@@ -23,7 +23,7 @@ public sealed class ConfigurationManagerTests
     }
 
     [TestMethod]
-    [DynamicData(nameof(GetConfigurationValueFromJsonData), DynamicDataSourceType.Method)]
+    [DynamicData(nameof(GetConfigurationValueFromJsonData))]
     public async ValueTask GetConfigurationValueFromJson(string jsonFileConfig, string key, string? result)
     {
         Mock<IFileSystem> fileSystem = new();
@@ -68,7 +68,7 @@ public sealed class ConfigurationManagerTests
     }
 
     [TestMethod]
-    [DynamicData(nameof(GetConfigurationValueFromJsonData), DynamicDataSourceType.Method)]
+    [DynamicData(nameof(GetConfigurationValueFromJsonData))]
     public async ValueTask GetConfigurationValueFromJsonWithFileLoggerProvider(string jsonFileConfig, string key, string? result)
     {
         byte[] bytes = Encoding.UTF8.GetBytes(jsonFileConfig);

@@ -1,0 +1,10 @@
+<Project>
+  <ItemGroup>
+    <!-- Don't use GlobalAnalyzerConfigFiles here -->
+    <!-- GlobalAnalyzerConfigFiles are evaluated very early before restore is done -->
+    <!-- https://github.com/dotnet/roslyn/blob/22afb85fd930deeeb1e0f39851ff0a09f86abe73/src/Compilers/Core/MSBuildTask/Microsoft.Managed.Core.targets#L138 -->
+    <!-- We use EditorConfigFiles instead which is passed to Csc task. -->
+    <!-- For the case of Code Quality (CAxxxx) rules, they can use GlobalAnalyzerConfigFiles because it's added from SDK and happens early enough for them -->
+    <EditorConfigFiles Include="$(MSBuildThisFileDirectory)..\globalconfigs\mstest-$(MSTestAnalysisMode.ToLowerInvariant()).globalconfig" Condition="'$(MSTestAnalysisMode)' != ''" />
+  </ItemGroup>
+</Project>

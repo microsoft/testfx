@@ -11,14 +11,14 @@ public class ClsTests : CLITestBase
 
     // This test in itself is not so important. What matters is that the asset gets build. If we regress and start having
     // the [DataRow] attribute no longer CLS compliant, the build will raise a warning in VS (and the build will fail in CI).
-    public void TestsAreRun()
+    public async Task TestsAreRun()
     {
         // Arrange
         string assemblyPath = GetAssetFullPath(TestAssetName);
 
         // Act
         System.Collections.Immutable.ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestCase> testCases = DiscoverTests(assemblyPath);
-        System.Collections.Immutable.ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult> testResults = RunTests(testCases);
+        System.Collections.Immutable.ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult> testResults = await RunTestsAsync(testCases);
 
         // Assert
         VerifyE2E.TestsPassed(

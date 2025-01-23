@@ -147,6 +147,21 @@ The type declaring these methods should also respect the following rules:
         <target state="translated">'[ExpectedException]' を回避する</target>
         <note />
       </trans-unit>
+      <trans-unit id="AvoidUsingAssertsInAsyncVoidContextDescription">
+        <source>Do not assert inside 'async void' methods, local functions, or lambdas. Exceptions that are thrown in this context will be unhandled exceptions. When using VSTest under .NET Framework, they will be silently swallowed. When using Microsoft.Testing.Platform or VSTest under modern .NET, they may crash the process.</source>
+        <target state="translated">'async void' メソッド、ローカル関数、またはラムダ内ではアサートしないでください。このコンテキストでスローされる例外は、ハンドルされない例外になります。.NET Frameworkで VSTest を使用すると、警告なしに飲み込まれるようになります。最新の .NET で Microsoft.Testing.Platform または VSTest を使用すると、プロセスがクラッシュする可能性があります。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidUsingAssertsInAsyncVoidContextMessageFormat">
+        <source>Do not assert inside 'async void' methods, local functions, or lambdas because they may not fail the test</source>
+        <target state="translated">'async void' メソッド、ローカル関数、またはラムダはテストに失敗しない可能性があるため、内部でアサートしないでください</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidUsingAssertsInAsyncVoidContextTitle">
+        <source>Do not assert inside 'async void' contexts</source>
+        <target state="translated">'async void' コンテキスト内でアサートしないでください</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ClassCleanupShouldBeValidDescription">
         <source>Methods marked with '[ClassCleanup]' should follow the following layout to be valid:
 -it can't be declared on a generic class without the 'InheritanceBehavior' mode is set

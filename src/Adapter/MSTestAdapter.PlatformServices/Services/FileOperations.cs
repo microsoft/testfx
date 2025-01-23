@@ -27,25 +27,8 @@ public class FileOperations : IFileOperations
     private readonly ConcurrentDictionary<string, Assembly> _assemblyCache = new();
 
 #if WIN_UI
-    private readonly bool _isPackaged;
+    private readonly bool _isPackaged = AppModel.IsPackagedProcess();
 #endif
-
-    internal FileOperations(bool skipSourceGeneratorCheck)
-    {
-        if (!skipSourceGeneratorCheck)
-        {
-            ApplicationStateGuard.Ensure(!SourceGeneratorToggle.UseSourceGenerator, $"{nameof(FileOperations)} should not be used when source generator mode is active, instead SourceGeneratedFileOperations should be used and delegate to here, with skipSourceGeneratorCheck = true, when needed.");
-        }
-
-#if WIN_UI
-        _isPackaged = AppModel.IsPackagedProcess();
-#endif
-    }
-
-    public FileOperations()
-        : this(false)
-    {
-    }
 
     /// <summary>
     /// Loads an assembly.

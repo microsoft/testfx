@@ -1,16 +1,17 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
+
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 
 [Serializable]
-internal sealed class FixtureTestResult
+internal readonly struct FixtureTestResult
 {
-    internal FixtureTestResult(bool isExecuted, UnitTestOutcome outcome, string? exceptionMessage)
+    internal FixtureTestResult(bool isExecuted, UTF.UnitTestOutcome outcome)
     {
         IsExecuted = isExecuted;
         Outcome = outcome;
-        ExceptionMessage = exceptionMessage;
     }
 
     /// <summary>
@@ -21,10 +22,5 @@ internal sealed class FixtureTestResult
     /// <summary>
     /// Gets the outcome of the test.
     /// </summary>
-    public UnitTestOutcome Outcome { get; }
-
-    /// <summary>
-    /// Gets the exception message if any.
-    /// </summary>
-    public string? ExceptionMessage { get; }
+    public UTF.UnitTestOutcome Outcome { get; }
 }

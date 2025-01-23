@@ -721,7 +721,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Exception thrown while executing test. If using extension of TestMethodAttribute then please contact vendor. Error message: {0}, Stack trace: {1}.
+        ///   Looks up a localized string similar to An unhandled exception was thrown by the &apos;Execute&apos; method. Please report this error to the author of the attribute &apos;{0}&apos;.
+        ///{1}.
         /// </summary>
         internal static string UTA_ExecuteThrewException {
             get {
@@ -776,11 +777,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The test method {0}.{1} has multiple attributes derived from ExpectedExceptionBaseAttribute defined on it. Only one such attribute is allowed..
+        ///   Looks up a localized string similar to The test method {0}.{1} has multiple attributes derived from &apos;{2}&apos; defined on it. Only one such attribute is allowed..
         /// </summary>
-        internal static string UTA_MultipleExpectedExceptionsOnTestMethod {
+        internal static string UTA_MultipleAttributesOnTestMethod {
             get {
-                return ResourceManager.GetString("UTA_MultipleExpectedExceptionsOnTestMethod", resourceCulture);
+                return ResourceManager.GetString("UTA_MultipleAttributesOnTestMethod", resourceCulture);
             }
         }
         

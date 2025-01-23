@@ -171,6 +171,11 @@ aber empfing {4} Argument(e) mit den Typen „{5}“.</target>
         <target state="translated">Es kann keine Instanz der Klasse '{0}' erstellt werden. Fehler: {1}.</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="UTA_MultipleAttributesOnTestMethod">
+        <source>The test method '{0}.{1}' has multiple attributes derived from '{2}' defined on it. Only one such attribute is allowed.</source>
+        <target state="translated">Für die Testmethode „{0}.{1}“ sind mehrere Attribute definiert, die von „{2}“ abgeleitet sind. Nur ein einziges solches Attribut ist zulässig.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="UTA_NoValidConstructor">
         <source>Cannot find a valid constructor for test class '{0}'. Valid constructors are 'public' and either parameterless or with one parameter of type 'TestContext'.</source>
         <target state="translated">Es wurde kein gültiger Konstruktor für die Testklasse "{0}" gefunden. Gültige Konstruktoren sind "public" und entweder parameterlos oder mit einem Parameter vom Typ "TestContext".</target>
@@ -249,9 +254,11 @@ Fehler: {1}</target>
         <note></note>
       </trans-unit>
       <trans-unit id="UTA_ExecuteThrewException">
-        <source>Exception thrown while executing test. If using extension of TestMethodAttribute then please contact vendor. Error message: {0}, Stack trace: {1}</source>
-        <target state="translated">Ausnahme beim Ausführen des Tests. Wenn Sie die Erweiterung "TestMethodAttribute" verwenden, wenden Sie sich an den Hersteller. Fehlermeldung: {0}, Stapelüberwachung: {1}</target>
-        <note></note>
+        <source>An unhandled exception was thrown by the 'Execute' method. Please report this error to the author of the attribute '{0}'.
+{1}</source>
+        <target state="translated">Von der Methode "Execute" wurde eine nicht behandelte Ausnahme ausgelöst. Melden Sie diesen Fehler dem Autor des Attributs '{0}'.
+{1}</target>
+        <note />
       </trans-unit>
       <trans-unit id="UTA_NoTestResult">
         <source>Error in executing test. No result returned by extension. If using extension of TestMethodAttribute then please contact vendor.</source>
@@ -360,11 +367,6 @@ Fehler: {1}</target>
 {2}</source>
         <target state="translated">Das für die Testmethode "{0}.{1}" definierte ExpectedException-Attribut hat während der Konstruktion eine Ausnahme ausgelöst.
 {2}</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="UTA_MultipleExpectedExceptionsOnTestMethod">
-        <source>The test method {0}.{1} has multiple attributes derived from ExpectedExceptionBaseAttribute defined on it. Only one such attribute is allowed.</source>
-        <target state="translated">Für die Testmethode "{0}.{1}" sind mehrere Attribute definiert, die von ExpectedExceptionBaseAttribute abgeleitet werden. Nur ein einziges solches Attribut ist zulässig.</target>
         <note></note>
       </trans-unit>
       <trans-unit id="LegacyScenariosNotSupportedWarning">

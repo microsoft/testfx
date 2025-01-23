@@ -85,7 +85,12 @@ public class TestMethodRunnerTests : TestContainer
 
         UnitTestResult[] results = testMethodRunner.Execute(string.Empty, string.Empty, string.Empty, string.Empty).ToUnitTestResults();
         Verify(results[0].Outcome == AdapterTestOutcome.Failed);
-        Verify(results[0].ErrorMessage.Contains("Exception thrown while executing test"));
+        Verify(results[0].ErrorMessage.StartsWith(
+            """            
+            An unhandled exception was thrown by the 'Execute' method. Please report this error to the author of the attribute 'Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute'.
+            System.Exception: DummyException
+            """,
+            StringComparison.Ordinal));
     }
 
     public void ExecuteForPassingTestShouldReturnUnitTestResultWithPassedOutcome()
@@ -139,7 +144,12 @@ public class TestMethodRunnerTests : TestContainer
 
         UnitTestResult[] results = testMethodRunner.RunTestMethod().ToUnitTestResults();
         Verify(results[0].Outcome == AdapterTestOutcome.Failed);
-        Verify(results[0].ErrorMessage.Contains("Exception thrown while executing test"));
+        Verify(results[0].ErrorMessage.StartsWith(
+            """            
+            An unhandled exception was thrown by the 'Execute' method. Please report this error to the author of the attribute 'Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute'.
+            System.Exception: Dummy Exception
+            """,
+            StringComparison.Ordinal));
     }
 
     public void RunTestMethodForMultipleResultsReturnMultipleResults()

@@ -235,6 +235,33 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Avoid doing assertions in &apos;async void&apos; methods or lambdas. Exceptions that are thrown in this context will be unobserved exceptions..
+        /// </summary>
+        internal static string AvoidUsingAssertsInAsyncVoidContextDescription {
+            get {
+                return ResourceManager.GetString("AvoidUsingAssertsInAsyncVoidContextDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Avoid doing assertions inside &apos;async void&apos; methods or lambdas because they may not fail the test.
+        /// </summary>
+        internal static string AvoidUsingAssertsInAsyncVoidContextMessageFormat {
+            get {
+                return ResourceManager.GetString("AvoidUsingAssertsInAsyncVoidContextMessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Avoid doing assertions inside &apos;async void&apos; contexts.
+        /// </summary>
+        internal static string AvoidUsingAssertsInAsyncVoidContextTitle {
+            get {
+                return ResourceManager.GetString("AvoidUsingAssertsInAsyncVoidContextTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Methods marked with &apos;[ClassCleanup]&apos; should follow the following layout to be valid:
         ///-it can&apos;t be declared on a generic class without the &apos;InheritanceBehavior&apos; mode is set
         ///-it should be &apos;public&apos;

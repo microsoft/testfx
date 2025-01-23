@@ -197,7 +197,8 @@ Error: {1}</value>
     <value>Class Initialization method {0}.{1} threw exception. {2}: {3}.</value>
   </data>
   <data name="UTA_ExecuteThrewException" xml:space="preserve">
-    <value>Exception thrown while executing test. If using extension of TestMethodAttribute then please contact vendor. Error message: {0}, Stack trace: {1}</value>
+    <value>An unhandled exception was thrown by the 'Execute' method. Please report this error to the author of the attribute '{0}'.
+{1}</value>
   </data>
   <data name="UTA_NoTestResult" xml:space="preserve">
     <value>Error in executing test. No result returned by extension. If using extension of TestMethodAttribute then please contact vendor.</value>
@@ -267,8 +268,8 @@ Error: {1}</value>
     <value>The ExpectedException attribute defined on test method {0}.{1} threw an exception during construction.
 {2}</value>
   </data>
-  <data name="UTA_MultipleExpectedExceptionsOnTestMethod" xml:space="preserve">
-    <value>The test method {0}.{1} has multiple attributes derived from ExpectedExceptionBaseAttribute defined on it. Only one such attribute is allowed.</value>
+  <data name="UTA_MultipleAttributesOnTestMethod" xml:space="preserve">
+    <value>The test method '{0}.{1}' has multiple attributes derived from '{2}' defined on it. Only one such attribute is allowed.</value>
   </data>
   <data name="LegacyScenariosNotSupportedWarning" xml:space="preserve">
     <value>Warning : A testsettings file or a vsmdi file is not supported with the MSTest V2 Adapter.</value>

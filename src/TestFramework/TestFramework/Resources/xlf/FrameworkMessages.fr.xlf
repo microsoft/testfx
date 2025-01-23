@@ -94,7 +94,7 @@
       </trans-unit>
       <trans-unit id="DynamicDataSourceShouldExistAndBeValid">
         <source>The dynamic data source '{0}' in type '{1}' should exist and be a property or a method.</source>
-        <target state="new">The dynamic data source '{0}' in type '{1}' should exist and be a property or a method.</target>
+        <target state="translated">La source de données dynamique '{0}' dans le type '{1}' doit exister et être une propriété ou une méthode.</target>
         <note />
       </trans-unit>
       <trans-unit id="ElementNumbersDontMatch">
@@ -125,6 +125,11 @@ Réel : {2}</target>
         <source>{0} failed. {1}</source>
         <target state="translated">Échec de {0}. {1}</target>
         <note></note>
+      </trans-unit>
+      <trans-unit id="HasCountFailMsg">
+        <source>Expected count of {1}. Actual: {2}. {0}</source>
+        <target state="new">Expected count of {1}. Actual: {2}. {0}</target>
+        <note />
       </trans-unit>
       <trans-unit id="IsInstanceOfFailMsg">
         <source>{0} Expected type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;.</source>
