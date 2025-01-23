@@ -12,7 +12,7 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interfa
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-using UnitTestOutcome = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestOutcome;
+using UnitTestOutcome = Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome;
 using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
@@ -93,15 +93,15 @@ internal sealed class UnitTestRunner : MarshalByRefObject
             if (fixtureType == Constants.ClassInitializeFixtureTrait)
             {
                 return testMethodInfo.Parent.IsClassInitializeExecuted
-                    ? new(true, GetOutcome(testMethodInfo.Parent.ClassInitializationException), testMethodInfo.Parent.ClassInitializationException?.Message)
-                    : new(true, UnitTestOutcome.Inconclusive, null);
+                    ? new(true, GetOutcome(testMethodInfo.Parent.ClassInitializationException))
+                    : new(true, UnitTestOutcome.Inconclusive);
             }
 
             if (fixtureType == Constants.ClassCleanupFixtureTrait)
             {
                 return testMethodInfo.Parent.IsClassInitializeExecuted
-                ? new(testMethodInfo.Parent.IsClassInitializeExecuted, GetOutcome(testMethodInfo.Parent.ClassCleanupException), testMethodInfo.Parent.ClassCleanupException?.Message)
-                : new(true, UnitTestOutcome.Inconclusive, null);
+                ? new(true, GetOutcome(testMethodInfo.Parent.ClassCleanupException))
+                : new(true, UnitTestOutcome.Inconclusive);
             }
         }
 
@@ -109,15 +109,15 @@ internal sealed class UnitTestRunner : MarshalByRefObject
         {
             if (fixtureType == Constants.AssemblyInitializeFixtureTrait)
             {
-                return new(true, GetOutcome(testMethodInfo.Parent.Parent.AssemblyInitializationException), testMethodInfo.Parent.Parent.AssemblyInitializationException?.Message);
+                return new(true, GetOutcome(testMethodInfo.Parent.Parent.AssemblyInitializationException));
             }
             else if (fixtureType == Constants.AssemblyCleanupFixtureTrait)
             {
-                return new(true, GetOutcome(testMethodInfo.Parent.Parent.AssemblyCleanupException), testMethodInfo.Parent.Parent.AssemblyInitializationException?.Message);
+                return new(true, GetOutcome(testMethodInfo.Parent.Parent.AssemblyCleanupException));
             }
         }
 
-        return new(false, UnitTestOutcome.Inconclusive, null);
+        return new(false, UnitTestOutcome.Inconclusive);
 
         // Local functions
         static UnitTestOutcome GetOutcome(Exception? exception) => exception == null ? UnitTestOutcome.Passed : UnitTestOutcome.Failed;
@@ -259,7 +259,7 @@ internal sealed class UnitTestRunner : MarshalByRefObject
         }
         catch (Exception ex)
         {
-            var testFailureException = new TestFailedException(UTF.UnitTestOutcome.Error, ex.TryGetMessage(), ex.TryGetStackTraceInformation());
+            var testFailureException = new TestFailedException(UnitTestOutcome.Error, ex.TryGetMessage(), ex.TryGetStackTraceInformation());
             result = new TestResult() { TestFailureException = testFailureException };
         }
         finally
@@ -294,13 +294,31 @@ internal sealed class UnitTestRunner : MarshalByRefObject
                 IEnumerable<TestClassInfo> classInfoCache = typeCache.ClassInfoListWithExecutableCleanupMethods;
                 foreach (TestClassInfo classInfo in classInfoCache)
                 {
-                    classInfo.ExecuteClassCleanup(testContext.Context);
+                    TestFailedException? ex = classInfo.ExecuteClassCleanup(testContext.Context);
+                    if (ex is not null && results.Length > 0)
+                    {
+#pragma warning disable IDE0056 // Use index operator
+                        TestResult lastResult = results[results.Length - 1];
+#pragma warning restore IDE0056 // Use index operator
+                        lastResult.Outcome = UTF.UnitTestOutcome.Error;
+                        lastResult.TestFailureException = ex;
+                        return;
+                    }
                 }
 
                 IEnumerable<TestAssemblyInfo> assemblyInfoCache = typeCache.AssemblyInfoListWithExecutableCleanupMethods;
                 foreach (TestAssemblyInfo assemblyInfo in assemblyInfoCache)
                 {
-                    assemblyInfo.ExecuteAssemblyCleanup(testContext.Context);
+                    TestFailedException? ex = assemblyInfo.ExecuteAssemblyCleanup(testContext.Context);
+                    if (ex is not null && results.Length > 0)
+                    {
+#pragma warning disable IDE0056 // Use index operator
+                        TestResult lastResult = results[results.Length - 1];
+#pragma warning restore IDE0056 // Use index operator
+                        lastResult.Outcome = UTF.UnitTestOutcome.Error;
+                        lastResult.TestFailureException = ex;
+                        return;
+                    }
                 }
             }
             finally
@@ -309,17 +327,6 @@ internal sealed class UnitTestRunner : MarshalByRefObject
                 initializationErrorLogs = logListener.GetAndClearStandardError();
                 initializationTrace = logListener.GetAndClearDebugTrace();
                 initializationTestContextMessages = testContext.GetAndClearDiagnosticMessages();
-            }
-        }
-        catch (Exception ex)
-        {
-            if (results.Length > 0)
-            {
-#pragma warning disable IDE0056 // Use index operator
-                TestResult lastResult = results[results.Length - 1];
-#pragma warning restore IDE0056 // Use index operator
-                lastResult.Outcome = UTF.UnitTestOutcome.Error;
-                lastResult.TestFailureException = ex;
             }
         }
         finally

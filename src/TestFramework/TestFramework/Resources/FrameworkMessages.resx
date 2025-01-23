@@ -290,4 +290,10 @@ Actual: {2}</value>
   <data name="DynamicDataSourceShouldExistAndBeValid" xml:space="preserve">
     <value>The dynamic data source '{0}' in type '{1}' should exist and be a property or a method.</value>
   </data>
+  <data name="HasCountFailMsg" xml:space="preserve">
+    <value>Expected collection of size {1}. Actual: {2}. {0}</value>
+  </data>
+  <data name="IsNotEmptyFailMsg" xml:space="preserve">
+    <value>Expected collection to contain any item but it is empty. {0}</value>
+  </data>
 </root>

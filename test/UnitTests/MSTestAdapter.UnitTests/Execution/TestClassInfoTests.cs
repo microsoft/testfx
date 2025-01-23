@@ -97,7 +97,8 @@ public class TestClassInfoTests : TestContainer
         _testClassInfo.ClassCleanupMethod = typeof(DummyTestClass).GetMethod("ClassCleanupMethod");
         _testClassInfo.ClassInitializeMethod = typeof(DummyTestClass).GetMethod("ClassInitializeMethod");
 
-        _testClassInfo.ExecuteClassCleanup(new TestContextImplementation(null, new StringWriter(), new Dictionary<string, object>())); // call cleanup without calling init
+        TestFailedException ex = _testClassInfo.ExecuteClassCleanup(new TestContextImplementation(null, new StringWriter(), new Dictionary<string, object>())); // call cleanup without calling init
+        Verify(ex is null);
         Verify(classCleanupCallCount == 0);
     }
 
@@ -110,8 +111,9 @@ public class TestClassInfoTests : TestContainer
         _testClassInfo.ClassInitializeMethod = typeof(DummyTestClass).GetMethod("ClassInitializeMethod");
 
         _testClassInfo.RunClassInitialize(_testContext);
-        _testClassInfo.ExecuteClassCleanup(new TestContextImplementation(null, new StringWriter(), new Dictionary<string, object>())); // call cleanup without calling init
+        TestFailedException ex = _testClassInfo.ExecuteClassCleanup(new TestContextImplementation(null, new StringWriter(), new Dictionary<string, object>())); // call cleanup without calling init
 
+        Verify(ex is null);
         Verify(classCleanupCallCount == 1);
     }
 
@@ -124,8 +126,9 @@ public class TestClassInfoTests : TestContainer
         _testClassInfo.BaseClassCleanupMethods.Add(typeof(DummyBaseTestClass).GetMethod("CleanupClassMethod"));
 
         _testClassInfo.RunClassInitialize(_testContext);
-        _testClassInfo.ExecuteClassCleanup(new TestContextImplementation(null, new StringWriter(), new Dictionary<string, object>()));
+        TestFailedException ex = _testClassInfo.ExecuteClassCleanup(new TestContextImplementation(null, new StringWriter(), new Dictionary<string, object>()));
 
+        Verify(ex is null);
         Verify(classCleanupCallCount == 1);
     }
 
@@ -414,9 +417,10 @@ public class TestClassInfoTests : TestContainer
 
         // Act
         _testClassInfo.RunClassInitialize(null);
-        _testClassInfo.ExecuteClassCleanup(new TestContextImplementation(null, new StringWriter(), new Dictionary<string, object>()));
+        TestFailedException ex = _testClassInfo.ExecuteClassCleanup(new TestContextImplementation(null, new StringWriter(), new Dictionary<string, object>()));
 
         // Assert
+        Verify(ex is null);
         Verify(classCleanupCallCount == 1);
     }
 
@@ -428,9 +432,10 @@ public class TestClassInfoTests : TestContainer
         _testClassInfo.ClassCleanupMethod = null;
 
         // Act
-        _testClassInfo.ExecuteClassCleanup(new TestContextImplementation(null, new StringWriter(), new Dictionary<string, object>()));
+        TestFailedException ex = _testClassInfo.ExecuteClassCleanup(new TestContextImplementation(null, new StringWriter(), new Dictionary<string, object>()));
 
         // Assert
+        Verify(ex is null);
         Verify(classCleanupCallCount == 0);
     }
 
@@ -442,9 +447,10 @@ public class TestClassInfoTests : TestContainer
 
         // Act
         _testClassInfo.RunClassInitialize(null);
-        Exception classCleanupException = VerifyThrows(() => _testClassInfo.ExecuteClassCleanup(new TestContextImplementation(null, new StringWriter(), new Dictionary<string, object>())));
+        TestFailedException classCleanupException = _testClassInfo.ExecuteClassCleanup(new TestContextImplementation(null, new StringWriter(), new Dictionary<string, object>()));
 
         // Assert
+        Verify(classCleanupException is not null);
         Verify(classCleanupException.Message.StartsWith("Class Cleanup method DummyTestClass.ClassCleanupMethod failed.", StringComparison.Ordinal));
         Verify(classCleanupException.Message.Contains("Error Message: Assert.Fail failed. Test Failure."));
         Verify(classCleanupException.Message.Contains($"{typeof(TestClassInfoTests).FullName}.<>c.<{nameof(this.RunClassCleanupShouldReturnAssertFailureExceptionDetails)}>"));
@@ -458,9 +464,10 @@ public class TestClassInfoTests : TestContainer
 
         // Act
         _testClassInfo.RunClassInitialize(null);
-        Exception classCleanupException = VerifyThrows(() => _testClassInfo.ExecuteClassCleanup(new TestContextImplementation(null, new StringWriter(), new Dictionary<string, object>())));
+        TestFailedException classCleanupException = _testClassInfo.ExecuteClassCleanup(new TestContextImplementation(null, new StringWriter(), new Dictionary<string, object>()));
 
         // Assert
+        Verify(classCleanupException is not null);
         Verify(classCleanupException.Message.StartsWith("Class Cleanup method DummyTestClass.ClassCleanupMethod failed.", StringComparison.Ordinal));
         Verify(classCleanupException.Message.Contains("Error Message: Assert.Inconclusive failed. Test Inconclusive."));
         Verify(classCleanupException.Message.Contains($"{typeof(TestClassInfoTests).FullName}.<>c.<{nameof(this.RunClassCleanupShouldReturnAssertInconclusiveExceptionDetails)}>"));
@@ -474,9 +481,10 @@ public class TestClassInfoTests : TestContainer
 
         // Act
         _testClassInfo.RunClassInitialize(null);
-        Exception classCleanupException = VerifyThrows(() => _testClassInfo.ExecuteClassCleanup(new TestContextImplementation(null, new StringWriter(), new Dictionary<string, object>())));
+        TestFailedException classCleanupException = _testClassInfo.ExecuteClassCleanup(new TestContextImplementation(null, new StringWriter(), new Dictionary<string, object>()));
 
         // Assert
+        Verify(classCleanupException is not null);
         Verify(classCleanupException.Message.StartsWith("Class Cleanup method DummyTestClass.ClassCleanupMethod failed.", StringComparison.Ordinal));
         Verify(classCleanupException.Message.Contains("Error Message: System.ArgumentException: Argument Exception. Stack Trace:"));
         Verify(classCleanupException.Message.Contains($"{typeof(TestClassInfoTests).FullName}.<>c.<{nameof(this.RunClassCleanupShouldReturnExceptionDetailsOfNonAssertExceptions)}>"));
@@ -492,9 +500,10 @@ public class TestClassInfoTests : TestContainer
 
         // Act
         _testClassInfo.RunClassInitialize(null);
-        Exception classCleanupException = VerifyThrows(() => _testClassInfo.ExecuteClassCleanup(new TestContextImplementation(null, new StringWriter(), new Dictionary<string, object>())));
+        TestFailedException classCleanupException = _testClassInfo.ExecuteClassCleanup(new TestContextImplementation(null, new StringWriter(), new Dictionary<string, object>()));
 
         // Assert
+        Verify(classCleanupException is not null);
         Verify(classCleanupException.Message.StartsWith("Class Cleanup method DummyBaseTestClass.CleanupClassMethod failed.", StringComparison.Ordinal));
         Verify(classCleanupException.Message.Contains("Error Message: System.ArgumentException: Argument Exception. Stack Trace:"));
         Verify(classCleanupException.Message.Contains($"{typeof(TestClassInfoTests).FullName}.<>c.<{nameof(this.RunBaseClassCleanupWithNoDerivedClassCleanupShouldReturnExceptionDetailsOfNonAssertExceptions)}>"));
@@ -510,25 +519,28 @@ public class TestClassInfoTests : TestContainer
         _testClassInfo.BaseClassCleanupMethods.Add(baseClassCleanupMethod);
 
         // Act
-        _testClassInfo.ExecuteClassCleanup(new TestContextImplementation(null, new StringWriter(), new Dictionary<string, object>()));
+        TestFailedException ex = _testClassInfo.ExecuteClassCleanup(new TestContextImplementation(null, new StringWriter(), new Dictionary<string, object>()));
 
         // Assert
+        Verify(ex is null);
         Verify(_testClassInfo.HasExecutableCleanupMethod);
         Verify(classCleanupCallCount == 0, "DummyBaseTestClass.CleanupClassMethod call count");
 
         // Act 2
         _testClassInfo.RunClassInitialize(null);
-        _testClassInfo.ExecuteClassCleanup(new TestContextImplementation(null, new StringWriter(), new Dictionary<string, object>()));
+        ex = _testClassInfo.ExecuteClassCleanup(new TestContextImplementation(null, new StringWriter(), new Dictionary<string, object>()));
 
         // Assert 2
+        Verify(ex is null);
         Verify(_testClassInfo.HasExecutableCleanupMethod);
         Verify(_testClassInfo.IsClassInitializeExecuted);
         Verify(classCleanupCallCount == 1, "DummyBaseTestClass.CleanupClassMethod call count");
 
         // Act 3
-        _testClassInfo.ExecuteClassCleanup(new TestContextImplementation(null, new StringWriter(), new Dictionary<string, object>()));
+        ex = _testClassInfo.ExecuteClassCleanup(new TestContextImplementation(null, new StringWriter(), new Dictionary<string, object>()));
 
         // Assert 3
+        Verify(ex is null);
         Verify(_testClassInfo.HasExecutableCleanupMethod);
         Verify(classCleanupCallCount == 1, "DummyBaseTestClass.CleanupClassMethod call count");
     }
@@ -542,8 +554,9 @@ public class TestClassInfoTests : TestContainer
         _testClassInfo.ClassCleanupMethod = typeof(DummyTestClass).GetMethod("ClassCleanupMethod");
 
         _testClassInfo.RunClassInitialize(null);
-        Exception classCleanupException = VerifyThrows(() => _testClassInfo.ExecuteClassCleanup(new TestContextImplementation(null, new StringWriter(), new Dictionary<string, object>())));
+        TestFailedException classCleanupException = _testClassInfo.ExecuteClassCleanup(new TestContextImplementation(null, new StringWriter(), new Dictionary<string, object>()));
 
+        Verify(classCleanupException is not null);
         Verify(classCleanupException.Message.StartsWith("Class Cleanup method DummyTestClass.ClassCleanupMethod failed. Error Message: System.InvalidOperationException: I fail..", StringComparison.Ordinal));
         Verify(classCleanupException.Message.Contains("at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestClassInfoTests.FailingStaticHelper..cctor()"));
     }

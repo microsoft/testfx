@@ -10,7 +10,7 @@ public class MSBuildTests_KnownExtensionRegistration : AcceptanceTestBase<NopAss
 {
     private const string AssetName = "MSBuildTests";
 
-    [DynamicData(nameof(GetBuildMatrixTfmBuildVerbConfiguration), typeof(AcceptanceTestBase<NopAssetFixture>), DynamicDataSourceType.Method)]
+    [DynamicData(nameof(GetBuildMatrixTfmBuildVerbConfiguration), typeof(AcceptanceTestBase<NopAssetFixture>))]
     [TestMethod]
     public async Task Microsoft_Testing_Platform_Extensions_ShouldBe_Correctly_Registered(string tfm, BuildConfiguration compilationMode, Verb verb)
     {

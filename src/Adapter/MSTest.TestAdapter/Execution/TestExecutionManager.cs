@@ -590,7 +590,7 @@ public class TestExecutionManager
             {
                 var result = new TestTools.UnitTesting.TestResult()
                 {
-                    Outcome = fixtureTestResult.Outcome.ToAdapterOutcome(),
+                    Outcome = fixtureTestResult.Outcome,
                 };
                 SendTestResults(currentTest, [result], DateTimeOffset.Now, DateTimeOffset.Now, testExecutionRecorder);
             }

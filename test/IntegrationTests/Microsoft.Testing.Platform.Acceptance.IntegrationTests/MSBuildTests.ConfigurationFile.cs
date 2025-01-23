@@ -6,7 +6,7 @@ namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 [TestClass]
 public class MSBuildTests : AcceptanceTestBase<NopAssetFixture>
 {
-    [DynamicData(nameof(GetBuildMatrixTfmBuildVerbConfiguration), typeof(AcceptanceTestBase<NopAssetFixture>), DynamicDataSourceType.Method)]
+    [DynamicData(nameof(GetBuildMatrixTfmBuildVerbConfiguration), typeof(AcceptanceTestBase<NopAssetFixture>))]
     [TestMethod]
     public async Task ConfigFileGeneration_CorrectlyCreateAndCacheAndCleaned(string tfm, BuildConfiguration compilationMode, Verb verb)
     {
@@ -44,7 +44,7 @@ public class MSBuildTests : AcceptanceTestBase<NopAssetFixture>
         }
     }
 
-    [DynamicData(nameof(GetBuildMatrixTfmBuildVerbConfiguration), typeof(AcceptanceTestBase<NopAssetFixture>), DynamicDataSourceType.Method)]
+    [DynamicData(nameof(GetBuildMatrixTfmBuildVerbConfiguration), typeof(AcceptanceTestBase<NopAssetFixture>))]
     [TestMethod]
     public async Task ConfigFileGeneration_NoConfigurationFile_TaskWontRun(string tfm, BuildConfiguration compilationMode, Verb verb)
     {

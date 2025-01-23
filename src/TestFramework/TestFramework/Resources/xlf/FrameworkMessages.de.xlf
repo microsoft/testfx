@@ -126,6 +126,11 @@ Tatsächlich: {2}</target>
         <target state="translated">Fehler bei "{0}". {1}</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="HasCountFailMsg">
+        <source>Expected collection of size {1}. Actual: {2}. {0}</source>
+        <target state="new">Expected collection of size {1}. Actual: {2}. {0}</target>
+        <note />
+      </trans-unit>
       <trans-unit id="IsInstanceOfFailMsg">
         <source>{0} Expected type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;.</source>
         <target state="translated">{0}Erwarteter Typ:&lt;{1}&gt;. Tatsächlicher Typ:&lt;{2}&gt;.</target>
@@ -135,6 +140,11 @@ Tatsächlich: {2}</target>
         <source>String '{0}' does not match pattern '{1}'. {2}.</source>
         <target state="translated">Die Zeichenfolge "{0}" stimmt nicht mit dem Muster "{1}" überein. {2}.</target>
         <note></note>
+      </trans-unit>
+      <trans-unit id="IsNotEmptyFailMsg">
+        <source>Expected collection to contain any item but it is empty. {0}</source>
+        <target state="new">Expected collection to contain any item but it is empty. {0}</target>
+        <note />
       </trans-unit>
       <trans-unit id="IsNotInstanceOfFailMsg">
         <source>Wrong Type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;. {0}</source>

@@ -160,6 +160,31 @@ public sealed class TestMethodShouldBeValidAnalyzerTests
     }
 
     [TestMethod]
+    public async Task WhenTestMethodIsGeneric_CanBeInferred_NoDiagnostic()
+    {
+        string code = """
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class TestClass
+            {
+                [TestMethod]
+                public void TestMethod1<T>(T[] t)
+                {
+                }
+
+                [TestMethod]
+                public void TestMethod2<T>(List<T> t)
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
     public async Task WhenTestMethodIsGeneric_Diagnostic()
     {
         string code = """

@@ -124,7 +124,14 @@ public static class DotnetCli
         }
     }
 
+    // Workaround NuGet issue https://github.com/NuGet/Home/issues/14064
     private static async Task<DotnetMuxerResult> CallTheMuxerAsync(string args, Dictionary<string, string?> environmentVariables, string? workingDirectory, int timeoutInSeconds, bool failIfReturnValueIsNotZero)
+        => await Policy
+            .Handle<InvalidOperationException>(ex => ex.Message.Contains("MSB4236"))
+            .WaitAndRetryAsync(retryCount: 3, sleepDurationProvider: static _ => TimeSpan.FromSeconds(2))
+            .ExecuteAsync(async () => await CallTheMuxerCoreAsync(args, environmentVariables, workingDirectory, timeoutInSeconds, failIfReturnValueIsNotZero));
+
+    private static async Task<DotnetMuxerResult> CallTheMuxerCoreAsync(string args, Dictionary<string, string?> environmentVariables, string? workingDirectory, int timeoutInSeconds, bool failIfReturnValueIsNotZero)
     {
         if (args.StartsWith("dotnet ", StringComparison.OrdinalIgnoreCase))
         {
@@ -133,6 +140,26 @@ public static class DotnetCli
 
         using DotnetMuxer dotnet = new(environmentVariables);
         int exitCode = await dotnet.ExecuteAsync(args, workingDirectory, timeoutInSeconds);
+
+        if (dotnet.StandardError.Contains("Invalid runtimeconfig.json"))
+        {
+            // Invalid runtimeconfig.json [D:\a\_work\1\s\artifacts\tmp\Release\testsuite\gqRdj\MSTestSdk\bin\Debug\net9.0\MSTestSdk.runtimeconfig.json]
+            Match match = Regex.Match(dotnet.StandardError, @"Invalid runtimeconfig.json \[(?<path>.+?)\]");
+            string fileContent;
+            if (!match.Success)
+            {
+                fileContent = "CANNOT MATCH PATH IN REGEX";
+            }
+            else
+            {
+                string filePath = match.Groups["path"].Value;
+                fileContent = !File.Exists(filePath)
+                    ? $"FILE DOES NOT EXIST: {filePath}"
+                    : File.ReadAllText(filePath);
+            }
+
+            throw new InvalidOperationException($"Invalid runtimeconfig.json:{fileContent}\n\nStandardOutput:\n{dotnet.StandardOutput}\nStandardError:\n{dotnet.StandardError}");
+        }
 
         if (exitCode != 0 && failIfReturnValueIsNotZero)
         {
