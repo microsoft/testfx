@@ -745,6 +745,16 @@ Der Typ, der diese Methoden deklariert, sollte auch die folgenden Regeln beachte
         <target state="translated">[{0}] kann nur für Methoden festgelegt werden, die mit [TestMethod] markiert sind.</target>
         <note />
       </trans-unit>
+      <trans-unit id="UseConditionBaseWithTestClassMessageFormat">
+        <source>The attribute '{0}' which derives from 'ConditionBaseAttribute' should be used only on classes marked with `TestClassAttribute`</source>
+        <target state="new">The attribute '{0}' which derives from 'ConditionBaseAttribute' should be used only on classes marked with `TestClassAttribute`</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseConditionBaseWithTestClassTitle">
+        <source>Use 'ConditionBaseAttribute' on test classes</source>
+        <target state="new">Use 'ConditionBaseAttribute' on test classes</target>
+        <note />
+      </trans-unit>
       <trans-unit id="UseDeploymentItemWithTestMethodOrTestClassMessageFormat">
         <source>'[DeploymentItem]' can be specified only on test class or test method</source>
         <target state="translated">„[DeploymentItem]“ kann nur für die Testklasse oder Testmethode angegeben werden.</target>

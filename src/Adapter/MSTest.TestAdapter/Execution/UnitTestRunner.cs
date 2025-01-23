@@ -351,7 +351,7 @@ internal sealed class UnitTestRunner : MarshalByRefObject
     /// <param name="testMethodInfo">The testMethodInfo.</param>
     /// <param name="notRunnableResult">The results to return if the test method is not runnable.</param>
     /// <returns>whether the given testMethod is runnable.</returns>
-    private bool IsTestMethodRunnable(
+    private static bool IsTestMethodRunnable(
         TestMethod testMethod,
         TestMethodInfo? testMethodInfo,
         [NotNullWhen(false)] out TestResult[]? notRunnableResult)
@@ -388,34 +388,16 @@ internal sealed class UnitTestRunner : MarshalByRefObject
             }
         }
 
-        // TODO: Executor should never be null. Is it incorrectly annotated?
-        string? ignoreMessage = testMethodInfo.Parent.ClassAttribute.IgnoreMessage ?? testMethodInfo.TestMethodOptions.Executor?.IgnoreMessage;
-        if (ignoreMessage is not null)
+        bool shouldIgnoreClass = testMethodInfo.Parent.ClassType.IsIgnored(out string? ignoreMessageOnClass);
+        bool shouldIgnoreMethod = testMethodInfo.TestMethod.IsIgnored(out string? ignoreMessageOnMethod);
+
+        string? ignoreMessage = ignoreMessageOnClass;
+        if (StringEx.IsNullOrEmpty(ignoreMessage) && shouldIgnoreMethod)
         {
-            notRunnableResult =
-                [
-                    new TestResult()
-                    {
-                        Outcome = UTF.UnitTestOutcome.Ignored,
-                        IgnoreReason = ignoreMessage,
-                    }
-                ];
-            return false;
+            ignoreMessage = ignoreMessageOnMethod;
         }
 
-        IgnoreAttribute? ignoreAttributeOnClass =
-            _reflectHelper.GetFirstNonDerivedAttributeOrDefault<IgnoreAttribute>(testMethodInfo.Parent.ClassType, inherit: false);
-        ignoreMessage = ignoreAttributeOnClass?.IgnoreMessage;
-
-        IgnoreAttribute? ignoreAttributeOnMethod =
-            _reflectHelper.GetFirstNonDerivedAttributeOrDefault<IgnoreAttribute>(testMethodInfo.TestMethod, inherit: false);
-
-        if (StringEx.IsNullOrEmpty(ignoreMessage) && ignoreAttributeOnMethod is not null)
-        {
-            ignoreMessage = ignoreAttributeOnMethod.IgnoreMessage;
-        }
-
-        if (ignoreAttributeOnClass is not null || ignoreAttributeOnMethod is not null)
+        if (shouldIgnoreClass || shouldIgnoreMethod)
         {
             notRunnableResult =
                 [
