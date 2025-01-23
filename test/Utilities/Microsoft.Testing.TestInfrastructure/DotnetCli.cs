@@ -56,7 +56,8 @@ public static class DotnetCli
         int retryCount = 5,
         bool disableCodeCoverage = true,
         bool warnAsError = true,
-        bool suppressPreviewDotNetMessage = true)
+        bool suppressPreviewDotNetMessage = true,
+        [CallerMemberName] string callerMemberName = "")
     {
         await s_maxOutstandingCommands_semaphore.WaitAsync();
         try
@@ -107,7 +108,7 @@ public static class DotnetCli
 
             if (DoNotRetry)
             {
-                return await CallTheMuxerAsync(args, environmentVariables, workingDirectory, timeoutInSeconds, failIfReturnValueIsNotZero);
+                return await CallTheMuxerAsync(args, environmentVariables, workingDirectory, timeoutInSeconds, failIfReturnValueIsNotZero, callerMemberName);
             }
             else
             {
@@ -115,7 +116,7 @@ public static class DotnetCli
                 return await Policy
                     .Handle<Exception>()
                     .WaitAndRetryAsync(delay)
-                    .ExecuteAsync(async () => await CallTheMuxerAsync(args, environmentVariables, workingDirectory, timeoutInSeconds, failIfReturnValueIsNotZero));
+                    .ExecuteAsync(async () => await CallTheMuxerAsync(args, environmentVariables, workingDirectory, timeoutInSeconds, failIfReturnValueIsNotZero, callerMemberName));
             }
         }
         finally
@@ -124,18 +125,36 @@ public static class DotnetCli
         }
     }
 
+    private static bool IsDotNetTestWithExeOrDll(string args)
+        => args.StartsWith("test ", StringComparison.Ordinal) && (args.Contains(".dll") || args.Contains(".exe"));
+
     // Workaround NuGet issue https://github.com/NuGet/Home/issues/14064
-    private static async Task<DotnetMuxerResult> CallTheMuxerAsync(string args, Dictionary<string, string?> environmentVariables, string? workingDirectory, int timeoutInSeconds, bool failIfReturnValueIsNotZero)
+    private static async Task<DotnetMuxerResult> CallTheMuxerAsync(string args, Dictionary<string, string?> environmentVariables, string? workingDirectory, int timeoutInSeconds, bool failIfReturnValueIsNotZero, string binlogBaseFileName)
         => await Policy
             .Handle<InvalidOperationException>(ex => ex.Message.Contains("MSB4236"))
             .WaitAndRetryAsync(retryCount: 3, sleepDurationProvider: static _ => TimeSpan.FromSeconds(2))
-            .ExecuteAsync(async () => await CallTheMuxerCoreAsync(args, environmentVariables, workingDirectory, timeoutInSeconds, failIfReturnValueIsNotZero));
+            .ExecuteAsync(async () => await CallTheMuxerCoreAsync(args, environmentVariables, workingDirectory, timeoutInSeconds, failIfReturnValueIsNotZero, binlogBaseFileName));
 
-    private static async Task<DotnetMuxerResult> CallTheMuxerCoreAsync(string args, Dictionary<string, string?> environmentVariables, string? workingDirectory, int timeoutInSeconds, bool failIfReturnValueIsNotZero)
+    private static async Task<DotnetMuxerResult> CallTheMuxerCoreAsync(string args, Dictionary<string, string?> environmentVariables, string? workingDirectory, int timeoutInSeconds, bool failIfReturnValueIsNotZero, string binlogBaseFileName)
     {
         if (args.StartsWith("dotnet ", StringComparison.OrdinalIgnoreCase))
         {
             throw new InvalidOperationException("Command should not start with 'dotnet'");
+        }
+
+        if (!args.Contains("-bl:") && !IsDotNetTestWithExeOrDll(args))
+        {
+            // We do this here rather than in the caller so that different retries produce different binlog file names.
+            string binlogFullPath = Path.Combine(TempDirectory.GetTestSuiteDirectory(), $"{binlogBaseFileName}-{DateTime.Now.Ticks}.binlog");
+            string binlogArg = $" -bl:\"{binlogFullPath}\"";
+            if (args.IndexOf("-- ", StringComparison.Ordinal) is int platformArgsIndex && platformArgsIndex > 0)
+            {
+                args = args.Insert(platformArgsIndex, binlogArg + " ");
+            }
+            else
+            {
+                args += binlogArg;
+            }
         }
 
         using DotnetMuxer dotnet = new(environmentVariables);

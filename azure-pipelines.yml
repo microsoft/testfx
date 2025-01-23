@@ -112,6 +112,22 @@ stages:
               ArtifactName: TestResults_Windows_$(_BuildConfig)
             condition: failed()
 
+          - task: CopyFiles@2
+            displayName: 'Copy binlogs'
+            inputs:
+              SourceFolder: '$(Build.SourcesDirectory)/artifacts/tmp/$(_BuildConfig)/testsuite'
+              Contents: |
+                **/*.binlog
+              TargetFolder: '$(Build.ArtifactStagingDirectory)/binlogs'
+            condition: always()
+
+          - task: PublishBuildArtifacts@1
+            displayName: 'Publish integration tests binlogs'
+            inputs:
+              PathtoPublish: '$(Build.ArtifactStagingDirectory)/binlogs'
+              ArtifactName: Integration_Tests_Windows_Binlogs_$(_BuildConfig)
+            condition: always()
+
           # Upload code coverage to codecov.io
           - script: $(Build.SourcesDirectory)/.dotnet/dotnet msbuild -restore
               eng/CodeCoverage.proj
@@ -158,6 +174,22 @@ stages:
               ArtifactName: TestResults_Linux_$(_BuildConfig)
             condition: failed()
 
+          - task: CopyFiles@2
+            displayName: 'Copy binlogs'
+            inputs:
+              SourceFolder: '$(Build.SourcesDirectory)/artifacts/tmp/$(_BuildConfig)/testsuite'
+              Contents: |
+                **/*.binlog
+              TargetFolder: '$(Build.ArtifactStagingDirectory)/binlogs'
+            condition: always()
+
+          - task: PublishBuildArtifacts@1
+            displayName: 'Publish integration tests binlogs'
+            inputs:
+              PathtoPublish: '$(Build.ArtifactStagingDirectory)/binlogs'
+              ArtifactName: Integration_Tests_Linux_Binlogs_$(_BuildConfig)
+            condition: always()
+
       - job: MacOS
         timeoutInMinutes: 90
         pool:
@@ -196,3 +228,19 @@ stages:
               PathtoPublish: '$(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)'
               ArtifactName: TestResults_MacOs_$(_BuildConfig)
             condition: failed()
+
+          - task: CopyFiles@2
+            displayName: 'Copy binlogs'
+            inputs:
+              SourceFolder: '$(Build.SourcesDirectory)/artifacts/tmp/$(_BuildConfig)/testsuite'
+              Contents: |
+                **/*.binlog
+              TargetFolder: '$(Build.ArtifactStagingDirectory)/binlogs'
+            condition: always()
+
+          - task: PublishBuildArtifacts@1
+            displayName: 'Publish integration tests binlogs'
+            inputs:
+              PathtoPublish: '$(Build.ArtifactStagingDirectory)/binlogs'
+              ArtifactName: Integration_Tests_MacOS_Binlogs_$(_BuildConfig)
+            condition: always()
