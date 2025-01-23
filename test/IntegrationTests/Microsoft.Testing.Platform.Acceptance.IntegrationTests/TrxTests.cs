@@ -161,12 +161,12 @@ Out of process file artifacts produced:
     public async Task Trx_WhenReportTrxIsSpecifiedAndReportTrxPathIsSpecified_Overwritten(string tfm)
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, TestAssetFixture.AssetName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--report-trx-filename report.trx");
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--report-trx --report-trx-filename report.trx");
 
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
         testHostResult.AssertOutputDoesNotContain("Warning");
 
-        testHostResult = await testHost.ExecuteAsync("--report-trx-filename report.trx");
+        testHostResult = await testHost.ExecuteAsync("--report-trx --report-trx-filename report.trx");
 
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
         testHostResult.AssertOutputContains("Warning: Trx file 'report.trx' already exists and will be overwritten.");
