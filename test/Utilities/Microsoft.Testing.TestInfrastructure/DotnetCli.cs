@@ -135,7 +135,8 @@ public static class DotnetCli
         if (!args.Contains("-bl:"))
         {
             // We do this here rather than in the caller so that different retries produce different binlog file names.
-            string binlogArg = $" -bl:\"{binlogBaseFileName}-{DateTime.Now.Ticks}.binlog\"";
+            string binlogFullPath = Path.Combine(TempDirectory.GetTestSuiteDirectory(), $"{binlogBaseFileName}-{DateTime.Now.Ticks}.binlog");
+            string binlogArg = $" -bl:\"{binlogFullPath}.binlog\"";
             if (args.IndexOf("-- ", StringComparison.Ordinal) is int platformArgsIndex && platformArgsIndex > 0)
             {
                 args = args.Insert(platformArgsIndex, binlogArg + " ");
