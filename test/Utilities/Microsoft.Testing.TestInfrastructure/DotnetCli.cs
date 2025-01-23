@@ -132,7 +132,11 @@ public static class DotnetCli
         }
 
         using DotnetMuxer dotnet = new(environmentVariables);
-        int exitCode = await dotnet.ExecuteAsync(args, workingDirectory, timeoutInSeconds);
+        // Workaround NuGet issue https://github.com/NuGet/Home/issues/14064
+        int exitCode = await Policy
+            .Handle<InvalidOperationException>(ex => ex.Message.Contains("MSB4236"))
+            .WaitAndRetryAsync(retryCount: 3, sleepDurationProvider: static _ => TimeSpan.FromSeconds(2))
+            .ExecuteAsync(async () => await dotnet.ExecuteAsync(args, workingDirectory, timeoutInSeconds));
 
         if (dotnet.StandardError.Contains("Invalid runtimeconfig.json"))
         {
