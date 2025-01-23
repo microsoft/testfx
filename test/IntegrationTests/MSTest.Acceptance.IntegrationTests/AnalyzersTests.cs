@@ -54,6 +54,7 @@ public class UnitTest1
     }
 
     [TestMethod]
+    [DoNotParallelize] // flaky when parallelized.
     public async Task VerifyMSTestAnalysisModeForDifferentAnalyzers()
     {
         string code = """
