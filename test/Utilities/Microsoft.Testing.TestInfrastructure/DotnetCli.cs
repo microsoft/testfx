@@ -124,6 +124,7 @@ public static class DotnetCli
         }
     }
 
+    // Workaround NuGet issue https://github.com/NuGet/Home/issues/14064
     private static async Task<DotnetMuxerResult> CallTheMuxerAsync(string args, Dictionary<string, string?> environmentVariables, string? workingDirectory, int timeoutInSeconds, bool failIfReturnValueIsNotZero)
         => await Policy
             .Handle<InvalidOperationException>(ex => ex.Message.Contains("MSB4236"))
@@ -138,7 +139,6 @@ public static class DotnetCli
         }
 
         using DotnetMuxer dotnet = new(environmentVariables);
-        // Workaround NuGet issue https://github.com/NuGet/Home/issues/14064
         int exitCode = await dotnet.ExecuteAsync(args, workingDirectory, timeoutInSeconds);
 
         if (dotnet.StandardError.Contains("Invalid runtimeconfig.json"))
