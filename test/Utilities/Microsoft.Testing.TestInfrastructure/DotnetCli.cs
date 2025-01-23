@@ -56,7 +56,8 @@ public static class DotnetCli
         int retryCount = 5,
         bool disableCodeCoverage = true,
         bool warnAsError = true,
-        bool suppressPreviewDotNetMessage = true)
+        bool suppressPreviewDotNetMessage = true,
+        [CallerMemberName] string callerMemberName = "")
     {
         await s_maxOutstandingCommands_semaphore.WaitAsync();
         try
@@ -107,7 +108,7 @@ public static class DotnetCli
 
             if (DoNotRetry)
             {
-                return await CallTheMuxerAsync(args, environmentVariables, workingDirectory, timeoutInSeconds, failIfReturnValueIsNotZero);
+                return await CallTheMuxerAsync(args, environmentVariables, workingDirectory, timeoutInSeconds, failIfReturnValueIsNotZero, callerMemberName);
             }
             else
             {
@@ -115,7 +116,7 @@ public static class DotnetCli
                 return await Policy
                     .Handle<Exception>()
                     .WaitAndRetryAsync(delay)
-                    .ExecuteAsync(async () => await CallTheMuxerAsync(args, environmentVariables, workingDirectory, timeoutInSeconds, failIfReturnValueIsNotZero));
+                    .ExecuteAsync(async () => await CallTheMuxerAsync(args, environmentVariables, workingDirectory, timeoutInSeconds, failIfReturnValueIsNotZero, callerMemberName));
             }
         }
         finally
@@ -124,11 +125,25 @@ public static class DotnetCli
         }
     }
 
-    private static async Task<DotnetMuxerResult> CallTheMuxerAsync(string args, Dictionary<string, string?> environmentVariables, string? workingDirectory, int timeoutInSeconds, bool failIfReturnValueIsNotZero)
+    private static async Task<DotnetMuxerResult> CallTheMuxerAsync(string args, Dictionary<string, string?> environmentVariables, string? workingDirectory, int timeoutInSeconds, bool failIfReturnValueIsNotZero, string binlogBaseFileName)
     {
         if (args.StartsWith("dotnet ", StringComparison.OrdinalIgnoreCase))
         {
             throw new InvalidOperationException("Command should not start with 'dotnet'");
+        }
+
+        if (!args.Contains("-bl:"))
+        {
+            // We do this here rather than in the caller so that different retries produce different binlog file names.
+            string binlogArg = $" -bl:\"{binlogBaseFileName}-{DateTime.Now.Ticks}.binlog\"";
+            if (args.IndexOf("-- ", StringComparison.Ordinal) is int platformArgsIndex && platformArgsIndex > 0)
+            {
+                args = args.Insert(platformArgsIndex, binlogArg + " ");
+            }
+            else
+            {
+                args += binlogArg;
+            }
         }
 
         using DotnetMuxer dotnet = new(environmentVariables);
