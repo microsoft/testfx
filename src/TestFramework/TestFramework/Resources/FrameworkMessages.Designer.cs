@@ -378,7 +378,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Expected count of {1}. Actual: {2}. {0}.
+        ///   Looks up a localized string similar to Expected collection of size {1}. Actual: {2}. {0}.
         /// </summary>
         internal static string HasCountFailMsg {
             get {
@@ -410,6 +410,15 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         internal static string IsMatchFail {
             get {
                 return ResourceManager.GetString("IsMatchFail", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Expected collection to contain any item but it is empty. {0}.
+        /// </summary>
+        internal static string IsNotEmptyFailMsg {
+            get {
+                return ResourceManager.GetString("IsNotEmptyFailMsg", resourceCulture);
             }
         }
         
