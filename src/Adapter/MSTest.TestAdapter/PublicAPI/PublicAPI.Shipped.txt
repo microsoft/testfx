@@ -5,6 +5,7 @@ const Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestSettings.Sett
 const Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.TestMethod.TotalHierarchyLevels = 4 -> int
 const Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.RunConfigurationSettings.SettingsName = "RunConfiguration" -> string!
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.LogMessageListener
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.LogMessageListener.~LogMessageListener() -> void
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.LogMessageListener.DebugTrace.get -> string?
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.LogMessageListener.Dispose() -> void
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.LogMessageListener.GetAndClearDebugTrace() -> string?
