@@ -41,7 +41,7 @@ public sealed class TestClassShouldBeValidFixer : CodeFixProvider
             return;
         }
 
-        ClassDeclarationSyntax declaration = syntaxToken.Parent.AncestorsAndSelf().OfType<ClassDeclarationSyntax>().First();
+        TypeDeclarationSyntax declaration = syntaxToken.Parent.AncestorsAndSelf().OfType<TypeDeclarationSyntax>().First();
 
         // Register a code action that will invoke the fix.
         context.RegisterCodeFix(
@@ -52,7 +52,7 @@ public sealed class TestClassShouldBeValidFixer : CodeFixProvider
             diagnostic);
     }
 
-    public static async Task<Document> FixClassDeclarationAsync(Document document, ClassDeclarationSyntax classDeclaration, CancellationToken cancellationToken)
+    public static async Task<Document> FixClassDeclarationAsync(Document document, TypeDeclarationSyntax typeDeclaration, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
@@ -64,9 +64,9 @@ public sealed class TestClassShouldBeValidFixer : CodeFixProvider
 
         // Remove the static modifier if it exists
         SyntaxTokenList modifiers = SyntaxFactory.TokenList(
-            classDeclaration.Modifiers.Where(modifier => !modifier.IsKind(SyntaxKind.StaticKeyword)));
+            typeDeclaration.Modifiers.Where(modifier => !modifier.IsKind(SyntaxKind.StaticKeyword)));
 
-        if (!classDeclaration.Modifiers.Any(SyntaxKind.PublicKeyword))
+        if (!typeDeclaration.Modifiers.Any(SyntaxKind.PublicKeyword))
         {
             // Determine the visibility modifier
             SyntaxToken visibilityModifier = canDiscoverInternals
@@ -78,8 +78,8 @@ public sealed class TestClassShouldBeValidFixer : CodeFixProvider
         }
 
         // Create a new class declaration with the updated modifiers.
-        ClassDeclarationSyntax newClassDeclaration = classDeclaration.WithModifiers(modifiers);
-        editor.ReplaceNode(classDeclaration, newClassDeclaration);
+        TypeDeclarationSyntax newTypeDeclaration = typeDeclaration.WithModifiers(modifiers);
+        editor.ReplaceNode(typeDeclaration, newTypeDeclaration);
         SyntaxNode newRoot = editor.GetChangedRoot();
 
         return document.WithSyntaxRoot(newRoot);
