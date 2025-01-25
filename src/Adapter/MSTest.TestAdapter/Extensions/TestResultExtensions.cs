@@ -90,6 +90,11 @@ public static class TestResultExtensions
             testResult.Attachments.Add(attachmentSet);
         }
 
+        if (frameworkTestResult.DatarowIndex >= 0)
+        {
+            testResult.DisplayName = string.Format(CultureInfo.CurrentCulture, Resource.DataDrivenResultDisplayName, testCase.DisplayName, frameworkTestResult.DatarowIndex);
+        }
+
         return testResult;
     }
 
@@ -99,11 +104,8 @@ public static class TestResultExtensions
     /// <param name="testResults">The test framework's TestResult object array.</param>
     /// <returns>The serializable UnitTestResult object array.</returns>
     public static UnitTestResult[] ToUnitTestResults(this UTF.TestResult[] testResults)
-        => ToUnitTestResults((IReadOnlyCollection<UTF.TestResult>)testResults);
-
-    internal static UnitTestResult[] ToUnitTestResults(this IReadOnlyCollection<UTF.TestResult> testResults)
     {
-        var unitTestResults = new UnitTestResult[testResults.Count];
+        var unitTestResults = new UnitTestResult[testResults.Length];
 
         int i = 0;
         foreach (UTF.TestResult testResult in testResults)

@@ -281,11 +281,6 @@ public class TestExecutionManager
 
             var testResult = unitTestResult.ToTestResult(test, startTime, endTime, _environment.MachineName, MSTestSettings.CurrentSettings);
 
-            if (unitTestResult.DatarowIndex >= 0)
-            {
-                testResult.DisplayName = string.Format(CultureInfo.CurrentCulture, Resource.DataDrivenResultDisplayName, test.DisplayName, unitTestResult.DatarowIndex);
-            }
-
             testExecutionRecorder.RecordEnd(test, testResult.Outcome);
 
             if (testResult.Outcome == TestOutcome.Failed)
