@@ -17,9 +17,6 @@
     <MicrosoftPlaywrightVersion>1.49.0</MicrosoftPlaywrightVersion>
     <MicrosoftTestingExtensionsFakesVersion>17.12.0</MicrosoftTestingExtensionsFakesVersion>
     <MicrosoftTestingInternalFrameworkVersion>1.5.0-preview.24577.4</MicrosoftTestingInternalFrameworkVersion>
-    <!-- CVE-2017-0247 -->
-    <SystemNetWebSocketsClientVersion>4.3.1</SystemNetWebSocketsClientVersion>
-    <SystemTextRegularExpressionsVersion>4.3.1</SystemTextRegularExpressionsVersion>
     <SystemThreadingTasksExtensionsVersion>4.5.4</SystemThreadingTasksExtensionsVersion>
   </PropertyGroup>
   <PropertyGroup Label="Test dependencies">
