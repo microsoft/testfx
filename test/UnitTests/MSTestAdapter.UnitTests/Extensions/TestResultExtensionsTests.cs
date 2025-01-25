@@ -5,8 +5,9 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 
 using TestFramework.ForTestingMSTest;
 
-using AdapterTestOutcome = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestOutcome;
 using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
+using VSTestTestOutcome = Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome;
+using VSTestTestResultMessage = Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResultMessage;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions;
 
@@ -14,148 +15,140 @@ public class TestResultExtensionsTests : TestContainer
 {
     public void ToUnitTestResultsForTestResultWithExceptionConvertsToUnitTestResultsWithFailureOutcome()
     {
-        UTF.TestResult[] results = [new UTF.TestResult() { TestFailureException = new Exception() }];
-        MSTest.TestAdapter.ObjectModel.UnitTestResult[] convertedResults = results.ToUnitTestResults();
+        var result = new UTF.TestResult() { TestFailureException = new Exception() };
+        var convertedResult = result.ToTestResult(new(), default, default, string.Empty, new());
 
-        Verify(convertedResults[0].Outcome == AdapterTestOutcome.Failed);
+        Verify(convertedResult.Outcome == VSTestTestOutcome.Failed);
     }
 
     public void ToUnitTestResultsForTestResultWithExceptionConvertsToUnitTestResultsWithInconclusiveOutcome()
     {
-        UTF.TestResult[] results = [new UTF.TestResult() { TestFailureException = new Exception(), Outcome = UTF.UnitTestOutcome.Inconclusive }];
-        MSTest.TestAdapter.ObjectModel.UnitTestResult[] convertedResults = results.ToUnitTestResults();
+        var result = new UTF.TestResult() { TestFailureException = new Exception(), Outcome = UTF.UnitTestOutcome.Inconclusive };
+        var convertedResult = result.ToTestResult(new(), default, default, string.Empty, new());
 
-        Verify(convertedResults[0].Outcome == AdapterTestOutcome.Inconclusive);
+        Verify(convertedResult.Outcome == VSTestTestOutcome.Skipped);
     }
 
     public void ToUnitTestResultsForTestResultShouldSetLoggingDataForConvertedUnitTestResults()
     {
         var timespan = default(TimeSpan);
-        UTF.TestResult[] results =
-        [
-            new UTF.TestResult()
-            {
-                DebugTrace = "debugTrace",
-                DisplayName = "displayName",
-                Duration = timespan,
-                LogOutput = "logOutput",
-                LogError = "logError",
-                DatarowIndex = 1,
-            }
-        ];
-        MSTest.TestAdapter.ObjectModel.UnitTestResult[] convertedResults = results.ToUnitTestResults();
+        var result = new UTF.TestResult()
+        {
+            DebugTrace = "debugTrace",
+            DisplayName = "displayName",
+            Duration = timespan,
+            LogOutput = "logOutput",
+            LogError = "logError",
+            DatarowIndex = 1,
+        };
 
-        Verify(convertedResults[0].StandardOut == "logOutput");
-        Verify(convertedResults[0].StandardError == "logError");
-        Verify(convertedResults[0].DisplayName == "displayName");
-        Verify(convertedResults[0].DebugTrace == "debugTrace");
-        Verify(timespan == convertedResults[0].Duration);
-        Verify(convertedResults[0].DatarowIndex == 1);
+        var convertedResult = result.ToTestResult(new() { DisplayName = result.DisplayName }, default, default, string.Empty, new());
+        VSTestTestResultMessage[] stdOutMessages = convertedResult.Messages.Where(m => m.Category == VSTestTestResultMessage.StandardOutCategory).ToArray();
+        Verify(stdOutMessages[0].Text == "logOutput");
+        Verify(convertedResult.Messages.Single(m => m.Category == VSTestTestResultMessage.StandardErrorCategory).Text == "logError");
+        Verify(convertedResult.DisplayName == "displayName (Data Row 1)");
+        Verify(stdOutMessages[1].Text == """
+
+
+            Debug Trace:
+            debugTrace
+            """);
+        Verify(timespan == convertedResult.Duration);
     }
 
     public void ToUnitTestResultsForTestResultShouldSetStandardOut()
     {
-        UTF.TestResult[] results =
-        [
-            new UTF.TestResult()
-            {
-                LogOutput = "logOutput",
-            }
-        ];
-        MSTest.TestAdapter.ObjectModel.UnitTestResult[] convertedResults = results.ToUnitTestResults();
+        var result = new UTF.TestResult()
+        {
+            LogOutput = "logOutput",
+        };
 
-        Verify(convertedResults[0].StandardOut == "logOutput");
+        var convertedResult = result.ToTestResult(new(), default, default, string.Empty, new());
+
+        Verify(convertedResult.Messages.Single(m => m.Category == VSTestTestResultMessage.StandardOutCategory).Text == "logOutput");
     }
 
     public void ToUnitTestResultsForTestResultShouldSetStandardError()
     {
-        UTF.TestResult[] results =
-        [
-            new UTF.TestResult()
-            {
-                LogError = "logError",
-            }
-        ];
+        var result = new UTF.TestResult()
+        {
+            LogError = "logError",
+        };
 
-        MSTest.TestAdapter.ObjectModel.UnitTestResult[] convertedResults = results.ToUnitTestResults();
+        var convertedResult = result.ToTestResult(new(), default, default, string.Empty, new());
 
-        Verify(convertedResults[0].StandardError == "logError");
+        Verify(convertedResult.Messages.Single(m => m.Category == VSTestTestResultMessage.StandardErrorCategory).Text == "logError");
     }
 
     public void ToUnitTestResultsForTestResultShouldSetDebugTrace()
     {
-        UTF.TestResult[] results =
-        [
-            new UTF.TestResult()
-            {
-                DebugTrace = "debugTrace",
-            }
-        ];
+        var result = new UTF.TestResult()
+        {
+            DebugTrace = "debugTrace",
+        };
 
-        MSTest.TestAdapter.ObjectModel.UnitTestResult[] convertedResults = results.ToUnitTestResults();
+        var convertedResult = result.ToTestResult(new(), default, default, string.Empty, new());
 
-        Verify(convertedResults[0].DebugTrace == "debugTrace");
+        Verify(convertedResult.Messages.Single(m => m.Category == VSTestTestResultMessage.StandardOutCategory).Text == """
+
+
+            Debug Trace:
+            debugTrace
+            """);
     }
 
     public void ToUnitTestResultsForTestResultShouldSetTestContextMessages()
     {
-        UTF.TestResult[] results =
-        [
-            new UTF.TestResult()
-            {
-                TestContextMessages = "Context",
-            }
-        ];
+        var result = new UTF.TestResult()
+        {
+            TestContextMessages = "Context",
+        };
 
-        MSTest.TestAdapter.ObjectModel.UnitTestResult[] convertedResults = results.ToUnitTestResults();
+        var convertedResult = result.ToTestResult(new(), default, default, string.Empty, new());
 
-        Verify(convertedResults[0].TestContextMessages == "Context");
+        Verify(convertedResult.Messages.Single(m => m.Category == VSTestTestResultMessage.StandardOutCategory).Text == """
+
+
+            TestContext Messages:
+            Context
+            """);
     }
 
     public void ToUnitTestResultsForTestResultShouldSetDuration()
     {
         var timespan = default(TimeSpan);
-        UTF.TestResult[] results =
-        [
-            new UTF.TestResult()
-            {
-                Duration = timespan,
-            }
-        ];
+        var result = new UTF.TestResult()
+        {
+            Duration = timespan,
+        };
 
-        MSTest.TestAdapter.ObjectModel.UnitTestResult[] convertedResults = results.ToUnitTestResults();
+        var convertedResult = result.ToTestResult(new(), default, default, string.Empty, new());
 
-        Verify(timespan == convertedResults[0].Duration);
+        Verify(timespan == convertedResult.Duration);
     }
 
     public void ToUnitTestResultsForTestResultShouldSetDisplayName()
     {
-        UTF.TestResult[] results =
-        [
-            new UTF.TestResult()
-            {
-                DisplayName = "displayName",
-            }
-        ];
+        var result = new UTF.TestResult()
+        {
+            DisplayName = "displayName",
+        };
 
-        MSTest.TestAdapter.ObjectModel.UnitTestResult[] convertedResults = results.ToUnitTestResults();
+        var convertedResult = result.ToTestResult(new(), default, default, string.Empty, new());
 
-        Verify(convertedResults[0].DisplayName == "displayName");
+        Verify(convertedResult.DisplayName == "displayName");
     }
 
     public void ToUnitTestResultsForTestResultShouldSetDataRowIndex()
     {
-        UTF.TestResult[] results =
-        [
-            new UTF.TestResult()
-            {
-                DatarowIndex = 1,
-            }
-        ];
+        var result = new UTF.TestResult()
+        {
+            DatarowIndex = 1,
+        };
 
-        MSTest.TestAdapter.ObjectModel.UnitTestResult[] convertedResults = results.ToUnitTestResults();
+        var convertedResult = result.ToTestResult(new(), default, default, string.Empty, new());
 
-        Verify(convertedResults[0].DatarowIndex == 1);
+        Verify(convertedResult.DisplayName == " (Data Row 1)");
     }
 
     public void ToUnitTestResultsForTestResultShouldSetParentInfo()
@@ -164,27 +157,24 @@ public class TestResultExtensionsTests : TestContainer
         var parentExecId = Guid.NewGuid();
         int innerResultsCount = 5;
 
-        UTF.TestResult[] results =
-        [
-            new UTF.TestResult()
-            {
-                ExecutionId = executionId,
-                ParentExecId = parentExecId,
-                InnerResultsCount = innerResultsCount,
-            }
-        ];
+        var result = new UTF.TestResult()
+        {
+            ExecutionId = executionId,
+            ParentExecId = parentExecId,
+            InnerResultsCount = innerResultsCount,
+        };
 
-        MSTest.TestAdapter.ObjectModel.UnitTestResult[] convertedResults = results.ToUnitTestResults();
+        var convertedResult = result.ToTestResult(new(), default, default, string.Empty, new());
 
-        Verify(executionId == convertedResults[0].ExecutionId);
-        Verify(parentExecId == convertedResults[0].ParentExecId);
-        Verify(innerResultsCount == convertedResults[0].InnerResultsCount);
+        Verify(executionId == (Guid)convertedResult.GetPropertyValue(MSTest.TestAdapter.Constants.ExecutionIdProperty));
+        Verify(parentExecId == (Guid)convertedResult.GetPropertyValue(MSTest.TestAdapter.Constants.ParentExecIdProperty));
+        Verify(innerResultsCount == (int)convertedResult.GetPropertyValue(MSTest.TestAdapter.Constants.InnerResultsCountProperty));
     }
 
     public void ToUnitTestResultsShouldHaveResultsFileProvidedToTestResult()
     {
-        UTF.TestResult[] results = [new UTF.TestResult() { ResultFiles = new List<string>() { "DummyFile.txt" } }];
-        MSTest.TestAdapter.ObjectModel.UnitTestResult[] convertedResults = results.ToUnitTestResults();
-        Verify(convertedResults[0].ResultFiles[0] == "DummyFile.txt");
+        var result = new UTF.TestResult() { ResultFiles = new List<string>() { "DummyFile.txt" } };
+        var convertedResult = result.ToTestResult(new(), default, default, string.Empty, new());
+        Verify(convertedResult.Attachments[0].Attachments[0].Description == "DummyFile.txt");
     }
 }
