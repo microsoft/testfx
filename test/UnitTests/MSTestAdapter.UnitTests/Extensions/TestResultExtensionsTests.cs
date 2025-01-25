@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
 using TestFramework.ForTestingMSTest;
 
@@ -173,8 +174,12 @@ public class TestResultExtensionsTests : TestContainer
 
     public void ToUnitTestResultsShouldHaveResultsFileProvidedToTestResult()
     {
-        var result = new UTF.TestResult() { ResultFiles = new List<string>() { "DummyFile.txt" } };
+        // NOTE: TextContextImplementation.AddResultFile calls Path.GetFullPath.
+        // Otherwise, ToTestResult will crash because it calls new Uri on the result file.
+        string resultFile = Path.GetFullPath("DummyFile.txt");
+
+        var result = new UTF.TestResult() { ResultFiles = new List<string>() { resultFile } };
         var convertedResult = result.ToTestResult(new(), default, default, string.Empty, new());
-        Verify(convertedResult.Attachments[0].Attachments[0].Description == "DummyFile.txt");
+        Verify(convertedResult.Attachments[0].Attachments[0].Description == resultFile);
     }
 }
