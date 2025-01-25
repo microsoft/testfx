@@ -558,4 +558,19 @@ The type declaring these methods should also respect the following rules:
   <data name="AvoidAssertAreSameWithValueTypesDescription" xml:space="preserve">
     <value>Use 'Assert.AreEqual'/'Assert.AreNotEqual' instead of 'Assert.AreSame'/'Assert.AreNotSame' when comparing value types. Passing a value type to 'Assert.AreSame'/'Assert.AreNotSame' will be boxed (creating a new object). Because 'Assert.AreSame'/'Assert.AreNotSame' does the comparison by reference, 'Assert.AreSame' will fail when boxing happens, and 'Assert.AreNotSame' will always pass.</value>
   </data>
+  <data name="AvoidUsingAssertsInAsyncVoidContextTitle" xml:space="preserve">
+    <value>Do not assert inside 'async void' contexts</value>
+  </data>
+  <data name="AvoidUsingAssertsInAsyncVoidContextMessageFormat" xml:space="preserve">
+    <value>Do not assert inside 'async void' methods, local functions, or lambdas because they may not fail the test</value>
+  </data>
+  <data name="AvoidUsingAssertsInAsyncVoidContextDescription" xml:space="preserve">
+    <value>Do not assert inside 'async void' methods, local functions, or lambdas. Exceptions that are thrown in this context will be unhandled exceptions. When using VSTest under .NET Framework, they will be silently swallowed. When using Microsoft.Testing.Platform or VSTest under modern .NET, they may crash the process.</value>
+  </data>
+  <data name="UseConditionBaseWithTestClassTitle" xml:space="preserve">
+    <value>Use 'ConditionBaseAttribute' on test classes</value>
+  </data>
+  <data name="UseConditionBaseWithTestClassMessageFormat" xml:space="preserve">
+    <value>The attribute '{0}' which derives from 'ConditionBaseAttribute' should be used only on classes marked with `TestClassAttribute`</value>
+  </data>
 </root>

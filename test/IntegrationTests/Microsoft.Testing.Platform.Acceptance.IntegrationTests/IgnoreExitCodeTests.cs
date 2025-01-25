@@ -89,7 +89,7 @@ public class DummyTestFramework : ITestFramework, IDataProducer
         }
     }
 
-    [DynamicData(nameof(GetBuildMatrix), DynamicDataSourceType.Method)]
+    [DynamicData(nameof(GetBuildMatrix))]
     [TestMethod]
     public async Task If_IgnoreExitCode_Specified_Should_Return_Success_ExitCode(string tfm, BuildConfiguration buildConfiguration, string commandLine, string environmentVariable)
     {

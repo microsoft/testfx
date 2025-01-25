@@ -652,4 +652,66 @@ public sealed class DataRowShouldBeValidAnalyzerTests
             // /0/Test0.cs(34,6): warning MSTEST0014: The type of the generic parameter 'T' could not be inferred.
             VerifyCS.Diagnostic(DataRowShouldBeValidAnalyzer.GenericTypeArgumentNotResolvedRule).WithLocation(9).WithArguments("T"));
     }
+
+    [TestMethod]
+    public async Task WhenMethodIsGenericWithEnumArgument()
+    {
+        string code = """
+            using System;
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class TestClass
+            {
+                [TestMethod]
+                [DataRow(ConsoleColor.Red)]
+                public void TestMethod<T>(T t)
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenMethodIsNestedGeneric()
+    {
+        string code = """
+            using System;
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class TestClass
+            {
+                [TestMethod]
+                [DataRow(new int[] { 0, 1 })]
+                public void TestMethodWithGenericIntArray<T>(T[] p)
+                {
+                }
+
+                [TestMethod]
+                [DataRow(new int[] { })]
+                public void TestMethodWithGenericIntArrayEmpty<T>(T[] p)
+                {
+                }
+
+                [TestMethod]
+                [DataRow(new ConsoleColor[] { ConsoleColor.Green, ConsoleColor.Red })]
+                public void TestMethodWithGenericEnumArray<T>(T[] p)
+                {
+                }
+
+                [TestMethod]
+                [DataRow(new ConsoleColor[] { })]
+                public void TestMethodWithGenericEnumArrayEmpty<T>(T[] p)
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
 }

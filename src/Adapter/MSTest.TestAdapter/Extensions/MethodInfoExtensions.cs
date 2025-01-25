@@ -127,7 +127,7 @@ internal static class MethodInfoExtensions
         if (methodParameters is { Length: > 0 } && arguments == null)
         {
             throw new TestFailedException(
-                ObjectModel.UnitTestOutcome.Error,
+                TestTools.UnitTesting.UnitTestOutcome.Error,
                 string.Format(
                     CultureInfo.InvariantCulture,
                     Resource.CannotRunTestMethodNoDataError,
@@ -173,7 +173,7 @@ internal static class MethodInfoExtensions
             catch (Exception ex) when (ex is TargetParameterCountException or ArgumentException)
             {
                 throw new TestFailedException(
-                    ObjectModel.UnitTestOutcome.Error,
+                    TestTools.UnitTesting.UnitTestOutcome.Error,
                     string.Format(
                         CultureInfo.InvariantCulture,
                         Resource.CannotRunTestArgumentsMismatchError,
@@ -197,6 +197,42 @@ internal static class MethodInfoExtensions
         }
     }
 
+    private static void InferGenerics(Type parameterType, Type argumentType, List<(Type ParameterType, Type Substitution)> result)
+    {
+        if (parameterType.IsGenericMethodParameter())
+        {
+            // We found a generic parameter. The argument type should be the substitution for it.
+            result.Add((parameterType, argumentType));
+            return;
+        }
+
+        if (!parameterType.ContainsGenericParameters)
+        {
+            // We don't have any generics.
+            return;
+        }
+
+        if (parameterType.GetElementType() is { } parameterTypeElementType &&
+            argumentType.GetElementType() is { } argumentTypeElementType)
+        {
+            // If we have arrays, we need to infer the generic types for the element types.
+            // For example, if parameterType is `T[]` and argumentType is `string[]`, we need to infer that `T` is `string`.
+            // So, we call InferGenerics with `T` and `string`.
+            InferGenerics(parameterTypeElementType, argumentTypeElementType, result);
+            return;
+        }
+        else if (parameterType.GenericTypeArguments.Length == argumentType.GenericTypeArguments.Length)
+        {
+            for (int i = 0; i < parameterType.GenericTypeArguments.Length; i++)
+            {
+                if (parameterType.GenericTypeArguments[i].ContainsGenericParameters)
+                {
+                    InferGenerics(parameterType.GenericTypeArguments[i], argumentType.GenericTypeArguments[i], result);
+                }
+            }
+        }
+    }
+
     // Scenarios to test:
     //
     // [DataRow(null, "Hello")]
@@ -214,7 +250,7 @@ internal static class MethodInfoExtensions
             // An example where this could happen is:
             // [TestMethod]
             // public void MyTestMethod<T>() { }
-            throw new TestFailedException(ObjectModel.UnitTestOutcome.Error, string.Format(CultureInfo.InvariantCulture, Resource.GenericParameterCantBeInferredBecauseNoArguments, methodInfo.Name));
+            throw new TestFailedException(TestTools.UnitTesting.UnitTestOutcome.Error, string.Format(CultureInfo.InvariantCulture, Resource.GenericParameterCantBeInferredBecauseNoArguments, methodInfo.Name));
         }
 
         Type[] genericDefinitions = methodInfo.GetGenericArguments();
@@ -228,26 +264,30 @@ internal static class MethodInfoExtensions
         for (int i = 0; i < parameters.Length; i++)
         {
             Type parameterType = parameters[i].ParameterType;
-            if (!parameterType.IsGenericMethodParameter() || arguments[i] is null)
+            if (!parameterType.ContainsGenericParameters || arguments[i] is null)
             {
                 continue;
             }
 
-            Type substitution = arguments[i]!/*Very strange nullability warning*/.GetType();
-            int mapIndexForParameter = GetMapIndexForParameterType(parameterType, map);
-            Type? existingSubstitution = map[mapIndexForParameter].Substitution;
+            var result = new List<(Type ParameterType, Type Substitution)>();
+            InferGenerics(parameterType, arguments[i]!/*Very strange nullability warning*/.GetType(), result);
+            foreach ((Type genericParameterType, Type substitution) in result)
+            {
+                int mapIndexForParameter = GetMapIndexForParameterType(genericParameterType, map);
+                Type? existingSubstitution = map[mapIndexForParameter].Substitution;
 
-            if (existingSubstitution is null || substitution.IsAssignableFrom(existingSubstitution))
-            {
-                map[mapIndexForParameter] = (parameterType, substitution);
-            }
-            else if (existingSubstitution.IsAssignableFrom(substitution))
-            {
-                // Do nothing. We already have a good existing substitution.
-            }
-            else
-            {
-                throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, Resource.GenericParameterConflict, parameterType.Name, existingSubstitution, substitution));
+                if (existingSubstitution is null || substitution.IsAssignableFrom(existingSubstitution))
+                {
+                    map[mapIndexForParameter] = (genericParameterType, substitution);
+                }
+                else if (existingSubstitution.IsAssignableFrom(substitution))
+                {
+                    // Do nothing. We already have a good existing substitution.
+                }
+                else
+                {
+                    throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, Resource.GenericParameterConflict, parameterType.Name, existingSubstitution, substitution));
+                }
             }
         }
 
@@ -269,7 +309,7 @@ internal static class MethodInfoExtensions
         {
             // The caller catches ArgumentExceptions and will lose the original exception details.
             // We transform the exception to TestFailedException here to preserve its details.
-            throw new TestFailedException(ObjectModel.UnitTestOutcome.Error, e.TryGetMessage(), e.TryGetStackTraceInformation(), e);
+            throw new TestFailedException(TestTools.UnitTesting.UnitTestOutcome.Error, e.TryGetMessage(), e.TryGetStackTraceInformation(), e);
         }
     }
 

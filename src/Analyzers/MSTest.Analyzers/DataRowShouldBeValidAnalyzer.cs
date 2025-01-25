@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Immutable;
@@ -193,10 +193,11 @@ public sealed class DataRowShouldBeValidAnalyzer : DiagnosticAnalyzer
 
             ITypeSymbol? argumentType = constructorArguments[currentArgumentIndex].Type;
             ITypeSymbol paramType = GetParameterType(methodSymbol.Parameters, currentArgumentIndex, constructorArguments.Length);
-            if (paramType.TypeKind == TypeKind.TypeParameter)
+            if (paramType.TypeKind == TypeKind.TypeParameter ||
+                paramType is IArrayTypeSymbol { ElementType.TypeKind: TypeKind.TypeParameter })
             {
                 // That means the actual type cannot be determined. We should have issued a separate
-                // diagnostic for that in GetParameterTypeSubstitutions call above.
+                // diagnostic for that in AnalyzeGenericMethod call above.
                 continue;
             }
 
@@ -215,6 +216,44 @@ public sealed class DataRowShouldBeValidAnalyzer : DiagnosticAnalyzer
         }
     }
 
+    private static Type GetSystemType(ITypeSymbol type)
+    {
+        if (type.TypeKind == TypeKind.Enum)
+        {
+            if (((INamedTypeSymbol)type).EnumUnderlyingType is { } underlyingType)
+            {
+                type = underlyingType;
+            }
+            else
+            {
+                // If this is reachable, it will be an error scenario.
+                return typeof(int);
+            }
+        }
+
+        return type.SpecialType switch
+        {
+            SpecialType.System_Boolean => typeof(bool),
+            SpecialType.System_Byte => typeof(byte),
+            SpecialType.System_Char => typeof(char),
+            SpecialType.System_Decimal => typeof(decimal),
+            SpecialType.System_Double => typeof(double),
+            SpecialType.System_Int16 => typeof(short),
+            SpecialType.System_Int32 => typeof(int),
+            SpecialType.System_Int64 => typeof(long),
+            SpecialType.System_IntPtr => typeof(IntPtr),
+            SpecialType.System_SByte => typeof(sbyte),
+            SpecialType.System_Single => typeof(float),
+            SpecialType.System_String => typeof(string),
+            SpecialType.System_UInt16 => typeof(ushort),
+            SpecialType.System_UInt32 => typeof(uint),
+            SpecialType.System_UInt64 => typeof(ulong),
+            SpecialType.System_UIntPtr => typeof(UIntPtr),
+            // All types that can be constants should hopefully be handled above.
+            _ => throw new ArgumentException($"Unexpected SpecialType '{type.SpecialType}'."),
+        };
+    }
+
     private static void AnalyzeGenericMethod(
         SymbolAnalysisContext context,
         SyntaxNode dataRowSyntax,
@@ -229,18 +268,7 @@ public sealed class DataRowShouldBeValidAnalyzer : DiagnosticAnalyzer
         var parameterTypesSubstitutions = new Dictionary<ITypeSymbol, (ITypeSymbol Symbol, Type SystemType)>(SymbolEqualityComparer.Default);
         foreach (IParameterSymbol parameter in methodSymbol.Parameters)
         {
-            ITypeSymbol parameterType = parameter.Type;
-            if (parameterType.Kind != SymbolKind.TypeParameter)
-            {
-                continue;
-            }
-
             TypedConstant constructorArgument = constructorArguments[parameter.Ordinal];
-            if (constructorArgument.Type is null)
-            {
-                // That's an error scenario. The compiler will be complaining about something already.
-                continue;
-            }
 
             // This happens for [DataRow(null)] which ends up being resolved
             // to DataRow(string?[]? stringArrayData) constructor.
@@ -252,21 +280,39 @@ public sealed class DataRowShouldBeValidAnalyzer : DiagnosticAnalyzer
                 continue;
             }
 
-            object? argumentValue = constructorArgument.Value;
-            if (argumentValue is null)
+            if (constructorArgument.Type is null)
+            {
+                // That's an error scenario. The compiler will be complaining about something already.
+                continue;
+            }
+
+            Type? argumentType = constructorArgument.Kind == TypedConstantKind.Array
+                ? GetSystemType(((IArrayTypeSymbol)constructorArgument.Type).ElementType)
+                : constructorArgument.Value?.GetType();
+
+            if (argumentType is null)
+            {
+                continue;
+            }
+
+            ITypeSymbol parameterType = constructorArgument.Kind == TypedConstantKind.Array
+                ? ((IArrayTypeSymbol)parameter.Type).ElementType
+                : parameter.Type;
+
+            if (parameterType.Kind != SymbolKind.TypeParameter)
             {
                 continue;
             }
 
             if (parameterTypesSubstitutions.TryGetValue(parameterType, out (ITypeSymbol Symbol, Type SystemType) existingType))
             {
-                if (argumentValue.GetType().IsAssignableTo(existingType.SystemType))
+                if (argumentType.IsAssignableTo(existingType.SystemType))
                 {
                     continue;
                 }
-                else if (existingType.SystemType.IsAssignableTo(argumentValue.GetType()))
+                else if (existingType.SystemType.IsAssignableTo(argumentType))
                 {
-                    parameterTypesSubstitutions[parameterType] = (parameterType, argumentValue.GetType());
+                    parameterTypesSubstitutions[parameterType] = (parameterType, argumentType);
                 }
                 else
                 {
@@ -275,7 +321,7 @@ public sealed class DataRowShouldBeValidAnalyzer : DiagnosticAnalyzer
             }
             else
             {
-                parameterTypesSubstitutions.Add(parameterType, (constructorArgument.Type, argumentValue.GetType()));
+                parameterTypesSubstitutions.Add(parameterType, (constructorArgument.Type, argumentType));
             }
         }
 

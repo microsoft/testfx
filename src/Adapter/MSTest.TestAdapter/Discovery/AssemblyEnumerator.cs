@@ -338,7 +338,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
 
         static UnitTestElement GetFixtureTest(string classFullName, string assemblyLocation, string fixtureType, string methodName, string[] hierarchy)
         {
-            var method = new TestMethod(classFullName, methodName, hierarchy, methodName, classFullName, assemblyLocation, false, null, TestIdGenerationStrategy.FullyQualified);
+            var method = new TestMethod(classFullName, methodName, hierarchy, methodName, classFullName, assemblyLocation, null, TestIdGenerationStrategy.FullyQualified);
             return new UnitTestElement(method)
             {
                 DisplayName = $"[{fixtureType}] {methodName}",

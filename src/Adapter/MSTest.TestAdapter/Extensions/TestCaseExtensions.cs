@@ -69,7 +69,6 @@ internal static class TestCaseExtensions
     /// <returns> The converted <see cref="UnitTestElement"/>. </returns>
     internal static UnitTestElement ToUnitTestElement(this TestCase testCase, string source)
     {
-        bool isAsync = (testCase.GetPropertyValue(Constants.AsyncTestProperty) as bool?) ?? false;
         string? testClassName = testCase.GetPropertyValue(Constants.TestClassNameProperty) as string;
         string name = testCase.GetTestName(testClassName);
         var testIdGenerationStrategy = (TestIdGenerationStrategy)testCase.GetPropertyValue(
@@ -77,8 +76,8 @@ internal static class TestCaseExtensions
             (int)TestIdGenerationStrategy.FullyQualified);
 
         TestMethod testMethod = testCase.ContainsManagedMethodAndType()
-            ? new(testCase.GetManagedType(), testCase.GetManagedMethod(), testCase.GetHierarchy()!, name, testClassName!, source, isAsync, testCase.DisplayName, testIdGenerationStrategy)
-            : new(name, testClassName!, source, isAsync, testCase.DisplayName, testIdGenerationStrategy);
+            ? new(testCase.GetManagedType(), testCase.GetManagedMethod(), testCase.GetHierarchy()!, name, testClassName!, source, testCase.DisplayName, testIdGenerationStrategy)
+            : new(name, testClassName!, source, testCase.DisplayName, testIdGenerationStrategy);
         var dataType = (DynamicDataType)testCase.GetPropertyValue(Constants.TestDynamicDataTypeProperty, (int)DynamicDataType.None);
         if (dataType != DynamicDataType.None)
         {
@@ -96,7 +95,6 @@ internal static class TestCaseExtensions
 
         UnitTestElement testElement = new(testMethod)
         {
-            IsAsync = isAsync,
             TestCategory = testCase.GetPropertyValue(Constants.TestCategoryProperty) as string[],
             Priority = testCase.GetPropertyValue(Constants.PriorityProperty) as int?,
             DisplayName = testCase.DisplayName,

@@ -37,7 +37,7 @@ public class MSTestExecutorTests : TestContainer
         Verify(extensionUriString.ExtensionUri == MSTest.TestAdapter.Constants.ExecutorUriString);
     }
 
-    public void RunTestsShouldNotExecuteTestsIfTestSettingsIsGiven()
+    public async Task RunTestsShouldNotExecuteTestsIfTestSettingsIsGiven()
     {
         var testCase = new TestCase("DummyName", new Uri("executor://MSTestAdapter/v2"), Assembly.GetExecutingAssembly().Location);
         TestCase[] tests = [testCase];
@@ -53,13 +53,13 @@ public class MSTestExecutorTests : TestContainer
             """;
         _mockRunContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
         _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
-        _mstestExecutor.RunTests(tests, _mockRunContext.Object, _mockFrameworkHandle.Object);
+        await _mstestExecutor.RunTestsAsync(tests, _mockRunContext.Object, _mockFrameworkHandle.Object, null);
 
         // Test should not start if TestSettings is given.
         _mockFrameworkHandle.Verify(fh => fh.RecordStart(tests[0]), Times.Never);
     }
 
-    public void RunTestsShouldReportErrorAndBailOutOnSettingsException()
+    public async Task RunTestsShouldReportErrorAndBailOutOnSettingsException()
     {
         var testCase = new TestCase("DummyName", new Uri("executor://MSTestAdapter/v2"), Assembly.GetExecutingAssembly().Location);
         TestCase[] tests = [testCase];
@@ -77,14 +77,14 @@ public class MSTestExecutorTests : TestContainer
         _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
 
         // Act.
-        _mstestExecutor.RunTests(tests, _mockRunContext.Object, _mockFrameworkHandle.Object);
+        await _mstestExecutor.RunTestsAsync(tests, _mockRunContext.Object, _mockFrameworkHandle.Object, null);
 
         // Assert.
         _mockFrameworkHandle.Verify(fh => fh.RecordStart(tests[0]), Times.Never);
         _mockFrameworkHandle.Verify(fh => fh.SendMessage(TestPlatform.ObjectModel.Logging.TestMessageLevel.Error, "Invalid value 'Pond' specified for 'Scope'. Supported scopes are ClassLevel, MethodLevel."), Times.Once);
     }
 
-    public void RunTestsWithSourcesShouldNotExecuteTestsIfTestSettingsIsGiven()
+    public async Task RunTestsWithSourcesShouldNotExecuteTestsIfTestSettingsIsGiven()
     {
         var sources = new List<string> { Assembly.GetExecutingAssembly().Location };
         string runSettingsXml =
@@ -99,13 +99,13 @@ public class MSTestExecutorTests : TestContainer
             """;
         _mockRunContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
         _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
-        _mstestExecutor.RunTests(sources, _mockRunContext.Object, _mockFrameworkHandle.Object);
+        await _mstestExecutor.RunTestsAsync(sources, _mockRunContext.Object, _mockFrameworkHandle.Object, null);
 
         // Test should not start if TestSettings is given.
         _mockFrameworkHandle.Verify(fh => fh.RecordStart(It.IsAny<TestCase>()), Times.Never);
     }
 
-    public void RunTestsWithSourcesShouldReportErrorAndBailOutOnSettingsException()
+    public async Task RunTestsWithSourcesShouldReportErrorAndBailOutOnSettingsException()
     {
         var sources = new List<string> { Assembly.GetExecutingAssembly().Location };
         string runSettingsXml =
@@ -122,14 +122,14 @@ public class MSTestExecutorTests : TestContainer
         _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
 
         // Act.
-        _mstestExecutor.RunTests(sources, _mockRunContext.Object, _mockFrameworkHandle.Object);
+        await _mstestExecutor.RunTestsAsync(sources, _mockRunContext.Object, _mockFrameworkHandle.Object, null);
 
         // Assert.
         _mockFrameworkHandle.Verify(fh => fh.RecordStart(It.IsAny<TestCase>()), Times.Never);
         _mockFrameworkHandle.Verify(fh => fh.SendMessage(TestPlatform.ObjectModel.Logging.TestMessageLevel.Error, "Invalid value 'Pond' specified for 'Scope'. Supported scopes are ClassLevel, MethodLevel."), Times.Once);
     }
 
-    public void RunTestsWithSourcesShouldSetDefaultCollectSourceInformationAsTrue()
+    public async Task RunTestsWithSourcesShouldSetDefaultCollectSourceInformationAsTrue()
     {
         var sources = new List<string> { Assembly.GetExecutingAssembly().Location };
         string runSettingsXml =
@@ -139,12 +139,12 @@ public class MSTestExecutorTests : TestContainer
             """;
         _mockRunContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
         _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
-        _mstestExecutor.RunTests(sources, _mockRunContext.Object, _mockFrameworkHandle.Object);
+        await _mstestExecutor.RunTestsAsync(sources, _mockRunContext.Object, _mockFrameworkHandle.Object, null);
 
         Verify(MSTestSettings.RunConfigurationSettings.CollectSourceInformation);
     }
 
-    public void RunTestsWithSourcesShouldSetCollectSourceInformationAsFalseIfSpecifiedInRunSettings()
+    public async Task RunTestsWithSourcesShouldSetCollectSourceInformationAsFalseIfSpecifiedInRunSettings()
     {
         var sources = new List<string> { Assembly.GetExecutingAssembly().Location };
         string runSettingsXml =
@@ -157,7 +157,7 @@ public class MSTestExecutorTests : TestContainer
             """;
         _mockRunContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
         _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
-        _mstestExecutor.RunTests(sources, _mockRunContext.Object, _mockFrameworkHandle.Object);
+        await _mstestExecutor.RunTestsAsync(sources, _mockRunContext.Object, _mockFrameworkHandle.Object, null);
 
         Verify(!MSTestSettings.RunConfigurationSettings.CollectSourceInformation);
     }

@@ -10,7 +10,6 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interfa
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.TestTools.UnitTesting.Internal;
 
-using UnitTestOutcome = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestOutcome;
 using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
@@ -62,7 +61,7 @@ internal sealed class TestMethodRunner
     /// Executes a test.
     /// </summary>
     /// <returns>The test results.</returns>
-    internal UnitTestResult[] Execute(string initializationLogs, string initializationErrorLogs, string initializationTrace, string initializationTestContextMessages)
+    internal TestResult[] Execute(string initializationLogs, string initializationErrorLogs, string initializationTrace, string initializationTestContextMessages)
     {
         bool isSTATestClass = AttributeComparer.IsDerived<STATestClassAttribute>(_testMethodInfo.Parent.ClassAttribute);
         bool isSTATestMethod = AttributeComparer.IsDerived<STATestMethodAttribute>(_testMethodInfo.TestMethodOptions.Executor);
@@ -70,7 +69,7 @@ internal sealed class TestMethodRunner
         bool isWindowsOS = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
         if (isSTARequested && isWindowsOS && Thread.CurrentThread.GetApartmentState() != ApartmentState.STA)
         {
-            UnitTestResult[] results = Array.Empty<UnitTestResult>();
+            TestResult[]? results = null;
             Thread entryPointThread = new(() => results = SafeRunTestMethod(initializationLogs, initializationErrorLogs, initializationTrace, initializationTestContextMessages))
             {
                 Name = (isSTATestClass, isSTATestMethod) switch
@@ -93,7 +92,7 @@ internal sealed class TestMethodRunner
                 PlatformServiceProvider.Instance.AdapterTraceLogger.LogError(ex.ToString());
             }
 
-            return results;
+            return results ?? Array.Empty<TestResult>();
         }
         else
         {
@@ -107,9 +106,9 @@ internal sealed class TestMethodRunner
         }
 
         // Local functions
-        UnitTestResult[] SafeRunTestMethod(string initializationLogs, string initializationErrorLogs, string initializationTrace, string initializationTestContextMessages)
+        TestResult[] SafeRunTestMethod(string initializationLogs, string initializationErrorLogs, string initializationTrace, string initializationTestContextMessages)
         {
-            UnitTestResult[]? result = null;
+            TestResult[]? result = null;
 
             try
             {
@@ -117,20 +116,21 @@ internal sealed class TestMethodRunner
             }
             catch (TestFailedException ex)
             {
-                result = [new UnitTestResult(ex)];
+                result = [new TestResult() { TestFailureException = ex }];
             }
             catch (Exception ex)
             {
                 if (result == null || result.Length == 0)
                 {
-                    result = [new()];
+                    result = [new TestResult() { Outcome = UTF.UnitTestOutcome.Error }];
                 }
 
 #pragma warning disable IDE0056 // Use index operator
-                result[result.Length - 1] = new UnitTestResult(new TestFailedException(UnitTestOutcome.Error, ex.TryGetMessage(), ex.TryGetStackTraceInformation()))
+                result[result.Length - 1] = new TestResult()
                 {
-                    StandardOut = result[result.Length - 1].StandardOut,
-                    StandardError = result[result.Length - 1].StandardError,
+                    TestFailureException = new TestFailedException(UTF.UnitTestOutcome.Error, ex.TryGetMessage(), ex.TryGetStackTraceInformation()),
+                    LogOutput = result[result.Length - 1].LogOutput,
+                    LogError = result[result.Length - 1].LogError,
                     DebugTrace = result[result.Length - 1].DebugTrace,
                     TestContextMessages = result[result.Length - 1].TestContextMessages,
                     Duration = result[result.Length - 1].Duration,
@@ -140,9 +140,9 @@ internal sealed class TestMethodRunner
             finally
             {
                 // Assembly initialize and class initialize logs are pre-pended to the first result.
-                UnitTestResult firstResult = result![0];
-                firstResult.StandardOut = initializationLogs + firstResult.StandardOut;
-                firstResult.StandardError = initializationErrorLogs + firstResult.StandardError;
+                TestResult firstResult = result![0];
+                firstResult.LogOutput = initializationLogs + firstResult.LogOutput;
+                firstResult.LogError = initializationErrorLogs + firstResult.LogError;
                 firstResult.DebugTrace = initializationTrace + firstResult.DebugTrace;
                 firstResult.TestContextMessages = initializationTestContextMessages + firstResult.TestContextMessages;
             }
@@ -155,7 +155,7 @@ internal sealed class TestMethodRunner
     /// Runs the test method.
     /// </summary>
     /// <returns>The test results.</returns>
-    internal UnitTestResult[] RunTestMethod()
+    internal TestResult[] RunTestMethod()
     {
         DebugEx.Assert(_test != null, "Test should not be null.");
         DebugEx.Assert(_testMethodInfo.TestMethod != null, "Test method should not be null.");
@@ -172,7 +172,8 @@ internal sealed class TestMethodRunner
         {
             if (_test.TestDataSourceIgnoreMessage is not null)
             {
-                return [new(UnitTestOutcome.Ignored, _test.TestDataSourceIgnoreMessage)];
+                _testContext.SetOutcome(UTF.UnitTestOutcome.Ignored);
+                return [new() { Outcome = UTF.UnitTestOutcome.Ignored, IgnoreReason = _test.TestDataSourceIgnoreMessage }];
             }
 
             object?[]? data = DataSerializationHelper.Deserialize(_test.SerializedData);
@@ -237,13 +238,13 @@ internal sealed class TestMethodRunner
             TestResult emptyResult = new()
             {
                 Outcome = aggregateOutcome,
-                TestFailureException = new TestFailedException(UnitTestOutcome.Error, Resource.UTA_NoTestResult),
+                TestFailureException = new TestFailedException(UTF.UnitTestOutcome.Error, Resource.UTA_NoTestResult),
             };
 
             results.Add(emptyResult);
         }
 
-        return results.ToUnitTestResults();
+        return results.ToArray();
     }
 
     private bool TryExecuteDataSourceBasedTests(List<TestResult> results)
@@ -434,10 +435,13 @@ internal sealed class TestMethodRunner
             [
                 new TestResult()
                 {
-                    // TODO: We need to change the exception type to more specific one.
-#pragma warning disable CA2201 // Do not raise reserved exception types
-                    TestFailureException = new Exception(string.Format(CultureInfo.CurrentCulture, Resource.UTA_ExecuteThrewException, ex.Message, ex.StackTrace), ex),
-#pragma warning restore CA2201 // Do not raise reserved exception types
+                    TestFailureException = new InvalidOperationException(
+                        string.Format(
+                            CultureInfo.CurrentCulture,
+                            Resource.UTA_ExecuteThrewException,
+                            _testMethodInfo.TestMethodOptions.Executor.GetType().FullName,
+                            ex.ToString()),
+                        ex),
                 },
             ];
         }

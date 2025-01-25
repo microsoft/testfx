@@ -10,16 +10,6 @@ internal sealed class ReflectionOperations2 : ReflectionOperations, IReflectionO
     private const BindingFlags DeclaredOnlyLookup = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly;
     private const BindingFlags Everything = BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance;
 
-    public ReflectionOperations2()
-    {
-#if NET8_0_OR_GREATER
-        if (!RuntimeFeature.IsDynamicCodeSupported)
-        {
-            throw new NotSupportedException("ReflectionOperations2 are not allowed when dynamic code is not supported, use NativeReflectionOperations instead");
-        }
-#endif
-    }
-
 #pragma warning disable IL2070 // this' argument does not satisfy 'DynamicallyAccessedMembersAttribute' in call to 'target method'.
 #pragma warning disable IL2026 // Members attributed with RequiresUnreferencedCode may break when trimming
 #pragma warning disable IL2067 // 'target parameter' argument does not satisfy 'DynamicallyAccessedMembersAttribute' in call to 'target method'.
