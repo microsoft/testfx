@@ -12,17 +12,20 @@ public enum OperatingSystems
     /// <summary>
     /// Represents the Linux operating system.
     /// </summary>
-    Linux = 1,
-
-    // TODO: This is copied from aspnetcore repo. Should we name it MacOS instead? Or OSX?
+    Linux = 1 << 0,
 
     /// <summary>
     /// Representing the MacOS operating system.
     /// </summary>
-    MacOSX = 2,
+    OSX = 1 << 1,
 
     /// <summary>
     /// Represents the Windows operating system.
     /// </summary>
-    Windows = 4,
+    Windows = 1 << 2,
+
+    /// <summary>
+    /// Represents the FreeBSD operating system.
+    /// </summary>
+    FreeBSD = 1 << 3,
 }
