@@ -249,8 +249,9 @@ Microsoft.VisualStudio.TestTools.UnitTesting.ITestDataSourceIgnoreCapability
 Microsoft.VisualStudio.TestTools.UnitTesting.ITestDataSourceIgnoreCapability.IgnoreMessage.get -> string?
 Microsoft.VisualStudio.TestTools.UnitTesting.ITestDataSourceIgnoreCapability.IgnoreMessage.set -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.OperatingSystems
+Microsoft.VisualStudio.TestTools.UnitTesting.OperatingSystems.FreeBSD = 8 -> Microsoft.VisualStudio.TestTools.UnitTesting.OperatingSystems
 Microsoft.VisualStudio.TestTools.UnitTesting.OperatingSystems.Linux = 1 -> Microsoft.VisualStudio.TestTools.UnitTesting.OperatingSystems
-Microsoft.VisualStudio.TestTools.UnitTesting.OperatingSystems.MacOSX = 2 -> Microsoft.VisualStudio.TestTools.UnitTesting.OperatingSystems
+Microsoft.VisualStudio.TestTools.UnitTesting.OperatingSystems.OSX = 2 -> Microsoft.VisualStudio.TestTools.UnitTesting.OperatingSystems
 Microsoft.VisualStudio.TestTools.UnitTesting.OperatingSystems.Windows = 4 -> Microsoft.VisualStudio.TestTools.UnitTesting.OperatingSystems
 Microsoft.VisualStudio.TestTools.UnitTesting.OSConditionAttribute
 Microsoft.VisualStudio.TestTools.UnitTesting.OSConditionAttribute.OSConditionAttribute(Microsoft.VisualStudio.TestTools.UnitTesting.ConditionMode mode, Microsoft.VisualStudio.TestTools.UnitTesting.OperatingSystems operatingSystems) -> void
