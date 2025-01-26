@@ -48,7 +48,11 @@ public sealed class OSConditionAttribute : ConditionBaseAttribute
             }
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
-                return (_operatingSystems & OperatingSystems.MacOSX) != 0;
+                return (_operatingSystems & OperatingSystems.OSX) != 0;
+            }
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.FreeBSD))
+            {
+                return (_operatingSystems & OperatingSystems.FreeBSD) != 0;
             }
 
             return false;
