@@ -12,6 +12,15 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, Inherited = false, AllowMultiple = false)]
 public sealed class OSConditionAttribute : ConditionBaseAttribute
 {
+#if !NETFRAMEWORK
+    private static readonly OSPlatform FreeBSD =
+#if NETSTANDARD
+        OSPlatform.Create("FreeBSD");
+#else
+        OSPlatform.FreeBSD;
+#endif
+#endif
+
     private readonly OperatingSystems _operatingSystems;
 
     /// <summary>
@@ -50,7 +59,7 @@ public sealed class OSConditionAttribute : ConditionBaseAttribute
             {
                 return (_operatingSystems & OperatingSystems.OSX) != 0;
             }
-            else if (RuntimeInformation.IsOSPlatform(OSPlatform.FreeBSD))
+            else if (RuntimeInformation.IsOSPlatform(FreeBSD))
             {
                 return (_operatingSystems & OperatingSystems.FreeBSD) != 0;
             }
