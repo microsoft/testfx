@@ -8,3 +8,4 @@ MSTEST0038 | Usage | Warning | AvoidAssertAreSameWithValueTypesAnalyzer, [Docume
 MSTEST0039 | Usage | Info | UseNewerAssertThrowsAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0039)
 MSTEST0040 | Usage | Warning | AvoidUsingAssertsInAsyncVoidContextAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0040)
 MSTEST0041 | Usage | Warning | UseConditionBaseWithTestClassAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0041)
+MSTEST0015 | Design | Disabled | TestMethodShouldNotBeIgnoredAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0015)
