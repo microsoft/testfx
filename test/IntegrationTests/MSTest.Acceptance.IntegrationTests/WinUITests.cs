@@ -1,18 +1,23 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Runtime.InteropServices;
+
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
 using Microsoft.Testing.Platform.Helpers;
 
 namespace MSTest.Acceptance.IntegrationTests;
 
-[TestClass]
-public sealed class WinUITests : AcceptanceTestBase<WinUITests.TestAssetFixture>
+[TestGroup]
+public sealed class WinUITests : AcceptanceTestBase
 {
     private static readonly string WinUITargetFramework = $"{TargetFrameworks.NetCurrent}-windows10.0.19041.0";
+    private readonly TestAssetFixture _testAssetFixture;
 
-    [TestMethod]
+    public WinUITests(ITestExecutionContext testExecutionContext, TestAssetFixture testAssetFixture)
+        : base(testExecutionContext) => _testAssetFixture = testAssetFixture;
+
     public async Task SimpleWinUITestCase()
     {
         if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
@@ -21,7 +26,7 @@ public sealed class WinUITests : AcceptanceTestBase<WinUITests.TestAssetFixture>
             return;
         }
 
-        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, WinUITargetFramework);
+        var testHost = TestHost.LocateFrom(_testAssetFixture.ProjectPath, TestAssetFixture.ProjectName, WinUITargetFramework);
         TestHostResult testHostResult = await testHost.ExecuteAsync();
 
         // Assert
@@ -29,7 +34,8 @@ public sealed class WinUITests : AcceptanceTestBase<WinUITests.TestAssetFixture>
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
     }
 
-    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
+    [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
+    public sealed class TestAssetFixture(AcceptanceFixture acceptanceFixture) : TestAssetFixtureBase(acceptanceFixture.NuGetGlobalPackagesFolder)
     {
         public const string ProjectName = "WinUITests";
 

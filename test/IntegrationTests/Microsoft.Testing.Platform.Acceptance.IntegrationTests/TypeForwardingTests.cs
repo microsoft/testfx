@@ -3,8 +3,8 @@
 
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
-[TestClass]
-public class TypeForwardingTests : AcceptanceTestBase<NopAssetFixture>
+[TestGroup]
+public class TypeForwardingTests : AcceptanceTestBase
 {
     private const string AssetName = "TypeForwardingTests";
 
@@ -60,7 +60,11 @@ public class TypeForwardingTests : AcceptanceTestBase<NopAssetFixture>
         Console.WriteLine(MyClassCompiledAgainstNetStandardBinary.M().DisplayName);
         """;
 
-    [TestMethod]
+    public TypeForwardingTests(ITestExecutionContext testExecutionContext)
+        : base(testExecutionContext)
+    {
+    }
+
     public async Task SettingDisplayNameFromNetStandardLibraryDuringNetCurrentRuntimeExecutionShouldNotCrash()
     {
         string patchedSources = Sources
