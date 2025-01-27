@@ -85,6 +85,12 @@ public sealed class PublicMethodShouldBeTestMethodAnalyzer : DiagnosticAnalyzer
             return;
         }
 
+        // We consider that if the method implements an interface member, it is not a test method.
+        if (methodSymbol.IsImplementationOfAnyInterfaceMember())
+        {
+            return;
+        }
+
         ImmutableArray<AttributeData> methodAttributes = methodSymbol.GetAttributes();
         // check if the method has testMethod, testInitialize or testCleanup attribute
         bool hasValidAttribute = false;

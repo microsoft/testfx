@@ -252,4 +252,22 @@ public sealed class PublicMethodShouldBeTestMethodAnalyzerTests
             """;
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
+
+    [TestMethod]
+    public async Task WhenMethodIsPublicAndImplementsInterface_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System;
+
+            [TestClass]
+            public class MyTestClass : IDisposable
+            {
+                public void Dispose()
+                {
+                }
+            }
+            """;
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
 }
