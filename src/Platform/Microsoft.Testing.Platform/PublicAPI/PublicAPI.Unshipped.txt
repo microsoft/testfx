@@ -1,6 +1,7 @@
 #nullable enable
 Microsoft.Testing.Platform.Builder.ITestApplicationBuilder.Configuration.get -> Microsoft.Testing.Platform.Configurations.IConfigurationManager!
 Microsoft.Testing.Platform.Builder.ITestApplicationBuilder.Logging.get -> Microsoft.Testing.Platform.Logging.ILoggingManager!
+[TPEXP]const Microsoft.Testing.Platform.CommandLine.CommandLineParseResult.OptionPrefix = '-' -> char
 [TPEXP]Microsoft.Testing.Platform.CommandLine.CommandLineParseOption
 [TPEXP]Microsoft.Testing.Platform.CommandLine.CommandLineParseOption.Arguments.get -> string![]!
 [TPEXP]Microsoft.Testing.Platform.CommandLine.CommandLineParseOption.CommandLineParseOption(string! name, string![]! arguments) -> void
@@ -15,10 +16,6 @@ Microsoft.Testing.Platform.Builder.ITestApplicationBuilder.Logging.get -> Micros
 [TPEXP]Microsoft.Testing.Platform.CommandLine.CommandLineParseResult.Options.get -> System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.CommandLine.CommandLineParseOption!>!
 [TPEXP]Microsoft.Testing.Platform.CommandLine.CommandLineParseResult.ToolName.get -> string?
 [TPEXP]Microsoft.Testing.Platform.CommandLine.CommandLineParseResult.TryGetOptionArgumentList(string! optionName, out string![]? arguments) -> bool
-[TPEXP]Microsoft.Testing.Platform.CommandLine.OptionRecord
-[TPEXP]Microsoft.Testing.Platform.CommandLine.OptionRecord.Arguments.get -> string![]!
-[TPEXP]Microsoft.Testing.Platform.CommandLine.OptionRecord.Option.get -> string!
-[TPEXP]Microsoft.Testing.Platform.CommandLine.OptionRecord.OptionRecord(string! option, string![]! arguments) -> void
 [TPEXP]Microsoft.Testing.Platform.Configurations.IConfigurationManager
 [TPEXP]Microsoft.Testing.Platform.Configurations.IConfigurationManager.AddConfigurationSource(System.Func<Microsoft.Testing.Platform.Configurations.IConfigurationSource!>! source) -> void
 [TPEXP]Microsoft.Testing.Platform.Configurations.IConfigurationProvider
@@ -31,3 +28,7 @@ Microsoft.Testing.Platform.Builder.ITestApplicationBuilder.Logging.get -> Micros
 [TPEXP]Microsoft.Testing.Platform.Logging.ILoggerProvider.CreateLogger(string! categoryName) -> Microsoft.Testing.Platform.Logging.ILogger!
 [TPEXP]Microsoft.Testing.Platform.Logging.ILoggingManager
 [TPEXP]Microsoft.Testing.Platform.Logging.ILoggingManager.AddProvider(System.Func<Microsoft.Testing.Platform.Logging.LogLevel, System.IServiceProvider!, Microsoft.Testing.Platform.Logging.ILoggerProvider!>! loggerProviderFactory) -> void
+[TPEXP]override Microsoft.Testing.Platform.CommandLine.CommandLineParseResult.Equals(object? obj) -> bool
+[TPEXP]override Microsoft.Testing.Platform.CommandLine.CommandLineParseResult.GetHashCode() -> int
+[TPEXP]override Microsoft.Testing.Platform.CommandLine.CommandLineParseResult.ToString() -> string!
+[TPEXP]static Microsoft.Testing.Platform.CommandLine.CommandLineParseResult.Empty.get -> Microsoft.Testing.Platform.CommandLine.CommandLineParseResult!
