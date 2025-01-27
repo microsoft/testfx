@@ -56,7 +56,7 @@ internal sealed class TestApplicationBuilder : ITestApplicationBuilder
 
     internal IServerModeManager ServerMode => _testHostBuilder.ServerMode;
 
-    internal ITestHostOrchestratorManager TestHostControllersManager => _testHostBuilder.TestHostOrchestratorManager;
+    internal ITestHostOrchestratorManager TestHostOrchestrator => _testHostBuilder.TestHostOrchestratorManager;
 
     internal IConfigurationManager Configuration => _testHostBuilder.Configuration;
 
@@ -64,7 +64,7 @@ internal sealed class TestApplicationBuilder : ITestApplicationBuilder
 
     internal IPlatformOutputDeviceManager OutputDisplay => _testHostBuilder.OutputDisplay;
 
-    internal ITelemetryManager TelemetryManager => _testHostBuilder.Telemetry;
+    internal ITelemetryManager Telemetry => _testHostBuilder.Telemetry;
 
     internal IToolsManager Tools => _testHostBuilder.Tools;
 
