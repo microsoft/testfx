@@ -96,82 +96,6 @@ public sealed partial class Assert
 
     [InterpolatedStringHandler]
     [EditorBrowsable(EditorBrowsableState.Never)]
-    public readonly struct AssertSingleInterpolatedStringHandler<TItem>
-    {
-        private readonly StringBuilder? _builder;
-        private readonly int _actualCount;
-        private readonly TItem? _item;
-
-        public AssertSingleInterpolatedStringHandler(int literalLength, int formattedCount, IEnumerable<TItem> collection, out bool shouldAppend)
-        {
-            _actualCount = collection.Count();
-            shouldAppend = _actualCount != 1;
-            if (shouldAppend)
-            {
-                _builder = new StringBuilder(literalLength + formattedCount);
-            }
-            else
-            {
-                _item = collection.First();
-            }
-        }
-
-        internal TItem ComputeAssertion(string assertionName)
-        {
-            if (_builder is not null)
-            {
-                ThrowAssertCountFailed(assertionName, 1, _actualCount, _builder.ToString());
-            }
-
-            return _item!;
-        }
-
-        public void AppendLiteral(string value)
-            => _builder!.Append(value);
-
-        public void AppendFormatted<T>(T value)
-            => AppendFormatted(value, format: null);
-
-#if NETCOREAPP3_1_OR_GREATER
-        public void AppendFormatted(ReadOnlySpan<char> value)
-            => _builder!.Append(value);
-
-#pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
-        public void AppendFormatted(ReadOnlySpan<char> value, int alignment = 0, string? format = null)
-            => AppendFormatted(value.ToString(), alignment, format);
-#pragma warning restore RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
-#endif
-
-        // NOTE: All the overloads involving format and/or alignment are not super efficient.
-        // This code path is only for when an assert is failing, so that's not the common scenario
-        // and should be okay if not very optimized.
-        // A more efficient implementation that can be used for .NET 6 and later is to delegate the work to
-        // the BCL's StringBuilder.AppendInterpolatedStringHandler
-        public void AppendFormatted<T>(T value, string? format)
-            => _builder!.AppendFormat(null, $"{{0:{format}}}", value);
-
-        public void AppendFormatted<T>(T value, int alignment)
-            => _builder!.AppendFormat(null, $"{{0,{alignment}}}", value);
-
-        public void AppendFormatted<T>(T value, int alignment, string? format)
-            => _builder!.AppendFormat(null, $"{{0,{alignment}:{format}}}", value);
-
-        public void AppendFormatted(string? value)
-            => _builder!.Append(value);
-
-#pragma warning disable RS0026 // Do not add multiple public overloads with optional parameters
-#pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
-        public void AppendFormatted(string? value, int alignment = 0, string? format = null)
-            => _builder!.AppendFormat(null, $"{{0,{alignment}:{format}}}", value);
-
-        public void AppendFormatted(object? value, int alignment = 0, string? format = null)
-            => _builder!.AppendFormat(null, $"{{0,{alignment}:{format}}}", value);
-#pragma warning restore RS0026 // Do not add multiple public overloads with optional parameters
-#pragma warning restore RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
-    }
-
-    [InterpolatedStringHandler]
-    [EditorBrowsable(EditorBrowsableState.Never)]
     public readonly struct AssertIsNotEmptyInterpolatedStringHandler<TItem>
     {
         private readonly StringBuilder? _builder;
@@ -286,32 +210,6 @@ public sealed partial class Assert
 
     public static void IsEmpty<T>(IEnumerable<T> collection, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters)
         => HasCount("IsEmpty", 0, collection, message, parameters);
-
-    public static T ContainsSingle<T>(IEnumerable<T> collection)
-        => ContainsSingle(collection, string.Empty, null);
-
-    public static T ContainsSingle<T>(IEnumerable<T> collection, string? message)
-        => ContainsSingle(collection, message, null);
-
-#pragma warning disable IDE0060 // Remove unused parameter
-    public static T ContainsSingle<T>(IEnumerable<T> collection, [InterpolatedStringHandlerArgument(nameof(collection))] ref AssertSingleInterpolatedStringHandler<T> message)
-#pragma warning restore IDE0060 // Remove unused parameter
-        => message.ComputeAssertion("ContainsSingle");
-
-    public static T ContainsSingle<T>(IEnumerable<T> collection, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters)
-    {
-        int actualCount = collection.Count();
-        if (actualCount == 1)
-        {
-            return collection.First();
-        }
-
-        string userMessage = BuildUserMessage(message, parameters);
-        ThrowAssertCountFailed("ContainsSingle", 1, actualCount, userMessage);
-
-        // Unreachable code but compiler cannot work it out
-        return default;
-    }
 
     private static void HasCount<T>(string assertionName, int expected, IEnumerable<T> collection, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters)
     {
