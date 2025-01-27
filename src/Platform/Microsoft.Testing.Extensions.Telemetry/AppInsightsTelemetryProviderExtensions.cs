@@ -28,7 +28,7 @@ public static class AppInsightsTelemetryProviderExtensions
             throw new ArgumentException(ExtensionResources.AddAppInsightsTelemetryProviderInvalidBuilder);
         }
 
-        testApplicationBuilder.TelemetryManager.AddTelemetryCollectorProvider(services =>
+        testApplicationBuilder.Telemetry.AddTelemetryCollectorProvider(services =>
         {
             IEnvironment environment = services.GetRequiredService<IEnvironment>();
 

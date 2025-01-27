@@ -30,7 +30,7 @@ public static class RetryExtensions
         }
 
         // Net yet exposed extension points
-        ((TestHostOrchestratorManager)testApplicationBuilder.TestHostControllersManager)
+        ((TestHostOrchestratorManager)testApplicationBuilder.TestHostOrchestrator)
             .AddTestHostOrchestrator(serviceProvider => new RetryOrchestrator(serviceProvider));
         ((TestHostManager)builder.TestHost)
             .AddTestExecutionFilterFactory(serviceProvider => new RetryExecutionFilterFactory(serviceProvider));
