@@ -3,7 +3,8 @@
 
 namespace Microsoft.Testing.Platform.CommandLine;
 
-internal sealed class OptionRecord(string option, string[] arguments)
+[Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
+public sealed class OptionRecord(string option, string[] arguments)
 {
     public string Option { get; } = option;
 

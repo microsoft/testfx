@@ -3,7 +3,8 @@
 
 namespace Microsoft.Testing.Platform.CommandLine;
 
-internal sealed class CommandLineParseResult(string? toolName, IReadOnlyList<OptionRecord> options, IReadOnlyList<string> errors) : IEquatable<CommandLineParseResult>
+[Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
+public sealed class CommandLineParseResult(string? toolName, IReadOnlyList<OptionRecord> options, IReadOnlyList<string> errors) : IEquatable<CommandLineParseResult>
 {
     public const char OptionPrefix = '-';
 
@@ -97,7 +98,8 @@ internal sealed class CommandLineParseResult(string? toolName, IReadOnlyList<Opt
         return false;
     }
 
-    public override bool Equals(object? obj) => Equals(obj as CommandLineParseResult);
+    public override bool Equals(object? obj)
+        => Equals(obj as CommandLineParseResult);
 
     public override int GetHashCode()
     {
