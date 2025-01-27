@@ -4,6 +4,27 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
+## <a name="1.5.3" />[1.5.3] - 2025-01-27
+
+See full log [here](https://github.com/microsoft/testfx/compare/v1.5.2...v1.5.3)
+
+### Fixed
+
+* Fix `MissingMethodException` for init-only properties when code is compiled against netstandard2.0 and runs on net9.0 at runtime by @dependabot in [#4794](https://github.com/microsoft/testfx/pull/4794)
+
+### Artifacts
+
+* Microsoft.Testing.Extensions.CrashDump: [1.5.3](https://www.nuget.org/packages/Microsoft.Testing.Extensions.CrashDump/1.5.3)
+* Microsoft.Testing.Extensions.HangDump: [1.5.3](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HangDump/1.5.3)
+* Microsoft.Testing.Extensions.HotReload: [1.5.3](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HotReload/1.5.3)
+* Microsoft.Testing.Extensions.Retry: [1.5.3](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Retry/1.5.3)
+* Microsoft.Testing.Extensions.Telemetry: [1.5.3](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Telemetry/1.5.3)
+* Microsoft.Testing.Extensions.TrxReport: [1.5.3](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport/1.5.3)
+* Microsoft.Testing.Extensions.TrxReport.Abstractions: [1.5.3](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport.Abstractions/1.5.3)
+* Microsoft.Testing.Extensions.VSTestBridge: [1.5.3](https://www.nuget.org/packages/Microsoft.Testing.Extensions.VSTestBridge/1.5.3)
+* Microsoft.Testing.Platform: [1.5.3](https://www.nuget.org/packages/Microsoft.Testing.Platform/1.5.3)
+* Microsoft.Testing.Platform.MSBuild: [1.5.3](https://www.nuget.org/packages/Microsoft.Testing.Platform.MSBuild/1.5.3)
+
 ## <a name="1.5.2" />[1.5.2] - 2025-01-21
 
 See full log [here](https://github.com/microsoft/testfx/compare/v1.5.1...v1.5.2)
