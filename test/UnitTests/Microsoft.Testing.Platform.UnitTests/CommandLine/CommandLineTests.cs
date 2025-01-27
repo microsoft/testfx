@@ -15,7 +15,7 @@ public sealed class CommandLineTests
     // So, we introduce this wrapper to be used instead so that the test method can be made public.
     public sealed class CommandLineParseResultWrapper
     {
-        internal CommandLineParseResultWrapper(string? toolName, IReadOnlyList<OptionRecord> options, IReadOnlyList<string> errors)
+        internal CommandLineParseResultWrapper(string? toolName, IReadOnlyList<CommandLineParseOption> options, IReadOnlyList<string> errors)
             => Result = new CommandLineParseResult(toolName, options, errors);
 
         internal CommandLineParseResult Result { get; }
@@ -61,43 +61,43 @@ public sealed class CommandLineTests
 
     internal static IEnumerable<(int TestNum, string[] Args, (string RspFileName, string RspFileContent)[]? RspFiles, CommandLineParseResultWrapper ParseResult)> ParserTestsData()
     {
-        yield return (1, ["--option1", "a"], null, new CommandLineParseResultWrapper(null, new List<OptionRecord> { new("option1", ["a"]) }.ToArray(), []));
-        yield return (2, ["--option1", "a", "b"], null, new CommandLineParseResultWrapper(null, new List<OptionRecord> { new("option1", ["a", "b"]) }.ToArray(), []));
-        yield return (3, ["-option1", "a"], null, new CommandLineParseResultWrapper(null, new List<OptionRecord> { new("option1", ["a"]) }.ToArray(), []));
-        yield return (4, ["--option1", "a", "-option2", "c"], null, new CommandLineParseResultWrapper(null, new List<OptionRecord>
+        yield return (1, ["--option1", "a"], null, new CommandLineParseResultWrapper(null, new List<CommandLineParseOption> { new("option1", ["a"]) }.ToArray(), []));
+        yield return (2, ["--option1", "a", "b"], null, new CommandLineParseResultWrapper(null, new List<CommandLineParseOption> { new("option1", ["a", "b"]) }.ToArray(), []));
+        yield return (3, ["-option1", "a"], null, new CommandLineParseResultWrapper(null, new List<CommandLineParseOption> { new("option1", ["a"]) }.ToArray(), []));
+        yield return (4, ["--option1", "a", "-option2", "c"], null, new CommandLineParseResultWrapper(null, new List<CommandLineParseOption>
         {
             new("option1", ["a"]),
             new("option2", ["c"]),
         }.ToArray(), []));
-        yield return (5, ["---option1", "a"], null, new CommandLineParseResultWrapper(null, new List<OptionRecord>().ToArray(), ["Unexpected argument ---option1", "Unexpected argument a"]));
-        yield return (6, ["--option1", "'a'"], null, new CommandLineParseResultWrapper(null, new List<OptionRecord> { new("option1", ["a"]) }.ToArray(), []));
-        yield return (7, ["--option1", "'a'", "--option2", "'hello'"], null, new CommandLineParseResultWrapper(null, new List<OptionRecord>
+        yield return (5, ["---option1", "a"], null, new CommandLineParseResultWrapper(null, new List<CommandLineParseOption>().ToArray(), ["Unexpected argument ---option1", "Unexpected argument a"]));
+        yield return (6, ["--option1", "'a'"], null, new CommandLineParseResultWrapper(null, new List<CommandLineParseOption> { new("option1", ["a"]) }.ToArray(), []));
+        yield return (7, ["--option1", "'a'", "--option2", "'hello'"], null, new CommandLineParseResultWrapper(null, new List<CommandLineParseOption>
         {
             new("option1", ["a"]),
             new("option2", ["hello"]),
         }.ToArray(), []));
-        yield return (8, ["--option1", "'a'b'"], null, new CommandLineParseResultWrapper(null, new List<OptionRecord> { new("option1", []) }.ToArray(), ["Unexpected single quote in argument: 'a'b' for option '--option1'"]));
-        yield return (9, ["option1", "--option1"], null, new CommandLineParseResultWrapper("option1", new List<OptionRecord> { new("option1", []) }.ToArray(), []));
-        yield return (10, ["--option1", @"""\\"""], null, new CommandLineParseResultWrapper(null, new List<OptionRecord> { new("option1", ["\\"]) }.ToArray(), []));
-        yield return (11, ["--option1", @" "" \"" "" "], null, new CommandLineParseResultWrapper(null, new List<OptionRecord> { new("option1", [" \" "]) }.ToArray(), []));
-        yield return (12, ["--option1", @" "" \$ "" "], null, new CommandLineParseResultWrapper(null, new List<OptionRecord> { new("option1", [" $ "]) }.ToArray(), []));
-        yield return (13, ["--option1", $@" "" \{Environment.NewLine} "" "], null, new CommandLineParseResultWrapper(null, new List<OptionRecord> { new("option1", [$" {Environment.NewLine} "]) }.ToArray(), []));
-        yield return (14, ["--option1", "a"], null, new CommandLineParseResultWrapper(null, new List<OptionRecord> { new("option1", ["a"]) }.ToArray(), []));
-        yield return (15, ["--option1:a"], null, new CommandLineParseResultWrapper(null, new List<OptionRecord> { new("option1", ["a"]) }.ToArray(), []));
-        yield return (16, ["--option1=a"], null, new CommandLineParseResultWrapper(null, new List<OptionRecord> { new("option1", ["a"]) }.ToArray(), []));
-        yield return (17, ["--option1=a", "--option1=b"], null, new CommandLineParseResultWrapper(null, new List<OptionRecord> { new("option1", ["a"]), new("option1", ["b"]) }.ToArray(), []));
-        yield return (18, ["--option1=a", "--option1 b"], null, new CommandLineParseResultWrapper(null, new List<OptionRecord> { new("option1", ["a"]), new("option1", ["b"]) }.ToArray(), []));
-        yield return (19, ["--option1=a=a"], null, new CommandLineParseResultWrapper(null, new List<OptionRecord> { new("option1", ["a=a"]) }.ToArray(), []));
-        yield return (20, ["--option1=a:a"], null, new CommandLineParseResultWrapper(null, new List<OptionRecord> { new("option1", ["a:a"]) }.ToArray(), []));
-        yield return (21, ["--option1:a=a"], null, new CommandLineParseResultWrapper(null, new List<OptionRecord> { new("option1", ["a=a"]) }.ToArray(), []));
-        yield return (22, ["--option1:a:a"], null, new CommandLineParseResultWrapper(null, new List<OptionRecord> { new("option1", ["a:a"]) }.ToArray(), []));
-        yield return (23, ["--option1:a:a", "--option1:a=a"], null, new CommandLineParseResultWrapper(null, new List<OptionRecord> { new("option1", ["a:a"]), new("option1", ["a=a"]) }.ToArray(), []));
+        yield return (8, ["--option1", "'a'b'"], null, new CommandLineParseResultWrapper(null, new List<CommandLineParseOption> { new("option1", []) }.ToArray(), ["Unexpected single quote in argument: 'a'b' for option '--option1'"]));
+        yield return (9, ["option1", "--option1"], null, new CommandLineParseResultWrapper("option1", new List<CommandLineParseOption> { new("option1", []) }.ToArray(), []));
+        yield return (10, ["--option1", @"""\\"""], null, new CommandLineParseResultWrapper(null, new List<CommandLineParseOption> { new("option1", ["\\"]) }.ToArray(), []));
+        yield return (11, ["--option1", @" "" \"" "" "], null, new CommandLineParseResultWrapper(null, new List<CommandLineParseOption> { new("option1", [" \" "]) }.ToArray(), []));
+        yield return (12, ["--option1", @" "" \$ "" "], null, new CommandLineParseResultWrapper(null, new List<CommandLineParseOption> { new("option1", [" $ "]) }.ToArray(), []));
+        yield return (13, ["--option1", $@" "" \{Environment.NewLine} "" "], null, new CommandLineParseResultWrapper(null, new List<CommandLineParseOption> { new("option1", [$" {Environment.NewLine} "]) }.ToArray(), []));
+        yield return (14, ["--option1", "a"], null, new CommandLineParseResultWrapper(null, new List<CommandLineParseOption> { new("option1", ["a"]) }.ToArray(), []));
+        yield return (15, ["--option1:a"], null, new CommandLineParseResultWrapper(null, new List<CommandLineParseOption> { new("option1", ["a"]) }.ToArray(), []));
+        yield return (16, ["--option1=a"], null, new CommandLineParseResultWrapper(null, new List<CommandLineParseOption> { new("option1", ["a"]) }.ToArray(), []));
+        yield return (17, ["--option1=a", "--option1=b"], null, new CommandLineParseResultWrapper(null, new List<CommandLineParseOption> { new("option1", ["a"]), new("option1", ["b"]) }.ToArray(), []));
+        yield return (18, ["--option1=a", "--option1 b"], null, new CommandLineParseResultWrapper(null, new List<CommandLineParseOption> { new("option1", ["a"]), new("option1", ["b"]) }.ToArray(), []));
+        yield return (19, ["--option1=a=a"], null, new CommandLineParseResultWrapper(null, new List<CommandLineParseOption> { new("option1", ["a=a"]) }.ToArray(), []));
+        yield return (20, ["--option1=a:a"], null, new CommandLineParseResultWrapper(null, new List<CommandLineParseOption> { new("option1", ["a:a"]) }.ToArray(), []));
+        yield return (21, ["--option1:a=a"], null, new CommandLineParseResultWrapper(null, new List<CommandLineParseOption> { new("option1", ["a=a"]) }.ToArray(), []));
+        yield return (22, ["--option1:a:a"], null, new CommandLineParseResultWrapper(null, new List<CommandLineParseOption> { new("option1", ["a:a"]) }.ToArray(), []));
+        yield return (23, ["--option1:a:a", "--option1:a=a"], null, new CommandLineParseResultWrapper(null, new List<CommandLineParseOption> { new("option1", ["a:a"]), new("option1", ["a=a"]) }.ToArray(), []));
         yield return (24, ["--option1", "a", "@test.rsp", "--option5", "e"], [("test.rsp",
             """
             --option2 b
             --option3 c
             --option4 d
-            """)], new CommandLineParseResultWrapper(null, new List<OptionRecord>
+            """)], new CommandLineParseResultWrapper(null, new List<CommandLineParseOption>
         {
             new("option1", ["a"]),
             new("option2", ["b"]),
@@ -116,7 +116,7 @@ public sealed class CommandLineTests
             """
             --option3 c
             --option4 d
-            """)], new CommandLineParseResultWrapper(null, new List<OptionRecord>
+            """)], new CommandLineParseResultWrapper(null, new List<CommandLineParseOption>
         {
             new("option1", ["a"]),
             new("option2", ["b"]),
@@ -130,7 +130,7 @@ public sealed class CommandLineTests
             """
             --option1 a
             --option2 b
-            """)], new CommandLineParseResultWrapper(null, new List<OptionRecord>
+            """)], new CommandLineParseResultWrapper(null, new List<CommandLineParseOption>
         {
             new("option1", ["a"]),
             new("option2", ["b"]),
@@ -142,7 +142,7 @@ public sealed class CommandLineTests
             """
             --option3 c
             --option4 d
-            """)], new CommandLineParseResultWrapper(null, new List<OptionRecord>
+            """)], new CommandLineParseResultWrapper(null, new List<CommandLineParseOption>
         {
             new("option1", ["a"]),
             new("option2", ["b"]),
@@ -156,7 +156,7 @@ public sealed class CommandLineTests
             --option2 b
             --option3 c
             --option4 d
-            """)], new CommandLineParseResultWrapper(null, new List<OptionRecord>
+            """)], new CommandLineParseResultWrapper(null, new List<CommandLineParseOption>
         {
             new("option1", ["a"]),
             new("option2", ["b"]),
@@ -173,7 +173,7 @@ public sealed class CommandLineTests
             """
             --option3 c
             --option4 d
-            """)], new CommandLineParseResultWrapper(null, new List<OptionRecord>
+            """)], new CommandLineParseResultWrapper(null, new List<CommandLineParseOption>
         {
             new("option1", ["a"]),
             new("option2", ["b"]),
@@ -191,7 +191,7 @@ public sealed class CommandLineTests
             """
             --option3 c
             --option4 d
-            """)], new CommandLineParseResultWrapper(null, new List<OptionRecord>
+            """)], new CommandLineParseResultWrapper(null, new List<CommandLineParseOption>
         {
             new("option1", ["a"]),
             new("option2", ["b"]),
