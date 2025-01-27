@@ -12,7 +12,7 @@ namespace MSTest.Acceptance.IntegrationTests;
 [TestGroup]
 public sealed class WinUITests : AcceptanceTestBase
 {
-    private static readonly string WinUITargetFramework = $"{TargetFrameworks.NetCurrent}-windows10.0.19041.0";
+    private static readonly string WinUITargetFramework = $"{TargetFrameworks.NetCurrent.Arguments}-windows10.0.19041.0";
     private readonly TestAssetFixture _testAssetFixture;
 
     public WinUITests(ITestExecutionContext testExecutionContext, TestAssetFixture testAssetFixture)
