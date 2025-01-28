@@ -3,7 +3,8 @@
 
 namespace Microsoft.Testing.Platform.Logging;
 
-internal interface ILoggingManager
+[Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
+public interface ILoggingManager
 {
     void AddProvider(Func<LogLevel, IServiceProvider, ILoggerProvider> loggerProviderFactory);
 }

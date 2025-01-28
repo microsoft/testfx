@@ -262,6 +262,8 @@ dotnet_diagnostic.VSTHRD002.severity = none             # VSTHRD002 Avoid proble
 dotnet_diagnostic.VSTHRD003.severity = none             # VSTHRD003: Avoid awaiting foreign Tasks
 dotnet_diagnostic.VSTHRD105.severity = none             # VSTHRD105: Avoid method overloads that assume TaskScheduler.Current
 
+dotnet_diagnostic.TPEXP.severity = none                 # TPEXP: Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+
 #### Naming styles ####
 
 ## Naming rules (define naming rule using dotnet_naming_rule.<rule_name>.<option>)

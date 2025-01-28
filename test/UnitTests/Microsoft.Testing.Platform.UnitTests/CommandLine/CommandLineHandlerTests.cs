@@ -249,9 +249,9 @@ public sealed class CommandLineHandlerTests
     public void GetOptionValue_OptionExists_ReturnsOptionValue()
     {
         // Arrange
-        OptionRecord optionRecord = new("name", ["value1", "value2"]);
+        CommandLineParseOption option = new("name", ["value1", "value2"]);
         CommandLineHandler commandLineHandler = new(
-            new CommandLineParseResult(string.Empty, [optionRecord], []), _extensionCommandLineOptionsProviders,
+            new CommandLineParseResult(string.Empty, [option], []), _extensionCommandLineOptionsProviders,
             _systemCommandLineOptionsProviders, _testApplicationModuleInfoMock.Object, _runtimeFeatureMock.Object);
 
         // Act
