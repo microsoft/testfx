@@ -118,7 +118,8 @@
           Inputs="@(GenerateTestingPlatformEntryPointInputsCacheFilePath)" Outputs="$(_TestingPlatformEntryPointSourcePath)"
           Condition=" '$(GenerateTestingPlatformEntryPoint)' == 'True' " >
     <TestingPlatformEntryPointTask TestingPlatformEntryPointSourcePath="$(_TestingPlatformEntryPointSourcePath)"
-                                  Language="$(Language)" >
+                                   RootNamespace="$(RootNamespace)"
+                                   Language="$(Language)" >
       <Output TaskParameter="TestingPlatformEntryPointGeneratedFilePath" PropertyName ="TestingPlatformEntryPointGeneratedFilePath" />
     </TestingPlatformEntryPointTask>
     <ItemGroup>
@@ -195,6 +196,7 @@
           Condition=" '$(GenerateSelfRegisteredExtensions)' == 'True' " >
     <TestingPlatformAutoRegisteredExtensions AutoRegisteredExtensionsSourcePath="$(_AutoRegisteredExtensionsSourcePath)"
                                              AutoRegisteredExtensionsBuilderHook="@(TestingPlatformBuilderHook)"
+                                             RootNamespace="$(RootNamespace)"
                                              Language="$(Language)" >
       <Output TaskParameter="AutoRegisteredExtensionsGeneratedFilePath" PropertyName ="AutoRegisteredExtensionsGeneratedFilePath" />
     </TestingPlatformAutoRegisteredExtensions>

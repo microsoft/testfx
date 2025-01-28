@@ -41,6 +41,9 @@ public sealed class TestingPlatformAutoRegisteredExtensions : Build.Utilities.Ta
     [Required]
     public ITaskItem[] AutoRegisteredExtensionsBuilderHook { get; set; }
 
+    [Required]
+    public string? RootNamespace { get; set; }
+
     [Output]
     public ITaskItem AutoRegisteredExtensionsGeneratedFilePath { get; set; }
 
@@ -103,7 +106,7 @@ static Contoso.BuilderHook.AddExtensions(Microsoft.Testing.Platform.Builder.Test
             }
             else
             {
-                GenerateCode(Language.ItemSpec, taskItems, AutoRegisteredExtensionsSourcePath, _fileSystem, Log);
+                GenerateCode(Language.ItemSpec, RootNamespace ?? "Microsoft.Testing.Platform.MSBuild", taskItems, AutoRegisteredExtensionsSourcePath, _fileSystem, Log);
                 AutoRegisteredExtensionsGeneratedFilePath = AutoRegisteredExtensionsSourcePath;
             }
         }
@@ -134,7 +137,7 @@ static Contoso.BuilderHook.AddExtensions(Microsoft.Testing.Platform.Builder.Test
         return result.ToArray();
     }
 
-    private static void GenerateCode(string language, ITaskItem[] taskItems, ITaskItem testingPlatformEntryPointSourcePath, IFileSystem fileSystem, TaskLoggingHelper taskLoggingHelper)
+    private static void GenerateCode(string language, string rootNamespace, ITaskItem[] taskItems, ITaskItem testingPlatformEntryPointSourcePath, IFileSystem fileSystem, TaskLoggingHelper taskLoggingHelper)
     {
         StringBuilder builder = new();
 
@@ -153,12 +156,12 @@ static Contoso.BuilderHook.AddExtensions(Microsoft.Testing.Platform.Builder.Test
             }
         }
 
-        string entryPointSource = GetSourceCode(language, builder.ToString());
+        string entryPointSource = GetSourceCode(language, rootNamespace, builder.ToString());
         taskLoggingHelper.LogMessage(MessageImportance.Normal, $"AutoRegisteredExtensions source:\n'{entryPointSource}'");
         fileSystem.WriteAllText(testingPlatformEntryPointSourcePath.ItemSpec, entryPointSource);
     }
 
-    private static string GetSourceCode(string language, string extensionsFragments)
+    private static string GetSourceCode(string language, string rootNamespace, string extensionsFragments)
     {
         if (language == CSharpLanguageSymbol)
         {
@@ -169,12 +172,15 @@ static Contoso.BuilderHook.AddExtensions(Microsoft.Testing.Platform.Builder.Test
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-[global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
-internal static class SelfRegisteredExtensions
+namespace {{rootNamespace}}
 {
-    public static void AddSelfRegisteredExtensions(this global::Microsoft.Testing.Platform.Builder.ITestApplicationBuilder builder, string[] args)
+    [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
+    internal static class SelfRegisteredExtensions
     {
-        {{extensionsFragments}}
+        public static void AddSelfRegisteredExtensions(this global::Microsoft.Testing.Platform.Builder.ITestApplicationBuilder builder, string[] args)
+        {
+            {{extensionsFragments}}
+        }
     }
 }
 """;
@@ -188,15 +194,17 @@ internal static class SelfRegisteredExtensions
 ' </auto-generated>
 '------------------------------------------------------------------------------
 
-<System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage>
-Friend Module SelfRegisteredExtensions
+Namespace {{rootNamespace}}
+    <System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage>
+    Friend Module SelfRegisteredExtensions
 
-    <System.Runtime.CompilerServices.Extension>
-    Public Sub AddSelfRegisteredExtensions(ByVal builder As Global.Microsoft.Testing.Platform.Builder.ITestApplicationBuilder, ByVal args As Global.System.String())
-        {{extensionsFragments}}
-    End Sub
+        <System.Runtime.CompilerServices.Extension>
+        Public Sub AddSelfRegisteredExtensions(ByVal builder As Global.Microsoft.Testing.Platform.Builder.ITestApplicationBuilder, ByVal args As Global.System.String())
+            {{extensionsFragments}}
+        End Sub
 
-End Module
+    End Module
+End Namespace
 """;
         }
         else if (language == FSharpLanguageSymbol)
@@ -211,6 +219,8 @@ End Module
 namespace Microsoft.TestingPlatform.Extensions
 
 open System.Runtime.CompilerServices
+
+namespace {{rootNamespace}}
 
 [<System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage>]
 [<Extension>]
