@@ -64,7 +64,9 @@ public sealed class PublicMethodShouldBeTestMethodAnalyzer : DiagnosticAnalyzer
             return;
         }
 
-        if (!methodSymbol.HasValidTestMethodSignature(taskSymbol, valueTaskSymbol, canDiscoverInternals))
+        if (!methodSymbol.HasValidTestMethodSignature(taskSymbol, valueTaskSymbol, canDiscoverInternals)
+            || methodSymbol.IsVirtual
+            || methodSymbol.IsOverride)
         {
             return;
         }
