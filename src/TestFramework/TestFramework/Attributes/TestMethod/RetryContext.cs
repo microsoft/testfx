@@ -3,6 +3,7 @@
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
+[Experimental("MSTESTEXP", UrlFormat = "https://aka.ms/mstest/diagnostics#{0}")]
 public readonly struct RetryContext
 {
     internal RetryContext(Func<Task<TestResult[]>> executeTaskGetter)

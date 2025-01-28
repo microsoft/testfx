@@ -21,6 +21,7 @@ public abstract class RetryBaseAttribute : Attribute
     /// The other results are currently not used, but may be used in the future for tooling to show the
     /// state of the failed attempts.
     /// </returns>
+    [Experimental("MSTESTEXP", UrlFormat = "https://aka.ms/mstest/diagnostics#{0}")]
     protected internal abstract Task<RetryResult> ExecuteAsync(RetryContext retryContext);
 
     internal static bool IsAcceptableResultForRetry(TestResult[] results)
