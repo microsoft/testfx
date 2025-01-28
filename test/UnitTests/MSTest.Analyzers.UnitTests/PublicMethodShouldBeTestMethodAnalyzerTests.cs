@@ -254,7 +254,7 @@ public sealed class PublicMethodShouldBeTestMethodAnalyzerTests
     }
 
     [TestMethod]
-    public async Task WhenMethodIsPublicAndImplementsInterface_NoDiagnostic()
+    public async Task WhenMethodIsPublicAndImplementsDispose_NoDiagnostic()
     {
         string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -264,6 +264,52 @@ public sealed class PublicMethodShouldBeTestMethodAnalyzerTests
             public class MyTestClass : IDisposable
             {
                 public void Dispose()
+                {
+                }
+            }
+            """;
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenMethodIsPublicAndImplementsUserDefinedInterface_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System;
+
+            public interface IMyInterface
+            {
+                void MyMethod();
+            }
+
+            [TestClass]
+            public class MyTestClass : IMyInterface
+            {
+                public void MyMethod()
+                {
+                }
+            }
+            """;
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenMethodIsPublicAndImplementsExplicitlyUserDefinedInterface_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System;
+
+            public interface IMyInterface
+            {
+                void MyMethod();
+            }
+
+            [TestClass]
+            public class MyTestClass : IMyInterface
+            {
+                void IMyInterface.MyMethod()
                 {
                 }
             }

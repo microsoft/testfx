@@ -86,6 +86,7 @@ public sealed class PublicMethodShouldBeTestMethodAnalyzer : DiagnosticAnalyzer
         }
 
         // We consider that if the method implements an interface member, it is not a test method.
+        // Explicit implementations are not public so they are discarded earlier.
         if (methodSymbol.IsImplementationOfAnyInterfaceMember())
         {
             return;
