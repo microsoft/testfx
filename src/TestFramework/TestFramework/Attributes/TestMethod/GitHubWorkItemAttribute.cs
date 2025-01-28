@@ -7,7 +7,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// GitHubWorkItem attribute; used to specify a GitHub issue associated with this test.
 /// </summary>
 [AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
-public sealed class GitHubWorkItemAttribute : WorkItemAttribute
+public sealed partial class GitHubWorkItemAttribute : WorkItemAttribute
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="GitHubWorkItemAttribute"/> class for the GitHub WorkItem Attribute.
@@ -28,7 +28,19 @@ public sealed class GitHubWorkItemAttribute : WorkItemAttribute
     /// <param name="url">The URL to a GitHub ticket.</param>
     /// <returns>The ticket ID.</returns>
     private static int ExtractId(string url)
-        => int.TryParse(url.Substring(url.LastIndexOf('/') + 1), out int id)
-            ? id
-            : throw new ArgumentException("The URL provided is not a valid GitHub ticket URL.", nameof(url));
+    {
+#if NET7_0_OR_GREATER
+        Match match = GitHubTicketRegex().Match(url);
+#else
+        Match match = Regex.Match(url, @"https:\/\/github\.com\/.+\/.+\/(issues|pull|discussions)\/(\d+)(#.+)?");
+#endif
+        return match.Success && int.TryParse(match.Groups[2].Value, out int issueId)
+            ? issueId
+            : throw new ArgumentException(FrameworkMessages.InvalidGitHubUrl, nameof(url));
+    }
+
+#if NET7_0_OR_GREATER
+    [GeneratedRegex("https:\\/\\/github\\.com\\/.+\\/.+\\/(issues|pull|discussions)\\/(\\d+)(#.+)?")]
+    private static partial Regex GitHubTicketRegex();
+#endif
 }
