@@ -12,7 +12,7 @@ public sealed partial class GitHubWorkItemAttribute : WorkItemAttribute
     /// <summary>
     /// Initializes a new instance of the <see cref="GitHubWorkItemAttribute"/> class for the GitHub WorkItem Attribute.
     /// </summary>
-    /// <param name="url">The URL to a GitHub issue.</param>
+    /// <param name="url">The URL to a GitHub issue, pull request, or discussion.</param>
     public GitHubWorkItemAttribute(string url)
         : base(ExtractId(url))
         => Url = url;
