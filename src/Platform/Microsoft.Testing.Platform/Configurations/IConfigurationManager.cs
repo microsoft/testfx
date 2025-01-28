@@ -3,7 +3,8 @@
 
 namespace Microsoft.Testing.Platform.Configurations;
 
-internal interface IConfigurationManager
+[Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
+public interface IConfigurationManager
 {
     void AddConfigurationSource(Func<IConfigurationSource> source);
 }

@@ -6,7 +6,8 @@ using Microsoft.Testing.Platform.Extensions;
 
 namespace Microsoft.Testing.Platform.Configurations;
 
-internal interface IConfigurationSource : IExtension
+[Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
+public interface IConfigurationSource : IExtension
 {
     int Order { get; }
 
