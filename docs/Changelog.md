@@ -4,6 +4,27 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
+## <a name="3.7.3" />[3.7.3] - 2025-01-27
+
+See full log [here](https://github.com/microsoft/testfx/compare/v3.7.2...v3.7.3)
+
+### Fixed
+
+* Fix `Could not load type 'System.Threading.Lock'` error for WinUI when using net9.0 by @dependabot in [#4794](https://github.com/microsoft/testfx/pull/4794)
+
+### Artifacts
+
+* MSTest: [3.7.3](https://www.nuget.org/packages/MSTest/3.7.3)
+* MSTest.TestFramework: [3.7.3](https://www.nuget.org/packages/MSTest.TestFramework/3.7.3)
+* MSTest.TestAdapter: [3.7.3](https://www.nuget.org/packages/MSTest.TestAdapter/3.7.3)
+* MSTest.Analyzers: [3.7.3](https://www.nuget.org/packages/MSTest.Analyzers/3.7.3)
+* MSTest.Sdk: [3.7.3](https://www.nuget.org/packages/MSTest.Sdk/3.7.3)
+* Microsoft.Testing.Extensions.CrashDump: [1.5.3](https://www.nuget.org/packages/Microsoft.Testing.Extensions.CrashDump/1.5.3)
+* Microsoft.Testing.Extensions.HangDump: [1.5.3](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HangDump/1.5.3)
+* Microsoft.Testing.Extensions.HotReload: [1.5.3](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HotReload/1.5.3)
+* Microsoft.Testing.Extensions.Retry: [1.5.3](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Retry/1.5.3)
+* Microsoft.Testing.Extensions.TrxReport: [1.5.3](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport/1.5.3)
+
 ## <a name="3.7.2" />[3.7.2] - 2025-01-21
 
 See full log [here](https://github.com/microsoft/testfx/compare/v3.7.1...v3.7.2)
