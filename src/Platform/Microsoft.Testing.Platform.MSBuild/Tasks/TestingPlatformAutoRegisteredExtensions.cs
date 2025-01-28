@@ -106,7 +106,8 @@ static Contoso.BuilderHook.AddExtensions(Microsoft.Testing.Platform.Builder.Test
             }
             else
             {
-                GenerateCode(Language.ItemSpec, RootNamespace, taskItems, AutoRegisteredExtensionsSourcePath, _fileSystem, Log);
+                string rootNamespace = string.IsNullOrEmpty(RootNamespace) ? "Microsoft.Testing.Platform.MSBuild" : RootNamespace;
+                GenerateCode(Language.ItemSpec, rootNamespace, taskItems, AutoRegisteredExtensionsSourcePath, _fileSystem, Log);
                 AutoRegisteredExtensionsGeneratedFilePath = AutoRegisteredExtensionsSourcePath;
             }
         }
