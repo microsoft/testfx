@@ -36,7 +36,7 @@ public sealed class TestingPlatformEntryPointTask : Build.Utilities.Task
     public ITaskItem Language { get; set; }
 
     [Required]
-    public string? RootNamespace { get; set; }
+    public string RootNamespace { get; set; }
 
     [Output]
     public ITaskItem TestingPlatformEntryPointGeneratedFilePath { get; set; }
@@ -57,7 +57,7 @@ public sealed class TestingPlatformEntryPointTask : Build.Utilities.Task
         }
         else
         {
-            GenerateEntryPoint(Language.ItemSpec, RootNamespace ?? "Microsoft.Testing.Platform.MSBuild", TestingPlatformEntryPointSourcePath, _fileSystem, Log);
+            GenerateEntryPoint(Language.ItemSpec, RootNamespace, TestingPlatformEntryPointSourcePath, _fileSystem, Log);
             TestingPlatformEntryPointGeneratedFilePath = TestingPlatformEntryPointSourcePath;
         }
 

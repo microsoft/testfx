@@ -42,7 +42,7 @@ public sealed class TestingPlatformAutoRegisteredExtensions : Build.Utilities.Ta
     public ITaskItem[] AutoRegisteredExtensionsBuilderHook { get; set; }
 
     [Required]
-    public string? RootNamespace { get; set; }
+    public string RootNamespace { get; set; }
 
     [Output]
     public ITaskItem AutoRegisteredExtensionsGeneratedFilePath { get; set; }
@@ -106,7 +106,7 @@ static Contoso.BuilderHook.AddExtensions(Microsoft.Testing.Platform.Builder.Test
             }
             else
             {
-                GenerateCode(Language.ItemSpec, RootNamespace ?? "Microsoft.Testing.Platform.MSBuild", taskItems, AutoRegisteredExtensionsSourcePath, _fileSystem, Log);
+                GenerateCode(Language.ItemSpec, RootNamespace, taskItems, AutoRegisteredExtensionsSourcePath, _fileSystem, Log);
                 AutoRegisteredExtensionsGeneratedFilePath = AutoRegisteredExtensionsSourcePath;
             }
         }
