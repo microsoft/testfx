@@ -128,7 +128,7 @@ Skutečnost: {2}</target>
       </trans-unit>
       <trans-unit id="HasCountFailMsg">
         <source>Expected collection of size {1}. Actual: {2}. {0}</source>
-        <target state="new">Expected collection of size {1}. Actual: {2}. {0}</target>
+        <target state="translated">Očekávala se kolekce {1} velikosti. Skutečnost: {2} {0}</target>
         <note />
       </trans-unit>
       <trans-unit id="IsInstanceOfFailMsg">
@@ -143,7 +143,7 @@ Skutečnost: {2}</target>
       </trans-unit>
       <trans-unit id="IsNotEmptyFailMsg">
         <source>Expected collection to contain any item but it is empty. {0}</source>
-        <target state="new">Expected collection to contain any item but it is empty. {0}</target>
+        <target state="translated">Očekávalo se, že kolekce bude obsahovat libovolnou položku, ale je prázdná. {0}</target>
         <note />
       </trans-unit>
       <trans-unit id="IsNotInstanceOfFailMsg">

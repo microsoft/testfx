@@ -128,7 +128,7 @@ Effettivo: {2}</target>
       </trans-unit>
       <trans-unit id="HasCountFailMsg">
         <source>Expected collection of size {1}. Actual: {2}. {0}</source>
-        <target state="new">Expected collection of size {1}. Actual: {2}. {0}</target>
+        <target state="translated">Prevista raccolta di dimensioni {1}. Effettivo: {2}. {0}</target>
         <note />
       </trans-unit>
       <trans-unit id="IsInstanceOfFailMsg">
@@ -143,7 +143,7 @@ Effettivo: {2}</target>
       </trans-unit>
       <trans-unit id="IsNotEmptyFailMsg">
         <source>Expected collection to contain any item but it is empty. {0}</source>
-        <target state="new">Expected collection to contain any item but it is empty. {0}</target>
+        <target state="translated">È previsto che la raccolta contenga qualsiasi elemento, ma è vuota. {0}</target>
         <note />
       </trans-unit>
       <trans-unit id="IsNotInstanceOfFailMsg">

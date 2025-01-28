@@ -128,7 +128,7 @@ Real: {2}</target>
       </trans-unit>
       <trans-unit id="HasCountFailMsg">
         <source>Expected collection of size {1}. Actual: {2}. {0}</source>
-        <target state="new">Expected collection of size {1}. Actual: {2}. {0}</target>
+        <target state="translated">Coleção esperada de tamanho {1}. Real: {2}. {0}</target>
         <note />
       </trans-unit>
       <trans-unit id="IsInstanceOfFailMsg">
@@ -143,7 +143,7 @@ Real: {2}</target>
       </trans-unit>
       <trans-unit id="IsNotEmptyFailMsg">
         <source>Expected collection to contain any item but it is empty. {0}</source>
-        <target state="new">Expected collection to contain any item but it is empty. {0}</target>
+        <target state="translated">A coleção esperada conter qualquer item, mas ela está vazia. {0}</target>
         <note />
       </trans-unit>
       <trans-unit id="IsNotInstanceOfFailMsg">

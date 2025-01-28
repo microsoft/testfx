@@ -128,7 +128,7 @@ Actual: {2}</source>
       </trans-unit>
       <trans-unit id="HasCountFailMsg">
         <source>Expected collection of size {1}. Actual: {2}. {0}</source>
-        <target state="new">Expected collection of size {1}. Actual: {2}. {0}</target>
+        <target state="translated">{1} 크기 컬렉션이 필요합니다. 실제: {2}. {0}</target>
         <note />
       </trans-unit>
       <trans-unit id="IsInstanceOfFailMsg">
@@ -143,7 +143,7 @@ Actual: {2}</source>
       </trans-unit>
       <trans-unit id="IsNotEmptyFailMsg">
         <source>Expected collection to contain any item but it is empty. {0}</source>
-        <target state="new">Expected collection to contain any item but it is empty. {0}</target>
+        <target state="translated">항목을 포함할 컬렉션이 필요한데 비어 있습니다. {0}</target>
         <note />
       </trans-unit>
       <trans-unit id="IsNotInstanceOfFailMsg">
