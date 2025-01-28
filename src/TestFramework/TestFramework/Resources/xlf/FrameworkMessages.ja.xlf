@@ -128,7 +128,7 @@ Actual: {2}</source>
       </trans-unit>
       <trans-unit id="HasCountFailMsg">
         <source>Expected collection of size {1}. Actual: {2}. {0}</source>
-        <target state="new">Expected collection of size {1}. Actual: {2}. {0}</target>
+        <target state="translated">サイズ {1} のコレクションが必要です。実際: {2}。{0}</target>
         <note />
       </trans-unit>
       <trans-unit id="IsInstanceOfFailMsg">
@@ -143,7 +143,7 @@ Actual: {2}</source>
       </trans-unit>
       <trans-unit id="IsNotEmptyFailMsg">
         <source>Expected collection to contain any item but it is empty. {0}</source>
-        <target state="new">Expected collection to contain any item but it is empty. {0}</target>
+        <target state="translated">コレクションには項目が含まれている必要がありますが、空です。{0}</target>
         <note />
       </trans-unit>
       <trans-unit id="IsNotInstanceOfFailMsg">
