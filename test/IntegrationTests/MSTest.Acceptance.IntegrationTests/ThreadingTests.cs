@@ -385,7 +385,7 @@ public class UnitTest1
 
         private const string ProgramFileSourceCode = """
 #file Program.cs
-
+using $ProjectName$;
 using System;
 using Microsoft.Testing.Platform.Builder;
 

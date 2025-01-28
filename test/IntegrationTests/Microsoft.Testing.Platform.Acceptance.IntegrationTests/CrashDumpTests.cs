@@ -103,12 +103,11 @@ public sealed class CrashDumpTests : AcceptanceTestBase<CrashDumpTests.TestAsset
 </Project>
 
 #file Program.cs
-
+using CrashDump;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Globalization;
-
 using Microsoft.Testing.Platform;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Builder;

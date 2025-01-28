@@ -110,6 +110,7 @@ public class TimeoutTests : AcceptanceTestBase<TimeoutTests.TestAssetFixture>
 </Project>
 
 #file Program.cs
+using TimeoutTest;
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.Extensions.TestFramework;

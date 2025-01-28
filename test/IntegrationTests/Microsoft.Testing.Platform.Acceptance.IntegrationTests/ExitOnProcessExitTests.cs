@@ -74,10 +74,10 @@ public class ExitOnProcessExitTests : AcceptanceTestBase<ExitOnProcessExitTests.
 </Project>
 
 #file Program.cs
+using ExecutionTests;
 using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.InteropServices;
-
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Capabilities;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;

@@ -211,6 +211,7 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
 </Project>
 
 #file Program.cs
+using RetryFailedTests;
 using Microsoft.Testing.Extensions;
 using Microsoft.Testing.Extensions.TrxReport.Abstractions;
 using Microsoft.Testing.Platform.Builder;

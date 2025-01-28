@@ -83,6 +83,7 @@ public class NoBannerTests : AcceptanceTestBase<NoBannerTests.TestAssetFixture>
 </Project>
 
 #file Program.cs
+using NoBannerTest;
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.Extensions.TestFramework;

@@ -95,6 +95,7 @@ public class MSBuildTests_Solution : AcceptanceTestBase<NopAssetFixture>
 </Project>
 
 #file Program.cs
+using MSBuildTests;
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.Extensions.Messages;

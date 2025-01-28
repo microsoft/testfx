@@ -76,6 +76,7 @@ public class MSBuildTests_KnownExtensionRegistration : AcceptanceTestBase<NopAss
 </Project>
 
 #file Program.cs
+using MSBuildTests;
 using System.Collections.Generic;
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Capabilities;

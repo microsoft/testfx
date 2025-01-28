@@ -662,6 +662,7 @@ Registered tools:
 </Project>
 
 #file Program.cs
+using AllExtensionsInfoTest;
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
@@ -722,6 +723,7 @@ public class DummyTestFramework : ITestFramework
 </Project>
 
 #file Program.cs
+using NoExtensionInfoTest;
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.Extensions.TestFramework;

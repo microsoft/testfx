@@ -59,6 +59,7 @@ public sealed class AbortionTests : AcceptanceTestBase<AbortionTests.TestAssetFi
 </Project>
 
 #file Program.cs
+using Abort;
 using System;
 using System.Collections.Generic;
 using System.Reflection;

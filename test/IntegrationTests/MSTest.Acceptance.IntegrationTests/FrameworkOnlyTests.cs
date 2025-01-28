@@ -44,7 +44,7 @@ public class FrameworkOnlyTests : AcceptanceTestBase<FrameworkOnlyTests.TestAsse
 </Project>
 
 #file Program.cs
-
+using FrameworkOnlyTests;
 using System;
 using System.Reflection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;

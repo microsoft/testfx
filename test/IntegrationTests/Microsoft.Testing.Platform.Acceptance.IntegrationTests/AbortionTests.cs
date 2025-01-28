@@ -53,6 +53,7 @@ public class AbortionTests : AcceptanceTestBase<AbortionTests.TestAssetFixture>
 </Project>
 
 #file Program.cs
+using Abort;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
