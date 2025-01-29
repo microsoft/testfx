@@ -68,12 +68,10 @@ namespace MSTest.Analyzers {
         ///-it should not be &apos;async void&apos;
         ///-it should not be a special method (finalizer, operator...).
         ///-it should not be generic
-        ///-it should not take any parameter
+        ///-it should either not take any parameter, or take a single parameter of type &apos;TestContext&apos;
         ///-return type should be &apos;void&apos;, &apos;Task&apos; or &apos;ValueTask&apos;
         ///
-        ///The type declaring these methods should also respect the following rules:
-        ///-The type should be a class
-        ///-The class should [rest of string was truncated]&quot;;.
+        ///The type declaring these methods should also respect the followi [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string AssemblyCleanupShouldBeValidDescription {
             get {
@@ -183,7 +181,34 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Prefer &apos;Assert.ThrowsException&apos; or &apos;Assert.ThrowsExceptionAsync&apos; over &apos;[ExpectedException]&apos; as it ensures that only the expected call throws the expected exception. The assert APIs also provide more flexibility and allow you to assert extra properties of the exeption..
+        ///   Looks up a localized string similar to Use &apos;Assert.AreEqual&apos;/&apos;Assert.AreNotEqual&apos; instead of &apos;Assert.AreSame&apos;/&apos;Assert.AreNotSame&apos; when comparing value types. Passing a value type to &apos;Assert.AreSame&apos;/&apos;Assert.AreNotSame&apos; will be boxed (creating a new object). Because &apos;Assert.AreSame&apos;/&apos;Assert.AreNotSame&apos; does the comparison by reference, &apos;Assert.AreSame&apos; will fail when boxing happens, and &apos;Assert.AreNotSame&apos; will always pass..
+        /// </summary>
+        internal static string AvoidAssertAreSameWithValueTypesDescription {
+            get {
+                return ResourceManager.GetString("AvoidAssertAreSameWithValueTypesDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Use &apos;{0}&apos; instead of &apos;{1}&apos; when comparing value types.
+        /// </summary>
+        internal static string AvoidAssertAreSameWithValueTypesMessageFormat {
+            get {
+                return ResourceManager.GetString("AvoidAssertAreSameWithValueTypesMessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Don&apos;t use &apos;Assert.AreSame&apos; or &apos;Assert.AreNotSame&apos; with value types.
+        /// </summary>
+        internal static string AvoidAssertAreSameWithValueTypesTitle {
+            get {
+                return ResourceManager.GetString("AvoidAssertAreSameWithValueTypesTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Prefer &apos;Assert.ThrowsExactly&apos; or &apos;Assert.ThrowsExactlyAsync&apos; over &apos;[ExpectedException]&apos; as it ensures that only the expected call throws the expected exception. The assert APIs also provide more flexibility and allow you to assert extra properties of the exception..
         /// </summary>
         internal static string AvoidExpectedExceptionAttributeDescription {
             get {
@@ -192,7 +217,7 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Prefer &apos;Assert.ThrowsException/ThrowsExceptionAsync&apos; over &apos;[ExpectedException]&apos;.
+        ///   Looks up a localized string similar to Prefer &apos;Assert.ThrowsExactly/ThrowsExactlyAsync&apos; over &apos;[ExpectedException]&apos;.
         /// </summary>
         internal static string AvoidExpectedExceptionAttributeMessageFormat {
             get {
@@ -210,6 +235,33 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Do not assert inside &apos;async void&apos; methods, local functions, or lambdas. Exceptions that are thrown in this context will be unhandled exceptions. When using VSTest under .NET Framework, they will be silently swallowed. When using Microsoft.Testing.Platform or VSTest under modern .NET, they may crash the process..
+        /// </summary>
+        internal static string AvoidUsingAssertsInAsyncVoidContextDescription {
+            get {
+                return ResourceManager.GetString("AvoidUsingAssertsInAsyncVoidContextDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Do not assert inside &apos;async void&apos; methods, local functions, or lambdas because they may not fail the test.
+        /// </summary>
+        internal static string AvoidUsingAssertsInAsyncVoidContextMessageFormat {
+            get {
+                return ResourceManager.GetString("AvoidUsingAssertsInAsyncVoidContextMessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Do not assert inside &apos;async void&apos; contexts.
+        /// </summary>
+        internal static string AvoidUsingAssertsInAsyncVoidContextTitle {
+            get {
+                return ResourceManager.GetString("AvoidUsingAssertsInAsyncVoidContextTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Methods marked with &apos;[ClassCleanup]&apos; should follow the following layout to be valid:
         ///-it can&apos;t be declared on a generic class without the &apos;InheritanceBehavior&apos; mode is set
         ///-it should be &apos;public&apos;
@@ -217,9 +269,9 @@ namespace MSTest.Analyzers {
         ///-it should not be &apos;async void&apos;
         ///-it should not be a special method (finalizer, operator...).
         ///-it should not be generic
-        ///-it should not take any parameter
+        ///-it should either not take any parameter, or take a single parameter of type &apos;TestContext&apos;
         ///-return type should be &apos;void&apos;, &apos;Task&apos; or &apos;ValueTask&apos;
-        ///-&apos;InheritanceBehavior.BeforeEachDerivedClass&apos; attribute parameter should be spec [rest of string was truncated]&quot;;.
+        ///-&apos;InheritanceBehavior.B [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string ClassCleanupShouldBeValidDescription {
             get {
@@ -308,6 +360,24 @@ namespace MSTest.Analyzers {
         internal static string DataRowShouldBeValidMessageFormat_ArgumentTypeMismatch {
             get {
                 return ResourceManager.GetString("DataRowShouldBeValidMessageFormat_ArgumentTypeMismatch", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Found two conflicting types for generic parameter &apos;{0}&apos;. The conflicting types are &apos;{1}&apos; and &apos;{2}&apos;..
+        /// </summary>
+        internal static string DataRowShouldBeValidMessageFormat_GenericTypeArgumentConflictingTypes {
+            get {
+                return ResourceManager.GetString("DataRowShouldBeValidMessageFormat_GenericTypeArgumentConflictingTypes", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The type of the generic parameter &apos;{0}&apos; could not be inferred..
+        /// </summary>
+        internal static string DataRowShouldBeValidMessageFormat_GenericTypeArgumentNotResolved {
+            get {
+                return ResourceManager.GetString("DataRowShouldBeValidMessageFormat_GenericTypeArgumentNotResolved", resourceCulture);
             }
         }
         
@@ -486,7 +556,7 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to &apos;[DynamicData]&apos; member &apos;{0}.{1}&apos; is a method so you should set &apos;DynamicDataSourceType.Method&apos;.
+        ///   Looks up a localized string similar to &apos;[DynamicData]&apos; member &apos;{0}.{1}&apos; is a method so you should use &apos;DynamicDataSourceType.AutoDetect&apos; or &apos;DynamicDataSourceType.Method&apos; (auto detect is the default when not specified explicitly, and is recommended).
         /// </summary>
         internal static string DynamicDataShouldBeValidMessageFormat_SourceTypeMethod {
             get {
@@ -495,7 +565,16 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to &apos;[DynamicData]&apos; member &apos;{0}.{1}&apos; is a property so you should set &apos;DynamicDataSourceType.Property&apos;.
+        ///   Looks up a localized string similar to &apos;[DynamicData]&apos; member &apos;{0}.{1}&apos; is not a property nor a method. Only properties and methods are supported..
+        /// </summary>
+        internal static string DynamicDataShouldBeValidMessageFormat_SourceTypeNotPropertyOrMethod {
+            get {
+                return ResourceManager.GetString("DynamicDataShouldBeValidMessageFormat_SourceTypeNotPropertyOrMethod", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &apos;[DynamicData]&apos; member &apos;{0}.{1}&apos; is a property so you should use &apos;DynamicDataSourceType.AutoDetect&apos; or &apos;DynamicDataSourceType.Property&apos; (auto detect is the default when not specified explicitly, and is recommended).
         /// </summary>
         internal static string DynamicDataShouldBeValidMessageFormat_SourceTypeProperty {
             get {
@@ -504,7 +583,7 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to &apos;[DynamicDta]&apos; member &apos;{0}.{1}&apos; is found more than once.
+        ///   Looks up a localized string similar to &apos;[DynamicData]&apos; member &apos;{0}.{1}&apos; is found more than once.
         /// </summary>
         internal static string DynamicDataShouldBeValidMessageFormat_TooManyMembers {
             get {
@@ -852,11 +931,11 @@ namespace MSTest.Analyzers {
         ///   Looks up a localized string similar to Test methods, methods marked with the &apos;[TestMethod]&apos; attribute, should respect the following layout to be considered valid by MSTest:
         ///- it should be &apos;public&apos; (or &apos;internal&apos; if &apos;[assembly: DiscoverInternals]&apos; attribute is set)
         ///- it should not be &apos;static&apos;
-        ///- it should not be generic
+        ///- it should may be generic as long as type parameters can be inferred and argument types are compatible
         ///- it should not be &apos;abstract&apos;
         ///- return type should be &apos;void&apos;, &apos;Task&apos; or &apos;ValueTask&apos;
         ///- it should not be &apos;async void&apos;
-        ///- it should not be a special method (finalizer, operator...)..
+        ///- it should not be a special me [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string TestMethodShouldBeValidDescription {
             get {
@@ -1000,6 +1079,24 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The attribute &apos;{0}&apos; which derives from &apos;ConditionBaseAttribute&apos; should be used only on classes marked with `TestClassAttribute`.
+        /// </summary>
+        internal static string UseConditionBaseWithTestClassMessageFormat {
+            get {
+                return ResourceManager.GetString("UseConditionBaseWithTestClassMessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Use &apos;ConditionBaseAttribute&apos; on test classes.
+        /// </summary>
+        internal static string UseConditionBaseWithTestClassTitle {
+            get {
+                return ResourceManager.GetString("UseConditionBaseWithTestClassTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to &apos;[DeploymentItem]&apos; can be specified only on test class or test method.
         /// </summary>
         internal static string UseDeploymentItemWithTestMethodOrTestClassMessageFormat {
@@ -1014,6 +1111,24 @@ namespace MSTest.Analyzers {
         internal static string UseDeploymentItemWithTestMethodOrTestClassTitle {
             get {
                 return ResourceManager.GetString("UseDeploymentItemWithTestMethodOrTestClassTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Use &apos;Assert.ThrowsExactly&apos; instead of &apos;Assert.ThrowsException&apos;.
+        /// </summary>
+        internal static string UseNewerAssertThrowsMessageFormat {
+            get {
+                return ResourceManager.GetString("UseNewerAssertThrowsMessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Use newer methods to assert exceptions.
+        /// </summary>
+        internal static string UseNewerAssertThrowsTitle {
+            get {
+                return ResourceManager.GetString("UseNewerAssertThrowsTitle", resourceCulture);
             }
         }
         

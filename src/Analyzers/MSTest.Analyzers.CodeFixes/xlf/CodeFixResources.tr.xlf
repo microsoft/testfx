@@ -2,9 +2,24 @@
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
   <file datatype="xml" source-language="en" target-language="tr" original="../CodeFixResources.resx">
     <body>
+      <trans-unit id="AddTestClassFix">
+        <source>Add '[TestClass]'</source>
+        <target state="new">Add '[TestClass]'</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AddTestMethodAttributeFix">
         <source>Add '[TestMethod]'</source>
         <target state="translated">'[TestMethod]' ekle</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AssertionArgsShouldAvoidConditionalAccessFix">
+        <source>Move conditional access in assertion to separate 'Assert.IsNotNull' check</source>
+        <target state="translated">Onaylamadaki koşullu erişimi 'Assert.IsNotNull' denetimine ayırmaya taşı</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidAssertAreSameWithValueTypesFix">
+        <source>Use '{0}'</source>
+        <target state="translated">'{0}' kullan</target>
         <note />
       </trans-unit>
       <trans-unit id="ChangeMethodAccessibilityToPrivateFix">
@@ -25,11 +40,6 @@
       <trans-unit id="AssemblyInitializeShouldBeValidCodeFix">
         <source>Fix signature</source>
         <target state="translated">İmzayı düzelt</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="PublicTypeShouldBeTestClassFix">
-        <source>Add '[TestClass]'</source>
-        <target state="translated">'[TestClass]' Ekle</target>
         <note />
       </trans-unit>
       <trans-unit id="ReplaceWithConstructorFix">
@@ -80,6 +90,16 @@
       <trans-unit id="UseAttributeOnTestMethodFix">
         <source>Add '[TestMethod]'</source>
         <target state="translated">'[TestMethod]' ekle</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseNewerAssertThrows">
+        <source>Use '{0}'</source>
+        <target state="translated">'{0}' kullan</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseProperAssertMethodsFix">
+        <source>Use '{0}'</source>
+        <target state="translated">'{0}' kullan</target>
         <note />
       </trans-unit>
     </body>

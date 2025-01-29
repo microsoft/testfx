@@ -10,7 +10,7 @@
 -it should not be 'async void'
 -it should not be a special method (finalizer, operator...).
 -it should not be generic
--it should not take any parameter
+-it should either not take any parameter, or take a single parameter of type 'TestContext'
 -return type should be 'void', 'Task' or 'ValueTask'
 
 The type declaring these methods should also respect the following rules:
@@ -26,14 +26,14 @@ The type declaring these methods should also respect the following rules:
 – il ne doit pas être « async void »
 – Il ne doit pas s’agir d’une méthode spéciale (finaliseur, opérateur...).
 – il ne doit pas être générique
-– il ne doit accepter aucun paramètre
+- il ne doit pas prendre de paramètre ou prendre un seul paramètre de type 'TestContext'
 - le type de retour doit être « vide », « Task » ou « ValueTask »
 
 Le type déclarant ces méthodes doit également respecter les règles suivantes :
 Le type doit être une classe
 -La classe doit être « public » ou « internal » (si le projet de test utilise l’attribut ’[DiscoverInternals]’)
 -La classe ne doit pas être» ’static »
--La classe doit être marquée par « [TestClass] » (ou un attribut dérivé).
+-La classe doit être marquée par « [TestClass] » (ou un attribut dérivé)
 -la classe ne doit pas être générique.</target>
         <note />
       </trans-unit>
@@ -117,19 +117,49 @@ Le type doit être une classe
         <target state="translated">Les arguments d’assertion doivent être passés dans l’ordre approprié</target>
         <note />
       </trans-unit>
+      <trans-unit id="AvoidAssertAreSameWithValueTypesDescription">
+        <source>Use 'Assert.AreEqual'/'Assert.AreNotEqual' instead of 'Assert.AreSame'/'Assert.AreNotSame' when comparing value types. Passing a value type to 'Assert.AreSame'/'Assert.AreNotSame' will be boxed (creating a new object). Because 'Assert.AreSame'/'Assert.AreNotSame' does the comparison by reference, 'Assert.AreSame' will fail when boxing happens, and 'Assert.AreNotSame' will always pass.</source>
+        <target state="translated">Utilisez 'Assert.AreEqual'/'Assert.AreNotEqual' à la place de 'Assert.AreSame'/'Assert.AreNotSame' lors de la comparaison des types valeur. Le passage d’un type valeur à 'Assert.AreSame'/'Assert.AreNotSame' est encadré (création d’un objet). Dans la mesure où 'Assert.AreSame'/'Assert.AreNotSame' effectue la comparaison par référence, 'Assert.AreSame' échoue quand le boxing se produit et 'Assert.AreNotSame' passe toujours.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidAssertAreSameWithValueTypesMessageFormat">
+        <source>Use '{0}' instead of '{1}' when comparing value types</source>
+        <target state="translated">Utiliser '{0}' au lieu de '{1}' lors de la comparaison de types valeur</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidAssertAreSameWithValueTypesTitle">
+        <source>Don't use 'Assert.AreSame' or 'Assert.AreNotSame' with value types</source>
+        <target state="translated">N’utilisez pas 'Assert.AreSame' ou 'Assert.AreNotSame' avec des types valeur</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AvoidExpectedExceptionAttributeDescription">
-        <source>Prefer 'Assert.ThrowsException' or 'Assert.ThrowsExceptionAsync' over '[ExpectedException]' as it ensures that only the expected call throws the expected exception. The assert APIs also provide more flexibility and allow you to assert extra properties of the exeption.</source>
-        <target state="translated">Préférez « Assert.ThrowsException » ou « Assert.ThrowsExceptionAsync » à « [ExpectedException] », car cela assure que seul l’appel attendu lève l’exception attendue. Les API d’assertion offrent également plus de flexibilité et vous permettent de déclarer des propriétés supplémentaires de l’exception.</target>
+        <source>Prefer 'Assert.ThrowsExactly' or 'Assert.ThrowsExactlyAsync' over '[ExpectedException]' as it ensures that only the expected call throws the expected exception. The assert APIs also provide more flexibility and allow you to assert extra properties of the exception.</source>
+        <target state="translated">Préférez « Assert.ThrowsExactly » ou « Assert.ThrowsExactlyAsync » à « [ExpectedException] », car il garantit que seul l’appel attendu lève l’exception attendue. Les API d’assertion offrent également plus de flexibilité et vous permettent de déclarer des propriétés supplémentaires de l’exception.</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidExpectedExceptionAttributeMessageFormat">
-        <source>Prefer 'Assert.ThrowsException/ThrowsExceptionAsync' over '[ExpectedException]'</source>
-        <target state="translated">Préférer « Assert.ThrowsException/ThrowsExceptionAsync » à « [ExpectedException] »</target>
+        <source>Prefer 'Assert.ThrowsExactly/ThrowsExactlyAsync' over '[ExpectedException]'</source>
+        <target state="translated">Préférez « Assert.ThrowsExactly/ThrowsExactlyAsync » à « [ExpectedException] »</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidExpectedExceptionAttributeTitle">
         <source>Avoid '[ExpectedException]'</source>
         <target state="translated">Éviter « [ExpectedException] »</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidUsingAssertsInAsyncVoidContextDescription">
+        <source>Do not assert inside 'async void' methods, local functions, or lambdas. Exceptions that are thrown in this context will be unhandled exceptions. When using VSTest under .NET Framework, they will be silently swallowed. When using Microsoft.Testing.Platform or VSTest under modern .NET, they may crash the process.</source>
+        <target state="translated">N’effectuez pas d’assertion dans les méthodes 'async void', les fonctions locales ou les expressions lambda. Les exceptions levées dans ce contexte seront des exceptions non gérées. Lors de l’utilisation de VSTest sous .NET Framework, ils sont silencieusement coupés. Quand vous utilisez Microsoft.Testing.Platform ou VSTest sous .NET moderne, ils peuvent bloquer le processus.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidUsingAssertsInAsyncVoidContextMessageFormat">
+        <source>Do not assert inside 'async void' methods, local functions, or lambdas because they may not fail the test</source>
+        <target state="translated">Ne pas effectuer d’assertion dans les méthodes 'async void', les fonctions locales ou les expressions lambda, car elles ne peuvent pas faire échouer le test</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidUsingAssertsInAsyncVoidContextTitle">
+        <source>Do not assert inside 'async void' contexts</source>
+        <target state="translated">Ne pas déclarer dans les contextes 'async void'</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassCleanupShouldBeValidDescription">
@@ -140,7 +170,7 @@ Le type doit être une classe
 -it should not be 'async void'
 -it should not be a special method (finalizer, operator...).
 -it should not be generic
--it should not take any parameter
+-it should either not take any parameter, or take a single parameter of type 'TestContext'
 -return type should be 'void', 'Task' or 'ValueTask'
 -'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'
 -'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should not be specified if the class is 'sealed'
@@ -152,13 +182,13 @@ The type declaring these methods should also respect the following rules:
 -If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</source>
         <target state="translated">Les méthodes marquées par « [ClassCleanup] » doivent respecter le schéma suivant pour être valides : 
--il ne peut pas être déclarée dans une classe générique si le mode ’InheritanceBehavior’ n’est pas activé.
+-il ne peut pas être déclarée dans une classe générique si le mode ’InheritanceBehavior’ n’est pas activé
 – il doit être « public »
 – il doit être « static »
 – il ne doit pas être « async void »
 – Il ne doit pas s’agir d’une méthode spéciale (finaliseur, opérateur...).
 – il ne doit pas être générique
-– il ne doit accepter aucun paramètre
+- il ne doit pas prendre de paramètre ou prendre un seul paramètre de type 'TestContext'
 - le type de retour doit être « vide », « Task » ou « ValueTask »
 - « InheritanceBehavior.BeforeEachDerivedClass » doit être spécifié si la classe est « abstract »
 -Le paramètre d’attribut « InheritanceBehavior.BeforeEachDerivedClass » ne doit pas être spécifié si la classe est « scellée »
@@ -167,7 +197,7 @@ Le type déclarant ces méthodes doit également respecter les règles suivantes
 Le type doit être une classe
 -La classe doit être « public » ou « internal » (si le projet de test utilise l’attribut ’[DiscoverInternals]’)
 -La classe ne doit pas être « static »
--Si la classe est « sealed », elle doit être marquée avec « [TestClass] » (ou un attribut dérivé).
+-Si la classe est « sealed », elle doit être marquée avec « [TestClass] » (ou un attribut dérivé)
 -la classe ne doit pas être générique.</target>
         <note />
       </trans-unit>
@@ -249,6 +279,16 @@ Le type doit être une classe
       <trans-unit id="DataRowShouldBeValidMessageFormat_ArgumentTypeMismatch">
         <source>DataRow argument type should match method parameter type. Mismatches occur at indices: {0}</source>
         <target state="translated">Le type d’argument DataRow doit correspondre au type de paramètre de la méthode. Des incompatibilités se produisent aux index :{0}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DataRowShouldBeValidMessageFormat_GenericTypeArgumentConflictingTypes">
+        <source>Found two conflicting types for generic parameter '{0}'. The conflicting types are '{1}' and '{2}'.</source>
+        <target state="translated">Deux types en conflit ont été trouvés pour le paramètre générique '{0}'. Les types en conflit sont '{1}' et '{2}'.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DataRowShouldBeValidMessageFormat_GenericTypeArgumentNotResolved">
+        <source>The type of the generic parameter '{0}' could not be inferred.</source>
+        <target state="translated">Impossible de déduire le type du paramètre générique '{0}'.</target>
         <note />
       </trans-unit>
       <trans-unit id="DataRowShouldBeValidMessageFormat_OnTestMethod">
@@ -353,18 +393,23 @@ Le type doit être une classe
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_SourceTypeMethod">
-        <source>'[DynamicData]' member '{0}.{1}' is a method so you should set 'DynamicDataSourceType.Method'</source>
-        <target state="translated">Membre '[DynamicData]' '{0}.{1}' est une méthode, vous devez donc définir 'DynamicDataSourceType.Method'</target>
+        <source>'[DynamicData]' member '{0}.{1}' is a method so you should use 'DynamicDataSourceType.AutoDetect' or 'DynamicDataSourceType.Method' (auto detect is the default when not specified explicitly, and is recommended)</source>
+        <target state="translated">'[DynamicData]' membre ' {0}.{1}' est une méthode, vous devez donc utiliser 'DynamicDataSourceType.AutoDetect' ou 'DynamicDataSourceType.Method' (la détection automatique est la valeur par défaut quand elle n’est pas spécifiée explicitement et est recommandée)</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DynamicDataShouldBeValidMessageFormat_SourceTypeNotPropertyOrMethod">
+        <source>'[DynamicData]' member '{0}.{1}' is not a property nor a method. Only properties and methods are supported.</source>
+        <target state="translated">'[DynamicData]' membre '{0}.{1}' n’est ni une propriété ni une méthode. Seules les propriétés et les méthodes sont prises en charge.</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_SourceTypeProperty">
-        <source>'[DynamicData]' member '{0}.{1}' is a property so you should set 'DynamicDataSourceType.Property'</source>
-        <target state="translated">Membre '[DynamicData]' '{0}.{1}' est une propriété, vous devez donc définir 'DynamicDataSourceType.Property'</target>
+        <source>'[DynamicData]' member '{0}.{1}' is a property so you should use 'DynamicDataSourceType.AutoDetect' or 'DynamicDataSourceType.Property' (auto detect is the default when not specified explicitly, and is recommended)</source>
+        <target state="translated">'[DynamicData]' membre « {0}.{1} » est une propriété, vous devez donc utiliser « DynamicDataSourceType.AutoDetect » ou « DynamicDataSourceType.Property » (la détection automatique est la valeur par défaut lorsqu’elle n’est pas spécifiée explicitement et est recommandée)</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_TooManyMembers">
-        <source>'[DynamicDta]' member '{0}.{1}' is found more than once</source>
-        <target state="translated">Membre « [DynamicDta] »{0}.{1}' est trouvé plusieurs fois</target>
+        <source>'[DynamicData]' member '{0}.{1}' is found more than once</source>
+        <target state="translated">'[DynamicData]' membre ' {0}.{1}' est trouvé plusieurs fois</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidTitle">
@@ -629,19 +674,19 @@ Le type doit être une classe
         <source>Test methods, methods marked with the '[TestMethod]' attribute, should respect the following layout to be considered valid by MSTest:
 - it should be 'public' (or 'internal' if '[assembly: DiscoverInternals]' attribute is set)
 - it should not be 'static'
-- it should not be generic
+- it should may be generic as long as type parameters can be inferred and argument types are compatible
 - it should not be 'abstract'
 - return type should be 'void', 'Task' or 'ValueTask'
 - it should not be 'async void'
 - it should not be a special method (finalizer, operator...).</source>
-        <target state="translated">Les méthodes de test, qui sont des méthodes marquées avec l’attribut « [TestMethod] », doivent respecter la disposition suivante pour être considérées comme valides par MSTest :
-– il doit être « public » (ou « interne » si l’attribut « [assembly : DiscoverInternals] » est défini)
-– le texte ne doit pas être « statique »
-– il ne doit pas être générique
+        <target state="translated">Les méthodes de test, c’est-à-dire les méthodes marquées de l’attribut « [TestMethod] », doivent respecter la disposition suivante pour être considérées comme valides par MSTest : 
+– elle doit être « publique » (ou « interne » si l’attribut « [assembly : DiscoverInternals] » est défini)
+– elle ne doit pas être « statique »
+– elle peut être générique tant que les paramètres de type peuvent être déduits et que les types d’arguments sont compatibles
 – il ne doit pas être « abstract »
-- doit être « void » ou renvoyer « Task » ou « ValueTask »
-– il ne doit pas être « async void »
-- il ne doit pas s’agir d’une méthode spéciale (finaliseur, opérateur...).</target>
+– le type de retour doit être « void », « Task » ou « ValueTask »
+– elle ne doit pas être « async void »
+– elle ne doit pas être une méthode spéciale (finaliseur, opérateur...).</target>
         <note />
       </trans-unit>
       <trans-unit id="TestMethodShouldBeValidTitle">
@@ -699,6 +744,16 @@ Le type doit être une classe
         <target state="translated">[{0}] ne peut être défini que sur les méthodes marquées avec [TestMethod]</target>
         <note />
       </trans-unit>
+      <trans-unit id="UseConditionBaseWithTestClassMessageFormat">
+        <source>The attribute '{0}' which derives from 'ConditionBaseAttribute' should be used only on classes marked with `TestClassAttribute`</source>
+        <target state="translated">L’attribut '{0}' qui dérive de 'ConditionBaseAttribute' doit être utilisé uniquement sur les classes marquées avec 'TestClassAttribute'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseConditionBaseWithTestClassTitle">
+        <source>Use 'ConditionBaseAttribute' on test classes</source>
+        <target state="translated">Utiliser 'ConditionBaseAttribute' sur les classes de test</target>
+        <note />
+      </trans-unit>
       <trans-unit id="UseDeploymentItemWithTestMethodOrTestClassMessageFormat">
         <source>'[DeploymentItem]' can be specified only on test class or test method</source>
         <target state="translated">« [DeploymentItem] » ne peut être spécifié que sur une classe de test ou une méthode de test</target>
@@ -707,6 +762,16 @@ Le type doit être une classe
       <trans-unit id="UseDeploymentItemWithTestMethodOrTestClassTitle">
         <source>'[DeploymentItem]' can be specified only on test class or test method</source>
         <target state="translated">« [DeploymentItem] » ne peut être spécifié que sur une classe de test ou une méthode de test</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseNewerAssertThrowsMessageFormat">
+        <source>Use 'Assert.ThrowsExactly' instead of 'Assert.ThrowsException'</source>
+        <target state="translated">Utiliser 'Assert.ThrowsExactly' à la place de 'Assert.ThrowsException'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseNewerAssertThrowsTitle">
+        <source>Use newer methods to assert exceptions</source>
+        <target state="translated">Utiliser des méthodes plus nouvelles pour déclarer des exceptions</target>
         <note />
       </trans-unit>
       <trans-unit id="UseParallelizeAttributeAnalyzerDescription">

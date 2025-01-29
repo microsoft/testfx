@@ -1,9 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Reflection;
-using System.Xml;
-
 using FluentAssertions;
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
@@ -24,7 +21,7 @@ public class DesktopTestSourceHostTests : TestContainer
     public void ParentDomainShouldHonorSearchDirectoriesSpecifiedInRunsettings()
     {
         string sampleProjectDirPath = Path.GetDirectoryName(GetTestAssemblyPath("SampleProjectForAssemblyResolution"));
-        string runSettingXml =
+        string runSettingsXml =
             $"""
              <RunSettings>
                 <RunConfiguration>
@@ -42,7 +39,7 @@ public class DesktopTestSourceHostTests : TestContainer
 
         _testSourceHost = new TestSourceHost(
             GetTestAssemblyPath("DesktopTestProjectx86Debug"),
-            GetMockedIRunSettings(runSettingXml).Object,
+            GetMockedIRunSettings(runSettingsXml).Object,
             null);
         _testSourceHost.SetupHost();
 
@@ -55,7 +52,7 @@ public class DesktopTestSourceHostTests : TestContainer
     {
         string sampleProjectPath = GetTestAssemblyPath("SampleProjectForAssemblyResolution");
         string sampleProjectDirPath = Path.GetDirectoryName(sampleProjectPath);
-        string runSettingXml =
+        string runSettingsXml =
             $"""
              <RunSettings>
                <RunConfiguration>
@@ -73,7 +70,7 @@ public class DesktopTestSourceHostTests : TestContainer
 
         _testSourceHost = new TestSourceHost(
             GetTestAssemblyPath("DesktopTestProjectx86Debug"),
-            GetMockedIRunSettings(runSettingXml).Object,
+            GetMockedIRunSettings(runSettingsXml).Object,
             null);
         _testSourceHost.SetupHost();
 
@@ -82,7 +79,7 @@ public class DesktopTestSourceHostTests : TestContainer
 
         // Creating instance of SampleProjectForAssemblyResolution should not throw.
         // It is present in  <Directory path = ".\ComponentTests" />  specified in runsettings
-        AppDomainUtilities.CreateInstance(_testSourceHost.AppDomain, type, null);
+        AppDomainUtilities.CreateInstance(_testSourceHost.AppDomain!, type, null);
     }
 
     public void DisposeShouldUnloadChildAppDomain()
@@ -130,12 +127,12 @@ public class DesktopTestSourceHostTests : TestContainer
         return testAssetPath;
     }
 
-    private static Mock<IRunSettings> GetMockedIRunSettings(string runSettingXml)
+    private static Mock<IRunSettings> GetMockedIRunSettings(string runSettingsXml)
     {
         var mockRunSettings = new Mock<IRunSettings>();
-        mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingXml);
+        mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
 
-        StringReader stringReader = new(runSettingXml);
+        StringReader stringReader = new(runSettingsXml);
         var reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
         MSTestSettingsProvider mstestSettingsProvider = new();
         reader.ReadToFollowing("MSTestV2");

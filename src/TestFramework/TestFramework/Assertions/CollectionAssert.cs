@@ -1,11 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Collections;
-using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
-using System.Reflection;
-
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 /// <summary>
@@ -1563,8 +1558,8 @@ public sealed class CollectionAssert
         // $ CONSIDER: comparison, which should result in ~n*log(n) + m*log(m) + n.
 
         // Count the occurrences of each object in the both collections
-        Dictionary<T, int> expectedElements = GetElementCounts<T>(expected, comparer, out int expectedNulls);
-        Dictionary<T, int> actualElements = GetElementCounts<T>(actual, comparer, out int actualNulls);
+        Dictionary<T, int> expectedElements = GetElementCounts(expected, comparer, out int expectedNulls);
+        Dictionary<T, int> actualElements = GetElementCounts(actual, comparer, out int actualNulls);
 
         if (actualNulls != expectedNulls)
         {
@@ -1684,7 +1679,7 @@ public sealed class CollectionAssert
     /// <summary>
     /// compares the objects using object.Equals.
     /// </summary>
-    private class ObjectComparer : IComparer
+    private sealed class ObjectComparer : IComparer
     {
         int IComparer.Compare(object? x, object? y) => Equals(x, y) ? 0 : -1;
     }

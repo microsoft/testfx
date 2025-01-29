@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the MIT license.  See License.txt in the project root for license information.
 
-using System.Collections;
 using System.Collections.Immutable;
-using System.Diagnostics;
 
 #pragma warning disable CA1000 // Do not declare static members on generic types
 
@@ -324,9 +322,9 @@ internal sealed partial class ArrayBuilder<T> : IReadOnlyList<T>, IDisposable
         var dictionary = new Dictionary<K, ImmutableArray<T>>(accumulator.Count, comparer);
 
         // freeze
-        foreach (KeyValuePair<K, ArrayBuilder<T>> pair in accumulator)
+        foreach ((K? key, ArrayBuilder<T>? value) in accumulator)
         {
-            dictionary.Add(pair.Key, pair.Value.ToImmutableAndFree());
+            dictionary.Add(key, value.ToImmutableAndFree());
         }
 
         return dictionary;

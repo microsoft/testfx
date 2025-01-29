@@ -8,10 +8,6 @@ using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.Telemetry;
 
-#if NETCOREAPP
-using System.Runtime.CompilerServices;
-#endif
-
 namespace Microsoft.Testing.Extensions;
 
 public static class AppInsightsTelemetryProviderExtensions
@@ -32,7 +28,7 @@ public static class AppInsightsTelemetryProviderExtensions
             throw new ArgumentException(ExtensionResources.AddAppInsightsTelemetryProviderInvalidBuilder);
         }
 
-        testApplicationBuilder.TelemetryManager.AddTelemetryCollectorProvider(services =>
+        testApplicationBuilder.Telemetry.AddTelemetryCollectorProvider(services =>
         {
             IEnvironment environment = services.GetRequiredService<IEnvironment>();
 

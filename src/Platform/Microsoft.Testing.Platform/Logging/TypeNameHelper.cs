@@ -1,9 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Diagnostics.CodeAnalysis;
-using System.Text;
-
 namespace Microsoft.Testing.Platform.Logging;
 
 /// <summary>
@@ -33,12 +30,6 @@ internal static class TypeNameHelper
         { typeof(ulong), "ulong" },
         { typeof(ushort), "ushort" },
     };
-
-    [return: NotNullIfNotNull(nameof(item))]
-    public static string? GetTypeDisplayName(object? item, bool fullName = true)
-        => item == null
-            ? null
-            : GetTypeDisplayName(item.GetType(), fullName);
 
     /// <summary>
     /// Pretty print a type name.

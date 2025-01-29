@@ -9,14 +9,14 @@ public class FSharpTestProjectTests : CLITestBase
 {
     private const string TestAssetName = "FSharpTestProject";
 
-    public void TestFSharpTestsWithSpaceAndDotInName()
+    public async Task TestFSharpTestsWithSpaceAndDotInName()
     {
         // Arrange
         string assemblyPath = GetAssetFullPath(TestAssetName, targetFramework: "net472");
 
         // Act
         System.Collections.Immutable.ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestCase> testCases = DiscoverTests(assemblyPath);
-        System.Collections.Immutable.ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult> testResults = RunTests(testCases);
+        System.Collections.Immutable.ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult> testResults = await RunTestsAsync(testCases);
 
         // Assert
         VerifyE2E.TestsPassed(testResults, "Test method passing with a . in it");

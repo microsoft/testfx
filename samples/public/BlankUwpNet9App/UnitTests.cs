@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.TestTools.UnitTesting.AppContainer;
@@ -14,6 +15,8 @@ namespace App1
         [TestMethod]
         public void TestMethod1()
         {
+            File.Create(@"C:\Users\adstep\Desktop\out.txt");
+
             Assert.AreEqual(0, 0);
         }
 

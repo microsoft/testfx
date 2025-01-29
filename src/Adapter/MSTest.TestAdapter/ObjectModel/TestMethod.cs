@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.ObjectModel;
-using System.Diagnostics.CodeAnalysis;
 
 using Microsoft.TestPlatform.AdapterUtilities;
 
@@ -16,6 +15,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 /// <summary>
 /// TestMethod contains information about a unit test method that needs to be executed.
 /// </summary>
+#if RELEASE
+#if NET6_0_OR_GREATER
+[Obsolete(Constants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
+#else
+[Obsolete(Constants.PublicTypeObsoleteMessage)]
+#endif
+#endif
 [Serializable]
 public sealed class TestMethod : ITestMethod
 {
@@ -25,22 +31,22 @@ public sealed class TestMethod : ITestMethod
     public const int TotalHierarchyLevels = HierarchyConstants.Levels.TotalLevelCount;
 
     private readonly ReadOnlyCollection<string?> _hierarchy;
-    private string? _declaringClassFullName;
-    private string? _declaringAssemblyName;
 
+#pragma warning disable IDE0060 // Remove unused parameter - Public API :/
     public TestMethod(string name, string fullClassName, string assemblyName, bool isAsync)
-        : this(null, null, null, name, fullClassName, assemblyName, isAsync, null, TestIdGenerationStrategy.FullyQualified)
+#pragma warning restore IDE0060 // Remove unused parameter
+        : this(null, null, null, name, fullClassName, assemblyName, null, TestIdGenerationStrategy.FullyQualified)
     {
     }
 
-    internal TestMethod(string name, string fullClassName, string assemblyName, bool isAsync, string? displayName,
+    internal TestMethod(string name, string fullClassName, string assemblyName, string? displayName,
         TestIdGenerationStrategy testIdGenerationStrategy)
-        : this(null, null, null, name, fullClassName, assemblyName, isAsync, displayName, testIdGenerationStrategy)
+        : this(null, null, null, name, fullClassName, assemblyName, displayName, testIdGenerationStrategy)
     {
     }
 
     internal TestMethod(string? managedTypeName, string? managedMethodName, string?[]? hierarchyValues, string name,
-        string fullClassName, string assemblyName, bool isAsync, string? displayName,
+        string fullClassName, string assemblyName, string? displayName,
         TestIdGenerationStrategy testIdGenerationStrategy)
     {
         Guard.NotNullOrWhiteSpace(assemblyName);
@@ -49,7 +55,6 @@ public sealed class TestMethod : ITestMethod
         DisplayName = displayName ?? name;
         FullClassName = fullClassName;
         AssemblyName = assemblyName;
-        IsAsync = isAsync;
 
         if (hierarchyValues is null)
         {
@@ -79,12 +84,12 @@ public sealed class TestMethod : ITestMethod
     /// </summary>
     public string? DeclaringAssemblyName
     {
-        get => _declaringAssemblyName;
+        get => field;
 
         set
         {
             DebugEx.Assert(value != AssemblyName, "DeclaringAssemblyName should not be the same as AssemblyName.");
-            _declaringAssemblyName = value;
+            field = value;
         }
     }
 
@@ -96,12 +101,12 @@ public sealed class TestMethod : ITestMethod
     /// </summary>
     public string? DeclaringClassFullName
     {
-        get => _declaringClassFullName;
+        get => field;
 
         set
         {
             DebugEx.Assert(value != FullClassName, "DeclaringClassFullName should not be the same as FullClassName.");
-            _declaringClassFullName = value;
+            field = value;
         }
     }
 
@@ -109,7 +114,7 @@ public sealed class TestMethod : ITestMethod
     public string AssemblyName { get; private set; }
 
     /// <inheritdoc />
-    public bool IsAsync { get; private set; }
+    public bool IsAsync => false; // TODO: Remove this property. We can't remove now as it's public and breaking change.
 
     /// <inheritdoc />
     public string? ManagedTypeName { get; }
@@ -136,6 +141,8 @@ public sealed class TestMethod : ITestMethod
     /// Gets or sets the serialized data.
     /// </summary>
     internal string?[]? SerializedData { get; set; }
+
+    internal string? TestDataSourceIgnoreMessage { get; set; }
 
     /// <summary>
     /// Gets or sets the test group set during discovery.

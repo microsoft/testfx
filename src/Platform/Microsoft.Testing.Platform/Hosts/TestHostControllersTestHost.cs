@@ -1,10 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Diagnostics;
-using System.Globalization;
-using System.Text;
-
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Extensions;
@@ -73,17 +69,20 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
         IEnvironment environment = ServiceProvider.GetEnvironment();
         IProcessHandler process = ServiceProvider.GetProcessHandler();
         ITestApplicationModuleInfo testApplicationModuleInfo = ServiceProvider.GetTestApplicationModuleInfo();
-        ExecutableInfo executableInfo = testApplicationModuleInfo.GetCurrentExecutableInfo();
         ITelemetryCollector telemetry = ServiceProvider.GetTelemetryCollector();
         ITelemetryInformation telemetryInformation = ServiceProvider.GetTelemetryInformation();
         string? extensionInformation = null;
-        IPlatformOutputDevice platformOutputDevice = ServiceProvider.GetPlatformOutputDevice();
+        var outputDevice = (ProxyOutputDevice)ServiceProvider.GetOutputDevice();
         IConfiguration configuration = ServiceProvider.GetConfiguration();
         try
         {
             using IProcess currentProcess = process.GetCurrentProcess();
             int currentPID = currentProcess.Id;
             string processIdString = currentPID.ToString(CultureInfo.InvariantCulture);
+
+            ExecutableInfo executableInfo = testApplicationModuleInfo.GetCurrentExecutableInfo();
+            await _logger.LogDebugAsync($"Test host controller process info: {executableInfo}");
+
             List<string> partialCommandLine =
             [
                 .. executableInfo.Arguments,
@@ -203,7 +202,7 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
                         displayErrorMessageBuilder.AppendLine(CultureInfo.InvariantCulture, $"Provider '{extension.DisplayName}' (UID: {extension.Uid}) failed with error: {errorMessage}");
                     }
 
-                    await platformOutputDevice.DisplayAsync(this, FormattedTextOutputDeviceDataBuilder.CreateRedConsoleColorText(displayErrorMessageBuilder.ToString()));
+                    await outputDevice.DisplayAsync(this, new ErrorMessageOutputDeviceData(displayErrorMessageBuilder.ToString()));
                     await _logger.LogErrorAsync(logErrorMessageBuilder.ToString());
                     return ExitCodes.InvalidPlatformSetup;
                 }
@@ -227,7 +226,7 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
             string testHostProcessStartupTime = _clock.UtcNow.ToString("HH:mm:ss.fff", CultureInfo.InvariantCulture);
             processStartInfo.EnvironmentVariables.Add($"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_TESTHOSTPROCESSSTARTTIME}_{currentPID}", testHostProcessStartupTime);
             await _logger.LogDebugAsync($"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_TESTHOSTPROCESSSTARTTIME}_{currentPID} '{testHostProcessStartupTime}'");
-            await _logger.LogDebugAsync($"Starting test host process");
+            await _logger.LogDebugAsync($"Starting test host process '{processStartInfo.FileName}' with args '{processStartInfo.Arguments}'");
             using IProcess testHostProcess = process.Start(processStartInfo);
 
             int? testHostProcessId = null;
@@ -246,59 +245,68 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
 
             await _logger.LogDebugAsync($"Started test host process '{testHostProcessId}' HasExited: {testHostProcess.HasExited}");
 
-            string? seconds = configuration[PlatformConfigurationConstants.PlatformTestHostControllersManagerSingleConnectionNamedPipeServerWaitConnectionTimeoutSeconds];
-            int timeoutSeconds = seconds is null ? TimeoutHelper.DefaultHangTimeoutSeconds : int.Parse(seconds, CultureInfo.InvariantCulture);
-            await _logger.LogDebugAsync($"Setting PlatformTestHostControllersManagerSingleConnectionNamedPipeServerWaitConnectionTimeoutSeconds '{timeoutSeconds}'");
-
-            // Wait for the test host controller to connect
-            using (CancellationTokenSource timeout = new(TimeSpan.FromSeconds(timeoutSeconds)))
-            using (var linkedToken = CancellationTokenSource.CreateLinkedTokenSource(timeout.Token, abortRun))
+            if (testHostProcess.HasExited || testHostProcessId is null)
             {
-                await _logger.LogDebugAsync($"Wait connection from the test host process");
-                await testHostControllerIpc.WaitConnectionAsync(linkedToken.Token);
+                await _logger.LogDebugAsync("Test host process exited prematurely");
             }
-
-            // Wait for the test host controller to send the PID of the test host process
-            using (CancellationTokenSource timeout = new(TimeoutHelper.DefaultHangTimeSpanTimeout))
+            else
             {
-                _waitForPid.Wait(timeout.Token);
-            }
+                string? seconds = configuration[PlatformConfigurationConstants.PlatformTestHostControllersManagerSingleConnectionNamedPipeServerWaitConnectionTimeoutSeconds];
+                int timeoutSeconds = seconds is null ? TimeoutHelper.DefaultHangTimeoutSeconds : int.Parse(seconds, CultureInfo.InvariantCulture);
+                await _logger.LogDebugAsync($"Setting PlatformTestHostControllersManagerSingleConnectionNamedPipeServerWaitConnectionTimeoutSeconds '{timeoutSeconds}'");
 
-            await _logger.LogDebugAsync($"Fire OnTestHostProcessStartedAsync");
-
-            if (_testHostPID is null)
-            {
-                throw ApplicationStateGuard.Unreachable();
-            }
-
-            if (_testHostsInformation.LifetimeHandlers.Length > 0)
-            {
-                // We don't block the host during the 'OnTestHostProcessStartedAsync' by-design, if 'ITestHostProcessLifetimeHandler' extensions needs
-                // to block the execution of the test host should add an in-process extension like an 'ITestApplicationLifecycleCallbacks' and
-                // wait for a connection/signal to return.
-                TestHostProcessInformation testHostProcessInformation = new(_testHostPID.Value);
-                foreach (ITestHostProcessLifetimeHandler lifetimeHandler in _testHostsInformation.LifetimeHandlers)
+                // Wait for the test host controller to connect
+                using (CancellationTokenSource timeout = new(TimeSpan.FromSeconds(timeoutSeconds)))
+                using (var linkedToken = CancellationTokenSource.CreateLinkedTokenSource(timeout.Token, abortRun))
                 {
-                    await lifetimeHandler.OnTestHostProcessStartedAsync(testHostProcessInformation, abortRun);
+                    await _logger.LogDebugAsync("Wait connection from the test host process");
+                    await testHostControllerIpc.WaitConnectionAsync(linkedToken.Token);
                 }
-            }
 
-            await _logger.LogDebugAsync($"Wait for test host process exit");
-            await testHostProcess.WaitForExitAsync();
+                // Wait for the test host controller to send the PID of the test host process
+                using (CancellationTokenSource timeout = new(TimeoutHelper.DefaultHangTimeSpanTimeout))
+                {
+                    _waitForPid.Wait(timeout.Token);
+                }
+
+                await _logger.LogDebugAsync("Fire OnTestHostProcessStartedAsync");
+
+                if (_testHostPID is null)
+                {
+                    throw ApplicationStateGuard.Unreachable();
+                }
+
+                if (_testHostsInformation.LifetimeHandlers.Length > 0)
+                {
+                    // We don't block the host during the 'OnTestHostProcessStartedAsync' by-design, if 'ITestHostProcessLifetimeHandler' extensions needs
+                    // to block the execution of the test host should add an in-process extension like an 'ITestApplicationLifecycleCallbacks' and
+                    // wait for a connection/signal to return.
+                    TestHostProcessInformation testHostProcessInformation = new(_testHostPID.Value);
+                    foreach (ITestHostProcessLifetimeHandler lifetimeHandler in _testHostsInformation.LifetimeHandlers)
+                    {
+                        await lifetimeHandler.OnTestHostProcessStartedAsync(testHostProcessInformation, abortRun);
+                    }
+                }
+
+                await _logger.LogDebugAsync("Wait for test host process exit");
+                await testHostProcess.WaitForExitAsync();
+            }
 
             if (_testHostsInformation.LifetimeHandlers.Length > 0)
             {
                 await _logger.LogDebugAsync($"Fire OnTestHostProcessExitedAsync testHostGracefullyClosed: {_testHostGracefullyClosed}");
                 var messageBusProxy = (MessageBusProxy)ServiceProvider.GetMessageBus();
 
-                ApplicationStateGuard.Ensure(_testHostPID is not null);
-                TestHostProcessInformation testHostProcessInformation = new(_testHostPID.Value, testHostProcess.ExitCode, _testHostGracefullyClosed);
-                foreach (ITestHostProcessLifetimeHandler lifetimeHandler in _testHostsInformation.LifetimeHandlers)
+                if (_testHostPID is not null)
                 {
-                    await lifetimeHandler.OnTestHostProcessExitedAsync(testHostProcessInformation, abortRun);
+                    TestHostProcessInformation testHostProcessInformation = new(_testHostPID.Value, testHostProcess.ExitCode, _testHostGracefullyClosed);
+                    foreach (ITestHostProcessLifetimeHandler lifetimeHandler in _testHostsInformation.LifetimeHandlers)
+                    {
+                        await lifetimeHandler.OnTestHostProcessExitedAsync(testHostProcessInformation, abortRun);
 
-                    // OnTestHostProcess could produce information that needs to be handled by others.
-                    await messageBusProxy.DrainDataAsync();
+                        // OnTestHostProcess could produce information that needs to be handled by others.
+                        await messageBusProxy.DrainDataAsync();
+                    }
                 }
 
                 // We disable after the drain because it's possible that the drain will produce more messages
@@ -306,7 +314,7 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
                 await messageBusProxy.DisableAsync();
             }
 
-            await platformOutputDevice.DisplayAfterSessionEndRunAsync();
+            await outputDevice.DisplayAfterSessionEndRunAsync();
 
             // We collect info about the extensions before the dispose to avoid possible issue with cleanup.
             if (telemetryInformation.IsEnabled)
@@ -322,7 +330,7 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
 
             if (!_testHostGracefullyClosed && !abortRun.IsCancellationRequested)
             {
-                await platformOutputDevice.DisplayAsync(this, FormattedTextOutputDeviceDataBuilder.CreateRedConsoleColorText(string.Format(CultureInfo.InvariantCulture, PlatformResources.TestProcessDidNotExitGracefullyErrorMessage, exitCode)));
+                await outputDevice.DisplayAsync(this, new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, PlatformResources.TestProcessDidNotExitGracefullyErrorMessage, exitCode)));
             }
 
             await _logger.LogInformationAsync($"TestHostControllersTestHost ended with exit code '{exitCode}' (real test host exit code '{testHostProcess.ExitCode}')' in '{consoleRunStarted.Elapsed}'");

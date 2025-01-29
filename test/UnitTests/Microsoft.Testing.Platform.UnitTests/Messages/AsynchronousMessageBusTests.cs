@@ -10,17 +10,13 @@ using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Platform.UnitTests;
 
-[TestGroup]
-public sealed class AsynchronousMessageBusTests : TestBase
+[TestClass]
+public sealed class AsynchronousMessageBusTests
 {
-    public AsynchronousMessageBusTests(ITestExecutionContext testExecutionContext)
-        : base(testExecutionContext)
-    {
-    }
-
+    [TestMethod]
     public async Task UnexpectedTypePublished_ShouldFail()
     {
-        MessageBusProxy proxy = new();
+        using MessageBusProxy proxy = new();
         InvalidTypePublished consumer = new(proxy);
         AsynchronousMessageBus asynchronousMessageBus = new(
             [consumer],
@@ -37,9 +33,10 @@ public sealed class AsynchronousMessageBusTests : TestBase
         await Assert.ThrowsAsync<InvalidOperationException>(proxy.DrainDataAsync);
     }
 
+    [TestMethod]
     public async Task DrainDataAsync_Loop_ShouldFail()
     {
-        MessageBusProxy proxy = new();
+        using MessageBusProxy proxy = new();
         LoopConsumerA consumerA = new(proxy);
         ConsumerB consumerB = new(proxy);
         AsynchronousMessageBus asynchronousMessageBus = new(
@@ -59,7 +56,7 @@ public sealed class AsynchronousMessageBusTests : TestBase
         }
         catch (InvalidOperationException ex)
         {
-            Assert.That(ex.Message.Contains("Publisher/Consumer loop detected during the drain after"));
+            StringAssert.Contains(ex.Message, "Publisher/Consumer loop detected during the drain after");
         }
 
         // Prevent loop to continue
@@ -67,9 +64,10 @@ public sealed class AsynchronousMessageBusTests : TestBase
         consumerB.StopConsume();
     }
 
+    [TestMethod]
     public async Task MessageBus_WhenConsumerProducesAndConsumesTheSameType_ShouldNotConsumeWhatProducedByItself()
     {
-        MessageBusProxy proxy = new();
+        using MessageBusProxy proxy = new();
         Consumer consumerA = new(proxy, "consumerA");
         Consumer consumerB = new(proxy, "consumerB");
         AsynchronousMessageBus asynchronousMessageBus = new(
@@ -90,13 +88,14 @@ public sealed class AsynchronousMessageBusTests : TestBase
         await proxy.DrainDataAsync();
 
         // assert
-        Assert.AreEqual(consumerA.ConsumedData.Count, 1);
-        Assert.AreEqual(consumerA.ConsumedData[0], consumerBData);
+        Assert.AreEqual(1, consumerA.ConsumedData.Count);
+        Assert.AreEqual(consumerBData, consumerA.ConsumedData[0]);
 
-        Assert.AreEqual(consumerB.ConsumedData.Count, 1);
-        Assert.AreEqual(consumerB.ConsumedData[0], consumerAData);
+        Assert.AreEqual(1, consumerB.ConsumedData.Count);
+        Assert.AreEqual(consumerAData, consumerB.ConsumedData[0]);
     }
 
+    [TestMethod]
     public async Task Consumers_ConsumeData_ShouldNotMissAnyPayload()
     {
         int totalConsumers = Environment.ProcessorCount;

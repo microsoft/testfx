@@ -12,8 +12,8 @@ using Moq;
 
 namespace Microsoft.Testing.Platform.UnitTests;
 
-[TestGroup]
-public class CommandLineHandlerTests : TestBase
+[TestClass]
+public sealed class CommandLineHandlerTests
 {
     private readonly Mock<IPlatformOutputDevice> _outputDisplayMock = new();
     private readonly Mock<ITestApplicationModuleInfo> _testApplicationModuleInfoMock = new();
@@ -25,11 +25,7 @@ public class CommandLineHandlerTests : TestBase
 
     private readonly ICommandLineOptionsProvider[] _extensionCommandLineOptionsProviders = [];
 
-    public CommandLineHandlerTests(ITestExecutionContext testExecutionContext)
-        : base(testExecutionContext)
-    {
-    }
-
+    [TestMethod]
     public async Task ParseAndValidateAsync_InvalidCommandLineArguments_ReturnsFalse()
     {
         // Arrange
@@ -42,10 +38,11 @@ public class CommandLineHandlerTests : TestBase
 
         // Assert
         Assert.IsFalse(result.IsValid);
-        Assert.Contains("Invalid command line arguments:", result.ErrorMessage);
-        Assert.Contains("Unexpected argument 'a'", result.ErrorMessage);
+        StringAssert.Contains(result.ErrorMessage, "Invalid command line arguments:");
+        StringAssert.Contains(result.ErrorMessage, "Unexpected argument 'a'");
     }
 
+    [TestMethod]
     public async Task ParseAndValidateAsync_EmptyCommandLineArguments_ReturnsTrue()
     {
         // Arrange
@@ -60,6 +57,7 @@ public class CommandLineHandlerTests : TestBase
         Assert.IsTrue(result.IsValid);
     }
 
+    [TestMethod]
     public async Task ParseAndValidateAsync_DuplicateOption_ReturnsFalse()
     {
         // Arrange
@@ -77,9 +75,10 @@ public class CommandLineHandlerTests : TestBase
 
         // Assert
         Assert.IsFalse(result.IsValid);
-        Assert.Contains("Option '--userOption' is declared by multiple extensions: 'Microsoft Testing Platform command line provider', 'Microsoft Testing Platform command line provider'", result.ErrorMessage);
+        StringAssert.Contains(result.ErrorMessage, "Option '--userOption' is declared by multiple extensions: 'Microsoft Testing Platform command line provider', 'Microsoft Testing Platform command line provider'");
     }
 
+    [TestMethod]
     public async Task ParseAndValidateAsync_InvalidOption_ReturnsFalse()
     {
         // Arrange
@@ -95,6 +94,7 @@ public class CommandLineHandlerTests : TestBase
         Assert.AreEqual("Option '--diagnostic-verbosity' has invalid arguments: '--diagnostic-verbosity' expects a single level argument ('Trace', 'Debug', 'Information', 'Warning', 'Error', or 'Critical')", result.ErrorMessage);
     }
 
+    [TestMethod]
     public async Task ParseAndValidateAsync_InvalidArgumentArity_ReturnsFalse()
     {
         // Arrange
@@ -110,6 +110,7 @@ public class CommandLineHandlerTests : TestBase
         Assert.AreEqual("Option '--help' from provider 'Platform command line provider' (UID: PlatformCommandLineProvider) expects no arguments", result.ErrorMessage);
     }
 
+    [TestMethod]
     public async Task ParseAndValidateAsync_ReservedOptions_ReturnsFalse()
     {
         // Arrange
@@ -129,6 +130,7 @@ public class CommandLineHandlerTests : TestBase
         Assert.AreEqual("Option '--help' is reserved and cannot be used by providers: 'help'", result.ErrorMessage);
     }
 
+    [TestMethod]
     public async Task ParseAndValidateAsync_ReservedOptionsPrefix_ReturnsFalse()
     {
         // Arrange
@@ -148,6 +150,7 @@ public class CommandLineHandlerTests : TestBase
         Assert.AreEqual("Option `--internal-customextension` from provider 'Microsoft Testing Platform command line provider' (UID: PlatformCommandLineProvider) is using the reserved prefix '--internal'", result.ErrorMessage);
     }
 
+    [TestMethod]
     public async Task ParseAndValidateAsync_UnknownOption_ReturnsFalse()
     {
         // Arrange
@@ -168,6 +171,7 @@ public class CommandLineHandlerTests : TestBase
         Assert.AreEqual("Unknown option '--x'", result.ErrorMessage);
     }
 
+    [TestMethod]
     public async Task ParseAndValidateAsync_InvalidValidConfiguration_ReturnsFalse()
     {
         // Arrange
@@ -187,6 +191,7 @@ public class CommandLineHandlerTests : TestBase
         Assert.AreEqual("Invalid configuration for provider 'Microsoft Testing Platform command line provider' (UID: PlatformCommandLineProvider). Error: Invalid configuration errorMessage", result.ErrorMessage);
     }
 
+    [TestMethod]
     public void IsHelpInvoked_HelpOptionSet_ReturnsTrue()
     {
         // Arrange
@@ -204,6 +209,7 @@ public class CommandLineHandlerTests : TestBase
         _outputDisplayMock.Verify(o => o.DisplayBannerAsync(It.IsAny<string?>()), Times.Never);
     }
 
+    [TestMethod]
     public void IsInfoInvoked_InfoOptionSet_ReturnsTrue()
     {
         // Arrange
@@ -221,6 +227,7 @@ public class CommandLineHandlerTests : TestBase
         _outputDisplayMock.Verify(o => o.DisplayBannerAsync(It.IsAny<string?>()), Times.Never);
     }
 
+    [TestMethod]
     public void IsVersionInvoked_VersionOptionSet_ReturnsTrue()
     {
         // Arrange
@@ -238,12 +245,13 @@ public class CommandLineHandlerTests : TestBase
         _outputDisplayMock.Verify(o => o.DisplayBannerAsync(It.IsAny<string?>()), Times.Never);
     }
 
+    [TestMethod]
     public void GetOptionValue_OptionExists_ReturnsOptionValue()
     {
         // Arrange
-        OptionRecord optionRecord = new("name", ["value1", "value2"]);
+        CommandLineParseOption option = new("name", ["value1", "value2"]);
         CommandLineHandler commandLineHandler = new(
-            new CommandLineParseResult(string.Empty, [optionRecord], []), _extensionCommandLineOptionsProviders,
+            new CommandLineParseResult(string.Empty, [option], []), _extensionCommandLineOptionsProviders,
             _systemCommandLineOptionsProviders, _testApplicationModuleInfoMock.Object, _runtimeFeatureMock.Object);
 
         // Act
@@ -251,12 +259,13 @@ public class CommandLineHandlerTests : TestBase
 
         // Assert
         Assert.IsTrue(result);
-        Assert.IsFalse(optionValue is null);
+        Assert.IsNotNull(optionValue);
         Assert.AreEqual(optionValue?.Length, 2);
         Assert.AreEqual("value1", optionValue?[0]);
         Assert.AreEqual("value2", optionValue?[1]);
     }
 
+    [TestMethod]
     public void GetOptionValue_OptionDoesNotExist_ReturnsNull()
     {
         // Arrange
@@ -278,7 +287,7 @@ public class CommandLineHandlerTests : TestBase
 
         // Assert
         Assert.IsFalse(result);
-        Assert.IsTrue(optionValue is null);
+        Assert.IsNull(optionValue);
     }
 
     private sealed class ExtensionCommandLineProviderMockReservedOptions : ICommandLineOptionsProvider

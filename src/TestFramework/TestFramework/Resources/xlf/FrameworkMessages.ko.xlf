@@ -92,6 +92,11 @@
         <target state="translated">동적 데이터 속성 '{0}'은(는) 정적이고 getter가 있어야 합니다.</target>
         <note />
       </trans-unit>
+      <trans-unit id="DynamicDataSourceShouldExistAndBeValid">
+        <source>The dynamic data source '{0}' in type '{1}' should exist and be a property or a method.</source>
+        <target state="translated">'{1}' 형식의 동적 데이터 원본 '{0}' 존재하며 속성 또는 메서드여야 합니다.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ElementNumbersDontMatch">
         <source>The number of elements in the collections do not match. Expected:&lt;{1}&gt;. Actual:&lt;{2}&gt;.{0}</source>
         <target state="translated">컬렉션의 요소 수가 일치하지 않습니다. 예상 값: &lt;{1}&gt;. 실제 값: &lt;{2}&gt;.{0}</target>
@@ -121,6 +126,16 @@ Actual: {2}</source>
         <target state="translated">{0}이(가) 실패했습니다. {1}</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="HasCountFailMsg">
+        <source>Expected collection of size {1}. Actual: {2}. {0}</source>
+        <target state="translated">{1} 크기 컬렉션이 필요합니다. 실제: {2}. {0}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="InvalidGitHubUrl">
+        <source>Invalid GitHub ticket URL</source>
+        <target state="new">Invalid GitHub ticket URL</target>
+        <note />
+      </trans-unit>
       <trans-unit id="IsInstanceOfFailMsg">
         <source>{0} Expected type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;.</source>
         <target state="translated">{0} 예상 형식: &lt;{1}&gt;, 실제 형식: &lt;{2}&gt;.</target>
@@ -130,6 +145,11 @@ Actual: {2}</source>
         <source>String '{0}' does not match pattern '{1}'. {2}.</source>
         <target state="translated">'{0}' 문자열이 '{1}' 패턴과 일치하지 않습니다. {2}</target>
         <note></note>
+      </trans-unit>
+      <trans-unit id="IsNotEmptyFailMsg">
+        <source>Expected collection to contain any item but it is empty. {0}</source>
+        <target state="translated">항목을 포함할 컬렉션이 필요한데 비어 있습니다. {0}</target>
+        <note />
       </trans-unit>
       <trans-unit id="IsNotInstanceOfFailMsg">
         <source>Wrong Type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;. {0}</source>
@@ -253,8 +273,8 @@ Actual: {2}</source>
         <note></note>
       </trans-unit>
       <trans-unit id="DynamicDataIEnumerableNull">
-        <source>Property or method {0} on {1} return type is not assignable to 'IEnumerable&lt;object[]&gt;' (nor 'IEnumerable&lt;ITuple&gt;' for .NET Core).</source>
-        <target state="translated">{1} 반환 형식의 속성 또는 메서드 {0}은(는) 'IEnumerable&lt;object[]&gt;'(.NET Core의 경우 'IEnumerable&lt;ITuple&gt;')에 할당할 수 없습니다.</target>
+        <source>Property or method {0} on {1} return type is not assignable to 'IEnumerable'.</source>
+        <target state="translated">{1} 반환 형식의 속성 또는 메서드 {0}은(는) 'IEnumerable'에 할당할 수 없습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataValueNull">

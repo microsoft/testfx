@@ -3,8 +3,6 @@
 
 #pragma warning disable TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
 
-using System.Diagnostics.CodeAnalysis;
-
 using Microsoft.Testing.Extensions.TrxReport.Abstractions;
 using Microsoft.Testing.Platform;
 using Microsoft.Testing.Platform.Extensions.Messages;
@@ -162,19 +160,33 @@ internal static class ObjectModelConverters
 
         testNode.Properties.Add(new TimingProperty(new(testResult.StartTime, testResult.EndTime, testResult.Duration), []));
 
+        var standardErrorMessages = new List<string>();
+        var standardOutputMessages = new List<string>();
         foreach (TestResultMessage testResultMessage in testResult.Messages)
         {
             if (testResultMessage.Category == TestResultMessage.StandardErrorCategory)
             {
-                testNode.Properties.Add(new SerializableKeyValuePairStringProperty("vstest.TestCase.StandardError", testResultMessage.Text ?? string.Empty));
-                testNode.Properties.Add(new StandardErrorProperty(testResultMessage.Text ?? string.Empty));
+                string message = testResultMessage.Text ?? string.Empty;
+                testNode.Properties.Add(new SerializableKeyValuePairStringProperty("vstest.TestCase.StandardError", message));
+                standardErrorMessages.Add(message);
             }
 
             if (testResultMessage.Category == TestResultMessage.StandardOutCategory)
             {
-                testNode.Properties.Add(new SerializableKeyValuePairStringProperty("vstest.TestCase.StandardOutput", testResultMessage.Text ?? string.Empty));
-                testNode.Properties.Add(new StandardOutputProperty(testResultMessage.Text ?? string.Empty));
+                string message = testResultMessage.Text ?? string.Empty;
+                testNode.Properties.Add(new SerializableKeyValuePairStringProperty("vstest.TestCase.StandardOutput", message));
+                standardOutputMessages.Add(message);
             }
+        }
+
+        if (standardErrorMessages.Count > 0)
+        {
+            testNode.Properties.Add(new StandardErrorProperty(string.Join(Environment.NewLine, standardErrorMessages)));
+        }
+
+        if (standardOutputMessages.Count > 0)
+        {
+            testNode.Properties.Add(new StandardOutputProperty(string.Join(Environment.NewLine, standardOutputMessages)));
         }
 
         return testNode;

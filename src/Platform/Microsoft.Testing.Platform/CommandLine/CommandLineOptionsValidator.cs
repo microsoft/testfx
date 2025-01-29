@@ -1,9 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Globalization;
-using System.Text;
-
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.CommandLine;
 using Microsoft.Testing.Platform.Helpers;
@@ -151,12 +148,12 @@ internal static class CommandLineOptionsValidator
         Dictionary<ICommandLineOptionsProvider, IReadOnlyCollection<CommandLineOption>> systemOptionsByProvider)
     {
         StringBuilder? stringBuilder = null;
-        foreach (OptionRecord optionRecord in parseResult.Options)
+        foreach (CommandLineParseOption optionRecord in parseResult.Options)
         {
-            if (!extensionOptionsByProvider.Union(systemOptionsByProvider).Any(tuple => tuple.Value.Any(x => x.Name == optionRecord.Option)))
+            if (!extensionOptionsByProvider.Union(systemOptionsByProvider).Any(tuple => tuple.Value.Any(x => x.Name == optionRecord.Name)))
             {
                 stringBuilder ??= new();
-                stringBuilder.AppendLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineUnknownOption, optionRecord.Option));
+                stringBuilder.AppendLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineUnknownOption, optionRecord.Name));
             }
         }
 
@@ -170,11 +167,11 @@ internal static class CommandLineOptionsValidator
         Dictionary<string, (ICommandLineOptionsProvider Provider, CommandLineOption Option)> providerAndOptionByOptionName)
     {
         StringBuilder stringBuilder = new();
-        foreach (IGrouping<string, OptionRecord> groupedOptions in parseResult.Options.GroupBy(x => x.Option))
+        foreach (IGrouping<string, CommandLineParseOption> groupedOptions in parseResult.Options.GroupBy(x => x.Name))
         {
             // getting the arguments count for an option.
             int arity = 0;
-            foreach (OptionRecord optionEntry in groupedOptions)
+            foreach (CommandLineParseOption optionEntry in groupedOptions)
             {
                 arity += optionEntry.Arguments.Length;
             }
@@ -208,14 +205,14 @@ internal static class CommandLineOptionsValidator
         ApplicationStateGuard.Ensure(parseResult is not null);
 
         StringBuilder? stringBuilder = null;
-        foreach (OptionRecord optionRecord in parseResult.Options)
+        foreach (CommandLineParseOption optionRecord in parseResult.Options)
         {
-            (ICommandLineOptionsProvider provider, CommandLineOption option) = providerAndOptionByOptionName[optionRecord.Option];
+            (ICommandLineOptionsProvider provider, CommandLineOption option) = providerAndOptionByOptionName[optionRecord.Name];
             ValidationResult result = await provider.ValidateOptionArgumentsAsync(option, optionRecord.Arguments);
             if (!result.IsValid)
             {
                 stringBuilder ??= new();
-                stringBuilder.AppendLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineInvalidArgumentsForOption, optionRecord.Option, result.ErrorMessage));
+                stringBuilder.AppendLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineInvalidArgumentsForOption, optionRecord.Name, result.ErrorMessage));
             }
         }
 
@@ -225,12 +222,24 @@ internal static class CommandLineOptionsValidator
     }
 
     private static async Task<ValidationResult> ValidateConfigurationAsync(
-        IEnumerable<ICommandLineOptionsProvider> extensionsProviders,
-        IEnumerable<ICommandLineOptionsProvider> systemProviders,
+        Dictionary<ICommandLineOptionsProvider, IReadOnlyCollection<CommandLineOption>>.KeyCollection extensionsProviders,
+        Dictionary<ICommandLineOptionsProvider, IReadOnlyCollection<CommandLineOption>>.KeyCollection systemProviders,
         ICommandLineOptions commandLineOptions)
     {
-        StringBuilder? stringBuilder = null;
-        foreach (ICommandLineOptionsProvider commandLineOptionsProvider in systemProviders.Union(extensionsProviders))
+        StringBuilder? stringBuilder = await ValidateConfigurationAsync(systemProviders, commandLineOptions, null);
+        stringBuilder = await ValidateConfigurationAsync(extensionsProviders, commandLineOptions, stringBuilder);
+
+        return stringBuilder?.Length > 0
+            ? ValidationResult.Invalid(stringBuilder.ToTrimmedString())
+            : ValidationResult.Valid();
+    }
+
+    private static async Task<StringBuilder?> ValidateConfigurationAsync(
+        Dictionary<ICommandLineOptionsProvider, IReadOnlyCollection<CommandLineOption>>.KeyCollection providers,
+        ICommandLineOptions commandLineOptions,
+        StringBuilder? stringBuilder)
+    {
+        foreach (ICommandLineOptionsProvider commandLineOptionsProvider in providers)
         {
             ValidationResult result = await commandLineOptionsProvider.ValidateCommandLineOptionsAsync(commandLineOptions);
             if (!result.IsValid)
@@ -241,9 +250,7 @@ internal static class CommandLineOptionsValidator
             }
         }
 
-        return stringBuilder?.Length > 0
-            ? ValidationResult.Invalid(stringBuilder.ToTrimmedString())
-            : ValidationResult.Valid();
+        return stringBuilder;
     }
 
     private static string ToTrimmedString(this StringBuilder stringBuilder)

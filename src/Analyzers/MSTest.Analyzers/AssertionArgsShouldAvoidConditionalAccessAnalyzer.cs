@@ -10,6 +10,7 @@ using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Operations;
 
 using MSTest.Analyzers.Helpers;
+using MSTest.Analyzers.RoslynAnalyzerHelpers;
 
 namespace MSTest.Analyzers;
 
@@ -19,37 +20,38 @@ namespace MSTest.Analyzers;
 [DiagnosticAnalyzer(LanguageNames.CSharp, LanguageNames.VisualBasic)]
 public sealed class AssertionArgsShouldAvoidConditionalAccessAnalyzer : DiagnosticAnalyzer
 {
-    private static readonly ImmutableArray<string> AssertSupportedMethodNames = ImmutableArray.Create([
-        "IsTrue",
-        "IsFalse",
-        "AreEqual",
-        "AreNotEqual",
-        "AreSame",
-        "AreNotSame"
+    private static readonly ImmutableArray<(string MethodName, int ArgumentCountToCheck)> AssertSupportedMethodNames = ImmutableArray.Create([
+        ("IsTrue", 1),
+        ("IsFalse", 1),
+        ("AreEqual", 2),
+        ("AreNotEqual", 2),
+        ("AreSame", 2),
+        ("AreNotSame", 2)
     ]);
 
-    private static readonly ImmutableArray<string> CollectionAssertSupportedMethodNames = ImmutableArray.Create([
-        "IsTrue",
-        "IsFalse",
-        "AreEqual",
-        "AreNotEqual",
-        "AreEquivalent",
-        "AreNotEquivalent",
-        "Contains",
-        "DoesNotContain",
-        "AllItemsAreNotNull",
-        "AllItemsAreUnique",
-        "IsSubsetOf",
-        "IsNotSubsetOf",
-        "AllItemsAreInstancesOfType"
+    private static readonly ImmutableArray<(string MethodName, int ArgumentCountToCheck)> CollectionAssertSupportedMethodNames = ImmutableArray.Create([
+        ("AreEqual", 2),
+        ("AreNotEqual", 2),
+        ("AreEquivalent", 2),
+        ("AreNotEquivalent", 2),
+        // TODO: Is it really bad to have Assert.Contains(myCollection, expression_with_conditional_access)? A codefix seems like may not always yield the correct result for this case.
+        // TODO: Maybe we should check one argument only (the collection itself)
+        // Same applies to DoesNotContain
+        ("Contains", 2),
+        ("DoesNotContain", 2),
+        ("AllItemsAreNotNull", 1),
+        ("AllItemsAreUnique", 1),
+        ("IsSubsetOf", 2),
+        ("IsNotSubsetOf", 2),
+        ("AllItemsAreInstancesOfType", 2)
     ]);
 
-    private static readonly ImmutableArray<string> StringAssertSupportedMethodNames = ImmutableArray.Create([
-        "Contains",
-        "StartsWith",
-        "EndsWith",
-        "Matches",
-        "DoesNotMatch"
+    private static readonly ImmutableArray<(string MethodName, int ArgumentCountToCheck)> StringAssertSupportedMethodNames = ImmutableArray.Create([
+        ("Contains", 2),
+        ("StartsWith", 2),
+        ("EndsWith", 2),
+        ("Matches", 2),
+        ("DoesNotMatch", 2)
     ]);
 
     private static readonly LocalizableResourceString Title = new(nameof(Resources.AssertionArgsShouldAvoidConditionalAccessTitle), Resources.ResourceManager, typeof(Resources));
@@ -62,7 +64,7 @@ public sealed class AssertionArgsShouldAvoidConditionalAccessAnalyzer : Diagnost
         description: null,
         Category.Usage,
         DiagnosticSeverity.Info,
-        isEnabledByDefault: true);
+        isEnabledByDefault: false);
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
         = ImmutableArray.Create(Rule);
@@ -91,50 +93,61 @@ public sealed class AssertionArgsShouldAvoidConditionalAccessAnalyzer : Diagnost
         });
     }
 
-    private static void AnalyzeOperation(OperationAnalysisContext context, INamedTypeSymbol assertSymbol, ImmutableArray<string> supportedMethodNames)
+    private static void AnalyzeOperation(OperationAnalysisContext context, INamedTypeSymbol assertSymbol, ImmutableArray<(string MethodName, int ArgumentCountToCheck)> supportedMethodNames)
     {
         var invocationOperation = (IInvocationOperation)context.Operation;
 
         // This is not an invocation of the expected assertion methods.
-        if (!supportedMethodNames.Contains(invocationOperation.TargetMethod.Name)
+        (_, int argumentCountToCheck) = supportedMethodNames.FirstOrDefault(x => x.MethodName == invocationOperation.TargetMethod.Name);
+        if (argumentCountToCheck == 0
             || !SymbolEqualityComparer.Default.Equals(assertSymbol, invocationOperation.TargetMethod.ContainingType)
-            || !HasAnyConditionalAccessOperationChild(invocationOperation))
+            || !HasAnyConditionalAccessOperationChild(invocationOperation, argumentCountToCheck, out Location? additionalLocation))
         {
             return;
         }
 
-        context.ReportDiagnostic(invocationOperation.CreateDiagnostic(Rule));
+        context.ReportDiagnostic(invocationOperation.CreateDiagnostic(Rule, additionalLocations: ImmutableArray.Create(additionalLocation), properties: null));
     }
 
-    private static bool HasAnyConditionalAccessOperationChild(IInvocationOperation invocationOperation)
+    private static bool HasAnyConditionalAccessOperationChild(IInvocationOperation invocationOperation, int argumentCountToCheck, [NotNullWhen(true)] out Location? additionalLocation)
     {
         foreach (IArgumentOperation argument in invocationOperation.Arguments)
         {
+            if (argument.Parameter is null || argument.Parameter.Ordinal >= argumentCountToCheck)
+            {
+                continue;
+            }
+
+            // Check for conversion operations with conditional access => (s?.Length).
+            IOperation value = argument.Value.WalkDownConversion();
+
             // Check for conditional access
             //      a?.b
             //      a?.b?.c
             //      a.b?.c
-            if (argument.Value is IConditionalAccessOperation { Kind: OperationKind.ConditionalAccess })
+            if (value.Kind == OperationKind.ConditionalAccess)
             {
+                additionalLocation = value.Syntax.GetLocation();
                 return true;
             }
 
             // Check for binary operations with conditional access => s?.Length > 1.
-            if (argument.Value is IBinaryOperation binaryOperation)
+            if (value is IBinaryOperation binaryOperation)
             {
-                if (binaryOperation.LeftOperand.Kind == OperationKind.ConditionalAccess || binaryOperation.RightOperand.Kind == OperationKind.ConditionalAccess)
+                if (binaryOperation.LeftOperand.Kind == OperationKind.ConditionalAccess)
                 {
+                    additionalLocation = binaryOperation.LeftOperand.Syntax.GetLocation();
+                    return true;
+                }
+                else if (binaryOperation.RightOperand.Kind == OperationKind.ConditionalAccess)
+                {
+                    additionalLocation = binaryOperation.RightOperand.Syntax.GetLocation();
                     return true;
                 }
             }
-
-            // Check for conversion operations with conditional access => (s?.Length).
-            if (argument.Value is IConversionOperation { Operand.Kind: OperationKind.ConditionalAccess })
-            {
-                return true;
-            }
         }
 
+        additionalLocation = null;
         return false;
     }
 }

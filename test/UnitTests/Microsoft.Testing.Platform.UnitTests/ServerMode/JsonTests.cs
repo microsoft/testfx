@@ -9,13 +9,12 @@ using TestNode = Microsoft.Testing.Platform.Extensions.Messages.TestNode;
 
 namespace Microsoft.Testing.Platform.UnitTests;
 
-[TestGroup]
-public class JsonTests : TestBase
+[TestClass]
+public sealed class JsonTests
 {
     private readonly Json _json;
 
-    public JsonTests(ITestExecutionContext testExecutionContext)
-        : base(testExecutionContext)
+    public JsonTests()
     {
         Dictionary<Type, JsonSerializer> serializers = new();
         Dictionary<Type, JsonDeserializer> deserializers = new();
@@ -36,6 +35,7 @@ public class JsonTests : TestBase
         _json = new Json(serializers, deserializers);
     }
 
+    [TestMethod]
     public async Task Serialize_TestNodeAsync()
     {
         // Arrange
@@ -45,7 +45,7 @@ public class JsonTests : TestBase
         {
             DisplayName = "test",
             Properties = bag,
-            Uid = new Extensions.Messages.TestNodeUid("11111"),
+            Uid = new TestNodeUid("11111"),
         };
 
         // Act
@@ -55,6 +55,7 @@ public class JsonTests : TestBase
         Assert.AreEqual("""{"uid":"11111","display-name":"test","hello":"my friend","node-type":"group"}""", actual);
     }
 
+    [TestMethod]
     public async Task Serialize_Array()
     {
         // Arrange
@@ -67,6 +68,7 @@ public class JsonTests : TestBase
         Assert.AreEqual("[1,2,3]", actual);
     }
 
+    [TestMethod]
     public async Task Serialize_DateTimeOffset()
     {
         // Arrange
@@ -79,6 +81,7 @@ public class JsonTests : TestBase
         Assert.AreEqual("2023-01-01T01:01:01.0010000+00:00", actual.Trim('"'));
     }
 
+    [TestMethod]
     public async Task Serialize_ArrayOfObjects()
     {
         // Arrange
@@ -113,6 +116,7 @@ public class JsonTests : TestBase
         Assert.AreEqual("""[{"name":"Thomas","children":[{"name":"Ruth","children":null}]},[2],3]""", actual);
     }
 
+    [TestMethod]
     public void DeserializePerson()
     {
         // Arrange
@@ -137,6 +141,7 @@ public class JsonTests : TestBase
         Assert.IsNull(actual.Children![0].Children);
     }
 
+    [TestMethod]
     public void DeserializePersonList()
     {
         // Arrange

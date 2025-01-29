@@ -34,5 +34,5 @@ internal sealed partial class JsonConfigurationSource(ITestApplicationModuleInfo
     public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 
     public Task<IConfigurationProvider> BuildAsync(CommandLineParseResult commandLineParseResult)
-        => Task.FromResult((IConfigurationProvider)new JsonConfigurationProvider(_testApplicationModuleInfo, _fileSystem, _fileLoggerProvider?.CreateLogger(typeof(JsonConfigurationProvider).ToString())));
+        => Task.FromResult((IConfigurationProvider)new JsonConfigurationProvider(_testApplicationModuleInfo, _fileSystem, commandLineParseResult, _fileLoggerProvider?.CreateLogger(typeof(JsonConfigurationProvider).ToString())));
 }

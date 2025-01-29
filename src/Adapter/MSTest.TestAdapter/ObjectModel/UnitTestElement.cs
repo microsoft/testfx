@@ -1,9 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Diagnostics;
-using System.Globalization;
-
 using Microsoft.TestPlatform.AdapterUtilities;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
@@ -16,7 +13,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 /// </summary>
 [Serializable]
 [DebuggerDisplay("{GetDisplayName()} ({TestMethod.ManagedTypeName})")]
-internal class UnitTestElement
+internal sealed class UnitTestElement
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="UnitTestElement"/> class.
@@ -35,16 +32,6 @@ internal class UnitTestElement
     /// Gets the test method which should be executed as part of this test case.
     /// </summary>
     public TestMethod TestMethod { get; private set; }
-
-    /// <summary>
-    /// Gets or sets a value indicating whether the unit test should be ignored at run-time.
-    /// </summary>
-    public bool Ignored { get; set; }
-
-    /// <summary>
-    /// Gets or sets a value indicating whether it is a async test.
-    /// </summary>
-    public bool IsAsync { get; set; }
 
     /// <summary>
     /// Gets or sets the test categories for test method.
@@ -152,12 +139,6 @@ internal class UnitTestElement
             testCase.SetPropertyValue(Constants.DeclaringClassNameProperty, TestMethod.DeclaringClassFullName);
         }
 
-        // Many of the tests will not be async, so there is no point in sending extra data
-        if (IsAsync)
-        {
-            testCase.SetPropertyValue(Constants.AsyncTestProperty, IsAsync);
-        }
-
         // Set only if some test category is present
         if (TestCategory is { Length: > 0 })
         {
@@ -170,7 +151,7 @@ internal class UnitTestElement
             testCase.SetPropertyValue(Constants.PriorityProperty, Priority.Value);
         }
 
-        if (Traits != null)
+        if (Traits is { Length: > 0 })
         {
             testCase.Traits.AddRange(Traits);
         }
@@ -214,6 +195,7 @@ internal class UnitTestElement
 
             testCase.SetPropertyValue(Constants.TestDynamicDataTypeProperty, (int)TestMethod.DataType);
             testCase.SetPropertyValue(Constants.TestDynamicDataProperty, data);
+            testCase.SetPropertyValue(Constants.TestDataSourceIgnoreMessageProperty, TestMethod.TestDataSourceIgnoreMessage);
         }
 
         SetTestCaseId(testCase, testFullName);

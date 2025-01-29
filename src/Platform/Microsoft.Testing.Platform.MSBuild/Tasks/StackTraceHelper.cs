@@ -1,14 +1,9 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
-using System.Reflection;
-using System.Text.RegularExpressions;
-
 namespace Microsoft.Testing.Platform.MSBuild;
 
-internal class StackTraceHelper
+internal static class StackTraceHelper
 {
     private static Regex? s_regex;
 

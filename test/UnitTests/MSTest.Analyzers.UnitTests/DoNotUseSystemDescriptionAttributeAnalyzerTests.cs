@@ -7,9 +7,10 @@ using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
 
 namespace MSTest.Analyzers.Test;
 
-[TestGroup]
-public sealed class DoNotUseSystemDescriptionAttributeAnalyzerTests(ITestExecutionContext testExecutionContext) : TestBase(testExecutionContext)
+[TestClass]
+public sealed class DoNotUseSystemDescriptionAttributeAnalyzerTests
 {
+    [TestMethod]
     public async Task WhenTestMethodHasMicrosoftDescriptionAttribute_NoDiagnostic()
     {
         string code = """
@@ -29,6 +30,7 @@ public sealed class DoNotUseSystemDescriptionAttributeAnalyzerTests(ITestExecuti
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenTestMethodHasSystemDescriptionAttribute_Diagnostic()
     {
         string code = """
@@ -48,6 +50,7 @@ public sealed class DoNotUseSystemDescriptionAttributeAnalyzerTests(ITestExecuti
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenMethodWithoutTestMethodAttribute_HasSystemDescriptionAttribute_NoDiagnostic()
     {
         string code = """

@@ -15,7 +15,9 @@ namespace MSTest.Analyzers;
 /// <summary>
 /// MSTEST0028: <inheritdoc cref="Resources.UseAsyncSuffixTestFixtureMethodSuppressorJustification"/>.
 /// </summary>
-[DiagnosticAnalyzer(LanguageNames.CSharp, LanguageNames.VisualBasic)]
+#pragma warning disable RS1004 // Recommend adding language support to diagnostic analyzer - This suppressor is not valid for VB
+[DiagnosticAnalyzer(LanguageNames.CSharp)]
+#pragma warning restore RS1004 // Recommend adding language support to diagnostic analyzer
 public sealed class NonNullableReferenceNotInitializedSuppressor : DiagnosticSuppressor
 {
     // CS8618: Non-nullable variable must contain a non-null value when exiting constructor. Consider declaring it as nullable.

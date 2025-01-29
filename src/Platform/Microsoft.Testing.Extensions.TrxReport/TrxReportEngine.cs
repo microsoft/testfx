@@ -4,18 +4,16 @@
 #if NETCOREAPP
 using System.Buffers;
 #endif
-using System.Globalization;
 using System.Security.Cryptography;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Xml.Linq;
 
+using Microsoft.Testing.Extensions.TestReports.Resources;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Helpers;
+using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Extensions.TrxReport.Abstractions;
@@ -27,14 +25,6 @@ internal sealed partial class TrxReportEngine
     private static readonly Regex ReservedFileNamesRegex = BuildReservedFileNameRegex();
     private static readonly Regex InvalidXmlCharReplace = BuildInvalidXmlCharReplace();
     private static readonly MatchEvaluator InvalidXmlEvaluator = ReplaceInvalidCharacterWithUniCodeEscapeSequence;
-
-    private static readonly Type[] FailedStates =
-    [
-        typeof(FailedTestNodeStateProperty),
-        typeof(CancelledTestNodeStateProperty),
-        typeof(ErrorTestNodeStateProperty),
-        typeof(TimeoutTestNodeStateProperty)
-    ];
 
     private static readonly HashSet<char> InvalidFileNameChars =
     [
@@ -153,7 +143,7 @@ internal sealed partial class TrxReportEngine
         _isCopyingFileAllowed = isCopyingFileAllowed;
     }
 
-    public async Task<string> GenerateReportAsync(string testHostCrashInfo = "", bool isTestHostCrashed = false, bool keepReportFileStreamOpen = false)
+    public async Task<(string FileName, string? Warning)> GenerateReportAsync(string testHostCrashInfo = "", bool isTestHostCrashed = false)
         => await RetryWhenIOExceptionAsync(async () =>
         {
             string testAppModule = _testApplicationModuleInfo.GetCurrentTestApplicationFullPath();
@@ -169,9 +159,19 @@ internal sealed partial class TrxReportEngine
 
             // If the user added the trxFileName the runDeploymentRoot would stay the same, We think it's a bug but I found that same behavior on vstest
             string runDeploymentRoot = AddTestSettings(testRun, testRunName);
-            string trxFileName = _commandLineOptionsService.TryGetOptionArgumentList(TrxReportGeneratorCommandLine.TrxReportFileNameOptionName, out string[]? fileName)
-                ? ReplaceInvalidFileNameChars(fileName[0])
-                : $"{runDeploymentRoot}.trx";
+            bool isFileNameExplicitlyProvided;
+            string trxFileName;
+            if (_commandLineOptionsService.TryGetOptionArgumentList(TrxReportGeneratorCommandLine.TrxReportFileNameOptionName, out string[]? fileName))
+            {
+                trxFileName = ReplaceInvalidFileNameChars(fileName[0]);
+                isFileNameExplicitlyProvided = true;
+            }
+            else
+            {
+                trxFileName = $"{runDeploymentRoot}.trx";
+                isFileNameExplicitlyProvided = false;
+            }
+
             AddResults(testAppModule, testRun, out XElement testDefinitions, out XElement testEntries, out string uncategorizedTestId, out string resultSummaryOutcome);
             testRun.Add(testDefinitions);
             testRun.Add(testEntries);
@@ -200,26 +200,19 @@ internal sealed partial class TrxReportEngine
 
             string outputDirectory = _configuration.GetTestResultDirectory(); // add var for this
             string finalFileName = Path.Combine(outputDirectory, trxFileName);
-            Stream stream = _fileSystem.NewFileStream(finalFileName, FileMode.CreateNew).Stream;
-            try
-            {
-                await document.SaveAsync(stream, SaveOptions.None, _cancellationToken);
-                return finalFileName;
-            }
-            finally
-            {
-                if (!keepReportFileStreamOpen)
-                {
-#if NET
-                    await stream.DisposeAsync();
-#else
-                    stream.Dispose();
-#endif
-                }
-            }
+
+            bool isFileNameExplicitlyProvidedAndFileExists = isFileNameExplicitlyProvided && _fileSystem.Exists(finalFileName);
+
+            // Note that we need to dispose the IFileStream, not the inner stream.
+            // IFileStream implementations will be responsible to dispose their inner stream.
+            using IFileStream stream = _fileSystem.NewFileStream(finalFileName, isFileNameExplicitlyProvided ? FileMode.Create : FileMode.CreateNew);
+            await document.SaveAsync(stream.Stream, SaveOptions.None, _cancellationToken);
+            return isFileNameExplicitlyProvidedAndFileExists
+                ? (finalFileName, string.Format(CultureInfo.InvariantCulture, ExtensionResources.TrxFileExistsAndWillBeOverwritten, finalFileName))
+                : (finalFileName, null);
         });
 
-    private async Task<string> RetryWhenIOExceptionAsync(Func<Task<string>> func)
+    private async Task<(string FileName, string? Warning)> RetryWhenIOExceptionAsync(Func<Task<(string FileName, string? Warning)>> func)
     {
         DateTimeOffset firstTryTime = _clock.UtcNow;
         bool throwIOException = false;
@@ -238,8 +231,8 @@ internal sealed partial class TrxReportEngine
                 }
             }
 
-            // We try for 30 seconds to create a file with a unique name.
-            if (_clock.UtcNow - firstTryTime > TimeSpan.FromSeconds(30))
+            // We try for 5 seconds to create a file with a unique name.
+            if (_clock.UtcNow - firstTryTime > TimeSpan.FromSeconds(5))
             {
                 throwIOException = true;
             }
@@ -469,7 +462,7 @@ internal sealed partial class TrxReportEngine
             string outcome = "Passed";
             TestNodeStateProperty? testState = testNode.Properties.SingleOrDefault<TestNodeStateProperty>();
             if (testState is { } state
-                && FailedStates.Contains(testState.GetType()))
+                && TestNodePropertiesCategories.WellKnownTestNodeTestRunOutcomeFailedProperties.Contains(testState.GetType()))
             {
                 outcome = resultSummaryOutcome = "Failed";
             }

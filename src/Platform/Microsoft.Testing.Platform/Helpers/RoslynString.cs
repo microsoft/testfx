@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Diagnostics.CodeAnalysis;
-
 namespace Microsoft.Testing.Platform;
 
 [SuppressMessage("ApiDesign", "RS0030:Do not use banned APIs", Justification = "This is the replacement helper")]

@@ -7,9 +7,10 @@ using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
 
 namespace MSTest.Analyzers.Test;
 
-[TestGroup]
-public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests(ITestExecutionContext testExecutionContext) : TestBase(testExecutionContext)
+[TestClass]
+public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests
 {
+    [TestMethod]
     public async Task WhenIsNullAssertion_ValueParameterIsNullable_NoDiagnostic()
     {
         string code = """
@@ -30,6 +31,7 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests(ITest
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
     public async Task WhenIsNullAssertion_ValueParameterIsNotNullable_Diagnostic()
     {
         string code = """
@@ -64,6 +66,7 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests(ITest
         await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
+    [TestMethod]
     public async Task WhenIsNullAssertion_ValueParameterAsPropertySymbolIsNotNullable_Diagnostic()
     {
         string code = """
@@ -99,6 +102,7 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests(ITest
         await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
+    [TestMethod]
     public async Task WhenIsNullAssertion_ValueParameterAsPropertySymbolIsNullable_NoDiagnostic()
     {
         string code = """
@@ -120,6 +124,7 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests(ITest
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
     public async Task WhenIsNullAssertion_ValueParameterAsReferenceObjectIsNotNullable_Diagnostic()
     {
         string code = """
@@ -163,6 +168,7 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests(ITest
         await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
+    [TestMethod]
     public async Task WhenIsNullAssertion_ValueParameterAsReferenceObjectIsNotNullable_WithoutEnableNullable_NoDiagnostic()
     {
         string code = """
@@ -187,6 +193,7 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests(ITest
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
     public async Task WhenIsNullAssertion_ValueParameterAsReferenceObjectIsNullable_NoDiagnostic()
     {
         string code = """
@@ -213,6 +220,7 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests(ITest
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
     public async Task WhenAssertIsTrueIsPassedTrue_NoDiagnostic()
     {
         string code = """
@@ -232,6 +240,7 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests(ITest
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
     public async Task WhenAssertIsTrueIsPassedTrue_WithMessage_NoDiagnostic()
     {
         string code = """
@@ -251,6 +260,7 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests(ITest
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
     public async Task WhenAssertIsTrueIsPassedTrue_WithMessageFirst_NoDiagnostic()
     {
         string code = """
@@ -270,6 +280,7 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests(ITest
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
     public async Task WhenAssertIsTrueIsPassedFalse_Diagnostic()
     {
         string code = """
@@ -302,6 +313,7 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests(ITest
         await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
+    [TestMethod]
     public async Task WhenAssertIsTrueIsPassedFalse_WithMessage_Diagnostic()
     {
         string code = """
@@ -326,13 +338,52 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests(ITest
                 [TestMethod]
                 public void TestMethod()
                 {
-                    Assert.Fail();
+                    Assert.Fail("message");
                 }
             }
             """;
         await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
+    [TestMethod]
+    public async Task WhenAssertIsTrueIsPassedFalse_WithMessageAndArgsAsParams_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    [|Assert.IsTrue(false, "message", "1")|];
+                    [|Assert.IsTrue(false, "message", "1", "2")|];
+                    [|Assert.IsTrue(false, "message", new object[] { "1", "2" })|];
+                    [|Assert.IsTrue(message: "message", parameters: new object[] { "1", "2" }, condition: false)|];
+                }
+            }
+            """;
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    Assert.Fail("message", "1");
+                    Assert.Fail("message", "1", "2");
+                    Assert.Fail("message", new object[] { "1", "2" });
+                    Assert.Fail(message: "message", parameters: new object[] { "1", "2" });
+                }
+            }
+            """;
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    [TestMethod]
     public async Task WhenAssertIsTrueIsPassedFalse_WithMessageFirst_Diagnostic()
     {
         string code = """
@@ -357,13 +408,14 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests(ITest
                 [TestMethod]
                 public void TestMethod()
                 {
-                    Assert.Fail();
+                    Assert.Fail(message: "message");
                 }
             }
             """;
         await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
+    [TestMethod]
     public async Task WhenAssertIsTrueIsPassedUnknown_NoDiagnostic()
     {
         string code = """
@@ -385,6 +437,7 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests(ITest
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
     public async Task WhenAssertIsTrueIsPassedUnknown_WithMessage_NoDiagnostic()
     {
         string code = """
@@ -406,6 +459,7 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests(ITest
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
     public async Task WhenAssertIsTrueIsPassedUnknown_WithMessageFirst_NoDiagnostic()
     {
         string code = """
@@ -427,6 +481,7 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests(ITest
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
     public async Task WhenAssertIsFalseIsPassedTrue_Diagnostic()
     {
         string code = """
@@ -459,6 +514,7 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests(ITest
         await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
+    [TestMethod]
     public async Task WhenAssertIsFalseIsPassedTrue_WithMessage_Diagnostic()
     {
         string code = """
@@ -483,7 +539,7 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests(ITest
                 [TestMethod]
                 public void TestMethod()
                 {
-                    Assert.Fail();
+                    Assert.Fail("message");
                 }
             }
             """;
@@ -491,6 +547,7 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests(ITest
         await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
+    [TestMethod]
     public async Task WhenAssertIsFalseIsPassedTrue_WithMessageFirst_Diagnostic()
     {
         string code = """
@@ -515,7 +572,7 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests(ITest
                 [TestMethod]
                 public void TestMethod()
                 {
-                    Assert.Fail();
+                    Assert.Fail(message: "message");
                 }
             }
             """;
@@ -523,6 +580,7 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests(ITest
         await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
+    [TestMethod]
     public async Task WhenAssertIsFalseIsPassedFalse_NoDiagnostic()
     {
         string code = """
@@ -542,6 +600,7 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests(ITest
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
     public async Task WhenAssertIsFalseIsPassedFalse_WithMessage_NoDiagnostic()
     {
         string code = """
@@ -561,6 +620,7 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests(ITest
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
     public async Task WhenAssertIsFalseIsPassedFalse_WithMessageFirst_NoDiagnostic()
     {
         string code = """
@@ -580,6 +640,7 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests(ITest
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
     public async Task WhenAssertIsFalseIsPassedUnknown_NoDiagnostic()
     {
         string code = """
@@ -601,6 +662,7 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests(ITest
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
     public async Task WhenAssertIsFalseIsPassedUnknown_WithMessage_NoDiagnostic()
     {
         string code = """
@@ -622,6 +684,7 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests(ITest
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
     public async Task WhenAssertIsFalseIsPassedUnknown_WithMessageFirst_NoDiagnostic()
     {
         string code = """
@@ -643,6 +706,7 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests(ITest
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
     public async Task WhenAssertIsNotNullIsPassedNull_Diagnostic()
     {
         string code = """
@@ -675,6 +739,7 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests(ITest
         await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
+    [TestMethod]
     public async Task WhenAssertIsNotNullIsPassedNull_WithMessage_Diagnostic()
     {
         string code = """
@@ -699,7 +764,7 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests(ITest
                 [TestMethod]
                 public void TestMethod()
                 {
-                    Assert.Fail();
+                    Assert.Fail("message");
                 }
             }
             """;
@@ -707,6 +772,7 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests(ITest
         await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
+    [TestMethod]
     public async Task WhenAssertIsNotNullIsPassedNull_WithMessageFirst_Diagnostic()
     {
         string code = """
@@ -731,7 +797,7 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests(ITest
                 [TestMethod]
                 public void TestMethod()
                 {
-                    Assert.Fail();
+                    Assert.Fail(message: "message");
                 }
             }
             """;
@@ -739,6 +805,7 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests(ITest
         await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
+    [TestMethod]
     public async Task WhenAssertIsNotNullIsPassedUnknown_NoDiagnostic()
     {
         string code = """
@@ -760,6 +827,7 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests(ITest
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
     public async Task WhenAssertIsNotNullIsPassedUnknown_WithMessage_NoDiagnostic()
     {
         string code = """
@@ -781,6 +849,7 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests(ITest
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
     public async Task WhenAssertIsNotNullIsPassedUnknown_WithMessageFirst_NoDiagnostic()
     {
         string code = """
@@ -802,6 +871,7 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests(ITest
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
     public async Task WhenAssertAreEqualIsPassedEqual_NoDiagnostic()
     {
         string code = """
@@ -821,6 +891,7 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests(ITest
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
     public async Task WhenAssertAreEqualIsPassedEqual_WithMessage_NoDiagnostic()
     {
         string code = """
@@ -840,6 +911,7 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests(ITest
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
     public async Task WhenAssertAreEqualIsPassedEqual_WithMessageFirst_NoDiagnostic()
     {
         string code = """
@@ -859,6 +931,7 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests(ITest
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
     public async Task WhenAssertAreEqualIsPassedEqual_WithMessageSecond_NoDiagnostic()
     {
         string code = """
@@ -878,6 +951,7 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests(ITest
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
     public async Task WhenAssertAreEqualIsPassedNonEqual_Diagnostic()
     {
         string code = """
@@ -910,6 +984,7 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests(ITest
         await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
+    [TestMethod]
     public async Task WhenAssertAreEqualIsPassedNonEqual_WithMessage_Diagnostic()
     {
         string code = """
@@ -934,7 +1009,7 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests(ITest
                 [TestMethod]
                 public void TestMethod()
                 {
-                    Assert.Fail();
+                    Assert.Fail("message");
                 }
             }
             """;
@@ -942,6 +1017,7 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests(ITest
         await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
+    [TestMethod]
     public async Task WhenAssertAreEqualIsPassedNonEqual_WithMessageFirst_Diagnostic()
     {
         string code = """
@@ -966,7 +1042,7 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests(ITest
                 [TestMethod]
                 public void TestMethod()
                 {
-                    Assert.Fail();
+                    Assert.Fail(message: "message");
                 }
             }
             """;
@@ -974,6 +1050,7 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests(ITest
         await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
+    [TestMethod]
     public async Task WhenAssertAreEqualIsPassedNonEqual_WithMessageSecond_Diagnostic()
     {
         string code = """
@@ -998,7 +1075,7 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests(ITest
                 [TestMethod]
                 public void TestMethod()
                 {
-                    Assert.Fail();
+                    Assert.Fail(message: "message");
                 }
             }
             """;
@@ -1006,6 +1083,7 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests(ITest
         await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
+    [TestMethod]
     public async Task WhenAssertAreEqualIsPassedUnknown_NoDiagnostic()
     {
         string code = """
@@ -1027,6 +1105,7 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests(ITest
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
     public async Task WhenAssertAreEqualIsPassedUnknown_WithMessage_NoDiagnostic()
     {
         string code = """
@@ -1048,6 +1127,7 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests(ITest
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
     public async Task WhenAssertAreEqualIsPassedUnknown_WithMessageFirst_NoDiagnostic()
     {
         string code = """
@@ -1069,6 +1149,7 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests(ITest
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
     public async Task WhenAssertAreEqualIsPassedUnknown_WithMessageSecond_NoDiagnostic()
     {
         string code = """
@@ -1090,6 +1171,7 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests(ITest
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
     public async Task WhenAssertAreNotEqualIsPassedEqual_Diagnostic()
     {
         string code = """
@@ -1122,6 +1204,7 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests(ITest
         await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
+    [TestMethod]
     public async Task WhenAssertAreNotEqualIsPassedEqual_WithMessage_Diagnostic()
     {
         string code = """
@@ -1146,7 +1229,7 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests(ITest
                 [TestMethod]
                 public void TestMethod()
                 {
-                    Assert.Fail();
+                    Assert.Fail("message");
                 }
             }
             """;
@@ -1154,6 +1237,7 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests(ITest
         await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
+    [TestMethod]
     public async Task WhenAssertAreNotEqualIsPassedEqual_WithMessageFirst_Diagnostic()
     {
         string code = """
@@ -1178,7 +1262,7 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests(ITest
                 [TestMethod]
                 public void TestMethod()
                 {
-                    Assert.Fail();
+                    Assert.Fail(message: "message");
                 }
             }
             """;
@@ -1186,6 +1270,7 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests(ITest
         await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
+    [TestMethod]
     public async Task WhenAssertAreNotEqualIsPassedEqual_WithMessageSecond_Diagnostic()
     {
         string code = """
@@ -1210,7 +1295,7 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests(ITest
                 [TestMethod]
                 public void TestMethod()
                 {
-                    Assert.Fail();
+                    Assert.Fail(message: "message");
                 }
             }
             """;
@@ -1218,6 +1303,7 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests(ITest
         await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
+    [TestMethod]
     public async Task WhenAssertAreNotEqualIsPassedNonEqual_NoDiagnostic()
     {
         string code = """
@@ -1237,6 +1323,7 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests(ITest
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
     public async Task WhenAssertAreNotEqualIsPassedNonEqual_WithMessage_NoDiagnostic()
     {
         string code = """
@@ -1256,6 +1343,7 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests(ITest
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
     public async Task WhenAssertAreNotEqualIsPassedNonEqual_WithMessageFirst_NoDiagnostic()
     {
         string code = """
@@ -1275,6 +1363,7 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests(ITest
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
     public async Task WhenAssertAreNotEqualIsPassedNonEqual_WithMessageSecond_NoDiagnostic()
     {
         string code = """
@@ -1294,6 +1383,7 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests(ITest
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
     public async Task WhenAssertAreNotEqualIsPassedUnknown_NoDiagnostic()
     {
         string code = """
@@ -1315,6 +1405,7 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests(ITest
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
     public async Task WhenAssertAreNotEqualIsPassedUnknown_WithMessage_NoDiagnostic()
     {
         string code = """
@@ -1336,6 +1427,7 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests(ITest
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
     public async Task WhenAssertAreNotEqualIsPassedUnknown_WithMessageFirst_NoDiagnostic()
     {
         string code = """
@@ -1357,6 +1449,7 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests(ITest
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
     public async Task WhenAssertAreNotEqualIsPassedUnknown_WithMessageSecond_NoDiagnostic()
     {
         string code = """

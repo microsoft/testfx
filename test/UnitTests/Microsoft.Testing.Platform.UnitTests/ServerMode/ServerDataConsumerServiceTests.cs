@@ -15,8 +15,8 @@ using TestNodeUid = Microsoft.Testing.Platform.Extensions.Messages.TestNodeUid;
 
 namespace Microsoft.Testing.Platform.UnitTests;
 
-[TestGroup]
-public sealed class ServerDataConsumerServiceTests : TestBase, IAsyncCleanable, IDisposable
+[TestClass]
+public sealed class ServerDataConsumerServiceTests : IDisposable
 {
     private readonly PerRequestServerDataConsumer _service;
     private readonly ServiceProvider _serviceProvider = new();
@@ -25,13 +25,13 @@ public sealed class ServerDataConsumerServiceTests : TestBase, IAsyncCleanable, 
 
     private readonly Guid _runId = Guid.NewGuid();
 
-    public ServerDataConsumerServiceTests(ITestExecutionContext testExecutionContext)
-        : base(testExecutionContext)
+    public ServerDataConsumerServiceTests()
     {
         _serviceProvider.TryAddService(new PerRequestTestSessionContext(CancellationToken.None, CancellationToken.None));
         _service = new PerRequestServerDataConsumer(_serviceProvider, _serverTestHost.Object, _runId, _task.Object);
     }
 
+    [TestMethod]
     public async Task ConsumeAsync_WithSessionFileArtifact()
     {
         SessionFileArtifact sessionFileArtifact = new(new SessionUid("1"), new FileInfo("file"), "name", "description");
@@ -55,6 +55,7 @@ public sealed class ServerDataConsumerServiceTests : TestBase, IAsyncCleanable, 
         Assert.AreEqual(expected[0].Description, actual[0].Description);
     }
 
+    [TestMethod]
     public async Task ConsumeAsync_WithTestNodeUpdatedMessage()
     {
         TestNodeUpdateMessage testNode = new(new SessionUid("1"), new TestNode { Uid = new TestNodeUid("test()"), DisplayName = string.Empty });
@@ -66,6 +67,7 @@ public sealed class ServerDataConsumerServiceTests : TestBase, IAsyncCleanable, 
         Assert.AreEqual(0, actual.Count);
     }
 
+    [TestMethod]
     public void PopulateTestNodeStatistics_WithMissingNodeType()
     {
         TestNodeUpdateMessage testNode = new(new SessionUid("1"), new TestNode { Uid = new TestNodeUid("test()"), DisplayName = string.Empty });
@@ -73,11 +75,12 @@ public sealed class ServerDataConsumerServiceTests : TestBase, IAsyncCleanable, 
         _service.PopulateTestNodeStatistics(testNode);
 
         TestNodeStatistics statistics = _service.GetTestNodeStatistics();
-        Assert.AreEqual(statistics.TotalDiscoveredTests, 0);
-        Assert.AreEqual(statistics.TotalPassedTests, 0);
-        Assert.AreEqual(statistics.TotalFailedTests, 0);
+        Assert.AreEqual(0, statistics.TotalDiscoveredTests);
+        Assert.AreEqual(0, statistics.TotalPassedTests);
+        Assert.AreEqual(0, statistics.TotalFailedTests);
     }
 
+    [TestMethod]
     public void PopulateTestNodeStatistics_WithDuplicateDiscoveredEvents()
     {
         PropertyBag properties = new(
@@ -89,11 +92,12 @@ public sealed class ServerDataConsumerServiceTests : TestBase, IAsyncCleanable, 
         _service.PopulateTestNodeStatistics(testNode);
 
         TestNodeStatistics statistics = _service.GetTestNodeStatistics();
-        Assert.AreEqual(statistics.TotalDiscoveredTests, 1);
-        Assert.AreEqual(statistics.TotalPassedTests, 0);
-        Assert.AreEqual(statistics.TotalFailedTests, 0);
+        Assert.AreEqual(1, statistics.TotalDiscoveredTests);
+        Assert.AreEqual(0, statistics.TotalPassedTests);
+        Assert.AreEqual(0, statistics.TotalFailedTests);
     }
 
+    [TestMethod]
     public void PopulateTestNodeStatistics_WithDiscoveredAndPassedEventsForSameUid()
     {
         PropertyBag properties = new(
@@ -110,11 +114,12 @@ public sealed class ServerDataConsumerServiceTests : TestBase, IAsyncCleanable, 
         _service.PopulateTestNodeStatistics(otherTestNode);
 
         TestNodeStatistics statistics = _service.GetTestNodeStatistics();
-        Assert.AreEqual(statistics.TotalDiscoveredTests, 1);
-        Assert.AreEqual(statistics.TotalPassedTests, 1);
-        Assert.AreEqual(statistics.TotalFailedTests, 0);
+        Assert.AreEqual(1, statistics.TotalDiscoveredTests);
+        Assert.AreEqual(1, statistics.TotalPassedTests);
+        Assert.AreEqual(0, statistics.TotalFailedTests);
     }
 
+    [TestMethod]
     public void PopulateTestNodeStatistics_WithDuplicatePassedEvents()
     {
         PropertyBag properties = new(PassedTestNodeStateProperty.CachedInstance);
@@ -125,13 +130,14 @@ public sealed class ServerDataConsumerServiceTests : TestBase, IAsyncCleanable, 
         _service.PopulateTestNodeStatistics(testNode);
 
         TestNodeStatistics statistics = _service.GetTestNodeStatistics();
-        Assert.AreEqual(statistics.TotalDiscoveredTests, 0);
-        Assert.AreEqual(statistics.TotalPassedTests, 1);
-        Assert.AreEqual(statistics.TotalFailedTests, 0);
-        Assert.AreEqual(statistics.TotalPassedRetries, 1);
-        Assert.AreEqual(statistics.TotalFailedRetries, 0);
+        Assert.AreEqual(0, statistics.TotalDiscoveredTests);
+        Assert.AreEqual(1, statistics.TotalPassedTests);
+        Assert.AreEqual(0, statistics.TotalFailedTests);
+        Assert.AreEqual(1, statistics.TotalPassedRetries);
+        Assert.AreEqual(0, statistics.TotalFailedRetries);
     }
 
+    [TestMethod]
     public void PopulateTestNodeStatistics_WithEventsForSameUid()
     {
         PropertyBag properties = new(
@@ -148,13 +154,14 @@ public sealed class ServerDataConsumerServiceTests : TestBase, IAsyncCleanable, 
         _service.PopulateTestNodeStatistics(otherTestNode);
 
         TestNodeStatistics statistics = _service.GetTestNodeStatistics();
-        Assert.AreEqual(statistics.TotalDiscoveredTests, 0);
-        Assert.AreEqual(statistics.TotalPassedTests, 1);
-        Assert.AreEqual(statistics.TotalFailedTests, 0);
-        Assert.AreEqual(statistics.TotalPassedRetries, 1);
-        Assert.AreEqual(statistics.TotalFailedRetries, 0);
+        Assert.AreEqual(0, statistics.TotalDiscoveredTests);
+        Assert.AreEqual(1, statistics.TotalPassedTests);
+        Assert.AreEqual(0, statistics.TotalFailedTests);
+        Assert.AreEqual(1, statistics.TotalPassedRetries);
+        Assert.AreEqual(0, statistics.TotalFailedRetries);
     }
 
+    [TestMethod]
     public void PopulateTestNodeStatistics_WithEventsForDifferentUids()
     {
         PropertyBag properties = new(
@@ -171,14 +178,15 @@ public sealed class ServerDataConsumerServiceTests : TestBase, IAsyncCleanable, 
         _service.PopulateTestNodeStatistics(otherTestNode);
 
         TestNodeStatistics statistics = _service.GetTestNodeStatistics();
-        Assert.AreEqual(statistics.TotalDiscoveredTests, 0);
-        Assert.AreEqual(statistics.TotalPassedTests, 1);
-        Assert.AreEqual(statistics.TotalFailedTests, 1);
-        Assert.AreEqual(statistics.TotalPassedRetries, 0);
-        Assert.AreEqual(statistics.TotalFailedRetries, 0);
+        Assert.AreEqual(0, statistics.TotalDiscoveredTests);
+        Assert.AreEqual(1, statistics.TotalPassedTests);
+        Assert.AreEqual(1, statistics.TotalFailedTests);
+        Assert.AreEqual(0, statistics.TotalPassedRetries);
+        Assert.AreEqual(0, statistics.TotalFailedRetries);
     }
 
-    public async Task CleanupAsync(CleanupContext context)
+    [TestCleanup]
+    public async Task CleanupAsync()
     {
         if (_service.GetIdleUpdateTaskAsync() is { } idleUpdateTaskAsync)
         {
@@ -186,7 +194,7 @@ public sealed class ServerDataConsumerServiceTests : TestBase, IAsyncCleanable, 
         }
     }
 
-    public void Dispose() => _service.Dispose();
+    void IDisposable.Dispose() => _service.Dispose();
 
     private sealed class DataProducer : IDataProducer
     {

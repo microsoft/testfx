@@ -66,6 +66,9 @@ tab_width = 4
 # Do not set end_of_line property, this is causing issues with Linux,
 # see https://github.com/dotnet/roslyn/issues/55526
 
+# MSTESTOBS: Type or member is obsolete
+dotnet_diagnostic.MSTESTOBS.severity = none
+
 #### .NET Coding Conventions ####
 
 ## Organize usings
@@ -211,6 +214,7 @@ dotnet_diagnostic.CA1827.severity = warning             # CA1827: Do not use Cou
 dotnet_diagnostic.CA1836.severity = warning             # CA1836: Prefer IsEmpty over Count
 dotnet_diagnostic.CA1840.severity = warning             # CA1840: Use 'Environment.CurrentManagedThreadId'
 dotnet_diagnostic.CA1852.severity = warning             # CA1852: Seal internal types
+dotnet_code_quality.CA1852.ignore_internalsvisibleto = true
 dotnet_diagnostic.CA1854.severity = warning             # CA1854: Prefer the 'IDictionary.TryGetValue(TKey, out TValue)' method
 # Disabled as it's making the code complex to deal with when multi targeting
 dotnet_diagnostic.CA1863.severity = none                # CA1863: Use 'CompositeFormat'
@@ -245,6 +249,7 @@ dotnet_diagnostic.SA1402.severity = none                # SA1402: File may only 
 dotnet_diagnostic.SA1515.severity = none                # SA1515: Single-line comment should be preceded by blank line
 dotnet_diagnostic.SA1611.severity = none                # SA1611: Element parameters should be documented
 dotnet_diagnostic.SA1615.severity = none                # SA1615: Element return value should be documented
+dotnet_diagnostic.SA1633.severity = none                # SA1633: File should have header
 dotnet_diagnostic.SA1649.severity = none                # SA1649: File name should match first type name
 
 # -----------------------------------------------------------------------------------------
@@ -256,6 +261,9 @@ dotnet_diagnostic.SA1601.severity = none                # SA1601: Partial elemen
 dotnet_diagnostic.VSTHRD002.severity = none             # VSTHRD002 Avoid problematic synchronous waits
 dotnet_diagnostic.VSTHRD003.severity = none             # VSTHRD003: Avoid awaiting foreign Tasks
 dotnet_diagnostic.VSTHRD105.severity = none             # VSTHRD105: Avoid method overloads that assume TaskScheduler.Current
+
+dotnet_diagnostic.MSTESTEXP.severity = none             # MSTESTEXP: Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+dotnet_diagnostic.TPEXP.severity = none                 # TPEXP: Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
 
 #### Naming styles ####
 

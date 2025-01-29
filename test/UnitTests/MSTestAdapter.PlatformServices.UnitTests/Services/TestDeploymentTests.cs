@@ -1,9 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Reflection;
-using System.Xml;
-
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
@@ -109,9 +106,9 @@ public class TestDeploymentTests : TestContainer
 
     public void CleanupShouldNotDeleteDirectoriesIfRunSettingsSpecifiesSo()
     {
-        string runSettingXml =
+        string runSettingsXml =
             "<DeleteDeploymentDirectoryAfterTestRunIsComplete>False</DeleteDeploymentDirectoryAfterTestRunIsComplete>";
-        StringReader stringReader = new(runSettingXml);
+        StringReader stringReader = new(runSettingsXml);
         var reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
         MSTestSettingsProvider mstestSettingsProvider = new();
         mstestSettingsProvider.Load(reader);
@@ -191,9 +188,9 @@ public class TestDeploymentTests : TestContainer
             new DeploymentUtility(),
             _mockFileUtility.Object);
 
-        string runSettingXml =
+        string runSettingsXml =
              "<DeploymentEnabled>False</DeploymentEnabled>";
-        StringReader stringReader = new(runSettingXml);
+        StringReader stringReader = new(runSettingsXml);
         var reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
         MSTestSettingsProvider mstestSettingsProvider = new();
         mstestSettingsProvider.Load(reader);
@@ -214,9 +211,9 @@ public class TestDeploymentTests : TestContainer
             new DeploymentUtility(),
             _mockFileUtility.Object);
 
-        string runSettingXml =
+        string runSettingsXml =
             "<DeploymentEnabled>False</DeploymentEnabled>";
-        StringReader stringReader = new(runSettingXml);
+        StringReader stringReader = new(runSettingsXml);
         var reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
         MSTestSettingsProvider mstestSettingsProvider = new();
         mstestSettingsProvider.Load(reader);
@@ -237,9 +234,9 @@ public class TestDeploymentTests : TestContainer
             new DeploymentUtility(),
             _mockFileUtility.Object);
 
-        string runSettingXml =
+        string runSettingsXml =
             "<DeploymentEnabled>True</DeploymentEnabled>";
-        StringReader stringReader = new(runSettingXml);
+        StringReader stringReader = new(runSettingsXml);
         var reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
         MSTestSettingsProvider mstestSettingsProvider = new();
         mstestSettingsProvider.Load(reader);
@@ -267,9 +264,9 @@ public class TestDeploymentTests : TestContainer
             new DeploymentUtility(),
             _mockFileUtility.Object);
 
-        string runSettingXml =
+        string runSettingsXml =
             "<DeploymentEnabled>True</DeploymentEnabled>";
-        StringReader stringReader = new(runSettingXml);
+        StringReader stringReader = new(runSettingsXml);
         var reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
         MSTestSettingsProvider mstestSettingsProvider = new();
         mstestSettingsProvider.Load(reader);

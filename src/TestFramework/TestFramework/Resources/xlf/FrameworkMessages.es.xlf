@@ -92,6 +92,11 @@
         <target state="translated">La propiedad de datos dinámicos '{0}' debe ser estática y tener un captador.</target>
         <note />
       </trans-unit>
+      <trans-unit id="DynamicDataSourceShouldExistAndBeValid">
+        <source>The dynamic data source '{0}' in type '{1}' should exist and be a property or a method.</source>
+        <target state="translated">El origen de datos dinámico '{0}' en el tipo '{1}' debe existir y ser una propiedad o un método.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ElementNumbersDontMatch">
         <source>The number of elements in the collections do not match. Expected:&lt;{1}&gt;. Actual:&lt;{2}&gt;.{0}</source>
         <target state="translated">El número de elementos de las colecciones no coincide. Se esperaba:&lt;{1}&gt;, pero es:&lt;{2}&gt;.{0}</target>
@@ -121,6 +126,16 @@ Real: {2}</target>
         <target state="translated">Error de {0}. {1}</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="HasCountFailMsg">
+        <source>Expected collection of size {1}. Actual: {2}. {0}</source>
+        <target state="translated">Se esperaba una colección de tamaño {1}. Real: {2}. {0}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="InvalidGitHubUrl">
+        <source>Invalid GitHub ticket URL</source>
+        <target state="new">Invalid GitHub ticket URL</target>
+        <note />
+      </trans-unit>
       <trans-unit id="IsInstanceOfFailMsg">
         <source>{0} Expected type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;.</source>
         <target state="translated">{0} Tipo esperado:&lt;{1}&gt;. Tipo real:&lt;{2}&gt;.</target>
@@ -130,6 +145,11 @@ Real: {2}</target>
         <source>String '{0}' does not match pattern '{1}'. {2}.</source>
         <target state="translated">La cadena '{0}' no coincide con el patrón '{1}'. {2}.</target>
         <note></note>
+      </trans-unit>
+      <trans-unit id="IsNotEmptyFailMsg">
+        <source>Expected collection to contain any item but it is empty. {0}</source>
+        <target state="translated">Se esperaba que la colección contenga cualquier elemento, pero está vacía. {0}</target>
+        <note />
       </trans-unit>
       <trans-unit id="IsNotInstanceOfFailMsg">
         <source>Wrong Type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;. {0}</source>
@@ -253,8 +273,8 @@ Real: {2}</target>
         <note></note>
       </trans-unit>
       <trans-unit id="DynamicDataIEnumerableNull">
-        <source>Property or method {0} on {1} return type is not assignable to 'IEnumerable&lt;object[]&gt;' (nor 'IEnumerable&lt;ITuple&gt;' for .NET Core).</source>
-        <target state="translated">La propiedad o el método {0} en {1} tipo de valor devuelto no se puede asignar a "IEnumerable&lt;objecto[]&gt;" (ni a "IEnumerable&lt;ITuple&gt;" para .NET Core).</target>
+        <source>Property or method {0} on {1} return type is not assignable to 'IEnumerable'.</source>
+        <target state="translated">La propiedad o el método {0} en el tipo de retorno {1} no se puede asignar a "IEnumerable".</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataValueNull">

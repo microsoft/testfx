@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if NETCOREAPP
-using System.Diagnostics;
 using System.Threading.Channels;
 
 using Microsoft.Testing.Platform.Extensions.Messages;
@@ -12,7 +11,7 @@ using Microsoft.Testing.Platform.Helpers;
 namespace Microsoft.Testing.Platform.Messages;
 
 [DebuggerDisplay("DataConsumer = {DataConsumer.Uid}")]
-internal class AsyncConsumerDataProcessor : IDisposable
+internal sealed class AsyncConsumerDataProcessor : IDisposable
 {
     private readonly ITask _task;
     private readonly CancellationToken _cancellationToken;

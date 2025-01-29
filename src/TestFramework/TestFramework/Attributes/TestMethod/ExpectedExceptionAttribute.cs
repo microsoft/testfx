@@ -1,13 +1,14 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Globalization;
-
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 /// <summary>
 /// Attribute that specifies to expect an exception of the specified type.
 /// </summary>
+/// <remarks>
+/// We recommend using one of the Assert.ThrowsException or Assert.ThrowsExceptionAsync overload instead of using this attribute.
+/// </remarks>
 [AttributeUsage(AttributeTargets.Method)]
 public sealed class ExpectedExceptionAttribute : ExpectedExceptionBaseAttribute
 {

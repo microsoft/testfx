@@ -42,4 +42,8 @@ internal static class DiagnosticIds
     public const string UseDeploymentItemWithTestMethodOrTestClassRuleId = "MSTEST0035";
     public const string DoNotUseShadowingRuleId = "MSTEST0036";
     public const string UseProperAssertMethodsRuleId = "MSTEST0037";
+    public const string AvoidAssertAreSameWithValueTypesRuleId = "MSTEST0038";
+    public const string UseNewerAssertThrowsRuleId = "MSTEST0039";
+    public const string AvoidUsingAssertsInAsyncVoidContextRuleId = "MSTEST0040";
+    public const string UseConditionBaseWithTestClassRuleId = "MSTEST0041";
 }

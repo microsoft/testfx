@@ -1,7 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Globalization;
 using System.Net;
 using System.Net.Sockets;
 
@@ -14,7 +13,7 @@ namespace Microsoft.Testing.Platform.ServerMode;
 
 internal sealed partial class ServerModeManager
 {
-    internal class MessageHandlerFactory : IMessageHandlerFactory, IOutputDeviceDataProducer
+    internal sealed class MessageHandlerFactory : IMessageHandlerFactory, IOutputDeviceDataProducer
     {
         private readonly string? _host;
         private readonly int _port;

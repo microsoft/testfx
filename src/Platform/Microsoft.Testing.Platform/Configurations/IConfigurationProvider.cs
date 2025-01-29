@@ -3,7 +3,8 @@
 
 namespace Microsoft.Testing.Platform.Configurations;
 
-internal interface IConfigurationProvider
+[Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
+public interface IConfigurationProvider
 {
     Task LoadAsync();
 

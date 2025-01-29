@@ -1,9 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Diagnostics.CodeAnalysis;
-using System.Reflection;
-
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
@@ -64,15 +61,11 @@ public class TestExecutionManagerTests : TestContainer
 
         _testExecutionManager = new TestExecutionManager(
             new EnvironmentWrapper(),
-            action => Task.Factory.StartNew(
-                () =>
-                {
-                    _enqueuedParallelTestsCount++;
-                    action();
-                },
-                CancellationToken.None,
-                TaskCreationOptions.LongRunning,
-                TaskScheduler.Default));
+            task =>
+            {
+                _enqueuedParallelTestsCount++;
+                return task();
+            });
     }
 
     protected override void Dispose(bool disposing)
@@ -87,7 +80,7 @@ public class TestExecutionManagerTests : TestContainer
 
     #region RunTests on a list of tests
 
-    public void RunTestsForTestWithFilterErrorShouldSendZeroResults()
+    public async Task RunTestsForTestWithFilterErrorShouldSendZeroResults()
     {
         TestCase testCase = GetTestCase(typeof(DummyTestClass), "PassingTest");
 
@@ -96,7 +89,7 @@ public class TestExecutionManagerTests : TestContainer
         // Causing the FilterExpressionError
         _runContext = new TestableRunContextTestExecutionTests(() => throw new TestPlatformFormatException());
 
-        _testExecutionManager.RunTests(tests, _runContext, _frameworkHandle, _cancellationToken);
+        await _testExecutionManager.RunTestsAsync(tests, _runContext, _frameworkHandle, _cancellationToken);
 
         // No Results
         Verify(_frameworkHandle.TestCaseStartList.Count == 0);
@@ -104,7 +97,7 @@ public class TestExecutionManagerTests : TestContainer
         Verify(_frameworkHandle.TestCaseEndList.Count == 0);
     }
 
-    public void RunTestsForTestWithFilterShouldSendResultsForFilteredTests()
+    public async Task RunTestsForTestWithFilterShouldSendResultsForFilteredTests()
     {
         TestCase testCase = GetTestCase(typeof(DummyTestClass), "PassingTest");
         TestCase failingTestCase = GetTestCase(typeof(DummyTestClass), "FailingTest");
@@ -112,7 +105,7 @@ public class TestExecutionManagerTests : TestContainer
 
         _runContext = new TestableRunContextTestExecutionTests(() => new TestableTestCaseFilterExpression(p => p.DisplayName == "PassingTest"));
 
-        _testExecutionManager.RunTests(tests, _runContext, _frameworkHandle, _cancellationToken);
+        await _testExecutionManager.RunTestsAsync(tests, _runContext, _frameworkHandle, _cancellationToken);
 
         // FailingTest should be skipped because it does not match the filter criteria.
         List<string> expectedTestCaseStartList = ["PassingTest"];
@@ -124,25 +117,25 @@ public class TestExecutionManagerTests : TestContainer
         Verify(expectedResultList.SequenceEqual(_frameworkHandle.ResultsList));
     }
 
-    public void RunTestsForIgnoredTestShouldSendResultsMarkingIgnoredTestsAsSkipped()
+    public async Task RunTestsForIgnoredTestShouldSendResultsMarkingIgnoredTestsAsSkipped()
     {
-        TestCase testCase = GetTestCase(typeof(DummyTestClass), "IgnoredTest", ignore: true);
+        TestCase testCase = GetTestCase(typeof(DummyTestClass), "IgnoredTest");
         TestCase[] tests = [testCase];
 
-        _testExecutionManager.RunTests(tests, _runContext, _frameworkHandle, _cancellationToken);
+        await _testExecutionManager.RunTestsAsync(tests, _runContext, _frameworkHandle, _cancellationToken);
 
         Verify(_frameworkHandle.TestCaseStartList[0] == "IgnoredTest");
         Verify(_frameworkHandle.TestCaseEndList[0] == "IgnoredTest:Skipped");
         Verify(_frameworkHandle.ResultsList[0] == "IgnoredTest  Skipped");
     }
 
-    public void RunTestsForASingleTestShouldSendSingleResult()
+    public async Task RunTestsForASingleTestShouldSendSingleResult()
     {
         TestCase testCase = GetTestCase(typeof(DummyTestClass), "PassingTest");
 
         TestCase[] tests = [testCase];
 
-        _testExecutionManager.RunTests(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
+        await _testExecutionManager.RunTestsAsync(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
 
         List<string> expectedTestCaseStartList = ["PassingTest"];
         List<string> expectedTestCaseEndList = ["PassingTest:Passed"];
@@ -153,13 +146,13 @@ public class TestExecutionManagerTests : TestContainer
         Verify(expectedResultList.SequenceEqual(_frameworkHandle.ResultsList));
     }
 
-    public void RunTestsForMultipleTestShouldSendMultipleResults()
+    public async Task RunTestsForMultipleTestShouldSendMultipleResults()
     {
         TestCase testCase = GetTestCase(typeof(DummyTestClass), "PassingTest");
         TestCase failingTestCase = GetTestCase(typeof(DummyTestClass), "FailingTest");
         TestCase[] tests = [testCase, failingTestCase];
 
-        _testExecutionManager.RunTests(tests, _runContext, _frameworkHandle, _cancellationToken);
+        await _testExecutionManager.RunTestsAsync(tests, _runContext, _frameworkHandle, _cancellationToken);
 
         List<string> expectedTestCaseStartList = ["PassingTest", "FailingTest"];
         List<string> expectedTestCaseEndList = ["PassingTest:Passed", "FailingTest:Failed"];
@@ -171,7 +164,7 @@ public class TestExecutionManagerTests : TestContainer
         Verify(_frameworkHandle.ResultsList[1].Contains(expectedResultList[1]));
     }
 
-    public void RunTestsForCancellationTokenCanceledSetToTrueShouldSendZeroResults()
+    public async Task RunTestsForCancellationTokenCanceledSetToTrueShouldSendZeroResults()
     {
         TestCase testCase = GetTestCase(typeof(DummyTestClass), "PassingTest");
 
@@ -179,7 +172,7 @@ public class TestExecutionManagerTests : TestContainer
 
         // Cancel the test run
         _cancellationToken.Cancel();
-        Exception exception = VerifyThrows(() => _testExecutionManager.RunTests(tests, _runContext, _frameworkHandle, _cancellationToken));
+        Exception exception = await VerifyThrowsAsync(() => _testExecutionManager.RunTestsAsync(tests, _runContext, _frameworkHandle, _cancellationToken));
 
         Verify(exception is OperationCanceledException);
 
@@ -189,7 +182,7 @@ public class TestExecutionManagerTests : TestContainer
         Verify(_frameworkHandle.TestCaseEndList.Count == 0);
     }
 
-    public void RunTestsForTestShouldDeployBeforeExecution()
+    public async Task RunTestsForTestShouldDeployBeforeExecution()
     {
         TestCase testCase = GetTestCase(typeof(DummyTestClass), "PassingTest");
         TestCase[] tests = [testCase];
@@ -199,7 +192,7 @@ public class TestExecutionManagerTests : TestContainer
         testablePlatformService.MockTestDeployment.Setup(
             td => td.Deploy(tests, _runContext, _frameworkHandle)).Callback(() => SetCaller("Deploy"));
 
-        _testExecutionManager.RunTests(
+        await _testExecutionManager.RunTestsAsync(
             tests,
             _runContext,
             _frameworkHandle,
@@ -209,7 +202,7 @@ public class TestExecutionManagerTests : TestContainer
         Verify(_callers[1] == "LoadAssembly", "Deploy should be called before execution.");
     }
 
-    public void RunTestsForTestShouldCleanupAfterExecution()
+    public async Task RunTestsForTestShouldCleanupAfterExecution()
     {
         TestCase testCase = GetTestCase(typeof(DummyTestClass), "PassingTest");
         TestCase[] tests = [testCase];
@@ -219,25 +212,25 @@ public class TestExecutionManagerTests : TestContainer
         testablePlatformService.MockTestDeployment.Setup(
             td => td.Cleanup()).Callback(() => SetCaller("Cleanup"));
 
-        _testExecutionManager.RunTests(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
+        await _testExecutionManager.RunTestsAsync(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
 
         Verify(_callers[0] == "LoadAssembly", "Cleanup should be called after execution.");
         Verify(_callers.LastOrDefault() == "Cleanup", "Cleanup should be called after execution.");
     }
 
-    public void RunTestsForTestShouldNotCleanupOnTestFailure()
+    public async Task RunTestsForTestShouldNotCleanupOnTestFailure()
     {
         TestCase testCase = GetTestCase(typeof(DummyTestClass), "PassingTest");
         TestCase failingTestCase = GetTestCase(typeof(DummyTestClass), "FailingTest");
         TestCase[] tests = [testCase, failingTestCase];
 
         TestablePlatformServiceProvider testablePlatformService = SetupTestablePlatformService();
-        _testExecutionManager.RunTests(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
+        await _testExecutionManager.RunTestsAsync(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
 
         testablePlatformService.MockTestDeployment.Verify(td => td.Cleanup(), Times.Never);
     }
 
-    public void RunTestsForTestShouldLoadSourceFromDeploymentDirectoryIfDeployed()
+    public async Task RunTestsForTestShouldLoadSourceFromDeploymentDirectoryIfDeployed()
     {
         TestCase testCase = GetTestCase(typeof(DummyTestClass), "PassingTest");
         TestCase failingTestCase = GetTestCase(typeof(DummyTestClass), "FailingTest");
@@ -251,14 +244,14 @@ public class TestExecutionManagerTests : TestContainer
         testablePlatformService.MockTestDeployment.Setup(td => td.GetDeploymentDirectory())
             .Returns(@"C:\temp");
 
-        _testExecutionManager.RunTests(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
+        await _testExecutionManager.RunTestsAsync(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
 
         testablePlatformService.MockFileOperations.Verify(
             fo => fo.LoadAssembly(It.Is<string>(s => s.StartsWith("C:\\temp")), It.IsAny<bool>()),
             Times.AtLeastOnce);
     }
 
-    public void RunTestsForTestShouldPassInTestRunParametersInformationAsPropertiesToTheTest()
+    public async Task RunTestsForTestShouldPassInTestRunParametersInformationAsPropertiesToTheTest()
     {
         TestCase testCase = GetTestCase(typeof(DummyTestClass), "PassingTest");
 
@@ -276,13 +269,13 @@ public class TestExecutionManagerTests : TestContainer
             </RunSettings>
             """);
 
-        _testExecutionManager.RunTests(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
+        await _testExecutionManager.RunTestsAsync(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
 
         Verify(DummyTestClass.TestContextProperties.ToList().Contains(
             new KeyValuePair<string, object>("webAppUrl", "http://localhost")));
     }
 
-    public void RunTestsForTestShouldPassInTcmPropertiesAsPropertiesToTheTest()
+    public async Task RunTestsForTestShouldPassInTcmPropertiesAsPropertiesToTheTest()
     {
         TestCase testCase = GetTestCase(typeof(DummyTestClass), "PassingTest");
         object[] propertiesValue = [32, 534, 5, "sample build directory", "sample build flavor", "132456", "sample build platform", "http://sampleBuildUti/", "http://samplecollectionuri/", "sample team project", false, 1401, 54, "sample configuration name", 345];
@@ -298,12 +291,12 @@ public class TestExecutionManagerTests : TestContainer
             </RunSettings>
             """);
 
-        _testExecutionManager.RunTests(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
+        await _testExecutionManager.RunTestsAsync(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
 
         VerifyTcmProperties(DummyTestClass.TestContextProperties, testCase);
     }
 
-    public void RunTestsForTestShouldPassInDeploymentInformationAsPropertiesToTheTest()
+    public async Task RunTestsForTestShouldPassInDeploymentInformationAsPropertiesToTheTest()
     {
         TestCase testCase = GetTestCase(typeof(DummyTestClass), "PassingTest");
         TestCase[] tests = [testCase];
@@ -311,12 +304,12 @@ public class TestExecutionManagerTests : TestContainer
         // Setup mocks.
         TestablePlatformServiceProvider testablePlatformService = SetupTestablePlatformService();
 
-        _testExecutionManager.RunTests(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
+        await _testExecutionManager.RunTestsAsync(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
 
         testablePlatformService.MockSettingsProvider.Verify(sp => sp.GetProperties(It.IsAny<string>()), Times.Once);
     }
 
-    public void RunTestsShouldClearSessionParametersAcrossRuns()
+    public async Task RunTestsShouldClearSessionParametersAcrossRuns()
     {
         TestCase testCase = GetTestCase(typeof(DummyTestClass), "PassingTest");
 
@@ -335,7 +328,7 @@ public class TestExecutionManagerTests : TestContainer
             """);
 
         // Trigger First Run
-        _testExecutionManager.RunTests(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
+        await _testExecutionManager.RunTestsAsync(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
 
         // Update runsettings to have different values for similar keys
         _runContext.MockRunSettings.Setup(rs => rs.SettingsXml).Returns(
@@ -352,7 +345,7 @@ public class TestExecutionManagerTests : TestContainer
             """);
 
         // Trigger another Run
-        _testExecutionManager.RunTests(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
+        await _testExecutionManager.RunTestsAsync(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
 
         Verify("http://updatedLocalHost".Equals(DummyTestClass.TestContextProperties["webAppUrl"]));
     }
@@ -362,11 +355,11 @@ public class TestExecutionManagerTests : TestContainer
     #region Run Tests on Sources
 
     [SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "This is currently ignored and that's why we marked it as private")]
-    private void RunTestsForSourceShouldRunTestsInASource()
+    private async Task RunTestsForSourceShouldRunTestsInASource()
     {
         var sources = new List<string> { Assembly.GetExecutingAssembly().Location };
 
-        _testExecutionManager.RunTests(sources, _runContext, _frameworkHandle, _cancellationToken);
+        await _testExecutionManager.RunTestsAsync(sources, _runContext, _frameworkHandle, _cancellationToken);
 
         Verify(_frameworkHandle.TestCaseStartList.Contains("PassingTest"));
         Verify(_frameworkHandle.TestCaseEndList.Contains("PassingTest:Passed"));
@@ -374,7 +367,7 @@ public class TestExecutionManagerTests : TestContainer
     }
 
     [SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "This is currently ignored and that's why we marked it as private")]
-    private void RunTestsForSourceShouldPassInTestRunParametersInformationAsPropertiesToTheTest()
+    private async Task RunTestsForSourceShouldPassInTestRunParametersInformationAsPropertiesToTheTest()
     {
         var sources = new List<string> { Assembly.GetExecutingAssembly().Location };
 
@@ -388,7 +381,7 @@ public class TestExecutionManagerTests : TestContainer
             </RunSettings>
             """);
 
-        _testExecutionManager.RunTests(sources, _runContext, _frameworkHandle, _cancellationToken);
+        await _testExecutionManager.RunTestsAsync(sources, _runContext, _frameworkHandle, _cancellationToken);
 
         Verify(
             DummyTestClass.TestContextProperties.ToList().Contains(
@@ -396,16 +389,16 @@ public class TestExecutionManagerTests : TestContainer
     }
 
     [SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "This is currently ignored and that's why we marked it as private")]
-    private void RunTestsForSourceShouldPassInDeploymentInformationAsPropertiesToTheTest()
+    private async Task RunTestsForSourceShouldPassInDeploymentInformationAsPropertiesToTheTest()
     {
         var sources = new List<string> { Assembly.GetExecutingAssembly().Location };
 
-        _testExecutionManager.RunTests(sources, _runContext, _frameworkHandle, _cancellationToken);
+        await _testExecutionManager.RunTestsAsync(sources, _runContext, _frameworkHandle, _cancellationToken);
 
         Verify(DummyTestClass.TestContextProperties is not null);
     }
 
-    public void RunTestsForMultipleSourcesShouldRunEachTestJustOnce()
+    public async Task RunTestsForMultipleSourcesShouldRunEachTestJustOnce()
     {
         int testsCount = 0;
         var sources = new List<string> { Assembly.GetExecutingAssembly().Location, Assembly.GetExecutingAssembly().Location };
@@ -414,7 +407,7 @@ public class TestExecutionManagerTests : TestContainer
             ExecuteTestsWrapper = (tests, runContext, frameworkHandle, isDeploymentDone) => testsCount += tests.Count(),
         };
 
-        testableTestExecutionManager.RunTests(sources, _runContext, _frameworkHandle, _cancellationToken);
+        await testableTestExecutionManager.RunTestsAsync(sources, _runContext, _frameworkHandle, _cancellationToken);
         Verify(testsCount == 4);
     }
 
@@ -425,8 +418,8 @@ public class TestExecutionManagerTests : TestContainer
     public void SendTestResultsShouldFillInDataRowIndexIfTestIsDataDriven()
     {
         var testCase = new TestCase("DummyTest", new Uri("executor://testExecutor"), Assembly.GetExecutingAssembly().Location);
-        UnitTestResult unitTestResult1 = new() { DatarowIndex = 0, DisplayName = "DummyTest" };
-        UnitTestResult unitTestResult2 = new() { DatarowIndex = 1, DisplayName = "DummyTest" };
+        TestTools.UnitTesting.TestResult unitTestResult1 = new() { DatarowIndex = 0, DisplayName = "DummyTest" };
+        TestTools.UnitTesting.TestResult unitTestResult2 = new() { DatarowIndex = 1, DisplayName = "DummyTest" };
         _testExecutionManager.SendTestResults(testCase, [unitTestResult1, unitTestResult2], default, default, _frameworkHandle);
         Verify(_frameworkHandle.TestDisplayNameList[0] == "DummyTest (Data Row 0)");
         Verify(_frameworkHandle.TestDisplayNameList[1] == "DummyTest (Data Row 1)");
@@ -436,7 +429,7 @@ public class TestExecutionManagerTests : TestContainer
 
     #region Parallel tests
 
-    public void RunTestsForTestShouldRunTestsInParallelWhenEnabledInRunsettings()
+    public async Task RunTestsForTestShouldRunTestsInParallelWhenEnabledInRunsettings()
     {
         TestCase testCase11 = GetTestCase(typeof(DummyTestClassForParallelize), "TestMethod1");
         TestCase testCase12 = GetTestCase(typeof(DummyTestClassForParallelize), "TestMethod2");
@@ -461,7 +454,7 @@ public class TestExecutionManagerTests : TestContainer
         try
         {
             MSTestSettings.PopulateSettings(_runContext, _mockMessageLogger.Object, null);
-            _testExecutionManager.RunTests(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
+            await _testExecutionManager.RunTestsAsync(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
 
             Verify(DummyTestClassForParallelize.ThreadIds.Count == 1);
             Verify(DummyTestClassForParallelize2.ThreadIds.Count == 1);
@@ -474,7 +467,7 @@ public class TestExecutionManagerTests : TestContainer
         }
     }
 
-    public void RunTestsForTestShouldRunTestsByMethodLevelWhenSpecified()
+    public async Task RunTestsForTestShouldRunTestsByMethodLevelWhenSpecified()
     {
         TestCase testCase11 = GetTestCase(typeof(DummyTestClassForParallelize), "TestMethod1");
         TestCase testCase12 = GetTestCase(typeof(DummyTestClassForParallelize), "TestMethod2");
@@ -498,7 +491,7 @@ public class TestExecutionManagerTests : TestContainer
         try
         {
             MSTestSettings.PopulateSettings(_runContext, _mockMessageLogger.Object, null);
-            _testExecutionManager.RunTests(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
+            await _testExecutionManager.RunTestsAsync(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
 
             Verify(_enqueuedParallelTestsCount == 2);
 
@@ -511,7 +504,7 @@ public class TestExecutionManagerTests : TestContainer
         }
     }
 
-    public void RunTestsForTestShouldRunTestsWithSpecifiedNumberOfWorkers()
+    public async Task RunTestsForTestShouldRunTestsWithSpecifiedNumberOfWorkers()
     {
         TestCase testCase1 = GetTestCase(typeof(DummyTestClassForParallelize), "TestMethod1");
         TestCase testCase2 = GetTestCase(typeof(DummyTestClassForParallelize2), "TestMethod1");
@@ -535,7 +528,7 @@ public class TestExecutionManagerTests : TestContainer
         try
         {
             MSTestSettings.PopulateSettings(_runContext, _mockMessageLogger.Object, null);
-            _testExecutionManager.RunTests(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
+            await _testExecutionManager.RunTestsAsync(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
 
             Verify(DummyTestClassForParallelize.ThreadIds.Count == 1);
             Verify(DummyTestClassForParallelize2.ThreadIds.Count == 1);
@@ -551,7 +544,7 @@ public class TestExecutionManagerTests : TestContainer
         }
     }
 
-    public void RunTestsForTestShouldNotRunTestsInParallelWhenDisabledFromRunsettings()
+    public async Task RunTestsForTestShouldNotRunTestsInParallelWhenDisabledFromRunsettings()
     {
         TestCase testCase1 = GetTestCase(typeof(DummyTestClassForParallelize), "TestMethod1");
         TestCase testCase2 = GetTestCase(typeof(DummyTestClassForParallelize), "TestMethod2");
@@ -598,7 +591,7 @@ public class TestExecutionManagerTests : TestContainer
             testablePlatformService.MockReflectionOperations.Setup(fo => fo.GetRuntimeMethods(It.IsAny<Type>()))
                 .Returns((Type t) => originalReflectionOperation.GetRuntimeMethods(t));
 
-            _testExecutionManager.RunTests(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
+            await _testExecutionManager.RunTestsAsync(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
 
             Verify(DummyTestClassForParallelize.ThreadIds.Count == 1);
         }
@@ -608,7 +601,7 @@ public class TestExecutionManagerTests : TestContainer
         }
     }
 
-    public void RunTestsForTestShouldNotRunTestsInParallelWhenDisabledFromSource()
+    public async Task RunTestsForTestShouldNotRunTestsInParallelWhenDisabledFromSource()
     {
         TestCase testCase1 = GetTestCase(typeof(DummyTestClassForParallelize), "TestMethod1");
         TestCase testCase2 = GetTestCase(typeof(DummyTestClassForParallelize), "TestMethod2");
@@ -657,7 +650,7 @@ public class TestExecutionManagerTests : TestContainer
             testablePlatformService.MockReflectionOperations.Setup(fo => fo.GetRuntimeMethods(It.IsAny<Type>()))
                 .Returns((Type t) => originalReflectionOperation.GetRuntimeMethods(t));
 
-            _testExecutionManager.RunTests(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
+            await _testExecutionManager.RunTestsAsync(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
 
             Verify(DummyTestClassForParallelize.ThreadIds.Count == 1);
         }
@@ -667,7 +660,7 @@ public class TestExecutionManagerTests : TestContainer
         }
     }
 
-    public void RunTestsForTestShouldRunNonParallelizableTestsSeparately()
+    public async Task RunTestsForTestShouldRunNonParallelizableTestsSeparately()
     {
         TestCase testCase1 = GetTestCase(typeof(DummyTestClassWithDoNotParallelizeMethods), "TestMethod1");
         TestCase testCase2 = GetTestCase(typeof(DummyTestClassWithDoNotParallelizeMethods), "TestMethod2");
@@ -696,7 +689,7 @@ public class TestExecutionManagerTests : TestContainer
         try
         {
             MSTestSettings.PopulateSettings(_runContext, _mockMessageLogger.Object, null);
-            _testExecutionManager.RunTests(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
+            await _testExecutionManager.RunTestsAsync(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
 
             Verify(_enqueuedParallelTestsCount == 2);
             Verify(DummyTestClassWithDoNotParallelizeMethods.ParallelizableTestsThreadIds.Count is 1 or 2);
@@ -709,7 +702,7 @@ public class TestExecutionManagerTests : TestContainer
         }
     }
 
-    public void RunTestsForTestShouldPreferParallelSettingsFromRunSettingsOverAssemblyLevelAttributes()
+    public async Task RunTestsForTestShouldPreferParallelSettingsFromRunSettingsOverAssemblyLevelAttributes()
     {
         TestCase testCase1 = GetTestCase(typeof(DummyTestClassForParallelize), "TestMethod1");
         TestCase testCase2 = GetTestCase(typeof(DummyTestClassForParallelize), "TestMethod2");
@@ -762,7 +755,7 @@ public class TestExecutionManagerTests : TestContainer
             testablePlatformService.MockReflectionOperations.Setup(fo => fo.GetRuntimeMethods(It.IsAny<Type>()))
                 .Returns((Type t) => originalReflectionOperation.GetRuntimeMethods(t));
 
-            _testExecutionManager.RunTests(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
+            await _testExecutionManager.RunTestsAsync(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
 
             Verify(_enqueuedParallelTestsCount == 2);
 
@@ -777,7 +770,7 @@ public class TestExecutionManagerTests : TestContainer
 
     // This is tracked by https://github.com/Microsoft/testfx/issues/320.
     [SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "This is currently ignored and that's why we marked it as private")]
-    private void RunTestsForTestShouldRunTestsInTheParentDomainsApartmentState()
+    private async Task RunTestsForTestShouldRunTestsInTheParentDomainsApartmentState()
     {
         TestCase testCase1 = GetTestCase(typeof(DummyTestClassWithDoNotParallelizeMethods), "TestMethod1");
         TestCase testCase2 = GetTestCase(typeof(DummyTestClassWithDoNotParallelizeMethods), "TestMethod2");
@@ -802,7 +795,7 @@ public class TestExecutionManagerTests : TestContainer
         try
         {
             MSTestSettings.PopulateSettings(_runContext, _mockMessageLogger.Object, null);
-            _testExecutionManager.RunTests(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
+            await _testExecutionManager.RunTestsAsync(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
 
             Verify(DummyTestClassWithDoNotParallelizeMethods.ThreadApartmentStates.Count == 1);
             Verify(Thread.CurrentThread.GetApartmentState() == DummyTestClassWithDoNotParallelizeMethods.ThreadApartmentStates.ToArray()[0]);
@@ -817,14 +810,11 @@ public class TestExecutionManagerTests : TestContainer
 
     #region private methods
 
-    private static TestCase GetTestCase(Type typeOfClass, string testName, bool ignore = false)
+    private static TestCase GetTestCase(Type typeOfClass, string testName)
     {
         MethodInfo methodInfo = typeOfClass.GetMethod(testName);
         var testMethod = new TestMethod(methodInfo.Name, typeOfClass.FullName, Assembly.GetExecutingAssembly().Location, isAsync: false);
-        UnitTestElement element = new(testMethod)
-        {
-            Ignored = ignore,
-        };
+        UnitTestElement element = new(testMethod);
         return element.ToTestCase();
     }
 
@@ -1143,7 +1133,11 @@ internal class TestableTestExecutionManager : TestExecutionManager
 {
     internal Action<IEnumerable<TestCase>, IRunContext, IFrameworkHandle, bool> ExecuteTestsWrapper { get; set; }
 
-    internal override void ExecuteTests(IEnumerable<TestCase> tests, IRunContext runContext, IFrameworkHandle frameworkHandle, bool isDeploymentDone) => ExecuteTestsWrapper?.Invoke(tests, runContext, frameworkHandle, isDeploymentDone);
+    internal override Task ExecuteTestsAsync(IEnumerable<TestCase> tests, IRunContext runContext, IFrameworkHandle frameworkHandle, bool isDeploymentDone)
+    {
+        ExecuteTestsWrapper?.Invoke(tests, runContext, frameworkHandle, isDeploymentDone);
+        return Task.CompletedTask;
+    }
 
     internal override UnitTestDiscoverer GetUnitTestDiscoverer() => new TestableUnitTestDiscoverer();
 }

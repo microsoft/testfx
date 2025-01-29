@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Reflection;
-
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
@@ -60,7 +58,7 @@ public class TestMethodFilterTests : TestContainer
     public void PropertyProviderValueForInvalidPropertyNameReturnsNull()
     {
         Type type = typeof(DummyTestClassWithTestMethods);
-        string fullName = $"{type.FullName}.{"TestMethod"}";
+        string fullName = $"{type.FullName}.TestMethod";
         TestCase testCase = new(fullName, MSTest.TestAdapter.Constants.ExecutorUri, Assembly.GetExecutingAssembly().FullName);
 
         object result = _testMethodFilter.PropertyValueProvider(testCase, null);
@@ -70,7 +68,7 @@ public class TestMethodFilterTests : TestContainer
     public void PropertyProviderValueForSupportedPropertyNameWhichIsNotSetReturnsNull()
     {
         Type type = typeof(DummyTestClassWithTestMethods);
-        string fullName = $"{type.FullName}.{"TestMethod"}";
+        string fullName = $"{type.FullName}.TestMethod";
 
         TestCase testCase = new(fullName, MSTest.TestAdapter.Constants.ExecutorUri, Assembly.GetExecutingAssembly().FullName);
         object result = _testMethodFilter.PropertyValueProvider(testCase, "Priority");
@@ -80,7 +78,7 @@ public class TestMethodFilterTests : TestContainer
     public void PropertyProviderValueForValidTestAndSupportedPropertyNameReturnsValue()
     {
         Type type = typeof(DummyTestClassWithTestMethods);
-        string fullName = $"{type.FullName}.{"TestMethod"}";
+        string fullName = $"{type.FullName}.TestMethod";
 
         TestCase testCase = new(fullName, MSTest.TestAdapter.Constants.ExecutorUri, Assembly.GetExecutingAssembly().FullName);
 

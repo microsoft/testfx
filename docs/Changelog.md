@@ -4,6 +4,230 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
+## <a name="3.7.3" />[3.7.3] - 2025-01-27
+
+See full log [here](https://github.com/microsoft/testfx/compare/v3.7.2...v3.7.3)
+
+### Fixed
+
+* Fix `Could not load type 'System.Threading.Lock'` error for WinUI when using net9.0 by @dependabot in [#4794](https://github.com/microsoft/testfx/pull/4794)
+
+### Artifacts
+
+* MSTest: [3.7.3](https://www.nuget.org/packages/MSTest/3.7.3)
+* MSTest.TestFramework: [3.7.3](https://www.nuget.org/packages/MSTest.TestFramework/3.7.3)
+* MSTest.TestAdapter: [3.7.3](https://www.nuget.org/packages/MSTest.TestAdapter/3.7.3)
+* MSTest.Analyzers: [3.7.3](https://www.nuget.org/packages/MSTest.Analyzers/3.7.3)
+* MSTest.Sdk: [3.7.3](https://www.nuget.org/packages/MSTest.Sdk/3.7.3)
+* Microsoft.Testing.Extensions.CrashDump: [1.5.3](https://www.nuget.org/packages/Microsoft.Testing.Extensions.CrashDump/1.5.3)
+* Microsoft.Testing.Extensions.HangDump: [1.5.3](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HangDump/1.5.3)
+* Microsoft.Testing.Extensions.HotReload: [1.5.3](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HotReload/1.5.3)
+* Microsoft.Testing.Extensions.Retry: [1.5.3](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Retry/1.5.3)
+* Microsoft.Testing.Extensions.TrxReport: [1.5.3](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport/1.5.3)
+
+## <a name="3.7.2" />[3.7.2] - 2025-01-21
+
+See full log [here](https://github.com/microsoft/testfx/compare/v3.7.1...v3.7.2)
+
+### Fixed
+
+* Drop package ref to System.Memory by @Evangelink in [#4652](https://github.com/microsoft/testfx/pull/4652)
+* Fix Tuple/ValueTuple handling of TRest by @Youssef1313 in [#4653](https://github.com/microsoft/testfx/pull/4653)
+
+### Artifacts
+
+* MSTest: [3.7.2](https://www.nuget.org/packages/MSTest/3.7.2)
+* MSTest.TestFramework: [3.7.2](https://www.nuget.org/packages/MSTest.TestFramework/3.7.2)
+* MSTest.TestAdapter: [3.7.2](https://www.nuget.org/packages/MSTest.TestAdapter/3.7.2)
+* MSTest.Analyzers: [3.7.2](https://www.nuget.org/packages/MSTest.Analyzers/3.7.2)
+* MSTest.Sdk: [3.7.2](https://www.nuget.org/packages/MSTest.Sdk/3.7.2)
+* Microsoft.Testing.Extensions.CrashDump: [1.5.2](https://www.nuget.org/packages/Microsoft.Testing.Extensions.CrashDump/1.5.2)
+* Microsoft.Testing.Extensions.HangDump: [1.5.2](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HangDump/1.5.2)
+* Microsoft.Testing.Extensions.HotReload: [1.5.2](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HotReload/1.5.2)
+* Microsoft.Testing.Extensions.Retry: [1.5.2](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Retry/1.5.2)
+* Microsoft.Testing.Extensions.TrxReport: [1.5.2](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport/1.5.2)
+
+## <a name="3.7.1" />[3.7.1] - 2024-01-13
+
+See full log [here](https://github.com/microsoft/testfx/compare/v3.7.0...v3.7.1)
+
+### Fixed
+
+* Don't report MSTEST0001 when TestAdapter isn't referenced (#4481) by @Evangelink in [#4509](https://github.com/microsoft/testfx/pull/4509)
+* Fix MSTEST0017 false positive when both actual/expected are constants (#4460) by @Evangelink in [#4510](https://github.com/microsoft/testfx/pull/4510)
+* MSTEST0037 (proper assert analyzer): Don't report for user defined eq… by @Evangelink in [#4511](https://github.com/microsoft/testfx/pull/4511)
+* Fix typo in analyzer message (#4452) by @Evangelink in [#4512](https://github.com/microsoft/testfx/pull/4512)
+* method scope fix (#4415) by @Evangelink in [#4513](https://github.com/microsoft/testfx/pull/4513)
+* Fix analyzer messages not localized (#4434) by @Evangelink in [#4514](https://github.com/microsoft/testfx/pull/4514)
+* Fix "Could not load file or assembly 'Microsoft.Testing.Platform'" exception by @Evangelink in [#4537](https://github.com/microsoft/testfx/pull/4537)
+* Don't report diagnostic for DeploymentItem on abstract class by @Youssef1313 in [#4539](https://github.com/microsoft/testfx/pull/4539)
+* Fix DynamicData.GetData regression preventing it to work without adapter by @Youssef1313 in [#4626](https://github.com/microsoft/testfx/pull/4626)
+
+### Artifacts
+
+* MSTest: [3.7.1](https://www.nuget.org/packages/MSTest/3.7.1)
+* MSTest.TestFramework: [3.7.1](https://www.nuget.org/packages/MSTest.TestFramework/3.7.1)
+* MSTest.TestAdapter: [3.7.1](https://www.nuget.org/packages/MSTest.TestAdapter/3.7.1)
+* MSTest.Analyzers: [3.7.1](https://www.nuget.org/packages/MSTest.Analyzers/3.7.1)
+* MSTest.Sdk: [3.7.1](https://www.nuget.org/packages/MSTest.Sdk/3.7.1)
+* Microsoft.Testing.Extensions.CrashDump: [1.5.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.CrashDump/1.5.1)
+* Microsoft.Testing.Extensions.HangDump: [1.5.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HangDump/1.5.1)
+* Microsoft.Testing.Extensions.HotReload: [1.5.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HotReload/1.5.1)
+* Microsoft.Testing.Extensions.Retry: [1.5.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Retry/1.5.1)
+* Microsoft.Testing.Extensions.TrxReport: [1.5.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport/1.5.1)
+
+## <a name="3.7.0" />[3.7.0] - 2024-12-20
+
+See full log [here](https://github.com/microsoft/testfx/compare/v3.6.4...v3.7.0)
+
+### Added
+
+* MSTEST0029 code fix by @engyebrahim in [#3747](https://github.com/microsoft/testfx/pull/3747)
+* Add codefix for MSTEST0025 by @engyebrahim in [#3756](https://github.com/microsoft/testfx/pull/3756)
+* Add codefix for MSTEST0022 by @engyebrahim in [#3770](https://github.com/microsoft/testfx/pull/3770)
+* Add codefix for MSTEST0020 by @engyebrahim in [#3798](https://github.com/microsoft/testfx/pull/3798)
+* Add code fix for MSTEST0019 by @engyebrahim in [#3812](https://github.com/microsoft/testfx/pull/3812)
+* Add support for testconfig.json entries in MSTest by @engyebrahim in [#3872](https://github.com/microsoft/testfx/pull/3872)
+* Implement method lookup for dynamic data by @nohwnd in [#3892](https://github.com/microsoft/testfx/pull/3892)
+* Add TestData property to the TestContext by @Evangelink in [#4015](https://github.com/microsoft/testfx/pull/4015)
+* Add TestException property to the TestContext by @Evangelink in [#4018](https://github.com/microsoft/testfx/pull/4018)
+* Add code fix for MSTEST0021 by @engyebrahim in [#3827](https://github.com/microsoft/testfx/pull/3827)
+* Add TestDisplayName property to the TestContext by @Evangelink in [#4037](https://github.com/microsoft/testfx/pull/4037)
+* Implement codefix for MSTEST0006 (AvoidExpectedException) by @Youssef1313 in [#4038](https://github.com/microsoft/testfx/pull/4038)
+* Implement 'Use proper Assert methods' analyzer by @Youssef1313 in [#4052](https://github.com/microsoft/testfx/pull/4052)
+* Support ValueTask-returning test methods for all target frameworks by @Youssef1313 in [#4059](https://github.com/microsoft/testfx/pull/4059)
+* Support rsp in MTP by @Youssef1313 in [#4072](https://github.com/microsoft/testfx/pull/4072)
+* Enable UseProperAssertMethodsAnalyzer by default by @Youssef1313 in [#4076](https://github.com/microsoft/testfx/pull/4076)
+* Add property to SDK for Fakes feature by @Evangelink in [#4121](https://github.com/microsoft/testfx/pull/4121)
+* Support VS/.NET CLI localization in MTP, and add our own env variable as well by @Youssef1313 in [#4122](https://github.com/microsoft/testfx/pull/4122)
+* Implement `--config` for specifying testconfig.json file by @Youssef1313 in [#4124](https://github.com/microsoft/testfx/pull/4124)
+* Add mac os on pr pipeline by @Evangelink in [#4155](https://github.com/microsoft/testfx/pull/4155)
+* Implement codefix for MSTEST0037: Use proper 'Assert' methods by @Youssef1313 in [#4162](https://github.com/microsoft/testfx/pull/4162)
+* Build targeting net9.0 by @Evangelink in [#4167](https://github.com/microsoft/testfx/pull/4167)
+* Add a MSTest sample with a program.cs by @Evangelink in [#4201](https://github.com/microsoft/testfx/pull/4201)
+* Obsolete public types that should not be public by @Evangelink in [#4208](https://github.com/microsoft/testfx/pull/4208)
+* Allow to disable test expansion on implementations of ITestDataSource by @Evangelink in [#4269](https://github.com/microsoft/testfx/pull/4269)
+* Display an error when '--maximum-failed-tests' is used with a framewo… by @Evangelink in [#4326](https://github.com/microsoft/testfx/pull/4326)
+* Make MSTest.TestFramework depends upon MSTest.Analyzers (#4351) by @Evangelink in [#4361](https://github.com/microsoft/testfx/pull/4361)
+* Add support for ValueTuple for all target frameworks (#4360) by @Evangelink in [#4364](https://github.com/microsoft/testfx/pull/4364)
+* Support 'TestPropertyAttribute' on test classes by @Youssef1313 in [#4249](https://github.com/microsoft/testfx/pull/4249)
+* Support '--maximum-failed-tests' to abort test run when failure threshold is reached by @Youssef1313 in [#4238](https://github.com/microsoft/testfx/pull/4238)
+
+### Fixed
+
+* Fix MSTEST0034 doesn't handle ClassCleanupExecutionAttribute by @engyebrahim in [#3741](https://github.com/microsoft/testfx/pull/3741)
+* fix code format in readme by @SimonCropp in [#3750](https://github.com/microsoft/testfx/pull/3750)
+* Fix running cleanup after first test method by @nohwnd in [#3766](https://github.com/microsoft/testfx/pull/3766)
+* Fix timedout test does not fail test run (in ui) by @nohwnd in [#3772](https://github.com/microsoft/testfx/pull/3772)
+* Fix typo by @engyebrahim in [#3797](https://github.com/microsoft/testfx/pull/3797)
+* MSTEST0018: fix false positive with data member visibility by @Evangelink in [#3866](https://github.com/microsoft/testfx/pull/3866)
+* Fix localization of test adapter messages by @nohwnd in [#3867](https://github.com/microsoft/testfx/pull/3867)
+* Fix localization info to avoid translating workers and scope by @nohwnd in [#3869](https://github.com/microsoft/testfx/pull/3869)
+* Fix resources included in MSTest.TestAdapter nupkg by @Evangelink in [#3874](https://github.com/microsoft/testfx/pull/3874)
+* Fix MSTEST0036 is shown for cases where no shadowing happens by @engyebrahim in [#3881](https://github.com/microsoft/testfx/pull/3881)
+* Fix MSTest hook to be always generated by @Evangelink in [#3889](https://github.com/microsoft/testfx/pull/3889)
+* Fix CollectionAssert.AreEqual fails for list of strings using IEqualityComparer following by @engyebrahim in [#3886](https://github.com/microsoft/testfx/pull/3886)
+* Fix CollectionAssert.AreEqual for collection of collections ignores even-items by @engyebrahim in [#3893](https://github.com/microsoft/testfx/pull/3893)
+* Fix mstest0036 by @engyebrahim in [#3895](https://github.com/microsoft/testfx/pull/3895)
+* Fix casing for event key value by @MarcoRossignoli in [#3915](https://github.com/microsoft/testfx/pull/3915)
+* Fix concurrency issue with registering callback on TestRunCancellationToken by @Evangelink in [#3958](https://github.com/microsoft/testfx/pull/3958)
+* Fix MSTEST0030 to correctly handle all methods by @Evangelink in [#3973](https://github.com/microsoft/testfx/pull/3973)
+* Fix MSTEST0018 FP with IEnumerable<SomeType[]> by @Evangelink in [#3978](https://github.com/microsoft/testfx/pull/3978)
+* Handle trivia properly in PreferTestCleanupOverDisposeFixer by @Youssef1313 in [#4000](https://github.com/microsoft/testfx/pull/4000)
+* Only ship TestAdapter related resources by @nohwnd in [#4012](https://github.com/microsoft/testfx/pull/4012)
+* Fix IsNonDerived implementation for attribute comparison by @Youssef1313 in [#4024](https://github.com/microsoft/testfx/pull/4024)
+* Partially improve CollectionAssert message by @Youssef1313 in [#4027](https://github.com/microsoft/testfx/pull/4027)
+* Respect custom ExpectedExceptionBase attribute implementations by @Youssef1313 in [#4045](https://github.com/microsoft/testfx/pull/4045)
+* Consider readonly TestContext as valid by @Youssef1313 in [#4053](https://github.com/microsoft/testfx/pull/4053)
+* Fix DataSourceAttribute not being discovered with TestDataSourceDiscoveryOption.DuringDiscovery by @Youssef1313 in [#4058](https://github.com/microsoft/testfx/pull/4058)
+* Ensure `--minimum-expected-tests` description is localized by @Youssef1313 in [#4125](https://github.com/microsoft/testfx/pull/4125)
+* Improve Regex to Reduce Matching Time by @thomhurst in [#4160](https://github.com/microsoft/testfx/pull/4160)
+* Refactor WarnOnUnsupportedEntries by @Youssef1313 in [#4182](https://github.com/microsoft/testfx/pull/4182)
+* Mark IgnoreAttribute as not inherited by @Youssef1313 in [#4183](https://github.com/microsoft/testfx/pull/4183)
+* Small XML doc refreshing by @Youssef1313 in [#4184](https://github.com/microsoft/testfx/pull/4184)
+* Fix local warning (and fix typo) by @Youssef1313 in [#4185](https://github.com/microsoft/testfx/pull/4185)
+* Fix analyzers package to support VB.NET by @Evangelink in [#4224](https://github.com/microsoft/testfx/pull/4224)
+* Preserve message and parameters in MSTEST0025 fixer by @Youssef1313 in [#4301](https://github.com/microsoft/testfx/pull/4301)
+* Throw exception if ExpectedExceptionBaseAttribute is applied more than once by @Youssef1313 in [#4359](https://github.com/microsoft/testfx/pull/4359)
+* Fix false positive for PreferTestCleanupOverDispose on non-test classes by @Youssef1313 in [#4380](https://github.com/microsoft/testfx/pull/4380)
+* Simplify adapter props and targets by @Evangelink in [#4403](https://github.com/microsoft/testfx/pull/4403)
+* Don't reference MTP in UWP by @Evangelink in [#4402](https://github.com/microsoft/testfx/pull/4402)
+* Fix MSTestV2Files msbuild items by @Evangelink in [#4406](https://github.com/microsoft/testfx/pull/4406)
+
+### Housekeeping
+
+* Avoid nuspec when creating M.T.P.MSBuild package by @ViktorHofer in [#4004](https://github.com/microsoft/testfx/pull/4004)
+* Move off validate arg from VSTest ObjectModel by @SimonCropp in [#4019](https://github.com/microsoft/testfx/pull/4019)
+* [main] Bump System.Management from 8.0.0 to 9.0.0 by @dependabot in [#4136](https://github.com/microsoft/testfx/pull/4136)
+* [main] Bump MicrosoftCodeAnalysisAnalyzersVersion from 3.11.0-beta1.24527.2 to 3.11.0-beta1.24574.2 by @dependabot in [#4137](https://github.com/microsoft/testfx/pull/4137)
+* Bump version of playwright by @Evangelink in [#4140](https://github.com/microsoft/testfx/pull/4140)
+* Update Fakes package version by @drognanar in [#4143](https://github.com/microsoft/testfx/pull/4143)
+* Use Polyfill lock by @Evangelink in [#4153](https://github.com/microsoft/testfx/pull/4153)
+* Further `System.Threading.Lock` usages by @thomhurst in [#4156](https://github.com/microsoft/testfx/pull/4156)
+* Use VS version 17.12 by @Evangelink in [#4176](https://github.com/microsoft/testfx/pull/4176)
+* Bump version in samples by @Evangelink in [#4232](https://github.com/microsoft/testfx/pull/4232)
+* Sort UnsupportedRunConfigurationSettings by @Youssef1313 in [#4234](https://github.com/microsoft/testfx/pull/4234)
+* Fix server mode in playground by @MarcoRossignoli in [#4243](https://github.com/microsoft/testfx/pull/4243)
+* Cleanup FailedStates in TrxReportEngine by @Youssef1313 in [#4247](https://github.com/microsoft/testfx/pull/4247)
+* [main] Bump MicrosoftCodeAnalysisAnalyzersVersion from 3.11.0-beta1.24574.2 to 3.11.0-beta1.24605.2 by @dependabot in [#4252](https://github.com/microsoft/testfx/pull/4252)
+* Use `ValidationResult.ValidTask` instead of `Task.FromResult(ValidationResult.Valid())` by @Youssef1313 in [#4262](https://github.com/microsoft/testfx/pull/4262)
+* Avoid Linq allocations from usage of Union by @Youssef1313 in [#4265](https://github.com/microsoft/testfx/pull/4265)
+* Avoid repetitive string.Format call for every character of command-line options by @Youssef1313 in [#4264](https://github.com/microsoft/testfx/pull/4264)
+* More efficient reflection by @Youssef1313 in [#4263](https://github.com/microsoft/testfx/pull/4263)
+* [Performance] Avoid System.Action allocations for test context cancellation by @Youssef1313 in [#4272](https://github.com/microsoft/testfx/pull/4272)
+* [Performance] Avoid TraitCollection.AddRange call with empty array by @Youssef1313 in [#4274](https://github.com/microsoft/testfx/pull/4274)
+* [Performance] Don't parse the same runsettings for each class in the assembly by @Youssef1313 in [#4270](https://github.com/microsoft/testfx/pull/4270)
+* Simplify Ignore handling in IsTestMethodRunnable by @Youssef1313 in [#4281](https://github.com/microsoft/testfx/pull/4281)
+* Simplify AttributeComparer.IsDerived by @Youssef1313 in [#4280](https://github.com/microsoft/testfx/pull/4280)
+* [Performance] Create dictionary with the right capacity by @Youssef1313 in [#4276](https://github.com/microsoft/testfx/pull/4276)
+* [Performance] Avoid repetitive string allocations from TestRunDirectories by @Youssef1313 in [#4275](https://github.com/microsoft/testfx/pull/4275)
+* cleanup SourceGeneratedFileOperations by @SimonCropp in [#4285](https://github.com/microsoft/testfx/pull/4285)
+* remove some un-used parameters by @SimonCropp in [#4283](https://github.com/microsoft/testfx/pull/4283)
+* remove redundant ascending by @SimonCropp in [#4287](https://github.com/microsoft/testfx/pull/4287)
+* remove param values where same as default by @SimonCropp in [#4286](https://github.com/microsoft/testfx/pull/4286)
+* [Performance] Ensure ReflectionOperations return `Attribute[]` when possible by @Youssef1313 in [#4271](https://github.com/microsoft/testfx/pull/4271)
+* leverage out null pattern in IsValidDeploymentItem by @SimonCropp in [#4048](https://github.com/microsoft/testfx/pull/4048)
+* Refactor GetTestFromMethod by @Youssef1313 in [#4279](https://github.com/microsoft/testfx/pull/4279)
+* Avoid dictionary resizes when the size is approximately known by @Youssef1313 in [#4313](https://github.com/microsoft/testfx/pull/4313)
+* Cleanup duplicate logic for timeout handling when creating assembly info by @Youssef1313 in [#4317](https://github.com/microsoft/testfx/pull/4317)
+* Use `List<T>` rather than `Collection<T>` by @Youssef1313 in [#4315](https://github.com/microsoft/testfx/pull/4315)
+* Cleanup MSTest.Sdk now that analyzers are deps of framework by @Evangelink in [#4407](https://github.com/microsoft/testfx/pull/4407)
+
+### Artifacts
+
+* MSTest: [3.7.0](https://www.nuget.org/packages/MSTest/3.7.0)
+* MSTest.TestFramework: [3.7.0](https://www.nuget.org/packages/MSTest.TestFramework/3.7.0)
+* MSTest.TestAdapter: [3.7.0](https://www.nuget.org/packages/MSTest.TestAdapter/3.7.0)
+* MSTest.Analyzers: [3.7.0](https://www.nuget.org/packages/MSTest.Analyzers/3.7.0)
+* MSTest.Sdk: [3.7.0](https://www.nuget.org/packages/MSTest.Sdk/3.7.0)
+* Microsoft.Testing.Extensions.CrashDump: [1.5.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.CrashDump/1.5.0)
+* Microsoft.Testing.Extensions.HangDump: [1.5.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HangDump/1.5.0)
+* Microsoft.Testing.Extensions.HotReload: [1.5.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HotReload/1.5.0)
+* Microsoft.Testing.Extensions.Retry: [1.5.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Retry/1.5.0)
+* Microsoft.Testing.Extensions.TrxReport: [1.5.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport/1.5.0)
+
+## <a name="3.6.4" />[3.6.4] - 2024-12-03
+
+See full log [here](https://github.com/microsoft/testfx/compare/v3.6.3...v3.6.4)
+
+### Fixed
+
+* Bump MS CC to 17.13.0 by @Evangelink in [#4212](https://github.com/microsoft/testfx/pull/4212)
+* Bump vulnerable deps by @Evangelink in [#4218)(https://github.com/microsoft/testfx/pull/4218)
+
+### Artifacts
+
+* MSTest: [3.6.4](https://www.nuget.org/packages/MSTest/3.6.4)
+* MSTest.TestFramework: [3.6.4](https://www.nuget.org/packages/MSTest.TestFramework/3.6.4)
+* MSTest.TestAdapter: [3.6.4](https://www.nuget.org/packages/MSTest.TestAdapter/3.6.4)
+* MSTest.Analyzers: [3.6.4](https://www.nuget.org/packages/MSTest.Analyzers/3.6.4)
+* MSTest.Sdk: [3.6.4](https://www.nuget.org/packages/MSTest.Sdk/3.6.4)
+* Microsoft.Testing.Extensions.CrashDump: [1.4.3](https://www.nuget.org/packages/Microsoft.Testing.Extensions.CrashDump/1.4.3)
+* Microsoft.Testing.Extensions.HangDump: [1.4.3](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HangDump/1.4.3)
+* Microsoft.Testing.Extensions.HotReload: [1.4.3](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HotReload/1.4.3)
+* Microsoft.Testing.Extensions.Retry: [1.4.3](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Retry/1.4.3)
+* Microsoft.Testing.Extensions.TrxReport: [1.4.3](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport/1.4.3)
+
 ## <a name="3.6.3" />[3.6.3] - 2024-11-12
 
 See full log [here](https://github.com/microsoft/testfx/compare/v3.6.2...v3.6.3)

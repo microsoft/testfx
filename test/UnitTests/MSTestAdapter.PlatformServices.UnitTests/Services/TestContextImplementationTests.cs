@@ -7,6 +7,8 @@ using System.Data.Common;
 #endif
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using Moq;
 
@@ -389,4 +391,21 @@ public class TestContextImplementationTests : TestContainer
         Verify(resultFiles.Contains("C:\\files\\myfile2.txt"));
     }
 #endif
+
+    public void DisplayMessageShouldForwardToIMessageLogger()
+    {
+        var messageLoggerMock = new Mock<IMessageLogger>(MockBehavior.Strict);
+
+        messageLoggerMock
+            .Setup(l => l.SendMessage(It.IsAny<TestMessageLevel>(), It.IsAny<string>()));
+
+        _testContextImplementation = new TestContextImplementation(_testMethod.Object, new ThreadSafeStringWriter(null, "test"), _properties, messageLoggerMock.Object);
+        _testContextImplementation.DisplayMessage(MessageLevel.Informational, "InfoMessage");
+        _testContextImplementation.DisplayMessage(MessageLevel.Warning, "WarningMessage");
+        _testContextImplementation.DisplayMessage(MessageLevel.Error, "ErrorMessage");
+
+        messageLoggerMock.Verify(x => x.SendMessage(TestMessageLevel.Informational, "InfoMessage"), Times.Once);
+        messageLoggerMock.Verify(x => x.SendMessage(TestMessageLevel.Warning, "WarningMessage"), Times.Once);
+        messageLoggerMock.Verify(x => x.SendMessage(TestMessageLevel.Error, "ErrorMessage"), Times.Once);
+    }
 }

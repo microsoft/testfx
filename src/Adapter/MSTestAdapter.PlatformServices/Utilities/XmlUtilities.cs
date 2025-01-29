@@ -3,15 +3,11 @@
 
 #if NETFRAMEWORK
 
-using System.Globalization;
-using System.Reflection;
-using System.Text;
-using System.Xml;
-
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
 
+[SuppressMessage("Performance", "CA1852: Seal internal types", Justification = "Overrides required for mocking")]
 internal class XmlUtilities
 {
     private const string XmlNamespace = "urn:schemas-microsoft-com:asm.v1";

@@ -243,15 +243,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to &apos;[DynamicData]&apos; referenced member &apos;{0}.{1}&apos; should return &apos;IEnumerable&lt;object[]&gt;&apos;, &apos;IEnumerable&lt;Tuple&gt;` or &apos;IEnumerable&lt;ValueTuple&gt;&apos;.
-        /// </summary>
-        internal static string DynamicDataShouldBeValidMessageFormat_MemberType {
-            get {
-                return ResourceManager.GetString("DynamicDataShouldBeValidMessageFormat_MemberType", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to {0}: {1}.
         /// </summary>
         internal static string EnumeratorLoadTypeErrorFormat {
@@ -279,7 +270,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Test &apos;{0}&apos; execution has been aborted..
+        ///   Looks up a localized string similar to Test &apos;{0}&apos; was canceled.
         /// </summary>
         internal static string Execution_Test_Cancelled {
             get {
@@ -288,20 +279,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Test &apos;{0}&apos; exceeded execution timeout period..
+        ///   Looks up a localized string similar to Test &apos;{0}&apos; timed out after {1}ms.
         /// </summary>
         internal static string Execution_Test_Timeout {
             get {
                 return ResourceManager.GetString("Execution_Test_Timeout", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Failed to get attribute cache. Ignoring attribute inheritance and falling into &apos;type defines Attribute model&apos;, so that we have some data..
-        /// </summary>
-        internal static string FailedFetchAttributeCache {
-            get {
-                return ResourceManager.GetString("FailedFetchAttributeCache", resourceCulture);
             }
         }
         
@@ -311,6 +293,33 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         internal static string FailedToGetCustomAttribute {
             get {
                 return ResourceManager.GetString("FailedToGetCustomAttribute", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The type of the generic parameter &apos;{0}&apos; could not be inferred..
+        /// </summary>
+        internal static string GenericParameterCantBeInferred {
+            get {
+                return ResourceManager.GetString("GenericParameterCantBeInferred", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The generic test method &apos;{0}&apos; doesn&apos;t have arguments, so the generic parameter cannot be inferred..
+        /// </summary>
+        internal static string GenericParameterCantBeInferredBecauseNoArguments {
+            get {
+                return ResourceManager.GetString("GenericParameterCantBeInferredBecauseNoArguments", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Found two conflicting types for generic parameter &apos;{0}&apos;. The conflicting types are &apos;{1}&apos; and &apos;{2}&apos;..
+        /// </summary>
+        internal static string GenericParameterConflict {
+            get {
+                return ResourceManager.GetString("GenericParameterConflict", resourceCulture);
             }
         }
         
@@ -383,15 +392,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         internal static string OlderTFMVersionFound {
             get {
                 return ResourceManager.GetString("OlderTFMVersionFound", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to An older version of MSTestV2 package is loaded in assembly, test cleanup methods might not run as expected. Please make sure all your test projects references MSTest packages newer then version 2.2.8..
-        /// </summary>
-        internal static string OlderTFMVersionFoundClassCleanup {
-            get {
-                return ResourceManager.GetString("OlderTFMVersionFoundClassCleanup", resourceCulture);
             }
         }
         
@@ -604,15 +604,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to UTA015: A generic method cannot be a test method. {0}.{1} has invalid signature.
-        /// </summary>
-        internal static string UTA_ErrorGenericTestMethod {
-            get {
-                return ResourceManager.GetString("UTA_ErrorGenericTestMethod", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to UTA007: Method {1} defined in class {0} does not have correct signature. Test method marked with the [TestMethod] attribute must be non-static, public, return-type as void  and should not take any parameter. Example: public void Test.Class1.Test(). Additionally, if you are using async-await in test method then return-type must be &apos;Task&apos; or &apos;ValueTask&apos;. Example: public async Task Test.Class1.Test2().
         /// </summary>
         internal static string UTA_ErrorIncorrectTestMethodSignature {
@@ -730,7 +721,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Exception thrown while executing test. If using extension of TestMethodAttribute then please contact vendor. Error message: {0}, Stack trace: {1}.
+        ///   Looks up a localized string similar to An unhandled exception was thrown by the &apos;Execute&apos; method. Please report this error to the author of the attribute &apos;{0}&apos;.
+        ///{1}.
         /// </summary>
         internal static string UTA_ExecuteThrewException {
             get {
@@ -785,11 +777,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The test method {0}.{1} has multiple attributes derived from ExpectedExceptionBaseAttribute defined on it. Only one such attribute is allowed..
+        ///   Looks up a localized string similar to The test method {0}.{1} has multiple attributes derived from &apos;{2}&apos; defined on it. Only one such attribute is allowed..
         /// </summary>
-        internal static string UTA_MultipleExpectedExceptionsOnTestMethod {
+        internal static string UTA_MultipleAttributesOnTestMethod {
             get {
-                return ResourceManager.GetString("UTA_MultipleExpectedExceptionsOnTestMethod", resourceCulture);
+                return ResourceManager.GetString("UTA_MultipleAttributesOnTestMethod", resourceCulture);
             }
         }
         

@@ -1,9 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Collections.Concurrent;
-using System.Reflection;
-
 #if WIN_UI
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.AppContainer;
 #endif
@@ -18,30 +15,20 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 /// <summary>
 /// The file operations.
 /// </summary>
+#if RELEASE
+#if NET6_0_OR_GREATER
+[Obsolete(Constants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
+#else
+[Obsolete(Constants.PublicTypeObsoleteMessage)]
+#endif
+#endif
 public class FileOperations : IFileOperations
 {
     private readonly ConcurrentDictionary<string, Assembly> _assemblyCache = new();
 
 #if WIN_UI
-    private readonly bool _isPackaged;
+    private readonly bool _isPackaged = AppModel.IsPackagedProcess();
 #endif
-
-    internal FileOperations(bool skipSourceGeneratorCheck)
-    {
-        if (!skipSourceGeneratorCheck)
-        {
-            ApplicationStateGuard.Ensure(!SourceGeneratorToggle.UseSourceGenerator, $"{nameof(FileOperations)} should not be used when source generator mode is active, instead SourceGeneratedFileOperations should be used and delegate to here, with skipSourceGeneratorCheck = true, when needed.");
-        }
-
-#if WIN_UI
-        _isPackaged = AppModel.IsPackagedProcess();
-#endif
-    }
-
-    public FileOperations()
-        : this(false)
-    {
-    }
 
     /// <summary>
     /// Loads an assembly.

@@ -1,10 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Diagnostics;
-using System.Globalization;
-using System.Text;
-
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Helpers;
@@ -13,7 +9,7 @@ using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Platform.Messages;
 
-internal class AsynchronousMessageBus : BaseMessageBus, IMessageBus, IDisposable
+internal sealed class AsynchronousMessageBus : BaseMessageBus, IMessageBus, IDisposable
 {
     // This is an arbitrary number of attempts to drain the message bus.
     // The number of attempts is configurable via the environment variable TESTINGPLATFORM_MESSAGEBUS_DRAINDATA_ATTEMPTS.
@@ -155,9 +151,9 @@ internal class AsynchronousMessageBus : BaseMessageBus, IMessageBus, IDisposable
                 StringBuilder builder = new();
                 builder.Append(CultureInfo.InvariantCulture, $"Publisher/Consumer loop detected during the drain after {stopwatch.Elapsed}.\n{builder}");
 
-                foreach (KeyValuePair<AsyncConsumerDataProcessor, long> keyValuePair in consumerToDrain)
+                foreach ((AsyncConsumerDataProcessor key, long value) in consumerToDrain)
                 {
-                    builder.AppendLine(CultureInfo.InvariantCulture, $"Consumer '{keyValuePair.Key.DataConsumer}' payload received {keyValuePair.Value}.");
+                    builder.AppendLine(CultureInfo.InvariantCulture, $"Consumer '{key.DataConsumer}' payload received {value}.");
                 }
 
                 throw new InvalidOperationException(builder.ToString());
@@ -165,9 +161,9 @@ internal class AsynchronousMessageBus : BaseMessageBus, IMessageBus, IDisposable
 
             totalNumberOfDrainAttempt--;
             anotherRound = false;
-            foreach (KeyValuePair<Type, List<AsyncConsumerDataProcessor>> dataTypeConsumer in _dataTypeConsumers)
+            foreach (List<AsyncConsumerDataProcessor> dataProcessors in _dataTypeConsumers.Values)
             {
-                foreach (AsyncConsumerDataProcessor asyncMultiProducerMultiConsumerDataProcessor in dataTypeConsumer.Value)
+                foreach (AsyncConsumerDataProcessor asyncMultiProducerMultiConsumerDataProcessor in dataProcessors)
                 {
                     if (!consumerToDrain.TryGetValue(asyncMultiProducerMultiConsumerDataProcessor, out long _))
                     {
@@ -194,9 +190,9 @@ internal class AsynchronousMessageBus : BaseMessageBus, IMessageBus, IDisposable
 
         _disabled = true;
 
-        foreach (KeyValuePair<Type, List<AsyncConsumerDataProcessor>> dataTypeConsumer in _dataTypeConsumers)
+        foreach (List<AsyncConsumerDataProcessor> dataProcessors in _dataTypeConsumers.Values)
         {
-            foreach (AsyncConsumerDataProcessor asyncMultiProducerMultiConsumerDataProcessor in dataTypeConsumer.Value)
+            foreach (AsyncConsumerDataProcessor asyncMultiProducerMultiConsumerDataProcessor in dataProcessors)
             {
                 await asyncMultiProducerMultiConsumerDataProcessor.CompleteAddingAsync();
             }
@@ -205,9 +201,9 @@ internal class AsynchronousMessageBus : BaseMessageBus, IMessageBus, IDisposable
 
     public override void Dispose()
     {
-        foreach (KeyValuePair<Type, List<AsyncConsumerDataProcessor>> dataTypeConsumer in _dataTypeConsumers)
+        foreach (List<AsyncConsumerDataProcessor> dataProcessors in _dataTypeConsumers.Values)
         {
-            foreach (AsyncConsumerDataProcessor asyncMultiProducerMultiConsumerDataProcessor in dataTypeConsumer.Value)
+            foreach (AsyncConsumerDataProcessor asyncMultiProducerMultiConsumerDataProcessor in dataProcessors)
             {
                 asyncMultiProducerMultiConsumerDataProcessor.Dispose();
             }

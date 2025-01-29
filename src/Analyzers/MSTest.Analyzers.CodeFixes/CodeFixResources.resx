@@ -126,7 +126,7 @@
   <data name="FixAssertionArgsOrder" xml:space="preserve">
     <value>Fix actual/expected arguments order</value>
   </data>
-  <data name="PublicTypeShouldBeTestClassFix" xml:space="preserve">
+  <data name="AddTestClassFix" xml:space="preserve">
     <value>Add '[TestClass]'</value>
   </data>
   <data name="TestMethodShouldBeValidFix" xml:space="preserve">
@@ -164,5 +164,17 @@
   </data>
   <data name="UseAssertThrowsExceptionOnLastStatementFix" xml:space="preserve">
     <value>Use 'Assert.ThrowsException&lt;T&gt;' instead of '[ExpectedException]' attribute</value>
+  </data>
+  <data name="UseProperAssertMethodsFix" xml:space="preserve">
+    <value>Use '{0}'</value>
+  </data>
+  <data name="UseNewerAssertThrows" xml:space="preserve">
+    <value>Use '{0}'</value>
+  </data>
+  <data name="AssertionArgsShouldAvoidConditionalAccessFix" xml:space="preserve">
+    <value>Move conditional access in assertion to separate 'Assert.IsNotNull' check</value>
+  </data>
+  <data name="AvoidAssertAreSameWithValueTypesFix" xml:space="preserve">
+    <value>Use '{0}'</value>
   </data>
 </root>

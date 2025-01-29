@@ -4,7 +4,6 @@
 #pragma warning disable CS1574 // XML comment has cref attribute that could not be resolved (not all builds have all types)
 
 using System;
-using System.Diagnostics;
 
 namespace Roslyn.Utilities
 {

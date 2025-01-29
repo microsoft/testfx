@@ -1,10 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Globalization;
-using System.Text;
-using System.Xml.Linq;
-
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
@@ -14,7 +10,7 @@ using Microsoft.Testing.Platform.Tools;
 
 namespace Microsoft.Testing.Extensions.TrxReport.Abstractions;
 
-internal class TrxCompareTool : ITool, IOutputDeviceDataProducer
+internal sealed class TrxCompareTool : ITool, IOutputDeviceDataProducer
 {
     public const string ToolName = "ms-trxcompare";
     private readonly ICommandLineOptions _commandLineOptions;

@@ -1,9 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Runtime.InteropServices;
-using System.Runtime.Versioning;
-
 namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 
 internal static class NativeMethods
@@ -30,7 +27,7 @@ internal static class NativeMethods
 
     internal static (bool AcceptAnsiColorCodes, bool OutputIsScreen, uint? OriginalConsoleMode) QueryIsScreenAndTryEnableAnsiColorCodes(StreamHandleType handleType = StreamHandleType.StdOut)
     {
-        if (System.Console.IsOutputRedirected)
+        if (Console.IsOutputRedirected)
         {
             // There's no ANSI terminal support if console output is redirected.
             return (AcceptAnsiColorCodes: false, OutputIsScreen: false, OriginalConsoleMode: null);

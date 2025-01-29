@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Text;
-
 namespace Microsoft.Testing.TestInfrastructure;
 
 public class TempDirectory : IDisposable
@@ -25,29 +23,34 @@ public class TempDirectory : IDisposable
         _cleanup = cleanup;
     }
 
-    ~TempDirectory() => Clean();
-
     public string Path { get; }
 
     public void Dispose()
-    {
-        Dispose(true);
-        GC.SuppressFinalize(this);
-    }
-
-    protected virtual void Dispose(bool disposing)
     {
         if (_isDisposed)
         {
             return;
         }
 
-        if (disposing && _cleanup)
+        _isDisposed = true;
+
+        if (!_cleanup)
         {
-            Clean();
+            return;
         }
 
-        _isDisposed = true;
+        if (!Directory.Exists(_baseDirectory))
+        {
+            return;
+        }
+
+        try
+        {
+            Directory.Delete(_baseDirectory, recursive: true);
+        }
+        catch
+        {
+        }
     }
 
     public DirectoryInfo CreateDirectory(string dir) => Directory.CreateDirectory(System.IO.Path.Combine(Path, dir));
@@ -138,6 +141,19 @@ public class TempDirectory : IDisposable
         return destination;
     }
 
+    internal static string GetTestSuiteDirectory()
+    {
+        string currentDirectory = AppContext.BaseDirectory;
+        while (System.IO.Path.GetFileName(currentDirectory) != "artifacts" && currentDirectory is not null)
+        {
+            currentDirectory = System.IO.Path.GetDirectoryName(currentDirectory)!;
+        }
+
+        return currentDirectory is null
+            ? throw new InvalidOperationException("artifacts folder not found")
+            : System.IO.Path.Combine(currentDirectory, "tmp", Constants.BuildConfiguration, "testsuite");
+    }
+
     /// <summary>
     /// Creates an unique temporary directory.
     /// </summary>
@@ -159,7 +175,7 @@ public class TempDirectory : IDisposable
                 throw new InvalidOperationException("artifacts folder not found");
             }
 
-            string directoryPath = System.IO.Path.Combine(currentDirectory, "tmp", Constants.BuildConfiguration, "testsuite", RandomId.Next());
+            string directoryPath = System.IO.Path.Combine(GetTestSuiteDirectory(), RandomId.Next());
             Directory.CreateDirectory(directoryPath);
 
             string directoryBuildProps = System.IO.Path.Combine(directoryPath, "Directory.Build.props");
@@ -227,22 +243,6 @@ public class TempDirectory : IDisposable
     // place where we are allowed to use it. All other methods should use our GetTempPath (this method).
     private static string GetTempPath() => Environment.GetEnvironmentVariable("AGENT_TEMPDIRECTORY")
             ?? System.IO.Path.GetTempPath();
-
-    public void Clean()
-    {
-        if (!Directory.Exists(_baseDirectory))
-        {
-            return;
-        }
-
-        try
-        {
-            Directory.Delete(_baseDirectory, recursive: true);
-        }
-        catch
-        {
-        }
-    }
 
     public void Add(string fileContents)
     {

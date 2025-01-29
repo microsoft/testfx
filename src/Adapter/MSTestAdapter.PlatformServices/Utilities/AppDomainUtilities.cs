@@ -3,10 +3,6 @@
 
 #if NETFRAMEWORK
 
-using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
-using System.Reflection;
-
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -45,7 +41,7 @@ internal static class AppDomainUtilities
     {
         if (GetTargetFrameworkVersionFromVersionString(frameworkVersionString).CompareTo(Version45) > 0)
         {
-            PropertyInfo pInfo = typeof(AppDomainSetup).GetProperty(Constants.TargetFrameworkName);
+            PropertyInfo? pInfo = typeof(AppDomainSetup).GetProperty(Constants.TargetFrameworkName);
             pInfo?.SetValue(setup, frameworkVersionString, null);
         }
     }
@@ -257,7 +253,7 @@ internal static class AppDomainUtilities
         appDomainCultureHelper?.SetUICulture(uiCulture);
     }
 
-    private class AppDomainCultureHelper : MarshalByRefObject
+    private sealed class AppDomainCultureHelper : MarshalByRefObject
     {
 #pragma warning disable CA1822 // Mark members as static - Should not be static for our need
         public void SetUICulture(CultureInfo uiCulture) => CultureInfo.DefaultThreadCurrentUICulture = uiCulture;

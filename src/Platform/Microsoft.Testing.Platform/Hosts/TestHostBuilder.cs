@@ -1,11 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Diagnostics;
-using System.Globalization;
-using System.Reflection;
-using System.Runtime.InteropServices;
-
 using Microsoft.Testing.Internal.Framework;
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
@@ -33,7 +28,7 @@ using Microsoft.Testing.Platform.Tools;
 
 namespace Microsoft.Testing.Platform.Hosts;
 
-internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFeature, IEnvironment environment, IProcessHandler processHandler, ITestApplicationModuleInfo testApplicationModuleInfo) : ITestHostBuilder
+internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFeature, IEnvironment environment, IProcessHandler processHandler, ITestApplicationModuleInfo testApplicationModuleInfo) : ITestHostBuilder
 {
     private readonly IFileSystem _fileSystem = fileSystem;
     private readonly ITestApplicationModuleInfo _testApplicationModuleInfo = testApplicationModuleInfo;
@@ -196,19 +191,24 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         LoggerFactoryProxy loggerFactoryProxy = new();
         serviceProvider.TryAddService(loggerFactoryProxy);
 
-        // Add output display proxy, needed by command line manager.
-        // We don't add to the service right now because we need special treatment between console/server mode.
-        IPlatformOutputDevice platformOutputDevice = ((PlatformOutputDeviceManager)OutputDisplay).Build(serviceProvider);
-
         // Add Terminal options provider
         CommandLine.AddProvider(() => new TerminalTestReporterCommandLineOptionsProvider());
 
         // Build the command line service - we need special treatment because is possible that an extension query it during the creation.
         // Add Retry default argument commandlines
-        CommandLineHandler commandLineHandler = await ((CommandLineManager)CommandLine).BuildAsync(loggingState.CommandLineParseResult);
+        CommandLineHandler commandLineHandler = await ((CommandLineManager)CommandLine).BuildAsync(loggingState.CommandLineParseResult, serviceProvider);
 
         // Set the concrete command line options to the proxy.
         commandLineOptionsProxy.SetCommandLineOptions(commandLineHandler);
+
+        // This is needed by output device.
+        var policiesService = new StopPoliciesService(testApplicationCancellationTokenSource);
+        serviceProvider.AddService(policiesService);
+
+        bool hasServerFlag = commandLineHandler.TryGetOptionArgumentList(PlatformCommandLineProvider.ServerOptionKey, out string[]? protocolName);
+        bool isJsonRpcProtocol = protocolName is null || protocolName.Length == 0 || protocolName[0].Equals(PlatformCommandLineProvider.JsonRpcProtocolName, StringComparison.OrdinalIgnoreCase);
+
+        ProxyOutputDevice proxyOutputDevice = await ((PlatformOutputDeviceManager)OutputDisplay).BuildAsync(serviceProvider, hasServerFlag && isJsonRpcProtocol);
 
         // Add FileLoggerProvider if needed
         if (loggingState.FileLoggerProvider is not null)
@@ -219,16 +219,6 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         // Get the command line options
         ICommandLineOptions commandLineOptions = serviceProvider.GetCommandLineOptions();
 
-        // Register the server mode log forwarder if needed. We follow the console --diagnostic behavior.
-        bool hasServerFlag = commandLineHandler.TryGetOptionArgumentList(PlatformCommandLineProvider.ServerOptionKey, out string[]? protocolName);
-        bool isJsonRpcProtocol = protocolName is null || protocolName.Length == 0 || protocolName[0].Equals(PlatformCommandLineProvider.JsonRpcProtocolName, StringComparison.OrdinalIgnoreCase);
-        if (hasServerFlag && isJsonRpcProtocol)
-        {
-            ServerLoggerForwarderProvider serverLoggerProxy = new(loggingState.LogLevel, serviceProvider);
-            serviceProvider.AddService(serverLoggerProxy);
-            Logging.AddProvider((logLevel, services) => serverLoggerProxy);
-        }
-
         // Build the logger factory.
         ILoggerFactory loggerFactory = await ((LoggingManager)Logging).BuildAsync(serviceProvider, loggingState.LogLevel, systemMonitor);
 
@@ -236,19 +226,14 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         loggerFactoryProxy.SetLoggerFactory(loggerFactory);
 
         // Initialize the output device if needed.
-        if (await platformOutputDevice.IsEnabledAsync())
+        if (await proxyOutputDevice.OriginalOutputDevice.IsEnabledAsync())
         {
-            await platformOutputDevice.TryInitializeAsync();
-        }
-        else
-        {
-            // If for some reason the custom output is not enabled we opt-in the default terminal output device.
-            platformOutputDevice = PlatformOutputDeviceManager.GetDefaultTerminalOutputDevice(serviceProvider);
-            await platformOutputDevice.TryInitializeAsync();
+            await proxyOutputDevice.OriginalOutputDevice.TryInitializeAsync();
         }
 
         // Add the platform output device to the service provider for both modes.
-        serviceProvider.TryAddService(platformOutputDevice);
+        serviceProvider.TryAddService(proxyOutputDevice);
+        serviceProvider.TryAddService(proxyOutputDevice.OriginalOutputDevice);
 
         // Create the test framework capabilities
         ITestFrameworkCapabilities testFrameworkCapabilities = TestFramework.TestFrameworkCapabilitiesFactory(serviceProvider);
@@ -257,6 +242,9 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
             await testFrameworkCapabilitiesAsyncInitializable.InitializeAsync();
         }
 
+        // Register the test framework capabilities to be used by services
+        serviceProvider.AddService(testFrameworkCapabilities);
+
         // If command line is not valid we return immediately.
         ValidationResult commandLineValidationResult = await CommandLineOptionsValidator.ValidateAsync(
             loggingState.CommandLineParseResult,
@@ -264,14 +252,11 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
             commandLineHandler.ExtensionsCommandLineOptionsProviders,
             commandLineHandler);
 
-        // Register the test framework capabilities to be used by services
-        serviceProvider.AddService(testFrameworkCapabilities);
-
         if (!loggingState.CommandLineParseResult.HasTool && !commandLineValidationResult.IsValid)
         {
-            await DisplayBannerIfEnabledAsync(loggingState, platformOutputDevice, testFrameworkCapabilities);
-            await platformOutputDevice.DisplayAsync(commandLineHandler, FormattedTextOutputDeviceDataBuilder.CreateRedConsoleColorText(commandLineValidationResult.ErrorMessage));
-            await commandLineHandler.PrintHelpAsync(platformOutputDevice);
+            await DisplayBannerIfEnabledAsync(loggingState, proxyOutputDevice, testFrameworkCapabilities);
+            await proxyOutputDevice.DisplayAsync(commandLineHandler, new ErrorMessageOutputDeviceData(commandLineValidationResult.ErrorMessage));
+            await commandLineHandler.PrintHelpAsync(proxyOutputDevice);
             return new InformativeCommandLineTestHost(ExitCodes.InvalidCommandLine, serviceProvider);
         }
 
@@ -307,7 +292,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
 
         // Display banner now because we need capture the output in case of MSBuild integration and we want to forward
         // to file disc also the banner, so at this point we need to have all services and configuration(result directory) built.
-        await DisplayBannerIfEnabledAsync(loggingState, platformOutputDevice, testFrameworkCapabilities);
+        await DisplayBannerIfEnabledAsync(loggingState, proxyOutputDevice, testFrameworkCapabilities);
 
         // Add global telemetry service.
         // Add at this point or the telemetry banner appearance order will be wrong, we want the testing app banner before the telemetry banner.
@@ -326,10 +311,10 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
 
         // Register the ITestApplicationResult
         TestApplicationResult testApplicationResult = new(
-            platformOutputDevice,
-            serviceProvider.GetTestApplicationCancellationTokenSource(),
+            proxyOutputDevice,
             serviceProvider.GetCommandLineOptions(),
-            serviceProvider.GetEnvironment());
+            serviceProvider.GetEnvironment(),
+            policiesService);
         serviceProvider.AddService(testApplicationResult);
 
         // ============= SETUP COMMON SERVICE USED IN ALL MODES END ===============//
@@ -339,14 +324,14 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         // ======= TOOLS MODE ======== //
         // Add the platform output device to the service provider.
         var toolsServiceProvider = (ServiceProvider)serviceProvider.Clone();
-        toolsServiceProvider.TryAddService(platformOutputDevice);
+        toolsServiceProvider.TryAddService(proxyOutputDevice);
         IReadOnlyList<ITool> toolsInformation = await ((ToolsManager)Tools).BuildAsync(toolsServiceProvider);
         if (loggingState.CommandLineParseResult.HasTool)
         {
             // Add the platform output device to the service provider.
-            serviceProvider.TryAddService(platformOutputDevice);
+            serviceProvider.TryAddService(proxyOutputDevice);
 
-            ToolsTestHost toolsTestHost = new(toolsInformation, serviceProvider, commandLineHandler, platformOutputDevice);
+            ToolsTestHost toolsTestHost = new(toolsInformation, serviceProvider, commandLineHandler, proxyOutputDevice);
 
             await LogTestHostCreatedAsync(
                 serviceProvider,
@@ -373,7 +358,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
             }
             else
             {
-                await commandLineHandler.PrintHelpAsync(platformOutputDevice, toolsInformation);
+                await commandLineHandler.PrintHelpAsync(proxyOutputDevice, toolsInformation);
             }
 
             return new InformativeCommandLineTestHost(0, serviceProvider);
@@ -382,7 +367,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         // If --info is invoked we return
         if (commandLineHandler.IsInfoInvoked())
         {
-            await commandLineHandler.PrintInfoAsync(platformOutputDevice, toolsInformation);
+            await commandLineHandler.PrintInfoAsync(proxyOutputDevice, toolsInformation);
             return new InformativeCommandLineTestHost(0, serviceProvider);
         }
 
@@ -390,6 +375,8 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         TestHostOrchestratorConfiguration testHostOrchestratorConfiguration = await TestHostOrchestratorManager.BuildAsync(serviceProvider);
         if (testHostOrchestratorConfiguration.TestHostOrchestrators.Length > 0 && !commandLineHandler.IsOptionSet(PlatformCommandLineProvider.DiscoverTestsOptionKey))
         {
+            policiesService.ProcessRole = TestProcessRole.TestHostOrchestrator;
+            await proxyOutputDevice.HandleProcessRoleAsync(TestProcessRole.TestHostOrchestrator);
             return new TestHostOrchestratorHost(testHostOrchestratorConfiguration, serviceProvider);
         }
 
@@ -397,7 +384,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         // Check if we're in the test host or we should check test controllers extensions
         // Environment variable check should not be needed but in case we will rollback to use only env var we will need it.
         if ((!testHostControllerInfo.HasTestHostController ||
-            systemEnvironment.GetEnvironmentVariable($"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_SKIPEXTENSION}_{testHostControllerInfo.GetTestHostControllerPID(true)}") != "1")
+            systemEnvironment.GetEnvironmentVariable($"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_SKIPEXTENSION}_{testHostControllerInfo.GetTestHostControllerPID()}") != "1")
             && !commandLineHandler.IsOptionSet(PlatformCommandLineProvider.DiscoverTestsOptionKey))
         {
             PassiveNode? passiveNode = null;
@@ -417,7 +404,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
             var testHostControllersServiceProvider = (ServiceProvider)serviceProvider.Clone();
 
             // Add the platform output device to the service provider.
-            testHostControllersServiceProvider.TryAddService(platformOutputDevice);
+            testHostControllersServiceProvider.TryAddService(proxyOutputDevice);
 
             // Add the message bus proxy specific for the launchers.
             testHostControllersServiceProvider.TryAddService(new MessageBusProxy());
@@ -425,6 +412,8 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
             if (testHostControllers.RequireProcessRestart)
             {
                 testHostControllerInfo.IsCurrentProcessTestHostController = true;
+                policiesService.ProcessRole = TestProcessRole.TestHostController;
+                await proxyOutputDevice.HandleProcessRoleAsync(TestProcessRole.TestHostController);
                 TestHostControllersTestHost testHostControllersTestHost = new(testHostControllers, testHostControllersServiceProvider, passiveNode, systemEnvironment, loggerFactory, systemClock);
 
                 await LogTestHostCreatedAsync(
@@ -438,6 +427,8 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         }
 
         // ======= TEST HOST MODE ======== //
+        policiesService.ProcessRole = TestProcessRole.TestHost;
+        await proxyOutputDevice.HandleProcessRoleAsync(TestProcessRole.TestHost);
 
         // Setup the test host working folder.
         // Out of the test host controller extension the current working directory is the test host working directory.
@@ -516,8 +507,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
                 serviceProvider,
                 BuildTestFrameworkAsync,
                 (TestFrameworkManager)TestFramework,
-                (TestHostManager)TestHost,
-                _testApplicationModuleInfo);
+                (TestHostManager)TestHost);
 
             // If needed we wrap the host inside the TestHostControlledHost to automatically handle the shutdown of the connected pipe.
             ITestHost actualTestHost = testControllerConnection is not null
@@ -552,7 +542,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
             return null;
         }
 
-        string pipeEnvironmentVariable = $"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_PIPENAME}_{testHostControllerInfo.GetTestHostControllerPID(true)}";
+        string pipeEnvironmentVariable = $"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_PIPENAME}_{testHostControllerInfo.GetTestHostControllerPID()}";
         string pipeName = environment.GetEnvironmentVariable(pipeEnvironmentVariable) ?? throw new InvalidOperationException($"Unexpected null pipe name from environment variable '{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_PIPENAME}'");
 
         // RemoveVariable the environment variable so that it doesn't get passed to the eventually children processes
@@ -581,7 +571,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         return client;
     }
 
-    protected virtual void AddApplicationMetadata(IServiceProvider serviceProvider, Dictionary<string, object> builderMetadata)
+    private void AddApplicationMetadata(IServiceProvider serviceProvider, Dictionary<string, object> builderMetadata)
     {
         ITelemetryInformation telemetryInformation = serviceProvider.GetTelemetryInformation();
         if (!telemetryInformation.IsEnabled)
@@ -639,7 +629,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         }
     }
 
-    private async Task<ITestFramework> BuildTestFrameworkAsync(TestFrameworkBuilderData testFrameworkBuilderData)
+    private static async Task<ITestFramework> BuildTestFrameworkAsync(TestFrameworkBuilderData testFrameworkBuilderData)
     {
         // Add the message bus proxy
         ServiceProvider serviceProvider = testFrameworkBuilderData.ServiceProvider;
@@ -677,9 +667,6 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         {
             serviceProvider.AllowTestAdapterFrameworkRegistration = false;
         }
-
-        // Virtual callback that allows to the VSTest mode to register custom services needed by the bridge.
-        AfterTestAdapterCreation(serviceProvider);
 
         // Prepare the session lifetime handlers for the notifications
         List<ITestSessionLifetimeHandler> testSessionLifetimeHandlers = [];
@@ -742,6 +729,17 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
             dataConsumersBuilder.Add(pushOnlyProtocolDataConsumer);
         }
 
+        var abortForMaxFailedTestsExtension = new AbortForMaxFailedTestsExtension(
+            serviceProvider.GetCommandLineOptions(),
+            serviceProvider.GetTestFrameworkCapabilities().GetCapability<IGracefulStopTestExecutionCapability>(),
+            serviceProvider.GetRequiredService<IStopPoliciesService>(),
+            serviceProvider.GetTestApplicationCancellationTokenSource());
+
+        if (await abortForMaxFailedTestsExtension.IsEnabledAsync())
+        {
+            dataConsumersBuilder.Add(abortForMaxFailedTestsExtension);
+        }
+
         IDataConsumer[] dataConsumerServices = dataConsumersBuilder.ToArray();
 
         // Build the message bus
@@ -779,39 +777,29 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         return testFramework;
     }
 
-    protected virtual ConsoleTestHost CreateConsoleTestHost(
+    private static ConsoleTestHost CreateConsoleTestHost(
         ServiceProvider serviceProvider,
         Func<TestFrameworkBuilderData, Task<ITestFramework>> buildTestFrameworkAsync,
         TestFrameworkManager testFrameworkManager,
-        TestHostManager testHostManager,
-        ITestApplicationModuleInfo testApplicationModuleInfo)
+        TestHostManager testHostManager)
         => new(serviceProvider, buildTestFrameworkAsync, testFrameworkManager, testHostManager);
 
-    protected virtual bool SkipAddingService(object service) => false;
-
-    protected virtual void AfterTestAdapterCreation(ServiceProvider serviceProvider)
+    private static async Task AddServiceIfNotSkippedAsync(object service, ServiceProvider serviceProvider)
     {
-    }
-
-    private async Task AddServiceIfNotSkippedAsync(object service, ServiceProvider serviceProvider)
-    {
-        if (!SkipAddingService(service))
+        if (service is IExtension extension)
         {
-            if (service is IExtension extension)
-            {
-                if (await extension.IsEnabledAsync())
-                {
-                    serviceProvider.TryAddService(service);
-                }
-            }
-            else
+            if (await extension.IsEnabledAsync())
             {
                 serviceProvider.TryAddService(service);
             }
         }
+        else
+        {
+            serviceProvider.TryAddService(service);
+        }
     }
 
-    private async Task RegisterAsServiceOrConsumerOrBothAsync(object service, ServiceProvider serviceProvider,
+    private static async Task RegisterAsServiceOrConsumerOrBothAsync(object service, ServiceProvider serviceProvider,
         List<IDataConsumer> dataConsumersBuilder)
     {
         if (service is IDataConsumer dataConsumer)
@@ -832,7 +820,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         await AddServiceIfNotSkippedAsync(service, serviceProvider);
     }
 
-    private async Task DisplayBannerIfEnabledAsync(ApplicationLoggingState loggingState, IPlatformOutputDevice platformOutputDevice,
+    private async Task DisplayBannerIfEnabledAsync(ApplicationLoggingState loggingState, ProxyOutputDevice outputDevice,
         ITestFrameworkCapabilities testFrameworkCapabilities)
     {
         bool isNoBannerSet = loggingState.CommandLineParseResult.IsOptionSet(PlatformCommandLineProvider.NoBannerOptionKey);
@@ -844,7 +832,8 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
             string? bannerMessage = bannerMessageOwnerCapability is not null
                 ? await bannerMessageOwnerCapability.GetBannerMessageAsync()
                 : null;
-            await platformOutputDevice.DisplayBannerAsync(bannerMessage);
+
+            await outputDevice.DisplayBannerAsync(bannerMessage);
         }
     }
 }

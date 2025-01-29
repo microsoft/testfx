@@ -7,18 +7,14 @@ using Microsoft.Testing.Platform.Helpers;
 
 namespace MSTest.Acceptance.IntegrationTests;
 
-[TestGroup]
-public sealed class ConfigurationSettingsTests : AcceptanceTestBase
+[TestClass]
+public sealed class ConfigurationSettingsTests : AcceptanceTestBase<ConfigurationSettingsTests.TestAssetFixture>
 {
-    private readonly TestAssetFixture _testAssetFixture;
-
-    public ConfigurationSettingsTests(ITestExecutionContext testExecutionContext, TestAssetFixture testAssetFixture)
-        : base(testExecutionContext) => _testAssetFixture = testAssetFixture;
-
-    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    [TestMethod]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     public async Task TestConfigJson_AndRunSettingsHasMstest_Throws(string tfm)
     {
-        var testHost = TestHost.LocateFrom(_testAssetFixture.ProjectPathWithMSTestRunSettings, TestAssetFixture.ProjectNameWithMSTestRunSettings, tfm);
+        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPathWithMSTestRunSettings, TestAssetFixture.ProjectNameWithMSTestRunSettings, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--settings my.runsettings");
 
         // Assert
@@ -26,10 +22,11 @@ public sealed class ConfigurationSettingsTests : AcceptanceTestBase
         testHostResult.AssertStandardErrorContains("Both '.runsettings' and '.testconfig.json' files have been detected. Please select only one of these test configuration files.");
     }
 
-    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    [TestMethod]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     public async Task TestConfigJson_AndRunSettingsHasMstestv2_Throws(string tfm)
     {
-        var testHost = TestHost.LocateFrom(_testAssetFixture.ProjectPathWithMSTestV2RunSettings, TestAssetFixture.ProjectNameWithMSTestV2RunSettings, tfm);
+        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPathWithMSTestV2RunSettings, TestAssetFixture.ProjectNameWithMSTestV2RunSettings, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--settings my.runsettings");
 
         // Assert
@@ -37,28 +34,68 @@ public sealed class ConfigurationSettingsTests : AcceptanceTestBase
         testHostResult.AssertStandardErrorContains("Both '.runsettings' and '.testconfig.json' files have been detected. Please select only one of these test configuration files.");
     }
 
-    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    [TestMethod]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     public async Task TestConfigJson_AndRunSettingsWithoutMstest_OverrideRunConfigration(string tfm)
     {
-        var testHost = TestHost.LocateFrom(_testAssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm);
+        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--settings my.runsettings");
 
         // Assert
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
     }
 
-    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    [TestMethod]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     public async Task TestConfigJson_WithoutRunSettings_BuildSuccess(string tfm)
     {
-        var testHost = TestHost.LocateFrom(_testAssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm);
+        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync();
 
         // Assert
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
     }
 
-    [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
-    public sealed class TestAssetFixture(AcceptanceFixture acceptanceFixture) : TestAssetFixtureBase(acceptanceFixture.NuGetGlobalPackagesFolder)
+    [TestMethod]
+    public async Task TestWithConfigFromCommandLineWithMapInconclusiveToFailedIsTrue()
+    {
+        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent);
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--config-file dummyconfigfile_map.json", environmentVariables: new()
+        {
+            ["TestWithConfigFromCommandLine"] = "true",
+        });
+
+        testHostResult.AssertExitCodeIs(ExitCodes.AtLeastOneTestFailed);
+        testHostResult.AssertOutputContainsSummary(failed: 1, passed: 1, skipped: 0);
+    }
+
+    [TestMethod]
+    public async Task TestWithConfigFromCommandLineWithMapInconclusiveToFailedIsFalse()
+    {
+        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent);
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--config-file dummyconfigfile_doNotMap.json", environmentVariables: new()
+        {
+            ["TestWithConfigFromCommandLine"] = "true",
+        });
+
+        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 1);
+    }
+
+    [TestMethod]
+    public async Task TestWithConfigFromCommandLineWithNonExistingFile()
+    {
+        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent);
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--config-file dummyconfigfile_not_existing_file.json", environmentVariables: new()
+        {
+            ["TestWithConfigFromCommandLine"] = "true",
+        });
+
+        testHostResult.AssertStandardErrorContains("FileNotFoundException");
+        testHostResult.AssertStandardErrorContains("dummyconfigfile_not_existing_file.json");
+    }
+
+    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
     {
         public const string ProjectName = "ConfigurationSettings";
         public const string ProjectNameWithMSTestRunSettings = "ConfigurationMSTestSettings";
@@ -127,6 +164,12 @@ public sealed class ConfigurationSettingsTests : AcceptanceTestBase
     <None Update="*.testconfig.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="dummyconfigfile_map.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="dummyconfigfile_doNotMap.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>
@@ -142,6 +185,24 @@ public sealed class ConfigurationSettingsTests : AcceptanceTestBase
 
     $AppendSettings$
 </RunSettings>
+
+#file dummyconfigfile_map.json
+{
+  "mstest": {
+    "execution": {
+      "mapInconclusiveToFailed": true,
+    },
+  }
+}
+
+#file dummyconfigfile_doNotMap.json
+{
+  "mstest": {
+    "execution": {
+      "mapInconclusiveToFailed": false,
+    },
+  }
+}
 
 #file $ProjectName$.testconfig.json
 {
@@ -197,6 +258,7 @@ public sealed class ConfigurationSettingsTests : AcceptanceTestBase
 
 
 #file UnitTest1.cs
+using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 [TestClass]
@@ -205,6 +267,15 @@ public class UnitTest1
     [TestMethod]
     public void TestMethod()
     {
+    }
+
+    [TestMethod]
+    public void TestWithConfigFromCommandLine()
+    {
+        if (Environment.GetEnvironmentVariable("TestWithConfigFromCommandLine") == "true")
+        {
+            Assert.Inconclusive("Inconclusive TestWithConfigFromCommandLine");
+        }
     }
 }
 """;

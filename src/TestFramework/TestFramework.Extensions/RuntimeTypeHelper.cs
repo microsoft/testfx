@@ -2,15 +2,13 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if NETFRAMEWORK
-using System.Diagnostics.CodeAnalysis;
-using System.Reflection;
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 /// <summary>
 /// Provides method signature discovery for generic methods.
 /// </summary>
-internal class RuntimeTypeHelper
+internal sealed class RuntimeTypeHelper
 {
     /// <summary>
     /// Compares the method signatures of these two methods.

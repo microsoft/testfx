@@ -3,7 +3,7 @@
   <PropertyGroup>
     <EnableNETAnalyzers>true</EnableNETAnalyzers>
     <!-- Use recommended ruleset of the preview SDK installed -->
-    <AnalysisLevel>latest-recommended</AnalysisLevel>
+    <AnalysisLevel>preview-recommended</AnalysisLevel>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
   </PropertyGroup>
 
@@ -11,7 +11,6 @@
     <PackageReference Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" PrivateAssets="all" Condition="'$(IsSourceProject)' == 'true'" />
     <PackageReference Include="Microsoft.CodeAnalysis.BannedApiAnalyzers" PrivateAssets="all" />
 
-    <AdditionalFiles Include="$(RepositoryEngineeringDir)stylecop.json" Link="stylecop.json" />
     <PackageReference Include="StyleCop.Analyzers" PrivateAssets="all" />
 
     <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" PrivateAssets="all" />

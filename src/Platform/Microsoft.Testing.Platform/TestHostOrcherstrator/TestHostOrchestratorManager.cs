@@ -1,14 +1,12 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Globalization;
-
 using Microsoft.Testing.Platform.Resources;
 using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Platform.Extensions.TestHostOrchestrator;
 
-internal class TestHostOrchestratorManager : ITestHostOrchestratorManager
+internal sealed class TestHostOrchestratorManager : ITestHostOrchestratorManager
 {
     private List<Func<IServiceProvider, ITestHostOrchestrator>>? _factories;
 

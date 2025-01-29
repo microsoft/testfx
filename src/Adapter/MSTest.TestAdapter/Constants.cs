@@ -10,6 +10,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 /// </summary>
 internal static class Constants
 {
+    internal const string PublicTypeObsoleteMessage = "We will remove or hide this type starting with v4. If you are using this type, reach out to our team on https://github.com/microsoft/testfx.";
+
     /// <summary>
     /// The 3rd level entry (class) name in the hierarchy array.
     /// </summary>
@@ -68,8 +70,6 @@ internal static class Constants
 
     internal static readonly TestProperty DeclaringClassNameProperty = TestProperty.Register("MSTestDiscoverer.DeclaringClassName", DeclaringClassNameLabel, typeof(string), TestPropertyAttributes.Hidden, typeof(TestCase));
 
-    internal static readonly TestProperty AsyncTestProperty = TestProperty.Register("MSTestDiscoverer.IsAsync", IsAsyncLabel, typeof(bool), TestPropertyAttributes.Hidden, typeof(TestCase));
-
 #pragma warning disable CS0618 // Type or member is obsolete
     internal static readonly TestProperty TestCategoryProperty = TestProperty.Register("MSTestDiscoverer.TestCategory", TestCategoryLabel, typeof(string[]), TestPropertyAttributes.Hidden | TestPropertyAttributes.Trait, typeof(TestCase));
 #pragma warning restore CS0618 // Type or member is obsolete
@@ -121,6 +121,8 @@ internal static class Constants
     internal static readonly TestProperty TestDynamicDataProperty = TestProperty.Register("MSTest.DynamicData", "DynamicData", typeof(string[]), TestPropertyAttributes.Hidden, typeof(TestCase));
 
     internal static readonly TestProperty TestIdGenerationStrategyProperty = TestProperty.Register("MSTest.TestIdGenerationStrategy", "TestIdGenerationStrategy", typeof(int), TestPropertyAttributes.Hidden, typeof(TestCase));
+
+    internal static readonly TestProperty TestDataSourceIgnoreMessageProperty = TestProperty.Register("MSTest.TestDataSourceIgnoreMessageProperty", "TestDataSourceIgnoreMessageProperty", typeof(string), TestPropertyAttributes.Hidden, typeof(TestCase));
     #endregion
 
     #region Private Constants
@@ -132,7 +134,6 @@ internal static class Constants
     /// </summary>
     private const string TestClassNameLabel = "ClassName";
     private const string DeclaringClassNameLabel = "DeclaringClassName";
-    private const string IsAsyncLabel = "IsAsync";
     private const string TestCategoryLabel = "TestCategory";
     private const string PriorityLabel = "Priority";
     private const string DeploymentItemsLabel = "DeploymentItems";

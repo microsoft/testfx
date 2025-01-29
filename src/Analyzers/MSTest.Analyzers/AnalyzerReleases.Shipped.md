@@ -1,4 +1,12 @@
-﻿## Release 3.6.0
+﻿## Release 3.7.0
+
+### New Rules
+
+Rule ID | Category | Severity | Notes
+--------|----------|----------|-------
+MSTEST0037 | `Usage` | Info | UseProperAssertMethodsAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0037)
+
+## Release 3.6.0
 
 ### New Rules
 

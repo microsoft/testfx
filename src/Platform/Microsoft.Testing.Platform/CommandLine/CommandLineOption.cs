@@ -1,9 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Diagnostics;
-using System.Globalization;
-
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Resources;
 
@@ -29,9 +26,10 @@ public sealed class CommandLineOption : IEquatable<CommandLineOption>
         Guard.NotNullOrWhiteSpace(description);
         ArgumentGuard.Ensure(arity.Max >= arity.Min, nameof(arity), PlatformResources.CommandLineInvalidArityErrorMessage);
 
+        string errorMessage = string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineInvalidOptionName, name);
         for (int i = 0; i < name.Length; i++)
         {
-            ArgumentGuard.Ensure(char.IsLetterOrDigit(name[i]) || name[i] == '-' || name[i] == '?', nameof(name), string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineInvalidOptionName, name));
+            ArgumentGuard.Ensure(char.IsLetterOrDigit(name[i]) || name[i] == '-' || name[i] == '?', nameof(name), errorMessage);
         }
 
         Name = name;
@@ -79,7 +77,6 @@ public sealed class CommandLineOption : IEquatable<CommandLineOption>
 
     internal bool IsBuiltIn { get; }
 
-    /// <inheritdoc/>
     public override bool Equals(object? obj) => Equals(obj as CommandLineOption);
 
     /// <inheritdoc/>
@@ -90,7 +87,6 @@ public sealed class CommandLineOption : IEquatable<CommandLineOption>
             Arity == other.Arity &&
             IsHidden == other.IsHidden;
 
-    /// <inheritdoc/>
     public override int GetHashCode()
     {
         HashCode hc = default;

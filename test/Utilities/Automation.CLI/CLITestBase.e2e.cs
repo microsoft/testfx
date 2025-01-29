@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Runtime.CompilerServices;
-
 using FluentAssertions;
 
 using Microsoft.TestPlatform.VsTestConsole.TranslationLayer;
@@ -35,9 +33,9 @@ public partial class CLITestBase : TestContainer
         ExpandTestSourcePaths(sources, targetFramework);
 
         _discoveryEventsHandler = new DiscoveryEventsHandler();
-        string runSettingXml = GetRunSettingXml(runSettings);
+        string runSettingsXml = GetRunSettingsXml(runSettings);
 
-        s_vsTestConsoleWrapper.DiscoverTests(sources, runSettingXml, _discoveryEventsHandler);
+        s_vsTestConsoleWrapper.DiscoverTests(sources, runSettingsXml, _discoveryEventsHandler);
     }
 
     /// <summary>
@@ -51,9 +49,9 @@ public partial class CLITestBase : TestContainer
         ExpandTestSourcePaths(sources, targetFramework);
 
         RunEventsHandler = new RunEventsHandler();
-        string runSettingXml = GetRunSettingXml(runSettings);
+        string runSettingsXml = GetRunSettingsXml(runSettings);
 
-        s_vsTestConsoleWrapper.RunTests(sources, runSettingXml, new TestPlatformOptions { TestCaseFilter = testCaseFilter }, RunEventsHandler);
+        s_vsTestConsoleWrapper.RunTests(sources, runSettingsXml, new TestPlatformOptions { TestCaseFilter = testCaseFilter }, RunEventsHandler);
         if (RunEventsHandler.Errors.Count != 0)
         {
             throw new Exception($"Run failed with {RunEventsHandler.Errors.Count} errors:{Environment.NewLine}{string.Join(Environment.NewLine, RunEventsHandler.Errors)}");
@@ -81,7 +79,7 @@ public partial class CLITestBase : TestContainer
     /// Gets the path to <c>vstest.console.exe</c>.
     /// </summary>
     /// <returns>Full path to <c>vstest.console.exe</c>.</returns>
-    public string GetConsoleRunnerPath()
+    public static string GetConsoleRunnerPath()
     {
         string testPlatformNuGetPackageFolder = Path.Combine(
             GetNugetPackageFolder(),

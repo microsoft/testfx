@@ -1,11 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Globalization;
-#if NETCOREAPP
-using System.Runtime.InteropServices;
-#endif
-
 using Microsoft.Testing.Extensions.Diagnostics.Resources;
 using Microsoft.Testing.Extensions.HangDump.Serializers;
 using Microsoft.Testing.Platform;
@@ -149,7 +144,7 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
         }
         else if (request is SessionEndSerializerRequest)
         {
-            await _logger.LogDebugAsync($"Session end received by the test host");
+            await _logger.LogDebugAsync("Session end received by the test host");
             _exitActivityIndicatorTask = true;
 #if NET
             if (_namedPipeClient is not null)
@@ -225,7 +220,7 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
 
     private async Task ActivityTimerAsync()
     {
-        _logger.LogDebug($"Wait for mutex name from the test host");
+        _logger.LogDebug("Wait for mutex name from the test host");
 
         if (!_mutexNameReceived.Wait(TimeoutHelper.DefaultHangTimeSpanTimeout))
         {
@@ -249,7 +244,7 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
             {
                 if (_traceEnabled)
                 {
-                    _logger.LogTrace($"Wait for activity signal");
+                    _logger.LogTrace("Wait for activity signal");
                 }
 
                 if (!_activityIndicatorMutex.WaitOne(_activityTimerValue))
@@ -276,7 +271,7 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
 
             if (_traceEnabled)
             {
-                _logger.LogTrace($"Exit 'ActivityTimerAsync'");
+                _logger.LogTrace("Exit 'ActivityTimerAsync'");
             }
         }
         catch (AbandonedMutexException)
@@ -295,7 +290,7 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
         {
             try
             {
-                _logger.LogDebug($"Timeout is not fired release activity mutex handle to allow test host to close");
+                _logger.LogDebug("Timeout is not fired release activity mutex handle to allow test host to close");
                 _activityIndicatorMutex.ReleaseMutex();
             }
             catch (AbandonedMutexException)
@@ -311,7 +306,7 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
         }
 
         _activityIndicatorMutex.Dispose();
-        _logger.LogDebug($"Activity indicator disposed");
+        _logger.LogDebug("Activity indicator disposed");
 
         if (timeoutFired)
         {
@@ -325,7 +320,7 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
         ApplicationStateGuard.Ensure(_dumpType is not null);
 
         await _logger.LogInformationAsync($"Hang dump timeout({_activityTimerValue}) expired.");
-        await _outputDisplay.DisplayAsync(this, FormattedTextOutputDeviceDataBuilder.CreateRedConsoleColorText(string.Format(CultureInfo.InvariantCulture, ExtensionResources.HangDumpTimeoutExpired, _activityTimerValue)));
+        await _outputDisplay.DisplayAsync(this, new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.HangDumpTimeoutExpired, _activityTimerValue)));
 
         string finalDumpFileName = _dumpFileNamePattern.Replace("%p", _testHostProcessInformation.PID.ToString(CultureInfo.InvariantCulture));
         finalDumpFileName = Path.Combine(_configuration.GetTestResultDirectory(), finalDumpFileName);
@@ -339,11 +334,11 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
             using (FileStream fs = File.OpenWrite(hangTestsFileName))
             using (StreamWriter sw = new(fs))
             {
-                await _outputDisplay.DisplayAsync(this, FormattedTextOutputDeviceDataBuilder.CreateRedConsoleColorText(ExtensionResources.RunningTestsWhileDumping));
+                await _outputDisplay.DisplayAsync(this, new ErrorMessageOutputDeviceData(ExtensionResources.RunningTestsWhileDumping));
                 foreach ((string testName, int seconds) in tests.Tests)
                 {
                     await sw.WriteLineAsync($"[{TimeSpan.FromSeconds(seconds)}] {testName}");
-                    await _outputDisplay.DisplayAsync(this, FormattedTextOutputDeviceDataBuilder.CreateRedConsoleColorText($"[{TimeSpan.FromSeconds(seconds)}] {testName}"));
+                    await _outputDisplay.DisplayAsync(this, new ErrorMessageOutputDeviceData($"[{TimeSpan.FromSeconds(seconds)}] {testName}"));
                 }
             }
 
@@ -352,7 +347,7 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
 
         await _logger.LogInformationAsync($"Creating dump filename {finalDumpFileName}");
 
-        await _outputDisplay.DisplayAsync(this, FormattedTextOutputDeviceDataBuilder.CreateRedConsoleColorText(string.Format(CultureInfo.InvariantCulture, ExtensionResources.CreatingDumpFile, finalDumpFileName)));
+        await _outputDisplay.DisplayAsync(this, new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.CreatingDumpFile, finalDumpFileName)));
 
 #if NETCOREAPP
         DiagnosticsClient diagnosticsClient = new(_testHostProcessInformation.PID);

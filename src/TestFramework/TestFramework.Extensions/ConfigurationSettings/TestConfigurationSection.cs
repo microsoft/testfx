@@ -24,7 +24,7 @@ public sealed class TestConfigurationSection : ConfigurationSection
     /// Gets the collection of properties.
     /// </summary>
     /// <returns>
-    /// The <see cref="System.Configuration.ConfigurationPropertyCollection"/> of properties for the element.
+    /// The <see cref="ConfigurationPropertyCollection"/> of properties for the element.
     /// </returns>
     protected override ConfigurationPropertyCollection Properties { get; } = [DataSourcesValue];
 }

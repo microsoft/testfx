@@ -13,13 +13,6 @@
 // #define DETECT_LEAKS  //for now always enable DETECT_LEAKS in debug.
 // #endif
 
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
-
-#if DETECT_LEAKS
-using System.Runtime.CompilerServices;
-
-#endif
 namespace Microsoft.Testing.Platform.Helpers;
 
 /// <summary>
@@ -128,9 +121,7 @@ internal sealed class ObjectPool<T>
 
     internal ObjectPool(Factory factory, int size)
     {
-#pragma warning disable SA1405 // Debug.Assert should provide message text
-        Debug.Assert(size >= 1);
-#pragma warning restore SA1405 // Debug.Assert should provide message text
+        RoslynDebug.Assert(size >= 1);
         _factory = factory;
         _items = new Element[size - 1];
     }

@@ -1,10 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Collections.Concurrent;
-using System.Diagnostics;
 using System.Net.Sockets;
-using System.Text;
 
 using MSTest.Acceptance.IntegrationTests.Messages.V100;
 

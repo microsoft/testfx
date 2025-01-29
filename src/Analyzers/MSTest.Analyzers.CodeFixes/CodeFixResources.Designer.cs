@@ -61,6 +61,15 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Add &apos;[TestClass]&apos;.
+        /// </summary>
+        internal static string AddTestClassFix {
+            get {
+                return ResourceManager.GetString("AddTestClassFix", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Add &apos;[TestMethod]&apos;.
         /// </summary>
         internal static string AddTestMethodAttributeFix {
@@ -75,6 +84,24 @@ namespace MSTest.Analyzers {
         internal static string AssemblyInitializeShouldBeValidCodeFix {
             get {
                 return ResourceManager.GetString("AssemblyInitializeShouldBeValidCodeFix", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Move conditional access in assertion to separate &apos;Assert.IsNotNull&apos; check.
+        /// </summary>
+        internal static string AssertionArgsShouldAvoidConditionalAccessFix {
+            get {
+                return ResourceManager.GetString("AssertionArgsShouldAvoidConditionalAccessFix", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Use &apos;{0}&apos;.
+        /// </summary>
+        internal static string AvoidAssertAreSameWithValueTypesFix {
+            get {
+                return ResourceManager.GetString("AvoidAssertAreSameWithValueTypesFix", resourceCulture);
             }
         }
         
@@ -102,15 +129,6 @@ namespace MSTest.Analyzers {
         internal static string FixSignatureCodeFix {
             get {
                 return ResourceManager.GetString("FixSignatureCodeFix", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Add &apos;[TestClass]&apos;.
-        /// </summary>
-        internal static string PublicTypeShouldBeTestClassFix {
-            get {
-                return ResourceManager.GetString("PublicTypeShouldBeTestClassFix", resourceCulture);
             }
         }
         
@@ -201,6 +219,24 @@ namespace MSTest.Analyzers {
         internal static string UseAttributeOnTestMethodFix {
             get {
                 return ResourceManager.GetString("UseAttributeOnTestMethodFix", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Use &apos;{0}&apos;.
+        /// </summary>
+        internal static string UseNewerAssertThrows {
+            get {
+                return ResourceManager.GetString("UseNewerAssertThrows", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Use &apos;{0}&apos;.
+        /// </summary>
+        internal static string UseProperAssertMethodsFix {
+            get {
+                return ResourceManager.GetString("UseProperAssertMethodsFix", resourceCulture);
             }
         }
     }

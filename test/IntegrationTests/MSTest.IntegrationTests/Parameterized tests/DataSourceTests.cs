@@ -11,7 +11,7 @@ public class DataSourceTests : CLITestBase
 
     // TODO @haplois | @evangelink: This test fails under CI - will be fixed in a future PR (Marked as private to ignore the test)
 #pragma warning disable IDE0051 // Remove unused private members
-    private void ExecuteCsvTestDataSourceTests()
+    private async Task ExecuteCsvTestDataSourceTests()
 #pragma warning restore IDE0051 // Remove unused private members
     {
         // Arrange
@@ -19,7 +19,7 @@ public class DataSourceTests : CLITestBase
 
         // Act
         System.Collections.Immutable.ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestCase> testCases = DiscoverTests(assemblyPath, "CsvTestMethod");
-        System.Collections.Immutable.ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult> testResults = RunTests(testCases);
+        System.Collections.Immutable.ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult> testResults = await RunTestsAsync(testCases);
 
         // Assert
         VerifyE2E.ContainsTestsPassed(

@@ -1,11 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Collections.Concurrent;
-using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
-using System.Runtime.InteropServices;
-
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
@@ -19,14 +14,32 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 /// <summary>
 /// Class responsible for execution of tests at assembly level and sending tests via framework handle.
 /// </summary>
+#if RELEASE
+#if NET6_0_OR_GREATER
+[Obsolete(Constants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
+#else
+[Obsolete(Constants.PublicTypeObsoleteMessage)]
+#endif
+#endif
 public class TestExecutionManager
 {
+    private sealed class RemotingMessageLogger : MarshalByRefObject, IMessageLogger
+    {
+        private readonly IMessageLogger _realMessageLogger;
+
+        public RemotingMessageLogger(IMessageLogger messageLogger)
+            => _realMessageLogger = messageLogger;
+
+        public void SendMessage(TestMessageLevel testMessageLevel, string message)
+            => _realMessageLogger.SendMessage(testMessageLevel, message);
+    }
+
     /// <summary>
     /// Dictionary for test run parameters.
     /// </summary>
     private readonly IDictionary<string, object> _sessionParameters;
     private readonly IEnvironment _environment;
-    private readonly Func<Action, Task> _taskFactory;
+    private readonly Func<Func<Task>, Task> _taskFactory;
 
     /// <summary>
     /// Specifies whether the test run is canceled or not.
@@ -38,7 +51,7 @@ public class TestExecutionManager
     {
     }
 
-    internal TestExecutionManager(IEnvironment environment, Func<Action, Task>? taskFactory = null)
+    internal TestExecutionManager(IEnvironment environment, Func<Func<Task>, Task>? taskFactory = null)
     {
         _testMethodFilter = new TestMethodFilter();
         _sessionParameters = new Dictionary<string, object>();
@@ -46,7 +59,7 @@ public class TestExecutionManager
         _taskFactory = taskFactory ?? DefaultFactoryAsync;
     }
 
-    private static Task DefaultFactoryAsync(Action action)
+    private static Task DefaultFactoryAsync(Func<Task> taskGetter)
     {
         if (MSTestSettings.RunConfigurationSettings.ExecutionApartmentState == ApartmentState.STA
             && RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
@@ -56,7 +69,9 @@ public class TestExecutionManager
             {
                 try
                 {
-                    action();
+                    // This is best we can do to execute in STA thread.
+                    Task task = taskGetter();
+                    task.GetAwaiter().GetResult();
                     tcs.SetResult(0);
                 }
                 catch (Exception ex)
@@ -71,7 +86,8 @@ public class TestExecutionManager
         }
         else
         {
-            return Task.Run(action);
+            // NOTE: If you replace this with `return taskGetter()`, you will break parallel tests.
+            return Task.Run(taskGetter);
         }
     }
 
@@ -92,6 +108,9 @@ public class TestExecutionManager
     /// <param name="runContext">Context to use when executing the tests.</param>
     /// <param name="frameworkHandle">Handle to the framework to record results and to do framework operations.</param>
     /// <param name="runCancellationToken">Test run cancellation token.</param>
+#if DEBUG
+    [Obsolete("Use RunTestsAsync instead.")]
+#endif
     public void RunTests(IEnumerable<TestCase> tests, IRunContext? runContext, IFrameworkHandle frameworkHandle, TestRunCancellationToken runCancellationToken)
     {
         DebugEx.Assert(tests != null, "tests");
@@ -108,7 +127,7 @@ public class TestExecutionManager
         CacheSessionParameters(runContext, frameworkHandle);
 
         // Execute the tests
-        ExecuteTests(tests, runContext, frameworkHandle, isDeploymentDone);
+        ExecuteTestsAsync(tests, runContext, frameworkHandle, isDeploymentDone).GetAwaiter().GetResult();
 
         if (!_hasAnyTestFailed)
         {
@@ -116,6 +135,40 @@ public class TestExecutionManager
         }
     }
 
+    /// <summary>
+    /// Runs the tests.
+    /// </summary>
+    /// <param name="tests">Tests to be run.</param>
+    /// <param name="runContext">Context to use when executing the tests.</param>
+    /// <param name="frameworkHandle">Handle to the framework to record results and to do framework operations.</param>
+    /// <param name="runCancellationToken">Test run cancellation token.</param>
+    internal async Task RunTestsAsync(IEnumerable<TestCase> tests, IRunContext? runContext, IFrameworkHandle frameworkHandle, TestRunCancellationToken runCancellationToken)
+    {
+        DebugEx.Assert(tests != null, "tests");
+        DebugEx.Assert(runContext != null, "runContext");
+        DebugEx.Assert(frameworkHandle != null, "frameworkHandle");
+        DebugEx.Assert(runCancellationToken != null, "runCancellationToken");
+
+        _testRunCancellationToken = runCancellationToken;
+        PlatformServiceProvider.Instance.TestRunCancellationToken = _testRunCancellationToken;
+
+        bool isDeploymentDone = PlatformServiceProvider.Instance.TestDeployment.Deploy(tests, runContext, frameworkHandle);
+
+        // Placing this after deployment since we need information post deployment that we pass in as properties.
+        CacheSessionParameters(runContext, frameworkHandle);
+
+        // Execute the tests
+        await ExecuteTestsAsync(tests, runContext, frameworkHandle, isDeploymentDone);
+
+        if (!_hasAnyTestFailed)
+        {
+            PlatformServiceProvider.Instance.TestDeployment.Cleanup();
+        }
+    }
+
+#if DEBUG
+    [Obsolete("Use RunTestsAsync instead.")]
+#endif
     public void RunTests(IEnumerable<string> sources, IRunContext? runContext, IFrameworkHandle frameworkHandle, TestRunCancellationToken cancellationToken)
     {
         _testRunCancellationToken = cancellationToken;
@@ -146,7 +199,45 @@ public class TestExecutionManager
         CacheSessionParameters(runContext, frameworkHandle);
 
         // Run tests.
-        ExecuteTests(tests, runContext, frameworkHandle, isDeploymentDone);
+        ExecuteTestsAsync(tests, runContext, frameworkHandle, isDeploymentDone).GetAwaiter().GetResult();
+
+        if (!_hasAnyTestFailed)
+        {
+            PlatformServiceProvider.Instance.TestDeployment.Cleanup();
+        }
+    }
+
+    internal async Task RunTestsAsync(IEnumerable<string> sources, IRunContext? runContext, IFrameworkHandle frameworkHandle, TestRunCancellationToken cancellationToken)
+    {
+        _testRunCancellationToken = cancellationToken;
+        PlatformServiceProvider.Instance.TestRunCancellationToken = _testRunCancellationToken;
+
+        var discoverySink = new TestCaseDiscoverySink();
+
+        var tests = new List<TestCase>();
+
+        // deploy everything first.
+        foreach (string source in sources)
+        {
+            _testRunCancellationToken?.ThrowIfCancellationRequested();
+
+            var logger = (IMessageLogger)frameworkHandle;
+
+            // discover the tests
+            GetUnitTestDiscoverer().DiscoverTestsInSource(source, logger, discoverySink, runContext);
+            tests.AddRange(discoverySink.Tests);
+
+            // Clear discoverSinksTests so that it just stores test for one source at one point of time
+            discoverySink.Tests.Clear();
+        }
+
+        bool isDeploymentDone = PlatformServiceProvider.Instance.TestDeployment.Deploy(tests, runContext, frameworkHandle);
+
+        // Placing this after deployment since we need information post deployment that we pass in as properties.
+        CacheSessionParameters(runContext, frameworkHandle);
+
+        // Run tests.
+        await ExecuteTestsAsync(tests, runContext, frameworkHandle, isDeploymentDone);
 
         if (!_hasAnyTestFailed)
         {
@@ -161,7 +252,7 @@ public class TestExecutionManager
     /// <param name="runContext">The run context.</param>
     /// <param name="frameworkHandle">Handle to record test start/end/results.</param>
     /// <param name="isDeploymentDone">Indicates if deployment is done.</param>
-    internal virtual void ExecuteTests(IEnumerable<TestCase> tests, IRunContext? runContext, IFrameworkHandle frameworkHandle, bool isDeploymentDone)
+    internal virtual async Task ExecuteTestsAsync(IEnumerable<TestCase> tests, IRunContext? runContext, IFrameworkHandle frameworkHandle, bool isDeploymentDone)
     {
         var testsBySource = from test in tests
                             group test by test.Source into testGroup
@@ -170,16 +261,16 @@ public class TestExecutionManager
         foreach (var group in testsBySource)
         {
             _testRunCancellationToken?.ThrowIfCancellationRequested();
-            ExecuteTestsInSource(group.Tests, runContext, frameworkHandle, group.Source, isDeploymentDone);
+            await ExecuteTestsInSourceAsync(group.Tests, runContext, frameworkHandle, group.Source, isDeploymentDone);
         }
     }
 
     internal virtual UnitTestDiscoverer GetUnitTestDiscoverer() => new();
 
-    internal void SendTestResults(TestCase test, IEnumerable<UnitTestResult> unitTestResults, DateTimeOffset startTime, DateTimeOffset endTime,
+    internal void SendTestResults(TestCase test, TestTools.UnitTesting.TestResult[] unitTestResults, DateTimeOffset startTime, DateTimeOffset endTime,
         ITestExecutionRecorder testExecutionRecorder)
     {
-        foreach (UnitTestResult unitTestResult in unitTestResults)
+        foreach (TestTools.UnitTesting.TestResult unitTestResult in unitTestResults)
         {
             _testRunCancellationToken?.ThrowIfCancellationRequested();
 
@@ -189,11 +280,6 @@ public class TestExecutionManager
             }
 
             var testResult = unitTestResult.ToTestResult(test, startTime, endTime, _environment.MachineName, MSTestSettings.CurrentSettings);
-
-            if (unitTestResult.DatarowIndex >= 0)
-            {
-                testResult.DisplayName = string.Format(CultureInfo.CurrentCulture, Resource.DataDrivenResultDisplayName, test.DisplayName, unitTestResult.DatarowIndex);
-            }
 
             testExecutionRecorder.RecordEnd(test, testResult.Outcome);
 
@@ -244,7 +330,7 @@ public class TestExecutionManager
     /// <param name="frameworkHandle">Handle to record test start/end/results.</param>
     /// <param name="source">The test container for the tests.</param>
     /// <param name="isDeploymentDone">Indicates if deployment is done.</param>
-    private void ExecuteTestsInSource(IEnumerable<TestCase> tests, IRunContext? runContext, IFrameworkHandle frameworkHandle, string source, bool isDeploymentDone)
+    private async Task ExecuteTestsInSourceAsync(IEnumerable<TestCase> tests, IRunContext? runContext, IFrameworkHandle frameworkHandle, string source, bool isDeploymentDone)
     {
         DebugEx.Assert(!StringEx.IsNullOrEmpty(source), "Source cannot be empty");
 
@@ -254,7 +340,7 @@ public class TestExecutionManager
         }
 
         using MSTestAdapter.PlatformServices.Interface.ITestSourceHost isolationHost = PlatformServiceProvider.Instance.CreateTestSourceHost(source, runContext?.RunSettings, frameworkHandle);
-
+        bool usesAppDomains = isolationHost is MSTestAdapter.PlatformServices.TestSourceHost { UsesAppDomain: true };
         PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("Created unit-test runner {0}", source);
 
         // Default test set is filtered tests based on user provided filter criteria
@@ -300,7 +386,7 @@ public class TestExecutionManager
             [MSTestSettings.CurrentSettings, unitTestElements, (int)sourceSettings.ClassCleanupLifecycle])!;
 
         // Ensures that the cancellation token gets through AppDomain boundary.
-        _testRunCancellationToken?.Register(testRunner.Cancel);
+        _testRunCancellationToken?.Register(static state => ((UnitTestRunner)state!).Cancel(), testRunner);
 
         if (MSTestSettings.CurrentSettings.ParallelizationWorkers.HasValue)
         {
@@ -350,7 +436,7 @@ public class TestExecutionManager
                 {
                     _testRunCancellationToken?.ThrowIfCancellationRequested();
 
-                    tasks.Add(_taskFactory(() =>
+                    tasks.Add(_taskFactory(async () =>
                     {
                         try
                         {
@@ -360,7 +446,7 @@ public class TestExecutionManager
 
                                 if (queue.TryDequeue(out IEnumerable<TestCase>? testSet))
                                 {
-                                    ExecuteTestsWithTestRunner(testSet, frameworkHandle, source, sourceLevelParameters, testRunner);
+                                    await ExecuteTestsWithTestRunnerAsync(testSet, frameworkHandle, source, sourceLevelParameters, testRunner, usesAppDomains);
                                 }
                             }
                         }
@@ -372,7 +458,7 @@ public class TestExecutionManager
 
                 try
                 {
-                    Task.WaitAll(tasks.ToArray());
+                    await Task.WhenAll(tasks);
                 }
                 catch (Exception ex)
                 {
@@ -386,23 +472,29 @@ public class TestExecutionManager
             // Queue the non parallel set
             if (nonParallelizableTestSet != null)
             {
-                ExecuteTestsWithTestRunner(nonParallelizableTestSet, frameworkHandle, source, sourceLevelParameters, testRunner);
+                await ExecuteTestsWithTestRunnerAsync(nonParallelizableTestSet, frameworkHandle, source, sourceLevelParameters, testRunner, usesAppDomains);
             }
         }
         else
         {
-            ExecuteTestsWithTestRunner(testsToRun, frameworkHandle, source, sourceLevelParameters, testRunner);
+            await ExecuteTestsWithTestRunnerAsync(testsToRun, frameworkHandle, source, sourceLevelParameters, testRunner, usesAppDomains);
+        }
+
+        if (PlatformServiceProvider.Instance.IsGracefulStopRequested)
+        {
+            testRunner.ForceCleanup(sourceLevelParameters!, new RemotingMessageLogger(frameworkHandle));
         }
 
         PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("Executed tests belonging to source {0}", source);
     }
 
-    private void ExecuteTestsWithTestRunner(
+    private async Task ExecuteTestsWithTestRunnerAsync(
         IEnumerable<TestCase> tests,
         ITestExecutionRecorder testExecutionRecorder,
         string source,
         IDictionary<string, object> sourceLevelParameters,
-        UnitTestRunner testRunner)
+        UnitTestRunner testRunner,
+        bool usesAppDomains)
     {
         bool hasAnyRunnableTests = false;
         var fixtureTests = new List<TestCase>();
@@ -411,9 +503,19 @@ public class TestExecutionManager
             ? tests.OrderBy(t => t.GetManagedType()).ThenBy(t => t.GetManagedMethod())
             : tests;
 
+        // If testRunner is in a different AppDomain, we cannot pass the testExecutionRecorder directly.
+        // Instead, we pass a proxy (remoting object) that is marshallable by ref.
+        IMessageLogger remotingMessageLogger = usesAppDomains
+            ? new RemotingMessageLogger(testExecutionRecorder)
+            : testExecutionRecorder;
+
         foreach (TestCase currentTest in orderedTests)
         {
             _testRunCancellationToken?.ThrowIfCancellationRequested();
+            if (PlatformServiceProvider.Instance.IsGracefulStopRequested)
+            {
+                break;
+            }
 
             // If it is a fixture test, add it to the list of fixture tests and do not execute it.
             // It is executed by test itself.
@@ -435,7 +537,19 @@ public class TestExecutionManager
             // Run single test passing test context properties to it.
             IDictionary<TestProperty, object?> tcmProperties = TcmTestPropertiesProvider.GetTcmProperties(currentTest);
             Dictionary<string, object?> testContextProperties = GetTestContextProperties(tcmProperties, sourceLevelParameters);
-            UnitTestResult[] unitTestResult = testRunner.RunSingleTest(unitTestElement.TestMethod, testContextProperties);
+
+            TestTools.UnitTesting.TestResult[] unitTestResult;
+            if (usesAppDomains)
+            {
+#pragma warning disable VSTHRD103 // Call async methods when in an async method - We cannot do right now because we are crossing app domains.
+                // TODO: When app domains support is dropped, we can finally always be calling the async version.
+                unitTestResult = testRunner.RunSingleTest(unitTestElement.TestMethod, testContextProperties, remotingMessageLogger);
+#pragma warning restore VSTHRD103 // Call async methods when in an async method
+            }
+            else
+            {
+                unitTestResult = await testRunner.RunSingleTestAsync(unitTestElement.TestMethod, testContextProperties, remotingMessageLogger);
+            }
 
             PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("Executed test {0}", unitTestElement.TestMethod.Name);
 
@@ -454,7 +568,11 @@ public class TestExecutionManager
             // If there were only fixture tests, send an inconclusive result.
             if (!hasAnyRunnableTests)
             {
-                var result = new UnitTestResult(ObjectModel.UnitTestOutcome.Inconclusive, null);
+                var result = new TestTools.UnitTesting.TestResult()
+                {
+                    Outcome = TestTools.UnitTesting.UnitTestOutcome.Inconclusive,
+                };
+
                 SendTestResults(currentTest, [result], DateTimeOffset.Now, DateTimeOffset.Now, testExecutionRecorder);
                 continue;
             }
@@ -465,7 +583,10 @@ public class TestExecutionManager
 
             if (fixtureTestResult.IsExecuted)
             {
-                var result = new UnitTestResult(fixtureTestResult.Outcome, null);
+                var result = new TestTools.UnitTesting.TestResult()
+                {
+                    Outcome = fixtureTestResult.Outcome,
+                };
                 SendTestResults(currentTest, [result], DateTimeOffset.Now, DateTimeOffset.Now, testExecutionRecorder);
             }
         }
@@ -481,18 +602,20 @@ public class TestExecutionManager
         IDictionary<TestProperty, object?> tcmProperties,
         IDictionary<string, object> sourceLevelParameters)
     {
-        var testContextProperties = new Dictionary<string, object?>();
+        // This dictionary will have *at least* 8 entries. Those are the sourceLevelParameters
+        // which were originally calculated from TestDeployment.GetDeploymentInformation.
+        var testContextProperties = new Dictionary<string, object?>(capacity: 8);
 
         // Add tcm properties.
-        foreach (KeyValuePair<TestProperty, object?> propertyPair in tcmProperties)
+        foreach ((TestProperty key, object? value) in tcmProperties)
         {
-            testContextProperties[propertyPair.Key.Id] = propertyPair.Value;
+            testContextProperties[key.Id] = value;
         }
 
         // Add source level parameters.
-        foreach (KeyValuePair<string, object> propertyPair in sourceLevelParameters)
+        foreach ((string key, object value) in sourceLevelParameters)
         {
-            testContextProperties[propertyPair.Key] = propertyPair.Value;
+            testContextProperties[key] = value;
         }
 
         return testContextProperties;

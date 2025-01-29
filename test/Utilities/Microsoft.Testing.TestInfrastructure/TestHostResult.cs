@@ -2,8 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.ObjectModel;
-using System.Globalization;
-using System.Text;
 
 namespace Microsoft.Testing.TestInfrastructure;
 
@@ -21,17 +19,16 @@ public sealed class TestHostResult(string command, int exitCode, string standard
 
     public ReadOnlyCollection<string> StandardErrorLines { get; } = standardErrorLines;
 
-    public override string ToString()
-    {
-        StringBuilder stringBuilder = new();
-        stringBuilder.AppendLine(CultureInfo.InvariantCulture, $"Command: {Command}");
-        stringBuilder.AppendLine(CultureInfo.InvariantCulture, $"====================");
-        stringBuilder.AppendLine(CultureInfo.InvariantCulture, $"ExitCode: {ExitCode}");
-        stringBuilder.AppendLine(CultureInfo.InvariantCulture, $"====================");
-        stringBuilder.AppendLine(CultureInfo.InvariantCulture, $"StandardOutput:\n{StandardOutput}");
-        stringBuilder.AppendLine(CultureInfo.InvariantCulture, $"====================");
-        stringBuilder.AppendLine(CultureInfo.InvariantCulture, $"StandardError:\n{StandardError}");
-
-        return stringBuilder.ToString();
-    }
+    public override string ToString() =>
+        $"""
+         Command: {Command}
+         ====================
+         ExitCode: {ExitCode}
+         ====================
+         StandardOutput:
+         {StandardOutput}
+         ====================
+         StandardError:
+         {StandardError}
+         """;
 }

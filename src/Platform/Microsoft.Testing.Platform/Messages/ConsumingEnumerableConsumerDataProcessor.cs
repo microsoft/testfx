@@ -2,15 +2,13 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if !NETCOREAPP
-using System.Collections.Concurrent;
-
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Platform.Messages;
 
-internal class AsyncConsumerDataProcessor : IDisposable
+internal sealed class AsyncConsumerDataProcessor : IDisposable
 {
     // The default underlying collection is a ConcurrentQueue<T> object, which provides first in, first out (FIFO) behavior.
     private readonly BlockingCollection<(IDataProducer DataProducer, IData Data)> _payloads = [];

@@ -26,7 +26,7 @@ internal static class SerializerUtilities
         Serializers = [];
         Deserializers = [];
 
-        Serializers[typeof(object)] = new ObjectSerializer<object>(o => new Dictionary<string, object?>());
+        Serializers[typeof(object)] = new ObjectSerializer<object>(_ => new Dictionary<string, object?>());
         Serializers[typeof(KeyValuePair<string, string>)] = new ObjectSerializer<KeyValuePair<string, string>>(o =>
         {
             Dictionary<string, object?> values = new()
@@ -138,7 +138,7 @@ internal static class SerializerUtilities
             [JsonRpcStrings.Description] = res.Description,
         });
 
-        Serializers[typeof(DiscoverResponseArgs)] = new ObjectSerializer<DiscoverResponseArgs>(res => new Dictionary<string, object?> { });
+        Serializers[typeof(DiscoverResponseArgs)] = new ObjectSerializer<DiscoverResponseArgs>(_ => new Dictionary<string, object?>());
 
         Serializers[typeof(RunResponseArgs)] = new ObjectSerializer<RunResponseArgs>(res => new Dictionary<string, object?>
         {
@@ -218,12 +218,12 @@ internal static class SerializerUtilities
 #if NETCOREAPP
                         properties[namedKvpStringProperty.Name] = namedKvpStringProperty.Pairs;
 #else
-                        Jsonite.JsonArray collection = [];
-                        foreach (KeyValuePair<string, string> item in namedKvpStringProperty.Pairs)
+                        JsonArray collection = [];
+                        foreach ((string? key, string? value) in namedKvpStringProperty.Pairs)
                         {
-                            Jsonite.JsonObject o = new()
+                            JsonObject o = new()
                             {
-                                { item.Key, item.Value },
+                                { key, value },
                             };
                             collection.Add(o);
                         }
@@ -419,12 +419,12 @@ internal static class SerializerUtilities
 #if NETCOREAPP
                 values[JsonRpcStrings.EnvironmentVariables] = ev.EnvironmentVariables;
 #else
-                Jsonite.JsonArray collection = [];
-                foreach (KeyValuePair<string, string?> item in ev.EnvironmentVariables)
+                JsonArray collection = [];
+                foreach ((string? key, string? value) in ev.EnvironmentVariables)
                 {
-                    Jsonite.JsonObject o = new()
+                    JsonObject o = new()
                     {
-                        { item.Key, item.Value },
+                        { key, value },
                     };
                     collection.Add(o);
                 }
@@ -624,17 +624,17 @@ internal static class SerializerUtilities
                 string displayName = string.Empty;
                 PropertyBag propertyBag = new();
 
-                foreach (KeyValuePair<string, object?> p in properties)
+                foreach ((string? key, object? value) in properties)
                 {
-                    if (p.Key == JsonRpcStrings.Uid)
+                    if (key == JsonRpcStrings.Uid)
                     {
-                        uid = p.Value as string ?? string.Empty;
+                        uid = value as string ?? string.Empty;
                         continue;
                     }
 
-                    if (p.Key == JsonRpcStrings.DisplayName)
+                    if (key == JsonRpcStrings.DisplayName)
                     {
-                        displayName = p.Value as string ?? string.Empty;
+                        displayName = value as string ?? string.Empty;
                         continue;
                     }
                 }
@@ -669,7 +669,7 @@ internal static class SerializerUtilities
             return new CancelRequestArgs(id);
         });
 
-        Deserializers[typeof(ExitRequestArgs)] = new ObjectDeserializer<ExitRequestArgs>(properties => new ExitRequestArgs());
+        Deserializers[typeof(ExitRequestArgs)] = new ObjectDeserializer<ExitRequestArgs>(_ => new ExitRequestArgs());
 
         // Deserialize an error
         Deserializers[typeof(ErrorMessage)] = new ObjectDeserializer<ErrorMessage>(properties =>

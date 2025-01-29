@@ -13,14 +13,14 @@ public partial class TestId : CLITestBase
 {
     private const string FullyQualifiedStrategyDll = "TestIdProject.FullyQualifiedStrategy";
 
-    public void TestIdUniqueness_DataRowArray_FullyQualifiedStrategy()
+    public async Task TestIdUniqueness_DataRowArray_FullyQualifiedStrategy()
     {
         // Arrange
         string assemblyPath = GetAssetFullPath(FullyQualifiedStrategyDll);
 
         // Act
         ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestCase> testCases = DiscoverTests(assemblyPath, "FullyQualifiedName~DataRowArraysTests");
-        ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult> testResults = RunTests(testCases);
+        ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult> testResults = await RunTestsAsync(testCases);
 
         // Assert
         VerifyE2E.FailedTestCount(testResults, 0);
@@ -34,14 +34,14 @@ public partial class TestId : CLITestBase
         testResults.Select(x => x.TestCase.Id.ToString()).Should().OnlyHaveUniqueItems();
     }
 
-    public void TestIdUniqueness_DataRowString_FullyQualifiedStrategy()
+    public async Task TestIdUniqueness_DataRowString_FullyQualifiedStrategy()
     {
         // Arrange
         string assemblyPath = GetAssetFullPath(FullyQualifiedStrategyDll);
 
         // Act
         ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestCase> testCases = DiscoverTests(assemblyPath, "FullyQualifiedName~DataRowStringTests");
-        ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult> testResults = RunTests(testCases);
+        ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult> testResults = await RunTestsAsync(testCases);
 
         // Assert
         VerifyE2E.FailedTestCount(testResults, 0);
@@ -56,14 +56,14 @@ public partial class TestId : CLITestBase
         testResults.Select(x => x.TestCase.Id.ToString()).Should().OnlyHaveUniqueItems();
     }
 
-    public void TestIdUniqueness_DynamicDataArrays_FullyQualifiedStrategy()
+    public async Task TestIdUniqueness_DynamicDataArrays_FullyQualifiedStrategy()
     {
         // Arrange
         string assemblyPath = GetAssetFullPath(FullyQualifiedStrategyDll);
 
         // Act
         ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestCase> testCases = DiscoverTests(assemblyPath, "FullyQualifiedName~DynamicDataArraysTests");
-        ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult> testResults = RunTests(testCases);
+        ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult> testResults = await RunTestsAsync(testCases);
 
         // Assert
         VerifyE2E.FailedTestCount(testResults, 0);
@@ -77,14 +77,14 @@ public partial class TestId : CLITestBase
         testResults.Select(x => x.TestCase.Id.ToString()).Should().OnlyHaveUniqueItems();
     }
 
-    public void TestIdUniqueness_DynamicDataTuple_FullyQualifiedStrategy()
+    public async Task TestIdUniqueness_DynamicDataTuple_FullyQualifiedStrategy()
     {
         // Arrange
         string assemblyPath = GetAssetFullPath(FullyQualifiedStrategyDll);
 
         // Act
         ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestCase> testCases = DiscoverTests(assemblyPath, "FullyQualifiedName~DynamicDataTuplesTests");
-        ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult> testResults = RunTests(testCases);
+        ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult> testResults = await RunTestsAsync(testCases);
 
         // Assert
         VerifyE2E.FailedTestCount(testResults, 0);
@@ -97,14 +97,14 @@ public partial class TestId : CLITestBase
         testResults.Select(x => x.TestCase.Id.ToString()).Should().OnlyHaveUniqueItems();
     }
 
-    public void TestIdUniqueness_DynamicDataGenericCollections_FullyQualifiedStrategy()
+    public async Task TestIdUniqueness_DynamicDataGenericCollections_FullyQualifiedStrategy()
     {
         // Arrange
         string assemblyPath = GetAssetFullPath(FullyQualifiedStrategyDll);
 
         // Act
         ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestCase> testCases = DiscoverTests(assemblyPath, "FullyQualifiedName~DynamicDataGenericCollectionsTests");
-        ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult> testResults = RunTests(testCases);
+        ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult> testResults = await RunTestsAsync(testCases);
 
         // Assert
         VerifyE2E.FailedTestCount(testResults, 0);
@@ -119,14 +119,14 @@ public partial class TestId : CLITestBase
         testResults.Select(x => x.TestCase.Id.ToString()).Should().OnlyHaveUniqueItems();
     }
 
-    public void TestIdUniqueness_TestDataSourceArrays_FullyQualifiedStrategy()
+    public async Task TestIdUniqueness_TestDataSourceArrays_FullyQualifiedStrategy()
     {
         // Arrange
         string assemblyPath = GetAssetFullPath(FullyQualifiedStrategyDll);
 
         // Act
         ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestCase> testCases = DiscoverTests(assemblyPath, "FullyQualifiedName~TestDataSourceArraysTests");
-        ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult> testResults = RunTests(testCases);
+        ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult> testResults = await RunTestsAsync(testCases);
 
         // Assert
         VerifyE2E.FailedTestCount(testResults, 0);
@@ -140,14 +140,14 @@ public partial class TestId : CLITestBase
         testResults.Select(x => x.TestCase.Id.ToString()).Should().OnlyHaveUniqueItems();
     }
 
-    public void TestIdUniqueness_TestDataSourceTuples_FullyQualifiedStrategy()
+    public async Task TestIdUniqueness_TestDataSourceTuples_FullyQualifiedStrategy()
     {
         // Arrange
         string assemblyPath = GetAssetFullPath(FullyQualifiedStrategyDll);
 
         // Act
         ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestCase> testCases = DiscoverTests(assemblyPath, "FullyQualifiedName~TestDataSourceTuplesTests");
-        ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult> testResults = RunTests(testCases);
+        ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult> testResults = await RunTestsAsync(testCases);
 
         // Assert
         VerifyE2E.FailedTestCount(testResults, 0);
@@ -160,14 +160,14 @@ public partial class TestId : CLITestBase
         testResults.Select(x => x.TestCase.Id.ToString()).Should().OnlyHaveUniqueItems();
     }
 
-    public void TestIdUniqueness_TestDataSourceGenericCollections_FullyQualifiedStrategy()
+    public async Task TestIdUniqueness_TestDataSourceGenericCollections_FullyQualifiedStrategy()
     {
         // Arrange
         string assemblyPath = GetAssetFullPath(FullyQualifiedStrategyDll);
 
         // Act
         ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestCase> testCases = DiscoverTests(assemblyPath, "FullyQualifiedName~TestDataSourceGenericCollectionsTests");
-        ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult> testResults = RunTests(testCases);
+        ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult> testResults = await RunTestsAsync(testCases);
 
         // Assert
         VerifyE2E.FailedTestCount(testResults, 0);

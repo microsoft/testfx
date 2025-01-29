@@ -37,6 +37,11 @@
         <target state="translated">ベースラインと比較する TRX ファイル</target>
         <note />
       </trans-unit>
+      <trans-unit id="TrxFileExistsAndWillBeOverwritten">
+        <source>Warning: Trx file '{0}' already exists and will be overwritten.</source>
+        <target state="translated">警告: Trx ファイル '{0}' は既に存在し、上書きされます。</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TrxReportArtifactDescription">
         <source>Test session</source>
         <target state="translated">テスト セッション</target>

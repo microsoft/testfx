@@ -6,17 +6,13 @@ using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
 
 namespace MSTest.Acceptance.IntegrationTests;
 
-[TestGroup]
-public sealed class AssemblyResolutionTests : AcceptanceTestBase
+[TestClass]
+public sealed class AssemblyResolutionTests : AcceptanceTestBase<AssemblyResolutionTests.TestAssetFixture>
 {
-    private readonly TestAssetFixture _testAssetFixture;
-
-    public AssemblyResolutionTests(ITestExecutionContext testExecutionContext, TestAssetFixture testAssetFixture)
-        : base(testExecutionContext) => _testAssetFixture = testAssetFixture;
-
+    [TestMethod]
     public async Task AssemblyResolution_WhenNotSpecified_TestFails()
     {
-        TestHostResult testHostResult = await _testAssetFixture.TestHost.ExecuteAsync();
+        TestHostResult testHostResult = await AssetFixture.TestHost.ExecuteAsync();
 
         // Assert
         testHostResult.AssertExitCodeIs(2);
@@ -24,10 +20,11 @@ public sealed class AssemblyResolutionTests : AcceptanceTestBase
         testHostResult.AssertOutputContainsSummary(failed: 1, passed: 0, skipped: 0);
     }
 
+    [TestMethod]
     public async Task AssemblyResolution_WhenSpecified_TestSucceeds()
     {
         // Arrange
-        string runSettingsFilePath = Path.Combine(_testAssetFixture.TestHost.DirectoryName, ".runsettings");
+        string runSettingsFilePath = Path.Combine(AssetFixture.TestHost.DirectoryName, ".runsettings");
         File.WriteAllText(runSettingsFilePath, $"""
             <?xml version="1.0" encoding="utf-8"?>
             <RunSettings>
@@ -35,14 +32,14 @@ public sealed class AssemblyResolutionTests : AcceptanceTestBase
               </RunConfiguration>
               <MSTestV2>
                 <AssemblyResolution>
-                  <Directory path="{_testAssetFixture.MainDllFolder.Path}" />
+                  <Directory path="{AssetFixture.MainDllFolder.Path}" />
                 </AssemblyResolution>
               </MSTestV2>
             </RunSettings>
             """);
 
         // Act
-        TestHostResult testHostResult = await _testAssetFixture.TestHost.ExecuteAsync($"--settings {runSettingsFilePath}");
+        TestHostResult testHostResult = await AssetFixture.TestHost.ExecuteAsync($"--settings {runSettingsFilePath}");
 
         // Assert
         testHostResult.AssertExitCodeIs(0);
@@ -50,12 +47,11 @@ public sealed class AssemblyResolutionTests : AcceptanceTestBase
         testHostResult.AssertOutputDoesNotContain("System.IO.FileNotFoundException: Could not load file or assembly 'MSTest.Extensibility.Samples");
     }
 
-    [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
-    public sealed class TestAssetFixture(AcceptanceFixture acceptanceFixture) : IAsyncInitializable, IDisposable
+    public sealed class TestAssetFixture : ITestAssetFixture
     {
         public const string ProjectName = "AssemblyResolution.Main";
         private const string TestProjectName = "AssemblyResolution.Test";
-        private static readonly string TargetFramework = TargetFrameworks.NetCurrent.Arguments;
+        private static readonly string TargetFramework = TargetFrameworks.NetCurrent;
 
         private readonly TempDirectory _testAssetDirectory = new();
 
@@ -69,10 +65,10 @@ public sealed class AssemblyResolutionTests : AcceptanceTestBase
             MainDllFolder?.Dispose();
         }
 
-        public async Task InitializeAsync(InitializationContext context)
+        public async Task InitializeAsync()
         {
             VSSolution solution = CreateTestAsset();
-            DotnetMuxerResult result = await DotnetCli.RunAsync($"build -nodeReuse:false {solution.SolutionFile} -c Release", acceptanceFixture.NuGetGlobalPackagesFolder.Path);
+            DotnetMuxerResult result = await DotnetCli.RunAsync($"build -nodeReuse:false {solution.SolutionFile} -c Release", AcceptanceFixture.NuGetGlobalPackagesFolder.Path);
             Assert.AreEqual(0, result.ExitCode);
 
             TestHost = TestHost.LocateFrom(solution.Projects.Skip(1).Single().FolderPath, TestProjectName, TargetFramework);

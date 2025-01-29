@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Reflection;
-
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
@@ -369,7 +367,7 @@ public class UnitTestDiscovererTests : TestContainer
         SetTestCaseNavigationData(testCase1, testNavigationData.FileName, testNavigationData.MinLineNumber);
     }
 
-    private void SetTestCaseNavigationData(TestCase testCase, string fileName, int lineNumber)
+    private static void SetTestCaseNavigationData(TestCase testCase, string fileName, int lineNumber)
     {
         testCase.LineNumber = lineNumber;
         testCase.CodeFilePath = fileName;

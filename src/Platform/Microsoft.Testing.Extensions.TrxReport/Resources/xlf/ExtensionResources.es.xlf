@@ -37,6 +37,11 @@
         <target state="translated">Archivo TRX que se va a comparar con la línea base</target>
         <note />
       </trans-unit>
+      <trans-unit id="TrxFileExistsAndWillBeOverwritten">
+        <source>Warning: Trx file '{0}' already exists and will be overwritten.</source>
+        <target state="translated">Advertencia: el archivo Trx '{0}' ya existe y se sobrescribirá.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TrxReportArtifactDescription">
         <source>Test session</source>
         <target state="translated">Sesión de prueba</target>

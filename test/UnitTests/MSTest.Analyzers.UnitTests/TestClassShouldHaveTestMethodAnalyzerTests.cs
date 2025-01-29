@@ -7,9 +7,10 @@ using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
 
 namespace MSTest.Analyzers.Test;
 
-[TestGroup]
-public sealed class TestClassShouldHaveTestMethodAnalyzerTests(ITestExecutionContext testExecutionContext) : TestBase(testExecutionContext)
+[TestClass]
+public sealed class TestClassShouldHaveTestMethodAnalyzerTests
 {
+    [TestMethod]
     public async Task WhenTestClassHasTestMethod_NoDiagnostic()
     {
         string code = """
@@ -28,6 +29,7 @@ public sealed class TestClassShouldHaveTestMethodAnalyzerTests(ITestExecutionCon
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenStaticTestClassWithAssemblyCleanup_DoesNotHaveTestMethod_NoDiagnostic()
     {
         string code = """
@@ -46,6 +48,7 @@ public sealed class TestClassShouldHaveTestMethodAnalyzerTests(ITestExecutionCon
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenStaticTestClassWithAssemblyInitialization_DoesNotHaveTestMethod_NoDiagnostic()
     {
         string code = """
@@ -64,6 +67,7 @@ public sealed class TestClassShouldHaveTestMethodAnalyzerTests(ITestExecutionCon
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenTestClassDoesNotHaveTestMethod_Diagnostic()
     {
         string code = """
@@ -82,6 +86,7 @@ public sealed class TestClassShouldHaveTestMethodAnalyzerTests(ITestExecutionCon
                 .WithArguments("MyTestClass"));
     }
 
+    [TestMethod]
     public async Task WhenStaticTestClassWithoutAssemblyAttributes_DoesNotHaveTestMethod_Diagnostic()
     {
         string code = """
@@ -99,6 +104,7 @@ public sealed class TestClassShouldHaveTestMethodAnalyzerTests(ITestExecutionCon
                 .WithArguments("MyTestClass"));
     }
 
+    [TestMethod]
     public async Task WhenTestClassWithoutAssemblyAttributesAndTestMethod_InheritsFromAbstractClassHasTestMethod_NoDiagnostic()
     {
         string code = """
@@ -118,6 +124,7 @@ public sealed class TestClassShouldHaveTestMethodAnalyzerTests(ITestExecutionCon
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenTestClassWithoutAssemblyAttributesAndTestMethod_InheritsFromClassHasTestMethod_NoDiagnostic()
     {
         string code = """
@@ -137,6 +144,7 @@ public sealed class TestClassShouldHaveTestMethodAnalyzerTests(ITestExecutionCon
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenTestClassWithoutAssemblyAttributesAndTestMethod_InheritsFromTestClassHasTestMethod_NoDiagnostic()
     {
         string code = """
@@ -157,6 +165,7 @@ public sealed class TestClassShouldHaveTestMethodAnalyzerTests(ITestExecutionCon
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenTestClassWithoutAssemblyAttributesAndTestMethod_InheritsFromAbstractTestClassHasTestMethod_NoDiagnostic()
     {
         string code = """
@@ -177,6 +186,7 @@ public sealed class TestClassShouldHaveTestMethodAnalyzerTests(ITestExecutionCon
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenTestClassWithoutAssemblyAttributesAndTestMethod_InheritsFromBaseBaseClassHasTestMethod_NoDiagnostic()
     {
         string code = """
@@ -200,6 +210,7 @@ public sealed class TestClassShouldHaveTestMethodAnalyzerTests(ITestExecutionCon
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenTestClassWithoutAssemblyAttributesAndTestMethod_InheritsFromClassDoesNotHaveTestMethod_Diagnostic()
     {
         string code = """
@@ -221,6 +232,7 @@ public sealed class TestClassShouldHaveTestMethodAnalyzerTests(ITestExecutionCon
                 .WithArguments("Derived"));
     }
 
+    [TestMethod]
     public async Task WhenTestClassWithoutAssemblyAttributesAndTestMethod_InheritsFromClassHasAssemblyInitialize_Diagnostic()
     {
         string code = """
@@ -246,6 +258,7 @@ public sealed class TestClassShouldHaveTestMethodAnalyzerTests(ITestExecutionCon
                 .WithArguments("Derived"));
     }
 
+    [TestMethod]
     public async Task WhenTestClassWithoutAssemblyAttributesAndTestMethod_InheritsFromBaseBaseClassHasAssemblyCleanup_Diagnostic()
     {
         string code = """

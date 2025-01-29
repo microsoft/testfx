@@ -1,14 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if !NET7_0_OR_GREATER
-using System.Diagnostics.CodeAnalysis;
-using System.Reflection;
-#endif
-
-using System.Globalization;
-using System.Text.RegularExpressions;
-
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Resources;
 
@@ -30,7 +22,19 @@ internal sealed partial class TerminalTestReporter : IDisposable
 
     internal Func<IStopwatch> CreateStopwatch { get; set; } = SystemStopwatch.StartNew;
 
-    private readonly Dictionary<string, TestProgressState> _assemblies = new();
+    internal event EventHandler OnProgressStartUpdate
+    {
+        add => _terminalWithProgress.OnProgressStartUpdate += value;
+        remove => _terminalWithProgress.OnProgressStartUpdate -= value;
+    }
+
+    internal event EventHandler OnProgressStopUpdate
+    {
+        add => _terminalWithProgress.OnProgressStopUpdate += value;
+        remove => _terminalWithProgress.OnProgressStopUpdate -= value;
+    }
+
+    private readonly ConcurrentDictionary<string, TestProgressState> _assemblies = new();
 
     private readonly List<TestRunArtifact> _artifacts = new();
 
@@ -51,7 +55,9 @@ internal sealed partial class TerminalTestReporter : IDisposable
     private bool? _shouldShowPassedTests;
 
 #if NET7_0_OR_GREATER
-    [GeneratedRegex(@$"^   at ((?<code>.+) in (?<file>.+):line (?<line>\d+)|(?<code1>.+))$", RegexOptions.ExplicitCapture, 1000)]
+    // Specifying no timeout, the regex is linear. And the timeout does not measure the regex only, but measures also any
+    // thread suspends, so the regex gets blamed incorrectly.
+    [GeneratedRegex(@"^   at ((?<code>.+) in (?<file>.+):line (?<line>\d+)|(?<code1>.+))$", RegexOptions.ExplicitCapture)]
     private static partial Regex GetFrameRegex();
 #else
     private static Regex? s_regex;
@@ -75,7 +81,9 @@ internal sealed partial class TerminalTestReporter : IDisposable
         {
             // Get these resources: https://github.com/dotnet/runtime/blob/main/src/libraries/System.Private.CoreLib/src/Resources/Strings.resx
 #pragma warning disable RS0030 // Do not use banned APIs
-            MethodInfo? getResourceStringMethod = typeof(Environment).GetMethod("GetResourceString", BindingFlags.Static | BindingFlags.NonPublic, null, [typeof(string)], null);
+            MethodInfo? getResourceStringMethod = typeof(Environment).GetMethod(
+                "GetResourceString",
+                BindingFlags.Static | BindingFlags.NonPublic, null, [typeof(string)], null);
 #pragma warning restore RS0030 // Do not use banned APIs
             if (getResourceStringMethod is not null)
             {
@@ -96,15 +104,19 @@ internal sealed partial class TerminalTestReporter : IDisposable
 
         string inPattern = string.Format(CultureInfo.InvariantCulture, inString, "(?<file>.+)", @"(?<line>\d+)");
 
-        s_regex = new Regex(@$"^   {atString} ((?<code>.+) {inPattern}|(?<code1>.+))$", RegexOptions.Compiled | RegexOptions.ExplicitCapture, matchTimeout: TimeSpan.FromSeconds(1));
+        // Specifying no timeout, the regex is linear. And the timeout does not measure the regex only, but measures also any
+        // thread suspends, so the regex gets blamed incorrectly.
+        s_regex = new Regex(@$"^   {atString} ((?<code>.+) {inPattern}|(?<code1>.+))$", RegexOptions.Compiled | RegexOptions.ExplicitCapture);
         return s_regex;
     }
 #endif
 
+    private int _counter;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="TerminalTestReporter"/> class with custom terminal and manual refresh for testing.
     /// </summary>
-    internal TerminalTestReporter(IConsole console, TerminalTestReporterOptions options)
+    public TerminalTestReporter(IConsole console, TerminalTestReporterOptions options)
     {
         _options = options;
 
@@ -158,22 +170,18 @@ internal sealed partial class TerminalTestReporter : IDisposable
     private TestProgressState GetOrAddAssemblyRun(string assembly, string? targetFramework, string? architecture, string? executionId)
     {
         string key = $"{assembly}|{targetFramework}|{architecture}|{executionId}";
-        if (_assemblies.TryGetValue(key, out TestProgressState? asm))
+        return _assemblies.GetOrAdd(key, _ =>
         {
-            return asm;
-        }
+            IStopwatch sw = CreateStopwatch();
+            var assemblyRun = new TestProgressState(Interlocked.Increment(ref _counter), assembly, targetFramework, architecture, sw);
+            int slotIndex = _terminalWithProgress.AddWorker(assemblyRun);
+            assemblyRun.SlotIndex = slotIndex;
 
-        IStopwatch sw = CreateStopwatch();
-        var assemblyRun = new TestProgressState(assembly, targetFramework, architecture, sw);
-        int slotIndex = _terminalWithProgress.AddWorker(assemblyRun);
-        assemblyRun.SlotIndex = slotIndex;
-
-        _assemblies.Add(key, assemblyRun);
-
-        return assemblyRun;
+            return assemblyRun;
+        });
     }
 
-    internal void TestExecutionCompleted(DateTimeOffset endTime)
+    public void TestExecutionCompleted(DateTimeOffset endTime)
     {
         _testExecutionEndTime = endTime;
         _terminalWithProgress.StopShowingProgress();
@@ -372,6 +380,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
        string? targetFramework,
        string? architecture,
        string? executionId,
+       string testNodeUid,
        string displayName,
        TestOutcome outcome,
        TimeSpan duration,
@@ -388,6 +397,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
             targetFramework,
             architecture,
             executionId,
+            testNodeUid,
             displayName,
             outcome,
             duration,
@@ -403,6 +413,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
         string? targetFramework,
         string? architecture,
         string? executionId,
+        string testNodeUid,
         string displayName,
         TestOutcome outcome,
         TimeSpan duration,
@@ -413,6 +424,11 @@ internal sealed partial class TerminalTestReporter : IDisposable
         string? errorOutput)
     {
         TestProgressState asm = _assemblies[$"{assembly}|{targetFramework}|{architecture}|{executionId}"];
+
+        if (_options.ShowActiveTests)
+        {
+            asm.TestNodeResultsState?.RemoveRunningTestNode(testNodeUid);
+        }
 
         switch (outcome)
         {
@@ -653,6 +669,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
             bool weHaveFilePathAndCodeLine = !RoslynString.IsNullOrWhiteSpace(match.Groups["code"].Value);
             terminal.Append(PlatformResources.StackFrameAt);
             terminal.Append(' ');
+
             if (weHaveFilePathAndCodeLine)
             {
                 terminal.Append(match.Groups["code"].Value);
@@ -798,7 +815,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
     /// <summary>
     /// Let the user know that cancellation was triggered.
     /// </summary>
-    internal void StartCancelling()
+    public void StartCancelling()
     {
         _wasCancelled = true;
         _terminalWithProgress.WriteToTerminal(terminal =>
@@ -853,7 +870,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
     internal void WriteErrorMessage(string assembly, string? targetFramework, string? architecture, string? executionId, Exception exception)
         => WriteErrorMessage(assembly, targetFramework, architecture, executionId, exception.ToString(), padding: null);
 
-    internal void WriteMessage(string text, SystemConsoleColor? color = null, int? padding = null)
+    public void WriteMessage(string text, SystemConsoleColor? color = null, int? padding = null)
     {
         if (color != null)
         {
@@ -976,4 +993,24 @@ internal sealed partial class TerminalTestReporter : IDisposable
             ConsoleColor.White => TerminalColor.White,
             _ => TerminalColor.Default,
         };
+
+    public void TestInProgress(
+        string assembly,
+        string? targetFramework,
+        string? architecture,
+        string testNodeUid,
+        string displayName,
+        string? executionId)
+    {
+        TestProgressState asm = _assemblies[$"{assembly}|{targetFramework}|{architecture}|{executionId}"];
+
+        if (_options.ShowActiveTests)
+        {
+            asm.TestNodeResultsState ??= new(Interlocked.Increment(ref _counter));
+            asm.TestNodeResultsState.AddRunningTestNode(
+                Interlocked.Increment(ref _counter), testNodeUid, displayName, CreateStopwatch());
+        }
+
+        _terminalWithProgress.UpdateWorker(asm.SlotIndex);
+    }
 }

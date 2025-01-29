@@ -4,12 +4,6 @@
 #pragma warning disable CA1837 // Use 'Environment.ProcessId'
 #pragma warning disable CA1416 // Validate platform compatibility
 
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
-using System.Reflection;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.ComTypes;
 
 namespace Microsoft.Testing.TestInfrastructure;
@@ -26,7 +20,7 @@ public class DebuggerUtility
         {
             if (pid == null)
             {
-                Trace($"FAIL: Pid is null.", enabled: enableLog);
+                Trace("FAIL: Pid is null.", enabled: enableLog);
                 return false;
             }
 
@@ -42,7 +36,7 @@ public class DebuggerUtility
                 return true;
             }
 
-            Trace($"Parent VS not found, finding the first VS that started.", enabled: enableLog);
+            Trace("Parent VS not found, finding the first VS that started.", enabled: enableLog);
             var firstVs = Process.GetProcesses()
                 .Where(p => p.ProcessName == "devenv")
                 .Select(p =>
@@ -104,21 +98,21 @@ public class DebuggerUtility
             Marshal.ThrowExceptionForHR(r);
             if (bindCtx == null)
             {
-                Trace($"BindCtx is null. Cannot attach VS.", enabled: enableLog);
+                Trace("BindCtx is null. Cannot attach VS.", enabled: enableLog);
                 return false;
             }
 
             bindCtx.GetRunningObjectTable(out runningObjectTable);
             if (runningObjectTable == null)
             {
-                Trace($"RunningObjectTable is null. Cannot attach VS.", enabled: enableLog);
+                Trace("RunningObjectTable is null. Cannot attach VS.", enabled: enableLog);
                 return false;
             }
 
             runningObjectTable.EnumRunning(out enumMoniker);
             if (enumMoniker == null)
             {
-                Trace($"EnumMoniker is null. Cannot attach VS.", enabled: enableLog);
+                Trace("EnumMoniker is null. Cannot attach VS.", enabled: enableLog);
                 return false;
             }
 

@@ -1,9 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Globalization;
-using System.Reflection;
-
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -12,6 +9,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
 /// <summary>
 /// Determines whether a type is a valid test class for this adapter.
 /// </summary>
+[SuppressMessage("Performance", "CA1852: Seal internal types", Justification = "Overrides required for testability")]
 internal class TypeValidator
 {
     // Setting this to a string representation instead of a typeof(TestContext).FullName
@@ -47,7 +45,7 @@ internal class TypeValidator
     /// <param name="type">The reflected type.</param>
     /// <param name="warnings">Contains warnings if any, that need to be passed back to the caller.</param>
     /// <returns>Return true if it is a valid test class.</returns>
-    internal virtual bool IsValidTestClass(Type type, ICollection<string> warnings)
+    internal virtual bool IsValidTestClass(Type type, List<string> warnings)
     {
         // PERF: We are doing caching reflection here, meaning we will cache every class info in the
         // assembly, this is because when we discover and run we will repeatedly inspect all the types in the assembly, and this
@@ -104,7 +102,7 @@ internal class TypeValidator
     {
         DebugEx.Assert(type != null, "HasCorrectTestContextSignature type is null");
 
-        IEnumerable<PropertyInfo> propertyInfoEnumerable = PlatformServiceProvider.Instance.ReflectionOperations.GetDeclaredProperties(type);
+        PropertyInfo[] propertyInfoEnumerable = PlatformServiceProvider.Instance.ReflectionOperations.GetDeclaredProperties(type);
         var propertyInfo = new List<PropertyInfo>();
 
         foreach (PropertyInfo pinfo in propertyInfoEnumerable)

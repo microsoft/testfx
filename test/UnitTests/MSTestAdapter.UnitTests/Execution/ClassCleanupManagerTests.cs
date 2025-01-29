@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Reflection;
-
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
@@ -35,7 +33,7 @@ public class ClassCleanupManagerTests : TestContainer
 
         var classCleanupManager = new ClassCleanupManager(testsToRun, ClassCleanupBehavior.EndOfClass, ClassCleanupBehavior.EndOfClass, reflectHelper);
 
-        TestClassInfo testClassInfo = new(typeof(ClassCleanupManagerTests), null, true, null, null, null)
+        TestClassInfo testClassInfo = new(typeof(ClassCleanupManagerTests), null, true, null, null)
         {
             // This needs to be set, to allow running class cleanup.
             ClassCleanupMethod = classCleanupMethodInfo,
