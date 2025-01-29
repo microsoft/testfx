@@ -22,13 +22,8 @@ public class TestRunCancellationToken
     private readonly ConcurrentBag<(Action<object?>, object?)> _registeredCallbacks = new();
 
     public TestRunCancellationToken()
-        : this(CancellationToken.None)
     {
     }
-
-    internal TestRunCancellationToken(CancellationToken cancellationToken) => CancellationToken = cancellationToken;
-
-    internal CancellationToken CancellationToken { get; }
 
     /// <summary>
     /// Gets a value indicating whether the test run is canceled.
@@ -81,18 +76,9 @@ public class TestRunCancellationToken
 
     internal void ThrowIfCancellationRequested()
     {
-        CancellationToken.ThrowIfCancellationRequested();
-
         if (Canceled)
         {
-            if (CancellationToken == CancellationToken.None)
-            {
-                throw new OperationCanceledException();
-            }
-            else
-            {
-                throw new OperationCanceledException(CancellationToken);
-            }
+            throw new OperationCanceledException();
         }
     }
 }
