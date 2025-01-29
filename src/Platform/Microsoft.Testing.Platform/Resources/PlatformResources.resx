@@ -509,12 +509,12 @@ Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplat
     <value>Canceling the test session...</value>
   </data>
   <data name="DiagnosticFileLevelWithAsyncFlush" xml:space="preserve">
-    <value>Diagnostic file (level '{0}' with async flush): {1}"</value>
+    <value>Diagnostic file (level '{0}' with async flush): {1}</value>
     <comment>0 level such as verbose, 
 1 path to file</comment>
   </data>
   <data name="DiagnosticFileLevelWithFlush" xml:space="preserve">
-    <value>Diagnostic file (level '{0}' with sync flush): {1}"</value>
+    <value>Diagnostic file (level '{0}' with sync flush): {1}</value>
     <comment>0 level such as verbose, 
 1 path to file</comment>
   </data>

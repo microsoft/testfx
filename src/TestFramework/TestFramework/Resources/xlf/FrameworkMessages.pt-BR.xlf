@@ -131,6 +131,11 @@ Real: {2}</target>
         <target state="translated">Coleção esperada de tamanho {1}. Real: {2}. {0}</target>
         <note />
       </trans-unit>
+      <trans-unit id="InvalidGitHubUrl">
+        <source>Invalid GitHub ticket URL</source>
+        <target state="new">Invalid GitHub ticket URL</target>
+        <note />
+      </trans-unit>
       <trans-unit id="IsInstanceOfFailMsg">
         <source>{0} Expected type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;.</source>
         <target state="translated">{0} Tipo esperado:&lt;{1}&gt;. Tipo real:&lt;{2}&gt;.</target>

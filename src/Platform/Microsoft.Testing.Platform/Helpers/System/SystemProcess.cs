@@ -19,6 +19,8 @@ internal sealed class SystemProcess : IProcess, IDisposable
 
     public int Id => _process.Id;
 
+    public string Name => _process.ProcessName;
+
     public int ExitCode => _process.ExitCode;
 
 #if NETCOREAPP
