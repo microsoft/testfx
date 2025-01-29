@@ -186,17 +186,19 @@ End Namespace
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-[<System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage>]
-[<EntryPoint>]
-let main args =
-    task {
-        let! builder = Microsoft.Testing.Platform.Builder.TestApplication.CreateBuilderAsync args
-        Microsoft.TestingPlatform.Extensions.SelfRegisteredExtensions.AddSelfRegisteredExtensions(builder, args)
-        use! app = builder.BuildAsync()
-        return! app.RunAsync()
-    }
-    |> Async.AwaitTask
-    |> Async.RunSynchronously
+module TestingPlatformEntryPoint =
+
+    [<System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage>]
+    [<EntryPoint>]
+    let main args =
+        task {
+            let! builder = Microsoft.Testing.Platform.Builder.TestApplication.CreateBuilderAsync args
+            Microsoft.TestingPlatform.Extensions.SelfRegisteredExtensions.AddSelfRegisteredExtensions(builder, args)
+            use! app = builder.BuildAsync()
+            return! app.RunAsync()
+        }
+        |> Async.AwaitTask
+        |> Async.RunSynchronously
 """
                 : $$"""
 //------------------------------------------------------------------------------
@@ -207,17 +209,19 @@ let main args =
 
 namespace {{rootNamespace}}
 
-[<System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage>]
-[<EntryPoint>]
-let main args =
-    task {
-        let! builder = Microsoft.Testing.Platform.Builder.TestApplication.CreateBuilderAsync args
-        Microsoft.TestingPlatform.Extensions.SelfRegisteredExtensions.AddSelfRegisteredExtensions(builder, args)
-        use! app = builder.BuildAsync()
-        return! app.RunAsync()
-    }
-    |> Async.AwaitTask
-    |> Async.RunSynchronously
+module TestingPlatformEntryPoint =
+
+    [<System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage>]
+    [<EntryPoint>]
+    let main args =
+        task {
+            let! builder = Microsoft.Testing.Platform.Builder.TestApplication.CreateBuilderAsync args
+            SelfRegisteredExtensions.AddSelfRegisteredExtensions(builder, args)
+            use! app = builder.BuildAsync()
+            return! app.RunAsync()
+        }
+        |> Async.AwaitTask
+        |> Async.RunSynchronously
 """;
         }
 

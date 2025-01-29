@@ -31,9 +31,9 @@ public class MSBuildTests_KnownExtensionRegistration : AcceptanceTestBase<NopAss
         testHostResult.AssertOutputContains("--hangdump");
 
         SL.Build binLog = SL.Serialization.Read(binlogFile);
-        SL.Target generateAutoRegisteredExtensions = binLog.FindChildrenRecursive<SL.Target>().Single(t => t.Name == "_GenerateAutoRegisteredExtensions");
-        SL.Task testingPlatformAutoRegisteredExtensions = generateAutoRegisteredExtensions.FindChildrenRecursive<SL.Task>().Single(t => t.Name == "TestingPlatformAutoRegisteredExtensions");
-        SL.Message generatedSource = testingPlatformAutoRegisteredExtensions.FindChildrenRecursive<SL.Message>().Single(m => m.Text.Contains("AutoRegisteredExtensions source:"));
+        SL.Target generateSelfRegisteredExtensions = binLog.FindChildrenRecursive<SL.Target>().Single(t => t.Name == "_GenerateSelfRegisteredExtensions");
+        SL.Task testingPlatformSelfRegisteredExtensions = generateSelfRegisteredExtensions.FindChildrenRecursive<SL.Task>().Single(t => t.Name == "TestingPlatformSelfRegisteredExtensions");
+        SL.Message generatedSource = testingPlatformSelfRegisteredExtensions.FindChildrenRecursive<SL.Message>().Single(m => m.Text.Contains("SelfRegisteredExtensions source:"));
 
         Assert.IsTrue(generatedSource.Text.Contains("Microsoft.Testing.Extensions.CrashDump.TestingPlatformBuilderHook.AddExtensions"), generatedSource.Text);
         Assert.IsTrue(generatedSource.Text.Contains("Microsoft.Testing.Extensions.HangDump.TestingPlatformBuilderHook.AddExtensions"), generatedSource.Text);
