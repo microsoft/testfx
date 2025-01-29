@@ -156,7 +156,6 @@ public sealed class HangDumpTests : AcceptanceTestBase<HangDumpTests.TestAssetFi
 </Project>
 
 #file Program.cs
-using HangDump;
 using System;
 using System.Threading;
 using System.Threading.Tasks;

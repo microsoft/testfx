@@ -36,7 +36,6 @@ public sealed class EnvironmentVariablesConfigurationProviderTests : AcceptanceT
 </Project>
 
 #file Program.cs
-using EnvironmentVariablesConfigurationProvider;
 using System;
 using System.Threading;
 using System.Threading.Tasks;

@@ -39,7 +39,6 @@ public sealed class TestHostProcessLifetimeHandlerTests : AcceptanceTestBase<Tes
 </Project>
 
 #file Program.cs
-using TestHostProcessLifetimeHandler;
 using System;
 using System.Threading;
 using System.Threading.Tasks;

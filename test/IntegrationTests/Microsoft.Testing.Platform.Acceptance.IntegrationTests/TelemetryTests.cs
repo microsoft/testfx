@@ -156,7 +156,6 @@ Diagnostic file \(level '{level}' with {flushType} flush\): {diagPathPattern}
 </Project>
 
 #file Program.cs
-using TelemetryTest;
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.Extensions.TestFramework;

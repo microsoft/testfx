@@ -183,7 +183,6 @@ public class UnhandledExceptionPolicyTests : AcceptanceTestBase<UnhandledExcepti
 
 
 #file Program.cs
-using UnhandledExceptionPolicyTests;
 using System;
 using System.Threading;
 using System.Threading.Tasks;

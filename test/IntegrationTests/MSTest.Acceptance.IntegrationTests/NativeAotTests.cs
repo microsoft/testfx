@@ -30,7 +30,6 @@ public class NativeAotTests : AcceptanceTestBase<NopAssetFixture>
 </Project>
 
 #file Program.cs
-using NativeAotTests;
 using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.InteropServices;

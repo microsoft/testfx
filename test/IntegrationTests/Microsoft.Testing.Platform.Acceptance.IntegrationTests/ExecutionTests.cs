@@ -136,7 +136,6 @@ Test1$
 </Project>
 
 #file Program.cs
-using ExecutionTests;
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.Extensions;
@@ -237,7 +236,6 @@ public class DummyTestFramework : ITestFramework, IDataProducer
 </Project>
 
 #file Program.cs
-using ExecutionTests2;
 using Microsoft.Testing.Platform;
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Builder;

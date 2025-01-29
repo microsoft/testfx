@@ -88,7 +88,6 @@ public sealed class CrashDumpTests : AcceptanceTestBase<CrashDumpTests.TestAsset
 
         private const string Sources = """
 #file CrashDump.csproj
-
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>$TargetFrameworks$</TargetFrameworks>
@@ -103,7 +102,6 @@ public sealed class CrashDumpTests : AcceptanceTestBase<CrashDumpTests.TestAsset
 </Project>
 
 #file Program.cs
-using CrashDump;
 using System;
 using System.Threading;
 using System.Threading.Tasks;

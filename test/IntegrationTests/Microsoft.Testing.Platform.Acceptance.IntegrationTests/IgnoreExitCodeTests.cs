@@ -27,7 +27,6 @@ public class IgnoreExitCodeTests : AcceptanceTestBase<NopAssetFixture>
 </Project>
 
 #file Program.cs
-using TestProject;
 using System;
 using System.Threading.Tasks;
 using Microsoft.Testing.Platform.Builder;

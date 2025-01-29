@@ -94,7 +94,6 @@ public sealed class CrashPlusHangDumpTests : AcceptanceTestBase<CrashPlusHangDum
 </Project>
 
 #file Program.cs
-using CrashPlusHangDump;
 using System;
 using System.Threading;
 using System.Threading.Tasks;

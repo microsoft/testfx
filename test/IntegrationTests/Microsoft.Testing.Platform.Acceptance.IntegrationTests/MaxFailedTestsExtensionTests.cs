@@ -51,7 +51,6 @@ public class MaxFailedTestsExtensionTests : AcceptanceTestBase<MaxFailedTestsExt
 </Project>
 
 #file Program.cs
-using MaxFailedTestsExtensionTests;
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;

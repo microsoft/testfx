@@ -84,7 +84,6 @@ public class CustomBannerTests : AcceptanceTestBase<CustomBannerTests.TestAssetF
 </Project>
 
 #file Program.cs
-using CustomBannerTest;
 using System.Text;
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;

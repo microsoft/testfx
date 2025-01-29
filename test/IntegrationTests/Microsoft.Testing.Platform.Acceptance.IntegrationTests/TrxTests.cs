@@ -237,7 +237,6 @@ Out of process file artifacts produced:
 </Project>
 
 #file Program.cs
-using TrxTest;
 using Microsoft.Testing.Extensions;
 using Microsoft.Testing.Extensions.TrxReport.Abstractions;
 using Microsoft.Testing.Platform.Builder;

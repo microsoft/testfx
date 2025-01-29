@@ -180,7 +180,6 @@ let main args =
 </Project>
 
 #file Program.cs
-using MSBuildTests;
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Capabilities;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
