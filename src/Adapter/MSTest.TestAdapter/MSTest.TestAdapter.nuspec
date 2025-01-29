@@ -52,7 +52,6 @@
     <!-- uap10.0 -->
     <file src="uap10.0.16299\build\uwp\MSTest.TestAdapter.props" target="build\uap10.0\MSTest.TestAdapter.props" />
     <file src="uap10.0.16299\build\uwp\MSTest.TestAdapter.targets" target="build\uap10.0\MSTest.TestAdapter.targets" />
-    <file src="uap10.0.16299\Microsoft.VisualStudio.TestPlatform.TestFramework.dll" target="build\uap10.0\" />
     <file src="$ArtifactsBinDir$MSTestAdapter.PlatformServices\$Configuration$\uap10.0.16299\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll" target="build\uap10.0\" />
     <file src="uap10.0.16299\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.dll" target="build\uap10.0\" />
     <file src="uap10.0.16299\Microsoft.TestPlatform.AdapterUtilities.dll" target="build\uap10.0\" />
