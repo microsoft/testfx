@@ -36,7 +36,7 @@ internal sealed class MSTestBridgedTestFramework : SynchronizedSingleSessionVSTe
     }
 
     /// <inheritdoc />
-    protected override Task SynchronizedRunTestsAsync(VSTestRunTestExecutionRequest request, IMessageBus messageBus,
+    protected override async Task SynchronizedRunTestsAsync(VSTestRunTestExecutionRequest request, IMessageBus messageBus,
         CancellationToken cancellationToken)
     {
         if (Environment.GetEnvironmentVariable("MSTEST_DEBUG_RUNTESTS") == "1"
@@ -49,14 +49,12 @@ internal sealed class MSTestBridgedTestFramework : SynchronizedSingleSessionVSTe
 
         if (request.VSTestFilter.TestCases is { } testCases)
         {
-            testExecutor.RunTests(testCases, request.RunContext, request.FrameworkHandle, _configuration);
+            await testExecutor.RunTestsAsync(testCases, request.RunContext, request.FrameworkHandle, _configuration);
         }
         else
         {
-            testExecutor.RunTests(request.AssemblyPaths, request.RunContext, request.FrameworkHandle, _configuration);
+            await testExecutor.RunTestsAsync(request.AssemblyPaths, request.RunContext, request.FrameworkHandle, _configuration);
         }
-
-        return Task.CompletedTask;
     }
 }
 #endif

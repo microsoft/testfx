@@ -92,6 +92,11 @@
         <target state="translated">A propriedade de dados dinâmicos "{0}" deve ser estática e ter um getter.</target>
         <note />
       </trans-unit>
+      <trans-unit id="DynamicDataSourceShouldExistAndBeValid">
+        <source>The dynamic data source '{0}' in type '{1}' should exist and be a property or a method.</source>
+        <target state="translated">A fonte de dados dinâmica '{0}' no tipo '{1}' deve existir e ser uma propriedade ou um método.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ElementNumbersDontMatch">
         <source>The number of elements in the collections do not match. Expected:&lt;{1}&gt;. Actual:&lt;{2}&gt;.{0}</source>
         <target state="translated">O número de elementos nas coleções não coincidem. Esperado:&lt;{1}&gt;. Real:&lt;{2}&gt;.{0}</target>
@@ -121,6 +126,11 @@ Real: {2}</target>
         <target state="translated">{0} falhou. {1}</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="HasCountFailMsg">
+        <source>Expected collection of size {1}. Actual: {2}. {0}</source>
+        <target state="translated">Coleção esperada de tamanho {1}. Real: {2}. {0}</target>
+        <note />
+      </trans-unit>
       <trans-unit id="IsInstanceOfFailMsg">
         <source>{0} Expected type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;.</source>
         <target state="translated">{0} Tipo esperado:&lt;{1}&gt;. Tipo real:&lt;{2}&gt;.</target>
@@ -130,6 +140,11 @@ Real: {2}</target>
         <source>String '{0}' does not match pattern '{1}'. {2}.</source>
         <target state="translated">A cadeia de caracteres '{0}' não corresponde ao padrão '{1}'. {2}.</target>
         <note></note>
+      </trans-unit>
+      <trans-unit id="IsNotEmptyFailMsg">
+        <source>Expected collection to contain any item but it is empty. {0}</source>
+        <target state="translated">A coleção esperada conter qualquer item, mas ela está vazia. {0}</target>
+        <note />
       </trans-unit>
       <trans-unit id="IsNotInstanceOfFailMsg">
         <source>Wrong Type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;. {0}</source>

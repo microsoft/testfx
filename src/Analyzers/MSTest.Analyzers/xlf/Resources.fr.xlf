@@ -147,6 +147,21 @@ Le type doit être une classe
         <target state="translated">Éviter « [ExpectedException] »</target>
         <note />
       </trans-unit>
+      <trans-unit id="AvoidUsingAssertsInAsyncVoidContextDescription">
+        <source>Do not assert inside 'async void' methods, local functions, or lambdas. Exceptions that are thrown in this context will be unhandled exceptions. When using VSTest under .NET Framework, they will be silently swallowed. When using Microsoft.Testing.Platform or VSTest under modern .NET, they may crash the process.</source>
+        <target state="translated">N’effectuez pas d’assertion dans les méthodes 'async void', les fonctions locales ou les expressions lambda. Les exceptions levées dans ce contexte seront des exceptions non gérées. Lors de l’utilisation de VSTest sous .NET Framework, ils sont silencieusement coupés. Quand vous utilisez Microsoft.Testing.Platform ou VSTest sous .NET moderne, ils peuvent bloquer le processus.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidUsingAssertsInAsyncVoidContextMessageFormat">
+        <source>Do not assert inside 'async void' methods, local functions, or lambdas because they may not fail the test</source>
+        <target state="translated">Ne pas effectuer d’assertion dans les méthodes 'async void', les fonctions locales ou les expressions lambda, car elles ne peuvent pas faire échouer le test</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidUsingAssertsInAsyncVoidContextTitle">
+        <source>Do not assert inside 'async void' contexts</source>
+        <target state="translated">Ne pas déclarer dans les contextes 'async void'</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ClassCleanupShouldBeValidDescription">
         <source>Methods marked with '[ClassCleanup]' should follow the following layout to be valid:
 -it can't be declared on a generic class without the 'InheritanceBehavior' mode is set
@@ -727,6 +742,16 @@ Le type doit être une classe
       <trans-unit id="UseAttributeOnTestMethodAnalyzerTitle">
         <source>[{0}] can only be set on methods marked with [TestMethod]</source>
         <target state="translated">[{0}] ne peut être défini que sur les méthodes marquées avec [TestMethod]</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseConditionBaseWithTestClassMessageFormat">
+        <source>The attribute '{0}' which derives from 'ConditionBaseAttribute' should be used only on classes marked with `TestClassAttribute`</source>
+        <target state="translated">L’attribut '{0}' qui dérive de 'ConditionBaseAttribute' doit être utilisé uniquement sur les classes marquées avec 'TestClassAttribute'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseConditionBaseWithTestClassTitle">
+        <source>Use 'ConditionBaseAttribute' on test classes</source>
+        <target state="translated">Utiliser 'ConditionBaseAttribute' sur les classes de test</target>
         <note />
       </trans-unit>
       <trans-unit id="UseDeploymentItemWithTestMethodOrTestClassMessageFormat">

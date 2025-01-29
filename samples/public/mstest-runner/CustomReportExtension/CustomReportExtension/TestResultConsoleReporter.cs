@@ -5,7 +5,7 @@ using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.TestHost;
 
-internal sealed class TestResultConsoleLogger :
+internal sealed class TestResultConsoleReporter :
     // This is the extension point to subscribe to data messages published to the platform.
     // The type should then be registered as a data consumer in the test host.
     IDataConsumer,
@@ -13,7 +13,7 @@ internal sealed class TestResultConsoleLogger :
     // The type should then be registered as a test session lifetime handler in the test host.
     ITestSessionLifetimeHandler
 {
-    public string Uid => nameof(TestResultConsoleLogger);
+    public string Uid => nameof(TestResultConsoleReporter);
 
     public string Version => "1.0.0";
 

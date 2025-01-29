@@ -214,7 +214,7 @@ public sealed partial class Assert
         {
         }
 
-        public AssertNonGenericAreEqualInterpolatedStringHandler(int literalLength, int formattedCount, string? expected, string? actual, bool ignoreCase, [NotNull] CultureInfo? culture, out bool shouldAppend)
+        public AssertNonGenericAreEqualInterpolatedStringHandler(int literalLength, int formattedCount, string? expected, string? actual, bool ignoreCase, CultureInfo culture, out bool shouldAppend)
         {
             Guard.NotNull(culture);
             shouldAppend = AreEqualFailing(expected, actual, ignoreCase, culture);
@@ -314,7 +314,7 @@ public sealed partial class Assert
         {
         }
 
-        public AssertNonGenericAreNotEqualInterpolatedStringHandler(int literalLength, int formattedCount, string? notExpected, string? actual, bool ignoreCase, [NotNull] CultureInfo? culture, out bool shouldAppend)
+        public AssertNonGenericAreNotEqualInterpolatedStringHandler(int literalLength, int formattedCount, string? notExpected, string? actual, bool ignoreCase, CultureInfo culture, out bool shouldAppend)
         {
             Guard.NotNull(culture);
             shouldAppend = AreNotEqualFailing(notExpected, actual, ignoreCase, culture);
@@ -1829,8 +1829,7 @@ public sealed partial class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="expected"/> is not equal to <paramref name="actual"/>.
     /// </exception>
-    public static void AreEqual(string? expected, string? actual, bool ignoreCase,
-        [NotNull] CultureInfo? culture)
+    public static void AreEqual(string? expected, string? actual, bool ignoreCase, CultureInfo culture)
         => AreEqual(expected, actual, ignoreCase, culture, string.Empty, null);
 
     /// <summary>
@@ -1858,15 +1857,14 @@ public sealed partial class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="expected"/> is not equal to <paramref name="actual"/>.
     /// </exception>
-    public static void AreEqual(string? expected, string? actual, bool ignoreCase,
-        [NotNull] CultureInfo? culture, string? message)
+    public static void AreEqual(string? expected, string? actual, bool ignoreCase, CultureInfo culture, string? message)
         => AreEqual(expected, actual, ignoreCase, culture, message, null);
 
     /// <inheritdoc cref="AreEqual(string?, string?, bool, CultureInfo, string?)" />
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
     public static void AreEqual(string? expected, string? actual, bool ignoreCase,
 #pragma warning restore IDE0060 // Remove unused parameter
-        [NotNull] CultureInfo? culture, [InterpolatedStringHandlerArgument(nameof(expected), nameof(actual), nameof(ignoreCase), nameof(culture))] ref AssertNonGenericAreEqualInterpolatedStringHandler message)
+        CultureInfo culture, [InterpolatedStringHandlerArgument(nameof(expected), nameof(actual), nameof(ignoreCase), nameof(culture))] ref AssertNonGenericAreEqualInterpolatedStringHandler message)
     {
         CheckParameterNotNull(culture, "Assert.AreEqual", nameof(culture), string.Empty);
         message.ComputeAssertion();
@@ -1900,8 +1898,7 @@ public sealed partial class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="expected"/> is not equal to <paramref name="actual"/>.
     /// </exception>
-    public static void AreEqual(string? expected, string? actual, bool ignoreCase,
-        [NotNull] CultureInfo? culture, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters)
+    public static void AreEqual(string? expected, string? actual, bool ignoreCase, CultureInfo culture, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters)
     {
         CheckParameterNotNull(culture, "Assert.AreEqual", "culture", string.Empty);
         if (!AreEqualFailing(expected, actual, ignoreCase, culture))
@@ -2017,7 +2014,7 @@ public sealed partial class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
     /// </exception>
-    public static void AreNotEqual(string? notExpected, string? actual, bool ignoreCase, CultureInfo? culture)
+    public static void AreNotEqual(string? notExpected, string? actual, bool ignoreCase, CultureInfo culture)
         => AreNotEqual(notExpected, actual, ignoreCase, culture, string.Empty, null);
 
     /// <summary>
@@ -2046,15 +2043,14 @@ public sealed partial class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
     /// </exception>
-    public static void AreNotEqual(string? notExpected, string? actual, bool ignoreCase,
-        CultureInfo? culture, string? message)
+    public static void AreNotEqual(string? notExpected, string? actual, bool ignoreCase, CultureInfo culture, string? message)
         => AreNotEqual(notExpected, actual, ignoreCase, culture, message, null);
 
-    /// <inheritdoc cref="AreNotEqual(string?, string?, bool, CultureInfo?, string?)" />
+    /// <inheritdoc cref="AreNotEqual(string?, string?, bool, CultureInfo, string?)" />
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
     public static void AreNotEqual(string? notExpected, string? actual, bool ignoreCase,
 #pragma warning restore IDE0060 // Remove unused parameter
-        CultureInfo? culture, [InterpolatedStringHandlerArgument(nameof(notExpected), nameof(actual), nameof(ignoreCase), nameof(culture))] ref AssertNonGenericAreNotEqualInterpolatedStringHandler message)
+        CultureInfo culture, [InterpolatedStringHandlerArgument(nameof(notExpected), nameof(actual), nameof(ignoreCase), nameof(culture))] ref AssertNonGenericAreNotEqualInterpolatedStringHandler message)
     {
         CheckParameterNotNull(culture, "Assert.AreNotEqual", nameof(culture), string.Empty);
         message.ComputeAssertion();
@@ -2090,7 +2086,7 @@ public sealed partial class Assert
     /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
     /// </exception>
     public static void AreNotEqual(string? notExpected, string? actual, bool ignoreCase,
-        CultureInfo? culture, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters)
+        CultureInfo culture, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters)
     {
         CheckParameterNotNull(culture, "Assert.AreNotEqual", "culture", string.Empty);
         if (!AreNotEqualFailing(notExpected, actual, ignoreCase, culture))

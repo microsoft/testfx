@@ -127,7 +127,7 @@
   </Target>
 
   <!-- We always include the entry point also if the task _GenerateTestingPlatformInjectEntryPoint is skipped for caching reason -->
-  <Target Name="_IncludeGenerateTestingPlatformEntryPointIntoCompilation" BeforeTargets="CoreCompile" Condition=" '$(GenerateTestingPlatformEntryPoint)' == 'True' " >
+  <Target Name="_IncludeGenerateTestingPlatformEntryPointIntoCompilation" BeforeTargets="BeforeCompile;XamlPreCompile" Condition=" '$(GenerateTestingPlatformEntryPoint)' == 'True' " >
     <ItemGroup>
       <Compile Include="$(_TestingPlatformEntryPointSourcePath)" />
     </ItemGroup>
@@ -205,7 +205,7 @@
 
   <!-- We always include the entry point also if the task _GenerateAutoRegisteredExtensions is skipped for caching reason -->
   <!-- !!! DO NOT CHANGE THE NAME OF THIS TARGET IS USED BY ADAPTERS https://github.com/microsoft/testfx/issues/3478#issuecomment-2313889212 !!! -->
-  <Target Name="_IncludeGenerateAutoRegisteredExtensionsIntoCompilation" BeforeTargets="_IncludeGenerateTestingPlatformEntryPointIntoCompilation;CoreCompile" Condition=" '$(GenerateSelfRegisteredExtensions)' == 'True' " >
+  <Target Name="_IncludeGenerateAutoRegisteredExtensionsIntoCompilation" BeforeTargets="_IncludeGenerateTestingPlatformEntryPointIntoCompilation;BeforeCompile;XamlPreCompile" Condition=" '$(GenerateSelfRegisteredExtensions)' == 'True' " >
     <ItemGroup>
       <Compile Include="$(_AutoRegisteredExtensionsSourcePath)" />
     </ItemGroup>

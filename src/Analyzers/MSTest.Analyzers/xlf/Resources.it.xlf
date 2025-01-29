@@ -147,6 +147,21 @@ Anche il tipo che dichiara questi metodi deve rispettare le regole seguenti:
         <target state="translated">Evita '[ExpectedException]'</target>
         <note />
       </trans-unit>
+      <trans-unit id="AvoidUsingAssertsInAsyncVoidContextDescription">
+        <source>Do not assert inside 'async void' methods, local functions, or lambdas. Exceptions that are thrown in this context will be unhandled exceptions. When using VSTest under .NET Framework, they will be silently swallowed. When using Microsoft.Testing.Platform or VSTest under modern .NET, they may crash the process.</source>
+        <target state="translated">Non dichiarare all'interno di metodi 'async void', funzioni locali o espressioni lambda. Le eccezioni generate in questo contesto saranno eccezioni non gestite. Quando si usa VSTest in .NET Framework, verranno eliminati automaticamente. Quando si usa Microsoft.Testing.Platform o VSTest nella versione moderna di .NET, è possibile che il processo venga arrestato in modo anomalo.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidUsingAssertsInAsyncVoidContextMessageFormat">
+        <source>Do not assert inside 'async void' methods, local functions, or lambdas because they may not fail the test</source>
+        <target state="translated">Non dichiarare all'interno di metodi 'async void', funzioni locali o espressioni lambda perché non possono non testare il test</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidUsingAssertsInAsyncVoidContextTitle">
+        <source>Do not assert inside 'async void' contexts</source>
+        <target state="translated">Non dichiarare all'interno di contesti 'async void'</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ClassCleanupShouldBeValidDescription">
         <source>Methods marked with '[ClassCleanup]' should follow the following layout to be valid:
 -it can't be declared on a generic class without the 'InheritanceBehavior' mode is set
@@ -727,6 +742,16 @@ Anche il tipo che dichiara questi metodi deve rispettare le regole seguenti:
       <trans-unit id="UseAttributeOnTestMethodAnalyzerTitle">
         <source>[{0}] can only be set on methods marked with [TestMethod]</source>
         <target state="translated">[{0}] può essere impostato solo su metodi contrassegnati con [TestMethod]</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseConditionBaseWithTestClassMessageFormat">
+        <source>The attribute '{0}' which derives from 'ConditionBaseAttribute' should be used only on classes marked with `TestClassAttribute`</source>
+        <target state="translated">L'attributo '{0}' che deriva da 'ConditionBaseAttribute' deve essere utilizzato solo in classi contrassegnate con 'TestClassAttribute'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseConditionBaseWithTestClassTitle">
+        <source>Use 'ConditionBaseAttribute' on test classes</source>
+        <target state="translated">Usa 'ConditionBaseAttribute' nelle classi di test</target>
         <note />
       </trans-unit>
       <trans-unit id="UseDeploymentItemWithTestMethodOrTestClassMessageFormat">

@@ -12,11 +12,11 @@ public class OutputTests : CLITestBase
 {
     private const string TestAssetName = "OutputTestProject";
 
-    public void OutputIsNotMixedWhenTestsRunInParallel() => ValidateOutputForClass("UnitTest1");
+    public async Task OutputIsNotMixedWhenTestsRunInParallel() => await ValidateOutputForClass("UnitTest1");
 
-    public void OutputIsNotMixedWhenAsyncTestsRunInParallel() => ValidateOutputForClass("UnitTest2");
+    public async Task OutputIsNotMixedWhenAsyncTestsRunInParallel() => await ValidateOutputForClass("UnitTest2");
 
-    private void ValidateOutputForClass(string className)
+    private static async Task ValidateOutputForClass(string className)
     {
         // LogMessageListener uses an implementation of a string writer that captures output per async context.
         // This allows us to capture output from tasks even when they are running in parallel.
@@ -29,7 +29,7 @@ public class OutputTests : CLITestBase
         testCases.Should().HaveCount(3);
         testCases.Should().NotContainNulls();
 
-        System.Collections.Immutable.ImmutableArray<TestResult> testResults = RunTests(testCases);
+        System.Collections.Immutable.ImmutableArray<TestResult> testResults = await RunTestsAsync(testCases);
         testResults.Should().HaveCount(3);
         testResults.Should().NotContainNulls();
 

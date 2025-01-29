@@ -3,7 +3,8 @@
 
 namespace Microsoft.Testing.Platform.CommandLine;
 
-internal sealed class CommandLineParseResult(string? toolName, IReadOnlyList<OptionRecord> options, IReadOnlyList<string> errors) : IEquatable<CommandLineParseResult>
+[Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
+public sealed class CommandLineParseResult(string? toolName, IReadOnlyList<CommandLineParseOption> options, IReadOnlyList<string> errors) : IEquatable<CommandLineParseResult>
 {
     public const char OptionPrefix = '-';
 
@@ -11,7 +12,7 @@ internal sealed class CommandLineParseResult(string? toolName, IReadOnlyList<Opt
 
     public string? ToolName { get; } = toolName;
 
-    public IReadOnlyList<OptionRecord> Options { get; } = options;
+    public IReadOnlyList<CommandLineParseOption> Options { get; } = options;
 
     public IReadOnlyList<string> Errors { get; } = errors;
 
@@ -54,11 +55,11 @@ internal sealed class CommandLineParseResult(string? toolName, IReadOnlyList<Opt
             return false;
         }
 
-        IReadOnlyList<OptionRecord> thisOptions = Options;
-        IReadOnlyList<OptionRecord> otherOptions = other.Options;
+        IReadOnlyList<CommandLineParseOption> thisOptions = Options;
+        IReadOnlyList<CommandLineParseOption> otherOptions = other.Options;
         for (int i = 0; i < thisOptions.Count; i++)
         {
-            if (thisOptions[i].Option != otherOptions[i].Option)
+            if (thisOptions[i].Name != otherOptions[i].Name)
             {
                 return false;
             }
@@ -81,12 +82,12 @@ internal sealed class CommandLineParseResult(string? toolName, IReadOnlyList<Opt
     }
 
     public bool IsOptionSet(string optionName)
-        => Options.Any(o => o.Option.Equals(optionName.Trim(OptionPrefix), StringComparison.OrdinalIgnoreCase));
+        => Options.Any(o => o.Name.Equals(optionName.Trim(OptionPrefix), StringComparison.OrdinalIgnoreCase));
 
     public bool TryGetOptionArgumentList(string optionName, [NotNullWhen(true)] out string[]? arguments)
     {
         optionName = optionName.Trim(OptionPrefix);
-        IEnumerable<OptionRecord> result = Options.Where(x => x.Option == optionName);
+        IEnumerable<CommandLineParseOption> result = Options.Where(x => x.Name == optionName);
         if (result.Any())
         {
             arguments = result.SelectMany(x => x.Arguments).ToArray();
@@ -97,14 +98,15 @@ internal sealed class CommandLineParseResult(string? toolName, IReadOnlyList<Opt
         return false;
     }
 
-    public override bool Equals(object? obj) => Equals(obj as CommandLineParseResult);
+    public override bool Equals(object? obj)
+        => Equals(obj as CommandLineParseResult);
 
     public override int GetHashCode()
     {
         HashCode hashCode = default;
-        foreach (OptionRecord option in Options)
+        foreach (CommandLineParseOption option in Options)
         {
-            hashCode.Add(option.Option);
+            hashCode.Add(option.Name);
             foreach (string value in option.Arguments)
             {
                 hashCode.Add(value);
@@ -144,9 +146,9 @@ internal sealed class CommandLineParseResult(string? toolName, IReadOnlyList<Opt
         }
         else
         {
-            foreach (OptionRecord option in Options)
+            foreach (CommandLineParseOption option in Options)
             {
-                builder.AppendLine(CultureInfo.InvariantCulture, $"   {option.Option}");
+                builder.AppendLine(CultureInfo.InvariantCulture, $"   {option.Name}");
                 foreach (string arg in option.Arguments)
                 {
                     builder.AppendLine(CultureInfo.InvariantCulture, $"        {arg}");

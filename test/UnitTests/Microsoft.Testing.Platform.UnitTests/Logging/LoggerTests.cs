@@ -35,7 +35,7 @@ public sealed class LoggerTests
         return new Logger<string>(mockLoggerFactory.Object);
     }
 
-    [DynamicData(nameof(LogTestHelpers.GetLogLevelCombinations), typeof(LogTestHelpers), DynamicDataSourceType.Method)]
+    [DynamicData(nameof(LogTestHelpers.GetLogLevelCombinations), typeof(LogTestHelpers))]
     [TestMethod]
     public void Logger_CheckEnabled(LogLevel defaultLogLevel, LogLevel currentLogLevel)
     {
@@ -43,7 +43,7 @@ public sealed class LoggerTests
         Assert.AreEqual(logger.IsEnabled(currentLogLevel), LogTestHelpers.IsLogEnabled(defaultLogLevel, currentLogLevel));
     }
 
-    [DynamicData(nameof(LogTestHelpers.GetLogLevelCombinations), typeof(LogTestHelpers), DynamicDataSourceType.Method)]
+    [DynamicData(nameof(LogTestHelpers.GetLogLevelCombinations), typeof(LogTestHelpers))]
     [TestMethod]
     public void Logger_Log_FormattedStringIsCorrect(LogLevel defaultLogLevel, LogLevel currentLogLevel)
     {
@@ -55,7 +55,7 @@ public sealed class LoggerTests
             LogTestHelpers.GetExpectedLogCallTimes(defaultLogLevel, currentLogLevel));
     }
 
-    [DynamicData(nameof(LogTestHelpers.GetLogLevelCombinations), typeof(LogTestHelpers), DynamicDataSourceType.Method)]
+    [DynamicData(nameof(LogTestHelpers.GetLogLevelCombinations), typeof(LogTestHelpers))]
     [TestMethod]
     public async ValueTask Logger_LogAsync_FormattedStringIsCorrect(LogLevel defaultLogLevel, LogLevel currentLogLevel)
     {

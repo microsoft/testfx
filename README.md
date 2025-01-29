@@ -1,4 +1,4 @@
-# Microsoft Test Framework
+# Microsoft Testing Platform and Microsoft Test Framework
 
 [![GitHub release](https://img.shields.io/github/release/microsoft/testfx.svg)](https://GitHub.com/microsoft/testfx/releases/)
 [![GitHub repo size](https://img.shields.io/github/repo-size/microsoft/testfx)](https://github.com/microsoft/testfx)
@@ -9,6 +9,10 @@
 [![GitHub contributors](https://img.shields.io/github/contributors/microsoft/testfx.svg)](https://GitHub.com/microsoft/testfx/graphs/contributors/)
 [![Commit Activity](https://img.shields.io/github/commit-activity/m/microsoft/testfx)](.)
 [![Build Status](https://dev.azure.com/dnceng-public/public/_apis/build/status/Microsoft/testfx/microsoft.testfx?branchName=main)](https://dev.azure.com/dnceng-public/public/_build/latest?definitionId=209&branchName=main)
+
+This repository is the home for Microsoft Testing Platform and extensions, as well as MSTest.
+
+Microsoft Testing Platform is a lightweight alternative to VSTest. For more information, see [Microsoft.Testing.Platform overview](https://learn.microsoft.com/dotnet/core/testing/unit-testing-platform-intro).
 
 MSTest, Microsoft Testing Framework, is a unit testing framework for .NET applications. It allows you to write tests, use Test Explorer, create test suites, and apply the red, green, and refactor patterns to write code.
 

@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
@@ -8,7 +8,7 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-using ObjectModelUnitTestOutcome = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestOutcome;
+using UTFUnitTestOutcome = Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 
@@ -31,7 +31,7 @@ public class TestClassInfo
 
     private readonly Lock _testClassExecuteSyncObject = new();
 
-    private UnitTestResult? _classInitializeResult;
+    private TestResult? _classInitializeResult;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TestClassInfo"/> class.
@@ -254,6 +254,9 @@ public class TestClassInfo
         // If no class initialize and no base class initialize, return
         if (ClassInitializeMethod is null && BaseClassInitMethods.Count == 0)
         {
+            // This assert fails only in unit tests which call RunClassInitialize
+            // directly, bypassing the logic in GetResultOrRunClassInitialize.
+            // DebugEx.Assert(false, "Caller shouldn't call us if nothing to execute");
             IsClassInitializeExecuted = true;
             return;
         }
@@ -270,45 +273,39 @@ public class TestClassInfo
         string? failedClassInitializeMethodName = string.Empty;
 
         // If class initialization is not done, then do it.
+        // This assert fails only in unit tests which call RunClassInitialize
+        // directly, bypassing the logic in GetResultOrRunClassInitialize.
+        // DebugEx.Assert(!IsClassInitializeExecuted, "Caller shouldn't call us if it was executed.");
         if (!IsClassInitializeExecuted)
         {
-            // Acquiring a lock is usually a costly operation which does not need to be
-            // performed every time if the class initialization is already executed.
-            lock (_testClassExecuteSyncObject)
+            try
             {
-                // Perform a check again.
-                if (!IsClassInitializeExecuted)
+                // We have discovered the methods from bottom (most derived) to top (less derived) but we want to execute
+                // from top to bottom.
+                for (int i = BaseClassInitMethods.Count - 1; i >= 0; i--)
                 {
-                    try
+                    initializeMethod = BaseClassInitMethods[i];
+                    ClassInitializationException = InvokeInitializeMethod(initializeMethod, testContext);
+                    if (ClassInitializationException is not null)
                     {
-                        // We have discovered the methods from bottom (most derived) to top (less derived) but we want to execute
-                        // from top to bottom.
-                        for (int i = BaseClassInitMethods.Count - 1; i >= 0; i--)
-                        {
-                            initializeMethod = BaseClassInitMethods[i];
-                            ClassInitializationException = InvokeInitializeMethod(initializeMethod, testContext);
-                            if (ClassInitializationException is not null)
-                            {
-                                break;
-                            }
-                        }
-
-                        if (ClassInitializationException is null)
-                        {
-                            initializeMethod = ClassInitializeMethod;
-                            ClassInitializationException = InvokeInitializeMethod(ClassInitializeMethod, testContext);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        ClassInitializationException = ex;
-                        failedClassInitializeMethodName = initializeMethod?.Name ?? ClassInitializeMethod?.Name;
-                    }
-                    finally
-                    {
-                        IsClassInitializeExecuted = true;
+                        break;
                     }
                 }
+
+                if (ClassInitializationException is null)
+                {
+                    initializeMethod = ClassInitializeMethod;
+                    ClassInitializationException = InvokeInitializeMethod(ClassInitializeMethod, testContext);
+                }
+            }
+            catch (Exception ex)
+            {
+                ClassInitializationException = ex;
+                failedClassInitializeMethodName = initializeMethod?.Name ?? ClassInitializeMethod?.Name;
+            }
+            finally
+            {
+                IsClassInitializeExecuted = true;
             }
         }
 
@@ -327,7 +324,7 @@ public class TestClassInfo
         // Fail the current test if it was a failure.
         Exception realException = ClassInitializationException.GetRealException();
 
-        ObjectModelUnitTestOutcome outcome = realException is AssertInconclusiveException ? ObjectModelUnitTestOutcome.Inconclusive : ObjectModelUnitTestOutcome.Failed;
+        UTFUnitTestOutcome outcome = realException is AssertInconclusiveException ? UTFUnitTestOutcome.Inconclusive : UTFUnitTestOutcome.Failed;
 
         // Do not use StackTraceHelper.GetFormattedExceptionMessage(realException) as it prefixes the message with the exception type name.
         string exceptionMessage = realException.TryGetMessage();
@@ -346,37 +343,25 @@ public class TestClassInfo
         throw testFailedException;
     }
 
-    private UnitTestResult? TryGetClonedCachedClassInitializeResult()
-    {
+    private TestResult? TryGetClonedCachedClassInitializeResult()
         // Historically, we were not caching class initialize result, and were always going through the logic in GetResultOrRunClassInitialize.
         // When caching is introduced, we found out that using the cached instance can change the behavior in some cases. For example,
-        // if you have Console.WriteLine in class initialize, those will be present on the UnitTestResult.
+        // if you have Console.WriteLine in class initialize, those will be present on the TestResult.
         // Before caching was introduced, these logs will be only in the first class initialize result (attached to the first test run in class)
         // By re-using the cached instance, it's now part of all tests.
         // To preserve the original behavior, we clone the cached instance so we keep only the information we are sure should be reused.
-        if (_classInitializeResult is null)
-        {
-            return null;
-        }
+        => _classInitializeResult is null
+            ? null
+            : new()
+            {
+                Outcome = _classInitializeResult.Outcome,
+                IgnoreReason = _classInitializeResult.IgnoreReason,
+                TestFailureException = _classInitializeResult.TestFailureException,
+            };
 
-        if (_classInitializeResult.ErrorStackTrace is not null && _classInitializeResult.ErrorMessage is not null)
-        {
-            return new(
-                new TestFailedException(
-                    _classInitializeResult.Outcome,
-                    _classInitializeResult.ErrorMessage,
-                    new StackTraceInformation(_classInitializeResult.ErrorStackTrace, _classInitializeResult.ErrorFilePath, _classInitializeResult.ErrorLineNumber, _classInitializeResult.ErrorColumnNumber)));
-        }
-
-        // We are expecting this to be hit for the case of "Passed".
-        // It's unlikely to be hit otherwise (GetResultOrRunClassInitialize appears to only create either Passed results or a result from exception), but
-        // we can still create UnitTestResult from outcome and error message (which is expected to be null for Passed).
-        return new(_classInitializeResult.Outcome, _classInitializeResult.ErrorMessage);
-    }
-
-    internal UnitTestResult GetResultOrRunClassInitialize(ITestContext testContext, string initializationLogs, string initializationErrorLogs, string initializationTrace, string initializationTestContextMessages)
+    internal TestResult GetResultOrRunClassInitialize(ITestContext testContext, string initializationLogs, string initializationErrorLogs, string initializationTrace, string initializationTestContextMessages)
     {
-        UnitTestResult? clonedInitializeResult = TryGetClonedCachedClassInitializeResult();
+        TestResult? clonedInitializeResult = TryGetClonedCachedClassInitializeResult();
 
         // Optimization: If we already ran before and know the result, return it.
         if (clonedInitializeResult is not null)
@@ -385,58 +370,88 @@ public class TestClassInfo
             return clonedInitializeResult;
         }
 
-        DebugEx.Assert(!IsClassInitializeExecuted, "If class initialize was executed, we should have been in the previous if were we have a result available.");
-
         // For optimization purposes, return right away if there is nothing to execute.
         // For STA, this avoids starting a thread when we know it will do nothing.
         // But we still return early even not STA.
         if (ClassInitializeMethod is null && BaseClassInitMethods.Count == 0)
         {
             IsClassInitializeExecuted = true;
-            return _classInitializeResult = new(ObjectModelUnitTestOutcome.Passed, null);
+            return _classInitializeResult = new() { Outcome = TestTools.UnitTesting.UnitTestOutcome.Passed };
         }
 
-        bool isSTATestClass = AttributeComparer.IsDerived<STATestClassAttribute>(ClassAttribute);
-        bool isWindowsOS = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
-        if (isSTATestClass
-            && isWindowsOS
-            && Thread.CurrentThread.GetApartmentState() != ApartmentState.STA)
+        // At this point, maybe class initialize was executed by another thread such
+        // that TryGetClonedCachedClassInitializeResult would return non-null.
+        // Now, we need to check again, but under a lock.
+        // Note that we are duplicating the logic above.
+        // We could keep the logic in lock only and not duplicate, but we don't want to pay
+        // the lock cost unnecessarily for a common case.
+        // We also need to lock to avoid concurrency issues and guarantee that class init is called only once.
+        lock (_testClassExecuteSyncObject)
         {
-            UnitTestResult result = new(ObjectModelUnitTestOutcome.Error, "MSTest STATestClass ClassInitialize didn't complete");
-            Thread entryPointThread = new(() => result = DoRun())
-            {
-                Name = "MSTest STATestClass ClassInitialize",
-            };
+            clonedInitializeResult = TryGetClonedCachedClassInitializeResult();
 
-            entryPointThread.SetApartmentState(ApartmentState.STA);
-            entryPointThread.Start();
-
-            try
+            // Optimization: If we already ran before and know the result, return it.
+            if (clonedInitializeResult is not null)
             {
-                entryPointThread.Join();
-                return result;
-            }
-            catch (Exception ex)
-            {
-                PlatformServiceProvider.Instance.AdapterTraceLogger.LogError(ex.ToString());
-                return new UnitTestResult(new TestFailedException(ObjectModelUnitTestOutcome.Error, ex.TryGetMessage(), ex.TryGetStackTraceInformation()));
-            }
-        }
-        else
-        {
-            // If the requested apartment state is STA and the OS is not Windows, then warn the user.
-            if (!isWindowsOS && isSTATestClass)
-            {
-                PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning(Resource.STAIsOnlySupportedOnWindowsWarning);
+                DebugEx.Assert(IsClassInitializeExecuted, "Class initialize result should be available if and only if class initialize was executed");
+                return clonedInitializeResult;
             }
 
-            return DoRun();
+            DebugEx.Assert(!IsClassInitializeExecuted, "If class initialize was executed, we should have been in the previous if were we have a result available.");
+
+            bool isSTATestClass = AttributeComparer.IsDerived<STATestClassAttribute>(ClassAttribute);
+            bool isWindowsOS = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+            if (isSTATestClass
+                && isWindowsOS
+                && Thread.CurrentThread.GetApartmentState() != ApartmentState.STA)
+            {
+                var result = new TestResult()
+                {
+                    Outcome = TestTools.UnitTesting.UnitTestOutcome.Error,
+                    IgnoreReason = "MSTest STATestClass ClassInitialize didn't complete",
+                };
+
+                Thread entryPointThread = new(() => result = DoRun())
+                {
+                    Name = "MSTest STATestClass ClassInitialize",
+                };
+
+                entryPointThread.SetApartmentState(ApartmentState.STA);
+                entryPointThread.Start();
+
+                try
+                {
+                    entryPointThread.Join();
+                    return result;
+                }
+                catch (Exception ex)
+                {
+                    PlatformServiceProvider.Instance.AdapterTraceLogger.LogError(ex.ToString());
+                    return new TestResult()
+                    {
+                        TestFailureException = new TestFailedException(UTFUnitTestOutcome.Error, ex.TryGetMessage(), ex.TryGetStackTraceInformation()),
+                    };
+                }
+            }
+            else
+            {
+                // If the requested apartment state is STA and the OS is not Windows, then warn the user.
+                if (!isWindowsOS && isSTATestClass)
+                {
+                    PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning(Resource.STAIsOnlySupportedOnWindowsWarning);
+                }
+
+                return DoRun();
+            }
         }
 
         // Local functions
-        UnitTestResult DoRun()
+        TestResult DoRun()
         {
-            UnitTestResult result = new(ObjectModelUnitTestOutcome.Passed, null);
+            var result = new TestResult()
+            {
+                Outcome = TestTools.UnitTesting.UnitTestOutcome.Passed,
+            };
 
             try
             {
@@ -456,17 +471,17 @@ public class TestClassInfo
             }
             catch (TestFailedException ex)
             {
-                result = new UnitTestResult(ex);
+                result = new TestResult() { TestFailureException = ex };
             }
             catch (Exception ex)
             {
-                result = new UnitTestResult(new TestFailedException(ObjectModelUnitTestOutcome.Error, ex.TryGetMessage(), ex.TryGetStackTraceInformation()));
+                result = new TestResult() { TestFailureException = new TestFailedException(UTFUnitTestOutcome.Error, ex.TryGetMessage(), ex.TryGetStackTraceInformation()) };
             }
             finally
             {
                 // Assembly initialize and class initialize logs are pre-pended to the first result.
-                result.StandardOut = initializationLogs;
-                result.StandardError = initializationErrorLogs;
+                result.LogOutput = initializationLogs;
+                result.LogError = initializationErrorLogs;
                 result.DebugTrace = initializationTrace;
                 result.TestContextMessages = initializationTestContextMessages;
             }
@@ -574,7 +589,7 @@ public class TestClassInfo
 
         if (classCleanupLifecycle == ClassCleanupBehavior.EndOfClass)
         {
-            var testFailedException = new TestFailedException(ObjectModelUnitTestOutcome.Failed, errorMessage, exceptionStackTraceInfo);
+            var testFailedException = new TestFailedException(UTFUnitTestOutcome.Failed, errorMessage, exceptionStackTraceInfo);
             ClassCleanupException = testFailedException;
             throw testFailedException;
         }
@@ -589,12 +604,12 @@ public class TestClassInfo
     /// This is a replacement for RunClassCleanup but as we are on a bug fix version, we do not want to change
     /// the public API, hence this method.
     /// </remarks>
-    internal void ExecuteClassCleanup(TestContext testContext)
+    internal TestFailedException? ExecuteClassCleanup(TestContext testContext)
     {
         if ((ClassCleanupMethod is null && BaseClassCleanupMethods.Count == 0)
             || IsClassCleanupExecuted)
         {
-            return;
+            return null;
         }
 
         MethodInfo? classCleanupMethod = ClassCleanupMethod;
@@ -607,15 +622,14 @@ public class TestClassInfo
                 // IsClassInitializeExecuted to true in RunClassInitialize
                 || !IsClassInitializeExecuted)
             {
-                return;
+                return null;
             }
 
             try
             {
                 if (classCleanupMethod is not null)
                 {
-                    if (ClassAttribute.IgnoreMessage is null &&
-                        !ReflectHelper.Instance.IsNonDerivedAttributeDefined<IgnoreAttribute>(classCleanupMethod.DeclaringType!, false))
+                    if (!classCleanupMethod.DeclaringType!.IsIgnored(out _))
                     {
                         ClassCleanupException = InvokeCleanupMethod(classCleanupMethod, remainingCleanupCount: BaseClassCleanupMethods.Count, testContext);
                     }
@@ -626,8 +640,7 @@ public class TestClassInfo
                     for (int i = 0; i < BaseClassCleanupMethods.Count; i++)
                     {
                         classCleanupMethod = BaseClassCleanupMethods[i];
-                        if (ClassAttribute.IgnoreMessage is null &&
-                            !ReflectHelper.Instance.IsNonDerivedAttributeDefined<IgnoreAttribute>(classCleanupMethod.DeclaringType!, false))
+                        if (!classCleanupMethod.DeclaringType!.IsIgnored(out _))
                         {
                             ClassCleanupException = InvokeCleanupMethod(classCleanupMethod, remainingCleanupCount: BaseClassCleanupMethods.Count - 1 - i, testContext);
                             if (ClassCleanupException is not null)
@@ -651,13 +664,13 @@ public class TestClassInfo
         // If ClassCleanup was successful, then don't do anything
         if (ClassCleanupException == null)
         {
-            return;
+            return null;
         }
 
         // If the exception is already a `TestFailedException` we throw it as-is
-        if (ClassCleanupException is TestFailedException)
+        if (ClassCleanupException is TestFailedException classCleanupEx)
         {
-            throw ClassCleanupException;
+            return classCleanupEx;
         }
 
         Exception realException = ClassCleanupException.GetRealException();
@@ -670,7 +683,7 @@ public class TestClassInfo
         StackTraceInformation? exceptionStackTraceInfo = realException.TryGetStackTraceInformation();
 
         var testFailedException = new TestFailedException(
-            ObjectModelUnitTestOutcome.Failed,
+            UTFUnitTestOutcome.Failed,
             string.Format(
                 CultureInfo.CurrentCulture,
                 Resource.UTA_ClassCleanupMethodWasUnsuccesful,
@@ -682,10 +695,10 @@ public class TestClassInfo
             realException);
         ClassCleanupException = testFailedException;
 
-        throw testFailedException;
+        return testFailedException;
     }
 
-    internal void RunClassCleanup(ITestContext testContext, ClassCleanupManager classCleanupManager, TestMethodInfo testMethodInfo, TestMethod testMethod, UnitTestResult[] results)
+    internal void RunClassCleanup(ITestContext testContext, ClassCleanupManager classCleanupManager, TestMethodInfo testMethodInfo, TestMethod testMethod, TestResult[] results)
     {
         DebugEx.Assert(testMethodInfo.Parent == this, "Parent of testMethodInfo should be this TestClassInfo.");
 
@@ -695,21 +708,19 @@ public class TestClassInfo
             return;
         }
 
+        if ((ClassCleanupMethod is null && BaseClassCleanupMethods.Count == 0)
+                || IsClassCleanupExecuted)
+        {
+            // DoRun will already do nothing for this condition. So, we gain a bit of performance.
+            return;
+        }
+
         bool isSTATestClass = AttributeComparer.IsDerived<STATestClassAttribute>(ClassAttribute);
         bool isWindowsOS = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
         if (isSTATestClass
             && isWindowsOS
             && Thread.CurrentThread.GetApartmentState() != ApartmentState.STA)
         {
-            // For optimization purposes, we duplicate some of the logic of ExecuteClassCleanup here so we don't need to start
-            // a thread for nothing.
-            if ((ClassCleanupMethod is null && BaseClassCleanupMethods.Count == 0)
-                || IsClassCleanupExecuted)
-            {
-                DoRun();
-                return;
-            }
-
             Thread entryPointThread = new(DoRun)
             {
                 Name = "MSTest STATestClass ClassCleanup",
@@ -750,7 +761,15 @@ public class TestClassInfo
                 using LogMessageListener logListener = new(MSTestSettings.CurrentSettings.CaptureDebugTraces);
                 try
                 {
-                    ExecuteClassCleanup(testContext.Context);
+                    TestFailedException? ex = ExecuteClassCleanup(testContext.Context);
+                    if (ex is not null && results.Length > 0)
+                    {
+#pragma warning disable IDE0056 // Use index operator
+                        TestResult lastResult = results[results.Length - 1];
+#pragma warning restore IDE0056 // Use index operator
+                        lastResult.Outcome = TestTools.UnitTesting.UnitTestOutcome.Error;
+                        lastResult.TestFailureException = ex;
+                    }
                 }
                 finally
                 {
@@ -760,27 +779,15 @@ public class TestClassInfo
                     initializationTestContextMessages = testContext.GetAndClearDiagnosticMessages();
                 }
             }
-            catch (Exception ex)
-            {
-                if (results.Length > 0)
-                {
-#pragma warning disable IDE0056 // Use index operator
-                    UnitTestResult lastResult = results[results.Length - 1];
-#pragma warning restore IDE0056 // Use index operator
-                    lastResult.Outcome = ObjectModelUnitTestOutcome.Error;
-                    lastResult.ErrorMessage = ex.Message;
-                    lastResult.ErrorStackTrace = ex.StackTrace;
-                }
-            }
             finally
             {
                 if (results.Length > 0)
                 {
 #pragma warning disable IDE0056 // Use index operator
-                    UnitTestResult lastResult = results[results.Length - 1];
+                    TestResult lastResult = results[results.Length - 1];
 #pragma warning restore IDE0056 // Use index operator
-                    lastResult.StandardOut += initializationLogs;
-                    lastResult.StandardError += initializationErrorLogs;
+                    lastResult.LogOutput += initializationLogs;
+                    lastResult.LogError += initializationErrorLogs;
                     lastResult.DebugTrace += initializationTrace;
                     lastResult.TestContextMessages += initializationTestContextMessages;
                 }

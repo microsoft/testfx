@@ -245,27 +245,6 @@ public partial class AssertTests : TestContainer
         VerifyThrows<AssertFailedException>(Action);
     }
 
-    public void AreEqualStringIgnoreCaseCultureInfoNullabilityPostConditions()
-    {
-        CultureInfo? cultureInfo = GetCultureInfo();
-        Assert.AreEqual("a", "a", false, cultureInfo);
-        _ = cultureInfo.Calendar; // no warning
-    }
-
-    public void AreEqualStringIgnoreCaseCultureInfoMessageNullabilityPostConditions()
-    {
-        CultureInfo? cultureInfo = GetCultureInfo();
-        Assert.AreEqual("a", "a", false, cultureInfo, "message");
-        _ = cultureInfo.Calendar; // no warning
-    }
-
-    public void AreEqualStringIgnoreCaseCultureInfoMessageParametersNullabilityPostConditions()
-    {
-        CultureInfo? cultureInfo = GetCultureInfo();
-        Assert.AreEqual("a", "a", false, cultureInfo, "message format {0} {1}", 1, 2);
-        _ = cultureInfo.Calendar; // no warning
-    }
-
     public void AreEqualUsingCustomIEquatable()
     {
         var instanceOfA = new A { Id = "SomeId" };

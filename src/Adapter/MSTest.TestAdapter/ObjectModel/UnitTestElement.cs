@@ -34,11 +34,6 @@ internal sealed class UnitTestElement
     public TestMethod TestMethod { get; private set; }
 
     /// <summary>
-    /// Gets or sets a value indicating whether it is a async test.
-    /// </summary>
-    public bool IsAsync { get; set; }
-
-    /// <summary>
     /// Gets or sets the test categories for test method.
     /// </summary>
     public string[]? TestCategory { get; set; }
@@ -142,12 +137,6 @@ internal sealed class UnitTestElement
         if (TestMethod.DeclaringClassFullName != null)
         {
             testCase.SetPropertyValue(Constants.DeclaringClassNameProperty, TestMethod.DeclaringClassFullName);
-        }
-
-        // Many of the tests will not be async, so there is no point in sending extra data
-        if (IsAsync)
-        {
-            testCase.SetPropertyValue(Constants.AsyncTestProperty, IsAsync);
         }
 
         // Set only if some test category is present

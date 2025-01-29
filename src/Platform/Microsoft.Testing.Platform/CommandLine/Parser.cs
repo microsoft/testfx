@@ -35,7 +35,7 @@ internal static class CommandLineParser
 
     private static CommandLineParseResult Parse(List<string> args, IEnvironment environment)
     {
-        List<OptionRecord> options = [];
+        List<CommandLineParseOption> options = [];
         List<string> errors = [];
 
         string? currentOption = null;

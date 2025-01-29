@@ -4,6 +4,78 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
+## <a name="3.7.3" />[3.7.3] - 2025-01-27
+
+See full log [here](https://github.com/microsoft/testfx/compare/v3.7.2...v3.7.3)
+
+### Fixed
+
+* Fix `Could not load type 'System.Threading.Lock'` error for WinUI when using net9.0 by @dependabot in [#4794](https://github.com/microsoft/testfx/pull/4794)
+
+### Artifacts
+
+* MSTest: [3.7.3](https://www.nuget.org/packages/MSTest/3.7.3)
+* MSTest.TestFramework: [3.7.3](https://www.nuget.org/packages/MSTest.TestFramework/3.7.3)
+* MSTest.TestAdapter: [3.7.3](https://www.nuget.org/packages/MSTest.TestAdapter/3.7.3)
+* MSTest.Analyzers: [3.7.3](https://www.nuget.org/packages/MSTest.Analyzers/3.7.3)
+* MSTest.Sdk: [3.7.3](https://www.nuget.org/packages/MSTest.Sdk/3.7.3)
+* Microsoft.Testing.Extensions.CrashDump: [1.5.3](https://www.nuget.org/packages/Microsoft.Testing.Extensions.CrashDump/1.5.3)
+* Microsoft.Testing.Extensions.HangDump: [1.5.3](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HangDump/1.5.3)
+* Microsoft.Testing.Extensions.HotReload: [1.5.3](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HotReload/1.5.3)
+* Microsoft.Testing.Extensions.Retry: [1.5.3](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Retry/1.5.3)
+* Microsoft.Testing.Extensions.TrxReport: [1.5.3](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport/1.5.3)
+
+## <a name="3.7.2" />[3.7.2] - 2025-01-21
+
+See full log [here](https://github.com/microsoft/testfx/compare/v3.7.1...v3.7.2)
+
+### Fixed
+
+* Drop package ref to System.Memory by @Evangelink in [#4652](https://github.com/microsoft/testfx/pull/4652)
+* Fix Tuple/ValueTuple handling of TRest by @Youssef1313 in [#4653](https://github.com/microsoft/testfx/pull/4653)
+
+### Artifacts
+
+* MSTest: [3.7.2](https://www.nuget.org/packages/MSTest/3.7.2)
+* MSTest.TestFramework: [3.7.2](https://www.nuget.org/packages/MSTest.TestFramework/3.7.2)
+* MSTest.TestAdapter: [3.7.2](https://www.nuget.org/packages/MSTest.TestAdapter/3.7.2)
+* MSTest.Analyzers: [3.7.2](https://www.nuget.org/packages/MSTest.Analyzers/3.7.2)
+* MSTest.Sdk: [3.7.2](https://www.nuget.org/packages/MSTest.Sdk/3.7.2)
+* Microsoft.Testing.Extensions.CrashDump: [1.5.2](https://www.nuget.org/packages/Microsoft.Testing.Extensions.CrashDump/1.5.2)
+* Microsoft.Testing.Extensions.HangDump: [1.5.2](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HangDump/1.5.2)
+* Microsoft.Testing.Extensions.HotReload: [1.5.2](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HotReload/1.5.2)
+* Microsoft.Testing.Extensions.Retry: [1.5.2](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Retry/1.5.2)
+* Microsoft.Testing.Extensions.TrxReport: [1.5.2](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport/1.5.2)
+
+## <a name="3.7.1" />[3.7.1] - 2024-01-13
+
+See full log [here](https://github.com/microsoft/testfx/compare/v3.7.0...v3.7.1)
+
+### Fixed
+
+* Don't report MSTEST0001 when TestAdapter isn't referenced (#4481) by @Evangelink in [#4509](https://github.com/microsoft/testfx/pull/4509)
+* Fix MSTEST0017 false positive when both actual/expected are constants (#4460) by @Evangelink in [#4510](https://github.com/microsoft/testfx/pull/4510)
+* MSTEST0037 (proper assert analyzer): Don't report for user defined eq… by @Evangelink in [#4511](https://github.com/microsoft/testfx/pull/4511)
+* Fix typo in analyzer message (#4452) by @Evangelink in [#4512](https://github.com/microsoft/testfx/pull/4512)
+* method scope fix (#4415) by @Evangelink in [#4513](https://github.com/microsoft/testfx/pull/4513)
+* Fix analyzer messages not localized (#4434) by @Evangelink in [#4514](https://github.com/microsoft/testfx/pull/4514)
+* Fix "Could not load file or assembly 'Microsoft.Testing.Platform'" exception by @Evangelink in [#4537](https://github.com/microsoft/testfx/pull/4537)
+* Don't report diagnostic for DeploymentItem on abstract class by @Youssef1313 in [#4539](https://github.com/microsoft/testfx/pull/4539)
+* Fix DynamicData.GetData regression preventing it to work without adapter by @Youssef1313 in [#4626](https://github.com/microsoft/testfx/pull/4626)
+
+### Artifacts
+
+* MSTest: [3.7.1](https://www.nuget.org/packages/MSTest/3.7.1)
+* MSTest.TestFramework: [3.7.1](https://www.nuget.org/packages/MSTest.TestFramework/3.7.1)
+* MSTest.TestAdapter: [3.7.1](https://www.nuget.org/packages/MSTest.TestAdapter/3.7.1)
+* MSTest.Analyzers: [3.7.1](https://www.nuget.org/packages/MSTest.Analyzers/3.7.1)
+* MSTest.Sdk: [3.7.1](https://www.nuget.org/packages/MSTest.Sdk/3.7.1)
+* Microsoft.Testing.Extensions.CrashDump: [1.5.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.CrashDump/1.5.1)
+* Microsoft.Testing.Extensions.HangDump: [1.5.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HangDump/1.5.1)
+* Microsoft.Testing.Extensions.HotReload: [1.5.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HotReload/1.5.1)
+* Microsoft.Testing.Extensions.Retry: [1.5.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Retry/1.5.1)
+* Microsoft.Testing.Extensions.TrxReport: [1.5.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport/1.5.1)
+
 ## <a name="3.7.0" />[3.7.0] - 2024-12-20
 
 See full log [here](https://github.com/microsoft/testfx/compare/v3.6.4...v3.7.0)

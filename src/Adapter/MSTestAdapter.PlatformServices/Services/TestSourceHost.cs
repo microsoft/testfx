@@ -104,6 +104,14 @@ public class TestSourceHost : ITestSourceHost
     internal AppDomain? AppDomain { get; private set; }
 #endif
 
+#pragma warning disable CA1822 // Mark members as static - accesses instance data under .NET Framework
+    internal bool UsesAppDomain =>
+#if NETFRAMEWORK
+            !_isAppDomainCreationDisabled;
+#else
+            false;
+#endif
+
     /// <summary>
     /// Setup the isolation host.
     /// </summary>

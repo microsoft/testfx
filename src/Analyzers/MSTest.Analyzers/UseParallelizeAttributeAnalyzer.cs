@@ -28,8 +28,7 @@ public sealed class UseParallelizeAttributeAnalyzer : DiagnosticAnalyzer
         Description,
         Category.Performance,
         DiagnosticSeverity.Info,
-        isEnabledByDefault: true,
-        isReportedAtCompilationEnd: true);
+        isEnabledByDefault: true);
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
         = ImmutableArray.Create(Rule);

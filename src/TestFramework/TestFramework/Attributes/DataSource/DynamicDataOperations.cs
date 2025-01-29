@@ -1,13 +1,13 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
-
-internal class DynamicDataOperations : IDynamicDataOperations
+internal static class DynamicDataOperations
 {
-    public IEnumerable<object[]> GetData(Type? _dynamicDataDeclaringType, DynamicDataSourceType _dynamicDataSourceType, string _dynamicDataSourceName, MethodInfo methodInfo)
+    private const BindingFlags DeclaredOnlyLookup = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly;
+
+    public static IEnumerable<object[]> GetData(Type? _dynamicDataDeclaringType, DynamicDataSourceType _dynamicDataSourceType, string _dynamicDataSourceName, MethodInfo methodInfo)
     {
         // Check if the declaring type of test data is passed in. If not, default to test method's class type.
         _dynamicDataDeclaringType ??= methodInfo.DeclaringType;
@@ -29,7 +29,7 @@ internal class DynamicDataOperations : IDynamicDataOperations
                 }
                 else
                 {
-                    throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, Resource.DynamicDataSourceShouldExistAndBeValid, _dynamicDataSourceName, _dynamicDataDeclaringType.FullName));
+                    throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, FrameworkMessages.DynamicDataSourceShouldExistAndBeValid, _dynamicDataSourceName, _dynamicDataDeclaringType.FullName));
                 }
 #pragma warning restore IDE0045 // Convert to conditional expression
 
@@ -105,15 +105,14 @@ internal class DynamicDataOperations : IDynamicDataOperations
         return property.GetValue(null, null);
     }
 
-    /// <inheritdoc />
-    public string? GetDisplayName(string? DynamicDataDisplayName, Type? DynamicDataDisplayNameDeclaringType, MethodInfo methodInfo, object?[]? data)
+    public static string? GetDisplayName(string? DynamicDataDisplayName, Type? DynamicDataDisplayNameDeclaringType, MethodInfo methodInfo, object?[]? data)
     {
         if (DynamicDataDisplayName != null)
         {
             Type? dynamicDisplayNameDeclaringType = DynamicDataDisplayNameDeclaringType ?? methodInfo.DeclaringType;
             DebugEx.Assert(dynamicDisplayNameDeclaringType is not null, "Declaring type of test data cannot be null.");
 
-            MethodInfo method = PlatformServiceProvider.Instance.ReflectionOperations.GetDeclaredMethod(dynamicDisplayNameDeclaringType, DynamicDataDisplayName)
+            MethodInfo method = dynamicDisplayNameDeclaringType.GetMethod(DynamicDataDisplayName, DeclaredOnlyLookup)
                 ?? throw new ArgumentNullException($"{DynamicDataSourceType.Method} {DynamicDataDisplayName}");
             ParameterInfo[] parameters = method.GetParameters();
             return parameters.Length != 2 ||
@@ -195,18 +194,48 @@ internal class DynamicDataOperations : IDynamicDataOperations
             return true;
         }
 #else
-        Type type = data.GetType();
-        if (IsTupleOrValueTuple(data.GetType(), out int tupleSize)
+        if (IsTupleOrValueTuple(data, out int tupleSize)
             && (objects.Count == 0 || objects[objects.Count - 1].Length == tupleSize))
         {
             object[] array = new object[tupleSize];
-            for (int i = 0; i < tupleSize; i++)
-            {
-                array[i] = type.GetField($"Item{i + 1}")?.GetValue(data)!;
-            }
+            ProcessTuple(data, array, 0);
 
             objects.Add(array);
             return true;
+        }
+
+        static object GetFieldOrProperty(Type type, object data, string fieldOrPropertyName)
+            // ValueTuple is a value type, and uses fields for Items.
+            // Tuple is a reference type, and uses properties for Items.
+            => type.IsValueType
+                ? type.GetField(fieldOrPropertyName).GetValue(data)
+                : type.GetProperty(fieldOrPropertyName).GetValue(data);
+
+        static void ProcessTuple(object data, object[] array, int startingIndex)
+        {
+            Type type = data.GetType();
+            int tupleSize = type.GenericTypeArguments.Length;
+            for (int i = 0; i < tupleSize; i++)
+            {
+                if (i != 7)
+                {
+                    // Note: ItemN are properties on Tuple, but are fields on ValueTuple
+                    array[startingIndex + i] = GetFieldOrProperty(type, data, $"Item{i + 1}");
+                    continue;
+                }
+
+                object rest = GetFieldOrProperty(type, data, "Rest");
+                if (IsTupleOrValueTuple(rest, out _))
+                {
+                    ProcessTuple(rest, array, startingIndex + 7);
+                }
+                else
+                {
+                    array[startingIndex + i] = rest;
+                }
+
+                return;
+            }
         }
 #endif
 
@@ -214,9 +243,16 @@ internal class DynamicDataOperations : IDynamicDataOperations
     }
 
 #if !NET471_OR_GREATER && !NETCOREAPP
-    private static bool IsTupleOrValueTuple(Type type, out int tupleSize)
+    private static bool IsTupleOrValueTuple(object? data, out int tupleSize)
     {
         tupleSize = 0;
+
+        if (data is null)
+        {
+            return false;
+        }
+
+        Type type = data.GetType();
         if (!type.IsGenericType)
         {
             return false;
@@ -230,25 +266,70 @@ internal class DynamicDataOperations : IDynamicDataOperations
             genericTypeDefinition == typeof(Tuple<,,,>) ||
             genericTypeDefinition == typeof(Tuple<,,,,>) ||
             genericTypeDefinition == typeof(Tuple<,,,,,>) ||
-            genericTypeDefinition == typeof(Tuple<,,,,,,>) ||
-            genericTypeDefinition == typeof(Tuple<,,,,,,,>))
+            genericTypeDefinition == typeof(Tuple<,,,,,,>))
         {
             tupleSize = type.GetGenericArguments().Length;
             return true;
         }
 
+        if (genericTypeDefinition == typeof(Tuple<,,,,,,,>))
+        {
+            object? last = type.GetProperty("Rest").GetValue(data);
+            if (IsTupleOrValueTuple(last, out int restSize))
+            {
+                tupleSize = 7 + restSize;
+                return true;
+            }
+            else
+            {
+                tupleSize = 8;
+                return true;
+            }
+        }
+
+#if NET462
+        if (genericTypeDefinition.FullName.StartsWith("System.ValueTuple`", StringComparison.Ordinal))
+        {
+            tupleSize = type.GetGenericArguments().Length;
+            if (tupleSize == 8)
+            {
+                object? last = type.GetField("Rest").GetValue(data);
+                if (IsTupleOrValueTuple(last, out int restSize))
+                {
+                    tupleSize = 7 + restSize;
+                }
+            }
+
+            return true;
+        }
+#else
         if (genericTypeDefinition == typeof(ValueTuple<>) ||
             genericTypeDefinition == typeof(ValueTuple<,>) ||
             genericTypeDefinition == typeof(ValueTuple<,,>) ||
             genericTypeDefinition == typeof(ValueTuple<,,,>) ||
             genericTypeDefinition == typeof(ValueTuple<,,,,>) ||
             genericTypeDefinition == typeof(ValueTuple<,,,,,>) ||
-            genericTypeDefinition == typeof(ValueTuple<,,,,,,>) ||
-            genericTypeDefinition == typeof(ValueTuple<,,,,,,,>))
+            genericTypeDefinition == typeof(ValueTuple<,,,,,,>))
         {
             tupleSize = type.GetGenericArguments().Length;
             return true;
         }
+
+        if (genericTypeDefinition == typeof(ValueTuple<,,,,,,,>))
+        {
+            object? last = type.GetField("Rest").GetValue(data);
+            if (IsTupleOrValueTuple(last, out int restSize))
+            {
+                tupleSize = 7 + restSize;
+                return true;
+            }
+            else
+            {
+                tupleSize = 8;
+                return true;
+            }
+        }
+#endif
 
         return false;
     }
@@ -260,7 +341,7 @@ internal class DynamicDataOperations : IDynamicDataOperations
         Type? currentType = type;
         while (currentType is not null)
         {
-            PropertyInfo? property = PlatformServiceProvider.Instance.ReflectionOperations.GetDeclaredProperty(currentType, propertyName);
+            PropertyInfo? property = currentType.GetProperty(propertyName, DeclaredOnlyLookup);
             if (property is not null)
             {
                 return property;
@@ -278,7 +359,7 @@ internal class DynamicDataOperations : IDynamicDataOperations
         Type? currentType = type;
         while (currentType is not null)
         {
-            MethodInfo? method = PlatformServiceProvider.Instance.ReflectionOperations.GetDeclaredMethod(currentType, methodName);
+            MethodInfo? method = currentType.GetMethod(methodName, DeclaredOnlyLookup);
             if (method is not null)
             {
                 return method;

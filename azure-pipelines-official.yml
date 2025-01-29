@@ -92,7 +92,6 @@ extends:
           enablePublishBuildAssets: true
           enablePublishUsingPipelines: true
           enableTelemetry: true
-          enableSourceBuild: true
           jobs:
           - job: Windows
             timeoutInMinutes: 90
@@ -148,6 +147,22 @@ extends:
                   -nobl
                 name: Test
                 displayName: Test
+
+              - task: CopyFiles@2
+                displayName: 'Copy binlogs'
+                inputs:
+                  SourceFolder: '$(Build.SourcesDirectory)/artifacts/tmp/$(_BuildConfig)/testsuite'
+                  Contents: |
+                    **/*.binlog
+                  TargetFolder: '$(Build.ArtifactStagingDirectory)/binlogs'
+                condition: always()
+
+              - task: 1ES.PublishBuildArtifacts@1
+                displayName: 'Publish integration tests binlogs'
+                inputs:
+                  PathtoPublish: '$(Build.ArtifactStagingDirectory)/binlogs'
+                  ArtifactName: Integration_Tests_Windows_Binlogs_$(_BuildConfig)
+                condition: always()
 
               # Remove temporary artifacts to avoid finding binskim issues for exes we don't own.
               - pwsh: |

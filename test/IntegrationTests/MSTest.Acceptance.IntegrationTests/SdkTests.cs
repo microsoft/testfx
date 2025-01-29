@@ -297,7 +297,7 @@ namespace MSTestSdkTest
                     // temporarily set test to be on net9.0 as it's fixing one error that started to happen:  error IL3000: System.Net.Quic.MsQuicApi..cctor
                     // see https://github.com/dotnet/sdk/issues/44880.
                     .PatchCodeWithReplace("$TargetFramework$", "net9.0")
-                    .PatchCodeWithReplace("$ExtraProperties$", $"""
+                    .PatchCodeWithReplace("$ExtraProperties$", """
                 <PublishAot>true</PublishAot>
                 <EnableMicrosoftTestingExtensionsCodeCoverage>false</EnableMicrosoftTestingExtensionsCodeCoverage>
                 """),

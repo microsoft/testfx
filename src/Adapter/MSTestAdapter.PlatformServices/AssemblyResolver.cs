@@ -111,18 +111,13 @@ class AssemblyResolver :
         _searchDirectories = [.. directories];
         _directoryList = new Queue<RecursiveDirectoryPath>();
 
-        // In source gen mode don't register any custom resolver. We can still resolve in the same folder,
-        // but nothing more.
-        if (!SourceGeneratorToggle.UseSourceGenerator)
-        {
-            AppDomain.CurrentDomain.AssemblyResolve += new ResolveEventHandler(OnResolve);
+        AppDomain.CurrentDomain.AssemblyResolve += new ResolveEventHandler(OnResolve);
 #if NETFRAMEWORK
-            AppDomain.CurrentDomain.ReflectionOnlyAssemblyResolve += new ResolveEventHandler(ReflectionOnlyOnResolve);
+        AppDomain.CurrentDomain.ReflectionOnlyAssemblyResolve += new ResolveEventHandler(ReflectionOnlyOnResolve);
 
-            // This is required for winmd resolution for arm built sources discovery on desktop.
-            WindowsRuntimeMetadata.ReflectionOnlyNamespaceResolve += new EventHandler<NamespaceResolveEventArgs>(WindowsRuntimeMetadataReflectionOnlyNamespaceResolve);
+        // This is required for winmd resolution for arm built sources discovery on desktop.
+        WindowsRuntimeMetadata.ReflectionOnlyNamespaceResolve += new EventHandler<NamespaceResolveEventArgs>(WindowsRuntimeMetadataReflectionOnlyNamespaceResolve);
 #endif
-        }
     }
 
     /// <summary>

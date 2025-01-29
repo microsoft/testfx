@@ -2,6 +2,11 @@
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
   <file datatype="xml" source-language="en" target-language="de" original="../CodeFixResources.resx">
     <body>
+      <trans-unit id="AddTestClassFix">
+        <source>Add '[TestClass]'</source>
+        <target state="new">Add '[TestClass]'</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AddTestMethodAttributeFix">
         <source>Add '[TestMethod]'</source>
         <target state="translated">„[TestMethod]“ hinzufügen</target>
@@ -9,7 +14,12 @@
       </trans-unit>
       <trans-unit id="AssertionArgsShouldAvoidConditionalAccessFix">
         <source>Move conditional access in assertion to separate 'Assert.IsNotNull' check</source>
-        <target state="new">Move conditional access in assertion to separate 'Assert.IsNotNull' check</target>
+        <target state="translated">Bedingten Zugriff in Assertion auf separate "Assert.IsNotNull"-Überprüfung verschieben</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidAssertAreSameWithValueTypesFix">
+        <source>Use '{0}'</source>
+        <target state="translated">„{0}“ verwenden</target>
         <note />
       </trans-unit>
       <trans-unit id="ChangeMethodAccessibilityToPrivateFix">
@@ -30,11 +40,6 @@
       <trans-unit id="AssemblyInitializeShouldBeValidCodeFix">
         <source>Fix signature</source>
         <target state="translated">Signatur korrigieren</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="PublicTypeShouldBeTestClassFix">
-        <source>Add '[TestClass]'</source>
-        <target state="translated">„[TestClass]“ hinzufügen</target>
         <note />
       </trans-unit>
       <trans-unit id="ReplaceWithConstructorFix">

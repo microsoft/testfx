@@ -28,7 +28,8 @@ public sealed class PreferTestInitializeOverConstructorAnalyzer : DiagnosticAnal
         null,
         Category.Design,
         DiagnosticSeverity.Info,
-        isEnabledByDefault: false);
+        isEnabledByDefault: false,
+        disableInAllMode: true);
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
         = ImmutableArray.Create(Rule);

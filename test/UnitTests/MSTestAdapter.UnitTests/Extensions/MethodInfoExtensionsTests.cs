@@ -357,7 +357,7 @@ public class MethodInfoExtensionsTests : TestContainer
         }
         catch (TestFailedException ex)
         {
-            Verify(ex.Outcome == UnitTestOutcome.Error);
+            Verify(ex.Outcome == UTF.UnitTestOutcome.Error);
             Verify(ex.TryGetMessage() == string.Format(CultureInfo.InvariantCulture, Resource.CannotRunTestMethodNoDataError, "Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions.MethodInfoExtensionsTests+DummyTestClass2", "PublicMethodWithParameters"));
         }
     }
@@ -382,7 +382,7 @@ public class MethodInfoExtensionsTests : TestContainer
         }
         catch (TestFailedException ex)
         {
-            Verify(ex.Outcome == UnitTestOutcome.Error);
+            Verify(ex.Outcome == UTF.UnitTestOutcome.Error);
 
             // Error in English is:
             //    Cannot run test method 'Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions.MethodInfoExtensionsTests+DummyTestClass2.PublicMethodWithParameters': Test data doesn't match method parameters. Either the count or types are different.
@@ -405,7 +405,7 @@ public class MethodInfoExtensionsTests : TestContainer
         }
         catch (TestFailedException ex)
         {
-            Verify(ex.Outcome == UnitTestOutcome.Error);
+            Verify(ex.Outcome == UTF.UnitTestOutcome.Error);
 
             // Error in English is:
             //    Cannot run test method 'Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions.MethodInfoExtensionsTests+DummyTestClass2.PublicMethodWithParameters': Test data doesn't match method parameters. Either the count or types are different.

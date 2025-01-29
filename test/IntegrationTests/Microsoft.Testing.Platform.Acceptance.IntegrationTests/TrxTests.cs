@@ -150,7 +150,7 @@ Out of process file artifacts produced:
     public async Task Trx_WhenReportTrxIsNotSpecifiedAndReportTrxPathIsSpecified_ErrorIsDisplayed(string tfm)
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, TestAssetFixture.AssetName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync($"--report-trx-filename report.trx");
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--report-trx-filename report.trx");
 
         testHostResult.AssertExitCodeIs(ExitCodes.InvalidCommandLine);
         testHostResult.AssertOutputContains("Error: '--report-trx-filename' requires '--report-trx' to be enabled");
@@ -158,10 +158,28 @@ Out of process file artifacts produced:
 
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     [TestMethod]
+    public async Task Trx_WhenReportTrxIsSpecifiedAndReportTrxPathIsSpecified_Overwritten(string tfm)
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, TestAssetFixture.AssetName, tfm);
+        string reportFileName = $"report-{tfm}.trx";
+        TestHostResult testHostResult = await testHost.ExecuteAsync($"--report-trx --report-trx-filename {reportFileName}");
+
+        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+        string warningMessage = $"Warning: Trx file '{Path.Combine(testHost.DirectoryName, "TestResults", reportFileName)}' already exists and will be overwritten.";
+        testHostResult.AssertOutputDoesNotContain(warningMessage);
+
+        testHostResult = await testHost.ExecuteAsync($"--report-trx --report-trx-filename {reportFileName}");
+
+        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+        testHostResult.AssertOutputContains(warningMessage);
+    }
+
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
     public async Task Trx_WhenReportTrxIsSpecifiedAndListTestsIsSpecified_ErrorIsDisplayed(string tfm)
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, TestAssetFixture.AssetName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync($"--report-trx --list-tests");
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--report-trx --list-tests");
 
         testHostResult.AssertExitCodeIs(ExitCodes.InvalidCommandLine);
         testHostResult.AssertOutputContains("Error: '--report-trx' cannot be enabled when using '--list-tests'");
@@ -188,7 +206,7 @@ Out of process file artifacts produced:
         Assert.IsTrue(await CheckTrxContentsMatchAsync(match.Value, trxContentsPattern), $"Output of the test host is:\n{testHostResult}");
     }
 
-    private async Task<bool> CheckTrxContentsMatchAsync(string path, string pattern)
+    private static async Task<bool> CheckTrxContentsMatchAsync(string path, string pattern)
     {
         using StreamReader reader = new(path);
         return Regex.IsMatch(await reader.ReadToEndAsync(), pattern);

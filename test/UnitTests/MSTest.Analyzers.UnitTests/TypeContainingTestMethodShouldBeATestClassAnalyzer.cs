@@ -3,7 +3,7 @@
 
 using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
     MSTest.Analyzers.TypeContainingTestMethodShouldBeATestClassAnalyzer,
-    Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider>;
+    MSTest.Analyzers.AddTestClassFixer>;
 
 namespace MSTest.Analyzers.Test;
 
@@ -42,7 +42,18 @@ public sealed class TypeContainingTestMethodShouldBeATestClassAnalyzerTests
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(code);
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod1() {}
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
     [TestMethod]
@@ -71,7 +82,31 @@ public sealed class TypeContainingTestMethodShouldBeATestClassAnalyzerTests
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(code);
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass : WithTestMethods_WithoutTestClass
+            {
+
+            }
+
+            [TestClass]
+            public class WithTestMethods_WithoutTestClass
+            {
+                [TestMethod]
+                public void TestMethod1()
+                {
+                }
+
+                [TestMethod]
+                public void TestMethod2()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
     [TestMethod]
@@ -100,7 +135,31 @@ public sealed class TypeContainingTestMethodShouldBeATestClassAnalyzerTests
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(code);
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class Base
+            {
+
+            }
+
+            [TestClass]
+            public class MyTestClass : Base
+            {
+                [TestMethod]
+                public void TestMethod1()
+                {
+                }
+
+                [TestMethod]
+                public void TestMethod2()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
     [TestMethod]
@@ -149,7 +208,24 @@ public sealed class TypeContainingTestMethodShouldBeATestClassAnalyzerTests
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(code);
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class DerivedTestMethod : TestMethodAttribute
+            {
+            }
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [DerivedTestMethod]
+                public void MyTestMethod()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
     [TestMethod]
@@ -192,6 +268,26 @@ public sealed class TypeContainingTestMethodShouldBeATestClassAnalyzerTests
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(code);
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class TestClass
+            {
+                [TestInitialize]
+                public void Initialize()
+                {
+
+                }
+
+                [TestMethod]
+                public void TestMethod1()
+                {
+
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 }
