@@ -28,7 +28,15 @@
       - .NET 6.0 Windows.18362+
       - UWP 10.0.16299
     </PackageDescription>
+
+    <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);_AddEmptyTfmDirectoryInLib</TargetsForTfmSpecificContentInPackage>
   </PropertyGroup>
+
+  <Target Name="_AddEmptyTfmDirectoryInLib">
+    <ItemGroup>
+      <TfmSpecificPackageFile Include="_._" PackagePath="lib/$(TargetFramework)/" />
+    </ItemGroup>
+  </Target>
 
   <ItemGroup>
     <ProjectReference Include="..\..\Adapter\MSTest.TestAdapter\MSTest.TestAdapter.csproj" />
