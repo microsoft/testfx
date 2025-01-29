@@ -37,8 +37,6 @@ namespace BlankUwpNet9App
         /// <inheritdoc/>
         protected override void OnLaunched(LaunchActivatedEventArgs e)
         {
-            Debugger.Launch();
-
             Frame rootFrame = Window.Current.Content as Frame;
 
             // Do not repeat app initialization when the Window already has content,
@@ -66,8 +64,6 @@ namespace BlankUwpNet9App
 
 
             Microsoft.VisualStudio.TestPlatform.TestExecutor.UnitTestClient.Run(e.Arguments);
-
-            Thread.Sleep(5 * 1000);
         }
 
         /// <summary>
