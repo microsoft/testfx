@@ -32,8 +32,7 @@
       - .NET Core 3.1+
       - .NET 6.0
       - .NET 6.0 Windows.18362+
-      - UWP 10.0.16299
-      - UWP 10.0.17763 with .NET 9
+      - UWP 10.0.16299- UWP 10.0.17763 with .NET 9
     </PackageDescription>
     <!-- Nothing in lib but that's expected -->
     <NoWarn>$(NoWarn);NU5127;NU5128</NoWarn>
