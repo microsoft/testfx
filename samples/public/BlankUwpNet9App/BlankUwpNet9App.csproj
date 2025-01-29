@@ -1,4 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
+  
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net9.0-windows10.0.26100.0</TargetFramework>
@@ -8,7 +9,7 @@
     <RuntimeIdentifiers>win-x86;win-x64;win-arm64</RuntimeIdentifiers>
     <PublishProfile>win-$(Platform).pubxml</PublishProfile>
     <DefaultLanguage>en-US</DefaultLanguage>
-    <PublishAot>true</PublishAot>
+    <!--<PublishAot>true</PublishAot>-->
     <UseUwp>true</UseUwp>
     <DisableRuntimeMarshalling>true</DisableRuntimeMarshalling>
     <EnableMsixTooling>true</EnableMsixTooling>
@@ -19,23 +20,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-	  <ProjectCapability Include="TestContainer" />
-	  <PackageReference Include="Microsoft.TestPlatform" Version="17.13.0-dev" />
-	  <PackageReference Include="Microsoft.TestPlatform.ObjectModel" Version="17.13.0-dev" />
-	  <PackageReference Include="Microsoft.TestPlatform.TestHost" Version="17.13.0-dev" />
+	  <PackageReference Include="Microsoft.TestPlatform.TestHost" Version="$(VSTestVersion)" />
     <PackageReference Include="Microsoft.Windows.SDK.CPP" Version="10.0.26100.2454" />
-    <PackageReference Include="MSTest.Engine" Version="1.0.0-alpha.24562.1" />
-    <PackageReference Include="MSTest.SourceGeneration" Version="1.0.0-alpha.24562.1" />
-    <PackageReference Include="MSTest.TestAdapter" Version="3.8.0-dev" />
-
-    <!-- Do not use MSTest metapackage as we don't want to use Microsoft.NET.Test.Sdk -->
-    <PackageReference Include="MSTest.TestFramework" Version="3.8.0-dev" />
-    <PackageReference Include="MSTest.Analyzers" Version="3.8.0-dev" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-    <!-- Instead we want to rely on Microsoft.TestPlatform.TestHost to support msix -->
-
-
-    <!--<PackageReference Include="Microsoft.TestPlatform.ObjectModel" IncludeAssets="None" Version="17.12.0" />-->
-	  <!--<SDKReference Include="TestPlatform.Universal, Version=$(UnitTestPlatformVersion)" />-->
+    <PackageReference Include="MSTest.TestAdapter" Version="$(MSTestVersion)" />
+    <PackageReference Include="MSTest.TestFramework" Version="$(MSTestVersion)" />
   </ItemGroup>
+  
 </Project>

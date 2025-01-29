@@ -244,6 +244,9 @@ Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataAttribute.IgnoreMessage.
 Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataSourceType.AutoDetect = 2 -> Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataSourceType
 *REMOVED*Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataAttribute.DynamicDataAttribute(string! dynamicDataSourceName, Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataSourceType dynamicDataSourceType = Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataSourceType.Property) -> void
 *REMOVED*Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataAttribute.DynamicDataAttribute(string! dynamicDataSourceName, System.Type! dynamicDataDeclaringType, Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataSourceType dynamicDataSourceType = Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataSourceType.Property) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.GitHubWorkItemAttribute
+Microsoft.VisualStudio.TestTools.UnitTesting.GitHubWorkItemAttribute.GitHubWorkItemAttribute(string! url) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.GitHubWorkItemAttribute.Url.get -> string!
 Microsoft.VisualStudio.TestTools.UnitTesting.ITestDataSourceIgnoreCapability
 Microsoft.VisualStudio.TestTools.UnitTesting.ITestDataSourceIgnoreCapability.IgnoreMessage.get -> string?
 Microsoft.VisualStudio.TestTools.UnitTesting.ITestDataSourceIgnoreCapability.IgnoreMessage.set -> void

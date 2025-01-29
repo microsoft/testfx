@@ -131,6 +131,11 @@ Tatsächlich: {2}</target>
         <target state="translated">Es wurde eine Sammlung mit einer Größe {1} erwartet. Tatsächlich: {2}. {0}</target>
         <note />
       </trans-unit>
+      <trans-unit id="InvalidGitHubUrl">
+        <source>Invalid GitHub ticket URL</source>
+        <target state="new">Invalid GitHub ticket URL</target>
+        <note />
+      </trans-unit>
       <trans-unit id="IsInstanceOfFailMsg">
         <source>{0} Expected type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;.</source>
         <target state="translated">{0}Erwarteter Typ:&lt;{1}&gt;. Tatsächlicher Typ:&lt;{2}&gt;.</target>

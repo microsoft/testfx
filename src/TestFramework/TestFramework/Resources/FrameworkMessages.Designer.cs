@@ -387,6 +387,15 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Invalid GitHub ticket URL.
+        /// </summary>
+        internal static string InvalidGitHubUrl {
+            get {
+                return ResourceManager.GetString("InvalidGitHubUrl", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The property {0} has type {1}; expected type {2}..
         /// </summary>
         internal static string InvalidPropertyType {

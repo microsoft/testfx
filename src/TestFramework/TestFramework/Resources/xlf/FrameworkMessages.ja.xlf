@@ -131,6 +131,11 @@ Actual: {2}</source>
         <target state="translated">サイズ {1} のコレクションが必要です。実際: {2}。{0}</target>
         <note />
       </trans-unit>
+      <trans-unit id="InvalidGitHubUrl">
+        <source>Invalid GitHub ticket URL</source>
+        <target state="new">Invalid GitHub ticket URL</target>
+        <note />
+      </trans-unit>
       <trans-unit id="IsInstanceOfFailMsg">
         <source>{0} Expected type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;.</source>
         <target state="translated">{0} には型 &lt;{1}&gt; が必要ですが、型 &lt;{2}&gt; が指定されました。</target>
