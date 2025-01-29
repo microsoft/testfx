@@ -151,7 +151,6 @@ internal static class DynamicDataOperations
             return true;
         }
 
-#if NET471_OR_GREATER || (NET && !WINDOWS_UWP)
         if (dataSource is IEnumerable enumerable and not string)
         {
             List<object[]> objects = new();
@@ -172,7 +171,6 @@ internal static class DynamicDataOperations
             data = objects;
             return true;
         }
-#endif
 
         data = null;
         return false;

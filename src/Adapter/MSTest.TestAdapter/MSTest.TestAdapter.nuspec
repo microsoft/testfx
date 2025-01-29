@@ -89,7 +89,6 @@
     <!-- net9.0 -->
     <file src="net9.0\build\common\MSTest.TestAdapter.props" target="build\net9.0\MSTest.TestAdapter.props" />
     <file src="net9.0\build\common\MSTest.TestAdapter.targets" target="build\net9.0\MSTest.TestAdapter.targets" />
-    <file src="net9.0\Microsoft.VisualStudio.TestPlatform.TestFramework.dll" target="build\net9.0\" />
     <file src="net9.0\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll" target="build\net9.0\" />
     <file src="net9.0-windows10.0.17763.0\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll" target="build\net9.0\uwp" />
     <file src="net9.0\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.dll" target="build\net9.0\" />
