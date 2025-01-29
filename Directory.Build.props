@@ -25,7 +25,6 @@
 
   <!-- The TFMs to build and test against. -->
   <PropertyGroup>
-    <NetFrameworkMinimum>net462</NetFrameworkMinimum>
     <NetCurrent>net9.0</NetCurrent>
 
     <!-- The windows SDK version of UWP, Modern UWP and WinUI could be aligned -->
