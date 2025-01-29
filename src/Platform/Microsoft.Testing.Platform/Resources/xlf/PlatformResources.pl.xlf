@@ -203,14 +203,14 @@
         <note />
       </trans-unit>
       <trans-unit id="DiagnosticFileLevelWithAsyncFlush">
-        <source>Diagnostic file (level '{0}' with async flush): {1}"</source>
-        <target state="translated">Plik diagnostyczny (poziom „{0}” z asynchronicznym opróżnianiem): {1}„</target>
+        <source>Diagnostic file (level '{0}' with async flush): {1}</source>
+        <target state="needs-review-translation">Plik diagnostyczny (poziom „{0}” z asynchronicznym opróżnianiem): {1}„</target>
         <note>0 level such as verbose, 
 1 path to file</note>
       </trans-unit>
       <trans-unit id="DiagnosticFileLevelWithFlush">
-        <source>Diagnostic file (level '{0}' with sync flush): {1}"</source>
-        <target state="translated">Plik diagnostyczny (poziom „{0}” z synchronicznym opróżnianiem): {1}„</target>
+        <source>Diagnostic file (level '{0}' with sync flush): {1}</source>
+        <target state="needs-review-translation">Plik diagnostyczny (poziom „{0}” z synchronicznym opróżnianiem): {1}„</target>
         <note>0 level such as verbose, 
 1 path to file</note>
       </trans-unit>
