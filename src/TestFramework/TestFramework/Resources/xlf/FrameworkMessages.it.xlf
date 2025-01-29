@@ -131,6 +131,11 @@ Effettivo: {2}</target>
         <target state="translated">Prevista raccolta di dimensioni {1}. Effettivo: {2}. {0}</target>
         <note />
       </trans-unit>
+      <trans-unit id="InvalidGitHubUrl">
+        <source>Invalid GitHub ticket URL</source>
+        <target state="new">Invalid GitHub ticket URL</target>
+        <note />
+      </trans-unit>
       <trans-unit id="IsInstanceOfFailMsg">
         <source>{0} Expected type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;.</source>
         <target state="translated">{0} Tipo previsto:&lt;{1}&gt;. Tipo effettivo:&lt;{2}&gt;.</target>
