@@ -204,13 +204,13 @@
       </trans-unit>
       <trans-unit id="DiagnosticFileLevelWithAsyncFlush">
         <source>Diagnostic file (level '{0}' with async flush): {1}</source>
-        <target state="needs-review-translation">診断ファイル (非同期フラッシュを使用したレベル '{0}'): {1}"</target>
+        <target state="new">Diagnostic file (level '{0}' with async flush): {1}</target>
         <note>0 level such as verbose, 
 1 path to file</note>
       </trans-unit>
       <trans-unit id="DiagnosticFileLevelWithFlush">
         <source>Diagnostic file (level '{0}' with sync flush): {1}</source>
-        <target state="needs-review-translation">診断ファイル (同期フラッシュを使用したレベル '{0}'): {1}"</target>
+        <target state="new">Diagnostic file (level '{0}' with sync flush): {1}</target>
         <note>0 level such as verbose, 
 1 path to file</note>
       </trans-unit>
