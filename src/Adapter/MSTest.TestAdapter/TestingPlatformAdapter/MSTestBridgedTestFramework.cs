@@ -5,6 +5,7 @@
 using Microsoft.Testing.Extensions.VSTestBridge;
 using Microsoft.Testing.Extensions.VSTestBridge.Requests;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
+using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
@@ -15,11 +16,15 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 internal sealed class MSTestBridgedTestFramework : SynchronizedSingleSessionVSTestBridgedTestFramework
 {
     private readonly BridgedConfiguration? _configuration;
+    private readonly ILoggerFactory _loggerFactory;
 
     public MSTestBridgedTestFramework(MSTestExtension mstestExtension, Func<IEnumerable<Assembly>> getTestAssemblies,
         IServiceProvider serviceProvider, ITestFrameworkCapabilities capabilities)
         : base(mstestExtension, getTestAssemblies, serviceProvider, capabilities)
-        => _configuration = new(serviceProvider.GetConfiguration());
+    {
+        _configuration = new(serviceProvider.GetConfiguration());
+        _loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
+    }
 
     /// <inheritdoc />
     protected override Task SynchronizedDiscoverTestsAsync(VSTestDiscoverTestExecutionRequest request, IMessageBus messageBus,
@@ -31,6 +36,7 @@ internal sealed class MSTestBridgedTestFramework : SynchronizedSingleSessionVSTe
             Debugger.Launch();
         }
 
+        PlatformServiceProvider.Instance.AdapterTraceLogger = new BridgedTraceLogger(_loggerFactory.CreateLogger("mstest-trace"));
         MSTestDiscoverer.DiscoverTests(request.AssemblyPaths, request.DiscoveryContext, request.MessageLogger, request.DiscoverySink, _configuration);
         return Task.CompletedTask;
     }
@@ -45,6 +51,7 @@ internal sealed class MSTestBridgedTestFramework : SynchronizedSingleSessionVSTe
             Debugger.Launch();
         }
 
+        PlatformServiceProvider.Instance.AdapterTraceLogger = new BridgedTraceLogger(_loggerFactory.CreateLogger("mstest-trace"));
         MSTestExecutor testExecutor = new(cancellationToken);
 
         if (request.VSTestFilter.TestCases is { } testCases)

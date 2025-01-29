@@ -30,9 +30,9 @@ internal interface IPlatformServiceProvider
     IFileOperations FileOperations { get; }
 
     /// <summary>
-    /// Gets an instance to the platform service for trace logging.
+    /// Gets or sets an instance to the platform service for trace logging.
     /// </summary>
-    IAdapterTraceLogger AdapterTraceLogger { get; }
+    IAdapterTraceLogger AdapterTraceLogger { get; set; }
 
     /// <summary>
     /// Gets an instance of the test deployment service.
