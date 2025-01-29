@@ -10,4 +10,7 @@ internal sealed class ExecutableInfo(string fileName, IEnumerable<string> argume
     public IEnumerable<string> Arguments { get; } = arguments;
 
     public string Workspace { get; } = workspace;
+
+    public override string ToString()
+        => $"Process: {FileName}, Arguments: {string.Join(" ", Arguments)}, Workspace: {Workspace}";
 }
