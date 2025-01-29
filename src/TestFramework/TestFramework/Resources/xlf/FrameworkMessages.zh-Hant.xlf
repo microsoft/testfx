@@ -131,6 +131,11 @@ Actual: {2}</source>
         <target state="translated">預期的大小集合 {1}。實際： {2}。{0}</target>
         <note />
       </trans-unit>
+      <trans-unit id="InvalidGitHubUrl">
+        <source>Invalid GitHub ticket URL</source>
+        <target state="new">Invalid GitHub ticket URL</target>
+        <note />
+      </trans-unit>
       <trans-unit id="IsInstanceOfFailMsg">
         <source>{0} Expected type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;.</source>
         <target state="translated">{0} 預期的類型: &lt;{1}&gt;，實際的類型: &lt;{2}&gt;。</target>
