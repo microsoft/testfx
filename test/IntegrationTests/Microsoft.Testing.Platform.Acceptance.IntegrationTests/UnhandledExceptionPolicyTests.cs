@@ -183,12 +183,10 @@ public class UnhandledExceptionPolicyTests : AcceptanceTestBase<UnhandledExcepti
 
 
 #file Program.cs
-
 using System;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Globalization;
-
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Extensions.Messages;

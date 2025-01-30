@@ -163,7 +163,7 @@ public static class DotnetCli
         if (dotnet.StandardError.Contains("Invalid runtimeconfig.json"))
         {
             // Invalid runtimeconfig.json [D:\a\_work\1\s\artifacts\tmp\Release\testsuite\gqRdj\MSTestSdk\bin\Debug\net9.0\MSTestSdk.runtimeconfig.json]
-            Match match = Regex.Match(dotnet.StandardError, @"Invalid runtimeconfig.json \[(?<path>.+?)\]");
+            Match match = Regex.Match(dotnet.StandardError, @"Invalid runtimeconfig\.json \[(?<path>.+?)\]");
             string fileContent;
             if (!match.Success)
             {

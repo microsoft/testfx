@@ -52,7 +52,6 @@ public class RunnerTests : AcceptanceTestBase<NopAssetFixture>
             AssetName,
             (CurrentMSTestSourceCode + """
 #file Program.cs
-
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
