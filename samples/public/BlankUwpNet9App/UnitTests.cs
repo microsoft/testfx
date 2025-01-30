@@ -15,8 +15,6 @@ namespace App1
         [TestMethod]
         public void TestMethod1()
         {
-            File.Create(@"C:\Users\adstep\Desktop\out.txt");
-
             Assert.AreEqual(0, 0);
         }
 
@@ -24,7 +22,8 @@ namespace App1
         [UITestMethod]
         public void TestMethod2()
         {
-            var grid = new Grid();
+            Grid grid = new();
+
             Assert.AreEqual(0, grid.MinWidth);
         }
     }
