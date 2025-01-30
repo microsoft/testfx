@@ -58,15 +58,11 @@ internal sealed class PlatformServiceProvider : IPlatformServiceProvider
     }
 
     /// <summary>
-    /// Gets an instance to the platform service for trace logging.
+    /// Gets or sets an instance to the platform service for trace logging.
     /// </summary>
     [field: AllowNull]
     [field: MaybeNull]
-    public IAdapterTraceLogger AdapterTraceLogger
-    {
-        get => field ??= new AdapterTraceLogger();
-        private set;
-    }
+    public IAdapterTraceLogger AdapterTraceLogger { get => field ??= new AdapterTraceLogger(); set; }
 
     /// <summary>
     /// Gets an instance of the test deployment service.
