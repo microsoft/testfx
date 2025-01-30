@@ -267,10 +267,10 @@
     <CallTarget Targets="_TestingPlatformTest" />
   </Target>
 
-  <!-- Expose a test target usable by tests projects where this target is injected -->
-  <Target Name="Test" Condition=" '$(UseMSBuildTestInfrastructure)' != 'True' AND '$(TestingPlatformDisableCustomTestTarget)' == 'False' " >
-    <CallTarget Targets="_TestingPlatformTest" />
-  </Target>
+  <!-- The Test target is separated so that we can conditionally define it. -->
+  <!-- Putting a condition on a target determines whether the target is **executed** or not -->
+  <!-- We want to not define the Test target in the first place when the user sets TestingPlatformDisableCustomTestTarget to true -->
+  <Import Project="Microsoft.Testing.Platform.MSBuild.CustomTestTarget.targets" Condition="'$(TestingPlatformDisableCustomTestTarget)' == 'False'" />
 
   <Target Name="_TestingPlatformTest">
     <!-- We call VSTest built-in workflow only for the multi-tfm for single tfm we need to directly call our target -->

@@ -252,6 +252,21 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
         compilationResult.AssertOutputContains(".NET Testing Platform");
     }
 
+    [TestMethod]
+    public async Task TestingPlatformDisableCustomTestTarget_Should_Cause_UserDefined_Target_To_Run()
+    {
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
+            AssetName,
+            SourceCode
+            .PatchCodeWithReplace("$PlatformTarget$", "<PlatformTarget>x64</PlatformTarget>")
+            .PatchCodeWithReplace("$TargetFrameworks$", $"<TargetFramework>{TargetFrameworks.NetCurrent}</TargetFramework>")
+            .PatchCodeWithReplace("$AssertValue$", "true")
+            .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"build {testAsset.TargetAssetPath} -p:TestingPlatformDisableCustomTestTarget=true -p:ImportUserDefinedTestTarget=true -t:\"Build;Test\"", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, failIfReturnValueIsNotZero: false);
+
+        compilationResult.AssertOutputContains("Error from UserDefinedTestTarget.targets");
+    }
+
     private const string SourceCode = """
 #file MSBuild Tests.csproj
 <Project Sdk="Microsoft.NET.Sdk">
@@ -270,6 +285,15 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
         <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Version="$MicrosoftTestingPlatformVersion$" />
         <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
     </ItemGroup>
+
+    <Import Project="UserDefinedTestTarget.targets" Condition="'$(ImportUserDefinedTestTarget)' == 'true'" />
+</Project>
+
+#file UserDefinedTestTarget.targets
+<Project>
+    <Target Name="Test">
+        <Error Text="Error from UserDefinedTestTarget.targets" />
+    </Target>
 </Project>
 
 #file Program.cs
