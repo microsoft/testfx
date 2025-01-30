@@ -23,7 +23,7 @@ namespace Microsoft.Testing.Platform.MSBuild;
 public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
 {
     private const string MonoRunnerName = "mono";
-    private const string DotnetRunnerName = "dotnet";
+    private static readonly string DotnetRunnerName = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "dotnet.exe" : "dotnet";
 
     private readonly IFileSystem _fileSystem;
     private readonly PipeNameDescription _pipeNameDescription;
@@ -90,7 +90,7 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
             if (TargetPath.ItemSpec.EndsWith(".dll", StringComparison.InvariantCultureIgnoreCase))
             {
                 Log.LogMessage(MessageImportance.Low, $"Target path is a dll '{TargetPath.ItemSpec}'");
-                return DotnetRunnerName + (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? ".exe" : string.Empty);
+                return DotnetRunnerName;
             }
 
             // If the target is an exe and we're not on Windows we try with the mono runner.
@@ -182,8 +182,7 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
 
         if (IsNetCoreApp)
         {
-            string dotnetRunnerName = ToolName;
-            if (dotnetRunnerName != MonoRunnerName && Path.GetFileName(_currentProcess.MainModule!.FileName!).Equals(dotnetRunnerName, StringComparison.OrdinalIgnoreCase))
+            if (ToolName == DotnetRunnerName)
             {
                 builder.AppendSwitch("exec");
                 builder.AppendFileNameIfNotNull(TargetPath.ItemSpec);
