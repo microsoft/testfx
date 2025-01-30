@@ -59,6 +59,9 @@ internal interface IPlatformServiceProvider
     /// </summary>
     TestRunCancellationToken? TestRunCancellationToken { get; set; }
 
+    /// <summary>
+    /// Gets or sets a value indicating whether a graceful stop is requested.
+    /// </summary>
     bool IsGracefulStopRequested { get; set; }
 
     /// <summary>
@@ -120,6 +123,8 @@ internal interface IPlatformServiceProvider
     /// <param name="properties">
     /// The default set of properties the test context needs to be filled with.
     /// </param>
+    /// <param name="messageLogger">The message logger.</param>
+    /// <param name="outcome">The test outcome.</param>
     /// <returns>
     /// The <see cref="ITestContext"/> instance.
     /// </returns>

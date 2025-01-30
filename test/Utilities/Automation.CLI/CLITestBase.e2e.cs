@@ -28,6 +28,7 @@ public partial class CLITestBase : TestContainer
     /// </summary>
     /// <param name="sources">Collection of test containers.</param>
     /// <param name="runSettings">Run settings for execution.</param>
+    /// <param name="targetFramework">Target framework for the test run.</param>
     public void InvokeVsTestForDiscovery(string[] sources, string runSettings = "", string targetFramework = null)
     {
         ExpandTestSourcePaths(sources, targetFramework);
@@ -44,6 +45,7 @@ public partial class CLITestBase : TestContainer
     /// <param name="sources">List of test assemblies.</param>
     /// <param name="runSettings">Run settings for execution.</param>
     /// <param name="testCaseFilter">Test Case filter for execution.</param>
+    /// <param name="targetFramework">Target framework for the test run.</param>
     public void InvokeVsTestForExecution(string[] sources, string runSettings = "", string testCaseFilter = null, string targetFramework = null)
     {
         ExpandTestSourcePaths(sources, targetFramework);
@@ -297,6 +299,7 @@ public partial class CLITestBase : TestContainer
     /// Converts relative paths to absolute.
     /// </summary>
     /// <param name="paths">An array of file paths, elements may be modified to absolute paths.</param>
+    /// <param name="targetFramework">Target framework for the test run.</param>
     private void ExpandTestSourcePaths(string[] paths, string targetFramework = null)
     {
         for (int i = 0; i < paths.Length; i++)

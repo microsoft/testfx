@@ -191,6 +191,8 @@ internal sealed class PlatformServiceProvider : IPlatformServiceProvider
     /// <param name="properties">
     /// The default set of properties the test context needs to be filled with.
     /// </param>
+    /// <param name="messageLogger">The message logger.</param>
+    /// <param name="outcome">The test outcome.</param>
     /// <returns>
     /// The <see cref="ITestContext"/> instance.
     /// </returns>
