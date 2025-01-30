@@ -117,7 +117,7 @@ public sealed partial class Assert
     #region Contains
 
     public static void Contains<T>(IEnumerable<T> collection, T expected)
-    => Contains(collection, expected, string.Empty, null);
+        => Contains(collection, expected, string.Empty, null);
 
     public static void Contains<T>(IEnumerable<T> collection, T expected, string? message)
         => Contains(collection, expected, message, null);
