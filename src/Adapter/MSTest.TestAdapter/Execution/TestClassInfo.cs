@@ -38,6 +38,7 @@ public class TestClassInfo
     /// </summary>
     /// <param name="type">Underlying test class type.</param>
     /// <param name="constructor">Constructor for the test class.</param>
+    /// <param name="isParameterlessConstructor">Whether or not the test class constructor has no parameters.</param>
     /// <param name="classAttribute">Test class attribute.</param>
     /// <param name="parent">Parent assembly info.</param>
     internal TestClassInfo(

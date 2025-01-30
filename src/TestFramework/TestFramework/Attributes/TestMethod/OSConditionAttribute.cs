@@ -26,6 +26,7 @@ public sealed class OSConditionAttribute : ConditionBaseAttribute
     /// <summary>
     /// Initializes a new instance of the <see cref="OSConditionAttribute"/> class.
     /// </summary>
+    /// <param name="mode">Decides whether the OSes will be included or excluded.</param>
     /// <param name="operatingSystems">The operating systems that this test supports.</param>
     public OSConditionAttribute(ConditionMode mode, OperatingSystems operatingSystems)
         : base(mode)

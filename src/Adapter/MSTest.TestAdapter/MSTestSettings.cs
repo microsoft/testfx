@@ -292,10 +292,9 @@ public class MSTestSettings
     /// <summary>
     /// Populate adapter settings from the context.
     /// </summary>
-    /// <param name="context">
+    /// <param name="context">The discovery context.</param>
     /// <param name="logger"> The logger for messages. </param>
-    /// The discovery context that contains the runsettings.
-    /// </param>
+    /// <param name="configuration">The configuration.</param>
     internal static void PopulateSettings(IDiscoveryContext? context, IMessageLogger? logger, IConfiguration? configuration)
     {
 #if !WINDOWS_UWP
@@ -916,6 +915,7 @@ public class MSTestSettings
     /// </summary>
     /// <param name="configuration">Configuration to load the settings from.</param>
     /// <param name="logger"> The logger for messages. </param>
+    /// <param name="settings">The MSTest settings.</param>
     internal static void SetSettingsFromConfig(IConfiguration configuration, IMessageLogger? logger, MSTestSettings settings)
     {
         // Expected format of the json is: -
