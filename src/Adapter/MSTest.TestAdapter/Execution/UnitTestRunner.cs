@@ -31,6 +31,8 @@ internal sealed class UnitTestRunner : MarshalByRefObject
     /// Initializes a new instance of the <see cref="UnitTestRunner"/> class.
     /// </summary>
     /// <param name="settings"> Specifies adapter settings that need to be instantiated in the domain running these tests. </param>
+    /// <param name="testsToRun"> The tests to run. </param>
+    /// <param name="classCleanupLifecycle"> The class cleanup lifecycle. </param>
     public UnitTestRunner(MSTestSettings settings, UnitTestElement[] testsToRun, int? classCleanupLifecycle)
         : this(settings, testsToRun, classCleanupLifecycle, ReflectHelper.Instance)
     {
@@ -40,6 +42,8 @@ internal sealed class UnitTestRunner : MarshalByRefObject
     /// Initializes a new instance of the <see cref="UnitTestRunner"/> class.
     /// </summary>
     /// <param name="settings"> Specifies adapter settings. </param>
+    /// <param name="testsToRun"> The tests to run. </param>
+    /// <param name="classCleanupLifecycle"> The class cleanup lifecycle. </param>
     /// <param name="reflectHelper"> The reflect Helper. </param>
     internal UnitTestRunner(MSTestSettings settings, UnitTestElement[] testsToRun, int? classCleanupLifecycle, ReflectHelper reflectHelper)
     {
@@ -134,6 +138,7 @@ internal sealed class UnitTestRunner : MarshalByRefObject
     /// </summary>
     /// <param name="testMethod"> The test Method. </param>
     /// <param name="testContextProperties"> The test context properties. </param>
+    /// <param name="messageLogger"> The message logger. </param>
     /// <returns> The <see cref="TestResult"/>. </returns>
     internal async Task<TestResult[]> RunSingleTestAsync(TestMethod testMethod, IDictionary<string, object?> testContextProperties, IMessageLogger messageLogger)
     {

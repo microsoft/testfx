@@ -29,6 +29,7 @@ public sealed class MSBuildTests
             BuildEngine = _buildEngine.Object,
             TestingPlatformEntryPointSourcePath = new CustomTaskItem("obj/entryPointFile"),
             Language = new CustomTaskItem("C#"),
+            RootNamespace = "SomeNamespace",
         };
 
         testingPlatformEntryPoint.Execute();
@@ -40,16 +41,19 @@ public sealed class MSBuildTests
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-[global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
-internal sealed class TestingPlatformEntryPoint
+namespace SomeNamespace
 {
-    public static async global::System.Threading.Tasks.Task<int> Main(string[] args)
+    [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
+    internal sealed class TestingPlatformEntryPoint
     {
-        global::Microsoft.Testing.Platform.Builder.ITestApplicationBuilder builder = await global::Microsoft.Testing.Platform.Builder.TestApplication.CreateBuilderAsync(args);
-        SelfRegisteredExtensions.AddSelfRegisteredExtensions(builder, args);
-        using (global::Microsoft.Testing.Platform.Builder.ITestApplication app = await builder.BuildAsync())
+        public static async global::System.Threading.Tasks.Task<int> Main(string[] args)
         {
-            return await app.RunAsync();
+            global::Microsoft.Testing.Platform.Builder.ITestApplicationBuilder builder = await global::Microsoft.Testing.Platform.Builder.TestApplication.CreateBuilderAsync(args);
+            SelfRegisteredExtensions.AddSelfRegisteredExtensions(builder, args);
+            using (global::Microsoft.Testing.Platform.Builder.ITestApplication app = await builder.BuildAsync())
+            {
+                return await app.RunAsync();
+            }
         }
     }
 }

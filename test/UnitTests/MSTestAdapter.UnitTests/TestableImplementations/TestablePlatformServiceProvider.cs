@@ -103,7 +103,7 @@ internal class TestablePlatformServiceProvider : IPlatformServiceProvider
 
     public IFileOperations FileOperations => MockFileOperations.Object;
 
-    public IAdapterTraceLogger AdapterTraceLogger => MockTraceLogger.Object;
+    public IAdapterTraceLogger AdapterTraceLogger { get => MockTraceLogger.Object; set => throw new NotSupportedException(); }
 
     public ITestDeployment TestDeployment => MockTestDeployment.Object;
 
