@@ -315,18 +315,12 @@ public sealed class TerminalTestReporterTests
 
         public void Clear() => throw new NotImplementedException();
 
-        public ConsoleColor GetBackgroundColor() => throw new NotImplementedException();
-
         public ConsoleColor GetForegroundColor() => ConsoleColor.White;
-
-        public void SetBackgroundColor(ConsoleColor color) => throw new NotImplementedException();
 
         public void SetForegroundColor(ConsoleColor color)
         {
             // do nothing
         }
-
-        public void Write(string format, object?[]? args) => throw new NotImplementedException();
 
         public void Write(string? value) => _output.Append(value);
 
@@ -335,16 +329,6 @@ public sealed class TerminalTestReporterTests
         public void WriteLine() => _output.AppendLine();
 
         public void WriteLine(string? value) => _output.AppendLine(value);
-
-        public void WriteLine(object? value) => throw new NotImplementedException();
-
-        public void WriteLine(string format, object? arg0) => throw new NotImplementedException();
-
-        public void WriteLine(string format, object? arg0, object? arg1) => throw new NotImplementedException();
-
-        public void WriteLine(string format, object? arg0, object? arg1, object? arg2) => throw new NotImplementedException();
-
-        public void WriteLine(string format, object?[]? args) => throw new NotImplementedException();
     }
 
     internal class StringBuilderTerminal : ITerminal
