@@ -8,13 +8,7 @@ internal sealed class SystemTask : ITask
     public Task Run(Action action)
         => Task.Run(action);
 
-    public Task Run(Action action, CancellationToken cancellationToken)
-        => Task.Run(action, cancellationToken);
-
     public Task Run(Func<Task> function, CancellationToken cancellationToken)
-        => Task.Run(function, cancellationToken);
-
-    public Task<T> Run<T>(Func<Task<T>?> function, CancellationToken cancellationToken)
         => Task.Run(function, cancellationToken);
 
     public Task RunLongRunning(Func<Task> action, string name, CancellationToken cancellationToken)
@@ -52,17 +46,8 @@ internal sealed class SystemTask : ITask
         return taskCompletionSource.Task;
     }
 
-    public Task WhenAll(IEnumerable<Task> tasks)
-        => Task.WhenAll(tasks);
-
     public Task WhenAll(params Task[] tasks)
         => Task.WhenAll(tasks);
-
-    public Task<Task> WhenAny(params Task[] tasks)
-        => Task.WhenAny(tasks);
-
-    public Task Delay(TimeSpan timeSpan)
-        => Task.Delay(timeSpan);
 
     public Task Delay(int millisecondDelay)
         => Task.Delay(millisecondDelay);
