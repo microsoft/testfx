@@ -24,7 +24,6 @@ internal sealed class ListTestsMessageBus(
     IPushOnlyProtocol? pushOnlyProtocol,
     IPushOnlyProtocolConsumer? pushOnlyProtocolConsumer) : BaseMessageBus, IMessageBus, IDisposable, IOutputDeviceDataProducer
 {
-    private readonly ITestFramework _testFramework = testFramework;
     private readonly ITestApplicationCancellationTokenSource _testApplicationCancellationTokenSource = testApplicationCancellationTokenSource;
     private readonly IOutputDevice _outputDisplay = outputDisplay;
     private readonly IEnvironment _environment = environment;
