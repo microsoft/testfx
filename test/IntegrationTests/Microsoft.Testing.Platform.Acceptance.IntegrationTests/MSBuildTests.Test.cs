@@ -100,6 +100,7 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
     }
 
     [TestMethod]
+    [OSCondition(OperatingSystems.Windows)]
     public async Task RunUsingTestTargetWithNetfxMSBuild()
     {
         TestAsset testAsset = await TestAsset.GenerateAssetAsync(
