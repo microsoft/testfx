@@ -11,8 +11,6 @@ internal interface ITestApplicationModuleInfo
 
     bool IsAppHostOrSingleFileOrNativeAot { get; }
 
-    string GetCommandLineArguments();
-
     string GetCurrentTestApplicationFullPath();
 
     string GetProcessPath();
