@@ -905,23 +905,6 @@ internal sealed partial class TerminalTestReporter : IDisposable
         }
     }
 
-    internal void TestDiscovered(
-        string assembly,
-        string? targetFramework,
-        string? architecture,
-        string? executionId,
-        string? displayName,
-        string? uid)
-    {
-        TestProgressState asm = _assemblies[$"{assembly}|{targetFramework}|{architecture}|{executionId}"];
-
-        // TODO: add mode for discovered tests to the progress bar - jajares
-        asm.PassedTests++;
-        asm.TotalTests++;
-        asm.DiscoveredTests.Add(new(displayName, uid));
-        _terminalWithProgress.UpdateWorker(asm.SlotIndex);
-    }
-
     public void AppendTestDiscoverySummary(ITerminal terminal)
     {
         terminal.AppendLine();
