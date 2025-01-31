@@ -681,40 +681,6 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
             @params: args,
             _testApplicationCancellationTokenSource.CancellationToken);
 
-    public async Task SendClientLaunchDebuggerAsync(ProcessInfoArgs args)
-       => await SendRequestAsync(
-           method: JsonRpcMethods.ClientLaunchDebugger,
-           @params: args,
-           _testApplicationCancellationTokenSource.CancellationToken);
-
-    public async Task SendClientAttachDebuggerAsync(AttachDebuggerInfoArgs args)
-       => await SendRequestAsync(
-           method: JsonRpcMethods.ClientAttachDebugger,
-           @params: args,
-           _testApplicationCancellationTokenSource.CancellationToken);
-
-    private async Task SendRequestAsync(string method, object @params, CancellationToken cancellationToken)
-    {
-        AssertInitialized();
-        int requestId = Interlocked.Increment(ref _serverToClientRequestId);
-        RequestMessage request = new(requestId, method, @params);
-        RpcInvocationState invocationState = new();
-
-        _serverToClientRequests.TryAdd(requestId, invocationState);
-
-        // Add the request to the counter
-        _requestCounter.AddCount();
-        await _messageHandler.WriteRequestAsync(request, cancellationToken);
-
-        using (cancellationToken.Register(() => _ = SendMessageAsync(
-            JsonRpcMethods.CancelRequest,
-            new CancelRequestArgs(requestId),
-            cancellationToken)))
-        {
-            await invocationState.CompletionSource.Task;
-        }
-    }
-
     public async Task PushDataAsync(IData value)
     {
         switch (value)
