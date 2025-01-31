@@ -27,8 +27,6 @@ internal interface ITestHostBuilder
 
     ILoggingManager Logging { get; }
 
-    IPlatformOutputDeviceManager OutputDisplay { get; }
-
     ICommandLineManager CommandLine { get; }
 
     ITestHostControllersManager TestHostControllers { get; }

@@ -64,8 +64,6 @@ internal sealed class TestApplicationBuilder : ITestApplicationBuilder
     [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
     public ILoggingManager Logging => _testHostBuilder.Logging;
 
-    internal IPlatformOutputDeviceManager OutputDisplay => _testHostBuilder.OutputDisplay;
-
     internal ITelemetryManager Telemetry => _testHostBuilder.Telemetry;
 
     internal IToolsManager Tools => _testHostBuilder.Tools;
