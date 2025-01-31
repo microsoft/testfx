@@ -27,8 +27,6 @@ internal sealed class TestProgressState
 
     public IStopwatch Stopwatch { get; }
 
-    public List<string> Attachments { get; } = new();
-
     public List<IProgressMessage> Messages { get; } = new();
 
     public int FailedTests { get; internal set; }
