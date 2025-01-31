@@ -16,14 +16,8 @@ internal class ActionResult
 
     public object? Result { get; }
 
-    public static ActionResult Ok(object result)
-        => new(true, result);
-
     public static ActionResult<TResult> Ok<TResult>(TResult result)
         => new(true, result);
-
-    public static ActionResult Fail()
-        => new(false, default);
 
     public static ActionResult<TResult> Fail<TResult>()
         => new(false, default);
