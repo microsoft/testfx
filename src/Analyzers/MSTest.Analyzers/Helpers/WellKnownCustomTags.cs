@@ -5,7 +5,6 @@ namespace MSTest.Analyzers.Helpers;
 
 internal static class WellKnownCustomTags
 {
-    public const string CompilationEnd = nameof(CompilationEnd);
     public const string EscalateToErrorInRecommended = nameof(EscalateToErrorInRecommended);
     public const string DisableInAllMode = nameof(DisableInAllMode);
 }
