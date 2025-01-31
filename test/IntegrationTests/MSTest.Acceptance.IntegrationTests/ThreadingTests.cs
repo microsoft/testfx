@@ -236,8 +236,6 @@ public sealed class ThreadingTests : AcceptanceTestBase<ThreadingTests.TestAsset
 
         public string LifecycleAttributesTaskProjectPath => GetAssetPath(LifecycleAttributesTaskProjectName);
 
-        public string LifecycleWithParallelAttributesTaskProjectNamePath => GetAssetPath(LifecycleWithParallelAttributesTaskProjectName);
-
         public string LifecycleAttributesValueTaskProjectPath => GetAssetPath(LifecycleAttributesValueTaskProjectName);
 
         public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
