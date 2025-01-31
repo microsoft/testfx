@@ -29,26 +29,6 @@ internal sealed class PooledHashSet<T> : HashSet<T>, IDisposable
         _pool?.Free(this, cancellationToken);
     }
 
-    public ImmutableHashSet<T> ToImmutableAndFree()
-    {
-        ImmutableHashSet<T> result;
-        if (Count == 0)
-        {
-            result = ImmutableHashSet<T>.Empty;
-        }
-        else
-        {
-            result = this.ToImmutableHashSet(Comparer);
-            Clear();
-        }
-
-        _pool?.Free(this, CancellationToken.None);
-        return result;
-    }
-
-    public ImmutableHashSet<T> ToImmutable()
-        => Count == 0 ? ImmutableHashSet<T>.Empty : this.ToImmutableHashSet(Comparer);
-
     // global pool
     private static readonly ObjectPool<PooledHashSet<T>> s_poolInstance = CreatePool();
     private static readonly ConcurrentDictionary<IEqualityComparer<T>, ObjectPool<PooledHashSet<T>>> s_poolInstancesByComparer = new();
@@ -68,17 +48,6 @@ internal sealed class PooledHashSet<T> : HashSet<T>, IDisposable
             s_poolInstancesByComparer.GetOrAdd(comparer, CreatePool);
         PooledHashSet<T> instance = pool.Allocate();
         Debug.Assert(instance.Count == 0);
-        return instance;
-    }
-
-    public static PooledHashSet<T> GetInstance(IEnumerable<T> initializer, IEqualityComparer<T>? comparer = null)
-    {
-        PooledHashSet<T> instance = GetInstance(comparer);
-        foreach (T? value in initializer)
-        {
-            instance.Add(value);
-        }
-
         return instance;
     }
 }

@@ -64,16 +64,6 @@ internal static class IMethodSymbolExtensions
     }
 
     /// <summary>
-    /// Checks if the given method implements IAsyncDisposable.Dispose()
-    /// </summary>
-    public static bool IsAsyncDisposeImplementation(this IMethodSymbol method, Compilation compilation)
-    {
-        INamedTypeSymbol? iAsyncDisposable = compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemIAsyncDisposable);
-        INamedTypeSymbol? valueTaskType = compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemThreadingTasksValueTask);
-        return method.IsAsyncDisposeImplementation(iAsyncDisposable, valueTaskType);
-    }
-
-    /// <summary>
     /// Checks if the given method implements <see cref="IDisposable.Dispose"/> or overrides an implementation of <see cref="IDisposable.Dispose"/>.
     /// </summary>
     public static bool IsDisposeImplementation([NotNullWhen(returnValue: true)] this IMethodSymbol? method, [NotNullWhen(returnValue: true)] INamedTypeSymbol? iDisposable)
