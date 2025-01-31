@@ -100,6 +100,24 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
     }
 
     [TestMethod]
+    public async Task RunUsingTestTargetWithNetfxMSBuild()
+    {
+        TestAsset testAsset = await TestAsset.GenerateAssetAsync(
+            AssetName,
+            SourceCode
+            .PatchCodeWithReplace("$PlatformTarget$", string.Empty)
+            .PatchCodeWithReplace("$TargetFrameworks$", $"<TargetFramework>{TargetFrameworks.NetCurrent}</TargetFramework>")
+            .PatchCodeWithReplace("$AssertValue$", bool.TrueString.ToLowerInvariant())
+            .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
+
+        string msbuildExe = await FindMsbuildWithVsWhereAsync();
+        var commandLine = new TestInfrastructure.CommandLine();
+        await commandLine.RunAsync($"\"{msbuildExe}\" {testAsset.TargetAssetPath} /t:Restore");
+        await commandLine.RunAsync($"\"{msbuildExe}\" {testAsset.TargetAssetPath} /t:\"Build;Test\"");
+        StringAssert.Contains(commandLine.StandardOutput, "Tests succeeded");
+    }
+
+    [TestMethod]
     public async Task Invoke_DotnetTest_With_Arch_Switch_x86_Should_Work()
     {
         if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))

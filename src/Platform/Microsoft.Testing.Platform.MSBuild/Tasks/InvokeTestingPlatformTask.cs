@@ -180,23 +180,25 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
     {
         Build.Utilities.CommandLineBuilder builder = new();
 
-        if (IsNetCoreApp)
+        if (ToolName == DotnetRunnerName && IsNetCoreApp)
         {
-            if (ToolName == DotnetRunnerName)
-            {
-                builder.AppendSwitch("exec");
-                builder.AppendFileNameIfNotNull(TargetPath.ItemSpec);
-            }
+            // In most cases, if ToolName is "dotnet.exe", that means we are given a "dll" file.
+            // In turn, that means we are not .NET Framework (because we will use Exe otherwise).
+            // In case ToolName ended up being "dotnet.exe" and we are
+            // .NET Framework, that means it's the user's assembly that is named "dotnet".
+            // In that case, we want to execute the tool (user's executable) directly.
+            // So, we only only "exec" if we are .NETCoreApp
+            builder.AppendSwitch("exec");
+            builder.AppendFileNameIfNotNull(TargetPath.ItemSpec);
         }
-        else
+        else if (ToolName == MonoRunnerName)
         {
-            // If the target is an exe and we're not on Windows we try with the mono runner and so we pass the test module to the mono runner.
-            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && TargetPath.ItemSpec.EndsWith(".exe", StringComparison.InvariantCultureIgnoreCase))
-            {
-                builder.AppendFileNameIfNotNull(TargetPath.ItemSpec);
-            }
+            // If ToolName is "mono", that means TargetPath is an "exe" file and we are not running on Windows.
+            // In this case, we use the given exe file as an argument to mono.
+            builder.AppendFileNameIfNotNull(TargetPath.ItemSpec);
         }
 
+        // If we are not "dotnet.exe" and not "mono", then we are given an executable from user and we are running on Windows.
         builder.AppendSwitchIfNotNull($"--{MSBuildConstants.MSBuildNodeOptionKey} ", _pipeNameDescription.Name);
 
         if (!string.IsNullOrEmpty(TestingPlatformCommandLineArguments?.ItemSpec))
