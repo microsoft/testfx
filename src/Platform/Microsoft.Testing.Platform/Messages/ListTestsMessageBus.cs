@@ -3,7 +3,6 @@
 
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
-using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
@@ -14,7 +13,6 @@ using Microsoft.Testing.Platform.Services;
 namespace Microsoft.Testing.Platform.Messages;
 
 internal sealed class ListTestsMessageBus(
-    ITestFramework testFramework,
     ITestApplicationCancellationTokenSource testApplicationCancellationTokenSource,
     ILoggerFactory loggerFactory,
     IOutputDevice outputDisplay,
@@ -24,7 +22,6 @@ internal sealed class ListTestsMessageBus(
     IPushOnlyProtocol? pushOnlyProtocol,
     IPushOnlyProtocolConsumer? pushOnlyProtocolConsumer) : BaseMessageBus, IMessageBus, IDisposable, IOutputDeviceDataProducer
 {
-    private readonly ITestFramework _testFramework = testFramework;
     private readonly ITestApplicationCancellationTokenSource _testApplicationCancellationTokenSource = testApplicationCancellationTokenSource;
     private readonly IOutputDevice _outputDisplay = outputDisplay;
     private readonly IEnvironment _environment = environment;
