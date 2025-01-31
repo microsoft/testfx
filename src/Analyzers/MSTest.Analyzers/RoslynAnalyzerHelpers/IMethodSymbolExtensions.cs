@@ -55,15 +55,6 @@ internal static class IMethodSymbolExtensions
     }
 
     /// <summary>
-    /// Checks if the given method implements IDisposable.Dispose()
-    /// </summary>
-    public static bool IsDisposeImplementation(this IMethodSymbol method, Compilation compilation)
-    {
-        INamedTypeSymbol? iDisposable = compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemIDisposable);
-        return method.IsDisposeImplementation(iDisposable);
-    }
-
-    /// <summary>
     /// Checks if the given method implements IAsyncDisposable.Dispose()
     /// </summary>
     public static bool IsAsyncDisposeImplementation(this IMethodSymbol method, Compilation compilation)
