@@ -95,54 +95,6 @@ internal sealed class SystemConsole : IConsole
         }
     }
 
-    public void WriteLine(object? value)
-    {
-        if (!_suppressOutput)
-        {
-            CaptureConsoleOutWriter.WriteLine(value);
-        }
-    }
-
-    public void WriteLine(string format, object? arg0)
-    {
-        if (!_suppressOutput)
-        {
-            CaptureConsoleOutWriter.WriteLine(format, arg0);
-        }
-    }
-
-    public void WriteLine(string format, object? arg0, object? arg1)
-    {
-        if (!_suppressOutput)
-        {
-            CaptureConsoleOutWriter.WriteLine(format, arg0, arg1);
-        }
-    }
-
-    public void WriteLine(string format, object? arg0, object? arg1, object? arg2)
-    {
-        if (!_suppressOutput)
-        {
-            CaptureConsoleOutWriter.WriteLine(format, arg0, arg1, arg2);
-        }
-    }
-
-    public void WriteLine(string format, object?[]? args)
-    {
-        if (!_suppressOutput)
-        {
-            CaptureConsoleOutWriter.WriteLine(format, args!);
-        }
-    }
-
-    public void Write(string format, object?[]? args)
-    {
-        if (!_suppressOutput)
-        {
-            CaptureConsoleOutWriter.Write(format, args!);
-        }
-    }
-
     public void Write(string? value)
     {
         if (!_suppressOutput)
@@ -173,20 +125,6 @@ internal sealed class SystemConsole : IConsole
 #pragma warning restore IDE0022 // Use expression body for method
     }
 
-    public void SetBackgroundColor(ConsoleColor color)
-    {
-#if NET8_0_OR_GREATER
-        if (RuntimeInformation.RuntimeIdentifier.Contains("ios") ||
-            RuntimeInformation.RuntimeIdentifier.Contains("android"))
-        {
-            return;
-        }
-#endif
-#pragma warning disable IDE0022 // Use expression body for method
-        Console.BackgroundColor = color;
-#pragma warning restore IDE0022 // Use expression body for method
-    }
-
     public ConsoleColor GetForegroundColor()
     {
 #if NET8_0_OR_GREATER
@@ -198,20 +136,6 @@ internal sealed class SystemConsole : IConsole
 #endif
 #pragma warning disable IDE0022 // Use expression body for method
         return Console.ForegroundColor;
-#pragma warning restore IDE0022 // Use expression body for method
-    }
-
-    public ConsoleColor GetBackgroundColor()
-    {
-#if NET8_0_OR_GREATER
-        if (RuntimeInformation.RuntimeIdentifier.Contains("ios") ||
-            RuntimeInformation.RuntimeIdentifier.Contains("android"))
-        {
-            return ConsoleColor.Black;
-        }
-#endif
-#pragma warning disable IDE0022 // Use expression body for method
-        return Console.BackgroundColor;
 #pragma warning restore IDE0022 // Use expression body for method
     }
 
