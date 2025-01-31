@@ -52,7 +52,7 @@ internal sealed class DotnetMuxerLocator
         // If current process is the same as the target architecture we return the current process filename.
         if (GetCurrentProcessArchitecture() == targetArchitecture)
         {
-            string currentProcessFileName = _currentProcess.MainModule!.FileName!;
+            string currentProcessFileName = _currentProcess.MainModule!.FileName;
             if (Path.GetFileName(currentProcessFileName) == _muxerName)
             {
                 muxerPath = currentProcessFileName;

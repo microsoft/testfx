@@ -57,7 +57,7 @@ internal sealed class PassiveNode : IDisposable
         // Log the message
         if (_logger.IsEnabled(LogLevel.Trace))
         {
-            await _logger.LogTraceAsync(message!.ToString());
+            await _logger.LogTraceAsync(message.ToString());
         }
 
         var requestMessage = (RequestMessage)message;

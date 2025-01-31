@@ -149,7 +149,7 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
                 }
 
                 ProcessModule? mainModule = _currentProcess.MainModule;
-                if (mainModule != null && Path.GetFileName(mainModule.FileName)!.Equals(dotnetRunnerName, StringComparison.OrdinalIgnoreCase))
+                if (mainModule != null && Path.GetFileName(mainModule.FileName).Equals(dotnetRunnerName, StringComparison.OrdinalIgnoreCase))
                 {
                     Log.LogMessage(MessageImportance.Low, $"dotnet muxer tool path found using current process: '{mainModule.FileName}' architecture: '{_currentProcessArchitecture}'");
                     return mainModule.FileName;
@@ -183,7 +183,7 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
         if (IsNetCoreApp)
         {
             string dotnetRunnerName = ToolName;
-            if (dotnetRunnerName != MonoRunnerName && Path.GetFileName(_currentProcess.MainModule!.FileName!).Equals(dotnetRunnerName, StringComparison.OrdinalIgnoreCase))
+            if (dotnetRunnerName != MonoRunnerName && Path.GetFileName(_currentProcess.MainModule!.FileName).Equals(dotnetRunnerName, StringComparison.OrdinalIgnoreCase))
             {
                 builder.AppendSwitch("exec");
                 builder.AppendFileNameIfNotNull(TargetPath.ItemSpec);

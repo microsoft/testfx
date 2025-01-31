@@ -70,7 +70,7 @@ internal sealed class HotReloadHandler
         if (waitExecutionCompletion is not null)
         {
             await waitExecutionCompletion;
-            await _outputDevice!.DisplayAsync(_outputDeviceDataProducer, new TextOutputDeviceData(ExtensionResources.HotReloadSessionCompleted));
+            await _outputDevice.DisplayAsync(_outputDeviceDataProducer, new TextOutputDeviceData(ExtensionResources.HotReloadSessionCompleted));
         }
 
         try

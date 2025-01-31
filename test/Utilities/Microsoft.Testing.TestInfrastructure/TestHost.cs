@@ -71,7 +71,7 @@ public sealed class TestHost
                 // Consider that the given dictionary has "TESTINGPLATFORM_UI_LANGUAGE" as a key.
                 // And also Environment.GetEnvironmentVariables() is returning TESTINGPLATFORM_UI_LANGUAGE.
                 // In that case, we do a "TryAdd" which effectively means the value from the original dictionary wins.
-                environmentVariables.TryAdd(key!, entry!.Value!.ToString()!);
+                environmentVariables.TryAdd(key!, entry.Value!.ToString()!);
             }
 
             // Define DOTNET_ROOT to point to the dotnet we install for this repository, to avoid
