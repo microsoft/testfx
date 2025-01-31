@@ -15,7 +15,6 @@ internal static class ExitCodes
     public const int TestSessionAborted = 3;
     public const int InvalidPlatformSetup = 4;
     public const int InvalidCommandLine = 5;
-    public const int FeatureNotImplemented = 6;
     public const int TestHostProcessExitedNonGracefully = 7;
     public const int ZeroTests = 8;
     public const int MinimumExpectedTestsPolicyViolation = 9;
