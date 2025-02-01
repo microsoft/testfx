@@ -15,7 +15,5 @@ internal interface ITestApplicationModuleInfo
 
     string GetProcessPath();
 
-    string[] GetCommandLineArgs();
-
     ExecutableInfo GetCurrentExecutableInfo();
 }
