@@ -37,7 +37,6 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
     private readonly IAsyncMonitor _asyncMonitor;
     private readonly IRuntimeFeature _runtimeFeature;
     private readonly IEnvironment _environment;
-    private readonly IProcessHandler _process;
     private readonly IPlatformInformation _platformInformation;
     private readonly ICommandLineOptions _commandLineOptions;
     private readonly IFileLoggerInformation? _fileLoggerInformation;
@@ -66,7 +65,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
 
     public TerminalOutputDevice(ITestApplicationCancellationTokenSource testApplicationCancellationTokenSource, IConsole console,
         ITestApplicationModuleInfo testApplicationModuleInfo, ITestHostControllerInfo testHostControllerInfo, IAsyncMonitor asyncMonitor,
-        IRuntimeFeature runtimeFeature, IEnvironment environment, IProcessHandler process, IPlatformInformation platformInformation,
+        IRuntimeFeature runtimeFeature, IEnvironment environment, IPlatformInformation platformInformation,
         ICommandLineOptions commandLineOptions, IFileLoggerInformation? fileLoggerInformation, ILoggerFactory loggerFactory, IClock clock,
         IStopPoliciesService policiesService)
     {
@@ -77,7 +76,6 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
         _asyncMonitor = asyncMonitor;
         _runtimeFeature = runtimeFeature;
         _environment = environment;
-        _process = process;
         _platformInformation = platformInformation;
         _commandLineOptions = commandLineOptions;
         _fileLoggerInformation = fileLoggerInformation;
