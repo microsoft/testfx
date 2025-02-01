@@ -1,4 +1,8 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project>
+
+  <!-- SDK top import -->
+  <Import Project="Sdk.props" Sdk="MSBuild.Sdk.Extras" Condition=" '$(OS)' == 'Windows_NT' " />
+  <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" Condition=" '$(OS)' != 'Windows_NT' " />
 
   <PropertyGroup>
     <TargetFrameworks Condition=" '$(OS)' == 'Windows_NT' ">netstandard2.0;$(NetFrameworkMinimum);$(SupportedNetFrameworks);$(UwpMinimum);$(WinUiMinimum)</TargetFrameworks>
@@ -12,6 +16,7 @@
     <NoWarn>$(NoWarn);NETSDK1023</NoWarn>
     
     <IncludeBuildOutput>false</IncludeBuildOutput>
+    <IsTestProject>false</IsTestProject>
     <IsPackable>true</IsPackable>
     <PackageId>MSTest</PackageId>
     <PackageTags>MSTest TestFramework TestAdapter VisualStudio Unittest MSTestV2 Microsoft</PackageTags>
@@ -52,5 +57,9 @@
   <ItemGroup>
     <None Include="$(PackageReadmeFile)" Pack="true" PackagePath="\" />
   </ItemGroup>
+
+  <!-- SDK bottom import -->
+  <Import Project="Sdk.targets" Sdk="MSBuild.Sdk.Extras" Condition=" '$(OS)' == 'Windows_NT' " />
+  <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" Condition=" '$(OS)' != 'Windows_NT' " />
 
 </Project>
