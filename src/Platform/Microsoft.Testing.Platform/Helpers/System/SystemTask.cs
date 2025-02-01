@@ -11,6 +11,9 @@ internal sealed class SystemTask : ITask
     public Task Run(Func<Task> function, CancellationToken cancellationToken)
         => Task.Run(function, cancellationToken);
 
+    public Task<T> Run<T>(Func<Task<T>?> function, CancellationToken cancellationToken)
+        => Task.Run(function, cancellationToken);
+
     public Task RunLongRunning(Func<Task> action, string name, CancellationToken cancellationToken)
     {
         // We create custom thread so we can assign the name that will help us to identify the thread in the dump
