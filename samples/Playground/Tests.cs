@@ -12,8 +12,6 @@ namespace Playground;
 [TestClass]
 public class TestClass
 {
-    public TestContext TestContext { get; set; }
-
     [TestMethod]
     [DynamicData(nameof(Data))]
     public void Test3(int a, int b)

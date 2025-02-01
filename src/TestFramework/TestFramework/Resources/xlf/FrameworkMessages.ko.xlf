@@ -138,7 +138,7 @@ Actual: {2}</source>
       </trans-unit>
       <trans-unit id="InvalidGitHubUrl">
         <source>Invalid GitHub ticket URL</source>
-        <target state="new">Invalid GitHub ticket URL</target>
+        <target state="translated">잘못된 GitHub 티켓 URL</target>
         <note />
       </trans-unit>
       <trans-unit id="IsInstanceOfFailMsg">

@@ -12,8 +12,6 @@ namespace Microsoft.Testing.Platform.Requests;
 public sealed class TreeNodeFilter : ITestExecutionFilter
 {
     public const char PathSeparator = '/';
-    internal const char PropertyPerEdgeStartChar = '[';
-    internal const char PropertyPerEdgeEndChar = ']';
 
     // Note: After the token gets expanded into regex ** gets converted to .*.*.
     internal const string AllNodesBelowRegexString = ".*.*";

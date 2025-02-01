@@ -38,8 +38,6 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol,
 
     public bool IsServerMode => _dotnetTestPipeClient?.IsConnected == true;
 
-    public string Name => PlatformCommandLineProvider.DotnetTestCliProtocolName;
-
     public Task<IPushOnlyProtocolConsumer> GetDataConsumerAsync()
         => Task.FromResult((IPushOnlyProtocolConsumer)new DotnetTestDataConsumer(this, _environment));
 
