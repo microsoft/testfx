@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #pragma warning disable CS8618 // Properties below are set by MSBuild.
@@ -160,7 +160,7 @@ Namespace {{rootNamespace}}
     <System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage>
     Module TestingPlatformEntryPoint
 
-        Function Main(args As String) As Integer
+        Function Main(args As String()) As Integer
             Return MainAsync(args).GetAwaiter().GetResult()
         End Function
 
