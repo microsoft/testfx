@@ -41,9 +41,7 @@ internal sealed class PlatformOutputDeviceManager : IPlatformOutputDeviceManager
     }
 
     public static TerminalOutputDevice GetDefaultTerminalOutputDevice(ServiceProvider serviceProvider)
-        => new(
-            serviceProvider.GetTestApplicationCancellationTokenSource(),
-            serviceProvider.GetConsole(),
+        => new(serviceProvider.GetConsole(),
             serviceProvider.GetTestApplicationModuleInfo(),
             serviceProvider.GetTestHostControllerInfo(),
             serviceProvider.GetAsyncMonitorFactory().Create(),

@@ -30,7 +30,6 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
     private const string TESTINGPLATFORM_CONSOLEOUTPUTDEVICE_SKIP_BANNER = nameof(TESTINGPLATFORM_CONSOLEOUTPUTDEVICE_SKIP_BANNER);
 #pragma warning restore SA1310 // Field names should not contain underscore
 
-    private readonly ITestApplicationCancellationTokenSource _testApplicationCancellationTokenSource;
     private readonly IConsole _console;
     private readonly ITestApplicationModuleInfo _testApplicationModuleInfo;
     private readonly ITestHostControllerInfo _testHostControllerInfo;
@@ -64,13 +63,13 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
     private bool _isServerMode;
     private ILogger? _logger;
 
-    public TerminalOutputDevice(ITestApplicationCancellationTokenSource testApplicationCancellationTokenSource, IConsole console,
+    public TerminalOutputDevice(
+        IConsole console,
         ITestApplicationModuleInfo testApplicationModuleInfo, ITestHostControllerInfo testHostControllerInfo, IAsyncMonitor asyncMonitor,
         IRuntimeFeature runtimeFeature, IEnvironment environment, IProcessHandler process, IPlatformInformation platformInformation,
         ICommandLineOptions commandLineOptions, IFileLoggerInformation? fileLoggerInformation, ILoggerFactory loggerFactory, IClock clock,
         IStopPoliciesService policiesService)
     {
-        _testApplicationCancellationTokenSource = testApplicationCancellationTokenSource;
         _console = console;
         _testApplicationModuleInfo = testApplicationModuleInfo;
         _testHostControllerInfo = testHostControllerInfo;
