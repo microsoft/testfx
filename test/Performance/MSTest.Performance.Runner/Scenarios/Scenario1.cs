@@ -127,14 +127,6 @@ internal class Scenario1 : IStep<NoInputOutput, SingleProject>
         return packageFullName.Substring(packagePrefixName.Length, packageFullName.Length - packagePrefixName.Length - NuGetPackageExtensionName.Length);
     }
 
-    private static string ExtractVersionFromVersionPropsFile(XDocument versionPropsXmlDocument, string entryName)
-    {
-        XElement[] matches = versionPropsXmlDocument.Descendants(entryName).ToArray();
-        return matches.Length != 1
-            ? throw new InvalidOperationException($"Was expecting to find a single entry for '{entryName}' but found {matches.Length}.")
-            : matches[0].Value;
-    }
-
     protected const string CurrentMSTestSourceCode = """
 #file Scenario1.csproj
 <Project Sdk="Microsoft.NET.Sdk">
