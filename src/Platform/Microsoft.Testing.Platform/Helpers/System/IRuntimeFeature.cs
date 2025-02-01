@@ -7,7 +7,5 @@ internal interface IRuntimeFeature
 {
     bool IsDynamicCodeSupported { get; }
 
-    bool IsHotReloadSupported { get; }
-
     bool IsHotReloadEnabled { get; }
 }
