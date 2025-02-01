@@ -32,7 +32,6 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
 
     private readonly ITestApplicationCancellationTokenSource _testApplicationCancellationTokenSource;
     private readonly IConsole _console;
-    private readonly ITestApplicationModuleInfo _testApplicationModuleInfo;
     private readonly ITestHostControllerInfo _testHostControllerInfo;
     private readonly IAsyncMonitor _asyncMonitor;
     private readonly IRuntimeFeature _runtimeFeature;
@@ -72,7 +71,6 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
     {
         _testApplicationCancellationTokenSource = testApplicationCancellationTokenSource;
         _console = console;
-        _testApplicationModuleInfo = testApplicationModuleInfo;
         _testHostControllerInfo = testHostControllerInfo;
         _asyncMonitor = asyncMonitor;
         _runtimeFeature = runtimeFeature;
@@ -99,7 +97,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
             _targetFramework = TargetFrameworkParser.GetShortTargetFramework(Assembly.GetEntryAssembly()?.GetCustomAttribute<TargetFrameworkAttribute>()?.FrameworkDisplayName) ?? _runtimeFramework;
         }
 
-        _assemblyName = _testApplicationModuleInfo.GetCurrentTestApplicationFullPath();
+        _assemblyName = testApplicationModuleInfo.GetCurrentTestApplicationFullPath();
 
         if (environment.GetEnvironmentVariable(TESTINGPLATFORM_CONSOLEOUTPUTDEVICE_SKIP_BANNER) is not null)
         {
