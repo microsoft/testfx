@@ -396,7 +396,7 @@ internal sealed partial class TrxReportEngine
 
         using FileStream fileStream = File.OpenRead(origin.FullName);
         using var destinationStream = new FileStream(destination.FullName, FileMode.Create);
-        await fileStream.CopyToAsync(destinationStream);
+        await fileStream.CopyToAsync(destinationStream, _cancellationToken);
     }
 
     private static void AddTestLists(XElement testRun, string uncategorizedTestId)
