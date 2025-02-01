@@ -45,10 +45,6 @@
     <PackageVersion Include="Microsoft.WindowsAppSDK" Version="1.0.0" />
     <PackageVersion Include="Polyfill" Version="7.14.0" />
     <PackageVersion Include="System.Threading.Tasks.Extensions" Version="$(SystemThreadingTasksExtensionsVersion)" />
-    <!-- CVE-2019-0820 -->
-    <PackageVersion Include="System.Diagnostics.TextWriterTraceListener" Version="4.3.0" />
-    <!-- CVE-2019-0981, CVE-2019-0980, CVE-2019-0657 -->
-    <PackageVersion Include="System.Private.Uri" Version="4.3.2" />
   </ItemGroup>
   <ItemGroup Label="Test dependencies">
     <PackageVersion Include="Codecov" Version="1.12.3" />
