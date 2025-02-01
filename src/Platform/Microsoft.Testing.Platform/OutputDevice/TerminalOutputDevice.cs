@@ -572,8 +572,6 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
                 }
 
                 break;
-            case TestRequestExecutionTimeInfo testRequestExecutionTimeInfo:
-                break;
         }
 
         return Task.CompletedTask;
