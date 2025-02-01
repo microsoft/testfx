@@ -1,4 +1,4 @@
-# MSTest.TestFramework
+# MSTest
 
 MSTest is Microsoft supported Test Framework.
 
