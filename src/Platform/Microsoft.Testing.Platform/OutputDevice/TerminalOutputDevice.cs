@@ -82,7 +82,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
         {
 #if !NETCOREAPP
             _longArchitecture = RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant();
-            _shortArchitecture = GetShortArchitecture(RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant());
+            _shortArchitecture = GetShortArchitecture(_longArchitecture);
 #else
             // RID has the operating system, we want to see that in the banner, but not next to every dll.
             _longArchitecture = RuntimeInformation.RuntimeIdentifier;
