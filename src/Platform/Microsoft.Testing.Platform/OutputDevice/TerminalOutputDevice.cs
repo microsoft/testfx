@@ -173,7 +173,6 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
         typeof(SessionFileArtifact),
         typeof(TestNodeFileArtifact),
         typeof(FileArtifact),
-        typeof(TestRequestExecutionTimeInfo),
     ];
 
     /// <inheritdoc />
