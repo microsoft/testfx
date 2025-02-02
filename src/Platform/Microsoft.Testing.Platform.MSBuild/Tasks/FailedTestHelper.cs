@@ -77,10 +77,10 @@ internal static class FailedTestHelper
         }
     }
 
-    private static string? JoinSingleLineAndShorten(string? first, string? second)
-        => first != null && second != null
-            ? SingleLineAndShorten(first) + " " + SingleLineAndShorten(second)
-            : SingleLineAndShorten(first) ?? SingleLineAndShorten(second);
+    private static string? JoinSingleLineAndShorten(string first, string? second)
+        => second == null
+            ? SingleLineAndShorten(first) ?? SingleLineAndShorten(second)
+            : SingleLineAndShorten(first) + " " + SingleLineAndShorten(second);
 
     private static string? SingleLineAndShorten(string? text)
 #pragma warning disable IDE0057 // Use range operator
