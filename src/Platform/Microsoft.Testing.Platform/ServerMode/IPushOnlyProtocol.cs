@@ -9,8 +9,6 @@ internal interface IPushOnlyProtocol :
 #endif
     IDisposable
 {
-    string Name { get; }
-
     bool IsServerMode { get; }
 
     Task AfterCommonServiceSetupAsync();
