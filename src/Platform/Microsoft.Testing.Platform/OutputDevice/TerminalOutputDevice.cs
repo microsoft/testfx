@@ -30,14 +30,11 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
     private const string TESTINGPLATFORM_CONSOLEOUTPUTDEVICE_SKIP_BANNER = nameof(TESTINGPLATFORM_CONSOLEOUTPUTDEVICE_SKIP_BANNER);
 #pragma warning restore SA1310 // Field names should not contain underscore
 
-    private readonly ITestApplicationCancellationTokenSource _testApplicationCancellationTokenSource;
     private readonly IConsole _console;
-    private readonly ITestApplicationModuleInfo _testApplicationModuleInfo;
     private readonly ITestHostControllerInfo _testHostControllerInfo;
     private readonly IAsyncMonitor _asyncMonitor;
     private readonly IRuntimeFeature _runtimeFeature;
     private readonly IEnvironment _environment;
-    private readonly IProcessHandler _process;
     private readonly IPlatformInformation _platformInformation;
     private readonly ICommandLineOptions _commandLineOptions;
     private readonly IFileLoggerInformation? _fileLoggerInformation;
@@ -58,7 +55,6 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
     private TerminalTestReporter? _terminalTestReporter;
     private bool _firstCallTo_OnSessionStartingAsync = true;
     private bool _bannerDisplayed;
-    private TestRequestExecutionTimeInfo? _testRequestExecutionTimeInfo;
     private bool _isVSTestMode;
     private bool _isListTests;
     private bool _isServerMode;
@@ -66,18 +62,15 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
 
     public TerminalOutputDevice(ITestApplicationCancellationTokenSource testApplicationCancellationTokenSource, IConsole console,
         ITestApplicationModuleInfo testApplicationModuleInfo, ITestHostControllerInfo testHostControllerInfo, IAsyncMonitor asyncMonitor,
-        IRuntimeFeature runtimeFeature, IEnvironment environment, IProcessHandler process, IPlatformInformation platformInformation,
+        IRuntimeFeature runtimeFeature, IEnvironment environment, IPlatformInformation platformInformation,
         ICommandLineOptions commandLineOptions, IFileLoggerInformation? fileLoggerInformation, ILoggerFactory loggerFactory, IClock clock,
         IStopPoliciesService policiesService)
     {
-        _testApplicationCancellationTokenSource = testApplicationCancellationTokenSource;
         _console = console;
-        _testApplicationModuleInfo = testApplicationModuleInfo;
         _testHostControllerInfo = testHostControllerInfo;
         _asyncMonitor = asyncMonitor;
         _runtimeFeature = runtimeFeature;
         _environment = environment;
-        _process = process;
         _platformInformation = platformInformation;
         _commandLineOptions = commandLineOptions;
         _fileLoggerInformation = fileLoggerInformation;
@@ -89,7 +82,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
         {
 #if !NETCOREAPP
             _longArchitecture = RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant();
-            _shortArchitecture = GetShortArchitecture(RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant());
+            _shortArchitecture = GetShortArchitecture(_longArchitecture);
 #else
             // RID has the operating system, we want to see that in the banner, but not next to every dll.
             _longArchitecture = RuntimeInformation.RuntimeIdentifier;
@@ -99,7 +92,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
             _targetFramework = TargetFrameworkParser.GetShortTargetFramework(Assembly.GetEntryAssembly()?.GetCustomAttribute<TargetFrameworkAttribute>()?.FrameworkDisplayName) ?? _runtimeFramework;
         }
 
-        _assemblyName = _testApplicationModuleInfo.GetCurrentTestApplicationFullPath();
+        _assemblyName = testApplicationModuleInfo.GetCurrentTestApplicationFullPath();
 
         if (environment.GetEnvironmentVariable(TESTINGPLATFORM_CONSOLEOUTPUTDEVICE_SKIP_BANNER) is not null)
         {
@@ -178,7 +171,6 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
         typeof(SessionFileArtifact),
         typeof(TestNodeFileArtifact),
         typeof(FileArtifact),
-        typeof(TestRequestExecutionTimeInfo),
     ];
 
     /// <inheritdoc />
@@ -576,9 +568,6 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
                         artifact.FileInfo.FullName);
                 }
 
-                break;
-            case TestRequestExecutionTimeInfo testRequestExecutionTimeInfo:
-                _testRequestExecutionTimeInfo = testRequestExecutionTimeInfo;
                 break;
         }
 

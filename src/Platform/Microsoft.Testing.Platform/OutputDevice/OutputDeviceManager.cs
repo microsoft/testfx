@@ -49,7 +49,6 @@ internal sealed class PlatformOutputDeviceManager : IPlatformOutputDeviceManager
             serviceProvider.GetAsyncMonitorFactory().Create(),
             serviceProvider.GetRuntimeFeature(),
             serviceProvider.GetEnvironment(),
-            serviceProvider.GetProcessHandler(),
             serviceProvider.GetPlatformInformation(),
             serviceProvider.GetCommandLineOptions(),
             serviceProvider.GetFileLoggerInformation(),
