@@ -31,7 +31,6 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
 #pragma warning restore SA1310 // Field names should not contain underscore
 
     private readonly IConsole _console;
-    private readonly ITestApplicationModuleInfo _testApplicationModuleInfo;
     private readonly ITestHostControllerInfo _testHostControllerInfo;
     private readonly IAsyncMonitor _asyncMonitor;
     private readonly IRuntimeFeature _runtimeFeature;
@@ -68,7 +67,6 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
         IStopPoliciesService policiesService)
     {
         _console = console;
-        _testApplicationModuleInfo = testApplicationModuleInfo;
         _testHostControllerInfo = testHostControllerInfo;
         _asyncMonitor = asyncMonitor;
         _runtimeFeature = runtimeFeature;
@@ -94,7 +92,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
             _targetFramework = TargetFrameworkParser.GetShortTargetFramework(Assembly.GetEntryAssembly()?.GetCustomAttribute<TargetFrameworkAttribute>()?.FrameworkDisplayName) ?? _runtimeFramework;
         }
 
-        _assemblyName = _testApplicationModuleInfo.GetCurrentTestApplicationFullPath();
+        _assemblyName = testApplicationModuleInfo.GetCurrentTestApplicationFullPath();
 
         if (environment.GetEnvironmentVariable(TESTINGPLATFORM_CONSOLEOUTPUTDEVICE_SKIP_BANNER) is not null)
         {
