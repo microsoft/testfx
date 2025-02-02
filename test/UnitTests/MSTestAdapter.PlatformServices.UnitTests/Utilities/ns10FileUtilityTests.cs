@@ -176,12 +176,10 @@ public class FileUtilityTests : TestContainer
         _fileUtility.Setup(fu => fu.GetDirectoriesInADirectory(It.IsAny<string>())).Returns((string dp) => files.Where(f => f.Contains(dp) && f.LastIndexOf('\\') > (f.IndexOf(dp, StringComparison.Ordinal) + dp.Length))
                     .Select(f =>
                     {
-#pragma warning disable IDE0057 // Use range operator
                         string val = f.Substring(
                             f.IndexOf(dp, StringComparison.Ordinal) + dp.Length + 1,
                             f.Length - (f.IndexOf(dp, StringComparison.Ordinal) + dp.Length + 1));
-                        return f.Substring(0, dp.Length + 1 + val.IndexOf('\\'));
-#pragma warning restore IDE0057 // Use range operator
+                        return f[..(dp.Length + 1 + val.IndexOf('\\'))];
                     })
                     .Distinct()
                     .ToArray());

@@ -209,11 +209,9 @@ internal class FileUtility
         DebugEx.Assert(!StringEx.IsNullOrEmpty(path), "path should not be null or empty.");
         DebugEx.Assert(!StringEx.IsNullOrEmpty(rootDir), "rootDir should not be null or empty.");
 
-#pragma warning disable IDE0057 // Use range operator
         return Path.IsPathRooted(path) && path.StartsWith(rootDir, StringComparison.OrdinalIgnoreCase)
-            ? path.Substring(rootDir.Length).TrimStart(Path.DirectorySeparatorChar)
+            ? path[rootDir.Length..].TrimStart(Path.DirectorySeparatorChar)
             : path;
-#pragma warning restore IDE0057 // Use range operator
     }
 
     /// <summary>
