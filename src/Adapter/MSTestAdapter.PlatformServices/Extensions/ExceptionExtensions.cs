@@ -20,7 +20,7 @@ internal static class ExceptionExtensions
         while (inner != null)
         {
             builder.AppendLine();
-            builder.AppendLine(inner.Message);
+            builder.Append(inner.Message);
             inner = inner.InnerException;
         }
 
