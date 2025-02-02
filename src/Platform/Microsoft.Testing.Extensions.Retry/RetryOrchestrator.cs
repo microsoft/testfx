@@ -167,7 +167,7 @@ internal sealed class RetryOrchestrator : ITestHostOrchestrator, IOutputDeviceDa
             // Prepare the process start
             ProcessStartInfo processStartInfo = new()
             {
-                FileName = executableInfo.FileName,
+                FileName = executableInfo.FilePath,
 #if !NETCOREAPP
                 UseShellExecute = false,
 #endif
