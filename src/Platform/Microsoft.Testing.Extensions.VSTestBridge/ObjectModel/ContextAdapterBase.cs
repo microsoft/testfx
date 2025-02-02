@@ -28,7 +28,7 @@ internal abstract class ContextAdapterBase
     // NOTE: Implementation is borrowed from VSTest
     // MSTest relies on this method existing and access it through reflection: https://github.com/microsoft/testfx/blob/main/src/Adapter/MSTest.TestAdapter/TestMethodFilter.cs#L115
     public ITestCaseFilterExpression? GetTestCaseFilter(
-        IEnumerable<string>? supportedProperties,
+        IEnumerable<string> supportedProperties,
         Func<string, TestProperty?> propertyProvider)
     {
         if (FilterExpressionWrapper is null)
@@ -46,9 +46,8 @@ internal abstract class ContextAdapterBase
 
         if (invalidProperties != null)
         {
-            string validPropertiesString = supportedProperties == null
-                ? string.Empty
-                : string.Join(", ", supportedProperties);
+            string validPropertiesString = string.Join(", ", supportedProperties);
+
             string errorMessage = string.Format(
                 CultureInfo.CurrentCulture,
                 "No tests matched the filter because it contains one or more properties that are not valid ({0}). Specify filter expression containing valid properties ({1}).",
