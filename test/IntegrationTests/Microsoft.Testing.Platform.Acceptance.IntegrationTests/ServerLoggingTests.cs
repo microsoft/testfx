@@ -86,7 +86,6 @@ public sealed partial class ServerLoggingTests : ServerModeTestsBase<ServerLoggi
 </Project>
 
 #file Program.cs
-
 using System;
 using System.Threading.Tasks;
 using Microsoft.Testing.Platform.Builder;

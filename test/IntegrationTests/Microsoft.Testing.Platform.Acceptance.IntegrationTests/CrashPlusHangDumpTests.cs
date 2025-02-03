@@ -94,12 +94,10 @@ public sealed class CrashPlusHangDumpTests : AcceptanceTestBase<CrashPlusHangDum
 </Project>
 
 #file Program.cs
-
 using System;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Globalization;
-
 using Microsoft.Testing.Platform;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Builder;

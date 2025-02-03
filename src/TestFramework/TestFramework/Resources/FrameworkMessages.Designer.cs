@@ -268,6 +268,15 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to String &apos;{0}&apos; does contain string &apos;{1}&apos;. {2}..
+        /// </summary>
+        internal static string DoesNotContainFail {
+            get {
+                return ResourceManager.GetString("DoesNotContainFail", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Assert.Equals should not be used for Assertions. Please use Assert.AreEqual &amp; overloads instead..
         /// </summary>
         internal static string DoNotUseAssertEquals {
@@ -383,6 +392,15 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         internal static string HasCountFailMsg {
             get {
                 return ResourceManager.GetString("HasCountFailMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Invalid GitHub ticket URL.
+        /// </summary>
+        internal static string InvalidGitHubUrl {
+            get {
+                return ResourceManager.GetString("InvalidGitHubUrl", resourceCulture);
             }
         }
         

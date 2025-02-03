@@ -30,7 +30,7 @@
       Supported platforms:
       - .NET 4.6.2+
       - .NET Core 3.1+
-      - .NET 6.0
+      - .NET 6.0+
       - .NET 6.0 Windows.18362+
       - UWP 10.0.16299
     </PackageDescription>
@@ -89,19 +89,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="build\common\MSTest.TestAdapter.props" Condition=" '$(TargetFramework)' != '$(UwpMinimum)' ">
+    <None Update="build\common\*" Condition=" '$(TargetFramework)' != '$(UwpMinimum)' ">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="build\netfx-netcore-netstandard\MSTest.TestAdapter.targets">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="build\uwp\MSTest.TestAdapter.props" Condition=" '$(TargetFramework)' == '$(UwpMinimum)' ">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="build\uwp\MSTest.TestAdapter.targets" Condition=" '$(TargetFramework)' == '$(UwpMinimum)' ">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="build\common\MSTest.TestAdapter.targets">
+    <None Update="build\uwp\*" Condition=" '$(TargetFramework)' == '$(UwpMinimum)' ">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="PACKAGE.md">
@@ -153,4 +144,5 @@
   <!-- SDK bottom import -->
   <Import Project="Sdk.targets" Sdk="MSBuild.Sdk.Extras" Condition=" '$(OS)' == 'Windows_NT' " />
   <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" Condition=" '$(OS)' != 'Windows_NT' " />
+  
 </Project>

@@ -82,6 +82,11 @@
         <target state="translated">'{0}' 문자열이 '{1}' 문자열을 포함하지 않습니다. {2}</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="DoesNotContainFail">
+        <source>String '{0}' does contain string '{1}'. {2}.</source>
+        <target state="new">String '{0}' does contain string '{1}'. {2}.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="DynamicDataInvalidMethodLayout">
         <source>Dynamic data method '{0}' should be static, parameterless and non-generic.</source>
         <target state="translated">동적 데이터 메서드 '{0}'은(는) 정적이고 매개 변수가 없으며 제네릭이 아니어야 합니다.</target>
@@ -128,7 +133,12 @@ Actual: {2}</source>
       </trans-unit>
       <trans-unit id="HasCountFailMsg">
         <source>Expected collection of size {1}. Actual: {2}. {0}</source>
-        <target state="new">Expected collection of size {1}. Actual: {2}. {0}</target>
+        <target state="translated">{1} 크기 컬렉션이 필요합니다. 실제: {2}. {0}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="InvalidGitHubUrl">
+        <source>Invalid GitHub ticket URL</source>
+        <target state="translated">잘못된 GitHub 티켓 URL</target>
         <note />
       </trans-unit>
       <trans-unit id="IsInstanceOfFailMsg">
@@ -143,7 +153,7 @@ Actual: {2}</source>
       </trans-unit>
       <trans-unit id="IsNotEmptyFailMsg">
         <source>Expected collection to contain any item but it is empty. {0}</source>
-        <target state="new">Expected collection to contain any item but it is empty. {0}</target>
+        <target state="translated">항목을 포함할 컬렉션이 필요한데 비어 있습니다. {0}</target>
         <note />
       </trans-unit>
       <trans-unit id="IsNotInstanceOfFailMsg">

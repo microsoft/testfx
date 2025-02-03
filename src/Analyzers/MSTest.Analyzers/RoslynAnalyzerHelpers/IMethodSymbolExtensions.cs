@@ -10,6 +10,38 @@ namespace Analyzer.Utilities.Extensions;
 
 internal static class IMethodSymbolExtensions
 {
+    public static bool IsImplementationOfAnyInterfaceMember(this ISymbol symbol)
+        => IsImplementationOfAnyInterfaceMember<ISymbol>(symbol);
+
+    /// <summary>
+    /// Checks if a given symbol implements an interface member implicitly
+    /// </summary>
+    public static bool IsImplementationOfAnyInterfaceMember<TSymbol>(this ISymbol symbol)
+        where TSymbol : ISymbol
+    {
+        if (symbol.ContainingType == null)
+        {
+            return false;
+        }
+
+        foreach (INamedTypeSymbol interfaceSymbol in symbol.ContainingType.AllInterfaces)
+        {
+            foreach (TSymbol interfaceMember in interfaceSymbol.GetMembers().OfType<TSymbol>())
+            {
+                if (IsImplementationOfInterfaceMember(symbol, interfaceMember))
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    public static bool IsImplementationOfInterfaceMember(this ISymbol symbol, [NotNullWhen(returnValue: true)] ISymbol? interfaceMember)
+        => interfaceMember != null
+        && SymbolEqualityComparer.Default.Equals(symbol, symbol.ContainingType.FindImplementationForInterfaceMember(interfaceMember));
+
     /// <summary>
     /// Checks if the given method is an implementation of the given interface method
     /// Substituted with the given typeargument.
@@ -20,25 +52,6 @@ internal static class IMethodSymbolExtensions
 
         return constructedInterface?.GetMembers(interfaceMethodName).FirstOrDefault() is IMethodSymbol interfaceMethod &&
             SymbolEqualityComparer.Default.Equals(method, method.ContainingType.FindImplementationForInterfaceMember(interfaceMethod));
-    }
-
-    /// <summary>
-    /// Checks if the given method implements IDisposable.Dispose()
-    /// </summary>
-    public static bool IsDisposeImplementation(this IMethodSymbol method, Compilation compilation)
-    {
-        INamedTypeSymbol? iDisposable = compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemIDisposable);
-        return method.IsDisposeImplementation(iDisposable);
-    }
-
-    /// <summary>
-    /// Checks if the given method implements IAsyncDisposable.Dispose()
-    /// </summary>
-    public static bool IsAsyncDisposeImplementation(this IMethodSymbol method, Compilation compilation)
-    {
-        INamedTypeSymbol? iAsyncDisposable = compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemIAsyncDisposable);
-        INamedTypeSymbol? valueTaskType = compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemThreadingTasksValueTask);
-        return method.IsAsyncDisposeImplementation(iAsyncDisposable, valueTaskType);
     }
 
     /// <summary>

@@ -58,15 +58,11 @@ internal sealed class PlatformServiceProvider : IPlatformServiceProvider
     }
 
     /// <summary>
-    /// Gets an instance to the platform service for trace logging.
+    /// Gets or sets an instance to the platform service for trace logging.
     /// </summary>
     [field: AllowNull]
     [field: MaybeNull]
-    public IAdapterTraceLogger AdapterTraceLogger
-    {
-        get => field ??= new AdapterTraceLogger();
-        private set;
-    }
+    public IAdapterTraceLogger AdapterTraceLogger { get => field ??= new AdapterTraceLogger(); set; }
 
     /// <summary>
     /// Gets an instance of the test deployment service.
@@ -195,6 +191,8 @@ internal sealed class PlatformServiceProvider : IPlatformServiceProvider
     /// <param name="properties">
     /// The default set of properties the test context needs to be filled with.
     /// </param>
+    /// <param name="messageLogger">The message logger.</param>
+    /// <param name="outcome">The test outcome.</param>
     /// <returns>
     /// The <see cref="ITestContext"/> instance.
     /// </returns>

@@ -31,6 +31,4 @@ public class TestNodeUpdateCollector
 
         return Task.CompletedTask;
     }
-
-    public Task IsComplete => _taskCompletionSource.Task;
 }

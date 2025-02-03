@@ -64,7 +64,7 @@ public sealed class AssertionArgsShouldAvoidConditionalAccessAnalyzer : Diagnost
         description: null,
         Category.Usage,
         DiagnosticSeverity.Info,
-        isEnabledByDefault: true);
+        isEnabledByDefault: false);
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
         = ImmutableArray.Create(Rule);
