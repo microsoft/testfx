@@ -10,6 +10,76 @@ namespace MSTest.Acceptance.IntegrationTests;
 public sealed class AnalyzersTests : AcceptanceTestBase<NopAssetFixture>
 {
     [TestMethod]
+    public async Task AnalyzersShouldBeEnabledWhenUsingMetapackage()
+    {
+        string code = """
+#file AnalyzersMetapackage.csproj
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>$TargetFrameworks$</TargetFrameworks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MSTest" Version="$MSTestVersion$" />
+  </ItemGroup>
+</Project>
+
+#file UnitTest1.cs
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+[TestClass]
+public class UnitTest1
+{
+    [DataRow(0)]
+    public void TestMethod()
+    {
+    }
+}
+""".PatchTargetFrameworks(TargetFrameworks.NetCurrent)
+    .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion);
+
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync("AnalyzersMetapackage", code);
+        DotnetMuxerResult result = await DotnetCli.RunAsync($"build {testAsset.TargetAssetPath}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, warnAsError: false);
+        result.AssertOutputContains("MSTEST0014");
+    }
+
+    [TestMethod]
+    public async Task AnalyzersShouldBeEnabledWhenUsingTestFrameworkPackage()
+    {
+        string code = """
+#file AnalyzersTestFrameworkPackage.csproj
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>$TargetFrameworks$</TargetFrameworks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MSTest.TestFramework" Version="$MSTestVersion$" />
+  </ItemGroup>
+</Project>
+
+#file UnitTest1.cs
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+[TestClass]
+public class UnitTest1
+{
+    [DataRow(0)]
+    public void TestMethod()
+    {
+    }
+}
+""".PatchTargetFrameworks(TargetFrameworks.NetCurrent)
+    .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion);
+
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync("AnalyzersTestFrameworkPackage", code);
+        DotnetMuxerResult result = await DotnetCli.RunAsync($"build {testAsset.TargetAssetPath}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, warnAsError: false);
+        result.AssertOutputContains("MSTEST0014");
+    }
+
+    [TestMethod]
     public async Task AnalyzerMessagesShouldBeLocalized()
     {
         string code = """
