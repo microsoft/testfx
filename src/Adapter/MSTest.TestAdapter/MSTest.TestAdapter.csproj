@@ -35,7 +35,7 @@
       - UWP 10.0.16299
     </PackageDescription>
     <!-- Nothing in lib but that's expected -->
-    <NoWarn>$(NoWarn);NU5127;NU5128</NoWarn>
+    <NoWarn>$(NoWarn);NU5127;NU5128;NU5100</NoWarn>
   </PropertyGroup>
 
   <PropertyGroup>

@@ -29,6 +29,7 @@
       - .NET 6.0 Windows.18362+
       - UWP 10.0.16299
     </PackageDescription>
+    <NoWarn>$(NoWarn);NU5100</NoWarn>
   </PropertyGroup>
 
   <PropertyGroup>
