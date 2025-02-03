@@ -60,7 +60,7 @@ public abstract class VSTestBridgedTestFrameworkBase : ITestFramework, IDataProd
         try
         {
             DebugUtils.LaunchAttachDebugger();
-
+            Debugger.Launch();
             Task convertedRequest = context.Request switch
             {
                 VSTestDiscoverTestExecutionRequest discoverRequest =>

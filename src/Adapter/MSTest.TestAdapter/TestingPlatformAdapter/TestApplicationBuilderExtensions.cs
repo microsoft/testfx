@@ -28,6 +28,7 @@ public static class TestApplicationBuilderExtensions
         testApplicationBuilder.AddRunSettingsService(extension);
         testApplicationBuilder.AddTestCaseFilterService(extension);
         testApplicationBuilder.AddTestRunParametersService(extension);
+        testApplicationBuilder.AddTreeNodeFilterService(extension);
 #pragma warning disable TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
         testApplicationBuilder.AddMaximumFailedTestsService(extension);
 #pragma warning restore TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
