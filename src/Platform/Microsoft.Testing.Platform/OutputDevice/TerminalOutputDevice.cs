@@ -279,7 +279,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
 
         // Start test execution here, rather than in ShowBanner, because then we know
         // if we are a testHost controller or not, and if we should show progress bar.
-        _terminalTestReporter.TestExecutionStarted(_clock.UtcNow, workerCount: 1, isDiscovery: false);
+        _terminalTestReporter.TestExecutionStarted(_clock.UtcNow, workerCount: 1, isDiscovery: _isListTests);
         _terminalTestReporter.AssemblyRunStarted(_assemblyName, _targetFramework, _shortArchitecture, executionId: null);
         if (_logger is not null && _logger.IsEnabled(LogLevel.Trace))
         {
@@ -292,7 +292,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
 
     public async Task DisplayAfterSessionEndRunAsync()
     {
-        if (_isVSTestMode || _isListTests || _isServerMode)
+        if (_isVSTestMode || _isServerMode)
         {
             return;
         }
@@ -522,6 +522,16 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
                             actual: null,
                             standardOutput,
                             standardError);
+                        break;
+
+                    case DiscoveredTestNodeStateProperty:
+                        _terminalTestReporter.TestDiscovered(
+                            _assemblyName,
+                            _targetFramework,
+                            _shortArchitecture,
+                            executionId: null,
+                            testNodeStateChanged.TestNode.DisplayName,
+                            testNodeStateChanged.TestNode.Uid);
                         break;
                 }
 
