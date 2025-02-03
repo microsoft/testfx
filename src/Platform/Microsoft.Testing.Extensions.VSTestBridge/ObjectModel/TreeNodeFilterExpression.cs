@@ -25,12 +25,20 @@ internal sealed class TreeNodeFilterExpression : ITestCaseFilterExpression
     public bool MatchTestCase(TestCase testCase, Func<string, object?> propertyValueProvider)
     {
         // TODO
-        var assemblyName = Path.GetFileNameWithoutExtension(testCase.Source);
-        var @namespace = ;
-        var className = ;
-        var methodName = ;
-        var propertyBag = ;
+        string assemblyName = Path.GetFileNameWithoutExtension(testCase.Source);
+        ReadOnlySpan<char> fullyQualifiedName = testCase.FullyQualifiedName.AsSpan();
 
-        return _treeNodeFilter.MatchesFilter($"/{assemblyName}/{@namespace}/{className}/{methodName}", propertyBag);
+        int lastDot = fullyQualifiedName.LastIndexOf('.');
+        ReadOnlySpan<char> methodName = fullyQualifiedName.Slice(lastDot + 1);
+        fullyQualifiedName = fullyQualifiedName.Slice(0, lastDot);
+
+        lastDot = fullyQualifiedName.LastIndexOf('.');
+        ReadOnlySpan<char> className = fullyQualifiedName.Slice(lastDot + 1);
+        fullyQualifiedName = fullyQualifiedName.Slice(0, lastDot);
+
+        ReadOnlySpan<char> @namespace = fullyQualifiedName;
+
+        // TODO: PropertyBag argument
+        return _treeNodeFilter.MatchesFilter($"/{assemblyName}/{@namespace.ToString()}/{className.ToString()}/{methodName.ToString()}", new());
     }
 }
