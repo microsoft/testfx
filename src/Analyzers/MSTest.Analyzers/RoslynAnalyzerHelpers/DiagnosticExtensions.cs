@@ -145,12 +145,6 @@ internal static class DiagnosticExtensions
         => context.Compilation.ReportNoLocationDiagnostic(rule, context.ReportDiagnostic, properties: null, args);
 
     public static void ReportNoLocationDiagnostic(
-        this SyntaxNodeAnalysisContext context,
-        DiagnosticDescriptor rule,
-        params object[] args)
-        => context.Compilation.ReportNoLocationDiagnostic(rule, context.ReportDiagnostic, properties: null, args);
-
-    public static void ReportNoLocationDiagnostic(
         this Compilation compilation,
         DiagnosticDescriptor rule,
         Action<Diagnostic> addDiagnostic,
