@@ -34,8 +34,9 @@ public class TestFilterTests : AcceptanceTestBase<TestFilterTests.TestAssetFixtu
 
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
         testHostResult.AssertOutputContains("""
-The following Tests are available:
+Discovered 1 tests in assembly - .*\.dll \(net.+\|.+\)
 Test2
+Discovered 1 tests.$
 """);
     }
 

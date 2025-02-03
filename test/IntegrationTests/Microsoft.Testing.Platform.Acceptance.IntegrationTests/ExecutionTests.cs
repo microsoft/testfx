@@ -19,9 +19,10 @@ public class ExecutionTests : AcceptanceTestBase<ExecutionTests.TestAssetFixture
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
         const string OutputPattern = """
-The following Tests are available:
+Discovered 1 tests in assembly - .*\.dll \(net.+\|.+\)
 Test1
-Test2$
+Test2
+Discovered 2 tests.$
 """;
         testHostResult.AssertOutputMatchesRegex(OutputPattern);
     }
@@ -49,8 +50,9 @@ Test2$
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
         const string OutputPattern = """
-The following Tests are available:
-Test1$
+Discovered 1 tests in assembly - .*\.dll \(net.+\|.+\)
+Test1
+Discovered 1 tests.$
 """;
         testHostResult.AssertOutputMatchesRegex(OutputPattern);
     }
