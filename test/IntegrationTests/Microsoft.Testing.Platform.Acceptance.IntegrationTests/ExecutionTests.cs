@@ -22,7 +22,7 @@ public class ExecutionTests : AcceptanceTestBase<ExecutionTests.TestAssetFixture
 Discovered 1 tests in assembly - .*\.dll \(net.+\|.+\)
 Test1
 Test2
-Discovered 2 tests.$
+Discovered 2 tests\.$
 """;
         testHostResult.AssertOutputMatchesRegex(OutputPattern);
     }
@@ -52,7 +52,7 @@ Discovered 2 tests.$
         const string OutputPattern = """
 Discovered 1 tests in assembly - .*\.dll \(net.+\|.+\)
 Test1
-Discovered 1 tests.$
+Discovered 1 tests\.$
 """;
         testHostResult.AssertOutputMatchesRegex(OutputPattern);
     }

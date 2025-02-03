@@ -33,10 +33,10 @@ public class TestFilterTests : AcceptanceTestBase<TestFilterTests.TestAssetFixtu
         TestHostResult testHostResult = await testHost.ExecuteAsync("--filter tree=one --list-tests");
 
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
-        testHostResult.AssertOutputContains("""
+        testHostResult.AssertOutputMatchesRegex("""
 Discovered 1 tests in assembly - .*\.dll \(net.+\|.+\)
 Test2
-Discovered 1 tests.$
+Discovered 1 tests\.$
 """);
     }
 
