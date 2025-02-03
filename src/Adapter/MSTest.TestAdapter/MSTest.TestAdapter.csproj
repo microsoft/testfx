@@ -89,10 +89,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="build\common\*" Condition=" '$(TargetFramework)' != '$(UwpMinimum)' ">
+    <None Update="buildTransitive\common\*" Condition=" '$(TargetFramework)' != '$(UwpMinimum)' ">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="build\uwp\*" Condition=" '$(TargetFramework)' == '$(UwpMinimum)' ">
+    <None Update="buildTransitive\uwp\*" Condition=" '$(TargetFramework)' == '$(UwpMinimum)' ">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="PACKAGE.md">
