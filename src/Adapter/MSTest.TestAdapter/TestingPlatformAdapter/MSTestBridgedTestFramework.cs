@@ -53,15 +53,7 @@ internal sealed class MSTestBridgedTestFramework : SynchronizedSingleSessionVSTe
 
         PlatformServiceProvider.Instance.AdapterTraceLogger = new BridgedTraceLogger(_loggerFactory.CreateLogger("mstest-trace"));
         MSTestExecutor testExecutor = new(cancellationToken);
-
-        if (request.VSTestFilter.TestCases is { } testCases)
-        {
-            await testExecutor.RunTestsAsync(testCases, request.RunContext, request.FrameworkHandle, _configuration);
-        }
-        else
-        {
-            await testExecutor.RunTestsAsync(request.AssemblyPaths, request.RunContext, request.FrameworkHandle, _configuration);
-        }
+        await testExecutor.RunTestsAsync(request.AssemblyPaths, request.RunContext, request.FrameworkHandle, _configuration);
     }
 }
 #endif
