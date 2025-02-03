@@ -23,5 +23,14 @@ internal sealed class TreeNodeFilterExpression : ITestCaseFilterExpression
     public string TestCaseFilterValue => _treeNodeFilter.Filter;
 
     public bool MatchTestCase(TestCase testCase, Func<string, object?> propertyValueProvider)
-        => true;
+    {
+        // TODO
+        var assemblyName = Path.GetFileNameWithoutExtension(testCase.Source);
+        var @namespace = ;
+        var className = ;
+        var methodName = ;
+        var propertyBag = ;
+
+        return _treeNodeFilter.MatchesFilter($"/{assemblyName}/{@namespace}/{className}/{methodName}", propertyBag);
+    }
 }
