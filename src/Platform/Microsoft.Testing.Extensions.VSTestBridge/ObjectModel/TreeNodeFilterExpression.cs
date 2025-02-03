@@ -9,9 +9,9 @@ namespace Microsoft.Testing.Extensions.VSTestBridge.ObjectModel;
 
 internal sealed class TreeNodeFilterExpression : ITestCaseFilterExpression
 {
-    private TreeNodeFilter _treeNodeFilter;
-    private IEnumerable<string>? _supportedProperties;
-    private Func<string, TestProperty?> _propertyProvider;
+    private readonly TreeNodeFilter _treeNodeFilter;
+    private readonly IEnumerable<string>? _supportedProperties;
+    private readonly Func<string, TestProperty?> _propertyProvider;
 
     public TreeNodeFilterExpression(TreeNodeFilter treeNodeFilter, IEnumerable<string>? supportedProperties, Func<string, TestProperty?> propertyProvider)
     {
