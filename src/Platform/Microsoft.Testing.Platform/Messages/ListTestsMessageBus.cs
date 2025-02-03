@@ -7,6 +7,7 @@ using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.OutputDevice;
+using Microsoft.Testing.Platform.OutputDevice.Terminal;
 using Microsoft.Testing.Platform.ServerMode;
 using Microsoft.Testing.Platform.Services;
 
@@ -15,22 +16,39 @@ namespace Microsoft.Testing.Platform.Messages;
 internal sealed class ListTestsMessageBus(
     ITestApplicationCancellationTokenSource testApplicationCancellationTokenSource,
     ILoggerFactory loggerFactory,
-    IOutputDevice outputDisplay,
+    IConsole console,
     IAsyncMonitorFactory asyncMonitorFactory,
     IEnvironment environment,
     ITestApplicationProcessExitCode testApplicationProcessExitCode,
     IPushOnlyProtocol? pushOnlyProtocol,
-    IPushOnlyProtocolConsumer? pushOnlyProtocolConsumer) : BaseMessageBus, IMessageBus, IDisposable, IOutputDeviceDataProducer
+    IPushOnlyProtocolConsumer? pushOnlyProtocolConsumer,
+    IClock clock,
+    IRuntimeFeature runtimeFeature,
+    ITestApplicationModuleInfo testApplicationModuleInfo,
+    bool noAnsi) : BaseMessageBus, IMessageBus, IDisposable, IOutputDeviceDataProducer
 {
+#pragma warning disable SA1310 // Field names should not contain underscore
+    private const string TESTINGPLATFORM_CONSOLEOUTPUTDEVICE_SKIP_BANNER = nameof(TESTINGPLATFORM_CONSOLEOUTPUTDEVICE_SKIP_BANNER);
+#pragma warning restore SA1310 // Field names should not contain underscore
+
     private readonly ITestApplicationCancellationTokenSource _testApplicationCancellationTokenSource = testApplicationCancellationTokenSource;
-    private readonly IOutputDevice _outputDisplay = outputDisplay;
+    private readonly IConsole _console = console;
     private readonly IEnvironment _environment = environment;
     private readonly ITestApplicationProcessExitCode _testApplicationProcessExitCode = testApplicationProcessExitCode;
     private readonly IPushOnlyProtocol? _pushOnlyProtocol = pushOnlyProtocol;
     private readonly IPushOnlyProtocolConsumer? _pushOnlyProtocolConsumer = pushOnlyProtocolConsumer;
+    private readonly IClock _clock = clock;
+    private readonly bool _noAnsi = noAnsi;
     private readonly ILogger<ListTestsMessageBus> _logger = loggerFactory.CreateLogger<ListTestsMessageBus>();
     private readonly IAsyncMonitor _asyncMonitor = asyncMonitorFactory.Create();
-    private bool _printTitle = true;
+    private readonly IRuntimeFeature _runtimeFeature = runtimeFeature;
+    private readonly ITestApplicationModuleInfo _testApplicationModuleInfo = testApplicationModuleInfo;
+    private TerminalTestReporter? _terminalTestReporter;
+    private bool _writeSummary = true;
+    private string? _shortArchitecture;
+    private string? _runtimeFramework;
+    private string? _targetFramework;
+    private string? _assemblyName;
 
     public override IDataConsumer[] DataConsumerServices => [];
 
@@ -46,13 +64,56 @@ internal sealed class ListTestsMessageBus(
 
     public override Task DisableAsync() => Task.CompletedTask;
 
+    public Guid Id { get; } = Guid.NewGuid();
+
     public override void Dispose()
     {
+        if (_writeSummary)
+        {
+            _terminalTestReporter?.TestExecutionCompleted(_clock.UtcNow);
+            _writeSummary = false;
+        }
+    }
+
+    public override Task InitAsync()
+    {
+        // This is single exe run, don't show all the details of assemblies and their summaries.
+        _terminalTestReporter = new TerminalTestReporter(_console, new()
+        {
+            BaseDirectory = null,
+            ShowAssembly = false,
+            ShowAssemblyStartAndComplete = false,
+            ShowPassedTests = () => false,
+            MinimumExpectedTests = 0,
+            UseAnsi = !_noAnsi,
+            ShowActiveTests = true,
+            ShowProgress = () => false,
+        });
+
+        _terminalTestReporter.TestExecutionStarted(_clock.UtcNow, workerCount: 1, isDiscovery: true);
+
+        if (_runtimeFeature.IsDynamicCodeSupported)
+        {
+#if !NETCOREAPP
+            string longArchitecture = RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant();
+            _shortArchitecture = ArchitectureParser.GetShortArchitecture(longArchitecture);
+#else
+            // RID has the operating system, we want to see that in the banner, but not next to every dll.
+            string longArchitecture = RuntimeInformation.RuntimeIdentifier;
+            _shortArchitecture = ArchitectureParser.GetShortArchitecture(RuntimeInformation.RuntimeIdentifier);
+#endif
+            _runtimeFramework = TargetFrameworkParser.GetShortTargetFramework(RuntimeInformation.FrameworkDescription);
+            _targetFramework = TargetFrameworkParser.GetShortTargetFramework(Assembly.GetEntryAssembly()?.GetCustomAttribute<TargetFrameworkAttribute>()?.FrameworkDisplayName) ?? _runtimeFramework;
+        }
+
+        _assemblyName = _testApplicationModuleInfo.GetCurrentTestApplicationFullPath();
+
+        _terminalTestReporter.AssemblyRunStarted(_assemblyName, _targetFramework, _shortArchitecture, null);
+
+        return Task.CompletedTask;
     }
 
     public override Task DrainDataAsync() => Task.CompletedTask;
-
-    public override Task InitAsync() => Task.CompletedTask;
 
     public override async Task PublishAsync(IDataProducer dataProducer, IData data)
     {
@@ -89,13 +150,8 @@ internal sealed class ListTestsMessageBus(
                 return;
             }
 
-            if (_printTitle)
-            {
-                await _outputDisplay.DisplayAsync(this, new TextOutputDeviceData("The following Tests are available:"));
-                _printTitle = false;
-            }
-
-            await _outputDisplay.DisplayAsync(this, new TextOutputDeviceData(testNodeUpdatedMessage.TestNode.DisplayName));
+            ApplicationStateGuard.Ensure(_terminalTestReporter != null);
+            _terminalTestReporter.TestDiscovered(_assemblyName!, _targetFramework, _shortArchitecture, null, testNodeUpdatedMessage.DisplayName, testNodeUpdatedMessage.TestNode.Uid);
         }
     }
 }

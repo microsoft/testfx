@@ -749,15 +749,20 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
             // In case of server mode the discovery is handled by the ServerHost using the standard message bus
             && !testFrameworkBuilderData.IsJsonRpcProtocol)
         {
+            bool noAnsi = serviceProvider.GetCommandLineOptions().IsOptionSet(TerminalTestReporterCommandLineOptionsProvider.NoAnsiOption);
             ListTestsMessageBus concreteMessageBusService = new(
                 serviceProvider.GetTestApplicationCancellationTokenSource(),
                 serviceProvider.GetLoggerFactory(),
-                serviceProvider.GetOutputDevice(),
+                serviceProvider.GetConsole(),
                 serviceProvider.GetAsyncMonitorFactory(),
                 serviceProvider.GetEnvironment(),
                 serviceProvider.GetTestApplicationProcessExitCode(),
                 pushOnlyProtocol,
-                pushOnlyProtocolDataConsumer);
+                pushOnlyProtocolDataConsumer,
+                serviceProvider.GetClock(),
+                serviceProvider.GetRuntimeFeature(),
+                serviceProvider.GetTestApplicationModuleInfo(),
+                noAnsi);
             await concreteMessageBusService.InitAsync();
             testFrameworkBuilderData.MessageBusProxy.SetBuiltMessageBus(concreteMessageBusService);
         }

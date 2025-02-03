@@ -50,8 +50,6 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
     // The targeted framework, .NET 8 when application specifies <TargetFramework>net8.0</TargetFramework>
     private readonly string? _targetFramework;
     private readonly string _assemblyName;
-    private readonly char[] _dash = new char[] { '-' };
-
     private TerminalTestReporter? _terminalTestReporter;
     private bool _firstCallTo_OnSessionStartingAsync = true;
     private bool _bannerDisplayed;
@@ -82,11 +80,11 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
         {
 #if !NETCOREAPP
             _longArchitecture = RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant();
-            _shortArchitecture = GetShortArchitecture(_longArchitecture);
+            _shortArchitecture = ArchitectureParser.GetShortArchitecture(_longArchitecture);
 #else
             // RID has the operating system, we want to see that in the banner, but not next to every dll.
             _longArchitecture = RuntimeInformation.RuntimeIdentifier;
-            _shortArchitecture = GetShortArchitecture(RuntimeInformation.RuntimeIdentifier);
+            _shortArchitecture = ArchitectureParser.GetShortArchitecture(RuntimeInformation.RuntimeIdentifier);
 #endif
             _runtimeFramework = TargetFrameworkParser.GetShortTargetFramework(RuntimeInformation.FrameworkDescription);
             _targetFramework = TargetFrameworkParser.GetShortTargetFramework(Assembly.GetEntryAssembly()?.GetCustomAttribute<TargetFrameworkAttribute>()?.FrameworkDisplayName) ?? _runtimeFramework;
@@ -159,11 +157,6 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
             ShowProgress = shouldShowProgress,
         });
     }
-
-    private string GetShortArchitecture(string runtimeIdentifier)
-        => runtimeIdentifier.Contains('-')
-            ? runtimeIdentifier.Split(_dash, 2)[1]
-            : runtimeIdentifier;
 
     public Type[] DataTypesConsumed { get; } =
     [
