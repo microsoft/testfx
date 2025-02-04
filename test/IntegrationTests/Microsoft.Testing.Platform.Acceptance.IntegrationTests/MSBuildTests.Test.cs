@@ -113,8 +113,9 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
 
         string msbuildExe = await FindMsbuildWithVsWhereAsync();
         var commandLine = new TestInfrastructure.CommandLine();
+        string binlogFile = Path.Combine(testAsset.TargetAssetPath, Guid.NewGuid().ToString("N"), "msbuild.binlog");
         await commandLine.RunAsync($"\"{msbuildExe}\" {testAsset.TargetAssetPath} /t:Restore");
-        await commandLine.RunAsync($"\"{msbuildExe}\" {testAsset.TargetAssetPath} /t:\"Build;Test\" /bl");
+        await commandLine.RunAsync($"\"{msbuildExe}\" {testAsset.TargetAssetPath} /t:\"Build;Test\" /bl:{binlogFile}");
         StringAssert.Contains(commandLine.StandardOutput, "Tests succeeded");
     }
 
