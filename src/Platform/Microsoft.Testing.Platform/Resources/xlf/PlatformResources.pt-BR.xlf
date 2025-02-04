@@ -851,12 +851,12 @@ Os valores válidos são “Normal”, “Detalhado”. O padrão é “Normal�
         <note />
       </trans-unit>
       <trans-unit id="TestDiscoverySummary">
-        <source>Discovered {0} test(s) in {1} assemblies.</source>
+        <source>Test discovery summary: found {0} test(s) in {1} assemblies.</source>
         <target state="needs-review-translation">Testes {0} descobertos nos assemblies {1}.</target>
         <note>0 is number of tests, 1 is count of assemblies</note>
       </trans-unit>
       <trans-unit id="TestDiscoverySummarySingular">
-        <source>Discovered {0} test(s).</source>
+        <source>Test discovery summary: found {0} test(s)</source>
         <target state="needs-review-translation">Testes {0} descobertos.</target>
         <note>0 is number of tests</note>
       </trans-unit>

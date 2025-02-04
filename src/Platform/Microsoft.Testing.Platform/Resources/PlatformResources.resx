@@ -641,7 +641,7 @@ Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is
     <value>Discovering tests from</value>
   </data>
   <data name="TestDiscoverySummary" xml:space="preserve">
-    <value>Discovered {0} test(s) in {1} assemblies.</value>
+    <value>Test discovery summary: found {0} test(s) in {1} assemblies.</value>
     <comment>0 is number of tests, 1 is count of assemblies</comment>
   </data>
   <data name="DiscoveredTestsInAssembly" xml:space="preserve">
@@ -649,7 +649,7 @@ Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is
     <comment>0 is count, the sentence is followed by the path of the assebly</comment>
   </data>
   <data name="TestDiscoverySummarySingular" xml:space="preserve">
-    <value>Discovered {0} test(s).</value>
+    <value>Test discovery summary: found {0} test(s)</value>
     <comment>0 is number of tests</comment>
   </data>
   <data name="ExitCode" xml:space="preserve">

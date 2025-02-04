@@ -19,10 +19,10 @@ public class ExecutionTests : AcceptanceTestBase<ExecutionTests.TestAssetFixture
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
         const string OutputPattern = """
-Discovered 2 test\(s\) in assembly - .*\.(dll|exe) \(net.+\|.+\)
   Test1
   Test2
-Discovered 2 test\(s\)\.$
+Test discovery summary: found 2 test\(s\)\ - .*\.(dll|exe) \(net.+\|.+\)
+  duration:
 """;
         testHostResult.AssertOutputMatchesRegex(OutputPattern);
     }
@@ -50,10 +50,11 @@ Discovered 2 test\(s\)\.$
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
         const string OutputPattern = """
-Discovered 1 test\(s\) in assembly - .*\.(dll|exe) \(net.+\|.+\)
   Test1
-Discovered 1 test\(s\)\.$
+Test discovery summary: found 1 test\(s\)\ - .*\.(dll|exe) \(net.+\|.+\)
+  duration:
 """;
+        """;
         testHostResult.AssertOutputMatchesRegex(OutputPattern);
     }
 
