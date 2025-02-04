@@ -13,7 +13,7 @@ namespace Microsoft.Testing.Extensions.VSTestBridge.Requests;
 /// </summary>
 public sealed class VSTestDiscoverTestExecutionRequest : DiscoverTestExecutionRequest
 {
-    internal VSTestDiscoverTestExecutionRequest(TestSessionContext session, VSTestTestExecutionFilter executionFilter, string[] assemblyPaths,
+    internal VSTestDiscoverTestExecutionRequest(TestSessionContext session, ITestExecutionFilter executionFilter, string[] assemblyPaths,
         IDiscoveryContext discoveryContext, IMessageLogger messageLogger, ITestCaseDiscoverySink discoverySink)
         : base(session, executionFilter)
     {
@@ -23,8 +23,9 @@ public sealed class VSTestDiscoverTestExecutionRequest : DiscoverTestExecutionRe
         DiscoverySink = discoverySink;
     }
 
+    [Obsolete("VSTestTestExecutionFilter always have null TestCases and should not be used.", error: true)]
     public VSTestTestExecutionFilter VSTestFilter
-        => (VSTestTestExecutionFilter)Filter;
+        => VSTestTestExecutionFilter.Instance;
 
     public string[] AssemblyPaths { get; }
 
