@@ -115,7 +115,7 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
         var commandLine = new TestInfrastructure.CommandLine();
         string binlogFile = Path.Combine(testAsset.TargetAssetPath, Guid.NewGuid().ToString("N"), "msbuild.binlog");
         await commandLine.RunAsync($"\"{msbuildExe}\" {testAsset.TargetAssetPath} /t:Restore");
-        await commandLine.RunAsync($"\"{msbuildExe}\" {testAsset.TargetAssetPath} /t:\"Build;Test\" /bl:{binlogFile}", environmentVariables: new Dictionary<string, string?>()
+        await commandLine.RunAsync($"\"{msbuildExe}\" {testAsset.TargetAssetPath} /t:\"Build;Test\" /bl:\"{binlogFile}\"", environmentVariables: new Dictionary<string, string?>()
         {
             ["DOTNET_ROOT"] = string.Empty,
         });
