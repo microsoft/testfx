@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 // Adapted from https://github.com/microsoft/vstest/blob/main/src/Microsoft.TestPlatform.CoreUtilities/Helpers/DotnetHostHelper.cs
-using Microsoft.Build.Framework;
 using Microsoft.Win32;
 
 namespace Microsoft.Testing.Platform.MSBuild.Tasks;
