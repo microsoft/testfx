@@ -120,7 +120,7 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
         // We look for dotnet muxer only if we're not running with mono.
         if (dotnetRunnerName != MonoRunnerName)
         {
-            if (DotnetHostPath is not null && File.Exists(DotnetHostPath.ItemSpec))
+            if (DotnetHostPath is not null && File.Exists(DotnetHostPath.ItemSpec) && IsCurrentProcessArchitectureCompatible())
             {
                 Log.LogMessage(MessageImportance.Low, $"dotnet muxer tool path found using DOTNET_HOST_PATH environment variable: '{DotnetHostPath.ItemSpec}'");
                 return DotnetHostPath.ItemSpec;
@@ -159,6 +159,9 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
 
         return null;
     }
+
+    private bool IsCurrentProcessArchitectureCompatible() =>
+        _currentProcessArchitecture == EnumPolyfill.Parse<Architecture>(TestArchitecture.ItemSpec, ignoreCase: true);
 
     protected override string GenerateCommandLineCommands()
     {
