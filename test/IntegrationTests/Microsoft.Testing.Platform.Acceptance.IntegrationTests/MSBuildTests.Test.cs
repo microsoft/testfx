@@ -103,7 +103,7 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
     [OSCondition(OperatingSystems.Windows)]
     public async Task RunUsingTestTargetWithNetfxMSBuild()
     {
-        TestAsset testAsset = await TestAsset.GenerateAssetAsync(
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
             AssetName,
             SourceCode
             .PatchCodeWithReplace("$PlatformTarget$", string.Empty)
@@ -115,7 +115,10 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
         var commandLine = new TestInfrastructure.CommandLine();
         string binlogFile = Path.Combine(testAsset.TargetAssetPath, Guid.NewGuid().ToString("N"), "msbuild.binlog");
         await commandLine.RunAsync($"\"{msbuildExe}\" {testAsset.TargetAssetPath} /t:Restore");
-        await commandLine.RunAsync($"\"{msbuildExe}\" {testAsset.TargetAssetPath} /t:\"Build;Test\" /bl:{binlogFile}");
+        await commandLine.RunAsync($"\"{msbuildExe}\" {testAsset.TargetAssetPath} /t:\"Build;Test\" /bl:{binlogFile}", environmentVariables: new Dictionary<string, string?>()
+        {
+            ["DOTNET_ROOT"] = string.Empty,
+        });
         StringAssert.Contains(commandLine.StandardOutput, "Tests succeeded");
     }
 

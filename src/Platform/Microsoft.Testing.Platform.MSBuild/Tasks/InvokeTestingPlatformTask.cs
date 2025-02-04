@@ -31,7 +31,6 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
     private readonly List<NamedPipeServer> _connections = new();
     private readonly StringBuilder _output = new();
     private readonly Lock _initLock = new();
-    private readonly Process _currentProcess = Process.GetCurrentProcess();
     private readonly Architecture _currentProcessArchitecture = RuntimeInformation.ProcessArchitecture;
 
     private Task? _connectionLoopTask;
@@ -121,39 +120,27 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
         // We look for dotnet muxer only if we're not running with mono.
         if (dotnetRunnerName != MonoRunnerName)
         {
-            if (!IsCurrentProcessArchitectureCompatible())
+            if (DotnetHostPath is not null && File.Exists(DotnetHostPath.ItemSpec))
             {
-                Log.LogMessage(MessageImportance.Low, $"Current process architecture '{_currentProcessArchitecture}' is not compatible with '{TestArchitecture.ItemSpec}'");
-                PlatformArchitecture targetArchitecture = EnumPolyfill.Parse<PlatformArchitecture>(TestArchitecture.ItemSpec, ignoreCase: true);
-                StringBuilder resolutionLog = new();
-                DotnetMuxerLocator dotnetMuxerLocator = new(log => resolutionLog.AppendLine(log));
-                if (dotnetMuxerLocator.TryGetDotnetPathByArchitecture(targetArchitecture, out string? dotnetPath))
-                {
-                    Log.LogMessage(MessageImportance.Low, resolutionLog.ToString());
-                    Log.LogMessage(MessageImportance.Low, $"dotnet muxer tool path found using architecture: '{TestArchitecture.ItemSpec}' '{dotnetPath}'");
-                    return dotnetPath;
-                }
-                else
-                {
-                    Log.LogMessage(MessageImportance.Low, resolutionLog.ToString());
-                    Log.LogError(string.Format(CultureInfo.InvariantCulture, Resources.MSBuildResources.IncompatibleArchitecture, dotnetRunnerName, TestArchitecture.ItemSpec));
-                    return null;
-                }
+                Log.LogMessage(MessageImportance.Low, $"dotnet muxer tool path found using DOTNET_HOST_PATH environment variable: '{DotnetHostPath.ItemSpec}'");
+                return DotnetHostPath.ItemSpec;
+            }
+
+            Log.LogMessage(MessageImportance.Low, $"Current process architecture '{_currentProcessArchitecture}'. Requested test architecture '{TestArchitecture.ItemSpec}'");
+            PlatformArchitecture targetArchitecture = EnumPolyfill.Parse<PlatformArchitecture>(TestArchitecture.ItemSpec, ignoreCase: true);
+            StringBuilder resolutionLog = new();
+            DotnetMuxerLocator dotnetMuxerLocator = new(log => resolutionLog.AppendLine(log));
+            if (dotnetMuxerLocator.TryGetDotnetPathByArchitecture(targetArchitecture, out string? dotnetPath))
+            {
+                Log.LogMessage(MessageImportance.Low, resolutionLog.ToString());
+                Log.LogMessage(MessageImportance.Low, $"dotnet muxer tool path found using architecture: '{TestArchitecture.ItemSpec}' '{dotnetPath}'");
+                return dotnetPath;
             }
             else
             {
-                if (DotnetHostPath is not null && File.Exists(DotnetHostPath.ItemSpec))
-                {
-                    Log.LogMessage(MessageImportance.Low, $"dotnet muxer tool path found using DOTNET_HOST_PATH environment variable: '{DotnetHostPath.ItemSpec}'");
-                    return DotnetHostPath.ItemSpec;
-                }
-
-                ProcessModule? mainModule = _currentProcess.MainModule;
-                if (mainModule != null && Path.GetFileName(mainModule.FileName)!.Equals(dotnetRunnerName, StringComparison.OrdinalIgnoreCase))
-                {
-                    Log.LogMessage(MessageImportance.Low, $"dotnet muxer tool path found using current process: '{mainModule.FileName}' architecture: '{_currentProcessArchitecture}'");
-                    return mainModule.FileName;
-                }
+                Log.LogMessage(MessageImportance.Low, resolutionLog.ToString());
+                Log.LogError(string.Format(CultureInfo.InvariantCulture, Resources.MSBuildResources.IncompatibleArchitecture, dotnetRunnerName, TestArchitecture.ItemSpec));
+                return null;
             }
         }
 
@@ -172,9 +159,6 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
 
         return null;
     }
-
-    private bool IsCurrentProcessArchitectureCompatible() =>
-        _currentProcessArchitecture == EnumPolyfill.Parse<Architecture>(TestArchitecture.ItemSpec, ignoreCase: true);
 
     protected override string GenerateCommandLineCommands()
     {
