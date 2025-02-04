@@ -4,6 +4,7 @@
 using Microsoft.Testing.Platform;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions.Messages;
+using Microsoft.Testing.Platform.Requests;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 
 namespace Microsoft.Testing.Extensions.VSTestBridge.ObjectModel;
@@ -13,7 +14,7 @@ namespace Microsoft.Testing.Extensions.VSTestBridge.ObjectModel;
 /// </summary>
 internal sealed class RunContextAdapter : ContextAdapterBase, IRunContext
 {
-    public RunContextAdapter(ICommandLineOptions commandLineOptions, IRunSettings runSettings)
+    public RunContextAdapter(ICommandLineOptions commandLineOptions, IRunSettings runSettings, ITestExecutionFilter? filter)
         : base(commandLineOptions)
     {
         RoslynDebug.Assert(runSettings.SettingsXml is not null);
@@ -22,10 +23,9 @@ internal sealed class RunContextAdapter : ContextAdapterBase, IRunContext
 
         // Parse and take the results directory from the runsettings.
         TestRunDirectory = XElement.Parse(runSettings.SettingsXml).Descendants("ResultsDirectory").SingleOrDefault()?.Value;
-    }
 
-    public RunContextAdapter(ICommandLineOptions commandLineOptions, IRunSettings runSettings, TestNodeUid[] testNodeUids)
-        : this(commandLineOptions, runSettings) => FilterExpressionWrapper = new(CreateFilter(testNodeUids));
+        HandleFilter(filter);
+    }
 
     // NOTE: Always false as it's TPv2 oriented and so not applicable to TA.
 
@@ -53,6 +53,20 @@ internal sealed class RunContextAdapter : ContextAdapterBase, IRunContext
 
     /// <inheritdoc />
     public IRunSettings? RunSettings { get; }
+
+    private void HandleFilter(ITestExecutionFilter? filter)
+    {
+        // TODO: Handle TreeNodeFilter
+        switch (filter)
+        {
+            case TestNodeUidListFilter testNodeUidListFilter:
+                FilterExpressionWrapper = new(CreateFilter(testNodeUidListFilter.TestNodeUids));
+                break;
+
+            default:
+                break;
+        }
+    }
 
     // We use heuristic to understand if the filter should be a TestCaseId or FullyQualifiedName.
     // We know that in VSTest TestCaseId is a GUID and FullyQualifiedName is a string.
