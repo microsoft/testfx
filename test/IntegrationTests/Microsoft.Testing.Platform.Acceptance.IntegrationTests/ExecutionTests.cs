@@ -19,7 +19,7 @@ public class ExecutionTests : AcceptanceTestBase<ExecutionTests.TestAssetFixture
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
         const string OutputPattern = """
-Discovered 1 test\(s\) in assembly - .*\.(dll|exe) \(net.+\|.+\)
+Discovered 2 test\(s\) in assembly - .*\.(dll|exe) \(net.+\|.+\)
   Test1
   Test2
 Discovered 2 test\(s\)\.$
