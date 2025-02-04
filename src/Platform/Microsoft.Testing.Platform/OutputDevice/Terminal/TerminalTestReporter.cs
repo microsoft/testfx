@@ -915,11 +915,19 @@ internal sealed partial class TerminalTestReporter : IDisposable
     {
         TestProgressState asm = _assemblies[$"{assembly}|{targetFramework}|{architecture}|{executionId}"];
 
-        // TODO: add mode for discovered tests to the progress bar - jajares
-        asm.PassedTests++;
-        asm.TotalTests++;
+        if (_isDiscovery)
+        {
+            // TODO: add mode for discovered tests to the progress bar, in the meantime only report the counts when running discovery, because in normal run we also get discovery events from the adapter, but we don't want to report them right now - jajares
+            asm.PassedTests++;
+            asm.TotalTests++;
+        }
+
         asm.DiscoveredTests.Add(new(displayName, uid));
-        _terminalWithProgress.UpdateWorker(asm.SlotIndex);
+
+        if (_isDiscovery)
+        {
+            _terminalWithProgress.UpdateWorker(asm.SlotIndex);
+        }
     }
 
     public void AppendTestDiscoverySummary(ITerminal terminal)
