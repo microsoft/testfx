@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
@@ -19,6 +19,9 @@ public sealed class AnalyzersTests : AcceptanceTestBase<NopAssetFixture>
   <PropertyGroup>
     <TargetFrameworks>$TargetFrameworks$</TargetFrameworks>
     <RunAnalyzers>true</RunAnalyzers>
+
+    <!-- This also serves as a test that VSTest is generating the entrypoint, even when it's a transitive dependency -->
+    <OutputType>Exe</OutputType>
   </PropertyGroup>
 
   <ItemGroup>
