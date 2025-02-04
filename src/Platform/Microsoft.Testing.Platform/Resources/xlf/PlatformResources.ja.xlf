@@ -215,8 +215,8 @@
 1 path to file</note>
       </trans-unit>
       <trans-unit id="DiscoveredTestsInAssembly">
-        <source>Discovered {0} tests in assembly</source>
-        <target state="translated">アセンブリで {0} つのテストを検出しました。</target>
+        <source>Discovered {0} test(s) in assembly</source>
+        <target state="needs-review-translation">アセンブリで {0} つのテストを検出しました。</target>
         <note>0 is count, the sentence is followed by the path of the assebly</note>
       </trans-unit>
       <trans-unit id="DiscoveringTestsFrom">
@@ -852,13 +852,13 @@ Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</source>
         <note />
       </trans-unit>
       <trans-unit id="TestDiscoverySummary">
-        <source>Discovered {0} tests in {1} assemblies.</source>
-        <target state="translated">{1} アセンブリで {0} つのテストを検出しました。</target>
+        <source>Discovered {0} test(s) in {1} assemblies.</source>
+        <target state="needs-review-translation">{1} アセンブリで {0} つのテストを検出しました。</target>
         <note>0 is number of tests, 1 is count of assemblies</note>
       </trans-unit>
       <trans-unit id="TestDiscoverySummarySingular">
-        <source>Discovered {0} tests.</source>
-        <target state="translated">{0} つのテストが検出されました。</target>
+        <source>Discovered {0} test(s).</source>
+        <target state="needs-review-translation">{0} つのテストが検出されました。</target>
         <note>0 is number of tests</note>
       </trans-unit>
       <trans-unit id="TestFrameworkProxyApiShouldNotBeCalled">

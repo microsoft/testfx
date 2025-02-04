@@ -34,9 +34,9 @@ public class TestFilterTests : AcceptanceTestBase<TestFilterTests.TestAssetFixtu
 
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
         testHostResult.AssertOutputMatchesRegex("""
-Discovered 1 tests in assembly - .*\.dll \(net.+\|.+\)
-Test2
-Discovered 1 tests\.$
+Discovered 1 test\(s\) in assembly - .*\.(dll|exe) \(net.+\|.+\)
+  Test2
+Discovered 1 test\(s\)\.$
 """);
     }
 
