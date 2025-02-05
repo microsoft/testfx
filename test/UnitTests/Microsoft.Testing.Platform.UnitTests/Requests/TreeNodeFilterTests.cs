@@ -221,5 +221,19 @@ public sealed class TreeNodeFilterTests
     }
 
     [TestMethod]
+    public void MatchEmptyNamespaceWithAsterisk()
+    {
+        TreeNodeFilter filter = new("/AssemblyName/*/ClassName/MethodName");
+        Assert.IsTrue(filter.MatchesFilter("/AssemblyName//ClassName/MethodName", new PropertyBag()));
+    }
+
+    [TestMethod]
+    public void MatchEmptyNamespaceWithEmpty()
+    {
+        TreeNodeFilter filter = new("/AssemblyName//ClassName/MethodName");
+        Assert.IsFalse(filter.MatchesFilter("/AssemblyName//ClassName/MethodName", new PropertyBag()));
+    }
+
+    [TestMethod]
     public void MatchAllFilterWithPropertyExpression_DoNotAllowInMiddleOfFilter() => Assert.ThrowsException<ArgumentException>(() => _ = new TreeNodeFilter("/**/Path[A=B]"));
 }
