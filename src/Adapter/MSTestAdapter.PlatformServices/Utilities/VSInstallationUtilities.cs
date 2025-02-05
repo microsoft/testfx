@@ -7,6 +7,9 @@ using static System.String;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
 
+/// <summary>
+/// Utilities to get Visual Studio installation paths.
+/// </summary>
 #if RELEASE
 #if NET6_0_OR_GREATER
 [Obsolete(Constants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]

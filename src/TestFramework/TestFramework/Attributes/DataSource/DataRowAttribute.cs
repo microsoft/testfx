@@ -41,6 +41,9 @@ public class DataRowAttribute : Attribute, ITestDataSource, ITestDataSourceUnfol
     /// <param name="data"> The data. </param>
     public DataRowAttribute(params object?[]? data) => Data = data ?? [null];
 
+    /// <summary>
+    /// Gets the test id generation strategy.
+    /// </summary>
     protected internal static TestIdGenerationStrategy TestIdGenerationStrategy { get; internal set; }
 
     /// <summary>

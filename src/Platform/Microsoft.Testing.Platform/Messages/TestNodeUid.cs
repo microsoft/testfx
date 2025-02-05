@@ -3,8 +3,15 @@
 
 namespace Microsoft.Testing.Platform.Extensions.Messages;
 
+/// <summary>
+/// Represents a test node unique identifier.
+/// </summary>
+/// <param name="value">The UID.</param>
 public sealed class TestNodeUid(string value) : IEquatable<TestNodeUid>
 {
+    /// <summary>
+    /// Gets the UID.
+    /// </summary>
     public string Value { get; init; } = Guard.NotNullOrWhiteSpace(value);
 
     public static implicit operator string(TestNodeUid testNode)
@@ -19,14 +26,18 @@ public sealed class TestNodeUid(string value) : IEquatable<TestNodeUid>
     public static bool operator !=(TestNodeUid left, TestNodeUid right)
         => !left.Equals(right);
 
+    /// <inheritdoc />
     public bool Equals(TestNodeUid? other)
         => other?.Value == value;
 
+    /// <inheritdoc />
     public override bool Equals(object? obj)
         => Equals(obj as TestNodeUid);
 
+    /// <inheritdoc />
     public override int GetHashCode()
         => Value.GetHashCode();
 
+    /// <inheritdoc />
     public override string ToString() => $"TestNodeUid {{ Value = {Value} }}";
 }

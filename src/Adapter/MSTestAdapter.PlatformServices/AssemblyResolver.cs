@@ -284,6 +284,11 @@ class AssemblyResolver :
 #endif
     string[] GetDirectories(string path) => Directory.GetDirectories(path);
 
+    /// <summary>
+    /// Verifies if a file exists.
+    /// </summary>
+    /// <param name="filePath">The file path.</param>
+    /// <returns><c>true</c> if the file exists; <c>false</c> otherwise.</returns>
 #if NETFRAMEWORK
     protected virtual
 #else
@@ -291,6 +296,11 @@ class AssemblyResolver :
 #endif
     bool DoesFileExist(string filePath) => File.Exists(filePath);
 
+    /// <summary>
+    /// Loads an assembly from the given path.
+    /// </summary>
+    /// <param name="path">The path of the assembly.</param>
+    /// <returns>The loaded <see cref="Assembly"/>.</returns>
 #if NETFRAMEWORK
     protected virtual
 #else
@@ -303,13 +313,18 @@ class AssemblyResolver :
 #pragma warning restore IL2026 // Members attributed with RequiresUnreferencedCode may break when trimming
 
 #if NETFRAMEWORK
+    /// <summary>
+    /// Loads an assembly from the given path in a reflection-only context.
+    /// </summary>
+    /// <param name="path">The path of the assembly.</param>
+    /// <returns>The loaded <see cref="Assembly"/>.</returns>
     protected virtual Assembly ReflectionOnlyLoadAssemblyFrom(string path) => Assembly.ReflectionOnlyLoadFrom(path);
 #endif
 
     /// <summary>
     /// It will search for a particular assembly in the given list of directory.
     /// </summary>
-    /// <param name="searchDirectorypaths"> The search Directorypaths. </param>
+    /// <param name="searchDirectorypaths"> The search directory paths. </param>
     /// <param name="name"> The name. </param>
     /// <param name="isReflectionOnly"> Indicates whether this is called under a Reflection Only Load context. </param>
     /// <returns> The <see cref="Assembly"/>. </returns>

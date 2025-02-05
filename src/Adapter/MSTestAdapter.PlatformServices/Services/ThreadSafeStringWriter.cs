@@ -55,7 +55,9 @@ public class ThreadSafeStringWriter : StringWriter
         GetOrAddStringBuilder();
     }
 
-    public override StringBuilder GetStringBuilder() => throw new NotSupportedException("GetStringBuilder is not supported, because it does not allow us to clean the string builder in thread safe way.");
+    /// <inheritdoc/>
+    public override StringBuilder GetStringBuilder()
+        => throw new NotSupportedException("GetStringBuilder is not supported, because it does not allow us to clean the string builder in thread safe way.");
 
     /// <inheritdoc/>
     public override string ToString()
@@ -70,6 +72,10 @@ public class ThreadSafeStringWriter : StringWriter
         }
     }
 
+    /// <summary>
+    /// Returns the string representation of the data in the buffer and then clears the buffer.
+    /// </summary>
+    /// <returns>The data.</returns>
     public string? ToStringAndClear()
     {
         try
@@ -100,6 +106,7 @@ public class ThreadSafeStringWriter : StringWriter
         GetOrAddStringBuilder().Append(value);
     }
 
+    /// <inheritdoc />
     public override void WriteLine(string? value)
     {
 #if DEBUG
