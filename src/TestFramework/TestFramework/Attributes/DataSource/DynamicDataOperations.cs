@@ -105,44 +105,6 @@ internal static class DynamicDataOperations
         return property.GetValue(null, null);
     }
 
-    public static string? GetDisplayName(string? DynamicDataDisplayName, Type? DynamicDataDisplayNameDeclaringType, MethodInfo methodInfo, object?[]? data)
-    {
-        if (DynamicDataDisplayName != null)
-        {
-            Type? dynamicDisplayNameDeclaringType = DynamicDataDisplayNameDeclaringType ?? methodInfo.DeclaringType;
-            DebugEx.Assert(dynamicDisplayNameDeclaringType is not null, "Declaring type of test data cannot be null.");
-
-            MethodInfo method = dynamicDisplayNameDeclaringType.GetMethod(DynamicDataDisplayName, DeclaredOnlyLookup)
-                ?? throw new ArgumentNullException($"{DynamicDataSourceType.Method} {DynamicDataDisplayName}");
-            ParameterInfo[] parameters = method.GetParameters();
-            return parameters.Length != 2 ||
-                parameters[0].ParameterType != typeof(MethodInfo) ||
-                parameters[1].ParameterType != typeof(object[]) ||
-                method.ReturnType != typeof(string) ||
-                !method.IsStatic ||
-                !method.IsPublic
-                ? throw new ArgumentNullException(
-                    string.Format(
-                        CultureInfo.InvariantCulture,
-                        FrameworkMessages.DynamicDataDisplayName,
-                        DynamicDataDisplayName,
-                        nameof(String),
-                        string.Join(", ", nameof(MethodInfo), typeof(object[]).Name)))
-                : method.Invoke(null, [methodInfo, data]) as string;
-        }
-
-        if (data != null)
-        {
-            // We want to force call to `data.AsEnumerable()` to ensure that objects are casted to strings (using ToString())
-            // so that null do appear as "null". If you remove the call, and do string.Join(",", new object[] { null, "a" }),
-            // you will get empty string while with the call you will get "null,a".
-            return string.Format(CultureInfo.CurrentCulture, FrameworkMessages.DataDrivenResultDisplayName, methodInfo.Name,
-                string.Join(",", data.AsEnumerable()));
-        }
-
-        return null;
-    }
-
     private static bool TryGetData(object dataSource, [NotNullWhen(true)] out IEnumerable<object[]>? data)
     {
         if (dataSource is IEnumerable<object[]> enumerableObjectArray)

@@ -109,7 +109,7 @@ public abstract class VSTestBridgedTestFrameworkBase : ITestFramework, IDataProd
         IClientInfo clientInfo = ServiceProvider.GetRequiredService<IClientInfo>();
         TestCaseDiscoverySinkAdapter testCaseDiscoverySinkAdapter = new(this, discoverRequest.Session, discoverRequest.AssemblyPaths, testApplicationModuleInfo, loggerFactory, messageBus, IsTrxEnabled, clientInfo, cancellationToken, discoverRequest.DiscoverySink);
 
-        return new(discoverRequest.Session, discoverRequest.VSTestFilter, discoverRequest.AssemblyPaths, discoverRequest.DiscoveryContext,
+        return new(discoverRequest.Session, discoverRequest.Filter, discoverRequest.AssemblyPaths, discoverRequest.DiscoveryContext,
             discoverRequest.MessageLogger, testCaseDiscoverySinkAdapter);
     }
 
@@ -125,7 +125,7 @@ public abstract class VSTestBridgedTestFrameworkBase : ITestFramework, IDataProd
         FrameworkHandlerAdapter frameworkHandlerAdapter = new(this, runRequest.Session, clientInfo, runRequest.AssemblyPaths, testApplicationModuleInfo,
             loggerFactory, messageBus, outputDevice, IsTrxEnabled, cancellationToken, runRequest.FrameworkHandle);
 
-        return new(runRequest.Session, runRequest.VSTestFilter, runRequest.AssemblyPaths, runRequest.RunContext,
+        return new(runRequest.Session, runRequest.Filter, runRequest.AssemblyPaths, runRequest.RunContext,
             frameworkHandlerAdapter);
     }
 }

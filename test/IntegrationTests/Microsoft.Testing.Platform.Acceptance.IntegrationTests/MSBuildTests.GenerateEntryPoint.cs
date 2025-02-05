@@ -75,11 +75,11 @@ Namespace MSBuildTests
     <System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage>
     Module TestingPlatformEntryPoint
 
-        Function Main(args As Global.System.String()) As Global.System.Int32
-            Return MainAsync(args).Result
+        Function Main(args As String()) As Integer
+            Return MainAsync(args).GetAwaiter().GetResult()
         End Function
 
-        Public Async Function MainAsync(ByVal args() As Global.System.String) As Global.System.Threading.Tasks.Task(Of Integer)
+        Public Async Function MainAsync(args As String()) As Global.System.Threading.Tasks.Task(Of Integer)
             Dim builder = Await Global.Microsoft.Testing.Platform.Builder.TestApplication.CreateBuilderAsync(args)
             SelfRegisteredExtensions.AddSelfRegisteredExtensions(builder, args)
             Using testApplication = Await builder.BuildAsync()

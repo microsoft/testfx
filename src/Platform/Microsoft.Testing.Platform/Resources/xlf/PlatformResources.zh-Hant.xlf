@@ -204,13 +204,13 @@
       </trans-unit>
       <trans-unit id="DiagnosticFileLevelWithAsyncFlush">
         <source>Diagnostic file (level '{0}' with async flush): {1}</source>
-        <target state="new">Diagnostic file (level '{0}' with async flush): {1}</target>
+        <target state="translated">診斷檔案 (具有非同步排清的層級 '{0}'): {1}</target>
         <note>0 level such as verbose, 
 1 path to file</note>
       </trans-unit>
       <trans-unit id="DiagnosticFileLevelWithFlush">
         <source>Diagnostic file (level '{0}' with sync flush): {1}</source>
-        <target state="new">Diagnostic file (level '{0}' with sync flush): {1}</target>
+        <target state="translated">診斷檔案 (具有同步排清的層級 '{0}'): {1}</target>
         <note>0 level such as verbose, 
 1 path to file</note>
       </trans-unit>

@@ -12,6 +12,7 @@ namespace Microsoft.Testing.Extensions.VSTestBridge.Requests;
 /// </summary>
 public sealed class VSTestRunTestExecutionRequest : RunTestExecutionRequest
 {
+    [Obsolete("VSTestTestExecutionFilter always have null TestCases and should not be used.", error: true)]
     public VSTestRunTestExecutionRequest(TestSessionContext session, VSTestTestExecutionFilter executionFilter, string[] assemblyPaths,
         IRunContext runContext, IFrameworkHandle frameworkHandle)
         : base(session, executionFilter)
@@ -21,8 +22,18 @@ public sealed class VSTestRunTestExecutionRequest : RunTestExecutionRequest
         FrameworkHandle = frameworkHandle;
     }
 
+    internal VSTestRunTestExecutionRequest(TestSessionContext session, ITestExecutionFilter executionFilter, string[] assemblyPaths,
+        IRunContext runContext, IFrameworkHandle frameworkHandle)
+        : base(session, executionFilter)
+    {
+        AssemblyPaths = assemblyPaths;
+        RunContext = runContext;
+        FrameworkHandle = frameworkHandle;
+    }
+
+    [Obsolete("VSTestTestExecutionFilter always have null TestCases and should not be used.", error: true)]
     public VSTestTestExecutionFilter VSTestFilter
-        => (VSTestTestExecutionFilter)Filter;
+        => VSTestTestExecutionFilter.Instance;
 
     public string[] AssemblyPaths { get; }
 

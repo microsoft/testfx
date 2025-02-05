@@ -11,13 +11,14 @@ namespace Microsoft.Testing.Extensions.VSTestBridge.Requests;
 /// <summary>
 /// A specialized test execution filter for VSTest. It contains the VSTest specific properties.
 /// </summary>
+[Obsolete("TestCases property of this class is always null.")]
 public sealed class VSTestTestExecutionFilter : ITestExecutionFilter
 {
-    internal VSTestTestExecutionFilter()
+    private VSTestTestExecutionFilter()
     {
     }
 
-    internal VSTestTestExecutionFilter(ImmutableArray<TestCase> testCases) => TestCases = testCases;
+    public ImmutableArray<TestCase>? TestCases => null;
 
-    public ImmutableArray<TestCase>? TestCases { get; }
+    internal static VSTestTestExecutionFilter Instance { get; } = new();
 }

@@ -969,9 +969,6 @@ internal sealed partial class TerminalTestReporter : IDisposable
         }
     }
 
-    public void AssemblyDiscoveryCompleted(int testCount) =>
-        _terminalWithProgress.WriteToTerminal(terminal => terminal.Append($"Found {testCount} tests"));
-
     private static TerminalColor ToTerminalColor(ConsoleColor consoleColor)
         => consoleColor switch
         {

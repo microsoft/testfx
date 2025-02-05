@@ -23,7 +23,7 @@ namespace Microsoft.Testing.Platform.MSBuild;
 public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
 {
     private const string MonoRunnerName = "mono";
-    private const string DotnetRunnerName = "dotnet";
+    private static readonly string DotnetRunnerName = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "dotnet.exe" : "dotnet";
 
     private readonly IFileSystem _fileSystem;
     private readonly PipeNameDescription _pipeNameDescription;
@@ -31,7 +31,6 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
     private readonly List<NamedPipeServer> _connections = new();
     private readonly StringBuilder _output = new();
     private readonly Lock _initLock = new();
-    private readonly Process _currentProcess = Process.GetCurrentProcess();
     private readonly Architecture _currentProcessArchitecture = RuntimeInformation.ProcessArchitecture;
 
     private Task? _connectionLoopTask;
@@ -90,7 +89,7 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
             if (TargetPath.ItemSpec.EndsWith(".dll", StringComparison.InvariantCultureIgnoreCase))
             {
                 Log.LogMessage(MessageImportance.Low, $"Target path is a dll '{TargetPath.ItemSpec}'");
-                return DotnetRunnerName + (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? ".exe" : string.Empty);
+                return DotnetRunnerName;
             }
 
             // If the target is an exe and we're not on Windows we try with the mono runner.
@@ -121,39 +120,27 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
         // We look for dotnet muxer only if we're not running with mono.
         if (dotnetRunnerName != MonoRunnerName)
         {
-            if (!IsCurrentProcessArchitectureCompatible())
+            if (DotnetHostPath is not null && File.Exists(DotnetHostPath.ItemSpec) && IsCurrentProcessArchitectureCompatible())
             {
-                Log.LogMessage(MessageImportance.Low, $"Current process architecture '{_currentProcessArchitecture}' is not compatible with '{TestArchitecture.ItemSpec}'");
-                PlatformArchitecture targetArchitecture = EnumPolyfill.Parse<PlatformArchitecture>(TestArchitecture.ItemSpec, ignoreCase: true);
-                StringBuilder resolutionLog = new();
-                DotnetMuxerLocator dotnetMuxerLocator = new(log => resolutionLog.AppendLine(log));
-                if (dotnetMuxerLocator.TryGetDotnetPathByArchitecture(targetArchitecture, out string? dotnetPath))
-                {
-                    Log.LogMessage(MessageImportance.Low, resolutionLog.ToString());
-                    Log.LogMessage(MessageImportance.Low, $"dotnet muxer tool path found using architecture: '{TestArchitecture.ItemSpec}' '{dotnetPath}'");
-                    return dotnetPath;
-                }
-                else
-                {
-                    Log.LogMessage(MessageImportance.Low, resolutionLog.ToString());
-                    Log.LogError(string.Format(CultureInfo.InvariantCulture, Resources.MSBuildResources.IncompatibleArchitecture, dotnetRunnerName, TestArchitecture.ItemSpec));
-                    return null;
-                }
+                Log.LogMessage(MessageImportance.Low, $"dotnet muxer tool path found using DOTNET_HOST_PATH environment variable: '{DotnetHostPath.ItemSpec}'");
+                return DotnetHostPath.ItemSpec;
+            }
+
+            Log.LogMessage(MessageImportance.Low, $"Current process architecture '{_currentProcessArchitecture}'. Requested test architecture '{TestArchitecture.ItemSpec}'");
+            PlatformArchitecture targetArchitecture = EnumPolyfill.Parse<PlatformArchitecture>(TestArchitecture.ItemSpec, ignoreCase: true);
+            StringBuilder resolutionLog = new();
+            DotnetMuxerLocator dotnetMuxerLocator = new(log => resolutionLog.AppendLine(log));
+            if (dotnetMuxerLocator.TryGetDotnetPathByArchitecture(targetArchitecture, out string? dotnetPath))
+            {
+                Log.LogMessage(MessageImportance.Low, resolutionLog.ToString());
+                Log.LogMessage(MessageImportance.Low, $"dotnet muxer tool path found using architecture: '{TestArchitecture.ItemSpec}' '{dotnetPath}'");
+                return dotnetPath;
             }
             else
             {
-                if (DotnetHostPath is not null && File.Exists(DotnetHostPath.ItemSpec))
-                {
-                    Log.LogMessage(MessageImportance.Low, $"dotnet muxer tool path found using DOTNET_HOST_PATH environment variable: '{DotnetHostPath.ItemSpec}'");
-                    return DotnetHostPath.ItemSpec;
-                }
-
-                ProcessModule? mainModule = _currentProcess.MainModule;
-                if (mainModule != null && Path.GetFileName(mainModule.FileName)!.Equals(dotnetRunnerName, StringComparison.OrdinalIgnoreCase))
-                {
-                    Log.LogMessage(MessageImportance.Low, $"dotnet muxer tool path found using current process: '{mainModule.FileName}' architecture: '{_currentProcessArchitecture}'");
-                    return mainModule.FileName;
-                }
+                Log.LogMessage(MessageImportance.Low, resolutionLog.ToString());
+                Log.LogError(string.Format(CultureInfo.InvariantCulture, Resources.MSBuildResources.IncompatibleArchitecture, dotnetRunnerName, TestArchitecture.ItemSpec));
+                return null;
             }
         }
 
@@ -180,24 +167,25 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
     {
         Build.Utilities.CommandLineBuilder builder = new();
 
-        if (IsNetCoreApp)
+        if (ToolName == DotnetRunnerName && IsNetCoreApp)
         {
-            string dotnetRunnerName = ToolName;
-            if (dotnetRunnerName != MonoRunnerName && Path.GetFileName(_currentProcess.MainModule!.FileName!).Equals(dotnetRunnerName, StringComparison.OrdinalIgnoreCase))
-            {
-                builder.AppendSwitch("exec");
-                builder.AppendFileNameIfNotNull(TargetPath.ItemSpec);
-            }
+            // In most cases, if ToolName is "dotnet.exe", that means we are given a "dll" file.
+            // In turn, that means we are not .NET Framework (because we will use Exe otherwise).
+            // In case ToolName ended up being "dotnet.exe" and we are
+            // .NET Framework, that means it's the user's assembly that is named "dotnet".
+            // In that case, we want to execute the tool (user's executable) directly.
+            // So, we only only "exec" if we are .NETCoreApp
+            builder.AppendSwitch("exec");
+            builder.AppendFileNameIfNotNull(TargetPath.ItemSpec);
         }
-        else
+        else if (ToolName == MonoRunnerName)
         {
-            // If the target is an exe and we're not on Windows we try with the mono runner and so we pass the test module to the mono runner.
-            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && TargetPath.ItemSpec.EndsWith(".exe", StringComparison.InvariantCultureIgnoreCase))
-            {
-                builder.AppendFileNameIfNotNull(TargetPath.ItemSpec);
-            }
+            // If ToolName is "mono", that means TargetPath is an "exe" file and we are not running on Windows.
+            // In this case, we use the given exe file as an argument to mono.
+            builder.AppendFileNameIfNotNull(TargetPath.ItemSpec);
         }
 
+        // If we are not "dotnet.exe" and not "mono", then we are given an executable from user and we are running on Windows.
         builder.AppendSwitchIfNotNull($"--{MSBuildConstants.MSBuildNodeOptionKey} ", _pipeNameDescription.Name);
 
         if (!string.IsNullOrEmpty(TestingPlatformCommandLineArguments?.ItemSpec))
