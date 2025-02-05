@@ -19,7 +19,7 @@ internal abstract class ContextAdapterBase
 
         RoslynDebug.Assert(runSettings.SettingsXml is not null);
 
-        string? filterFromRunsettings = XElement.Parse(runSettings.SettingsXml).Descendants("TestCaseFilter").SingleOrDefault()?.Value;
+        string? filterFromRunsettings = XElement.Parse(runSettings.SettingsXml).Element("RunSettings")?.Element("RunConfiguration")?.Element("TestCaseFilter")?.Value;
         string? filterFromCommandLineOption = null;
         if (commandLineOptions.TryGetOptionArgumentList(
             TestCaseFilterCommandLineOptionsProvider.TestCaseFilterOptionName,
@@ -77,7 +77,9 @@ internal abstract class ContextAdapterBase
     private void HandleFilter(ITestExecutionFilter? filter, string? filterFromRunsettings, string? filterFromCommandLineOption)
     {
         // No filters at all, we can return immediately as there is nothing to do.
-        if (filter is null or NopFilter && filterFromRunsettings is null && filterFromCommandLineOption is null)
+        if (filter is null or NopFilter
+            && filterFromRunsettings is null
+            && filterFromCommandLineOption is null)
         {
             return;
         }
@@ -87,20 +89,11 @@ internal abstract class ContextAdapterBase
         AppendFilter(filterFromRunsettings, filterBuilder);
         AppendFilter(filterFromCommandLineOption, filterBuilder);
 
-        // TODO: Handle TreeNodeFilter. Note that this is unlikely to be handled here.
-        // This code path tries to construct a VSTest compatible filter.
-        // This is probably not possible for TreeNodeFilter.
-        switch (filter)
+        if (filter is TestNodeUidListFilter testNodeUidListFilter)
         {
-            case TestNodeUidListFilter testNodeUidListFilter:
-                StartFilter(filterBuilder);
-                BuildFilter(testNodeUidListFilter.TestNodeUids, filterBuilder);
-                EndFilter(filterBuilder);
-
-                break;
-
-            default:
-                break;
+            StartFilter(filterBuilder);
+            BuildFilter(testNodeUidListFilter.TestNodeUids, filterBuilder);
+            EndFilter(filterBuilder);
         }
 
         if (filterBuilder.Length > 0)
@@ -108,6 +101,7 @@ internal abstract class ContextAdapterBase
             FilterExpressionWrapper = new(filterBuilder.ToString());
         }
 
+        // Local functions
         static void AppendFilter(string? filter, StringBuilder builder)
         {
             if (filter is null)
@@ -142,47 +136,46 @@ internal abstract class ContextAdapterBase
     {
         for (int i = 0; i < testNodesUid.Length; i++)
         {
+            if (i > 0)
+            {
+                filter.Append('|');
+            }
+
             if (Guid.TryParse(testNodesUid[i].Value, out Guid guid))
             {
                 filter.Append("Id=");
                 filter.Append(guid.ToString());
+                continue;
             }
-            else
+
+            TestNodeUid currentTestNodeUid = testNodesUid[i];
+            filter.Append("FullyQualifiedName=");
+            for (int k = 0; k < currentTestNodeUid.Value.Length; k++)
             {
-                TestNodeUid currentTestNodeUid = testNodesUid[i];
-                filter.Append("FullyQualifiedName=");
-                for (int k = 0; k < currentTestNodeUid.Value.Length; k++)
+                char currentChar = currentTestNodeUid.Value[k];
+                switch (currentChar)
                 {
-                    char currentChar = currentTestNodeUid.Value[k];
-                    switch (currentChar)
-                    {
-                        case '\\':
-                        case '(':
-                        case ')':
-                        case '&':
-                        case '|':
-                        case '=':
-                        case '!':
-                        case '~':
-                            // If the symbol is not escaped, add an escape character.
-                            if (i - 1 < 0 || currentTestNodeUid.Value[k - 1] != '\\')
-                            {
-                                filter.Append('\\');
-                            }
+                    case '\\':
+                    case '(':
+                    case ')':
+                    case '&':
+                    case '|':
+                    case '=':
+                    case '!':
+                    case '~':
+                        // If the symbol is not escaped, add an escape character.
+                        if (i - 1 < 0 || currentTestNodeUid.Value[k - 1] != '\\')
+                        {
+                            filter.Append('\\');
+                        }
 
-                            filter.Append(currentChar);
-                            break;
+                        filter.Append(currentChar);
+                        break;
 
-                        default:
-                            filter.Append(currentChar);
-                            break;
-                    }
+                    default:
+                        filter.Append(currentChar);
+                        break;
                 }
-            }
-
-            if (i != testNodesUid.Length - 1)
-            {
-                filter.Append('|');
             }
         }
     }
