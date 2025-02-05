@@ -5,6 +5,9 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 
+/// <summary>
+/// Represents the result of a unit test.
+/// </summary>
 [Serializable]
 [DebuggerDisplay("{DisplayName} ({Outcome})")]
 #if RELEASE

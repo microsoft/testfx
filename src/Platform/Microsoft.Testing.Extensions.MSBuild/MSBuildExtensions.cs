@@ -8,8 +8,15 @@ using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Platform.MSBuild;
 
+/// <summary>
+/// Extension methods for adding MSBuild support to the test application builder.
+/// </summary>
 public static class MSBuildExtensions
 {
+    /// <summary>
+    /// Adds MSBuild support to the test application builder.
+    /// </summary>
+    /// <param name="builder">The test application builder.</param>
     public static void AddMSBuild(this ITestApplicationBuilder builder)
     {
         builder.CommandLine.AddProvider(() => new MSBuildCommandLineProvider());

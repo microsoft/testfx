@@ -32,6 +32,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 #endif
 public class TestDataSource : ITestDataSource
 {
+    /// <summary>
+    /// Gets the test data from custom test data source and sets dbconnection in testContext object.
+    /// </summary>
+    /// <param name="testMethodInfo">The test method info.</param>
+    /// <param name="testContext">The test context.</param>
+    /// <returns>The test data.</returns>
 #if NETFRAMEWORK
     public IEnumerable<object>? GetData(ITestMethod testMethodInfo, ITestContext testContext)
 #else

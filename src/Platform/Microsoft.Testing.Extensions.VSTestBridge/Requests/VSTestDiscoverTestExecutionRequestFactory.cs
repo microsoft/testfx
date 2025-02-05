@@ -23,6 +23,11 @@ public sealed class VSTestDiscoverTestExecutionRequestFactory : ITestExecutionRe
     {
     }
 
+    /// <summary>
+    /// Creates a new instance of <see cref="VSTestDiscoverTestExecutionRequest"/> with the given parameters.
+    /// </summary>
+    /// <param name="session">The test session context.</param>
+    /// <returns>An instance of <see cref="TestExecutionRequest"/>.</returns>
     // This class is never instantiated.
     // It's not possible to reach this method.
     // The class should probably be static and not needing to implement the interface.
@@ -30,6 +35,14 @@ public sealed class VSTestDiscoverTestExecutionRequestFactory : ITestExecutionRe
     Task<TestExecutionRequest> ITestExecutionRequestFactory.CreateRequestAsync(Platform.TestHost.TestSessionContext session)
         => throw ApplicationStateGuard.Unreachable();
 
+    /// <summary>
+    /// Creates a new instance of <see cref="VSTestDiscoverTestExecutionRequest"/> with the given parameters.
+    /// </summary>
+    /// <param name="discoverTestExecutionRequest">The discover tests request.</param>
+    /// <param name="adapterExtension">The adapter extension.</param>
+    /// <param name="testAssemblyPaths">The paths to test assemblies.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>An instance of <see cref="VSTestDiscoverTestExecutionRequest"/>.</returns>
     public static VSTestDiscoverTestExecutionRequest CreateRequest(
         DiscoverTestExecutionRequest discoverTestExecutionRequest,
         VSTestBridgedTestFrameworkBase adapterExtension, string[] testAssemblyPaths, CancellationToken cancellationToken)

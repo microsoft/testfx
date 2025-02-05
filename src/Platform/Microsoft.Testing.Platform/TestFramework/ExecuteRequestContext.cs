@@ -18,6 +18,13 @@ public sealed class ExecuteRequestContext
 {
     private readonly IExecuteRequestCompletionNotifier _executeRequestCompletionNotifier;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ExecuteRequestContext"/> class.
+    /// </summary>
+    /// <param name="request">The request.</param>
+    /// <param name="messageBus">The message bus.</param>
+    /// <param name="executeRequestCompletionNotifier">The request completion notifier.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
     [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
     public ExecuteRequestContext(IRequest request, IMessageBus messageBus, IExecuteRequestCompletionNotifier executeRequestCompletionNotifier,
         CancellationToken cancellationToken)
