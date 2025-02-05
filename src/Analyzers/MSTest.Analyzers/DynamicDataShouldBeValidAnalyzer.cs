@@ -276,8 +276,7 @@ public sealed class DynamicDataShouldBeValidAnalyzer : DiagnosticAnalyzer
         // Validate member return type.
         ITypeSymbol? memberTypeSymbol = member.GetMemberType();
         if (memberTypeSymbol is INamedTypeSymbol memberNamedType
-            && (!SymbolEqualityComparer.Default.Equals(memberNamedType.ConstructedFrom, ienumerableTypeSymbol)
-                || memberNamedType.TypeArguments.Length != 1))
+            && !memberNamedType.OriginalDefinition.Inherits(ienumerableTypeSymbol))
         {
             context.ReportDiagnostic(attributeSyntax.CreateDiagnostic(MemberTypeRule, declaringType.Name, memberName));
             return;

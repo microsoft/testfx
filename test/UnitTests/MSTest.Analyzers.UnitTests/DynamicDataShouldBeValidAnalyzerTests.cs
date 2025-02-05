@@ -1356,4 +1356,30 @@ public sealed class DynamicDataShouldBeValidAnalyzerTests
             VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.DisplayMethodSignatureRule).WithLocation(10).WithArguments("SomeClass", "GetSomeDisplayName3"),
             VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.DisplayMethodSignatureRule).WithLocation(11).WithArguments("SomeClass", "GetSomeDisplayName3"));
     }
+
+    [TestMethod]
+    [GitHubWorkItem("https://github.com/microsoft/testfx/issues/4922")]
+    public async Task WhenDataImplementsIEnumerable_NoDiagnostic()
+        => await VerifyCS.VerifyAnalyzerAsync("""
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                [DynamicData(nameof(GetData), DynamicDataSourceType.Method)]
+                public void TestMethod2(int i, int j)
+                {
+                }
+
+                private static List<object[]> GetData()
+                {
+                    return new List<object[]>
+                    {
+                        new object[] { 1, 2 },
+                        new object[] { 3, 4 },
+                    };
+                }
+            }
+            """);
 }
