@@ -19,7 +19,7 @@ internal abstract class ContextAdapterBase
 
         RoslynDebug.Assert(runSettings.SettingsXml is not null);
 
-        string? filterFromRunsettings = XElement.Parse(runSettings.SettingsXml).Element("RunSettings")?.Element("RunConfiguration")?.Element("TestCaseFilter")?.Value;
+        string? filterFromRunsettings = XDocument.Parse(runSettings.SettingsXml).Element("RunSettings")?.Element("RunConfiguration")?.Element("TestCaseFilter")?.Value;
         string? filterFromCommandLineOption = null;
         if (commandLineOptions.TryGetOptionArgumentList(
             TestCaseFilterCommandLineOptionsProvider.TestCaseFilterOptionName,

@@ -19,7 +19,7 @@ internal sealed class RunContextAdapter : ContextAdapterBase, IRunContext
         RoslynDebug.Assert(runSettings.SettingsXml is not null);
 
         // Parse and take the results directory from the runsettings.
-        TestRunDirectory = XElement.Parse(runSettings.SettingsXml).Element("RunSettings")?.Element("RunConfiguration")?.Element("ResultsDirectory")?.Value;
+        TestRunDirectory = XDocument.Parse(runSettings.SettingsXml).Element("RunSettings")?.Element("RunConfiguration")?.Element("ResultsDirectory")?.Value;
     }
 
     // NOTE: Always false as it's TPv2 oriented and so not applicable to TA.
