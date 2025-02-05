@@ -35,7 +35,7 @@ internal abstract class ContextAdapterBase
 
     public IRunSettings? RunSettings { get; }
 
-    protected FilterExpressionWrapper? FilterExpressionWrapper { get; set; }
+    private FilterExpressionWrapper? FilterExpressionWrapper { get; set; }
 
     // NOTE: Implementation is borrowed from VSTest
     // MSTest relies on this method existing and access it through reflection: https://github.com/microsoft/testfx/blob/main/src/Adapter/MSTest.TestAdapter/TestMethodFilter.cs#L115
