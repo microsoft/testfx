@@ -375,11 +375,33 @@ internal sealed class TestMethodRunner
             displayName = testDataSource.GetDisplayName(new ReflectionTestMethodInfo(_testMethodInfo.MethodInfo, _test.DisplayName), data);
         }
 
+        string? ignoreFromTestDataRow = null;
+        if (data?.Length == 1 && data[0]?.GetType() is { IsGenericType: true } genericType &&
+            genericType.GetGenericTypeDefinition() == typeof(TestDataRow<>))
+        {
+            // TODO: Get display name from TestDataRow. If non-null, set that to displayName.
+            object testDataRow = data[0]!;
+            object? dataFromTestDataRow = genericType.GetProperty(nameof(TestDataRow<>.Value))!.GetValue(testDataRow);
+            ignoreFromTestDataRow = genericType.GetProperty(nameof(TestDataRow<>.IgnoreMessage))!.GetValue(testDataRow) as string;
+            // TODO: Handle if Tuple/ValueTuple.
+            data = [dataFromTestDataRow];
+        }
+
         var stopwatch = Stopwatch.StartNew();
         _testMethodInfo.SetArguments(data);
         _testContext.SetTestData(data);
         _testContext.SetDisplayName(displayName);
-        TestResult[] testResults = ExecuteTest(_testMethodInfo);
+
+        TestResult[] testResults = ignoreFromTestDataRow is not null
+            ? [
+                new TestResult()
+                {
+                    Outcome = UTF.UnitTestOutcome.Ignored,
+                    IgnoreReason = ignoreFromTestDataRow,
+                }
+            ]
+            : ExecuteTest(_testMethodInfo);
+
         stopwatch.Stop();
 
         foreach (TestResult testResult in testResults)
