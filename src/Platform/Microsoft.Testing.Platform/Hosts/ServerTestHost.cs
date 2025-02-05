@@ -51,7 +51,6 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
     // Whenever a client responds with a result or an error, the requests
     // get completed.
     private ConcurrentDictionary<int, RpcInvocationState> _serverToClientRequests;
-    private int _serverToClientRequestId;
     private IMessageHandler? _messageHandler;
     private TestHost.ClientInfo? _client;
     private IClientInfo? _clientInfoService;
