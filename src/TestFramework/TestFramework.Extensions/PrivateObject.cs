@@ -8,6 +8,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// <summary>
 /// This class represents the live NON public INTERNAL object in the system.
 /// </summary>
+[Obsolete(Constants.PublicTypeObsoleteMessage)]
 public class PrivateObject
 {
     #region Data

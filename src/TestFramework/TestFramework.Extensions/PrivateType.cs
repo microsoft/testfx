@@ -8,6 +8,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// <summary>
 /// This class represents a private class for the Private Accessors functionality.
 /// </summary>
+[Obsolete(Constants.PublicTypeObsoleteMessage)]
 public class PrivateType
 {
     /// <summary>
