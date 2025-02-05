@@ -17,6 +17,9 @@ using MSTest.Analyzers.Helpers;
 
 namespace MSTest.Analyzers;
 
+/// <summary>
+/// Code fix for <see cref="AssertionArgsShouldAvoidConditionalAccessAnalyzer"/>.
+/// </summary>
 [ExportCodeFixProvider(LanguageNames.CSharp, Name = nameof(AssertionArgsShouldAvoidConditionalAccessFixer))]
 [Shared]
 public sealed class AssertionArgsShouldAvoidConditionalAccessFixer : CodeFixProvider
@@ -67,13 +70,16 @@ public sealed class AssertionArgsShouldAvoidConditionalAccessFixer : CodeFixProv
         }
     }
 
+    /// <inheritdoc />
     public sealed override ImmutableArray<string> FixableDiagnosticIds { get; }
         = ImmutableArray.Create(DiagnosticIds.AssertionArgsShouldAvoidConditionalAccessRuleId);
 
+    /// <inheritdoc />
     public override FixAllProvider GetFixAllProvider()
         // See https://github.com/dotnet/roslyn/blob/main/docs/analyzers/FixAllProvider.md for more information on Fix All Providers
         => new CustomFixAll();
 
+    /// <inheritdoc />
     public override async Task RegisterCodeFixesAsync(CodeFixContext context)
     {
         SyntaxNode root = await context.Document.GetRequiredSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false);

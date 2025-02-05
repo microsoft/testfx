@@ -11,13 +11,3 @@ root = false
 # CA1822: Mark members as static
 # Bump severity only for source as there are FPs for tests, see https://github.com/microsoft/testfx/issues/1225
 dotnet_diagnostic.CA1822.severity = warning
-
-## Styling conventions
-
-# TODO: Enable this
-# SA1600: Elements should be documented
-dotnet_diagnostic.SA1600.severity = none
-
-# TODO: Enable this
-# SA1601: Partial elements should be documented
-dotnet_diagnostic.SA1601.severity = none

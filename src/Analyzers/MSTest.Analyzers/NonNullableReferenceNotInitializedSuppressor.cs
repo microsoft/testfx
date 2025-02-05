@@ -27,8 +27,10 @@ public sealed class NonNullableReferenceNotInitializedSuppressor : DiagnosticSup
     internal static readonly SuppressionDescriptor Rule =
         new(DiagnosticIds.NonNullableReferenceNotInitializedSuppressorRuleId, SuppressedDiagnosticId, Resources.UseAsyncSuffixTestFixtureMethodSuppressorJustification);
 
+    /// <inheritdoc />
     public override ImmutableArray<SuppressionDescriptor> SupportedSuppressions { get; } = ImmutableArray.Create(Rule);
 
+    /// <inheritdoc />
     public override void ReportSuppressions(SuppressionAnalysisContext context)
     {
         if (!context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestContext, out INamedTypeSymbol? testContextSymbol)

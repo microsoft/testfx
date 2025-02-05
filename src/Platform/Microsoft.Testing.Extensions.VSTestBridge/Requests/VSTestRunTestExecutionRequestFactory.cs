@@ -23,6 +23,11 @@ public sealed class VSTestRunTestExecutionRequestFactory : ITestExecutionRequest
     {
     }
 
+    /// <summary>
+    /// Creates a request asynchronously.
+    /// </summary>
+    /// <param name="session">The test session context.</param>
+    /// <returns>The <see cref="TestExecutionRequest"/> request.</returns>
     // This class is never instantiated.
     // It's not possible to reach this method.
     // The class should probably be static and not needing to implement the interface.

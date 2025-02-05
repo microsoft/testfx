@@ -50,8 +50,14 @@ public abstract class TestContext
     /// </summary>
     public virtual CancellationTokenSource CancellationTokenSource { get; protected internal set; } = new();
 
+    /// <summary>
+    /// Gets or sets the test data for the test method being executed.
+    /// </summary>
     public object?[]? TestData { get; protected set; }
 
+    /// <summary>
+    /// Gets or sets the test display name for the test method being executed.
+    /// </summary>
     public string? TestDisplayName { get; protected set; }
 
 #if NETFRAMEWORK
@@ -198,6 +204,11 @@ public abstract class TestContext
     /// <param name="args">the arguments.</param>
     public abstract void WriteLine(string format, params object?[] args);
 
+    /// <summary>
+    /// Used to write trace messages while the test is running.
+    /// </summary>
+    /// <param name="messageLevel">The message level.</param>
+    /// <param name="message">The message.</param>
     public abstract void DisplayMessage(MessageLevel messageLevel, string message);
 
     private T? GetProperty<T>(string name)

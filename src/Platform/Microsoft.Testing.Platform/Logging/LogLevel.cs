@@ -3,6 +3,9 @@
 
 namespace Microsoft.Testing.Platform.Logging;
 
+/// <summary>
+/// An enumeration of the supported logging levels.
+/// </summary>
 public enum LogLevel
 {
     /// <summary>

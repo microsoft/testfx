@@ -3,7 +3,14 @@
 
 namespace Microsoft.Testing.Platform.OutputDevice;
 
+/// <summary>
+/// Represents an error message output data.
+/// </summary>
+/// <param name="message">The error message.</param>
 public sealed class ErrorMessageOutputDeviceData(string message) : IOutputDeviceData
 {
+    /// <summary>
+    /// Gets the error message.
+    /// </summary>
     public string Message { get; } = message;
 }
