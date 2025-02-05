@@ -93,25 +93,25 @@ failed OwnerTest (0ms)
         testHostResult.AssertOutputContains("Running test: CategoryAOnly");
         testHostResult.AssertOutputDoesNotContain("Running test: CategoryBOnly");
         testHostResult.AssertOutputContains("Running test: CategoryAAndB");
-        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+        testHostResult.AssertExitCodeIs(ExitCodes.AtLeastOneTestFailed);
 
         testHostResult = await testHost.ExecuteAsync("--settings NoFilter.runsettings");
         testHostResult.AssertOutputContains("Running test: CategoryAOnly");
         testHostResult.AssertOutputContains("Running test: CategoryBOnly");
         testHostResult.AssertOutputContains("Running test: CategoryAAndB");
-        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+        testHostResult.AssertExitCodeIs(ExitCodes.AtLeastOneTestFailed);
 
         testHostResult = await testHost.ExecuteAsync("--settings CategoryA.runsettings --filter TestCategory~CategoryA");
         testHostResult.AssertOutputContains("Running test: CategoryAOnly");
         testHostResult.AssertOutputDoesNotContain("Running test: CategoryBOnly");
         testHostResult.AssertOutputContains("Running test: CategoryAAndB");
-        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+        testHostResult.AssertExitCodeIs(ExitCodes.AtLeastOneTestFailed);
 
         testHostResult = await testHost.ExecuteAsync("--settings CategoryA.runsettings --filter TestCategory~CategoryB");
         testHostResult.AssertOutputDoesNotContain("Running test: CategoryAOnly");
         testHostResult.AssertOutputDoesNotContain("Running test: CategoryBOnly");
         testHostResult.AssertOutputContains("Running test: CategoryAAndB");
-        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+        testHostResult.AssertExitCodeIs(ExitCodes.AtLeastOneTestFailed);
     }
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
