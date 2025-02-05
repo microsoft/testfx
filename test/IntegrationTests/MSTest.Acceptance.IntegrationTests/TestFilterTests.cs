@@ -83,6 +83,37 @@ failed OwnerTest (0ms)
         testHostResult.AssertExitCodeIs(8);
     }
 
+    [TestMethod]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    public async Task RunWithFilterFromRunsettings(string currentTfm)
+    {
+        var testHost = TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, currentTfm);
+
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--settings CategoryA.runsettings");
+        testHostResult.AssertOutputContains("Running test: CategoryAOnly");
+        testHostResult.AssertOutputDoesNotContain("Running test: CategoryBOnly");
+        testHostResult.AssertOutputContains("Running test: CategoryAAndB");
+        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+
+        testHostResult = await testHost.ExecuteAsync("--settings NoFilter.runsettings");
+        testHostResult.AssertOutputContains("Running test: CategoryAOnly");
+        testHostResult.AssertOutputContains("Running test: CategoryBOnly");
+        testHostResult.AssertOutputContains("Running test: CategoryAAndB");
+        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+
+        testHostResult = await testHost.ExecuteAsync("--settings CategoryA.runsettings --filter TestCategory~CategoryA");
+        testHostResult.AssertOutputContains("Running test: CategoryAOnly");
+        testHostResult.AssertOutputDoesNotContain("Running test: CategoryBOnly");
+        testHostResult.AssertOutputContains("Running test: CategoryAAndB");
+        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+
+        testHostResult = await testHost.ExecuteAsync("--settings CategoryA.runsettings --filter TestCategory~CategoryB");
+        testHostResult.AssertOutputDoesNotContain("Running test: CategoryAOnly");
+        testHostResult.AssertOutputDoesNotContain("Running test: CategoryBOnly");
+        testHostResult.AssertOutputContains("Running test: CategoryAAndB");
+        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+    }
+
     public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
     {
         public string TargetAssetPath => GetAssetPath(AssetName);
@@ -110,7 +141,35 @@ failed OwnerTest (0ms)
     <PackageReference Include="MSTest.TestFramework" Version="$MSTestVersion$" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="*.runsettings">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>
+
+#file CategoryA.runsettings
+<?xml version="1.0" encoding="utf-8"?>
+<RunSettings>
+  <RunConfiguration>
+    <TestCaseFilter>(TestCategory~CategoryA)</TestCaseFilter>
+  </RunConfiguration>
+
+  <MSTest>
+    <CaptureTraceOutput>false</CaptureTraceOutput>
+  </MSTest>
+
+</RunSettings>
+
+#file NoFilter.runsettings
+<?xml version="1.0" encoding="utf-8"?>
+<RunSettings>
+  <MSTest>
+    <CaptureTraceOutput>false</CaptureTraceOutput>
+  </MSTest>
+
+</RunSettings>
 
 #file UnitTest1.cs
 
@@ -135,6 +194,28 @@ public class TestClass
     [TestMethod]
     [TestProperty("TestCategory", "category")]
     public void TestCategoryTest() { }
+
+    [TestMethod]
+    [TestCategory("CategoryA")]
+    public void CategoryAOnly()
+    {
+        Console.WriteLine($"Running test: {nameof(CategoryAOnly)}");
+    }
+
+    [TestMethod]
+    [TestCategory("CategoryB")]
+    public void CategoryBOnly()
+    {
+        Console.WriteLine($"Running test: {nameof(CategoryBOnly)}");
+    }
+
+    [TestMethod]
+    [TestCategory("CategoryA")]
+    [TestCategory("CategoryB")]
+    public void CategoryAAndB()
+    {
+        Console.WriteLine($"Running test: {nameof(CategoryAAndB)}");
+    }
 }
 """;
     }
