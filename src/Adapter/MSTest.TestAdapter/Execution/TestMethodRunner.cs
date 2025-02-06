@@ -380,8 +380,13 @@ internal sealed class TestMethodRunner
             ignoreFromTestDataRow = genericType.GetProperty("IgnoreMessage")!.GetValue(testDataRow) as string;
             displayName = genericType.GetProperty("DisplayName")!.GetValue(testDataRow) as string ?? displayName;
 
-            // TODO: Handle if Tuple/ValueTuple.
-            data = [dataFromTestDataRow];
+            data = TestDataSourceHelpers.TryHandleTupleDataSource(dataFromTestDataRow, out object?[] tupleExpandedToArray)
+                ? tupleExpandedToArray
+                : [dataFromTestDataRow];
+        }
+        else if (data?.Length == 1 && TestDataSourceHelpers.TryHandleTupleDataSource(data[0], out object?[] tupleExpandedToArray))
+        {
+            data = tupleExpandedToArray;
         }
 
         var stopwatch = Stopwatch.StartNew();
