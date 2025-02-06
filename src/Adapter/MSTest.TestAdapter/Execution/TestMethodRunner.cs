@@ -381,8 +381,8 @@ internal sealed class TestMethodRunner
         {
             // TODO: Get display name from TestDataRow. If non-null, set that to displayName.
             object testDataRow = data[0]!;
-            object? dataFromTestDataRow = genericType.GetProperty(nameof(TestDataRow<>.Value))!.GetValue(testDataRow);
-            ignoreFromTestDataRow = genericType.GetProperty(nameof(TestDataRow<>.IgnoreMessage))!.GetValue(testDataRow) as string;
+            object? dataFromTestDataRow = genericType.GetProperty("Value")!.GetValue(testDataRow);
+            ignoreFromTestDataRow = genericType.GetProperty("IgnoreMessage")!.GetValue(testDataRow) as string;
             // TODO: Handle if Tuple/ValueTuple.
             data = [dataFromTestDataRow];
         }
