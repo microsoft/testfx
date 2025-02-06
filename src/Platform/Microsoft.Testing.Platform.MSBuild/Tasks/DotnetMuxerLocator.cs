@@ -126,6 +126,19 @@ internal sealed class DotnetMuxerLocator
 
         _resolutionLog("DotnetHostHelper.TryGetDotnetPathByArchitecture: Muxer was not found using DOTNET_ROOT* env variables.");
 
+        // Search in path
+        muxerPath = GetMuxerFromPath();
+        if (muxerPath is not null)
+        {
+            if (IsValidArchitectureMuxer(targetArchitecture, muxerPath))
+            {
+                _resolutionLog($"DotnetHostHelper.TryGetDotnetPathByArchitecture: Muxer compatible with '{targetArchitecture}' resolved from PATH: '{muxerPath}'");
+                return true;
+            }
+
+            _resolutionLog($"DotnetHostHelper.TryGetDotnetPathByArchitecture: Muxer resolved using PATH is not compatible with the target architecture: '{muxerPath}'");
+        }
+
         // Try to search for global registration
         muxerPath = isWinOs ? GetMuxerFromGlobalRegistrationWin(targetArchitecture) : GetMuxerFromGlobalRegistrationOnUnix(targetArchitecture);
 
@@ -203,6 +216,22 @@ internal sealed class DotnetMuxerLocator
 
         _resolutionLog($"DotnetHostHelper.TryGetDotnetPathByArchitecture: Muxer compatible with '{targetArchitecture}' resolved from default installation path: '{muxerPath}'");
         return true;
+    }
+
+    private string? GetMuxerFromPath()
+    {
+        string values = Environment.GetEnvironmentVariable("PATH")!;
+        foreach (string? p in values.Split(Path.PathSeparator))
+        {
+            string fullPath = Path.Combine(p, _muxerName);
+            if (File.Exists(fullPath))
+            {
+                _resolutionLog($"DotnetMuxerLocator.GetMuxerFromPath: Found {_muxerName} using PATH environment variable: '{fullPath}'");
+                return fullPath;
+            }
+        }
+
+        return null;
     }
 
     private string? GetMuxerFromGlobalRegistrationWin(PlatformArchitecture targetArchitecture)

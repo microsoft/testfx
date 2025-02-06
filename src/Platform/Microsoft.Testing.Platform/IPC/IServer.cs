@@ -3,7 +3,7 @@
 
 namespace Microsoft.Testing.Platform.IPC;
 
-internal interface IServer : INamedPipeBase,
+internal interface IServer :
 #if NETCOREAPP
     IAsyncDisposable,
 #endif

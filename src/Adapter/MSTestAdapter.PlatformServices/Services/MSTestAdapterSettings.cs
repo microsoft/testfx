@@ -10,6 +10,9 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
+/// <summary>
+/// The MSTest settings.
+/// </summary>
 #if RELEASE
 #if NET6_0_OR_GREATER
 [Obsolete(Constants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
@@ -171,6 +174,11 @@ public class MSTestAdapterSettings
         return settings;
     }
 
+    /// <summary>
+    /// Determines if the AppDomain are disabled based of the runsettings.
+    /// </summary>
+    /// <param name="settingsXml">The XML runsettings content.</param>
+    /// <returns><c>true</c> if AppDomains are disabled; <c>false</c> otherwise.</returns>
     public static bool IsAppDomainCreationDisabled(string? settingsXml)
     {
         // Expected format of the json is: -

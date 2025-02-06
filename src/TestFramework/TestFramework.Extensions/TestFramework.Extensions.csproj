@@ -30,6 +30,7 @@
       - UWP 10.0.16299
       - UWP 10.0.17763 with .NET 9+
     </PackageDescription>
+    <NoWarn>$(NoWarn);NU5100</NoWarn>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -83,17 +84,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="build\winui+uwp\MSTest.TestFramework.targets">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
-
-  <ItemGroup>
     <InternalsVisibleTo Include="Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter" Key="$(VsPublicKey)" />
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="build\winui\MSTest.TestFramework.targets">
+    <None Update="buildTransitive\winui\MSTest.TestFramework.targets">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

@@ -14,6 +14,7 @@ public sealed partial class Assert
 {
     [InterpolatedStringHandler]
     [EditorBrowsable(EditorBrowsableState.Never)]
+    [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1600:Elements should be documented", Justification = "This is not meant to be consumed by users.")]
     public readonly struct AssertIsInstanceOfTypeInterpolatedStringHandler
     {
         private readonly StringBuilder? _builder;
@@ -75,6 +76,7 @@ public sealed partial class Assert
 
     [InterpolatedStringHandler]
     [EditorBrowsable(EditorBrowsableState.Never)]
+    [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1600:Elements should be documented", Justification = "This is not meant to be consumed by users.")]
     public readonly struct AssertGenericIsInstanceOfTypeInterpolatedStringHandler<TArg>
     {
         private readonly StringBuilder? _builder;
@@ -134,6 +136,7 @@ public sealed partial class Assert
 
     [InterpolatedStringHandler]
     [EditorBrowsable(EditorBrowsableState.Never)]
+    [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1600:Elements should be documented", Justification = "This is not meant to be consumed by users.")]
     public readonly struct AssertIsNotInstanceOfTypeInterpolatedStringHandler
     {
         private readonly StringBuilder? _builder;
@@ -195,6 +198,7 @@ public sealed partial class Assert
 
     [InterpolatedStringHandler]
     [EditorBrowsable(EditorBrowsableState.Never)]
+    [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1600:Elements should be documented", Justification = "This is not meant to be consumed by users.")]
     public readonly struct AssertGenericIsNotInstanceOfTypeInterpolatedStringHandler<TArg>
     {
         private readonly StringBuilder? _builder;

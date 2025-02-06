@@ -299,4 +299,7 @@ Actual: {2}</value>
   <data name="InvalidGitHubUrl" xml:space="preserve">
     <value>Invalid GitHub ticket URL</value>
   </data>
+  <data name="DoesNotContainFail" xml:space="preserve">
+    <value>String '{0}' does contain string '{1}'. {2}.</value>
+  </data>
 </root>

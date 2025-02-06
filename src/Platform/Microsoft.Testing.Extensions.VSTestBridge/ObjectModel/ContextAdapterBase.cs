@@ -11,7 +11,7 @@ namespace Microsoft.Testing.Extensions.VSTestBridge.ObjectModel;
 
 internal abstract class ContextAdapterBase
 {
-    public ContextAdapterBase(ICommandLineOptions commandLineOptions)
+    protected ContextAdapterBase(ICommandLineOptions commandLineOptions)
     {
         if (commandLineOptions.TryGetOptionArgumentList(
             TestCaseFilterCommandLineOptionsProvider.TestCaseFilterOptionName,

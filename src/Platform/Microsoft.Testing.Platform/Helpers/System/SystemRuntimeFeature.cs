@@ -11,12 +11,6 @@ internal sealed class SystemRuntimeFeature : IRuntimeFeature
     public bool IsDynamicCodeSupported => true;
 #endif
 
-#if NET6_0_OR_GREATER
-    public bool IsHotReloadSupported => true && IsDynamicCodeSupported;
-#else
-    public bool IsHotReloadSupported => false;
-#endif
-
     public bool IsHotReloadEnabled { get; private set; }
 
     public void EnableHotReload() => IsHotReloadEnabled = true;

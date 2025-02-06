@@ -18,27 +18,11 @@ internal interface IConsole
 
     void SetForegroundColor(ConsoleColor color);
 
-    void SetBackgroundColor(ConsoleColor color);
-
     ConsoleColor GetForegroundColor();
-
-    ConsoleColor GetBackgroundColor();
 
     void WriteLine();
 
     void WriteLine(string? value);
-
-    void WriteLine(object? value);
-
-    void WriteLine(string format, object? arg0);
-
-    void WriteLine(string format, object? arg0, object? arg1);
-
-    void WriteLine(string format, object? arg0, object? arg1, object? arg2);
-
-    void WriteLine(string format, object?[]? args);
-
-    void Write(string format, object?[]? args);
 
     void Write(string? value);
 

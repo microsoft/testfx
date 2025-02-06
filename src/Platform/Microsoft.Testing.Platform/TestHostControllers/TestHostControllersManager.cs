@@ -64,13 +64,6 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
         _factoryOrdering.Add(compositeServiceFactory);
     }
 
-    public void AddDataConsumer(Func<IServiceProvider, IDataConsumer> dataConsumerFactory)
-    {
-        Guard.NotNull(dataConsumerFactory);
-        _dataConsumerFactories.Add(dataConsumerFactory);
-        _factoryOrdering.Add(dataConsumerFactory);
-    }
-
     public void AddDataConsumer<T>(CompositeExtensionFactory<T> compositeServiceFactory)
         where T : class, IDataConsumer
     {

@@ -14,17 +14,9 @@ internal interface ITask
 
     Task RunLongRunning(Func<Task> action, string name, CancellationToken cancellationToken);
 
-    Task Run(Action action, CancellationToken cancellationToken);
-
-    Task WhenAll(IEnumerable<Task> tasks);
-
     Task WhenAll(params Task[] tasks);
-
-    Task<Task> WhenAny(params Task[] tasks);
 
     Task Delay(int millisecondDelay);
 
     Task Delay(TimeSpan timeSpan, CancellationToken cancellation);
-
-    Task Delay(TimeSpan timeSpan);
 }

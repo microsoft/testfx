@@ -750,7 +750,6 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
             && !testFrameworkBuilderData.IsJsonRpcProtocol)
         {
             ListTestsMessageBus concreteMessageBusService = new(
-                serviceProvider.GetTestFramework(),
                 serviceProvider.GetTestApplicationCancellationTokenSource(),
                 serviceProvider.GetLoggerFactory(),
                 serviceProvider.GetOutputDevice(),
