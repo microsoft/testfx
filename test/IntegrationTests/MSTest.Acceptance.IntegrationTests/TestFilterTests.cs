@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
@@ -93,25 +93,27 @@ failed OwnerTest (0ms)
         testHostResult.AssertOutputContains("Running test: CategoryAOnly");
         testHostResult.AssertOutputDoesNotContain("Running test: CategoryBOnly");
         testHostResult.AssertOutputContains("Running test: CategoryAAndB");
-        testHostResult.AssertExitCodeIs(ExitCodes.AtLeastOneTestFailed);
+        testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
         testHostResult = await testHost.ExecuteAsync("--settings NoFilter.runsettings");
         testHostResult.AssertOutputContains("Running test: CategoryAOnly");
         testHostResult.AssertOutputContains("Running test: CategoryBOnly");
         testHostResult.AssertOutputContains("Running test: CategoryAAndB");
+        // PriorityTest, OwnerTest, and TestCategoryTest are reported as failing.
+        // See the test UsingTestPropertyForOwnerAndPriorityAndTestCategory_TestsFailed
         testHostResult.AssertExitCodeIs(ExitCodes.AtLeastOneTestFailed);
 
         testHostResult = await testHost.ExecuteAsync("--settings CategoryA.runsettings --filter TestCategory~CategoryA");
         testHostResult.AssertOutputContains("Running test: CategoryAOnly");
         testHostResult.AssertOutputDoesNotContain("Running test: CategoryBOnly");
         testHostResult.AssertOutputContains("Running test: CategoryAAndB");
-        testHostResult.AssertExitCodeIs(ExitCodes.AtLeastOneTestFailed);
+        testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
         testHostResult = await testHost.ExecuteAsync("--settings CategoryA.runsettings --filter TestCategory~CategoryB");
         testHostResult.AssertOutputDoesNotContain("Running test: CategoryAOnly");
         testHostResult.AssertOutputDoesNotContain("Running test: CategoryBOnly");
         testHostResult.AssertOutputContains("Running test: CategoryAAndB");
-        testHostResult.AssertExitCodeIs(ExitCodes.AtLeastOneTestFailed);
+        testHostResult.AssertExitCodeIs(ExitCodes.Success);
     }
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
