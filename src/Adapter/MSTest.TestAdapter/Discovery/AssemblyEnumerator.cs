@@ -437,9 +437,24 @@ internal class AssemblyEnumerator : MarshalByRefObject
         var discoveredTests = new List<UnitTestElement>();
         int index = 0;
 
-        foreach (object?[] d in data)
+        foreach (object?[] dataOrTestDataRow in data)
         {
-            // TODO: Handle TestDataRow.
+            object?[] d = dataOrTestDataRow;
+            string? displayNameFromTestDataRow;
+            string? ignoreFromTestDataRow; // TODO: Use the value and respect the ignore. Should we re-use TestDataSourceIgnoreMessage ?
+            if (d?.Length == 1 && d[0]?.GetType() is { IsGenericType: true } genericType &&
+                genericType.GetGenericTypeDefinition() == typeof(TestDataRow<>))
+            {
+                object testDataRow = d[0]!;
+                object? dataFromTestDataRow = genericType.GetProperty("Value")!.GetValue(testDataRow);
+                ignoreFromTestDataRow = genericType.GetProperty("IgnoreMessage")!.GetValue(testDataRow) as string;
+                displayNameFromTestDataRow = genericType.GetProperty("DisplayName")!.GetValue(testDataRow) as string;
+
+                d = TestDataSourceHelpers.TryHandleTupleDataSource(dataFromTestDataRow, out object?[] tupleExpandedToArray)
+                    ? tupleExpandedToArray
+                    : [dataFromTestDataRow];
+            }
+
             UnitTestElement discoveredTest = test.Clone();
             discoveredTest.DisplayName = dataSource.GetDisplayName(methodInfo, d) ?? discoveredTest.DisplayName;
 
