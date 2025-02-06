@@ -69,13 +69,13 @@ public class FileOperations : IFileOperations
     /// <param name="assembly">The assembly.</param>
     /// <returns>Path to the .DLL of the assembly.</returns>
     public string? GetAssemblyPath(Assembly assembly)
-#if WINDOWS_UWP
-        => null; // TODO: what are the options here?
-#else
+#if NETSTANDARD || (NETCOREAPP && !WINDOWS_UWP) || NETFRAMEWORK
         // This method will never be called in source generator mode, we are providing a different provider for file operations.
 #pragma warning disable IL3000 // Avoid accessing Assembly file path when publishing as a single file
         => assembly.Location;
 #pragma warning disable IL3000 // Avoid accessing Assembly file path when publishing as a single file
+#elif WINDOWS_UWP
+        => null; // TODO: what are the options here?
 #endif
 
     /// <summary>
@@ -86,7 +86,13 @@ public class FileOperations : IFileOperations
     /// <exception cref="NotImplementedException"> This is currently not implemented. </exception>
     public bool DoesFileExist(string assemblyFileName)
     {
-#if WINDOWS_UWP
+#if NETSTANDARD || (NETCOREAPP && !WIN_UI && !WINDOWS_UWP)
+        // For projectK these assemblies can be created on the fly which means the file might not exist on disk.
+        // Depend on Assembly Load failures instead of this validation.
+        return true;
+#elif NETFRAMEWORK
+        return (SafeInvoke(() => File.Exists(assemblyFileName)) as bool?) ?? false;
+#elif WINDOWS_UWP
         bool fileExists = false;
 
         try
@@ -102,12 +108,6 @@ public class FileOperations : IFileOperations
         }
 
         return fileExists;
-#elif NETSTANDARD || (NETCOREAPP && !WIN_UI)
-        // For projectK these assemblies can be created on the fly which means the file might not exist on disk.
-        // Depend on Assembly Load failures instead of this validation.
-        return true;
-#elif NETFRAMEWORK
-        return (SafeInvoke(() => File.Exists(assemblyFileName)) as bool?) ?? false;
 #elif WIN_UI
         string path = GetFullFilePath(assemblyFileName);
         return File.Exists(path);
