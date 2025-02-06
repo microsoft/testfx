@@ -64,7 +64,7 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.TestPlatform.AdapterUtilities" />
     <PackageReference Include="System.Threading.Tasks.Extensions"
-                      Condition=" '$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == '$(NetFrameworkMinimum)' OR '$(TargetFramework)' == '$(UwpMinimum)' OR '$(TargetFramework)' == '$(ModernUwpMinimum)' " />
+                      Condition=" '$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == '$(NetFrameworkMinimum)' OR '$(TargetFramework)' == '$(UwpMinimum)' " />
   </ItemGroup>
 
   <ItemGroup>
