@@ -7,13 +7,17 @@ using Microsoft.Testing.Platform.Resources;
 
 namespace Microsoft.Testing.Platform.Requests;
 
+/// <summary>
+/// A tree based filter for test execution.
+/// </summary>
 [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
 [SuppressMessage("ApiDesign", "RS0016:Add public types and members to the declared API", Justification = "Experimental API")]
 public sealed class TreeNodeFilter : ITestExecutionFilter
 {
+    /// <summary>
+    /// The path separator character.
+    /// </summary>
     public const char PathSeparator = '/';
-    internal const char PropertyPerEdgeStartChar = '[';
-    internal const char PropertyPerEdgeEndChar = ']';
 
     // Note: After the token gets expanded into regex ** gets converted to .*.*.
     internal const string AllNodesBelowRegexString = ".*.*";
@@ -25,6 +29,9 @@ public sealed class TreeNodeFilter : ITestExecutionFilter
         _filters = ParseFilter(filter);
     }
 
+    /// <summary>
+    /// Gets the filter string.
+    /// </summary>
     public string Filter { get; }
 
     /// <remarks>

@@ -36,7 +36,7 @@
       - UWP 10.0.17763 with .NET 9
     </PackageDescription>
     <!-- Nothing in lib but that's expected -->
-    <NoWarn>$(NoWarn);NU5127;NU5128</NoWarn>
+    <NoWarn>$(NoWarn);NU5127;NU5128;NU5100</NoWarn>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -96,10 +96,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="build\common\*" Condition=" '$(TargetFramework)' != '$(UwpMinimum)' ">
+    <None Update="buildTransitive\common\*" Condition=" '$(TargetFramework)' != '$(UwpMinimum)' ">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="build\uwp\*" Condition=" '$(TargetFramework)' == '$(UwpMinimum)' ">
+    <None Update="buildTransitive\uwp\*" Condition=" '$(TargetFramework)' == '$(UwpMinimum)' ">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="PACKAGE.md">

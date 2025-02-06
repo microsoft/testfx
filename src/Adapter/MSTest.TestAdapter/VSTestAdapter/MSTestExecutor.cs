@@ -49,12 +49,24 @@ public class MSTestExecutor : ITestExecutor
     /// </summary>
     public TestExecutionManager TestExecutionManager { get; protected set; }
 
+    /// <summary>
+    /// Runs the tests.
+    /// </summary>
+    /// <param name="tests">The collection of test cases to run.</param>
+    /// <param name="runContext">The run context.</param>
+    /// <param name="frameworkHandle">The handle to the framework.</param>
 #if DEBUG
     [Obsolete("Use RunTestsAsync instead.")]
 #endif
     public void RunTests(IEnumerable<TestCase>? tests, IRunContext? runContext, IFrameworkHandle? frameworkHandle)
         => RunTestsAsync(tests, runContext, frameworkHandle, null).GetAwaiter().GetResult();
 
+    /// <summary>
+    /// Runs the tests.
+    /// </summary>
+    /// <param name="sources">The collection of assemblies to run.</param>
+    /// <param name="runContext">The run context.</param>
+    /// <param name="frameworkHandle">The handle to the framework.</param>
 #if DEBUG
     [Obsolete("Use RunTestsAsync instead.")]
 #endif
@@ -89,6 +101,9 @@ public class MSTestExecutor : ITestExecutor
         await RunTestsFromRightContextAsync(frameworkHandle, async testRunToken => await TestExecutionManager.RunTestsAsync(sources, runContext, frameworkHandle, testRunToken));
     }
 
+    /// <summary>
+    /// Cancel the test run.
+    /// </summary>
     public void Cancel()
         => _testRunCancellationToken?.Cancel();
 

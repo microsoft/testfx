@@ -12,6 +12,10 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, Inherited = false)]
 public abstract class ConditionBaseAttribute : Attribute
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ConditionBaseAttribute"/> class.
+    /// </summary>
+    /// <param name="mode">The condition mode.</param>
     protected ConditionBaseAttribute(ConditionMode mode)
         => Mode = mode;
 

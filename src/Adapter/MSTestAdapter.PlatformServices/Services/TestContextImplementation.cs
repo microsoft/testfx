@@ -157,6 +157,9 @@ public class TestContextImplementation : TestContext, ITestContext
     public override string TestName => base.TestName!;
 #endif
 
+    /// <summary>
+    /// Gets the inner test context object.
+    /// </summary>
     public TestContext Context => this;
 
     /// <inheritdoc/>
@@ -365,6 +368,7 @@ public class TestContextImplementation : TestContext, ITestContext
     public void SetDisplayName(string? displayName)
         => TestDisplayName = displayName;
 
+    /// <inheritdoc/>
     public override void DisplayMessage(MessageLevel messageLevel, string message)
         => _messageLogger?.SendMessage(messageLevel.ToTestMessageLevel(), message);
     #endregion

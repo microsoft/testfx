@@ -6,6 +6,9 @@ using Microsoft.Testing.Platform.Capabilities.TestFramework;
 
 namespace Microsoft.Testing.Extensions.VSTestBridge.Capabilities;
 
+/// <summary>
+/// The VSTest bridged test framework capabilities.
+/// </summary>
 public sealed class VSTestBridgeExtensionBaseCapabilities : ITrxReportCapability, IVSTestFlattenedTestNodesReportCapability, INamedFeatureCapability
 {
     private const string VSTestProviderSupport = "vstestProvider";
@@ -24,5 +27,6 @@ public sealed class VSTestBridgeExtensionBaseCapabilities : ITrxReportCapability
     /// <inheritdoc />
     void ITrxReportCapability.Enable() => IsTrxEnabled = true;
 
+    /// <inheritdoc />
     bool INamedFeatureCapability.IsSupported(string featureName) => featureName is VSTestProviderSupport;
 }

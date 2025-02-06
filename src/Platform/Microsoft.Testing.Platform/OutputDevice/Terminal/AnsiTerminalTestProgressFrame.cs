@@ -343,8 +343,6 @@ internal sealed class AnsiTerminalTestProgressFrame
 
         public long ProgressVersion { get; }
 
-        public int RenderedHeight { get; set; }
-
         public int RenderedDurationLength { get; set; }
     }
 }
