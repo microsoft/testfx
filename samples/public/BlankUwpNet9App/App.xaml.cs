@@ -2,14 +2,9 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Diagnostics;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel;
+
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
-using Windows.Storage;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
@@ -19,7 +14,7 @@ namespace BlankUwpNet9App;
 /// <summary>
 /// Provides application-specific behavior to supplement the default Application class.
 /// </summary>
-sealed partial class App : Application
+public sealed partial class App : Application
 {
     /// <summary>
     /// Initializes the singleton application object. This is the first line of authored code
@@ -33,9 +28,9 @@ sealed partial class App : Application
     }
 
     /// <inheritdoc/>
-    protected override void OnLaunched(LaunchActivatedEventArgs e)
+    protected override void OnLaunched(LaunchActivatedEventArgs args)
     {
-        Frame rootFrame = Window.Current.Content as Frame;
+        var rootFrame = Window.Current.Content as Frame;
 
         // Do not repeat app initialization when the Window already has content,
         // just ensure that the window is active.
@@ -46,7 +41,7 @@ sealed partial class App : Application
 
             rootFrame.NavigationFailed += OnNavigationFailed;
 
-            if (e.PreviousExecutionState == ApplicationExecutionState.Terminated)
+            if (args.PreviousExecutionState == ApplicationExecutionState.Terminated)
             {
                 // TODO: Load state from previously suspended application
             }
@@ -60,8 +55,7 @@ sealed partial class App : Application
         // Ensure the current window is active
         Window.Current.Activate();
 
-
-        Microsoft.VisualStudio.TestPlatform.TestExecutor.UnitTestClient.Run(e.Arguments);
+        Microsoft.VisualStudio.TestPlatform.TestExecutor.UnitTestClient.Run(args.Arguments);
     }
 
     /// <summary>
@@ -69,10 +63,8 @@ sealed partial class App : Application
     /// </summary>
     /// <param name="sender">The Frame which failed navigation.</param>
     /// <param name="e">Details about the navigation failure.</param>
-    void OnNavigationFailed(object sender, NavigationFailedEventArgs e)
-    {
-        throw new Exception($"Failed to load page '{e.SourcePageType.FullName}'.");
-    }
+    private void OnNavigationFailed(object sender, NavigationFailedEventArgs e)
+        => throw new Exception($"Failed to load page '{e.SourcePageType.FullName}'.");
 
     /// <summary>
     /// Invoked when application execution is being suspended. Application state is saved
