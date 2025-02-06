@@ -3,10 +3,18 @@
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
+/// <summary>
+/// The result of a test retry.
+/// </summary>
+[Experimental("MSTESTEXP", UrlFormat = "https://aka.ms/mstest/diagnostics#{0}")]
 public sealed class RetryResult
 {
     private readonly List<TestResult[]> _testResults = new();
 
+    /// <summary>
+    /// Adds a set of test results to the retry result.
+    /// </summary>
+    /// <param name="testResults">The test results for the current attempt.</param>
     public void AddResult(TestResult[] testResults)
         => _testResults.Add(testResults);
 

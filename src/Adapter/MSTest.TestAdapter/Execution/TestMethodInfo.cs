@@ -64,16 +64,34 @@ public class TestMethodInfo : ITestMethod
     /// </summary>
     public bool IsRunnable => StringEx.IsNullOrEmpty(NotRunnableReason);
 
+    /// <summary>
+    /// Gets the parameter types of the test method.
+    /// </summary>
     public ParameterInfo[] ParameterTypes => TestMethod.GetParameters();
 
+    /// <summary>
+    /// Gets the return type of the test method.
+    /// </summary>
     public Type ReturnType => TestMethod.ReturnType;
 
+    /// <summary>
+    /// Gets the name of the class declaring the test method.
+    /// </summary>
     public string TestClassName => Parent.ClassType.FullName!;
 
+    /// <summary>
+    /// Gets the name of the test method.
+    /// </summary>
     public string TestMethodName => TestMethod.Name;
 
+    /// <summary>
+    /// Gets the methodInfo for test method.
+    /// </summary>
     public MethodInfo MethodInfo => TestMethod;
 
+    /// <summary>
+    /// Gets the arguments with which test method is invoked.
+    /// </summary>
     public object?[]? Arguments { get; private set; }
 
     /// <summary>
@@ -95,8 +113,20 @@ public class TestMethodInfo : ITestMethod
 
     internal RetryBaseAttribute? RetryAttribute { get; }
 
-    public Attribute[]? GetAllAttributes(bool inherit) => ReflectHelper.Instance.GetDerivedAttributes<Attribute>(TestMethod, inherit).ToArray();
+    /// <summary>
+    /// Gets all attributes of the test method.
+    /// </summary>
+    /// <param name="inherit">Whether or not getting the attributes that are inherited.</param>
+    /// <returns>An array of the attributes.</returns>
+    public Attribute[]? GetAllAttributes(bool inherit)
+        => ReflectHelper.Instance.GetDerivedAttributes<Attribute>(TestMethod, inherit).ToArray();
 
+    /// <summary>
+    /// Gets all attributes of the test method.
+    /// </summary>
+    /// <typeparam name="TAttributeType">The type of the attributes.</typeparam>
+    /// <param name="inherit">Whether or not getting the attributes that are inherited.</param>
+    /// <returns>An array of the attributes.</returns>
     public TAttributeType[] GetAttributes<TAttributeType>(bool inherit)
         where TAttributeType : Attribute
         => ReflectHelper.Instance.GetDerivedAttributes<TAttributeType>(TestMethod, inherit).ToArray();
@@ -302,6 +332,7 @@ public class TestMethodInfo : ITestMethod
     /// Execute test without timeout.
     /// </summary>
     /// <param name="arguments">Arguments to be passed to the method.</param>
+    /// <param name="timeoutTokenSource">The timeout token source.</param>
     /// <returns>The result of the execution.</returns>
     [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
     private TestResult ExecuteInternal(object?[]? arguments, CancellationTokenSource? timeoutTokenSource)
@@ -490,6 +521,7 @@ public class TestMethodInfo : ITestMethod
     /// be expected or not expected.
     /// </summary>
     /// <param name="ex">Exception that was thrown.</param>
+    /// <param name="realException">Real exception thrown by the test method.</param>
     /// <param name="className">The class name.</param>
     /// <param name="methodName">The method name.</param>
     /// <returns>Test framework exception with details.</returns>
@@ -561,6 +593,7 @@ public class TestMethodInfo : ITestMethod
     /// Runs TestCleanup methods of parent TestClass and base classes.
     /// </summary>
     /// <param name="result">Instance of TestResult.</param>
+    /// <param name="timeoutTokenSource">The timeout token source.</param>
     [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
     private void RunTestCleanupMethod(TestResult result, CancellationTokenSource? timeoutTokenSource)
     {
@@ -696,6 +729,7 @@ public class TestMethodInfo : ITestMethod
     /// </summary>
     /// <param name="classInstance">Instance of TestClass.</param>
     /// <param name="result">Instance of TestResult.</param>
+    /// <param name="timeoutTokenSource">The timeout token source.</param>
     /// <returns>True if the TestInitialize method(s) did not throw an exception.</returns>
     [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
     private bool RunTestInitializeMethod(object classInstance, TestResult result, CancellationTokenSource? timeoutTokenSource)

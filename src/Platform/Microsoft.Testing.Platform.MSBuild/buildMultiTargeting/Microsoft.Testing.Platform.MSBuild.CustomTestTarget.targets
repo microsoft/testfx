@@ -1,0 +1,6 @@
+﻿<Project>
+  <!-- Expose a test target usable by tests projects where this target is injected -->
+  <Target Name="Test" Condition=" '$(UseMSBuildTestInfrastructure)' != 'True' " >
+    <CallTarget Targets="_TestingPlatformTest" />
+  </Target>
+</Project>

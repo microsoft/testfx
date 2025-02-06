@@ -385,7 +385,6 @@ public class UnitTest1
 
         private const string ProgramFileSourceCode = """
 #file Program.cs
-
 using System;
 using Microsoft.Testing.Platform.Builder;
 
@@ -455,7 +454,7 @@ using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 [TestClass]
-public class LifecycleAttributesVoid
+public class LifecycleAttributesVoidTests
 {
     [AssemblyInitialize]
     public static void AssemblyInitialize(TestContext context)
@@ -565,7 +564,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 $ParallelAttribute$
 [TestClass]
-public class LifecycleAttributesTask
+public class LifecycleAttributesTaskTests
 {
     [AssemblyInitialize]
     public static Task AssemblyInitialize(TestContext context)
@@ -680,7 +679,7 @@ using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 [TestClass]
-public class LifecycleAttributesValueTask
+public class LifecycleAttributesValueTaskTests
 {
     [AssemblyInitialize]
     public static ValueTask AssemblyInitialize(TestContext context)

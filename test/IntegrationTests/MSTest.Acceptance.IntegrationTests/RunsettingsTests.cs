@@ -48,9 +48,9 @@ public sealed class RunSettingsTests : AcceptanceTestBase<RunSettingsTests.TestA
         testHostResult.AssertOutputContains("Runsettings attribute 'TargetFrameworkVersion' is not supported by Microsoft.Testing.Platform and will be ignored");
         testHostResult.AssertOutputContains("Runsettings attribute 'TargetPlatform' is not supported by Microsoft.Testing.Platform and will be ignored");
         testHostResult.AssertOutputContains("Runsettings attribute 'TestAdaptersPaths' is not supported by Microsoft.Testing.Platform and will be ignored");
-        testHostResult.AssertOutputContains("Runsettings attribute 'TestCaseFilter' is not supported by Microsoft.Testing.Platform and will be ignored");
         testHostResult.AssertOutputContains("Runsettings attribute 'TestSessionTimeout' is not supported by Microsoft.Testing.Platform and will be ignored");
         testHostResult.AssertOutputContains("Runsettings attribute 'TreatNoTestsAsError' is not supported by Microsoft.Testing.Platform and will be ignored");
+        testHostResult.AssertOutputDoesNotContain("Runsettings attribute 'TestCaseFilter' is not supported by Microsoft.Testing.Platform and will be ignored");
     }
 
     [TestMethod]

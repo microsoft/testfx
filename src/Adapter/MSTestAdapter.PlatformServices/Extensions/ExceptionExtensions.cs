@@ -13,22 +13,18 @@ internal static class ExceptionExtensions
     /// </summary>
     /// <param name="exception"> The exception. </param>
     /// <returns> Custom exception message that includes inner exceptions. </returns>
-    internal static string GetExceptionMessage(this Exception? exception)
+    internal static string GetExceptionMessage(this Exception exception)
     {
-        if (exception == null)
-        {
-            return string.Empty;
-        }
-
-        string exceptionString = exception.Message;
+        var builder = new StringBuilder(exception.Message);
         Exception? inner = exception.InnerException;
         while (inner != null)
         {
-            exceptionString += Environment.NewLine + inner.Message;
+            builder.AppendLine();
+            builder.Append(inner.Message);
             inner = inner.InnerException;
         }
 
-        return exceptionString;
+        return builder.ToString();
     }
 
     internal static bool IsOperationCanceledExceptionFromToken(this Exception ex, CancellationToken cancellationToken)

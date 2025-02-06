@@ -36,11 +36,9 @@ public sealed class EnvironmentVariablesConfigurationProviderTests : AcceptanceT
 </Project>
 
 #file Program.cs
-
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.Extensions.Messages;

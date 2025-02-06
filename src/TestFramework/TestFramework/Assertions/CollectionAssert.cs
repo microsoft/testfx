@@ -1486,6 +1486,7 @@ public sealed class CollectionAssert
     /// <param name="collection">
     /// The collection to process.
     /// </param>
+    /// <param name="comparer">The equality comparer to use when comparing items.</param>
     /// <param name="nullCount">
     /// The number of null elements in the collection.
     /// </param>
@@ -1531,6 +1532,7 @@ public sealed class CollectionAssert
     /// <param name="actual">
     /// The second collection to compare.
     /// </param>
+    /// <param name="comparer">The equality comparer to use when comparing items.</param>
     /// <param name="expectedCount">
     /// The expected number of occurrences of
     /// <paramref name="mismatchedElement"/> or 0 if there is no mismatched

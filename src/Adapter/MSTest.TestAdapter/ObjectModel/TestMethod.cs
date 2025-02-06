@@ -31,9 +31,14 @@ public sealed class TestMethod : ITestMethod
     public const int TotalHierarchyLevels = HierarchyConstants.Levels.TotalLevelCount;
 
     private readonly ReadOnlyCollection<string?> _hierarchy;
-    private string? _declaringClassFullName;
-    private string? _declaringAssemblyName;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TestMethod"/> class.
+    /// </summary>
+    /// <param name="name">The name of the method.</param>
+    /// <param name="fullClassName">The full name of the class declaring the method.</param>
+    /// <param name="assemblyName">The full assembly name.</param>
+    /// <param name="isAsync">Whether the method is async.</param>
 #pragma warning disable IDE0060 // Remove unused parameter - Public API :/
     public TestMethod(string name, string fullClassName, string assemblyName, bool isAsync)
 #pragma warning restore IDE0060 // Remove unused parameter
@@ -86,12 +91,12 @@ public sealed class TestMethod : ITestMethod
     /// </summary>
     public string? DeclaringAssemblyName
     {
-        get => _declaringAssemblyName;
+        get => field;
 
         set
         {
             DebugEx.Assert(value != AssemblyName, "DeclaringAssemblyName should not be the same as AssemblyName.");
-            _declaringAssemblyName = value;
+            field = value;
         }
     }
 
@@ -103,12 +108,12 @@ public sealed class TestMethod : ITestMethod
     /// </summary>
     public string? DeclaringClassFullName
     {
-        get => _declaringClassFullName;
+        get => field;
 
         set
         {
             DebugEx.Assert(value != FullClassName, "DeclaringClassFullName should not be the same as FullClassName.");
-            _declaringClassFullName = value;
+            field = value;
         }
     }
 

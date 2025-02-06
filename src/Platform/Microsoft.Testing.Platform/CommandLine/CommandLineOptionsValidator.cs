@@ -148,12 +148,12 @@ internal static class CommandLineOptionsValidator
         Dictionary<ICommandLineOptionsProvider, IReadOnlyCollection<CommandLineOption>> systemOptionsByProvider)
     {
         StringBuilder? stringBuilder = null;
-        foreach (OptionRecord optionRecord in parseResult.Options)
+        foreach (CommandLineParseOption optionRecord in parseResult.Options)
         {
-            if (!extensionOptionsByProvider.Union(systemOptionsByProvider).Any(tuple => tuple.Value.Any(x => x.Name == optionRecord.Option)))
+            if (!extensionOptionsByProvider.Union(systemOptionsByProvider).Any(tuple => tuple.Value.Any(x => x.Name == optionRecord.Name)))
             {
                 stringBuilder ??= new();
-                stringBuilder.AppendLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineUnknownOption, optionRecord.Option));
+                stringBuilder.AppendLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineUnknownOption, optionRecord.Name));
             }
         }
 
@@ -167,11 +167,11 @@ internal static class CommandLineOptionsValidator
         Dictionary<string, (ICommandLineOptionsProvider Provider, CommandLineOption Option)> providerAndOptionByOptionName)
     {
         StringBuilder stringBuilder = new();
-        foreach (IGrouping<string, OptionRecord> groupedOptions in parseResult.Options.GroupBy(x => x.Option))
+        foreach (IGrouping<string, CommandLineParseOption> groupedOptions in parseResult.Options.GroupBy(x => x.Name))
         {
             // getting the arguments count for an option.
             int arity = 0;
-            foreach (OptionRecord optionEntry in groupedOptions)
+            foreach (CommandLineParseOption optionEntry in groupedOptions)
             {
                 arity += optionEntry.Arguments.Length;
             }
@@ -205,14 +205,14 @@ internal static class CommandLineOptionsValidator
         ApplicationStateGuard.Ensure(parseResult is not null);
 
         StringBuilder? stringBuilder = null;
-        foreach (OptionRecord optionRecord in parseResult.Options)
+        foreach (CommandLineParseOption optionRecord in parseResult.Options)
         {
-            (ICommandLineOptionsProvider provider, CommandLineOption option) = providerAndOptionByOptionName[optionRecord.Option];
+            (ICommandLineOptionsProvider provider, CommandLineOption option) = providerAndOptionByOptionName[optionRecord.Name];
             ValidationResult result = await provider.ValidateOptionArgumentsAsync(option, optionRecord.Arguments);
             if (!result.IsValid)
             {
                 stringBuilder ??= new();
-                stringBuilder.AppendLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineInvalidArgumentsForOption, optionRecord.Option, result.ErrorMessage));
+                stringBuilder.AppendLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineInvalidArgumentsForOption, optionRecord.Name, result.ErrorMessage));
             }
         }
 

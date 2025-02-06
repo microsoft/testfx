@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -38,5 +38,5 @@
   </ItemGroup>
 
   <!-- Import the capabilities for the Microsoft.Testing.Platform -->
-  <Import Project="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\buildMultiTargeting\Microsoft.Testing.Platform.props"/>
+  <Import Project="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\buildMultiTargeting\Microsoft.Testing.Platform.props" />
 </Project>

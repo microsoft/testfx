@@ -10,8 +10,15 @@ using Microsoft.Testing.Platform.Telemetry;
 
 namespace Microsoft.Testing.Extensions;
 
+/// <summary>
+/// Extensions for adding AppInsights telemetry provider.
+/// </summary>
 public static class AppInsightsTelemetryProviderExtensions
 {
+    /// <summary>
+    /// Adds the AppInsights telemetry provider to the test application.
+    /// </summary>
+    /// <param name="builder">The test application builder.</param>
     public static void AddAppInsightsTelemetryProvider(this ITestApplicationBuilder builder)
     {
 #if NETCOREAPP
@@ -28,7 +35,7 @@ public static class AppInsightsTelemetryProviderExtensions
             throw new ArgumentException(ExtensionResources.AddAppInsightsTelemetryProviderInvalidBuilder);
         }
 
-        testApplicationBuilder.TelemetryManager.AddTelemetryCollectorProvider(services =>
+        testApplicationBuilder.Telemetry.AddTelemetryCollectorProvider(services =>
         {
             IEnvironment environment = services.GetRequiredService<IEnvironment>();
 

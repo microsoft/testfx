@@ -1,0 +1,11 @@
+###############################
+# Core EditorConfig Options   #
+###############################
+
+root = false
+
+[*.{cs,vb}]
+
+#### .NET Coding Conventions ####
+
+dotnet_analyzer_diagnostic.category-StyleCop.CSharp.DocumentationRules.severity = none # Disable StyleCop.CSharp.DocumentationRules

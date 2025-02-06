@@ -64,11 +64,13 @@ public sealed class AssertionArgsShouldAvoidConditionalAccessAnalyzer : Diagnost
         description: null,
         Category.Usage,
         DiagnosticSeverity.Info,
-        isEnabledByDefault: true);
+        isEnabledByDefault: false);
 
+    /// <inheritdoc />
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
         = ImmutableArray.Create(Rule);
 
+    /// <inheritdoc />
     public override void Initialize(AnalysisContext context)
     {
         context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);

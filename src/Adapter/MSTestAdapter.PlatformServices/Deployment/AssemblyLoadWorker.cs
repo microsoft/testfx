@@ -79,6 +79,7 @@ internal sealed class AssemblyLoadWorker : MarshalByRefObject
     /// Get the target dotNet framework string for the assembly.
     /// </summary>
     /// <param name="path">Path of the assembly file.</param>
+    /// <param name="errorMessage">Error message if any.</param>
     /// <returns> String representation of the target dotNet framework e.g. .NETFramework,Version=v4.0. </returns>
     internal string GetTargetFrameworkVersionStringFromPath(string path, out string? errorMessage)
     {

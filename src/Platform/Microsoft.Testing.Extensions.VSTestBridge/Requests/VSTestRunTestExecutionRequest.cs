@@ -12,6 +12,15 @@ namespace Microsoft.Testing.Extensions.VSTestBridge.Requests;
 /// </summary>
 public sealed class VSTestRunTestExecutionRequest : RunTestExecutionRequest
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="VSTestRunTestExecutionRequest"/> class.
+    /// </summary>
+    /// <param name="session">The test session context.</param>
+    /// <param name="executionFilter">The test execution filter.</param>
+    /// <param name="assemblyPaths">The assembly paths.</param>
+    /// <param name="runContext">The VSTest run context.</param>
+    /// <param name="frameworkHandle">The VSTest framework handle.</param>
+    [Obsolete("VSTestTestExecutionFilter always have null TestCases and should not be used.", error: true)]
     public VSTestRunTestExecutionRequest(TestSessionContext session, VSTestTestExecutionFilter executionFilter, string[] assemblyPaths,
         IRunContext runContext, IFrameworkHandle frameworkHandle)
         : base(session, executionFilter)
@@ -21,12 +30,34 @@ public sealed class VSTestRunTestExecutionRequest : RunTestExecutionRequest
         FrameworkHandle = frameworkHandle;
     }
 
-    public VSTestTestExecutionFilter VSTestFilter
-        => (VSTestTestExecutionFilter)Filter;
+    internal VSTestRunTestExecutionRequest(TestSessionContext session, ITestExecutionFilter executionFilter, string[] assemblyPaths,
+        IRunContext runContext, IFrameworkHandle frameworkHandle)
+        : base(session, executionFilter)
+    {
+        AssemblyPaths = assemblyPaths;
+        RunContext = runContext;
+        FrameworkHandle = frameworkHandle;
+    }
 
+    /// <summary>
+    /// Gets the VSTest filter.
+    /// </summary>
+    [Obsolete("VSTestTestExecutionFilter always have null TestCases and should not be used.", error: true)]
+    public VSTestTestExecutionFilter VSTestFilter
+        => VSTestTestExecutionFilter.Instance;
+
+    /// <summary>
+    /// Gets the array of assembly paths.
+    /// </summary>
     public string[] AssemblyPaths { get; }
 
+    /// <summary>
+    /// Gets the VSTest run context.
+    /// </summary>
     public IRunContext RunContext { get; }
 
+    /// <summary>
+    /// Gets the VSTest framework handle.
+    /// </summary>
     public IFrameworkHandle FrameworkHandle { get; }
 }

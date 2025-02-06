@@ -2,7 +2,6 @@
 abstract Microsoft.VisualStudio.TestTools.UnitTesting.ConditionBaseAttribute.IgnoreMessage.get -> string?
 abstract Microsoft.VisualStudio.TestTools.UnitTesting.ConditionBaseAttribute.GroupName.get -> string!
 abstract Microsoft.VisualStudio.TestTools.UnitTesting.ConditionBaseAttribute.ShouldRun.get -> bool
-abstract Microsoft.VisualStudio.TestTools.UnitTesting.RetryBaseAttribute.ExecuteAsync(Microsoft.VisualStudio.TestTools.UnitTesting.RetryContext retryContext) -> System.Threading.Tasks.Task<Microsoft.VisualStudio.TestTools.UnitTesting.RetryResult!>!
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsNotEmptyInterpolatedStringHandler<TItem>
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsNotEmptyInterpolatedStringHandler<TItem>.AppendFormatted(object? value, int alignment = 0, string? format = null) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsNotEmptyInterpolatedStringHandler<TItem>.AppendFormatted(string? value) -> void
@@ -245,12 +244,16 @@ Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataAttribute.IgnoreMessage.
 Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataSourceType.AutoDetect = 2 -> Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataSourceType
 *REMOVED*Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataAttribute.DynamicDataAttribute(string! dynamicDataSourceName, Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataSourceType dynamicDataSourceType = Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataSourceType.Property) -> void
 *REMOVED*Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataAttribute.DynamicDataAttribute(string! dynamicDataSourceName, System.Type! dynamicDataDeclaringType, Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataSourceType dynamicDataSourceType = Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataSourceType.Property) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.GitHubWorkItemAttribute
+Microsoft.VisualStudio.TestTools.UnitTesting.GitHubWorkItemAttribute.GitHubWorkItemAttribute(string! url) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.GitHubWorkItemAttribute.Url.get -> string!
 Microsoft.VisualStudio.TestTools.UnitTesting.ITestDataSourceIgnoreCapability
 Microsoft.VisualStudio.TestTools.UnitTesting.ITestDataSourceIgnoreCapability.IgnoreMessage.get -> string?
 Microsoft.VisualStudio.TestTools.UnitTesting.ITestDataSourceIgnoreCapability.IgnoreMessage.set -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.OperatingSystems
+Microsoft.VisualStudio.TestTools.UnitTesting.OperatingSystems.FreeBSD = 8 -> Microsoft.VisualStudio.TestTools.UnitTesting.OperatingSystems
 Microsoft.VisualStudio.TestTools.UnitTesting.OperatingSystems.Linux = 1 -> Microsoft.VisualStudio.TestTools.UnitTesting.OperatingSystems
-Microsoft.VisualStudio.TestTools.UnitTesting.OperatingSystems.MacOSX = 2 -> Microsoft.VisualStudio.TestTools.UnitTesting.OperatingSystems
+Microsoft.VisualStudio.TestTools.UnitTesting.OperatingSystems.OSX = 2 -> Microsoft.VisualStudio.TestTools.UnitTesting.OperatingSystems
 Microsoft.VisualStudio.TestTools.UnitTesting.OperatingSystems.Windows = 4 -> Microsoft.VisualStudio.TestTools.UnitTesting.OperatingSystems
 Microsoft.VisualStudio.TestTools.UnitTesting.OSConditionAttribute
 Microsoft.VisualStudio.TestTools.UnitTesting.OSConditionAttribute.OSConditionAttribute(Microsoft.VisualStudio.TestTools.UnitTesting.ConditionMode mode, Microsoft.VisualStudio.TestTools.UnitTesting.OperatingSystems operatingSystems) -> void
@@ -264,12 +267,6 @@ Microsoft.VisualStudio.TestTools.UnitTesting.RetryAttribute.MillisecondsDelayBet
 Microsoft.VisualStudio.TestTools.UnitTesting.RetryAttribute.RetryAttribute(int maxRetryAttempts) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.RetryBaseAttribute
 Microsoft.VisualStudio.TestTools.UnitTesting.RetryBaseAttribute.RetryBaseAttribute() -> void
-Microsoft.VisualStudio.TestTools.UnitTesting.RetryContext
-Microsoft.VisualStudio.TestTools.UnitTesting.RetryContext.ExecuteTaskGetter.get -> System.Func<System.Threading.Tasks.Task<Microsoft.VisualStudio.TestTools.UnitTesting.TestResult![]!>!>!
-Microsoft.VisualStudio.TestTools.UnitTesting.RetryContext.RetryContext() -> void
-Microsoft.VisualStudio.TestTools.UnitTesting.RetryResult
-Microsoft.VisualStudio.TestTools.UnitTesting.RetryResult.AddResult(Microsoft.VisualStudio.TestTools.UnitTesting.TestResult![]! testResults) -> void
-Microsoft.VisualStudio.TestTools.UnitTesting.RetryResult.RetryResult() -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome.Ignored = 10 -> Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome
 override Microsoft.VisualStudio.TestTools.UnitTesting.IgnoreAttribute.IgnoreMessage.get -> string?
 override Microsoft.VisualStudio.TestTools.UnitTesting.IgnoreAttribute.GroupName.get -> string!
@@ -296,10 +293,40 @@ static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreNotEqual<T>(T? not
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreNotEqual<T>(T? notExpected, T? actual, System.Collections.Generic.IEqualityComparer<T>? comparer, ref Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAreNotEqualInterpolatedStringHandler<T> message) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreNotSame<T>(T? notExpected, T? actual, ref Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAreNotSameInterpolatedStringHandler<T> message) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreSame<T>(T? expected, T? actual, ref Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAreSameInterpolatedStringHandler<T> message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Contains(string! value, string! substring) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Contains(string! value, string! substring, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Contains(string! value, string! substring, string? message, params object?[]? parameters) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Contains(string! value, string! substring, System.StringComparison comparisonType) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Contains(string! value, string! substring, System.StringComparison comparisonType, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Contains(string! value, string! substring, System.StringComparison comparisonType, string? message, params object?[]? parameters) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Contains<T>(System.Collections.Generic.IEnumerable<T>! collection, System.Func<T, bool>! predicate) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Contains<T>(System.Collections.Generic.IEnumerable<T>! collection, System.Func<T, bool>! predicate, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Contains<T>(System.Collections.Generic.IEnumerable<T>! collection, System.Func<T, bool>! predicate, string? message, params object?[]? parameters) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Contains<T>(System.Collections.Generic.IEnumerable<T>! collection, T expected) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Contains<T>(System.Collections.Generic.IEnumerable<T>! collection, T expected, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Contains<T>(System.Collections.Generic.IEnumerable<T>! collection, T expected, string? message, params object?[]? parameters) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Contains<T>(System.Collections.Generic.IEnumerable<T>! collection, T expected, System.Collections.Generic.IEqualityComparer<T>! comparer) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Contains<T>(System.Collections.Generic.IEnumerable<T>! collection, T expected, System.Collections.Generic.IEqualityComparer<T>! comparer, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Contains<T>(System.Collections.Generic.IEnumerable<T>! collection, T expected, System.Collections.Generic.IEqualityComparer<T>! comparer, string? message, params object?[]? parameters) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ContainsSingle<T>(System.Collections.Generic.IEnumerable<T>! collection) -> T
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ContainsSingle<T>(System.Collections.Generic.IEnumerable<T>! collection, ref Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertSingleInterpolatedStringHandler<T> message) -> T
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ContainsSingle<T>(System.Collections.Generic.IEnumerable<T>! collection, string? message) -> T
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ContainsSingle<T>(System.Collections.Generic.IEnumerable<T>! collection, string? message, params object?[]? parameters) -> T
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.DoesNotContain(string! value, string! substring) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.DoesNotContain(string! value, string! substring, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.DoesNotContain(string! value, string! substring, string? message, params object?[]? parameters) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.DoesNotContain(string! value, string! substring, string? message, System.StringComparison comparisonType) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.DoesNotContain(string! value, string! substring, System.StringComparison comparisonType) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.DoesNotContain(string! value, string! substring, System.StringComparison comparisonType, string? message, params object?[]? parameters) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.DoesNotContain<T>(System.Collections.Generic.IEnumerable<T>! collection, System.Func<T, bool>! predicate) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.DoesNotContain<T>(System.Collections.Generic.IEnumerable<T>! collection, System.Func<T, bool>! predicate, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.DoesNotContain<T>(System.Collections.Generic.IEnumerable<T>! collection, System.Func<T, bool>! predicate, string? message, params object?[]? parameters) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.DoesNotContain<T>(System.Collections.Generic.IEnumerable<T>! collection, T expected) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.DoesNotContain<T>(System.Collections.Generic.IEnumerable<T>! collection, T expected, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.DoesNotContain<T>(System.Collections.Generic.IEnumerable<T>! collection, T expected, string? message, params object?[]? parameters) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.DoesNotContain<T>(System.Collections.Generic.IEnumerable<T>! collection, T expected, System.Collections.Generic.IEqualityComparer<T>! comparer) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.DoesNotContain<T>(System.Collections.Generic.IEnumerable<T>! collection, T expected, System.Collections.Generic.IEqualityComparer<T>! comparer, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.DoesNotContain<T>(System.Collections.Generic.IEnumerable<T>! collection, T expected, System.Collections.Generic.IEqualityComparer<T>! comparer, string? message, params object?[]? parameters) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.HasCount<T>(int expected, System.Collections.Generic.IEnumerable<T>! collection) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.HasCount<T>(int expected, System.Collections.Generic.IEnumerable<T>! collection, ref Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertCountInterpolatedStringHandler<T> message) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.HasCount<T>(int expected, System.Collections.Generic.IEnumerable<T>! collection, string? message) -> void
@@ -334,3 +361,10 @@ static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ThrowsExactly<TExcept
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ThrowsExactlyAsync<TException>(System.Func<System.Threading.Tasks.Task!>! action, string! message = "", params object![]! messageArgs) -> System.Threading.Tasks.Task<TException!>!
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ThrowsExactlyAsync<TException>(System.Func<System.Threading.Tasks.Task!>! action, System.Func<System.Exception?, string!>! messageBuilder) -> System.Threading.Tasks.Task<TException!>!
 *REMOVED*Microsoft.VisualStudio.TestTools.UnitTesting.IgnoreAttribute.IgnoreMessage.get -> string?
+[MSTESTEXP]abstract Microsoft.VisualStudio.TestTools.UnitTesting.RetryBaseAttribute.ExecuteAsync(Microsoft.VisualStudio.TestTools.UnitTesting.RetryContext retryContext) -> System.Threading.Tasks.Task<Microsoft.VisualStudio.TestTools.UnitTesting.RetryResult!>!
+[MSTESTEXP]Microsoft.VisualStudio.TestTools.UnitTesting.RetryContext
+[MSTESTEXP]Microsoft.VisualStudio.TestTools.UnitTesting.RetryContext.ExecuteTaskGetter.get -> System.Func<System.Threading.Tasks.Task<Microsoft.VisualStudio.TestTools.UnitTesting.TestResult![]!>!>!
+[MSTESTEXP]Microsoft.VisualStudio.TestTools.UnitTesting.RetryContext.RetryContext() -> void
+[MSTESTEXP]Microsoft.VisualStudio.TestTools.UnitTesting.RetryResult
+[MSTESTEXP]Microsoft.VisualStudio.TestTools.UnitTesting.RetryResult.AddResult(Microsoft.VisualStudio.TestTools.UnitTesting.TestResult![]! testResults) -> void
+[MSTESTEXP]Microsoft.VisualStudio.TestTools.UnitTesting.RetryResult.RetryResult() -> void

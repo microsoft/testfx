@@ -39,7 +39,6 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.TestPlatform.ObjectModel" />
-    <PackageReference Include="System.Diagnostics.TextWriterTraceListener" Condition=" '$(TargetFramework)' == '$(WinUiMinimum)' " />
   </ItemGroup>
 
   <PropertyGroup>
@@ -49,11 +48,6 @@
 
   <ItemGroup>
     <InternalsVisibleTo Include="Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests" Key="$(VsPublicKey)" />
-  </ItemGroup>
-
-  <ItemGroup Condition=" '$(TargetFramework)' == '$(UwpMinimum)' OR '$(TargetFramework)' == '$(WinUiMinimum)' ">
-    <!-- CVE-2019-0981, CVE-2019-0980, CVE-2019-0657 -->
-    <PackageReference Include="System.Private.Uri" />
   </ItemGroup>
 
   <ItemGroup>
