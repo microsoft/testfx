@@ -439,6 +439,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
 
         foreach (object?[] d in data)
         {
+            // TODO: Handle TestDataRow.
             UnitTestElement discoveredTest = test.Clone();
             discoveredTest.DisplayName = dataSource.GetDisplayName(methodInfo, d) ?? discoveredTest.DisplayName;
 
