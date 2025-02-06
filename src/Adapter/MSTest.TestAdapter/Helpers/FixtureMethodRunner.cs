@@ -134,7 +134,7 @@ internal static class FixtureMethodRunner
                 {
                     try
                     {
-                        ExecutionContextService.RunActionOnContext(action, executionContextScope);
+                        ExecutionContextService.RunActionOnContext(action, executionContextScope); // enter here with timeout
                     }
                     catch (Exception ex)
                     {

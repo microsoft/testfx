@@ -12,6 +12,7 @@ using MSTest.Acceptance.IntegrationTests.Messages.V100;
 #endif
 using Microsoft.Testing.Platform.TestHost;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.Testing.Extensions.VSTestBridge.Helpers;
 
 namespace Playground;
 
@@ -24,10 +25,10 @@ public class Program
 
         if (Environment.GetEnvironmentVariable("TESTSERVERMODE") != "1")
         {
-#if NETCOREAPP
-            // To attach to the children
-            Microsoft.Testing.TestInfrastructure.DebuggerUtility.AttachCurrentProcessToParentVSProcess();
-#endif
+//#if NETCOREAPP
+//            // To attach to the children
+//            Microsoft.Testing.TestInfrastructure.DebuggerUtility.AttachCurrentProcessToParentVSProcess();
+//#endif
 
             ITestApplicationBuilder testApplicationBuilder = await TestApplication.CreateBuilderAsync(args);
 

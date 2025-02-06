@@ -362,7 +362,7 @@ public class TestMethodInfo : ITestMethod
                         hasTestInitializePassed = true;
                         if (IsTimeoutSet)
                         {
-                            ExecutionContextService.RunActionOnContext(
+                            ExecutionContextService.RunActionOnContext( // we enter here without timeout
                                 () => TestMethod.InvokeAsSynchronousTask(_classInstance, arguments),
                                 new InstanceExecutionContextScope(_classInstance, Parent.ClassType));
                         }
