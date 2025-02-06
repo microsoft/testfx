@@ -62,7 +62,7 @@
     <file src="netcoreapp3.1\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="lib\netcoreapp3.1\" />
 
     <!-- net6.0 -->
-    <file src="net6.0\buildTransitive\winui\MSTest.TestFramework.targets" target="buildTransitive\net6.0\" />
+    <file src="net6.0\buildTransitive\winui+uwp\MSTest.TestFramework.targets" target="buildTransitive\net6.0\" />
     <file src="net6.0\Microsoft.VisualStudio.TestPlatform.TestFramework.dll" target="lib\net6.0\" />
     <file src="net6.0\Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="lib\net6.0\" />
     <file src="net6.0\**\Microsoft.VisualStudio.TestPlatform.TestFramework.resources.dll" target="lib\net6.0\" />
@@ -72,7 +72,7 @@
     <file src="net6.0-windows10.0.18362.0\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="buildTransitive\net6.0\winui\" />
 
     <!-- net7.0 -->
-    <file src="net7.0\buildTransitive\winui\MSTest.TestFramework.targets" target="buildTransitive\net7.0\" />
+    <file src="net7.0\buildTransitive\winui+uwp\MSTest.TestFramework.targets" target="buildTransitive\net7.0\" />
     <file src="net7.0\Microsoft.VisualStudio.TestPlatform.TestFramework.dll" target="lib\net7.0\" />
     <file src="net7.0\Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="lib\net7.0\" />
     <file src="net7.0\**\Microsoft.VisualStudio.TestPlatform.TestFramework.resources.dll" target="lib\net7.0\" />
@@ -80,7 +80,7 @@
     <file src="net7.0\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="buildTransitive\net7.0\" />
 
     <!-- net8.0 -->
-    <file src="net8.0\buildTransitive\winui\MSTest.TestFramework.targets" target="buildTransitive\net8.0\" />
+    <file src="net8.0\buildTransitive\winui+uwp\MSTest.TestFramework.targets" target="buildTransitive\net8.0\" />
     <file src="net8.0\Microsoft.VisualStudio.TestPlatform.TestFramework.dll" target="lib\net8.0\" />
     <file src="net8.0\Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="lib\net8.0\" />
     <file src="net8.0\**\Microsoft.VisualStudio.TestPlatform.TestFramework.resources.dll" target="lib\net8.0\" />
@@ -88,12 +88,14 @@
     <file src="net8.0\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="buildTransitive\net8.0\" />
 
     <!-- net9.0 -->
-    <file src="net9.0\buildTransitive\winui\MSTest.TestFramework.targets" target="buildTransitive\net9.0\" />
+    <file src="net9.0\buildTransitive\winui+uwp\MSTest.TestFramework.targets" target="buildTransitive\net9.0\" />
     <file src="net9.0\Microsoft.VisualStudio.TestPlatform.TestFramework.dll" target="lib\net9.0\" />
     <file src="net9.0\Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="lib\net9.0\" />
     <file src="net9.0\**\Microsoft.VisualStudio.TestPlatform.TestFramework.resources.dll" target="lib\net9.0\" />
     <file src="net9.0\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll" target="buildTransitive\net9.0\" />
     <file src="net9.0\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="buildTransitive\net9.0\" />
+    <file src="net9.0-windows10.0.17763.0\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll" target="buildTransitive\net9.0\uwp" />
+    <file src="net9.0-windows10.0.17763.0\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="buildTransitive\net9.0\uwp" />
 
     <!-- Source code -->
     <file src="$srcroot$\**\*.cs" target="src" />
