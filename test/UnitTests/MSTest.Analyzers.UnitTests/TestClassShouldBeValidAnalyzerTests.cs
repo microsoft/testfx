@@ -54,6 +54,35 @@ public sealed class TestClassShouldBeValidAnalyzerTests
             fixedCode);
     }
 
+    [TestMethod]
+    public async Task WhenClassIsInternalAndTestRecord_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            internal record {|#0:MyTestClass|}
+            {
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public record MyTestClass
+            {
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.Diagnostic(TestClassShouldBeValidAnalyzer.TestClassShouldBeValidRule)
+                .WithLocation(0)
+                .WithArguments("MyTestClass"),
+            fixedCode);
+    }
+
     [DataRow("private")]
     [DataRow("internal")]
     [TestMethod]
