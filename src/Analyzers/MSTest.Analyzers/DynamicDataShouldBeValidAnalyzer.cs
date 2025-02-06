@@ -275,11 +275,16 @@ public sealed class DynamicDataShouldBeValidAnalyzer : DiagnosticAnalyzer
 
         // Validate member return type.
         ITypeSymbol? memberTypeSymbol = member.GetMemberType();
-        if (memberTypeSymbol is INamedTypeSymbol memberNamedType
-            && !memberNamedType.OriginalDefinition.Inherits(ienumerableTypeSymbol))
+        if (memberTypeSymbol is not INamedTypeSymbol memberNamedType)
+        {
+            return;
+        }
+
+        if (memberNamedType.SpecialType == SpecialType.System_String
+            || (memberNamedType.SpecialType != SpecialType.System_Collections_IEnumerable
+                && !memberNamedType.AllInterfaces.Any(i => i.SpecialType == SpecialType.System_Collections_IEnumerable)))
         {
             context.ReportDiagnostic(attributeSyntax.CreateDiagnostic(MemberTypeRule, declaringType.Name, memberName));
-            return;
         }
     }
 
