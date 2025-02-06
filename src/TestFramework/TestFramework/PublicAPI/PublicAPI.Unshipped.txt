@@ -268,6 +268,8 @@ Microsoft.VisualStudio.TestTools.UnitTesting.RetryAttribute.RetryAttribute(int m
 Microsoft.VisualStudio.TestTools.UnitTesting.RetryBaseAttribute
 Microsoft.VisualStudio.TestTools.UnitTesting.RetryBaseAttribute.RetryBaseAttribute() -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.TestDataRow<T>
+Microsoft.VisualStudio.TestTools.UnitTesting.TestDataRow<T>.DisplayName.get -> string?
+Microsoft.VisualStudio.TestTools.UnitTesting.TestDataRow<T>.DisplayName.set -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.TestDataRow<T>.IgnoreMessage.get -> string?
 Microsoft.VisualStudio.TestTools.UnitTesting.TestDataRow<T>.IgnoreMessage.set -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.TestDataRow<T>.TestDataRow(T value) -> void

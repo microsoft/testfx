@@ -173,7 +173,7 @@ internal sealed class TestMethodRunner
             if (_test.TestDataSourceIgnoreMessage is not null)
             {
                 _testContext.SetOutcome(UTF.UnitTestOutcome.Ignored);
-                return [new() { Outcome = UTF.UnitTestOutcome.Ignored, IgnoreReason = _test.TestDataSourceIgnoreMessage }];
+                return [TestResult.CreateIgnoredResult(_test.TestDataSourceIgnoreMessage)];
             }
 
             object?[]? data = DataSerializationHelper.Deserialize(_test.SerializedData);
@@ -271,11 +271,7 @@ internal sealed class TestMethodRunner
         {
             if (testDataSource is ITestDataSourceIgnoreCapability { IgnoreMessage: { } ignoreMessage })
             {
-                results.Add(new()
-                {
-                    Outcome = UTF.UnitTestOutcome.Ignored,
-                    IgnoreReason = ignoreMessage,
-                });
+                results.Add(TestResult.CreateIgnoredResult(ignoreMessage));
                 continue;
             }
 
@@ -379,10 +375,11 @@ internal sealed class TestMethodRunner
         if (data?.Length == 1 && data[0]?.GetType() is { IsGenericType: true } genericType &&
             genericType.GetGenericTypeDefinition() == typeof(TestDataRow<>))
         {
-            // TODO: Get display name from TestDataRow. If non-null, set that to displayName.
             object testDataRow = data[0]!;
             object? dataFromTestDataRow = genericType.GetProperty("Value")!.GetValue(testDataRow);
             ignoreFromTestDataRow = genericType.GetProperty("IgnoreMessage")!.GetValue(testDataRow) as string;
+            displayName = genericType.GetProperty("DisplayName")!.GetValue(testDataRow) as string ?? displayName;
+
             // TODO: Handle if Tuple/ValueTuple.
             data = [dataFromTestDataRow];
         }
@@ -393,13 +390,7 @@ internal sealed class TestMethodRunner
         _testContext.SetDisplayName(displayName);
 
         TestResult[] testResults = ignoreFromTestDataRow is not null
-            ? [
-                new TestResult()
-                {
-                    Outcome = UTF.UnitTestOutcome.Ignored,
-                    IgnoreReason = ignoreFromTestDataRow,
-                }
-            ]
+            ? [TestResult.CreateIgnoredResult(ignoreFromTestDataRow)]
             : ExecuteTest(_testMethodInfo);
 
         stopwatch.Stop();

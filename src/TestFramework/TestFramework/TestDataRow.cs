@@ -31,4 +31,10 @@ public sealed class TestDataRow<T>
     /// </summary>
     [DataMember]
     public string? IgnoreMessage { get; set; }
+
+    /// <summary>
+    /// Gets or sets the display name for the test case.
+    /// </summary>
+    [DataMember]
+    public string? DisplayName { get; set; }
 }
