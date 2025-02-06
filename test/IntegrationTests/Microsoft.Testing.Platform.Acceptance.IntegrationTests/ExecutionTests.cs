@@ -54,7 +54,6 @@ Test discovery summary: found 2 test\(s\)\ - .*\.(dll|exe) \(net.+\|.+\)
 Test discovery summary: found 1 test\(s\)\ - .*\.(dll|exe) \(net.+\|.+\)
   duration:
 """;
-        """;
         testHostResult.AssertOutputMatchesRegex(OutputPattern);
     }
 
