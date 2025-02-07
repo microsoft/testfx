@@ -44,10 +44,10 @@ public class ParameterizedTestTests : AcceptanceTestBase<ParameterizedTestTests.
         => await RunTestsAsync(currentTfm, DataSourceAssetName, null);
 
     [TestMethod]
-    //[DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
-    public async Task UsingTestDataRowVariousCases(/*string currentTfm*/)
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    public async Task UsingTestDataRowVariousCases(string currentTfm)
     {
-        var testHost = TestHost.LocateFrom(AssetFixture.GetAssetPath(DynamicDataAssetName), DynamicDataAssetName, TargetFrameworks.NetCurrent /*currentTfm*/);
+        var testHost = TestHost.LocateFrom(AssetFixture.GetAssetPath(DynamicDataAssetName), DynamicDataAssetName, currentTfm);
 
         TestHostResult testHostResult = await testHost.ExecuteAsync("--filter ClassName=TestDataRowTests --list-tests");
         testHostResult.AssertOutputContains("""
