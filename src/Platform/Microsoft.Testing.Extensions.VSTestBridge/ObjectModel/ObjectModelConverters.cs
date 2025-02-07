@@ -24,14 +24,14 @@ internal static class ObjectModelConverters
     /// <summary>
     /// Converts a VSTest <see cref="TestCase"/> to a Microsoft Testing Platform <see cref="TestNode"/>.
     /// </summary>
-    public static TestNode ToTestNode(this TestCase testCase, bool isTrxEnabled, IClientInfo client)
+    public static TestNode ToTestNode(this TestCase testCase, bool isTrxEnabled, IClientInfo client, string? displayNameFromTestResult = null)
     {
         string testNodeUid = testCase.Id.ToString();
 
         TestNode testNode = new()
         {
             Uid = new TestNodeUid(testNodeUid),
-            DisplayName = testCase.DisplayName ?? testCase.FullyQualifiedName,
+            DisplayName = displayNameFromTestResult ?? testCase.DisplayName ?? testCase.FullyQualifiedName,
         };
 
         CopyVSTestProperties(testCase.Properties, testNode, testCase, testCase.GetPropertyValue, isTrxEnabled, client);
@@ -129,7 +129,7 @@ internal static class ObjectModelConverters
     /// </summary>
     public static TestNode ToTestNode(this TestResult testResult, bool isTrxEnabled, IClientInfo client)
     {
-        var testNode = testResult.TestCase.ToTestNode(isTrxEnabled, client);
+        var testNode = testResult.TestCase.ToTestNode(isTrxEnabled, client, testResult.DisplayName);
         CopyVSTestProperties(testResult.Properties, testNode, testResult.TestCase, testResult.GetPropertyValue, isTrxEnabled, client);
         testNode.AddOutcome(testResult);
 
@@ -211,7 +211,7 @@ internal static class ObjectModelConverters
             // It seems that NUnit inconclusive tests are reported as None which should be considered as Skipped.
             case TestOutcome.None:
             case TestOutcome.Skipped:
-                testNode.Properties.Add(SkippedTestNodeStateProperty.CachedInstance);
+                testNode.Properties.Add(testResult.ErrorMessage is null ? SkippedTestNodeStateProperty.CachedInstance : new SkippedTestNodeStateProperty(testResult.ErrorMessage));
                 break;
 
             default:

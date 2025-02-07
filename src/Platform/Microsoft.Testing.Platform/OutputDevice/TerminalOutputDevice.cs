@@ -506,7 +506,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
                             standardError);
                         break;
 
-                    case SkippedTestNodeStateProperty:
+                    case SkippedTestNodeStateProperty skippedState:
                         _terminalTestReporter.TestCompleted(
                             _assemblyName,
                             _targetFramework,
@@ -516,7 +516,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
                             testNodeStateChanged.TestNode.DisplayName,
                             TestOutcome.Skipped,
                             duration,
-                            errorMessage: null,
+                            errorMessage: skippedState.Explanation,
                             exception: null,
                             expected: null,
                             actual: null,
