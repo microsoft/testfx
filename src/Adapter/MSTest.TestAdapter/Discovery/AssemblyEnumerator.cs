@@ -441,13 +441,12 @@ internal class AssemblyEnumerator : MarshalByRefObject
         {
             object?[] d = dataOrTestDataRow;
             string? displayNameFromTestDataRow;
-            string? ignoreFromTestDataRow; // TODO: Use the value and respect the ignore. Should we re-use TestDataSourceIgnoreMessage ?
             if (d?.Length == 1 && d[0]?.GetType() is { IsGenericType: true } genericType &&
                 genericType.GetGenericTypeDefinition() == typeof(TestDataRow<>))
             {
                 object testDataRow = d[0]!;
                 object? dataFromTestDataRow = genericType.GetProperty("Value")!.GetValue(testDataRow);
-                ignoreFromTestDataRow = genericType.GetProperty("IgnoreMessage")!.GetValue(testDataRow) as string;
+                testDataSourceIgnoreMessage = genericType.GetProperty("IgnoreMessage")!.GetValue(testDataRow) as string ?? testDataSourceIgnoreMessage;
                 displayNameFromTestDataRow = genericType.GetProperty("DisplayName")!.GetValue(testDataRow) as string;
 
                 d = TestDataSourceHelpers.TryHandleTupleDataSource(dataFromTestDataRow, methodInfo.GetParameters(), out object?[] tupleExpandedToArray)
