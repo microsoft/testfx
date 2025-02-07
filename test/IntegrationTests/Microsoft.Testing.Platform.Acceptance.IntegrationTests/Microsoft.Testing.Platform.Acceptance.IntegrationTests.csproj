@@ -12,8 +12,6 @@
   <ItemGroup>
     <PackageReference Include="MSBuild.StructuredLogger" />
     <PackageReference Include="StreamJsonRpc" />
-
-    <Compile Include="$(RepoRoot)test\IntegrationTests\MSTest.Acceptance.IntegrationTests\ServerMode\**\*.cs" Link="ServerMode\%(RecursiveDir)%(FileName)%(Extension)" />
   </ItemGroup>
 
   <ItemGroup>
