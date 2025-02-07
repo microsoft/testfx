@@ -366,19 +366,16 @@ internal sealed class TestMethodRunner
         string? displayName = StringEx.IsNullOrWhiteSpace(_test.DisplayName)
             ? _test.Name
             : _test.DisplayName;
-        if (testDataSource != null)
-        {
-            displayName = testDataSource.GetDisplayName(new ReflectionTestMethodInfo(_testMethodInfo.MethodInfo, _test.DisplayName), data);
-        }
 
         string? ignoreFromTestDataRow = null;
+        string? displayNameFromTestDataRow = null;
         if (data?.Length == 1 && data[0]?.GetType() is { IsGenericType: true } genericType &&
             genericType.GetGenericTypeDefinition() == typeof(TestDataRow<>))
         {
             object testDataRow = data[0]!;
             object? dataFromTestDataRow = genericType.GetProperty("Value")!.GetValue(testDataRow);
             ignoreFromTestDataRow = genericType.GetProperty("IgnoreMessage")!.GetValue(testDataRow) as string;
-            displayName = genericType.GetProperty("DisplayName")!.GetValue(testDataRow) as string ?? displayName;
+            displayNameFromTestDataRow = genericType.GetProperty("DisplayName")!.GetValue(testDataRow) as string;
 
             data = TestDataSourceHelpers.TryHandleTupleDataSource(dataFromTestDataRow, _testMethodInfo.ParameterTypes, out object?[] tupleExpandedToArray)
                 ? tupleExpandedToArray
@@ -388,6 +385,12 @@ internal sealed class TestMethodRunner
         {
             data = tupleExpandedToArray;
         }
+
+        displayName = testDataSource != null
+            ? displayNameFromTestDataRow
+                ?? testDataSource.GetDisplayName(new ReflectionTestMethodInfo(_testMethodInfo.MethodInfo, _test.DisplayName), data)
+                ?? displayName
+            : displayNameFromTestDataRow ?? displayName;
 
         var stopwatch = Stopwatch.StartNew();
         _testMethodInfo.SetArguments(data);
