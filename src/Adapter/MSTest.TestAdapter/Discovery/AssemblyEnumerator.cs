@@ -440,7 +440,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
         foreach (object?[] dataOrTestDataRow in data)
         {
             object?[] d = dataOrTestDataRow;
-            string? displayNameFromTestDataRow;
+            string? displayNameFromTestDataRow = null;
             if (d?.Length == 1 && d[0]?.GetType() is { IsGenericType: true } genericType &&
                 genericType.GetGenericTypeDefinition() == typeof(TestDataRow<>))
             {
@@ -455,7 +455,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
             }
 
             UnitTestElement discoveredTest = test.Clone();
-            discoveredTest.DisplayName = dataSource.GetDisplayName(methodInfo, d) ?? discoveredTest.DisplayName;
+            discoveredTest.DisplayName = displayNameFromTestDataRow ?? dataSource.GetDisplayName(methodInfo, d) ?? discoveredTest.DisplayName;
 
             // If strategy is DisplayName and we have a duplicate test name don't expand the test, bail out.
 #pragma warning disable CS0618 // Type or member is obsolete
