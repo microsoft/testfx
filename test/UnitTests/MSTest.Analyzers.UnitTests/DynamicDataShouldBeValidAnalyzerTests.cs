@@ -1620,4 +1620,25 @@ public sealed class DynamicDataShouldBeValidAnalyzerTests
             
             """,
             VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.MemberTypeRule).WithLocation(0).WithArguments("MyTestClass", "GetData"));
+
+    [TestMethod]
+    public async Task WhenDataIsPointer_Diagnostic()
+        => await VerifyCS.VerifyAnalyzerAsync(
+            """            
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                [{|#0:DynamicData(nameof(GetData), DynamicDataSourceType.Method)|}]
+                public void TestMethod2(char c)
+                {
+                }
+
+                private static IntPtr GetData() => new IntPtr(1);
+            }
+            
+            """,
+            VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.MemberTypeRule).WithLocation(0).WithArguments("MyTestClass", "GetData"));
 }
