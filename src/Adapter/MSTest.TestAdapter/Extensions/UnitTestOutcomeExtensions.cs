@@ -7,6 +7,9 @@ using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 
+/// <summary>
+/// Extension methods for <see cref="UTF.UnitTestOutcome"/>.
+/// </summary>
 #if RELEASE
 #if NET6_0_OR_GREATER
 [Obsolete(Constants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]

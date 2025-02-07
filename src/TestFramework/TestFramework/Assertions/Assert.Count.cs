@@ -14,6 +14,7 @@ public sealed partial class Assert
 {
     [InterpolatedStringHandler]
     [EditorBrowsable(EditorBrowsableState.Never)]
+    [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1600:Elements should be documented", Justification = "This is not meant to be consumed by users.")]
     public readonly struct AssertCountInterpolatedStringHandler<TItem>
     {
         private readonly StringBuilder? _builder;
@@ -96,6 +97,7 @@ public sealed partial class Assert
 
     [InterpolatedStringHandler]
     [EditorBrowsable(EditorBrowsableState.Never)]
+    [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1600:Elements should be documented", Justification = "This is not meant to be consumed by users.")]
     public readonly struct AssertIsNotEmptyInterpolatedStringHandler<TItem>
     {
         private readonly StringBuilder? _builder;
@@ -161,17 +163,41 @@ public sealed partial class Assert
 #pragma warning restore RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
     }
 
+    /// <summary>
+    /// Tests that the collection is not empty.
+    /// </summary>
+    /// <typeparam name="T">The type of the items of the collection.</typeparam>
+    /// <param name="collection">The collection.</param>
     public static void IsNotEmpty<T>(IEnumerable<T> collection)
         => IsNotEmpty(collection, string.Empty, null);
 
+    /// <summary>
+    /// Tests whether the collection is not empty.
+    /// </summary>
+    /// <typeparam name="T">The type of the collection items.</typeparam>
+    /// <param name="collection">The collection.</param>
+    /// <param name="message">The message to display when the assertion fails.</param>
     public static void IsNotEmpty<T>(IEnumerable<T> collection, string? message)
         => IsNotEmpty(collection, message, null);
 
+    /// <summary>
+    /// Tests that the collection is not empty.
+    /// </summary>
+    /// <typeparam name="T">The type of the collection items.</typeparam>
+    /// <param name="collection">The collection.</param>
+    /// <param name="message">The message to display when the assertion fails.</param>
 #pragma warning disable IDE0060 // Remove unused parameter
     public static void IsNotEmpty<T>(IEnumerable<T> collection, [InterpolatedStringHandlerArgument(nameof(collection))] ref AssertIsNotEmptyInterpolatedStringHandler<T> message)
 #pragma warning restore IDE0060 // Remove unused parameter
         => message.ComputeAssertion();
 
+    /// <summary>
+    /// Tests that the collection is not empty.
+    /// </summary>
+    /// <typeparam name="T">The type of the collection items.</typeparam>
+    /// <param name="collection">The collection.</param>
+    /// <param name="message">The message format to display when the assertion fails.</param>
+    /// <param name="parameters">The parameters to format the message.</param>
     public static void IsNotEmpty<T>(IEnumerable<T> collection, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters)
     {
         if (collection.Any())
@@ -183,31 +209,83 @@ public sealed partial class Assert
         ThrowAssertIsNotEmptyFailed(userMessage);
     }
 
+    /// <summary>
+    /// Tests whether the collection has the expected count/length.
+    /// </summary>
+    /// <typeparam name="T">The type of the collection items.</typeparam>
+    /// <param name="expected">The expected count.</param>
+    /// <param name="collection">The collection.</param>
     public static void HasCount<T>(int expected, IEnumerable<T> collection)
         => HasCount(expected, collection, string.Empty, null);
 
+    /// <summary>
+    /// Tests whether the collection has the expected count/length.
+    /// </summary>
+    /// <typeparam name="T">The type of the collection items.</typeparam>
+    /// <param name="expected">The expected count.</param>
+    /// <param name="collection">The collection.</param>
+    /// <param name="message">The message to display when the assertion fails.</param>
     public static void HasCount<T>(int expected, IEnumerable<T> collection, string? message)
         => HasCount(expected, collection, message, null);
 
+    /// <summary>
+    /// Tests whether the collection has the expected count/length.
+    /// </summary>
+    /// <typeparam name="T">The type of the collection items.</typeparam>
+    /// <param name="expected">The expected count.</param>
+    /// <param name="collection">The collection.</param>
+    /// <param name="message">The message to display when the assertion fails.</param>
 #pragma warning disable IDE0060 // Remove unused parameter
     public static void HasCount<T>(int expected, IEnumerable<T> collection, [InterpolatedStringHandlerArgument(nameof(expected), nameof(collection))] ref AssertCountInterpolatedStringHandler<T> message)
 #pragma warning restore IDE0060 // Remove unused parameter
         => message.ComputeAssertion("HasCount");
 
+    /// <summary>
+    /// Tests whether the collection has the expected count/length.
+    /// </summary>
+    /// <typeparam name="T">The type of the collection items.</typeparam>
+    /// <param name="expected">The expected count.</param>
+    /// <param name="collection">The collection.</param>
+    /// <param name="message">The message format to display when the assertion fails.</param>
+    /// <param name="parameters">The parameters to format the message.</param>
     public static void HasCount<T>(int expected, IEnumerable<T> collection, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters)
         => HasCount("HasCount", expected, collection, message, parameters);
 
+    /// <summary>
+    /// Tests that the collection is empty.
+    /// </summary>
+    /// <typeparam name="T">The type of the collection items.</typeparam>
+    /// <param name="collection">The collection.</param>
     public static void IsEmpty<T>(IEnumerable<T> collection)
         => IsEmpty(collection, string.Empty, null);
 
+    /// <summary>
+    /// Tests that the collection is empty.
+    /// </summary>
+    /// <typeparam name="T">The type of the collection items.</typeparam>
+    /// <param name="collection">The collection.</param>
+    /// <param name="message">The message to display when the assertion fails.</param>
     public static void IsEmpty<T>(IEnumerable<T> collection, string? message)
         => IsEmpty(collection, message, null);
 
+    /// <summary>
+    /// Tests that the collection is empty.
+    /// </summary>
+    /// <typeparam name="T">The type of the collection items.</typeparam>
+    /// <param name="collection">The collection.</param>
+    /// <param name="message">The message to display when the assertion fails.</param>
 #pragma warning disable IDE0060 // Remove unused parameter
     public static void IsEmpty<T>(IEnumerable<T> collection, [InterpolatedStringHandlerArgument(nameof(collection))] ref AssertCountInterpolatedStringHandler<T> message)
 #pragma warning restore IDE0060 // Remove unused parameter
         => message.ComputeAssertion("IsEmpty");
 
+    /// <summary>
+    /// Tests that the collection is empty.
+    /// </summary>
+    /// <typeparam name="T">The type of the collection items.</typeparam>
+    /// <param name="collection">The collection.</param>
+    /// <param name="message">The message format to display when the assertion fails.</param>
+    /// <param name="parameters">The parameters to format the message.</param>
     public static void IsEmpty<T>(IEnumerable<T> collection, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters)
         => HasCount("IsEmpty", 0, collection, message, parameters);
 

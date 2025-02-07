@@ -67,23 +67,6 @@ internal sealed class CurrentTestApplicationModuleInfo(IEnvironment environment,
     public string GetProcessPath()
         => GetProcessPath(_environment, _process, throwOnNull: true)!;
 
-    public string[] GetCommandLineArgs()
-        => _environment.GetCommandLineArgs();
-
-    public string GetCommandLineArguments()
-    {
-        string executableFileName = Path.GetFileNameWithoutExtension(GetCurrentTestApplicationFullPath());
-        if (IsAppHostOrSingleFileOrNativeAot)
-        {
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            {
-                executableFileName += ".exe";
-            }
-        }
-
-        return _environment.CommandLine[_environment.CommandLine.IndexOf(executableFileName, StringComparison.InvariantCultureIgnoreCase)..];
-    }
-
     private static string? GetProcessPath(IEnvironment environment, IProcessHandler process, bool throwOnNull = false)
 #if NETCOREAPP
     {
@@ -105,9 +88,7 @@ internal sealed class CurrentTestApplicationModuleInfo(IEnvironment environment,
         bool isDotnetMuxer = IsCurrentTestApplicationHostDotnetMuxer;
         bool isAppHost = IsAppHostOrSingleFileOrNativeAot;
         bool isMonoMuxer = IsCurrentTestApplicationHostMonoMuxer;
-        string processPath = GetProcessPath();
-        string[] commandLineArguments = GetCommandLineArgs();
-        string fileName = processPath;
+        string[] commandLineArguments = _environment.GetCommandLineArgs();
         IEnumerable<string> arguments = (isAppHost, isDotnetMuxer, isMonoMuxer) switch
         {
             // When executable
@@ -120,6 +101,6 @@ internal sealed class CurrentTestApplicationModuleInfo(IEnvironment environment,
             _ => commandLineArguments,
         };
 
-        return new(fileName, arguments, Path.GetDirectoryName(currentTestApplicationFullPath)!);
+        return new(GetProcessPath(), arguments, Path.GetDirectoryName(currentTestApplicationFullPath)!);
     }
 }

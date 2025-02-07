@@ -32,6 +32,13 @@ public sealed class TestMethod : ITestMethod
 
     private readonly ReadOnlyCollection<string?> _hierarchy;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TestMethod"/> class.
+    /// </summary>
+    /// <param name="name">The name of the method.</param>
+    /// <param name="fullClassName">The full name of the class declaring the method.</param>
+    /// <param name="assemblyName">The full assembly name.</param>
+    /// <param name="isAsync">Whether the method is async.</param>
 #pragma warning disable IDE0060 // Remove unused parameter - Public API :/
     public TestMethod(string name, string fullClassName, string assemblyName, bool isAsync)
 #pragma warning restore IDE0060 // Remove unused parameter

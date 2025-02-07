@@ -84,7 +84,7 @@
       </trans-unit>
       <trans-unit id="DoesNotContainFail">
         <source>String '{0}' does contain string '{1}'. {2}.</source>
-        <target state="new">String '{0}' does contain string '{1}'. {2}.</target>
+        <target state="translated">A cadeia de caracteres "{0}" contém a cadeia de caracteres "{1}". {2}.</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataInvalidMethodLayout">
@@ -138,7 +138,7 @@ Real: {2}</target>
       </trans-unit>
       <trans-unit id="InvalidGitHubUrl">
         <source>Invalid GitHub ticket URL</source>
-        <target state="new">Invalid GitHub ticket URL</target>
+        <target state="translated">URL de tíquete do GitHub inválida</target>
         <note />
       </trans-unit>
       <trans-unit id="IsInstanceOfFailMsg">

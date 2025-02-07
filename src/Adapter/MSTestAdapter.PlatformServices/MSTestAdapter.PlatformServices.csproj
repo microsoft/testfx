@@ -5,7 +5,7 @@
   <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" Condition=" '$(OS)' != 'Windows_NT' " />
 
   <PropertyGroup>
-    <TargetFrameworks Condition=" '$(OS)' == 'Windows_NT' ">netstandard2.0;$(NetFrameworkMinimum);$(SupportedNetFrameworks);$(UwpMinimum);$(WinUiMinimum)</TargetFrameworks>
+    <TargetFrameworks Condition=" '$(OS)' == 'Windows_NT' ">netstandard2.0;$(NetFrameworkMinimum);$(SupportedNetFrameworks);$(UwpMinimum);$(ModernUwpMinimum);$(WinUiMinimum)</TargetFrameworks>
     <TargetFrameworks Condition=" '$(OS)' != 'Windows_NT' ">$(SupportedNetFrameworks);netstandard2.0</TargetFrameworks>
     <UseAssemblyVersion14>true</UseAssemblyVersion14>
   </PropertyGroup>
@@ -17,9 +17,10 @@
   </PropertyGroup>
 
   <!-- Properties specific to UWP -->
-  <PropertyGroup Condition=" '$(TargetFramework)' == '$(UwpMinimum)' ">
-    <DefineConstants>$(DefineConstants);NETFX_CORE;WINDOWS_UWP</DefineConstants>
+  <PropertyGroup Condition=" '$(TargetFramework)' == '$(UwpMinimum)' OR '$(TargetFramework)' == '$(ModernUwpMinimum)' ">
+    <DefineConstants>$(DefineConstants);WINDOWS_UWP</DefineConstants>
   </PropertyGroup>
+
   <!-- Properties specific to WinUI -->
   <PropertyGroup Condition=" '$(TargetFramework)' == '$(WinUiMinimum)' ">
     <TargetPlatformVersion>10.0.18362.0</TargetPlatformVersion>
@@ -39,7 +40,6 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.TestPlatform.ObjectModel" />
-    <PackageReference Include="System.Diagnostics.TextWriterTraceListener" Condition=" '$(TargetFramework)' == '$(WinUiMinimum)' " />
   </ItemGroup>
 
   <PropertyGroup>
@@ -60,7 +60,7 @@
     <AdditionalFiles Include="PublicAPI\$(TargetFramework)\PublicAPI.Unshipped.txt" />
   </ItemGroup>
 
-  <ItemGroup Condition=" '$(TargetFramework)' != '$(UwpMinimum)' ">
+  <ItemGroup Condition=" '$(TargetFramework)' != '$(UwpMinimum)' AND '$(TargetFramework)' != '$(ModernUwpMinimum)' ">
     <Compile Update="Resources\Resource.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>

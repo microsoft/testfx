@@ -103,14 +103,27 @@ public class LogMessageListener : IDisposable
     [SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "Part of the public API")]
     public string? DebugTrace => s_redirectedDebugTrace?.ToString();
 
+    /// <summary>
+    /// Gets and clears the standard output.
+    /// </summary>
+    /// <returns>The standard output text.</returns>
     public string? GetAndClearStandardOutput() => _redirectedStandardOutput.ToStringAndClear();
 
+    /// <summary>
+    /// Gets and clears the standard error.
+    /// </summary>
+    /// <returns>The standard error text.</returns>
     public string? GetAndClearStandardError() => _redirectedStandardError.ToStringAndClear();
 
+    /// <summary>
+    /// Gets and clears the debug trace.
+    /// </summary>
+    /// <returns>The debug and trace text.</returns>
     [SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "Part of the public API")]
     public string? GetAndClearDebugTrace()
         => s_redirectedDebugTrace?.ToStringAndClear();
 
+    /// <inheritdoc />
     public void Dispose()
     {
         if (_isDisposed)

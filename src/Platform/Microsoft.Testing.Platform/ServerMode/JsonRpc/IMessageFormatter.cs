@@ -9,8 +9,17 @@ namespace Microsoft.Testing.Platform.ServerMode;
 /// </summary>
 internal interface IMessageFormatter
 {
+    /// <summary>
+    /// Gets the identifier of the formatter.
+    /// </summary>
     string Id { get; }
 
+    /// <summary>
+    /// Deserializes the given serialized content into an object of type <typeparamref name="T"/>.
+    /// </summary>
+    /// <typeparam name="T">The type of the object to deserialize.</typeparam>
+    /// <param name="serializedUtf8Content">The serialized utf-8 content.</param>
+    /// <returns>The deserialized object.</returns>
     // Note: The current design might impose performance overhead, since the data
     //       is not directly deserialized from a stream, but rather first a string is extracted
     //       and allocated and then a string is deserialized.
@@ -23,5 +32,11 @@ internal interface IMessageFormatter
     T Deserialize<T>(string serializedUtf8Content);
 
 #endif
+
+    /// <summary>
+    /// Serializes the given object into a string.
+    /// </summary>
+    /// <param name="obj">The object to serialized.</param>
+    /// <returns>The object serialized.</returns>
     Task<string> SerializeAsync(object obj);
 }

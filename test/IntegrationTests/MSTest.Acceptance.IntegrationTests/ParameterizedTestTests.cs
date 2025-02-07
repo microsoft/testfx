@@ -81,10 +81,6 @@ public class ParameterizedTestTests : AcceptanceTestBase<ParameterizedTestTests.
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
     {
-        public string DynamicDataTargetAssetPath => GetAssetPath(DynamicDataAssetName);
-
-        public string TestSourceDataTargetAssetPath => GetAssetPath(DataSourceAssetName);
-
         public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
         {
             yield return (DynamicDataAssetName, DynamicDataAssetName,

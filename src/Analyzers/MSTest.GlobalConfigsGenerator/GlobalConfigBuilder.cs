@@ -36,7 +36,7 @@ internal sealed class GlobalConfigBuilder
         {
             DiagnosticSeverity.Error => "error",
             DiagnosticSeverity.Warning => "warning",
-            DiagnosticSeverity.Info => "info",
+            DiagnosticSeverity.Info => "suggestion",
             DiagnosticSeverity.Hidden => "silent",
             null => "none",
             _ => throw new InvalidOperationException($"Unexpected severity '{severity}'."),

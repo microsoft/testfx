@@ -108,7 +108,7 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
             string arguments = string.Join(" ", partialCommandLine);
 #endif
             ProcessStartInfo processStartInfo = new(
-                executableInfo.FileName,
+                executableInfo.FilePath,
                 arguments)
             {
                 EnvironmentVariables =

@@ -27,7 +27,7 @@ public sealed class OSConditionAttribute : ConditionBaseAttribute
     /// Initializes a new instance of the <see cref="OSConditionAttribute"/> class.
     /// </summary>
     /// <param name="mode">Decides whether the OSes will be included or excluded.</param>
-    /// <param name="operatingSystems">The operating systems that this test supports.</param>
+    /// <param name="operatingSystems">The operating systems that this test includes/excludes.</param>
     public OSConditionAttribute(ConditionMode mode, OperatingSystems operatingSystems)
         : base(mode)
     {
@@ -35,11 +35,18 @@ public sealed class OSConditionAttribute : ConditionBaseAttribute
         IgnoreMessage = $"Test is only supported on {operatingSystems}";
     }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="OSConditionAttribute"/> class.
+    /// </summary>
+    /// <param name="operatingSystems">The operating systems that this test supports.</param>
     public OSConditionAttribute(OperatingSystems operatingSystems)
         : this(ConditionMode.Include, operatingSystems)
     {
     }
 
+    /// <summary>
+    /// Gets a value indicating whether the test method or test class should be ignored.
+    /// </summary>
     public override bool ShouldRun
 #if NET462
         // On .NET Framework, we are sure we are running on Windows.
@@ -70,7 +77,13 @@ public sealed class OSConditionAttribute : ConditionBaseAttribute
     }
 #endif
 
+    /// <summary>
+    /// Gets the ignore message (in case <see cref="ShouldRun"/> returns <see langword="false"/>).
+    /// </summary>
     public override string? IgnoreMessage { get; }
 
+    /// <summary>
+    /// Gets the group name for this attribute.
+    /// </summary>
     public override string GroupName => "OSCondition";
 }
