@@ -7,8 +7,15 @@ using Microsoft.Testing.Platform.TestHost;
 
 namespace Microsoft.Testing.Extensions;
 
+/// <summary>
+/// Extension methods for <see cref="ITestApplicationBuilder"/>.
+/// </summary>
 public static class HotReloadExtensions
 {
+    /// <summary>
+    /// Adds a hot reload provider to the test application builder.
+    /// </summary>
+    /// <param name="builder">The test application builder.</param>
     public static void AddHotReloadProvider(this ITestApplicationBuilder builder)
         => ((TestHostManager)builder.TestHost).AddTestFrameworkInvoker(serviceProvider =>
             new HotReloadTestHostTestFrameworkInvoker(serviceProvider));

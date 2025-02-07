@@ -10,8 +10,15 @@ using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Extensions;
 
+/// <summary>
+/// Provides extension methods for adding hang dump support to the test application.
+/// </summary>
 public static class HangDumpExtensions
 {
+    /// <summary>
+    /// Adds hang dump support to the test application.
+    /// </summary>
+    /// <param name="builder">The test application builder.</param>
     public static void AddHangDumpProvider(this ITestApplicationBuilder builder)
     {
         CurrentTestApplicationModuleInfo testApplicationModuleInfo = new(new SystemEnvironment(), new SystemProcessHandler());

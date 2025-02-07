@@ -14,6 +14,7 @@ public sealed partial class Assert
 {
     [InterpolatedStringHandler]
     [EditorBrowsable(EditorBrowsableState.Never)]
+    [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1600:Elements should be documented", Justification = "This is not meant to be consumed by users.")]
     public readonly struct AssertSingleInterpolatedStringHandler<TItem>
     {
         private readonly StringBuilder? _builder;
@@ -88,17 +89,45 @@ public sealed partial class Assert
 #pragma warning restore RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
     }
 
+    /// <summary>
+    /// Tests whether the specified collection contains exactly one element.
+    /// </summary>
+    /// <typeparam name="T">The type of the collection items.</typeparam>
+    /// <param name="collection">The collection.</param>
+    /// <returns>The item.</returns>
     public static T ContainsSingle<T>(IEnumerable<T> collection)
         => ContainsSingle(collection, string.Empty, null);
 
+    /// <summary>
+    /// Tests whether the specified collection contains exactly one element.
+    /// </summary>
+    /// <typeparam name="T">The type of the collection items.</typeparam>
+    /// <param name="collection">The collection.</param>
+    /// <param name="message">The message to display when the assertion fails.</param>
+    /// <returns>The item.</returns>
     public static T ContainsSingle<T>(IEnumerable<T> collection, string? message)
         => ContainsSingle(collection, message, null);
 
+    /// <summary>
+    /// Tests whether the specified collection contains exactly one element.
+    /// </summary>
+    /// <typeparam name="T">The type of the collection items.</typeparam>
+    /// <param name="collection">The collection.</param>
+    /// <param name="message">The message to display when the assertion fails.</param>
+    /// <returns>The item.</returns>
 #pragma warning disable IDE0060 // Remove unused parameter
     public static T ContainsSingle<T>(IEnumerable<T> collection, [InterpolatedStringHandlerArgument(nameof(collection))] ref AssertSingleInterpolatedStringHandler<T> message)
 #pragma warning restore IDE0060 // Remove unused parameter
         => message.ComputeAssertion("ContainsSingle");
 
+    /// <summary>
+    /// Tests whether the specified collection contains exactly one element.
+    /// </summary>
+    /// <typeparam name="T">The type of the collection items.</typeparam>
+    /// <param name="collection">The collection.</param>
+    /// <param name="message">The message format to display when the assertion fails.</param>
+    /// <param name="parameters">The parameters to format the message.</param>
+    /// <returns>The item.</returns>
     public static T ContainsSingle<T>(IEnumerable<T> collection, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters)
     {
         int actualCount = collection.Count();
@@ -116,12 +145,33 @@ public sealed partial class Assert
 
     #region Contains
 
+    /// <summary>
+    /// Tests whether the specified collection contains the given element.
+    /// </summary>
+    /// <typeparam name="T">The type of the collection items.</typeparam>
+    /// <param name="collection">The collection.</param>
+    /// <param name="expected">The expected item.</param>
     public static void Contains<T>(IEnumerable<T> collection, T expected)
         => Contains(collection, expected, string.Empty, null);
 
+    /// <summary>
+    /// Tests whether the specified collection contains the given element.
+    /// </summary>
+    /// <typeparam name="T">The type of the collection items.</typeparam>
+    /// <param name="collection">The collection.</param>
+    /// <param name="expected">The expected item.</param>
+    /// <param name="message">The message to display when the assertion fails.</param>
     public static void Contains<T>(IEnumerable<T> collection, T expected, string? message)
         => Contains(collection, expected, message, null);
 
+    /// <summary>
+    /// Tests whether the specified collection contains the given element.
+    /// </summary>
+    /// <typeparam name="T">The type of the collection items.</typeparam>
+    /// <param name="collection">The collection.</param>
+    /// <param name="expected">The expected item.</param>
+    /// <param name="message">The message format to display when the assertion fails.</param>
+    /// <param name="parameters">The parameters to format the message.</param>
     public static void Contains<T>(IEnumerable<T> collection, T expected, string? message, params object?[]? parameters)
     {
         if (!collection.Contains(expected))
@@ -131,12 +181,36 @@ public sealed partial class Assert
         }
     }
 
+    /// <summary>
+    /// Tests whether the specified collection contains the given element.
+    /// </summary>
+    /// <typeparam name="T">The type of the collection items.</typeparam>
+    /// <param name="collection">The collection.</param>
+    /// <param name="expected">The expected item.</param>
+    /// <param name="comparer">An equality comparer to compare values.</param>
     public static void Contains<T>(IEnumerable<T> collection, T expected, IEqualityComparer<T> comparer)
         => Contains(collection, expected, comparer, string.Empty, null);
 
+    /// <summary>
+    /// Tests whether the specified collection contains the given element.
+    /// </summary>
+    /// <typeparam name="T">The type of the collection items.</typeparam>
+    /// <param name="collection">The collection.</param>
+    /// <param name="expected">The expected item.</param>
+    /// <param name="comparer">An equality comparer to compare values.</param>
+    /// <param name="message">The message to display when the assertion fails.</param>
     public static void Contains<T>(IEnumerable<T> collection, T expected, IEqualityComparer<T> comparer, string? message)
         => Contains(collection, expected, comparer, message, null);
 
+    /// <summary>
+    /// Tests whether the specified collection contains the given element.
+    /// </summary>
+    /// <typeparam name="T">The type of the collection items.</typeparam>
+    /// <param name="collection">The collection.</param>
+    /// <param name="expected">The expected item.</param>
+    /// <param name="comparer">An equality comparer to compare values.</param>
+    /// <param name="message">The message to display when the assertion fails.</param>
+    /// <param name="parameters">The parameters to format the message.</param>
     public static void Contains<T>(IEnumerable<T> collection, T expected, IEqualityComparer<T> comparer, string? message, params object?[]? parameters)
     {
         if (!collection.Contains(expected, comparer))
@@ -146,12 +220,33 @@ public sealed partial class Assert
         }
     }
 
+    /// <summary>
+    /// Tests whether the specified collection contains the given element.
+    /// </summary>
+    /// <typeparam name="T">The type of the collection items.</typeparam>
+    /// <param name="collection">The collection.</param>
+    /// <param name="predicate">A function to test each element for a condition.</param>
     public static void Contains<T>(IEnumerable<T> collection, Func<T, bool> predicate)
         => Contains(collection, predicate, string.Empty, null);
 
+    /// <summary>
+    /// Tests whether the specified collection contains the given element.
+    /// </summary>
+    /// <typeparam name="T">The type of the collection items.</typeparam>
+    /// <param name="collection">The collection.</param>
+    /// <param name="predicate">A function to test each element for a condition.</param>
+    /// <param name="message">The message to display when the assertion fails.</param>
     public static void Contains<T>(IEnumerable<T> collection, Func<T, bool> predicate, string? message)
         => Contains(collection, predicate, message, null);
 
+    /// <summary>
+    /// Tests whether the specified collection contains the given element.
+    /// </summary>
+    /// <typeparam name="T">The type of the collection items.</typeparam>
+    /// <param name="collection">The collection.</param>
+    /// <param name="predicate">A function to test each element for a condition.</param>
+    /// <param name="message">The message format to display when the assertion fails.</param>
+    /// <param name="parameters">The parameters to format the message.</param>
     public static void Contains<T>(IEnumerable<T> collection, Func<T, bool> predicate, string? message, params object?[]? parameters)
     {
         if (!collection.Any(predicate))
@@ -321,12 +416,33 @@ public sealed partial class Assert
 
     #region DoesNotContain
 
+    /// <summary>
+    /// Tests whether the specified collection does not contain the specified item.
+    /// </summary>
+    /// <typeparam name="T">The type of the collection items.</typeparam>
+    /// <param name="collection">The collection.</param>
+    /// <param name="expected">The expected item.</param>
     public static void DoesNotContain<T>(IEnumerable<T> collection, T expected)
-    => DoesNotContain(collection, expected, string.Empty, null);
+        => DoesNotContain(collection, expected, string.Empty, null);
 
+    /// <summary>
+    /// Tests whether the specified collection does not contain the specified item.
+    /// </summary>
+    /// <typeparam name="T">The type of the collection items.</typeparam>
+    /// <param name="collection">The collection.</param>
+    /// <param name="expected">The expected item.</param>
+    /// <param name="message">The message to display when the assertion fails.</param>
     public static void DoesNotContain<T>(IEnumerable<T> collection, T expected, string? message)
         => DoesNotContain(collection, expected, message, null);
 
+    /// <summary>
+    /// Tests whether the specified collection does not contain the specified item.
+    /// </summary>
+    /// <typeparam name="T">The type of the collection items.</typeparam>
+    /// <param name="collection">The collection.</param>
+    /// <param name="expected">The expected item.</param>
+    /// <param name="message">The message to display when the assertion fails.</param>
+    /// <param name="parameters">The parameters to format the message.</param>
     public static void DoesNotContain<T>(IEnumerable<T> collection, T expected, string? message, params object?[]? parameters)
     {
         if (collection.Contains(expected))
@@ -336,12 +452,36 @@ public sealed partial class Assert
         }
     }
 
+    /// <summary>
+    /// Tests whether the specified collection does not contain the specified item.
+    /// </summary>
+    /// <typeparam name="T">The type of the collection items.</typeparam>
+    /// <param name="collection">The collection.</param>
+    /// <param name="expected">The expected item.</param>
+    /// <param name="comparer">An equality comparer to compare values.</param>
     public static void DoesNotContain<T>(IEnumerable<T> collection, T expected, IEqualityComparer<T> comparer)
         => DoesNotContain(collection, expected, comparer, string.Empty, null);
 
+    /// <summary>
+    /// Tests whether the specified collection does not contain the specified item.
+    /// </summary>
+    /// <typeparam name="T">The type of the collection items.</typeparam>
+    /// <param name="collection">The collection.</param>
+    /// <param name="expected">The expected item.</param>
+    /// <param name="comparer">An equality comparer to compare values.</param>
+    /// <param name="message">The message to display when the assertion fails.</param>
     public static void DoesNotContain<T>(IEnumerable<T> collection, T expected, IEqualityComparer<T> comparer, string? message)
         => DoesNotContain(collection, expected, comparer, message, null);
 
+    /// <summary>
+    /// Tests whether the specified collection does not contain the specified item.
+    /// </summary>
+    /// <typeparam name="T">The type of the collection items.</typeparam>
+    /// <param name="collection">The collection.</param>
+    /// <param name="expected">The expected item.</param>
+    /// <param name="comparer">An equality comparer to compare values.</param>
+    /// <param name="message">The message to display when the assertion fails.</param>
+    /// <param name="parameters">The parameters to format the message.</param>
     public static void DoesNotContain<T>(IEnumerable<T> collection, T expected, IEqualityComparer<T> comparer, string? message, params object?[]? parameters)
     {
         if (collection.Contains(expected, comparer))
@@ -351,12 +491,33 @@ public sealed partial class Assert
         }
     }
 
+    /// <summary>
+    /// Tests whether the specified collection does not contain the specified item.
+    /// </summary>
+    /// <typeparam name="T">The type of the collection items.</typeparam>
+    /// <param name="collection">The collection.</param>
+    /// <param name="predicate">A function to test each element for a condition.</param>
     public static void DoesNotContain<T>(IEnumerable<T> collection, Func<T, bool> predicate)
         => DoesNotContain(collection, predicate, string.Empty, null);
 
+    /// <summary>
+    /// Tests whether the specified collection does not contain the specified item.
+    /// </summary>
+    /// <typeparam name="T">The type of the collection items.</typeparam>
+    /// <param name="collection">The collection.</param>
+    /// <param name="predicate">A function to test each element for a condition.</param>
+    /// <param name="message">The message to display when the assertion fails.</param>
     public static void DoesNotContain<T>(IEnumerable<T> collection, Func<T, bool> predicate, string? message)
         => DoesNotContain(collection, predicate, message, null);
 
+    /// <summary>
+    /// Tests whether the specified collection does not contain the specified item.
+    /// </summary>
+    /// <typeparam name="T">The type of the collection items.</typeparam>
+    /// <param name="collection">The collection.</param>
+    /// <param name="predicate">A function to test each element for a condition.</param>
+    /// <param name="message">The message to display when the assertion fails.</param>
+    /// <param name="parameters">The parameters to format the message.</param>
     public static void DoesNotContain<T>(IEnumerable<T> collection, Func<T, bool> predicate, string? message, params object?[]? parameters)
     {
         if (collection.Any(predicate))

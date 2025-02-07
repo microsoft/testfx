@@ -84,7 +84,7 @@
       </trans-unit>
       <trans-unit id="DoesNotContainFail">
         <source>String '{0}' does contain string '{1}'. {2}.</source>
-        <target state="new">String '{0}' does contain string '{1}'. {2}.</target>
+        <target state="translated">文字列 '{0}' は文字列 '{1}' を含んでいます。{2}。</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataInvalidMethodLayout">
@@ -138,7 +138,7 @@ Actual: {2}</source>
       </trans-unit>
       <trans-unit id="InvalidGitHubUrl">
         <source>Invalid GitHub ticket URL</source>
-        <target state="new">Invalid GitHub ticket URL</target>
+        <target state="translated">GitHub チケット URL が無効です</target>
         <note />
       </trans-unit>
       <trans-unit id="IsInstanceOfFailMsg">

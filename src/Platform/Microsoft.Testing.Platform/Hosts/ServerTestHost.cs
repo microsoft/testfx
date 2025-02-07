@@ -120,9 +120,7 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
         e.SetObserved();
         _logger.LogWarning($"[ServerTestHost.OnTaskSchedulerUnobservedTaskException] Unhandled exception: {e.Exception}");
 
-        // Looks like nothing in this message to really be localized?
-        // All are class names, method names, property names, and placeholders. So none is localizable?
-        ServiceProvider.GetOutputDevice().DisplayAsync(this, new WarningMessageOutputDeviceData(PlatformResources.UnobservedTaskExceptionWarningMessage))
+        ServiceProvider.GetOutputDevice().DisplayAsync(this, new WarningMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, PlatformResources.UnobservedTaskExceptionWarningMessage, e.Exception.ToString())))
             .GetAwaiter().GetResult();
     }
 

@@ -174,9 +174,6 @@ public static class ServiceProviderExtensions
     internal static ITestApplicationProcessExitCode GetTestApplicationProcessExitCode(this IServiceProvider serviceProvider)
         => serviceProvider.GetRequiredServiceInternal<ITestApplicationProcessExitCode>();
 
-    internal static IMonitor GetMonitor(this IServiceProvider serviceProvider)
-        => serviceProvider.GetRequiredServiceInternal<IMonitor>();
-
     internal static ITestApplicationCancellationTokenSource GetTestApplicationCancellationTokenSource(this IServiceProvider serviceProvider)
         => serviceProvider.GetRequiredServiceInternal<ITestApplicationCancellationTokenSource>();
 
@@ -203,9 +200,6 @@ public static class ServiceProviderExtensions
 
     internal static ITestFrameworkCapabilities GetTestFrameworkCapabilities(this IServiceProvider serviceProvider)
         => serviceProvider.GetRequiredServiceInternal<ITestFrameworkCapabilities>();
-
-    internal static CommandLineParseResult GetCommandLineParseResult(this IServiceProvider serviceProvider)
-        => serviceProvider.GetRequiredServiceInternal<ApplicationLoggingState>().CommandLineParseResult;
 
     internal static IPlatformInformation GetPlatformInformation(this IServiceProvider serviceProvider)
         => serviceProvider.GetRequiredServiceInternal<IPlatformInformation>();
