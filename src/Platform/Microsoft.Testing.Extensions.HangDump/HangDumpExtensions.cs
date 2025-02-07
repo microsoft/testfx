@@ -45,7 +45,7 @@ public static class HangDumpExtensions
             => new HangDumpEnvironmentVariableProvider(serviceProvider.GetCommandLineOptions(), hangDumpConfiguration));
 
         builder.CommandLine.AddProvider(()
-            => new HangDumpCommandLineProvider(hangDumpConfiguration));
+            => new HangDumpCommandLineProvider());
 
         var hangDumpActivityIndicatorComposite
             = new CompositeExtensionFactory<HangDumpActivityIndicator>(serviceProvider => new HangDumpActivityIndicator(
