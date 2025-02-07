@@ -1,0 +1,7 @@
+{
+  "profiles": {
+    "BlankUwpNet9App": {
+      "commandName": "MsixPackage"
+    }
+  }
+}

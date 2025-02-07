@@ -5,7 +5,6 @@ using Microsoft.Testing.Extensions.Diagnostics;
 using Microsoft.Testing.Extensions.Diagnostics.Resources;
 using Microsoft.Testing.Extensions.UnitTests.Helpers;
 using Microsoft.Testing.Platform.Extensions.CommandLine;
-using Microsoft.Testing.Platform.IPC;
 using Microsoft.Testing.Platform.Services;
 
 using Moq;
@@ -19,10 +18,7 @@ public sealed class HangDumpTests
     {
         var testApplicationModuleInfo = new Mock<ITestApplicationModuleInfo>();
         _ = testApplicationModuleInfo.Setup(x => x.GetCurrentTestApplicationFullPath()).Returns("FullPath");
-        return new(new HangDumpConfiguration(
-            testApplicationModuleInfo.Object,
-            new PipeNameDescription("pipeName", false),
-            "suffix"));
+        return new();
     }
 
     [TestMethod]
