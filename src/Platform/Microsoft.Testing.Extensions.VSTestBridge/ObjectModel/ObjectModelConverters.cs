@@ -211,7 +211,9 @@ internal static class ObjectModelConverters
             // It seems that NUnit inconclusive tests are reported as None which should be considered as Skipped.
             case TestOutcome.None:
             case TestOutcome.Skipped:
-                testNode.Properties.Add(testResult.ErrorMessage is null ? SkippedTestNodeStateProperty.CachedInstance : new SkippedTestNodeStateProperty(testResult.ErrorMessage));
+                testNode.Properties.Add(testResult.ErrorMessage is null
+                    ? SkippedTestNodeStateProperty.CachedInstance
+                    : new SkippedTestNodeStateProperty(testResult.ErrorMessage));
                 break;
 
             default:

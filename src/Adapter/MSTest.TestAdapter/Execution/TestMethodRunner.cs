@@ -369,13 +369,11 @@ internal sealed class TestMethodRunner
 
         string? ignoreFromTestDataRow = null;
         string? displayNameFromTestDataRow = null;
-        if (data?.Length == 1 && data[0]?.GetType() is { IsGenericType: true } genericType &&
-            genericType.GetGenericTypeDefinition() == typeof(TestDataRow<>))
+        if (data?.Length == 1 && data[0] is ITestDataRow testDataRow)
         {
-            object testDataRow = data[0]!;
-            object? dataFromTestDataRow = genericType.GetProperty("Value")!.GetValue(testDataRow);
-            ignoreFromTestDataRow = genericType.GetProperty("IgnoreMessage")!.GetValue(testDataRow) as string;
-            displayNameFromTestDataRow = genericType.GetProperty("DisplayName")!.GetValue(testDataRow) as string;
+            object? dataFromTestDataRow = testDataRow.Value;
+            ignoreFromTestDataRow = testDataRow.IgnoreMessage;
+            displayNameFromTestDataRow = testDataRow.DisplayName;
 
             data = TestDataSourceHelpers.TryHandleTupleDataSource(dataFromTestDataRow, _testMethodInfo.ParameterTypes, out object?[] tupleExpandedToArray)
                 ? tupleExpandedToArray

@@ -11,7 +11,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// </summary>
 /// <typeparam name="T">The type parameter corresponding to the type of the value held by this type. It can be a tuple for test methods with more than one parameter.</typeparam>
 [DataContract]
-public sealed class TestDataRow<T>
+public sealed class TestDataRow<T> : ITestDataRow
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="TestDataRow{T}"/> class.
@@ -21,10 +21,10 @@ public sealed class TestDataRow<T>
         => Value = value;
 
     /// <summary>
-    /// Gets or sets value held by this instance.
+    /// Gets the value held by this instance.
     /// </summary>
     [DataMember]
-    public T Value { get; set; }
+    public T Value { get; }
 
     /// <summary>
     /// Gets or sets the ignore message. A non-null value means the test case is ignored with the message provided.
@@ -37,4 +37,10 @@ public sealed class TestDataRow<T>
     /// </summary>
     [DataMember]
     public string? DisplayName { get; set; }
+
+    object? ITestDataRow.Value => Value;
+
+    string? ITestDataRow.IgnoreMessage => IgnoreMessage;
+
+    string? ITestDataRow.DisplayName => DisplayName;
 }

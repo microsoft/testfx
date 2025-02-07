@@ -441,13 +441,11 @@ internal class AssemblyEnumerator : MarshalByRefObject
         {
             object?[] d = dataOrTestDataRow;
             string? displayNameFromTestDataRow = null;
-            if (d?.Length == 1 && d[0]?.GetType() is { IsGenericType: true } genericType &&
-                genericType.GetGenericTypeDefinition() == typeof(TestDataRow<>))
+            if (d?.Length == 1 && d[0] is ITestDataRow testDataRow)
             {
-                object testDataRow = d[0]!;
-                object? dataFromTestDataRow = genericType.GetProperty("Value")!.GetValue(testDataRow);
-                testDataSourceIgnoreMessage = genericType.GetProperty("IgnoreMessage")!.GetValue(testDataRow) as string ?? testDataSourceIgnoreMessage;
-                displayNameFromTestDataRow = genericType.GetProperty("DisplayName")!.GetValue(testDataRow) as string;
+                object? dataFromTestDataRow = testDataRow.Value;
+                testDataSourceIgnoreMessage = testDataRow.IgnoreMessage ?? testDataSourceIgnoreMessage;
+                displayNameFromTestDataRow = testDataRow.DisplayName;
 
                 d = TestDataSourceHelpers.TryHandleTupleDataSource(dataFromTestDataRow, methodInfo.GetParameters(), out object?[] tupleExpandedToArray)
                     ? tupleExpandedToArray
