@@ -450,7 +450,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
                 ignoreFromTestDataRow = genericType.GetProperty("IgnoreMessage")!.GetValue(testDataRow) as string;
                 displayNameFromTestDataRow = genericType.GetProperty("DisplayName")!.GetValue(testDataRow) as string;
 
-                d = TestDataSourceHelpers.TryHandleTupleDataSource(dataFromTestDataRow, out object?[] tupleExpandedToArray)
+                d = TestDataSourceHelpers.TryHandleTupleDataSource(dataFromTestDataRow, methodInfo.GetParameters(), out object?[] tupleExpandedToArray)
                     ? tupleExpandedToArray
                     : [dataFromTestDataRow];
             }

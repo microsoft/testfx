@@ -380,11 +380,11 @@ internal sealed class TestMethodRunner
             ignoreFromTestDataRow = genericType.GetProperty("IgnoreMessage")!.GetValue(testDataRow) as string;
             displayName = genericType.GetProperty("DisplayName")!.GetValue(testDataRow) as string ?? displayName;
 
-            data = TestDataSourceHelpers.TryHandleTupleDataSource(dataFromTestDataRow, out object?[] tupleExpandedToArray)
+            data = TestDataSourceHelpers.TryHandleTupleDataSource(dataFromTestDataRow, _testMethodInfo.ParameterTypes, out object?[] tupleExpandedToArray)
                 ? tupleExpandedToArray
                 : [dataFromTestDataRow];
         }
-        else if (data?.Length == 1 && TestDataSourceHelpers.TryHandleTupleDataSource(data[0], out object?[] tupleExpandedToArray))
+        else if (data?.Length == 1 && TestDataSourceHelpers.TryHandleTupleDataSource(data[0], _testMethodInfo.ParameterTypes, out object?[] tupleExpandedToArray))
         {
             data = tupleExpandedToArray;
         }

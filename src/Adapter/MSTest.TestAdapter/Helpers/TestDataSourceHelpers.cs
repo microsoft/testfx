@@ -5,8 +5,15 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 
 internal static class TestDataSourceHelpers
 {
-    public static bool TryHandleTupleDataSource(object? data, out object?[] array)
+    public static bool TryHandleTupleDataSource(object? data, ParameterInfo[] testMethodParameters, out object?[] array)
     {
+        if (testMethodParameters.Length == 1 &&
+            data?.GetType().IsAssignableTo(testMethodParameters[0].ParameterType) == true)
+        {
+            array = Array.Empty<object>();
+            return false;
+        }
+
 #if NET471_OR_GREATER || NETCOREAPP
         if (data is ITuple tuple)
         {
