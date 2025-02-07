@@ -1636,7 +1636,7 @@ public sealed class DynamicDataShouldBeValidAnalyzerTests
                 {
                 }
 
-                private static IntPtr GetData() => new IntPtr(1);
+                private static unsafe int* GetData() => null;
             }
             
             """,
