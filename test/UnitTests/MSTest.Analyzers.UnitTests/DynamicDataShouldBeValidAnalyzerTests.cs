@@ -11,7 +11,7 @@ namespace MSTest.Analyzers.Test;
 public sealed class DynamicDataShouldBeValidAnalyzerTests
 {
     [TestMethod]
-    public async Task ValidUsages_NoDiagnostic()
+    public async Task WhenDataIsIEnumerableObjectArray_NoDiagnostic()
     {
         string code = """
             using System;
@@ -117,6 +117,30 @@ public sealed class DynamicDataShouldBeValidAnalyzerTests
                 {
                 }
 
+                public static IEnumerable<object[]> Data => new List<object[]>();
+                public static IEnumerable<object[]> GetData() => new List<object[]>();
+            }
+            
+            public class SomeClass
+            {
+                public static IEnumerable<object[]> SomeData => new List<object[]>();
+                public static IEnumerable<object[]> GetSomeData() => new List<object[]>();
+            }
+        """;
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenDataIsIEnumerableTuple_NoDiagnostic()
+    {
+        string code = """
+            using System;
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
                 [DynamicData("DataTuple")]
                 [TestMethod]
                 public void TestMethod101(int i, string s)
@@ -165,6 +189,30 @@ public sealed class DynamicDataShouldBeValidAnalyzerTests
                 {
                 }
 
+                public static IEnumerable<Tuple<int, string>> DataTuple => new List<Tuple<int, string>>();
+                public static IEnumerable<Tuple<int, string>> GetDataTuple() => new List<Tuple<int, string>>();
+            }
+            
+            public class SomeClass
+            {
+                public static IEnumerable<Tuple<int, string>> SomeDataTuple => new List<Tuple<int, string>>();
+                public static IEnumerable<Tuple<int, string>> GetSomeDataTuple() => new List<Tuple<int, string>>();
+            }
+            """;
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenDataIsIEnumerableValueTuple_NoDiagnostic()
+    {
+        string code = """
+            using System;
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
                 [DynamicData("DataValueTuple")]
                 [TestMethod]
                 public void TestMethod201(int i, string s)
@@ -213,6 +261,30 @@ public sealed class DynamicDataShouldBeValidAnalyzerTests
                 {
                 }
 
+                public static IEnumerable<(int, string)> DataValueTuple => new List<(int, string)>();
+                public static IEnumerable<(int, string)> GetDataValueTuple() => new List<(int, string)>();
+            }
+
+            public class SomeClass
+            {
+                public static IEnumerable<(int, string)> SomeDataValueTuple => new List<(int, string)>();
+                public static IEnumerable<(int, string)> GetSomeDataValueTuple() => new List<(int, string)>();
+            }
+            """;
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenDataIsJaggedArrays_NoDiagnostic()
+    {
+        string code = """
+            using System;
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            
+            [TestClass]
+            public class MyTestClass
+            {
                 [DynamicData("DataJaggedArray")]
                 [TestMethod]
                 public void TestMethod301(MyTestClass[] testClasses)
@@ -261,6 +333,30 @@ public sealed class DynamicDataShouldBeValidAnalyzerTests
                 {
                 }
 
+                public static MyTestClass[][] DataJaggedArray => System.Array.Empty<MyTestClass[]>();
+                public static MyTestClass[][] GetDataJaggedArray() => System.Array.Empty<MyTestClass[]>();
+            }
+            
+            public class SomeClass
+            {
+                public static MyTestClass[][] SomeDataJaggedArray => System.Array.Empty<MyTestClass[]>();
+                public static MyTestClass[][] GetSomeDataJaggedArray() => System.Array.Empty<MyTestClass[]>();
+            }
+            """;
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenDataIsNonObjectTypeArray_NoDiagnostic()
+    {
+        string code = """
+            using System;
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
                 [DynamicData("DataNonObjectTypeArray")]
                 [TestMethod]
                 public void TestMethod401(MyTestClass[] testClasses)
@@ -308,6 +404,31 @@ public sealed class DynamicDataShouldBeValidAnalyzerTests
                 public void TestMethod414(MyTestClass[] testClasses)
                 {
                 }
+
+                public static IEnumerable<MyTestClass[]> DataNonObjectTypeArray => new List<MyTestClass[]>();
+                public static IEnumerable<MyTestClass[]> GetDataNonObjectTypeArray() => new List<MyTestClass[]>();
+            }
+            
+            public class SomeClass
+            {
+                public static IEnumerable<MyTestClass[]> SomeDataNonObjectTypeArray => new List<MyTestClass[]>();
+                public static IEnumerable<MyTestClass[]> GetSomeDataNonObjectTypeArray() => new List<MyTestClass[]>();
+            }
+            """;
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenDataIsIEnumerableObject_NoDiagnostic()
+    {
+        string code = """
+            using System;
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
 
                 [DynamicData("Data")]
                 [TestMethod]
@@ -357,6 +478,105 @@ public sealed class DynamicDataShouldBeValidAnalyzerTests
                 {
                 }
 
+                public static IEnumerable<object> Data => new List<object>();
+                public static IEnumerable<object> GetData() => new List<object>();
+            }
+            
+            public class SomeClass
+            {
+                public static IEnumerable<object> SomeData => new List<object>();
+                public static IEnumerable<object> GetSomeData() => new List<object>();
+            }
+            """;
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenDataIsIEnumerable_NoDiagnostic()
+    {
+        string code = """
+            using System;
+            using System.Collections;
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+
+                [DynamicData("Data")]
+                [TestMethod]
+                public void TestMethod501(object[] o)
+                {
+                }
+            
+                [DynamicData("SomeData", typeof(SomeClass))]
+                [TestMethod]
+                public void TestMethod502(object[] o)
+                {
+                }
+            
+                [DynamicData(dynamicDataSourceName: "Data")]
+                [TestMethod]
+                public void TestMethod503(object[] o)
+                {
+                }
+            
+                [DynamicData(dynamicDataDeclaringType: typeof(SomeClass), dynamicDataSourceName: "SomeData")]
+                [TestMethod]
+                public void TestMethod504(object[] o)
+                {
+                }
+
+                [DynamicData("GetData", DynamicDataSourceType.Method)]
+                [TestMethod]
+                public void TestMethod511(object[] o)
+                {
+                }
+            
+                [DynamicData("GetSomeData", typeof(SomeClass), DynamicDataSourceType.Method)]
+                [TestMethod]
+                public void TestMethod512(object[] o)
+                {
+                }
+            
+                [DynamicData(dynamicDataSourceType: DynamicDataSourceType.Method, dynamicDataSourceName: "GetData")]
+                [TestMethod]
+                public void TestMethod513(object[] o)
+                {
+                }
+            
+                [DynamicData(dynamicDataDeclaringType: typeof(SomeClass), dynamicDataSourceType: DynamicDataSourceType.Method, dynamicDataSourceName: "GetSomeData")]
+                [TestMethod]
+                public void TestMethod514(object[] o)
+                {
+                }
+
+                public static IEnumerable Data => new List<object>();
+                public static IEnumerable GetData() => new List<object>();
+            }
+            
+            public class SomeClass
+            {
+                public static IEnumerable SomeData => new List<object>();
+                public static IEnumerable GetSomeData() => new List<object>();
+            }
+            """;
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenDataIsTypeArray_NoDiagnostic()
+    {
+        string code = """
+            using System;
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+
                 [DynamicData("DataArray")]
                 [TestMethod]
                 public void TestMethod601(MyTestClass[] o)
@@ -405,37 +625,13 @@ public sealed class DynamicDataShouldBeValidAnalyzerTests
                 {
                 }    
 
-                public static IEnumerable<object[]> Data => new List<object[]>();
-                public static IEnumerable<Tuple<int, string>> DataTuple => new List<Tuple<int, string>>();
-                public static IEnumerable<(int, string)> DataValueTuple => new List<(int, string)>();
-                public static MyTestClass[][] DataJaggedArray => System.Array.Empty<MyTestClass[]>();
-                public static IEnumerable<MyTestClass[]> DataNonObjectTypeArray => new List<MyTestClass[]>();
-                public static IEnumerable<object> DataObject => new List<object>();
                 public static MyTestClass[] DataArray => System.Array.Empty<MyTestClass>();
-                public static IEnumerable<object[]> GetData() => new List<object[]>();
-                public static IEnumerable<Tuple<int, string>> GetDataTuple() => new List<Tuple<int, string>>();
-                public static IEnumerable<(int, string)> GetDataValueTuple() => new List<(int, string)>();
-                public static MyTestClass[][] GetDataJaggedArray() => System.Array.Empty<MyTestClass[]>();
-                public static IEnumerable<MyTestClass[]> GetDataNonObjectTypeArray() => new List<MyTestClass[]>();
-                public static IEnumerable<object> GetDataObject() => new List<object>();
                 public static MyTestClass[] GetDataArray() => System.Array.Empty<MyTestClass>();
             }
 
             public class SomeClass
             {
-                public static IEnumerable<object[]> SomeData => new List<object[]>();
-                public static IEnumerable<Tuple<int, string>> SomeDataTuple => new List<Tuple<int, string>>();
-                public static IEnumerable<(int, string)> SomeDataValueTuple => new List<(int, string)>();
-                public static MyTestClass[][] SomeDataJaggedArray => System.Array.Empty<MyTestClass[]>();
-                public static IEnumerable<MyTestClass[]> SomeDataNonObjectTypeArray => new List<MyTestClass[]>();
-                public static IEnumerable<object> SomeDataObject => new List<object>();
                 public static MyTestClass[] SomeDataArray => System.Array.Empty<MyTestClass>();
-                public static IEnumerable<object[]> GetSomeData() => new List<object[]>();
-                public static IEnumerable<Tuple<int, string>> GetSomeDataTuple() => new List<Tuple<int, string>>();
-                public static IEnumerable<(int, string)> GetSomeDataValueTuple() => new List<(int, string)>();
-                public static MyTestClass[][] GetSomeDataJaggedArray() => System.Array.Empty<MyTestClass[]>();
-                public static IEnumerable<MyTestClass[]> GetSomeDataNonObjectTypeArray() => new List<MyTestClass[]>();
-                public static IEnumerable<object> GetSomeDataObject() => new List<object>();
                 public static MyTestClass[] GetSomeDataArray() => System.Array.Empty<MyTestClass>();
             }
             """;
@@ -751,7 +947,7 @@ public sealed class DynamicDataShouldBeValidAnalyzerTests
     }
 
     [TestMethod]
-    public async Task MemberIsNotStatic_Diagnostic()
+    public async Task WhenMemberIsNotStatic_Diagnostic()
     {
         string code = """
             using System;
@@ -785,7 +981,7 @@ public sealed class DynamicDataShouldBeValidAnalyzerTests
     }
 
     [TestMethod]
-    public async Task MemberIsNotPublic_NoDiagnostic()
+    public async Task WhenMemberIsNotPublic_NoDiagnostic()
     {
         string code = """
             using System;
@@ -816,7 +1012,7 @@ public sealed class DynamicDataShouldBeValidAnalyzerTests
     }
 
     [TestMethod]
-    public async Task MemberIsShadowingBase_NoDiagnostic()
+    public async Task WhenMemberIsShadowingBase_NoDiagnostic()
     {
         string code = """
             using System;
@@ -853,7 +1049,7 @@ public sealed class DynamicDataShouldBeValidAnalyzerTests
     }
 
     [TestMethod]
-    public async Task MemberIsFromBase_NoDiagnostic()
+    public async Task WhenMemberIsFromBase_NoDiagnostic()
     {
         string code = """
             using System;
@@ -887,7 +1083,7 @@ public sealed class DynamicDataShouldBeValidAnalyzerTests
     }
 
     [TestMethod]
-    public async Task MethodHasParameters_Diagnostic()
+    public async Task WhenMethodHasParameters_Diagnostic()
     {
         string code = """
             using System;
@@ -921,7 +1117,7 @@ public sealed class DynamicDataShouldBeValidAnalyzerTests
     }
 
     [TestMethod]
-    public async Task MethodIsGeneric_Diagnostic()
+    public async Task WhenMethodIsGeneric_Diagnostic()
     {
         string code = """
             using System;
@@ -1356,4 +1552,93 @@ public sealed class DynamicDataShouldBeValidAnalyzerTests
             VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.DisplayMethodSignatureRule).WithLocation(10).WithArguments("SomeClass", "GetSomeDisplayName3"),
             VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.DisplayMethodSignatureRule).WithLocation(11).WithArguments("SomeClass", "GetSomeDisplayName3"));
     }
+
+    [TestMethod]
+    [GitHubWorkItem("https://github.com/microsoft/testfx/issues/4922")]
+    public async Task WhenDataImplementsIEnumerable_NoDiagnostic()
+        => await VerifyCS.VerifyAnalyzerAsync("""
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                [DynamicData(nameof(GetData), DynamicDataSourceType.Method)]
+                public void TestMethod2(int i, int j)
+                {
+                }
+
+                private static List<object[]> GetData()
+                {
+                    return new List<object[]>
+                    {
+                        new object[] { 1, 2 },
+                        new object[] { 3, 4 },
+                    };
+                }
+            }
+            """);
+
+    [TestMethod]
+    public async Task WhenDataIsString_Diagnostic()
+        => await VerifyCS.VerifyAnalyzerAsync(
+            """            
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                [{|#0:DynamicData(nameof(GetData), DynamicDataSourceType.Method)|}]
+                public void TestMethod2(char c)
+                {
+                }
+
+                private static string GetData() => "abc";
+            }
+            
+            """,
+            VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.MemberTypeRule).WithLocation(0).WithArguments("MyTestClass", "GetData"));
+
+    [TestMethod]
+    public async Task WhenDataIsObjectButCollectionsAreCasted_Diagnostic()
+        => await VerifyCS.VerifyAnalyzerAsync(
+            """            
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                [{|#0:DynamicData(nameof(GetData), DynamicDataSourceType.Method)|}]
+                public void TestMethod2(char c)
+                {
+                }
+
+                private static object GetData() => new List<object> { 1, 2, 3 };
+            }
+            
+            """,
+            VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.MemberTypeRule).WithLocation(0).WithArguments("MyTestClass", "GetData"));
+
+    [TestMethod]
+    public async Task WhenDataIsPointer_Diagnostic()
+        => await VerifyCS.VerifyAnalyzerAsync(
+            """            
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                [{|#0:DynamicData(nameof(GetData), DynamicDataSourceType.Method)|}]
+                public void TestMethod2(char c)
+                {
+                }
+
+                private static unsafe int* GetData() => null;
+            }
+            
+            """,
+            VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.MemberTypeRule).WithLocation(0).WithArguments("MyTestClass", "GetData"));
 }
