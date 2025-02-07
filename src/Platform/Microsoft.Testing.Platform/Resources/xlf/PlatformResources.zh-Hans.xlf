@@ -203,14 +203,14 @@
         <note />
       </trans-unit>
       <trans-unit id="DiagnosticFileLevelWithAsyncFlush">
-        <source>Diagnostic file (level '{0}' with async flush): {1}"</source>
-        <target state="translated">诊断文件(具有异步刷新的级别“{0}”): {1}”</target>
+        <source>Diagnostic file (level '{0}' with async flush): {1}</source>
+        <target state="translated">诊断文件(具有异步刷新的级别“{0}”): {1}</target>
         <note>0 level such as verbose, 
 1 path to file</note>
       </trans-unit>
       <trans-unit id="DiagnosticFileLevelWithFlush">
-        <source>Diagnostic file (level '{0}' with sync flush): {1}"</source>
-        <target state="translated">诊断文件(具有同步刷新的级别“{0}”): {1}”</target>
+        <source>Diagnostic file (level '{0}' with sync flush): {1}</source>
+        <target state="translated">诊断文件(具有同步刷新的级别“{0}”): {1}</target>
         <note>0 level such as verbose, 
 1 path to file</note>
       </trans-unit>

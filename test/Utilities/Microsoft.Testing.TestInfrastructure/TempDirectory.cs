@@ -141,6 +141,19 @@ public class TempDirectory : IDisposable
         return destination;
     }
 
+    internal static string GetTestSuiteDirectory()
+    {
+        string currentDirectory = AppContext.BaseDirectory;
+        while (System.IO.Path.GetFileName(currentDirectory) != "artifacts" && currentDirectory is not null)
+        {
+            currentDirectory = System.IO.Path.GetDirectoryName(currentDirectory)!;
+        }
+
+        return currentDirectory is null
+            ? throw new InvalidOperationException("artifacts folder not found")
+            : System.IO.Path.Combine(currentDirectory, "tmp", Constants.BuildConfiguration, "testsuite");
+    }
+
     /// <summary>
     /// Creates an unique temporary directory.
     /// </summary>
@@ -162,7 +175,7 @@ public class TempDirectory : IDisposable
                 throw new InvalidOperationException("artifacts folder not found");
             }
 
-            string directoryPath = System.IO.Path.Combine(currentDirectory, "tmp", Constants.BuildConfiguration, "testsuite", RandomId.Next());
+            string directoryPath = System.IO.Path.Combine(GetTestSuiteDirectory(), RandomId.Next());
             Directory.CreateDirectory(directoryPath);
 
             string directoryBuildProps = System.IO.Path.Combine(directoryPath, "Directory.Build.props");

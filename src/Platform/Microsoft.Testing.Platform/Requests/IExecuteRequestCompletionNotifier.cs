@@ -3,8 +3,14 @@
 
 namespace Microsoft.Testing.Platform.Requests;
 
+/// <summary>
+/// Interface to notify the completion of a request.
+/// </summary>
 [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
 public interface IExecuteRequestCompletionNotifier
 {
+    /// <summary>
+    /// Notifies the completion of the request.
+    /// </summary>
     void Complete();
 }

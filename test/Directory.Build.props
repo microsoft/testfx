@@ -3,19 +3,23 @@
 
   <Import Project="../Directory.Build.props" />
 
-  <!-- Testing -->
   <PropertyGroup>
+    <TestRunnerName>TestingPlatformRunner</TestRunnerName>
+    <!-- By default we run tests with VSTest runner and custom test framework. Platform projects will use a different runner and framework -->
+    <UseVSTestRunner Condition=" '$(UseVSTestRunner)' == '' " >true</UseVSTestRunner>
+  </PropertyGroup>
+
+  <!-- Build & pack tests -->
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <PublishAot Condition=" '$(PublishAot)' == '' ">false</PublishAot>
     <!-- At the moment we don't run single file tests we should do it in integration/isolation -->
     <EnableSingleFileAnalyzer>false</EnableSingleFileAnalyzer>
     <EnableCodeCoverage Condition=" '$(EnableCodeCoverage)' == '' ">true</EnableCodeCoverage>
     <DefineConstants Condition=" '$(PublishAot)' == 'true' ">$(DefineConstants);NATIVE_AOT</DefineConstants>
     <DefineConstants Condition=" '$(EnableCodeCoverage)' == 'True' ">$(DefineConstants);ENABLE_CODECOVERAGE</DefineConstants>
-  </PropertyGroup>
-
-  <!-- Build & pack -->
-  <PropertyGroup>
-    <IsPackable>false</IsPackable>
-    <PublishAot Condition=" '$(PublishAot)' == '' ">false</PublishAot>
+    <!-- Do not capture test output on CI to help community see errors -->
+    <TestCaptureOutput Condition=" '$(ContinuousIntegrationBuild)' == 'true' ">false</TestCaptureOutput>
   </PropertyGroup>
 
 </Project>

@@ -11,9 +11,17 @@ using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
+/// <summary>
+/// Extension methods for <see cref="ITestApplicationBuilder"/>.
+/// </summary>
 [SuppressMessage("ApiDesign", "RS0030:Do not use banned APIs", Justification = "We can use MTP from this folder")]
 public static class TestApplicationBuilderExtensions
 {
+    /// <summary>
+    /// Register MSTest as the test framework and register the necessary services.
+    /// </summary>
+    /// <param name="testApplicationBuilder">The test application builder on which to register.</param>
+    /// <param name="getTestAssemblies">The function to get the test assemblies.</param>
     public static void AddMSTest(this ITestApplicationBuilder testApplicationBuilder, Func<IEnumerable<Assembly>> getTestAssemblies)
     {
         MSTestExtension extension = new();

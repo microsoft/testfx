@@ -77,7 +77,7 @@ public sealed class CommandLineOption : IEquatable<CommandLineOption>
 
     internal bool IsBuiltIn { get; }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public override bool Equals(object? obj) => Equals(obj as CommandLineOption);
 
     /// <inheritdoc/>
@@ -88,7 +88,7 @@ public sealed class CommandLineOption : IEquatable<CommandLineOption>
             Arity == other.Arity &&
             IsHidden == other.IsHidden;
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public override int GetHashCode()
     {
         HashCode hc = default;

@@ -1,0 +1,23 @@
+<Project>
+
+  <PropertyGroup Condition=" '$(UseWinUI)' == 'true' ">
+    <_TestFrameworkExtensionsRoot>$(MSBuildThisFileDirectory)../net6.0/winui/</_TestFrameworkExtensionsRoot>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(UseUwpTools)' == 'true' ">
+    <_TestFrameworkExtensionsRoot>$(MSBuildThisFileDirectory)../net9.0/uwp/</_TestFrameworkExtensionsRoot>
+  </PropertyGroup>
+  
+  <PropertyGroup Condition=" '$(UseWinUI)' != 'true' AND '$(UseUwpTools)' != 'true' ">
+    <_TestFrameworkExtensionsRoot>$(MSBuildThisFileDirectory)</_TestFrameworkExtensionsRoot>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions">
+      <HintPath>$(_TestFrameworkExtensionsRoot)Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll</HintPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Visible>False</Visible>
+    </Reference>
+  </ItemGroup>
+
+</Project>

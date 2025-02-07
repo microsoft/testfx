@@ -121,7 +121,7 @@ public sealed class DynamicDataAttribute : Attribute, ITestDataSource, ITestData
 
     /// <inheritdoc />
     public IEnumerable<object[]> GetData(MethodInfo methodInfo)
-        => DynamicDataProvider.Instance.GetData(_dynamicDataDeclaringType, _dynamicDataSourceType, _dynamicDataSourceName, methodInfo);
+        => DynamicDataOperations.GetData(_dynamicDataDeclaringType, _dynamicDataSourceType, _dynamicDataSourceName, methodInfo);
 
     /// <inheritdoc />
     public string? GetDisplayName(MethodInfo methodInfo, object?[]? data)
@@ -157,9 +157,11 @@ public sealed class DynamicDataAttribute : Attribute, ITestDataSource, ITestData
         return method.Invoke(null, [methodInfo, data]) as string;
     }
 
+    /// <inheritdoc />
     string? ITestDataSourceEmptyDataSourceExceptionInfo.GetPropertyOrMethodNameForEmptyDataSourceException()
         => _dynamicDataSourceName;
 
+    /// <inheritdoc />
     string? ITestDataSourceEmptyDataSourceExceptionInfo.GetPropertyOrMethodContainerTypeNameForEmptyDataSourceException(MethodInfo testMethodInfo)
     {
         Type? type = _dynamicDataDeclaringType ?? testMethodInfo.DeclaringType;

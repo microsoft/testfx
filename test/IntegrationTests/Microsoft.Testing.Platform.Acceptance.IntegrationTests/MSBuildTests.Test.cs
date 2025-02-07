@@ -34,12 +34,12 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
         }
     }
 
-    [DynamicData(nameof(GetBuildMatrix), DynamicDataSourceType.Method, DynamicDataDisplayName = nameof(FormatBuildMatrixEntry))]
+    [DynamicData(nameof(GetBuildMatrix), DynamicDataDisplayName = nameof(FormatBuildMatrixEntry))]
     [TestMethod]
     public async Task InvokeTestingPlatform_Target_Should_Execute_Tests_Without_Showing_Error_Detail_SingleTfm(string testCommand, string tfm, BuildConfiguration compilationMode, bool testSucceeded)
         => await InvokeTestingPlatform_Target_Should_Execute_Tests_Without_Showing_Error_Detail(testCommand, tfm, false, [tfm], compilationMode, testSucceeded);
 
-    [DynamicData(nameof(GetBuildMatrixMultiTfm), DynamicDataSourceType.Method, DynamicDataDisplayName = nameof(FormatBuildMatrixEntry))]
+    [DynamicData(nameof(GetBuildMatrixMultiTfm), DynamicDataDisplayName = nameof(FormatBuildMatrixEntry))]
     [TestMethod]
     public async Task InvokeTestingPlatform_Target_Should_Execute_Tests_Without_Showing_Error_Detail_MultiTfm(string testCommand, string multiTfm, BuildConfiguration compilationMode, bool testSucceeded)
         => await InvokeTestingPlatform_Target_Should_Execute_Tests_Without_Showing_Error_Detail(testCommand, multiTfm, true, TargetFrameworks.All, compilationMode, testSucceeded);
@@ -63,12 +63,12 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
         }
     }
 
-    [DynamicData(nameof(GetBuildMatrix), DynamicDataSourceType.Method, DynamicDataDisplayName = nameof(FormatBuildMatrixEntry))]
+    [DynamicData(nameof(GetBuildMatrix), DynamicDataDisplayName = nameof(FormatBuildMatrixEntry))]
     [TestMethod]
     public async Task InvokeTestingPlatform_Target_Should_Build_Without_Warnings_And_Execute_Passing_Test_And_Pass_TheRun_SingleTfm(string testCommand, string tfm, BuildConfiguration compilationMode, bool testSucceeded)
         => await InvokeTestingPlatform_Target_Should_Build_Without_Warnings_And_Execute_Passing_Test_And_Pass_TheRun_Detail(testCommand, tfm, false, [tfm], compilationMode, testSucceeded);
 
-    [DynamicData(nameof(GetBuildMatrixMultiTfm), DynamicDataSourceType.Method, DynamicDataDisplayName = nameof(FormatBuildMatrixEntry))]
+    [DynamicData(nameof(GetBuildMatrixMultiTfm), DynamicDataDisplayName = nameof(FormatBuildMatrixEntry))]
     [TestMethod]
     public async Task InvokeTestingPlatform_Target_Should_Build_Without_Warnings_And_Execute_Passing_Test_And_Pass_TheRun_MultiTfm(string testCommand, string multiTfm, BuildConfiguration compilationMode, bool testSucceeded)
         => await InvokeTestingPlatform_Target_Should_Build_Without_Warnings_And_Execute_Passing_Test_And_Pass_TheRun_Detail(testCommand, multiTfm, true, TargetFrameworks.All, compilationMode, testSucceeded);
@@ -97,6 +97,29 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
         {
             CommonAssert(compilationResult, tfmToAssert, testSucceeded, testResultFolder);
         }
+    }
+
+    [TestMethod]
+    [OSCondition(OperatingSystems.Windows)]
+    public async Task RunUsingTestTargetWithNetfxMSBuild()
+    {
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
+            AssetName,
+            SourceCode
+            .PatchCodeWithReplace("$PlatformTarget$", string.Empty)
+            .PatchCodeWithReplace("$TargetFrameworks$", $"<TargetFramework>{TargetFrameworks.NetCurrent}</TargetFramework>")
+            .PatchCodeWithReplace("$AssertValue$", bool.TrueString.ToLowerInvariant())
+            .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
+
+        string msbuildExe = await FindMsbuildWithVsWhereAsync();
+        var commandLine = new TestInfrastructure.CommandLine();
+        string binlogFile = Path.Combine(testAsset.TargetAssetPath, Guid.NewGuid().ToString("N"), "msbuild.binlog");
+        await commandLine.RunAsync($"\"{msbuildExe}\" {testAsset.TargetAssetPath} /t:Restore");
+        await commandLine.RunAsync($"\"{msbuildExe}\" {testAsset.TargetAssetPath} /t:\"Build;Test\" /bl:\"{binlogFile}\"", environmentVariables: new Dictionary<string, string?>()
+        {
+            ["DOTNET_ROOT"] = string.Empty,
+        });
+        StringAssert.Contains(commandLine.StandardOutput, "Tests succeeded");
     }
 
     [TestMethod]
@@ -227,7 +250,7 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
     // We avoid to test the multi-tfm because it's already tested with the above tests and we don't want to have too heavy testing,
     // msbuild is pretty heavy (a lot of processes started due to the no 'nodereuse') and makes tests flaky.
     // We test two functionality for the same reason, we don't want to load too much the CI only for UX reasons.
-    [DynamicData(nameof(GetBuildMatrix), DynamicDataSourceType.Method, DynamicDataDisplayName = nameof(FormatBuildMatrixEntry))]
+    [DynamicData(nameof(GetBuildMatrix), DynamicDataDisplayName = nameof(FormatBuildMatrixEntry))]
     [TestMethod]
     public async Task InvokeTestingPlatform_Target_Showing_Error_And_Do_Not_Capture_The_Output_SingleTfm(string testCommand, string tfm, BuildConfiguration compilationMode, bool testSucceeded)
     {
@@ -252,6 +275,21 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
         compilationResult.AssertOutputContains(".NET Testing Platform");
     }
 
+    [TestMethod]
+    public async Task TestingPlatformDisableCustomTestTarget_Should_Cause_UserDefined_Target_To_Run()
+    {
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
+            AssetName,
+            SourceCode
+            .PatchCodeWithReplace("$PlatformTarget$", "<PlatformTarget>x64</PlatformTarget>")
+            .PatchCodeWithReplace("$TargetFrameworks$", $"<TargetFramework>{TargetFrameworks.NetCurrent}</TargetFramework>")
+            .PatchCodeWithReplace("$AssertValue$", "true")
+            .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"build {testAsset.TargetAssetPath} -p:TestingPlatformDisableCustomTestTarget=true -p:ImportUserDefinedTestTarget=true -t:\"Build;Test\"", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, failIfReturnValueIsNotZero: false);
+
+        compilationResult.AssertOutputContains("Error from UserDefinedTestTarget.targets");
+    }
+
     private const string SourceCode = """
 #file MSBuild Tests.csproj
 <Project Sdk="Microsoft.NET.Sdk">
@@ -270,6 +308,15 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
         <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Version="$MicrosoftTestingPlatformVersion$" />
         <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
     </ItemGroup>
+
+    <Import Project="UserDefinedTestTarget.targets" Condition="'$(ImportUserDefinedTestTarget)' == 'true'" />
+</Project>
+
+#file UserDefinedTestTarget.targets
+<Project>
+    <Target Name="Test">
+        <Error Text="Error from UserDefinedTestTarget.targets" />
+    </Target>
 </Project>
 
 #file Program.cs

@@ -31,9 +31,11 @@ public sealed class PublicMethodShouldBeTestMethodAnalyzer : DiagnosticAnalyzer
         DiagnosticSeverity.Info,
         isEnabledByDefault: false);
 
+    /// <inheritdoc />
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
         = ImmutableArray.Create(PublicMethodShouldBeTestMethodRule);
 
+    /// <inheritdoc />
     public override void Initialize(AnalysisContext context)
     {
         context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
@@ -64,7 +66,9 @@ public sealed class PublicMethodShouldBeTestMethodAnalyzer : DiagnosticAnalyzer
             return;
         }
 
-        if (!methodSymbol.HasValidTestMethodSignature(taskSymbol, valueTaskSymbol, canDiscoverInternals))
+        if (!methodSymbol.HasValidTestMethodSignature(taskSymbol, valueTaskSymbol, canDiscoverInternals)
+            || methodSymbol.IsVirtual
+            || methodSymbol.IsOverride)
         {
             return;
         }
@@ -81,6 +85,13 @@ public sealed class PublicMethodShouldBeTestMethodAnalyzer : DiagnosticAnalyzer
         }
 
         if (!isTestClass)
+        {
+            return;
+        }
+
+        // We consider that if the method implements an interface member, it is not a test method.
+        // Explicit implementations are not public so they are discarded earlier.
+        if (methodSymbol.IsImplementationOfAnyInterfaceMember())
         {
             return;
         }

@@ -1,0 +1,97 @@
+<Project>
+
+  <!-- Handle the coexistence between testing platform and Microsoft.NET.Test.Sdk  -->
+  <PropertyGroup>
+    <GenerateTestingPlatformEntryPoint Condition=" '$(GenerateTestingPlatformEntryPoint)' == '' ">$(EnableMSTestRunner)</GenerateTestingPlatformEntryPoint>
+    <GenerateSelfRegisteredExtensions Condition=" '$(GenerateSelfRegisteredExtensions)' == '' ">$(EnableMSTestRunner)</GenerateSelfRegisteredExtensions>
+    <GenerateProgramFile Condition=" '$(EnableMSTestRunner)' == 'true' ">false</GenerateProgramFile>
+    <DisableTestingPlatformServerCapability Condition=" '$(EnableMSTestRunner)' == 'false' or '$(EnableMSTestRunner)' == '' " >true</DisableTestingPlatformServerCapability>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(UseWinUI)' == 'true' ">
+    <_TestAdapterPlatformServicesRoot>$(MSBuildThisFileDirectory)../net6.0/winui/</_TestAdapterPlatformServicesRoot>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(UseUwpTools)' == 'true' ">
+    <_TestAdapterPlatformServicesRoot>$(MSBuildThisFileDirectory)../net9.0/uwp/</_TestAdapterPlatformServicesRoot>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(UseWinUI)' != 'true' AND '$(UseUwpTools)' != 'true' ">
+    <_TestAdapterPlatformServicesRoot>$(MSBuildThisFileDirectory)</_TestAdapterPlatformServicesRoot>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <TestAdapterContent Include="$(MSBuildThisFileDirectory)Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.dll" Condition=" '$(EnableMSTestRunner)' != 'true' ">
+      <Link>Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Visible>False</Visible>
+    </TestAdapterContent>
+    <TestAdapterContent Include="$(_TestAdapterPlatformServicesRoot)Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll">
+      <Link>Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Visible>False</Visible>
+    </TestAdapterContent>
+    <TestAdapterContent Include="$(MSBuildThisFileDirectory)\Microsoft.TestPlatform.AdapterUtilities.dll">
+      <Link>Microsoft.TestPlatform.AdapterUtilities.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Visible>False</Visible>
+    </TestAdapterContent>
+  </ItemGroup>
+
+  <ItemGroup>
+    <!--
+      Including `@(TestAdapterContent)` in the `None` ItemGroup to get the `CopyToOutputDirectory` behavior be default,
+      package consumers can opt-out of this behavior by removing `@(TestAdapterContent)` from the `None` ItemGroup
+      (i.e. `<None Remove="@(TestAdapterContent)" />`)
+      -->
+    <None Include="@(TestAdapterContent)" />
+  </ItemGroup>
+
+  <Choose>
+    <!-- Avoid false warning about missing reference (msbuild bug) -->
+    <!-- https://github.com/dotnet/msbuild/issues/9698#issuecomment-1945763467 -->
+    <When Condition=" '$(EnableMSTestRunner)' == 'true' ">
+      <ItemGroup>
+        <Reference Include="Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter">
+          <HintPath>$(_TestAdapterPlatformServicesRoot)Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.dll</HintPath>
+        </Reference>
+      </ItemGroup>
+    </When>
+  </Choose>
+
+  <Target Name="GetMSTestV2CultureHierarchy">
+    <!--
+      Only traversing 5 levels in the culture hierarchy. This is the maximum length for all cultures and should be sufficient
+      to get to a culture name that maps to a resource folder we package.
+      The root culture name for all cultures is invariant whose name is '' (empty) and the parent for invariant culture is
+      invariant itself. (https://msdn.microsoft.com/library/system.globalization.cultureinfo.parent.aspx)
+      So the below code should not break build in any case.
+      -->
+    <ItemGroup>
+      <CurrentUICultureHierarchy Include="$([System.Globalization.CultureInfo]::CurrentUICulture.Name)" />
+      <CurrentUICultureHierarchy Include="$([System.Globalization.CultureInfo]::CurrentUICulture.Parent.Name)"  Condition=" '$([System.Globalization.CultureInfo]::CurrentUICulture.Parent.Name)' != '' "/>
+      <CurrentUICultureHierarchy Include="$([System.Globalization.CultureInfo]::CurrentUICulture.Parent.Parent.Name)"  Condition=" '$([System.Globalization.CultureInfo]::CurrentUICulture.Parent.Parent.Name)' != '' "/>
+      <CurrentUICultureHierarchy Include="$([System.Globalization.CultureInfo]::CurrentUICulture.Parent.Parent.Parent.Name)"  Condition=" '$([System.Globalization.CultureInfo]::CurrentUICulture.Parent.Parent.Parent.Name)' != '' "/>
+      <CurrentUICultureHierarchy Include="$([System.Globalization.CultureInfo]::CurrentUICulture.Parent.Parent.Parent.Parent.Name)"  Condition=" '$([System.Globalization.CultureInfo]::CurrentUICulture.Parent.Parent.Parent.Parent.Name)' != '' "/>
+    </ItemGroup>
+  </Target>
+
+  <!-- Copy resources over to $(TargetDir) if this is a localized build. -->
+  <Target Name="CopyMSTestV2Resources" BeforeTargets="PrepareForBuild" Condition=" '$(EnableMSTestV2CopyResources)' == 'true' " DependsOnTargets="GetMSTestV2CultureHierarchy">
+
+    <!-- Expand the UICulture hierarchy to items, such as cs-CZ, cs, and attach the culture metadata to the item. -->
+    <ItemGroup>
+      <MSTestV2Files Include="$(MSBuildThisFileDirectory)..\_localization\%(CurrentUICultureHierarchy.Identity)\*.dll">
+        <UICulture>%(CurrentUICultureHierarchy.Identity)</UICulture>
+      </MSTestV2Files>
+    </ItemGroup>
+
+    <ItemGroup>
+      <!-- Add the localization file as content so it gets copied from nuget to bin folder. -->
+      <Content Include="@(MSTestV2Files->'%(FullPath)')">
+        <Link>%(MSTestV2Files.UICulture)\%(FileName).dll</Link>
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        <BaseAssemblyFullPath>%(FullPath)</BaseAssemblyFullPath>
+        <Visible>False</Visible>
+      </Content>
+    </ItemGroup>
+  </Target>
+</Project>

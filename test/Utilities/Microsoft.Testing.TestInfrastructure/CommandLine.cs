@@ -54,6 +54,19 @@ public sealed class CommandLine : IDisposable
         }
     }
 
+    private static (string Command, string Arguments) GetCommandAndArguments(string commandLine)
+    {
+        // Hacky way to split command and arguments that works with the limited cases we use in our tests.
+        if (!commandLine.StartsWith('"'))
+        {
+            string[] tokens = commandLine.Split(' ');
+            return (tokens[0], string.Join(" ", tokens.Skip(1)));
+        }
+
+        int endQuote = commandLine.IndexOf('"', 1);
+        return (commandLine.Substring(1, endQuote - 1), commandLine.Substring(endQuote + 2));
+    }
+
     public async Task<int> RunAsyncAndReturnExitCodeAsync(
         string commandLine,
         IDictionary<string, string?>? environmentVariables = null,
@@ -65,9 +78,7 @@ public sealed class CommandLine : IDisposable
         try
         {
             Interlocked.Increment(ref s_totalProcessesAttempt);
-            string[] tokens = commandLine.Split(' ');
-            string command = tokens[0];
-            string arguments = string.Join(" ", tokens.Skip(1));
+            (string command, string arguments) = GetCommandAndArguments(commandLine);
             _errorOutputLines.Clear();
             _standardOutputLines.Clear();
             ProcessConfiguration startInfo = new(command)

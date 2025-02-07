@@ -9,5 +9,19 @@ internal static class DebugEx
     /// <inheritdoc cref="Debug.Assert(bool, string)"/>
     [Conditional("DEBUG")]
     public static void Assert([DoesNotReturnIf(false)] bool b, string message)
+#if NETFRAMEWORK && DEBUG
+    {
+        if (!b)
+        {
+            // In CI scenarios, we don't want Debug.Assert to show a dialog that
+            // ends up causing the job to timeout. We use FailFast instead.
+            // FailFast is better than throwing an exception to avoid anyone
+            // catching an exception and masking an assert failure.
+            var ex = new Exception($"Debug.Assert failed: {message}");
+            Environment.FailFast(ex.Message, ex);
+        }
+    }
+#else
         => Debug.Assert(b, message);
+#endif
 }

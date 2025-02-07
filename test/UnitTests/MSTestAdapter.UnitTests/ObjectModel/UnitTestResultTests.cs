@@ -12,6 +12,7 @@ using Moq;
 using TestFramework.ForTestingMSTest;
 
 using UnitTestOutcome = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestOutcome;
+using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.ObjectModel;
 
@@ -30,7 +31,7 @@ public class UnitTestResultTests : TestContainer
     public void UnitTestResultConstructorWithTestFailedExceptionShouldSetRequiredFields()
     {
         var stackTrace = new StackTraceInformation("trace", "filePath", 2, 3);
-        TestFailedException ex = new(UnitTestOutcome.Error, "DummyMessage", stackTrace);
+        TestFailedException ex = new(TestTools.UnitTesting.UnitTestOutcome.Error, "DummyMessage", stackTrace);
 
         UnitTestResult result = new(ex);
 
@@ -40,212 +41,6 @@ public class UnitTestResultTests : TestContainer
         Verify(result.ErrorFilePath == "filePath");
         Verify(result.ErrorLineNumber == 2);
         Verify(result.ErrorColumnNumber == 3);
-    }
-
-    public void ToTestResultShouldReturnConvertedTestResultWithFieldsSet()
-    {
-        var stackTrace = new StackTraceInformation("DummyStackTrace", "filePath", 2, 3);
-        TestFailedException ex = new(UnitTestOutcome.Error, "DummyMessage", stackTrace);
-        var dummyTimeSpan = new TimeSpan(20);
-        UnitTestResult result = new(ex)
-        {
-            DisplayName = "DummyDisplayName",
-            Duration = dummyTimeSpan,
-        };
-
-        TestCase testCase = new("Foo", new Uri("Uri", UriKind.Relative), Assembly.GetExecutingAssembly().FullName);
-        DateTimeOffset startTime = DateTimeOffset.Now;
-        DateTimeOffset endTime = DateTimeOffset.Now;
-
-        string runSettingsXml =
-            """
-            <RunSettings>
-              <MSTestV2>
-              </MSTestV2>
-            </RunSettings>
-            """;
-
-        var adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object);
-
-        // Act
-        var testResult = result.ToTestResult(testCase, startTime, endTime, "MachineName", adapterSettings);
-
-        // Validate
-        Verify(testCase == testResult.TestCase);
-        Verify(testResult.DisplayName == "DummyDisplayName");
-        Verify(dummyTimeSpan == testResult.Duration);
-        Verify(testResult.Outcome == TestOutcome.Failed);
-        Verify(testResult.ErrorMessage == "DummyMessage");
-        Verify(testResult.ErrorStackTrace == "DummyStackTrace");
-        Verify(startTime == testResult.StartTime);
-        Verify(endTime == testResult.EndTime);
-        Verify(testResult.Messages.Count == 0);
-    }
-
-    public void ToTestResultForUniTestResultWithStandardOutShouldReturnTestResultWithStdOutMessage()
-    {
-        UnitTestResult result = new()
-        {
-            StandardOut = "DummyOutput",
-        };
-        TestCase testCase = new("Foo", new Uri("Uri", UriKind.Relative), Assembly.GetExecutingAssembly().FullName);
-
-        string runSettingsXml =
-            """
-            <RunSettings>
-              <MSTestV2>
-              </MSTestV2>
-            </RunSettings>
-            """;
-
-        var adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object);
-
-        var testResult = result.ToTestResult(testCase, DateTimeOffset.Now, DateTimeOffset.Now, "MachineName", adapterSettings);
-        Verify(testResult.Messages.All(m => m.Text.Contains("DummyOutput") && m.Category.Equals("StdOutMsgs", StringComparison.Ordinal)));
-    }
-
-    public void ToTestResultForUniTestResultWithStandardErrorShouldReturnTestResultWithStdErrorMessage()
-    {
-        UnitTestResult result = new()
-        {
-            StandardError = "DummyError",
-        };
-        TestCase testCase = new("Foo", new Uri("Uri", UriKind.Relative), Assembly.GetExecutingAssembly().FullName);
-
-        string runSettingsXml =
-            """
-            <RunSettings>
-              <MSTestV2>
-              </MSTestV2>
-            </RunSettings>
-            """;
-
-        var adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object);
-
-        var testResult = result.ToTestResult(testCase, DateTimeOffset.Now, DateTimeOffset.Now, "MachineName", adapterSettings);
-        Verify(testResult.Messages.All(m => m.Text.Contains("DummyError") && m.Category.Equals("StdErrMsgs", StringComparison.Ordinal)));
-    }
-
-    public void ToTestResultForUniTestResultWithDebugTraceShouldReturnTestResultWithDebugTraceStdOutMessage()
-    {
-        UnitTestResult result = new()
-        {
-            DebugTrace = "DummyDebugTrace",
-        };
-        TestCase testCase = new("Foo", new Uri("Uri", UriKind.Relative), Assembly.GetExecutingAssembly().FullName);
-
-        string runSettingsXml =
-            """
-            <RunSettings>
-              <MSTestV2>
-              </MSTestV2>
-            </RunSettings>
-            """;
-
-        var adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object);
-
-        var testResult = result.ToTestResult(testCase, DateTimeOffset.Now, DateTimeOffset.Now, "MachineName", adapterSettings);
-        Verify(testResult.Messages.All(m => m.Text.Contains("\r\n\r\nDebug Trace:\r\nDummyDebugTrace") && m.Category.Equals("StdOutMsgs", StringComparison.Ordinal)));
-    }
-
-    public void ToTestResultForUniTestResultWithTestContextMessagesShouldReturnTestResultWithTestContextStdOutMessage()
-    {
-        UnitTestResult result = new()
-        {
-            TestContextMessages = "KeepMovingForward",
-        };
-        TestCase testCase = new("Foo", new Uri("Uri", UriKind.Relative), Assembly.GetExecutingAssembly().FullName);
-
-        string runSettingsXml =
-            """
-            <RunSettings>
-              <MSTestV2>
-              </MSTestV2>
-            </RunSettings>
-            """;
-
-        var adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object);
-
-        var testResult = result.ToTestResult(testCase, DateTimeOffset.Now, DateTimeOffset.Now, "MachineName", adapterSettings);
-        Verify(testResult.Messages.All(m => m.Text.Contains("\r\n\r\nTestContext Messages:\r\nKeepMovingForward") && m.Category.Equals("StdOutMsgs", StringComparison.Ordinal)));
-    }
-
-    public void ToTestResultForUniTestResultWithResultFilesShouldReturnTestResultWithResultFilesAttachment()
-    {
-        UnitTestResult result = new()
-        {
-            ResultFiles = new List<string>() { "dummy://DummyFile.txt" },
-        };
-        TestCase testCase = new("Foo", new Uri("Uri", UriKind.Relative), Assembly.GetExecutingAssembly().FullName);
-
-        string runSettingsXml =
-            """
-            <RunSettings>
-              <MSTestV2>
-              </MSTestV2>
-            </RunSettings>
-            """;
-
-        var adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object);
-
-        var testResult = result.ToTestResult(testCase, DateTimeOffset.Now, DateTimeOffset.Now, "MachineName", adapterSettings);
-
-        Verify(testResult.Attachments.Count == 1);
-        Verify(testResult.Attachments[0].Attachments[0].Description == "dummy://DummyFile.txt");
-    }
-
-    public void ToTestResultForUniTestResultWithNoResultFilesShouldReturnTestResultWithNoResultFilesAttachment()
-    {
-        UnitTestResult result = new()
-        {
-            ResultFiles = null,
-        };
-        TestCase testCase = new("Foo", new Uri("Uri", UriKind.Relative), Assembly.GetExecutingAssembly().FullName);
-
-        string runSettingsXml =
-            """
-            <RunSettings>
-              <MSTestV2>
-              </MSTestV2>
-            </RunSettings>
-            """;
-
-        var adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object);
-
-        var testResult = result.ToTestResult(testCase, DateTimeOffset.Now, DateTimeOffset.Now, "MachineName", adapterSettings);
-
-        Verify(testResult.Attachments.Count == 0);
-    }
-
-    public void ToTestResultForUniTestResultWithParentInfoShouldReturnTestResultWithParentInfo()
-    {
-        var executionId = Guid.NewGuid();
-        var parentExecId = Guid.NewGuid();
-        int innerResultsCount = 5;
-
-        UnitTestResult result = new()
-        {
-            ExecutionId = executionId,
-            ParentExecId = parentExecId,
-            InnerResultsCount = innerResultsCount,
-        };
-        TestCase testCase = new("Foo", new Uri("Uri", UriKind.Relative), Assembly.GetExecutingAssembly().FullName);
-
-        string runSettingsXml =
-            """
-            <RunSettings>
-              <MSTestV2>
-              </MSTestV2>
-            </RunSettings>
-            """;
-
-        var adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object);
-
-        var testResult = result.ToTestResult(testCase, DateTimeOffset.Now, DateTimeOffset.Now, "MachineName", adapterSettings);
-
-        Verify(executionId.Equals(testResult.GetPropertyValue(MSTest.TestAdapter.Constants.ExecutionIdProperty)));
-        Verify(parentExecId.Equals(testResult.GetPropertyValue(MSTest.TestAdapter.Constants.ParentExecIdProperty)));
-        Verify(innerResultsCount.Equals(testResult.GetPropertyValue(MSTest.TestAdapter.Constants.InnerResultsCountProperty)));
     }
 
     public void UniTestHelperToTestOutcomeForUnitTestOutcomePassedShouldReturnTestOutcomePassed()
@@ -260,7 +55,7 @@ public class UnitTestResultTests : TestContainer
 
         var adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object);
 
-        var resultOutcome = UnitTestOutcomeHelper.ToTestOutcome(UnitTestOutcome.Passed, adapterSettings);
+        var resultOutcome = UnitTestOutcomeHelper.ToTestOutcome(UTF.UnitTestOutcome.Passed, adapterSettings);
         Verify(resultOutcome == TestOutcome.Passed);
     }
 
@@ -276,7 +71,7 @@ public class UnitTestResultTests : TestContainer
 
         var adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object);
 
-        var resultOutcome = UnitTestOutcomeHelper.ToTestOutcome(UnitTestOutcome.Failed, adapterSettings);
+        var resultOutcome = UnitTestOutcomeHelper.ToTestOutcome(UTF.UnitTestOutcome.Failed, adapterSettings);
         Verify(resultOutcome == TestOutcome.Failed);
     }
 
@@ -292,7 +87,7 @@ public class UnitTestResultTests : TestContainer
 
         var adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object);
 
-        var resultOutcome = UnitTestOutcomeHelper.ToTestOutcome(UnitTestOutcome.Error, adapterSettings);
+        var resultOutcome = UnitTestOutcomeHelper.ToTestOutcome(UTF.UnitTestOutcome.Error, adapterSettings);
         Verify(resultOutcome == TestOutcome.Failed);
     }
 
@@ -309,7 +104,7 @@ public class UnitTestResultTests : TestContainer
 
         var adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object);
 
-        var resultOutcome = UnitTestOutcomeHelper.ToTestOutcome(UnitTestOutcome.NotRunnable, adapterSettings);
+        var resultOutcome = UnitTestOutcomeHelper.ToTestOutcome(UTF.UnitTestOutcome.NotRunnable, adapterSettings);
         Verify(resultOutcome == TestOutcome.None);
     }
 
@@ -325,7 +120,7 @@ public class UnitTestResultTests : TestContainer
 
         var adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object);
 
-        var resultOutcome = UnitTestOutcomeHelper.ToTestOutcome(UnitTestOutcome.NotRunnable, adapterSettings);
+        var resultOutcome = UnitTestOutcomeHelper.ToTestOutcome(UTF.UnitTestOutcome.NotRunnable, adapterSettings);
         Verify(resultOutcome == TestOutcome.Failed);
     }
 
@@ -341,7 +136,7 @@ public class UnitTestResultTests : TestContainer
 
         var adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object);
 
-        var resultOutcome = UnitTestOutcomeHelper.ToTestOutcome(UnitTestOutcome.Timeout, adapterSettings);
+        var resultOutcome = UnitTestOutcomeHelper.ToTestOutcome(UTF.UnitTestOutcome.Timeout, adapterSettings);
         Verify(resultOutcome == TestOutcome.Failed);
     }
 
@@ -357,7 +152,7 @@ public class UnitTestResultTests : TestContainer
 
         var adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object);
 
-        var resultOutcome = UnitTestOutcomeHelper.ToTestOutcome(UnitTestOutcome.Ignored, adapterSettings);
+        var resultOutcome = UnitTestOutcomeHelper.ToTestOutcome(UTF.UnitTestOutcome.Ignored, adapterSettings);
         Verify(resultOutcome == TestOutcome.Skipped);
     }
 
@@ -373,7 +168,7 @@ public class UnitTestResultTests : TestContainer
 
         var adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object);
 
-        var resultOutcome = UnitTestOutcomeHelper.ToTestOutcome(UnitTestOutcome.Inconclusive, adapterSettings);
+        var resultOutcome = UnitTestOutcomeHelper.ToTestOutcome(UTF.UnitTestOutcome.Inconclusive, adapterSettings);
         Verify(resultOutcome == TestOutcome.Skipped);
     }
 
@@ -390,7 +185,7 @@ public class UnitTestResultTests : TestContainer
 
         var adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object);
 
-        var resultOutcome = UnitTestOutcomeHelper.ToTestOutcome(UnitTestOutcome.Inconclusive, adapterSettings);
+        var resultOutcome = UnitTestOutcomeHelper.ToTestOutcome(UTF.UnitTestOutcome.Inconclusive, adapterSettings);
         Verify(resultOutcome == TestOutcome.Failed);
     }
 
@@ -406,7 +201,7 @@ public class UnitTestResultTests : TestContainer
 
         var adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object);
 
-        var resultOutcome = UnitTestOutcomeHelper.ToTestOutcome(UnitTestOutcome.NotFound, adapterSettings);
+        var resultOutcome = UnitTestOutcomeHelper.ToTestOutcome(UTF.UnitTestOutcome.NotFound, adapterSettings);
         Verify(resultOutcome == TestOutcome.NotFound);
     }
 
@@ -422,7 +217,7 @@ public class UnitTestResultTests : TestContainer
 
         var adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object);
 
-        var resultOutcome = UnitTestOutcomeHelper.ToTestOutcome(UnitTestOutcome.InProgress, adapterSettings);
+        var resultOutcome = UnitTestOutcomeHelper.ToTestOutcome(UTF.UnitTestOutcome.InProgress, adapterSettings);
         Verify(resultOutcome == TestOutcome.None);
     }
 
@@ -438,7 +233,7 @@ public class UnitTestResultTests : TestContainer
             """;
 
         var adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object);
-        var resultOutcome = UnitTestOutcomeHelper.ToTestOutcome(UnitTestOutcome.NotRunnable, adapterSettings);
+        var resultOutcome = UnitTestOutcomeHelper.ToTestOutcome(UTF.UnitTestOutcome.NotRunnable, adapterSettings);
         Verify(resultOutcome == TestOutcome.Failed);
     }
 }

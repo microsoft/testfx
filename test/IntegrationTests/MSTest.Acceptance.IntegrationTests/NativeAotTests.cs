@@ -33,7 +33,6 @@ public class NativeAotTests : AcceptanceTestBase<NopAssetFixture>
 using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.InteropServices;
-
 using Microsoft.Testing.Framework;
 using Microsoft.Testing.Internal.Framework;
 using Microsoft.Testing.Platform.Builder;

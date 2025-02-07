@@ -29,11 +29,14 @@ public sealed class TestMethodShouldBeValidAnalyzer : DiagnosticAnalyzer
         Description,
         Category.Usage,
         DiagnosticSeverity.Warning,
-        isEnabledByDefault: true);
+        isEnabledByDefault: true,
+        escalateToErrorInRecommended: true);
 
+    /// <inheritdoc />
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
         = ImmutableArray.Create(ValidTestMethodSignatureRule);
 
+    /// <inheritdoc />
     public override void Initialize(AnalysisContext context)
     {
         context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
@@ -51,6 +54,32 @@ public sealed class TestMethodShouldBeValidAnalyzer : DiagnosticAnalyzer
                     SymbolKind.Method);
             }
         });
+    }
+
+    private static bool IsOrHasTypeParameter(ITypeSymbol type, ITypeParameterSymbol typeParameter)
+    {
+        if (SymbolEqualityComparer.Default.Equals(type, typeParameter))
+        {
+            return true;
+        }
+
+        if (type is IArrayTypeSymbol array)
+        {
+            return IsOrHasTypeParameter(array.ElementType, typeParameter);
+        }
+
+        if (type is INamedTypeSymbol namedType)
+        {
+            foreach (ITypeSymbol typeArgument in namedType.TypeArguments)
+            {
+                if (IsOrHasTypeParameter(typeArgument, typeParameter))
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     private static void AnalyzeSymbol(SymbolAnalysisContext context, INamedTypeSymbol testMethodAttributeSymbol, INamedTypeSymbol? taskSymbol,
@@ -73,8 +102,9 @@ public sealed class TestMethodShouldBeValidAnalyzer : DiagnosticAnalyzer
         {
             foreach (ITypeParameterSymbol typeParameter in methodSymbol.TypeParameters)
             {
-                // If none of the parameters match the type parameter, then that generic type can't be inferred.
-                if (!methodSymbol.Parameters.Any(p => typeParameter.Equals(p.Type, SymbolEqualityComparer.Default)))
+                // If none of the parameters contains the type parameter, then that generic type can't be inferred.
+                // By "contains", we mean if the type parameter is 'T', we could have 'T', 'T[]', or 'List<T>'.
+                if (!methodSymbol.Parameters.Any(p => IsOrHasTypeParameter(p.Type, typeParameter)))
                 {
                     context.ReportDiagnostic(methodSymbol.CreateDiagnostic(ValidTestMethodSignatureRule, methodSymbol.Name));
                 }

@@ -1,7 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if NETFRAMEWORK || NET
+#if NETFRAMEWORK || (NET && !WINDOWS_UWP)
 #if NETFRAMEWORK
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Security;
@@ -111,18 +111,13 @@ class AssemblyResolver :
         _searchDirectories = [.. directories];
         _directoryList = new Queue<RecursiveDirectoryPath>();
 
-        // In source gen mode don't register any custom resolver. We can still resolve in the same folder,
-        // but nothing more.
-        if (!SourceGeneratorToggle.UseSourceGenerator)
-        {
-            AppDomain.CurrentDomain.AssemblyResolve += new ResolveEventHandler(OnResolve);
+        AppDomain.CurrentDomain.AssemblyResolve += new ResolveEventHandler(OnResolve);
 #if NETFRAMEWORK
-            AppDomain.CurrentDomain.ReflectionOnlyAssemblyResolve += new ResolveEventHandler(ReflectionOnlyOnResolve);
+        AppDomain.CurrentDomain.ReflectionOnlyAssemblyResolve += new ResolveEventHandler(ReflectionOnlyOnResolve);
 
-            // This is required for winmd resolution for arm built sources discovery on desktop.
-            WindowsRuntimeMetadata.ReflectionOnlyNamespaceResolve += new EventHandler<NamespaceResolveEventArgs>(WindowsRuntimeMetadataReflectionOnlyNamespaceResolve);
+        // This is required for winmd resolution for arm built sources discovery on desktop.
+        WindowsRuntimeMetadata.ReflectionOnlyNamespaceResolve += new EventHandler<NamespaceResolveEventArgs>(WindowsRuntimeMetadataReflectionOnlyNamespaceResolve);
 #endif
-        }
     }
 
     /// <summary>
@@ -289,6 +284,11 @@ class AssemblyResolver :
 #endif
     string[] GetDirectories(string path) => Directory.GetDirectories(path);
 
+    /// <summary>
+    /// Verifies if a file exists.
+    /// </summary>
+    /// <param name="filePath">The file path.</param>
+    /// <returns><c>true</c> if the file exists; <c>false</c> otherwise.</returns>
 #if NETFRAMEWORK
     protected virtual
 #else
@@ -296,6 +296,11 @@ class AssemblyResolver :
 #endif
     bool DoesFileExist(string filePath) => File.Exists(filePath);
 
+    /// <summary>
+    /// Loads an assembly from the given path.
+    /// </summary>
+    /// <param name="path">The path of the assembly.</param>
+    /// <returns>The loaded <see cref="Assembly"/>.</returns>
 #if NETFRAMEWORK
     protected virtual
 #else
@@ -308,13 +313,18 @@ class AssemblyResolver :
 #pragma warning restore IL2026 // Members attributed with RequiresUnreferencedCode may break when trimming
 
 #if NETFRAMEWORK
+    /// <summary>
+    /// Loads an assembly from the given path in a reflection-only context.
+    /// </summary>
+    /// <param name="path">The path of the assembly.</param>
+    /// <returns>The loaded <see cref="Assembly"/>.</returns>
     protected virtual Assembly ReflectionOnlyLoadAssemblyFrom(string path) => Assembly.ReflectionOnlyLoadFrom(path);
 #endif
 
     /// <summary>
     /// It will search for a particular assembly in the given list of directory.
     /// </summary>
-    /// <param name="searchDirectorypaths"> The search Directorypaths. </param>
+    /// <param name="searchDirectorypaths"> The search directory paths. </param>
     /// <param name="name"> The name. </param>
     /// <param name="isReflectionOnly"> Indicates whether this is called under a Reflection Only Load context. </param>
     /// <returns> The <see cref="Assembly"/>. </returns>

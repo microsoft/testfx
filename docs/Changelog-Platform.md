@@ -4,6 +4,70 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
+## <a name="1.5.3" />[1.5.3] - 2025-01-27
+
+See full log [here](https://github.com/microsoft/testfx/compare/v1.5.2...v1.5.3)
+
+### Fixed
+
+* Fix `MissingMethodException` for init-only properties when code is compiled against netstandard2.0 and runs on net9.0 at runtime by @dependabot in [#4794](https://github.com/microsoft/testfx/pull/4794)
+
+### Artifacts
+
+* Microsoft.Testing.Extensions.CrashDump: [1.5.3](https://www.nuget.org/packages/Microsoft.Testing.Extensions.CrashDump/1.5.3)
+* Microsoft.Testing.Extensions.HangDump: [1.5.3](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HangDump/1.5.3)
+* Microsoft.Testing.Extensions.HotReload: [1.5.3](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HotReload/1.5.3)
+* Microsoft.Testing.Extensions.Retry: [1.5.3](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Retry/1.5.3)
+* Microsoft.Testing.Extensions.Telemetry: [1.5.3](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Telemetry/1.5.3)
+* Microsoft.Testing.Extensions.TrxReport: [1.5.3](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport/1.5.3)
+* Microsoft.Testing.Extensions.TrxReport.Abstractions: [1.5.3](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport.Abstractions/1.5.3)
+* Microsoft.Testing.Extensions.VSTestBridge: [1.5.3](https://www.nuget.org/packages/Microsoft.Testing.Extensions.VSTestBridge/1.5.3)
+* Microsoft.Testing.Platform: [1.5.3](https://www.nuget.org/packages/Microsoft.Testing.Platform/1.5.3)
+* Microsoft.Testing.Platform.MSBuild: [1.5.3](https://www.nuget.org/packages/Microsoft.Testing.Platform.MSBuild/1.5.3)
+
+## <a name="1.5.2" />[1.5.2] - 2025-01-21
+
+See full log [here](https://github.com/microsoft/testfx/compare/v1.5.1...v1.5.2)
+
+### Fixed
+
+* Ensure IProperty record implementation have nice array display by @Evangelink in [#4659](https://github.com/microsoft/testfx/pull/4659)
+
+### Artifacts
+
+* Microsoft.Testing.Extensions.CrashDump: [1.5.2](https://www.nuget.org/packages/Microsoft.Testing.Extensions.CrashDump/1.5.2)
+* Microsoft.Testing.Extensions.HangDump: [1.5.2](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HangDump/1.5.2)
+* Microsoft.Testing.Extensions.HotReload: [1.5.2](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HotReload/1.5.2)
+* Microsoft.Testing.Extensions.Retry: [1.5.2](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Retry/1.5.2)
+* Microsoft.Testing.Extensions.Telemetry: [1.5.2](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Telemetry/1.5.2)
+* Microsoft.Testing.Extensions.TrxReport: [1.5.2](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport/1.5.2)
+* Microsoft.Testing.Extensions.TrxReport.Abstractions: [1.5.2](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport.Abstractions/1.5.2)
+* Microsoft.Testing.Extensions.VSTestBridge: [1.5.2](https://www.nuget.org/packages/Microsoft.Testing.Extensions.VSTestBridge/1.5.2)
+* Microsoft.Testing.Platform: [1.5.2](https://www.nuget.org/packages/Microsoft.Testing.Platform/1.5.2)
+* Microsoft.Testing.Platform.MSBuild: [1.5.2](https://www.nuget.org/packages/Microsoft.Testing.Platform.MSBuild/1.5.2)
+
+## <a name="1.5.1" />[1.5.1] - 2025-01-13
+
+See full log [here](https://github.com/microsoft/testfx/compare/v1.5.0...v1.5.1)
+
+### Fixed
+
+* Fix match all filter not working when property expression is present (#4495) by @Evangelink in [#4507](https://github.com/microsoft/testfx/pull/4507)
+* Fix "Found multiple properties of type 'Microsoft.Testing.Platform.Ex… by @Evangelink in [#4563](https://github.com/microsoft/testfx/pull/4563)
+
+### Artifacts
+
+* Microsoft.Testing.Extensions.CrashDump: [1.5.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.CrashDump/1.5.1)
+* Microsoft.Testing.Extensions.HangDump: [1.5.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HangDump/1.5.1)
+* Microsoft.Testing.Extensions.HotReload: [1.5.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HotReload/1.5.1)
+* Microsoft.Testing.Extensions.Retry: [1.5.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Retry/1.5.1)
+* Microsoft.Testing.Extensions.Telemetry: [1.5.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Telemetry/1.5.1)
+* Microsoft.Testing.Extensions.TrxReport: [1.5.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport/1.5.1)
+* Microsoft.Testing.Extensions.TrxReport.Abstractions: [1.5.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport.Abstractions/1.5.1)
+* Microsoft.Testing.Extensions.VSTestBridge: [1.5.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.VSTestBridge/1.5.1)
+* Microsoft.Testing.Platform: [1.5.1](https://www.nuget.org/packages/Microsoft.Testing.Platform/1.5.1)
+* Microsoft.Testing.Platform.MSBuild: [1.5.1](https://www.nuget.org/packages/Microsoft.Testing.Platform.MSBuild/1.5.1)
+
 ## <a name="1.5.0" />[1.5.0] - 2024-12-20
 
 See full log [here](https://github.com/microsoft/testfx/compare/v1.4.3...v1.5.0)

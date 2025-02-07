@@ -9,14 +9,14 @@ public class DiscoverInternalsTests : CLITestBase
 {
     private const string TestAsset = "DiscoverInternalsProject";
 
-    public void InternalTestClassesAreDiscoveredWhenTheDiscoverInternalsAttributeIsPresent()
+    public async Task InternalTestClassesAreDiscoveredWhenTheDiscoverInternalsAttributeIsPresent()
     {
         // Arrange
         string assemblyPath = Path.IsPathRooted(TestAsset) ? TestAsset : GetAssetFullPath(TestAsset);
 
         // Act
         System.Collections.Immutable.ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestCase> testCases = DiscoverTests(assemblyPath);
-        _ = RunTests(testCases);
+        _ = await RunTestsAsync(testCases);
 
         // Assert
         VerifyE2E.AtLeastTestsDiscovered(
@@ -39,7 +39,7 @@ public class DiscoverInternalsTests : CLITestBase
             "EqualityIsCaseInsensitive");
     }
 
-    public void AnInternalTypeCanBeUsedInADynamicDataTestMethod()
+    public async Task AnInternalTypeCanBeUsedInADynamicDataTestMethod()
     {
         string assemblyPath = Path.IsPathRooted(TestAsset) ? TestAsset : GetAssetFullPath(TestAsset);
 
@@ -48,7 +48,7 @@ public class DiscoverInternalsTests : CLITestBase
 
         IEnumerable<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestCase> targetTestCases = testCases.Where(t => t.DisplayName == "DynamicDataTestMethod (DiscoverInternalsProject.SerializableInternalType)");
 
-        System.Collections.Immutable.ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult> testResults = RunTests(targetTestCases);
+        System.Collections.Immutable.ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult> testResults = await RunTestsAsync(targetTestCases);
 
         // Assert
         VerifyE2E.TestsPassed(

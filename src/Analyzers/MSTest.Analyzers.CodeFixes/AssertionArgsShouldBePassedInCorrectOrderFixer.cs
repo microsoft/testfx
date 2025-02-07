@@ -17,17 +17,23 @@ using MSTest.Analyzers.Helpers;
 
 namespace MSTest.Analyzers;
 
+/// <summary>
+/// Code fixer for <see cref="AssertionArgsShouldBePassedInCorrectOrderAnalyzer"/>.
+/// </summary>
 [ExportCodeFixProvider(LanguageNames.CSharp, Name = nameof(AssertionArgsShouldBePassedInCorrectOrderFixer))]
 [Shared]
 public sealed class AssertionArgsShouldBePassedInCorrectOrderFixer : CodeFixProvider
 {
+    /// <inheritdoc />
     public sealed override ImmutableArray<string> FixableDiagnosticIds { get; }
         = ImmutableArray.Create(DiagnosticIds.AssertionArgsShouldBePassedInCorrectOrderRuleId);
 
+    /// <inheritdoc />
     public override FixAllProvider GetFixAllProvider()
         // See https://github.com/dotnet/roslyn/blob/main/docs/analyzers/FixAllProvider.md for more information on Fix All Providers
         => WellKnownFixAllProviders.BatchFixer;
 
+    /// <inheritdoc />
     public override async Task RegisterCodeFixesAsync(CodeFixContext context)
     {
         Diagnostic diagnostic = context.Diagnostics[0];
@@ -56,8 +62,8 @@ public sealed class AssertionArgsShouldBePassedInCorrectOrderFixer : CodeFixProv
 
         SeparatedSyntaxList<ArgumentSyntax> arguments = invocationExpr.ArgumentList.Arguments;
 
-        ArgumentSyntax expectedArg = arguments.FirstOrDefault(IsExpectedArgument);
-        ArgumentSyntax actualArg = arguments.FirstOrDefault(IsActualArgument);
+        ArgumentSyntax? expectedArg = arguments.FirstOrDefault(IsExpectedArgument);
+        ArgumentSyntax? actualArg = arguments.FirstOrDefault(IsActualArgument);
 
         // Handle positional arguments if named arguments are not found
         if (expectedArg == null || actualArg == null)

@@ -48,7 +48,7 @@ public sealed class TestApplicationResultTests
     }
 
     [TestMethod]
-    [DynamicData(nameof(FailedState), DynamicDataSourceType.Method)]
+    [DynamicData(nameof(FailedState))]
     public async Task GetProcessExitCodeAsync_If_Failed_Tests_Returns_AtLeastOneTestFailed(TestNodeStateProperty testNodeStateProperty)
     {
         await _testApplicationResult.ConsumeAsync(new DummyProducer(), new TestNodeUpdateMessage(

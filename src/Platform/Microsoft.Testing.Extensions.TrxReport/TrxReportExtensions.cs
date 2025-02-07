@@ -13,8 +13,15 @@ using Microsoft.Testing.Platform.TestHostControllers;
 
 namespace Microsoft.Testing.Extensions;
 
+/// <summary>
+/// Provides extension methods for adding TRX report generation to a test application.
+/// </summary>
 public static class TrxReportExtensions
 {
+    /// <summary>
+    /// Adds TRX report generation to a test application.
+    /// </summary>
+    /// <param name="builder">The test application builder.</param>
     public static void AddTrxReportProvider(this ITestApplicationBuilder builder)
     {
         if (builder is not TestApplicationBuilder testApplicationBuilder)
@@ -64,6 +71,7 @@ public static class TrxReportExtensions
                     serviceProvider.GetConfiguration(),
                     serviceProvider.GetSystemClock(),
                     serviceProvider.GetTask(),
+                    serviceProvider.GetOutputDevice(),
                     pipeNameDescription);
             });
         ((TestHostControllersManager)builder.TestHostControllers).AddDataConsumer(compositeLifeTimeHandler);

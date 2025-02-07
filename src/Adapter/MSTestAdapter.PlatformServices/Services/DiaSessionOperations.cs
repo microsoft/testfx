@@ -17,8 +17,6 @@ internal static class DiaSessionOperations
     /// <remarks>Initializes DiaSession.</remarks>
     static DiaSessionOperations()
     {
-        ApplicationStateGuard.Ensure(!SourceGeneratorToggle.UseSourceGenerator, $"{nameof(DiaSessionOperations)} should not be used in source generator mode, all code location metadata should be taken from generated code via SourceGeneratedReflectionDataProvider.");
-
         const string diaSessionTypeName = "Microsoft.VisualStudio.TestPlatform.ObjectModel.DiaSession, Microsoft.VisualStudio.TestPlatform.ObjectModel";
         const string diaNavigationDataTypeName = "Microsoft.VisualStudio.TestPlatform.ObjectModel.DiaNavigationData,  Microsoft.VisualStudio.TestPlatform.ObjectModel";
 

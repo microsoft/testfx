@@ -153,7 +153,7 @@ public sealed class FileLoggerTests : IDisposable
     }
 
     [TestMethod]
-    [DynamicData(nameof(LogTestHelpers.GetLogLevelCombinations), typeof(LogTestHelpers), DynamicDataSourceType.Method)]
+    [DynamicData(nameof(LogTestHelpers.GetLogLevelCombinations), typeof(LogTestHelpers))]
     public async Task Log_WhenSyncFlush_StreamWriterIsCalledOnlyWhenLogLevelAllowsIt(LogLevel defaultLogLevel, LogLevel currentLogLevel)
     {
         _mockFileSystem.Setup(x => x.Exists(It.IsAny<string>())).Returns(false);
@@ -193,7 +193,7 @@ public sealed class FileLoggerTests : IDisposable
     }
 
     [TestMethod]
-    [DynamicData(nameof(LogTestHelpers.GetLogLevelCombinations), typeof(LogTestHelpers), DynamicDataSourceType.Method)]
+    [DynamicData(nameof(LogTestHelpers.GetLogLevelCombinations), typeof(LogTestHelpers))]
     public void Log_WhenAsyncFlush_StreamWriterIsCalledOnlyWhenLogLevelAllowsIt(LogLevel defaultLogLevel, LogLevel currentLogLevel)
     {
         _mockFileSystem.Setup(x => x.Exists(It.IsAny<string>())).Returns(false);

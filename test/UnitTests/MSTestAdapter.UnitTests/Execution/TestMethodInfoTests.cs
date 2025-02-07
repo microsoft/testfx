@@ -508,7 +508,7 @@ public class TestMethodInfoTests : TestContainer
         var exception = result.TestFailureException as TestFailedException;
         Verify(exception is not null);
         Verify(errorMessage == exception.Message);
-        Verify(exception.Outcome == UnitTestOutcome.Failed);
+        Verify(exception.Outcome == UTF.UnitTestOutcome.Failed);
         Verify(exception.InnerException.GetType() == typeof(ArgumentException));
         Verify(exception.InnerException.InnerException.GetType() == typeof(InvalidOperationException));
 
@@ -532,7 +532,7 @@ public class TestMethodInfoTests : TestContainer
 
         var exception = result.TestFailureException as TestFailedException;
         Verify(exception is not null);
-        Verify(exception.Outcome == UnitTestOutcome.Failed);
+        Verify(exception.Outcome == UTF.UnitTestOutcome.Failed);
         Verify(exception.InnerException.GetType() == typeof(Exception));
         Verify(exception.InnerException.InnerException.GetType() == typeof(InvalidOperationException));
 
@@ -569,7 +569,7 @@ public class TestMethodInfoTests : TestContainer
         var exception = result.TestFailureException as TestFailedException;
         Verify(exception is not null);
         Verify(errorMessage == exception.Message);
-        Verify(exception.Outcome == UnitTestOutcome.Failed);
+        Verify(exception.Outcome == UTF.UnitTestOutcome.Failed);
         Verify(exception.InnerException.GetType() == typeof(UTF.AssertFailedException));
 
         Verify(
@@ -600,7 +600,7 @@ public class TestMethodInfoTests : TestContainer
         var exception = result.TestFailureException as TestFailedException;
         Verify(exception is not null);
         Verify(errorMessage == exception.Message);
-        Verify(exception.Outcome == UnitTestOutcome.Inconclusive);
+        Verify(exception.Outcome == UTF.UnitTestOutcome.Inconclusive);
         Verify(exception.InnerException.GetType() == typeof(UTF.AssertInconclusiveException));
 
         Verify(
@@ -627,7 +627,7 @@ public class TestMethodInfoTests : TestContainer
 
         var exception = result.TestFailureException as TestFailedException;
         Verify(exception is not null);
-        Verify(exception.Outcome == UnitTestOutcome.Failed);
+        Verify(exception.Outcome == UTF.UnitTestOutcome.Failed);
         Verify(exception.InnerException.GetType() == typeof(Exception));
         Verify(exception.InnerException.InnerException.GetType() == typeof(InvalidOperationException));
 
@@ -743,7 +743,7 @@ public class TestMethodInfoTests : TestContainer
 
         var exception = result.TestFailureException as TestFailedException;
         Verify(exception is not null);
-        Verify(exception.Outcome == UnitTestOutcome.Failed);
+        Verify(exception.Outcome == UTF.UnitTestOutcome.Failed);
         Verify(expectedErrorMessage == exception.Message);
         Verify(exception.InnerException.GetType() == typeof(ArgumentException));
         Verify(exception.InnerException.InnerException.GetType() == typeof(InvalidOperationException));
@@ -771,7 +771,7 @@ public class TestMethodInfoTests : TestContainer
 
         var exception = result.TestFailureException as TestFailedException;
         Verify(exception is not null);
-        Verify(exception.Outcome == UnitTestOutcome.Inconclusive);
+        Verify(exception.Outcome == UTF.UnitTestOutcome.Inconclusive);
         Verify(expectedErrorMessage == exception.Message);
         Verify(exception.InnerException.GetType() == typeof(UTF.AssertInconclusiveException));
 
@@ -798,7 +798,7 @@ public class TestMethodInfoTests : TestContainer
 
         var exception = result.TestFailureException as TestFailedException;
         Verify(exception is not null);
-        Verify(exception.Outcome == UnitTestOutcome.Failed);
+        Verify(exception.Outcome == UTF.UnitTestOutcome.Failed);
         Verify(expectedErrorMessage == exception.Message);
         Verify(exception.InnerException.GetType() == typeof(UTF.AssertFailedException));
 
@@ -1258,7 +1258,7 @@ public class TestMethodInfoTests : TestContainer
             new TestAssemblyInfo(typeof(DummyTestClassForExpectedException).Assembly));
 
         TypeInspectionException ex = UTF.Assert.ThrowsException<TypeInspectionException>(() => new TestMethodInfo(testMethodInfo, classInfo, _testMethodOptions));
-        UTF.Assert.AreEqual("The test method Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests+DummyTestClassForExpectedException.DummyTestMethod1 has multiple attributes derived from ExpectedExceptionBaseAttribute defined on it. Only one such attribute is allowed.", ex.Message);
+        UTF.Assert.AreEqual("The test method 'Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests+DummyTestClassForExpectedException.DummyTestMethod1' has multiple attributes derived from 'ExpectedExceptionBaseAttribute' defined on it. Only one such attribute is allowed.", ex.Message);
     }
 
     public void ResolveExpectedExceptionShouldThrowWhenAttributeIsDefinedTwice_SameConcreteType()
@@ -1272,7 +1272,7 @@ public class TestMethodInfoTests : TestContainer
             new TestAssemblyInfo(typeof(DummyTestClassForExpectedException).Assembly));
 
         TypeInspectionException ex = UTF.Assert.ThrowsException<TypeInspectionException>(() => new TestMethodInfo(testMethodInfo, classInfo, _testMethodOptions));
-        UTF.Assert.AreEqual("The test method Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests+DummyTestClassForExpectedException.DummyTestMethod1 has multiple attributes derived from ExpectedExceptionBaseAttribute defined on it. Only one such attribute is allowed.", ex.Message);
+        UTF.Assert.AreEqual("The test method 'Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests+DummyTestClassForExpectedException.DummyTestMethod1' has multiple attributes derived from 'ExpectedExceptionBaseAttribute' defined on it. Only one such attribute is allowed.", ex.Message);
     }
 
     public void ResolveExpectedExceptionHelperShouldReturnExpectedExceptionAttributeIfPresent()

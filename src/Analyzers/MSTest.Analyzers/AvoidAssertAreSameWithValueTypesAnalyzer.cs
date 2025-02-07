@@ -24,6 +24,8 @@ public sealed class AvoidAssertAreSameWithValueTypesAnalyzer : DiagnosticAnalyze
     private static readonly LocalizableResourceString MessageFormat = new(nameof(Resources.AvoidAssertAreSameWithValueTypesMessageFormat), Resources.ResourceManager, typeof(Resources));
     private static readonly LocalizableResourceString Description = new(nameof(Resources.AvoidAssertAreSameWithValueTypesDescription), Resources.ResourceManager, typeof(Resources));
 
+    internal const string ReplacementKey = nameof(ReplacementKey);
+
     internal static readonly DiagnosticDescriptor Rule = DiagnosticDescriptorHelper.Create(
         DiagnosticIds.AvoidAssertAreSameWithValueTypesRuleId,
         Title,
@@ -33,9 +35,11 @@ public sealed class AvoidAssertAreSameWithValueTypesAnalyzer : DiagnosticAnalyze
         DiagnosticSeverity.Warning,
         isEnabledByDefault: true);
 
+    /// <inheritdoc />
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
         = ImmutableArray.Create(Rule);
 
+    /// <inheritdoc />
     public override void Initialize(AnalysisContext context)
     {
         context.EnableConcurrentExecution();
@@ -69,11 +73,16 @@ public sealed class AvoidAssertAreSameWithValueTypesAnalyzer : DiagnosticAnalyze
             return;
         }
 
-        if (argExpected.Value.WalkDownConversion().Type?.IsValueType == true ||
-            argActual.Value.WalkDownConversion().Type?.IsValueType == true)
+        ITypeSymbol? expectedType = argExpected.Value.WalkDownConversion().Type;
+        ITypeSymbol? actualType = argActual.Value.WalkDownConversion().Type;
+
+        if (expectedType?.IsValueType == true ||
+            actualType?.IsValueType == true)
         {
             string suggestedReplacement = targetMethod.Name == "AreSame" ? "AreEqual" : "AreNotEqual";
-            context.ReportDiagnostic(operation.CreateDiagnostic(Rule, targetMethod.Name, suggestedReplacement));
+            ImmutableDictionary<string, string?> properties = ImmutableDictionary<string, string?>.Empty
+                .Add(ReplacementKey, suggestedReplacement);
+            context.ReportDiagnostic(operation.CreateDiagnostic(Rule, properties, targetMethod.Name, suggestedReplacement));
         }
     }
 }

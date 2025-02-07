@@ -25,8 +25,10 @@ public sealed class UseAsyncSuffixTestFixtureMethodSuppressor : DiagnosticSuppre
     internal static readonly SuppressionDescriptor Rule =
         new(DiagnosticIds.UseAsyncSuffixTestFixtureMethodSuppressorRuleId, SuppressedDiagnosticId, Resources.UseAsyncSuffixTestFixtureMethodSuppressorJustification);
 
+    /// <inheritdoc />
     public override ImmutableArray<SuppressionDescriptor> SupportedSuppressions { get; } = ImmutableArray.Create(Rule);
 
+    /// <inheritdoc />
     public override void ReportSuppressions(SuppressionAnalysisContext context)
     {
         if (!context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingAssemblyInitializeAttribute, out INamedTypeSymbol? assemblyInitializeAttributeSymbol)

@@ -22,7 +22,7 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
     }
 
     [TestMethod]
-    [DynamicData(nameof(GetMatrix), DynamicDataSourceType.Method)]
+    [DynamicData(nameof(GetMatrix))]
     public async Task RetryFailedTests_OnlyRetryTimes_Succeeds(string tfm, bool failOnly)
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
@@ -58,7 +58,7 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
     }
 
     [TestMethod]
-    [DynamicData(nameof(GetMatrix), DynamicDataSourceType.Method)]
+    [DynamicData(nameof(GetMatrix))]
     public async Task RetryFailedTests_MaxPercentage_Succeeds(string tfm, bool fail)
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
@@ -100,7 +100,7 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
     }
 
     [TestMethod]
-    [DynamicData(nameof(GetMatrix), DynamicDataSourceType.Method)]
+    [DynamicData(nameof(GetMatrix))]
     public async Task RetryFailedTests_MaxTestsCount_Succeeds(string tfm, bool fail)
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);

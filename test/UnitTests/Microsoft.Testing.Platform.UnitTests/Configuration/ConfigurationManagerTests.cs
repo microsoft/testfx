@@ -23,7 +23,7 @@ public sealed class ConfigurationManagerTests
     }
 
     [TestMethod]
-    [DynamicData(nameof(GetConfigurationValueFromJsonData), DynamicDataSourceType.Method)]
+    [DynamicData(nameof(GetConfigurationValueFromJsonData))]
     public async ValueTask GetConfigurationValueFromJson(string jsonFileConfig, string key, string? result)
     {
         Mock<IFileSystem> fileSystem = new();
@@ -33,7 +33,7 @@ public sealed class ConfigurationManagerTests
         CurrentTestApplicationModuleInfo testApplicationModuleInfo = new(new SystemEnvironment(), new SystemProcessHandler());
         ConfigurationManager configurationManager = new(fileSystem.Object, testApplicationModuleInfo);
         configurationManager.AddConfigurationSource(() => new JsonConfigurationSource(testApplicationModuleInfo, fileSystem.Object, null));
-        IConfiguration configuration = await configurationManager.BuildAsync(null, new CommandLineParseResult(null, new List<OptionRecord>(), Array.Empty<string>()));
+        IConfiguration configuration = await configurationManager.BuildAsync(null, new CommandLineParseResult(null, new List<CommandLineParseOption>(), Array.Empty<string>()));
         Assert.AreEqual(result, configuration[key], $"Expected '{result}' found '{configuration[key]}'");
     }
 
@@ -64,11 +64,11 @@ public sealed class ConfigurationManagerTests
         ConfigurationManager configurationManager = new(fileSystem.Object, testApplicationModuleInfo);
         configurationManager.AddConfigurationSource(() =>
             new JsonConfigurationSource(testApplicationModuleInfo, fileSystem.Object, null));
-        await Assert.ThrowsAsync<NullReferenceException>(() => configurationManager.BuildAsync(null, new CommandLineParseResult(null, new List<OptionRecord>(), Array.Empty<string>())));
+        await Assert.ThrowsAsync<NullReferenceException>(() => configurationManager.BuildAsync(null, new CommandLineParseResult(null, new List<CommandLineParseOption>(), Array.Empty<string>())));
     }
 
     [TestMethod]
-    [DynamicData(nameof(GetConfigurationValueFromJsonData), DynamicDataSourceType.Method)]
+    [DynamicData(nameof(GetConfigurationValueFromJsonData))]
     public async ValueTask GetConfigurationValueFromJsonWithFileLoggerProvider(string jsonFileConfig, string key, string? result)
     {
         byte[] bytes = Encoding.UTF8.GetBytes(jsonFileConfig);
@@ -91,7 +91,7 @@ public sealed class ConfigurationManagerTests
         configurationManager.AddConfigurationSource(() =>
             new JsonConfigurationSource(testApplicationModuleInfo, fileSystem.Object, null));
 
-        IConfiguration configuration = await configurationManager.BuildAsync(loggerProviderMock.Object, new CommandLineParseResult(null, new List<OptionRecord>(), Array.Empty<string>()));
+        IConfiguration configuration = await configurationManager.BuildAsync(loggerProviderMock.Object, new CommandLineParseResult(null, new List<CommandLineParseOption>(), Array.Empty<string>()));
         Assert.AreEqual(result, configuration[key], $"Expected '{result}' found '{configuration[key]}'");
 
         loggerMock.Verify(x => x.LogAsync(LogLevel.Trace, It.IsAny<string>(), null, LoggingExtensions.Formatter), Times.Once);
@@ -102,7 +102,7 @@ public sealed class ConfigurationManagerTests
     {
         CurrentTestApplicationModuleInfo testApplicationModuleInfo = new(new SystemEnvironment(), new SystemProcessHandler());
         ConfigurationManager configurationManager = new(new SystemFileSystem(), testApplicationModuleInfo);
-        await Assert.ThrowsAsync<InvalidOperationException>(() => configurationManager.BuildAsync(null, new CommandLineParseResult(null, new List<OptionRecord>(), Array.Empty<string>())));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => configurationManager.BuildAsync(null, new CommandLineParseResult(null, new List<CommandLineParseOption>(), Array.Empty<string>())));
     }
 
     [TestMethod]
@@ -115,7 +115,7 @@ public sealed class ConfigurationManagerTests
         ConfigurationManager configurationManager = new(new SystemFileSystem(), testApplicationModuleInfo);
         configurationManager.AddConfigurationSource(() => mockConfigurationSource.Object);
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() => configurationManager.BuildAsync(null, new CommandLineParseResult(null, new List<OptionRecord>(), Array.Empty<string>())));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => configurationManager.BuildAsync(null, new CommandLineParseResult(null, new List<CommandLineParseOption>(), Array.Empty<string>())));
 
         mockConfigurationSource.Verify(x => x.IsEnabledAsync(), Times.Once);
     }
@@ -135,7 +135,7 @@ public sealed class ConfigurationManagerTests
         ConfigurationManager configurationManager = new(new SystemFileSystem(), testApplicationModuleInfo);
         configurationManager.AddConfigurationSource(() => fakeConfigurationSource);
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() => configurationManager.BuildAsync(null, new CommandLineParseResult(null, new List<OptionRecord>(), Array.Empty<string>())));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => configurationManager.BuildAsync(null, new CommandLineParseResult(null, new List<CommandLineParseOption>(), Array.Empty<string>())));
     }
 
     private class FakeConfigurationSource : IConfigurationSource, IAsyncInitializableExtension

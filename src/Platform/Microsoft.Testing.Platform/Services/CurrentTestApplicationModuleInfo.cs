@@ -21,6 +21,17 @@ internal sealed class CurrentTestApplicationModuleInfo(IEnvironment environment,
         }
     }
 
+    public bool IsCurrentTestApplicationHostMonoMuxer
+    {
+        get
+        {
+            string? processPath = GetProcessPath(_environment, _process);
+            return processPath is not null
+                && Path.GetFileNameWithoutExtension(processPath) is { } processName
+                && processName is "mono" or "mono-sgen";
+        }
+    }
+
     public bool IsCurrentTestApplicationModuleExecutable
     {
         get
@@ -31,7 +42,9 @@ internal sealed class CurrentTestApplicationModuleInfo(IEnvironment environment,
     }
 
     public bool IsAppHostOrSingleFileOrNativeAot
-        => IsCurrentTestApplicationModuleExecutable && !IsCurrentTestApplicationHostDotnetMuxer;
+        => IsCurrentTestApplicationModuleExecutable
+        && !IsCurrentTestApplicationHostDotnetMuxer
+        && !IsCurrentTestApplicationHostMonoMuxer;
 
 #if NETCOREAPP
     [UnconditionalSuppressMessage("SingleFile", "IL3000:Avoid accessing Assembly file path when publishing as a single file", Justification = "We handle the singlefile/native aot use case")]
@@ -54,23 +67,6 @@ internal sealed class CurrentTestApplicationModuleInfo(IEnvironment environment,
     public string GetProcessPath()
         => GetProcessPath(_environment, _process, throwOnNull: true)!;
 
-    public string[] GetCommandLineArgs()
-        => _environment.GetCommandLineArgs();
-
-    public string GetCommandLineArguments()
-    {
-        string executableFileName = Path.GetFileNameWithoutExtension(GetCurrentTestApplicationFullPath());
-        if (IsAppHostOrSingleFileOrNativeAot)
-        {
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            {
-                executableFileName += ".exe";
-            }
-        }
-
-        return _environment.CommandLine[_environment.CommandLine.IndexOf(executableFileName, StringComparison.InvariantCultureIgnoreCase)..];
-    }
-
     private static string? GetProcessPath(IEnvironment environment, IProcessHandler process, bool throwOnNull = false)
 #if NETCOREAPP
     {
@@ -91,15 +87,20 @@ internal sealed class CurrentTestApplicationModuleInfo(IEnvironment environment,
         string currentTestApplicationFullPath = GetCurrentTestApplicationFullPath();
         bool isDotnetMuxer = IsCurrentTestApplicationHostDotnetMuxer;
         bool isAppHost = IsAppHostOrSingleFileOrNativeAot;
-        string processPath = GetProcessPath();
-        string[] commandLineArguments = GetCommandLineArgs();
-        string fileName = processPath;
-        IEnumerable<string> arguments = isAppHost
-            ? commandLineArguments.Skip(1)
-            : isDotnetMuxer
-                ? MuxerExec.Concat(commandLineArguments)
-                : commandLineArguments;
+        bool isMonoMuxer = IsCurrentTestApplicationHostMonoMuxer;
+        string[] commandLineArguments = _environment.GetCommandLineArgs();
+        IEnumerable<string> arguments = (isAppHost, isDotnetMuxer, isMonoMuxer) switch
+        {
+            // When executable
+            (true, _, _) => commandLineArguments.Skip(1),
+            // When dotnet
+            (_, true, _) => MuxerExec.Concat(commandLineArguments),
+            // When mono
+            (_, _, true) => commandLineArguments,
+            // Otherwise
+            _ => commandLineArguments,
+        };
 
-        return new(fileName, arguments, Path.GetDirectoryName(currentTestApplicationFullPath)!);
+        return new(GetProcessPath(), arguments, Path.GetDirectoryName(currentTestApplicationFullPath)!);
     }
 }

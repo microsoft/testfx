@@ -87,11 +87,6 @@ public class LogMessageListener : IDisposable
         }
     }
 
-    ~LogMessageListener()
-    {
-        Dispose(false);
-    }
-
     /// <summary>
     /// Gets logger output.
     /// </summary>
@@ -108,31 +103,30 @@ public class LogMessageListener : IDisposable
     [SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "Part of the public API")]
     public string? DebugTrace => s_redirectedDebugTrace?.ToString();
 
-    public string? GetAndClearStandardOutput()
-    {
-        string? output = _redirectedStandardOutput.ToStringAndClear();
-        return output;
-    }
+    /// <summary>
+    /// Gets and clears the standard output.
+    /// </summary>
+    /// <returns>The standard output text.</returns>
+    public string? GetAndClearStandardOutput() => _redirectedStandardOutput.ToStringAndClear();
 
-    public string? GetAndClearStandardError()
-    {
-        string? output = _redirectedStandardError.ToStringAndClear();
-        return output;
-    }
+    /// <summary>
+    /// Gets and clears the standard error.
+    /// </summary>
+    /// <returns>The standard error text.</returns>
+    public string? GetAndClearStandardError() => _redirectedStandardError.ToStringAndClear();
 
+    /// <summary>
+    /// Gets and clears the debug trace.
+    /// </summary>
+    /// <returns>The debug and trace text.</returns>
     [SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "Part of the public API")]
     public string? GetAndClearDebugTrace()
         => s_redirectedDebugTrace?.ToStringAndClear();
 
+    /// <inheritdoc />
     public void Dispose()
     {
-        Dispose(true);
-        GC.SuppressFinalize(this);
-    }
-
-    private void Dispose(bool disposing)
-    {
-        if (!disposing || _isDisposed)
+        if (_isDisposed)
         {
             return;
         }

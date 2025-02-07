@@ -7,7 +7,7 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-using UnitTestOutcome = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestOutcome;
+using UnitTestOutcome = Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 
@@ -260,11 +260,11 @@ public class TestAssemblyInfo
     /// It is a replacement for RunAssemblyCleanup but as we are in a bug-fix version, we do not want to touch
     /// public API and so we introduced this method.
     /// </remarks>
-    internal void ExecuteAssemblyCleanup(TestContext testContext)
+    internal TestFailedException? ExecuteAssemblyCleanup(TestContext testContext)
     {
         if (AssemblyCleanupMethod == null)
         {
-            return;
+            return null;
         }
 
         lock (_assemblyInfoExecuteSyncObject)
@@ -299,13 +299,13 @@ public class TestAssemblyInfo
         // If assemblyCleanup was successful, then don't do anything
         if (AssemblyCleanupException is null)
         {
-            return;
+            return null;
         }
 
         // If the exception is already a `TestFailedException` we throw it as-is
-        if (AssemblyCleanupException is TestFailedException)
+        if (AssemblyCleanupException is TestFailedException assemblyCleanupEx)
         {
-            throw AssemblyCleanupException;
+            return assemblyCleanupEx;
         }
 
         Exception realException = AssemblyCleanupException.GetRealException();
@@ -318,7 +318,7 @@ public class TestAssemblyInfo
         StackTraceInformation? exceptionStackTraceInfo = realException.GetStackTraceInformation();
         DebugEx.Assert(AssemblyCleanupMethod.DeclaringType?.Name is not null, "AssemblyCleanupMethod.DeclaringType.Name is null");
 
-        throw new TestFailedException(
+        return new TestFailedException(
             UnitTestOutcome.Failed,
             string.Format(
                 CultureInfo.CurrentCulture,

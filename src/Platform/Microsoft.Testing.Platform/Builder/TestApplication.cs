@@ -73,17 +73,18 @@ public sealed class TestApplication : ITestApplication
         string createBuilderEntryTime = createBuilderStart.ToString("HH:mm:ss.fff", CultureInfo.InvariantCulture);
         testApplicationOptions ??= new TestApplicationOptions();
 
-        LaunchAttachDebugger(systemEnvironment);
+        SystemConsole systemConsole = new();
+        SystemProcessHandler systemProcess = new();
+        AttachDebuggerIfNeeded(systemEnvironment, systemConsole, systemProcess);
 
         // First step is to parse the command line from where we get the second input layer.
         // The first one should be the env vars handled autonomously by extensions and part of the test platform.
         CommandLineParseResult parseResult = CommandLineParser.Parse(args, systemEnvironment);
         TestHostControllerInfo testHostControllerInfo = new(parseResult);
-        SystemProcessHandler systemProcess = new();
         CurrentTestApplicationModuleInfo testApplicationModuleInfo = new(systemEnvironment, systemProcess);
 
         // Create the UnhandledExceptionHandler that will be set inside the TestHostBuilder.
-        LazyInitializer.EnsureInitialized(ref s_unhandledExceptionHandler, () => new UnhandledExceptionHandler(systemEnvironment, new SystemConsole(), parseResult.IsOptionSet(PlatformCommandLineProvider.TestHostControllerPIDOptionKey)));
+        LazyInitializer.EnsureInitialized(ref s_unhandledExceptionHandler, () => new UnhandledExceptionHandler(systemEnvironment, systemConsole, parseResult.IsOptionSet(PlatformCommandLineProvider.TestHostControllerPIDOptionKey)));
         ApplicationStateGuard.Ensure(s_unhandledExceptionHandler is not null);
 
         // First task is to setup the logger if enabled and we take the info from the command line or env vars.
@@ -224,6 +225,7 @@ public sealed class TestApplication : ITestApplication
         => (_testHost as IDisposable)?.Dispose();
 
 #if NETCOREAPP
+    /// <inheritdoc />
     public ValueTask DisposeAsync()
         => _testHost is IAsyncDisposable asyncDisposable
             ? asyncDisposable.DisposeAsync()
@@ -234,11 +236,24 @@ public sealed class TestApplication : ITestApplication
     public async Task<int> RunAsync()
         => await _testHost.RunAsync();
 
-    private static void LaunchAttachDebugger(SystemEnvironment environment)
+    private static void AttachDebuggerIfNeeded(SystemEnvironment environment, SystemConsole console, SystemProcessHandler systemProcess)
     {
         if (environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_LAUNCH_ATTACH_DEBUGGER) == "1")
         {
             Debugger.Launch();
+        }
+
+        if (environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER) == "1")
+        {
+            IProcess currentProcess = systemProcess.GetCurrentProcess();
+            console.WriteLine($"Waiting for debugger to attach... Process Id: {currentProcess.Id}, Name: {currentProcess.Name}");
+
+            while (!Debugger.IsAttached)
+            {
+                Thread.Sleep(1000);
+            }
+
+            Debugger.Break();
         }
     }
 

@@ -252,4 +252,94 @@ public sealed class PublicMethodShouldBeTestMethodAnalyzerTests
             """;
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
+
+    [TestMethod]
+    public async Task WhenMethodIsPublicAndImplementsDispose_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System;
+
+            [TestClass]
+            public class MyTestClass : IDisposable
+            {
+                public void Dispose()
+                {
+                }
+            }
+            """;
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenMethodIsPublicAndImplementsUserDefinedInterface_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System;
+
+            public interface IMyInterface
+            {
+                void MyMethod();
+            }
+
+            [TestClass]
+            public class MyTestClass : IMyInterface
+            {
+                public void MyMethod()
+                {
+                }
+            }
+            """;
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenMethodIsPublicAndImplementsExplicitlyUserDefinedInterface_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System;
+
+            public interface IMyInterface
+            {
+                void MyMethod();
+            }
+
+            [TestClass]
+            public class MyTestClass : IMyInterface
+            {
+                void IMyInterface.MyMethod()
+                {
+                }
+            }
+            """;
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenMethodIsPublicAndImplementsDisposeAsVirtual_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System;
+
+            [TestClass]
+            public class MyTestClass : IDisposable
+            {
+                public virtual void Dispose()
+                {
+                }
+            }
+
+            [TestClass]
+            public class SubTestClass : MyTestClass
+            {
+                public override void Dispose()
+                {
+                }
+            }
+            """;
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
 }

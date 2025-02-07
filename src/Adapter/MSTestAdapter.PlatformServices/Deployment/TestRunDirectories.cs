@@ -35,6 +35,10 @@ public class TestRunDirectories
     /// </summary>
     internal const string DeploymentOutDirectorySuffix = "Out";
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TestRunDirectories"/> class.
+    /// </summary>
+    /// <param name="rootDirectory">The root directory path.</param>
     public TestRunDirectories(string rootDirectory)
     {
         DebugEx.Assert(!StringEx.IsNullOrEmpty(rootDirectory), "rootDirectory");

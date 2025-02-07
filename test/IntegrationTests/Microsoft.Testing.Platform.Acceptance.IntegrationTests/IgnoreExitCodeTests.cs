@@ -29,7 +29,6 @@ public class IgnoreExitCodeTests : AcceptanceTestBase<NopAssetFixture>
 #file Program.cs
 using System;
 using System.Threading.Tasks;
-
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.Extensions.Messages;
@@ -89,7 +88,7 @@ public class DummyTestFramework : ITestFramework, IDataProducer
         }
     }
 
-    [DynamicData(nameof(GetBuildMatrix), DynamicDataSourceType.Method)]
+    [DynamicData(nameof(GetBuildMatrix))]
     [TestMethod]
     public async Task If_IgnoreExitCode_Specified_Should_Return_Success_ExitCode(string tfm, BuildConfiguration buildConfiguration, string commandLine, string environmentVariable)
     {

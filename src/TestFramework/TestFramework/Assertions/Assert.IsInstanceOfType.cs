@@ -14,6 +14,7 @@ public sealed partial class Assert
 {
     [InterpolatedStringHandler]
     [EditorBrowsable(EditorBrowsableState.Never)]
+    [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1600:Elements should be documented", Justification = "This is not meant to be consumed by users.")]
     public readonly struct AssertIsInstanceOfTypeInterpolatedStringHandler
     {
         private readonly StringBuilder? _builder;
@@ -75,6 +76,7 @@ public sealed partial class Assert
 
     [InterpolatedStringHandler]
     [EditorBrowsable(EditorBrowsableState.Never)]
+    [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1600:Elements should be documented", Justification = "This is not meant to be consumed by users.")]
     public readonly struct AssertGenericIsInstanceOfTypeInterpolatedStringHandler<TArg>
     {
         private readonly StringBuilder? _builder;
@@ -134,6 +136,7 @@ public sealed partial class Assert
 
     [InterpolatedStringHandler]
     [EditorBrowsable(EditorBrowsableState.Never)]
+    [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1600:Elements should be documented", Justification = "This is not meant to be consumed by users.")]
     public readonly struct AssertIsNotInstanceOfTypeInterpolatedStringHandler
     {
         private readonly StringBuilder? _builder;
@@ -195,6 +198,7 @@ public sealed partial class Assert
 
     [InterpolatedStringHandler]
     [EditorBrowsable(EditorBrowsableState.Never)]
+    [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1600:Elements should be documented", Justification = "This is not meant to be consumed by users.")]
     public readonly struct AssertGenericIsNotInstanceOfTypeInterpolatedStringHandler<TArg>
     {
         private readonly StringBuilder? _builder;
@@ -390,7 +394,7 @@ public sealed partial class Assert
     }
 
     private static bool IsInstanceOfTypeFailing([NotNullWhen(false)] object? value, [NotNullWhen(false)] Type? expectedType)
-        => expectedType == null || value == null || !expectedType.IsAssignableFrom(value.GetType());
+        => expectedType == null || value == null || !expectedType.IsInstanceOfType(value);
 
     [DoesNotReturn]
     private static void ThrowAssertIsInstanceOfTypeFailed(object? value, Type? expectedType, string userMessage)
@@ -543,7 +547,7 @@ public sealed partial class Assert
     private static bool IsNotInstanceOfTypeFailing(object? value, [NotNullWhen(false)] Type? wrongType)
         => wrongType is null ||
             // Null is not an instance of any type.
-            (value is not null && wrongType.IsAssignableFrom(value.GetType()));
+            (value is not null && wrongType.IsInstanceOfType(value));
 
     [DoesNotReturn]
     private static void ThrowAssertIsNotInstanceOfTypeFailed(object? value, Type? wrongType, string userMessage)

@@ -12,14 +12,14 @@ public class DynamicDataTests : CLITestBase
 {
     private const string TestAssetName = "DynamicDataTestProject";
 
-    public void ExecuteDynamicDataTests()
+    public async Task ExecuteDynamicDataTests()
     {
         // Arrange
         string assemblyPath = GetAssetFullPath(TestAssetName);
 
         // Act
         ImmutableArray<TestCase> testCases = DiscoverTests(assemblyPath, testCaseFilter: "ClassName~DynamicDataTests");
-        ImmutableArray<TestResult> testResults = RunTests(testCases);
+        ImmutableArray<TestResult> testResults = await RunTestsAsync(testCases);
 
         // Assert
         VerifyE2E.TestsPassed(
@@ -82,14 +82,14 @@ public class DynamicDataTests : CLITestBase
         VerifyE2E.FailedTestCount(testResults, 0);
     }
 
-    public void ExecuteDynamicDataTestsWithCategoryFilter()
+    public async Task ExecuteDynamicDataTestsWithCategoryFilter()
     {
         // Arrange
         string assemblyPath = GetAssetFullPath(TestAssetName);
 
         // Act
         ImmutableArray<TestCase> testCases = DiscoverTests(assemblyPath, "TestCategory~DynamicDataWithCategory");
-        ImmutableArray<TestResult> testResults = RunTests(testCases);
+        ImmutableArray<TestResult> testResults = await RunTestsAsync(testCases);
 
         // Assert
         VerifyE2E.ContainsTestsPassed(
@@ -100,14 +100,14 @@ public class DynamicDataTests : CLITestBase
         VerifyE2E.FailedTestCount(testResults, 0);
     }
 
-    public void ExecuteNonExpandableDynamicDataTests()
+    public async Task ExecuteNonExpandableDynamicDataTests()
     {
         // Arrange
         string assemblyPath = GetAssetFullPath(TestAssetName);
 
         // Act
         ImmutableArray<TestCase> testCases = DiscoverTests(assemblyPath, testCaseFilter: "ClassName~DisableExpansionTests");
-        ImmutableArray<TestResult> testResults = RunTests(testCases);
+        ImmutableArray<TestResult> testResults = await RunTestsAsync(testCases);
 
         // Assert
         Verify(testCases.Length == 6);

@@ -114,6 +114,6 @@ internal sealed class AssemblyEnumeratorWrapper
             PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning(Resource.OlderTFMVersionFound);
         }
 
-        return assemblyEnumerator.EnumerateAssembly(fullFilePath, xml, warnings);
+        return assemblyEnumerator.EnumerateAssembly(fullFilePath, warnings);
     }
 }

@@ -235,6 +235,33 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Do not assert inside &apos;async void&apos; methods, local functions, or lambdas. Exceptions that are thrown in this context will be unhandled exceptions. When using VSTest under .NET Framework, they will be silently swallowed. When using Microsoft.Testing.Platform or VSTest under modern .NET, they may crash the process..
+        /// </summary>
+        internal static string AvoidUsingAssertsInAsyncVoidContextDescription {
+            get {
+                return ResourceManager.GetString("AvoidUsingAssertsInAsyncVoidContextDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Do not assert inside &apos;async void&apos; methods, local functions, or lambdas because they may not fail the test.
+        /// </summary>
+        internal static string AvoidUsingAssertsInAsyncVoidContextMessageFormat {
+            get {
+                return ResourceManager.GetString("AvoidUsingAssertsInAsyncVoidContextMessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Do not assert inside &apos;async void&apos; contexts.
+        /// </summary>
+        internal static string AvoidUsingAssertsInAsyncVoidContextTitle {
+            get {
+                return ResourceManager.GetString("AvoidUsingAssertsInAsyncVoidContextTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Methods marked with &apos;[ClassCleanup]&apos; should follow the following layout to be valid:
         ///-it can&apos;t be declared on a generic class without the &apos;InheritanceBehavior&apos; mode is set
         ///-it should be &apos;public&apos;
@@ -1048,6 +1075,24 @@ namespace MSTest.Analyzers {
         internal static string UseClassCleanupBehaviorEndOfClassTitle {
             get {
                 return ResourceManager.GetString("UseClassCleanupBehaviorEndOfClassTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The attribute &apos;{0}&apos; which derives from &apos;ConditionBaseAttribute&apos; should be used only on classes marked with `TestClassAttribute`.
+        /// </summary>
+        internal static string UseConditionBaseWithTestClassMessageFormat {
+            get {
+                return ResourceManager.GetString("UseConditionBaseWithTestClassMessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Use &apos;ConditionBaseAttribute&apos; on test classes.
+        /// </summary>
+        internal static string UseConditionBaseWithTestClassTitle {
+            get {
+                return ResourceManager.GetString("UseConditionBaseWithTestClassTitle", resourceCulture);
             }
         }
         
