@@ -252,12 +252,6 @@ dotnet_diagnostic.SA1615.severity = none                # SA1615: Element return
 dotnet_diagnostic.SA1633.severity = none                # SA1633: File should have header
 dotnet_diagnostic.SA1649.severity = none                # SA1649: File name should match first type name
 
-# -----------------------------------------------------------------------------------------
-# Globally disabled but enabled for src folder
-dotnet_diagnostic.SA1600.severity = none                # SA1600: Elements should be documented
-dotnet_diagnostic.SA1601.severity = none                # SA1601: Partial elements should be documented
-# -----------------------------------------------------------------------------------------
-
 dotnet_diagnostic.VSTHRD002.severity = none             # VSTHRD002 Avoid problematic synchronous waits
 dotnet_diagnostic.VSTHRD003.severity = none             # VSTHRD003: Avoid awaiting foreign Tasks
 dotnet_diagnostic.VSTHRD105.severity = none             # VSTHRD105: Avoid method overloads that assume TaskScheduler.Current

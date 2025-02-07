@@ -3,6 +3,7 @@
 
 using Microsoft.Testing.Extensions.VSTestBridge.ObjectModel;
 using Microsoft.Testing.Platform.CommandLine;
+using Microsoft.Testing.Platform.Requests;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 
 using Moq;
@@ -28,7 +29,7 @@ public class RunContextAdapterTests
 """;
 
         _runSettings.Setup(x => x.SettingsXml).Returns(runSettings);
-        RunContextAdapter runContextAdapter = new(_commandLineOptions.Object, _runSettings.Object);
+        RunContextAdapter runContextAdapter = new(_commandLineOptions.Object, _runSettings.Object, new NopFilter());
         Assert.AreEqual("/PlatformResultDirectoryFromFile", runContextAdapter.TestRunDirectory);
         Assert.AreEqual(runSettings, runContextAdapter.RunSettings!.SettingsXml);
         Assert.IsNotNull(runContextAdapter.RunSettings);
@@ -46,7 +47,7 @@ public class RunContextAdapterTests
 """;
 
         _runSettings.Setup(x => x.SettingsXml).Returns(runSettings);
-        RunContextAdapter runContextAdapter = new(_commandLineOptions.Object, _runSettings.Object);
+        RunContextAdapter runContextAdapter = new(_commandLineOptions.Object, _runSettings.Object, new NopFilter());
         Assert.IsNull(runContextAdapter.TestRunDirectory);
         Assert.IsNotNull(runContextAdapter.RunSettings);
     }

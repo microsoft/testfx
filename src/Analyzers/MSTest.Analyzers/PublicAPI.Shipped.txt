@@ -1,8 +1,4 @@
 #nullable enable
-Analyzer.Utilities.WellKnownTypeProvider
-Analyzer.Utilities.WellKnownTypeProvider.Compilation.get -> Microsoft.CodeAnalysis.Compilation!
-Analyzer.Utilities.WellKnownTypeProvider.GetOrCreateTypeByMetadataName(string! fullTypeName) -> Microsoft.CodeAnalysis.INamedTypeSymbol?
-Analyzer.Utilities.WellKnownTypeProvider.TryGetOrCreateTypeByMetadataName(string! fullTypeName, out Microsoft.CodeAnalysis.INamedTypeSymbol? namedTypeSymbol) -> bool
 MSTest.Analyzers.AssemblyCleanupShouldBeValidAnalyzer
 MSTest.Analyzers.AssemblyCleanupShouldBeValidAnalyzer.AssemblyCleanupShouldBeValidAnalyzer() -> void
 MSTest.Analyzers.AssemblyInitializeShouldBeValidAnalyzer
@@ -147,4 +143,3 @@ override MSTest.Analyzers.UseDeploymentItemWithTestMethodOrTestClassAnalyzer.Ini
 override MSTest.Analyzers.UseDeploymentItemWithTestMethodOrTestClassAnalyzer.SupportedDiagnostics.get -> System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.DiagnosticDescriptor!>
 override MSTest.Analyzers.UseParallelizeAttributeAnalyzer.Initialize(Microsoft.CodeAnalysis.Diagnostics.AnalysisContext! context) -> void
 override MSTest.Analyzers.UseParallelizeAttributeAnalyzer.SupportedDiagnostics.get -> System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.DiagnosticDescriptor!>
-static Analyzer.Utilities.WellKnownTypeProvider.GetOrCreate(Microsoft.CodeAnalysis.Compilation! compilation) -> Analyzer.Utilities.WellKnownTypeProvider!

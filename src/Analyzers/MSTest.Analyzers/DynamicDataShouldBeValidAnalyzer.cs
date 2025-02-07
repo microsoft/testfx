@@ -62,6 +62,7 @@ public sealed class DynamicDataShouldBeValidAnalyzer : DiagnosticAnalyzer
     internal static readonly DiagnosticDescriptor DisplayMethodSignatureRule = NotTestMethodRule
         .WithMessage(new(nameof(Resources.DynamicDataShouldBeValidMessageFormat_DisplayMethodSignature), Resources.ResourceManager, typeof(Resources)));
 
+    /// <inheritdoc />
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } = ImmutableArray.Create(
         NotTestMethodRule,
         MemberNotFoundRule,
@@ -74,6 +75,7 @@ public sealed class DynamicDataShouldBeValidAnalyzer : DiagnosticAnalyzer
         DataMemberSignatureRule,
         DisplayMethodSignatureRule);
 
+    /// <inheritdoc />
     public override void Initialize(AnalysisContext context)
     {
         context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);

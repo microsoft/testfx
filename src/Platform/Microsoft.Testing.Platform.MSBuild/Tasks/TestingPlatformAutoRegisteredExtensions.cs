@@ -8,6 +8,9 @@ using Microsoft.Build.Utilities;
 
 namespace Microsoft.Testing.Platform.MSBuild;
 
+/// <summary>
+/// Task to generate the self-registered extensions source file.
+/// </summary>
 public sealed class TestingPlatformSelfRegisteredExtensions : Build.Utilities.Task
 {
     private const string DisplayNameMetadataName = "DisplayName";
@@ -17,6 +20,9 @@ public sealed class TestingPlatformSelfRegisteredExtensions : Build.Utilities.Ta
     private const string FSharpLanguageSymbol = "F#";
     private const string VBLanguageSymbol = "VB";
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TestingPlatformSelfRegisteredExtensions"/> class.
+    /// </summary>
     public TestingPlatformSelfRegisteredExtensions()
         : this(new FileSystem())
     {
@@ -32,18 +38,33 @@ public sealed class TestingPlatformSelfRegisteredExtensions : Build.Utilities.Ta
         _fileSystem = fileSystem;
     }
 
+    /// <summary>
+    /// Gets or sets the path to the source file.
+    /// </summary>
     [Required]
     public ITaskItem SelfRegisteredExtensionsSourcePath { get; set; }
 
+    /// <summary>
+    /// Gets or sets the language of the source file.
+    /// </summary>
     [Required]
     public ITaskItem Language { get; set; }
 
+    /// <summary>
+    /// Gets or sets the builder hooks.
+    /// </summary>
     [Required]
     public ITaskItem[] SelfRegisteredExtensionsBuilderHook { get; set; }
 
+    /// <summary>
+    /// Gets or sets the root namespace.
+    /// </summary>
     [Required]
     public string RootNamespace { get; set; }
 
+    /// <summary>
+    /// Gets or sets the path to the generated file.
+    /// </summary>
     [Output]
     public ITaskItem SelfRegisteredExtensionsGeneratedFilePath { get; set; }
 
@@ -64,6 +85,7 @@ static Contoso.BuilderHook.AddExtensions(Microsoft.Testing.Platform.Builder.Test
 
     private readonly IFileSystem _fileSystem;
 
+    /// <inheritdoc />
     public override bool Execute()
     {
         Log.LogMessage(MessageImportance.Normal, $"SelfRegisteredExtensionsSourcePath: '{SelfRegisteredExtensionsSourcePath.ItemSpec}'");

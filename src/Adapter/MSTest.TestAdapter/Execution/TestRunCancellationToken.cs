@@ -21,10 +21,6 @@ public class TestRunCancellationToken
     /// </summary>
     private readonly ConcurrentBag<(Action<object?>, object?)> _registeredCallbacks = new();
 
-    public TestRunCancellationToken()
-    {
-    }
-
     /// <summary>
     /// Gets a value indicating whether the test run is canceled.
     /// </summary>

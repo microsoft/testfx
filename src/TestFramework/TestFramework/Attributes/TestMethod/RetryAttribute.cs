@@ -36,6 +36,9 @@ public sealed class RetryAttribute : RetryBaseAttribute
     /// </summary>
     public int MillisecondsDelayBetweenRetries { get; set; }
 
+    /// <summary>
+    /// Gets or sets the delay backoff type.
+    /// </summary>
     public DelayBackoffType BackoffType
     {
         get => field;

@@ -84,7 +84,7 @@
       </trans-unit>
       <trans-unit id="DoesNotContainFail">
         <source>String '{0}' does contain string '{1}'. {2}.</source>
-        <target state="new">String '{0}' does contain string '{1}'. {2}.</target>
+        <target state="translated">字符串“{0}”确实包含字符串“{1}”。{2}</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataInvalidMethodLayout">

@@ -140,6 +140,7 @@ public sealed class UseAttributeOnTestMethodAnalyzer : DiagnosticAnalyzer
         (WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingConditionBaseAttribute, ConditionBaseRule),
     ];
 
+    /// <inheritdoc />
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } =
         ImmutableArray.Create(
             OwnerRule,
@@ -151,6 +152,7 @@ public sealed class UseAttributeOnTestMethodAnalyzer : DiagnosticAnalyzer
             CssIterationRule,
             CssProjectStructureRule);
 
+    /// <inheritdoc />
     public override void Initialize(AnalysisContext context)
     {
         context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
