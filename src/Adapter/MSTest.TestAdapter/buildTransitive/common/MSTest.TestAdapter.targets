@@ -9,10 +9,13 @@
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(UseWinUI)' == 'true' ">
-    <__TestAdapterPlatformServicesRoot>$(MSBuildThisFileDirectory)../net6.0/winui/</__TestAdapterPlatformServicesRoot>
+    <_TestAdapterPlatformServicesRoot>$(MSBuildThisFileDirectory)../net6.0/winui/</_TestAdapterPlatformServicesRoot>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(UseWinUI)' != 'true' ">
-    <__TestAdapterPlatformServicesRoot>$(MSBuildThisFileDirectory)</__TestAdapterPlatformServicesRoot>
+  <PropertyGroup Condition=" '$(UseUwpTools)' == 'true' ">
+    <_TestAdapterPlatformServicesRoot>$(MSBuildThisFileDirectory)../net9.0/uwp/</_TestAdapterPlatformServicesRoot>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(UseWinUI)' != 'true' AND '$(UseUwpTools)' != 'true' ">
+    <_TestAdapterPlatformServicesRoot>$(MSBuildThisFileDirectory)</_TestAdapterPlatformServicesRoot>
   </PropertyGroup>
 
   <ItemGroup>
@@ -21,7 +24,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Visible>False</Visible>
     </TestAdapterContent>
-    <TestAdapterContent Include="$(__TestAdapterPlatformServicesRoot)Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll">
+    <TestAdapterContent Include="$(_TestAdapterPlatformServicesRoot)Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll">
       <Link>Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Visible>False</Visible>
@@ -48,7 +51,7 @@
     <When Condition=" '$(EnableMSTestRunner)' == 'true' ">
       <ItemGroup>
         <Reference Include="Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter">
-          <HintPath>$(__TestAdapterPlatformServicesRoot)Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.dll</HintPath>
+          <HintPath>$(_TestAdapterPlatformServicesRoot)Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.dll</HintPath>
         </Reference>
       </ItemGroup>
     </When>

@@ -34,6 +34,7 @@ public sealed class TestContextShouldBeValidAnalyzer : DiagnosticAnalyzer
         DiagnosticSeverity.Warning,
         isEnabledByDefault: true);
 
+    /// <inheritdoc />
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
         = ImmutableArray.Create(TestContextShouldBeValidRule);
 
@@ -138,6 +139,7 @@ public sealed class TestContextShouldBeValidAnalyzer : DiagnosticAnalyzer
             ? parameter
             : null;
 
+    /// <inheritdoc />
     public override void Initialize(AnalysisContext context)
     {
         context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);

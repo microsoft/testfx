@@ -31,9 +31,15 @@ public interface ITestApplicationBuilder
     /// </summary>
     ICommandLineManager CommandLine { get; }
 
+    /// <summary>
+    /// Gets the configuration manager.
+    /// </summary>
     [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
     IConfigurationManager Configuration { get; }
 
+    /// <summary>
+    /// Gets the logging manager.
+    /// </summary>
     [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
     ILoggingManager Logging { get; }
 

@@ -20,6 +20,9 @@ using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.Testing.Platform.MSBuild;
 
+/// <summary>
+/// Task that invokes the Testing Platform.
+/// </summary>
 public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
 {
     private const string MonoRunnerName = "mono";
@@ -39,6 +42,9 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
     private StreamWriter? _outputFileStream;
     private string? _toolCommand;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="InvokeTestingPlatformTask"/> class.
+    /// </summary>
     public InvokeTestingPlatformTask()
        : this(new FileSystem())
     {
@@ -52,35 +58,66 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
 
     internal InvokeTestingPlatformTask(IFileSystem fileSystem) => _fileSystem = fileSystem;
 
+    /// <summary>
+    /// Gets or sets the target path.
+    /// </summary>
     [Required]
     public ITaskItem TargetPath { get; set; }
 
+    /// <summary>
+    /// Gets or sets the target framework.
+    /// </summary>
     [Required]
     public ITaskItem TargetFramework { get; set; }
 
+    /// <summary>
+    /// Gets or sets the test architecture.
+    /// </summary>
     [Required]
     public ITaskItem TestArchitecture { get; set; }
 
+    /// <summary>
+    /// Gets or sets the target framework identifier.
+    /// </summary>
     [Required]
     public ITaskItem TargetFrameworkIdentifier { get; set; }
 
+    /// <summary>
+    /// Gets or sets the testing platform show tests failure.
+    /// </summary>
     [Required]
     public ITaskItem TestingPlatformShowTestsFailure { get; set; }
 
+    /// <summary>
+    /// Gets or sets the testing platform capture output.
+    /// </summary>
     [Required]
     public ITaskItem TestingPlatformCaptureOutput { get; set; }
 
+    /// <summary>
+    /// Gets or sets the project full path.
+    /// </summary>
     [Required]
     public ITaskItem ProjectFullPath { get; set; }
 
+    /// <summary>
+    /// Gets or sets the dotnet host path.
+    /// </summary>
     public ITaskItem? DotnetHostPath { get; set; }
 
+    /// <summary>
+    /// Gets or sets the testing platform command line arguments.
+    /// </summary>
     public ITaskItem? TestingPlatformCommandLineArguments { get; set; }
 
+    /// <summary>
+    /// Gets or sets the VSTestCLI run settings.
+    /// </summary>
     public ITaskItem[]? VSTestCLIRunSettings { get; set; }
 
     private bool IsNetCoreApp => TargetFrameworkIdentifier.ItemSpec == ".NETCoreApp";
 
+    /// <inheritdoc />
     protected override string ToolName
     {
         get
@@ -103,8 +140,10 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
         }
     }
 
+    /// <inheritdoc />
     public override string ToolExe { get => base.ToolExe; set => throw new NotSupportedException(); }
 
+    /// <inheritdoc />
     protected override string? GenerateFullPathToTool()
     {
         // If it's not netcore and we're on Windows we expect the TargetPath to be the executable, otherwise we try with mono.
@@ -163,6 +202,7 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
     private bool IsCurrentProcessArchitectureCompatible() =>
         _currentProcessArchitecture == EnumPolyfill.Parse<Architecture>(TestArchitecture.ItemSpec, ignoreCase: true);
 
+    /// <inheritdoc />
     protected override string GenerateCommandLineCommands()
     {
         Build.Utilities.CommandLineBuilder builder = new();
@@ -204,6 +244,7 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
         return builder.ToString();
     }
 
+    /// <inheritdoc />
     protected override bool ValidateParameters()
     {
         if (!_fileSystem.Exist(TargetPath.ItemSpec))
@@ -215,12 +256,15 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
         return true;
     }
 
+    /// <inheritdoc />
     protected override MessageImportance StandardOutputLoggingImportance
         => MessageImportance.Low;
 
+    /// <inheritdoc />
     protected override MessageImportance StandardErrorLoggingImportance
         => MessageImportance.Low;
 
+    /// <inheritdoc />
     protected override void LogEventsFromTextOutput(string singleLine, MessageImportance messageImportance)
     {
         if (!bool.Parse(TestingPlatformCaptureOutput.ItemSpec))
@@ -232,6 +276,7 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
         _output.AppendLine(singleLine);
     }
 
+    /// <inheritdoc />
     protected override void ProcessStarted()
         => _connectionLoopTask = Task.Run(async () =>
         {
@@ -259,6 +304,7 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
             }
         });
 
+    /// <inheritdoc />
     public override bool Execute()
     {
         bool returnValue = base.Execute();
@@ -285,6 +331,7 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
         return returnValue;
     }
 
+    /// <inheritdoc />
     protected override void LogToolCommand(string message)
     {
         _toolCommand = message;
@@ -292,6 +339,7 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
         Log.LogMessage(MessageImportance.High, Resources.MSBuildResources.RunTests, TargetPath.ItemSpec.Trim(), TargetFramework.ItemSpec, TestArchitecture.ItemSpec);
     }
 
+    /// <inheritdoc />
     protected override bool HandleTaskExecutionErrors()
     {
         // This is an unexpected situation we simply print to the console the output and return false.
@@ -414,6 +462,7 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
         public Task LogAsync<TState>(LogLevel logLevel, TState state, Exception? exception, Func<TState, Exception?, string> formatter) => Task.CompletedTask;
     }
 
+    /// <inheritdoc />
     public void Dispose()
     {
         _outputFileStream?.Dispose();

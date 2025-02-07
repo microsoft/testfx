@@ -27,7 +27,6 @@ internal sealed class RunSettingsAdapter : IRunSettings
         "TargetFrameworkVersion",
         "TargetPlatform",
         "TestAdaptersPaths",
-        "TestCaseFilter",
         "TestSessionTimeout",
         "TreatNoTestsAsError",
         "TreatTestAdapterErrorsAsWarnings",

@@ -24,7 +24,7 @@ public sealed class AvoidAssertAreSameWithValueTypesAnalyzer : DiagnosticAnalyze
     private static readonly LocalizableResourceString MessageFormat = new(nameof(Resources.AvoidAssertAreSameWithValueTypesMessageFormat), Resources.ResourceManager, typeof(Resources));
     private static readonly LocalizableResourceString Description = new(nameof(Resources.AvoidAssertAreSameWithValueTypesDescription), Resources.ResourceManager, typeof(Resources));
 
-    internal const string ReplacemenyKey = nameof(ReplacemenyKey);
+    internal const string ReplacementKey = nameof(ReplacementKey);
 
     internal static readonly DiagnosticDescriptor Rule = DiagnosticDescriptorHelper.Create(
         DiagnosticIds.AvoidAssertAreSameWithValueTypesRuleId,
@@ -35,9 +35,11 @@ public sealed class AvoidAssertAreSameWithValueTypesAnalyzer : DiagnosticAnalyze
         DiagnosticSeverity.Warning,
         isEnabledByDefault: true);
 
+    /// <inheritdoc />
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
         = ImmutableArray.Create(Rule);
 
+    /// <inheritdoc />
     public override void Initialize(AnalysisContext context)
     {
         context.EnableConcurrentExecution();
@@ -79,7 +81,7 @@ public sealed class AvoidAssertAreSameWithValueTypesAnalyzer : DiagnosticAnalyze
         {
             string suggestedReplacement = targetMethod.Name == "AreSame" ? "AreEqual" : "AreNotEqual";
             ImmutableDictionary<string, string?> properties = ImmutableDictionary<string, string?>.Empty
-                .Add(ReplacemenyKey, suggestedReplacement);
+                .Add(ReplacementKey, suggestedReplacement);
             context.ReportDiagnostic(operation.CreateDiagnostic(Rule, properties, targetMethod.Name, suggestedReplacement));
         }
     }

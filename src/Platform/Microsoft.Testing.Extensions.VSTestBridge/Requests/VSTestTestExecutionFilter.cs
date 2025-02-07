@@ -18,6 +18,9 @@ public sealed class VSTestTestExecutionFilter : ITestExecutionFilter
     {
     }
 
+    /// <summary>
+    /// Gets the collection of <see cref="TestCase"/> objects.
+    /// </summary>
     public ImmutableArray<TestCase>? TestCases => null;
 
     internal static VSTestTestExecutionFilter Instance { get; } = new();

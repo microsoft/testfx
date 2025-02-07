@@ -3,7 +3,13 @@
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 
+/// <summary>
+/// Interface to abstract environment related information.
+/// </summary>
 internal interface IEnvironment
 {
+    /// <summary>
+    /// Gets the machine name.
+    /// </summary>
     string MachineName { get; }
 }

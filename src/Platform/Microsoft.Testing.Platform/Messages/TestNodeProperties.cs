@@ -51,6 +51,9 @@ public sealed record InProgressTestNodeStateProperty(string? Explanation = null)
 /// <param name="Explanation">Textual explanation of the node.</param>
 public sealed record PassedTestNodeStateProperty(string? Explanation = null) : TestNodeStateProperty(Explanation)
 {
+    /// <summary>
+    /// Gets the cached instance of the <see cref="PassedTestNodeStateProperty"/> property.
+    /// </summary>
     public static PassedTestNodeStateProperty CachedInstance { get; } = new PassedTestNodeStateProperty();
 }
 
@@ -60,6 +63,9 @@ public sealed record PassedTestNodeStateProperty(string? Explanation = null) : T
 /// <param name="Explanation">Textual explanation of the node.</param>
 public sealed record SkippedTestNodeStateProperty(string? Explanation = null) : TestNodeStateProperty(Explanation)
 {
+    /// <summary>
+    /// Gets the cached instance of the <see cref="SkippedTestNodeStateProperty"/> property.
+    /// </summary>
     public static SkippedTestNodeStateProperty CachedInstance { get; } = new SkippedTestNodeStateProperty();
 }
 

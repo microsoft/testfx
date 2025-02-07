@@ -23,15 +23,30 @@ public sealed class VSTestDiscoverTestExecutionRequest : DiscoverTestExecutionRe
         DiscoverySink = discoverySink;
     }
 
+    /// <summary>
+    /// Gets the VSTest filter.
+    /// </summary>
     [Obsolete("VSTestTestExecutionFilter always have null TestCases and should not be used.", error: true)]
     public VSTestTestExecutionFilter VSTestFilter
         => VSTestTestExecutionFilter.Instance;
 
+    /// <summary>
+    /// Gets the paths of the assemblies to discover tests from.
+    /// </summary>
     public string[] AssemblyPaths { get; }
 
+    /// <summary>
+    /// Gets the discovery context for the test discovery.
+    /// </summary>
     public IDiscoveryContext DiscoveryContext { get; }
 
+    /// <summary>
+    /// Gets the message logger to log messages.
+    /// </summary>
     public IMessageLogger MessageLogger { get; }
 
+    /// <summary>
+    /// Gets the discovery sink to send discovered test cases to.
+    /// </summary>
     public ITestCaseDiscoverySink DiscoverySink { get; }
 }

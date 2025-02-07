@@ -90,7 +90,9 @@
     <file src="net9.0\buildTransitive\common\MSTest.TestAdapter.props" target="buildTransitive\net9.0\MSTest.TestAdapter.props" />
     <file src="net9.0\buildTransitive\common\MSTest.TestAdapter.targets" target="buildTransitive\net9.0\MSTest.TestAdapter.targets" />
     <file src="net9.0\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll" target="buildTransitive\net9.0\" />
+    <file src="net9.0-windows10.0.17763.0\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll" target="buildTransitive\net9.0\uwp" />
     <file src="net9.0\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.dll" target="buildTransitive\net9.0\" />
+    <file src="net9.0-windows10.0.17763.0\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.dll" target="buildTransitive\net9.0\uwp" />
     <file src="net9.0\Microsoft.TestPlatform.AdapterUtilities.dll" target="buildTransitive\net9.0\" />
 
     <!-- net462 -->

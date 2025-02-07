@@ -3,6 +3,9 @@
 
 namespace Microsoft.Testing.Platform.Extensions.Messages;
 
+/// <summary>
+/// Represents a property bag.
+/// </summary>
 public sealed partial class PropertyBag
 {
     private readonly struct PropertyBagEnumerable(Property? properties, TestNodeStateProperty? testNodeStateProperty) : IEnumerable<IProperty>
