@@ -20,16 +20,22 @@ using MSTest.Analyzers.Helpers;
 
 namespace MSTest.Analyzers;
 
+/// <summary>
+/// Code fixer for MSTest2017: Prefer using Dispose over TestCleanup.
+/// </summary>
 [ExportCodeFixProvider(LanguageNames.CSharp, Name = nameof(PreferDisposeOverTestCleanupFixer))]
 [Shared]
 public sealed class PreferDisposeOverTestCleanupFixer : CodeFixProvider
 {
+    /// <inheritdoc />
     public override ImmutableArray<string> FixableDiagnosticIds { get; }
         = ImmutableArray.Create(DiagnosticIds.PreferDisposeOverTestCleanupRuleId);
 
+    /// <inheritdoc />
     public override FixAllProvider GetFixAllProvider()
         => WellKnownFixAllProviders.BatchFixer;
 
+    /// <inheritdoc />
     public override async Task RegisterCodeFixesAsync(CodeFixContext context)
     {
         SyntaxNode root = await context.Document.GetRequiredSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false);

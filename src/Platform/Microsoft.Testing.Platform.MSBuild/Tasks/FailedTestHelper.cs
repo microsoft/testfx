@@ -83,7 +83,5 @@ internal static class FailedTestHelper
             : SingleLineAndShorten(first) ?? SingleLineAndShorten(second);
 
     private static string? SingleLineAndShorten(string? text)
-#pragma warning disable IDE0057 // Use range operator
-        => text == null ? null : (text.Length <= 1000 ? text : text.Substring(0, 1000)).Replace('\r', ' ').Replace('\n', ' ');
-#pragma warning restore IDE0057 // Use range operator
+        => text == null ? null : (text.Length <= 1000 ? text : text[..1000]).Replace('\r', ' ').Replace('\n', ' ');
 }

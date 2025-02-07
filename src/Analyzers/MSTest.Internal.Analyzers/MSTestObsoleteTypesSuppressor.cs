@@ -23,8 +23,10 @@ public sealed class MSTestObsoleteTypesSuppressor : DiagnosticSuppressor
     internal static readonly SuppressionDescriptor Rule =
         new("MSTESTINT1", SuppressedDiagnosticId, "Type is obsolete only so we can change accessibility");
 
+    /// <inheritdoc />
     public override ImmutableArray<SuppressionDescriptor> SupportedSuppressions { get; } = ImmutableArray.Create(Rule);
 
+    /// <inheritdoc />
     public override void ReportSuppressions(SuppressionAnalysisContext context)
     {
         foreach (Diagnostic diagnostic in context.ReportedDiagnostics)

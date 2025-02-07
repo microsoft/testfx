@@ -13,7 +13,7 @@ namespace Microsoft.Testing.Extensions.VSTestBridge.Requests;
 /// </summary>
 public sealed class VSTestDiscoverTestExecutionRequest : DiscoverTestExecutionRequest
 {
-    internal VSTestDiscoverTestExecutionRequest(TestSessionContext session, VSTestTestExecutionFilter executionFilter, string[] assemblyPaths,
+    internal VSTestDiscoverTestExecutionRequest(TestSessionContext session, ITestExecutionFilter executionFilter, string[] assemblyPaths,
         IDiscoveryContext discoveryContext, IMessageLogger messageLogger, ITestCaseDiscoverySink discoverySink)
         : base(session, executionFilter)
     {
@@ -23,14 +23,30 @@ public sealed class VSTestDiscoverTestExecutionRequest : DiscoverTestExecutionRe
         DiscoverySink = discoverySink;
     }
 
+    /// <summary>
+    /// Gets the VSTest filter.
+    /// </summary>
+    [Obsolete("VSTestTestExecutionFilter always have null TestCases and should not be used.", error: true)]
     public VSTestTestExecutionFilter VSTestFilter
-        => (VSTestTestExecutionFilter)Filter;
+        => VSTestTestExecutionFilter.Instance;
 
+    /// <summary>
+    /// Gets the paths of the assemblies to discover tests from.
+    /// </summary>
     public string[] AssemblyPaths { get; }
 
+    /// <summary>
+    /// Gets the discovery context for the test discovery.
+    /// </summary>
     public IDiscoveryContext DiscoveryContext { get; }
 
+    /// <summary>
+    /// Gets the message logger to log messages.
+    /// </summary>
     public IMessageLogger MessageLogger { get; }
 
+    /// <summary>
+    /// Gets the discovery sink to send discovered test cases to.
+    /// </summary>
     public ITestCaseDiscoverySink DiscoverySink { get; }
 }

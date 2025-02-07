@@ -3,23 +3,51 @@
 
 namespace Microsoft.Testing.Platform.CommandLine;
 
+/// <summary>
+/// Represents the result of parsing a command line.
+/// </summary>
+/// <param name="toolName">The name of the tool.</param>
+/// <param name="options">The collection of parsed options.</param>
+/// <param name="errors">The collection of errors associated to the parsing.</param>
 [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
 public sealed class CommandLineParseResult(string? toolName, IReadOnlyList<CommandLineParseOption> options, IReadOnlyList<string> errors) : IEquatable<CommandLineParseResult>
 {
+    /// <summary>
+    /// The prefix for options.
+    /// </summary>
     public const char OptionPrefix = '-';
 
+    /// <summary>
+    /// Gets an empty <see cref="CommandLineParseResult"/>.
+    /// </summary>
     public static CommandLineParseResult Empty => new(null, [], []);
 
+    /// <summary>
+    /// Gets the name of the tool.
+    /// </summary>
     public string? ToolName { get; } = toolName;
 
+    /// <summary>
+    /// Gets the collection of parsed options.
+    /// </summary>
     public IReadOnlyList<CommandLineParseOption> Options { get; } = options;
 
+    /// <summary>
+    /// Gets the collection of errors associated to the parsing.
+    /// </summary>
     public IReadOnlyList<string> Errors { get; } = errors;
 
+    /// <summary>
+    /// Gets a value indicating whether the parsing has errors.
+    /// </summary>
     public bool HasError => Errors.Count > 0;
 
+    /// <summary>
+    /// Gets a value indicating whether the parsing has a tool.
+    /// </summary>
     public bool HasTool => ToolName is not null;
 
+    /// <inheritdoc />
     public bool Equals(CommandLineParseResult? other)
     {
         if (other is null)
@@ -81,9 +109,20 @@ public sealed class CommandLineParseResult(string? toolName, IReadOnlyList<Comma
         return true;
     }
 
+    /// <summary>
+    /// Determines if the specified option is set.
+    /// </summary>
+    /// <param name="optionName">The name of the option.</param>
+    /// <returns>Returns <c>true</c> if the option is set; <c>false</c> otherwise.</returns>
     public bool IsOptionSet(string optionName)
         => Options.Any(o => o.Name.Equals(optionName.Trim(OptionPrefix), StringComparison.OrdinalIgnoreCase));
 
+    /// <summary>
+    /// Gets the argument list for the specified option.
+    /// </summary>
+    /// <param name="optionName">The name of the option.</param>
+    /// <param name="arguments">The arguments associated with the option.</param>
+    /// <returns>Returns <c>true</c> if there are some arguments; <c>false</c> otherwise.</returns>
     public bool TryGetOptionArgumentList(string optionName, [NotNullWhen(true)] out string[]? arguments)
     {
         optionName = optionName.Trim(OptionPrefix);
@@ -98,9 +137,11 @@ public sealed class CommandLineParseResult(string? toolName, IReadOnlyList<Comma
         return false;
     }
 
+    /// <inheritdoc />
     public override bool Equals(object? obj)
         => Equals(obj as CommandLineParseResult);
 
+    /// <inheritdoc />
     public override int GetHashCode()
     {
         HashCode hashCode = default;
@@ -121,6 +162,7 @@ public sealed class CommandLineParseResult(string? toolName, IReadOnlyList<Comma
         return hashCode.ToHashCode();
     }
 
+    /// <inheritdoc />
     public override string ToString()
     {
         var builder = new StringBuilder();

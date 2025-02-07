@@ -46,6 +46,9 @@ public class TestExecutionManager
     /// </summary>
     private TestRunCancellationToken? _testRunCancellationToken;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TestExecutionManager"/> class.
+    /// </summary>
     public TestExecutionManager()
         : this(new EnvironmentWrapper())
     {
@@ -166,6 +169,13 @@ public class TestExecutionManager
         }
     }
 
+    /// <summary>
+    /// Runs the tests.
+    /// </summary>
+    /// <param name="sources">Tests to be run.</param>
+    /// <param name="runContext">Context to use when executing the tests.</param>
+    /// <param name="frameworkHandle">Handle to the framework to record results and to do framework operations.</param>
+    /// <param name="cancellationToken">Test run cancellation token.</param>
 #if DEBUG
     [Obsolete("Use RunTestsAsync instead.")]
 #endif

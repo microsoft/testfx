@@ -84,7 +84,7 @@
       </trans-unit>
       <trans-unit id="DoesNotContainFail">
         <source>String '{0}' does contain string '{1}'. {2}.</source>
-        <target state="new">String '{0}' does contain string '{1}'. {2}.</target>
+        <target state="translated">Ciąg „{0}” zawiera ciąg „{1}”. {2}.</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataInvalidMethodLayout">
@@ -138,7 +138,7 @@ Rzeczywiste: {2}</target>
       </trans-unit>
       <trans-unit id="InvalidGitHubUrl">
         <source>Invalid GitHub ticket URL</source>
-        <target state="new">Invalid GitHub ticket URL</target>
+        <target state="translated">Nieprawidłowy adres URL biletu usługi GitHub</target>
         <note />
       </trans-unit>
       <trans-unit id="IsInstanceOfFailMsg">
