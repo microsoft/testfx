@@ -528,7 +528,22 @@ internal sealed partial class TerminalTestReporter : IDisposable
 
         terminal.AppendLine();
 
-        FormatErrorMessage(terminal, flatExceptions, outcome, 0);
+        if (outcome == TestOutcome.Skipped &&
+            flatExceptions.Length == 1 &&
+            flatExceptions[0].ErrorType is null &&
+            flatExceptions[0].StackTrace is null &&
+            flatExceptions[0].ErrorMessage is not null)
+        {
+            // Ignore reason ends up being set as error message.
+            // We don't want it to be in red, so we detect this case and handle here.
+            terminal.ResetColor();
+            terminal.Append(flatExceptions[0].ErrorMessage!);
+        }
+        else
+        {
+            FormatErrorMessage(terminal, flatExceptions, outcome, 0);
+        }
+
         FormatExpectedAndActual(terminal, expected, actual);
         FormatStackTrace(terminal, flatExceptions, 0);
         FormatInnerExceptions(terminal, flatExceptions);
