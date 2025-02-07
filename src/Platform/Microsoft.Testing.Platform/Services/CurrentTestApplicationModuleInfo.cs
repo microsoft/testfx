@@ -88,9 +88,7 @@ internal sealed class CurrentTestApplicationModuleInfo(IEnvironment environment,
         bool isDotnetMuxer = IsCurrentTestApplicationHostDotnetMuxer;
         bool isAppHost = IsAppHostOrSingleFileOrNativeAot;
         bool isMonoMuxer = IsCurrentTestApplicationHostMonoMuxer;
-        string processPath = GetProcessPath();
         string[] commandLineArguments = _environment.GetCommandLineArgs();
-        string fileName = processPath;
         IEnumerable<string> arguments = (isAppHost, isDotnetMuxer, isMonoMuxer) switch
         {
             // When executable
@@ -103,6 +101,6 @@ internal sealed class CurrentTestApplicationModuleInfo(IEnvironment environment,
             _ => commandLineArguments,
         };
 
-        return new(fileName, arguments, Path.GetDirectoryName(currentTestApplicationFullPath)!);
+        return new(GetProcessPath(), arguments, Path.GetDirectoryName(currentTestApplicationFullPath)!);
     }
 }

@@ -9,7 +9,5 @@ internal interface ITool : IExtension
 {
     string Name { get; }
 
-    bool Hidden { get; }
-
     Task<int> RunAsync();
 }

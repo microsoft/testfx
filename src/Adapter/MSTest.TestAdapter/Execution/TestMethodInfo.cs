@@ -64,16 +64,34 @@ public class TestMethodInfo : ITestMethod
     /// </summary>
     public bool IsRunnable => StringEx.IsNullOrEmpty(NotRunnableReason);
 
+    /// <summary>
+    /// Gets the parameter types of the test method.
+    /// </summary>
     public ParameterInfo[] ParameterTypes => TestMethod.GetParameters();
 
+    /// <summary>
+    /// Gets the return type of the test method.
+    /// </summary>
     public Type ReturnType => TestMethod.ReturnType;
 
+    /// <summary>
+    /// Gets the name of the class declaring the test method.
+    /// </summary>
     public string TestClassName => Parent.ClassType.FullName!;
 
+    /// <summary>
+    /// Gets the name of the test method.
+    /// </summary>
     public string TestMethodName => TestMethod.Name;
 
+    /// <summary>
+    /// Gets the methodInfo for test method.
+    /// </summary>
     public MethodInfo MethodInfo => TestMethod;
 
+    /// <summary>
+    /// Gets the arguments with which test method is invoked.
+    /// </summary>
     public object?[]? Arguments { get; private set; }
 
     /// <summary>
@@ -95,8 +113,20 @@ public class TestMethodInfo : ITestMethod
 
     internal RetryBaseAttribute? RetryAttribute { get; }
 
-    public Attribute[]? GetAllAttributes(bool inherit) => ReflectHelper.Instance.GetDerivedAttributes<Attribute>(TestMethod, inherit).ToArray();
+    /// <summary>
+    /// Gets all attributes of the test method.
+    /// </summary>
+    /// <param name="inherit">Whether or not getting the attributes that are inherited.</param>
+    /// <returns>An array of the attributes.</returns>
+    public Attribute[]? GetAllAttributes(bool inherit)
+        => ReflectHelper.Instance.GetDerivedAttributes<Attribute>(TestMethod, inherit).ToArray();
 
+    /// <summary>
+    /// Gets all attributes of the test method.
+    /// </summary>
+    /// <typeparam name="TAttributeType">The type of the attributes.</typeparam>
+    /// <param name="inherit">Whether or not getting the attributes that are inherited.</param>
+    /// <returns>An array of the attributes.</returns>
     public TAttributeType[] GetAttributes<TAttributeType>(bool inherit)
         where TAttributeType : Attribute
         => ReflectHelper.Instance.GetDerivedAttributes<TAttributeType>(TestMethod, inherit).ToArray();

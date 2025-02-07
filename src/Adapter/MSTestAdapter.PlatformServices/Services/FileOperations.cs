@@ -69,7 +69,7 @@ public class FileOperations : IFileOperations
     /// <param name="assembly">The assembly.</param>
     /// <returns>Path to the .DLL of the assembly.</returns>
     public string? GetAssemblyPath(Assembly assembly)
-#if NETSTANDARD || NETCOREAPP || NETFRAMEWORK
+#if NETSTANDARD || (NETCOREAPP && !WINDOWS_UWP) || NETFRAMEWORK
         // This method will never be called in source generator mode, we are providing a different provider for file operations.
 #pragma warning disable IL3000 // Avoid accessing Assembly file path when publishing as a single file
         => assembly.Location;
@@ -86,7 +86,7 @@ public class FileOperations : IFileOperations
     /// <exception cref="NotImplementedException"> This is currently not implemented. </exception>
     public bool DoesFileExist(string assemblyFileName)
     {
-#if NETSTANDARD || (NETCOREAPP && !WIN_UI)
+#if NETSTANDARD || (NETCOREAPP && !WIN_UI && !WINDOWS_UWP)
         // For projectK these assemblies can be created on the fly which means the file might not exist on disk.
         // Depend on Assembly Load failures instead of this validation.
         return true;

@@ -13,6 +13,9 @@ using Microsoft.Testing.Platform.TestHost;
 
 namespace Microsoft.Testing.Extensions.VSTestBridge;
 
+/// <summary>
+/// A specialized bridged test framework base class that supports a single test session.
+/// </summary>
 public abstract class SynchronizedSingleSessionVSTestBridgedTestFramework : VSTestBridgedTestFrameworkBase, IDisposable
 {
     private readonly IExtension _extension;
@@ -21,6 +24,13 @@ public abstract class SynchronizedSingleSessionVSTestBridgedTestFramework : VSTe
     private bool _isDisposed;
     private SessionUid? _sessionUid;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SynchronizedSingleSessionVSTestBridgedTestFramework"/> class.
+    /// </summary>
+    /// <param name="extension">The test framework extension.</param>
+    /// <param name="getTestAssemblies">A function to get the list of assemblies for this session.</param>
+    /// <param name="serviceProvider">The service provider.</param>
+    /// <param name="capabilities">The test framework capabilities.</param>
     protected SynchronizedSingleSessionVSTestBridgedTestFramework(IExtension extension, Func<IEnumerable<Assembly>> getTestAssemblies,
         IServiceProvider serviceProvider, ITestFrameworkCapabilities capabilities)
         : base(serviceProvider, capabilities)
@@ -70,6 +80,10 @@ public abstract class SynchronizedSingleSessionVSTestBridgedTestFramework : VSTe
         return new CloseTestSessionResult { IsSuccess = true };
     }
 
+    /// <summary>
+    /// The dispose pattern.
+    /// </summary>
+    /// <param name="disposing">Whether to dispose managed state.</param>
     protected virtual void Dispose(bool disposing)
     {
         if (!_isDisposed)
@@ -86,20 +100,51 @@ public abstract class SynchronizedSingleSessionVSTestBridgedTestFramework : VSTe
         }
     }
 
+    /// <summary>
+    /// Discover tests asynchronously.
+    /// </summary>
+    /// <param name="request">The VSTest discovery request.</param>
+    /// <param name="messageBus">The message bus.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
     protected sealed override Task DiscoverTestsAsync(VSTestDiscoverTestExecutionRequest request, IMessageBus messageBus,
         CancellationToken cancellationToken)
         => ExecuteRequestWithRequestCountGuardAsync(async () => await SynchronizedDiscoverTestsAsync(request, messageBus, cancellationToken));
 
+    /// <summary>
+    /// Discovers tests asynchronously with handling of concurrency.
+    /// </summary>
+    /// <param name="request">The VSTest discovery request.</param>
+    /// <param name="messageBus">The message bus.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
     protected abstract Task SynchronizedDiscoverTestsAsync(VSTestDiscoverTestExecutionRequest request, IMessageBus messageBus,
         CancellationToken cancellationToken);
 
+    /// <summary>
+    /// Runs tests asynchronously.
+    /// </summary>
+    /// <param name="request">The VSTest run request.</param>
+    /// <param name="messageBus">The message bus.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
     protected sealed override Task RunTestsAsync(VSTestRunTestExecutionRequest request, IMessageBus messageBus,
         CancellationToken cancellationToken)
         => ExecuteRequestWithRequestCountGuardAsync(async () => await SynchronizedRunTestsAsync(request, messageBus, cancellationToken));
 
+    /// <summary>
+    /// Runs tests asynchronously with handling of concurrency.
+    /// </summary>
+    /// <param name="request">The VSTest run request.</param>
+    /// <param name="messageBus">The message bus.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
     protected abstract Task SynchronizedRunTestsAsync(VSTestRunTestExecutionRequest request, IMessageBus messageBus,
         CancellationToken cancellationToken);
 
+    /// <summary>
+    /// Executes the request.
+    /// </summary>
+    /// <param name="request">The test execution request.</param>
+    /// <param name="messageBus">The message bus.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <exception cref="NotSupportedException">Exception is thrown when the request is neither <see cref="DiscoverTestExecutionRequest"/> nor <see cref="RunTestExecutionRequest"/>.</exception>
     protected sealed override Task ExecuteRequestAsync(TestExecutionRequest request, IMessageBus messageBus,
         CancellationToken cancellationToken)
         => ExecuteRequestWithRequestCountGuardAsync(async () =>
@@ -126,6 +171,7 @@ public abstract class SynchronizedSingleSessionVSTestBridgedTestFramework : VSTe
             }
         });
 
+    /// <inheritdoc />
     public void Dispose()
     {
         // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method

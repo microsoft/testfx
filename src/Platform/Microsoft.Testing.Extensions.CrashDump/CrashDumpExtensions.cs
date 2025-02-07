@@ -7,8 +7,16 @@ using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Extensions;
 
+/// <summary>
+/// Provides extension methods for adding crash dump support to the test application builder.
+/// </summary>
 public static class CrashDumpExtensions
 {
+    /// <summary>
+    /// Adds crash dump support to the test application builder.
+    /// </summary>
+    /// <param name="builder">The test application builder.</param>
+    /// <param name="ignoreIfNotSupported">Determines if the extension should not be enabled on netfx.</param>
     public static void AddCrashDumpProvider(this ITestApplicationBuilder builder, bool ignoreIfNotSupported = false)
     {
         CrashDumpConfiguration crashDumpGeneratorConfiguration = new();

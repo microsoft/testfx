@@ -10,8 +10,15 @@ using Microsoft.Testing.Platform.TestHost;
 
 namespace Microsoft.Testing.Extensions;
 
+/// <summary>
+/// Extension methods for adding the retry provider to the test application.
+/// </summary>
 public static class RetryExtensions
 {
+    /// <summary>
+    /// Adds the retry provider to the test application.
+    /// </summary>
+    /// <param name="builder">The test application builder.</param>
     public static void AddRetryProvider(this ITestApplicationBuilder builder)
     {
         builder.CommandLine.AddProvider(() => new RetryCommandLineOptionsProvider());

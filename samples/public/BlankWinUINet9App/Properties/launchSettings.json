@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "BlankWinUINet9App (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "BlankWinUINet9App (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}

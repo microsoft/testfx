@@ -3,6 +3,9 @@
 
 namespace Microsoft.Testing.Platform.Extensions.Messages;
 
+/// <summary>
+/// A class that holds properties.
+/// </summary>
 public sealed partial class PropertyBag
 {
     [DebuggerTypeProxy(typeof(PropertyDebugView))]

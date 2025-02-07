@@ -1,7 +1,15 @@
 <Project>
   <PropertyGroup>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
-    <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
+    <!-- false is already the default but we are explicit about it. -->
+    <!-- Pinning versions of transitive deps is not a good idea for us -->
+    <!-- This option promotes a transitive dependency to a top-level dependency implicitly whenever a PackageVersion is present. -->
+    <!-- In turn, that means we could end up building against a newer dependency version, but not specifying it in nuspec -->
+    <!-- Even when using MSBuild packaging rather than nuspec packaging, we will have many extra dependencies, potentially unnecessarily. -->
+    <!-- It's also hard to control where it's intentional or not when using MSBuild packaging. -->
+    <!-- Whenever we want to use a newer version of a transitive dependency, it has to be explicit -->
+    <!-- It also needs to be added to nuspec manually (for projects that use nuspec) so that the new version flows to consumers -->
+    <CentralPackageTransitivePinningEnabled>false</CentralPackageTransitivePinningEnabled>
   </PropertyGroup>
   <PropertyGroup Label="Product dependencies">
     <AspireHostingTestingVersion>8.2.2</AspireHostingTestingVersion>
@@ -21,7 +29,7 @@
   </PropertyGroup>
   <PropertyGroup Label="Test dependencies">
     <MicrosoftCodeAnalysisAnalyzerTestingVersion>1.1.3-beta1.24423.1</MicrosoftCodeAnalysisAnalyzerTestingVersion>
-    <MSTestVersion>3.8.0-preview.25080.5</MSTestVersion>
+    <MSTestVersion>3.8.0-preview.25104.9</MSTestVersion>
   </PropertyGroup>
   <ItemGroup Label="Analyzers">
     <PackageVersion Include="Microsoft.CodeAnalysis.BannedApiAnalyzers" Version="$(MicrosoftCodeAnalysisBannedApiAnalyzersVersion)" />

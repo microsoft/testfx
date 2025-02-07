@@ -14,6 +14,7 @@ public sealed partial class Assert
 {
     [InterpolatedStringHandler]
     [EditorBrowsable(EditorBrowsableState.Never)]
+    [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1600:Elements should be documented", Justification = "This is not meant to be consumed by users.")]
     public readonly struct AssertNonStrictThrowsInterpolatedStringHandler<TException>
         where TException : Exception
     {
@@ -81,6 +82,7 @@ public sealed partial class Assert
 
     [InterpolatedStringHandler]
     [EditorBrowsable(EditorBrowsableState.Never)]
+    [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1600:Elements should be documented", Justification = "This is not meant to be consumed by users.")]
     public readonly struct AssertThrowsExactlyInterpolatedStringHandler<TException>
         where TException : Exception
     {

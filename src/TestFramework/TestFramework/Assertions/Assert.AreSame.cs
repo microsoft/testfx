@@ -14,6 +14,7 @@ public sealed partial class Assert
 {
     [InterpolatedStringHandler]
     [EditorBrowsable(EditorBrowsableState.Never)]
+    [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1600:Elements should be documented", Justification = "This is not meant to be consumed by users.")]
     public readonly struct AssertAreSameInterpolatedStringHandler<TArgument>
     {
         private readonly StringBuilder? _builder;
@@ -75,6 +76,7 @@ public sealed partial class Assert
 
     [InterpolatedStringHandler]
     [EditorBrowsable(EditorBrowsableState.Never)]
+    [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1600:Elements should be documented", Justification = "This is not meant to be consumed by users.")]
     public readonly struct AssertAreNotSameInterpolatedStringHandler<TArgument>
     {
         private readonly StringBuilder? _builder;

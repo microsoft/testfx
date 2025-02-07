@@ -32,9 +32,11 @@ public sealed class TestMethodShouldBeValidAnalyzer : DiagnosticAnalyzer
         isEnabledByDefault: true,
         escalateToErrorInRecommended: true);
 
+    /// <inheritdoc />
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
         = ImmutableArray.Create(ValidTestMethodSignatureRule);
 
+    /// <inheritdoc />
     public override void Initialize(AnalysisContext context)
     {
         context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
