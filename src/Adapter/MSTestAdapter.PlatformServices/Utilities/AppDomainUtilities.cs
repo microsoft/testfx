@@ -267,7 +267,7 @@ internal static class AppDomainUtilities
             int dynamicDataTestIdGenerationStrategy)
         {
             // Normally, these two properties should have the same value.
-            // But just in case the user explicitly changed only one of them, we just
+            // But just in case they diverged for any reason, we just
             // preserve whatever values in each correctly.
             DataRowAttribute.TestIdGenerationStrategy = (TestIdGenerationStrategy)dataRowTestIdGenerationStrategy;
             DynamicDataAttribute.TestIdGenerationStrategy = (TestIdGenerationStrategy)dynamicDataTestIdGenerationStrategy;
