@@ -248,7 +248,7 @@ internal static class AppDomainUtilities
         Type staticStateHelperType = typeof(StaticStateHelper);
         var staticStateHelper = appDomain.CreateInstanceFromAndUnwrap(staticStateHelperType.Assembly.Location, staticStateHelperType.FullName) as StaticStateHelper;
         staticStateHelper?.SetUICulture(CultureInfo.DefaultThreadCurrentUICulture);
-        staticStateHelper?.SetTestIdGenerationStrategy(DataRowAttribute.TestIdGenerationStrategy, DynamicDataAttribute.TestIdGenerationStrategy);
+        staticStateHelper?.SetTestIdGenerationStrategy((int)DataRowAttribute.TestIdGenerationStrategy, (int)DynamicDataAttribute.TestIdGenerationStrategy);
     }
 
     private sealed class StaticStateHelper : MarshalByRefObject
@@ -263,14 +263,14 @@ internal static class AppDomainUtilities
         // Very early during discovery, we set TestIdGenerationStrategy static property.
         // We want to preserve the values in the app domain where UnitTestRunner is created.
         public void SetTestIdGenerationStrategy(
-            TestIdGenerationStrategy dataRowTestIdGenerationStrategy,
-            TestIdGenerationStrategy dynamicDataTestIdGenerationStrategy)
+            int dataRowTestIdGenerationStrategy,
+            int dynamicDataTestIdGenerationStrategy)
         {
             // Normally, these two properties should have the same value.
             // But just in case the user explicitly changed only one of them, we just
             // preserve whatever values in each correctly.
-            DataRowAttribute.TestIdGenerationStrategy = dataRowTestIdGenerationStrategy;
-            DynamicDataAttribute.TestIdGenerationStrategy = dynamicDataTestIdGenerationStrategy;
+            DataRowAttribute.TestIdGenerationStrategy = (TestIdGenerationStrategy)dataRowTestIdGenerationStrategy;
+            DynamicDataAttribute.TestIdGenerationStrategy = (TestIdGenerationStrategy)dynamicDataTestIdGenerationStrategy;
         }
     }
 }
