@@ -181,7 +181,7 @@ internal static class AppDomainUtilities
         string? typeAssemblyLocation = type.Assembly.Location;
         string? fullFilePath = typeAssemblyLocation == null ? null : Path.Combine(appDomain.SetupInformation.ApplicationBase, Path.GetFileName(typeAssemblyLocation));
 
-        EnsureAppDomainUsesCorrectUICulture(appDomain, CultureInfo.DefaultThreadCurrentUICulture);
+        EnsureRelevantStaticStateIsRestored(appDomain);
 
         if (fullFilePath == null || File.Exists(fullFilePath))
         {
@@ -241,22 +241,37 @@ internal static class AppDomainUtilities
         return DefaultVersion;
     }
 
-    internal /* for testing purposes */ static void EnsureAppDomainUsesCorrectUICulture(AppDomain appDomain, CultureInfo uiCulture)
+    private static void EnsureRelevantStaticStateIsRestored(AppDomain appDomain)
     {
-        // AppDomain is not preserving the culture info. So we need to set it explicitly.
+        // AppDomain is not preserving the state static (by-design, as it's for isolation).
+        // However, there is some static state that we want to preserve, so we need to set it explicitly.
+        Type staticStateHelperType = typeof(StaticStateHelper);
+        var staticStateHelper = appDomain.CreateInstanceFromAndUnwrap(staticStateHelperType.Assembly.Location, staticStateHelperType.FullName) as StaticStateHelper;
+        staticStateHelper?.SetUICulture(CultureInfo.DefaultThreadCurrentUICulture);
+        staticStateHelper?.SetTestIdGenerationStrategy(DataRowAttribute.TestIdGenerationStrategy, DynamicDataAttribute.TestIdGenerationStrategy);
+    }
+
+    private sealed class StaticStateHelper : MarshalByRefObject
+    {
+#pragma warning disable CA1822 // Mark members as static - Should not be static for our need
         // The overloads of CreateInstanceAndUnwrap that takes the culture info are actually not setting the culture
         // of the AppDomain but only using this culture for the cast/conversion of the arguments.
         // For the problem reported by vendors, we would only need to set the DefaultThreadCurrentUICulture as it's
         // the culture we want to use for the resx.
-        Type cultureHelperType = typeof(AppDomainCultureHelper);
-        var appDomainCultureHelper = appDomain.CreateInstanceFromAndUnwrap(cultureHelperType.Assembly.Location, cultureHelperType.FullName) as AppDomainCultureHelper;
-        appDomainCultureHelper?.SetUICulture(uiCulture);
-    }
-
-    private sealed class AppDomainCultureHelper : MarshalByRefObject
-    {
-#pragma warning disable CA1822 // Mark members as static - Should not be static for our need
         public void SetUICulture(CultureInfo uiCulture) => CultureInfo.DefaultThreadCurrentUICulture = uiCulture;
+
+        // Very early during discovery, we set TestIdGenerationStrategy static property.
+        // We want to preserve the values in the app domain where UnitTestRunner is created.
+        public void SetTestIdGenerationStrategy(
+            TestIdGenerationStrategy dataRowTestIdGenerationStrategy,
+            TestIdGenerationStrategy dynamicDataTestIdGenerationStrategy)
+        {
+            // Normally, these two properties should have the same value.
+            // But just in case the user explicitly changed only one of them, we just
+            // preserve whatever values in each correctly.
+            DataRowAttribute.TestIdGenerationStrategy = dataRowTestIdGenerationStrategy;
+            DynamicDataAttribute.TestIdGenerationStrategy = dynamicDataTestIdGenerationStrategy;
+        }
     }
 }
 
