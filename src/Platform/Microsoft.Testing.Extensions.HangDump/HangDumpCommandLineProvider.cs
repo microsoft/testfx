@@ -30,10 +30,6 @@ internal sealed class HangDumpCommandLineProvider : ICommandLineOptionsProvider
         new(HangDumpTypeOptionName, ExtensionResources.HangDumpTypeOptionDescription, ArgumentArity.ExactlyOne, false)
     ];
 
-    private readonly HangDumpConfiguration _hangDumpConfiguration;
-
-    public HangDumpCommandLineProvider(HangDumpConfiguration hangDumpConfiguration) => _hangDumpConfiguration = hangDumpConfiguration;
-
     public string Uid => nameof(HangDumpCommandLineProvider);
 
     public string Version => AppVersion.DefaultSemVer;

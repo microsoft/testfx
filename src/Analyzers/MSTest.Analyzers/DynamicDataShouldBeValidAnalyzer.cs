@@ -62,6 +62,7 @@ public sealed class DynamicDataShouldBeValidAnalyzer : DiagnosticAnalyzer
     internal static readonly DiagnosticDescriptor DisplayMethodSignatureRule = NotTestMethodRule
         .WithMessage(new(nameof(Resources.DynamicDataShouldBeValidMessageFormat_DisplayMethodSignature), Resources.ResourceManager, typeof(Resources)));
 
+    /// <inheritdoc />
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } = ImmutableArray.Create(
         NotTestMethodRule,
         MemberNotFoundRule,
@@ -74,6 +75,7 @@ public sealed class DynamicDataShouldBeValidAnalyzer : DiagnosticAnalyzer
         DataMemberSignatureRule,
         DisplayMethodSignatureRule);
 
+    /// <inheritdoc />
     public override void Initialize(AnalysisContext context)
     {
         context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
@@ -84,20 +86,17 @@ public sealed class DynamicDataShouldBeValidAnalyzer : DiagnosticAnalyzer
             if (context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestMethodAttribute, out INamedTypeSymbol? testMethodAttributeSymbol)
                 && context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingDynamicDataAttribute, out INamedTypeSymbol? dynamicDataAttributeSymbol)
                 && context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingDynamicDataSourceType, out INamedTypeSymbol? dynamicDataSourceTypeSymbol)
-                && context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemCollectionsGenericIEnumerable1, out INamedTypeSymbol? ienumerableTypeSymbol)
                 && context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemReflectionMethodInfo, out INamedTypeSymbol? methodInfoTypeSymbol))
             {
                 context.RegisterSymbolAction(
-                   context => AnalyzeSymbol(context, testMethodAttributeSymbol, dynamicDataAttributeSymbol, dynamicDataSourceTypeSymbol,
-                    ienumerableTypeSymbol, methodInfoTypeSymbol),
+                   context => AnalyzeSymbol(context, testMethodAttributeSymbol, dynamicDataAttributeSymbol, dynamicDataSourceTypeSymbol, methodInfoTypeSymbol),
                    SymbolKind.Method);
             }
         });
     }
 
     private static void AnalyzeSymbol(SymbolAnalysisContext context, INamedTypeSymbol testMethodAttributeSymbol,
-        INamedTypeSymbol dynamicDataAttributeSymbol, INamedTypeSymbol dynamicDataSourceTypeSymbol, INamedTypeSymbol ienumerableTypeSymbol,
-        INamedTypeSymbol methodInfoTypeSymbol)
+        INamedTypeSymbol dynamicDataAttributeSymbol, INamedTypeSymbol dynamicDataSourceTypeSymbol, INamedTypeSymbol methodInfoTypeSymbol)
     {
         var methodSymbol = (IMethodSymbol)context.Symbol;
 
@@ -115,7 +114,7 @@ public sealed class DynamicDataShouldBeValidAnalyzer : DiagnosticAnalyzer
             if (SymbolEqualityComparer.Default.Equals(methodAttribute.AttributeClass, dynamicDataAttributeSymbol))
             {
                 hasDynamicDataAttribute = true;
-                AnalyzeAttribute(context, methodAttribute, methodSymbol, dynamicDataSourceTypeSymbol, ienumerableTypeSymbol, methodInfoTypeSymbol);
+                AnalyzeAttribute(context, methodAttribute, methodSymbol, dynamicDataSourceTypeSymbol, methodInfoTypeSymbol);
             }
         }
 
@@ -127,14 +126,14 @@ public sealed class DynamicDataShouldBeValidAnalyzer : DiagnosticAnalyzer
     }
 
     private static void AnalyzeAttribute(SymbolAnalysisContext context, AttributeData attributeData, IMethodSymbol methodSymbol,
-        INamedTypeSymbol dynamicDataSourceTypeSymbol, INamedTypeSymbol ienumerableTypeSymbol, INamedTypeSymbol methodInfoTypeSymbol)
+        INamedTypeSymbol dynamicDataSourceTypeSymbol, INamedTypeSymbol methodInfoTypeSymbol)
     {
         if (attributeData.ApplicationSyntaxReference?.GetSyntax() is not { } attributeSyntax)
         {
             return;
         }
 
-        AnalyzeDataSource(context, attributeData, attributeSyntax, methodSymbol, dynamicDataSourceTypeSymbol, ienumerableTypeSymbol);
+        AnalyzeDataSource(context, attributeData, attributeSyntax, methodSymbol, dynamicDataSourceTypeSymbol);
         AnalyzeDisplayNameSource(context, attributeData, attributeSyntax, methodSymbol, methodInfoTypeSymbol);
     }
 
@@ -181,7 +180,7 @@ public sealed class DynamicDataShouldBeValidAnalyzer : DiagnosticAnalyzer
     }
 
     private static void AnalyzeDataSource(SymbolAnalysisContext context, AttributeData attributeData, SyntaxNode attributeSyntax,
-        IMethodSymbol methodSymbol, INamedTypeSymbol dynamicDataSourceTypeSymbol, INamedTypeSymbol ienumerableTypeSymbol)
+        IMethodSymbol methodSymbol, INamedTypeSymbol dynamicDataSourceTypeSymbol)
     {
         string? memberName = null;
         int dataSourceType = DynamicDataSourceTypeAutoDetect;
@@ -273,12 +272,17 @@ public sealed class DynamicDataShouldBeValidAnalyzer : DiagnosticAnalyzer
 
         // Validate member return type.
         ITypeSymbol? memberTypeSymbol = member.GetMemberType();
-        if (memberTypeSymbol is INamedTypeSymbol memberNamedType
-            && (!SymbolEqualityComparer.Default.Equals(memberNamedType.ConstructedFrom, ienumerableTypeSymbol)
-                || memberNamedType.TypeArguments.Length != 1))
+        if (memberTypeSymbol is IArrayTypeSymbol arrayType)
+        {
+            return;
+        }
+
+        if (memberTypeSymbol is not INamedTypeSymbol memberNamedType
+            || memberNamedType.SpecialType == SpecialType.System_String
+            || (memberNamedType.SpecialType != SpecialType.System_Collections_IEnumerable
+                && !memberNamedType.AllInterfaces.Any(i => i.SpecialType == SpecialType.System_Collections_IEnumerable)))
         {
             context.ReportDiagnostic(attributeSyntax.CreateDiagnostic(MemberTypeRule, declaringType.Name, memberName));
-            return;
         }
     }
 

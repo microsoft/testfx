@@ -5,6 +5,9 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace MSTest.Extensibility.Samples;
 
+/// <summary>
+/// Extensions for the <see cref="Microsoft.VisualStudio.TestTools.UnitTesting.Assert"/> class.
+/// </summary>
 [SuppressMessage("Naming", "CA1711:Identifiers should not have incorrect suffix", Justification = "This is only some sample type")]
 public static class AssertEx
 {

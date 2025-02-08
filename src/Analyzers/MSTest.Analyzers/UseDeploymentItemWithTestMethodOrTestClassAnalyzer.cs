@@ -29,9 +29,11 @@ public sealed class UseDeploymentItemWithTestMethodOrTestClassAnalyzer : Diagnos
         DiagnosticSeverity.Info,
         isEnabledByDefault: true);
 
+    /// <inheritdoc />
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
         = ImmutableArray.Create(UseDeploymentItemWithTestMethodOrTestClassRule);
 
+    /// <inheritdoc />
     public override void Initialize(AnalysisContext context)
     {
         context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);

@@ -18,8 +18,16 @@ using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Extensions.VSTestBridge;
 
+/// <summary>
+/// Represents a base class for bridged test frameworks (support of Microsoft.Testing.Platform while supporting VSTest like APIs).
+/// </summary>
 public abstract class VSTestBridgedTestFrameworkBase : ITestFramework, IDataProducer
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="VSTestBridgedTestFrameworkBase"/> class.
+    /// </summary>
+    /// <param name="serviceProvider">The service provider.</param>
+    /// <param name="capabilities">The test framework capabilities.</param>
     protected VSTestBridgedTestFrameworkBase(IServiceProvider serviceProvider, ITestFrameworkCapabilities capabilities)
     {
         Guard.NotNull(serviceProvider);
@@ -47,8 +55,14 @@ public abstract class VSTestBridgedTestFrameworkBase : ITestFramework, IDataProd
         typeof(TestNodeFileArtifact)
     ];
 
+    /// <summary>
+    /// Gets the service provider.
+    /// </summary>
     protected internal IServiceProvider ServiceProvider { get; }
 
+    /// <summary>
+    /// Gets a value indicating whether the TRX report is enabled.
+    /// </summary>
     protected internal bool IsTrxEnabled { get; }
 
     /// <inheritdoc />
@@ -89,12 +103,30 @@ public abstract class VSTestBridgedTestFrameworkBase : ITestFramework, IDataProd
     /// <inheritdoc />
     public abstract Task<CloseTestSessionResult> CloseTestSessionAsync(CloseTestSessionContext context);
 
+    /// <summary>
+    /// Execute the test execution request (discovery, run...).
+    /// </summary>
+    /// <param name="request">The test execution request.</param>
+    /// <param name="messageBus">The message bus.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
     protected abstract Task ExecuteRequestAsync(TestExecutionRequest request, IMessageBus messageBus,
         CancellationToken cancellationToken);
 
+    /// <summary>
+    /// Discovers tests.
+    /// </summary>
+    /// <param name="request">The VSTest discovery request.</param>
+    /// <param name="messageBus">The message bus.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
     protected abstract Task DiscoverTestsAsync(VSTestDiscoverTestExecutionRequest request, IMessageBus messageBus,
         CancellationToken cancellationToken);
 
+    /// <summary>
+    /// Runs the tests.
+    /// </summary>
+    /// <param name="request">The VSTest run request.</param>
+    /// <param name="messageBus">The message bus.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
     protected abstract Task RunTestsAsync(VSTestRunTestExecutionRequest request, IMessageBus messageBus,
         CancellationToken cancellationToken);
 

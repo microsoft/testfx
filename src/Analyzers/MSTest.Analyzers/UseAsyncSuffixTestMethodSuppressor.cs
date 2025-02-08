@@ -25,8 +25,10 @@ public sealed class UseAsyncSuffixTestMethodSuppressor : DiagnosticSuppressor
     internal static readonly SuppressionDescriptor Rule =
         new(DiagnosticIds.UseAsyncSuffixTestMethodSuppressorRuleId, SuppressedDiagnosticId, Resources.UseAsyncSuffixTestMethodSuppressorJustification);
 
+    /// <inheritdoc />
     public override ImmutableArray<SuppressionDescriptor> SupportedSuppressions { get; } = ImmutableArray.Create(Rule);
 
+    /// <inheritdoc />
     public override void ReportSuppressions(SuppressionAnalysisContext context)
     {
         if (!context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestMethodAttribute, out INamedTypeSymbol? testMethodAttributeSymbol))
