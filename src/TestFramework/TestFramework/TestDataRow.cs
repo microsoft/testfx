@@ -38,9 +38,12 @@ public sealed class TestDataRow<T> : ITestDataRow
     [DataMember]
     public string? DisplayName { get; set; }
 
+    /// <inheritdoc cref="Value"/>
     object? ITestDataRow.Value => Value;
 
+    /// <inheritdoc cref="IgnoreMessage"/>
     string? ITestDataRow.IgnoreMessage => IgnoreMessage;
 
+    /// <inheritdoc cref="DisplayName"/>
     string? ITestDataRow.DisplayName => DisplayName;
 }
