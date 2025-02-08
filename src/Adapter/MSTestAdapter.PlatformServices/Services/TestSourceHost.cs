@@ -54,7 +54,6 @@ public class TestSourceHost : ITestSourceHost
 
     private readonly IRunSettings? _runSettings;
     private readonly IFrameworkHandle? _frameworkHandle;
-    private readonly IAppDomain _appDomain;
 
     private string? _targetFrameworkVersion;
 
@@ -71,33 +70,24 @@ public class TestSourceHost : ITestSourceHost
     /// <param name="runSettings"> The run-settings provided for this session. </param>
     /// <param name="frameworkHandle"> The handle to the test platform. </param>
     public TestSourceHost(string sourceFileName, IRunSettings? runSettings, IFrameworkHandle? frameworkHandle)
-#if NETFRAMEWORK
-        : this(sourceFileName, runSettings, frameworkHandle, new AppDomainWrapper())
-#endif
     {
-#if !WINDOWS_UWP && !NETFRAMEWORK
-        _sourceFileName = sourceFileName;
-
-        // Set the environment context.
-        SetContext(sourceFileName);
-#endif
-    }
-
 #if NETFRAMEWORK
-    internal TestSourceHost(string sourceFileName, IRunSettings? runSettings, IFrameworkHandle? frameworkHandle, IAppDomain appDomain)
-    {
-        _sourceFileName = sourceFileName;
         _runSettings = runSettings;
         _frameworkHandle = frameworkHandle;
-        _appDomain = appDomain;
-
-        // Set the environment context.
-        SetContext(sourceFileName);
 
         // Set isAppDomainCreationDisabled flag
         _isAppDomainCreationDisabled = _runSettings != null && MSTestAdapterSettings.IsAppDomainCreationDisabled(_runSettings.SettingsXml);
+#endif
+
+#if !WINDOWS_UWP
+        _sourceFileName = sourceFileName;
+
+        // Set the environment context.
+        SetContext(sourceFileName);
+#endif
     }
 
+#if NETFRAMEWORK
     /// <summary>
     /// Gets the child AppDomain used to discover/execute tests.
     /// </summary>
@@ -163,7 +153,7 @@ public class TestSourceHost : ITestSourceHost
             EqtTrace.Info("DesktopTestSourceHost.SetupHost(): Creating app-domain for source {0} with application base path {1}.", _sourceFileName, appDomainSetup.ApplicationBase);
 
             string domainName = $"TestSourceHost: Enumerating source ({_sourceFileName})";
-            AppDomain = _appDomain.CreateDomain(domainName, null!, appDomainSetup);
+            AppDomain = AppDomain.CreateDomain(domainName, null, appDomainSetup);
 
             // Load objectModel before creating assembly resolver otherwise in 3.5 process, we run into a recursive assembly resolution
             // which is trigged by AppContainerUtilities.AttachEventToResolveWinmd method.
@@ -241,7 +231,7 @@ public class TestSourceHost : ITestSourceHost
         {
             try
             {
-                _appDomain.Unload(AppDomain);
+                AppDomain.Unload(AppDomain);
             }
             catch (Exception exception)
             {
