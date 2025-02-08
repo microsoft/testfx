@@ -263,10 +263,6 @@ public class TestSourceHost : ITestSourceHost
 
         ResetContext();
 
-#elif !WINDOWS_UWP
-        ResetContext();
-#endif
-
         GC.SuppressFinalize(this);
     }
 
