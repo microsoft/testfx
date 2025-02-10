@@ -3,7 +3,7 @@
 
 using Microsoft.Testing.Platform;
 using Microsoft.Testing.Platform.CommandLine;
-using Microsoft.Testing.Platform.Extensions.Messages;
+using Microsoft.Testing.Platform.Requests;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 
 namespace Microsoft.Testing.Extensions.VSTestBridge.ObjectModel;
@@ -13,19 +13,14 @@ namespace Microsoft.Testing.Extensions.VSTestBridge.ObjectModel;
 /// </summary>
 internal sealed class RunContextAdapter : ContextAdapterBase, IRunContext
 {
-    public RunContextAdapter(ICommandLineOptions commandLineOptions, IRunSettings runSettings)
-        : base(commandLineOptions)
+    public RunContextAdapter(ICommandLineOptions commandLineOptions, IRunSettings runSettings, ITestExecutionFilter filter)
+        : base(commandLineOptions, runSettings, filter)
     {
         RoslynDebug.Assert(runSettings.SettingsXml is not null);
 
-        RunSettings = runSettings;
-
         // Parse and take the results directory from the runsettings.
-        TestRunDirectory = XElement.Parse(runSettings.SettingsXml).Descendants("ResultsDirectory").SingleOrDefault()?.Value;
+        TestRunDirectory = XDocument.Parse(runSettings.SettingsXml).Element("RunSettings")?.Element("RunConfiguration")?.Element("ResultsDirectory")?.Value;
     }
-
-    public RunContextAdapter(ICommandLineOptions commandLineOptions, IRunSettings runSettings, TestNodeUid[] testNodeUids)
-        : this(commandLineOptions, runSettings) => FilterExpressionWrapper = new(CreateFilter(testNodeUids));
 
     // NOTE: Always false as it's TPv2 oriented and so not applicable to TA.
 
@@ -50,62 +45,4 @@ internal sealed class RunContextAdapter : ContextAdapterBase, IRunContext
 
     /// <inheritdoc />
     public string? SolutionDirectory { get; }
-
-    /// <inheritdoc />
-    public IRunSettings? RunSettings { get; }
-
-    // We use heuristic to understand if the filter should be a TestCaseId or FullyQualifiedName.
-    // We know that in VSTest TestCaseId is a GUID and FullyQualifiedName is a string.
-    private static string CreateFilter(TestNodeUid[] testNodesUid)
-    {
-        StringBuilder filter = new();
-
-        for (int i = 0; i < testNodesUid.Length; i++)
-        {
-            if (Guid.TryParse(testNodesUid[i].Value, out Guid guid))
-            {
-                filter.Append("Id=");
-                filter.Append(guid.ToString());
-            }
-            else
-            {
-                TestNodeUid currentTestNodeUid = testNodesUid[i];
-                filter.Append("FullyQualifiedName=");
-                for (int k = 0; k < currentTestNodeUid.Value.Length; k++)
-                {
-                    char currentChar = currentTestNodeUid.Value[k];
-                    switch (currentChar)
-                    {
-                        case '\\':
-                        case '(':
-                        case ')':
-                        case '&':
-                        case '|':
-                        case '=':
-                        case '!':
-                        case '~':
-                            // If the symbol is not escaped, add an escape character.
-                            if (i - 1 < 0 || currentTestNodeUid.Value[k - 1] != '\\')
-                            {
-                                filter.Append('\\');
-                            }
-
-                            filter.Append(currentChar);
-                            break;
-
-                        default:
-                            filter.Append(currentChar);
-                            break;
-                    }
-                }
-            }
-
-            if (i != testNodesUid.Length - 1)
-            {
-                filter.Append('|');
-            }
-        }
-
-        return filter.ToString();
-    }
 }

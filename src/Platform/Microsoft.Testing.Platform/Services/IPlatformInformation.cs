@@ -3,6 +3,9 @@
 
 namespace Microsoft.Testing.Platform.Services;
 
+/// <summary>
+/// Provides information about the platform.
+/// </summary>
 [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
 public interface IPlatformInformation
 {

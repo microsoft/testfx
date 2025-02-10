@@ -15,6 +15,9 @@ using VSTestUriDataAttachment = Microsoft.VisualStudio.TestPlatform.ObjectModel.
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 
+/// <summary>
+/// Extension methods for TestResult.
+/// </summary>
 #if NET6_0_OR_GREATER
 [Obsolete(Constants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
 #else

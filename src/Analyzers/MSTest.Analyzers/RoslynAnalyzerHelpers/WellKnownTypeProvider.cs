@@ -16,7 +16,7 @@ namespace Analyzer.Utilities;
 /// <summary>
 /// Provides and caches well known types in a compilation.
 /// </summary>
-public class WellKnownTypeProvider
+internal sealed class WellKnownTypeProvider
 {
     private static readonly BoundedCacheWithFactory<Compilation, WellKnownTypeProvider> s_providerCache = new();
 

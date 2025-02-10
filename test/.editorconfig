@@ -36,3 +36,5 @@ dotnet_diagnostic.MSTEST0017.severity = warning     # MSTEST0017: Assertion argu
 dotnet_diagnostic.MSTEST0029.severity = warning     # MSTEST0029: Public methods should be test methods
 dotnet_diagnostic.MSTEST0030.severity = warning     # MSTEST0030: Type containing '[TestMethod]' should be marked with '[TestClass]'
 dotnet_diagnostic.MSTEST0032.severity = warning     # MSTEST0032: Assertion condition is always true
+
+dotnet_analyzer_diagnostic.category-StyleCop.CSharp.DocumentationRules.severity = none # Disable StyleCop.CSharp.DocumentationRules

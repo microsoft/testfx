@@ -225,6 +225,7 @@ public sealed class TestApplication : ITestApplication
         => (_testHost as IDisposable)?.Dispose();
 
 #if NETCOREAPP
+    /// <inheritdoc />
     public ValueTask DisposeAsync()
         => _testHost is IAsyncDisposable asyncDisposable
             ? asyncDisposable.DisposeAsync()

@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #pragma warning disable CS8618 // Properties below are set by MSBuild.
@@ -8,12 +8,18 @@ using Microsoft.Build.Utilities;
 
 namespace Microsoft.Testing.Platform.MSBuild;
 
+/// <summary>
+/// This task generates the entry point for the Testing Platform.
+/// </summary>
 public sealed class TestingPlatformEntryPointTask : Build.Utilities.Task
 {
     private const string CSharpLanguageSymbol = "C#";
     private const string FSharpLanguageSymbol = "F#";
     private const string VBLanguageSymbol = "VB";
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TestingPlatformEntryPointTask"/> class.
+    /// </summary>
     public TestingPlatformEntryPointTask()
         : this(new FileSystem())
     {
@@ -29,20 +35,33 @@ public sealed class TestingPlatformEntryPointTask : Build.Utilities.Task
         _fileSystem = fileSystem;
     }
 
+    /// <summary>
+    /// Gets or sets the path to the Testing Platform entry point source file.
+    /// </summary>
     [Required]
     public ITaskItem TestingPlatformEntryPointSourcePath { get; set; }
 
+    /// <summary>
+    /// Gets or sets the language of the project.
+    /// </summary>
     [Required]
     public ITaskItem Language { get; set; }
 
+    /// <summary>
+    /// Gets or sets the root namespace of the project.
+    /// </summary>
     [Required]
     public string RootNamespace { get; set; }
 
+    /// <summary>
+    /// Gets or sets the path to the generated Testing Platform entry point file.
+    /// </summary>
     [Output]
     public ITaskItem TestingPlatformEntryPointGeneratedFilePath { get; set; }
 
     private readonly IFileSystem _fileSystem;
 
+    /// <inheritdoc />
     public override bool Execute()
     {
         Log.LogMessage(MessageImportance.Normal, $"TestingPlatformEntryPointSourcePath: '{TestingPlatformEntryPointSourcePath.ItemSpec}'");

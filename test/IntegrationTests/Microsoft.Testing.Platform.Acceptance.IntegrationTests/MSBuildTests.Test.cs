@@ -100,6 +100,29 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
     }
 
     [TestMethod]
+    [OSCondition(OperatingSystems.Windows)]
+    public async Task RunUsingTestTargetWithNetfxMSBuild()
+    {
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
+            AssetName,
+            SourceCode
+            .PatchCodeWithReplace("$PlatformTarget$", string.Empty)
+            .PatchCodeWithReplace("$TargetFrameworks$", $"<TargetFramework>{TargetFrameworks.NetCurrent}</TargetFramework>")
+            .PatchCodeWithReplace("$AssertValue$", bool.TrueString.ToLowerInvariant())
+            .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
+
+        string msbuildExe = await FindMsbuildWithVsWhereAsync();
+        var commandLine = new TestInfrastructure.CommandLine();
+        string binlogFile = Path.Combine(testAsset.TargetAssetPath, Guid.NewGuid().ToString("N"), "msbuild.binlog");
+        await commandLine.RunAsync($"\"{msbuildExe}\" {testAsset.TargetAssetPath} /t:Restore");
+        await commandLine.RunAsync($"\"{msbuildExe}\" {testAsset.TargetAssetPath} /t:\"Build;Test\" /bl:\"{binlogFile}\"", environmentVariables: new Dictionary<string, string?>()
+        {
+            ["DOTNET_ROOT"] = string.Empty,
+        });
+        StringAssert.Contains(commandLine.StandardOutput, "Tests succeeded");
+    }
+
+    [TestMethod]
     public async Task Invoke_DotnetTest_With_Arch_Switch_x86_Should_Work()
     {
         if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
