@@ -23,7 +23,11 @@ internal sealed class TestAssemblySettingsProvider : MarshalByRefObject
 #endif
     public override object InitializeLifetimeService() => null!;
 
-    internal static TestAssemblySettings GetSettings(string source)
+    [SuppressMessage(
+        "Performance",
+        "CA1822:Mark members as static",
+        Justification = "Intentionally not static. We call it from a different AppDomain")]
+    internal TestAssemblySettings GetSettings(string source)
     {
         var testAssemblySettings = new TestAssemblySettings();
 
