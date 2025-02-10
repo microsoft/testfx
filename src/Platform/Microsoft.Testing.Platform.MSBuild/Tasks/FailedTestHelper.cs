@@ -77,10 +77,10 @@ internal static class FailedTestHelper
         }
     }
 
-    private static string? JoinSingleLineAndShorten(string? first, string? second)
-        => first != null && second != null
-            ? SingleLineAndShorten(first) + " " + SingleLineAndShorten(second)
-            : SingleLineAndShorten(first) ?? SingleLineAndShorten(second);
+    private static string? JoinSingleLineAndShorten(string first, string? second)
+        => second == null
+            ? SingleLineAndShorten(first)
+            : SingleLineAndShorten(first) + " " + SingleLineAndShorten(second);
 
     private static string? SingleLineAndShorten(string? text)
         => text == null ? null : (text.Length <= 1000 ? text : text[..1000]).Replace('\r', ' ').Replace('\n', ' ');

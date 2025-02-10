@@ -43,7 +43,7 @@ public class TestAssemblySettingsProviderTests : TestContainer
             .Returns(Assembly.GetExecutingAssembly());
 
         // Act.
-        MSTest.TestAdapter.ObjectModel.TestAssemblySettings settings = TestAssemblySettingsProvider.GetSettings("Foo");
+        MSTest.TestAdapter.ObjectModel.TestAssemblySettings settings = new TestAssemblySettingsProvider().GetSettings("Foo");
 
         // Assert.
         Verify(settings.Workers == -1);
@@ -62,7 +62,7 @@ public class TestAssemblySettingsProviderTests : TestContainer
             .Returns([new UTF.ParallelizeAttribute { Workers = 10 }]);
 
         // Act.
-        MSTest.TestAdapter.ObjectModel.TestAssemblySettings settings = TestAssemblySettingsProvider.GetSettings("Foo");
+        MSTest.TestAdapter.ObjectModel.TestAssemblySettings settings = new TestAssemblySettingsProvider().GetSettings("Foo");
 
         // Assert.
         Verify(settings.Workers == 10);
@@ -81,7 +81,7 @@ public class TestAssemblySettingsProviderTests : TestContainer
             .Returns([new UTF.ParallelizeAttribute { Workers = 0 }]);
 
         // Act.
-        MSTest.TestAdapter.ObjectModel.TestAssemblySettings settings = TestAssemblySettingsProvider.GetSettings("Foo");
+        MSTest.TestAdapter.ObjectModel.TestAssemblySettings settings = new TestAssemblySettingsProvider().GetSettings("Foo");
 
         // Assert.
         Verify(Environment.ProcessorCount == settings.Workers);
@@ -96,7 +96,7 @@ public class TestAssemblySettingsProviderTests : TestContainer
             .Returns(Assembly.GetExecutingAssembly());
 
         // Act.
-        MSTest.TestAdapter.ObjectModel.TestAssemblySettings settings = TestAssemblySettingsProvider.GetSettings("Foo");
+        MSTest.TestAdapter.ObjectModel.TestAssemblySettings settings = new TestAssemblySettingsProvider().GetSettings("Foo");
 
         // Assert.
         Verify(settings.Scope == ExecutionScope.ClassLevel);
@@ -115,7 +115,7 @@ public class TestAssemblySettingsProviderTests : TestContainer
             .Returns([new UTF.ParallelizeAttribute { Scope = ExecutionScope.MethodLevel }]);
 
         // Act.
-        MSTest.TestAdapter.ObjectModel.TestAssemblySettings settings = TestAssemblySettingsProvider.GetSettings("Foo");
+        MSTest.TestAdapter.ObjectModel.TestAssemblySettings settings = new TestAssemblySettingsProvider().GetSettings("Foo");
 
         // Assert.
         Verify(settings.Scope == ExecutionScope.MethodLevel);
@@ -130,7 +130,7 @@ public class TestAssemblySettingsProviderTests : TestContainer
             .Returns(Assembly.GetExecutingAssembly());
 
         // Act.
-        MSTest.TestAdapter.ObjectModel.TestAssemblySettings settings = TestAssemblySettingsProvider.GetSettings("Foo");
+        MSTest.TestAdapter.ObjectModel.TestAssemblySettings settings = new TestAssemblySettingsProvider().GetSettings("Foo");
 
         // Assert.
         Verify(settings.CanParallelizeAssembly);
@@ -149,7 +149,7 @@ public class TestAssemblySettingsProviderTests : TestContainer
             .Returns([new UTF.DoNotParallelizeAttribute()]);
 
         // Act.
-        MSTest.TestAdapter.ObjectModel.TestAssemblySettings settings = TestAssemblySettingsProvider.GetSettings("Foo");
+        MSTest.TestAdapter.ObjectModel.TestAssemblySettings settings = new TestAssemblySettingsProvider().GetSettings("Foo");
 
         // Assert.
         Verify(!settings.CanParallelizeAssembly);
