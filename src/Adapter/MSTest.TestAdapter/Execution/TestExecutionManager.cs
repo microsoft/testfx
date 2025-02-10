@@ -372,20 +372,7 @@ public class TestExecutionManager
 
         _testRunCancellationToken?.ThrowIfCancellationRequested();
 
-        TestAssemblySettingsProvider? sourceSettingsProvider = null;
-
-        try
-        {
-            sourceSettingsProvider = isolationHost.CreateInstanceForType(
-                typeof(TestAssemblySettingsProvider),
-                null) as TestAssemblySettingsProvider;
-        }
-        catch (Exception ex)
-        {
-            PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("Could not create TestAssemblySettingsProvider instance in child app-domain", ex);
-        }
-
-        TestAssemblySettings sourceSettings = (sourceSettingsProvider != null) ? TestAssemblySettingsProvider.GetSettings(source) : new TestAssemblySettings();
+        TestAssemblySettings sourceSettings = TestAssemblySettingsProvider.GetSettings(source);
         int parallelWorkers = sourceSettings.Workers;
         ExecutionScope parallelScope = sourceSettings.Scope;
         TestCase[] testsToRun = tests.Where(t => MatchTestFilter(filterExpression, t, _testMethodFilter)).ToArray();
