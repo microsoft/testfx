@@ -385,7 +385,10 @@ public class TestExecutionManager
             PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("Could not create TestAssemblySettingsProvider instance in child app-domain", ex);
         }
 
-        TestAssemblySettings sourceSettings = (sourceSettingsProvider != null) ? sourceSettingsProvider.GetSettings(source) : new TestAssemblySettings();
+        TestAssemblySettings sourceSettings = (sourceSettingsProvider != null)
+            ? sourceSettingsProvider.GetSettings(source)
+            : new TestAssemblySettings();
+
         int parallelWorkers = sourceSettings.Workers;
         ExecutionScope parallelScope = sourceSettings.Scope;
         TestCase[] testsToRun = tests.Where(t => MatchTestFilter(filterExpression, t, _testMethodFilter)).ToArray();
