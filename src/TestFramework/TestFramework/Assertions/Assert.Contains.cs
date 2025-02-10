@@ -15,6 +15,7 @@ public sealed partial class Assert
     [InterpolatedStringHandler]
     [EditorBrowsable(EditorBrowsableState.Never)]
     [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1600:Elements should be documented", Justification = "This is not meant to be consumed by users.")]
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
     public readonly struct AssertSingleInterpolatedStringHandler<TItem>
     {
         private readonly StringBuilder? _builder;
@@ -88,6 +89,7 @@ public sealed partial class Assert
 #pragma warning restore RS0026 // Do not add multiple public overloads with optional parameters
 #pragma warning restore RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
     }
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 
     /// <summary>
     /// Tests whether the specified collection contains exactly one element.
