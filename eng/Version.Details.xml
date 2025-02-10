@@ -17,9 +17,9 @@
       <Uri>https://dev.azure.com/devdiv/DevDiv/_git/vs-code-coverage</Uri>
       <Sha>1b85b097d28713a74e5de24f67cea15938048824</Sha>
     </Dependency>
-    <Dependency Name="MSTest.Engine" Version="1.0.0-alpha.25104.1">
+    <Dependency Name="MSTest.Engine" Version="1.0.0-alpha.25107.2">
       <Uri>https://github.com/microsoft/testanywhere</Uri>
-      <Sha>bfb03acdc8018866aaa254c1a628456071b437cb</Sha>
+      <Sha>0787bef4335997b316090bf2b95213e4fb3db003</Sha>
     </Dependency>
   </ToolsetDependencies>
 </Dependencies>
