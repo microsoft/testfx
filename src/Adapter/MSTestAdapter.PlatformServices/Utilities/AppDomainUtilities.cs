@@ -248,7 +248,6 @@ internal static class AppDomainUtilities
         Type staticStateHelperType = typeof(StaticStateHelper);
         var staticStateHelper = appDomain.CreateInstanceFromAndUnwrap(staticStateHelperType.Assembly.Location, staticStateHelperType.FullName) as StaticStateHelper;
         staticStateHelper?.SetUICulture(CultureInfo.DefaultThreadCurrentUICulture);
-        staticStateHelper?.SetTestIdGenerationStrategy((int)DataRowAttribute.TestIdGenerationStrategy, (int)DynamicDataAttribute.TestIdGenerationStrategy);
     }
 
     private sealed class StaticStateHelper : MarshalByRefObject
@@ -259,19 +258,6 @@ internal static class AppDomainUtilities
         // For the problem reported by vendors, we would only need to set the DefaultThreadCurrentUICulture as it's
         // the culture we want to use for the resx.
         public void SetUICulture(CultureInfo uiCulture) => CultureInfo.DefaultThreadCurrentUICulture = uiCulture;
-
-        // Very early during discovery, we set TestIdGenerationStrategy static property.
-        // We want to preserve the values in the app domain where UnitTestRunner is created.
-        public void SetTestIdGenerationStrategy(
-            int dataRowTestIdGenerationStrategy,
-            int dynamicDataTestIdGenerationStrategy)
-        {
-            // Normally, these two properties should have the same value.
-            // But just in case they diverged for any reason, we just
-            // preserve whatever values in each correctly.
-            DataRowAttribute.TestIdGenerationStrategy = (TestIdGenerationStrategy)dataRowTestIdGenerationStrategy;
-            DynamicDataAttribute.TestIdGenerationStrategy = (TestIdGenerationStrategy)dynamicDataTestIdGenerationStrategy;
-        }
     }
 }
 
