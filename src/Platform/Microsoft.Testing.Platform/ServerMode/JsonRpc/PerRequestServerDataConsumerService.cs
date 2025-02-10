@@ -216,22 +216,24 @@ internal sealed class PerRequestServerDataConsumer(IServiceProvider serviceProvi
             return;
         }
 
-        if (value is TestNodeUpdateMessage update)
+        switch (value)
         {
-            await ProcessTestNodeUpdateAsync(update, cancellationToken);
-            PopulateTestNodeStatistics(update);
-        }
-        else if (value is SessionFileArtifact sessionFileArtifact)
-        {
-            Artifacts.Add(new Artifact(sessionFileArtifact.FileInfo.FullName, dataProducer.Uid, FileType, sessionFileArtifact.DisplayName, sessionFileArtifact.Description));
-        }
-        else if (value is FileArtifact file)
-        {
-            Artifacts.Add(new Artifact(file.FileInfo.FullName, dataProducer.Uid, FileType, file.DisplayName, file.Description));
-        }
-        else if (value is TestNodeFileArtifact testNodeFileArtifact)
-        {
-            Artifacts.Add(new Artifact(testNodeFileArtifact.FileInfo.FullName, dataProducer.Uid, FileType, testNodeFileArtifact.DisplayName, testNodeFileArtifact.Description));
+            case TestNodeUpdateMessage update:
+                await ProcessTestNodeUpdateAsync(update, cancellationToken);
+                PopulateTestNodeStatistics(update);
+                break;
+
+            case TestNodeFileArtifact testNodeFileArtifact:
+                Artifacts.Add(new Artifact(testNodeFileArtifact.FileInfo.FullName, dataProducer.Uid, FileType, testNodeFileArtifact.DisplayName, testNodeFileArtifact.Description));
+                break;
+
+            case SessionFileArtifact sessionFileArtifact:
+                Artifacts.Add(new Artifact(sessionFileArtifact.FileInfo.FullName, dataProducer.Uid, FileType, sessionFileArtifact.DisplayName, sessionFileArtifact.Description));
+                break;
+
+            case FileArtifact file:
+                Artifacts.Add(new Artifact(file.FileInfo.FullName, dataProducer.Uid, FileType, file.DisplayName, file.Description));
+                break;
         }
     }
 
