@@ -405,13 +405,7 @@ internal sealed class UnitTestRunner : MarshalByRefObject
         if (shouldIgnoreClass || shouldIgnoreMethod)
         {
             notRunnableResult =
-                [
-                    new TestResult()
-                    {
-                        Outcome = UTF.UnitTestOutcome.Ignored,
-                        IgnoreReason = ignoreMessage,
-                    }
-                ];
+                [TestResult.CreateIgnoredResult(ignoreMessage)];
             return false;
         }
 

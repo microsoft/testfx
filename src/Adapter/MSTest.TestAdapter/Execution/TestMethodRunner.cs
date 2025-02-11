@@ -173,7 +173,7 @@ internal sealed class TestMethodRunner
             if (_test.TestDataSourceIgnoreMessage is not null)
             {
                 _testContext.SetOutcome(UTF.UnitTestOutcome.Ignored);
-                return [new() { Outcome = UTF.UnitTestOutcome.Ignored, IgnoreReason = _test.TestDataSourceIgnoreMessage }];
+                return [TestResult.CreateIgnoredResult(_test.TestDataSourceIgnoreMessage)];
             }
 
             object?[]? data = DataSerializationHelper.Deserialize(_test.SerializedData);
@@ -271,11 +271,7 @@ internal sealed class TestMethodRunner
         {
             if (testDataSource is ITestDataSourceIgnoreCapability { IgnoreMessage: { } ignoreMessage })
             {
-                results.Add(new()
-                {
-                    Outcome = UTF.UnitTestOutcome.Ignored,
-                    IgnoreReason = ignoreMessage,
-                });
+                results.Add(TestResult.CreateIgnoredResult(ignoreMessage));
                 continue;
             }
 
@@ -370,16 +366,34 @@ internal sealed class TestMethodRunner
         string? displayName = StringEx.IsNullOrWhiteSpace(_test.DisplayName)
             ? _test.Name
             : _test.DisplayName;
-        if (testDataSource != null)
+
+        string? displayNameFromTestDataRow = null;
+        string? ignoreFromTestDataRow = null;
+        if (data is not null &&
+            TestDataSourceHelpers.TryHandleITestDataRow(data, _testMethodInfo.ParameterTypes, out data, out ignoreFromTestDataRow, out displayNameFromTestDataRow))
         {
-            displayName = testDataSource.GetDisplayName(new ReflectionTestMethodInfo(_testMethodInfo.MethodInfo, _test.DisplayName), data);
+            // Handled already.
         }
+        else if (data?.Length == 1 && TestDataSourceHelpers.TryHandleTupleDataSource(data[0], _testMethodInfo.ParameterTypes, out object?[] tupleExpandedToArray))
+        {
+            data = tupleExpandedToArray;
+        }
+
+        displayName = testDataSource != null
+            ? displayNameFromTestDataRow
+                ?? testDataSource.GetDisplayName(new ReflectionTestMethodInfo(_testMethodInfo.MethodInfo, _test.DisplayName), data)
+                ?? displayName
+            : displayNameFromTestDataRow ?? displayName;
 
         var stopwatch = Stopwatch.StartNew();
         _testMethodInfo.SetArguments(data);
         _testContext.SetTestData(data);
         _testContext.SetDisplayName(displayName);
-        TestResult[] testResults = ExecuteTest(_testMethodInfo);
+
+        TestResult[] testResults = ignoreFromTestDataRow is not null
+            ? [TestResult.CreateIgnoredResult(ignoreFromTestDataRow)]
+            : ExecuteTest(_testMethodInfo);
+
         stopwatch.Stop();
 
         foreach (TestResult testResult in testResults)

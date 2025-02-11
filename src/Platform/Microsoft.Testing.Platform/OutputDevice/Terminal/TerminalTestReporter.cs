@@ -384,6 +384,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
        string displayName,
        TestOutcome outcome,
        TimeSpan duration,
+       string? informativeMessage,
        string? errorMessage,
        Exception? exception,
        string? expected,
@@ -401,6 +402,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
             displayName,
             outcome,
             duration,
+            informativeMessage,
             flatExceptions,
             expected,
             actual,
@@ -408,7 +410,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
             errorOutput);
     }
 
-    internal void TestCompleted(
+    private void TestCompleted(
         string assembly,
         string? targetFramework,
         string? architecture,
@@ -417,6 +419,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
         string displayName,
         TestOutcome outcome,
         TimeSpan duration,
+        string? informativeMessage,
         FlatException[] exceptions,
         string? expected,
         string? actual,
@@ -460,6 +463,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
                 displayName,
                 outcome,
                 duration,
+                informativeMessage,
                 exceptions,
                 expected,
                 actual,
@@ -474,7 +478,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
         return _shouldShowPassedTests.Value;
     }
 
-    internal /* for testing */ void RenderTestCompleted(
+    private void RenderTestCompleted(
         ITerminal terminal,
         string assembly,
         string? targetFramework,
@@ -482,6 +486,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
         string displayName,
         TestOutcome outcome,
         TimeSpan duration,
+        string? informativeMessage,
         FlatException[] flatExceptions,
         string? expected,
         string? actual,
@@ -528,6 +533,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
 
         terminal.AppendLine();
 
+        AppendIndentedLine(terminal, informativeMessage, SingleIndentation);
         FormatErrorMessage(terminal, flatExceptions, outcome, 0);
         FormatExpectedAndActual(terminal, expected, actual);
         FormatStackTrace(terminal, flatExceptions, 0);
