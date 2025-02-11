@@ -35,7 +35,10 @@
   </ItemGroup>
   <Target Name="GenerateTemplates" AfterTargets="PrepareForBuild">
     <PropertyGroup>
-      <_TemplateProperties>MSTestEngineVersion=$(MSTestEngineVersion);MSTestVersion=$(Version);MicrosoftTestingPlatformVersion=$(Version.Replace('$(VersionPrefix)', '$(TestingPlatformVersionPrefix)'));MicrosoftNETTestSdkVersion=$(MicrosoftNETTestSdkVersion);MicrosoftTestingExtensionsCodeCoverageVersion=$(MicrosoftTestingExtensionsCodeCoverageVersion);MicrosoftPlaywrightVersion=$(MicrosoftPlaywrightVersion);AspireHostingTestingVersion=$(AspireHostingTestingVersion);MicrosoftTestingExtensionsFakesVersion=$(MicrosoftTestingExtensionsFakesVersion)</_TemplateProperties>
+      <MSTestEnginePreReleaseLabel>alpha</MSTestEnginePreReleaseLabel>
+      <MSTestEnginePreReleaseLabel Condition="'$(ContinuousIntegrationBuild)' == 'true' and '$(OfficialBuild)' != 'true'">ci</MSTestEnginePreReleaseLabel>
+      <MSTestEnginePreReleaseLabel Condition="'$(ContinuousIntegrationBuild)' != 'true' and '$(OfficialBuild)' != 'true'">dev</MSTestEnginePreReleaseLabel>
+      <_TemplateProperties>MSTestEngineVersion=1.0.0-$(MSTestEnginePreReleaseLabel)$(_BuildNumberLabels);MSTestVersion=$(Version);MicrosoftTestingPlatformVersion=$(Version.Replace('$(VersionPrefix)', '$(TestingPlatformVersionPrefix)'));MicrosoftNETTestSdkVersion=$(MicrosoftNETTestSdkVersion);MicrosoftTestingExtensionsCodeCoverageVersion=$(MicrosoftTestingExtensionsCodeCoverageVersion);MicrosoftPlaywrightVersion=$(MicrosoftPlaywrightVersion);AspireHostingTestingVersion=$(AspireHostingTestingVersion);MicrosoftTestingExtensionsFakesVersion=$(MicrosoftTestingExtensionsFakesVersion)</_TemplateProperties>
     </PropertyGroup>
 
     <!--

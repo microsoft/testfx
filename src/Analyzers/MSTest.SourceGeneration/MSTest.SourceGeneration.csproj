@@ -12,6 +12,7 @@
     <RootNamespace>Microsoft.Testing.Framework.SourceGeneration</RootNamespace>
     <!-- Cancel default license (closed-source) and set license as packaged license file -->
     <PackageLicenseExpressionInternal></PackageLicenseExpressionInternal>
+    <PackageLicenseExpression></PackageLicenseExpression>
     <PackageLicenseFile>License.txt</PackageLicenseFile>
     <!--
       This is a early preview package, keep 1.0.0-alpha or similar suffix even in official builds.
@@ -19,6 +20,7 @@
     <VersionPrefix>1.0.0</VersionPrefix>
     <PreReleaseVersionLabel>alpha</PreReleaseVersionLabel>
     <SuppressFinalPackageVersion>true</SuppressFinalPackageVersion>
+    <IsPackable>true</IsPackable>
   </PropertyGroup>
 
   <PropertyGroup>

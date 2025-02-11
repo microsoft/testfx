@@ -52,7 +52,7 @@ public class UnitTest1
         var versionsPropsFileDoc = XDocument.Load(Path.Combine(RootFinder.Find(), "eng", "Versions.props"));
         MSTestVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "MSTest.TestFramework.");
         MicrosoftTestingPlatformVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "Microsoft.Testing.Platform.");
-        MSTestEngineVersion = ExtractVersionFromXmlFile(versionsPropsFileDoc, "MSTestEngineVersion");
+        MSTestEngineVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "MSTest.Engine");
     }
 
     protected static TFixture AssetFixture { get; private set; } = default!;
@@ -194,13 +194,5 @@ public class UnitTest1
 
         string packageFullName = Path.GetFileName(matches[0]);
         return packageFullName.Substring(packagePrefixName.Length, packageFullName.Length - packagePrefixName.Length - NuGetPackageExtensionName.Length);
-    }
-
-    private static string ExtractVersionFromXmlFile(XDocument versionPropsXmlDocument, string entryName)
-    {
-        XElement[] matches = versionPropsXmlDocument.Descendants(entryName).ToArray();
-        return matches.Length != 1
-            ? throw new InvalidOperationException($"Was expecting to find a single entry for '{entryName}' but found {matches.Length}.")
-            : matches[0].Value;
     }
 }
