@@ -1,0 +1,98 @@
+#nullable enable
+Microsoft.Testing.Framework.AssertFailedException
+Microsoft.Testing.Framework.AssertFailedException.AssertFailedException() -> void
+Microsoft.Testing.Framework.AssertFailedException.AssertFailedException(string! message) -> void
+Microsoft.Testing.Framework.AssertFailedException.AssertFailedException(string! message, System.Exception! ex) -> void
+Microsoft.Testing.Framework.Configurations.ConfigurationExtensions
+Microsoft.Testing.Framework.Configurations.IConfiguration
+Microsoft.Testing.Framework.Configurations.IConfiguration.this[string! key].get -> string?
+Microsoft.Testing.Framework.Configurations.TestFrameworkConfiguration
+Microsoft.Testing.Framework.Configurations.TestFrameworkConfiguration.MaxParallelTests.get -> int
+Microsoft.Testing.Framework.Configurations.TestFrameworkConfiguration.TestFrameworkConfiguration(int maxParallelTests = 2147483647) -> void
+Microsoft.Testing.Framework.DynamicDataNameProvider
+Microsoft.Testing.Framework.InternalUnsafeActionParameterizedTestNode<TData>
+Microsoft.Testing.Framework.InternalUnsafeActionParameterizedTestNode<TData>.Body.get -> System.Action<Microsoft.Testing.Framework.ITestExecutionContext!, TData>!
+Microsoft.Testing.Framework.InternalUnsafeActionParameterizedTestNode<TData>.Body.init -> void
+Microsoft.Testing.Framework.InternalUnsafeActionParameterizedTestNode<TData>.GetArguments.get -> System.Func<System.Collections.Generic.IEnumerable<TData>!>!
+Microsoft.Testing.Framework.InternalUnsafeActionParameterizedTestNode<TData>.GetArguments.init -> void
+Microsoft.Testing.Framework.InternalUnsafeActionParameterizedTestNode<TData>.InternalUnsafeActionParameterizedTestNode() -> void
+Microsoft.Testing.Framework.InternalUnsafeActionTaskParameterizedTestNode<TData>
+Microsoft.Testing.Framework.InternalUnsafeActionTaskParameterizedTestNode<TData>.Body.get -> System.Action<Microsoft.Testing.Framework.ITestExecutionContext!, TData>!
+Microsoft.Testing.Framework.InternalUnsafeActionTaskParameterizedTestNode<TData>.Body.init -> void
+Microsoft.Testing.Framework.InternalUnsafeActionTaskParameterizedTestNode<TData>.GetArguments.get -> System.Func<System.Threading.Tasks.Task<System.Collections.Generic.IEnumerable<TData>!>!>!
+Microsoft.Testing.Framework.InternalUnsafeActionTaskParameterizedTestNode<TData>.GetArguments.init -> void
+Microsoft.Testing.Framework.InternalUnsafeActionTaskParameterizedTestNode<TData>.InternalUnsafeActionTaskParameterizedTestNode() -> void
+Microsoft.Testing.Framework.InternalUnsafeActionTestNode
+Microsoft.Testing.Framework.InternalUnsafeActionTestNode.Body.get -> System.Action<Microsoft.Testing.Framework.ITestExecutionContext!>!
+Microsoft.Testing.Framework.InternalUnsafeActionTestNode.Body.init -> void
+Microsoft.Testing.Framework.InternalUnsafeActionTestNode.InternalUnsafeActionTestNode() -> void
+Microsoft.Testing.Framework.InternalUnsafeAsyncActionParameterizedTestNode<TData>
+Microsoft.Testing.Framework.InternalUnsafeAsyncActionParameterizedTestNode<TData>.Body.get -> System.Func<Microsoft.Testing.Framework.ITestExecutionContext!, TData, System.Threading.Tasks.Task!>!
+Microsoft.Testing.Framework.InternalUnsafeAsyncActionParameterizedTestNode<TData>.Body.init -> void
+Microsoft.Testing.Framework.InternalUnsafeAsyncActionParameterizedTestNode<TData>.GetArguments.get -> System.Func<System.Collections.Generic.IEnumerable<TData>!>!
+Microsoft.Testing.Framework.InternalUnsafeAsyncActionParameterizedTestNode<TData>.GetArguments.init -> void
+Microsoft.Testing.Framework.InternalUnsafeAsyncActionParameterizedTestNode<TData>.InternalUnsafeAsyncActionParameterizedTestNode() -> void
+Microsoft.Testing.Framework.InternalUnsafeAsyncActionTaskParameterizedTestNode<TData>
+Microsoft.Testing.Framework.InternalUnsafeAsyncActionTaskParameterizedTestNode<TData>.Body.get -> System.Func<Microsoft.Testing.Framework.ITestExecutionContext!, TData, System.Threading.Tasks.Task!>!
+Microsoft.Testing.Framework.InternalUnsafeAsyncActionTaskParameterizedTestNode<TData>.Body.init -> void
+Microsoft.Testing.Framework.InternalUnsafeAsyncActionTaskParameterizedTestNode<TData>.GetArguments.get -> System.Func<System.Threading.Tasks.Task<System.Collections.Generic.IEnumerable<TData>!>!>!
+Microsoft.Testing.Framework.InternalUnsafeAsyncActionTaskParameterizedTestNode<TData>.GetArguments.init -> void
+Microsoft.Testing.Framework.InternalUnsafeAsyncActionTaskParameterizedTestNode<TData>.InternalUnsafeAsyncActionTaskParameterizedTestNode() -> void
+Microsoft.Testing.Framework.InternalUnsafeAsyncActionTestNode
+Microsoft.Testing.Framework.InternalUnsafeAsyncActionTestNode.Body.get -> System.Func<Microsoft.Testing.Framework.ITestExecutionContext!, System.Threading.Tasks.Task!>!
+Microsoft.Testing.Framework.InternalUnsafeAsyncActionTestNode.Body.init -> void
+Microsoft.Testing.Framework.InternalUnsafeAsyncActionTestNode.InternalUnsafeAsyncActionTestNode() -> void
+Microsoft.Testing.Framework.InternalUnsafeTestArgumentsEntry<TArguments>
+Microsoft.Testing.Framework.InternalUnsafeTestArgumentsEntry<TArguments>.Arguments.get -> TArguments
+Microsoft.Testing.Framework.InternalUnsafeTestArgumentsEntry<TArguments>.DisplayNameFragment.get -> string?
+Microsoft.Testing.Framework.InternalUnsafeTestArgumentsEntry<TArguments>.InternalUnsafeTestArgumentsEntry(TArguments arguments, string! uidFragment, string? displayNameFragment = null) -> void
+Microsoft.Testing.Framework.InternalUnsafeTestArgumentsEntry<TArguments>.UidFragment.get -> string!
+Microsoft.Testing.Framework.ITestExecutionContext
+Microsoft.Testing.Framework.ITestExecutionContext.AddTestAttachmentAsync(System.IO.FileInfo! file, string! displayName, string? description = null) -> System.Threading.Tasks.Task!
+Microsoft.Testing.Framework.ITestExecutionContext.CancellationToken.get -> System.Threading.CancellationToken
+Microsoft.Testing.Framework.ITestExecutionContext.CancelTestExecution() -> void
+Microsoft.Testing.Framework.ITestExecutionContext.CancelTestExecution(int millisecondsDelay) -> void
+Microsoft.Testing.Framework.ITestExecutionContext.CancelTestExecution(System.TimeSpan delay) -> void
+Microsoft.Testing.Framework.ITestExecutionContext.Configuration.get -> Microsoft.Testing.Framework.Configurations.IConfiguration!
+Microsoft.Testing.Framework.ITestExecutionContext.ReportException(System.Exception! exception, System.Threading.CancellationToken? timeoutCancellationToken = null) -> void
+Microsoft.Testing.Framework.ITestExecutionContext.TestInfo.get -> Microsoft.Testing.Framework.ITestInfo!
+Microsoft.Testing.Framework.ITestInfo
+Microsoft.Testing.Framework.ITestInfo.DisplayName.get -> string!
+Microsoft.Testing.Framework.ITestInfo.Properties.get -> Microsoft.Testing.Platform.Extensions.Messages.IProperty![]!
+Microsoft.Testing.Framework.ITestInfo.StableUid.get -> Microsoft.Testing.Framework.TestNodeUid!
+Microsoft.Testing.Framework.ITestNodesBuilder
+Microsoft.Testing.Framework.ITestNodesBuilder.BuildAsync(Microsoft.Testing.Framework.ITestSessionContext! testSessionContext) -> System.Threading.Tasks.Task<Microsoft.Testing.Framework.TestNode![]!>!
+Microsoft.Testing.Framework.ITestSessionContext
+Microsoft.Testing.Framework.ITestSessionContext.AddTestAttachmentAsync(System.IO.FileInfo! file, string! displayName, string? description = null) -> System.Threading.Tasks.Task!
+Microsoft.Testing.Framework.ITestSessionContext.CancellationToken.get -> System.Threading.CancellationToken
+Microsoft.Testing.Framework.ITestSessionContext.Configuration.get -> Microsoft.Testing.Framework.Configurations.IConfiguration!
+Microsoft.Testing.Framework.TestApplicationBuilderExtensions
+Microsoft.Testing.Framework.TestNode
+Microsoft.Testing.Framework.TestNode.DisplayName.get -> string!
+Microsoft.Testing.Framework.TestNode.DisplayName.init -> void
+Microsoft.Testing.Framework.TestNode.OverriddenEdgeName.get -> string?
+Microsoft.Testing.Framework.TestNode.OverriddenEdgeName.init -> void
+Microsoft.Testing.Framework.TestNode.Properties.get -> Microsoft.Testing.Platform.Extensions.Messages.IProperty![]!
+Microsoft.Testing.Framework.TestNode.Properties.init -> void
+Microsoft.Testing.Framework.TestNode.StableUid.get -> Microsoft.Testing.Framework.TestNodeUid!
+Microsoft.Testing.Framework.TestNode.StableUid.init -> void
+Microsoft.Testing.Framework.TestNode.TestNode() -> void
+Microsoft.Testing.Framework.TestNode.Tests.get -> Microsoft.Testing.Framework.TestNode![]!
+Microsoft.Testing.Framework.TestNode.Tests.init -> void
+Microsoft.Testing.Framework.TestNodeUid
+Microsoft.Testing.Framework.TestNodeUid.<Clone>$() -> Microsoft.Testing.Framework.TestNodeUid!
+Microsoft.Testing.Framework.TestNodeUid.Deconstruct(out string! Value) -> void
+Microsoft.Testing.Framework.TestNodeUid.Equals(Microsoft.Testing.Framework.TestNodeUid? other) -> bool
+Microsoft.Testing.Framework.TestNodeUid.TestNodeUid(string! Value) -> void
+Microsoft.Testing.Framework.TestNodeUid.Value.get -> string!
+Microsoft.Testing.Framework.TestNodeUid.Value.init -> void
+override Microsoft.Testing.Framework.TestNodeUid.Equals(object? obj) -> bool
+override Microsoft.Testing.Framework.TestNodeUid.GetHashCode() -> int
+override Microsoft.Testing.Framework.TestNodeUid.ToString() -> string!
+static Microsoft.Testing.Framework.Configurations.ConfigurationExtensions.GetTestResultDirectory(this Microsoft.Testing.Framework.Configurations.IConfiguration! configuration) -> string!
+static Microsoft.Testing.Framework.DynamicDataNameProvider.GetUidFragment(string![]! parameterNames, object?[]! data, int index) -> string!
+static Microsoft.Testing.Framework.TestApplicationBuilderExtensions.AddTestFramework(this Microsoft.Testing.Platform.Builder.ITestApplicationBuilder! testApplicationBuilder, Microsoft.Testing.Framework.Configurations.TestFrameworkConfiguration? testFrameworkConfiguration = null, params Microsoft.Testing.Framework.ITestNodesBuilder![]! testNodesBuilder) -> void
+static Microsoft.Testing.Framework.TestApplicationBuilderExtensions.AddTestFramework(this Microsoft.Testing.Platform.Builder.ITestApplicationBuilder! testApplicationBuilder, params Microsoft.Testing.Framework.ITestNodesBuilder![]! testNodesBuilder) -> void
+static Microsoft.Testing.Framework.TestNodeUid.implicit operator Microsoft.Testing.Framework.TestNodeUid!(string! value) -> Microsoft.Testing.Framework.TestNodeUid!
+static Microsoft.Testing.Framework.TestNodeUid.operator !=(Microsoft.Testing.Framework.TestNodeUid? left, Microsoft.Testing.Framework.TestNodeUid? right) -> bool
+static Microsoft.Testing.Framework.TestNodeUid.operator ==(Microsoft.Testing.Framework.TestNodeUid? left, Microsoft.Testing.Framework.TestNodeUid? right) -> bool
