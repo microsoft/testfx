@@ -205,20 +205,11 @@ public class TestClassInfoTests : TestContainer
 
         _testClassInfo.ClassInitializeMethod = typeof(DummyTestClass).GetMethod("ClassInitializeMethod");
 
-        VerifyThrows<NullReferenceException>(() => GetResultOrRunClassInitialize(null));
-    }
-
-    public void RunClassInitializeShouldNotExecuteClassInitializeIfItHasAlreadyExecuted()
-    {
-        int classInitCallCount = 0;
-        DummyTestClass.ClassInitializeMethodBody = tc => classInitCallCount++;
-
-        _testClassInfo.IsClassInitializeExecuted = true;
-        _testClassInfo.ClassInitializeMethod = typeof(DummyTestClass).GetMethod("ClassInitializeMethod");
-
-        GetResultOrRunClassInitialize();
-
-        Verify(classInitCallCount == 0);
+        TestResult result = GetResultOrRunClassInitialize(null);
+        var exception = result.TestFailureException as TestFailedException;
+        Verify(exception is not null);
+        Verify(result.Outcome == UTF.UnitTestOutcome.Failed);
+        Verify(exception.Message == "TestContext cannot be Null.");
     }
 
     public void RunClassInitializeShouldExecuteClassInitialize()
@@ -228,8 +219,12 @@ public class TestClassInfoTests : TestContainer
         _testClassInfo.ClassInitializeMethod = typeof(DummyTestClass).GetMethod("ClassInitializeMethod");
 
         GetResultOrRunClassInitialize();
-
         Verify(classInitCallCount == 1);
+        Verify(_testClassInfo.IsClassInitializeExecuted);
+
+        GetResultOrRunClassInitialize();
+        Verify(classInitCallCount == 1);
+        Verify(_testClassInfo.IsClassInitializeExecuted);
     }
 
     public void RunClassInitializeShouldSetClassInitializeExecutedFlag()
@@ -272,7 +267,8 @@ public class TestClassInfoTests : TestContainer
         DummyTestClass.ClassInitializeMethodBody = tc => UTF.Assert.Inconclusive("Test Inconclusive");
         _testClassInfo.ClassInitializeMethod = typeof(DummyTestClass).GetMethod("ClassInitializeMethod");
 
-        VerifyThrows(GetResultOrRunClassInitialize);
+        var exception = GetResultOrRunClassInitialize().TestFailureException as TestFailedException;
+        Assert.IsNotNull(exception);
 
         Verify(_testClassInfo.ClassInitializationException is not null);
     }
@@ -337,7 +333,8 @@ public class TestClassInfoTests : TestContainer
 
         _testClassInfo.BaseClassInitMethods.Add(typeof(DummyBaseTestClass).GetMethod("InitBaseClassMethod"));
 
-        TestFailedException exception = VerifyThrows<TestFailedException>(GetResultOrRunClassInitialize);
+        var exception = GetResultOrRunClassInitialize().TestFailureException as TestFailedException;
+        Assert.IsNotNull(exception);
 
         Verify(exception.Outcome == UTF.UnitTestOutcome.Failed);
         Verify(
@@ -355,7 +352,8 @@ public class TestClassInfoTests : TestContainer
         DummyTestClass.ClassInitializeMethodBody = tc => UTF.Assert.Fail("Test failure");
         _testClassInfo.ClassInitializeMethod = typeof(DummyTestClass).GetMethod("ClassInitializeMethod");
 
-        TestFailedException exception = VerifyThrows<TestFailedException>(GetResultOrRunClassInitialize);
+        var exception = GetResultOrRunClassInitialize().TestFailureException as TestFailedException;
+        Assert.IsNotNull(exception);
 
         Verify(exception.Outcome == UTF.UnitTestOutcome.Failed);
         Verify(
@@ -372,7 +370,8 @@ public class TestClassInfoTests : TestContainer
         DummyTestClass.ClassInitializeMethodBody = tc => UTF.Assert.Inconclusive("Test Inconclusive");
         _testClassInfo.ClassInitializeMethod = typeof(DummyTestClass).GetMethod("ClassInitializeMethod");
 
-        TestFailedException exception = VerifyThrows<TestFailedException>(GetResultOrRunClassInitialize);
+        var exception = GetResultOrRunClassInitialize().TestFailureException as TestFailedException;
+        Assert.IsNotNull(exception);
 
         Verify(exception.Outcome == UTF.UnitTestOutcome.Inconclusive);
         Verify(
@@ -389,7 +388,8 @@ public class TestClassInfoTests : TestContainer
         DummyTestClass.ClassInitializeMethodBody = tc => throw new ArgumentException("Argument exception");
         _testClassInfo.ClassInitializeMethod = typeof(DummyTestClass).GetMethod("ClassInitializeMethod");
 
-        TestFailedException exception = VerifyThrows<TestFailedException>(GetResultOrRunClassInitialize);
+        var exception = GetResultOrRunClassInitialize().TestFailureException as TestFailedException;
+        Assert.IsNotNull(exception);
 
         Verify(exception.Outcome == UTF.UnitTestOutcome.Failed);
         Verify(
@@ -406,7 +406,8 @@ public class TestClassInfoTests : TestContainer
         _testClassInfo.ClassInitializeMethod = typeof(DummyTestClass).GetMethod("ClassInitializeMethod");
         _testClassInfo.ClassInitializationException = new TestFailedException(UTF.UnitTestOutcome.Failed, "Cached Test failure");
 
-        TestFailedException exception = VerifyThrows<TestFailedException>(GetResultOrRunClassInitialize);
+        var exception = GetResultOrRunClassInitialize().TestFailureException as TestFailedException;
+        Assert.IsNotNull(exception);
         Verify(exception.Outcome == UTF.UnitTestOutcome.Failed);
         Verify(exception.Message == "Cached Test failure");
     }
@@ -428,7 +429,8 @@ public class TestClassInfoTests : TestContainer
             FailingStaticHelper.DoWork();
         _testClassInfo.ClassInitializeMethod = typeof(DummyTestClass).GetMethod("ClassInitializeMethod");
 
-        TestFailedException exception = VerifyThrows<TestFailedException>(GetResultOrRunClassInitialize);
+        var exception = GetResultOrRunClassInitialize().TestFailureException as TestFailedException;
+        Assert.IsNotNull(exception);
 
         Verify(exception.Outcome == UTF.UnitTestOutcome.Failed);
         Verify(
@@ -440,10 +442,10 @@ public class TestClassInfoTests : TestContainer
         Verify(exception.InnerException.GetType() == typeof(InvalidOperationException));
     }
 
-    private void GetResultOrRunClassInitialize()
+    private TestResult GetResultOrRunClassInitialize()
         => GetResultOrRunClassInitialize(_testContext);
 
-    private void GetResultOrRunClassInitialize(TestContext testContext)
+    private TestResult GetResultOrRunClassInitialize(TestContext testContext)
         => _testClassInfo.GetResultOrRunClassInitialize(new TestTestCoxtextImpl(testContext), string.Empty, string.Empty, string.Empty, string.Empty);
     #endregion
 
