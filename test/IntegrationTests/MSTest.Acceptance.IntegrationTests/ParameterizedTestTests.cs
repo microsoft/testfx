@@ -69,7 +69,8 @@ public class ParameterizedTestTests : AcceptanceTestBase<ParameterizedTestTests.
             Display name for fourth row - TestDataRowParameterIsTupleUnfolded
             """);
 
-        testHostResult = await testHost.ExecuteAsync("--filter ClassName=TestDataRowTests");
+        // progress causes flakiness. See https://github.com/microsoft/testfx/pull/4930#issuecomment-2648506466
+        testHostResult = await testHost.ExecuteAsync("--filter ClassName=TestDataRowTests --no-progress");
 
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 9, skipped: 15);
