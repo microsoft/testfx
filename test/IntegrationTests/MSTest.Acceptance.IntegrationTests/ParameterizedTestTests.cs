@@ -49,7 +49,7 @@ public class ParameterizedTestTests : AcceptanceTestBase<ParameterizedTestTests.
     {
         var testHost = TestHost.LocateFrom(AssetFixture.GetAssetPath(DynamicDataAssetName), DynamicDataAssetName, currentTfm);
 
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--filter ClassName=TestDataRowTests --list-tests");
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--settings AppDomainEnabled.runsettings --filter ClassName=TestDataRowTests --list-tests");
         testHostResult.AssertOutputContains("""
             The following Tests are available:
             TestDataRowSingleParameterFolded
@@ -73,6 +73,11 @@ public class ParameterizedTestTests : AcceptanceTestBase<ParameterizedTestTests.
 
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 9, skipped: 15);
+        // If this assert fails with difference showing only missing double quotes, then we are using the wrong value
+        // of DynamicDataAttribute.TestIdGenerationStrategy.
+        // If the failure is .NET Framework only, then it's very likely to be linked to AppDomain.
+        // Each AppDomain has its own version of static state. If DynamicDataAttribute.TestIdGenerationStrategy is set
+        // from one AppDomain, but is read from another, it's not going to be correct.
         testHostResult.AssertOutputMatchesRegex("""
             skipped TestDataRowSingleParameterFolded \("TestDataRowSingleParameterFolded - Ignoring"\) \(\d+ms\)
               Ignore reason for second row - TestDataRowSingleParameterFolded
@@ -173,7 +178,23 @@ public class ParameterizedTestTests : AcceptanceTestBase<ParameterizedTestTests.
     <PackageReference Include="MSTest.TestFramework" Version="$MSTestVersion$" />
   </ItemGroup>
 
+    <ItemGroup>
+    <None Update="AppDomainEnabled.runsettings">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>
+
+#file AppDomainEnabled.runsettings
+<?xml version="1.0" encoding="utf-8" ?>
+<RunSettings>
+    <MSTest>
+        <!-- Currently, the default is already false, but we want to ensure the
+             test runs with AppDomain enabled even if we changed the default -->
+        <DisableAppDomain>false</DisableAppDomain>
+    </MSTest>
+</RunSettings>
 
 #file UnitTest1.cs
 
