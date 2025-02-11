@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>$(TargetFrameworks);net462</TargetFrameworks>
+    <OutputType>Exe</OutputType>
+    <NoMoq>true</NoMoq>
+    <NoFluentAssertions>true</NoFluentAssertions>
+    <UseVSTestRunner>false</UseVSTestRunner>
+    <EnableMSTestRunner>true</EnableMSTestRunner>
+    <RootNamespace>Microsoft.Testing.Framework.UnitTests</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Update="*.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <!-- Create an alias to not collide with the Microsoft.Testing.Platform platform definition -->
+  <Target Name="ChangeAliasesOfStrongNameAssemblies" BeforeTargets="FindReferenceAssembliesForReferences;ResolveReferences">
+    <ItemGroup>
+      <ReferencePath Condition="'%(FileName)' == 'Microsoft.Testing.Platform.MSBuild'">
+        <Aliases>MicrosoftTestingPlatformMSBuild</Aliases>
+      </ReferencePath>
+    </ItemGroup>
+  </Target>
+
+  <ItemGroup>
+    <ProjectReference Include="$(RepoRoot)src\Adapter\MSTest.Engine\MSTest.Engine.csproj" />
+    <ProjectReference Include="$(RepoRoot)src\Analyzers\MSTest.SourceGeneration\MSTest.SourceGeneration.csproj">
+      <OutputItemType>Analyzer</OutputItemType>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+  </ItemGroup>
+
+</Project>

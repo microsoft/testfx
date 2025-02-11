@@ -1,0 +1,16 @@
+﻿{
+  "testingplatform": {
+    "telemetry": {
+      "isDevelopmentRepository": true
+    },
+    "exitProcessOnUnhandledException": true,
+    "testHostControllersManager": {
+      "singleConnectionNamedPipeServer": {
+        "waitConnectionTimeoutSeconds": 90
+      },
+      "namedPipeClient": {
+        "connectTimeoutSeconds": 90
+      }
+    }
+  }
+}

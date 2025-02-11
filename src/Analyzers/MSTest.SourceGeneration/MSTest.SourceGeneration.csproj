@@ -1,0 +1,54 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- C# Source generators have to target netstandard -->
+    <TargetFrameworks>netstandard2.0</TargetFrameworks>
+    <!-- Generates a package at build -->
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <!-- Do not include the generator as a lib dependency -->
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <NoWarn>NU5128</NoWarn>
+    <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
+    <RootNamespace>Microsoft.Testing.Framework.SourceGeneration</RootNamespace>
+    <!-- Cancel default license (closed-source) and set license as packaged license file -->
+    <PackageLicenseExpressionInternal></PackageLicenseExpressionInternal>
+    <PackageLicenseFile>License.txt</PackageLicenseFile>
+    <!--
+      This is a early preview package, keep 1.0.0-alpha or similar suffix even in official builds.
+    -->
+    <VersionPrefix>1.0.0</VersionPrefix>
+    <PreReleaseVersionLabel>alpha</PreReleaseVersionLabel>
+    <SuppressFinalPackageVersion>true</SuppressFinalPackageVersion>
+  </PropertyGroup>
+
+  <!-- NuGet properties -->
+  <PropertyGroup>
+    <PackageDescription>
+      <![CDATA[Microsoft.Testing is a set of platform, framework and protocol intended to make it possible to run any test on any target or device.
+
+This package provides the C# source generators for MSTest test framework.]]>
+    </PackageDescription>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <AdditionalFiles Include="BannedSymbols.txt" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="MSTest.SourceGeneration.UnitTests" Key="$(VsPublicKey)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Roslyn C# - so that we can implement the code generator -->
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" PrivateAssets="all" />
+    <!-- Analyzers to help write analyzers/generators -->
+    <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Package the generator in the analyzer directory of the nuget package -->
+    <None Include="$(OutputPath)\netstandard2.0\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+    <Content Include="$(RepoRoot)/LICENSE.PLATFORMTOOLS.txt" Pack="true" PackagePath="License.txt" />
+  </ItemGroup>
+
+</Project>

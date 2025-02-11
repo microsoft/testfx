@@ -1,0 +1,8 @@
+﻿{
+  "testingplatform": {
+    "telemetry": {
+      "isDevelopmentRepository": true
+    },
+    "exitProcessOnUnhandledException": true
+  }
+}
