@@ -210,7 +210,7 @@ public class TempDirectory : IDisposable
             we end up with a -dev or -ci version which will lose resolution over -preview dependency of code coverage. Because we want to
             ensure we are testing with locally built version, we force adding the platform dependency.
         -->
-        <PackageReference Include="Microsoft.Testing.Platform" Version="{AppVersion.DefaultSemVer}" Condition="'$(EnableMicrosoftTestingPlatform)' == 'true'" />
+        <PackageReference Include="Microsoft.Testing.Platform" Version="{AppVersion.DefaultSemVer}" Condition="'$(UsingMSTestSdk)' != 'true' AND '$(EnableMicrosoftTestingPlatform)' == 'true'" />
     </ItemGroup>
 </Project>
 """);
