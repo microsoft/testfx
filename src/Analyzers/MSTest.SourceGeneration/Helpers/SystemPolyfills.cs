@@ -2,14 +2,17 @@
 // Licensed under dual-license. See LICENSE.PLATFORMTOOLS.txt file in the project root for full license information.
 
 #if !NETCOREAPP
+#pragma warning disable SA1403 // File may only contain a single namespace
+#pragma warning disable SA1623 // Property summary documentation should match accessors
+#pragma warning disable SA1642 // Constructor summary documentation should begin with standard text
+#pragma warning disable SA1502 // Element should not be on a single line
 
 using System.ComponentModel;
 
 namespace System.Runtime.CompilerServices
 {
-
     [EditorBrowsable(EditorBrowsableState.Never)]
-    internal class IsExternalInit { }
+    internal sealed class IsExternalInit { }
 }
 
 // This was copied from https://github.com/dotnet/coreclr/blob/60f1e6265bd1039f023a82e0643b524d6aaf7845/src/System.Private.CoreLib/shared/System/Diagnostics/CodeAnalysis/NullableAttributes.cs
@@ -155,10 +158,7 @@ namespace System.Runtime.CompilerServices
         /// Creates a new instance of the <see cref="CompilerFeatureRequiredAttribute"/> type.
         /// </summary>
         /// <param name="featureName">The name of the feature to indicate.</param>
-        public CompilerFeatureRequiredAttribute(string featureName)
-        {
-            FeatureName = featureName;
-        }
+        public CompilerFeatureRequiredAttribute(string featureName) => FeatureName = featureName;
 
         /// <summary>
         /// The name of the compiler feature.

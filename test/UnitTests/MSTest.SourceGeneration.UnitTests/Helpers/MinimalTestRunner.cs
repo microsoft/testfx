@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Reflection;
-
 /// <summary>
 /// Discovers and runs tests using the MSTest attributes, so we can run tests even when we completely break or delete the real MSTest engine.
 /// </summary>
