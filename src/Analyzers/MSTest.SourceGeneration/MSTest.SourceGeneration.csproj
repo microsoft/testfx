@@ -21,6 +21,19 @@
     <SuppressFinalPackageVersion>true</SuppressFinalPackageVersion>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <EnableSingleFileAnalyzer Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net7.0'))">true</EnableSingleFileAnalyzer>
+    <TrimmerSingleWarn>false</TrimmerSingleWarn>
+    <!--
+      - Use IsAotCompatible and not <EnableAotAnalyzer>true</EnableAotAnalyzer>
+      - Use IsTrimmable and not <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
+      There is no property for single file so we can use the analyzer directly. Check this file for more details:
+      https://github.com/dotnet/sdk/blob/b3288690d4ef92019370562b807092f62b4059e7/src/Tasks/Microsoft.NET.Build.Tasks/ProcessFrameworkReferences.cs#L436-L473
+    -->
+    <IsTrimmable Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net7.0'))">true</IsTrimmable>
+    <IsAotCompatible Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net7.0'))">true</IsAotCompatible>
+  </PropertyGroup>
+
   <!-- NuGet properties -->
   <PropertyGroup>
     <PackageDescription>
