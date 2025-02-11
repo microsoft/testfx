@@ -87,7 +87,21 @@ public class OutputTests : CLITestBase
         // It is not deterministic where the class initialize and class cleanup will run, so we look at all tests, to make sure it is includes somewhere.
         string output = string.Join(Environment.NewLine, testResults.SelectMany(r => r.Messages).Where(messageFilter).Select(m => m.Text));
         output.Should().NotBeNull();
-        output.Should().Contain("ClassInitialize");
-        output.Should().Contain("ClassCleanup");
+        var failureMessageBuilder = new StringBuilder();
+        foreach (TestResult testResult in testResults)
+        {
+            failureMessageBuilder.AppendLine($"TestResult: {testResult.DisplayName}");
+            foreach (TestResultMessage message in testResult.Messages)
+            {
+                failureMessageBuilder.AppendLine($"  {message.Category}:");
+                failureMessageBuilder.AppendLine($"    {message.Text}:");
+            }
+
+            failureMessageBuilder.AppendLine();
+        }
+
+        string becauseMessage = failureMessageBuilder.ToString();
+        output.Should().Contain("ClassInitialize", because: becauseMessage);
+        output.Should().Contain("ClassCleanup", because: becauseMessage);
     }
 }
