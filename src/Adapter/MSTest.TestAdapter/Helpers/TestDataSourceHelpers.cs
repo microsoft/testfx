@@ -1,10 +1,38 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 
 internal static class TestDataSourceHelpers
 {
+    public static bool TryHandleITestDataRow(
+        object?[] d,
+        ParameterInfo[] testMethodParameters,
+        out object?[] data,
+        out string? ignoreMessageFromTestDataRow,
+        out string? displayNameFromTestDataRow)
+    {
+        if (d.Length == 1 && d[0] is ITestDataRow testDataRow)
+        {
+            object? dataFromTestDataRow = testDataRow.Value;
+            ignoreMessageFromTestDataRow = testDataRow.IgnoreMessage;
+            displayNameFromTestDataRow = testDataRow.DisplayName;
+
+            data = TryHandleTupleDataSource(dataFromTestDataRow, testMethodParameters, out object?[] tupleExpandedToArray)
+                ? tupleExpandedToArray
+                : [dataFromTestDataRow];
+
+            return true;
+        }
+
+        data = d;
+        ignoreMessageFromTestDataRow = null;
+        displayNameFromTestDataRow = null;
+        return false;
+    }
+
     public static bool TryHandleTupleDataSource(object? data, ParameterInfo[] testMethodParameters, out object?[] array)
     {
         if (testMethodParameters.Length == 1 &&

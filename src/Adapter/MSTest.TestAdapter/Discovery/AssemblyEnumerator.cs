@@ -440,16 +440,9 @@ internal class AssemblyEnumerator : MarshalByRefObject
         foreach (object?[] dataOrTestDataRow in data)
         {
             object?[] d = dataOrTestDataRow;
-            string? displayNameFromTestDataRow = null;
-            if (d?.Length == 1 && d[0] is ITestDataRow testDataRow)
+            if (TestDataSourceHelpers.TryHandleITestDataRow(d, methodInfo.GetParameters(), out d, out string? ignoreMessageFromTestDataRow, out string? displayNameFromTestDataRow))
             {
-                object? dataFromTestDataRow = testDataRow.Value;
-                testDataSourceIgnoreMessage = testDataRow.IgnoreMessage ?? testDataSourceIgnoreMessage;
-                displayNameFromTestDataRow = testDataRow.DisplayName;
-
-                d = TestDataSourceHelpers.TryHandleTupleDataSource(dataFromTestDataRow, methodInfo.GetParameters(), out object?[] tupleExpandedToArray)
-                    ? tupleExpandedToArray
-                    : [dataFromTestDataRow];
+                testDataSourceIgnoreMessage = ignoreMessageFromTestDataRow ?? testDataSourceIgnoreMessage;
             }
 
             UnitTestElement discoveredTest = test.Clone();

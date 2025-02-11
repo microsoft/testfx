@@ -367,17 +367,12 @@ internal sealed class TestMethodRunner
             ? _test.Name
             : _test.DisplayName;
 
-        string? ignoreFromTestDataRow = null;
         string? displayNameFromTestDataRow = null;
-        if (data?.Length == 1 && data[0] is ITestDataRow testDataRow)
+        string? ignoreFromTestDataRow = null;
+        if (data is not null &&
+            TestDataSourceHelpers.TryHandleITestDataRow(data, _testMethodInfo.ParameterTypes, out data, out ignoreFromTestDataRow, out displayNameFromTestDataRow))
         {
-            object? dataFromTestDataRow = testDataRow.Value;
-            ignoreFromTestDataRow = testDataRow.IgnoreMessage;
-            displayNameFromTestDataRow = testDataRow.DisplayName;
-
-            data = TestDataSourceHelpers.TryHandleTupleDataSource(dataFromTestDataRow, _testMethodInfo.ParameterTypes, out object?[] tupleExpandedToArray)
-                ? tupleExpandedToArray
-                : [dataFromTestDataRow];
+            // Handled already.
         }
         else if (data?.Length == 1 && TestDataSourceHelpers.TryHandleTupleDataSource(data[0], _testMethodInfo.ParameterTypes, out object?[] tupleExpandedToArray))
         {
