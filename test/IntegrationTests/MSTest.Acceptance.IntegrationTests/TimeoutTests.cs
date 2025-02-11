@@ -598,6 +598,13 @@ public class TimeoutTests : AcceptanceTestBase<TimeoutTests.TestAssetFixture>
     <OutputType>Exe</OutputType>
     <Nullable>enable</Nullable>
     <LangVersion>preview</LangVersion>
+
+    <!--
+        This property is not required by users and is only set to simplify our testing infrastructure. When testing out in local or ci,
+        we end up with a -dev or -ci version which will lose resolution over -preview dependency of code coverage. Because we want to
+        ensure we are testing with locally built version, we force adding the platform dependency.
+    -->
+    <EnableMicrosoftTestingPlatform>true</EnableMicrosoftTestingPlatform>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="MSTest" Version="$MSTestVersion$" />
@@ -906,6 +913,13 @@ public class TestClass : TestClassBase
     <OutputType>Exe</OutputType>
     <Nullable>enable</Nullable>
     <LangVersion>preview</LangVersion>
+
+    <!--
+        This property is not required by users and is only set to simplify our testing infrastructure. When testing out in local or ci,
+        we end up with a -dev or -ci version which will lose resolution over -preview dependency of code coverage. Because we want to
+        ensure we are testing with locally built version, we force adding the platform dependency.
+    -->
+    <EnableMicrosoftTestingPlatform>true</EnableMicrosoftTestingPlatform>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="MSTest" Version="$MSTestVersion$" />

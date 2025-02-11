@@ -77,6 +77,13 @@ public sealed class TestContextTests : AcceptanceTestBase<TestContextTests.TestA
     <OutputType>Exe</OutputType>
     <EnableMSTestRunner>true</EnableMSTestRunner>
     <TargetFrameworks>$TargetFrameworks$</TargetFrameworks>
+
+    <!--
+        This property is not required by users and is only set to simplify our testing infrastructure. When testing out in local or ci,
+        we end up with a -dev or -ci version which will lose resolution over -preview dependency of code coverage. Because we want to
+        ensure we are testing with locally built version, we force adding the platform dependency.
+    -->
+    <EnableMicrosoftTestingPlatform>true</EnableMicrosoftTestingPlatform>
   </PropertyGroup>
 
   <ItemGroup>
