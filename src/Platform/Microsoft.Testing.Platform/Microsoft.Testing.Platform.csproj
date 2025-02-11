@@ -1,21 +1,8 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFrameworks>$(MicrosoftTestingTargetFrameworks);netstandard2.0</TargetFrameworks>
   </PropertyGroup>
-
-  <!-- Insert the PlatformVersion.cs -->
-  <PropertyGroup>
-    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
-  </PropertyGroup>
-  <ItemGroup>
-    <Compile Include="**/*.cs" Exclude="**/*.user; **/*.*proj; **/*.sln; **/*.vssscc" />
-  </ItemGroup>
-  <Target Name="InsertPlatformVersion" BeforeTargets="PrepareForBuild">
-    <ItemGroup>
-      <Compile Include="$(Compile);$(IntermediateOutputPath)/PlatformVersion.cs" />
-    </ItemGroup>
-  </Target>
 
   <ItemGroup>
     <AssemblyMetadata Include="Microsoft.Testing.Platform.Application.BuildTimeUTC" Value="$([System.DateTime]::UtcNow.ToString('yyyy/MM/dd'))" />
@@ -102,6 +89,10 @@ This package provides the core platform and the .NET implementation of the proto
     <GenerateFileFromTemplate TemplateFile="%(_TemplateCsproj.Identity)" OutputPath="%(_TemplateCsproj.Destination)" Properties="$(_TemplateProperties)">
       <Output TaskParameter="ResolvedOutputPath" ItemName="FileWrites" />
     </GenerateFileFromTemplate>
+
+    <ItemGroup>
+      <Compile Include="$(IntermediateOutputPath)/PlatformVersion.cs" />
+    </ItemGroup>
   </Target>
 
   <!-- NuGet package layout -->
