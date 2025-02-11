@@ -106,19 +106,6 @@
     </None>
   </ItemGroup>
 
-  <!-- Insert the MSTestVersion.cs -->
-  <PropertyGroup>
-    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
-  </PropertyGroup>
-  <ItemGroup>
-    <Compile Include="**/*.cs" Exclude="**/*.user; **/*.*proj; **/*.sln; **/*.vssscc" />
-  </ItemGroup>
-  <Target Name="InsertMSTestVersion" BeforeTargets="PrepareForBuild">
-    <ItemGroup>
-      <Compile Include="$(Compile);$(IntermediateOutputPath)/MSTestVersion.cs" />
-    </ItemGroup>
-  </Target>
-
   <!-- Version templating -->
   <ItemGroup>
     <PackageReference Include="Microsoft.DotNet.Build.Tasks.Templating" Version="$(MicrosoftDotNetBuildTasksTemplatingPackageVersion)" AllowExplicitReference="true" PrivateAssets="All" IsImplicitlyDefined="true" />
@@ -140,6 +127,9 @@
     <GenerateFileFromTemplate TemplateFile="%(_TemplateCsproj.Identity)" OutputPath="%(_TemplateCsproj.Destination)" Properties="$(_TemplateProperties)">
       <Output TaskParameter="ResolvedOutputPath" ItemName="FileWrites" />
     </GenerateFileFromTemplate>
+    <ItemGroup>
+      <Compile Include="$(IntermediateOutputPath)/MSTestVersion.cs" />
+    </ItemGroup>
   </Target>
 
   <ItemGroup>
