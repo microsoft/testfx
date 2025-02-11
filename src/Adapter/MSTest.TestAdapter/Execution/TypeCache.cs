@@ -103,7 +103,7 @@ internal sealed class TypeCache : MarshalByRefObject
     /// Get the test method info corresponding to the parameter test Element.
     /// </summary>
     /// <returns> The <see cref="TestMethodInfo"/>. </returns>
-    public TestMethodInfo? GetTestMethodInfoForDiscovery(TestMethod testMethod)
+    public DiscoveryTestMethodInfo? GetTestMethodInfoForDiscovery(TestMethod testMethod)
     {
         Guard.NotNull(testMethod);
 
@@ -694,12 +694,10 @@ internal sealed class TypeCache : MarshalByRefObject
         return testMethodInfo;
     }
 
-    private TestMethodInfo ResolveTestMethodInfoForDiscovery(TestMethod testMethod, TestClassInfo testClassInfo)
+    private DiscoveryTestMethodInfo ResolveTestMethodInfoForDiscovery(TestMethod testMethod, TestClassInfo testClassInfo)
     {
         MethodInfo methodInfo = GetMethodInfoForTestMethod(testMethod, testClassInfo);
-
-        // Let's build a fake options type as it won't be used.
-        return new TestMethodInfo(methodInfo, testClassInfo, new(TimeoutInfo.FromTimeout(-1), null, false, null!));
+        return new DiscoveryTestMethodInfo(methodInfo, testClassInfo);
     }
 
     /// <summary>
