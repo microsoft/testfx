@@ -22,6 +22,13 @@ public sealed class AnalyzersTests : AcceptanceTestBase<NopAssetFixture>
 
     <!-- This also serves as a test that VSTest is generating the entrypoint, even when it's a transitive dependency -->
     <OutputType>Exe</OutputType>
+
+    <!--
+        This property is not required by users and is only set to simplify our testing infrastructure. When testing out in local or ci,
+        we end up with a -dev or -ci version which will lose resolution over -preview dependency of code coverage. Because we want to
+        ensure we are testing with locally built version, we force adding the platform dependency.
+    -->
+    <EnableMicrosoftTestingPlatform>true</EnableMicrosoftTestingPlatform>
   </PropertyGroup>
 
   <ItemGroup>
