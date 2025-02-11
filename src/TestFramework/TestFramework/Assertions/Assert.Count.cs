@@ -14,7 +14,6 @@ public sealed partial class Assert
 {
     [InterpolatedStringHandler]
     [EditorBrowsable(EditorBrowsableState.Never)]
-    [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1600:Elements should be documented", Justification = "This is not meant to be consumed by users.")]
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
     public readonly struct AssertCountInterpolatedStringHandler<TItem>
     {
@@ -98,7 +97,6 @@ public sealed partial class Assert
 
     [InterpolatedStringHandler]
     [EditorBrowsable(EditorBrowsableState.Never)]
-    [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1600:Elements should be documented", Justification = "This is not meant to be consumed by users.")]
     public readonly struct AssertIsNotEmptyInterpolatedStringHandler<TItem>
     {
         private readonly StringBuilder? _builder;
