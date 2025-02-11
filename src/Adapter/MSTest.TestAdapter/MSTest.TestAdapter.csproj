@@ -127,6 +127,7 @@
     <GenerateFileFromTemplate TemplateFile="%(_TemplateCsproj.Identity)" OutputPath="%(_TemplateCsproj.Destination)" Properties="$(_TemplateProperties)">
       <Output TaskParameter="ResolvedOutputPath" ItemName="FileWrites" />
     </GenerateFileFromTemplate>
+
     <ItemGroup>
       <Compile Include="$(IntermediateOutputPath)/MSTestVersion.cs" />
     </ItemGroup>

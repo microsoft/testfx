@@ -89,6 +89,7 @@ This package provides the core platform and the .NET implementation of the proto
     <GenerateFileFromTemplate TemplateFile="%(_TemplateCsproj.Identity)" OutputPath="%(_TemplateCsproj.Destination)" Properties="$(_TemplateProperties)">
       <Output TaskParameter="ResolvedOutputPath" ItemName="FileWrites" />
     </GenerateFileFromTemplate>
+
     <ItemGroup>
       <Compile Include="$(IntermediateOutputPath)/PlatformVersion.cs" />
     </ItemGroup>
