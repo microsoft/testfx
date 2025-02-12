@@ -174,8 +174,15 @@ internal static class FixtureMethodRunner
                 UnitTestOutcome.Timeout,
                 string.Format(CultureInfo.InvariantCulture, methodCanceledMessageFormat, methodInfo.DeclaringType!.FullName, methodInfo.Name));
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            if (ex is AggregateException aggregateEx && aggregateEx.InnerExceptions.OfType<TaskCanceledException>().Any(tce => tce.CancellationToken == cancellationTokenSource.Token))
+            {
+                return new(
+                    UnitTestOutcome.Timeout,
+                    "Are we going to hit this??");
+            }
+
             // We throw the real exception to have the original stack trace to elaborate up the chain.
             if (realException is not null)
             {
