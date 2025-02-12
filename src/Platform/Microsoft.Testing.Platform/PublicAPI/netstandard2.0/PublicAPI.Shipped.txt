@@ -1,4 +1,4 @@
-#nullable enable
+﻿#nullable enable
 ~override Microsoft.Testing.Platform.Extensions.Messages.LinePosition.Equals(object obj) -> bool
 ~override Microsoft.Testing.Platform.Extensions.Messages.LinePosition.ToString() -> string
 ~override Microsoft.Testing.Platform.Extensions.Messages.LinePositionSpan.Equals(object obj) -> bool

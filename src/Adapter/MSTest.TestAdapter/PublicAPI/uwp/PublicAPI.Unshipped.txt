@@ -1,2 +1,1 @@
-#nullable enable
-*REMOVED*Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.LogMessageListener.~LogMessageListener() -> void
+﻿#nullable enable

@@ -1,10 +1,15 @@
-#nullable enable
+﻿#nullable enable
 abstract Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.AddResultFile(string! fileName) -> void
+abstract Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.DisplayMessage(Microsoft.VisualStudio.TestTools.UnitTesting.MessageLevel messageLevel, string! message) -> void
 abstract Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.Properties.get -> System.Collections.IDictionary!
 abstract Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.Write(string! format, params object?[]! args) -> void
 abstract Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.Write(string? message) -> void
 abstract Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.WriteLine(string! format, params object?[]! args) -> void
 abstract Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.WriteLine(string? message) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.MessageLevel
+Microsoft.VisualStudio.TestTools.UnitTesting.MessageLevel.Error = 2 -> Microsoft.VisualStudio.TestTools.UnitTesting.MessageLevel
+Microsoft.VisualStudio.TestTools.UnitTesting.MessageLevel.Informational = 0 -> Microsoft.VisualStudio.TestTools.UnitTesting.MessageLevel
+Microsoft.VisualStudio.TestTools.UnitTesting.MessageLevel.Warning = 1 -> Microsoft.VisualStudio.TestTools.UnitTesting.MessageLevel
 Microsoft.VisualStudio.TestTools.UnitTesting.TestContext
 Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestContext() -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestData.get -> object?[]?

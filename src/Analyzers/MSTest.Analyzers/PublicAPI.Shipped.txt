@@ -1,4 +1,4 @@
-#nullable enable
+﻿#nullable enable
 MSTest.Analyzers.AssemblyCleanupShouldBeValidAnalyzer
 MSTest.Analyzers.AssemblyCleanupShouldBeValidAnalyzer.AssemblyCleanupShouldBeValidAnalyzer() -> void
 MSTest.Analyzers.AssemblyInitializeShouldBeValidAnalyzer
@@ -7,8 +7,12 @@ MSTest.Analyzers.AssertionArgsShouldAvoidConditionalAccessAnalyzer
 MSTest.Analyzers.AssertionArgsShouldAvoidConditionalAccessAnalyzer.AssertionArgsShouldAvoidConditionalAccessAnalyzer() -> void
 MSTest.Analyzers.AssertionArgsShouldBePassedInCorrectOrderAnalyzer
 MSTest.Analyzers.AssertionArgsShouldBePassedInCorrectOrderAnalyzer.AssertionArgsShouldBePassedInCorrectOrderAnalyzer() -> void
+MSTest.Analyzers.AvoidAssertAreSameWithValueTypesAnalyzer
+MSTest.Analyzers.AvoidAssertAreSameWithValueTypesAnalyzer.AvoidAssertAreSameWithValueTypesAnalyzer() -> void
 MSTest.Analyzers.AvoidExpectedExceptionAttributeAnalyzer
 MSTest.Analyzers.AvoidExpectedExceptionAttributeAnalyzer.AvoidExpectedExceptionAttributeAnalyzer() -> void
+MSTest.Analyzers.AvoidUsingAssertsInAsyncVoidContextAnalyzer
+MSTest.Analyzers.AvoidUsingAssertsInAsyncVoidContextAnalyzer.AvoidUsingAssertsInAsyncVoidContextAnalyzer() -> void
 MSTest.Analyzers.ClassCleanupShouldBeValidAnalyzer
 MSTest.Analyzers.ClassCleanupShouldBeValidAnalyzer.ClassCleanupShouldBeValidAnalyzer() -> void
 MSTest.Analyzers.ClassInitializeShouldBeValidAnalyzer
@@ -67,6 +71,8 @@ MSTest.Analyzers.UseAttributeOnTestMethodAnalyzer
 MSTest.Analyzers.UseAttributeOnTestMethodAnalyzer.UseAttributeOnTestMethodAnalyzer() -> void
 MSTest.Analyzers.UseClassCleanupBehaviorEndOfClassAnalyzer
 MSTest.Analyzers.UseClassCleanupBehaviorEndOfClassAnalyzer.UseClassCleanupBehaviorEndOfClassAnalyzer() -> void
+MSTest.Analyzers.UseConditionBaseWithTestClassAnalyzer
+MSTest.Analyzers.UseConditionBaseWithTestClassAnalyzer.UseConditionBaseWithTestClassAnalyzer() -> void
 MSTest.Analyzers.UseDeploymentItemWithTestMethodOrTestClassAnalyzer
 MSTest.Analyzers.UseDeploymentItemWithTestMethodOrTestClassAnalyzer.UseDeploymentItemWithTestMethodOrTestClassAnalyzer() -> void
 MSTest.Analyzers.UseParallelizeAttributeAnalyzer
@@ -79,8 +85,12 @@ override MSTest.Analyzers.AssertionArgsShouldAvoidConditionalAccessAnalyzer.Init
 override MSTest.Analyzers.AssertionArgsShouldAvoidConditionalAccessAnalyzer.SupportedDiagnostics.get -> System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.DiagnosticDescriptor!>
 override MSTest.Analyzers.AssertionArgsShouldBePassedInCorrectOrderAnalyzer.Initialize(Microsoft.CodeAnalysis.Diagnostics.AnalysisContext! context) -> void
 override MSTest.Analyzers.AssertionArgsShouldBePassedInCorrectOrderAnalyzer.SupportedDiagnostics.get -> System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.DiagnosticDescriptor!>
+override MSTest.Analyzers.AvoidAssertAreSameWithValueTypesAnalyzer.Initialize(Microsoft.CodeAnalysis.Diagnostics.AnalysisContext! context) -> void
+override MSTest.Analyzers.AvoidAssertAreSameWithValueTypesAnalyzer.SupportedDiagnostics.get -> System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.DiagnosticDescriptor!>
 override MSTest.Analyzers.AvoidExpectedExceptionAttributeAnalyzer.Initialize(Microsoft.CodeAnalysis.Diagnostics.AnalysisContext! context) -> void
 override MSTest.Analyzers.AvoidExpectedExceptionAttributeAnalyzer.SupportedDiagnostics.get -> System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.DiagnosticDescriptor!>
+override MSTest.Analyzers.AvoidUsingAssertsInAsyncVoidContextAnalyzer.Initialize(Microsoft.CodeAnalysis.Diagnostics.AnalysisContext! context) -> void
+override MSTest.Analyzers.AvoidUsingAssertsInAsyncVoidContextAnalyzer.SupportedDiagnostics.get -> System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.DiagnosticDescriptor!>
 override MSTest.Analyzers.ClassCleanupShouldBeValidAnalyzer.Initialize(Microsoft.CodeAnalysis.Diagnostics.AnalysisContext! context) -> void
 override MSTest.Analyzers.ClassCleanupShouldBeValidAnalyzer.SupportedDiagnostics.get -> System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.DiagnosticDescriptor!>
 override MSTest.Analyzers.ClassInitializeShouldBeValidAnalyzer.Initialize(Microsoft.CodeAnalysis.Diagnostics.AnalysisContext! context) -> void
@@ -139,6 +149,8 @@ override MSTest.Analyzers.UseAttributeOnTestMethodAnalyzer.Initialize(Microsoft.
 override MSTest.Analyzers.UseAttributeOnTestMethodAnalyzer.SupportedDiagnostics.get -> System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.DiagnosticDescriptor!>
 override MSTest.Analyzers.UseClassCleanupBehaviorEndOfClassAnalyzer.Initialize(Microsoft.CodeAnalysis.Diagnostics.AnalysisContext! context) -> void
 override MSTest.Analyzers.UseClassCleanupBehaviorEndOfClassAnalyzer.SupportedDiagnostics.get -> System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.DiagnosticDescriptor!>
+override MSTest.Analyzers.UseConditionBaseWithTestClassAnalyzer.Initialize(Microsoft.CodeAnalysis.Diagnostics.AnalysisContext! context) -> void
+override MSTest.Analyzers.UseConditionBaseWithTestClassAnalyzer.SupportedDiagnostics.get -> System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.DiagnosticDescriptor!>
 override MSTest.Analyzers.UseDeploymentItemWithTestMethodOrTestClassAnalyzer.Initialize(Microsoft.CodeAnalysis.Diagnostics.AnalysisContext! context) -> void
 override MSTest.Analyzers.UseDeploymentItemWithTestMethodOrTestClassAnalyzer.SupportedDiagnostics.get -> System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.DiagnosticDescriptor!>
 override MSTest.Analyzers.UseParallelizeAttributeAnalyzer.Initialize(Microsoft.CodeAnalysis.Diagnostics.AnalysisContext! context) -> void
