@@ -4,7 +4,7 @@
     <TargetFrameworks>netstandard2.0;$(MicrosoftTestingTargetFrameworks)</TargetFrameworks>
     <RootNamespace>Microsoft.Testing.Extensions.Policy</RootNamespace>
     <!-- Cancel default license (MIT) and set license as packaged license file -->
-	<PackageLicenseExpression />
+    <PackageLicenseExpression />
     <PackageLicenseFile>License.txt</PackageLicenseFile>
   </PropertyGroup>
 

@@ -1,0 +1,123 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0;$(MicrosoftTestingTargetFrameworks)</TargetFrameworks>
+    <RootNamespace>Microsoft.Testing.Framework</RootNamespace>
+    <!-- Cancel default license (closed-source) and set license as packaged license file -->
+    <PackageLicenseExpressionInternal></PackageLicenseExpressionInternal>
+    <PackageLicenseExpression></PackageLicenseExpression>
+    <PackageLicenseFile>License.txt</PackageLicenseFile>
+    <VersionPrefix>$(MSTestEngineVersionPrefix)</VersionPrefix>
+    <PreReleaseVersionLabel>$(MSTestEnginePreReleaseVersionLabel)</PreReleaseVersionLabel>
+    <SuppressFinalPackageVersion>true</SuppressFinalPackageVersion>
+    <!-- Temporarly disable missing XML documentation on public APIs -->
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+    <IsPackable>true</IsPackable>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <EnableSingleFileAnalyzer Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net7.0'))">true</EnableSingleFileAnalyzer>
+    <TrimmerSingleWarn>false</TrimmerSingleWarn>
+    <!--
+      - Use IsAotCompatible and not <EnableAotAnalyzer>true</EnableAotAnalyzer>
+      - Use IsTrimmable and not <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
+      There is no property for single file so we can use the analyzer directly. Check this file for more details:
+      https://github.com/dotnet/sdk/blob/b3288690d4ef92019370562b807092f62b4059e7/src/Tasks/Microsoft.NET.Build.Tasks/ProcessFrameworkReferences.cs#L436-L473
+    -->
+    <IsTrimmable Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net7.0'))">true</IsTrimmable>
+    <IsAotCompatible Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net7.0'))">true</IsAotCompatible>
+  </PropertyGroup>
+
+  <!-- Insert the RepositoryVersion.cs -->
+  <PropertyGroup>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="**/*.cs" Exclude="**/*.user; **/*.*proj; **/*.sln; **/*.vssscc" />
+  </ItemGroup>
+  <Target Name="InsertRepositoryVersion" BeforeTargets="PrepareForBuild">
+    <ItemGroup>
+      <Compile Include="$(Compile);$(IntermediateOutputPath)/RepositoryVersion.cs" />
+    </ItemGroup>
+  </Target>
+
+  <!-- NuGet properties -->
+  <PropertyGroup>
+    <PackageDescription>
+      <![CDATA[Microsoft.Testing is a set of platform, framework and protocol intended to make it possible to run any test on any target or device.
+
+This package provides a new experimental engine for MSTest test framework.]]>
+    </PackageDescription>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <AdditionalFiles Include="BannedSymbols.txt" />
+    <!-- API that is common to all frameworks that we build for. -->
+    <AdditionalFiles Include="PublicAPI/PublicAPI.Shipped.txt" />
+    <AdditionalFiles Include="PublicAPI/PublicAPI.Unshipped.txt" />
+    <!-- Framework specific API -->
+    <AdditionalFiles Include="PublicAPI/netstandard/PublicAPI.Unshipped.txt" Condition=" '$(TargetFramework)' == 'netstandard2.0' " />
+    <AdditionalFiles Include="PublicAPI/netstandard/PublicAPI.Shipped.txt" Condition=" '$(TargetFramework)' == 'netstandard2.0' " />
+    <AdditionalFiles Include="PublicAPI/net/PublicAPI.Shipped.txt" Condition=" '$(TargetFramework)' != 'netstandard2.0' " />
+    <AdditionalFiles Include="PublicAPI/net/PublicAPI.Unshipped.txt" Condition=" '$(TargetFramework)' != 'netstandard2.0' " />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="MSTest.Engine.UnitTests" Key="$(VsPublicKey)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="$(RepoRoot)src/Platform/Microsoft.Testing.Extensions.TrxReport.Abstractions/Microsoft.Testing.Extensions.TrxReport.Abstractions.csproj" />
+  </ItemGroup>
+
+  <!-- NuGet package layout -->
+  <!-- NuGet folders https://learn.microsoft.com/nuget/create-packages/creating-a-package#from-a-convention-based-working-directory -->
+  <ItemGroup>
+    <Content Include="buildMultiTargeting/**">
+      <Pack>true</Pack>
+      <PackagePath>buildMultiTargeting</PackagePath>
+    </Content>
+    <Content Include="$(RepoRoot)/LICENSE.PLATFORMTOOLS.txt" Pack="true" PackagePath="License.txt" />
+    <TfmSpecificPackageFile Include="build/**">
+      <PackagePath>build/$(TargetFramework)</PackagePath>
+    </TfmSpecificPackageFile>
+  </ItemGroup>
+
+  <!-- Version templating -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.DotNet.Build.Tasks.Templating" Version="$(MicrosoftDotNetBuildTasksTemplatingPackageVersion)" AllowExplicitReference="true" PrivateAssets="All" IsImplicitlyDefined="true" />
+  </ItemGroup>
+  <Target Name="GenerateRepositoryVersionSourceFile" AfterTargets="PrepareForBuild" Condition=" Exists('$(MSBuildProjectDirectory)/RepositoryVersion.cs.template') ">
+    <PropertyGroup>
+      <_TemplateProperties>Version=$(Version)</_TemplateProperties>
+    </PropertyGroup>
+    <ItemGroup>
+      <_TemplateCsproj Include="$(MSBuildProjectDirectory)/RepositoryVersion.cs.template" Destination="$(IntermediateOutputPath)/RepositoryVersion.cs" />
+    </ItemGroup>
+
+    <GenerateFileFromTemplate TemplateFile="%(_TemplateCsproj.Identity)" OutputPath="%(_TemplateCsproj.Destination)" Properties="$(_TemplateProperties)">
+      <Output TaskParameter="ResolvedOutputPath" ItemName="FileWrites" />
+    </GenerateFileFromTemplate>
+  </Target>
+
+  <!-- Generates NuGet package layout inside artifacts to make it testable with simple imports -->
+  <Target Name="ReproNugetPackageLayout" AfterTargets="Build" Condition=" '$(TargetFramework)' != '' ">
+    <ItemGroup>
+      <MSBuildAssetsBuildTargeting Include="buildMultiTargeting/**" />
+      <MSBuildAssetsBuild Include="build/**" />
+      <MSBuildLib Include="$(TargetDir)$(TargetName).dll" />
+      <!-- We ship with embedded symbols -->
+      <!--<MSBuildLib Include="$(TargetDir)$(TargetName).pdb" />-->
+    </ItemGroup>
+
+    <Message Text="MSBuildAssetsBuildTargeting tests: @(MSBuildAssetsBuildTargeting->'$(ArtifactsDir)tests/nugetPackageFolder/$(AssemblyName)/buildMultiTargeting/%(RecursiveDir)%(Filename)%(Extension)')" Importance="low" />
+    <Copy SourceFiles="@(MSBuildAssetsBuildTargeting)" DestinationFiles="@(MSBuildAssetsBuildTargeting->'$(ArtifactsDir)tests/nugetPackageFolder/$(AssemblyName)/buildMultiTargeting/%(RecursiveDir)%(Filename)%(Extension)')" />
+
+    <Message Text="MSBuildAssetsBuild tests: @(MSBuildAssetsBuild->'$(ArtifactsDir)tests/nugetPackageFolder/build/$(TargetFramework)/%(RecursiveDir)%(Filename)%(Extension)')" Importance="low" />
+    <Copy SourceFiles="@(MSBuildAssetsBuild)" DestinationFiles="@(MSBuildAssetsBuild->'$(ArtifactsDir)tests/nugetPackageFolder/$(AssemblyName)/build/$(TargetFramework)/%(RecursiveDir)%(Filename)%(Extension)')" />
+
+    <Message Text="MSBuildLib tests: @(MSBuildLib->'$(ArtifactsDir)tests/nugetPackageFolder/lib/$(TargetFramework)/%(RecursiveDir)%(Filename)%(Extension)')" Importance="low" />
+    <Copy SourceFiles="@(MSBuildLib)" DestinationFiles="@(MSBuildLib->'$(ArtifactsDir)tests/nugetPackageFolder/$(AssemblyName)/lib/$(TargetFramework)/%(RecursiveDir)%(Filename)%(Extension)')" />
+  </Target>
+
+</Project>

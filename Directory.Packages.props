@@ -29,7 +29,7 @@
   </PropertyGroup>
   <PropertyGroup Label="Test dependencies">
     <MicrosoftCodeAnalysisAnalyzerTestingVersion>1.1.3-beta1.24423.1</MicrosoftCodeAnalysisAnalyzerTestingVersion>
-    <MSTestVersion>3.8.0-preview.25107.5</MSTestVersion>
+    <MSTestVersion>3.8.0-preview.25111.12</MSTestVersion>
   </PropertyGroup>
   <ItemGroup Label="Analyzers">
     <PackageVersion Include="Microsoft.CodeAnalysis.BannedApiAnalyzers" Version="$(MicrosoftCodeAnalysisBannedApiAnalyzersVersion)" />
@@ -44,12 +44,14 @@
     <PackageVersion Include="Microsoft.CodeAnalysis" Version="$(MicrosoftCodeAnalysisVersion)" />
     <PackageVersion Include="Microsoft.CodeAnalysis.Analyzers" Version="3.11.0" />
     <PackageVersion Include="Microsoft.CodeAnalysis.Common" Version="$(MicrosoftCodeAnalysisVersion)" />
+    <PackageVersion Include="Microsoft.CodeAnalysis.CSharp" Version="4.8.0" />
     <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="$(MicrosoftCodeAnalysisVersion)" />
     <PackageVersion Include="Microsoft.Diagnostics.NETCore.Client" Version="0.2.553101" />
     <PackageVersion Include="Microsoft.Testing.Extensions.CodeCoverage" Version="$(MicrosoftTestingExtensionsCodeCoverageVersion)" />
     <PackageVersion Include="Microsoft.TestPlatform.AdapterUtilities" Version="$(MicrosoftNETTestSdkVersion)" />
     <PackageVersion Include="Microsoft.TestPlatform.ObjectModel" Version="$(MicrosoftNETTestSdkVersion)" />
     <PackageVersion Include="Microsoft.TestPlatform.TranslationLayer" Version="$(MicrosoftNETTestSdkVersion)" />
+    <PackageVersion Include="Microsoft.Win32.Registry" Version="5.0.0" />
     <PackageVersion Include="Microsoft.WindowsAppSDK" Version="1.0.0" />
     <PackageVersion Include="Polyfill" Version="7.14.0" />
     <PackageVersion Include="System.Threading.Tasks.Extensions" Version="$(SystemThreadingTasksExtensionsVersion)" />
@@ -57,15 +59,12 @@
   <ItemGroup Label="Test dependencies">
     <PackageVersion Include="Codecov" Version="1.12.3" />
     <PackageVersion Include="FluentAssertions" Version="6.12.0" />
-    <PackageVersion Include="FSharp.Core" Version="8.0.200" />
-    <!-- CVE-2024-48924 / Transitive deps of StreamJsonRpc -->
-    <PackageVersion Include="MessagePack" Version="2.5.187" />
+    <PackageVersion Include="FSharp.Core" Version="9.0.201" />
     <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.Analyzer.Testing" Version="$(MicrosoftCodeAnalysisAnalyzerTestingVersion)" />
     <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.CodeFix.Testing" Version="$(MicrosoftCodeAnalysisAnalyzerTestingVersion)" />
     <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.CodeRefactoring.Testing" Version="$(MicrosoftCodeAnalysisAnalyzerTestingVersion)" />
-    <PackageVersion Include="Microsoft.Extensions.FileSystemGlobbing" Version="9.0.1" />
+    <PackageVersion Include="Microsoft.Extensions.FileSystemGlobbing" Version="9.0.2" />
     <PackageVersion Include="Microsoft.TestPlatform" Version="$(MicrosoftNETTestSdkVersion)" />
-    <PackageVersion Include="Microsoft.Win32.Registry" Version="5.0.0" />
     <!-- Pinned to 4.18.4 for security -->
     <PackageVersion Include="Moq" Version="4.18.4" />
     <PackageVersion Include="MSBuild.StructuredLogger" Version="2.2.386" />
@@ -73,14 +72,13 @@
     <PackageVersion Include="MSTest.TestAdapter" Version="$(MSTestVersion)" />
     <PackageVersion Include="MSTest.TestFramework" Version="$(MSTestVersion)" />
     <PackageVersion Include="Newtonsoft.Json" Version="13.0.3" />
-    <!-- CVE-2024-0057 / Transitive deps of code analysis testing packages -->
-    <PackageVersion Include="NuGet.Packaging" Version="6.12.1" />
+
     <PackageVersion Include="Polly" Version="8.5.0" />
     <PackageVersion Include="Polly.Contrib.WaitAndRetry" Version="1.1.1" />
     <PackageVersion Include="StreamJsonRpc" Version="2.20.20" />
     <PackageVersion Include="StrongNamer" Version="0.2.5" />
     <PackageVersion Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
-    <PackageVersion Include="System.Management" Version="9.0.1" />
+    <PackageVersion Include="System.Management" Version="9.0.2" />
   </ItemGroup>
   <!--
     Declare below packages that we will be referenced through MSTest.Sdk but don't have direct reference.

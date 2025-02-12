@@ -267,6 +267,13 @@ Microsoft.VisualStudio.TestTools.UnitTesting.RetryAttribute.MillisecondsDelayBet
 Microsoft.VisualStudio.TestTools.UnitTesting.RetryAttribute.RetryAttribute(int maxRetryAttempts) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.RetryBaseAttribute
 Microsoft.VisualStudio.TestTools.UnitTesting.RetryBaseAttribute.RetryBaseAttribute() -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.TestDataRow<T>
+Microsoft.VisualStudio.TestTools.UnitTesting.TestDataRow<T>.DisplayName.get -> string?
+Microsoft.VisualStudio.TestTools.UnitTesting.TestDataRow<T>.DisplayName.set -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.TestDataRow<T>.IgnoreMessage.get -> string?
+Microsoft.VisualStudio.TestTools.UnitTesting.TestDataRow<T>.IgnoreMessage.set -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.TestDataRow<T>.TestDataRow(T value) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.TestDataRow<T>.Value.get -> T
 Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome.Ignored = 10 -> Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome
 override Microsoft.VisualStudio.TestTools.UnitTesting.IgnoreAttribute.IgnoreMessage.get -> string?
 override Microsoft.VisualStudio.TestTools.UnitTesting.IgnoreAttribute.GroupName.get -> string!

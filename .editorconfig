@@ -259,6 +259,11 @@ dotnet_diagnostic.VSTHRD105.severity = none             # VSTHRD105: Avoid metho
 dotnet_diagnostic.MSTESTEXP.severity = none             # MSTESTEXP: Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
 dotnet_diagnostic.TPEXP.severity = none                 # TPEXP: Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
 
+dotnet_diagnostic.SA1108.severity = none                # SA1108: Block statements must not contain embedded comments
+dotnet_diagnostic.SA1600.severity = none                # SA1600: Elements should be documented
+dotnet_diagnostic.SA1601.severity = none                # SA1601: Partial elements should be documented
+dotnet_diagnostic.SA1602.severity = none                # SA1602: Enumeration items should be documented
+
 #### Naming styles ####
 
 ## Naming rules (define naming rule using dotnet_naming_rule.<rule_name>.<option>)

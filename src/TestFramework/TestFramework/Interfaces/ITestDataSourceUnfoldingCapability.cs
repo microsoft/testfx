@@ -10,6 +10,9 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// </summary>
 public interface ITestDataSourceUnfoldingCapability
 {
+    /// <summary>
+    /// Gets the strategy for unfolding parameterized tests.
+    /// </summary>
     TestDataSourceUnfoldingStrategy UnfoldingStrategy { get; }
 }
 

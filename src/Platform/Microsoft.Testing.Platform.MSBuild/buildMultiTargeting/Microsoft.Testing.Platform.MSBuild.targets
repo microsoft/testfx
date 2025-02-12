@@ -88,6 +88,8 @@
     <ItemGroup>
       <!-- Items to hash-->
       <_GenerateTestingPlatformEntryPointInputsCacheToHash Include="@(TestingPlatformBuilderHook)"/>
+      <_GenerateTestingPlatformEntryPointInputsCacheToHash Include="$(RootNamespace)"/>
+
       <!-- Export the items name for the _GenerateTestingPlatformInjectEntryPoint task-->
       <GenerateTestingPlatformEntryPointInputsCacheFilePath Include="$(_GenerateTestingPlatformEntryPointInputsCachFilePath)" />
     </ItemGroup>
@@ -165,6 +167,8 @@
     <ItemGroup>
       <!-- Items to hash-->
       <_GenerateSelfRegisteredExtensionsInputsCacheToHash Include="@(TestingPlatformBuilderHook)"/>
+      <_GenerateSelfRegisteredExtensionsInputsCacheToHash Include="$(RootNamespace)"/>
+
       <!-- Export the items name for the _GenerateSelfRegisteredExtensions task-->
       <GenerateSelfRegisteredExtensionsInputsCacheFilePath Include="$(_GenerateSelfRegisteredExtensionsInputsCachFilePath)" />
     </ItemGroup>

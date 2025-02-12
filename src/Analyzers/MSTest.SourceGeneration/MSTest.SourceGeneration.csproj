@@ -1,0 +1,67 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- C# Source generators have to target netstandard -->
+    <TargetFrameworks>netstandard2.0</TargetFrameworks>
+    <!-- Generates a package at build -->
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <!-- Do not include the generator as a lib dependency -->
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <NoWarn>NU5128</NoWarn>
+    <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
+    <RootNamespace>Microsoft.Testing.Framework.SourceGeneration</RootNamespace>
+    <!-- Cancel default license (closed-source) and set license as packaged license file -->
+    <PackageLicenseExpressionInternal></PackageLicenseExpressionInternal>
+    <PackageLicenseExpression></PackageLicenseExpression>
+    <PackageLicenseFile>License.txt</PackageLicenseFile>
+
+    <VersionPrefix>$(MSTestEngineVersionPrefix)</VersionPrefix>
+    <PreReleaseVersionLabel>$(MSTestEnginePreReleaseVersionLabel)</PreReleaseVersionLabel>
+    <SuppressFinalPackageVersion>true</SuppressFinalPackageVersion>
+    <IsPackable>true</IsPackable>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <EnableSingleFileAnalyzer Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net7.0'))">true</EnableSingleFileAnalyzer>
+    <TrimmerSingleWarn>false</TrimmerSingleWarn>
+    <!--
+      - Use IsAotCompatible and not <EnableAotAnalyzer>true</EnableAotAnalyzer>
+      - Use IsTrimmable and not <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
+      There is no property for single file so we can use the analyzer directly. Check this file for more details:
+      https://github.com/dotnet/sdk/blob/b3288690d4ef92019370562b807092f62b4059e7/src/Tasks/Microsoft.NET.Build.Tasks/ProcessFrameworkReferences.cs#L436-L473
+    -->
+    <IsTrimmable Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net7.0'))">true</IsTrimmable>
+    <IsAotCompatible Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net7.0'))">true</IsAotCompatible>
+  </PropertyGroup>
+
+  <!-- NuGet properties -->
+  <PropertyGroup>
+    <PackageDescription>
+      <![CDATA[Microsoft.Testing is a set of platform, framework and protocol intended to make it possible to run any test on any target or device.
+
+This package provides the C# source generators for MSTest test framework.]]>
+    </PackageDescription>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <AdditionalFiles Include="BannedSymbols.txt" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="MSTest.SourceGeneration.UnitTests" Key="$(VsPublicKey)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Roslyn C# - so that we can implement the code generator -->
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" PrivateAssets="all" />
+    <!-- Analyzers to help write analyzers/generators -->
+    <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Package the generator in the analyzer directory of the nuget package -->
+    <None Include="$(OutputPath)\netstandard2.0\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+    <Content Include="$(RepoRoot)/LICENSE.PLATFORMTOOLS.txt" Pack="true" PackagePath="License.txt" />
+  </ItemGroup>
+
+</Project>

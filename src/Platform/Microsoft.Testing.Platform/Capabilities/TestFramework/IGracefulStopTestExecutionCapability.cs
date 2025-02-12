@@ -13,5 +13,9 @@ namespace Microsoft.Testing.Platform.Capabilities.TestFramework;
 [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
 public interface IGracefulStopTestExecutionCapability : ITestFrameworkCapability
 {
+    /// <summary>
+    /// Stops the test execution gracefully.
+    /// </summary>
+    /// <param name="cancellationToken">The cancellation token.</param>
     Task StopTestExecutionAsync(CancellationToken cancellationToken);
 }
