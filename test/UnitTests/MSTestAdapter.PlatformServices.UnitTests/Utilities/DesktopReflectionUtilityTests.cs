@@ -30,15 +30,13 @@ public class ReflectionUtilityTests : TestContainer
         var attribValuePairs = new List<string>();
         foreach (object attrib in attributes)
         {
-            if (attrib is DummySingleAAttribute)
+            if (attrib is DummySingleAAttribute a)
             {
-                var a = attrib as DummySingleAAttribute;
                 attribValuePairs.Add("DummySingleA : " + a.Value);
             }
-            else if (attrib is DummyAAttribute)
+            else if (attrib is DummyAAttribute aa)
             {
-                var a = attrib as DummyAAttribute;
-                attribValuePairs.Add("DummyA : " + a.Value);
+                attribValuePairs.Add("DummyA : " + aa.Value);
             }
         }
 

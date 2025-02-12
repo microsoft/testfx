@@ -13,9 +13,9 @@ public sealed class LifeCycleClassCleanupEndOfAssembly
     : IDisposable
 #endif
 {
-    private static TestContext s_testContext;
+    private static TestContext s_testContext = null!;
 
-    public TestContext TestContext { get; set; }
+    public TestContext TestContext { get; set; } = null!;
 
     public LifeCycleClassCleanupEndOfAssembly()
     {

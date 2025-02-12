@@ -12,7 +12,7 @@ public class RunSettingsUtilitiesTests : TestContainer
 {
     public void GetTestRunParametersReturnsNullOnNullRunSettings()
     {
-        Dictionary<string, object> trp = RunSettingsUtilities.GetTestRunParameters(null);
+        Dictionary<string, object>? trp = RunSettingsUtilities.GetTestRunParameters(null);
         Verify(trp is null);
     }
 
@@ -30,7 +30,7 @@ public class RunSettingsUtilitiesTests : TestContainer
             </RunSettings>
             """;
 
-        Dictionary<string, object> trp = RunSettingsUtilities.GetTestRunParameters(settingsXml);
+        Dictionary<string, object>? trp = RunSettingsUtilities.GetTestRunParameters(settingsXml);
         Verify(trp is null);
     }
 
@@ -50,7 +50,7 @@ public class RunSettingsUtilitiesTests : TestContainer
             </RunSettings>
             """;
 
-        Dictionary<string, object> trp = RunSettingsUtilities.GetTestRunParameters(settingsXml);
+        Dictionary<string, object>? trp = RunSettingsUtilities.GetTestRunParameters(settingsXml);
         Verify(trp is not null);
         Verify(trp.Count == 0);
     }
@@ -72,7 +72,7 @@ public class RunSettingsUtilitiesTests : TestContainer
             </RunSettings>
             """;
 
-        Dictionary<string, object> trp = RunSettingsUtilities.GetTestRunParameters(settingsXml);
+        Dictionary<string, object>? trp = RunSettingsUtilities.GetTestRunParameters(settingsXml);
         Verify(trp is not null);
         Verify(trp.Count == 1);
 
@@ -100,7 +100,7 @@ public class RunSettingsUtilitiesTests : TestContainer
             </RunSettings>
             """;
 
-        Dictionary<string, object> trp = RunSettingsUtilities.GetTestRunParameters(settingsXml);
+        Dictionary<string, object>? trp = RunSettingsUtilities.GetTestRunParameters(settingsXml);
         Verify(trp is not null);
         Verify(trp.Count == 3);
 
@@ -171,7 +171,7 @@ public class RunSettingsUtilitiesTests : TestContainer
             </RunSettings>
             """;
 
-        Dictionary<string, object> trp = RunSettingsUtilities.GetTestRunParameters(settingsXml);
+        Dictionary<string, object>? trp = RunSettingsUtilities.GetTestRunParameters(settingsXml);
         Verify(trp is not null);
         Verify(trp.Count == 0);
     }

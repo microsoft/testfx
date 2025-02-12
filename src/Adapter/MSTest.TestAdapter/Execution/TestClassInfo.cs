@@ -203,7 +203,6 @@ public class TestClassInfo
     public MethodInfo? TestInitializeMethod
     {
         get;
-
         internal set
         {
             if (field != null)

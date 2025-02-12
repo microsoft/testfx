@@ -15,7 +15,7 @@ public class ReflectionOperationsTests : TestContainer
 
     public void GetCustomAttributesShouldReturnAllAttributes()
     {
-        MethodInfo methodInfo = typeof(DummyBaseTestClass).GetMethod("DummyVTestMethod1");
+        MethodInfo methodInfo = typeof(DummyBaseTestClass).GetMethod("DummyVTestMethod1")!;
 
         object[] attributes = _reflectionOperations.GetCustomAttributes(methodInfo, false);
 
@@ -28,7 +28,7 @@ public class ReflectionOperationsTests : TestContainer
 
     public void GetCustomAttributesShouldReturnAllAttributesIgnoringBaseInheritance()
     {
-        MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("DummyVTestMethod1");
+        MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("DummyVTestMethod1")!;
 
         object[] attributes = _reflectionOperations.GetCustomAttributes(methodInfo, false);
 
@@ -41,7 +41,7 @@ public class ReflectionOperationsTests : TestContainer
 
     public void GetCustomAttributesShouldReturnAllAttributesWithBaseInheritance()
     {
-        MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("DummyVTestMethod1");
+        MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("DummyVTestMethod1")!;
 
         object[] attributes = _reflectionOperations.GetCustomAttributes(methodInfo, true);
 
@@ -94,7 +94,7 @@ public class ReflectionOperationsTests : TestContainer
 
     public void GetSpecificCustomAttributesShouldReturnAllAttributes()
     {
-        MethodInfo methodInfo = typeof(DummyBaseTestClass).GetMethod("DummyVTestMethod1");
+        MethodInfo methodInfo = typeof(DummyBaseTestClass).GetMethod("DummyVTestMethod1")!;
 
         object[] attributes = _reflectionOperations.GetCustomAttributes(methodInfo, typeof(DummyAAttribute), false);
 
@@ -107,7 +107,7 @@ public class ReflectionOperationsTests : TestContainer
 
     public void GetSpecificCustomAttributesShouldReturnAllAttributesIgnoringBaseInheritance()
     {
-        MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("DummyVTestMethod1");
+        MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("DummyVTestMethod1")!;
 
         object[] attributes = _reflectionOperations.GetCustomAttributes(methodInfo, typeof(DummyAAttribute), false);
 
@@ -120,7 +120,7 @@ public class ReflectionOperationsTests : TestContainer
 
     public void GetSpecificCustomAttributesShouldReturnAllAttributesWithBaseInheritance()
     {
-        MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("DummyVTestMethod1");
+        MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("DummyVTestMethod1")!;
 
         object[] attributes = _reflectionOperations.GetCustomAttributes(methodInfo, typeof(DummyAAttribute), true);
 

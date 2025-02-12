@@ -1,1 +1,3 @@
 #nullable enable
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.FileOperations.GetNavigationData(object? navigationSession, string! className, string! methodName, out int minLineNumber, out string? fileName) -> void
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.MSTestSettingsProvider.GetProperties(string? source) -> System.Collections.Generic.IDictionary<string!, object!>!

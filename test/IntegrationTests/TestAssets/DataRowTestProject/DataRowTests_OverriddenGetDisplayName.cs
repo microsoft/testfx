@@ -15,7 +15,7 @@ public class DataRowTests_OverriddenGetDisplayName
 
     private class DummyDataRowAttribute : DataRowAttribute
     {
-        public override string GetDisplayName(MethodInfo methodInfo, object[] data) => "Overridden DisplayName";
+        public override string? GetDisplayName(MethodInfo methodInfo, object?[]? data) => "Overridden DisplayName";
     }
 
     [TestMethod("SomeCustomDisplayName2")]

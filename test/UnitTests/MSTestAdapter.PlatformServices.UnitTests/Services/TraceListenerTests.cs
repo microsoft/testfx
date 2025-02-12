@@ -16,8 +16,8 @@ public class TraceListenerTests : TestContainer
     {
         StringWriter writer = new(new StringBuilder("DummyTrace"));
         var traceListener = new TraceListenerWrapper(writer);
-        TextWriter returnedWriter = traceListener.GetWriter();
-        Verify(returnedWriter.ToString() == "DummyTrace");
+        TextWriter? returnedWriter = traceListener.GetWriter();
+        Verify(returnedWriter?.ToString() == "DummyTrace");
     }
 
     public void DisposeShouldDisposeCorrespondingTextWriter()
