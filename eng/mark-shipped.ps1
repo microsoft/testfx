@@ -3,13 +3,13 @@ $ErrorActionPreference = "Stop"
 
 function Set-AsShipped([Parameter(Mandatory)][string]$Directory) {
     $shippedFilePath = "$Directory/PublicAPI.Shipped.txt"
-    $shipped = Get-Content $shippedFilePath -Encoding utf8
+    [array]$shipped = Get-Content $shippedFilePath -Encoding utf8
     if ($null -eq $shipped) {
         $shipped = @()
     }
 
     $unshippedFilePath = "$Directory/PublicAPI.Unshipped.txt"
-    $unshipped = Get-Content $unshippedFilePath
+    [array]$unshipped = Get-Content $unshippedFilePath -Encoding utf8
     $removed = @()
     $removedPrefix = "*REMOVED*";
     Write-Host "Processing $Directory"
@@ -26,7 +26,7 @@ function Set-AsShipped([Parameter(Mandatory)][string]$Directory) {
         }
     }
 
-    $shipped | Sort-Object | Where-Object { $_ -notin $removed } | Out-File $shippedFilePath -Encoding utf8
+    @("#nullable enable") + ($shipped | Where-Object { ($_ -notin $removed) -and ($_ -ne "#nullable enable") } | Sort-Object) | Out-File $shippedFilePath -Encoding utf8
     "#nullable enable" | Out-File $unshippedFilePath -Encoding utf8
 }
 
