@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
-## <a name="3.8.3" />[3.8.3] - 2025-02-12
+## <a name="3.8.0" />[3.8.0] - 2025-02-12
 
 See full log [here](https://github.com/microsoft/testfx/compare/v3.7.3...v3.8.0)
 
