@@ -1,4 +1,4 @@
-﻿#nullable enable
+#nullable enable
 abstract Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.AddResultFile(string! fileName) -> void
 abstract Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.DisplayMessage(Microsoft.VisualStudio.TestTools.UnitTesting.MessageLevel messageLevel, string! message) -> void
 abstract Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.Properties.get -> System.Collections.IDictionary!

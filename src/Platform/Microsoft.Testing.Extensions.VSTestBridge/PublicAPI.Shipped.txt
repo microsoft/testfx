@@ -1,4 +1,4 @@
-﻿#nullable enable
+#nullable enable
 abstract Microsoft.Testing.Extensions.VSTestBridge.SynchronizedSingleSessionVSTestBridgedTestFramework.SynchronizedDiscoverTestsAsync(Microsoft.Testing.Extensions.VSTestBridge.Requests.VSTestDiscoverTestExecutionRequest! request, Microsoft.Testing.Platform.Messages.IMessageBus! messageBus, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
 abstract Microsoft.Testing.Extensions.VSTestBridge.SynchronizedSingleSessionVSTestBridgedTestFramework.SynchronizedRunTestsAsync(Microsoft.Testing.Extensions.VSTestBridge.Requests.VSTestRunTestExecutionRequest! request, Microsoft.Testing.Platform.Messages.IMessageBus! messageBus, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
 abstract Microsoft.Testing.Extensions.VSTestBridge.VSTestBridgedTestFrameworkBase.CloseTestSessionAsync(Microsoft.Testing.Platform.Extensions.TestFramework.CloseTestSessionContext! context) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.TestFramework.CloseTestSessionResult!>!

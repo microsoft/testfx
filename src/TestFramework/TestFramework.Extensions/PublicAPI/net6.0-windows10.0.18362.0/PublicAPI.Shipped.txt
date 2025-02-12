@@ -1,4 +1,4 @@
-﻿#nullable enable
+#nullable enable
 Microsoft.VisualStudio.TestTools.UnitTesting.AppContainer.UITestMethodAttribute
 Microsoft.VisualStudio.TestTools.UnitTesting.AppContainer.UITestMethodAttribute.UITestMethodAttribute() -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.AppContainer.UITestMethodAttribute.UITestMethodAttribute(string! displayName) -> void

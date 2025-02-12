@@ -1,4 +1,4 @@
-﻿#nullable enable
+#nullable enable
 Microsoft.Testing.Extensions.TrxReport.TestingPlatformBuilderHook
 Microsoft.Testing.Extensions.TrxReportExtensions
 static Microsoft.Testing.Extensions.TrxReport.TestingPlatformBuilderHook.AddExtensions(Microsoft.Testing.Platform.Builder.ITestApplicationBuilder! testApplicationBuilder, string![]! _) -> void
