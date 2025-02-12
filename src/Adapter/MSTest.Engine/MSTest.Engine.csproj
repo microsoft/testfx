@@ -7,13 +7,8 @@
     <PackageLicenseExpressionInternal></PackageLicenseExpressionInternal>
     <PackageLicenseExpression></PackageLicenseExpression>
     <PackageLicenseFile>License.txt</PackageLicenseFile>
-    <!--
-      This is a early preview package, keep 1.0.0-alpha or similar suffix even in official builds.
-    -->
-    <!-- Whenever VersionPrefix or PreReleaseVersionLabel change, MSTest.Sdk need to be in sync. -->
-    <!-- See GenerateTemplates target in MSTest.Sdk.targets -->
-    <VersionPrefix>1.0.0</VersionPrefix>
-    <PreReleaseVersionLabel>alpha</PreReleaseVersionLabel>
+    <VersionPrefix>$(MSTestEngineVersionPrefix)</VersionPrefix>
+    <PreReleaseVersionLabel>$(MSTestEnginePreReleaseVersionLabel)</PreReleaseVersionLabel>
     <SuppressFinalPackageVersion>true</SuppressFinalPackageVersion>
     <!-- Temporarly disable missing XML documentation on public APIs -->
     <NoWarn>$(NoWarn);CS1591</NoWarn>
