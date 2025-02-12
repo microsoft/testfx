@@ -60,8 +60,6 @@
     <PackageVersion Include="Codecov" Version="1.12.3" />
     <PackageVersion Include="FluentAssertions" Version="6.12.0" />
     <PackageVersion Include="FSharp.Core" Version="9.0.201" />
-    <!-- CVE-2024-48924 / Transitive deps of StreamJsonRpc -->
-    <PackageVersion Include="MessagePack" Version="2.5.187" />
     <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.Analyzer.Testing" Version="$(MicrosoftCodeAnalysisAnalyzerTestingVersion)" />
     <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.CodeFix.Testing" Version="$(MicrosoftCodeAnalysisAnalyzerTestingVersion)" />
     <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.CodeRefactoring.Testing" Version="$(MicrosoftCodeAnalysisAnalyzerTestingVersion)" />
@@ -74,9 +72,7 @@
     <PackageVersion Include="MSTest.TestAdapter" Version="$(MSTestVersion)" />
     <PackageVersion Include="MSTest.TestFramework" Version="$(MSTestVersion)" />
     <PackageVersion Include="Newtonsoft.Json" Version="13.0.3" />
-    <!-- CVE-2024-0057 / Transitive deps of code analysis testing packages -->
-    <PackageVersion Include="NuGet.Packaging" Version="6.12.1" />
-    <PackageVersion Include="NuGet.Protocol" Version="6.12.1" />
+
     <PackageVersion Include="Polly" Version="8.5.0" />
     <PackageVersion Include="Polly.Contrib.WaitAndRetry" Version="1.1.1" />
     <PackageVersion Include="StreamJsonRpc" Version="2.20.20" />

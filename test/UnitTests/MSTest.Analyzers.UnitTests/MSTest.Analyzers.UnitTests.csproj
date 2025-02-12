@@ -25,9 +25,6 @@
 
     <!-- Deps of MSTest.TestAdapter -->
     <PackageReference Include="Microsoft.TestPlatform.AdapterUtilities" />
-
-    <!-- CVE-2024-0057 / Transitive deps of code analysis testing packages -->
-    <PackageReference Include="NuGet.Packaging" />
   </ItemGroup>
 
   <ItemGroup>
