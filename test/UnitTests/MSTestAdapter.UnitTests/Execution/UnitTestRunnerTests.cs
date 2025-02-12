@@ -106,7 +106,7 @@ public sealed class UnitTestRunnerTests : TestContainer
     public async Task RunSingleTestShouldReturnTestResultIndicatingNotRunnableTestIfTestMethodCannotBeRun()
     {
         Type type = typeof(TypeCacheTests.DummyTestClassWithTestMethods);
-        MethodInfo methodInfo = type.GetMethod("TestMethodWithNullCustomPropertyName")!!;
+        MethodInfo methodInfo = type.GetMethod("TestMethodWithNullCustomPropertyName")!;
         var testMethod = new TestMethod(methodInfo.Name, type.FullName!, "A", isAsync: false);
 
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("A", It.IsAny<bool>()))
@@ -129,7 +129,7 @@ public sealed class UnitTestRunnerTests : TestContainer
     public async Task ExecuteShouldSkipTestAndFillInClassIgnoreMessageIfIgnoreAttributeIsPresentOnTestClassAndHasMessage()
     {
         Type type = typeof(TypeCacheTests.DummyTestClassWithIgnoreClassWithMessage);
-        MethodInfo methodInfo = type.GetMethod("TestMethod")!!;
+        MethodInfo methodInfo = type.GetMethod("TestMethod")!;
         var testMethod = new TestMethod(methodInfo.Name, type.FullName!, "A", isAsync: false);
 
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("A", It.IsAny<bool>()))
@@ -146,7 +146,7 @@ public sealed class UnitTestRunnerTests : TestContainer
     public async Task ExecuteShouldSkipTestAndSkipFillingIgnoreMessageIfIgnoreAttributeIsPresentOnTestClassButHasNoMessage()
     {
         Type type = typeof(TypeCacheTests.DummyTestClassWithIgnoreClass);
-        MethodInfo methodInfo = type.GetMethod("TestMethod")!!;
+        MethodInfo methodInfo = type.GetMethod("TestMethod")!;
         var testMethod = new TestMethod(methodInfo.Name, type.FullName!, "A", isAsync: false);
 
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("A", It.IsAny<bool>()))
@@ -163,7 +163,7 @@ public sealed class UnitTestRunnerTests : TestContainer
     public async Task ExecuteShouldSkipTestAndFillInMethodIgnoreMessageIfIgnoreAttributeIsPresentOnTestMethodAndHasMessage()
     {
         Type type = typeof(TypeCacheTests.DummyTestClassWithIgnoreTestWithMessage);
-        MethodInfo methodInfo = type.GetMethod("TestMethod")!!;
+        MethodInfo methodInfo = type.GetMethod("TestMethod")!;
         var testMethod = new TestMethod(methodInfo.Name, type.FullName!, "A", isAsync: false);
 
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("A", It.IsAny<bool>()))
@@ -180,7 +180,7 @@ public sealed class UnitTestRunnerTests : TestContainer
     public async Task ExecuteShouldSkipTestAndSkipFillingIgnoreMessageIfIgnoreAttributeIsPresentOnTestMethodButHasNoMessage()
     {
         Type type = typeof(TypeCacheTests.DummyTestClassWithIgnoreTest);
-        MethodInfo methodInfo = type.GetMethod("TestMethod")!!;
+        MethodInfo methodInfo = type.GetMethod("TestMethod")!;
         var testMethod = new TestMethod(methodInfo.Name, type.FullName!, "A", isAsync: false);
 
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("A", It.IsAny<bool>()))
@@ -197,7 +197,7 @@ public sealed class UnitTestRunnerTests : TestContainer
     public async Task ExecuteShouldSkipTestAndFillInClassIgnoreMessageIfIgnoreAttributeIsPresentOnBothClassAndMethod()
     {
         Type type = typeof(TypeCacheTests.DummyTestClassWithIgnoreClassAndIgnoreTestWithMessage);
-        MethodInfo methodInfo = type.GetMethod("TestMethod")!!;
+        MethodInfo methodInfo = type.GetMethod("TestMethod")!;
         var testMethod = new TestMethod(methodInfo.Name, type.FullName!, "A", isAsync: false);
 
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("A", It.IsAny<bool>()))
@@ -214,7 +214,7 @@ public sealed class UnitTestRunnerTests : TestContainer
     public async Task ExecuteShouldSkipTestAndFillInMethodIgnoreMessageIfIgnoreAttributeIsPresentOnBothClassAndMethodButClassHasNoMessage()
     {
         Type type = typeof(TypeCacheTests.DummyTestClassWithIgnoreClassWithNoMessageAndIgnoreTestWithMessage);
-        MethodInfo methodInfo = type.GetMethod("TestMethod")!!;
+        MethodInfo methodInfo = type.GetMethod("TestMethod")!;
         var testMethod = new TestMethod(methodInfo.Name, type.FullName!, "A", isAsync: false);
 
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("A", It.IsAny<bool>()))
@@ -253,7 +253,7 @@ public sealed class UnitTestRunnerTests : TestContainer
     public async Task RunSingleTestShouldReturnTestResultsForAPassingTestMethod()
     {
         Type type = typeof(TypeCacheTests.DummyTestClassWithTestMethods);
-        MethodInfo methodInfo = type.GetMethod("TestMethod")!!;
+        MethodInfo methodInfo = type.GetMethod("TestMethod")!;
         var testMethod = new TestMethod(methodInfo.Name, type.FullName!, "A", isAsync: false);
 
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("A", It.IsAny<bool>()))
@@ -270,7 +270,7 @@ public sealed class UnitTestRunnerTests : TestContainer
     public async Task RunSingleTestShouldSetTestsAsInProgressInTestContext()
     {
         Type type = typeof(DummyTestClass);
-        MethodInfo methodInfo = type.GetMethod("TestMethodToTestInProgress")!!;
+        MethodInfo methodInfo = type.GetMethod("TestMethodToTestInProgress")!;
         var testMethod = new TestMethod(methodInfo.Name, type.FullName!, "A", isAsync: false);
 
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("A", It.IsAny<bool>()))
@@ -290,13 +290,13 @@ public sealed class UnitTestRunnerTests : TestContainer
         _unitTestRunner = new UnitTestRunner(new MSTestSettings(), Array.Empty<UnitTestElement>(), null, mockReflectHelper.Object);
 
         Type type = typeof(DummyTestClassWithInitializeMethods);
-        MethodInfo methodInfo = type.GetMethod("TestMethod")!!;
+        MethodInfo methodInfo = type.GetMethod("TestMethod")!;
         var testMethod = new TestMethod(methodInfo.Name, type.FullName!, "A", isAsync: false);
 
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("A", It.IsAny<bool>()))
             .Returns(Assembly.GetExecutingAssembly());
         mockReflectHelper.Setup(
-            rh => rh.IsNonDerivedAttributeDefined<AssemblyInitializeAttribute>(type.GetMethod("AssemblyInitialize")!!, It.IsAny<bool>()))
+            rh => rh.IsNonDerivedAttributeDefined<AssemblyInitializeAttribute>(type.GetMethod("AssemblyInitialize")!, It.IsAny<bool>()))
             .Returns(true);
 
         int validator = 1;
