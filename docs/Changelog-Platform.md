@@ -4,6 +4,29 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
+## <a name="1.6.0" />[1.6.0] - 2025-02-12
+
+See full log [here](https://github.com/microsoft/testfx/compare/v1.5.3...v1.6.0)
+
+### Added
+
+### Fixed
+
+### Housekeeping
+
+### Artifacts
+
+* Microsoft.Testing.Extensions.CrashDump: [1.6.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.CrashDump/1.6.0)
+* Microsoft.Testing.Extensions.HangDump: [1.6.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HangDump/1.6.0)
+* Microsoft.Testing.Extensions.HotReload: [1.6.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HotReload/1.6.0)
+* Microsoft.Testing.Extensions.Retry: [1.6.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Retry/1.6.0)
+* Microsoft.Testing.Extensions.Telemetry: [1.6.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Telemetry/1.6.0)
+* Microsoft.Testing.Extensions.TrxReport: [1.6.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport/1.6.0)
+* Microsoft.Testing.Extensions.TrxReport.Abstractions: [1.6.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport.Abstractions/1.6.0)
+* Microsoft.Testing.Extensions.VSTestBridge: [1.6.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.VSTestBridge/1.6.0)
+* Microsoft.Testing.Platform: [1.6.0](https://www.nuget.org/packages/Microsoft.Testing.Platform/1.6.0)
+* Microsoft.Testing.Platform.MSBuild: [1.6.0](https://www.nuget.org/packages/Microsoft.Testing.Platform.MSBuild/1.6.0)
+
 ## <a name="1.5.3" />[1.5.3] - 2025-01-27
 
 See full log [here](https://github.com/microsoft/testfx/compare/v1.5.2...v1.5.3)
