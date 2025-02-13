@@ -104,11 +104,11 @@ public class FileUtilityTests : TestContainer
 
         _fileUtility.Setup(fu => fu.GetDirectoriesInADirectory(It.IsAny<string>())).Returns<string>(directory =>
         {
-            IEnumerable<string> directories = allFiles.Where(file => IsFileUnderDirectory(directory, file)).Select(file => Path.GetDirectoryName(file)).Distinct();
+            IEnumerable<string> directories = allFiles.Where(file => IsFileUnderDirectory(directory, file)).Select(file => Path.GetDirectoryName(file)!).Distinct();
             return directories.ToArray();
         });
 
-        _fileUtility.Setup(fu => fu.GetFilesInADirectory(It.IsAny<string>())).Returns<string>(directory => allFiles.Where(file => Path.GetDirectoryName(file).Equals(directory, StringComparison.OrdinalIgnoreCase)).Distinct().ToArray());
+        _fileUtility.Setup(fu => fu.GetFilesInADirectory(It.IsAny<string>())).Returns<string>(directory => allFiles.Where(file => Path.GetDirectoryName(file)!.Equals(directory, StringComparison.OrdinalIgnoreCase)).Distinct().ToArray());
 
         // Act
         List<string> files = _fileUtility.Object.AddFilesFromDirectory("C:\\MainClock", directory => directory.Contains("Results"), false);
@@ -144,11 +144,11 @@ public class FileUtilityTests : TestContainer
 
         _fileUtility.Setup(fu => fu.GetDirectoriesInADirectory(It.IsAny<string>())).Returns<string>(directory =>
         {
-            IEnumerable<string> directories = allFiles.Where(file => IsFileUnderDirectory(directory, file)).Select(file => Path.GetDirectoryName(file)).Distinct();
+            IEnumerable<string> directories = allFiles.Where(file => IsFileUnderDirectory(directory, file)).Select(file => Path.GetDirectoryName(file)!).Distinct();
             return directories.ToArray();
         });
 
-        _fileUtility.Setup(fu => fu.GetFilesInADirectory(It.IsAny<string>())).Returns<string>(directory => allFiles.Where(file => Path.GetDirectoryName(file).Equals(directory, StringComparison.OrdinalIgnoreCase)).Distinct().ToArray());
+        _fileUtility.Setup(fu => fu.GetFilesInADirectory(It.IsAny<string>())).Returns<string>(directory => allFiles.Where(file => Path.GetDirectoryName(file)!.Equals(directory, StringComparison.OrdinalIgnoreCase)).Distinct().ToArray());
 
         // Act
         List<string> files = _fileUtility.Object.AddFilesFromDirectory("C:\\MainClock", false);
@@ -162,7 +162,7 @@ public class FileUtilityTests : TestContainer
 
     private static bool IsFileUnderDirectory(string directory, string fileName)
     {
-        string fileDirectory = Path.GetDirectoryName(fileName);
+        string fileDirectory = Path.GetDirectoryName(fileName)!;
         return fileDirectory.StartsWith(directory, StringComparison.OrdinalIgnoreCase) &&
                !directory.Equals(fileDirectory, StringComparison.OrdinalIgnoreCase);
     }

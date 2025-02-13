@@ -13,7 +13,7 @@ public class ReflectionUtilityTests : TestContainer
 {
     public void GetCustomAttributesShouldReturnAllAttributes()
     {
-        MethodInfo methodInfo = typeof(DummyBaseTestClass).GetMethod("DummyVTestMethod1");
+        MethodInfo methodInfo = typeof(DummyBaseTestClass).GetMethod("DummyVTestMethod1")!;
 
         IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributes(methodInfo, false);
 
@@ -26,7 +26,7 @@ public class ReflectionUtilityTests : TestContainer
 
     public void GetCustomAttributesShouldReturnAllAttributesIgnoringBaseInheritance()
     {
-        MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("DummyVTestMethod1");
+        MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("DummyVTestMethod1")!;
 
         IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributes(methodInfo, false);
 
@@ -39,7 +39,7 @@ public class ReflectionUtilityTests : TestContainer
 
     public void GetCustomAttributesShouldReturnAllAttributesWithBaseInheritance()
     {
-        MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("DummyVTestMethod1");
+        MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("DummyVTestMethod1")!;
 
         IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributes(methodInfo, true);
 
@@ -92,7 +92,7 @@ public class ReflectionUtilityTests : TestContainer
 
     public void GetSpecificCustomAttributesShouldReturnAllAttributes()
     {
-        MethodInfo methodInfo = typeof(DummyBaseTestClass).GetMethod("DummyVTestMethod1");
+        MethodInfo methodInfo = typeof(DummyBaseTestClass).GetMethod("DummyVTestMethod1")!;
 
         IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributes(methodInfo, typeof(DummyAAttribute), false);
 
@@ -105,7 +105,7 @@ public class ReflectionUtilityTests : TestContainer
 
     public void GetSpecificCustomAttributesShouldReturnAllAttributesIgnoringBaseInheritance()
     {
-        MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("DummyVTestMethod1");
+        MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("DummyVTestMethod1")!;
 
         IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributes(methodInfo, typeof(DummyAAttribute), false);
 
@@ -118,7 +118,7 @@ public class ReflectionUtilityTests : TestContainer
 
     public void GetSpecificCustomAttributesShouldReturnAllAttributesWithBaseInheritance()
     {
-        MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("DummyVTestMethod1");
+        MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("DummyVTestMethod1")!;
 
         IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributes(methodInfo, typeof(DummyAAttribute), true);
 
@@ -171,7 +171,7 @@ public class ReflectionUtilityTests : TestContainer
     internal static List<string> GetAttributeValuePairs(IEnumerable attributes)
     {
         var attribValuePairs = new List<string>();
-        foreach (object attrib in attributes)
+        foreach (object? attrib in attributes)
         {
             if (attrib is DummySingleAAttribute dummySingleAAttribute)
             {

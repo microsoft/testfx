@@ -84,19 +84,19 @@ public class MSTestDiscovererTests : TestContainer
 
     public void DiscoverTestsShouldThrowIfSourcesIsNull()
     {
-        void A() => _discoverer.DiscoverTests(null, _mockDiscoveryContext.Object, _mockMessageLogger.Object, _mockTestCaseDiscoverySink.Object);
+        void A() => _discoverer.DiscoverTests(null!, _mockDiscoveryContext.Object, _mockMessageLogger.Object, _mockTestCaseDiscoverySink.Object);
         VerifyThrows<ArgumentNullException>(A);
     }
 
     public void DiscoverTestsShouldThrowIfDiscoverySinkIsNull()
     {
-        void A() => _discoverer.DiscoverTests(new List<string>(), _mockDiscoveryContext.Object, _mockMessageLogger.Object, null);
+        void A() => _discoverer.DiscoverTests(new List<string>(), _mockDiscoveryContext.Object, _mockMessageLogger.Object, null!);
         VerifyThrows<ArgumentNullException>(A);
     }
 
     public void DiscoverTestsShouldThrowIfLoggerIsNull()
     {
-        void A() => _discoverer.DiscoverTests(new List<string>(), _mockDiscoveryContext.Object, null, _mockTestCaseDiscoverySink.Object);
+        void A() => _discoverer.DiscoverTests(new List<string>(), _mockDiscoveryContext.Object, null!, _mockTestCaseDiscoverySink.Object);
         VerifyThrows<ArgumentNullException>(A);
     }
 
@@ -122,7 +122,7 @@ public class MSTestDiscovererTests : TestContainer
             .Returns(true);
 
         // This call should not throw a null reference exception.
-        _discoverer.DiscoverTests(new List<string> { source }, null, _mockMessageLogger.Object, _mockTestCaseDiscoverySink.Object);
+        _discoverer.DiscoverTests(new List<string> { source }, null!, _mockMessageLogger.Object, _mockTestCaseDiscoverySink.Object);
     }
 
     public void DiscoverTestsShouldDiscoverTests()
@@ -141,7 +141,7 @@ public class MSTestDiscovererTests : TestContainer
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly(source, It.IsAny<bool>()))
             .Returns(Assembly.GetExecutingAssembly());
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.CreateNavigationSession(source))
-            .Returns((object)null);
+            .Returns((object?)null);
         _testablePlatformServiceProvider.MockTestSourceHost.Setup(
             ih => ih.CreateInstanceForType(It.IsAny<Type>(), It.IsAny<object[]>()))
             .Returns(new AssemblyEnumerator());
@@ -201,7 +201,7 @@ public class MSTestDiscovererTests : TestContainer
 
     public void AreValidSourcesShouldThrowIfPlatformsValidSourceExtensionsIsNull()
     {
-        _testablePlatformServiceProvider.MockTestSourceValidator.SetupGet(ts => ts.ValidSourceExtensions).Returns((List<string>)null);
+        _testablePlatformServiceProvider.MockTestSourceValidator.SetupGet(ts => ts.ValidSourceExtensions).Returns((List<string>)null!);
         var sources = new List<string> { "dummy" };
         VerifyThrows<ArgumentNullException>(() => MSTestDiscovererHelpers.AreValidSources(sources));
     }

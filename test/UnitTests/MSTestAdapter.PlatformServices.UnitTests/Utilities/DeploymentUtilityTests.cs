@@ -106,7 +106,7 @@ public class DeploymentUtilityTests : TestContainer
                 testRunDirectories));
 
         // Assert.
-        string warning;
+        string? warning;
         string sourceFile = Assembly.GetExecutingAssembly().GetName().Name + ".dll";
         string configFile = Assembly.GetExecutingAssembly().GetName().Name + ".dll.config";
         _mockFileUtility.Verify(
@@ -151,7 +151,7 @@ public class DeploymentUtilityTests : TestContainer
                 testRunDirectories));
 
         // Assert.
-        string warning;
+        string? warning;
 
         _mockFileUtility.Verify(
             fu =>
@@ -188,7 +188,7 @@ public class DeploymentUtilityTests : TestContainer
                 testRunDirectories));
 
         // Assert.
-        string warning;
+        string? warning;
 
         _mockFileUtility.Verify(
             fu =>
@@ -229,7 +229,7 @@ public class DeploymentUtilityTests : TestContainer
                 testRunDirectories));
 
         // Assert.
-        string warning;
+        string? warning;
 
         _mockFileUtility.Verify(
             fu =>
@@ -284,7 +284,7 @@ public class DeploymentUtilityTests : TestContainer
                 testRunDirectories));
 
         // Assert.
-        string warning;
+        string? warning;
 
         _mockFileUtility.Verify(
             fu =>
@@ -309,7 +309,7 @@ public class DeploymentUtilityTests : TestContainer
         _mockAssemblyUtility.Setup(
             au => au.GetSatelliteAssemblies(It.IsAny<string>()))
             .Returns([]);
-        string warning;
+        string? warning;
         _mockFileUtility.Setup(fu => fu.CopyFileOverwrite(It.IsAny<string>(), It.IsAny<string>(), out warning))
             .Returns(
                 (string x, string y, string z) =>
@@ -364,7 +364,7 @@ public class DeploymentUtilityTests : TestContainer
         _mockAssemblyUtility.Setup(
             au => au.GetSatelliteAssemblies(It.IsAny<string>()))
             .Returns([]);
-        string warning;
+        string? warning;
         _mockFileUtility.Setup(fu => fu.CopyFileOverwrite(It.IsAny<string>(), It.IsAny<string>(), out warning))
             .Returns(
                 (string x, string y, string z) =>
@@ -425,7 +425,7 @@ public class DeploymentUtilityTests : TestContainer
     public void CreateDeploymentDirectoriesShouldCreateDefaultDeploymentDirectoryIfTestRunDirectoryIsNull()
     {
         // Setup mocks
-        _mockRunContext.Setup(rc => rc.TestRunDirectory).Returns((string)null);
+        _mockRunContext.Setup(rc => rc.TestRunDirectory).Returns((string)null!);
         _mockFileUtility.Setup(fu => fu.GetNextIterationDirectoryName(It.Is<string>(s => s.Contains(TestRunDirectories.DefaultDeploymentRootDirectory)), It.IsAny<string>()))
             .Returns(RootDeploymentDirectory);
 
@@ -469,7 +469,7 @@ public class DeploymentUtilityTests : TestContainer
                 defaultDeploymentItemOutputDirectoryOut)
         ];
         testCase.SetPropertyValue(DeploymentItemUtilityTests.DeploymentItemsProperty, kvpArray);
-        string currentExecutingFolder = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+        string currentExecutingFolder = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!;
 
         testRunDirectories = new TestRunDirectories(currentExecutingFolder);
 

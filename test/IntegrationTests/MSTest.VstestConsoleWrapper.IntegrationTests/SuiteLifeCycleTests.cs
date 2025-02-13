@@ -1589,7 +1589,7 @@ public class SuiteLifeCycleTests : CLITestBase
             """
             .Split(WindowsLineReturn, StringSplitOptions.None);
         caseDerivedClassInitializeNoneAndClassCleanupBeforeEachDerivedClassParentTestMethod
-            .Messages[0].Text
+            .Messages[0].Text!
             .Substring(expectedStart.Length)
             .Split(WindowsLineReturn, StringSplitOptions.None)
             .Should().BeEquivalentTo(expectedRemainingMessages);
@@ -1642,7 +1642,7 @@ public class SuiteLifeCycleTests : CLITestBase
             """
             .Split(["\r\n"], StringSplitOptions.None);
         caseDerivedClassInitializeNoneAndClassCleanupBeforeEachDerivedClassParentTestMethod
-            .Messages[1].Text
+            .Messages[1].Text!
             .Substring(expectedStart.Length)
             .Split(["\r\n"], StringSplitOptions.None)
             .Should().BeEquivalentTo(expectedRemainingMessages);
@@ -1693,7 +1693,7 @@ public class SuiteLifeCycleTests : CLITestBase
             """
             .Split(["\r\n"], StringSplitOptions.None);
         caseDerivedClassInitializeNoneAndClassCleanupBeforeEachDerivedClassParentTestMethod
-            .Messages[2].Text
+            .Messages[2].Text!
             .Substring(expectedStart.Length)
             .Split(["\r\n"], StringSplitOptions.None)
             .Should().BeEquivalentTo(expectedRemainingMessages);

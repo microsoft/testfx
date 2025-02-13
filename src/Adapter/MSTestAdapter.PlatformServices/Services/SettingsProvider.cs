@@ -62,7 +62,7 @@ public class MSTestSettingsProvider : ISettingsProvider
     /// </summary>
     /// <param name="source">The source.</param>
     /// <returns>A collection of properties.</returns>
-    public IDictionary<string, object> GetProperties(string source)
+    public IDictionary<string, object> GetProperties(string? source)
 #if !WINDOWS_UWP
         => TestDeployment.GetDeploymentInformation(source);
 #else

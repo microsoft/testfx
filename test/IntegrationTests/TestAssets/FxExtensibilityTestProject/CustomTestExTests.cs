@@ -63,7 +63,8 @@ public class IterativeTestClassAttribute : TestClassAttribute
 
     public IterativeTestClassAttribute(int stabilityThreshold) => _stabilityThreshold = stabilityThreshold;
 
-    public override TestMethodAttribute GetTestMethodAttribute(TestMethodAttribute testMethodAttribute) => testMethodAttribute is IterativeTestMethodAttribute
+    public override TestMethodAttribute? GetTestMethodAttribute(TestMethodAttribute? testMethodAttribute)
+        => testMethodAttribute is IterativeTestMethodAttribute
             ? testMethodAttribute
             : new IterativeTestMethodAttribute(_stabilityThreshold);
 }

@@ -50,7 +50,7 @@ public class RunConfigurationSettingsTests : TestContainer
             </RunSettings>
             """;
 
-        var configurationSettings = RunConfigurationSettings.GetSettings(runSettingsXml, RunConfigurationSettings.SettingsName);
+        RunConfigurationSettings configurationSettings = RunConfigurationSettings.GetSettings(runSettingsXml, RunConfigurationSettings.SettingsName)!;
         Verify(configurationSettings.CollectSourceInformation);
     }
 
@@ -67,7 +67,7 @@ public class RunConfigurationSettingsTests : TestContainer
             </RunSettings>
             """;
 
-        var configurationSettings = RunConfigurationSettings.GetSettings(runSettingsXml, RunConfigurationSettings.SettingsName);
+        RunConfigurationSettings configurationSettings = RunConfigurationSettings.GetSettings(runSettingsXml, RunConfigurationSettings.SettingsName)!;
         Verify(!configurationSettings.CollectSourceInformation);
     }
 
@@ -108,7 +108,7 @@ public class RunConfigurationSettingsTests : TestContainer
 
     public void PopulateSettingsShouldInitializeDefaultSettingsWhenRunSettingsXmlIsEmpty()
     {
-        _mockDiscoveryContext.Setup(md => md.RunSettings.SettingsXml).Returns(string.Empty);
+        _mockDiscoveryContext.Setup(md => md.RunSettings!.SettingsXml).Returns(string.Empty);
         MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object, null);
 
         RunConfigurationSettings settings = MSTestSettings.RunConfigurationSettings;
@@ -174,7 +174,7 @@ public class RunConfigurationSettingsTests : TestContainer
 
         var mockConfig = new Mock<IConfiguration>();
         mockConfig.Setup(config => config[It.IsAny<string>()])
-                  .Returns((string key) => configDictionary.TryGetValue(key, out string value) ? value : null);
+                  .Returns((string key) => configDictionary.TryGetValue(key, out string? value) ? value : null);
 
         var settings = new RunConfigurationSettings();
 

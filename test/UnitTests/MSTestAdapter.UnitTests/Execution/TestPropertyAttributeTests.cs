@@ -43,26 +43,26 @@ public class TestPropertyAttributeTests : TestContainer
 
     public void GetTestMethodInfoShouldAddPropertiesFromContainingClassCorrectly()
     {
-        string className = typeof(DummyTestClassBase).FullName;
-        var testMethod = new TestMethod(nameof(DummyTestClassBase.VirtualTestMethodInBaseAndDerived), className, typeof(DummyTestClassBase).Assembly.GetName().Name, isAsync: false);
+        string className = typeof(DummyTestClassBase).FullName!;
+        var testMethod = new TestMethod(nameof(DummyTestClassBase.VirtualTestMethodInBaseAndDerived), className, typeof(DummyTestClassBase).Assembly.GetName().Name!, isAsync: false);
 
-        var testContext = new TestContextImplementation(testMethod, new StringWriter(), new Dictionary<string, object>());
+        var testContext = new TestContextImplementation(testMethod, new StringWriter(), new Dictionary<string, object?>());
 
         _ = _typeCache.GetTestMethodInfo(
             testMethod,
             testContext,
             false);
 
-        Assert.IsTrue(testContext.TryGetPropertyValue("TestMethodKeyFromBase", out object value1));
+        Assert.IsTrue(testContext.TryGetPropertyValue("TestMethodKeyFromBase", out object? value1));
         Assert.AreEqual("TestMethodValueFromBase", value1);
 
-        Assert.IsTrue(testContext.TryGetPropertyValue("DummyTestClassBaseKey1", out object value2));
+        Assert.IsTrue(testContext.TryGetPropertyValue("DummyTestClassBaseKey1", out object? value2));
         Assert.AreEqual("DummyTestClassBaseValue1", value2);
 
-        Assert.IsTrue(testContext.TryGetPropertyValue("DummyTestClassBaseKey2", out object value3));
+        Assert.IsTrue(testContext.TryGetPropertyValue("DummyTestClassBaseKey2", out object? value3));
         Assert.AreEqual("DummyTestClassBaseValue2", value3);
 
-        TestPlatform.ObjectModel.Trait[] traits = ReflectHelper.Instance.GetTestPropertiesAsTraits(typeof(DummyTestClassBase).GetMethod(nameof(DummyTestClassBase.VirtualTestMethodInBaseAndDerived))).ToArray();
+        TestPlatform.ObjectModel.Trait[] traits = ReflectHelper.Instance.GetTestPropertiesAsTraits(typeof(DummyTestClassBase).GetMethod(nameof(DummyTestClassBase.VirtualTestMethodInBaseAndDerived))!).ToArray();
         Assert.AreEqual(3, traits.Length);
         Assert.AreEqual("TestMethodKeyFromBase", traits[0].Name);
         Assert.AreEqual("TestMethodValueFromBase", traits[0].Value);
@@ -74,35 +74,35 @@ public class TestPropertyAttributeTests : TestContainer
 
     public void GetTestMethodInfoShouldAddPropertiesFromContainingClassAndBaseClassesAndOverriddenMethodsCorrectly_OverriddenIsTestMethod()
     {
-        string className = typeof(DummyTestClassDerived).FullName;
-        var testMethod = new TestMethod(nameof(DummyTestClassDerived.VirtualTestMethodInBaseAndDerived), className, typeof(DummyTestClassBase).Assembly.GetName().Name, isAsync: false);
+        string className = typeof(DummyTestClassDerived).FullName!;
+        var testMethod = new TestMethod(nameof(DummyTestClassDerived.VirtualTestMethodInBaseAndDerived), className, typeof(DummyTestClassBase).Assembly.GetName().Name!, isAsync: false);
 
-        var testContext = new TestContextImplementation(testMethod, new StringWriter(), new Dictionary<string, object>());
+        var testContext = new TestContextImplementation(testMethod, new StringWriter(), new Dictionary<string, object?>());
 
         _ = _typeCache.GetTestMethodInfo(
             testMethod,
             testContext,
             false);
 
-        Assert.IsTrue(testContext.TryGetPropertyValue("DerivedMethod1Key", out object value1));
+        Assert.IsTrue(testContext.TryGetPropertyValue("DerivedMethod1Key", out object? value1));
         Assert.AreEqual("DerivedMethod1Value", value1);
 
-        Assert.IsTrue(testContext.TryGetPropertyValue("TestMethodKeyFromBase", out object value2));
+        Assert.IsTrue(testContext.TryGetPropertyValue("TestMethodKeyFromBase", out object? value2));
         Assert.AreEqual("TestMethodValueFromBase", value2);
 
-        Assert.IsTrue(testContext.TryGetPropertyValue("DummyTestClassDerivedKey1", out object value3));
+        Assert.IsTrue(testContext.TryGetPropertyValue("DummyTestClassDerivedKey1", out object? value3));
         Assert.AreEqual("DummyTestClassValue1", value3);
 
-        Assert.IsTrue(testContext.TryGetPropertyValue("DummyTestClassDerivedKey2", out object value4));
+        Assert.IsTrue(testContext.TryGetPropertyValue("DummyTestClassDerivedKey2", out object? value4));
         Assert.AreEqual("DummyTestClassValue2", value4);
 
-        Assert.IsTrue(testContext.TryGetPropertyValue("DummyTestClassBaseKey1", out object value5));
+        Assert.IsTrue(testContext.TryGetPropertyValue("DummyTestClassBaseKey1", out object? value5));
         Assert.AreEqual("DummyTestClassBaseValue1", value5);
 
-        Assert.IsTrue(testContext.TryGetPropertyValue("DummyTestClassBaseKey2", out object value6));
+        Assert.IsTrue(testContext.TryGetPropertyValue("DummyTestClassBaseKey2", out object? value6));
         Assert.AreEqual("DummyTestClassBaseValue2", value6);
 
-        TestPlatform.ObjectModel.Trait[] traits = ReflectHelper.Instance.GetTestPropertiesAsTraits(typeof(DummyTestClassDerived).GetMethod(nameof(DummyTestClassDerived.VirtualTestMethodInBaseAndDerived))).ToArray();
+        TestPlatform.ObjectModel.Trait[] traits = ReflectHelper.Instance.GetTestPropertiesAsTraits(typeof(DummyTestClassDerived).GetMethod(nameof(DummyTestClassDerived.VirtualTestMethodInBaseAndDerived))!).ToArray();
         Assert.AreEqual(6, traits.Length);
         Assert.AreEqual("DerivedMethod1Key", traits[0].Name);
         Assert.AreEqual("DerivedMethod1Value", traits[0].Value);
@@ -120,35 +120,35 @@ public class TestPropertyAttributeTests : TestContainer
 
     public void GetTestMethodInfoShouldAddPropertiesFromContainingClassAndBaseClassesAndOverriddenMethodsCorrectly_OverriddenIsNotTestMethod()
     {
-        string className = typeof(DummyTestClassDerived).FullName;
-        var testMethod = new TestMethod(nameof(DummyTestClassDerived.VirtualTestMethodInDerivedButNotTestMethodInBase), className, typeof(DummyTestClassBase).Assembly.GetName().Name, isAsync: false);
+        string className = typeof(DummyTestClassDerived).FullName!;
+        var testMethod = new TestMethod(nameof(DummyTestClassDerived.VirtualTestMethodInDerivedButNotTestMethodInBase), className, typeof(DummyTestClassBase).Assembly.GetName().Name!, isAsync: false);
 
-        var testContext = new TestContextImplementation(testMethod, new StringWriter(), new Dictionary<string, object>());
+        var testContext = new TestContextImplementation(testMethod, new StringWriter(), new Dictionary<string, object?>());
 
         _ = _typeCache.GetTestMethodInfo(
             testMethod,
             testContext,
             false);
 
-        Assert.IsTrue(testContext.TryGetPropertyValue("DerivedMethod2Key", out object value1));
+        Assert.IsTrue(testContext.TryGetPropertyValue("DerivedMethod2Key", out object? value1));
         Assert.AreEqual("DerivedMethod2Value", value1);
 
-        Assert.IsTrue(testContext.TryGetPropertyValue("NonTestMethodKeyFromBase", out object value2));
+        Assert.IsTrue(testContext.TryGetPropertyValue("NonTestMethodKeyFromBase", out object? value2));
         Assert.AreEqual("NonTestMethodValueFromBase", value2);
 
-        Assert.IsTrue(testContext.TryGetPropertyValue("DummyTestClassDerivedKey1", out object value3));
+        Assert.IsTrue(testContext.TryGetPropertyValue("DummyTestClassDerivedKey1", out object? value3));
         Assert.AreEqual("DummyTestClassValue1", value3);
 
-        Assert.IsTrue(testContext.TryGetPropertyValue("DummyTestClassDerivedKey2", out object value4));
+        Assert.IsTrue(testContext.TryGetPropertyValue("DummyTestClassDerivedKey2", out object? value4));
         Assert.AreEqual("DummyTestClassValue2", value4);
 
-        Assert.IsTrue(testContext.TryGetPropertyValue("DummyTestClassBaseKey1", out object value5));
+        Assert.IsTrue(testContext.TryGetPropertyValue("DummyTestClassBaseKey1", out object? value5));
         Assert.AreEqual("DummyTestClassBaseValue1", value5);
 
-        Assert.IsTrue(testContext.TryGetPropertyValue("DummyTestClassBaseKey2", out object value6));
+        Assert.IsTrue(testContext.TryGetPropertyValue("DummyTestClassBaseKey2", out object? value6));
         Assert.AreEqual("DummyTestClassBaseValue2", value6);
 
-        TestPlatform.ObjectModel.Trait[] traits = ReflectHelper.Instance.GetTestPropertiesAsTraits(typeof(DummyTestClassDerived).GetMethod(nameof(DummyTestClassDerived.VirtualTestMethodInDerivedButNotTestMethodInBase))).ToArray();
+        TestPlatform.ObjectModel.Trait[] traits = ReflectHelper.Instance.GetTestPropertiesAsTraits(typeof(DummyTestClassDerived).GetMethod(nameof(DummyTestClassDerived.VirtualTestMethodInDerivedButNotTestMethodInBase))!).ToArray();
         Assert.AreEqual(6, traits.Length);
         Assert.AreEqual("DerivedMethod2Key", traits[0].Name);
         Assert.AreEqual("DerivedMethod2Value", traits[0].Value);
@@ -172,7 +172,7 @@ public class TestPropertyAttributeTests : TestContainer
     [TestProperty("DummyTestClassBaseKey2", "DummyTestClassBaseValue2")]
     internal class DummyTestClassBase
     {
-        public TestContext TestContext { get; set; }
+        public TestContext TestContext { get; set; } = null!;
 
         [TestMethod]
         [TestProperty("TestMethodKeyFromBase", "TestMethodValueFromBase")]

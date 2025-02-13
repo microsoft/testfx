@@ -20,7 +20,7 @@ public class DesktopTestSourceHostTests : TestContainer
     public void GetResolutionPathsShouldAddPublicAndPrivateAssemblyPath()
     {
         // Setup
-        TestSourceHost sut = new(null, null, null);
+        TestSourceHost sut = new(null!, null, null);
 
         // Execute
         // It should return public and private path if it is not running in portable mode.
@@ -29,33 +29,33 @@ public class DesktopTestSourceHostTests : TestContainer
         // Assert
         if (!string.IsNullOrWhiteSpace(VSInstallationUtilities.PathToPublicAssemblies))
         {
-            Verify(result.Contains(VSInstallationUtilities.PathToPublicAssemblies));
+            Verify(result.Contains(VSInstallationUtilities.PathToPublicAssemblies!));
         }
 
         if (!string.IsNullOrWhiteSpace(VSInstallationUtilities.PathToPrivateAssemblies))
         {
-            Verify(result.Contains(VSInstallationUtilities.PathToPrivateAssemblies));
+            Verify(result.Contains(VSInstallationUtilities.PathToPrivateAssemblies!));
         }
     }
 
     public void GetResolutionPathsShouldNotAddPublicAndPrivateAssemblyPathInPortableMode()
     {
         // Setup
-        TestSourceHost sut = new(null, null, null);
+        TestSourceHost sut = new(null!, null, null);
 
         // Execute
         // It should not return public and private path if it is running in portable mode.
         List<string> result = sut.GetResolutionPaths("DummyAssembly.dll", isPortableMode: true);
 
         // Assert
-        Verify(!result.Contains(VSInstallationUtilities.PathToPublicAssemblies));
-        Verify(!result.Contains(VSInstallationUtilities.PathToPrivateAssemblies));
+        Verify(!result.Contains(VSInstallationUtilities.PathToPublicAssemblies!));
+        Verify(!result.Contains(VSInstallationUtilities.PathToPrivateAssemblies!));
     }
 
     public void GetResolutionPathsShouldAddAdapterFolderPath()
     {
         // Setup
-        TestSourceHost sut = new(null, null, null);
+        TestSourceHost sut = new(null!, null, null);
 
         // Execute
         List<string> result = sut.GetResolutionPaths("DummyAssembly.dll", isPortableMode: false);
@@ -67,7 +67,7 @@ public class DesktopTestSourceHostTests : TestContainer
     public void GetResolutionPathsShouldAddTestPlatformFolderPath()
     {
         // Setup
-        TestSourceHost sut = new(null, null, null);
+        TestSourceHost sut = new(null!, null, null);
 
         // Execute
         List<string> result = sut.GetResolutionPaths("DummyAssembly.dll", isPortableMode: false);
@@ -111,7 +111,7 @@ public class DesktopTestSourceHostTests : TestContainer
             var expectedObject = sourceHost.Object.CreateInstanceForType(typeof(DummyClass), null) as DummyClass;
 
             // Assert
-            Verify(Path.GetDirectoryName(typeof(DesktopTestSourceHostTests).Assembly.Location) == expectedObject.AppDomainAppBase);
+            Verify(Path.GetDirectoryName(typeof(DesktopTestSourceHostTests).Assembly.Location) == expectedObject?.AppDomainAppBase);
         }
         finally
         {
@@ -145,7 +145,7 @@ public class DesktopTestSourceHostTests : TestContainer
             var expectedObject = sourceHost.CreateInstanceForType(typeof(DummyClass), null) as DummyClass;
 
             // Assert
-            Verify(Path.GetDirectoryName(typeof(DesktopTestSourceHostTests).Assembly.Location) == expectedObject.AppDomainAppBase);
+            Verify(Path.GetDirectoryName(typeof(DesktopTestSourceHostTests).Assembly.Location) == expectedObject?.AppDomainAppBase);
         }
         finally
         {

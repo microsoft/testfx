@@ -8,9 +8,9 @@ namespace SuiteLifeCycleTestProject;
 [TestClass]
 public sealed class LifeCycleDerivedClassCleanupEndOfAssemblyAndBeforeEachDerivedClass : LifeCycleClassCleanupEndOfAssemblyAndBeforeEachDerivedClass
 {
-    private static TestContext s_testContext;
+    private static TestContext s_testContext = null!;
 
-    public TestContext DerivedClassTestContext { get; set; }
+    public TestContext DerivedClassTestContext { get; set; } = null!;
 
     public LifeCycleDerivedClassCleanupEndOfAssemblyAndBeforeEachDerivedClass()
     {
