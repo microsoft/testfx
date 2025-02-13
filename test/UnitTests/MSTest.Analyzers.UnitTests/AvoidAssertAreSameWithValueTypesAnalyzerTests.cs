@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
@@ -232,7 +232,7 @@ public sealed class AvoidAssertAreSameWithValueTypesAnalyzerTests
             ExpectedDiagnostics =
             {
                 VerifyCS.Diagnostic().WithLocation(0).WithArguments("AreEqual", "AreSame"),
-                VerifyCS.Diagnostic().WithLocation(1).WithArguments("AreEqual", "AreSame"),
+                VerifyCS.Diagnostic().WithLocation(1).WithArguments("AreNotEqual", "AreNotSame"),
             },
         }.RunAsync();
     }
