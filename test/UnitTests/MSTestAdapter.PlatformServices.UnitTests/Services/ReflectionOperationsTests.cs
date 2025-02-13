@@ -57,7 +57,7 @@ public class ReflectionOperationsTests : TestContainer
     {
         Type type = typeof(DummyBaseTestClass);
 
-        object[] attributes = _reflectionOperations.GetCustomAttributes(type, false);
+        object[] attributes = GetMemberAttributes(type, false);
 
         Verify(attributes is not null);
         Verify(attributes.Length == 1);
@@ -66,11 +66,16 @@ public class ReflectionOperationsTests : TestContainer
         Verify(expectedAttributes.SequenceEqual(GetAttributeValuePairs(attributes)));
     }
 
+    private object[] GetMemberAttributes(Type type, bool inherit)
+        => _reflectionOperations.GetCustomAttributes(type, inherit)
+            .Where(x => x.GetType().FullName != "System.Runtime.CompilerServices.NullableContextAttribute")
+            .ToArray();
+
     public void GetCustomAttributesOnTypeShouldReturnAllAttributesIgnoringBaseInheritance()
     {
         Type type = typeof(DummyTestClass);
 
-        object[] attributes = _reflectionOperations.GetCustomAttributes(type, false);
+        object[] attributes = GetMemberAttributes(type, false);
 
         Verify(attributes is not null);
         Verify(attributes.Length == 1);
@@ -83,7 +88,7 @@ public class ReflectionOperationsTests : TestContainer
     {
         Type method = typeof(DummyTestClass);
 
-        object[] attributes = _reflectionOperations.GetCustomAttributes(method, true);
+        object[] attributes = GetMemberAttributes(method, true);
 
         Verify(attributes is not null);
         Verify(attributes.Length == 2);
