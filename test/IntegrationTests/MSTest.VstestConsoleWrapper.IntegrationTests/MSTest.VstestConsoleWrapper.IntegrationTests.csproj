@@ -1,7 +1,10 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>$(NetFrameworkMinimum)</TargetFramework>
+    <UseInternalTestFramework>true</UseInternalTestFramework>
+    <UseMSTest>false</UseMSTest>
+    <OutputType>Exe</OutputType>
   </PropertyGroup>
 
   <ItemGroup>

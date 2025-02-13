@@ -7,7 +7,6 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deploym
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using Moq;
 

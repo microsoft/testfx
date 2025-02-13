@@ -1,9 +1,11 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>$(NetFrameworkMinimum)</TargetFramework>
     <IsPackable>false</IsPackable>
     <NoWarn>$(NoWarn),1685</NoWarn>
+    <UseInternalTestFramework>true</UseInternalTestFramework>
+    <OutputType>Exe</OutputType>
   </PropertyGroup>
 
   <ItemGroup>

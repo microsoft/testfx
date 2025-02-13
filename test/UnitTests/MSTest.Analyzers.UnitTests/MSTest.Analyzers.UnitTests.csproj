@@ -2,8 +2,6 @@
 
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
-    <UseVSTestRunner>false</UseVSTestRunner>
-    <EnableMSTestRunner>true</EnableMSTestRunner>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <GenerateBindingRedirectsOutputType>true</GenerateBindingRedirectsOutputType>
     
@@ -11,6 +9,8 @@
     <!-- This is to ensure that the assembly built from source is what is being used in tests -->
     <!-- This will exclude compile and runtime assets from NuGet so that they flow via ProjectReference -->
     <UseMSTestFromSource>true</UseMSTestFromSource>
+    <EnableMSTestRunner>true</EnableMSTestRunner>
+    <OutputType>Exe</OutputType>
   </PropertyGroup>
 
   <ItemGroup>

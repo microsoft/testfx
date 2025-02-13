@@ -8,7 +8,6 @@ using System.Data.Common;
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using Moq;
 
