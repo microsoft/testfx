@@ -189,4 +189,51 @@ public sealed class AvoidAssertAreSameWithValueTypesAnalyzerTests
 
         await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
+
+    [TestMethod]
+    public async Task AnalyzerMessageShouldBeCorrect()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Collections.Generic;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    {|#0:Assert.AreSame(0, 0)|};
+                    {|#1:Assert.AreNotSame(0, 1)|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Collections.Generic;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    Assert.AreEqual(0, 0);
+                    Assert.AreNotEqual(0, 1);
+                }
+            }
+            """;
+
+        await new VerifyCS.Test()
+        {
+            TestCode = code,
+            FixedCode = fixedCode,
+            ExpectedDiagnostics =
+            {
+                VerifyCS.Diagnostic().WithLocation(0).WithMessage("Use 'AreEqual' instead of 'AreSame' when comparing value types"),
+                VerifyCS.Diagnostic().WithLocation(1).WithMessage("Use 'AreNotEqual' instead of 'AreNotSame' when comparing value types"),
+            },
+        }.RunAsync();
+    }
 }
