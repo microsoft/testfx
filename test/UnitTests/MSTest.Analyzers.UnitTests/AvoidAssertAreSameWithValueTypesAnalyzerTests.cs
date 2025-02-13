@@ -231,8 +231,8 @@ public sealed class AvoidAssertAreSameWithValueTypesAnalyzerTests
             FixedCode = fixedCode,
             ExpectedDiagnostics =
             {
-                VerifyCS.Diagnostic().WithLocation(0).WithMessage("Use 'AreEqual' instead of 'AreSame' when comparing value types"),
-                VerifyCS.Diagnostic().WithLocation(1).WithMessage("Use 'AreNotEqual' instead of 'AreNotSame' when comparing value types"),
+                VerifyCS.Diagnostic().WithLocation(0).WithArguments("AreEqual", "AreSame"),
+                VerifyCS.Diagnostic().WithLocation(1).WithArguments("AreEqual", "AreSame"),
             },
         }.RunAsync();
     }
