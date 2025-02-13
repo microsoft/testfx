@@ -68,7 +68,7 @@ public class TestClassInfoTests : TestContainer
     {
         _testClassType = typeof(DummyTestClass);
         _testClassConstructor = _testClassType.GetConstructors().First();
-        _testClassAttribute = (UTF.TestClassAttribute)_testClassType.GetCustomAttributes().First();
+        _testClassAttribute = _testClassType.GetCustomAttributes().OfType<TestClassAttribute>().First();
         _testAssemblyInfo = new TestAssemblyInfo(_testClassType.Assembly);
 
         _testClassInfo = new TestClassInfo(

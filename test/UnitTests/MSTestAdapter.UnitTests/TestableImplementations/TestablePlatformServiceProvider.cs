@@ -35,7 +35,7 @@ internal class TestablePlatformServiceProvider : IPlatformServiceProvider
 
     public Mock<ITraceListenerManager> MockTraceListenerManager { get; set; } = new();
 
-    public Mock<IThreadOperations> MockThreadOperations { get; set; } = null!;
+    public Mock<IThreadOperations> MockThreadOperations { get; set; } = new();
 
     [AllowNull]
     public Mock<IReflectionOperations2> MockReflectionOperations { get; set; } = null!;
