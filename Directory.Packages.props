@@ -36,7 +36,7 @@
     <PackageVersion Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" Version="$(MicrosoftCodeAnalysisPublicApiAnalyzersVersion)" />
     <PackageVersion Include="Microsoft.VisualStudio.Threading.Analyzers" Version="17.13.2" />
     <PackageVersion Include="StyleCop.Analyzers" Version="1.2.0-beta.556" />
-    <PackageVersion Include="ReferenceTrimmer" Version="3.3.10" />
+    <GlobalPackageReference Include="ReferenceTrimmer" Version="3.3.10" />
   </ItemGroup>
   <ItemGroup Label="Product dependencies">
     <PackageVersion Include="Microsoft.ApplicationInsights" Version="2.22.0" />
