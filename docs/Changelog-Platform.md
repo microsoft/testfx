@@ -4,9 +4,49 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
+## <a name="1.6.0" />[1.6.0] - 2025-02-12
+
+See full log [here](https://github.com/microsoft/testfx/compare/v3.7.3...v3.8.0)
+
+### Added
+
+* Implement != operator for filtering by @Youssef1313 in [#4494](https://github.com/microsoft/testfx/pull/4494)
+* VSTestBridge: support filter at discovery + runsettings TestCaseFilter by @Youssef1313 in [#4921](https://github.com/microsoft/testfx/pull/4921)
+* Add ability to wait for debugger attach by @Evangelink in [#4829](https://github.com/microsoft/testfx/pull/4829)
+* Open experimentally Configuration and Logging by @Evangelink in [#4795](https://github.com/microsoft/testfx/pull/4795)
+* avoid 2x string allocs in TerminalOutputDevice by @SimonCropp in [#4894](https://github.com/microsoft/testfx/pull/4894)
+
+### Fixed
+
+* Fix outputting of unhandled exception through OutputDevice by @Youssef1313 in [#4926](https://github.com/microsoft/testfx/pull/4926)
+* Remove wrong closing double quotes in diag messages by @Evangelink in [#4826](https://github.com/microsoft/testfx/pull/4826)
+* TestHost controller support mono by @Evangelink in [#4831](https://github.com/microsoft/testfx/pull/4831)
+* Fix MTP MSBuild targets to run before BeforeCompile and XamlPreCompile by @Youssef1313 in [#4777](https://github.com/microsoft/testfx/pull/4777)
+* Don't inject Test target when `TestingPlatformDisableCustomTestTarget` is true by @Youssef1313 in [#4838](https://github.com/microsoft/testfx/pull/4838)
+* Make SelfRegisteredExtensions and EntryPoint types part of namespace by @Evangelink in [#4814](https://github.com/microsoft/testfx/pull/4814)
+* Fix InvokeTestingPlatformTask to handle running with msbuild.exe and 'Test' target by @Youssef1313 in [#4840](https://github.com/microsoft/testfx/pull/4840)
+* Fix ordering in server mode data consume by @Evangelink in [#4953](https://github.com/microsoft/testfx/pull/4953)
+* Overwrite trx when file name is explicitly provided by @Youssef1313 in [#4654](https://github.com/microsoft/testfx/pull/4654)
+* pass some missing cancellationTokens by @SimonCropp in [#4857](https://github.com/microsoft/testfx/pull/4857)
+
+### Housekeeping
+
+### Artifacts
+
+* Microsoft.Testing.Extensions.CrashDump: [1.6.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.CrashDump/1.6.0)
+* Microsoft.Testing.Extensions.HangDump: [1.6.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HangDump/1.6.0)
+* Microsoft.Testing.Extensions.HotReload: [1.6.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HotReload/1.6.0)
+* Microsoft.Testing.Extensions.Retry: [1.6.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Retry/1.6.0)
+* Microsoft.Testing.Extensions.Telemetry: [1.6.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Telemetry/1.6.0)
+* Microsoft.Testing.Extensions.TrxReport: [1.6.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport/1.6.0)
+* Microsoft.Testing.Extensions.TrxReport.Abstractions: [1.6.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport.Abstractions/1.6.0)
+* Microsoft.Testing.Extensions.VSTestBridge: [1.6.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.VSTestBridge/1.6.0)
+* Microsoft.Testing.Platform: [1.6.0](https://www.nuget.org/packages/Microsoft.Testing.Platform/1.6.0)
+* Microsoft.Testing.Platform.MSBuild: [1.6.0](https://www.nuget.org/packages/Microsoft.Testing.Platform.MSBuild/1.6.0)
+
 ## <a name="1.5.3" />[1.5.3] - 2025-01-27
 
-See full log [here](https://github.com/microsoft/testfx/compare/v1.5.2...v1.5.3)
+See full log [here](https://github.com/microsoft/testfx/compare/v3.7.2...v3.7.3)
 
 ### Fixed
 
@@ -27,7 +67,7 @@ See full log [here](https://github.com/microsoft/testfx/compare/v1.5.2...v1.5.3)
 
 ## <a name="1.5.2" />[1.5.2] - 2025-01-21
 
-See full log [here](https://github.com/microsoft/testfx/compare/v1.5.1...v1.5.2)
+See full log [here](https://github.com/microsoft/testfx/compare/v3.7.1...v3.7.2)
 
 ### Fixed
 
@@ -48,7 +88,7 @@ See full log [here](https://github.com/microsoft/testfx/compare/v1.5.1...v1.5.2)
 
 ## <a name="1.5.1" />[1.5.1] - 2025-01-13
 
-See full log [here](https://github.com/microsoft/testfx/compare/v1.5.0...v1.5.1)
+See full log [here](https://github.com/microsoft/testfx/compare/v3.7.0...v3.7.1)
 
 ### Fixed
 
