@@ -14,7 +14,6 @@ See full log [here](https://github.com/microsoft/testfx/compare/v3.7.3...v3.8.0)
 * VSTestBridge: support filter at discovery + runsettings TestCaseFilter by @Youssef1313 in [#4921](https://github.com/microsoft/testfx/pull/4921)
 * Add ability to wait for debugger attach by @Evangelink in [#4829](https://github.com/microsoft/testfx/pull/4829)
 * Open experimentally Configuration and Logging by @Evangelink in [#4795](https://github.com/microsoft/testfx/pull/4795)
-* avoid 2x string allocs in TerminalOutputDevice by @SimonCropp in [#4894](https://github.com/microsoft/testfx/pull/4894)
 
 ### Fixed
 
@@ -28,8 +27,7 @@ See full log [here](https://github.com/microsoft/testfx/compare/v3.7.3...v3.8.0)
 * Fix ordering in server mode data consume by @Evangelink in [#4953](https://github.com/microsoft/testfx/pull/4953)
 * Overwrite trx when file name is explicitly provided by @Youssef1313 in [#4654](https://github.com/microsoft/testfx/pull/4654)
 * pass some missing cancellationTokens by @SimonCropp in [#4857](https://github.com/microsoft/testfx/pull/4857)
-
-### Housekeeping
+* avoid 2x string allocs in TerminalOutputDevice by @SimonCropp in [#4894](https://github.com/microsoft/testfx/pull/4894)
 
 ### Artifacts
 

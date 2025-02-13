@@ -15,7 +15,7 @@ using MSTest.Analyzers.RoslynAnalyzerHelpers;
 namespace MSTest.Analyzers;
 
 /// <summary>
-/// MSTEST0025: <inheritdoc cref="Resources.AvoidAssertAreSameWithValueTypesTitle"/>.
+/// MSTEST0038: <inheritdoc cref="Resources.AvoidAssertAreSameWithValueTypesTitle"/>.
 /// </summary>
 [DiagnosticAnalyzer(LanguageNames.CSharp, LanguageNames.VisualBasic)]
 public sealed class AvoidAssertAreSameWithValueTypesAnalyzer : DiagnosticAnalyzer
@@ -82,7 +82,7 @@ public sealed class AvoidAssertAreSameWithValueTypesAnalyzer : DiagnosticAnalyze
             string suggestedReplacement = targetMethod.Name == "AreSame" ? "AreEqual" : "AreNotEqual";
             ImmutableDictionary<string, string?> properties = ImmutableDictionary<string, string?>.Empty
                 .Add(ReplacementKey, suggestedReplacement);
-            context.ReportDiagnostic(operation.CreateDiagnostic(Rule, properties, targetMethod.Name, suggestedReplacement));
+            context.ReportDiagnostic(operation.CreateDiagnostic(Rule, properties, suggestedReplacement, targetMethod.Name));
         }
     }
 }

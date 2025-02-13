@@ -30,12 +30,9 @@ See full log [here](https://github.com/microsoft/testfx/compare/v3.7.3...v3.8.0)
 * Implement codefix for MSTEST0026: Avoid conditional access in assertions (and small analyzer false positive) by @Youssef1313 in [#4502](https://github.com/microsoft/testfx/pull/4502)
 * Add messageBuilder overloads for Assert.Throws\[Exactly\]\[Async\] by @Youssef1313 in [#4541](https://github.com/microsoft/testfx/pull/4541)
 * Implement codefix for 'Are\[Not\]Same' usage with value types by @Youssef1313 in [#4584](https://github.com/microsoft/testfx/pull/4584)
-* Reword unhandled TestMethodAttribute.Execute exception message by @Evangelink in [#4641](https://github.com/microsoft/testfx/pull/4641)
 * Implement analyzer to warn for use of Assert methods in async void by @Youssef1313 in [#4640](https://github.com/microsoft/testfx/pull/4640)
 * Introduce `RetryAttribute` for test methods by @Youssef1313 in [#4586](https://github.com/microsoft/testfx/pull/4586)
-* Fix bad nullability annotation on CultureInfo by @Evangelink in [#4670](https://github.com/microsoft/testfx/pull/4670)
 * Obsolete InternalTestFailureException and GenericParameterHelper by @Evangelink in [#4703](https://github.com/microsoft/testfx/pull/4703)
-* Remove incorrect isReportedAtCompilationEnd for UseParallelizeAttributeAnalyzer by @Youssef1313 in [#4737](https://github.com/microsoft/testfx/pull/4737)
 * Implement MSTestAnalysisMode by @Youssef1313 in [#4712](https://github.com/microsoft/testfx/pull/4712)
 * Add Assert.HasCount by @Evangelink in [#4748](https://github.com/microsoft/testfx/pull/4748)
 * Add UsingMSTestSdk property by @aelij in [#4754](https://github.com/microsoft/testfx/pull/4754)
@@ -44,11 +41,8 @@ See full log [here](https://github.com/microsoft/testfx/compare/v3.7.3...v3.8.0)
 * MSTEST0030: add codefix by @Evangelink in [#4769](https://github.com/microsoft/testfx/pull/4769)
 * Add Contains/DoesNotContain assert APIs by @Evangelink in [#4799](https://github.com/microsoft/testfx/pull/4799)
 * Add GitHubWorkItem by @Evangelink in [#4813](https://github.com/microsoft/testfx/pull/4813)
-* Disable MSTEST0026 by default by @Evangelink in [#4816](https://github.com/microsoft/testfx/pull/4816)
 * Add MSTest trace logs when using MTP by @Evangelink in [#4833](https://github.com/microsoft/testfx/pull/4833)
-* Fix some missing xml docs by @Evangelink in [#4841](https://github.com/microsoft/testfx/pull/4841)
 * Add string Contains/DoesNotContain assertions by @Evangelink in [#4842](https://github.com/microsoft/testfx/pull/4842)
-* Ensure all public APIs are documented by @Evangelink in [#4920](https://github.com/microsoft/testfx/pull/4920)
 * Add UWP .NET 9 support for MSTest extensions by @Sergio0694 in [#3848](https://github.com/microsoft/testfx/pull/3848)
 * Add TrxReport dependency to MSTest metapackage by @Youssef1313 in [#4956](https://github.com/microsoft/testfx/pull/4956)
 * Add TestDataRow class by @Youssef1313 in [#4930](https://github.com/microsoft/testfx/pull/4930)
@@ -74,6 +68,12 @@ See full log [here](https://github.com/microsoft/testfx/compare/v3.7.3...v3.8.0)
 * Preserve TestIdGenerationStrategy in the execution AppDomain by @Youssef1313 in [#4942](https://github.com/microsoft/testfx/pull/4942)
 * Ensure to use the test execution AppDomain for loading the test assembly by @Youssef1313 in [#4952](https://github.com/microsoft/testfx/pull/4952)
 * MSTEST0029 do not report on implementation of interface by @Evangelink in [#4803](https://github.com/microsoft/testfx/pull/4803)
+* Reword unhandled TestMethodAttribute.Execute exception message by @Evangelink in [#4641](https://github.com/microsoft/testfx/pull/4641)
+* Fix bad nullability annotation on CultureInfo by @Evangelink in [#4670](https://github.com/microsoft/testfx/pull/4670)
+* Remove incorrect isReportedAtCompilationEnd for UseParallelizeAttributeAnalyzer by @Youssef1313 in [#4737](https://github.com/microsoft/testfx/pull/4737)
+* Disable MSTEST0026 by default by @Evangelink in [#4816](https://github.com/microsoft/testfx/pull/4816)
+* Ensure all public APIs are documented by @Evangelink in [#4920](https://github.com/microsoft/testfx/pull/4920)
+* Fix some missing xml docs by @Evangelink in [#4841](https://github.com/microsoft/testfx/pull/4841)
 
 ### Housekeeping
 
@@ -94,6 +94,11 @@ See full log [here](https://github.com/microsoft/testfx/compare/v3.7.3...v3.8.0)
 * Fix doc about supported tfms by @Evangelink in [#4825](https://github.com/microsoft/testfx/pull/4825)
 * Fix MSTest metapackage README by @Youssef1313 in [#4887](https://github.com/microsoft/testfx/pull/4887)
 * Many cleanup PRs by @SimonCropp!
+
+### New Contributors
+
+* @aelij made their first contribution in [#4754](https://github.com/microsoft/testfx/pull/4754)
+* @Sergio0694 made their first contribution in [#3848](https://github.com/microsoft/testfx/pull/3848)
 
 ### Artifacts
 
