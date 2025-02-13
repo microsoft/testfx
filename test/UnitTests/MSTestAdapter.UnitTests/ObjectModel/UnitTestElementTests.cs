@@ -5,6 +5,8 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
+using Polyfills;
+
 using TestFramework.ForTestingMSTest;
 
 using Constants = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Constants;
@@ -173,7 +175,7 @@ public class UnitTestElementTests : TestContainer
     public void ToTestCase_WhenStrategyIsLegacy_UsesDefaultTestCaseId()
     {
 #pragma warning disable CA2263 // Prefer generic overload when type is known
-        foreach (DynamicDataType dataType in Enum.GetValues(typeof(DynamicDataType))!)
+        foreach (DynamicDataType dataType in EnumPolyfill.GetValues<DynamicDataType>())
         {
             var testCase = new UnitTestElement(new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", null, TestIdGenerationStrategy.Legacy) { DataType = dataType }).ToTestCase();
             var expectedTestCase = new TestCase(testCase.FullyQualifiedName, testCase.ExecutorUri, testCase.Source);
@@ -187,7 +189,7 @@ public class UnitTestElementTests : TestContainer
     public void ToTestCase_WhenStrategyIsDisplayName_DoesNotUseDefaultTestCaseId()
     {
 #pragma warning disable CA2263 // Prefer generic overload when type is known
-        foreach (DynamicDataType dataType in Enum.GetValues(typeof(DynamicDataType))!)
+        foreach (DynamicDataType dataType in EnumPolyfill.GetValues<DynamicDataType>())
         {
             var testCase = new UnitTestElement(new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", null, TestIdGenerationStrategy.DisplayName) { DataType = dataType }).ToTestCase();
             var expectedTestCase = new TestCase(testCase.FullyQualifiedName, testCase.ExecutorUri, testCase.Source);
@@ -208,7 +210,7 @@ public class UnitTestElementTests : TestContainer
     public void ToTestCase_WhenStrategyIsData_DoesNotUseDefaultTestCaseId()
     {
 #pragma warning disable CA2263 // Prefer generic overload when type is known
-        foreach (DynamicDataType dataType in Enum.GetValues(typeof(DynamicDataType))!)
+        foreach (DynamicDataType dataType in EnumPolyfill.GetValues<DynamicDataType>())
         {
             var testCase = new UnitTestElement(new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", null, TestIdGenerationStrategy.FullyQualified) { DataType = dataType }).ToTestCase();
             var expectedTestCase = new TestCase(testCase.FullyQualifiedName, testCase.ExecutorUri, testCase.Source);
