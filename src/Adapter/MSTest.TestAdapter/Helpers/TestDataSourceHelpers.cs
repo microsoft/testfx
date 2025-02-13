@@ -7,6 +7,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 
 internal static class TestDataSourceHelpers
 {
+    public static bool IsDataConsideredSingleArgumentValue(object?[]? data, ParameterInfo[] parameters)
+        => data is not null
+            && (data.Length != 1 || data[0] is not null)
+            && parameters.Length == 1
+            && parameters[0].ParameterType == typeof(object[]);
+
     public static bool TryHandleITestDataRow(
         object?[] d,
         ParameterInfo[] testMethodParameters,
