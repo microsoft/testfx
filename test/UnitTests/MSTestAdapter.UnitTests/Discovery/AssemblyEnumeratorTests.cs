@@ -66,7 +66,7 @@ public class AssemblyEnumeratorTests : TestContainer
                 }
             });
         var mockMessageLogger = new Mock<IMessageLogger>();
-        var adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsName, mockMessageLogger.Object);
+        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsName, mockMessageLogger.Object)!;
 
         // Constructor has the side effect of populating the passed settings to MSTestSettings.CurrentSettings
         _ = new AssemblyEnumerator(adapterSettings);
@@ -171,7 +171,7 @@ public class AssemblyEnumeratorTests : TestContainer
 
     public void GetLoadExceptionDetailsShouldReturnLoaderExceptionMessagesForMoreThanOneException()
     {
-        var loaderException1 = new ArgumentNullException("DummyLoaderExceptionMessage1", (Exception)null);
+        var loaderException1 = new ArgumentNullException("DummyLoaderExceptionMessage1", (Exception)null!);
         var loaderException2 = new AccessViolationException("DummyLoaderExceptionMessage2");
         var exceptions = new ReflectionTypeLoadException(
             null,
@@ -237,7 +237,7 @@ public class AssemblyEnumeratorTests : TestContainer
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("DummyAssembly", false))
             .Returns(mockAssembly.Object);
         testableAssemblyEnumerator.MockTypeEnumerator.Setup(te => te.Enumerate(_warnings))
-            .Returns((List<UnitTestElement>)null);
+            .Returns((List<UnitTestElement>)null!);
 
         Verify(_assemblyEnumerator.EnumerateAssembly("DummyAssembly", _warnings).Count == 0);
     }

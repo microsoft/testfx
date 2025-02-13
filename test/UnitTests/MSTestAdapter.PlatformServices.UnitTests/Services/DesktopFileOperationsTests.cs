@@ -15,23 +15,23 @@ public class DesktopFileOperationsTests : TestContainer
 
     public DesktopFileOperationsTests() => _fileOperations = new FileOperations();
 
-    public void CreateNavigationSessionShouldReturnNullIfSourceIsNull() => Verify(_fileOperations.CreateNavigationSession(null) is null);
+    public void CreateNavigationSessionShouldReturnNullIfSourceIsNull() => Verify(_fileOperations.CreateNavigationSession(null!) is null);
 
     public void CreateNavigationSessionShouldReturnDiaSession()
     {
-        object diaSession = _fileOperations.CreateNavigationSession(Assembly.GetExecutingAssembly().Location);
+        object? diaSession = _fileOperations.CreateNavigationSession(Assembly.GetExecutingAssembly().Location);
         Verify(diaSession is DiaSession);
     }
 
     public void GetNavigationDataShouldReturnDataFromNavigationSession()
     {
-        object diaSession = _fileOperations.CreateNavigationSession(Assembly.GetExecutingAssembly().Location);
+        object? diaSession = _fileOperations.CreateNavigationSession(Assembly.GetExecutingAssembly().Location);
         _fileOperations.GetNavigationData(
             diaSession,
             typeof(DesktopFileOperationsTests).FullName,
             "GetNavigationDataShouldReturnDataFromNavigationSession",
             out int minLineNumber,
-            out string fileName);
+            out string? fileName);
 
         Verify(minLineNumber != -1);
         Verify(fileName is not null);
@@ -44,7 +44,7 @@ public class DesktopFileOperationsTests : TestContainer
             typeof(DesktopFileOperationsTests).FullName,
             "GetNavigationDataShouldReturnDataFromNavigationSession",
             out int minLineNumber,
-            out string fileName);
+            out string? fileName);
 
         Verify(minLineNumber == -1);
         Verify(fileName is null);
@@ -52,14 +52,14 @@ public class DesktopFileOperationsTests : TestContainer
 
     public void DisposeNavigationSessionShouldDisposeNavigationSessionInstance()
     {
-        object session = _fileOperations.CreateNavigationSession(Assembly.GetExecutingAssembly().Location);
+        object? session = _fileOperations.CreateNavigationSession(Assembly.GetExecutingAssembly().Location);
         _fileOperations.DisposeNavigationSession(session);
         var diaSession = session as DiaSession;
         bool isExceptionThrown = false;
 
         try
         {
-            diaSession.GetNavigationData(
+            diaSession!.GetNavigationData(
                 typeof(DesktopFileOperationsTests).FullName,
                 "DisposeNavigationSessionShouldDisposeNavigationSessionInstance");
         }
@@ -75,7 +75,7 @@ public class DesktopFileOperationsTests : TestContainer
         // This should not throw.
         _fileOperations.DisposeNavigationSession(null);
 
-    public void DoesFileExistReturnsFalseIfAssemblyNameIsNull() => Verify(!_fileOperations.DoesFileExist(null));
+    public void DoesFileExistReturnsFalseIfAssemblyNameIsNull() => Verify(!_fileOperations.DoesFileExist(null!));
 
     public void DoesFileExistReturnsFalseIfFileDoesNotExist() => Verify(!_fileOperations.DoesFileExist("C:\\temp1foobar.txt"));
 

@@ -11,7 +11,7 @@ public class DictionaryHelperTests : TestContainer
 {
     public void ConcatenatingDictionariesReturnsEmptyDictionaryWhenBothSidesAreNullOrEmpty()
     {
-        Dictionary<string, string> source = null;
+        Dictionary<string, string>? source = null;
 
         var overwrite = new Dictionary<string, string>();
 
@@ -31,7 +31,7 @@ public class DictionaryHelperTests : TestContainer
             ["aaa"] = "source",
         };
 
-        Dictionary<string, string> overwrite = null;
+        Dictionary<string, string>? overwrite = null;
 
         IDictionary<string, string> actual = source.ConcatWithOverwrites(overwrite);
 
@@ -42,7 +42,7 @@ public class DictionaryHelperTests : TestContainer
 
     public void ConcatenatingDictionariesReturnsOverwriteSideWhenSourceIsNullOrEmpty()
     {
-        Dictionary<string, string> source = null;
+        Dictionary<string, string>? source = null;
 
         var overwrite = new Dictionary<string, string>
         {

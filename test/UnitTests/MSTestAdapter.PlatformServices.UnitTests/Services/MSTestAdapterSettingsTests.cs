@@ -31,7 +31,7 @@ public class MSTestAdapterSettingsTests : TestContainer
     public void ResolveEnvironmentVariableShouldResolvePathWhenPassedAbsolutePath()
     {
         string path = @"C:\unitTesting\..\MsTest\Adapter";
-        string baseDirectory = null;
+        string? baseDirectory = null;
         string expectedResult = @"C:\MsTest\Adapter";
 
         var adapterSettings = new TestableMSTestAdapterSettings
@@ -39,7 +39,7 @@ public class MSTestAdapterSettingsTests : TestContainer
             DoesDirectoryExistSetter = _ => true,
         };
 
-        string result = adapterSettings.ResolveEnvironmentVariableAndReturnFullPathIfExist(path, baseDirectory);
+        string? result = adapterSettings.ResolveEnvironmentVariableAndReturnFullPathIfExist(path, baseDirectory);
 
         Verify(result is not null);
         Verify(string.Equals(result, expectedResult, StringComparison.OrdinalIgnoreCase));
@@ -48,7 +48,7 @@ public class MSTestAdapterSettingsTests : TestContainer
     public void ResolveEnvironmentVariableShouldResolvePathWithAnEnvironmentVariable()
     {
         string path = @"%temp%\unitTesting\MsTest\Adapter";
-        string baseDirectory = null;
+        string? baseDirectory = null;
         string expectedResult = @"C:\foo\unitTesting\MsTest\Adapter";
 
         var adapterSettings = new TestableMSTestAdapterSettings
@@ -57,7 +57,7 @@ public class MSTestAdapterSettingsTests : TestContainer
             DoesDirectoryExistSetter = _ => true,
         };
 
-        string result = adapterSettings.ResolveEnvironmentVariableAndReturnFullPathIfExist(path, baseDirectory);
+        string? result = adapterSettings.ResolveEnvironmentVariableAndReturnFullPathIfExist(path, baseDirectory);
 
         Verify(result is not null);
         Verify(string.Equals(result, expectedResult, StringComparison.OrdinalIgnoreCase));
@@ -74,7 +74,7 @@ public class MSTestAdapterSettingsTests : TestContainer
             DoesDirectoryExistSetter = _ => true,
         };
 
-        string result = adapterSettings.ResolveEnvironmentVariableAndReturnFullPathIfExist(path, baseDirectory);
+        string? result = adapterSettings.ResolveEnvironmentVariableAndReturnFullPathIfExist(path, baseDirectory);
 
         Verify(result is not null);
         Verify(string.Equals(result, expectedResult, StringComparison.OrdinalIgnoreCase));
@@ -91,7 +91,7 @@ public class MSTestAdapterSettingsTests : TestContainer
             DoesDirectoryExistSetter = _ => true,
         };
 
-        string result = adapterSettings.ResolveEnvironmentVariableAndReturnFullPathIfExist(path, baseDirectory);
+        string? result = adapterSettings.ResolveEnvironmentVariableAndReturnFullPathIfExist(path, baseDirectory);
 
         Verify(result is not null);
         Verify(string.Equals(result, expectedResult, StringComparison.OrdinalIgnoreCase));
@@ -114,7 +114,7 @@ public class MSTestAdapterSettingsTests : TestContainer
             DoesDirectoryExistSetter = _ => true,
         };
 
-        string result = adapterSettings.ResolveEnvironmentVariableAndReturnFullPathIfExist(path, baseDirectory);
+        string? result = adapterSettings.ResolveEnvironmentVariableAndReturnFullPathIfExist(path, baseDirectory);
 
         Verify(result is not null);
         Verify(string.Equals(result, expectedResult, StringComparison.OrdinalIgnoreCase));
@@ -132,7 +132,7 @@ public class MSTestAdapterSettingsTests : TestContainer
             DoesDirectoryExistSetter = _ => true,
         };
 
-        string result = adapterSettings.ResolveEnvironmentVariableAndReturnFullPathIfExist(path, baseDirectory);
+        string? result = adapterSettings.ResolveEnvironmentVariableAndReturnFullPathIfExist(path, baseDirectory);
 
         Verify(result is not null);
         Verify(string.Equals(result, expectedResult, StringComparison.OrdinalIgnoreCase));
@@ -143,7 +143,7 @@ public class MSTestAdapterSettingsTests : TestContainer
         string path = @"Z:\Program Files (x86)\MsTest\Adapter";
         string baseDirectory = @"C:\unitTesting";
 
-        string result = new TestableMSTestAdapterSettings().ResolveEnvironmentVariableAndReturnFullPathIfExist(path, baseDirectory);
+        string? result = new TestableMSTestAdapterSettings().ResolveEnvironmentVariableAndReturnFullPathIfExist(path, baseDirectory);
 
         Verify(result is null);
     }
@@ -329,7 +329,7 @@ public class MSTestAdapterSettingsTests : TestContainer
 
         var mockConfig = new Mock<IConfiguration>();
         mockConfig.Setup(config => config[It.IsAny<string>()])
-                  .Returns((string key) => configDictionary.TryGetValue(key, out string value) ? value : null);
+                  .Returns((string key) => configDictionary.TryGetValue(key, out string? value) ? value : null);
 
         // Act
         var settings = MSTestAdapterSettings.ToSettings(mockConfig.Object);
@@ -358,7 +358,7 @@ public class MSTestAdapterSettingsTests : TestContainer
         };
         var mockConfig = new Mock<IConfiguration>();
         mockConfig.Setup(config => config[It.IsAny<string>()])
-                  .Returns((string key) => configDictionary.TryGetValue(key, out string value) ? value : null);
+                  .Returns((string key) => configDictionary.TryGetValue(key, out string? value) ? value : null);
 
         // Act
         MSTestAdapterSettings.Configuration = mockConfig.Object;
@@ -379,9 +379,9 @@ public class TestableMSTestAdapterSettings : MSTestAdapterSettings
 
     public TestableMSTestAdapterSettings(List<RecursiveDirectoryPath> expectedResult) => SearchDirectories.AddRange(expectedResult);
 
-    public Func<string, bool> DoesDirectoryExistSetter { get; set; }
+    public Func<string, bool> DoesDirectoryExistSetter { get; set; } = null!;
 
-    public Func<string, string> ExpandEnvironmentVariablesSetter { get; set; }
+    public Func<string, string> ExpandEnvironmentVariablesSetter { get; set; } = null!;
 
     protected override bool DoesDirectoryExist(string path) => DoesDirectoryExistSetter?.Invoke(path) ?? base.DoesDirectoryExist(path);
 

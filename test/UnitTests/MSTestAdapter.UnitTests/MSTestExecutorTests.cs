@@ -30,9 +30,7 @@ public class MSTestExecutorTests : TestContainer
     {
         var testExecutor = new MSTestExecutor();
 
-        var extensionUriString =
-            testExecutor.GetType().GetCustomAttributes(typeof(ExtensionUriAttribute), false).Single() as
-            ExtensionUriAttribute;
+        var extensionUriString = (ExtensionUriAttribute)testExecutor.GetType().GetCustomAttributes(typeof(ExtensionUriAttribute), false).Single();
 
         Verify(extensionUriString.ExtensionUri == MSTest.TestAdapter.Constants.ExecutorUriString);
     }
