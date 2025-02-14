@@ -149,6 +149,17 @@ public sealed class TestMethod : ITestMethod
     /// </summary>
     internal string?[]? SerializedData { get; set; }
 
+    /// <summary>
+    /// Gets or sets the test data source ignore message.
+    /// </summary>
+    /// <remarks>
+    /// The test is ignored if this is set to non-null and non-empty string.
+    /// If set to empty string, the test is considered as not ignored.
+    /// In VSTest, when tests are expanded during discovery, we end up reading
+    /// this property as empty string, even though it was set to null.
+    /// (probably some serialization issue on VSTest side)
+    /// So, we treat null and empty string the same.
+    /// </remarks>
     internal string? TestDataSourceIgnoreMessage { get; set; }
 
     /// <summary>
