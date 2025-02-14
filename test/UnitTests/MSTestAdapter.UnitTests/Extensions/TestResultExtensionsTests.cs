@@ -166,9 +166,9 @@ public class TestResultExtensionsTests : TestContainer
 
         var convertedResult = result.ToTestResult(new(), default, default, string.Empty, new());
 
-        Verify(executionId == (Guid)convertedResult.GetPropertyValue(MSTest.TestAdapter.Constants.ExecutionIdProperty));
-        Verify(parentExecId == (Guid)convertedResult.GetPropertyValue(MSTest.TestAdapter.Constants.ParentExecIdProperty));
-        Verify(innerResultsCount == (int)convertedResult.GetPropertyValue(MSTest.TestAdapter.Constants.InnerResultsCountProperty));
+        Verify(executionId == (Guid)convertedResult.GetPropertyValue(MSTest.TestAdapter.Constants.ExecutionIdProperty)!);
+        Verify(parentExecId == (Guid)convertedResult.GetPropertyValue(MSTest.TestAdapter.Constants.ParentExecIdProperty)!);
+        Verify(innerResultsCount == (int)convertedResult.GetPropertyValue(MSTest.TestAdapter.Constants.InnerResultsCountProperty)!);
     }
 
     public void ToUnitTestResultsShouldHaveResultsFileProvidedToTestResult()

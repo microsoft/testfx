@@ -20,7 +20,7 @@ internal sealed class TestCaseDiscoverySink : ITestCaseDiscoverySink
     /// Sends the test case.
     /// </summary>
     /// <param name="discoveredTest"> The discovered test. </param>
-    public void SendTestCase(TestCase discoveredTest)
+    public void SendTestCase(TestCase? discoveredTest)
     {
         if (discoveredTest != null)
         {

@@ -16,7 +16,7 @@ namespace PlatformServices.Desktop.ComponentTests;
 
 public class DesktopTestSourceHostTests : TestContainer
 {
-    private TestSourceHost _testSourceHost;
+    private TestSourceHost? _testSourceHost;
 
     public void ParentDomainShouldHonorSearchDirectoriesSpecifiedInRunsettings()
     {

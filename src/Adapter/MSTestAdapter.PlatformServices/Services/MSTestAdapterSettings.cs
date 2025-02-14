@@ -242,10 +242,10 @@ public class MSTestAdapterSettings
     /// <param name="path">The path to be expanded.</param>
     /// <param name="baseDirectory">The base directory for the path which is not rooted path.</param>
     /// <returns>The expanded path.</returns>
-    internal string? ResolveEnvironmentVariableAndReturnFullPathIfExist(string path, string baseDirectory)
+    internal string? ResolveEnvironmentVariableAndReturnFullPathIfExist(string? path, string? baseDirectory)
     {
         // Trim beginning and trailing white space from the path.
-        path = path.Trim(' ', '\t');
+        path = path?.Trim(' ', '\t');
 
         if (StringEx.IsNullOrEmpty(path))
         {

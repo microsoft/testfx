@@ -89,7 +89,7 @@ public class TestIdCases
     {
         public IEnumerable<object[]> GetData(MethodInfo methodInfo) => ArraysData;
 
-        public string GetDisplayName(MethodInfo methodInfo, object[] data) => "Custom name";
+        public string GetDisplayName(MethodInfo methodInfo, object?[]? data) => "Custom name";
     }
 
     [DataTestMethod]
@@ -102,7 +102,7 @@ public class TestIdCases
     {
         public IEnumerable<object[]> GetData(MethodInfo methodInfo) => TuplesData;
 
-        public string GetDisplayName(MethodInfo methodInfo, object[] data) => "Custom name";
+        public string GetDisplayName(MethodInfo methodInfo, object?[]? data) => "Custom name";
     }
 
     [DataTestMethod]
@@ -115,6 +115,6 @@ public class TestIdCases
     {
         public IEnumerable<object[]> GetData(MethodInfo methodInfo) => GenericCollectionsData;
 
-        public string GetDisplayName(MethodInfo methodInfo, object[] data) => "Custom name";
+        public string GetDisplayName(MethodInfo methodInfo, object?[]? data) => "Custom name";
     }
 }

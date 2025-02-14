@@ -241,14 +241,14 @@ public class DynamicDataTests : DynamicDataTestsBase
     public class ExampleClass
     {
         [JsonProperty("jTokenDictionary")]
-        public IDictionary<string, JToken> JTokenDictionary { get; set; }
+        public IDictionary<string, JToken> JTokenDictionary { get; set; } = null!;
     }
 
     public class ExampleTestCase
     {
-        public string TestCaseName { get; set; }
+        public string TestCaseName { get; set; } = null!;
 
-        public ExampleClass Example { get; set; }
+        public ExampleClass Example { get; set; } = null!;
     }
 
     private static IEnumerable<object[]> StringAndInt32()

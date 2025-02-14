@@ -17,7 +17,7 @@ public class ExpectedExceptionAttributeTests : TestContainer
     /// </summary>
     public void ExpectedExceptionAttributeConstructorShouldThrowArgumentNullExceptionWhenExceptionTypeIsNull()
     {
-        static void A() => _ = new ExpectedExceptionAttribute(null, "Dummy");
+        static void A() => _ = new ExpectedExceptionAttribute(null!, "Dummy");
 
         Exception ex = VerifyThrows(A);
         Verify(ex is ArgumentNullException);

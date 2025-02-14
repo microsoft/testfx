@@ -54,7 +54,7 @@ public class DesktopSettingsProviderTests : TestContainer
     }
 
     public void LoadShouldThrowIfReaderIsNull() =>
-        VerifyThrows<ArgumentNullException>(() => _settingsProvider.Load(null));
+        VerifyThrows<ArgumentNullException>(() => _settingsProvider.Load(null!));
 
     public void LoadShouldReadAndFillInSettings()
     {

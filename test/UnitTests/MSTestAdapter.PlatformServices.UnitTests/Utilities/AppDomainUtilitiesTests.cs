@@ -96,7 +96,7 @@ public class AppDomainUtilitiesTests : TestContainer
 
     internal class TestableXmlUtilities : XmlUtilities
     {
-        internal string ConfigXml { get; set; }
+        internal string ConfigXml { get; set; } = null!;
 
         internal override XmlDocument GetXmlDocument(string configFile)
         {

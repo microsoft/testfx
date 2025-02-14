@@ -39,7 +39,7 @@ public class TestMethodRunnerTests : TestContainer
         _testMethodAttribute = new TestMethodAttribute();
 
         _testMethod = new TestMethod("dummyTestName", "dummyClassName", "dummyAssemblyName", false);
-        _testContextImplementation = new TestContextImplementation(_testMethod, new ThreadSafeStringWriter(null, "test"), new Dictionary<string, object>());
+        _testContextImplementation = new TestContextImplementation(_testMethod, new ThreadSafeStringWriter(null!, "test"), new Dictionary<string, object?>());
         _testClassInfo = GetTestClassInfo<DummyTestClass>();
 
         _testMethodOptions = new TestMethodOptions(TimeoutInfo.FromTimeout(200), _testContextImplementation, false, _testMethodAttribute);
@@ -83,7 +83,7 @@ public class TestMethodRunnerTests : TestContainer
 
         TestResult[] results = testMethodRunner.Execute(string.Empty, string.Empty, string.Empty, string.Empty);
         Verify(results[0].Outcome == UTF.UnitTestOutcome.Failed);
-        Verify(results[0].ExceptionMessage.StartsWith(
+        Verify(results[0].ExceptionMessage!.StartsWith(
             """            
             An unhandled exception was thrown by the 'Execute' method. Please report this error to the author of the attribute 'Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute'.
             System.Exception: DummyException
@@ -142,7 +142,7 @@ public class TestMethodRunnerTests : TestContainer
 
         TestResult[] results = testMethodRunner.RunTestMethod();
         Verify(results[0].Outcome == UTF.UnitTestOutcome.Failed);
-        Verify(results[0].ExceptionMessage.StartsWith(
+        Verify(results[0].ExceptionMessage!.StartsWith(
             """            
             An unhandled exception was thrown by the 'Execute' method. Please report this error to the author of the attribute 'Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute'.
             System.Exception: Dummy Exception
@@ -161,7 +161,7 @@ public class TestMethodRunnerTests : TestContainer
 
         var localTestMethodOptions = new TestMethodOptions(TimeoutInfo.FromTimeout(200), _testContextImplementation, false, testMethodAttributeMock.Object);
 
-        var testMethodInfo = new TestableTestMethodInfo(_methodInfo, _testClassInfo, localTestMethodOptions, null);
+        var testMethodInfo = new TestableTestMethodInfo(_methodInfo, _testClassInfo, localTestMethodOptions, null!);
         var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation);
 
         TestResult[] results = testMethodRunner.Execute(string.Empty, string.Empty, string.Empty, string.Empty);
@@ -374,8 +374,8 @@ public class TestMethodRunnerTests : TestContainer
         _testablePlatformServiceProvider.MockReflectionOperations.Setup(rf => rf.GetCustomAttributes(_methodInfo, It.IsAny<bool>())).Returns(attributes);
 
         TestResult[] results = testMethodRunner.RunTestMethod();
-        Verify(results[0].ResultFiles.ToList().Contains("C:\\temp.txt"));
-        Verify(results[1].ResultFiles.ToList().Contains("C:\\temp.txt"));
+        Verify(results[0].ResultFiles!.Contains("C:\\temp.txt"));
+        Verify(results[1].ResultFiles!.Contains("C:\\temp.txt"));
     }
 
     public void RunTestMethodWithEmptyDataSourceShouldFailBecauseConsiderEmptyDataSourceAsInconclusiveIsFalse()
@@ -402,10 +402,10 @@ public class TestMethodRunnerTests : TestContainer
                 """;
 
             var settings = MSTestSettings.GetSettings(xml, MSTestSettings.SettingsNameAlias, null);
-            MSTestSettings.PopulateSettings(settings);
+            MSTestSettings.PopulateSettings(settings!);
 
             var testMethodInfo = new TestableTestMethodInfo(
-                typeof(DummyTestClassEmptyDataSource).GetMethod(nameof(DummyTestClassEmptyDataSource.TestMethod)),
+                typeof(DummyTestClassEmptyDataSource).GetMethod(nameof(DummyTestClassEmptyDataSource.TestMethod))!,
                 GetTestClassInfo<DummyTestClassEmptyDataSource>(),
                 _testMethodOptions,
                 () => throw ApplicationStateGuard.Unreachable());
@@ -444,14 +444,14 @@ public class TestMethodRunnerTests : TestContainer
         internal TestableTestMethodInfo(MethodInfo testMethod, TestClassInfo parent, TestMethodOptions testMethodOptions, Func<UTF.TestResult> invoke)
             : base(testMethod, parent, testMethodOptions) => _invokeTest = invoke;
 
-        public override TestResult Invoke(object[] arguments) =>
+        public override TestResult Invoke(object?[]? arguments) =>
             // Ignore args for now
             _invokeTest();
     }
 
     public class DummyTestClassBase
     {
-        public static Action<DummyTestClassBase> BaseTestClassMethodBody { get; set; }
+        public static Action<DummyTestClassBase> BaseTestClassMethodBody { get; set; } = null!;
 
         public void DummyBaseTestClassMethod() => BaseTestClassMethodBody(this);
     }
@@ -460,21 +460,21 @@ public class TestMethodRunnerTests : TestContainer
     {
         public DummyTestClass() => TestConstructorMethodBody();
 
-        public static Action TestConstructorMethodBody { get; set; }
+        public static Action TestConstructorMethodBody { get; set; } = null!;
 
-        public static Action<object> TestContextSetterBody { get; set; }
+        public static Action<object> TestContextSetterBody { get; set; } = null!;
 
-        public static Action<DummyTestClass> TestInitializeMethodBody { get; set; }
+        public static Action<DummyTestClass> TestInitializeMethodBody { get; set; } = null!;
 
-        public static Action<DummyTestClass> TestMethodBody { get; set; }
+        public static Action<DummyTestClass> TestMethodBody { get; set; } = null!;
 
-        public static Action<DummyTestClass> TestCleanupMethodBody { get; set; }
+        public static Action<DummyTestClass> TestCleanupMethodBody { get; set; } = null!;
 
-        public static Func<Task> DummyAsyncTestMethodBody { get; set; }
+        public static Func<Task> DummyAsyncTestMethodBody { get; set; } = null!;
 
-        public static Action<TestContext> AssemblyInitializeMethodBody { get; set; }
+        public static Action<TestContext> AssemblyInitializeMethodBody { get; set; } = null!;
 
-        public static Action<TestContext> ClassInitializeMethodBody { get; set; }
+        public static Action<TestContext> ClassInitializeMethodBody { get; set; } = null!;
 
         public TestContext TestContext
         {
@@ -507,7 +507,7 @@ public class TestMethodRunnerTests : TestContainer
 
     public class DummyTestClassWithTestContextWithoutSetter
     {
-        public TestContext TestContext { get; }
+        public TestContext TestContext { get; } = null!;
     }
 
     public class DummyTestClassEmptyDataSource

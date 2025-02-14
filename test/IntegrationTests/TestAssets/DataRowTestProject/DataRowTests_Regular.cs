@@ -28,7 +28,7 @@ public class DataRowTests_Regular
     [DataRow]
     [DataRow(2)]
     [DataRow(2, "DerivedRequiredArgument", "DerivedOptionalArgument", "DerivedExtraArgument")]
-    public void DataRowTestMethodFailsWithInvalidArguments(int i1, string requiredString, string s1 = null) => Assert.Fail();
+    public void DataRowTestMethodFailsWithInvalidArguments(int i1, string requiredString, string? s1 = null) => Assert.Fail();
 
     [TestMethod]
     [DataRow(10.01d, 20.01d)]

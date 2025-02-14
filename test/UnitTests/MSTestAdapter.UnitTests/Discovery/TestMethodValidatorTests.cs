@@ -44,7 +44,7 @@ public class TestMethodValidatorTests : TestContainer
     {
         SetupTestMethod();
         _mockMethodInfo.Setup(mi => mi.IsGenericMethodDefinition).Returns(true);
-        _mockMethodInfo.Setup(mi => mi.DeclaringType.FullName).Returns("DummyTestClass");
+        _mockMethodInfo.Setup(mi => mi.DeclaringType!.FullName).Returns("DummyTestClass");
         _mockMethodInfo.Setup(mi => mi.Name).Returns("DummyTestMethod");
 
         Verify(!_testMethodValidator.IsValidTestMethod(_mockMethodInfo.Object, _type, _warnings));
@@ -57,7 +57,7 @@ public class TestMethodValidatorTests : TestContainer
         SetupTestMethod();
 
         _mockMethodInfo.Setup(mi => mi.IsGenericMethodDefinition).Returns(true);
-        _mockMethodInfo.Setup(mi => mi.DeclaringType.FullName).Returns("DummyTestClass");
+        _mockMethodInfo.Setup(mi => mi.DeclaringType!.FullName).Returns("DummyTestClass");
         _mockMethodInfo.Setup(mi => mi.Name).Returns("DummyTestMethod");
         _mockMethodInfo.Setup(mi => mi.Attributes).Returns(MethodAttributes.Public);
         _mockMethodInfo.Setup(mi => mi.ReturnType).Returns(typeof(void));
@@ -71,7 +71,7 @@ public class TestMethodValidatorTests : TestContainer
         SetupTestMethod();
         MethodInfo methodInfo = typeof(DummyTestClass).GetMethod(
             "InternalTestMethod",
-            BindingFlags.Instance | BindingFlags.NonPublic);
+            BindingFlags.Instance | BindingFlags.NonPublic)!;
 
         Verify(!_testMethodValidator.IsValidTestMethod(methodInfo, typeof(DummyTestClass), _warnings));
     }
@@ -81,7 +81,7 @@ public class TestMethodValidatorTests : TestContainer
         SetupTestMethod();
         MethodInfo methodInfo = typeof(DummyTestClass).GetMethod(
             "AbstractTestMethod",
-            BindingFlags.Instance | BindingFlags.Public);
+            BindingFlags.Instance | BindingFlags.Public)!;
 
         Verify(!_testMethodValidator.IsValidTestMethod(methodInfo, typeof(DummyTestClass), _warnings));
     }
@@ -91,7 +91,7 @@ public class TestMethodValidatorTests : TestContainer
         SetupTestMethod();
         MethodInfo methodInfo = typeof(DummyTestClass).GetMethod(
             "StaticTestMethod",
-            BindingFlags.Static | BindingFlags.Public);
+            BindingFlags.Static | BindingFlags.Public)!;
 
         Verify(!_testMethodValidator.IsValidTestMethod(methodInfo, typeof(DummyTestClass), _warnings));
     }
@@ -109,7 +109,7 @@ public class TestMethodValidatorTests : TestContainer
         SetupTestMethod();
         MethodInfo methodInfo = typeof(DummyTestClass).GetMethod(
             "AsyncMethodWithVoidReturnType",
-            BindingFlags.Instance | BindingFlags.Public);
+            BindingFlags.Instance | BindingFlags.Public)!;
 
         Verify(!_testMethodValidator.IsValidTestMethod(methodInfo, typeof(DummyTestClass), _warnings));
     }
@@ -119,7 +119,7 @@ public class TestMethodValidatorTests : TestContainer
         SetupTestMethod();
         MethodInfo methodInfo = typeof(DummyTestClass).GetMethod(
             "MethodWithIntReturnType",
-            BindingFlags.Instance | BindingFlags.Public);
+            BindingFlags.Instance | BindingFlags.Public)!;
 
         Verify(!_testMethodValidator.IsValidTestMethod(methodInfo, typeof(DummyTestClass), _warnings));
     }
@@ -129,7 +129,7 @@ public class TestMethodValidatorTests : TestContainer
         SetupTestMethod();
         MethodInfo methodInfo = typeof(DummyTestClass).GetMethod(
             "AsyncMethodWithTaskReturnType",
-            BindingFlags.Instance | BindingFlags.Public);
+            BindingFlags.Instance | BindingFlags.Public)!;
 
         Verify(_testMethodValidator.IsValidTestMethod(methodInfo, _type, _warnings));
     }
@@ -139,7 +139,7 @@ public class TestMethodValidatorTests : TestContainer
         SetupTestMethod();
         MethodInfo methodInfo = typeof(DummyTestClass).GetMethod(
             "MethodWithTaskReturnType",
-            BindingFlags.Instance | BindingFlags.Public);
+            BindingFlags.Instance | BindingFlags.Public)!;
 
         Verify(_testMethodValidator.IsValidTestMethod(methodInfo, _type, _warnings));
     }
@@ -149,7 +149,7 @@ public class TestMethodValidatorTests : TestContainer
         SetupTestMethod();
         MethodInfo methodInfo = typeof(DummyTestClass).GetMethod(
             "MethodWithVoidReturnType",
-            BindingFlags.Instance | BindingFlags.Public);
+            BindingFlags.Instance | BindingFlags.Public)!;
 
         Verify(_testMethodValidator.IsValidTestMethod(methodInfo, _type, _warnings));
     }
@@ -161,7 +161,7 @@ public class TestMethodValidatorTests : TestContainer
         SetupTestMethod();
         MethodInfo methodInfo = typeof(DummyTestClass).GetMethod(
             "InternalTestMethod",
-            BindingFlags.Instance | BindingFlags.NonPublic);
+            BindingFlags.Instance | BindingFlags.NonPublic)!;
 
         var testMethodValidator = new TestMethodValidator(_mockReflectHelper.Object, true);
 
@@ -173,7 +173,7 @@ public class TestMethodValidatorTests : TestContainer
         SetupTestMethod();
         MethodInfo methodInfo = typeof(DummyTestClass).GetMethod(
             "PrivateTestMethod",
-            BindingFlags.Instance | BindingFlags.NonPublic);
+            BindingFlags.Instance | BindingFlags.NonPublic)!;
 
         var testMethodValidator = new TestMethodValidator(_mockReflectHelper.Object, true);
 

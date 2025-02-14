@@ -28,9 +28,9 @@ public partial class TypeEnumeratorTests
 
         public override string Name => _original.Name;
 
-        public override Type DeclaringType => _original.DeclaringType;
+        public override Type? DeclaringType => _original.DeclaringType;
 
-        public override Type ReflectedType => _original.ReflectedType;
+        public override Type? ReflectedType => _original.ReflectedType;
 
         public override IEnumerable<CustomAttributeData> CustomAttributes => _original.CustomAttributes;
 
@@ -62,7 +62,7 @@ public partial class TypeEnumeratorTests
 
         public override Delegate CreateDelegate(Type delegateType) => _original.CreateDelegate(delegateType);
 
-        public override Delegate CreateDelegate(Type delegateType, object target) => _original.CreateDelegate(delegateType, target);
+        public override Delegate CreateDelegate(Type delegateType, object? target) => _original.CreateDelegate(delegateType, target);
 
         public override MethodInfo GetBaseDefinition() => _original.GetBaseDefinition();
 
@@ -76,13 +76,13 @@ public partial class TypeEnumeratorTests
 
         public override MethodInfo GetGenericMethodDefinition() => _original.GetGenericMethodDefinition();
 
-        public override MethodBody GetMethodBody() => _original.GetMethodBody();
+        public override MethodBody? GetMethodBody() => _original.GetMethodBody();
 
         public override MethodImplAttributes GetMethodImplementationFlags() => _original.GetMethodImplementationFlags();
 
         public override ParameterInfo[] GetParameters() => _original.GetParameters();
 
-        public override object Invoke(object obj, BindingFlags invokeAttr, Binder binder, object[] parameters, CultureInfo culture)
+        public override object? Invoke(object? obj, BindingFlags invokeAttr, Binder? binder, object?[]? parameters, CultureInfo? culture)
             => _original.Invoke(obj, invokeAttr, binder, parameters, culture);
 
         public override bool IsDefined(Type attributeType, bool inherit)
@@ -90,6 +90,6 @@ public partial class TypeEnumeratorTests
 
         public override MethodInfo MakeGenericMethod(params Type[] typeArguments) => _original.MakeGenericMethod(typeArguments);
 
-        public override string ToString() => _original.ToString();
+        public override string? ToString() => _original.ToString();
     }
 }

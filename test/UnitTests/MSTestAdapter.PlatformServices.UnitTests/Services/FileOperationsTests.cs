@@ -40,14 +40,14 @@ public class FileOperationsTests : TestContainer
 #if !WIN_UI
     public void DoesFileExistReturnsTrueForAllFiles()
     {
-        Verify(_fileOperations.DoesFileExist(null));
+        Verify(_fileOperations.DoesFileExist(null!));
         Verify(_fileOperations.DoesFileExist("foobar"));
     }
 #endif
 
     public void GetFullFilePathShouldReturnAssemblyFileName()
     {
-        Verify(_fileOperations.GetFullFilePath(null) is null);
+        Verify(_fileOperations.GetFullFilePath(null!) is null);
         Verify(_fileOperations.GetFullFilePath("assemblyFileName") == "assemblyFileName");
     }
 }

@@ -29,6 +29,7 @@ internal sealed class PlatformServiceProvider : IPlatformServiceProvider
     /// </summary>
     [field: AllowNull]
     [field: MaybeNull]
+    [AllowNull]
     public ITestSource TestSource
     {
         get => field ??= new TestSource();
@@ -40,6 +41,7 @@ internal sealed class PlatformServiceProvider : IPlatformServiceProvider
     /// </summary>
     [field: AllowNull]
     [field: MaybeNull]
+    [AllowNull]
     public ITestDataSource TestDataSource
     {
         get => field ??= new TestDataSource();
@@ -51,6 +53,7 @@ internal sealed class PlatformServiceProvider : IPlatformServiceProvider
     /// </summary>
     [field: AllowNull]
     [field: MaybeNull]
+    [AllowNull]
     public IFileOperations FileOperations
     {
         get => field ??= new FileOperations();
@@ -62,6 +65,7 @@ internal sealed class PlatformServiceProvider : IPlatformServiceProvider
     /// </summary>
     [field: AllowNull]
     [field: MaybeNull]
+    [AllowNull]
     public IAdapterTraceLogger AdapterTraceLogger { get => field ??= new AdapterTraceLogger(); set; }
 
     /// <summary>
@@ -69,6 +73,7 @@ internal sealed class PlatformServiceProvider : IPlatformServiceProvider
     /// </summary>
     [field: AllowNull]
     [field: MaybeNull]
+    [AllowNull]
     public ITestDeployment TestDeployment
     {
         get => field ??= new TestDeployment();
@@ -80,6 +85,7 @@ internal sealed class PlatformServiceProvider : IPlatformServiceProvider
     /// </summary>
     [field: AllowNull]
     [field: MaybeNull]
+    [AllowNull]
     public ISettingsProvider SettingsProvider
     {
         get => field ??= new MSTestSettingsProvider();
@@ -91,6 +97,7 @@ internal sealed class PlatformServiceProvider : IPlatformServiceProvider
     /// </summary>
     [field: AllowNull]
     [field: MaybeNull]
+    [AllowNull]
     public IThreadOperations ThreadOperations
     {
         get => field ??= new ThreadOperations();
@@ -102,6 +109,7 @@ internal sealed class PlatformServiceProvider : IPlatformServiceProvider
     /// </summary>
     [field: AllowNull]
     [field: MaybeNull]
+    [AllowNull]
     public IReflectionOperations2 ReflectionOperations
     {
         get => field ??= new ReflectionOperations2();
@@ -120,6 +128,7 @@ internal sealed class PlatformServiceProvider : IPlatformServiceProvider
     /// </summary>
     [field: AllowNull]
     [field: MaybeNull]
+    [AllowNull]
     internal static IPlatformServiceProvider Instance
     {
         get => field ??= new PlatformServiceProvider();

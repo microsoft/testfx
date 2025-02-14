@@ -29,7 +29,7 @@ public class DataRowTests_DerivedClass : DataRowTests_BaseClass
     [DataRow(123)]
     [DataRow(123, "DerivedOptionalString1")]
     [DataRow(123, "DerivedOptionalString2", "DerivedOptionalString3")]
-    public void DataRowTestMethodWithSomeOptionalParameters(int i, string s1 = null, string s2 = null) => Assert.IsTrue(true);
+    public void DataRowTestMethodWithSomeOptionalParameters(int i, string? s1 = null, string? s2 = null) => Assert.IsTrue(true);
 
     [TestCategory("DataRowAllOptional")]
     [TestMethod]
@@ -37,7 +37,7 @@ public class DataRowTests_DerivedClass : DataRowTests_BaseClass
     [DataRow(123)]
     [DataRow(123, "DerivedOptionalString4")]
     [DataRow(123, "DerivedOptionalString5", "DerivedOptionalString6")]
-    public void DataRowTestMethodWithAllOptionalParameters(int i = 0, string s1 = null, string s2 = null) => Assert.IsTrue(true);
+    public void DataRowTestMethodWithAllOptionalParameters(int i = 0, string? s1 = null, string? s2 = null) => Assert.IsTrue(true);
 
     [TestCategory("DataRowParamsArgument")]
     [TestMethod]
@@ -53,7 +53,7 @@ public class DataRowTests_DerivedClass : DataRowTests_BaseClass
     [DataRow]
     [DataRow(2)]
     [DataRow(2, "DerivedRequiredArgument", "DerivedOptionalArgument", "DerivedExtraArgument")]
-    public void DataRowTestMethodFailsWithInvalidArguments(int i1, string requiredString, string s1 = null) => Assert.Fail();
+    public void DataRowTestMethodFailsWithInvalidArguments(int i1, string requiredString, string? s1 = null) => Assert.Fail();
 
     [TestMethod]
     [DataRow(10.01d, 20.01d)]

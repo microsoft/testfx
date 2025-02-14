@@ -132,7 +132,7 @@ public class AssemblyResolverTests : TestContainer
                     count++;
                 }
 
-                return null;
+                return null!;
             };
 
         ResolveEventArgs dummyArgs = new("DummyTestDllForTest");
@@ -177,7 +177,7 @@ public class AssemblyResolverTests : TestContainer
         isAssemblyLoaded = false;
 
         // Simulate loading the assembly in Reflection-only context.
-        assemblyResolver.ReflectionOnlyOnResolve(null, new ResolveEventArgs(currentAssembly.FullName));
+        assemblyResolver.ReflectionOnlyOnResolve(null!, new ResolveEventArgs(currentAssembly.FullName));
 
         // The below assertions ensure that a cached version is not returned out because it actually Reflection only loads the assembly.
         Verify(!isAssemblyLoaded);
@@ -192,23 +192,24 @@ public class TestableAssemblyResolver : AssemblyResolver
     {
     }
 
-    public Func<string, bool> DoesDirectoryExistSetter { get; set; }
+    public Func<string, bool> DoesDirectoryExistSetter { get; set; } = null!;
 
-    public Func<string, string[]> GetDirectoriesSetter { get; set; }
+    public Func<string, string[]> GetDirectoriesSetter { get; set; } = null!;
 
-    public Func<string, bool> DoesFileExistSetter { get; set; }
+    public Func<string, bool> DoesFileExistSetter { get; set; } = null!;
 
-    public Func<string, Assembly> LoadAssemblyFromSetter { get; set; }
+    public Func<string, Assembly> LoadAssemblyFromSetter { get; set; } = null!;
 
-    public Func<string, Assembly> ReflectionOnlyLoadAssemblyFromSetter { get; set; }
+    public Func<string, Assembly> ReflectionOnlyLoadAssemblyFromSetter { get; set; } = null!;
 
-    public Func<List<string>, string, bool, Assembly> SearchAssemblySetter { get; internal set; }
+    public Func<List<string>, string, bool, Assembly> SearchAssemblySetter { get; internal set; } = null!;
 
     protected override bool DoesDirectoryExist(string path) => DoesDirectoryExistSetter?.Invoke(path) ?? base.DoesDirectoryExist(path);
 
     protected override string[] GetDirectories(string path) => GetDirectoriesSetter == null ? base.GetDirectories(path) : GetDirectoriesSetter(path);
 
-    protected override Assembly SearchAssembly(List<string> searchDirectorypaths, string name, bool isReflectionOnly) => SearchAssemblySetter == null
+    protected override Assembly? SearchAssembly(List<string> searchDirectorypaths, string name, bool isReflectionOnly)
+        => SearchAssemblySetter == null
             ? base.SearchAssembly(searchDirectorypaths, name, isReflectionOnly)
             : SearchAssemblySetter(searchDirectorypaths, name, isReflectionOnly);
 

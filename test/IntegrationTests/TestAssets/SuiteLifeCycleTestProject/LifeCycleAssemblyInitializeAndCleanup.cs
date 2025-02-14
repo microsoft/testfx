@@ -8,7 +8,7 @@ namespace SuiteLifeCycleTestProject;
 [TestClass]
 public class LifeCycleAssemblyInitializeAndCleanup
 {
-    private static TestContext s_testContext;
+    private static TestContext s_testContext = null!;
 
     [AssemblyInitialize]
     public static void AssemblyInit(TestContext testContext)

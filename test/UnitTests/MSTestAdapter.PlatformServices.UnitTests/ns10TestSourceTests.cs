@@ -19,9 +19,9 @@ public class TestSourceTests : TestContainer
 
     public void IsAssemblyReferencedShouldReturnTrueIfSourceOrAssemblyNameIsNull()
     {
-        Verify(_testSource.IsAssemblyReferenced(null, null));
-        Verify(_testSource.IsAssemblyReferenced(null, string.Empty));
-        Verify(_testSource.IsAssemblyReferenced(new AssemblyName(), null));
+        Verify(_testSource.IsAssemblyReferenced(null!, null!));
+        Verify(_testSource.IsAssemblyReferenced(null!, string.Empty));
+        Verify(_testSource.IsAssemblyReferenced(new AssemblyName(), null!));
     }
 
     public void IsAssemblyReferencedShouldReturnTrueForAllSourceOrAssemblyNames() => Verify(_testSource.IsAssemblyReferenced(new AssemblyName("ReferenceAssembly"), "SourceAssembly"));

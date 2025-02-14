@@ -26,7 +26,7 @@ public class ExceptionExtensionsTests : TestContainer
 
     public void ExceptionTryGetMessageReturnsEmptyStringIfExceptionMessageIsNull()
     {
-        var exception = new DummyException(() => null);
+        var exception = new DummyException(() => null!);
 
         Verify(exception.TryGetMessage() == string.Empty);
     }
@@ -35,7 +35,7 @@ public class ExceptionExtensionsTests : TestContainer
     {
         string errorMessage = string.Format(CultureInfo.InvariantCulture, Resource.UTF_FailedToGetExceptionMessage, "null");
 
-        var exception = (Exception)null;
+        var exception = (Exception?)null;
 
         Verify(errorMessage == exception.TryGetMessage());
     }
@@ -53,7 +53,7 @@ public class ExceptionExtensionsTests : TestContainer
 
     public void TryGetStackTraceInformationReturnsNullIfExceptionStackTraceIsNullOrEmpty()
     {
-        var exception = new DummyExceptionForStackTrace(() => null);
+        var exception = new DummyExceptionForStackTrace(() => null!);
 
         Verify(exception.TryGetStackTraceInformation() is null);
     }
@@ -62,9 +62,9 @@ public class ExceptionExtensionsTests : TestContainer
     {
         var exception = new DummyExceptionForStackTrace(() => "    at A()\r\n    at B()");
 
-        MSTest.TestAdapter.ObjectModel.StackTraceInformation stackTraceInformation = exception.TryGetStackTraceInformation();
+        MSTest.TestAdapter.ObjectModel.StackTraceInformation? stackTraceInformation = exception.TryGetStackTraceInformation();
 
-        Verify(stackTraceInformation.ErrorStackTrace.StartsWith("    at A()", StringComparison.Ordinal));
+        Verify(stackTraceInformation!.ErrorStackTrace.StartsWith("    at A()", StringComparison.Ordinal));
         Verify(stackTraceInformation.ErrorFilePath is null);
         Verify(stackTraceInformation.ErrorLineNumber == 0);
     }
@@ -115,7 +115,7 @@ public class ExceptionExtensionsTests : TestContainer
     public void IsUnitTestAssertExceptionSetsOutcomeAsInconclusiveIfAssertInconclusiveException()
     {
         var exception = new UTF.AssertInconclusiveException("Dummy Message", new NotImplementedException("notImplementedException"));
-        exception.TryGetUnitTestAssertException(out UTF.UnitTestOutcome outcome, out string exceptionMessage, out _);
+        exception.TryGetUnitTestAssertException(out UTF.UnitTestOutcome outcome, out string? exceptionMessage, out _);
 
         Verify(outcome == UTF.UnitTestOutcome.Inconclusive);
         Verify(exceptionMessage == "Dummy Message");
@@ -124,7 +124,7 @@ public class ExceptionExtensionsTests : TestContainer
     public void IsUnitTestAssertExceptionSetsOutcomeAsFailedIfAssertFailedException()
     {
         var exception = new UTF.AssertFailedException("Dummy Message", new NotImplementedException("notImplementedException"));
-        exception.TryGetUnitTestAssertException(out UTF.UnitTestOutcome outcome, out string exceptionMessage, out _);
+        exception.TryGetUnitTestAssertException(out UTF.UnitTestOutcome outcome, out string? exceptionMessage, out _);
 
         Verify(outcome == UTF.UnitTestOutcome.Failed);
         Verify(exceptionMessage == "Dummy Message");

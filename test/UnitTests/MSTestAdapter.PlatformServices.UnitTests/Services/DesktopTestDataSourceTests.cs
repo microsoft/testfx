@@ -38,7 +38,7 @@ public class DesktopTestDataSourceTests : TestContainer
         _mockTestMethodInfo.Setup(ds => ds.MethodInfo).Returns(methodInfo);
 
         TestDataSource testDataSource = new();
-        IEnumerable<object> dataRows = testDataSource.GetData(_mockTestMethodInfo.Object, _mockTestContext.Object);
+        IEnumerable<object>? dataRows = testDataSource.GetData(_mockTestMethodInfo.Object, _mockTestContext.Object);
 
         foreach (DataRow dataRow in dataRows.Cast<DataRow>())
         {
@@ -57,7 +57,7 @@ public class DesktopTestDataSourceTests : TestContainer
         _mockTestMethodInfo.Setup(ds => ds.MethodInfo).Returns(methodInfo);
 
         TestDataSource testDataSource = new();
-        IEnumerable<object> dataRows = testDataSource.GetData(_mockTestMethodInfo.Object, _mockTestContext.Object);
+        IEnumerable<object>? dataRows = testDataSource.GetData(_mockTestMethodInfo.Object, _mockTestContext.Object);
 
         _mockTestContext.Verify(tc => tc.SetDataConnection(It.IsAny<object>()), Times.Once);
     }
@@ -66,18 +66,18 @@ public class DesktopTestDataSourceTests : TestContainer
 
     public class DummyTestClass
     {
-        public TestContext TestContext { get; set; }
+        public TestContext TestContext { get; set; } = null!;
 
         [TestMethod]
         public void PassingTest()
         {
-            Verify(TestContext.DataRow["adapter"].ToString() == "v1");
+            Verify(TestContext.DataRow!["adapter"].ToString() == "v1");
             Verify(TestContext.DataRow["targetPlatform"].ToString() == "x86");
             TestContext.AddResultFile("C:\\temp.txt");
         }
 
         [TestMethod]
-        public void FailingTest() => Verify(TestContext.DataRow["configuration"].ToString() == "Release");
+        public void FailingTest() => Verify(TestContext.DataRow!["configuration"].ToString() == "Release");
     }
 
     #endregion

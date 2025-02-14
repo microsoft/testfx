@@ -49,7 +49,7 @@ public class TestExecutionManagerTests : TestContainer
     ];
 
     private TestableRunContextTestExecutionTests _runContext;
-    private List<string> _callers;
+    private List<string> _callers = new();
     private int _enqueuedParallelTestsCount;
 
     public TestExecutionManagerTests()
@@ -271,7 +271,7 @@ public class TestExecutionManagerTests : TestContainer
 
         await _testExecutionManager.RunTestsAsync(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
 
-        Verify(DummyTestClass.TestContextProperties.ToList().Contains(
+        Verify(DummyTestClass.TestContextProperties!.Contains(
             new KeyValuePair<string, object>("webAppUrl", "http://localhost")));
     }
 
@@ -347,7 +347,7 @@ public class TestExecutionManagerTests : TestContainer
         // Trigger another Run
         await _testExecutionManager.RunTestsAsync(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
 
-        Verify("http://updatedLocalHost".Equals(DummyTestClass.TestContextProperties["webAppUrl"]));
+        Verify("http://updatedLocalHost".Equals(DummyTestClass.TestContextProperties!["webAppUrl"]));
     }
 
     #endregion
@@ -384,7 +384,7 @@ public class TestExecutionManagerTests : TestContainer
         await _testExecutionManager.RunTestsAsync(sources, _runContext, _frameworkHandle, _cancellationToken);
 
         Verify(
-            DummyTestClass.TestContextProperties.ToList().Contains(
+            DummyTestClass.TestContextProperties!.Contains(
             new KeyValuePair<string, object>("webAppUrl", "http://localhost")));
     }
 
@@ -574,7 +574,7 @@ public class TestExecutionManagerTests : TestContainer
 
             testablePlatformService.MockReflectionOperations.Setup(
                 ro => ro.GetCustomAttributes(It.IsAny<Assembly>(), It.IsAny<Type>())).
-                Returns((Assembly asm, Type type) => type.FullName.Equals(typeof(ParallelizeAttribute).FullName, StringComparison.Ordinal)
+                Returns((Assembly asm, Type type) => type.FullName!.Equals(typeof(ParallelizeAttribute).FullName, StringComparison.Ordinal)
                         ? [new ParallelizeAttribute { Workers = 10, Scope = ExecutionScope.MethodLevel }]
                         : originalReflectionOperation.GetCustomAttributes(asm, type));
 
@@ -633,7 +633,7 @@ public class TestExecutionManagerTests : TestContainer
 
             testablePlatformService.MockReflectionOperations.Setup(
                 ro => ro.GetCustomAttributes(It.IsAny<Assembly>(), It.IsAny<Type>())).
-                Returns((Assembly asm, Type type) => type.FullName.Equals(typeof(DoNotParallelizeAttribute).FullName, StringComparison.Ordinal)
+                Returns((Assembly asm, Type type) => type.FullName!.Equals(typeof(DoNotParallelizeAttribute).FullName, StringComparison.Ordinal)
                         ? [new DoNotParallelizeAttribute()]
                         : originalReflectionOperation.GetCustomAttributes(asm, type));
 
@@ -734,7 +734,7 @@ public class TestExecutionManagerTests : TestContainer
 
             testablePlatformService.MockReflectionOperations.Setup(
                 ro => ro.GetCustomAttributes(It.IsAny<Assembly>(), It.IsAny<Type>())).
-                Returns((Assembly asm, Type type) => type.FullName.Equals(typeof(ParallelizeAttribute).FullName, StringComparison.Ordinal)
+                Returns((Assembly asm, Type type) => type.FullName!.Equals(typeof(ParallelizeAttribute).FullName, StringComparison.Ordinal)
                         ? [new ParallelizeAttribute { Workers = 1 }]
                         : originalReflectionOperation.GetCustomAttributes(asm, type));
 
@@ -812,8 +812,8 @@ public class TestExecutionManagerTests : TestContainer
 
     private static TestCase GetTestCase(Type typeOfClass, string testName)
     {
-        MethodInfo methodInfo = typeOfClass.GetMethod(testName);
-        var testMethod = new TestMethod(methodInfo.Name, typeOfClass.FullName, Assembly.GetExecutingAssembly().Location, isAsync: false);
+        MethodInfo methodInfo = typeOfClass.GetMethod(testName)!;
+        var testMethod = new TestMethod(methodInfo.Name, typeOfClass.FullName!, Assembly.GetExecutingAssembly().Location, isAsync: false);
         UnitTestElement element = new(testMethod);
         return element.ToTestCase();
     }
@@ -852,11 +852,11 @@ public class TestExecutionManagerTests : TestContainer
         _callers.Add(caller);
     }
 
-    private void VerifyTcmProperties(IDictionary<string, object> tcmProperties, TestCase testCase)
+    private void VerifyTcmProperties(IDictionary<string, object>? tcmProperties, TestCase testCase)
     {
         foreach (TestProperty property in _tcmKnownProperties)
         {
-            Verify(testCase.GetPropertyValue(property).Equals(tcmProperties[property.Id]));
+            Verify(testCase.GetPropertyValue(property)!.Equals(tcmProperties![property.Id]));
         }
     }
 
@@ -867,9 +867,9 @@ public class TestExecutionManagerTests : TestContainer
         System.Collections.IEnumerator propertiesValueEnumerator = propertiesValue.GetEnumerator();
         while (tcmKnownPropertiesEnumerator.MoveNext() && propertiesValueEnumerator.MoveNext())
         {
-            object property = tcmKnownPropertiesEnumerator.Current;
-            object value = propertiesValueEnumerator.Current;
-            testCase.SetPropertyValue(property as TestProperty, value);
+            object? property = tcmKnownPropertiesEnumerator.Current;
+            object? value = propertiesValueEnumerator.Current;
+            testCase.SetPropertyValue((property as TestProperty)!, value);
         }
     }
 
@@ -880,13 +880,9 @@ public class TestExecutionManagerTests : TestContainer
     [DummyTestClass]
     internal class DummyTestClass
     {
-        public static IDictionary<string, object> TestContextProperties
-        {
-            get;
-            set;
-        }
+        public static IDictionary<string, object>? TestContextProperties { get; set; }
 
-        public TestContext TestContext { get; set; }
+        public TestContext TestContext { get; set; } = null!;
 
         [TestMethod]
         [TestCategory("Foo")]
@@ -1069,7 +1065,7 @@ internal sealed class TestableFrameworkHandle : IFrameworkHandle
     public void RecordResult(TestResult testResult)
     {
         ResultsList.Add(testResult.ToString());
-        TestDisplayNameList.Add(testResult.DisplayName);
+        TestDisplayNameList.Add(testResult.DisplayName!);
     }
 
     public void SendMessage(TestMessageLevel testMessageLevel, string message) => MessageList.Add($"{testMessageLevel}:{message}");
@@ -1082,9 +1078,9 @@ internal sealed class TestableFrameworkHandle : IFrameworkHandle
 
     public int LaunchProcessWithDebuggerAttached(
         string filePath,
-        string workingDirectory,
-        string arguments,
-        IDictionary<string, string> environmentVariables) => throw new NotImplementedException();
+        string? workingDirectory,
+        string? arguments,
+        IDictionary<string, string?>? environmentVariables) => throw new NotImplementedException();
 }
 
 internal sealed class TestableRunContextTestExecutionTests : IRunContext
@@ -1109,13 +1105,13 @@ internal sealed class TestableRunContextTestExecutionTests : IRunContext
 
     public bool IsBeingDebugged { get; }
 
-    public string TestRunDirectory { get; }
+    public string? TestRunDirectory { get; }
 
-    public string SolutionDirectory { get; }
+    public string? SolutionDirectory { get; }
 
     public ITestCaseFilterExpression GetTestCaseFilter(
-        IEnumerable<string> supportedProperties,
-        Func<string, TestProperty> propertyProvider) => _getFilter();
+        IEnumerable<string>? supportedProperties,
+        Func<string, TestProperty?> propertyProvider) => _getFilter();
 }
 
 internal sealed class TestableTestCaseFilterExpression : ITestCaseFilterExpression
@@ -1124,16 +1120,16 @@ internal sealed class TestableTestCaseFilterExpression : ITestCaseFilterExpressi
 
     public TestableTestCaseFilterExpression(Func<TestCase, bool> matchTestCase) => _matchTest = matchTestCase;
 
-    public string TestCaseFilterValue { get; }
+    public string TestCaseFilterValue { get; } = null!;
 
-    public bool MatchTestCase(TestCase testCase, Func<string, object> propertyValueProvider) => _matchTest(testCase);
+    public bool MatchTestCase(TestCase testCase, Func<string, object?> propertyValueProvider) => _matchTest(testCase);
 }
 
 internal class TestableTestExecutionManager : TestExecutionManager
 {
-    internal Action<IEnumerable<TestCase>, IRunContext, IFrameworkHandle, bool> ExecuteTestsWrapper { get; set; }
+    internal Action<IEnumerable<TestCase>, IRunContext?, IFrameworkHandle, bool> ExecuteTestsWrapper { get; set; } = null!;
 
-    internal override Task ExecuteTestsAsync(IEnumerable<TestCase> tests, IRunContext runContext, IFrameworkHandle frameworkHandle, bool isDeploymentDone)
+    internal override Task ExecuteTestsAsync(IEnumerable<TestCase> tests, IRunContext? runContext, IFrameworkHandle frameworkHandle, bool isDeploymentDone)
     {
         ExecuteTestsWrapper?.Invoke(tests, runContext, frameworkHandle, isDeploymentDone);
         return Task.CompletedTask;

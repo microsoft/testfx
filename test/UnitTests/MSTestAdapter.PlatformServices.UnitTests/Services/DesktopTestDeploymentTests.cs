@@ -53,7 +53,7 @@ public class DesktopTestDeploymentTests : TestContainer
 
         Verify(testDeployment.Deploy(new List<TestCase> { testCase }, mockRunContext.Object, new Mock<IFrameworkHandle>().Object));
 
-        string warning;
+        string? warning;
         string sourceFile = Assembly.GetExecutingAssembly().GetName().Name + ".dll";
         _mockFileUtility.Verify(
             fu =>
@@ -78,7 +78,7 @@ public class DesktopTestDeploymentTests : TestContainer
 
         Verify(testDeployment.Deploy(new List<TestCase> { testCase1, testCase2 }, mockRunContext.Object, new Mock<IFrameworkHandle>().Object));
 
-        string warning;
+        string? warning;
         string sourceFile1 = Assembly.GetExecutingAssembly().GetName().Name + ".dll";
         _mockFileUtility.Verify(
             fu =>

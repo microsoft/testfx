@@ -24,7 +24,7 @@ public class RunConfiguration
     /// </summary>
     public string[] TestAdaptersPaths { get; }
 
-    public string TestResultsDirectory { get; set; }
+    public string? TestResultsDirectory { get; set; }
 
     /// <summary>
     /// Converts the setting to be an XmlElement.

@@ -33,7 +33,7 @@ public class TcmTestPropertiesProviderTests : TestContainer
 
     public void GetTcmPropertiesShouldReturnEmptyDictionaryIfTestCaseIsNull()
     {
-        IDictionary<TestProperty, object> tcmProperties = TcmTestPropertiesProvider.GetTcmProperties(null);
+        IDictionary<TestProperty, object?> tcmProperties = TcmTestPropertiesProvider.GetTcmProperties(null);
         Verify(tcmProperties.Count == 0);
     }
 
@@ -60,7 +60,7 @@ public class TcmTestPropertiesProviderTests : TestContainer
         ];
         SetTestCaseProperties(testCase, propertiesValue);
 
-        IDictionary<TestProperty, object> tcmProperties = TcmTestPropertiesProvider.GetTcmProperties(testCase);
+        IDictionary<TestProperty, object?> tcmProperties = TcmTestPropertiesProvider.GetTcmProperties(testCase);
         Verify(tcmProperties.Count == 0);
     }
 
@@ -87,7 +87,7 @@ public class TcmTestPropertiesProviderTests : TestContainer
         ];
         SetTestCaseProperties(testCase, propertiesValue);
 
-        IDictionary<TestProperty, object> tcmProperties = TcmTestPropertiesProvider.GetTcmProperties(testCase);
+        IDictionary<TestProperty, object?> tcmProperties = TcmTestPropertiesProvider.GetTcmProperties(testCase);
 
         VerifyTcmProperties(tcmProperties, testCase);
     }
@@ -115,7 +115,7 @@ public class TcmTestPropertiesProviderTests : TestContainer
             345
         ];
         SetTestCaseProperties(testCase1, propertiesValue1);
-        IDictionary<TestProperty, object> tcmProperties1 = TcmTestPropertiesProvider.GetTcmProperties(testCase1);
+        IDictionary<TestProperty, object?> tcmProperties1 = TcmTestPropertiesProvider.GetTcmProperties(testCase1);
         VerifyTcmProperties(tcmProperties1, testCase1);
 
         // Verify 2nd call.
@@ -139,7 +139,7 @@ public class TcmTestPropertiesProviderTests : TestContainer
             346
         ];
         SetTestCaseProperties(testCase2, propertiesValue2);
-        IDictionary<TestProperty, object> tcmProperties2 = TcmTestPropertiesProvider.GetTcmProperties(testCase2);
+        IDictionary<TestProperty, object?> tcmProperties2 = TcmTestPropertiesProvider.GetTcmProperties(testCase2);
         VerifyTcmProperties(tcmProperties2, testCase2);
     }
 
@@ -166,7 +166,7 @@ public class TcmTestPropertiesProviderTests : TestContainer
             345
         ];
         SetTestCaseProperties(testCase1, propertiesValue1);
-        IDictionary<TestProperty, object> tcmProperties1 = TcmTestPropertiesProvider.GetTcmProperties(testCase1);
+        IDictionary<TestProperty, object?> tcmProperties1 = TcmTestPropertiesProvider.GetTcmProperties(testCase1);
         VerifyTcmProperties(tcmProperties1, testCase1);
 
         // Verify 2nd call.
@@ -190,7 +190,7 @@ public class TcmTestPropertiesProviderTests : TestContainer
             346
         ];
         SetTestCaseProperties(testCase2, propertiesValue2);
-        IDictionary<TestProperty, object> tcmProperties2 = TcmTestPropertiesProvider.GetTcmProperties(testCase2);
+        IDictionary<TestProperty, object?> tcmProperties2 = TcmTestPropertiesProvider.GetTcmProperties(testCase2);
         VerifyTcmProperties(tcmProperties2, testCase2);
 
         // Verify 3rd call.
@@ -214,7 +214,7 @@ public class TcmTestPropertiesProviderTests : TestContainer
             347
         ];
         SetTestCaseProperties(testCase3, propertiesValue3);
-        IDictionary<TestProperty, object> tcmProperties3 = TcmTestPropertiesProvider.GetTcmProperties(testCase3);
+        IDictionary<TestProperty, object?> tcmProperties3 = TcmTestPropertiesProvider.GetTcmProperties(testCase3);
         VerifyTcmProperties(tcmProperties3, testCase3);
     }
 
@@ -225,17 +225,17 @@ public class TcmTestPropertiesProviderTests : TestContainer
         System.Collections.IEnumerator propertiesValueEnumerator = propertiesValue.GetEnumerator();
         while (tcmKnownPropertiesEnumerator.MoveNext() && propertiesValueEnumerator.MoveNext())
         {
-            object property = tcmKnownPropertiesEnumerator.Current;
-            object value = propertiesValueEnumerator.Current;
-            testCase.SetPropertyValue(property as TestProperty, value);
+            object? property = tcmKnownPropertiesEnumerator.Current;
+            object? value = propertiesValueEnumerator.Current;
+            testCase.SetPropertyValue((property as TestProperty)!, value);
         }
     }
 
-    private void VerifyTcmProperties(IDictionary<TestProperty, object> tcmProperties, TestCase testCase)
+    private void VerifyTcmProperties(IDictionary<TestProperty, object?> tcmProperties, TestCase testCase)
     {
         foreach (TestProperty property in _tcmKnownProperties)
         {
-            Verify(testCase.GetPropertyValue(property).Equals(tcmProperties[property]));
+            Verify(testCase.GetPropertyValue(property)!.Equals(tcmProperties[property]));
         }
     }
 }

@@ -33,7 +33,7 @@ public class ExpectedExceptionBaseAttributeTests : TestContainer
     public void RethrowIfAssertExceptionThrowsExceptionOnAssertInconclusive() =>
         VerifyThrows<AssertInconclusiveException>(() => _sut.RethrowIfAssertException(new AssertInconclusiveException()));
 
-    public void VerifyCorrectMessageIsGettingSetInVariablenoExceptionMessage()
+    public void VerifyCorrectMessageIsGettingSetInVariableNoExceptionMessage()
     {
         string expected = "DummyString";
         _sut = new TestableExpectedExceptionBaseAttributeClass(expected);
@@ -43,9 +43,9 @@ public class ExpectedExceptionBaseAttributeTests : TestContainer
         Verify(expected == result);
     }
 
-    public void VerifyEmptyMessageIsGettingSetInVariablenoExceptionMessage()
+    public void VerifyEmptyMessageIsGettingSetInVariableNoExceptionMessage()
     {
-        _sut = new TestableExpectedExceptionBaseAttributeClass(null);
+        _sut = new TestableExpectedExceptionBaseAttributeClass(null!);
 
         string result = _sut.GetNoExceptionMessage();
 

@@ -14,7 +14,7 @@ public class TestCaseExtensionsTests : TestContainer
 {
     public void ToUnitTestElementShouldReturnUnitTestElementWithFieldsSet()
     {
-        TestCase testCase = new("DummyClassName.DummyMethod", new("DummyUri", UriKind.Relative), Assembly.GetCallingAssembly().FullName)
+        TestCase testCase = new("DummyClassName.DummyMethod", new("DummyUri", UriKind.Relative), Assembly.GetCallingAssembly().FullName!)
         {
             DisplayName = "DummyDisplayName",
         };
@@ -36,7 +36,7 @@ public class TestCaseExtensionsTests : TestContainer
 
     public void ToUnitTestElementForTestCaseWithNoPropertiesShouldReturnUnitTestElementWithDefaultFields()
     {
-        TestCase testCase = new("DummyClass.DummyMethod", new("DummyUri", UriKind.Relative), Assembly.GetCallingAssembly().FullName);
+        TestCase testCase = new("DummyClass.DummyMethod", new("DummyUri", UriKind.Relative), Assembly.GetCallingAssembly().FullName!);
         testCase.SetPropertyValue(Constants.TestClassNameProperty, "DummyClassName");
 
         var resultUnitTestElement = testCase.ToUnitTestElement(testCase.Source);
@@ -48,7 +48,7 @@ public class TestCaseExtensionsTests : TestContainer
 
     public void ToUnitTestElementShouldAddDeclaringClassNameToTestElementWhenAvailable()
     {
-        TestCase testCase = new("DummyClass.DummyMethod", new("DummyUri", UriKind.Relative), Assembly.GetCallingAssembly().FullName);
+        TestCase testCase = new("DummyClass.DummyMethod", new("DummyUri", UriKind.Relative), Assembly.GetCallingAssembly().FullName!);
         testCase.SetPropertyValue(Constants.TestClassNameProperty, "DummyClassName");
         testCase.SetPropertyValue(Constants.DeclaringClassNameProperty, "DummyDeclaringClassName");
 

@@ -9,9 +9,9 @@ namespace SuiteLifeCycleTestProject;
 public sealed class LifeCycleDerivedClassInitializeBeforeEachDerivedClassAndClassCleanupNone
     : LifeCycleClassInitializeBeforeEachDerivedClassAndClassCleanupNone
 {
-    private static TestContext s_testContext;
+    private static TestContext s_testContext = null!;
 
-    public TestContext DerivedClassTestContext { get; set; }
+    public TestContext DerivedClassTestContext { get; set; } = null!;
 
     public LifeCycleDerivedClassInitializeBeforeEachDerivedClassAndClassCleanupNone()
     {

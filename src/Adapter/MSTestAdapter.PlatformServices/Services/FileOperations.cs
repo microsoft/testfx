@@ -139,7 +139,7 @@ public class FileOperations : IFileOperations
     /// <param name="methodName"> The method name. </param>
     /// <param name="minLineNumber"> The min line number. </param>
     /// <param name="fileName"> The file name. </param>
-    public void GetNavigationData(object navigationSession, string className, string methodName, out int minLineNumber, out string? fileName)
+    public void GetNavigationData(object? navigationSession, string className, string methodName, out int minLineNumber, out string? fileName)
     {
 #if NETSTANDARD || (NETCOREAPP && !WIN_UI) || WINDOWS_UWP || WIN_UI
         DiaSessionOperations.GetNavigationData(navigationSession, className, methodName, out minLineNumber, out fileName);

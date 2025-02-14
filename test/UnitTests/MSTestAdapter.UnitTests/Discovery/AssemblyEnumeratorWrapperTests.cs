@@ -80,12 +80,12 @@ public class AssemblyEnumeratorWrapperTests : TestContainer
 
     public void GetTestsShouldReturnTestElements()
     {
-        string assemblyName = Assembly.GetExecutingAssembly().FullName;
+        string assemblyName = Assembly.GetExecutingAssembly().FullName!;
 
         // Setup mocks.
         SetupMocks(assemblyName, doesFileExist: true, isAssemblyReferenced: true);
 
-        ICollection<MSTest.TestAdapter.ObjectModel.UnitTestElement> tests = _testableAssemblyEnumeratorWrapper.GetTests(assemblyName, null, out _warnings);
+        ICollection<MSTest.TestAdapter.ObjectModel.UnitTestElement>? tests = _testableAssemblyEnumeratorWrapper.GetTests(assemblyName, null, out _warnings);
 
         Verify(tests is not null);
 
@@ -95,7 +95,7 @@ public class AssemblyEnumeratorWrapperTests : TestContainer
 
     public void GetTestsShouldCreateAnIsolatedInstanceOfAssemblyEnumerator()
     {
-        string assemblyName = Assembly.GetExecutingAssembly().FullName;
+        string assemblyName = Assembly.GetExecutingAssembly().FullName!;
 
         // Setup mocks.
         SetupMocks(assemblyName, doesFileExist: true, isAssemblyReferenced: true);

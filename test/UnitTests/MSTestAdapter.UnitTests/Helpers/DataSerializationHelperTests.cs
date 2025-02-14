@@ -13,50 +13,46 @@ public class DataSerializationHelperTests : TestContainer
     {
         var source = new DateTimeOffset(628381323438126060, TimeSpan.FromHours(-8));
 
-        object[] actual = DataSerializationHelper.Deserialize(
-            DataSerializationHelper.Serialize([source]));
+        object?[]? actual = DataSerializationHelper.Deserialize(DataSerializationHelper.Serialize([source]));
 
-        Verify(actual.Length == 1);
-        Verify(actual[0].GetType() == typeof(DateTimeOffset));
-        Verify(actual[0].Equals(source));
+        Verify(actual!.Length == 1);
+        Verify(actual[0]!.GetType() == typeof(DateTimeOffset));
+        Verify(actual[0]!.Equals(source));
     }
 
     public void DataSerializerShouldRoundTripDateTime()
     {
         var source = new DateTime(628381323438126060);
 
-        object[] actual = DataSerializationHelper.Deserialize(
-            DataSerializationHelper.Serialize([source]));
+        object?[]? actual = DataSerializationHelper.Deserialize(DataSerializationHelper.Serialize([source]));
 
-        Verify(actual.Length == 1);
-        Verify(actual[0].GetType() == typeof(DateTime));
-        Verify(actual[0].Equals(source));
-        Verify(((DateTime)actual[0]).Kind.Equals(source.Kind));
+        Verify(actual!.Length == 1);
+        Verify(actual[0]!.GetType() == typeof(DateTime));
+        Verify(actual[0]!.Equals(source));
+        Verify(((DateTime)actual[0]!).Kind.Equals(source.Kind));
     }
 
     public void DataSerializerShouldRoundTripDateTimeOfKindLocal()
     {
         var source = new DateTime(628381323438126060, DateTimeKind.Local);
 
-        object[] actual = DataSerializationHelper.Deserialize(
-            DataSerializationHelper.Serialize([source]));
+        object?[]? actual = DataSerializationHelper.Deserialize(DataSerializationHelper.Serialize([source]));
 
-        Verify(actual.Length == 1);
-        Verify(actual[0].GetType() == typeof(DateTime));
-        Verify(actual[0].Equals(source));
-        Verify(((DateTime)actual[0]).Kind.Equals(source.Kind));
+        Verify(actual!.Length == 1);
+        Verify(actual[0]!.GetType() == typeof(DateTime));
+        Verify(actual[0]!.Equals(source));
+        Verify(((DateTime)actual[0]!).Kind.Equals(source.Kind));
     }
 
     public void DataSerializerShouldRoundTripDateTimeOfKindUtc()
     {
         var source = new DateTime(628381323438126060, DateTimeKind.Utc);
 
-        object[] actual = DataSerializationHelper.Deserialize(
-            DataSerializationHelper.Serialize([source]));
+        object?[]? actual = DataSerializationHelper.Deserialize(DataSerializationHelper.Serialize([source]));
 
-        Verify(actual.Length == 1);
-        Verify(actual[0].GetType() == typeof(DateTime));
-        Verify(actual[0].Equals(source));
-        Verify(((DateTime)actual[0]).Kind.Equals(source.Kind));
+        Verify(actual!.Length == 1);
+        Verify(actual[0]!.GetType() == typeof(DateTime));
+        Verify(actual[0]!.Equals(source));
+        Verify(((DateTime)actual[0]!).Kind.Equals(source.Kind));
     }
 }

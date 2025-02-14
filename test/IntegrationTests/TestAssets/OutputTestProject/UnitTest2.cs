@@ -10,7 +10,7 @@ public class UnitTest2
 {
     private static readonly Random Rng = new();
 
-    public TestContext TestContext { get; set; }
+    public TestContext TestContext { get; set; } = null!;
 
     [ClassInitialize]
     public static void ClassInitialize(TestContext testContext) => WriteLines("UnitTest2 - ClassInitialize");
