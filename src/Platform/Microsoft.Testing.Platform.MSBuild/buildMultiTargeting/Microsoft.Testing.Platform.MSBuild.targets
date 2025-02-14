@@ -14,10 +14,12 @@
     <ProjectCapability Include="TestContainer" />
   </ItemGroup>
 
-  <!-- Add assembly attribute metadata for reflection usage -->
-  <ItemGroup>
-    <AssemblyMetadata Include="Microsoft.Testing.Platform.Application" Value="True" Condition=" '$(IsTestingPlatformApplication)' == 'True' " />
-  </ItemGroup>
+  <Target Name="_AddAssemblyMetadata" BeforeTargets="GetAssemblyAttributes">
+    <!-- Add assembly attribute metadata for reflection usage -->
+    <ItemGroup>
+      <AssemblyMetadata Include="Microsoft.Testing.Platform.Application" Value="True" Condition=" '$(IsTestingPlatformApplication)' == 'True' " />
+    </ItemGroup>
+  </Target>
 
   <!-- Setup the task folder -->
   <PropertyGroup>
