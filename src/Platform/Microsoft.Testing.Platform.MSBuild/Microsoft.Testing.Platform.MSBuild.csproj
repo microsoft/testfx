@@ -12,13 +12,13 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Build.Framework" PrivateAssets="All" />
     <PackageReference Include="Microsoft.Build.Utilities.Core" PrivateAssets="All" />
-    <PackageReference Include="Microsoft.Win32.Registry" PrivateAssets="All" />
+    <PackageReference Include="Microsoft.Win32.Registry" PrivateAssets="All" NoWarn="RT0003" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="$(RepoRoot)\src\Platform\Microsoft.Testing.Platform\Microsoft.Testing.Platform.csproj" CopyToBuildOutput="true" />
     <!-- Deps only so we can include it in the lib of the NuGet package -->
-    <ProjectReference Include="$(RepoRoot)\src\Platform\Microsoft.Testing.Extensions.MSBuild\Microsoft.Testing.Extensions.MSBuild.csproj" PrivateAssets="All" />
+    <ProjectReference Include="$(RepoRoot)\src\Platform\Microsoft.Testing.Extensions.MSBuild\Microsoft.Testing.Extensions.MSBuild.csproj" PrivateAssets="All" ReferenceOutputAssembly="false" />
   </ItemGroup>
 
   <!-- NuGet properties -->
