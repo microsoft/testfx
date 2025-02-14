@@ -1,4 +1,4 @@
-﻿<Project>
+<Project>
 
   <!-- SDK top import -->
   <Import Project="Sdk.props" Sdk="MSBuild.Sdk.Extras" Condition=" '$(OS)' == 'Windows_NT' " />
@@ -45,14 +45,14 @@
 
   <ItemGroup>
     <ProjectReference Include="$(RepoRoot)src\Adapter\MSTest.TestAdapter\MSTest.TestAdapter.csproj"
-                      ReferenceOutputAssembly="false" />
+                      NoWarn="RT0002" />
     <ProjectReference Include="$(RepoRoot)src\TestFramework\TestFramework.Extensions\TestFramework.Extensions.csproj"
-                      ReferenceOutputAssembly="false" />
+                      NoWarn="RT0002" />
     <ProjectReference Include="$(RepoRoot)src\Analyzers\MSTest.Analyzers.Package\MSTest.Analyzers.Package.csproj"
-                      ReferenceOutputAssembly="false" />
+                      NoWarn="RT0002" />
     <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.TrxReport\Microsoft.Testing.Extensions.TrxReport.csproj"
                       Condition=" '$(TargetFramework)' != '$(UwpMinimum)' "
-                      ReferenceOutputAssembly="false" />
+                      NoWarn="RT0002" />
 
     <!-- CodeCoverage 17.14 doesn't support netcoreapp3.1. -->
     <!-- We end up having System.Collections.Immutable 8.0.0 which is not compatible with netcoreapp3.1 -->
