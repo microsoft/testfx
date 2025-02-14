@@ -22,8 +22,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\MSTest.Analyzers.CodeFixes\MSTest.Analyzers.CodeFixes.csproj" ReferenceOutputAssembly="false" />
-    <ProjectReference Include="..\MSTest.Analyzers\MSTest.Analyzers.csproj" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="..\MSTest.Analyzers.CodeFixes\MSTest.Analyzers.CodeFixes.csproj" NoWarn="RT0002"  />
+    <ProjectReference Include="..\MSTest.Analyzers\MSTest.Analyzers.csproj" NoWarn="RT0002" />
   </ItemGroup>
 
   <ItemGroup>
