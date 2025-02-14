@@ -139,16 +139,6 @@
     <_TestingPlatformEntryPointSourcePath>$([System.IO.Path]::Combine($(IntermediateOutputPath),$(_TestingPlatformEntryPointSourceName)))</_TestingPlatformEntryPointSourcePath>
     <_TestingPlatformEntryPointSourcePath>$([MSBuild]::NormalizePath($(MSBuildProjectDirectory), $(_TestingPlatformEntryPointSourcePath)))</_TestingPlatformEntryPointSourcePath>
   </PropertyGroup>
-  <Target Name="_IncludeGenerateTestingPlatformEntryPointIntoCompilation" BeforeTargets="BeforeCompile;XamlPreCompile"
-          DependsOnTargets="_CalculateGenerateTestingPlatformEntryPoint;_GenerateTestingPlatformEntryPointFileInputCache;_GenerateTestingPlatformEntryPoint" />
-
-    <ItemGroup Condition=" '$(GenerateTestingPlatformEntryPoint)' == 'True' ">
-      <Compile Include="$(_TestingPlatformEntryPointSourcePath)" />
-
-      <!-- We need to report to the FileWrites here because is possible that we skip _GenerateTestingPlatformInjectEntryPoint and we want to correctly handle the "dotnet clean" target -->
-      <FileWrites Include="$(_TestingPlatformEntryPointSourcePath)" />
-    </ItemGroup>
-  </Target>
   <Target Name="_GenerateTestingPlatformEntryPoint"
           Inputs="@(GenerateTestingPlatformEntryPointInputsCacheFilePath)" Outputs="$(_TestingPlatformEntryPointSourcePath)"
           Condition=" '$(GenerateTestingPlatformEntryPoint)' == 'True' " >
@@ -158,6 +148,16 @@
       <Output TaskParameter="TestingPlatformEntryPointGeneratedFilePath" PropertyName ="TestingPlatformEntryPointGeneratedFilePath" />
     </TestingPlatformEntryPointTask>
     <ItemGroup>
+      <FileWrites Include="$(_TestingPlatformEntryPointSourcePath)" />
+    </ItemGroup>
+  </Target>
+  <Target Name="_IncludeGenerateTestingPlatformEntryPointIntoCompilation" BeforeTargets="BeforeCompile;XamlPreCompile"
+          DependsOnTargets="_CalculateGenerateTestingPlatformEntryPoint;_GenerateTestingPlatformEntryPointFileInputCache;_GenerateTestingPlatformEntryPoint" />
+
+    <ItemGroup Condition=" '$(GenerateTestingPlatformEntryPoint)' == 'True' ">
+      <Compile Include="$(_TestingPlatformEntryPointSourcePath)" />
+
+      <!-- We need to report to the FileWrites here because is possible that we skip _GenerateTestingPlatformInjectEntryPoint and we want to correctly handle the "dotnet clean" target -->
       <FileWrites Include="$(_TestingPlatformEntryPointSourcePath)" />
     </ItemGroup>
   </Target>
@@ -227,19 +227,6 @@
     <_SelfRegisteredExtensionsSourcePath>$([System.IO.Path]::Combine($(IntermediateOutputPath),$(_SelfRegisteredExtensionsSourceName)))</_SelfRegisteredExtensionsSourcePath>
     <_SelfRegisteredExtensionsSourcePath>$([MSBuild]::NormalizePath($(MSBuildProjectDirectory), $(_SelfRegisteredExtensionsSourcePath)))</_SelfRegisteredExtensionsSourcePath>
   </PropertyGroup>
-  <!-- We always include the entry point also if the task _GenerateSelfRegisteredExtensions is skipped for caching reason -->
-  <!-- !!! DO NOT CHANGE THE NAME OF THIS TARGET IS USED BY ADAPTERS https://github.com/microsoft/testfx/issues/3478#issuecomment-2313889212 !!! -->
-  <Target Name="_IncludeGenerateSelfRegisteredExtensionsIntoCompilation" BeforeTargets="BeforeCompile;XamlPreCompile"
-          DependsOnTargets="_CalculateGenerateSelfRegisteredExtensions;_GenerateSelfRegisteredExtensionsFileInputCache;_GenerateSelfRegisteredExtensions">
-
-    <ItemGroup>
-      <Compile Include="$(_SelfRegisteredExtensionsSourcePath)" />
-    </ItemGroup>
-    <!-- We need to report to the FileWrites here because is possible that we skip _GenerateSelfRegisteredExtensions and we want to correctly handle the "dotnet clean" target -->
-    <ItemGroup>
-      <FileWrites Include="$(_SelfRegisteredExtensionsSourcePath)" />
-    </ItemGroup>
-  </Target>
   <Target Name="_GenerateSelfRegisteredExtensions"
           Inputs="@(GenerateSelfRegisteredExtensionsInputsCacheFilePath)" Outputs="$(_SelfRegisteredExtensionsSourcePath)"
           Condition=" '$(GenerateSelfRegisteredExtensions)' == 'True' " >
@@ -249,6 +236,20 @@
                                              Language="$(Language)" >
       <Output TaskParameter="SelfRegisteredExtensionsGeneratedFilePath" PropertyName ="SelfRegisteredExtensionsGeneratedFilePath" />
     </TestingPlatformSelfRegisteredExtensions>
+    <ItemGroup>
+      <FileWrites Include="$(_SelfRegisteredExtensionsSourcePath)" />
+    </ItemGroup>
+  </Target>
+
+  <!-- We always include the entry point also if the task _GenerateSelfRegisteredExtensions is skipped for caching reason -->
+  <!-- !!! DO NOT CHANGE THE NAME OF THIS TARGET IS USED BY ADAPTERS https://github.com/microsoft/testfx/issues/3478#issuecomment-2313889212 !!! -->
+  <Target Name="_IncludeGenerateSelfRegisteredExtensionsIntoCompilation" BeforeTargets="BeforeCompile;XamlPreCompile"
+          DependsOnTargets="_CalculateGenerateSelfRegisteredExtensions;_GenerateSelfRegisteredExtensionsFileInputCache;_GenerateSelfRegisteredExtensions">
+
+    <ItemGroup>
+      <Compile Include="$(_SelfRegisteredExtensionsSourcePath)" />
+    </ItemGroup>
+    <!-- We need to report to the FileWrites here because is possible that we skip _GenerateSelfRegisteredExtensions and we want to correctly handle the "dotnet clean" target -->
     <ItemGroup>
       <FileWrites Include="$(_SelfRegisteredExtensionsSourcePath)" />
     </ItemGroup>
