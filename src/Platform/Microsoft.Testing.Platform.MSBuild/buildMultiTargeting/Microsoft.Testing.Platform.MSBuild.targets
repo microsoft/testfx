@@ -1,11 +1,9 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" DefaultTargets="Build">
 
-  <!-- Acknowledge users choices -->
-  <PropertyGroup Condition=" $(IsTestingPlatformApplication) == 'True' ">
-    <GenerateTestingPlatformConfigurationFile Condition=" '$(GenerateTestingPlatformConfigurationFile)' == '' " >True</GenerateTestingPlatformConfigurationFile>
-    <GenerateTestingPlatformEntryPoint Condition=" '$(GenerateTestingPlatformEntryPoint)' == '' " >True</GenerateTestingPlatformEntryPoint>
-    <GenerateSelfRegisteredExtensions Condition=" '$(GenerateSelfRegisteredExtensions)' == '' ">True</GenerateSelfRegisteredExtensions>
+  <PropertyGroup>
+    <!-- This is the knob to disable completely for this project the machinery -->
+    <IsTestingPlatformApplication Condition=" '$(IsTestingPlatformApplication)' == '' ">True</IsTestingPlatformApplication>
   </PropertyGroup>
 
   <!-- Declare our capability to Visual Studio/Visual Studio Code -->
@@ -48,6 +46,16 @@
     <_TestingPlatformConfigurationFileName>$(AssemblyName).testconfig.json</_TestingPlatformConfigurationFileName>
     <_TestingPlatformConfigurationFile>$([System.IO.Path]::Combine($(MSBuildProjectDirectory),$(OutputPath),$(_TestingPlatformConfigurationFileName)))</_TestingPlatformConfigurationFile>
   </PropertyGroup>
+
+  <Target Name="_CalculateGenerateTestingPlatformConfigurationFile" BeforeTargets="CopyFilesToOutputDirectory" Condition="'$(GenerateTestingPlatformConfigurationFile)' == 'true'">
+    <PropertyGroup>
+      <!-- We add this to a target to allow setting IsTestingPlatformApplication as late as possible -->
+      <!-- For example, MSTest.TestAdapter.targets is imported *after* Microsoft.Testing.Platform.MSBuild.targets -->
+      <!-- We want to allow MSTest.TestAdapter.targets to set IsTestingPlatformApplication to false if EnableMSTestRunner is not set to true. -->
+      <GenerateTestingPlatformConfigurationFile Condition=" '$(GenerateTestingPlatformConfigurationFile)' == '' " >$(IsTestingPlatformApplication)</GenerateTestingPlatformConfigurationFile>
+    </PropertyGroup>
+  </Target>
+
   <Target Name="GenerateTestingPlatformConfigurationFile" BeforeTargets="CopyFilesToOutputDirectory"
           Inputs="$(_TestingPlatformConfigurationFileSourcePath)"
           Outputs="$(_TestingPlatformConfigurationFile)"
@@ -78,6 +86,15 @@
   <!-- Import task -->
   <UsingTask TaskName="Microsoft.Testing.Platform.MSBuild.TestingPlatformEntryPointTask"
          AssemblyFile="$(MicrosoftTestingPlatformMSBuildTaskFolder)Microsoft.Testing.Platform.MSBuild.dll"/>
+
+  <Target Name="_CalculateGenerateTestingPlatformEntryPoint" BeforeTargets="_GenerateTestingPlatformEntryPoint;_IncludeGenerateTestingPlatformEntryPointIntoCompilation;BeforeCompile;XamlPreCompile">
+    <PropertyGroup>
+      <!-- We add this to a target to allow setting IsTestingPlatformApplication as late as possible -->
+      <!-- For example, MSTest.TestAdapter.targets is imported *after* Microsoft.Testing.Platform.MSBuild.targets -->
+      <!-- We want to allow MSTest.TestAdapter.targets to set IsTestingPlatformApplication to false if EnableMSTestRunner is not set to true. -->
+      <GenerateTestingPlatformEntryPoint Condition=" '$(GenerateTestingPlatformEntryPoint)' == '' " >$(IsTestingPlatformApplication)</GenerateTestingPlatformEntryPoint>
+    </PropertyGroup>
+  </Target>
 
   <Target Name="_GenerateTestingPlatformEntryPointFileInputCache" BeforeTargets="_GenerateTestingPlatformEntryPoint" Condition=" '$(GenerateTestingPlatformEntryPoint)' == 'True' " >
     <PropertyGroup>
@@ -158,6 +175,14 @@
   <UsingTask TaskName="Microsoft.Testing.Platform.MSBuild.TestingPlatformSelfRegisteredExtensions"
          AssemblyFile="$(MicrosoftTestingPlatformMSBuildTaskFolder)Microsoft.Testing.Platform.MSBuild.dll"/>
 
+  <Target Name="_CalculateGenerateSelfRegisteredExtensions" BeforeTargets="_GenerateTestingPlatformEntryPoint;_IncludeGenerateSelfRegisteredExtensionsIntoCompilation;_IncludeGenerateTestingPlatformEntryPointIntoCompilation;BeforeCompile;XamlPreCompile">
+    <PropertyGroup>
+      <!-- We add this to a target to allow setting IsTestingPlatformApplication as late as possible -->
+      <!-- For example, MSTest.TestAdapter.targets is imported *after* Microsoft.Testing.Platform.MSBuild.targets -->
+      <!-- We want to allow MSTest.TestAdapter.targets to set IsTestingPlatformApplication to false if EnableMSTestRunner is not set to true. -->
+      <GenerateSelfRegisteredExtensions Condition=" '$(GenerateSelfRegisteredExtensions)' == '' " >$(IsTestingPlatformApplication)</GenerateSelfRegisteredExtensions>
+    </PropertyGroup>
+  </Target>
   <Target Name="_GenerateSelfRegisteredExtensionsFileInputCache" BeforeTargets="_GenerateTestingPlatformEntryPoint" Condition=" '$(GenerateSelfRegisteredExtensions)' == 'True' " >
     <PropertyGroup>
       <!-- Cache file to check -->
