@@ -135,4 +135,30 @@ return await app.RunAsync();
         Assert.IsFalse(binLog.FindChildrenRecursive<AddItem>()
             .Any(x => x.Title.Contains("ProjectCapability") && x.Children.Any(c => ((Item)c).Name == "TestingPlatformServer")));
     }
+
+    [TestMethod]
+    public async SystemTask IsTestingPlatformApplication_False_Should_Prevent_EntryPoint_Generation()
+    {
+        // While it looks strange to set EnableMSTestRunner to true and IsTestingPlatformApplication to false,
+        // this is a valid scenario that used to work.
+        // The idea here is that a user can EnableMSTestRunner in Directory.Build.props so that it applies to all projects.
+        // Then, one of the projects can reference a test project via ProjectReference, but that project itself is not a test project.
+        // In this case, we want to ensure we don't generate the entry point.
+        using TestAsset generator = await TestAsset.GenerateAssetAsync(
+            AssetName,
+            CurrentMSTestSourceCode
+                .PatchCodeWithReplace("$TargetFramework$", $"<TargetFramework>{TargetFrameworks.NetCurrent}</TargetFramework>")
+                .PatchCodeWithReplace("$MicrosoftNETTestSdkVersion$", MicrosoftNETTestSdkVersion)
+                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+                .PatchCodeWithReplace("$EnableMSTestRunner$", "<EnableMSTestRunner>true</EnableMSTestRunner>")
+                .PatchCodeWithReplace("$OutputType$", "<OutputType>Exe</OutputType>")
+                .PatchCodeWithReplace("$Extra$", "<IsTestingPlatformApplication>false</IsTestingPlatformApplication><ManualEntryPoint>true</ManualEntryPoint>"));
+
+        string binlogFile = Path.Combine(generator.TargetAssetPath, "msbuild.binlog");
+        await DotnetCli.RunAsync($"build -bl:{binlogFile} {generator.TargetAssetPath}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path);
+
+        Build binLog = Serialization.Read(binlogFile);
+        Assert.IsFalse(binLog.FindChildrenRecursive<Property>(p => p.Name == "GenerateTestingPlatformEntryPoint")
+            .Any(x => x.Value.Equals("true", StringComparison.OrdinalIgnoreCase)));
+    }
 }

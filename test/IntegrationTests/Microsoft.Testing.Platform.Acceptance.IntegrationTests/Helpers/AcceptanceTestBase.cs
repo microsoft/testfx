@@ -21,6 +21,7 @@ public abstract class AcceptanceTestBase<TFixture>
     $EnableMSTestRunner$
     $Extra$
     <NoWarn>$(NoWarn);NETSDK1201</NoWarn>
+    <DefineConstants Condition="'$(ManualEntryPoint)'=='true'">$(DefineConstants);MANUAL_ENTRYPOINT</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>
@@ -33,6 +34,15 @@ public abstract class AcceptanceTestBase<TFixture>
 
 #file UnitTest1.cs
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+#if MANUAL_ENTRYPOINT
+internal static class Program
+{
+    public static void Main()
+    {
+    }
+}
+#endif
 
 [TestClass]
 public class UnitTest1
