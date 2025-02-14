@@ -170,7 +170,7 @@ internal sealed class TestMethodRunner
         var parentStopwatch = Stopwatch.StartNew();
         if (_test.DataType == DynamicDataType.ITestDataSource)
         {
-            if (_test.TestDataSourceIgnoreMessage is not null)
+            if (!string.IsNullOrEmpty(_test.TestDataSourceIgnoreMessage))
             {
                 _testContext.SetOutcome(UTF.UnitTestOutcome.Ignored);
                 return [TestResult.CreateIgnoredResult(_test.TestDataSourceIgnoreMessage)];
@@ -269,7 +269,7 @@ internal sealed class TestMethodRunner
 
         foreach (UTF.ITestDataSource testDataSource in testDataSources)
         {
-            if (testDataSource is ITestDataSourceIgnoreCapability { IgnoreMessage: { } ignoreMessage })
+            if (testDataSource is ITestDataSourceIgnoreCapability { IgnoreMessage: { Length: > 0 } ignoreMessage })
             {
                 results.Add(TestResult.CreateIgnoredResult(ignoreMessage));
                 continue;
