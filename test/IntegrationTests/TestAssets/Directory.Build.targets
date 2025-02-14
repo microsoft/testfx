@@ -11,4 +11,5 @@
     <ProjectCapability Remove="TestContainer" />
     <ProjectCapability Remove="TestingPlatformServer" />
   </ItemGroup>
+  
 </Project>

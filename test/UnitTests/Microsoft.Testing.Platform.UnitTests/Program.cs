@@ -19,8 +19,10 @@ builder.AddMSTest(() => [Assembly.GetEntryAssembly()!]);
 #if ENABLE_CODECOVERAGE
 builder.AddCodeCoverageProvider();
 #endif
-builder.AddCrashDumpProvider();
+builder.AddAppInsightsTelemetryProvider();
+builder.AddCrashDumpProvider(ignoreIfNotSupported: true);
 builder.AddHangDumpProvider();
+builder.AddRetryProvider();
 builder.AddTrxReportProvider();
 
 // Custom suite tools
