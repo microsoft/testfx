@@ -27,6 +27,8 @@ public static class DotnetCli
         "MicrosoftInstrumentationEngine_FileLogPath"
     ];
 
+    private static int s_binlogCounter;
+
     [SuppressMessage("Style", "IDE0032:Use auto property", Justification = "It's causing some runtime bug")]
     private static int s_maxOutstandingCommand = Environment.ProcessorCount;
     private static SemaphoreSlim s_maxOutstandingCommands_semaphore = new(s_maxOutstandingCommand, s_maxOutstandingCommand);
@@ -145,7 +147,7 @@ public static class DotnetCli
         if (!args.Contains("-bl:") && !IsDotNetTestWithExeOrDll(args))
         {
             // We do this here rather than in the caller so that different retries produce different binlog file names.
-            string binlogFullPath = Path.Combine(TempDirectory.GetTestSuiteDirectory(), $"{binlogBaseFileName}-{DateTime.Now.Ticks}.binlog");
+            string binlogFullPath = Path.Combine(TempDirectory.GetTestSuiteDirectory(), $"{binlogBaseFileName}-{Interlocked.Increment(ref s_binlogCounter)}.binlog");
             string binlogArg = $" -bl:\"{binlogFullPath}\"";
             if (args.IndexOf("-- ", StringComparison.Ordinal) is int platformArgsIndex && platformArgsIndex > 0)
             {

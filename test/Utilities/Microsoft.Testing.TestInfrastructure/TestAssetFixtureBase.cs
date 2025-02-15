@@ -36,7 +36,7 @@ public abstract class TestAssetFixtureBase : ITestAssetFixture
         => await Parallel.ForEachAsync(GetAssetsToGenerate(), async (asset, _) =>
         {
             TestAsset testAsset = await TestAsset.GenerateAssetAsync(asset.Name, asset.Code);
-            DotnetMuxerResult result = await DotnetCli.RunAsync($"build {testAsset.TargetAssetPath} -c Release", _nugetGlobalPackagesDirectory.Path);
+            DotnetMuxerResult result = await DotnetCli.RunAsync($"build {testAsset.TargetAssetPath} -c Release", _nugetGlobalPackagesDirectory.Path, callerMemberName: asset.Name);
             testAsset.DotnetResult = result;
             _testAssets.TryAdd(asset.ID, testAsset);
         });

@@ -479,17 +479,17 @@ Anche il tipo che dichiara questi metodi deve rispettare le regole seguenti:
       </trans-unit>
       <trans-unit id="PublicMethodShouldBeTestMethodAnalyzerDescription">
         <source>Public methods should be test methods (marked with `[TestMethod]`).</source>
-        <target state="new">Public methods should be test methods (marked with `[TestMethod]`).</target>
+        <target state="translated">I metodi pubblici devono essere metodi di test (contrassegnati con '[TestMethod]').</target>
         <note />
       </trans-unit>
       <trans-unit id="PublicMethodShouldBeTestMethodAnalyzerFormat">
         <source>Public method '{0}' should be a test method</source>
-        <target state="new">Public method '{0}' should be a test method</target>
+        <target state="translated">Il metodo pubblico '{0}' deve essere un metodo di test</target>
         <note />
       </trans-unit>
       <trans-unit id="PublicMethodShouldBeTestMethodAnalyzerTitle">
         <source>Public methods should be test methods</source>
-        <target state="new">Public methods should be test methods</target>
+        <target state="translated">I metodi pubblici devono essere metodi di test</target>
         <note />
       </trans-unit>
       <trans-unit id="PublicTypeShouldBeTestClassDescription">

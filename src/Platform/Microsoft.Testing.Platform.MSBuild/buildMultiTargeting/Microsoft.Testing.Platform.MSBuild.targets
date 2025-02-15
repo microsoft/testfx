@@ -109,10 +109,7 @@
 
   <!-- Generate the entry point source using the user extensions informations -->
   <PropertyGroup>
-    <_TestingPlatformEntryPointSourceNameWithoutExtension>TestPlatformEntryPoint</_TestingPlatformEntryPointSourceNameWithoutExtension>
-    <_TestingPlatformEntryPointSourceName Condition=" $(Language) == 'C#' " >$(_TestingPlatformEntryPointSourceNameWithoutExtension).cs</_TestingPlatformEntryPointSourceName>
-    <_TestingPlatformEntryPointSourceName Condition=" $(Language) == 'VB' " >$(_TestingPlatformEntryPointSourceNameWithoutExtension).vb</_TestingPlatformEntryPointSourceName>
-    <_TestingPlatformEntryPointSourceName Condition=" $(Language) == 'F#' " >$(_TestingPlatformEntryPointSourceNameWithoutExtension).fs</_TestingPlatformEntryPointSourceName>
+    <_TestingPlatformEntryPointSourceName>TestPlatformEntryPoint$(DefaultLanguageSourceExtension)</_TestingPlatformEntryPointSourceName>
     <_TestingPlatformEntryPointSourcePath>$([System.IO.Path]::Combine($(IntermediateOutputPath),$(_TestingPlatformEntryPointSourceName)))</_TestingPlatformEntryPointSourcePath>
     <_TestingPlatformEntryPointSourcePath>$([MSBuild]::NormalizePath($(MSBuildProjectDirectory), $(_TestingPlatformEntryPointSourcePath)))</_TestingPlatformEntryPointSourcePath>
   </PropertyGroup>
@@ -188,10 +185,7 @@
 
   <!-- Generate the extensions source file using the user extensions informations -->
   <PropertyGroup>
-    <_SelfRegisteredExtensionsSourceNameWithoutExtension>SelfRegisteredExtensions</_SelfRegisteredExtensionsSourceNameWithoutExtension>
-    <_SelfRegisteredExtensionsSourceName Condition=" $(Language) == 'C#' " >$(_SelfRegisteredExtensionsSourceNameWithoutExtension).cs</_SelfRegisteredExtensionsSourceName>
-    <_SelfRegisteredExtensionsSourceName Condition=" $(Language) == 'VB' " >$(_SelfRegisteredExtensionsSourceNameWithoutExtension).vb</_SelfRegisteredExtensionsSourceName>
-    <_SelfRegisteredExtensionsSourceName Condition=" $(Language) == 'F#' " >$(_SelfRegisteredExtensionsSourceNameWithoutExtension).fs</_SelfRegisteredExtensionsSourceName>
+    <_SelfRegisteredExtensionsSourceName>SelfRegisteredExtensions$(DefaultLanguageSourceExtension)</_SelfRegisteredExtensionsSourceName>
     <_SelfRegisteredExtensionsSourcePath>$([System.IO.Path]::Combine($(IntermediateOutputPath),$(_SelfRegisteredExtensionsSourceName)))</_SelfRegisteredExtensionsSourcePath>
     <_SelfRegisteredExtensionsSourcePath>$([MSBuild]::NormalizePath($(MSBuildProjectDirectory), $(_SelfRegisteredExtensionsSourcePath)))</_SelfRegisteredExtensionsSourcePath>
   </PropertyGroup>

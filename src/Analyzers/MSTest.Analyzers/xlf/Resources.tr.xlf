@@ -479,17 +479,17 @@ Bu yöntemleri bildiren tipin ayrıca aşağıdaki kurallara uyması gerekir:
       </trans-unit>
       <trans-unit id="PublicMethodShouldBeTestMethodAnalyzerDescription">
         <source>Public methods should be test methods (marked with `[TestMethod]`).</source>
-        <target state="new">Public methods should be test methods (marked with `[TestMethod]`).</target>
+        <target state="translated">Genel metotlar test metotları olmalıdır ('[TestMethod]' ile işaretlendi).</target>
         <note />
       </trans-unit>
       <trans-unit id="PublicMethodShouldBeTestMethodAnalyzerFormat">
         <source>Public method '{0}' should be a test method</source>
-        <target state="new">Public method '{0}' should be a test method</target>
+        <target state="translated">Genel metot '{0}' bir test metodu olmalıdır</target>
         <note />
       </trans-unit>
       <trans-unit id="PublicMethodShouldBeTestMethodAnalyzerTitle">
         <source>Public methods should be test methods</source>
-        <target state="new">Public methods should be test methods</target>
+        <target state="translated">Genel metotlar test metotları olmalıdır</target>
         <note />
       </trans-unit>
       <trans-unit id="PublicTypeShouldBeTestClassDescription">
