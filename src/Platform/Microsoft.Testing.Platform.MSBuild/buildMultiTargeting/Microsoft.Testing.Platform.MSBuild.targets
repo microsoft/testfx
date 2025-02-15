@@ -154,8 +154,10 @@
       <FileWrites Include="$(_TestingPlatformEntryPointSourcePath)" />
     </ItemGroup>
   </Target>
+  <!-- Note: _IncludeGenerateTestingPlatformEntryPointIntoCompilation is set to depend on _IncludeGenerateSelfRegisteredExtensionsIntoCompilation -->
+  <!-- This is because file orders matter in F# -->
   <Target Name="_IncludeGenerateTestingPlatformEntryPointIntoCompilation" BeforeTargets="BeforeCompile;XamlPreCompile"
-          DependsOnTargets="_CalculateGenerateTestingPlatformEntryPoint;_GenerateTestingPlatformEntryPointFileInputCache;_GenerateTestingPlatformEntryPoint">
+          DependsOnTargets="_CalculateGenerateTestingPlatformEntryPoint;_GenerateTestingPlatformEntryPointFileInputCache;_GenerateTestingPlatformEntryPoint;_IncludeGenerateSelfRegisteredExtensionsIntoCompilation">
 
     <ItemGroup Condition=" '$(GenerateTestingPlatformEntryPoint)' == 'True' ">
       <Compile Include="$(_TestingPlatformEntryPointSourcePath)" />
