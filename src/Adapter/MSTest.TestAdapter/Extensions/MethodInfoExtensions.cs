@@ -137,10 +137,7 @@ internal static class MethodInfoExtensions
 
         object? invokeResult;
 
-        if (arguments is not null
-            && (arguments.Length != 1 || arguments[0] is not null)
-            && methodParameters.Length == 1
-            && methodParameters[0].ParameterType == typeof(object[]))
+        if (TestDataSourceHelpers.IsDataConsideredSingleArgumentValue(arguments, methodParameters))
         {
             invokeResult = methodInfo.Invoke(classInstance, [arguments]);
         }
