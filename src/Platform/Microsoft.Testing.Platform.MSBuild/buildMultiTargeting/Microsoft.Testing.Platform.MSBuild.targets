@@ -152,10 +152,9 @@
     </ItemGroup>
   </Target>
   <Target Name="_IncludeGenerateTestingPlatformEntryPointIntoCompilation" BeforeTargets="BeforeCompile;XamlPreCompile"
-          DependsOnTargets="_CalculateGenerateTestingPlatformEntryPoint;_GenerateTestingPlatformEntryPointFileInputCache;_GenerateTestingPlatformEntryPoint"
-          Condition=" '$(GenerateTestingPlatformEntryPoint)' == 'True' ">
+          DependsOnTargets="_CalculateGenerateTestingPlatformEntryPoint;_GenerateTestingPlatformEntryPointFileInputCache;_GenerateTestingPlatformEntryPoint">
 
-    <ItemGroup>
+    <ItemGroup Condition=" '$(GenerateTestingPlatformEntryPoint)' == 'True' ">
       <Compile Include="$(_TestingPlatformEntryPointSourcePath)" />
 
       <!-- We need to report to the FileWrites here because is possible that we skip _GenerateTestingPlatformInjectEntryPoint and we want to correctly handle the "dotnet clean" target -->
@@ -245,14 +244,12 @@
   <!-- We always include the entry point also if the task _GenerateSelfRegisteredExtensions is skipped for caching reason -->
   <!-- !!! DO NOT CHANGE THE NAME OF THIS TARGET IS USED BY ADAPTERS https://github.com/microsoft/testfx/issues/3478#issuecomment-2313889212 !!! -->
   <Target Name="_IncludeGenerateSelfRegisteredExtensionsIntoCompilation" BeforeTargets="BeforeCompile;XamlPreCompile"
-          DependsOnTargets="_CalculateGenerateSelfRegisteredExtensions;_GenerateSelfRegisteredExtensionsFileInputCache;_GenerateSelfRegisteredExtensions"
-          Condition=" '$(GenerateSelfRegisteredExtensions)' == 'True' ">
+          DependsOnTargets="_CalculateGenerateSelfRegisteredExtensions;_GenerateSelfRegisteredExtensionsFileInputCache;_GenerateSelfRegisteredExtensions">
 
-    <ItemGroup>
+    <ItemGroup Condition=" '$(GenerateSelfRegisteredExtensions)' == 'True' ">
       <Compile Include="$(_SelfRegisteredExtensionsSourcePath)" />
-    </ItemGroup>
-    <!-- We need to report to the FileWrites here because is possible that we skip _GenerateSelfRegisteredExtensions and we want to correctly handle the "dotnet clean" target -->
-    <ItemGroup>
+
+      <!-- We need to report to the FileWrites here because is possible that we skip _GenerateSelfRegisteredExtensions and we want to correctly handle the "dotnet clean" target -->
       <FileWrites Include="$(_SelfRegisteredExtensionsSourcePath)" />
     </ItemGroup>
   </Target>
