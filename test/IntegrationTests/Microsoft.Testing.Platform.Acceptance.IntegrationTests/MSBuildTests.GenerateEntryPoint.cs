@@ -253,14 +253,14 @@ internal sealed class Capabilities : ITestFrameworkCapabilities
     <ItemGroup>
       <TestingPlatformBuilderHook Include="A" >
         <DisplayName>DummyTestFramework</DisplayName>
-        <TypeFullName>MyNamespaceRoot.Level1.Level2.DummyTestFrameworkRegistration</TypeFullName>
+        <TypeFullName>MSBuildTests.MyNamespaceRoot.Level1.Level2.DummyTestFrameworkRegistration</TypeFullName>
       </TestingPlatformBuilderHook>
     </ItemGroup>
 
     <ItemGroup>
       <TestingPlatformBuilderHook Include="B" >
         <DisplayName>DummyTestFramework2</DisplayName>
-        <TypeFullName>MyNamespaceRoot.Level1.Level2.DummyTestFrameworkRegistration2</TypeFullName>
+        <TypeFullName>MSBuildTests.MyNamespaceRoot.Level1.Level2.DummyTestFrameworkRegistration2</TypeFullName>
       </TestingPlatformBuilderHook>
     </ItemGroup>
 
