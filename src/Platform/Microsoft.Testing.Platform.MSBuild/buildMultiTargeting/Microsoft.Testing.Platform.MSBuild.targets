@@ -7,6 +7,9 @@
   </PropertyGroup>
 
   <!-- Declare our capability to Visual Studio/Visual Studio Code -->
+  <!-- Note: DisableTestingPlatformServerCapability may be set by TestAdapter targets -->
+  <!-- While TestAdapter targets file is imported *after* this file, MSBuild evaluates properties -->
+  <!-- first, then items. So, we will be able to pick up the correct value here. -->
   <ItemGroup Condition=" '$(DisableTestingPlatformServerCapability)' != 'True' ">
     <ProjectCapability Include="TestingPlatformServer" />
 

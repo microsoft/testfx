@@ -6,6 +6,10 @@
     <IsTestingPlatformApplication>$(EnableMSTestRunner)</IsTestingPlatformApplication>
 
     <GenerateProgramFile Condition=" '$(EnableMSTestRunner)' == 'true' ">false</GenerateProgramFile>
+
+    <!-- While this targets file is imported *after* MTP.MSBuild.targets, it's still valid to set the property at this point -->
+    <!-- This is because items are evaluated after properties, and we use this property to control an item. -->
+    <DisableTestingPlatformServerCapability Condition=" '$(EnableMSTestRunner)' == 'false' or '$(EnableMSTestRunner)' == '' " >true</DisableTestingPlatformServerCapability>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(UseWinUI)' == 'true' ">
