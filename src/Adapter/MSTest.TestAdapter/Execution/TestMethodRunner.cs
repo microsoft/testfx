@@ -170,7 +170,7 @@ internal sealed class TestMethodRunner
         var parentStopwatch = Stopwatch.StartNew();
         if (_test.DataType == DynamicDataType.ITestDataSource)
         {
-            if (_test.TestDataSourceIgnoreMessage is not null)
+            if (!string.IsNullOrEmpty(_test.TestDataSourceIgnoreMessage))
             {
                 _testContext.SetOutcome(UTF.UnitTestOutcome.Ignored);
                 return [TestResult.CreateIgnoredResult(_test.TestDataSourceIgnoreMessage)];
@@ -269,7 +269,7 @@ internal sealed class TestMethodRunner
 
         foreach (UTF.ITestDataSource testDataSource in testDataSources)
         {
-            if (testDataSource is ITestDataSourceIgnoreCapability { IgnoreMessage: { } ignoreMessage })
+            if (testDataSource is ITestDataSourceIgnoreCapability { IgnoreMessage: { Length: > 0 } ignoreMessage })
             {
                 results.Add(TestResult.CreateIgnoredResult(ignoreMessage));
                 continue;
@@ -373,6 +373,22 @@ internal sealed class TestMethodRunner
             TestDataSourceHelpers.TryHandleITestDataRow(data, _testMethodInfo.ParameterTypes, out data, out ignoreFromTestDataRow, out displayNameFromTestDataRow))
         {
             // Handled already.
+        }
+        else if (TestDataSourceHelpers.IsDataConsideredSingleArgumentValue(data, _testMethodInfo.ParameterTypes))
+        {
+            // SPECIAL CASE:
+            // This condition is a duplicate of the condition in InvokeAsSynchronousTask.
+            //
+            // The known scenario we know of that shows importance of that check is if we have DynamicData using this member
+            //
+            // public static IEnumerable<object[]> GetData()
+            // {
+            //     yield return new object[] { ("Hello", "World") };
+            // }
+            //
+            // If the test method has a single parameter which is 'object[]', then we should pass the tuple array as is.
+            // Note that normally, the array in this code path represents the arguments of the test method.
+            // However, InvokeAsSynchronousTask uses the above check to mean "the whole array is the single argument to the test method"
         }
         else if (data?.Length == 1 && TestDataSourceHelpers.TryHandleTupleDataSource(data[0], _testMethodInfo.ParameterTypes, out object?[] tupleExpandedToArray))
         {
