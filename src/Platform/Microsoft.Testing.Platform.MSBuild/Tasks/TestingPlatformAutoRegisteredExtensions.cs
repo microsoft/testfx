@@ -5,6 +5,7 @@
 
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
+using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Platform.MSBuild;
 
@@ -171,7 +172,15 @@ static Contoso.BuilderHook.AddExtensions(Microsoft.Testing.Platform.Builder.Test
                 builder.Append("        ");
             }
 
-            builder.Append(CultureInfo.InvariantCulture, $"{taskItems[i].GetMetadata(TypeFullNameMetadataName)}.AddExtensions(builder, args){(language == CSharpLanguageSymbol ? ";" : string.Empty)}");
+            string global = language switch
+            {
+                CSharpLanguageSymbol => "global::",
+                VBLanguageSymbol => "Global.",
+                FSharpLanguageSymbol => "global.",
+                _ => throw ApplicationStateGuard.Unreachable(),
+            };
+
+            builder.Append(CultureInfo.InvariantCulture, $"{global}{taskItems[i].GetMetadata(TypeFullNameMetadataName)}.AddExtensions(builder, args){(language == CSharpLanguageSymbol ? ";" : string.Empty)}");
             if (i < taskItems.Length - 1)
             {
                 builder.AppendLine();
