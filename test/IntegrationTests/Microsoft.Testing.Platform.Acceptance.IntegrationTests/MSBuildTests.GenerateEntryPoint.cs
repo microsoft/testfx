@@ -71,24 +71,22 @@ namespace MSBuildTests
 ' </auto-generated>
 '------------------------------------------------------------------------------
 
-Namespace MSBuildTests
-    <System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage>
-    Module TestingPlatformEntryPoint
+<System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage>
+Module TestingPlatformEntryPoint
 
-        Function Main(args As String()) As Integer
-            Return MainAsync(args).GetAwaiter().GetResult()
-        End Function
+    Function Main(args As String()) As Integer
+        Return MainAsync(args).GetAwaiter().GetResult()
+    End Function
 
-        Public Async Function MainAsync(args As String()) As Global.System.Threading.Tasks.Task(Of Integer)
-            Dim builder = Await Global.Microsoft.Testing.Platform.Builder.TestApplication.CreateBuilderAsync(args)
-            SelfRegisteredExtensions.AddSelfRegisteredExtensions(builder, args)
-            Using testApplication = Await builder.BuildAsync()
-                Return Await testApplication.RunAsync()
-            End Using
-        End Function
+    Public Async Function MainAsync(args As String()) As Global.System.Threading.Tasks.Task(Of Integer)
+        Dim builder = Await Global.Microsoft.Testing.Platform.Builder.TestApplication.CreateBuilderAsync(args)
+        SelfRegisteredExtensions.AddSelfRegisteredExtensions(builder, args)
+        Using testApplication = Await builder.BuildAsync()
+            Return Await testApplication.RunAsync()
+        End Using
+    End Function
 
-    End Module
-End Namespace'", "Vbc");
+End Module'", "Vbc");
 
     [DynamicData(nameof(GetBuildMatrixTfmBuildVerbConfiguration), typeof(AcceptanceTestBase<NopAssetFixture>))]
     [TestMethod]
