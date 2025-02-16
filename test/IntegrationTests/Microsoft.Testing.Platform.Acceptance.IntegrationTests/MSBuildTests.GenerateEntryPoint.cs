@@ -253,14 +253,14 @@ internal sealed class Capabilities : ITestFrameworkCapabilities
     <ItemGroup>
       <TestingPlatformBuilderHook Include="A" >
         <DisplayName>DummyTestFramework</DisplayName>
-        <TypeFullName>MSBuildTests.MyNamespaceRoot.Level1.Level2.DummyTestFrameworkRegistration</TypeFullName>
+        <TypeFullName>MyNamespaceRoot.Level1.Level2.DummyTestFrameworkRegistration</TypeFullName>
       </TestingPlatformBuilderHook>
     </ItemGroup>
 
     <ItemGroup>
       <TestingPlatformBuilderHook Include="B" >
         <DisplayName>DummyTestFramework2</DisplayName>
-        <TypeFullName>MSBuildTests.MyNamespaceRoot.Level1.Level2.DummyTestFrameworkRegistration2</TypeFullName>
+        <TypeFullName>MyNamespaceRoot.Level1.Level2.DummyTestFrameworkRegistration2</TypeFullName>
       </TestingPlatformBuilderHook>
     </ItemGroup>
 
@@ -285,7 +285,7 @@ Imports Microsoft.Testing.Platform.Requests
 Imports Microsoft.Testing.Platform.Extensions
 Imports Microsoft.Testing.Platform
 
-Namespace MyNamespaceRoot.Level1.Level2
+Namespace Global.MyNamespaceRoot.Level1.Level2
   Public Module DummyTestFrameworkRegistration
     Public Sub AddExtensions(builder As ITestApplicationBuilder, args As String())
       builder.RegisterTestFramework(Function() New Capabilities(), Function(cap, services) New DummyTestFramework())
