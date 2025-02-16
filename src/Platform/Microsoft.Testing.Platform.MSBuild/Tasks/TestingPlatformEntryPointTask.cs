@@ -169,7 +169,7 @@ Module TestingPlatformEntryPoint
     End Function
 
 End Module
-"""
+""";
         }
         else if (language == FSharpLanguageSymbol)
         {
