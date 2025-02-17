@@ -22,9 +22,11 @@ internal sealed class NonAnsiTerminal : ITerminal
         _defaultForegroundColor = _console.GetForegroundColor();
     }
 
+#pragma warning disable CA1416 // Validate platform compatibility
     public int Width => _console.IsOutputRedirected ? int.MaxValue : _console.BufferWidth;
 
     public int Height => _console.IsOutputRedirected ? int.MaxValue : _console.BufferHeight;
+#pragma warning restore CA1416 // Validate platform compatibility
 
     public void Append(char value)
         => _console.Write(value);

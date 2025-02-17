@@ -10,8 +10,16 @@ internal interface IConsole
 {
     event ConsoleCancelEventHandler? CancelKeyPress;
 
+    [UnsupportedOSPlatform("android")]
+    [UnsupportedOSPlatform("browser")]
+    [UnsupportedOSPlatform("ios")]
+    [UnsupportedOSPlatform("tvos")]
     public int BufferHeight { get; }
 
+    [UnsupportedOSPlatform("android")]
+    [UnsupportedOSPlatform("browser")]
+    [UnsupportedOSPlatform("ios")]
+    [UnsupportedOSPlatform("tvos")]
     public int BufferWidth { get; }
 
     public bool IsOutputRedirected { get; }
