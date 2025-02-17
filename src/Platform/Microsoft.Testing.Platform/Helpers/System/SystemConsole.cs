@@ -43,37 +43,34 @@ internal sealed class SystemConsole : IConsole
         };
     }
 
-    // the following event does not make sense in the mobile scenarios, user cannot ctrl+c
-    // but can just kill the app in the device via a gesture
+    // This is based on the UnsupportedOSPlatformAttribute on the API:
+    // https://github.com/dotnet/runtime/blob/8a79637e1454c751c24a984b7fb8af4c4d43394b/src/libraries/System.Console/src/System/Console.cs#L560-L563
+    private static bool IsCancelKeyPressNotSupported()
+        => RuntimeInformation.IsOSPlatform(OSPlatform.Create("ANDROID")) ||
+            RuntimeInformation.IsOSPlatform(OSPlatform.Create("IOS")) ||
+            RuntimeInformation.IsOSPlatform(OSPlatform.Create("TVOS")) ||
+            RuntimeInformation.IsOSPlatform(OSPlatform.Create("BROWSER"));
+
     public event ConsoleCancelEventHandler? CancelKeyPress
     {
         add
         {
-#if NET8_0_OR_GREATER
-            if (RuntimeInformation.RuntimeIdentifier.Contains("ios") ||
-                RuntimeInformation.RuntimeIdentifier.Contains("android"))
+            if (IsCancelKeyPressNotSupported())
             {
                 return;
             }
-#endif
 
-#pragma warning disable IDE0027 // Use expression body for accessor
             Console.CancelKeyPress += value;
-#pragma warning restore IDE0027 // Use expression body for accessor
         }
 
         remove
         {
-#if NET8_0_OR_GREATER
-            if (RuntimeInformation.RuntimeIdentifier.Contains("ios") ||
-                RuntimeInformation.RuntimeIdentifier.Contains("android"))
+            if (IsCancelKeyPressNotSupported())
             {
                 return;
             }
-#endif
-#pragma warning disable IDE0027 // Use expression body for accessor
+
             Console.CancelKeyPress -= value;
-#pragma warning restore IDE0027 // Use expression body for accessor
         }
     }
 
