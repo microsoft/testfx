@@ -2,9 +2,13 @@
 
   <!-- Handle the coexistence between testing platform and Microsoft.NET.Test.Sdk  -->
   <PropertyGroup>
-    <GenerateTestingPlatformEntryPoint Condition=" '$(GenerateTestingPlatformEntryPoint)' == '' ">$(EnableMSTestRunner)</GenerateTestingPlatformEntryPoint>
-    <GenerateSelfRegisteredExtensions Condition=" '$(GenerateSelfRegisteredExtensions)' == '' ">$(EnableMSTestRunner)</GenerateSelfRegisteredExtensions>
+    <EnableMSTestRunner Condition=" '$(EnableMSTestRunner)' == '' ">false</EnableMSTestRunner>
+    <IsTestingPlatformApplication>$(EnableMSTestRunner)</IsTestingPlatformApplication>
+
     <GenerateProgramFile Condition=" '$(EnableMSTestRunner)' == 'true' ">false</GenerateProgramFile>
+
+    <!-- While this targets file is imported *after* MTP.MSBuild.targets, it's still valid to set the property at this point -->
+    <!-- This is because items are evaluated after properties, and we use this property to control an item. -->
     <DisableTestingPlatformServerCapability Condition=" '$(EnableMSTestRunner)' == 'false' or '$(EnableMSTestRunner)' == '' " >true</DisableTestingPlatformServerCapability>
   </PropertyGroup>
 
