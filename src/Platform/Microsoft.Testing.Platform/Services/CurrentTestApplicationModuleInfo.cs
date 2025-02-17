@@ -78,6 +78,9 @@ internal sealed class CurrentTestApplicationModuleInfo(IEnvironment environment,
     public string GetCurrentTestApplicationDirectory()
         => Path.GetDirectoryName(TryGetCurrentTestApplicationFullPath()) ?? AppContext.BaseDirectory;
 
+    public string GetDisplayName()
+        => TryGetCurrentTestApplicationFullPath() ?? TryGetAssemblyName() ?? "<unknown-assembly>";
+
     public string GetProcessPath()
         => GetProcessPath(_environment, _process, throwOnNull: true)!;
 

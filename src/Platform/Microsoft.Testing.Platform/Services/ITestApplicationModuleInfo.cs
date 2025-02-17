@@ -19,6 +19,8 @@ internal interface ITestApplicationModuleInfo
 
     string GetCurrentTestApplicationDirectory();
 
+    string GetDisplayName();
+
     string GetProcessPath();
 
     ExecutableInfo GetCurrentExecutableInfo();
