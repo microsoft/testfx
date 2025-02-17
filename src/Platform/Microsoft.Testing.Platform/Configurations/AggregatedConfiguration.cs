@@ -61,7 +61,7 @@ internal sealed class AggregatedConfiguration(IConfigurationProvider[] configura
     public async Task CheckTestResultsDirectoryOverrideAndCreateItAsync(ICommandLineOptions commandLineOptions, IFileLoggerProvider? fileLoggerProvider)
     {
         // Load Configuration
-        _currentWorkingDirectory = Path.GetDirectoryName(_testApplicationModuleInfo.TryGetCurrentTestApplicationFullPath() ?? AppContext.BaseDirectory)!;
+        _currentWorkingDirectory = _testApplicationModuleInfo.GetCurrentTestApplicationDirectory();
 
         string? resultDirectory = this[PlatformConfigurationConstants.PlatformResultDirectory];
         if (resultDirectory is null)
