@@ -144,7 +144,9 @@ internal sealed class FileLogger : IDisposable
             return;
         }
 
+#pragma warning disable CA1416 // Validate platform compatibility
         if (!_semaphore.Wait(TimeoutHelper.DefaultHangTimeSpanTimeout))
+#pragma warning restore CA1416
         {
             throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.TimeoutAcquiringSemaphoreErrorMessage, TimeoutHelper.DefaultHangTimeoutSeconds));
         }
