@@ -195,6 +195,7 @@ internal sealed class UnitTestElement
 
             testCase.SetPropertyValue(Constants.TestDynamicDataTypeProperty, (int)TestMethod.DataType);
             testCase.SetPropertyValue(Constants.TestDynamicDataProperty, data);
+            // VSTest serialization doesn't handle null so instead don't set the property so that it's deserialized as null
             if (TestMethod.TestDataSourceIgnoreMessage is not null)
             {
                 testCase.SetPropertyValue(Constants.TestDataSourceIgnoreMessageProperty, TestMethod.TestDataSourceIgnoreMessage);
