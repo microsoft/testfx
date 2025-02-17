@@ -9,4 +9,8 @@
 
   <Import Project="../Directory.Build.props" />
 
+  <!-- Pack config -->
+  <PropertyGroup>
+    <CommonPackageTags>Microsoft test testing unittest unittesting unit-testing tdd</CommonPackageTags>
+  </PropertyGroup>
 </Project>

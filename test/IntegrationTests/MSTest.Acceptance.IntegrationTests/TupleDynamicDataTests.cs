@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
@@ -15,7 +15,7 @@ public sealed class TupleDynamicDataTests : AcceptanceTestBase<TupleDynamicDataT
     public async Task CanUseLongTuplesAndValueTuplesForAllFrameworks(string tfm)
     {
         var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--settings my.runsettings");
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--filter ClassName=CanUseLongTuplesAndValueTuplesForAllFrameworks --settings my.runsettings");
 
         // Assert
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
@@ -34,6 +34,22 @@ public sealed class TupleDynamicDataTests : AcceptanceTestBase<TupleDynamicDataT
             Hello2, , World2
             """);
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 12, skipped: 0);
+    }
+
+    [TestMethod]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    public async Task TupleSupportDoesNotBreakObjectArraySupport(string tfm)
+    {
+        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm);
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--filter ClassName=TupleSupportDoesNotBreakObjectArraySupport --settings my.runsettings");
+
+        // Assert
+        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+        testHostResult.AssertOutputContains("""
+            Length: 1
+            (Hello, World)
+            """);
+        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
     }
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
@@ -73,14 +89,14 @@ public sealed class TupleDynamicDataTests : AcceptanceTestBase<TupleDynamicDataT
   </ItemGroup>
 </Project>
 
-#file UnitTest1.cs
+#file CanUseLongTuplesAndValueTuplesForAllFrameworks.cs
 using System;
 using System.Collections.Generic;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 [TestClass]
-public class UnitTest1
+public class CanUseLongTuplesAndValueTuplesForAllFrameworks
 {
     private static readonly StringBuilder s_builder = new();
 
@@ -151,6 +167,31 @@ public class UnitTest1
     ];
 }
 
+#file TupleSupportDoesNotBreakObjectArraySupport.cs
+using System;
+using System.Collections.Generic;
+using System.Text;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+[TestClass]
+public class TupleSupportDoesNotBreakObjectArraySupport
+{
+    [TestMethod]
+    [DynamicData(nameof(GetData))]
+    public void TestMethod1(object[] data)
+    {
+        Console.WriteLine($"Length: {data.Length}");
+        Assert.AreEqual(1, data.Length);
+
+        Console.WriteLine(data[0]);
+        Assert.AreEqual(("Hello", "World"), data[0]);
+    }
+
+    private static IEnumerable<object[]> GetData()
+    {
+        yield return new object[] { ("Hello", "World") };
+    }
+}
 
 #file my.runsettings
 <RunSettings>
