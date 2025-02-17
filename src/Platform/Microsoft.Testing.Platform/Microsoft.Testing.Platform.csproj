@@ -74,6 +74,13 @@ This package provides the core platform and the .NET implementation of the proto
     <EmbeddedResource Update="Resources\PlatformResources.resx" GenerateSource="true" />
   </ItemGroup>
 
+  <ItemGroup>
+    <SupportedPlatform Include="android" />
+    <SupportedPlatform Include="ios" />
+    <SupportedPlatform Include="browser" />
+    <SupportedPlatform Include="tvos" />
+  </ItemGroup>
+
   <!-- Version templating -->
   <ItemGroup>
     <PackageReference Include="Microsoft.DotNet.Build.Tasks.Templating" Version="$(MicrosoftDotNetBuildTasksTemplatingPackageVersion)" AllowExplicitReference="true" PrivateAssets="All" IsImplicitlyDefined="true" />

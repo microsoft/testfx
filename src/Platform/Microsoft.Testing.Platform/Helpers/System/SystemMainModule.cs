@@ -8,7 +8,9 @@ internal sealed class SystemMainModule(ProcessModule? processModule) : IMainModu
 {
     private readonly ProcessModule? _processModule = processModule;
 
+#pragma warning disable CA1416 // Validate platform compatibility
     public string? FileName => _processModule?.FileName;
+#pragma warning restore CA1416
 }
 #else
 internal sealed class SystemMainModule : IMainModule

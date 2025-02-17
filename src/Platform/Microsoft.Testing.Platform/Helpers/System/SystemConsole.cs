@@ -13,11 +13,19 @@ internal sealed class SystemConsole : IConsole
     /// <summary>
     /// Gets the height of the buffer area.
     /// </summary>
+    [UnsupportedOSPlatform("android")]
+    [UnsupportedOSPlatform("browser")]
+    [UnsupportedOSPlatform("ios")]
+    [UnsupportedOSPlatform("tvos")]
     public int BufferHeight => Console.BufferHeight;
 
     /// <summary>
     /// Gets the width of the buffer area.
     /// </summary>
+    [UnsupportedOSPlatform("android")]
+    [UnsupportedOSPlatform("browser")]
+    [UnsupportedOSPlatform("ios")]
+    [UnsupportedOSPlatform("tvos")]
     public int BufferWidth => Console.BufferWidth;
 
     /// <summary>
@@ -45,11 +53,37 @@ internal sealed class SystemConsole : IConsole
 
     // This is based on the UnsupportedOSPlatformAttribute on the API:
     // https://github.com/dotnet/runtime/blob/8a79637e1454c751c24a984b7fb8af4c4d43394b/src/libraries/System.Console/src/System/Console.cs#L560-L563
+    [SupportedOSPlatformGuard("android")]
+    [SupportedOSPlatformGuard("ios")]
+    [SupportedOSPlatformGuard("tvos")]
+    [SupportedOSPlatformGuard("browser")]
     private static bool IsCancelKeyPressNotSupported()
         => RuntimeInformation.IsOSPlatform(OSPlatform.Create("ANDROID")) ||
             RuntimeInformation.IsOSPlatform(OSPlatform.Create("IOS")) ||
             RuntimeInformation.IsOSPlatform(OSPlatform.Create("TVOS")) ||
             RuntimeInformation.IsOSPlatform(OSPlatform.Create("BROWSER"));
+
+    // This is based on the UnsupportedOSPlatformAttribute on the API:
+    // https://github.com/dotnet/runtime/blob/d6cfa2039309c1d5cef630e95eb5274a556dc726/src/libraries/System.Console/src/System/Console.cs#L334-L337
+    [SupportedOSPlatformGuard("android")]
+    [SupportedOSPlatformGuard("ios")]
+    [SupportedOSPlatformGuard("tvos")]
+    [SupportedOSPlatformGuard("browser")]
+    private static bool IsForegroundColorNotSupported()
+        => RuntimeInformation.IsOSPlatform(OSPlatform.Create("ANDROID")) ||
+            RuntimeInformation.IsOSPlatform(OSPlatform.Create("IOS")) ||
+            RuntimeInformation.IsOSPlatform(OSPlatform.Create("TVOS")) ||
+            RuntimeInformation.IsOSPlatform(OSPlatform.Create("BROWSER"));
+
+    // This is based on the UnsupportedOSPlatformAttribute on the API:
+    // https://github.com/dotnet/runtime/blob/d6cfa2039309c1d5cef630e95eb5274a556dc726/src/libraries/System.Console/src/System/Console.cs#L537-L539
+    [SupportedOSPlatformGuard("android")]
+    [SupportedOSPlatformGuard("ios")]
+    [SupportedOSPlatformGuard("tvos")]
+    private static bool IsClearNotSupported()
+        => RuntimeInformation.IsOSPlatform(OSPlatform.Create("ANDROID")) ||
+            RuntimeInformation.IsOSPlatform(OSPlatform.Create("IOS")) ||
+            RuntimeInformation.IsOSPlatform(OSPlatform.Create("TVOS"));
 
     public event ConsoleCancelEventHandler? CancelKeyPress
     {
@@ -110,31 +144,24 @@ internal sealed class SystemConsole : IConsole
 
     public void SetForegroundColor(ConsoleColor color)
     {
-#if NET8_0_OR_GREATER
-        if (RuntimeInformation.RuntimeIdentifier.Contains("ios") ||
-            RuntimeInformation.RuntimeIdentifier.Contains("android"))
+        if (IsForegroundColorNotSupported())
         {
             return;
         }
-#endif
-#pragma warning disable IDE0022 // Use expression body for method
+
         Console.ForegroundColor = color;
-#pragma warning restore IDE0022 // Use expression body for method
     }
 
     public ConsoleColor GetForegroundColor()
-    {
-#if NET8_0_OR_GREATER
-        if (RuntimeInformation.RuntimeIdentifier.Contains("ios") ||
-            RuntimeInformation.RuntimeIdentifier.Contains("android"))
-        {
-            return ConsoleColor.Black;
-        }
-#endif
-#pragma warning disable IDE0022 // Use expression body for method
-        return Console.ForegroundColor;
-#pragma warning restore IDE0022 // Use expression body for method
-    }
+        => IsForegroundColorNotSupported() ? ConsoleColor.Black : Console.ForegroundColor;
 
-    public void Clear() => Console.Clear();
+    public void Clear()
+    {
+        if (IsClearNotSupported())
+        {
+            return;
+        }
+
+        Console.Clear();
+    }
 }
