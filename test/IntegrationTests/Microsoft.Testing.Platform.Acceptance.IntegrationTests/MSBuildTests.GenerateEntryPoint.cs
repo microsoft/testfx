@@ -25,10 +25,8 @@ public class MSBuildTests_EntryPoint : AcceptanceTestBase<NopAssetFixture>
         SL.Build binLog = SL.Serialization.Read(binlogFile);
         SL.Target generateTestingPlatformEntryPoint = binLog.FindChildrenRecursive<SL.Target>().Single(t => t.Name == "_GenerateTestingPlatformEntryPoint");
         Assert.AreEqual("Target \"_GenerateTestingPlatformEntryPoint\" skipped, due to false condition; ( '$(GenerateTestingPlatformEntryPoint)' == 'True' ) was evaluated as ( 'False' == 'True' ).", ((SL.Message)generateTestingPlatformEntryPoint.Children[0]).Text);
-        SL.Target generateTestingPlatformEntryPointFileInputCache = binLog.FindChildrenRecursive<SL.Target>().Single(t => t.Name == "_GenerateTestingPlatformEntryPointFileInputCache");
-        Assert.AreEqual("Target \"_GenerateTestingPlatformEntryPointFileInputCache\" skipped, due to false condition; ( '$(GenerateTestingPlatformEntryPoint)' == 'True' ) was evaluated as ( 'False' == 'True' ).", ((SL.Message)generateTestingPlatformEntryPointFileInputCache.Children[0]).Text);
         SL.Target includeGenerateTestingPlatformEntryPointIntoCompilation = binLog.FindChildrenRecursive<SL.Target>().Single(t => t.Name == "_IncludeGenerateTestingPlatformEntryPointIntoCompilation");
-        Assert.AreEqual("Target \"_IncludeGenerateTestingPlatformEntryPointIntoCompilation\" skipped, due to false condition; ( '$(GenerateTestingPlatformEntryPoint)' == 'True' ) was evaluated as ( 'False' == 'True' ).", ((SL.Message)includeGenerateTestingPlatformEntryPointIntoCompilation.Children[0]).Text);
+        Assert.IsEmpty(includeGenerateTestingPlatformEntryPointIntoCompilation.Children);
         Assert.AreNotEqual(0, compilationResult.ExitCode);
     }
 
