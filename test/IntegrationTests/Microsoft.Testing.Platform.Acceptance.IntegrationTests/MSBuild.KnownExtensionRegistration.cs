@@ -124,5 +124,14 @@ internal sealed class Capabilities : ITestFrameworkCapabilities
 {
     IReadOnlyCollection<ITestFrameworkCapability> ICapabilities<ITestFrameworkCapability>.Capabilities => Array.Empty<ITestFrameworkCapability>();
 }
+
+#file DummyClass.cs
+
+namespace MSBuildTests.Microsoft;
+
+// This serves as a test to ensure that we don't regress generation of 'global::'
+// If the self registered generation used Microsoft.Testing.Extensions.ExtensionName.TestingPlatformBuilderHook.AddExtension,
+// Then, without global::, Microsoft will be referring to MSBuildTests.Microsoft namespace and will fail to compile
+public static class DummyClass { }
 """;
 }
