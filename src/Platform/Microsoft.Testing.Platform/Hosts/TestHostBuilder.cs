@@ -585,8 +585,11 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
         AssemblyInformationalVersionAttribute? version = Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>();
         builderMetadata[TelemetryProperties.HostProperties.TestingPlatformVersionPropertyName] = version?.InformationalVersion ?? "unknown";
 
-        string? moduleName = Path.GetFileName(_testApplicationModuleInfo.TryGetCurrentTestApplicationFullPath()) ?? _testApplicationModuleInfo.TryGetAssemblyName();
-        builderMetadata[TelemetryProperties.HostProperties.TestHostPropertyName] = moduleName is null ? "unknown" : Sha256Hasher.HashWithNormalizedCasing(moduleName);
+        string moduleName = Path.GetFileName(_testApplicationModuleInfo.TryGetCurrentTestApplicationFullPath())
+            ?? _testApplicationModuleInfo.TryGetAssemblyName()
+            ?? "unknown";
+
+        builderMetadata[TelemetryProperties.HostProperties.TestHostPropertyName] = Sha256Hasher.HashWithNormalizedCasing(moduleName);
         builderMetadata[TelemetryProperties.HostProperties.FrameworkDescriptionPropertyName] = RuntimeInformation.FrameworkDescription;
         builderMetadata[TelemetryProperties.HostProperties.ProcessArchitecturePropertyName] = RuntimeInformation.ProcessArchitecture;
         builderMetadata[TelemetryProperties.HostProperties.OSArchitecturePropertyName] = RuntimeInformation.OSArchitecture;
