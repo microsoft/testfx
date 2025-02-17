@@ -68,6 +68,9 @@ internal sealed class TestApplicationBuilder : ITestApplicationBuilder
 
     internal ITelemetryManager Telemetry => _testHostBuilder.Telemetry;
 
+    [Obsolete("Remove in v2. Avoid breaking change with the rename of the property. See https://github.com/microsoft/testfx/issues/5015")]
+    internal ITelemetryManager TelemetryManager => _testHostBuilder.Telemetry;
+
     internal IToolsManager Tools => _testHostBuilder.Tools;
 
     public ITestApplicationBuilder RegisterTestFramework(
