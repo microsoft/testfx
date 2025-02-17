@@ -13,6 +13,12 @@ internal interface ITestApplicationModuleInfo
 
     string GetCurrentTestApplicationFullPath();
 
+    string? TryGetCurrentTestApplicationFullPath();
+
+    string? TryGetAssemblyName();
+
+    string GetCurrentTestApplicationDirectory();
+
     string GetProcessPath();
 
     ExecutableInfo GetCurrentExecutableInfo();

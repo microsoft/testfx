@@ -102,7 +102,7 @@ internal sealed class CommandLineHandler : ICommandLineHandler, ICommandLineOpti
             await outputDevice.DisplayAsync(this, new TextOutputDeviceData($"  Runtime location: {runtimeLocation}"));
 #endif
 
-            string moduleName = _testApplicationModuleInfo.GetCurrentTestApplicationFullPath();
+            string? moduleName = _testApplicationModuleInfo.TryGetCurrentTestApplicationFullPath();
             await outputDevice.DisplayAsync(this, new TextOutputDeviceData($"  Test module: {moduleName}"));
         }
 

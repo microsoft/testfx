@@ -93,7 +93,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
             _targetFramework = TargetFrameworkParser.GetShortTargetFramework(Assembly.GetEntryAssembly()?.GetCustomAttribute<TargetFrameworkAttribute>()?.FrameworkDisplayName) ?? _runtimeFramework;
         }
 
-        _assemblyName = testApplicationModuleInfo.GetCurrentTestApplicationFullPath();
+        _assemblyName = testApplicationModuleInfo.TryGetCurrentTestApplicationFullPath() ?? testApplicationModuleInfo.TryGetAssemblyName() ?? "unknown assembly name";
 
         if (environment.GetEnvironmentVariable(TESTINGPLATFORM_CONSOLEOUTPUTDEVICE_SKIP_BANNER) is not null)
         {

@@ -179,7 +179,7 @@ public sealed class TestApplication : ITestApplication
 #endif
         await logger.LogInformationAsync($"IsDynamicCodeSupported: {isDynamicCodeSupported}");
 
-        string moduleName = testApplicationModuleInfo.GetCurrentTestApplicationFullPath();
+        string? moduleName = testApplicationModuleInfo.TryGetCurrentTestApplicationFullPath();
         await logger.LogInformationAsync($"Test module: {moduleName}");
         await logger.LogInformationAsync($"Command line arguments: '{(args.Length == 0 ? string.Empty : args.Aggregate((a, b) => $"{a} {b}"))}'");
 
@@ -311,7 +311,7 @@ public sealed class TestApplication : ITestApplication
         }
 
         // Set the directory to the default test result directory
-        string directory = Path.Combine(Path.GetDirectoryName(testApplicationModuleInfo.GetCurrentTestApplicationFullPath())!, AggregatedConfiguration.DefaultTestResultFolderName);
+        string directory = Path.Combine(testApplicationModuleInfo.GetCurrentTestApplicationDirectory(), AggregatedConfiguration.DefaultTestResultFolderName);
         bool customDirectory = false;
 
         if (result.TryGetOptionArgumentList(PlatformCommandLineProvider.ResultDirectoryOptionKey, out string[]? resultDirectoryArg))
