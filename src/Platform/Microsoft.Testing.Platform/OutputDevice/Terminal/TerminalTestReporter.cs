@@ -144,6 +144,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
         _terminalWithProgress = terminalWithProgress;
     }
 
+    [UnsupportedOSPlatform("browser")]
     public void TestExecutionStarted(DateTimeOffset testStartTime, int workerCount, bool isDiscovery)
     {
         _isDiscovery = isDiscovery;

@@ -13,11 +13,17 @@ internal sealed class SystemConsole : IConsole
     /// <summary>
     /// Gets the height of the buffer area.
     /// </summary>
+    [SupportedOSPlatform("Windows")]
+    [SupportedOSPlatform("Linux")]
+    [SupportedOSPlatform("macOS")]
     public int BufferHeight => Console.BufferHeight;
 
     /// <summary>
     /// Gets the width of the buffer area.
     /// </summary>
+    [SupportedOSPlatform("Windows")]
+    [SupportedOSPlatform("Linux")]
+    [SupportedOSPlatform("macOS")]
     public int BufferWidth => Console.BufferWidth;
 
     /// <summary>
@@ -51,6 +57,9 @@ internal sealed class SystemConsole : IConsole
             RuntimeInformation.IsOSPlatform(OSPlatform.Create("TVOS")) ||
             RuntimeInformation.IsOSPlatform(OSPlatform.Create("BROWSER"));
 
+    [UnsupportedOSPlatform("android")]
+    [UnsupportedOSPlatform("browser")]
+    [UnsupportedOSPlatform("ios")]
     public event ConsoleCancelEventHandler? CancelKeyPress
     {
         add
@@ -108,6 +117,9 @@ internal sealed class SystemConsole : IConsole
         }
     }
 
+    [SupportedOSPlatform("Windows")]
+    [SupportedOSPlatform("Linux")]
+    [SupportedOSPlatform("macOS")]
     public void SetForegroundColor(ConsoleColor color)
     {
 #if NET8_0_OR_GREATER
@@ -122,6 +134,9 @@ internal sealed class SystemConsole : IConsole
 #pragma warning restore IDE0022 // Use expression body for method
     }
 
+    [SupportedOSPlatform("Windows")]
+    [SupportedOSPlatform("Linux")]
+    [SupportedOSPlatform("macOS")]
     public ConsoleColor GetForegroundColor()
     {
 #if NET8_0_OR_GREATER
@@ -136,5 +151,8 @@ internal sealed class SystemConsole : IConsole
 #pragma warning restore IDE0022 // Use expression body for method
     }
 
+    [SupportedOSPlatform("Windows")]
+    [SupportedOSPlatform("Linux")]
+    [SupportedOSPlatform("macOS")]
     public void Clear() => Console.Clear();
 }

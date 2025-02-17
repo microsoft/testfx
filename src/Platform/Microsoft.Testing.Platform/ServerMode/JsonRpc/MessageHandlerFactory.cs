@@ -11,6 +11,7 @@ using Microsoft.Testing.Platform.Resources;
 
 namespace Microsoft.Testing.Platform.ServerMode;
 
+[UnsupportedOSPlatform("browser")]
 internal sealed partial class ServerModeManager
 {
     internal sealed class MessageHandlerFactory : IMessageHandlerFactory, IOutputDeviceDataProducer

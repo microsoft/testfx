@@ -15,6 +15,7 @@ using Microsoft.Testing.Platform.Resources;
 
 namespace Microsoft.Testing.Platform.IPC;
 
+[UnsupportedOSPlatform("browser")]
 internal sealed class NamedPipeServer : NamedPipeBase, IServer
 {
     private readonly Func<IRequest, Task<IResponse>> _callback;

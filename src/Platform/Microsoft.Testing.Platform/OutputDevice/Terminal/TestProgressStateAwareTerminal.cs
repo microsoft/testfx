@@ -95,6 +95,7 @@ internal sealed partial class TestProgressStateAwareTerminal : IDisposable
         return 0;
     }
 
+    [UnsupportedOSPlatform("browser")]
     public void StartShowingProgress(int workerCount)
     {
         if (GetShowProgress())

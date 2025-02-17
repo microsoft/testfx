@@ -5,6 +5,7 @@ using Microsoft.Testing.Platform.Hosts;
 
 namespace Microsoft.Testing.Platform.Logging;
 
+[UnsupportedOSPlatform("browser")]
 internal sealed class ServerLogMessageInMemoryStore(LogLevel logLevel) : ILogger, IEnumerable<ServerLogMessage>
 {
     private readonly LogLevel _logLevel = logLevel;

@@ -523,6 +523,11 @@ Los valores disponibles son 'Seguimiento', 'Depurar', 'Información', 'Advertenc
 {1}</target>
         <note />
       </trans-unit>
+      <trans-unit id="PlatformCommandLineExitOnProcessExitNotSupported">
+        <source>dsadsa</source>
+        <target state="new">dsadsa</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PlatformCommandLineExitOnProcessExitOptionDescription">
         <source>Exit the test process if dependent process exits. PID must be provided.</source>
         <target state="translated">Salir del proceso de prueba si el proceso dependiente se cierra. Se debe proporcionar el PID.</target>

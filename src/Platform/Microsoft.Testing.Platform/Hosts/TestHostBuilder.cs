@@ -47,6 +47,7 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
 
     public ITelemetryManager Telemetry { get; } = new TelemetryManager();
 
+    [UnsupportedOSPlatform("browser")]
     public IServerModeManager ServerMode { get; } = new ServerModeManager();
 
     public ITestHostControllersManager TestHostControllers { get; } = new TestHostControllersManager();

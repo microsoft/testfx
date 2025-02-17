@@ -716,4 +716,7 @@ Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is
   <data name="AbortForMaxFailedTestsCapabilityNotAvailable" xml:space="preserve">
     <value>The current test framework does not implement 'IGracefulStopTestExecutionCapability' which is required for '--maximum-failed-tests' feature.</value>
   </data>
+  <data name="PlatformCommandLineExitOnProcessExitNotSupported" xml:space="preserve">
+    <value>dsadsa</value>
+  </data>
 </root>

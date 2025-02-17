@@ -6,6 +6,7 @@ namespace Microsoft.Testing.Platform.Helpers;
 internal interface IMainModule
 {
 #if NETCOREAPP
+    [UnsupportedOSPlatform("browser")]
     string? FileName { get; }
 #else
     string FileName { get; }

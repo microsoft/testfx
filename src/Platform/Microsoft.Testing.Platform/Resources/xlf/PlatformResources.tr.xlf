@@ -523,6 +523,11 @@ Kullanılabilir değerler: 'Trace', 'Debug', 'Information', 'Warning', 'Error' v
 {1}</target>
         <note />
       </trans-unit>
+      <trans-unit id="PlatformCommandLineExitOnProcessExitNotSupported">
+        <source>dsadsa</source>
+        <target state="new">dsadsa</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PlatformCommandLineExitOnProcessExitOptionDescription">
         <source>Exit the test process if dependent process exits. PID must be provided.</source>
         <target state="translated">Bağımlı işlemden çıkılıyorsa test işleminden çıkın. PID sağlanmalıdır.</target>

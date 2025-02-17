@@ -110,4 +110,10 @@ This package provides the core platform and the .NET implementation of the proto
     </TfmSpecificPackageFile>
   </ItemGroup>
 
+  <ItemGroup>
+    <SupportedPlatform Include="android" />
+    <SupportedPlatform Include="ios" />
+    <SupportedPlatform Include="browser" />
+  </ItemGroup>
+
 </Project>

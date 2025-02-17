@@ -15,6 +15,7 @@ using Microsoft.Testing.Platform.Resources;
 
 namespace Microsoft.Testing.Platform.IPC;
 
+[UnsupportedOSPlatform("browser")]
 internal sealed class NamedPipeClient : NamedPipeBase, IClient
 {
     private readonly NamedPipeClientStream _namedPipeClientStream;

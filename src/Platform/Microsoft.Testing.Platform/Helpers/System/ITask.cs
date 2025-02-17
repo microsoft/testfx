@@ -12,6 +12,7 @@ internal interface ITask
 
     Task<T> Run<T>(Func<Task<T>?> function, CancellationToken cancellationToken);
 
+    [UnsupportedOSPlatform("browser")]
     Task RunLongRunning(Func<Task> action, string name, CancellationToken cancellationToken);
 
     Task WhenAll(params Task[] tasks);

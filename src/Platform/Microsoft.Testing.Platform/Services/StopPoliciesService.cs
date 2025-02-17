@@ -5,6 +5,7 @@ using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Platform.Services;
 
+[UnsupportedOSPlatform("browser")]
 internal sealed class StopPoliciesService : IStopPoliciesService
 {
     private readonly ITestApplicationCancellationTokenSource _testApplicationCancellationTokenSource;

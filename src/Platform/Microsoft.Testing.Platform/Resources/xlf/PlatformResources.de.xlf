@@ -523,6 +523,11 @@ Die verfügbaren Werte sind "Trace", "Debug", "Information", "Warning", "Error" 
 {1}</target>
         <note />
       </trans-unit>
+      <trans-unit id="PlatformCommandLineExitOnProcessExitNotSupported">
+        <source>dsadsa</source>
+        <target state="new">dsadsa</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PlatformCommandLineExitOnProcessExitOptionDescription">
         <source>Exit the test process if dependent process exits. PID must be provided.</source>
         <target state="translated">Beenden Sie den Testprozess, wenn der abhängige Prozess beendet ist. Die PID muss angegeben werden.</target>

@@ -5,12 +5,15 @@ namespace Microsoft.Testing.Platform.Helpers;
 
 internal static class CountDownEventExtensions
 {
+    [UnsupportedOSPlatform("browser")]
     public static async Task<bool> WaitAsync(this CountdownEvent countdownEvent, CancellationToken cancellationToken)
         => await countdownEvent.WaitAsync(uint.MaxValue, cancellationToken);
 
+    [UnsupportedOSPlatform("browser")]
     public static async Task<bool> WaitAsync(this CountdownEvent countdownEvent, TimeSpan timeout, CancellationToken cancellationToken)
         => await countdownEvent.WaitAsync((uint)timeout.TotalMilliseconds, cancellationToken);
 
+    [UnsupportedOSPlatform("browser")]
     internal static async Task<bool> WaitAsync(this CountdownEvent countdownEvent, uint millisecondsTimeOutInterval, CancellationToken cancellationToken)
     {
         RegisteredWaitHandle? registeredHandle = null;

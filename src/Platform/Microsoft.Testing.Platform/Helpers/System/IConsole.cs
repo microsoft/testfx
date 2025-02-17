@@ -8,16 +8,31 @@ namespace Microsoft.Testing.Platform.Helpers;
 /// </summary>
 internal interface IConsole
 {
+    [UnsupportedOSPlatform("android")]
+    [UnsupportedOSPlatform("browser")]
+    [UnsupportedOSPlatform("ios")]
     event ConsoleCancelEventHandler? CancelKeyPress;
 
-    public int BufferHeight { get; }
+    [SupportedOSPlatform("Windows")]
+    [SupportedOSPlatform("Linux")]
+    [SupportedOSPlatform("macOS")]
+    int BufferHeight { get; }
 
-    public int BufferWidth { get; }
+    [SupportedOSPlatform("Windows")]
+    [SupportedOSPlatform("Linux")]
+    [SupportedOSPlatform("macOS")]
+    int BufferWidth { get; }
 
-    public bool IsOutputRedirected { get; }
+    bool IsOutputRedirected { get; }
 
+    [SupportedOSPlatform("Windows")]
+    [SupportedOSPlatform("Linux")]
+    [SupportedOSPlatform("macOS")]
     void SetForegroundColor(ConsoleColor color);
 
+    [SupportedOSPlatform("Windows")]
+    [SupportedOSPlatform("Linux")]
+    [SupportedOSPlatform("macOS")]
     ConsoleColor GetForegroundColor();
 
     void WriteLine();
@@ -28,5 +43,8 @@ internal interface IConsole
 
     void Write(char value);
 
+    [SupportedOSPlatform("Windows")]
+    [SupportedOSPlatform("Linux")]
+    [SupportedOSPlatform("macOS")]
     void Clear();
 }

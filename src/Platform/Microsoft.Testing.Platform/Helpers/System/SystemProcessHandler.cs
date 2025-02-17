@@ -8,10 +8,14 @@ namespace Microsoft.Testing.Platform.Helpers;
 [SuppressMessage("ApiDesign", "RS0030:Do not use banned APIs", Justification = "This is the Process wrapper.")]
 internal sealed class SystemProcessHandler : IProcessHandler
 {
+    [UnsupportedOSPlatform("browser")]
     public IProcess GetCurrentProcess() => new SystemProcess(Process.GetCurrentProcess());
 
+    [UnsupportedOSPlatform("browser")]
     public IProcess GetProcessById(int pid) => new SystemProcess(Process.GetProcessById(pid));
 
+    [UnsupportedOSPlatform("browser")]
+    [UnsupportedOSPlatform("ios")]
     public IProcess Start(ProcessStartInfo startInfo)
     {
         Process process = Process.Start(startInfo)

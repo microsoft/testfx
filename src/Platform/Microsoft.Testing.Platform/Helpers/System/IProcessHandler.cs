@@ -5,9 +5,13 @@ namespace Microsoft.Testing.Platform.Helpers;
 
 internal interface IProcessHandler
 {
+    [UnsupportedOSPlatform("browser")]
     IProcess GetProcessById(int pid);
 
+    [UnsupportedOSPlatform("browser")]
     IProcess GetCurrentProcess();
 
+    [UnsupportedOSPlatform("browser")]
+    [UnsupportedOSPlatform("ios")]
     IProcess Start(ProcessStartInfo startInfo);
 }

@@ -523,6 +523,11 @@ Os valores disponíveis são 'Rastreamento', 'Depuração', 'Informação', 'Avi
 {1}</target>
         <note />
       </trans-unit>
+      <trans-unit id="PlatformCommandLineExitOnProcessExitNotSupported">
+        <source>dsadsa</source>
+        <target state="new">dsadsa</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PlatformCommandLineExitOnProcessExitOptionDescription">
         <source>Exit the test process if dependent process exits. PID must be provided.</source>
         <target state="translated">Sair do processo de teste se o processo dependente for encerrado. O PID deve ser fornecido.</target>

@@ -21,6 +21,7 @@ using Microsoft.Testing.Platform.TestHost;
 
 namespace Microsoft.Testing.Platform.Hosts;
 
+[UnsupportedOSPlatform("browser")]
 internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, IDisposable, IOutputDeviceDataProducer
 {
     public const string ProtocolVersion = "1.0.0";

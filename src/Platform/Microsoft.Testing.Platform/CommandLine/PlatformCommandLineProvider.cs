@@ -104,9 +104,17 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
             return ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, PlatformResources.PlatformCommandLinePortOptionSingleArgument, ClientPortOptionKey));
         }
 
-        if (commandOption.Name == ExitOnProcessExitOptionKey && (!int.TryParse(arguments[0], out int _)))
+        if (commandOption.Name == ExitOnProcessExitOptionKey)
         {
-            return ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, PlatformResources.PlatformCommandLineExitOnProcessExitSingleArgument, ExitOnProcessExitOptionKey));
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Create("browser")))
+            {
+                return ValidationResult.InvalidTask(PlatformResources.PlatformCommandLineExitOnProcessExitNotSupported);
+            }
+
+            if (!int.TryParse(arguments[0], out int _))
+            {
+                return ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, PlatformResources.PlatformCommandLineExitOnProcessExitSingleArgument, ExitOnProcessExitOptionKey));
+            }
         }
 
         if (commandOption.Name == TimeoutOptionKey)
@@ -183,6 +191,11 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
 
         if (commandLineOptions.IsOptionSet(ExitOnProcessExitOptionKey))
         {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Create("browser")))
+            {
+                throw ApplicationStateGuard.Unreachable();
+            }
+
             _ = commandLineOptions.TryGetOptionArgumentList(ExitOnProcessExitOptionKey, out string[]? pid);
             ApplicationStateGuard.Ensure(pid is not null);
             RoslynDebug.Assert(pid.Length == 1);

@@ -523,6 +523,11 @@ Dostupné hodnoty jsou Trace, Debug, Information, Warning, Error a Critical.</ta
 {1}</target>
         <note />
       </trans-unit>
+      <trans-unit id="PlatformCommandLineExitOnProcessExitNotSupported">
+        <source>dsadsa</source>
+        <target state="new">dsadsa</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PlatformCommandLineExitOnProcessExitOptionDescription">
         <source>Exit the test process if dependent process exits. PID must be provided.</source>
         <target state="translated">Pokud se závislý proces ukončí, ukončete testovací proces. Je nutné zadat identifikátor PID.</target>

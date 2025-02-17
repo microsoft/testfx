@@ -8,6 +8,7 @@ internal sealed class SystemMainModule(ProcessModule? processModule) : IMainModu
 {
     private readonly ProcessModule? _processModule = processModule;
 
+    [UnsupportedOSPlatform("browser")]
     public string? FileName => _processModule?.FileName;
 }
 #else

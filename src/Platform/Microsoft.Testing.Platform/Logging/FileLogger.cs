@@ -137,6 +137,7 @@ internal sealed class FileLogger : IDisposable
         }
     }
 
+    [UnsupportedOSPlatform("browser")]
     private void InternalSyncLog<TState>(LogLevel logLevel, TState state, Exception? exception, Func<TState, Exception?, string> formatter, string category)
     {
         if (!IsEnabled(logLevel))

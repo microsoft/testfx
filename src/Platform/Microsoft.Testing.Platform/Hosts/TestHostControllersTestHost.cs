@@ -60,6 +60,8 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
 
     public Task<bool> IsEnabledAsync() => Task.FromResult(false);
 
+    [UnsupportedOSPlatform("browser")]
+    [UnsupportedOSPlatform("ios")]
     protected override async Task<int> InternalRunAsync()
     {
         int exitCode;
