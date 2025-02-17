@@ -195,7 +195,7 @@
     <_SelfRegisteredExtensionsSourcePath>$([System.IO.Path]::Combine($(IntermediateOutputPath),$(_SelfRegisteredExtensionsSourceName)))</_SelfRegisteredExtensionsSourcePath>
     <_SelfRegisteredExtensionsSourcePath>$([MSBuild]::NormalizePath($(MSBuildProjectDirectory), $(_SelfRegisteredExtensionsSourcePath)))</_SelfRegisteredExtensionsSourcePath>
   </PropertyGroup>
-  <Target Name="_GenerateSelfRegisteredExtensions" BeforeTargets="_IncludeGenerateSelfRegisteredExtensionsIntoCompilation;_GenerateTestingPlatformEntryPoint"
+  <Target Name="_GenerateSelfRegisteredExtensions" BeforeTargets="_IncludeGenerateAutoRegisteredExtensionsIntoCompilation;_GenerateTestingPlatformEntryPoint"
           Inputs="@(GenerateSelfRegisteredExtensionsInputsCacheFilePath)" Outputs="$(_SelfRegisteredExtensionsSourcePath)"
           Condition=" '$(GenerateSelfRegisteredExtensions)' == 'True' " >
     <TestingPlatformSelfRegisteredExtensions SelfRegisteredExtensionsSourcePath="$(_SelfRegisteredExtensionsSourcePath)"
@@ -211,7 +211,7 @@
 
   <!-- We always include the entry point also if the task _GenerateSelfRegisteredExtensions is skipped for caching reason -->
   <!-- !!! DO NOT CHANGE THE NAME OF THIS TARGET IS USED BY ADAPTERS https://github.com/microsoft/testfx/issues/3478#issuecomment-2313889212 !!! -->
-  <Target Name="_IncludeGenerateSelfRegisteredExtensionsIntoCompilation" BeforeTargets="_IncludeGenerateTestingPlatformEntryPointIntoCompilation;BeforeCompile;XamlPreCompile" Condition=" '$(GenerateSelfRegisteredExtensions)' == 'True' " >
+  <Target Name="_IncludeGenerateAutoRegisteredExtensionsIntoCompilation" BeforeTargets="_IncludeGenerateTestingPlatformEntryPointIntoCompilation;BeforeCompile;XamlPreCompile" Condition=" '$(GenerateSelfRegisteredExtensions)' == 'True' " >
     <ItemGroup>
       <Compile Include="$(_SelfRegisteredExtensionsSourcePath)" />
     </ItemGroup>
