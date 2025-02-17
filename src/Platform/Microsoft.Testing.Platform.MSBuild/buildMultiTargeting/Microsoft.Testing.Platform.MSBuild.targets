@@ -151,10 +151,10 @@
       <FileWrites Include="$(_TestingPlatformEntryPointSourcePath)" />
     </ItemGroup>
   </Target>
-  <!-- Note: _IncludeGenerateTestingPlatformEntryPointIntoCompilation is set to depend on _IncludeGenerateSelfRegisteredExtensionsIntoCompilation -->
+  <!-- Note: _IncludeGenerateTestingPlatformEntryPointIntoCompilation is set to depend on _IncludeGenerateAutoRegisteredExtensionsIntoCompilation -->
   <!-- This is because file orders matter in F# -->
   <Target Name="_IncludeGenerateTestingPlatformEntryPointIntoCompilation" BeforeTargets="BeforeCompile;XamlPreCompile"
-          DependsOnTargets="_CalculateGenerateTestingPlatformEntryPoint;_GenerateTestingPlatformEntryPointFileInputCache;_GenerateTestingPlatformEntryPoint;_IncludeGenerateSelfRegisteredExtensionsIntoCompilation">
+          DependsOnTargets="_CalculateGenerateTestingPlatformEntryPoint;_GenerateTestingPlatformEntryPointFileInputCache;_GenerateTestingPlatformEntryPoint;_IncludeGenerateAutoRegisteredExtensionsIntoCompilation">
 
     <ItemGroup Condition=" '$(GenerateTestingPlatformEntryPoint)' == 'True' ">
       <Compile Include="$(_TestingPlatformEntryPointSourcePath)" />
@@ -242,7 +242,7 @@
 
   <!-- We always include the entry point also if the task _GenerateSelfRegisteredExtensions is skipped for caching reason -->
   <!-- !!! DO NOT CHANGE THE NAME OF THIS TARGET IS USED BY ADAPTERS https://github.com/microsoft/testfx/issues/3478#issuecomment-2313889212 !!! -->
-  <Target Name="_IncludeGenerateSelfRegisteredExtensionsIntoCompilation" BeforeTargets="BeforeCompile;XamlPreCompile"
+  <Target Name="_IncludeGenerateAutoRegisteredExtensionsIntoCompilation" BeforeTargets="BeforeCompile;XamlPreCompile"
           DependsOnTargets="_CalculateGenerateSelfRegisteredExtensions;_GenerateSelfRegisteredExtensionsFileInputCache;_GenerateSelfRegisteredExtensions">
 
     <ItemGroup Condition=" '$(GenerateSelfRegisteredExtensions)' == 'True' ">
