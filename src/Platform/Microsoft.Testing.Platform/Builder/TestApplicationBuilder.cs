@@ -58,6 +58,9 @@ internal sealed class TestApplicationBuilder : ITestApplicationBuilder
 
     internal ITestHostOrchestratorManager TestHostOrchestrator => _testHostBuilder.TestHostOrchestratorManager;
 
+    [Obsolete("Remove in v2. Avoid breaking change with the rename of the property. See https://github.com/microsoft/testfx/issues/5015", error: true)]
+    internal ITestHostOrchestratorManager TestHostControllersManager => _testHostBuilder.TestHostOrchestratorManager;
+
     [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
     public IConfigurationManager Configuration => _testHostBuilder.Configuration;
 
@@ -67,6 +70,9 @@ internal sealed class TestApplicationBuilder : ITestApplicationBuilder
     internal IPlatformOutputDeviceManager OutputDisplay => _testHostBuilder.OutputDisplay;
 
     internal ITelemetryManager Telemetry => _testHostBuilder.Telemetry;
+
+    [Obsolete("Remove in v2. Avoid breaking change with the rename of the property. See https://github.com/microsoft/testfx/issues/5015", error: true)]
+    internal ITelemetryManager TelemetryManager => _testHostBuilder.Telemetry;
 
     internal IToolsManager Tools => _testHostBuilder.Tools;
 
