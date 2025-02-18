@@ -121,7 +121,7 @@ public sealed class IPCTests
         });
         NamedPipeServer singleConnectionNamedPipeServer = new(
             pipeNameDescription,
-            (IRequest request) =>
+            request =>
             {
                 receivedMessages.Enqueue((BaseMessage)request);
                 return Task.FromResult<IResponse>(VoidResponse.CachedInstance);
