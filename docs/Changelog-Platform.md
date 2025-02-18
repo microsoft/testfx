@@ -11,7 +11,7 @@ See full log [here](https://github.com/microsoft/testfx/compare/v3.8.0...v3.8.1)
 ### Fixed
 
 * Revert _IncludeGenerateAutoRegisteredExtensionsIntoCompilation target rename by @Youssef1313 in [#5045](https://github.com/microsoft/testfx/pull/5045)
-* Use `global::` prefix for generated code by @youssef-backport-bot in [#5033](https://github.com/microsoft/testfx/pull/5033)
+* Use `global::` prefix for generated code by @Youssef1313 in [#5033](https://github.com/microsoft/testfx/pull/5033)
 * Fix breaking change with telemetry by @Evangelink in [#5050](https://github.com/microsoft/testfx/pull/5050)
 
 ### Artifacts
