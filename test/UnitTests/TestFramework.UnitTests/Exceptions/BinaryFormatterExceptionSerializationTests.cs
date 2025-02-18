@@ -13,7 +13,13 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.Attributes
 public class BinaryFormatterExceptionSerializationTests : TestContainer
 {
     public void AssertFailedExceptionCanBeSerializedAndDeserialized()
-        => VerifySerialization(() => Assert.AreEqual(0, 1));
+        => VerifySerialization(Assert.Fail);
+
+    public void AssertInconclusiveExceptionCanBeSerializedAndDeserialized()
+        => VerifySerialization(Assert.Inconclusive);
+
+    public void InternalTestFailureExceptionCanBeSerializedAndDeserialized()
+        => VerifySerialization(() => throw new InternalTestFailureException("Some internal error."));
 
     private void VerifySerialization(Action actionThatThrows)
     {
@@ -23,10 +29,14 @@ public class BinaryFormatterExceptionSerializationTests : TestContainer
         }
         catch (Exception ex)
         {
+            // Ensure the thrown exception can be serialized and deserialized by binary formatter to keep compatibility with it,
+            // even though it is obsoleted and removed in .NET.
             var mem = new MemoryStream();
             new BinaryFormatter().Serialize(mem, ex);
             mem.Position = 0;
             new BinaryFormatter().Deserialize(mem);
+
+            return;
         }
 
         throw new InvalidOperationException($"The provided '{nameof(actionThatThrows)}' did not throw any exception.");
