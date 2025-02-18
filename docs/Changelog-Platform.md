@@ -4,6 +4,29 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
+## <a name="1.6.1" />[1.6.1] - 2025-02-18
+
+See full log [here](https://github.com/microsoft/testfx/compare/v3.8.0...v3.8.1)
+
+### Fixed
+
+* Revert _IncludeGenerateAutoRegisteredExtensionsIntoCompilation target rename by @Youssef1313 in [#5045](https://github.com/microsoft/testfx/pull/5045)
+* Use `global::` prefix for generated code by @Youssef1313 in [#5033](https://github.com/microsoft/testfx/pull/5033)
+* Fix breaking change with telemetry by @Evangelink in [#5050](https://github.com/microsoft/testfx/pull/5050)
+
+### Artifacts
+
+* Microsoft.Testing.Extensions.CrashDump: [1.6.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.CrashDump/1.6.1)
+* Microsoft.Testing.Extensions.HangDump: [1.6.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HangDump/1.6.1)
+* Microsoft.Testing.Extensions.HotReload: [1.6.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HotReload/1.6.1)
+* Microsoft.Testing.Extensions.Retry: [1.6.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Retry/1.6.1)
+* Microsoft.Testing.Extensions.Telemetry: [1.6.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Telemetry/1.6.1)
+* Microsoft.Testing.Extensions.TrxReport: [1.6.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport/1.6.1)
+* Microsoft.Testing.Extensions.TrxReport.Abstractions: [1.6.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport.Abstractions/1.6.1)
+* Microsoft.Testing.Extensions.VSTestBridge: [1.6.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.VSTestBridge/1.6.1)
+* Microsoft.Testing.Platform: [1.6.1](https://www.nuget.org/packages/Microsoft.Testing.Platform/1.6.1)
+* Microsoft.Testing.Platform.MSBuild: [1.6.1](https://www.nuget.org/packages/Microsoft.Testing.Platform.MSBuild/1.6.1)
+
 ## <a name="1.6.0" />[1.6.0] - 2025-02-12
 
 See full log [here](https://github.com/microsoft/testfx/compare/v3.7.3...v3.8.0)
