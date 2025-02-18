@@ -1,5 +1,4 @@
 #nullable enable
-<<<<<<< HEAD
 abstract Microsoft.VisualStudio.TestTools.UnitTesting.ConditionBaseAttribute.IgnoreMessage.get -> string?
 abstract Microsoft.VisualStudio.TestTools.UnitTesting.ConditionBaseAttribute.GroupName.get -> string!
 abstract Microsoft.VisualStudio.TestTools.UnitTesting.ConditionBaseAttribute.ShouldRun.get -> bool
@@ -376,9 +375,7 @@ static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ThrowsExactlyAsync<TE
 [MSTESTEXP]Microsoft.VisualStudio.TestTools.UnitTesting.RetryResult
 [MSTESTEXP]Microsoft.VisualStudio.TestTools.UnitTesting.RetryResult.AddResult(Microsoft.VisualStudio.TestTools.UnitTesting.TestResult![]! testResults) -> void
 [MSTESTEXP]Microsoft.VisualStudio.TestTools.UnitTesting.RetryResult.RetryResult() -> void
-=======
 Microsoft.VisualStudio.TestTools.UnitTesting.AssertFailedException.AssertFailedException(System.Runtime.Serialization.SerializationInfo! info, System.Runtime.Serialization.StreamingContext context) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.AssertInconclusiveException.AssertInconclusiveException(System.Runtime.Serialization.SerializationInfo! info, System.Runtime.Serialization.StreamingContext context) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.InternalTestFailureException.InternalTestFailureException(System.Runtime.Serialization.SerializationInfo! info, System.Runtime.Serialization.StreamingContext context) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestAssertException.UnitTestAssertException(System.Runtime.Serialization.SerializationInfo! info, System.Runtime.Serialization.StreamingContext context) -> void
->>>>>>> Address review feedback
