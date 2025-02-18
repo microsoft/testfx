@@ -19,12 +19,14 @@ internal sealed class NonAnsiTerminal : ITerminal
     public NonAnsiTerminal(IConsole console)
     {
         _console = console;
-        _defaultForegroundColor = _console.GetForegroundColor();
+        _defaultForegroundColor = IsForegroundColorNotSupported() ? ConsoleColor.Black : _console.GetForegroundColor();
     }
 
+#pragma warning disable CA1416 // Validate platform compatibility
     public int Width => _console.IsOutputRedirected ? int.MaxValue : _console.BufferWidth;
 
     public int Height => _console.IsOutputRedirected ? int.MaxValue : _console.BufferHeight;
+#pragma warning restore CA1416 // Validate platform compatibility
 
     public void Append(char value)
         => _console.Write(value);
@@ -48,10 +50,24 @@ internal sealed class NonAnsiTerminal : ITerminal
     }
 
     public void SetColor(TerminalColor color)
-        => _console.SetForegroundColor(ToConsoleColor(color));
+    {
+        if (IsForegroundColorNotSupported())
+        {
+            return;
+        }
+
+        _console.SetForegroundColor(ToConsoleColor(color));
+    }
 
     public void ResetColor()
-        => _console.SetForegroundColor(_defaultForegroundColor);
+    {
+        if (IsForegroundColorNotSupported())
+        {
+            return;
+        }
+
+        _console.SetForegroundColor(_defaultForegroundColor);
+    }
 
     public void ShowCursor()
     {
@@ -225,4 +241,14 @@ internal sealed class NonAnsiTerminal : ITerminal
     {
         // nop
     }
+
+    [SupportedOSPlatformGuard("android")]
+    [SupportedOSPlatformGuard("ios")]
+    [SupportedOSPlatformGuard("tvos")]
+    [SupportedOSPlatformGuard("browser")]
+    private static bool IsForegroundColorNotSupported()
+        => RuntimeInformation.IsOSPlatform(OSPlatform.Create("ANDROID")) ||
+            RuntimeInformation.IsOSPlatform(OSPlatform.Create("IOS")) ||
+            RuntimeInformation.IsOSPlatform(OSPlatform.Create("TVOS")) ||
+            RuntimeInformation.IsOSPlatform(OSPlatform.Create("BROWSER"));
 }

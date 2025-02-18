@@ -13,11 +13,19 @@ internal sealed class SystemConsole : IConsole
     /// <summary>
     /// Gets the height of the buffer area.
     /// </summary>
+    [UnsupportedOSPlatform("android")]
+    [UnsupportedOSPlatform("browser")]
+    [UnsupportedOSPlatform("ios")]
+    [UnsupportedOSPlatform("tvos")]
     public int BufferHeight => Console.BufferHeight;
 
     /// <summary>
     /// Gets the width of the buffer area.
     /// </summary>
+    [UnsupportedOSPlatform("android")]
+    [UnsupportedOSPlatform("browser")]
+    [UnsupportedOSPlatform("ios")]
+    [UnsupportedOSPlatform("tvos")]
     public int BufferWidth => Console.BufferWidth;
 
     /// <summary>
@@ -43,35 +51,14 @@ internal sealed class SystemConsole : IConsole
         };
     }
 
-    // This is based on the UnsupportedOSPlatformAttribute on the API:
-    // https://github.com/dotnet/runtime/blob/8a79637e1454c751c24a984b7fb8af4c4d43394b/src/libraries/System.Console/src/System/Console.cs#L560-L563
-    private static bool IsCancelKeyPressNotSupported()
-        => RuntimeInformation.IsOSPlatform(OSPlatform.Create("ANDROID")) ||
-            RuntimeInformation.IsOSPlatform(OSPlatform.Create("IOS")) ||
-            RuntimeInformation.IsOSPlatform(OSPlatform.Create("TVOS")) ||
-            RuntimeInformation.IsOSPlatform(OSPlatform.Create("BROWSER"));
-
+    [UnsupportedOSPlatform("android")]
+    [UnsupportedOSPlatform("ios")]
+    [UnsupportedOSPlatform("tvos")]
+    [UnsupportedOSPlatform("browser")]
     public event ConsoleCancelEventHandler? CancelKeyPress
     {
-        add
-        {
-            if (IsCancelKeyPressNotSupported())
-            {
-                return;
-            }
-
-            Console.CancelKeyPress += value;
-        }
-
-        remove
-        {
-            if (IsCancelKeyPressNotSupported())
-            {
-                return;
-            }
-
-            Console.CancelKeyPress -= value;
-        }
+        add => Console.CancelKeyPress += value;
+        remove => Console.CancelKeyPress -= value;
     }
 
     public void SuppressOutput() => _suppressOutput = true;
@@ -108,33 +95,23 @@ internal sealed class SystemConsole : IConsole
         }
     }
 
+    [UnsupportedOSPlatform("android")]
+    [UnsupportedOSPlatform("ios")]
+    [UnsupportedOSPlatform("tvos")]
+    [UnsupportedOSPlatform("browser")]
     public void SetForegroundColor(ConsoleColor color)
-    {
-#if NET8_0_OR_GREATER
-        if (RuntimeInformation.RuntimeIdentifier.Contains("ios") ||
-            RuntimeInformation.RuntimeIdentifier.Contains("android"))
-        {
-            return;
-        }
-#endif
-#pragma warning disable IDE0022 // Use expression body for method
-        Console.ForegroundColor = color;
-#pragma warning restore IDE0022 // Use expression body for method
-    }
+        => Console.ForegroundColor = color;
 
+    [UnsupportedOSPlatform("android")]
+    [UnsupportedOSPlatform("ios")]
+    [UnsupportedOSPlatform("tvos")]
+    [UnsupportedOSPlatform("browser")]
     public ConsoleColor GetForegroundColor()
-    {
-#if NET8_0_OR_GREATER
-        if (RuntimeInformation.RuntimeIdentifier.Contains("ios") ||
-            RuntimeInformation.RuntimeIdentifier.Contains("android"))
-        {
-            return ConsoleColor.Black;
-        }
-#endif
-#pragma warning disable IDE0022 // Use expression body for method
-        return Console.ForegroundColor;
-#pragma warning restore IDE0022 // Use expression body for method
-    }
+        => Console.ForegroundColor;
 
-    public void Clear() => Console.Clear();
+    [UnsupportedOSPlatform("android")]
+    [UnsupportedOSPlatform("ios")]
+    [UnsupportedOSPlatform("tvos")]
+    public void Clear()
+        => Console.Clear();
 }

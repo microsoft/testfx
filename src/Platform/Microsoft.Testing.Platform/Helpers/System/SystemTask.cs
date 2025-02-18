@@ -44,7 +44,9 @@ internal sealed class SystemTask : ITask
             Name = name,
         };
 
+#pragma warning disable CA1416 // Validate platform compatibility
         thread.Start();
+#pragma warning restore CA1416
 
         return taskCompletionSource.Task;
     }
