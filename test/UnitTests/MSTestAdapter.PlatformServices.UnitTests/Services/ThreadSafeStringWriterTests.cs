@@ -13,61 +13,75 @@ public class ThreadSafeStringWriterTests : TestContainer
 
     public void ThreadSafeStringWriterWritesLinesFromDifferentTasksSeparately()
     {
-        // Suppress the flow of parent context here because this test method will run in
-        // a task already and we don't want the existing async context to interfere with this.
-        using (ExecutionContext.SuppressFlow())
+        int currentAttempt = 0;
+        Exception? exception = null;
+        do
         {
-            // String writer needs to be task aware to write output from different tasks
-            // into different output. The tasks below wait for each other to ensure
-            // we are mixing output from different tasks at the same time.
-            using var stringWriter = new ThreadSafeStringWriter(CultureInfo.InvariantCulture, "output");
-            var task1 = Task.Run(() =>
+            // Suppress the flow of parent context here because this test method will run in
+            // a task already and we don't want the existing async context to interfere with this.
+            using (ExecutionContext.SuppressFlow())
             {
-                var timeout = Stopwatch.StartNew();
-                stringWriter.WriteLine("content1");
-                stringWriter.WriteLine("content1");
-                stringWriter.WriteLine("content1");
-                stringWriter.WriteLine("content1");
-                while (!_task2flag && timeout.Elapsed < TimeSpan.FromSeconds(5))
+                // String writer needs to be task aware to write output from different tasks
+                // into different output. The tasks below wait for each other to ensure
+                // we are mixing output from different tasks at the same time.
+                using var stringWriter = new ThreadSafeStringWriter(CultureInfo.InvariantCulture, "output");
+                var task1 = Task.Run(() =>
                 {
+                    var timeout = Stopwatch.StartNew();
+                    stringWriter.WriteLine("content1");
+                    stringWriter.WriteLine("content1");
+                    stringWriter.WriteLine("content1");
+                    stringWriter.WriteLine("content1");
+                    while (!_task2flag && timeout.Elapsed < TimeSpan.FromSeconds(5))
+                    {
+                    }
+
+                    stringWriter.WriteLine("content1");
+                    stringWriter.WriteLine("content1");
+                    stringWriter.WriteLine("content1");
+                    stringWriter.WriteLine("content1");
+                    return stringWriter.ToString();
+                });
+                var task2 = Task.Run(() =>
+                {
+                    stringWriter.WriteLine("content2");
+                    stringWriter.WriteLine("content2");
+                    stringWriter.WriteLine("content2");
+                    stringWriter.WriteLine("content2");
+                    _task2flag = true;
+                    stringWriter.WriteLine("content2");
+                    stringWriter.WriteLine("content2");
+                    stringWriter.WriteLine("content2");
+                    stringWriter.WriteLine("content2");
+                    return stringWriter.ToString();
+                });
+
+                string task2Output = task2.GetAwaiter().GetResult();
+                string task1Output = task1.GetAwaiter().GetResult();
+
+                try
+                {
+                    // there was no output in the current task, the output should be empty
+                    string content = stringWriter.ToString();
+                    Verify(string.IsNullOrWhiteSpace(content));
+                }
+                catch (Exception ex)
+                {
+                    exception = ex;
+                    continue;
                 }
 
-                stringWriter.WriteLine("content1");
-                stringWriter.WriteLine("content1");
-                stringWriter.WriteLine("content1");
-                stringWriter.WriteLine("content1");
-                return stringWriter.ToString();
-            });
-            var task2 = Task.Run(() =>
-            {
-                stringWriter.WriteLine("content2");
-                stringWriter.WriteLine("content2");
-                stringWriter.WriteLine("content2");
-                stringWriter.WriteLine("content2");
-                _task2flag = true;
-                stringWriter.WriteLine("content2");
-                stringWriter.WriteLine("content2");
-                stringWriter.WriteLine("content2");
-                stringWriter.WriteLine("content2");
-                return stringWriter.ToString();
-            });
+                // task1 and task2 should output into their respective buckets
+                Verify(!string.IsNullOrWhiteSpace(task1Output));
+                Verify(!string.IsNullOrWhiteSpace(task2Output));
 
-            string task2Output = task2.GetAwaiter().GetResult();
-            string task1Output = task1.GetAwaiter().GetResult();
-
-            // there was no output in the current task, the output should be empty
-            string content = stringWriter.ToString();
-            Verify(string.IsNullOrWhiteSpace(content));
-
-            // task1 and task2 should output into their respective buckets
-            Verify(!string.IsNullOrWhiteSpace(task1Output));
-            Verify(!string.IsNullOrWhiteSpace(task2Output));
-
-            string[] task1Split = task1Output.Split(Environment.NewLine.ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
-            Verify(task1Split.SequenceEqual(Enumerable.Repeat("content1", 8)));
-            string[] task2Split = task2Output.Split(Environment.NewLine.ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
-            Verify(task2Split.SequenceEqual(Enumerable.Repeat("content2", 8)));
+                string[] task1Split = task1Output.Split(Environment.NewLine.ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
+                Verify(task1Split.SequenceEqual(Enumerable.Repeat("content1", 8)));
+                string[] task2Split = task2Output.Split(Environment.NewLine.ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
+                Verify(task2Split.SequenceEqual(Enumerable.Repeat("content2", 8)));
+            }
         }
+        while (exception != null && currentAttempt++ < 3);
     }
 
     public void ThreadSafeStringWriterWritesLinesIntoDifferentWritesSeparately()

@@ -208,10 +208,10 @@ internal sealed class TestFrameworkEngine : IDataProducer
         }
         catch (Exception ex)
         {
-            Exception realException = ex.InnerException ?? ex;
+            Exception realException = ex is TargetInvocationException ? ex.InnerException! : ex;
             _logger.LogError("Error during test", realException);
             TestNode errorNode = CloneTestNode(testNode);
-            errorNode.Properties.Add(new ErrorTestNodeStateProperty(ex));
+            errorNode.Properties.Add(new ErrorTestNodeStateProperty(realException));
             await publishNodeUpdateAsync(errorNode);
 
             return false;
