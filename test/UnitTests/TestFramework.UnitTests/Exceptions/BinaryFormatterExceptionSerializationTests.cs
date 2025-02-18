@@ -18,6 +18,7 @@ public class BinaryFormatterExceptionSerializationTests : TestContainer
     public void AssertInconclusiveExceptionCanBeSerializedAndDeserialized()
         => VerifySerialization(Assert.Inconclusive);
 
+    [Obsolete]
     public void InternalTestFailureExceptionCanBeSerializedAndDeserialized()
         => VerifySerialization(() => throw new InternalTestFailureException("Some internal error."));
 
