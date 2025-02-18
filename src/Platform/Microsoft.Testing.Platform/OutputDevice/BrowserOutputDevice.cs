@@ -269,13 +269,13 @@ internal sealed partial class BrowserOutputDevice : IPlatformOutputDevice,
     }
 
 #if NET7_0_OR_GREATER
-    [JSImport("console.warn")]
+    [JSImport("globalThis.console.warn", "main.js")]
     private static partial void ConsoleWarn(string? message);
 
-    [JSImport("console.error")]
+    [JSImport("globalThis.console.error")]
     private static partial void ConsoleError(string? message);
 
-    [JSImport("console.log")]
+    [JSImport("globalThis.console.log")]
     private static partial void ConsoleLog(string? message);
 #else
     private void ConsoleWarn(string? message) => _console.WriteLine(message);
