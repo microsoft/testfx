@@ -29,15 +29,29 @@ internal sealed class HotReloadHandler
         _console = console;
         _outputDevice = outputDevice;
         _outputDeviceDataProducer = outputDeviceDataProducer;
-        _console.CancelKeyPress += (_, _) =>
+
+        if (!IsCancelKeyPressNotSupported())
         {
-            if (!s_shutdownProcess)
+            _console.CancelKeyPress += (_, _) =>
             {
-                s_shutdownProcess = true;
-                SemaphoreSlim.Release();
-            }
-        };
+                if (!s_shutdownProcess)
+                {
+                    s_shutdownProcess = true;
+                    SemaphoreSlim.Release();
+                }
+            };
+        }
     }
+
+    [SupportedOSPlatformGuard("android")]
+    [SupportedOSPlatformGuard("ios")]
+    [SupportedOSPlatformGuard("tvos")]
+    [SupportedOSPlatformGuard("browser")]
+    private static bool IsCancelKeyPressNotSupported()
+        => RuntimeInformation.IsOSPlatform(OSPlatform.Create("ANDROID")) ||
+            RuntimeInformation.IsOSPlatform(OSPlatform.Create("IOS")) ||
+            RuntimeInformation.IsOSPlatform(OSPlatform.Create("TVOS")) ||
+            RuntimeInformation.IsOSPlatform(OSPlatform.Create("BROWSER"));
 
     // Called automatically by the runtime through the MetadataUpdateHandlerAttribute
     public static void ClearCache(Type[]? _)
@@ -82,10 +96,22 @@ internal sealed class HotReloadHandler
             // We're closing
         }
 
-        _console!.Clear();
+        if (!IsClearNotSupported())
+        {
+            _console!.Clear();
+        }
+
         await _outputDevice.DisplayAsync(_outputDeviceDataProducer, new TextOutputDeviceData(ExtensionResources.HotReloadSessionStarted));
 
         return !s_shutdownProcess;
     }
+
+    [SupportedOSPlatformGuard("android")]
+    [SupportedOSPlatformGuard("ios")]
+    [SupportedOSPlatformGuard("tvos")]
+    private static bool IsClearNotSupported()
+        => RuntimeInformation.IsOSPlatform(OSPlatform.Create("ANDROID")) ||
+            RuntimeInformation.IsOSPlatform(OSPlatform.Create("IOS")) ||
+            RuntimeInformation.IsOSPlatform(OSPlatform.Create("TVOS"));
 #endif
 }

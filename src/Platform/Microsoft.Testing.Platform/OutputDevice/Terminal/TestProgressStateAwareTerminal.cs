@@ -103,7 +103,9 @@ internal sealed partial class TestProgressStateAwareTerminal : IDisposable
             _terminal.StartBusyIndicator();
             // If we crash unexpectedly without completing this thread we don't want it to keep the process running.
             _refresher = new Thread(ThreadProc) { IsBackground = true };
+#pragma warning disable CA1416 // Validate platform compatibility
             _refresher.Start();
+#pragma warning restore CA1416
         }
     }
 
