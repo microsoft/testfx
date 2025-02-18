@@ -9,6 +9,4 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 internal static class Constants
 {
     internal const string PublicTypeObsoleteMessage = "We will remove or hide this type starting with v4. If you are using this type, reach out to our team on https://github.com/microsoft/testfx.";
-
-    internal const string LegacyFormatterImplementationMessage = "This API supports obsolete formatter-based serialization. It should not be called or extended by application code.";
 }
