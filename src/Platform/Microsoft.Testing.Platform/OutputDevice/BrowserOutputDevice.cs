@@ -1,6 +1,10 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#if NET7_0_OR_GREATER
+using System.Runtime.InteropServices.JavaScript;
+#endif
+
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
@@ -230,27 +234,44 @@ internal sealed partial class BrowserOutputDevice : IPlatformOutputDevice,
             switch (data)
             {
                 case FormattedTextOutputDeviceData formattedTextData:
-                    _console.WriteLine(formattedTextData.Text);
+                    ConsoleLog(formattedTextData.Text);
                     break;
 
                 case TextOutputDeviceData textData:
-                    _console.WriteLine(textData.Text);
+                    ConsoleLog(textData.Text);
                     break;
 
                 case WarningMessageOutputDeviceData warningData:
-                    _console.WriteLine(warningData.Message);
+                    ConsoleWarn(warningData.Message);
                     break;
 
                 case ErrorMessageOutputDeviceData errorData:
-                    _console.WriteLine(errorData.Message);
+                    ConsoleError(errorData.Message);
                     break;
 
                 case ExceptionOutputDeviceData exceptionOutputDeviceData:
-                    _console.WriteLine(exceptionOutputDeviceData.Exception.ToString());
+                    ConsoleError(exceptionOutputDeviceData.Exception.ToString());
                     break;
             }
         }
     }
+
+#if NET7_0_OR_GREATER
+    [JSImport("console.warn")]
+    private static partial void ConsoleWarn(string? message);
+
+    [JSImport("console.error")]
+    private static partial void ConsoleError(string? message);
+
+    [JSImport("console.log")]
+    private static partial void ConsoleLog(string? message);
+#else
+    private void ConsoleWarn(string? message) => _console.WriteLine(message);
+
+    private void ConsoleError(string? message) => _console.WriteLine(message);
+
+    private void ConsoleLog(string? message) => _console.WriteLine(message);
+#endif
 
     public Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken)
     {
@@ -273,27 +294,27 @@ internal sealed partial class BrowserOutputDevice : IPlatformOutputDevice,
                         break;
 
                     case ErrorTestNodeStateProperty errorState:
-                        _console.WriteLine($"{nameof(ErrorTestNodeStateProperty)}: {testNodeStateChanged.TestNode.DisplayName}");
-                        _console.WriteLine(errorState.Explanation);
-                        _console.WriteLine(errorState.Exception?.ToString());
+                        ConsoleError($"{nameof(ErrorTestNodeStateProperty)}: {testNodeStateChanged.TestNode.DisplayName}");
+                        ConsoleError(errorState.Explanation);
+                        ConsoleError(errorState.Exception?.ToString());
                         break;
 
                     case FailedTestNodeStateProperty failedState:
-                        _console.WriteLine($"{nameof(FailedTestNodeStateProperty)}: {testNodeStateChanged.TestNode.DisplayName}");
-                        _console.WriteLine(failedState.Explanation);
-                        _console.WriteLine(failedState.Exception?.ToString());
+                        ConsoleError($"{nameof(FailedTestNodeStateProperty)}: {testNodeStateChanged.TestNode.DisplayName}");
+                        ConsoleError(failedState.Explanation);
+                        ConsoleError(failedState.Exception?.ToString());
                         break;
 
                     case TimeoutTestNodeStateProperty timeoutState:
-                        _console.WriteLine($"{nameof(TimeoutTestNodeStateProperty)}: {testNodeStateChanged.TestNode.DisplayName}");
-                        _console.WriteLine(timeoutState.Explanation);
-                        _console.WriteLine(timeoutState.Exception?.ToString());
+                        ConsoleError($"{nameof(TimeoutTestNodeStateProperty)}: {testNodeStateChanged.TestNode.DisplayName}");
+                        ConsoleError(timeoutState.Explanation);
+                        ConsoleError(timeoutState.Exception?.ToString());
                         break;
 
                     case CancelledTestNodeStateProperty cancelledState:
-                        _console.WriteLine($"{nameof(CancelledTestNodeStateProperty)}: {testNodeStateChanged.TestNode.DisplayName}");
-                        _console.WriteLine(cancelledState.Explanation);
-                        _console.WriteLine(cancelledState.Exception?.ToString());
+                        ConsoleError($"{nameof(CancelledTestNodeStateProperty)}: {testNodeStateChanged.TestNode.DisplayName}");
+                        ConsoleError(cancelledState.Explanation);
+                        ConsoleError(cancelledState.Exception?.ToString());
                         break;
 
                     case PassedTestNodeStateProperty:
