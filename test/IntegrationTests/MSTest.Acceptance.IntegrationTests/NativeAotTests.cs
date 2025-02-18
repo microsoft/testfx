@@ -119,6 +119,7 @@ public class UnitTest1
                 var testHost = TestHost.LocateFrom(generator.TargetAssetPath, "NativeAotTests", TargetFrameworks.NetCurrent, RID, Verb.publish);
 
                 TestHostResult result = await testHost.ExecuteAsync();
+                result.AssertOutputContains($"MSTest.Engine v{MSTestEngineVersion}");
                 result.AssertExitCodeIs(0);
             }, times: 15, every: TimeSpan.FromSeconds(5));
     }
