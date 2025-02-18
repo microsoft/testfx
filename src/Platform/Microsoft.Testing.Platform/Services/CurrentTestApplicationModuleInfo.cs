@@ -46,23 +46,40 @@ internal sealed class CurrentTestApplicationModuleInfo(IEnvironment environment,
         && !IsCurrentTestApplicationHostDotnetMuxer
         && !IsCurrentTestApplicationHostMonoMuxer;
 
-#if NETCOREAPP
-    [UnconditionalSuppressMessage("SingleFile", "IL3000:Avoid accessing Assembly file path when publishing as a single file", Justification = "We handle the singlefile/native aot use case")]
-#endif
     public string GetCurrentTestApplicationFullPath()
     {
-#pragma warning disable IL3000
-        // This is empty in native app, or in single file app.
-        string? moduleName = Assembly.GetEntryAssembly()?.Location;
-#pragma warning restore IL3000
-
-        moduleName = RoslynString.IsNullOrEmpty(moduleName)
-            ? GetProcessPath(_environment, _process)
-            : moduleName;
+        string? moduleName = TryGetCurrentTestApplicationFullPath();
 
         ApplicationStateGuard.Ensure(moduleName is not null);
         return moduleName;
     }
+
+#if NETCOREAPP
+    [UnconditionalSuppressMessage("SingleFile", "IL3000:Avoid accessing Assembly file path when publishing as a single file", Justification = "We handle the singlefile/native aot use case")]
+#endif
+    public string? TryGetCurrentTestApplicationFullPath()
+    {
+        // This is empty in native app, or in single file app.
+        string? moduleName = Assembly.GetEntryAssembly()?.Location;
+
+        return RoslynString.IsNullOrEmpty(moduleName)
+            ? GetProcessPath(_environment, _process)
+            : moduleName;
+    }
+
+    public string? TryGetAssemblyName()
+    {
+        string? executableName = Assembly.GetEntryAssembly()?.GetName().Name;
+        return RoslynString.IsNullOrEmpty(executableName)
+            ? Path.GetFileNameWithoutExtension(GetProcessPath(_environment, _process))
+            : executableName;
+    }
+
+    public string GetCurrentTestApplicationDirectory()
+        => Path.GetDirectoryName(TryGetCurrentTestApplicationFullPath()) ?? AppContext.BaseDirectory;
+
+    public string GetDisplayName()
+        => TryGetCurrentTestApplicationFullPath() ?? TryGetAssemblyName() ?? "<unknown-assembly>";
 
     public string GetProcessPath()
         => GetProcessPath(_environment, _process, throwOnNull: true)!;
@@ -84,7 +101,6 @@ internal sealed class CurrentTestApplicationModuleInfo(IEnvironment environment,
 
     public ExecutableInfo GetCurrentExecutableInfo()
     {
-        string currentTestApplicationFullPath = GetCurrentTestApplicationFullPath();
         bool isDotnetMuxer = IsCurrentTestApplicationHostDotnetMuxer;
         bool isAppHost = IsAppHostOrSingleFileOrNativeAot;
         bool isMonoMuxer = IsCurrentTestApplicationHostMonoMuxer;
@@ -101,6 +117,6 @@ internal sealed class CurrentTestApplicationModuleInfo(IEnvironment environment,
             _ => commandLineArguments,
         };
 
-        return new(GetProcessPath(), arguments, Path.GetDirectoryName(currentTestApplicationFullPath)!);
+        return new(GetProcessPath(), arguments, GetCurrentTestApplicationDirectory());
     }
 }
