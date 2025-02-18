@@ -1,7 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if NETFRAMEWORK
 using System.Runtime.Serialization.Formatters.Binary;
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -10,7 +9,8 @@ using TestFramework.ForTestingMSTest;
 
 namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.Attributes;
 
-public class BinaryFormatterExceptionSerializationTests : TestContainer
+[Obsolete]
+public sealed class BinaryFormatterExceptionSerializationTests : TestContainer
 {
     public void AssertFailedExceptionCanBeSerializedAndDeserialized()
         => VerifySerialization(Assert.Fail);
@@ -18,7 +18,6 @@ public class BinaryFormatterExceptionSerializationTests : TestContainer
     public void AssertInconclusiveExceptionCanBeSerializedAndDeserialized()
         => VerifySerialization(Assert.Inconclusive);
 
-    [Obsolete]
     public void InternalTestFailureExceptionCanBeSerializedAndDeserialized()
         => VerifySerialization(() => throw new InternalTestFailureException("Some internal error."));
 
@@ -43,4 +42,3 @@ public class BinaryFormatterExceptionSerializationTests : TestContainer
         throw new InvalidOperationException($"The provided '{nameof(actionThatThrows)}' did not throw any exception.");
     }
 }
-#endif
