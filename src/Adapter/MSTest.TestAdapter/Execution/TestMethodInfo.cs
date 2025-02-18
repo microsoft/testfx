@@ -52,9 +52,9 @@ public class TestMethodInfo : ITestMethod
         Executor = GetTestMethodAttribute();
     }
 
-    internal TimeoutInfo TimeoutInfo { get; }
+    internal TimeoutInfo TimeoutInfo { get; /*For testing only*/set; }
 
-    internal TestMethodAttribute Executor { get; }
+    internal TestMethodAttribute Executor { get; /*For testing only*/set; }
 
     internal ITestContext TestContext { get; }
 

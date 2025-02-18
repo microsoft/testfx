@@ -6,6 +6,7 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -42,7 +43,7 @@ public class TestMethodRunnerTests : TestContainer
         _testContextImplementation = new TestContextImplementation(_testMethod, new ThreadSafeStringWriter(null!, "test"), new Dictionary<string, object?>());
         _testClassInfo = GetTestClassInfo<DummyTestClass>();
 
-        _testMethodOptions = new TestMethodOptions(TimeoutInfo.FromTimeout(200), _testContextImplementation, false, _testMethodAttribute);
+        _testMethodOptions = new TestMethodOptions(TimeoutInfo.FromTimeout(200), _testContextImplementation, _testMethodAttribute);
 
         // Reset test hooks
         DummyTestClass.TestConstructorMethodBody = () => { };
@@ -159,7 +160,7 @@ public class TestMethodRunnerTests : TestContainer
             new TestResult { Outcome = UTF.UnitTestOutcome.Failed },
         ]);
 
-        var localTestMethodOptions = new TestMethodOptions(TimeoutInfo.FromTimeout(200), _testContextImplementation, false, testMethodAttributeMock.Object);
+        var localTestMethodOptions = new TestMethodOptions(TimeoutInfo.FromTimeout(200), _testContextImplementation, testMethodAttributeMock.Object);
 
         var testMethodInfo = new TestableTestMethodInfo(_methodInfo, _testClassInfo, localTestMethodOptions, null!);
         var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation);
@@ -437,12 +438,33 @@ public class TestMethodRunnerTests : TestContainer
         => throw new ArgumentException();
 #pragma warning restore CA2208 // Instantiate argument exceptions correctly
 
-    public class TestableTestMethodInfo : TestMethodInfo
+    private sealed class TestMethodOptions
+    {
+        public TimeoutInfo TimeoutInfo { get; }
+
+        public ITestContext TestContext { get; }
+
+        public TestMethodAttribute TestMethodAttribute { get; }
+
+        public TestMethodOptions(TimeoutInfo timeoutInfo, ITestContext testContextImplementation, TestMethodAttribute testMethodAttribute)
+        {
+            TimeoutInfo = timeoutInfo;
+            TestContext = testContextImplementation;
+            TestMethodAttribute = testMethodAttribute;
+        }
+    }
+
+    private class TestableTestMethodInfo : TestMethodInfo
     {
         private readonly Func<TestResult> _invokeTest;
 
         internal TestableTestMethodInfo(MethodInfo testMethod, TestClassInfo parent, TestMethodOptions testMethodOptions, Func<UTF.TestResult> invoke)
-            : base(testMethod, parent, testMethodOptions) => _invokeTest = invoke;
+            : base(testMethod, parent, testMethodOptions.TestContext)
+        {
+            TimeoutInfo = testMethodOptions.TimeoutInfo;
+            Executor = testMethodOptions.TestMethodAttribute;
+            _invokeTest = invoke;
+        }
 
         public override TestResult Invoke(object?[]? arguments) =>
             // Ignore args for now
