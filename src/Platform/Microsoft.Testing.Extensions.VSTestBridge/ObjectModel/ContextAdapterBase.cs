@@ -85,7 +85,6 @@ internal abstract class ContextAdapterBase
         }
 
         var filterBuilder = new StringBuilder();
-        Debugger.Launch();
 
         AppendFilter(filterFromRunsettings, filterBuilder);
         AppendFilter(filterFromCommandLineOption, filterBuilder);
