@@ -6,6 +6,7 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -42,7 +43,7 @@ public class TestMethodRunnerTests : TestContainer
         _testContextImplementation = new TestContextImplementation(_testMethod, new ThreadSafeStringWriter(null!, "test"), new Dictionary<string, object?>());
         _testClassInfo = GetTestClassInfo<DummyTestClass>();
 
-        _testMethodOptions = new TestMethodOptions(TimeoutInfo.FromTimeout(200), _testContextImplementation, false, _testMethodAttribute);
+        _testMethodOptions = new TestMethodOptions(TimeoutInfo.FromTimeout(200), _testContextImplementation, _testMethodAttribute);
 
         // Reset test hooks
         DummyTestClass.TestConstructorMethodBody = () => { };
@@ -159,7 +160,7 @@ public class TestMethodRunnerTests : TestContainer
             new TestResult { Outcome = UTF.UnitTestOutcome.Failed },
         ]);
 
-        var localTestMethodOptions = new TestMethodOptions(TimeoutInfo.FromTimeout(200), _testContextImplementation, false, testMethodAttributeMock.Object);
+        var localTestMethodOptions = new TestMethodOptions(TimeoutInfo.FromTimeout(200), _testContextImplementation, testMethodAttributeMock.Object);
 
         var testMethodInfo = new TestableTestMethodInfo(_methodInfo, _testClassInfo, localTestMethodOptions, null!);
         var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation);
@@ -213,18 +214,17 @@ public class TestMethodRunnerTests : TestContainer
 
     public void RunTestMethodShouldRunDataDrivenTestsWhenDataIsProvidedUsingDataSourceAttribute()
     {
-        var testMethodInfo = new TestableTestMethodInfo(_methodInfo, _testClassInfo, _testMethodOptions, () => new TestResult() { Outcome = UTF.UnitTestOutcome.Passed });
-        var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation);
-
         DataSourceAttribute dataSourceAttribute = new("DummyConnectionString", "DummyTableName");
 
         var attributes = new Attribute[] { dataSourceAttribute };
 
-        TestDataSource testDataSource = new();
-
         // Setup mocks
         _testablePlatformServiceProvider.MockReflectionOperations.Setup(rf => rf.GetCustomAttributes(_methodInfo, It.IsAny<bool>())).Returns(attributes);
+
+        var testMethodInfo = new TestableTestMethodInfo(_methodInfo, _testClassInfo, _testMethodOptions, () => new TestResult() { Outcome = UTF.UnitTestOutcome.Passed });
         _testablePlatformServiceProvider.MockTestDataSource.Setup(tds => tds.GetData(testMethodInfo, _testContextImplementation)).Returns([1, 2, 3]);
+
+        var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation);
 
         TestResult[] results = testMethodRunner.RunTestMethod();
 
@@ -261,15 +261,15 @@ public class TestMethodRunnerTests : TestContainer
 
     public void RunTestMethodShouldSetDataRowIndexForDataDrivenTestsWhenDataIsProvidedUsingDataSourceAttribute()
     {
-        var testMethodInfo = new TestableTestMethodInfo(_methodInfo, _testClassInfo, _testMethodOptions, () => new UTF.TestResult());
-        var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation);
-
-        DataSourceAttribute dataSourceAttribute = new("DummyConnectionString", "DummyTableName");
-
-        var attributes = new Attribute[] { dataSourceAttribute };
+        MethodInfo methodInfo = typeof(DummyTestClass).GetMethods().Single(m => m.Name.Equals(nameof(DummyTestClass.DummyDataSourceTestMethod), StringComparison.Ordinal));
+        object[] attributes = methodInfo.GetCustomAttributes(inherit: false);
 
         // Setup mocks
-        _testablePlatformServiceProvider.MockReflectionOperations.Setup(rf => rf.GetCustomAttributes(_methodInfo, It.IsAny<bool>())).Returns(attributes);
+        _testablePlatformServiceProvider.MockReflectionOperations.Setup(rf => rf.GetCustomAttributes(methodInfo, It.IsAny<bool>())).Returns(attributes);
+
+        var testMethodInfo = new TestableTestMethodInfo(methodInfo, _testClassInfo, _testMethodOptions, () => new UTF.TestResult());
+        var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation);
+
         _testablePlatformServiceProvider.MockTestDataSource.Setup(tds => tds.GetData(testMethodInfo, _testContextImplementation)).Returns([1, 2, 3]);
 
         TestResult[] results = testMethodRunner.RunTestMethod();
@@ -282,9 +282,6 @@ public class TestMethodRunnerTests : TestContainer
 
     public void RunTestMethodShouldRunOnlyDataSourceTestsWhenBothDataSourceAndDataRowAreProvided()
     {
-        var testMethodInfo = new TestableTestMethodInfo(_methodInfo, _testClassInfo, _testMethodOptions, () => new UTF.TestResult());
-        var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation);
-
         DataSourceAttribute dataSourceAttribute = new("DummyConnectionString", "DummyTableName");
         int dummyIntData = 2;
         string dummyStringData = "DummyString";
@@ -296,6 +293,10 @@ public class TestMethodRunnerTests : TestContainer
 
         // Setup mocks
         _testablePlatformServiceProvider.MockReflectionOperations.Setup(rf => rf.GetCustomAttributes(_methodInfo, It.IsAny<bool>())).Returns(attributes);
+
+        var testMethodInfo = new TestableTestMethodInfo(_methodInfo, _testClassInfo, _testMethodOptions, () => new UTF.TestResult());
+        var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation);
+
         _testablePlatformServiceProvider.MockTestDataSource.Setup(tds => tds.GetData(testMethodInfo, _testContextImplementation)).Returns([1, 2, 3]);
 
         TestResult[] results = testMethodRunner.RunTestMethod();
@@ -309,8 +310,6 @@ public class TestMethodRunnerTests : TestContainer
     public void RunTestMethodShouldFillInDisplayNameWithDataRowDisplayNameIfProvidedForDataDrivenTests()
     {
         TestResult testResult = new();
-        var testMethodInfo = new TestableTestMethodInfo(_methodInfo, _testClassInfo, _testMethodOptions, () => testResult);
-        var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation);
 
         int dummyIntData = 2;
         string dummyStringData = "DummyString";
@@ -324,6 +323,9 @@ public class TestMethodRunnerTests : TestContainer
         // Setup mocks
         _testablePlatformServiceProvider.MockReflectionOperations.Setup(ro => ro.GetCustomAttributes(_methodInfo, It.IsAny<bool>())).Returns(attributes);
 
+        var testMethodInfo = new TestableTestMethodInfo(_methodInfo, _testClassInfo, _testMethodOptions, () => testResult);
+        var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation);
+
         TestResult[] results = testMethodRunner.RunTestMethod();
 
         Verify(results.Length == 1);
@@ -333,8 +335,6 @@ public class TestMethodRunnerTests : TestContainer
     public void RunTestMethodShouldFillInDisplayNameWithDataRowArgumentsIfNoDisplayNameIsProvidedForDataDrivenTests()
     {
         TestResult testResult = new();
-        var testMethodInfo = new TestableTestMethodInfo(_methodInfo, _testClassInfo, _testMethodOptions, () => testResult);
-        var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation);
 
         int dummyIntData = 2;
         string dummyStringData = "DummyString";
@@ -346,6 +346,9 @@ public class TestMethodRunnerTests : TestContainer
 
         // Setup mocks
         _testablePlatformServiceProvider.MockReflectionOperations.Setup(rf => rf.GetCustomAttributes(_methodInfo, It.IsAny<bool>())).Returns(attributes);
+
+        var testMethodInfo = new TestableTestMethodInfo(_methodInfo, _testClassInfo, _testMethodOptions, () => testResult);
+        var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation);
 
         TestResult[] results = testMethodRunner.RunTestMethod();
 
@@ -360,9 +363,6 @@ public class TestMethodRunnerTests : TestContainer
             ResultFiles = new List<string>() { "C:\\temp.txt" },
         };
 
-        var testMethodInfo = new TestableTestMethodInfo(_methodInfo, _testClassInfo, _testMethodOptions, () => testResult);
-        var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation);
-
         int dummyIntData1 = 1;
         int dummyIntData2 = 2;
         DataRowAttribute dataRowAttribute1 = new(dummyIntData1);
@@ -372,6 +372,9 @@ public class TestMethodRunnerTests : TestContainer
 
         // Setup mocks
         _testablePlatformServiceProvider.MockReflectionOperations.Setup(rf => rf.GetCustomAttributes(_methodInfo, It.IsAny<bool>())).Returns(attributes);
+
+        var testMethodInfo = new TestableTestMethodInfo(_methodInfo, _testClassInfo, _testMethodOptions, () => testResult);
+        var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation);
 
         TestResult[] results = testMethodRunner.RunTestMethod();
         Verify(results[0].ResultFiles!.Contains("C:\\temp.txt"));
@@ -437,12 +440,33 @@ public class TestMethodRunnerTests : TestContainer
         => throw new ArgumentException();
 #pragma warning restore CA2208 // Instantiate argument exceptions correctly
 
-    public class TestableTestMethodInfo : TestMethodInfo
+    private sealed class TestMethodOptions
+    {
+        public TimeoutInfo TimeoutInfo { get; }
+
+        public ITestContext TestContext { get; }
+
+        public TestMethodAttribute TestMethodAttribute { get; }
+
+        public TestMethodOptions(TimeoutInfo timeoutInfo, ITestContext testContextImplementation, TestMethodAttribute testMethodAttribute)
+        {
+            TimeoutInfo = timeoutInfo;
+            TestContext = testContextImplementation;
+            TestMethodAttribute = testMethodAttribute;
+        }
+    }
+
+    private class TestableTestMethodInfo : TestMethodInfo
     {
         private readonly Func<TestResult> _invokeTest;
 
         internal TestableTestMethodInfo(MethodInfo testMethod, TestClassInfo parent, TestMethodOptions testMethodOptions, Func<UTF.TestResult> invoke)
-            : base(testMethod, parent, testMethodOptions) => _invokeTest = invoke;
+            : base(testMethod, parent, testMethodOptions.TestContext)
+        {
+            TimeoutInfo = testMethodOptions.TimeoutInfo;
+            Executor = testMethodOptions.TestMethodAttribute;
+            _invokeTest = invoke;
+        }
 
         public override TestResult Invoke(object?[]? arguments) =>
             // Ignore args for now
@@ -492,6 +516,9 @@ public class TestMethodRunnerTests : TestContainer
         public void DummyTestCleanupMethod() => TestCleanupMethodBody(this);
 
         public void DummyTestMethod() => TestMethodBody(this);
+
+        [DataSource("DummyConnectionString", "DummyTableName")]
+        public void DummyDataSourceTestMethod() => TestMethodBody(this);
 
         public Task DummyAsyncTestMethod() =>
             // We use this method to validate async TestInitialize, TestCleanup, TestMethod
