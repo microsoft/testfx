@@ -211,10 +211,11 @@ internal sealed class UnitTestRunner : MarshalByRefObject
                 }
             }
 
+            ITestContext testContextForClassCleanup = PlatformServiceProvider.Instance.GetTestContext(testMethod, writer, properties, messageLogger, testContextForTestExecution.Context.CurrentTestOutcome);
+            testMethodInfo?.Parent.RunClassCleanup(testContextForClassCleanup, _classCleanupManager, testMethodInfo, testMethod, result);
+
             if (testMethodInfo?.Parent.Parent.IsAssemblyInitializeExecuted == true)
             {
-                ITestContext testContextForClassCleanup = PlatformServiceProvider.Instance.GetTestContext(testMethod, writer, properties, messageLogger, testContextForTestExecution.Context.CurrentTestOutcome);
-                testMethodInfo.Parent.RunClassCleanup(testContextForClassCleanup, _classCleanupManager, testMethodInfo, testMethod, result);
                 ITestContext testContextForAssemblyCleanup = PlatformServiceProvider.Instance.GetTestContext(testMethod, writer, properties, messageLogger, testContextForClassCleanup.Context.CurrentTestOutcome);
                 RunAssemblyCleanupIfNeeded(testContextForAssemblyCleanup, _classCleanupManager, _typeCache, result);
             }
