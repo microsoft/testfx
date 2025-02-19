@@ -508,10 +508,11 @@ public class TestMethodInfoTests : TestContainer
         Verify(exception.Outcome == UTF.UnitTestOutcome.Failed);
         Verify(exception.InnerException!.GetType() == typeof(ArgumentException));
         Verify(exception.InnerException.InnerException!.GetType() == typeof(InvalidOperationException));
-
+#if DEBUG
         Verify(
-            exception.StackTraceInformation!.ErrorStackTrace.StartsWith(
-            "    at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<TestMethodInfoInvokeWhenTestThrowsReturnsExpectedResult>b__", StringComparison.Ordinal));
+    exception.StackTraceInformation!.ErrorStackTrace.StartsWith(
+    "    at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<TestMethodInfoInvokeWhenTestThrowsReturnsExpectedResult>b__", StringComparison.Ordinal)); 
+#endif
     }
 
     public void TestInitialize_WhenTestReturnsTaskFromException_DisplayProperException()
@@ -568,10 +569,11 @@ public class TestMethodInfoTests : TestContainer
         Verify(errorMessage == exception.Message);
         Verify(exception.Outcome == UTF.UnitTestOutcome.Failed);
         Verify(exception.InnerException!.GetType() == typeof(UTF.AssertFailedException));
-
+#if DEBUG
         Verify(
-            exception.StackTraceInformation!.ErrorStackTrace.StartsWith(
-            "   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<TestMethodInfoInvokeWhenTestThrowsAssertFailReturnsExpectedResult>b__", StringComparison.Ordinal));
+    exception.StackTraceInformation!.ErrorStackTrace.StartsWith(
+    "   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<TestMethodInfoInvokeWhenTestThrowsAssertFailReturnsExpectedResult>b__", StringComparison.Ordinal)); 
+#endif
     }
 
     public void TestMethodInfoInvokeWhenTestThrowsAssertInconclusiveReturnsExpectedResult()
@@ -599,10 +601,11 @@ public class TestMethodInfoTests : TestContainer
         Verify(errorMessage == exception.Message);
         Verify(exception.Outcome == UTF.UnitTestOutcome.Inconclusive);
         Verify(exception.InnerException!.GetType() == typeof(UTF.AssertInconclusiveException));
-
+#if DEBUG
         Verify(
             exception.StackTraceInformation!.ErrorStackTrace.StartsWith(
-            "   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<TestMethodInfoInvokeWhenTestThrowsAssertInconclusiveReturnsExpectedResult>b__", StringComparison.Ordinal));
+            "   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<TestMethodInfoInvokeWhenTestThrowsAssertInconclusiveReturnsExpectedResult>b__", StringComparison.Ordinal)); 
+#endif
     }
 
     #endregion
@@ -745,9 +748,11 @@ public class TestMethodInfoTests : TestContainer
         Verify(exception.InnerException!.GetType() == typeof(ArgumentException));
         Verify(exception.InnerException.InnerException!.GetType() == typeof(InvalidOperationException));
 
+#if DEBUG
         Verify(
             exception.StackTraceInformation!.ErrorStackTrace.StartsWith(
             "   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<TestMethodInfoInvokeWhenTestCleanupThrowsReturnsExpectedResult>b__", StringComparison.Ordinal));
+#endif
     }
 
     public void TestMethodInfoInvokeWhenTestCleanupThrowsAssertInconclusiveReturnsExpectedResult()
@@ -771,10 +776,11 @@ public class TestMethodInfoTests : TestContainer
         Verify(exception.Outcome == UTF.UnitTestOutcome.Inconclusive);
         Verify(expectedErrorMessage == exception.Message);
         Verify(exception.InnerException!.GetType() == typeof(UTF.AssertInconclusiveException));
-
+#if DEBUG
         Verify(
-            exception.StackTraceInformation!.ErrorStackTrace.StartsWith(
-            "   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<TestMethodInfoInvokeWhenTestCleanupThrowsAssertInconclusiveReturnsExpectedResult>b__", StringComparison.Ordinal));
+    exception.StackTraceInformation!.ErrorStackTrace.StartsWith(
+    "   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<TestMethodInfoInvokeWhenTestCleanupThrowsAssertInconclusiveReturnsExpectedResult>b__", StringComparison.Ordinal));
+#endif
     }
 
     public void TestMethodInfoInvokeWhenTestCleanupThrowsAssertFailedReturnsExpectedResult()
@@ -798,10 +804,11 @@ public class TestMethodInfoTests : TestContainer
         Verify(exception.Outcome == UTF.UnitTestOutcome.Failed);
         Verify(expectedErrorMessage == exception.Message);
         Verify(exception.InnerException!.GetType() == typeof(UTF.AssertFailedException));
-
+#if DEBUG
         Verify(
             exception.StackTraceInformation!.ErrorStackTrace.StartsWith(
             "   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<TestMethodInfoInvokeWhenTestCleanupThrowsAssertFailedReturnsExpectedResult>b__", StringComparison.Ordinal));
+#endif
     }
 
     public void TestMethodInfoInvokeShouldAppendErrorMessagesIfBothTestMethodAndTestCleanupThrows()
@@ -841,9 +848,11 @@ public class TestMethodInfoTests : TestContainer
 
         Verify(result.Outcome == UTF.UnitTestOutcome.Failed);
         Verify(exception is not null);
+#if DEBUG
         Verify(exception.StackTraceInformation!.ErrorStackTrace.Contains("Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.DummyTestClass.DummyTestMethod()"));
         Verify(exception.StackTraceInformation.ErrorStackTrace.Contains(Resource.UTA_CleanupStackTrace));
         Verify(exception.StackTraceInformation.ErrorStackTrace.Contains("Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.DummyTestClass.DummyTestCleanupMethod()"));
+#endif
     }
 
     public void TestMethodInfoInvokeShouldSetOutcomeAsInconclusiveIfTestCleanupIsInconclusive()

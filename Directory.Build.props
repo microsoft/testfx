@@ -13,6 +13,7 @@
     <LangVersion>preview</LangVersion>
     <ImplicitUsings>enable</ImplicitUsings>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <!-- The TFMs to build and test against. -->
@@ -56,6 +57,12 @@
   <!-- Sign config -->
   <PropertyGroup>
     <StrongNameKeyId>Microsoft</StrongNameKeyId>
+  </PropertyGroup>
+
+  <!-- Test config -->
+  <PropertyGroup>
+    <!-- Needs to be setup globally so that arcade doesn't bring xUnit to playground and other test projects -->
+    <TestRunnerName>TestingPlatformRunner</TestRunnerName>
   </PropertyGroup>
 
   <!-- Polyfill config -->

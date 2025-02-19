@@ -8,7 +8,6 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using Moq;
 
@@ -866,6 +865,7 @@ public class TypeCacheTests : TestContainer
         _mockReflectHelper.Setup(rh => rh.IsNonDerivedAttributeDefined<TimeoutAttribute>(methodInfo, false))
             .Returns(true);
         _mockReflectHelper.Setup(rh => rh.GetFirstDerivedAttributeOrDefault<TestMethodAttribute>(It.IsAny<MethodInfo>(), false)).CallBase();
+        _mockReflectHelper.Setup(rh => rh.GetFirstNonDerivedAttributeOrDefault<TimeoutAttribute>(methodInfo, false)).CallBase();
         TestMethodInfo? testMethodInfo = _typeCache.GetTestMethodInfo(
                 testMethod,
                 new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null!, "test"), new Dictionary<string, object?>()),
@@ -885,6 +885,8 @@ public class TypeCacheTests : TestContainer
 
         _mockReflectHelper.Setup(rh => rh.IsNonDerivedAttributeDefined<TimeoutAttribute>(methodInfo, false))
             .Returns(true);
+        _mockReflectHelper.Setup(ReflectHelper => ReflectHelper.GetFirstNonDerivedAttributeOrDefault<TimeoutAttribute>(methodInfo, false))
+            .CallBase();
 
         void A() => _typeCache.GetTestMethodInfo(
                 testMethod,
@@ -911,6 +913,8 @@ public class TypeCacheTests : TestContainer
 
         _mockReflectHelper.Setup(rh => rh.IsNonDerivedAttributeDefined<TimeoutAttribute>(methodInfo, false))
             .Returns(true);
+        _mockReflectHelper.Setup(ReflectHelper => ReflectHelper.GetFirstNonDerivedAttributeOrDefault<TimeoutAttribute>(methodInfo, false))
+            .CallBase();
 
         void A() => _typeCache.GetTestMethodInfo(
                 testMethod,
@@ -973,6 +977,8 @@ public class TypeCacheTests : TestContainer
 
         _mockReflectHelper.Setup(rh => rh.IsNonDerivedAttributeDefined<TimeoutAttribute>(methodInfo, false))
            .Returns(true);
+        _mockReflectHelper.Setup(ReflectHelper => ReflectHelper.GetFirstNonDerivedAttributeOrDefault<TimeoutAttribute>(methodInfo, false))
+            .CallBase();
 
         TestMethodInfo? testMethodInfo = _typeCache.GetTestMethodInfo(
                 testMethod,

@@ -2,7 +2,7 @@
   "profiles": {
     "MSTest.Engine.UnitTests": {
       "commandName": "Project",
-      "commandLineArgs": "--treenode-filter /*/*/*/**",
+      "commandLineArgs": "",
       "environmentVariables": {
         //"TESTINGPLATFORM_HOTRELOAD_ENABLED": "1"
       }

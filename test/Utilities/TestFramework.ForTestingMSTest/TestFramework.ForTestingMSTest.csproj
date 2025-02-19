@@ -1,20 +1,18 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFrameworks>netstandard2.0;$(MicrosoftTestingTargetFrameworks)</TargetFrameworks>
     <Nullable>enable</Nullable>
-    <!-- Assembly name must end with TestAdapter to be picked up by Test Platform -->
-    <AssemblyName>TestFramework.ForTestingMSTest.TestAdapter</AssemblyName>
-    <RootNamespace>TestFramework.ForTestingMSTest</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.TestPlatform.ObjectModel" />
-    <PackageReference Include="Polyfill" PrivateAssets="all" />
+    <InternalsVisibleTo Include="MSTest.IntegrationTests" />
   </ItemGroup>
 
   <ItemGroup>
-    <InternalsVisibleTo Include="MSTest.IntegrationTests" />
+    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Microsoft.Testing.Platform.csproj" />
+    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.TrxReport.Abstractions\Microsoft.Testing.Extensions.TrxReport.Abstractions.csproj" />
+    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform.MSBuild\Microsoft.Testing.Platform.MSBuild.csproj" />
   </ItemGroup>
 
 </Project>

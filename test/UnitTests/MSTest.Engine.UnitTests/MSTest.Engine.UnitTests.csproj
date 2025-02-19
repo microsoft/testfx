@@ -1,13 +1,12 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>$(TargetFrameworks);net462</TargetFrameworks>
-    <OutputType>Exe</OutputType>
+    <TargetFrameworks>$(MicrosoftTestingTargetFrameworks);net462</TargetFrameworks>
+    <RootNamespace>Microsoft.Testing.Framework.UnitTests</RootNamespace>
     <NoMoq>true</NoMoq>
     <NoFluentAssertions>true</NoFluentAssertions>
-    <UseVSTestRunner>false</UseVSTestRunner>
     <EnableMSTestRunner>true</EnableMSTestRunner>
-    <RootNamespace>Microsoft.Testing.Framework.UnitTests</RootNamespace>
+    <OutputType>Exe</OutputType>
   </PropertyGroup>
 
   <ItemGroup>

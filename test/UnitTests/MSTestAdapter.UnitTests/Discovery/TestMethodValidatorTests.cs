@@ -56,6 +56,10 @@ public class TestMethodValidatorTests : TestContainer
     {
         SetupTestMethod();
 
+        _mockReflectHelper
+            .Setup(x => x.GetFirstNonDerivedAttributeOrDefault<AsyncStateMachineAttribute>(_mockMethodInfo.Object, false))
+            .Returns(default(AsyncStateMachineAttribute?));
+
         _mockMethodInfo.Setup(mi => mi.IsGenericMethodDefinition).Returns(true);
         _mockMethodInfo.Setup(mi => mi.DeclaringType!.FullName).Returns("DummyTestClass");
         _mockMethodInfo.Setup(mi => mi.Name).Returns("DummyTestMethod");
@@ -110,6 +114,8 @@ public class TestMethodValidatorTests : TestContainer
         MethodInfo methodInfo = typeof(DummyTestClass).GetMethod(
             "AsyncMethodWithVoidReturnType",
             BindingFlags.Instance | BindingFlags.Public)!;
+        _mockReflectHelper.Setup(_mockReflectHelper => _mockReflectHelper.GetFirstNonDerivedAttributeOrDefault<AsyncStateMachineAttribute>(methodInfo, false))
+            .CallBase();
 
         Verify(!_testMethodValidator.IsValidTestMethod(methodInfo, typeof(DummyTestClass), _warnings));
     }
@@ -182,7 +188,8 @@ public class TestMethodValidatorTests : TestContainer
 
     #endregion
 
-    private void SetupTestMethod() => _mockReflectHelper.Setup(
+    private void SetupTestMethod()
+        => _mockReflectHelper.Setup(
             rh => rh.IsDerivedAttributeDefined<UTF.TestMethodAttribute>(It.IsAny<MemberInfo>(), false)).Returns(true);
 }
 

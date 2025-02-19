@@ -112,7 +112,7 @@ public class MSTestDiscovererTests : TestContainer
 
     public void DiscoverTestsShouldNotThrowIfDiscoveryContextIsNull()
     {
-        string source = Assembly.GetExecutingAssembly().Location;
+        string source = GetCurrentAssembly();
 
         _testablePlatformServiceProvider.MockTestSourceValidator.Setup(tsv => tsv.ValidSourceExtensions)
             .Returns(new List<string> { ".dll" });
@@ -127,7 +127,7 @@ public class MSTestDiscovererTests : TestContainer
 
     public void DiscoverTestsShouldDiscoverTests()
     {
-        string source = Assembly.GetExecutingAssembly().Location;
+        string source = GetCurrentAssembly();
 
         // Setup mocks.
         _testablePlatformServiceProvider.MockTestSourceValidator.Setup(tsv => tsv.ValidSourceExtensions)
@@ -152,6 +152,9 @@ public class MSTestDiscovererTests : TestContainer
         _mockTestCaseDiscoverySink.Verify(ds => ds.SendTestCase(It.IsAny<TestCase>()), Times.AtLeastOnce);
     }
 
+    private static string GetCurrentAssembly()
+        => Assembly.GetExecutingAssembly().Location.Replace(".exe", ".dll");
+
     public void DiscoveryShouldNotHappenIfTestSettingsIsGiven()
     {
         string runSettingsXml =
@@ -168,7 +171,7 @@ public class MSTestDiscovererTests : TestContainer
         _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
         _testablePlatformServiceProvider.MockTestSourceValidator.SetupGet(ts => ts.ValidSourceExtensions).Returns(new List<string> { ".dll" });
 
-        string source = Assembly.GetExecutingAssembly().Location;
+        string source = GetCurrentAssembly();
         _discoverer.DiscoverTests(new List<string> { source }, _mockDiscoveryContext.Object, _mockMessageLogger.Object, _mockTestCaseDiscoverySink.Object);
 
         // Assert.
@@ -191,7 +194,7 @@ public class MSTestDiscovererTests : TestContainer
         _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
         _testablePlatformServiceProvider.MockTestSourceValidator.SetupGet(ts => ts.ValidSourceExtensions).Returns(new List<string> { ".dll" });
 
-        string source = Assembly.GetExecutingAssembly().Location;
+        string source = GetCurrentAssembly();
         _discoverer.DiscoverTests(new List<string> { source }, _mockDiscoveryContext.Object, _mockMessageLogger.Object, _mockTestCaseDiscoverySink.Object);
 
         // Assert.

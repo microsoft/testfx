@@ -4,7 +4,6 @@
 using FluentAssertions;
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using SampleFrameworkExtensions;
 
