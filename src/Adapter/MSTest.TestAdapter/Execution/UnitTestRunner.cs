@@ -153,8 +153,7 @@ internal sealed class UnitTestRunner : MarshalByRefObject
             // Get the testMethod
             TestMethodInfo? testMethodInfo = _typeCache.GetTestMethodInfo(
                 testMethod,
-                testContextForTestExecution,
-                MSTestSettings.CurrentSettings.CaptureDebugTraces);
+                testContextForTestExecution);
 
             TestResult[] result;
             if (!IsTestMethodRunnable(testMethod, testMethodInfo, out TestResult[]? notRunnableResult))
