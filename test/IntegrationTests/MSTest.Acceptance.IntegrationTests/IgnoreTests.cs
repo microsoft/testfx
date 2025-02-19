@@ -193,6 +193,7 @@ public class SubClass : IntermediateClass
     public static void SubClassCleanup()
         => Console.WriteLine("SubClass.ClassCleanup");
 
+    // Ignore the first test on purpose, see https://github.com/microsoft/testfx/issues/5062
     [TestMethod]
     [Ignore]
     public void IgnoredMethod()
