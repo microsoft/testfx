@@ -5,6 +5,7 @@ namespace Microsoft.Testing.Platform.MSBuild;
 
 internal static class NamespaceHelpers
 {
+    // https://github.com/dotnet/templating/blob/b0b1283f8c96be35f1b65d4b0c1ec0534d86fc2f/src/Microsoft.TemplateEngine.Orchestrator.RunnableProjects/ValueForms/DefaultSafeNamespaceValueFormFactory.cs#L17-L59
     internal static string ToSafeNamespace(string value)
     {
         const char invalidCharacterReplacement = '_';
