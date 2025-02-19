@@ -19,6 +19,7 @@ namespace Microsoft.Testing.Platform.OutputDevice;
 /// <summary>
 /// Implementation of output device that writes to terminal with progress and optionally with ANSI.
 /// </summary>
+[UnsupportedOSPlatform("browser")]
 internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDevice,
     IDataConsumer,
     IOutputDeviceDataProducer,

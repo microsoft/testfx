@@ -9,6 +9,7 @@ namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 /// <summary>
 /// Terminal test reporter that outputs test progress and is capable of writing ANSI or non-ANSI output via the given terminal.
 /// </summary>
+[UnsupportedOSPlatform("browser")]
 internal sealed partial class TerminalTestReporter : IDisposable
 {
     /// <summary>
