@@ -4,8 +4,6 @@
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
 
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-
 using TestFramework.ForTestingMSTest;
 
 namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.Attributes;
