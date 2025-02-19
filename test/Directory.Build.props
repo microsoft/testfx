@@ -3,13 +3,11 @@
 
   <Import Project="../Directory.Build.props" />
 
-  <PropertyGroup>
-    <TestRunnerName>TestingPlatformRunner</TestRunnerName>
-  </PropertyGroup>
-
   <!-- Build & pack tests -->
   <PropertyGroup>
     <IsPackable>false</IsPackable>
+    <!-- Prevent arcade from adding Microsoft.NET.Test.Sdk -->
+    <ExcludeMicrosoftNetTestSdk>true</ExcludeMicrosoftNetTestSdk>
     <PublishAot Condition=" '$(PublishAot)' == '' ">false</PublishAot>
     <!-- At the moment we don't run single file tests we should do it in integration/isolation -->
     <EnableSingleFileAnalyzer>false</EnableSingleFileAnalyzer>

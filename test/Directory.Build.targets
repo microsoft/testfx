@@ -56,4 +56,16 @@
     </None>
   </ItemGroup>
 
+  <ItemGroup Condition=" '$(UseInternalTestFramework)' == 'true' ">
+    <ProjectReference Include="$(RepoRoot)test\Utilities\TestFramework.ForTestingMSTest\TestFramework.ForTestingMSTest.csproj" />
+  </ItemGroup>
+
+  <ItemGroup Condition=" '$(UseInternalTestFramework)' == 'true' ">
+    <ProjectCapability Include="TestContainer" />
+    <ProjectCapability Include="TestingPlatformServer" />
+  </ItemGroup>
+
+  <Import Project="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\buildMultiTargeting\Microsoft.Testing.Platform.props"
+          Condition=" '$(UseInternalTestFramework)' == 'true' " />
+
 </Project>

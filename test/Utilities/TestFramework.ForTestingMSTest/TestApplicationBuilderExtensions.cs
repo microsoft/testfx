@@ -13,7 +13,7 @@ public static class TestApplicationBuilderExtensions
     {
         TestFrameworkExtension extension = new();
         testApplicationBuilder.RegisterTestFramework(
-            _ => new TestFrameworkCapabilities(),
+            _ => new TestFrameworkCapabilities(new TrxReportCapability()),
             (capabilities, serviceProvider) => new TestFramework(extension, serviceProvider.GetLoggerFactory()));
     }
 }

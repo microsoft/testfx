@@ -79,12 +79,26 @@ internal sealed class TestFrameworkEngine : IDataProducer
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
+                TestNodeUid testNodeUid = $"{testContainerType.FullName}.{publicMethod.Name}";
+                if (request.Filter is TestNodeUidListFilter testNodeUidListFilter
+                    && !testNodeUidListFilter.TestNodeUids.Contains(testNodeUid))
+                {
+                    continue;
+                }
+
                 _logger.LogDebug($"Starting test '{publicMethod.Name}'");
                 TestNode testNode = new()
                 {
-                    Uid = $"{testContainerType.FullName}.{publicMethod.Name}",
+                    Uid = testNodeUid,
                     DisplayName = publicMethod.Name,
                 };
+                testNode.Properties.Add(new TestMethodIdentifierProperty(
+                    assembly.FullName!,
+                    testContainerType.Namespace!,
+                    testContainerType.Name,
+                    publicMethod.Name,
+                    publicMethod.GetParameters().Select(x => x.ParameterType.FullName!).ToArray(),
+                    publicMethod.ReturnType.FullName!));
 
                 TestNode progressNode = CloneTestNode(testNode);
                 progressNode.Properties.Add(InProgressTestNodeStateProperty.CachedInstance);
@@ -152,6 +166,13 @@ internal sealed class TestFrameworkEngine : IDataProducer
                     DisplayName = publicMethod.Name,
                 };
                 testNode.Properties.Add(DiscoveredTestNodeStateProperty.CachedInstance);
+                testNode.Properties.Add(new TestMethodIdentifierProperty(
+                    assembly.FullName!,
+                    testContainerType.Namespace!,
+                    testContainerType.Name,
+                    publicMethod.Name,
+                    publicMethod.GetParameters().Select(x => x.ParameterType.FullName!).ToArray(),
+                    publicMethod.ReturnType.FullName!));
 
                 await messageBus.PublishAsync(this, new TestNodeUpdateMessage(request.Session.SessionUid, testNode));
             }

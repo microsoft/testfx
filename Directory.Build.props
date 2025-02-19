@@ -59,6 +59,12 @@
     <StrongNameKeyId>Microsoft</StrongNameKeyId>
   </PropertyGroup>
 
+  <!-- Test config -->
+  <PropertyGroup>
+    <!-- Needs to be setup globally so that arcade doesn't bring xUnit to playground and other test projects -->
+    <TestRunnerName>TestingPlatformRunner</TestRunnerName>
+  </PropertyGroup>
+
   <!-- Polyfill config -->
   <PropertyGroup>
     <PolyGuard>true</PolyGuard>
