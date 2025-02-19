@@ -10,6 +10,7 @@ using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
 using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Helpers;
+using Microsoft.Testing.Platform.OutputDevice.Terminal;
 using Microsoft.Testing.Platform.Resources;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.TestHost;
@@ -89,7 +90,7 @@ internal sealed partial class BrowserOutputDevice : IPlatformOutputDevice,
         => await _policiesService.RegisterOnAbortCallbackAsync(
             () =>
             {
-                _console.WriteLine(PlatformResources.CancellingTestSession);
+                ConsoleLog(PlatformResources.CancellingTestSession);
                 return Task.CompletedTask;
             });
 
@@ -129,7 +130,7 @@ internal sealed partial class BrowserOutputDevice : IPlatformOutputDevice,
 
                 if (bannerMessage is not null)
                 {
-                    _console.WriteLine(bannerMessage);
+                    ConsoleLog(bannerMessage);
                 }
                 else
                 {
@@ -159,7 +160,7 @@ internal sealed partial class BrowserOutputDevice : IPlatformOutputDevice,
                         stringBuilder.Append(']');
                     }
 
-                    _console.WriteLine(stringBuilder.ToString());
+                    ConsoleLog(stringBuilder.ToString());
                 }
             }
         }
@@ -202,14 +203,23 @@ internal sealed partial class BrowserOutputDevice : IPlatformOutputDevice,
             if (!_firstCallTo_OnSessionStartingAsync)
             {
                 int total = _skippedTests + _passedTests + _failedTests;
-                string totalText = $"Total tests: {total}";
-                string failedText = $"Failed tests: {_failedTests}";
-                string passedText = $"Passed tests: {_passedTests}";
-                string skippedText = $"Skipped tests: {_skippedTests}";
-                ConsoleLog(totalText);
-                ConsoleLog(failedText);
-                ConsoleLog(passedText);
-                ConsoleLog(skippedText);
+                // TODO: Duplicate the logic from TerminalTestReporter.AppendTestRunSummary, or refactor it
+                // so that it's easily shareable between the two implementations.
+                string text = $"""
+                    Total tests: {total}
+                    Failed tests: {_failedTests}
+                    Passed tests: {_passedTests}
+                    Skipped tests: {_skippedTests}
+                    """;
+
+                if (_failedTests > 0)
+                {
+                    ConsoleError(text);
+                }
+                else
+                {
+                    ConsoleLog(text);
+                }
             }
         }
     }
@@ -285,6 +295,31 @@ internal sealed partial class BrowserOutputDevice : IPlatformOutputDevice,
     private void ConsoleLog(string? message) => _console.WriteLine(message);
 #endif
 
+    private void OnFailedTest(TestNodeUpdateMessage testNodeStateChanged, TestNodeStateProperty state, Exception? exception, TimeSpan duration)
+    {
+        _failedTests++;
+        var builder = new StringBuilder();
+        builder.Append("failed ");
+        builder.Append(testNodeStateChanged.TestNode.DisplayName);
+        builder.Append(' ');
+        HumanReadableDurationFormatter.Append(builder, static (builder, s) => builder!.Append(s), duration);
+        if (state.Explanation is not null)
+        {
+            builder.AppendLine();
+            builder.Append("  ");
+            builder.Append(state.Explanation);
+        }
+
+        if (exception is not null)
+        {
+            builder.AppendLine();
+            builder.Append("  ");
+            builder.Append(exception.ToString());
+        }
+
+        ConsoleError(builder.ToString());
+    }
+
     public Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken)
     {
         if (cancellationToken.IsCancellationRequested)
@@ -297,8 +332,6 @@ internal sealed partial class BrowserOutputDevice : IPlatformOutputDevice,
             case TestNodeUpdateMessage testNodeStateChanged:
 
                 TimeSpan duration = testNodeStateChanged.TestNode.Properties.SingleOrDefault<TimingProperty>()?.GlobalTiming.Duration ?? TimeSpan.Zero;
-                string? standardOutput = testNodeStateChanged.TestNode.Properties.SingleOrDefault<StandardOutputProperty>()?.StandardOutput;
-                string? standardError = testNodeStateChanged.TestNode.Properties.SingleOrDefault<StandardErrorProperty>()?.StandardError;
 
                 switch (testNodeStateChanged.TestNode.Properties.SingleOrDefault<TestNodeStateProperty>())
                 {
@@ -306,58 +339,46 @@ internal sealed partial class BrowserOutputDevice : IPlatformOutputDevice,
                         break;
 
                     case ErrorTestNodeStateProperty errorState:
-                        _failedTests++;
-                        ConsoleError($"{nameof(ErrorTestNodeStateProperty)}: {testNodeStateChanged.TestNode.DisplayName}");
-                        ConsoleError(errorState.Explanation);
-                        ConsoleError(errorState.Exception?.ToString());
+                        OnFailedTest(testNodeStateChanged, errorState, errorState.Exception, duration);
                         break;
 
                     case FailedTestNodeStateProperty failedState:
-                        _failedTests++;
-                        ConsoleError($"{nameof(FailedTestNodeStateProperty)}: {testNodeStateChanged.TestNode.DisplayName}");
-                        ConsoleError(failedState.Explanation);
-                        ConsoleError(failedState.Exception?.ToString());
+                        OnFailedTest(testNodeStateChanged, failedState, failedState.Exception, duration);
                         break;
 
                     case TimeoutTestNodeStateProperty timeoutState:
-                        _failedTests++;
-                        ConsoleError($"{nameof(TimeoutTestNodeStateProperty)}: {testNodeStateChanged.TestNode.DisplayName}");
-                        ConsoleError(timeoutState.Explanation);
-                        ConsoleError(timeoutState.Exception?.ToString());
+                        OnFailedTest(testNodeStateChanged, timeoutState, timeoutState.Exception, duration);
                         break;
 
                     case CancelledTestNodeStateProperty cancelledState:
-                        _failedTests++;
-                        ConsoleError($"{nameof(CancelledTestNodeStateProperty)}: {testNodeStateChanged.TestNode.DisplayName}");
-                        ConsoleError(cancelledState.Explanation);
-                        ConsoleError(cancelledState.Exception?.ToString());
+                        OnFailedTest(testNodeStateChanged, cancelledState, cancelledState.Exception, duration);
                         break;
 
                     case PassedTestNodeStateProperty:
                         _passedTests++;
                         break;
 
-                    case SkippedTestNodeStateProperty skippedState:
+                    case SkippedTestNodeStateProperty:
                         _skippedTests++;
                         break;
                 }
 
                 break;
 
-            case TestNodeFileArtifact artifact:
+            case TestNodeFileArtifact:
                 {
                     // TODO
                 }
 
                 break;
 
-            case SessionFileArtifact artifact:
+            case SessionFileArtifact:
                 {
                     // TODO
                 }
 
                 break;
-            case FileArtifact artifact:
+            case FileArtifact:
                 {
                     // TODO
                 }
