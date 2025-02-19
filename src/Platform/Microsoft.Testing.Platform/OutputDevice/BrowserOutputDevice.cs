@@ -121,48 +121,49 @@ internal sealed partial class BrowserOutputDevice : IPlatformOutputDevice,
     {
         using (await _asyncMonitor.LockAsync(TimeoutHelper.DefaultHangTimeSpanTimeout))
         {
-            if (!_bannerDisplayed)
+            if (_bannerDisplayed)
             {
-                // skip the banner for the children processes
-                _environment.SetEnvironmentVariable(TESTINGPLATFORM_CONSOLEOUTPUTDEVICE_SKIP_BANNER, "1");
+                return;
+            }
 
-                _bannerDisplayed = true;
+            // skip the banner for the children processes
+            _environment.SetEnvironmentVariable(TESTINGPLATFORM_CONSOLEOUTPUTDEVICE_SKIP_BANNER, "1");
 
-                if (bannerMessage is not null)
+            _bannerDisplayed = true;
+
+            if (bannerMessage is not null)
+            {
+                ConsoleLog(bannerMessage);
+                return;
+            }
+
+            StringBuilder stringBuilder = new();
+            stringBuilder.Append(_platformInformation.Name);
+
+            if (_platformInformation.Version is { } version)
+            {
+                stringBuilder.Append(CultureInfo.InvariantCulture, $" v{version}");
+                if (_platformInformation.CommitHash is { } commitHash)
                 {
-                    ConsoleLog(bannerMessage);
-                }
-                else
-                {
-                    StringBuilder stringBuilder = new();
-                    stringBuilder.Append(_platformInformation.Name);
-
-                    if (_platformInformation.Version is { } version)
-                    {
-                        stringBuilder.Append(CultureInfo.InvariantCulture, $" v{version}");
-                        if (_platformInformation.CommitHash is { } commitHash)
-                        {
-                            stringBuilder.Append(CultureInfo.InvariantCulture, $"+{commitHash[..10]}");
-                        }
-                    }
-
-                    if (_platformInformation.BuildDate is { } buildDate)
-                    {
-                        stringBuilder.Append(CultureInfo.InvariantCulture, $" (UTC {buildDate.UtcDateTime.ToShortDateString()})");
-                    }
-
-                    if (_runtimeFeature.IsDynamicCodeSupported)
-                    {
-                        stringBuilder.Append(" [");
-                        stringBuilder.Append(_longArchitecture);
-                        stringBuilder.Append(" - ");
-                        stringBuilder.Append(_runtimeFramework);
-                        stringBuilder.Append(']');
-                    }
-
-                    ConsoleLog(stringBuilder.ToString());
+                    stringBuilder.Append(CultureInfo.InvariantCulture, $"+{commitHash[..10]}");
                 }
             }
+
+            if (_platformInformation.BuildDate is { } buildDate)
+            {
+                stringBuilder.Append(CultureInfo.InvariantCulture, $" (UTC {buildDate.UtcDateTime.ToShortDateString()})");
+            }
+
+            if (_runtimeFeature.IsDynamicCodeSupported)
+            {
+                stringBuilder.Append(" [");
+                stringBuilder.Append(_longArchitecture);
+                stringBuilder.Append(" - ");
+                stringBuilder.Append(_runtimeFramework);
+                stringBuilder.Append(']');
+            }
+
+            ConsoleLog(stringBuilder.ToString());
         }
     }
 
@@ -176,22 +177,25 @@ internal sealed partial class BrowserOutputDevice : IPlatformOutputDevice,
     {
         var builder = new StringBuilder();
         builder.Append(assembly);
-        if (targetFramework != null || architecture != null)
+        if (targetFramework == null && architecture == null)
         {
-            builder.Append(" (");
-            if (targetFramework != null)
-            {
-                builder.Append(targetFramework);
-                builder.Append('|');
-            }
-
-            if (architecture != null)
-            {
-                builder.Append(architecture);
-            }
-
-            builder.Append(')');
+            console.WriteLine(builder.ToString());
+            return;
         }
+
+        builder.Append(" (");
+        if (targetFramework != null)
+        {
+            builder.Append(targetFramework);
+            builder.Append('|');
+        }
+
+        if (architecture != null)
+        {
+            builder.Append(architecture);
+        }
+
+        builder.Append(')');
 
         console.WriteLine(builder.ToString());
     }
@@ -200,26 +204,28 @@ internal sealed partial class BrowserOutputDevice : IPlatformOutputDevice,
     {
         using (await _asyncMonitor.LockAsync(TimeoutHelper.DefaultHangTimeSpanTimeout))
         {
-            if (!_firstCallTo_OnSessionStartingAsync)
+            if (_firstCallTo_OnSessionStartingAsync)
             {
-                int total = _skippedTests + _passedTests + _failedTests;
-                // TODO: Duplicate the logic from TerminalTestReporter.AppendTestRunSummary, or refactor it
-                // so that it's easily shareable between the two implementations.
-                string text = $"""
+                return;
+            }
+
+            int total = _skippedTests + _passedTests + _failedTests;
+            // TODO: Duplicate the logic from TerminalTestReporter.AppendTestRunSummary, or refactor it
+            // so that it's easily shareable between the two implementations.
+            string text = $"""
                     Total tests: {total}
                     Failed tests: {_failedTests}
                     Passed tests: {_passedTests}
                     Skipped tests: {_skippedTests}
                     """;
 
-                if (_failedTests > 0)
-                {
-                    ConsoleError(text);
-                }
-                else
-                {
-                    ConsoleLog(text);
-                }
+            if (_failedTests > 0)
+            {
+                ConsoleError(text);
+            }
+            else
+            {
+                ConsoleLog(text);
             }
         }
     }
