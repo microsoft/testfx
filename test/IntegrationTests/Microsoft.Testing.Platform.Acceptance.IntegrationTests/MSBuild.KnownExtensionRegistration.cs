@@ -62,6 +62,8 @@ public class MSBuildTests_KnownExtensionRegistration : AcceptanceTestBase<NopAss
         <OutputType>Exe</OutputType>
         <!-- Do not warn about package downgrade. NuGet uses alphabetical sort as ordering so -dev or -ci are considered downgrades of -preview. -->
         <NoWarn>$(NoWarn);NETSDK1201</NoWarn>
+
+        <RootNamespace>(MSBuild Tests)</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>
