@@ -92,6 +92,11 @@ public sealed class TestingPlatformEntryPointTask : Build.Utilities.Task
 
     private static string GetEntryPointSourceCode(string language, string rootNamespace)
     {
+        if (language != VBLanguageSymbol && !string.IsNullOrEmpty(rootNamespace))
+        {
+            rootNamespace = NamespaceHelpers.ToSafeNamespace(rootNamespace);
+        }
+
         if (language == CSharpLanguageSymbol)
         {
             return string.IsNullOrEmpty(rootNamespace)

@@ -194,6 +194,11 @@ static Contoso.BuilderHook.AddExtensions(Microsoft.Testing.Platform.Builder.Test
 
     private static string GetSourceCode(string language, string rootNamespace, string extensionsFragments)
     {
+        if (language != VBLanguageSymbol && !string.IsNullOrEmpty(rootNamespace))
+        {
+            rootNamespace = NamespaceHelpers.ToSafeNamespace(rootNamespace);
+        }
+
         if (language == CSharpLanguageSymbol)
         {
             return string.IsNullOrEmpty(rootNamespace)
