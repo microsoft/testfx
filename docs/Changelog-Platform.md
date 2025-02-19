@@ -4,6 +4,27 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
+## <a name="1.6.2" />[1.6.2] - 2025-02-19
+
+See full log [here](https://github.com/microsoft/testfx/compare/v3.8.1...v3.8.2)
+
+### Fixed
+
+* Handle if RootNamespace contains invalid identifier characters by @Youssef1313 in [#5069](https://github.com/microsoft/testfx/pull/5069)
+
+### Artifacts
+
+* Microsoft.Testing.Extensions.CrashDump: [1.6.2](https://www.nuget.org/packages/Microsoft.Testing.Extensions.CrashDump/1.6.2)
+* Microsoft.Testing.Extensions.HangDump: [1.6.2](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HangDump/1.6.2)
+* Microsoft.Testing.Extensions.HotReload: [1.6.2](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HotReload/1.6.2)
+* Microsoft.Testing.Extensions.Retry: [1.6.2](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Retry/1.6.2)
+* Microsoft.Testing.Extensions.Telemetry: [1.6.2](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Telemetry/1.6.2)
+* Microsoft.Testing.Extensions.TrxReport: [1.6.2](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport/1.6.2)
+* Microsoft.Testing.Extensions.TrxReport.Abstractions: [1.6.2](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport.Abstractions/1.6.2)
+* Microsoft.Testing.Extensions.VSTestBridge: [1.6.2](https://www.nuget.org/packages/Microsoft.Testing.Extensions.VSTestBridge/1.6.2)
+* Microsoft.Testing.Platform: [1.6.2](https://www.nuget.org/packages/Microsoft.Testing.Platform/1.6.2)
+* Microsoft.Testing.Platform.MSBuild: [1.6.2](https://www.nuget.org/packages/Microsoft.Testing.Platform.MSBuild/1.6.2)
+
 ## <a name="1.6.1" />[1.6.1] - 2025-02-18
 
 See full log [here](https://github.com/microsoft/testfx/compare/v3.8.0...v3.8.1)
