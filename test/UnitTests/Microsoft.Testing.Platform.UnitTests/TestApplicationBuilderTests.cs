@@ -178,9 +178,9 @@ public sealed class TestApplicationBuilderTests
     [SuppressMessage("Design", "TA0001:Extension should not implement cross-functional areas", Justification = "Done on purpose for testing error")]
     private sealed class InvalidComposition : ITestHostProcessLifetimeHandler, ITestSessionLifetimeHandler
     {
-        private readonly IServiceProvider? _serviceProvider;
-
-        public InvalidComposition(IServiceProvider serviceProvider) => _serviceProvider = serviceProvider;
+        public InvalidComposition(IServiceProvider serviceProvider)
+        {
+        }
 
         public InvalidComposition()
         {
@@ -209,13 +209,13 @@ public sealed class TestApplicationBuilderTests
 
     private sealed class TestHostProcessLifetimeHandlerPlusTestHostEnvironmentVariableProvider : ITestHostProcessLifetimeHandler, ITestHostEnvironmentVariableProvider
     {
-        private readonly IServiceProvider? _serviceProvider;
-
         public TestHostProcessLifetimeHandlerPlusTestHostEnvironmentVariableProvider()
         {
         }
 
-        public TestHostProcessLifetimeHandlerPlusTestHostEnvironmentVariableProvider(IServiceProvider serviceProvider) => _serviceProvider = serviceProvider;
+        public TestHostProcessLifetimeHandlerPlusTestHostEnvironmentVariableProvider(IServiceProvider serviceProvider)
+        {
+        }
 
         public string Uid => nameof(TestHostProcessLifetimeHandlerPlusTestHostEnvironmentVariableProvider);
 
@@ -280,13 +280,13 @@ public sealed class TestApplicationBuilderTests
 
     public sealed class TestSessionLifetimeHandlerPlusConsumer : ITestSessionLifetimeHandler, IDataConsumer
     {
-        private readonly IServiceProvider? _serviceProvider;
-
         public TestSessionLifetimeHandlerPlusConsumer()
         {
         }
 
-        public TestSessionLifetimeHandlerPlusConsumer(IServiceProvider serviceProvider) => _serviceProvider = serviceProvider;
+        public TestSessionLifetimeHandlerPlusConsumer(IServiceProvider serviceProvider)
+        {
+        }
 
         public string Uid => nameof(TestSessionLifetimeHandlerPlusConsumer);
 
