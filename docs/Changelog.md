@@ -4,6 +4,56 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
+## <a name="3.8.2" />[3.8.2] - 2025-02-19
+
+See full log [here](https://github.com/microsoft/testfx/compare/v3.8.1...v3.8.2)
+
+### Fixed
+
+* Fix ClassCleanup not called when the first test in class is ignored by @Youssef1313 in [#5071](https://github.com/microsoft/testfx/pull/5071)
+
+### Artifacts
+
+* MSTest: [3.8.2](https://www.nuget.org/packages/MSTest/3.8.2)
+* MSTest.TestFramework: [3.8.2](https://www.nuget.org/packages/MSTest.TestFramework/3.8.2)
+* MSTest.TestAdapter: [3.8.2](https://www.nuget.org/packages/MSTest.TestAdapter/3.8.2)
+* MSTest.Analyzers: [3.8.2](https://www.nuget.org/packages/MSTest.Analyzers/3.8.2)
+* MSTest.Sdk: [3.8.2](https://www.nuget.org/packages/MSTest.Sdk/3.8.2)
+* Microsoft.Testing.Extensions.CrashDump: [1.6.2](https://www.nuget.org/packages/Microsoft.Testing.Extensions.CrashDump/1.6.2)
+* Microsoft.Testing.Extensions.HangDump: [1.6.2](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HangDump/1.6.2)
+* Microsoft.Testing.Extensions.HotReload: [1.6.2](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HotReload/1.6.2)
+* Microsoft.Testing.Extensions.Retry: [1.6.2](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Retry/1.6.2)
+* Microsoft.Testing.Extensions.TrxReport: [1.6.2](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport/1.6.2)
+* MSTest.SourceGeneration: [1.0.0-alpha.25119.7](https://www.nuget.org/packages/MSTest.SourceGeneration/1.0.0-alpha.25119.7)
+* MSTest.Engine: [1.0.0-alpha.25119.7](https://www.nuget.org/packages/MSTest.Engine/1.0.0-alpha.25119.7)
+
+## <a name="3.8.1" />[3.8.1] - 2025-02-18
+
+See full log [here](https://github.com/microsoft/testfx/compare/v3.8.0...v3.8.1)
+
+### Fixed
+
+* Fix MSTEST0038 message by @Youssef1313 in [#5011](https://github.com/microsoft/testfx/pull/5011)
+* Fix parameterized test treated as ignored when using VSTest in Test Explorer by @Youssef1313 in [#5023](https://github.com/microsoft/testfx/pull/5023)
+* Avoid handling tuples for test methods with only `object[]` parameter by @Youssef1313 [#5022](https://github.com/microsoft/testfx/pull/5022)
+* Set packages README correctly by @Youssef1313 in [#5030](https://github.com/microsoft/testfx/pull/5030)
+* Fix serialization of exceptions by BinaryFormatter in .NET Framework by @nohwnd in [#5055](https://github.com/microsoft/testfx/pull/5055)
+
+### Artifacts
+
+* MSTest: [3.8.1](https://www.nuget.org/packages/MSTest/3.8.1)
+* MSTest.TestFramework: [3.8.1](https://www.nuget.org/packages/MSTest.TestFramework/3.8.1)
+* MSTest.TestAdapter: [3.8.1](https://www.nuget.org/packages/MSTest.TestAdapter/3.8.1)
+* MSTest.Analyzers: [3.8.1](https://www.nuget.org/packages/MSTest.Analyzers/3.8.1)
+* MSTest.Sdk: [3.8.1](https://www.nuget.org/packages/MSTest.Sdk/3.8.1)
+* Microsoft.Testing.Extensions.CrashDump: [1.6.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.CrashDump/1.6.1)
+* Microsoft.Testing.Extensions.HangDump: [1.6.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HangDump/1.6.1)
+* Microsoft.Testing.Extensions.HotReload: [1.6.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HotReload/1.6.1)
+* Microsoft.Testing.Extensions.Retry: [1.6.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Retry/1.6.1)
+* Microsoft.Testing.Extensions.TrxReport: [1.6.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport/1.6.1)
+* MSTest.SourceGeneration: [1.0.0-alpha.25118.9](https://www.nuget.org/packages/MSTest.SourceGeneration/1.0.0-alpha.25118.9)
+* MSTest.Engine: [1.0.0-alpha.25118.9](https://www.nuget.org/packages/MSTest.Engine/1.0.0-alpha.25118.9)
+
 ## <a name="3.8.0" />[3.8.0] - 2025-02-12
 
 See full log [here](https://github.com/microsoft/testfx/compare/v3.7.3...v3.8.0)

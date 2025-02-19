@@ -18,9 +18,11 @@ public sealed class IgnoreTests : AcceptanceTestBase<IgnoreTests.TestAssetFixtur
 
         // Assert
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
-        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 11, skipped: 7);
+        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 11, skipped: 8);
 
         testHostResult.AssertOutputContains("SubClass.Method");
+        testHostResult.AssertOutputContains("SubClass.ClassCleanup");
+        testHostResult.AssertOutputDoesNotContain("SubClass.IgnoredMethod");
     }
 
     [TestMethod]
@@ -190,6 +192,12 @@ public class SubClass : IntermediateClass
     [ClassCleanup]
     public static void SubClassCleanup()
         => Console.WriteLine("SubClass.ClassCleanup");
+
+    // Ignore the first test on purpose, see https://github.com/microsoft/testfx/issues/5062
+    [TestMethod]
+    [Ignore]
+    public void IgnoredMethod()
+        => Console.WriteLine("SubClass.IgnoredMethod");
 
     [TestMethod]
     public void Method()

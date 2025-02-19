@@ -152,13 +152,13 @@ public class AssemblyResolverTests : TestContainer
         bool isAssemblyLoaded = false;
         bool isAssemblyReflectionOnlyLoaded = false;
 
-        assemblyResolver.LoadAssemblyFromSetter = (string path) =>
+        assemblyResolver.LoadAssemblyFromSetter = path =>
         {
             isAssemblyLoaded = true;
             return typeof(AssemblyResolverTests).Assembly;
         };
 
-        assemblyResolver.ReflectionOnlyLoadAssemblyFromSetter = (string path) =>
+        assemblyResolver.ReflectionOnlyLoadAssemblyFromSetter = path =>
         {
             isAssemblyReflectionOnlyLoaded = true;
             return typeof(AssemblyResolverTests).Assembly;

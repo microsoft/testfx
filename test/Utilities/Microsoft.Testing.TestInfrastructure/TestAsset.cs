@@ -101,6 +101,8 @@ public class TestAsset : IDisposable
         <add key="local-shipping" value="{Constants.ArtifactsPackagesShipping}" />
         <add key="local-tmp-packages" value="{Constants.ArtifactsTmpPackages}" />
         <add key="dotnet-public" value="https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public/nuget/v3/index.json" />
+        <!-- This feed is required for FSharp.Core until preview 1 or 2 is released -->
+        <add key="dotnet10" value="https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet10/nuget/v3/index.json" />
     </packageSources>
     <config>
         <add key="globalPackagesFolder" value=".packages" />
@@ -117,6 +119,9 @@ public class TestAsset : IDisposable
             <package pattern="*" />
         </packageSource>
         <packageSource key="dotnet-public">
+            <package pattern="*" />
+        </packageSource>
+        <packageSource key="dotnet10">
             <package pattern="*" />
         </packageSource>
     </packageSourceMapping>

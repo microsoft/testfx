@@ -25,7 +25,7 @@ public class ThreadSafeStringWriterTests : TestContainer
                 // into different output. The tasks below wait for each other to ensure
                 // we are mixing output from different tasks at the same time.
                 using var stringWriter = new ThreadSafeStringWriter(CultureInfo.InvariantCulture, "output");
-                var task1 = Task.Run(() =>
+                Task<string> task1 = Task.Run(() =>
                 {
                     var timeout = Stopwatch.StartNew();
                     stringWriter.WriteLine("content1");
@@ -42,7 +42,7 @@ public class ThreadSafeStringWriterTests : TestContainer
                     stringWriter.WriteLine("content1");
                     return stringWriter.ToString();
                 });
-                var task2 = Task.Run(() =>
+                Task<string> task2 = Task.Run(() =>
                 {
                     stringWriter.WriteLine("content2");
                     stringWriter.WriteLine("content2");

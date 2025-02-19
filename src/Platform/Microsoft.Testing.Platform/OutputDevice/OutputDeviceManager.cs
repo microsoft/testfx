@@ -7,7 +7,7 @@ using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Platform.OutputDevice;
 
-internal sealed class PlatformOutputDeviceManager : IPlatformOutputDeviceManager
+internal sealed class PlatformOutputDeviceManager
 {
     private Func<IServiceProvider, IPlatformOutputDevice>? _platformOutputDeviceFactory;
 

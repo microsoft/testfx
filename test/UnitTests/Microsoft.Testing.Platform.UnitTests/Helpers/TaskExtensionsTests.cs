@@ -45,7 +45,7 @@ public sealed class TaskExtensionsTests
     {
         CancellationTokenSource cancellationTokenSource = new();
         CancellationToken cancelToken = cancellationTokenSource.Token;
-        var task = Task.Run(async () => await DoSomething().WithCancellationAsync(cancelToken), cancelToken);
+        Task<string> task = Task.Run(async () => await DoSomething().WithCancellationAsync(cancelToken), cancelToken);
 #pragma warning disable VSTHRD103 // Call async methods when in an async method
         cancellationTokenSource.Cancel();
 #pragma warning restore VSTHRD103 // Call async methods when in an async method

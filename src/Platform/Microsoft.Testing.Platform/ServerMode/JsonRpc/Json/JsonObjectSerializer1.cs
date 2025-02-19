@@ -5,5 +5,5 @@ namespace Microsoft.Testing.Platform.ServerMode.Json;
 
 internal sealed class JsonObjectSerializer<T> : JsonObjectSerializer
 {
-    public JsonObjectSerializer(Func<T, (string Key, object? Value)[]?> value) => Properties = (object o) => value((T)o);
+    public JsonObjectSerializer(Func<T, (string Key, object? Value)[]?> value) => Properties = o => value((T)o);
 }
