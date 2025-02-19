@@ -617,6 +617,7 @@ public class TestClassInfo
                 // If ClassInitialize method has not been executed, then we should not execute ClassCleanup
                 // Note that if there is no ClassInitialze method at all, we will still set
                 // IsClassInitializeExecuted to true in RunClassInitialize
+                // IsClassInitializeExecuted can be false if all tests in the class are ignored.
                 || !IsClassInitializeExecuted)
             {
                 return null;
