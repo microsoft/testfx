@@ -340,7 +340,7 @@
     <!--
     NETCoreSdkRuntimeIdentifier is used by DefaultAppHostRuntimeIdentifier to figure out the architecture, and is defined also for .NET Framework.
     -->
-    <_TestArchitecture Condition="('$(_TestArchitecture)' == '' or '$(_TestArchitecture)' == 'AnyCpu') and '$(NETCoreSdkRuntimeIdentifier)' != ''">$([System.Text.RegularExpressions.Regex]::Replace($(DefaultAppHostRuntimeIdentifier), '.*-', ''))</_TestArchitecture>
+    <_TestArchitecture Condition="('$(_TestArchitecture)' == '' or '$(_TestArchitecture)' == 'AnyCpu') and '$(NETCoreSdkRuntimeIdentifier)' != ''">$([System.Text.RegularExpressions.Regex]::Replace($(NETCoreSdkRuntimeIdentifier), '.*-', ''))</_TestArchitecture>
     <!-- If everyting else fails, fallback to x64. -->
     <_TestArchitecture Condition="'$(_TestArchitecture)' == '' or '$(_TestArchitecture)' == 'AnyCpu'">x64</_TestArchitecture>
     <TestingPlatformShowTestsFailure Condition=" '$(TestingPlatformShowTestsFailure)' == '' ">False</TestingPlatformShowTestsFailure>
