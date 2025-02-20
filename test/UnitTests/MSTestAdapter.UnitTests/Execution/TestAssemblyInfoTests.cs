@@ -264,9 +264,11 @@ public class TestAssemblyInfoTests : TestContainer
         DummyTestClass.AssemblyCleanupMethodBody = () => UTF.Assert.Fail("Test Failure.");
 
         _testAssemblyInfo.AssemblyCleanupMethod = typeof(DummyTestClass).GetMethod("AssemblyCleanupMethod")!;
+        string? actualErrorMessage = _testAssemblyInfo.RunAssemblyCleanup();
         Verify(
-            _testAssemblyInfo.RunAssemblyCleanup()!.StartsWith(
-            "Assembly Cleanup method DummyTestClass.AssemblyCleanupMethod failed. Error Message: Assert.Fail failed. Test Failure.. StackTrace:    at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestAssemblyInfoTests.<>c.<RunAssemblyCleanupShouldReturnAssertFailureExceptionDetails>", StringComparison.Ordinal));
+            actualErrorMessage!.StartsWith(
+                "Assembly Cleanup method DummyTestClass.AssemblyCleanupMethod failed. Error Message: Assert.Fail failed. Test Failure.. StackTrace:    at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestAssemblyInfoTests.<>c.<RunAssemblyCleanupShouldReturnAssertFailureExceptionDetails>", StringComparison.Ordinal),
+            $"Value: {actualErrorMessage}");
     }
 
     public void RunAssemblyCleanupShouldReturnAssertInconclusiveExceptionDetails()
@@ -274,9 +276,11 @@ public class TestAssemblyInfoTests : TestContainer
         DummyTestClass.AssemblyCleanupMethodBody = () => UTF.Assert.Inconclusive("Test Inconclusive.");
 
         _testAssemblyInfo.AssemblyCleanupMethod = typeof(DummyTestClass).GetMethod("AssemblyCleanupMethod")!;
+        string? actualErrorMessage = _testAssemblyInfo.RunAssemblyCleanup();
         Verify(
-            _testAssemblyInfo.RunAssemblyCleanup()!.StartsWith(
-            "Assembly Cleanup method DummyTestClass.AssemblyCleanupMethod failed. Error Message: Assert.Inconclusive failed. Test Inconclusive.. StackTrace:    at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestAssemblyInfoTests.<>c.<RunAssemblyCleanupShouldReturnAssertInconclusiveExceptionDetails>", StringComparison.Ordinal));
+            actualErrorMessage!.StartsWith(
+                "Assembly Cleanup method DummyTestClass.AssemblyCleanupMethod failed. Error Message: Assert.Inconclusive failed. Test Inconclusive.. StackTrace:    at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestAssemblyInfoTests.<>c.<RunAssemblyCleanupShouldReturnAssertInconclusiveExceptionDetails>", StringComparison.Ordinal),
+            $"Value: {actualErrorMessage}");
     }
 
     public void RunAssemblyCleanupShouldReturnExceptionDetailsOfNonAssertExceptions()
@@ -284,9 +288,11 @@ public class TestAssemblyInfoTests : TestContainer
         DummyTestClass.AssemblyCleanupMethodBody = () => throw new ArgumentException("Argument Exception");
 
         _testAssemblyInfo.AssemblyCleanupMethod = typeof(DummyTestClass).GetMethod("AssemblyCleanupMethod")!;
+        string? actualErrorMessage = _testAssemblyInfo.RunAssemblyCleanup();
         Verify(
-            _testAssemblyInfo.RunAssemblyCleanup()!.StartsWith(
-            "Assembly Cleanup method DummyTestClass.AssemblyCleanupMethod failed. Error Message: System.ArgumentException: Argument Exception. StackTrace:     at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestAssemblyInfoTests.<>c.<RunAssemblyCleanupShouldReturnExceptionDetailsOfNonAssertExceptions>", StringComparison.Ordinal));
+            actualErrorMessage!.StartsWith(
+                "Assembly Cleanup method DummyTestClass.AssemblyCleanupMethod failed. Error Message: System.ArgumentException: Argument Exception. StackTrace:     at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestAssemblyInfoTests.<>c.<RunAssemblyCleanupShouldReturnExceptionDetailsOfNonAssertExceptions>", StringComparison.Ordinal),
+            $"Value: {actualErrorMessage}");
     }
 
     public void RunAssemblyCleanupShouldThrowTheInnerMostExceptionWhenThereAreMultipleNestedTypeInitializationExceptions()
