@@ -194,7 +194,7 @@ stages:
         timeoutInMinutes: 90
         pool:
           name: Azure Pipelines
-          vmImage: macos-14-arm64
+          image: macos-14-arm64
           os: macOS
         strategy:
           matrix:
