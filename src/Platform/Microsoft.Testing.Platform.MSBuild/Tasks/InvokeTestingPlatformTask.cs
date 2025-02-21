@@ -93,7 +93,6 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
     /// <summary>
     /// Gets or sets the value of MSBuild property _NativeExecutableExtension.
     /// </summary>
-    [Required]
     public ITaskItem NativeExecutableExtension { get; set; }
 
     // -------- END the previous properties shouldn't be used. See https://github.com/microsoft/testfx/issues/5091 --------
