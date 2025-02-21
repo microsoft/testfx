@@ -13,13 +13,23 @@ internal sealed class CTRLPlusCCancellationTokenSource : ITestApplicationCancell
 
     public CTRLPlusCCancellationTokenSource(IConsole? console = null, ILogger? logger = null)
     {
-        if (console is not null)
+        if (console is not null && !IsCancelKeyPressNotSupported())
         {
             console.CancelKeyPress += OnConsoleCancelKeyPressed;
         }
 
         _logger = logger;
     }
+
+    [SupportedOSPlatformGuard("android")]
+    [SupportedOSPlatformGuard("ios")]
+    [SupportedOSPlatformGuard("tvos")]
+    [SupportedOSPlatformGuard("browser")]
+    private static bool IsCancelKeyPressNotSupported()
+        => RuntimeInformation.IsOSPlatform(OSPlatform.Create("ANDROID")) ||
+            RuntimeInformation.IsOSPlatform(OSPlatform.Create("IOS")) ||
+            RuntimeInformation.IsOSPlatform(OSPlatform.Create("TVOS")) ||
+            RuntimeInformation.IsOSPlatform(OSPlatform.Create("BROWSER"));
 
     public void CancelAfter(TimeSpan timeout) => _cancellationTokenSource.CancelAfter(timeout);
 

@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "MSTest.SourceGeneration.UnitTests": {
+      "commandName": "Project",
+      "commandLineArgs": "--treenode-filter /*/*/*/**"
+    }
+  }
+}

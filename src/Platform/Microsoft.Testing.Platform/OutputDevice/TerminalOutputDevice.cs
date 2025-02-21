@@ -19,6 +19,7 @@ namespace Microsoft.Testing.Platform.OutputDevice;
 /// <summary>
 /// Implementation of output device that writes to terminal with progress and optionally with ANSI.
 /// </summary>
+[UnsupportedOSPlatform("browser")]
 internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDevice,
     IDataConsumer,
     IOutputDeviceDataProducer,
@@ -93,7 +94,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
             _targetFramework = TargetFrameworkParser.GetShortTargetFramework(Assembly.GetEntryAssembly()?.GetCustomAttribute<TargetFrameworkAttribute>()?.FrameworkDisplayName) ?? _runtimeFramework;
         }
 
-        _assemblyName = testApplicationModuleInfo.GetCurrentTestApplicationFullPath();
+        _assemblyName = testApplicationModuleInfo.GetDisplayName();
 
         if (environment.GetEnvironmentVariable(TESTINGPLATFORM_CONSOLEOUTPUTDEVICE_SKIP_BANNER) is not null)
         {
@@ -426,6 +427,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
                             testNodeStateChanged.TestNode.DisplayName,
                             TestOutcome.Error,
                             duration,
+                            null,
                             errorState.Explanation,
                             errorState.Exception,
                             expected: null,
@@ -444,6 +446,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
                              testNodeStateChanged.TestNode.DisplayName,
                              TestOutcome.Fail,
                              duration,
+                             null,
                              failedState.Explanation,
                              failedState.Exception,
                              expected: failedState.Exception?.Data["assert.expected"] as string,
@@ -462,6 +465,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
                              testNodeStateChanged.TestNode.DisplayName,
                              TestOutcome.Timeout,
                              duration,
+                             null,
                              timeoutState.Explanation,
                              timeoutState.Exception,
                              expected: null,
@@ -480,6 +484,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
                              testNodeStateChanged.TestNode.DisplayName,
                              TestOutcome.Canceled,
                              duration,
+                             null,
                              cancelledState.Explanation,
                              cancelledState.Exception,
                              expected: null,
@@ -498,6 +503,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
                             testNodeStateChanged.TestNode.DisplayName,
                             outcome: TestOutcome.Passed,
                             duration: duration,
+                            informativeMessage: null,
                             errorMessage: null,
                             exception: null,
                             expected: null,
@@ -506,7 +512,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
                             standardError);
                         break;
 
-                    case SkippedTestNodeStateProperty:
+                    case SkippedTestNodeStateProperty skippedState:
                         _terminalTestReporter.TestCompleted(
                             _assemblyName,
                             _targetFramework,
@@ -516,6 +522,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
                             testNodeStateChanged.TestNode.DisplayName,
                             TestOutcome.Skipped,
                             duration,
+                            informativeMessage: skippedState.Explanation,
                             errorMessage: null,
                             exception: null,
                             expected: null,

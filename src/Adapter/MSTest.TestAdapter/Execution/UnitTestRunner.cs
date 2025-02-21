@@ -153,8 +153,7 @@ internal sealed class UnitTestRunner : MarshalByRefObject
             // Get the testMethod
             TestMethodInfo? testMethodInfo = _typeCache.GetTestMethodInfo(
                 testMethod,
-                testContextForTestExecution,
-                MSTestSettings.CurrentSettings.CaptureDebugTraces);
+                testContextForTestExecution);
 
             TestResult[] result;
             if (!IsTestMethodRunnable(testMethod, testMethodInfo, out TestResult[]? notRunnableResult))
@@ -211,10 +210,11 @@ internal sealed class UnitTestRunner : MarshalByRefObject
                 }
             }
 
+            ITestContext testContextForClassCleanup = PlatformServiceProvider.Instance.GetTestContext(testMethod, writer, properties, messageLogger, testContextForTestExecution.Context.CurrentTestOutcome);
+            testMethodInfo?.Parent.RunClassCleanup(testContextForClassCleanup, _classCleanupManager, testMethodInfo, testMethod, result);
+
             if (testMethodInfo?.Parent.Parent.IsAssemblyInitializeExecuted == true)
             {
-                ITestContext testContextForClassCleanup = PlatformServiceProvider.Instance.GetTestContext(testMethod, writer, properties, messageLogger, testContextForTestExecution.Context.CurrentTestOutcome);
-                testMethodInfo.Parent.RunClassCleanup(testContextForClassCleanup, _classCleanupManager, testMethodInfo, testMethod, result);
                 ITestContext testContextForAssemblyCleanup = PlatformServiceProvider.Instance.GetTestContext(testMethod, writer, properties, messageLogger, testContextForClassCleanup.Context.CurrentTestOutcome);
                 RunAssemblyCleanupIfNeeded(testContextForAssemblyCleanup, _classCleanupManager, _typeCache, result);
             }
@@ -405,13 +405,7 @@ internal sealed class UnitTestRunner : MarshalByRefObject
         if (shouldIgnoreClass || shouldIgnoreMethod)
         {
             notRunnableResult =
-                [
-                    new TestResult()
-                    {
-                        Outcome = UTF.UnitTestOutcome.Ignored,
-                        IgnoreReason = ignoreMessage,
-                    }
-                ];
+                [TestResult.CreateIgnoredResult(ignoreMessage)];
             return false;
         }
 

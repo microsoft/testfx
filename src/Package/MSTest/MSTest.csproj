@@ -20,7 +20,6 @@
     <IsPackable>true</IsPackable>
     <PackageId>MSTest</PackageId>
     <PackageTags>MSTest TestFramework TestAdapter VisualStudio Unittest MSTestV2 Microsoft</PackageTags>
-    <PackageReadmeFile>PACKAGE.md</PackageReadmeFile>
     <PackageDescription>
       MSTest is Microsoft supported Test Framework.
 
@@ -45,9 +44,14 @@
   </Target>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Adapter\MSTest.TestAdapter\MSTest.TestAdapter.csproj" />
-    <ProjectReference Include="..\..\TestFramework\TestFramework.Extensions\TestFramework.Extensions.csproj" />
-    <ProjectReference Include="..\..\Analyzers\MSTest.Analyzers.Package\MSTest.Analyzers.Package.csproj" />
+    <ProjectReference Include="$(RepoRoot)src\Adapter\MSTest.TestAdapter\MSTest.TestAdapter.csproj" />
+    <ProjectReference Include="$(RepoRoot)src\TestFramework\TestFramework.Extensions\TestFramework.Extensions.csproj" />
+    <ProjectReference Include="$(RepoRoot)src\Analyzers\MSTest.Analyzers.Package\MSTest.Analyzers.Package.csproj" />
+    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.TrxReport\Microsoft.Testing.Extensions.TrxReport.csproj" Condition=" '$(TargetFramework)' != '$(UwpMinimum)' " />
+
+    <!-- CodeCoverage 17.14 doesn't support netcoreapp3.1. -->
+    <!-- We end up having System.Collections.Immutable 8.0.0 which is not compatible with netcoreapp3.1 -->
+    <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" Condition="'$(TargetFramework)' != 'netcoreapp3.1'" />
   </ItemGroup>
 
   <ItemGroup>
@@ -60,10 +64,6 @@
     <!--      https://github.com/microsoft/vstest/issues/4098 -->
     <!--      https://github.com/microsoft/vstest/pull/4104 -->
     <PackageReference Include="Microsoft.NET.Test.Sdk" VersionOverride="$(MicrosoftNETTestSdkVersion)" Condition="'$(TargetFramework)' != '$(UwpMinimum)'" PrivateAssets="none" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Include="$(PackageReadmeFile)" Pack="true" PackagePath="\" />
   </ItemGroup>
 
   <!-- SDK bottom import -->

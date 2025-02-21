@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Platform.Helpers;
+
 namespace Microsoft.Testing.TestInfrastructure;
 
 public class TempDirectory : IDisposable
@@ -194,9 +196,23 @@ public class TempDirectory : IDisposable
 """);
 
             string directoryBuildTarget = System.IO.Path.Combine(directoryPath, "Directory.Build.targets");
-            File.WriteAllText(directoryBuildTarget, """
+            File.WriteAllText(directoryBuildTarget, $"""
 <?xml version="1.0" encoding="utf-8"?>
-<Project/>
+<Project>
+    <ItemGroup>
+        <!-- EnableMicrosoftTestingPlatform is already handled by MSTest.Sdk, but not when using MSTest metapackage -->
+        <!-- Historically, EnableMicrosoftTestingPlatform existed first in MSTest.Sdk with the goal of fixing our tests -->
+        <!-- Then, this code was introduced. -->
+        <!-- As EnableMicrosoftTestingPlatform isn't expected/intended to be used by users, it may be possible to remove it from MSTest.Sdk -->
+        <!-- The code here should solve the issue either way. -->
+        <!--
+            This property is not required by users and is only set to simplify our testing infrastructure. When testing out in local or ci,
+            we end up with a -dev or -ci version which will lose resolution over -preview dependency of code coverage. Because we want to
+            ensure we are testing with locally built version, we force adding the platform dependency.
+        -->
+        <PackageReference Include="Microsoft.Testing.Platform" Version="{AppVersion.DefaultSemVer}" Condition="'$(UsingMSTestSdk)' != 'true' AND '$(EnableMicrosoftTestingPlatform)' == 'true'" />
+    </ItemGroup>
+</Project>
 """);
 
             string directoryPackagesProps = System.IO.Path.Combine(directoryPath, "Directory.Packages.props");

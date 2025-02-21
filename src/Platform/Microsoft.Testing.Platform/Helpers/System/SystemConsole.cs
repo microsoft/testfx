@@ -13,11 +13,19 @@ internal sealed class SystemConsole : IConsole
     /// <summary>
     /// Gets the height of the buffer area.
     /// </summary>
+    [UnsupportedOSPlatform("android")]
+    [UnsupportedOSPlatform("browser")]
+    [UnsupportedOSPlatform("ios")]
+    [UnsupportedOSPlatform("tvos")]
     public int BufferHeight => Console.BufferHeight;
 
     /// <summary>
     /// Gets the width of the buffer area.
     /// </summary>
+    [UnsupportedOSPlatform("android")]
+    [UnsupportedOSPlatform("browser")]
+    [UnsupportedOSPlatform("ios")]
+    [UnsupportedOSPlatform("tvos")]
     public int BufferWidth => Console.BufferWidth;
 
     /// <summary>
@@ -43,38 +51,14 @@ internal sealed class SystemConsole : IConsole
         };
     }
 
-    // the following event does not make sense in the mobile scenarios, user cannot ctrl+c
-    // but can just kill the app in the device via a gesture
+    [UnsupportedOSPlatform("android")]
+    [UnsupportedOSPlatform("ios")]
+    [UnsupportedOSPlatform("tvos")]
+    [UnsupportedOSPlatform("browser")]
     public event ConsoleCancelEventHandler? CancelKeyPress
     {
-        add
-        {
-#if NET8_0_OR_GREATER
-            if (RuntimeInformation.RuntimeIdentifier.Contains("ios") ||
-                RuntimeInformation.RuntimeIdentifier.Contains("android"))
-            {
-                return;
-            }
-#endif
-
-#pragma warning disable IDE0027 // Use expression body for accessor
-            Console.CancelKeyPress += value;
-#pragma warning restore IDE0027 // Use expression body for accessor
-        }
-
-        remove
-        {
-#if NET8_0_OR_GREATER
-            if (RuntimeInformation.RuntimeIdentifier.Contains("ios") ||
-                RuntimeInformation.RuntimeIdentifier.Contains("android"))
-            {
-                return;
-            }
-#endif
-#pragma warning disable IDE0027 // Use expression body for accessor
-            Console.CancelKeyPress -= value;
-#pragma warning restore IDE0027 // Use expression body for accessor
-        }
+        add => Console.CancelKeyPress += value;
+        remove => Console.CancelKeyPress -= value;
     }
 
     public void SuppressOutput() => _suppressOutput = true;
@@ -111,33 +95,23 @@ internal sealed class SystemConsole : IConsole
         }
     }
 
+    [UnsupportedOSPlatform("android")]
+    [UnsupportedOSPlatform("ios")]
+    [UnsupportedOSPlatform("tvos")]
+    [UnsupportedOSPlatform("browser")]
     public void SetForegroundColor(ConsoleColor color)
-    {
-#if NET8_0_OR_GREATER
-        if (RuntimeInformation.RuntimeIdentifier.Contains("ios") ||
-            RuntimeInformation.RuntimeIdentifier.Contains("android"))
-        {
-            return;
-        }
-#endif
-#pragma warning disable IDE0022 // Use expression body for method
-        Console.ForegroundColor = color;
-#pragma warning restore IDE0022 // Use expression body for method
-    }
+        => Console.ForegroundColor = color;
 
+    [UnsupportedOSPlatform("android")]
+    [UnsupportedOSPlatform("ios")]
+    [UnsupportedOSPlatform("tvos")]
+    [UnsupportedOSPlatform("browser")]
     public ConsoleColor GetForegroundColor()
-    {
-#if NET8_0_OR_GREATER
-        if (RuntimeInformation.RuntimeIdentifier.Contains("ios") ||
-            RuntimeInformation.RuntimeIdentifier.Contains("android"))
-        {
-            return ConsoleColor.Black;
-        }
-#endif
-#pragma warning disable IDE0022 // Use expression body for method
-        return Console.ForegroundColor;
-#pragma warning restore IDE0022 // Use expression body for method
-    }
+        => Console.ForegroundColor;
 
-    public void Clear() => Console.Clear();
+    [UnsupportedOSPlatform("android")]
+    [UnsupportedOSPlatform("ios")]
+    [UnsupportedOSPlatform("tvos")]
+    public void Clear()
+        => Console.Clear();
 }

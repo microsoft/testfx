@@ -47,8 +47,8 @@ public class OutputTests : CLITestBase
     }
 
     private static readonly string DebugTraceString = string.Format(CultureInfo.InvariantCulture, "{0}{0}Debug Trace:{0}", Environment.NewLine);
-    private static readonly Func<TestResultMessage, bool> IsDebugMessage = m => m.Category == "StdOutMsgs" && m.Text.StartsWith(DebugTraceString, StringComparison.Ordinal);
-    private static readonly Func<TestResultMessage, bool> IsStandardOutputMessage = m => m.Category == "StdOutMsgs" && !m.Text.StartsWith(DebugTraceString, StringComparison.Ordinal);
+    private static readonly Func<TestResultMessage, bool> IsDebugMessage = m => m.Category == "StdOutMsgs" && m.Text!.StartsWith(DebugTraceString, StringComparison.Ordinal);
+    private static readonly Func<TestResultMessage, bool> IsStandardOutputMessage = m => m.Category == "StdOutMsgs" && !m.Text!.StartsWith(DebugTraceString, StringComparison.Ordinal);
     private static readonly Func<TestResultMessage, bool> IsStandardErrorMessage = m => m.Category == "StdErrMsgs";
 
     private static void ValidateOutputsAreNotMixed(IEnumerable<TestResult> testResults, string methodName, string[] shouldNotContain)
@@ -87,7 +87,21 @@ public class OutputTests : CLITestBase
         // It is not deterministic where the class initialize and class cleanup will run, so we look at all tests, to make sure it is includes somewhere.
         string output = string.Join(Environment.NewLine, testResults.SelectMany(r => r.Messages).Where(messageFilter).Select(m => m.Text));
         output.Should().NotBeNull();
-        output.Should().Contain("ClassInitialize");
-        output.Should().Contain("ClassCleanup");
+        var failureMessageBuilder = new StringBuilder();
+        foreach (TestResult testResult in testResults)
+        {
+            failureMessageBuilder.AppendLine($"TestResult: {testResult.DisplayName}");
+            foreach (TestResultMessage message in testResult.Messages)
+            {
+                failureMessageBuilder.AppendLine($"  {message.Category}:");
+                failureMessageBuilder.AppendLine($"    {message.Text}:");
+            }
+
+            failureMessageBuilder.AppendLine();
+        }
+
+        string becauseMessage = failureMessageBuilder.ToString();
+        output.Should().Contain("ClassInitialize", because: becauseMessage);
+        output.Should().Contain("ClassCleanup", because: becauseMessage);
     }
 }

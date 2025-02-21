@@ -72,7 +72,7 @@ public class ThreadOperations : IThreadOperations
         try
         {
             // Creates a Task<bool> that represents the results of the execution thread.
-            var executionTask = Task.Run(() => executionThread.Join(timeout), cancellationToken);
+            Task<bool> executionTask = Task.Run(() => executionThread.Join(timeout), cancellationToken);
             executionTask.Wait(cancellationToken);
 
             // If the execution thread completes before the timeout, the task will return true, otherwise false.

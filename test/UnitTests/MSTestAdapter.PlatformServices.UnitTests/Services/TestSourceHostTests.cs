@@ -13,7 +13,7 @@ public class TestSourceHostTests : TestContainer
 {
     private readonly TestSourceHost _testSourceHost;
 
-    public TestSourceHostTests() => _testSourceHost = new TestSourceHost(null, null, null);
+    public TestSourceHostTests() => _testSourceHost = new TestSourceHost(null!, null, null);
 
     public void CreateInstanceForTypeCreatesAnInstanceOfAGivenTypeThroughDefaultConstructor()
     {

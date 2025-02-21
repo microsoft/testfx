@@ -149,6 +149,12 @@ public sealed class TestMethod : ITestMethod
     /// </summary>
     internal string?[]? SerializedData { get; set; }
 
+    /// <summary>
+    /// Gets or sets the test data source ignore message.
+    /// </summary>
+    /// <remarks>
+    /// The test is ignored if this is set to non-null.
+    /// </remarks>
     internal string? TestDataSourceIgnoreMessage { get; set; }
 
     /// <summary>

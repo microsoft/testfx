@@ -24,11 +24,9 @@ public class MSBuildTests_EntryPoint : AcceptanceTestBase<NopAssetFixture>
         compilationResult = await DotnetCli.RunAsync($"{(verb == Verb.publish ? $"publish -f {tfm}" : "build")}  -c {compilationMode} -r {RID} -nodeReuse:false -p:GenerateTestingPlatformEntryPoint=False -bl:{binlogFile} {testAsset.TargetAssetPath} -v:n", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, failIfReturnValueIsNotZero: false);
         SL.Build binLog = SL.Serialization.Read(binlogFile);
         SL.Target generateTestingPlatformEntryPoint = binLog.FindChildrenRecursive<SL.Target>().Single(t => t.Name == "_GenerateTestingPlatformEntryPoint");
-        Assert.AreEqual("Target \"_GenerateTestingPlatformEntryPoint\" skipped, due to false condition; ( '$(GenerateTestingPlatformEntryPoint)' == 'True' ) was evaluated as ( 'False' == 'True' ).", ((SL.Message)generateTestingPlatformEntryPoint.Children[0]).Text);
-        SL.Target generateTestingPlatformEntryPointFileInputCache = binLog.FindChildrenRecursive<SL.Target>().Single(t => t.Name == "_GenerateTestingPlatformEntryPointFileInputCache");
-        Assert.AreEqual("Target \"_GenerateTestingPlatformEntryPointFileInputCache\" skipped, due to false condition; ( '$(GenerateTestingPlatformEntryPoint)' == 'True' ) was evaluated as ( 'False' == 'True' ).", ((SL.Message)generateTestingPlatformEntryPointFileInputCache.Children[0]).Text);
+        Assert.AreEqual("Target \"_GenerateTestingPlatformEntryPoint\" skipped, due to false condition; ( '$(GenerateTestingPlatformEntryPoint)' == 'true' ) was evaluated as ( 'False' == 'true' ).", ((SL.Message)generateTestingPlatformEntryPoint.Children[0]).Text);
         SL.Target includeGenerateTestingPlatformEntryPointIntoCompilation = binLog.FindChildrenRecursive<SL.Target>().Single(t => t.Name == "_IncludeGenerateTestingPlatformEntryPointIntoCompilation");
-        Assert.AreEqual("Target \"_IncludeGenerateTestingPlatformEntryPointIntoCompilation\" skipped, due to false condition; ( '$(GenerateTestingPlatformEntryPoint)' == 'True' ) was evaluated as ( 'False' == 'True' ).", ((SL.Message)includeGenerateTestingPlatformEntryPointIntoCompilation.Children[0]).Text);
+        Assert.IsEmpty(includeGenerateTestingPlatformEntryPointIntoCompilation.Children);
         Assert.AreNotEqual(0, compilationResult.ExitCode);
     }
 
@@ -71,24 +69,22 @@ namespace MSBuildTests
 ' </auto-generated>
 '------------------------------------------------------------------------------
 
-Namespace MSBuildTests
-    <System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage>
-    Module TestingPlatformEntryPoint
+<System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage>
+Module TestingPlatformEntryPoint
 
-        Function Main(args As String()) As Integer
-            Return MainAsync(args).GetAwaiter().GetResult()
-        End Function
+    Function Main(args As String()) As Integer
+        Return MainAsync(args).GetAwaiter().GetResult()
+    End Function
 
-        Public Async Function MainAsync(args As String()) As Global.System.Threading.Tasks.Task(Of Integer)
-            Dim builder = Await Global.Microsoft.Testing.Platform.Builder.TestApplication.CreateBuilderAsync(args)
-            SelfRegisteredExtensions.AddSelfRegisteredExtensions(builder, args)
-            Using testApplication = Await builder.BuildAsync()
-                Return Await testApplication.RunAsync()
-            End Using
-        End Function
+    Public Async Function MainAsync(args As String()) As Global.System.Threading.Tasks.Task(Of Integer)
+        Dim builder = Await Global.Microsoft.Testing.Platform.Builder.TestApplication.CreateBuilderAsync(args)
+        SelfRegisteredExtensions.AddSelfRegisteredExtensions(builder, args)
+        Using testApplication = Await builder.BuildAsync()
+            Return Await testApplication.RunAsync()
+        End Using
+    End Function
 
-    End Module
-End Namespace'", "Vbc");
+End Module'", "Vbc");
 
     [DynamicData(nameof(GetBuildMatrixTfmBuildVerbConfiguration), typeof(AcceptanceTestBase<NopAssetFixture>))]
     [TestMethod]
@@ -285,7 +281,7 @@ Imports Microsoft.Testing.Platform.Requests
 Imports Microsoft.Testing.Platform.Extensions
 Imports Microsoft.Testing.Platform
 
-Namespace MyNamespaceRoot.Level1.Level2
+Namespace Global.MyNamespaceRoot.Level1.Level2
   Public Module DummyTestFrameworkRegistration
     Public Sub AddExtensions(builder As ITestApplicationBuilder, args As String())
       builder.RegisterTestFramework(Function() New Capabilities(), Function(cap, services) New DummyTestFramework())

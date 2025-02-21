@@ -62,6 +62,8 @@ public class MSBuildTests_KnownExtensionRegistration : AcceptanceTestBase<NopAss
         <OutputType>Exe</OutputType>
         <!-- Do not warn about package downgrade. NuGet uses alphabetical sort as ordering so -dev or -ci are considered downgrades of -preview. -->
         <NoWarn>$(NoWarn);NETSDK1201</NoWarn>
+
+        <RootNamespace>(MSBuild Tests)</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>
@@ -124,5 +126,14 @@ internal sealed class Capabilities : ITestFrameworkCapabilities
 {
     IReadOnlyCollection<ITestFrameworkCapability> ICapabilities<ITestFrameworkCapability>.Capabilities => Array.Empty<ITestFrameworkCapability>();
 }
+
+#file DummyClass.cs
+
+namespace MSBuildTests.Microsoft;
+
+// This serves as a test to ensure that we don't regress generation of 'global::'
+// If the self registered generation used Microsoft.Testing.Extensions.ExtensionName.TestingPlatformBuilderHook.AddExtension,
+// Then, without global::, Microsoft will be referring to MSBuildTests.Microsoft namespace and will fail to compile
+public static class DummyClass { }
 """;
 }

@@ -32,6 +32,7 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
 {
     private readonly IFileSystem _fileSystem = fileSystem;
     private readonly ITestApplicationModuleInfo _testApplicationModuleInfo = testApplicationModuleInfo;
+    private readonly PlatformOutputDeviceManager _outputDisplay = new();
 
     public ITestFrameworkManager? TestFramework { get; set; }
 
@@ -40,8 +41,6 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
     public IConfigurationManager Configuration { get; } = new ConfigurationManager(fileSystem, testApplicationModuleInfo);
 
     public ILoggingManager Logging { get; } = new LoggingManager();
-
-    public IPlatformOutputDeviceManager OutputDisplay { get; } = new PlatformOutputDeviceManager();
 
     public ICommandLineManager CommandLine { get; } = new CommandLineManager(runtimeFeature, testApplicationModuleInfo);
 
@@ -208,7 +207,7 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
         bool hasServerFlag = commandLineHandler.TryGetOptionArgumentList(PlatformCommandLineProvider.ServerOptionKey, out string[]? protocolName);
         bool isJsonRpcProtocol = protocolName is null || protocolName.Length == 0 || protocolName[0].Equals(PlatformCommandLineProvider.JsonRpcProtocolName, StringComparison.OrdinalIgnoreCase);
 
-        ProxyOutputDevice proxyOutputDevice = await ((PlatformOutputDeviceManager)OutputDisplay).BuildAsync(serviceProvider, hasServerFlag && isJsonRpcProtocol);
+        ProxyOutputDevice proxyOutputDevice = await _outputDisplay.BuildAsync(serviceProvider, hasServerFlag && isJsonRpcProtocol);
 
         // Add FileLoggerProvider if needed
         if (loggingState.FileLoggerProvider is not null)
@@ -585,7 +584,10 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
         AssemblyInformationalVersionAttribute? version = Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>();
         builderMetadata[TelemetryProperties.HostProperties.TestingPlatformVersionPropertyName] = version?.InformationalVersion ?? "unknown";
 
-        string moduleName = Path.GetFileName(_testApplicationModuleInfo.GetCurrentTestApplicationFullPath());
+        string moduleName = Path.GetFileName(_testApplicationModuleInfo.TryGetCurrentTestApplicationFullPath())
+            ?? _testApplicationModuleInfo.TryGetAssemblyName()
+            ?? "unknown";
+
         builderMetadata[TelemetryProperties.HostProperties.TestHostPropertyName] = Sha256Hasher.HashWithNormalizedCasing(moduleName);
         builderMetadata[TelemetryProperties.HostProperties.FrameworkDescriptionPropertyName] = RuntimeInformation.FrameworkDescription;
         builderMetadata[TelemetryProperties.HostProperties.ProcessArchitecturePropertyName] = RuntimeInformation.ProcessArchitecture;

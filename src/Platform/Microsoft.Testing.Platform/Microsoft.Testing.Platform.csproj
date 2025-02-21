@@ -1,21 +1,9 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFrameworks>$(MicrosoftTestingTargetFrameworks);netstandard2.0</TargetFrameworks>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
-
-  <!-- Insert the PlatformVersion.cs -->
-  <PropertyGroup>
-    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
-  </PropertyGroup>
-  <ItemGroup>
-    <Compile Include="**/*.cs" Exclude="**/*.user; **/*.*proj; **/*.sln; **/*.vssscc" />
-  </ItemGroup>
-  <Target Name="InsertPlatformVersion" BeforeTargets="PrepareForBuild">
-    <ItemGroup>
-      <Compile Include="$(Compile);$(IntermediateOutputPath)/PlatformVersion.cs" />
-    </ItemGroup>
-  </Target>
 
   <ItemGroup>
     <AssemblyMetadata Include="Microsoft.Testing.Platform.Application.BuildTimeUTC" Value="$([System.DateTime]::UtcNow.ToString('yyyy/MM/dd'))" />
@@ -87,6 +75,15 @@ This package provides the core platform and the .NET implementation of the proto
     <EmbeddedResource Update="Resources\PlatformResources.resx" GenerateSource="true" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- NOTE: SDK already adds Linux, macOS, and Windows. -->
+    <!-- See https://github.com/dotnet/sdk/blob/cb459ebc2d9374b2bc5ce944cc633a6e79ed8275/src/Tasks/Microsoft.NET.Build.Tasks/targets/Microsoft.NET.SupportedPlatforms.props -->
+    <SupportedPlatform Include="android" />
+    <SupportedPlatform Include="ios" />
+    <SupportedPlatform Include="browser" />
+    <SupportedPlatform Include="tvos" />
+  </ItemGroup>
+
   <!-- Version templating -->
   <ItemGroup>
     <PackageReference Include="Microsoft.DotNet.Build.Tasks.Templating" Version="$(MicrosoftDotNetBuildTasksTemplatingPackageVersion)" AllowExplicitReference="true" PrivateAssets="All" IsImplicitlyDefined="true" />
@@ -102,6 +99,10 @@ This package provides the core platform and the .NET implementation of the proto
     <GenerateFileFromTemplate TemplateFile="%(_TemplateCsproj.Identity)" OutputPath="%(_TemplateCsproj.Destination)" Properties="$(_TemplateProperties)">
       <Output TaskParameter="ResolvedOutputPath" ItemName="FileWrites" />
     </GenerateFileFromTemplate>
+
+    <ItemGroup>
+      <Compile Include="$(IntermediateOutputPath)/PlatformVersion.cs" />
+    </ItemGroup>
   </Target>
 
   <!-- NuGet package layout -->

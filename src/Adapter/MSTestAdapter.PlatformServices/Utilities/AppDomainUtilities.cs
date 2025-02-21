@@ -24,6 +24,7 @@ internal static class AppDomainUtilities
     /// </summary>
     [field: AllowNull]
     [field: MaybeNull]
+    [AllowNull]
     internal static XmlUtilities XmlUtilities
     {
         get => field ??= new XmlUtilities();

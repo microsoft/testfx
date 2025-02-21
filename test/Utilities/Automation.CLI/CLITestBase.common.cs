@@ -63,7 +63,7 @@ public partial class CLITestBase : TestContainer
         return testResultsFolder;
     }
 
-    protected static string GetAssetFullPath(string assetName, string configuration = null, string targetFramework = null)
+    protected static string GetAssetFullPath(string assetName, string? configuration = null, string? targetFramework = null)
     {
         configuration ??= Configuration;
         targetFramework ??= DefaultTargetFramework;

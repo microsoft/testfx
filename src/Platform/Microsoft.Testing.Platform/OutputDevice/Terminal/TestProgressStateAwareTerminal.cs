@@ -6,6 +6,7 @@ namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 /// <summary>
 /// Terminal that updates the progress in place when progress reporting is enabled.
 /// </summary>
+[UnsupportedOSPlatform("browser")]
 internal sealed partial class TestProgressStateAwareTerminal : IDisposable
 {
     /// <summary>

@@ -1,10 +1,33 @@
 #nullable enable
+[TPEXP]const Microsoft.Testing.Platform.CommandLine.CommandLineParseResult.OptionPrefix = '-' -> char
 [TPEXP]Microsoft.Testing.Platform.Capabilities.TestFramework.IBannerMessageOwnerCapability
 [TPEXP]Microsoft.Testing.Platform.Capabilities.TestFramework.IBannerMessageOwnerCapability.GetBannerMessageAsync() -> System.Threading.Tasks.Task<string?>!
 [TPEXP]Microsoft.Testing.Platform.Capabilities.TestFramework.IGracefulStopTestExecutionCapability
 [TPEXP]Microsoft.Testing.Platform.Capabilities.TestFramework.IGracefulStopTestExecutionCapability.StopTestExecutionAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
 [TPEXP]Microsoft.Testing.Platform.Capabilities.TestFramework.TestFrameworkCapabilitiesExtensions
+[TPEXP]Microsoft.Testing.Platform.CommandLine.CommandLineParseOption
+[TPEXP]Microsoft.Testing.Platform.CommandLine.CommandLineParseOption.Arguments.get -> string![]!
+[TPEXP]Microsoft.Testing.Platform.CommandLine.CommandLineParseOption.CommandLineParseOption(string! name, string![]! arguments) -> void
+[TPEXP]Microsoft.Testing.Platform.CommandLine.CommandLineParseOption.Name.get -> string!
+[TPEXP]Microsoft.Testing.Platform.CommandLine.CommandLineParseResult
+[TPEXP]Microsoft.Testing.Platform.CommandLine.CommandLineParseResult.CommandLineParseResult(string? toolName, System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.CommandLine.CommandLineParseOption!>! options, System.Collections.Generic.IReadOnlyList<string!>! errors) -> void
+[TPEXP]Microsoft.Testing.Platform.CommandLine.CommandLineParseResult.Equals(Microsoft.Testing.Platform.CommandLine.CommandLineParseResult? other) -> bool
+[TPEXP]Microsoft.Testing.Platform.CommandLine.CommandLineParseResult.Errors.get -> System.Collections.Generic.IReadOnlyList<string!>!
+[TPEXP]Microsoft.Testing.Platform.CommandLine.CommandLineParseResult.HasError.get -> bool
+[TPEXP]Microsoft.Testing.Platform.CommandLine.CommandLineParseResult.HasTool.get -> bool
+[TPEXP]Microsoft.Testing.Platform.CommandLine.CommandLineParseResult.IsOptionSet(string! optionName) -> bool
+[TPEXP]Microsoft.Testing.Platform.CommandLine.CommandLineParseResult.Options.get -> System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.CommandLine.CommandLineParseOption!>!
+[TPEXP]Microsoft.Testing.Platform.CommandLine.CommandLineParseResult.ToolName.get -> string?
+[TPEXP]Microsoft.Testing.Platform.CommandLine.CommandLineParseResult.TryGetOptionArgumentList(string! optionName, out string![]? arguments) -> bool
 [TPEXP]Microsoft.Testing.Platform.CommandLine.ICommandLineManager.AddProvider(System.Func<System.IServiceProvider!, Microsoft.Testing.Platform.Extensions.CommandLine.ICommandLineOptionsProvider!>! commandLineProviderFactory) -> void
+[TPEXP]Microsoft.Testing.Platform.Configurations.IConfigurationManager
+[TPEXP]Microsoft.Testing.Platform.Configurations.IConfigurationManager.AddConfigurationSource(System.Func<Microsoft.Testing.Platform.Configurations.IConfigurationSource!>! source) -> void
+[TPEXP]Microsoft.Testing.Platform.Configurations.IConfigurationProvider
+[TPEXP]Microsoft.Testing.Platform.Configurations.IConfigurationProvider.LoadAsync() -> System.Threading.Tasks.Task!
+[TPEXP]Microsoft.Testing.Platform.Configurations.IConfigurationProvider.TryGet(string! key, out string? value) -> bool
+[TPEXP]Microsoft.Testing.Platform.Configurations.IConfigurationSource
+[TPEXP]Microsoft.Testing.Platform.Configurations.IConfigurationSource.BuildAsync(Microsoft.Testing.Platform.CommandLine.CommandLineParseResult! commandLineParseResult) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Configurations.IConfigurationProvider!>!
+[TPEXP]Microsoft.Testing.Platform.Configurations.IConfigurationSource.Order.get -> int
 [TPEXP]Microsoft.Testing.Platform.Extensions.Messages.StandardErrorProperty
 [TPEXP]Microsoft.Testing.Platform.Extensions.Messages.StandardErrorProperty.Deconstruct(out string! StandardError) -> void
 [TPEXP]Microsoft.Testing.Platform.Extensions.Messages.StandardErrorProperty.StandardError.get -> string!
@@ -17,6 +40,10 @@
 [TPEXP]Microsoft.Testing.Platform.Extensions.Messages.StandardOutputProperty.StandardOutput.init -> void
 [TPEXP]Microsoft.Testing.Platform.Extensions.Messages.StandardOutputProperty.StandardOutputProperty(Microsoft.Testing.Platform.Extensions.Messages.StandardOutputProperty! original) -> void
 [TPEXP]Microsoft.Testing.Platform.Extensions.Messages.StandardOutputProperty.StandardOutputProperty(string! StandardOutput) -> void
+[TPEXP]Microsoft.Testing.Platform.Logging.ILoggerProvider
+[TPEXP]Microsoft.Testing.Platform.Logging.ILoggerProvider.CreateLogger(string! categoryName) -> Microsoft.Testing.Platform.Logging.ILogger!
+[TPEXP]Microsoft.Testing.Platform.Logging.ILoggingManager
+[TPEXP]Microsoft.Testing.Platform.Logging.ILoggingManager.AddProvider(System.Func<Microsoft.Testing.Platform.Logging.LogLevel, System.IServiceProvider!, Microsoft.Testing.Platform.Logging.ILoggerProvider!>! loggerProviderFactory) -> void
 [TPEXP]Microsoft.Testing.Platform.Requests.IExecuteRequestCompletionNotifier
 [TPEXP]Microsoft.Testing.Platform.Requests.IExecuteRequestCompletionNotifier.Complete() -> void
 [TPEXP]Microsoft.Testing.Platform.Services.IClientInfo
@@ -27,6 +54,9 @@
 [TPEXP]Microsoft.Testing.Platform.Services.IPlatformInformation.CommitHash.get -> string?
 [TPEXP]Microsoft.Testing.Platform.Services.IPlatformInformation.Name.get -> string!
 [TPEXP]Microsoft.Testing.Platform.Services.IPlatformInformation.Version.get -> string?
+[TPEXP]override Microsoft.Testing.Platform.CommandLine.CommandLineParseResult.Equals(object? obj) -> bool
+[TPEXP]override Microsoft.Testing.Platform.CommandLine.CommandLineParseResult.GetHashCode() -> int
+[TPEXP]override Microsoft.Testing.Platform.CommandLine.CommandLineParseResult.ToString() -> string!
 [TPEXP]override Microsoft.Testing.Platform.Extensions.Messages.StandardErrorProperty.Equals(object? obj) -> bool
 [TPEXP]override Microsoft.Testing.Platform.Extensions.Messages.StandardErrorProperty.GetHashCode() -> int
 [TPEXP]override Microsoft.Testing.Platform.Extensions.Messages.StandardErrorProperty.ToString() -> string!
@@ -35,6 +65,7 @@
 [TPEXP]override Microsoft.Testing.Platform.Extensions.Messages.StandardOutputProperty.ToString() -> string!
 [TPEXP]static Microsoft.Testing.Platform.Capabilities.TestFramework.TestFrameworkCapabilitiesExtensions.GetCapability<T>(this Microsoft.Testing.Platform.Capabilities.TestFramework.ITestFrameworkCapabilities! capabilities) -> T?
 [TPEXP]static Microsoft.Testing.Platform.Capabilities.TestFramework.TestFrameworkCapabilitiesExtensions.HasCapability<T>(this Microsoft.Testing.Platform.Capabilities.TestFramework.ITestFrameworkCapabilities! capabilities) -> bool
+[TPEXP]static Microsoft.Testing.Platform.CommandLine.CommandLineParseResult.Empty.get -> Microsoft.Testing.Platform.CommandLine.CommandLineParseResult!
 [TPEXP]static Microsoft.Testing.Platform.Extensions.Messages.StandardErrorProperty.operator !=(Microsoft.Testing.Platform.Extensions.Messages.StandardErrorProperty? left, Microsoft.Testing.Platform.Extensions.Messages.StandardErrorProperty? right) -> bool
 [TPEXP]static Microsoft.Testing.Platform.Extensions.Messages.StandardErrorProperty.operator ==(Microsoft.Testing.Platform.Extensions.Messages.StandardErrorProperty? left, Microsoft.Testing.Platform.Extensions.Messages.StandardErrorProperty? right) -> bool
 [TPEXP]static Microsoft.Testing.Platform.Extensions.Messages.StandardOutputProperty.operator !=(Microsoft.Testing.Platform.Extensions.Messages.StandardOutputProperty? left, Microsoft.Testing.Platform.Extensions.Messages.StandardOutputProperty? right) -> bool
@@ -60,6 +91,8 @@ Microsoft.Testing.Platform.Builder.ITestApplication.RunAsync() -> System.Threadi
 Microsoft.Testing.Platform.Builder.ITestApplicationBuilder
 Microsoft.Testing.Platform.Builder.ITestApplicationBuilder.BuildAsync() -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Builder.ITestApplication!>!
 Microsoft.Testing.Platform.Builder.ITestApplicationBuilder.CommandLine.get -> Microsoft.Testing.Platform.CommandLine.ICommandLineManager!
+Microsoft.Testing.Platform.Builder.ITestApplicationBuilder.Configuration.get -> Microsoft.Testing.Platform.Configurations.IConfigurationManager!
+Microsoft.Testing.Platform.Builder.ITestApplicationBuilder.Logging.get -> Microsoft.Testing.Platform.Logging.ILoggingManager!
 Microsoft.Testing.Platform.Builder.ITestApplicationBuilder.RegisterTestFramework(System.Func<System.IServiceProvider!, Microsoft.Testing.Platform.Capabilities.TestFramework.ITestFrameworkCapabilities!>! capabilitiesFactory, System.Func<Microsoft.Testing.Platform.Capabilities.TestFramework.ITestFrameworkCapabilities!, System.IServiceProvider!, Microsoft.Testing.Platform.Extensions.TestFramework.ITestFramework!>! adapterFactory) -> Microsoft.Testing.Platform.Builder.ITestApplicationBuilder!
 Microsoft.Testing.Platform.Builder.ITestApplicationBuilder.TestHost.get -> Microsoft.Testing.Platform.TestHost.ITestHostManager!
 Microsoft.Testing.Platform.Builder.ITestApplicationBuilder.TestHostControllers.get -> Microsoft.Testing.Platform.TestHostControllers.ITestHostControllersManager!

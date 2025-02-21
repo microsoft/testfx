@@ -55,6 +55,13 @@ public sealed class PublishAotNonNativeTests : AcceptanceTestBase<NopAssetFixtur
         <LangVersion>preview</LangVersion>
         <NoWarn>$(NoWarn);NU1507</NoWarn>
         <PlatformTarget>x64</PlatformTarget>
+
+        <!--
+            This property is not required by users and is only set to simplify our testing infrastructure. When testing out in local or ci,
+            we end up with a -dev or -ci version which will lose resolution over -preview dependency of code coverage. Because we want to
+            ensure we are testing with locally built version, we force adding the platform dependency.
+        -->
+        <EnableMicrosoftTestingPlatform>true</EnableMicrosoftTestingPlatform>
     </PropertyGroup>
     <ItemGroup>
         <PackageReference Include="MSTest" Version="$MSTestVersion$" />

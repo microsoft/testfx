@@ -12,7 +12,6 @@
     <PackageReference Include="Microsoft.CodeAnalysis.BannedApiAnalyzers" PrivateAssets="all" />
 
     <PackageReference Include="StyleCop.Analyzers" PrivateAssets="all" />
-    <AdditionalFiles Include="$(RepositoryEngineeringDir)stylecop.json" Link="stylecop.json" />
 
     <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" PrivateAssets="all" />
   </ItemGroup>
