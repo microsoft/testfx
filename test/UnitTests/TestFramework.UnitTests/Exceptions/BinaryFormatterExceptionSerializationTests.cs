@@ -35,7 +35,7 @@ public sealed class BinaryFormatterExceptionSerializationTests : TestContainer
             var mem = new MemoryStream();
             var formatter = new BinaryFormatter
             {
-                Binder = new FormatterBinder(),
+                Binder = new FormatterBinder(ex.GetType()),
             };
             formatter.Serialize(mem, ex);
             mem.Position = 0;
@@ -52,28 +52,18 @@ public sealed class BinaryFormatterExceptionSerializationTests : TestContainer
     }
 
     /// <summary>
-    /// This is for compliance, usage of BinaryFormatter without binder is not allowed, as well as using binder that returns null.
-    /// But there is no way to "attack" this. We use it in our tests only, and you definitely should NOT copy this code elsewhere.
+    /// This is for compliance, usage of BinaryFormatter without binder is not allowed.
     /// </summary>
     private class FormatterBinder : SerializationBinder
     {
-        private class TypeResolver
-        {
-            public TypeResolver()
-            {
-                bool a = false;
-                if (a)
-                {
-                    _nullType = typeof(object);
-                }
-            }
+        private readonly Type _type;
 
-            private readonly Type? _nullType;
-
-            public Type ResolveType() => _nullType!;
-        }
+        public FormatterBinder(Type type)
+            => _type = type;
 
         public override Type BindToType(string assemblyName, string typeName)
-            => new TypeResolver().ResolveType();
+            => assemblyName == _type.Assembly.ToString() && typeName == _type.FullName
+            ? _type
+            : throw new InvalidOperationException();
     }
 }
