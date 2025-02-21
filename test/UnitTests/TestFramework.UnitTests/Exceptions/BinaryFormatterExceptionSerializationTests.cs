@@ -35,7 +35,7 @@ public sealed class BinaryFormatterExceptionSerializationTests : TestContainer
             var mem = new MemoryStream();
             var formatter = new BinaryFormatter
             {
-                Binder = new FormatterBinder(),
+                Binder = new FormatterBinder(ex.GetType()),
             };
             formatter.Serialize(mem, ex);
             mem.Position = 0;
@@ -56,7 +56,14 @@ public sealed class BinaryFormatterExceptionSerializationTests : TestContainer
     /// </summary>
     private class FormatterBinder : SerializationBinder
     {
+        private readonly Type _type;
+
+        public FormatterBinder(Type type)
+            => _type = type;
+
         public override Type BindToType(string assemblyName, string typeName)
-            => null!;
+            => assemblyName == _type.Assembly.ToString() && typeName == _type.FullName
+            ? _type
+            : throw new InvalidOperationException();
     }
 }
