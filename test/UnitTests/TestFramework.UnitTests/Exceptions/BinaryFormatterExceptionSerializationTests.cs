@@ -52,11 +52,28 @@ public sealed class BinaryFormatterExceptionSerializationTests : TestContainer
     }
 
     /// <summary>
-    /// This is for compliance, usage of BinaryFormatter without binder is not allowed.
+    /// This is for compliance, usage of BinaryFormatter without binder is not allowed, as well as using binder that returns null.
+    /// But there is no way to "attack" this. We use it in our tests only, and you definitely should NOT copy this code elsewhere.
     /// </summary>
     private class FormatterBinder : SerializationBinder
     {
+        private class TypeResolver
+        {
+            public TypeResolver()
+            {
+                bool a = false;
+                if (a)
+                {
+                    _nullType = typeof(object);
+                }
+            }
+
+            private readonly Type? _nullType;
+
+            public Type ResolveType() => _nullType!;
+        }
+
         public override Type BindToType(string assemblyName, string typeName)
-            => null!;
+            => new TypeResolver().ResolveType();
     }
 }
