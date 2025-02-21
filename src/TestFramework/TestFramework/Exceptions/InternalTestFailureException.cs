@@ -62,5 +62,8 @@ public class InternalTestFailureException : UnitTestAssertException
     protected InternalTestFailureException(SerializationInfo info, StreamingContext context)
         : base(info, context)
     {
+        // Do not remove this as unused, it is used by BinaryFormatter when communicating between tested VisualStudio instance,
+        // and the UI testing framework that tests it. Don't attempt testing this in the repository using BinaryFormatter will trigger
+        // many compliance issues.
     }
 }
