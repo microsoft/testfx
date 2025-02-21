@@ -3,8 +3,7 @@
 
   <Import Project="../Directory.Build.props" />
 
-  <PropertyGroup>
-    <TestRunnerName>TestingPlatformRunner</TestRunnerName>
+  <PropertyGroup>    
     <!-- By default we run tests with VSTest runner and custom test framework. Platform projects will use a different runner and framework -->
     <UseVSTestRunner Condition=" '$(UseVSTestRunner)' == '' " >true</UseVSTestRunner>
     <Nullable>enable</Nullable>
