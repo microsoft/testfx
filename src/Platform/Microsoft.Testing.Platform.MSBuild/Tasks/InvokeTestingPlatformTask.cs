@@ -69,26 +69,22 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
     /// <summary>
     /// Gets or sets the value of MSBuild property UseAppHost.
     /// </summary>
-    [Required]
-    public ITaskItem UseAppHost { get; set; }
+    public ITaskItem? UseAppHost { get; set; }
 
     /// <summary>
     /// Gets or sets the value of MSBuild property _IsExecutable.
     /// </summary>
-    [Required]
-    public ITaskItem IsExecutable { get; set; }
+    public ITaskItem? IsExecutable { get; set; }
 
     /// <summary>
     /// Gets or sets the value of MSBuild property TargetDir.
     /// </summary>
-    [Required]
-    public ITaskItem TargetDir { get; set; }
+    public ITaskItem? TargetDir { get; set; }
 
     /// <summary>
     /// Gets or sets the value of MSBuild property AssemblyName.
     /// </summary>
-    [Required]
-    public ITaskItem AssemblyName { get; set; }
+    public ITaskItem? AssemblyName { get; set; }
 
     /// <summary>
     /// Gets or sets the value of MSBuild property _NativeExecutableExtension.
@@ -259,10 +255,10 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
         // https://github.com/dotnet/sdk/blob/5846d648f2280b54a54e481f55de4d9eea0e6a0e/src/Tasks/Microsoft.NET.Build.Tasks/targets/Microsoft.NET.Sdk.targets#L1152-L1155
         // The more correct logic is implementing https://github.com/microsoft/testfx/issues/5091
         if (IsNetCoreApp &&
-            bool.TryParse(IsExecutable.ItemSpec, out bool isExecutable) && isExecutable &&
-            bool.TryParse(UseAppHost.ItemSpec, out bool useAppHost) && useAppHost)
+            bool.TryParse(IsExecutable?.ItemSpec, out bool isExecutable) && isExecutable &&
+            bool.TryParse(UseAppHost?.ItemSpec, out bool useAppHost) && useAppHost)
         {
-            string runCommand = $"{TargetDir.ItemSpec}{AssemblyName.ItemSpec}{NativeExecutableExtension?.ItemSpec}";
+            string runCommand = $"{TargetDir?.ItemSpec}{AssemblyName?.ItemSpec}{NativeExecutableExtension?.ItemSpec}";
             if (File.Exists(runCommand))
             {
                 return runCommand;
