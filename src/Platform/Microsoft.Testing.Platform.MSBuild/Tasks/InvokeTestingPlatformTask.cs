@@ -93,7 +93,7 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
     /// <summary>
     /// Gets or sets the value of MSBuild property _NativeExecutableExtension.
     /// </summary>
-    public ITaskItem NativeExecutableExtension { get; set; }
+    public ITaskItem? NativeExecutableExtension { get; set; }
 
     // -------- END the previous properties shouldn't be used. See https://github.com/microsoft/testfx/issues/5091 --------
 
@@ -255,7 +255,7 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
             bool.TryParse(IsExecutable.ItemSpec, out bool isExecutable) && isExecutable &&
             bool.TryParse(UseAppHost.ItemSpec, out bool useAppHost) && useAppHost)
         {
-            string runCommand = $"{TargetDir.ItemSpec}{AssemblyName.ItemSpec}{NativeExecutableExtension.ItemSpec}";
+            string runCommand = $"{TargetDir.ItemSpec}{AssemblyName.ItemSpec}{NativeExecutableExtension?.ItemSpec}";
             if (File.Exists(runCommand))
             {
                 return runCommand;
