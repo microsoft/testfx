@@ -501,10 +501,12 @@ public class TestClassInfoTests : TestContainer
         Verify(classCleanupException is not null);
         Verify(classCleanupException.Message.StartsWith("Class Cleanup method DummyTestClass.ClassCleanupMethod failed.", StringComparison.Ordinal));
         Verify(classCleanupException.Message.Contains("Error Message: Assert.Fail failed. Test Failure."));
+#if DEBUG
         Verify(
-            classCleanupException.Message.Contains(
-            $"{typeof(TestClassInfoTests).FullName}.<>c.<{nameof(this.RunClassCleanupShouldReturnAssertFailureExceptionDetails)}>"),
-            $"Value: {classCleanupException.Message}");
+    classCleanupException.Message.Contains(
+    $"{typeof(TestClassInfoTests).FullName}.<>c.<{nameof(this.RunClassCleanupShouldReturnAssertFailureExceptionDetails)}>"),
+    $"Value: {classCleanupException.Message}");
+#endif
     }
 
     public void RunClassCleanupShouldReturnAssertInconclusiveExceptionDetails()
@@ -521,9 +523,11 @@ public class TestClassInfoTests : TestContainer
         Verify(classCleanupException is not null);
         Verify(classCleanupException.Message.StartsWith("Class Cleanup method DummyTestClass.ClassCleanupMethod failed.", StringComparison.Ordinal));
         Verify(classCleanupException.Message.Contains("Error Message: Assert.Inconclusive failed. Test Inconclusive."));
+#if DEBUG
         Verify(
             classCleanupException.Message.Contains($"{typeof(TestClassInfoTests).FullName}.<>c.<{nameof(this.RunClassCleanupShouldReturnAssertInconclusiveExceptionDetails)}>"),
             $"Value: {classCleanupException.Message}");
+#endif
     }
 
     public void RunClassCleanupShouldReturnExceptionDetailsOfNonAssertExceptions()

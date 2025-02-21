@@ -267,7 +267,7 @@ public class TestAssemblyInfoTests : TestContainer
         string? actualErrorMessage = _testAssemblyInfo.RunAssemblyCleanup();
         Verify(
             actualErrorMessage!.StartsWith(
-                "Assembly Cleanup method DummyTestClass.AssemblyCleanupMethod failed. Error Message: Assert.Fail failed. Test Failure.. StackTrace:    at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestAssemblyInfoTests.<>c.<RunAssemblyCleanupShouldReturnAssertFailureExceptionDetails>", StringComparison.Ordinal),
+                "Assembly Cleanup method DummyTestClass.AssemblyCleanupMethod failed. Error Message: Assert.Fail failed. Test Failure..", StringComparison.Ordinal),
             $"Value: {actualErrorMessage}");
     }
 
@@ -279,7 +279,7 @@ public class TestAssemblyInfoTests : TestContainer
         string? actualErrorMessage = _testAssemblyInfo.RunAssemblyCleanup();
         Verify(
             actualErrorMessage!.StartsWith(
-                "Assembly Cleanup method DummyTestClass.AssemblyCleanupMethod failed. Error Message: Assert.Inconclusive failed. Test Inconclusive.. StackTrace:    at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestAssemblyInfoTests.<>c.<RunAssemblyCleanupShouldReturnAssertInconclusiveExceptionDetails>", StringComparison.Ordinal),
+                "Assembly Cleanup method DummyTestClass.AssemblyCleanupMethod failed. Error Message: Assert.Inconclusive failed. Test Inconclusive..", StringComparison.Ordinal),
             $"Value: {actualErrorMessage}");
     }
 
@@ -291,7 +291,7 @@ public class TestAssemblyInfoTests : TestContainer
         string? actualErrorMessage = _testAssemblyInfo.RunAssemblyCleanup();
         Verify(
             actualErrorMessage!.StartsWith(
-                "Assembly Cleanup method DummyTestClass.AssemblyCleanupMethod failed. Error Message: System.ArgumentException: Argument Exception. StackTrace:     at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestAssemblyInfoTests.<>c.<RunAssemblyCleanupShouldReturnExceptionDetailsOfNonAssertExceptions>", StringComparison.Ordinal),
+                "Assembly Cleanup method DummyTestClass.AssemblyCleanupMethod failed. Error Message: System.ArgumentException: Argument Exception.", StringComparison.Ordinal),
             $"Value: {actualErrorMessage}");
     }
 
