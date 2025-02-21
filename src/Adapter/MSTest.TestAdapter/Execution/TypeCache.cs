@@ -80,7 +80,7 @@ internal sealed class TypeCache : MarshalByRefObject
     /// Get the test method info corresponding to the parameter test Element.
     /// </summary>
     /// <returns> The <see cref="TestMethodInfo"/>. </returns>
-    public TestMethodInfo? GetTestMethodInfo(TestMethod testMethod, ITestContext testContext, bool captureDebugTraces)
+    public TestMethodInfo? GetTestMethodInfo(TestMethod testMethod, ITestContext testContext)
     {
         Guard.NotNull(testMethod);
         Guard.NotNull(testContext);
@@ -96,7 +96,7 @@ internal sealed class TypeCache : MarshalByRefObject
         }
 
         // Get the testMethod
-        return ResolveTestMethodInfo(testMethod, testClassInfo, testContext, captureDebugTraces);
+        return ResolveTestMethodInfo(testMethod, testClassInfo, testContext);
     }
 
     /// <summary>
@@ -678,16 +678,14 @@ internal sealed class TypeCache : MarshalByRefObject
     /// <returns>
     /// The TestMethodInfo for the given test method. Null if the test method could not be found.
     /// </returns>
-    private TestMethodInfo ResolveTestMethodInfo(TestMethod testMethod, TestClassInfo testClassInfo, ITestContext testContext, bool captureDebugTraces)
+    private TestMethodInfo ResolveTestMethodInfo(TestMethod testMethod, TestClassInfo testClassInfo, ITestContext testContext)
     {
         DebugEx.Assert(testMethod != null, "testMethod is Null");
         DebugEx.Assert(testClassInfo != null, "testClassInfo is Null");
 
         MethodInfo methodInfo = GetMethodInfoForTestMethod(testMethod, testClassInfo);
 
-        TimeoutInfo timeout = GetTestTimeout(methodInfo, testMethod);
-        var testMethodOptions = new TestMethodOptions(timeout, testContext, captureDebugTraces, GetTestMethodAttribute(methodInfo, testClassInfo));
-        var testMethodInfo = new TestMethodInfo(methodInfo, testClassInfo, testMethodOptions);
+        var testMethodInfo = new TestMethodInfo(methodInfo, testClassInfo, testContext);
 
         SetCustomProperties(testMethodInfo, testContext);
 
@@ -698,25 +696,6 @@ internal sealed class TypeCache : MarshalByRefObject
     {
         MethodInfo methodInfo = GetMethodInfoForTestMethod(testMethod, testClassInfo);
         return new DiscoveryTestMethodInfo(methodInfo, testClassInfo);
-    }
-
-    /// <summary>
-    /// Provides the Test Method Extension Attribute of the TestClass.
-    /// </summary>
-    /// <param name="methodInfo"> The method info. </param>
-    /// <param name="testClassInfo"> The test class info. </param>
-    /// <returns>Test Method Attribute.</returns>
-    private TestMethodAttribute GetTestMethodAttribute(MethodInfo methodInfo, TestClassInfo testClassInfo)
-    {
-        // Get the derived TestMethod attribute from reflection.
-        // It should be non-null as it was already validated by IsValidTestMethod.
-        TestMethodAttribute testMethodAttribute = _reflectionHelper.GetFirstDerivedAttributeOrDefault<TestMethodAttribute>(methodInfo, inherit: false)!;
-
-        // Get the derived TestMethod attribute from Extended TestClass Attribute
-        // If the extended TestClass Attribute doesn't have extended TestMethod attribute then base class returns back the original testMethod Attribute
-        testMethodAttribute = testClassInfo.ClassAttribute.GetTestMethodAttribute(testMethodAttribute) ?? testMethodAttribute;
-
-        return testMethodAttribute;
     }
 
     /// <summary>
@@ -794,31 +773,6 @@ internal sealed class TypeCache : MarshalByRefObject
 
         // Only find methods that match the given declaring name.
         return methods.FirstOrDefault(method => method.DeclaringType!.FullName == testMethod.DeclaringClassFullName);
-    }
-
-    /// <summary>
-    /// Gets the test timeout for the parameter test method.
-    /// </summary>
-    /// <param name="methodInfo"> The method Info. </param>
-    /// <param name="testMethod"> The test Method. </param>
-    /// <returns> The timeout value if defined in milliseconds. 0 if not defined. </returns>
-    private TimeoutInfo GetTestTimeout(MethodInfo methodInfo, TestMethod testMethod)
-    {
-        DebugEx.Assert(methodInfo != null, "TestMethod should be non-null");
-        TimeoutAttribute? timeoutAttribute = _reflectionHelper.GetFirstNonDerivedAttributeOrDefault<TimeoutAttribute>(methodInfo, inherit: false);
-
-        if (timeoutAttribute != null)
-        {
-            if (!timeoutAttribute.HasCorrectTimeout)
-            {
-                string message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorInvalidTimeout, testMethod.FullClassName, testMethod.Name);
-                throw new TypeInspectionException(message);
-            }
-
-            return TimeoutInfo.FromTimeoutAttribute(timeoutAttribute);
-        }
-
-        return TimeoutInfo.FromTestTimeoutSettings();
     }
 
     /// <summary>

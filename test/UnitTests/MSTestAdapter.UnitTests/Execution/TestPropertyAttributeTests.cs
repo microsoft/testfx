@@ -49,8 +49,7 @@ public class TestPropertyAttributeTests : TestContainer
 
         _ = _typeCache.GetTestMethodInfo(
             testMethod,
-            testContext,
-            false);
+            testContext);
 
         Assert.IsTrue(testContext.TryGetPropertyValue("TestMethodKeyFromBase", out object? value1));
         Assert.AreEqual("TestMethodValueFromBase", value1);
@@ -80,8 +79,7 @@ public class TestPropertyAttributeTests : TestContainer
 
         _ = _typeCache.GetTestMethodInfo(
             testMethod,
-            testContext,
-            false);
+            testContext);
 
         Assert.IsTrue(testContext.TryGetPropertyValue("DerivedMethod1Key", out object? value1));
         Assert.AreEqual("DerivedMethod1Value", value1);
@@ -126,8 +124,7 @@ public class TestPropertyAttributeTests : TestContainer
 
         _ = _typeCache.GetTestMethodInfo(
             testMethod,
-            testContext,
-            false);
+            testContext);
 
         Assert.IsTrue(testContext.TryGetPropertyValue("DerivedMethod2Key", out object? value1));
         Assert.AreEqual("DerivedMethod2Value", value1);

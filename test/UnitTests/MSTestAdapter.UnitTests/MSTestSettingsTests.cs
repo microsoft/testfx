@@ -1309,33 +1309,32 @@ public class MSTestSettingsTests : TestContainer
         _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value '3' for runsettings entry 'execution:considerFixturesAsSpecialTests', setting will be ignored."), Times.Once);
     }
 
-    [TestMethod]
     public void ConfigJson_WithValidValues_ValuesAreSetCorrectly()
     {
         // Arrange - setting up valid configuration values
         var configDictionary = new Dictionary<string, string>
-    {
-        { "mstest:timeout:assemblyInitialize", "300" },
-        { "mstest:timeout:assemblyCleanup", "300" },
-        { "mstest:timeout:classInitialize", "200" },
-        { "mstest:timeout:classCleanup", "200" },
-        { "mstest:timeout:testInitialize", "100" },
-        { "mstest:timeout:testCleanup", "100" },
-        { "mstest:timeout:test", "60" },
-        { "mstest:timeout:useCooperativeCancellation", "true" },
-        { "mstest:parallelism:enabled", "true" },
-        { "mstest:parallelism:workers", "4" },
-        { "mstest:parallelism:scope", "class" },
-        { "mstest:execution:mapInconclusiveToFailed", "true" },
-        { "mstest:execution:mapNotRunnableToFailed", "true" },
-        { "mstest:execution:treatDiscoveryWarningsAsErrors", "true" },
-        { "mstest:execution:considerEmptyDataSourceAsInconclusive", "true" },
-        { "mstest:execution:treatClassAndAssemblyCleanupWarningsAsErrors", "true" },
-        { "mstest:execution:considerFixturesAsSpecialTests", "true" },
-        { "mstest:enableBaseClassTestMethodsFromOtherAssemblies", "true" },
-        { "mstest:orderTestsByNameInClass", "true" },
-        { "mstest:output:captureTrace", "true" },
-    };
+        {
+            { "mstest:timeout:assemblyInitialize", "300" },
+            { "mstest:timeout:assemblyCleanup", "300" },
+            { "mstest:timeout:classInitialize", "200" },
+            { "mstest:timeout:classCleanup", "200" },
+            { "mstest:timeout:testInitialize", "100" },
+            { "mstest:timeout:testCleanup", "100" },
+            { "mstest:timeout:test", "60" },
+            { "mstest:timeout:useCooperativeCancellation", "true" },
+            { "mstest:parallelism:enabled", "true" },
+            { "mstest:parallelism:workers", "4" },
+            { "mstest:parallelism:scope", "class" },
+            { "mstest:execution:mapInconclusiveToFailed", "true" },
+            { "mstest:execution:mapNotRunnableToFailed", "true" },
+            { "mstest:execution:treatDiscoveryWarningsAsErrors", "true" },
+            { "mstest:execution:considerEmptyDataSourceAsInconclusive", "true" },
+            { "mstest:execution:treatClassAndAssemblyCleanupWarningsAsErrors", "true" },
+            { "mstest:execution:considerFixturesAsSpecialTests", "true" },
+            { "mstest:enableBaseClassTestMethodsFromOtherAssemblies", "true" },
+            { "mstest:orderTestsByNameInClass", "true" },
+            { "mstest:output:captureTrace", "true" },
+        };
 
         var mockConfig = new Mock<IConfiguration>();
         mockConfig.Setup(config => config[It.IsAny<string>()])
@@ -1366,11 +1365,40 @@ public class MSTestSettingsTests : TestContainer
         Verify(settings.TestInitializeTimeout == 100);
         Verify(settings.TestCleanupTimeout == 100);
 
+        Verify(!settings.DisableParallelization);
         Verify(settings.ParallelizationWorkers == 4);
         Verify(settings.ParallelizationScope == ExecutionScope.ClassLevel);
     }
 
-    [TestMethod]
+    public void ConfigJson_Parllelism_Enabled_True() => ConfigJson_Parllelism_Enabled_Core(true);
+
+    public void ConfigJson_Parllelism_Enabled_False() => ConfigJson_Parllelism_Enabled_Core(false);
+
+    private void ConfigJson_Parllelism_Enabled_Core(bool parallelismEnabled)
+    {
+        // Arrange - setting up valid configuration values
+        var configDictionary = new Dictionary<string, string>
+        {
+            { "mstest:parallelism:enabled", parallelismEnabled.ToString().ToLowerInvariant() },
+            { "mstest:parallelism:workers", "4" },
+            { "mstest:parallelism:scope", "class" },
+        };
+
+        var mockConfig = new Mock<IConfiguration>();
+        mockConfig.Setup(config => config[It.IsAny<string>()])
+                  .Returns((string key) => configDictionary.TryGetValue(key, out string? value) ? value : null);
+
+        var settings = new MSTestSettings();
+
+        // Act
+        MSTestSettings.SetSettingsFromConfig(mockConfig.Object, _mockMessageLogger.Object, settings);
+
+        // Assert
+        Verify(settings.DisableParallelization == !parallelismEnabled);
+        Verify(settings.ParallelizationWorkers == 4);
+        Verify(settings.ParallelizationScope == ExecutionScope.ClassLevel);
+    }
+
     public void ConfigJson_WithValidValues_MethodScope()
     {
         // Arrange - setting up valid configuration values

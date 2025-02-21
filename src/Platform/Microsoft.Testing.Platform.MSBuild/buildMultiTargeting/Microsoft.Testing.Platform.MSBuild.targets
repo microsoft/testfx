@@ -149,13 +149,19 @@
       <FileWrites Include="$(_TestingPlatformEntryPointSourcePath)" />
     </ItemGroup>
   </Target>
-  <!-- Note: _IncludeGenerateTestingPlatformEntryPointIntoCompilation is set to depend on _IncludeGenerateAutoRegisteredExtensionsIntoCompilation -->
-  <!-- This is because file orders matter in F# -->
+
   <Target Name="_IncludeGenerateTestingPlatformEntryPointIntoCompilation" BeforeTargets="BeforeCompile;XamlPreCompile"
-          DependsOnTargets="_CalculateGenerateTestingPlatformEntryPoint;_GenerateTestingPlatformEntryPointFileInputCache;_GenerateTestingPlatformEntryPoint;_IncludeGenerateAutoRegisteredExtensionsIntoCompilation">
+          DependsOnTargets="_CalculateGenerateTestingPlatformEntryPoint;_GenerateTestingPlatformEntryPointFileInputCache;_GenerateTestingPlatformEntryPoint">
 
     <ItemGroup Condition=" '$(GenerateTestingPlatformEntryPoint)' == 'true' ">
-      <Compile Include="$(_TestingPlatformEntryPointSourcePath)" />
+      <!-- Order of files matter in F#. Make sure to include the entry-point last. -->
+      <!-- See https://github.com/dotnet/fsharp/blob/27db996c58a511386ad754e34f4b57877aa1d99e/src/FSharp.Build/Microsoft.FSharp.Targets#L258-L277 -->
+      <!-- IMPORTANT: We use CompileAfter and not CompileLast as CompileLast is quite recent: https://github.com/dotnet/fsharp/pull/17103 -->
+      <!-- Note that we only add the entry point in CompileAfter. The self-registered extensions is still in Compile -->
+      <!-- If the user enables only self-registered extensions generation and decides to write their own entry point, they should add
+           their entry point file to CompileAfter as well -->
+      <Compile Include="$(_TestingPlatformEntryPointSourcePath)" Condition=" '$(Language)' != 'F#' " />
+      <CompileAfter Include="$(_TestingPlatformEntryPointSourcePath)" Condition=" '$(Language)' == 'F#' " />
 
       <!-- We need to report to the FileWrites here because is possible that we skip _GenerateTestingPlatformInjectEntryPoint and we want to correctly handle the "dotnet clean" target -->
       <FileWrites Include="$(_TestingPlatformEntryPointSourcePath)" />
@@ -340,7 +346,7 @@
     <!--
     NETCoreSdkRuntimeIdentifier is used by DefaultAppHostRuntimeIdentifier to figure out the architecture, and is defined also for .NET Framework.
     -->
-    <_TestArchitecture Condition="('$(_TestArchitecture)' == '' or '$(_TestArchitecture)' == 'AnyCpu') and '$(NETCoreSdkRuntimeIdentifier)' != ''">$([System.Text.RegularExpressions.Regex]::Replace($(DefaultAppHostRuntimeIdentifier), '.*-', ''))</_TestArchitecture>
+    <_TestArchitecture Condition="('$(_TestArchitecture)' == '' or '$(_TestArchitecture)' == 'AnyCpu') and '$(NETCoreSdkRuntimeIdentifier)' != ''">$([System.Text.RegularExpressions.Regex]::Replace($(NETCoreSdkRuntimeIdentifier), '.*-', ''))</_TestArchitecture>
     <!-- If everyting else fails, fallback to x64. -->
     <_TestArchitecture Condition="'$(_TestArchitecture)' == '' or '$(_TestArchitecture)' == 'AnyCpu'">x64</_TestArchitecture>
     <TestingPlatformShowTestsFailure Condition=" '$(TestingPlatformShowTestsFailure)' == '' ">False</TestingPlatformShowTestsFailure>

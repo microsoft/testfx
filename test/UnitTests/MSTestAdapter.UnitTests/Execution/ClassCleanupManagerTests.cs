@@ -16,11 +16,11 @@ public class ClassCleanupManagerTests : TestContainer
     public void AssemblyCleanupRunsAfterAllTestsFinishEvenIfWeScheduleTheSameTestMultipleTime()
     {
         ReflectHelper reflectHelper = Mock.Of<ReflectHelper>();
-        MethodInfo methodInfo = typeof(ClassCleanupManagerTests).GetMethod(nameof(FakeTestMethod), BindingFlags.Instance | BindingFlags.NonPublic)!;
-        MethodInfo classCleanupMethodInfo = typeof(ClassCleanupManagerTests).GetMethod(nameof(FakeClassCleanupMethod), BindingFlags.Instance | BindingFlags.NonPublic)!;
+        MethodInfo methodInfo = typeof(FakeTestClass).GetMethod(nameof(FakeTestClass.FakeTestMethod), BindingFlags.Instance | BindingFlags.NonPublic)!;
+        MethodInfo classCleanupMethodInfo = typeof(FakeTestClass).GetMethod(nameof(FakeTestClass.FakeClassCleanupMethod), BindingFlags.Instance | BindingFlags.NonPublic)!;
         // Full class name must agree between unitTestElement.TestMethod.FullClassName and testMethod.FullClassName;
         string fullClassName = methodInfo.DeclaringType!.FullName!;
-        TestMethod testMethod = new(nameof(FakeTestMethod), fullClassName, typeof(ClassCleanupManagerTests).Assembly.FullName!, isAsync: false);
+        TestMethod testMethod = new(nameof(FakeTestClass.FakeTestMethod), fullClassName, typeof(FakeTestClass).Assembly.FullName!, isAsync: false);
 
         // Setting 2 of the same test to run, we should run assembly cleanup after both these tests
         // finish, not after the first one finishes.
@@ -32,7 +32,7 @@ public class ClassCleanupManagerTests : TestContainer
 
         var classCleanupManager = new ClassCleanupManager(testsToRun, ClassCleanupBehavior.EndOfClass, ClassCleanupBehavior.EndOfClass, reflectHelper);
 
-        TestClassInfo testClassInfo = new(typeof(ClassCleanupManagerTests), null!, true, null!, null!)
+        TestClassInfo testClassInfo = new(typeof(FakeTestClass), null!, true, new TestClassAttribute(), null!)
         {
             // This needs to be set, to allow running class cleanup.
             ClassCleanupMethod = classCleanupMethodInfo,
@@ -50,11 +50,17 @@ public class ClassCleanupManagerTests : TestContainer
         Assert.IsTrue(classCleanupManager.ShouldRunEndOfAssemblyCleanup);
     }
 
-    private void FakeTestMethod()
+    [TestClass]
+    private class FakeTestClass
     {
-    }
+        [TestMethod]
+        internal void FakeTestMethod()
+        {
+        }
 
-    private void FakeClassCleanupMethod()
-    {
+        [ClassCleanup]
+        internal void FakeClassCleanupMethod()
+        {
+        }
     }
 }
