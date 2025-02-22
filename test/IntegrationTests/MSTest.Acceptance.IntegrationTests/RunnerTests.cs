@@ -27,15 +27,14 @@ public class RunnerTests : AcceptanceTestBase<NopAssetFixture>
                 .PatchCodeWithReplace("$EnableMSTestRunner$", "<EnableMSTestRunner>true</EnableMSTestRunner>")
                 .PatchCodeWithReplace("$OutputType$", "<OutputType>Exe</OutputType>")
                 .PatchCodeWithReplace("$Extra$", string.Empty));
-        string binlogFile = Path.Combine(generator.TargetAssetPath, "msbuild.binlog");
         DotnetMuxerResult compilationResult = await DotnetCli.RunAsync(
             $"restore -m:1 -nodeReuse:false {generator.TargetAssetPath} -r {RID}",
             AcceptanceFixture.NuGetGlobalPackagesFolder.Path);
         compilationResult = await DotnetCli.RunAsync(
-            $"{verb} -m:1 -nodeReuse:false {generator.TargetAssetPath} -c {buildConfiguration} -bl:{binlogFile} -r {RID}",
+            $"{verb} -m:1 -nodeReuse:false {generator.TargetAssetPath} -c {buildConfiguration} -r {RID}",
             AcceptanceFixture.NuGetGlobalPackagesFolder.Path);
 
-        Build binLog = Serialization.Read(binlogFile);
+        Build binLog = Serialization.Read(compilationResult.BinlogPath);
         Assert.AreNotEqual(0, binLog.FindChildrenRecursive<AddItem>()
             .Count(x => x.Title.Contains("ProjectCapability") && x.Children.Any(c => ((Item)c).Name == "TestingPlatformServer")));
 
@@ -69,10 +68,9 @@ return await app.RunAsync();
 <GenerateTestingPlatformEntryPoint>False</GenerateTestingPlatformEntryPoint>
 <LangVersion>preview</LangVersion>
 """));
-        string binlogFile = Path.Combine(generator.TargetAssetPath, "msbuild.binlog");
         await DotnetCli.RunAsync($"restore -m:1 -nodeReuse:false {generator.TargetAssetPath} -r {RID}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path);
         await DotnetCli.RunAsync(
-            $"{verb} -m:1 -nodeReuse:false {generator.TargetAssetPath} -c {buildConfiguration} -bl:{binlogFile} -r {RID}",
+            $"{verb} -m:1 -nodeReuse:false {generator.TargetAssetPath} -c {buildConfiguration} -r {RID}",
             AcceptanceFixture.NuGetGlobalPackagesFolder.Path);
         var testHost = TestHost.LocateFrom(generator.TargetAssetPath, AssetName, tfm, buildConfiguration: buildConfiguration, verb: verb);
         TestHostResult testHostResult = await testHost.ExecuteAsync();
@@ -92,11 +90,10 @@ return await app.RunAsync();
                 .PatchCodeWithReplace("$EnableMSTestRunner$", "<EnableMSTestRunner>false</EnableMSTestRunner>")
                 .PatchCodeWithReplace("$OutputType$", "<OutputType>Exe</OutputType>")
                 .PatchCodeWithReplace("$Extra$", string.Empty));
-        string binlogFile = Path.Combine(generator.TargetAssetPath, "msbuild.binlog");
         await DotnetCli.RunAsync($"restore -m:1 -nodeReuse:false {generator.TargetAssetPath} -r {RID}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path);
         try
         {
-            await DotnetCli.RunAsync($"{verb} -m:1 -nodeReuse:false {generator.TargetAssetPath} -c {buildConfiguration} -bl:{binlogFile} -r {RID}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path);
+            await DotnetCli.RunAsync($"{verb} -m:1 -nodeReuse:false {generator.TargetAssetPath} -c {buildConfiguration} -r {RID}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path);
             var testHost = TestHost.LocateFrom(generator.TargetAssetPath, AssetName, tfm, buildConfiguration: buildConfiguration, verb: verb);
             TestHostResult testHostResult = await testHost.ExecuteAsync();
             Assert.AreEqual(string.Empty, testHostResult.StandardOutput);
@@ -127,11 +124,10 @@ return await app.RunAsync();
                 .PatchCodeWithReplace("$OutputType$", string.Empty)
                 .PatchCodeWithReplace("$Extra$", string.Empty));
 
-        string binlogFile = Path.Combine(generator.TargetAssetPath, "msbuild.binlog");
         await DotnetCli.RunAsync($"restore -m:1 -nodeReuse:false {generator.TargetAssetPath} -r {RID}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path);
-        await DotnetCli.RunAsync($"{verb} -bl:{binlogFile} -m:1 -nodeReuse:false {generator.TargetAssetPath} -c {buildConfiguration} -r {RID} ", AcceptanceFixture.NuGetGlobalPackagesFolder.Path);
+        DotnetMuxerResult result = await DotnetCli.RunAsync($"{verb} -m:1 -nodeReuse:false {generator.TargetAssetPath} -c {buildConfiguration} -r {RID} ", AcceptanceFixture.NuGetGlobalPackagesFolder.Path);
 
-        Build binLog = Serialization.Read(binlogFile);
+        Build binLog = Serialization.Read(result.BinlogPath);
         Assert.IsFalse(binLog.FindChildrenRecursive<AddItem>()
             .Any(x => x.Title.Contains("ProjectCapability") && x.Children.Any(c => ((Item)c).Name == "TestingPlatformServer")));
     }

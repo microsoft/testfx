@@ -14,14 +14,14 @@ public class MSBuildTests_KnownExtensionRegistration : AcceptanceTestBase<NopAss
     [TestMethod]
     public async Task Microsoft_Testing_Platform_Extensions_ShouldBe_Correctly_Registered(string tfm, BuildConfiguration compilationMode, Verb verb)
     {
-        TestAsset testAsset = await TestAsset.GenerateAssetAsync(
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
             nameof(Microsoft_Testing_Platform_Extensions_ShouldBe_Correctly_Registered),
             SourceCode
             .PatchCodeWithReplace("$TargetFrameworks$", tfm)
             .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
-        string binlogFile = Path.Combine(testAsset.TargetAssetPath, Guid.NewGuid().ToString("N"), "msbuild.binlog");
         await DotnetCli.RunAsync($"restore -r {RID} {testAsset.TargetAssetPath}{Path.DirectorySeparatorChar}MSBuildTests.csproj", AcceptanceFixture.NuGetGlobalPackagesFolder.Path);
-        await DotnetCli.RunAsync($"{(verb == Verb.publish ? $"publish -f {tfm}" : "build")}  -c {compilationMode} -r {RID} -nodeReuse:false -bl:{binlogFile} {testAsset.TargetAssetPath} -v:n", AcceptanceFixture.NuGetGlobalPackagesFolder.Path);
+        DotnetMuxerResult result = await DotnetCli.RunAsync($"{(verb == Verb.publish ? $"publish -f {tfm}" : "build")}  -c {compilationMode} -r {RID} -nodeReuse:false {testAsset.TargetAssetPath} -v:n", AcceptanceFixture.NuGetGlobalPackagesFolder.Path);
+        string binlogFile = result.BinlogPath!;
 
         var testHost = TestInfrastructure.TestHost.LocateFrom(testAsset.TargetAssetPath, AssetName, tfm, rid: RID, verb: verb, buildConfiguration: compilationMode);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--help");

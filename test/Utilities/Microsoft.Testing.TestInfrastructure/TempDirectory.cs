@@ -25,7 +25,7 @@ public class TempDirectory : IDisposable
 #pragma warning disable CS0618 // Type or member is obsolete - This is the only place where GetRepoRoot and GetTestSuiteDirectory should be called.
     internal static string RepoRoot { get; } = GetRepoRoot();
 
-    internal static string TestSuiteDirectory { get; } = GetTestSuiteDirectory();
+    public static string TestSuiteDirectory { get; } = GetTestSuiteDirectory();
 #pragma warning restore CS0618 // Type or member is obsolete
 
     public void Dispose()
