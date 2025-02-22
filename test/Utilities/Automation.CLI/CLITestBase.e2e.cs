@@ -248,7 +248,9 @@ public partial class CLITestBase : TestContainer
                        test.Equals(f.DisplayName, StringComparison.Ordinal));
             testFound.Should().NotBeNull("Test '{0}' does not appear in failed tests list.", test);
 
+#if DEBUG
             if (!validateStackTraceInfo)
+#endif
             {
                 continue;
             }

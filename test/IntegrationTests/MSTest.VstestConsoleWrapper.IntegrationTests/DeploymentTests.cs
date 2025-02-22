@@ -21,8 +21,8 @@ public class DeploymentTests : CLITestBase
     public void ValidateTestSourceDependencyDeployment_net462()
         => ValidateTestSourceDependencyDeployment("net462");
 
-    public void ValidateTestSourceDependencyDeployment_netcoreapp31()
-        => ValidateTestSourceDependencyDeployment("netcoreapp3.1");
+    public void ValidateTestSourceDependencyDeployment_net60()
+        => ValidateTestSourceDependencyDeployment("net6.0");
 
     private void ValidateTestSourceDependencyDeployment(string targetFramework)
     {
@@ -35,8 +35,8 @@ public class DeploymentTests : CLITestBase
         => ValidateTestSourceLocationDeployment("net462");
 
     [SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "This is currently ignored and that's why we marked it as private")]
-    private void ValidateTestSourceLocationDeployment_netcoreapp31()
-        => ValidateTestSourceLocationDeployment("netcoreapp3.1");
+    private void ValidateTestSourceLocationDeployment_net60()
+        => ValidateTestSourceLocationDeployment("net6.0");
 
     public void ValidateTestSourceLocationDeployment(string targetFramework)
     {
@@ -48,8 +48,8 @@ public class DeploymentTests : CLITestBase
     public void ValidateDirectoryDeployment_net462()
         => ValidateDirectoryDeployment("net462");
 
-    public void ValidateDirectoryDeployment_netcoreapp31()
-        => ValidateDirectoryDeployment("netcoreapp3.1");
+    public void ValidateDirectoryDeployment_net60()
+        => ValidateDirectoryDeployment("net6.0");
 
     public void ValidateDirectoryDeployment(string targetFramework)
     {
@@ -60,8 +60,8 @@ public class DeploymentTests : CLITestBase
     public void ValidateFileDeployment_net462()
         => ValidateFileDeployment("net462");
 
-    public void ValidateFileDeployment_netcoreapp31()
-        => ValidateFileDeployment("netcoreapp3.1");
+    public void ValidateFileDeployment_net60()
+        => ValidateFileDeployment("net6.0");
 
     public void ValidateFileDeployment(string targetFramework)
     {
