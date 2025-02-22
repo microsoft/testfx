@@ -44,7 +44,7 @@ public abstract class TestAssetFixtureBase : ITestAssetFixture
         => await Task.WhenAll(GetAssetsToGenerate().Select(async asset =>
         {
             TestAsset testAsset = await TestAsset.GenerateAssetAsync(asset.Name, asset.Code);
-            DotnetMuxerResult result = await DotnetCli.RunAsync($"build {testAsset.TargetAssetPath} -c Release", _nugetGlobalPackagesDirectory.Path);
+            DotnetMuxerResult result = await DotnetCli.RunAsync($"build {testAsset.TargetAssetPath} -c Release", _nugetGlobalPackagesDirectory.Path, callerMemberName: asset.Name);
             testAsset.DotnetResult = result;
             _testAssets.TryAdd(asset.ID, testAsset);
         }));
