@@ -144,10 +144,11 @@ public static class DotnetCli
             throw new InvalidOperationException("Command should not start with 'dotnet'");
         }
 
+        string? binlogFullPath = null;
         if (!args.Contains("-bl:") && !IsDotNetTestWithExeOrDll(args))
         {
             // We do this here rather than in the caller so that different retries produce different binlog file names.
-            string binlogFullPath = Path.Combine(TempDirectory.TestSuiteDirectory, $"{binlogBaseFileName}-{Interlocked.Increment(ref s_binlogCounter)}.binlog");
+            binlogFullPath = Path.Combine(TempDirectory.TestSuiteDirectory, $"{binlogBaseFileName}-{Interlocked.Increment(ref s_binlogCounter)}.binlog");
             string binlogArg = $" -bl:\"{binlogFullPath}\"";
             if (args.IndexOf("-- ", StringComparison.Ordinal) is int platformArgsIndex && platformArgsIndex > 0)
             {
@@ -194,6 +195,6 @@ public static class DotnetCli
         }
 
         // Return a result object and let caller decide what to do with it.
-        return new DotnetMuxerResult(args, exitCode, dotnet.StandardOutput, dotnet.StandardOutputLines, dotnet.StandardError, dotnet.StandardErrorLines);
+        return new DotnetMuxerResult(args, exitCode, dotnet.StandardOutput, dotnet.StandardOutputLines, dotnet.StandardError, dotnet.StandardErrorLines, binlogFullPath);
     }
 }
