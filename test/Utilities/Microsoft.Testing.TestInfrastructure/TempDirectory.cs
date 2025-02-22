@@ -14,18 +14,19 @@ public class TempDirectory : IDisposable
     /// <summary>
     /// Initializes a new instance of the <see cref="TempDirectory"/> class.
     /// </summary>
-    public TempDirectory(string? subDirectory = null, bool arcadeConvention = true, bool cleanup = true)
+    public TempDirectory(string? subDirectory = null)
     {
-        if (Environment.GetEnvironmentVariable("Microsoft_Testing_TestInfrastructure_TempDirectory_Cleanup") == "0")
-        {
-            cleanup = false;
-        }
-
-        (_baseDirectory, Path) = CreateUniqueDirectory(subDirectory, arcadeConvention);
-        _cleanup = cleanup;
+        _cleanup = Environment.GetEnvironmentVariable("Microsoft_Testing_TestInfrastructure_TempDirectory_Cleanup") != "0";
+        (_baseDirectory, Path) = CreateUniqueDirectory(subDirectory);
     }
 
     public string Path { get; }
+
+#pragma warning disable CS0618 // Type or member is obsolete - This is the only place where GetRepoRoot and GetTestSuiteDirectory should be called.
+    internal static string RepoRoot { get; } = GetRepoRoot();
+
+    internal static string TestSuiteDirectory { get; } = GetTestSuiteDirectory();
+#pragma warning restore CS0618 // Type or member is obsolete
 
     public void Dispose()
     {
@@ -143,7 +144,12 @@ public class TempDirectory : IDisposable
         return destination;
     }
 
-    internal static string GetTestSuiteDirectory()
+    [Obsolete("Don't use directly. Use TestSuiteDirectory property instead.")]
+    private static string GetTestSuiteDirectory()
+        => System.IO.Path.Combine(RepoRoot, "artifacts", "tmp", Constants.BuildConfiguration, "testsuite");
+
+    [Obsolete("Don't use directly. Use RepoRoot property instead.")]
+    private static string GetRepoRoot()
     {
         string currentDirectory = AppContext.BaseDirectory;
         while (System.IO.Path.GetFileName(currentDirectory) != "artifacts" && currentDirectory is not null)
@@ -151,9 +157,8 @@ public class TempDirectory : IDisposable
             currentDirectory = System.IO.Path.GetDirectoryName(currentDirectory)!;
         }
 
-        return currentDirectory is null
-            ? throw new InvalidOperationException("artifacts folder not found")
-            : System.IO.Path.Combine(currentDirectory, "tmp", Constants.BuildConfiguration, "testsuite");
+        return System.IO.Path.GetDirectoryName(currentDirectory)
+            ?? throw new InvalidOperationException("artifacts folder not found");
     }
 
     /// <summary>
@@ -162,30 +167,17 @@ public class TempDirectory : IDisposable
     /// <returns>
     /// Path of the created directory.
     /// </returns>
-    internal static (string BaseDirectory, string FinalDirectory) CreateUniqueDirectory(string? subDirectory, bool arcadeConvention)
+    internal static (string BaseDirectory, string FinalDirectory) CreateUniqueDirectory(string? subDirectory)
     {
-        if (arcadeConvention)
-        {
-            string currentDirectory = AppContext.BaseDirectory;
-            while (System.IO.Path.GetFileName(currentDirectory) != "artifacts" && currentDirectory is not null)
-            {
-                currentDirectory = System.IO.Path.GetDirectoryName(currentDirectory)!;
-            }
+        string directoryPath = System.IO.Path.Combine(TestSuiteDirectory, RandomId.Next());
+        Directory.CreateDirectory(directoryPath);
 
-            if (currentDirectory is null)
-            {
-                throw new InvalidOperationException("artifacts folder not found");
-            }
-
-            string directoryPath = System.IO.Path.Combine(GetTestSuiteDirectory(), RandomId.Next());
-            Directory.CreateDirectory(directoryPath);
-
-            string directoryBuildProps = System.IO.Path.Combine(directoryPath, "Directory.Build.props");
-            File.WriteAllText(directoryBuildProps, $"""
+        string directoryBuildProps = System.IO.Path.Combine(directoryPath, "Directory.Build.props");
+        File.WriteAllText(directoryBuildProps, $"""
 <?xml version="1.0" encoding="utf-8"?>
 <Project>
     <PropertyGroup>
-      <RepoRoot>{System.IO.Path.GetDirectoryName(currentDirectory)}/</RepoRoot>
+      <RepoRoot>{RepoRoot}/</RepoRoot>
       <!-- Do not warn about package downgrade. NuGet uses alphabetical sort as ordering so -dev or -ci are considered downgrades of -preview. -->
       <NoWarn>NU1605</NoWarn>
       <RunAnalyzers>false</RunAnalyzers>
@@ -195,8 +187,8 @@ public class TempDirectory : IDisposable
 </Project>
 """);
 
-            string directoryBuildTarget = System.IO.Path.Combine(directoryPath, "Directory.Build.targets");
-            File.WriteAllText(directoryBuildTarget, $"""
+        string directoryBuildTarget = System.IO.Path.Combine(directoryPath, "Directory.Build.targets");
+        File.WriteAllText(directoryBuildTarget, $"""
 <?xml version="1.0" encoding="utf-8"?>
 <Project>
     <ItemGroup>
@@ -215,8 +207,8 @@ public class TempDirectory : IDisposable
 </Project>
 """);
 
-            string directoryPackagesProps = System.IO.Path.Combine(directoryPath, "Directory.Packages.props");
-            File.WriteAllText(directoryPackagesProps, """
+        string directoryPackagesProps = System.IO.Path.Combine(directoryPath, "Directory.Packages.props");
+        File.WriteAllText(directoryPackagesProps, """
 <?xml version="1.0" encoding="utf-8"?>
 <Project>
     <PropertyGroup>
@@ -225,40 +217,16 @@ public class TempDirectory : IDisposable
 </Project>
 """);
 
-            string finalDirectory = directoryPath;
-            if (!string.IsNullOrWhiteSpace(subDirectory))
-            {
-                finalDirectory = System.IO.Path.Combine(directoryPath, subDirectory);
-            }
-
-            Directory.CreateDirectory(finalDirectory);
-
-            return (directoryPath, finalDirectory);
-        }
-        else
+        string finalDirectory = directoryPath;
+        if (!string.IsNullOrWhiteSpace(subDirectory))
         {
-            string temp = GetTempPath();
-            string directoryPath = System.IO.Path.Combine(temp, "testingplatform", RandomId.Next());
-            string finalDirectory = directoryPath;
-            if (!string.IsNullOrWhiteSpace(subDirectory))
-            {
-                finalDirectory = System.IO.Path.Combine(directoryPath, subDirectory);
-            }
-
-            Directory.CreateDirectory(finalDirectory);
-
-            return (directoryPath, finalDirectory);
+            finalDirectory = System.IO.Path.Combine(directoryPath, subDirectory);
         }
-    }
 
-    // AGENT_TEMPDIRECTORY is Azure DevOps variable, which is set to path
-    // that is cleaned up after every job. This is preferable to use over
-    // just the normal TEMP, because that is not cleaned up for every run.
-    //
-    // System.IO.Path.GetTempPath is banned from the rest of the code. This is the only
-    // place where we are allowed to use it. All other methods should use our GetTempPath (this method).
-    private static string GetTempPath() => Environment.GetEnvironmentVariable("AGENT_TEMPDIRECTORY")
-            ?? System.IO.Path.GetTempPath();
+        Directory.CreateDirectory(finalDirectory);
+
+        return (directoryPath, finalDirectory);
+    }
 
     public void Add(string fileContents)
     {

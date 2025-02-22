@@ -147,7 +147,7 @@ public static class DotnetCli
         if (!args.Contains("-bl:") && !IsDotNetTestWithExeOrDll(args))
         {
             // We do this here rather than in the caller so that different retries produce different binlog file names.
-            string binlogFullPath = Path.Combine(TempDirectory.GetTestSuiteDirectory(), $"{binlogBaseFileName}-{Interlocked.Increment(ref s_binlogCounter)}.binlog");
+            string binlogFullPath = Path.Combine(TempDirectory.TestSuiteDirectory, $"{binlogBaseFileName}-{Interlocked.Increment(ref s_binlogCounter)}.binlog");
             string binlogArg = $" -bl:\"{binlogFullPath}\"";
             if (args.IndexOf("-- ", StringComparison.Ordinal) is int platformArgsIndex && platformArgsIndex > 0)
             {
