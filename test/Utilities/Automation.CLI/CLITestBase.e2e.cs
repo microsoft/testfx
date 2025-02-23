@@ -17,15 +17,7 @@ public partial class CLITestBase : TestContainer
 
     public CLITestBase()
     {
-        s_vsTestConsoleWrapper = new(
-            GetConsoleRunnerPath(),
-            new()
-            {
-                EnvironmentVariables = new()
-                {
-                    ["DOTNET_ROOT"] = FindDotNetRoot(),
-                },
-            });
+        s_vsTestConsoleWrapper = new(GetConsoleRunnerPath());
         s_vsTestConsoleWrapper.StartSession();
     }
 
