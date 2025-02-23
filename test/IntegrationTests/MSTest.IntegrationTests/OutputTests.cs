@@ -14,11 +14,13 @@ public class OutputTests : CLITestBase
 {
     private const string TestAssetName = "OutputTestProject";
 
-    public async Task OutputIsNotMixedWhenTestsRunInParallel() => await ValidateOutputForClass("UnitTest1");
+#if DEBUG
+    public async Task OutputIsNotMixedWhenTestsRunInParallel() => await ValidateOutputForClassAsync("UnitTest1");
+#endif
 
-    public async Task OutputIsNotMixedWhenAsyncTestsRunInParallel() => await ValidateOutputForClass("UnitTest2");
+    public async Task OutputIsNotMixedWhenAsyncTestsRunInParallel() => await ValidateOutputForClassAsync("UnitTest2");
 
-    private static async Task ValidateOutputForClass(string className)
+    private static async Task ValidateOutputForClassAsync(string className)
     {
         // LogMessageListener uses an implementation of a string writer that captures output per async context.
         // This allows us to capture output from tasks even when they are running in parallel.
