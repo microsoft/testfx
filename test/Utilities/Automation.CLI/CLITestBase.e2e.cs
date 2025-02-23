@@ -250,7 +250,6 @@ public partial class CLITestBase : TestContainer
 
 #if DEBUG
             if (!validateStackTraceInfo)
-#endif
             {
                 continue;
             }
@@ -262,6 +261,7 @@ public partial class CLITestBase : TestContainer
             {
                 testFound.ErrorStackTrace.Should().Contain(testMethodName, "No stack trace for failed test: {0}", test);
             }
+#endif
         }
     }
 
