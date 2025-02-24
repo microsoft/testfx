@@ -250,7 +250,7 @@ public sealed class UseNewerAssertThrowsAnalyzerTests
                 public void MyTestMethod()
                 {
                     Func<object> action = () => _ = 5;
-                    Assert.ThrowsExactly<Exception>(() => _ = action());
+                    Assert.ThrowsExactly<Exception>(() => action());
                 }
             }
             """;
@@ -288,8 +288,82 @@ public sealed class UseNewerAssertThrowsAnalyzerTests
                 public void MyTestMethod()
                 {
                     Func<object> action = () => _ = 5;
-                    Assert.ThrowsExactly<Exception>(() => _ = (action + action)());
+                    Assert.ThrowsExactly<Exception>(() => (action + action)());
                 }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    [TestMethod]
+    public async Task VariousTestCasesForDiscard()
+    {
+        string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public sealed class Test1
+            {
+                [TestMethod]
+                public void TestMethod1()
+                {
+                    int[] numbers = [1];
+                    int x = 0;
+                    string s = "";
+
+                    [|Assert.ThrowsException<ArgumentException>(() => VoidMethod(1))|];
+                    [|Assert.ThrowsException<ArgumentException>(() => NonVoidMethod(1))|];
+                    [|Assert.ThrowsException<ArgumentException>(() => _ = NonVoidMethod(1))|];
+                    [|Assert.ThrowsException<ArgumentException>(() => new Test1())|];
+                    [|Assert.ThrowsException<ArgumentException>(() => _ = new Test1())|];
+                    [|Assert.ThrowsException<ArgumentException>(() => numbers[0] = 4)|];
+                    [|Assert.ThrowsException<ArgumentException>(() => x++)|];
+                    [|Assert.ThrowsException<ArgumentException>(() => x--)|];
+                    [|Assert.ThrowsException<ArgumentException>(() => ++x)|];
+                    [|Assert.ThrowsException<ArgumentException>(() => --x)|];
+                    [|Assert.ThrowsException<ArgumentException>(() => s!)|];
+                    [|Assert.ThrowsException<ArgumentException>(() => !true)|];
+                }
+
+                private void VoidMethod(object o) => _ = o;
+
+                private int NonVoidMethod(int i) => i;
+            }
+            """;
+
+        string fixedCode = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            
+            [TestClass]
+            public sealed class Test1
+            {
+                [TestMethod]
+                public void TestMethod1()
+                {
+                    int[] numbers = [1];
+                    int x = 0;
+                    string s = "";
+
+                    Assert.ThrowsExactly<ArgumentException>(() => VoidMethod(1));
+                    Assert.ThrowsExactly<ArgumentException>(() => NonVoidMethod(1));
+                    Assert.ThrowsExactly<ArgumentException>(() => _ = NonVoidMethod(1));
+                    Assert.ThrowsExactly<ArgumentException>(() => new Test1());
+                    Assert.ThrowsExactly<ArgumentException>(() => _ = new Test1());
+                    Assert.ThrowsExactly<ArgumentException>(() => numbers[0] = 4);
+                    Assert.ThrowsExactly<ArgumentException>(() => x++);
+                    Assert.ThrowsExactly<ArgumentException>(() => x--);
+                    Assert.ThrowsExactly<ArgumentException>(() => ++x);
+                    Assert.ThrowsExactly<ArgumentException>(() => --x);
+                    Assert.ThrowsExactly<ArgumentException>(() => _ = s!);
+                    Assert.ThrowsExactly<ArgumentException>(() => _ = !true);
+                }
+            
+                private void VoidMethod(object o) => _ = o;
+            
+                private int NonVoidMethod(int i) => i;
             }
             """;
 
