@@ -256,6 +256,7 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
         // The more correct logic is implementing https://github.com/microsoft/testfx/issues/5091
         // What we want to do here is to avoid using 'dotnet exec' if possible, and run the executable directly instead.
         // When running with dotnet exec, we are run under dotnet.exe process, which can break some scenarios (e.g, loading PRI in WinUI tests).
+        // It seems like WinUI would try to resolve the PRI file relative to the path of the process, so relative to, e.g, C:\Program Files\dotnet
         if (IsNetCoreApp &&
             bool.TryParse(IsExecutable?.ItemSpec, out bool isExecutable) && isExecutable &&
             bool.TryParse(UseAppHost?.ItemSpec, out bool useAppHost) && useAppHost)
@@ -376,7 +377,6 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
     public override bool Execute()
     {
         var list = new List<string>();
-        Debugger.Launch();
         foreach (DictionaryEntry entry in new SystemEnvironment().GetEnvironmentVariables())
         {
             if (entry.Key is string key && key.StartsWith("DOTNET_ROOT", StringComparison.OrdinalIgnoreCase))
