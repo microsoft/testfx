@@ -380,7 +380,6 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
 
         //// This should be done before the base.Execute() call.
         // EnvironmentVariables = list.ToArray();
-
         bool returnValue = base.Execute();
         if (_toolCommand is not null)
         {
