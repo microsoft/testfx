@@ -244,16 +244,18 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
 
     private string? TryGetRunCommand()
     {
-        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            // Currently fails on Linux and macOS.
-            // Not yet investigated.
-            return null;
-        }
+        // if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        // {
+        //     // Currently fails on Linux and macOS.
+        //     // Not yet investigated.
+        //     return null;
+        // }
 
         // This condition specifically handles this part:
         // https://github.com/dotnet/sdk/blob/5846d648f2280b54a54e481f55de4d9eea0e6a0e/src/Tasks/Microsoft.NET.Build.Tasks/targets/Microsoft.NET.Sdk.targets#L1152-L1155
         // The more correct logic is implementing https://github.com/microsoft/testfx/issues/5091
+        // What we want to do here is to avoid using 'dotnet exec' if possible, and run the executable directly instead.
+        // When running with dotnet exec, we are run under dotnet.exe process, which can break some scenarios (e.g, loading PRI in WinUI tests).
         if (IsNetCoreApp &&
             bool.TryParse(IsExecutable?.ItemSpec, out bool isExecutable) && isExecutable &&
             bool.TryParse(UseAppHost?.ItemSpec, out bool useAppHost) && useAppHost)
@@ -374,6 +376,7 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
     public override bool Execute()
     {
         var list = new List<string>();
+        Debugger.Launch();
         foreach (DictionaryEntry entry in new SystemEnvironment().GetEnvironmentVariables())
         {
             if (entry.Key is string key && key.StartsWith("DOTNET_ROOT", StringComparison.OrdinalIgnoreCase))
