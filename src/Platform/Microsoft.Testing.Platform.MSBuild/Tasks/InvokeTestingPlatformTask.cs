@@ -373,6 +373,18 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
     /// <inheritdoc />
     public override bool Execute()
     {
+        var list = new List<string>();
+        foreach (DictionaryEntry entry in new SystemEnvironment().GetEnvironmentVariables())
+        {
+            if (entry.Key is string key && key.StartsWith("DOTNET_ROOT", StringComparison.OrdinalIgnoreCase))
+            {
+                list.Add($"{key}={entry.Value}");
+            }
+        }
+
+        // This should be done before the base.Execute() call.
+        EnvironmentVariables = list.ToArray();
+
         bool returnValue = base.Execute();
         if (_toolCommand is not null)
         {
