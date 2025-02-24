@@ -115,7 +115,7 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
         await commandLine.RunAsync($"\"{msbuildExe}\" {testAsset.TargetAssetPath} /t:Restore");
         await commandLine.RunAsync($"\"{msbuildExe}\" {testAsset.TargetAssetPath} /t:\"Build;Test\" /bl:\"{binlogFile}\"", environmentVariables: new Dictionary<string, string?>()
         {
-            ["DOTNET_ROOT"] = Environment.GetEnvironmentVariable("DOTNET_ROOT"),
+            ["DOTNET_ROOT"] = Path.Combine(RootFinder.Find(), ".dotnet"),
         });
         StringAssert.Contains(commandLine.StandardOutput, "Tests succeeded");
     }
