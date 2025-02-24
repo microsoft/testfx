@@ -12,7 +12,8 @@ public class SuiteLifeCycleTests : CLITestBase
     private const string TestAssetName = "SuiteLifeCycleTestProject";
     private static readonly string[] WindowsLineReturn = ["\r\n"];
 
-    public void ValidateTestRunLifecycle_net6() => ValidateTestRunLifecycle("net6.0");
+    [SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "Disabled as it's not working on CI. A fatal error occurred. The required library hostfxr.dll could not be found.")]
+    private void ValidateTestRunLifecycle_net6() => ValidateTestRunLifecycle("net6.0");
 
     public void ValidateTestRunLifecycle_net462() => ValidateTestRunLifecycle("net462");
 

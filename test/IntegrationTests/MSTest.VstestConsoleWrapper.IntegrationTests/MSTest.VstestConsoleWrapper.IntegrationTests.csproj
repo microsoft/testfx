@@ -1,11 +1,14 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>$(NetFrameworkMinimum)</TargetFramework>
+    <UseInternalTestFramework>true</UseInternalTestFramework>
+    <!-- Don't generate MSTest using -->
+    <UseMSTest>false</UseMSTest>
+    <OutputType>Exe</OutputType>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="$(RepoRoot)test\Utilities\TestFramework.ForTestingMSTest\TestFramework.ForTestingMSTest.csproj" />
     <ProjectReference Include="$(RepoRoot)test\Utilities\Automation.CLI\Automation.CLI.csproj" />
   </ItemGroup>
 

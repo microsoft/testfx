@@ -204,20 +204,25 @@ public class TestableAssemblyResolver : AssemblyResolver
 
     public Func<List<string>, string, bool, Assembly> SearchAssemblySetter { get; internal set; } = null!;
 
-    protected override bool DoesDirectoryExist(string path) => DoesDirectoryExistSetter?.Invoke(path) ?? base.DoesDirectoryExist(path);
+    protected override bool DoesDirectoryExist(string path)
+        => DoesDirectoryExistSetter?.Invoke(path) ?? base.DoesDirectoryExist(path);
 
-    protected override string[] GetDirectories(string path) => GetDirectoriesSetter == null ? base.GetDirectories(path) : GetDirectoriesSetter(path);
+    protected override string[] GetDirectories(string path)
+        => GetDirectoriesSetter == null ? base.GetDirectories(path) : GetDirectoriesSetter(path);
 
     protected override Assembly? SearchAssembly(List<string> searchDirectorypaths, string name, bool isReflectionOnly)
         => SearchAssemblySetter == null
             ? base.SearchAssembly(searchDirectorypaths, name, isReflectionOnly)
             : SearchAssemblySetter(searchDirectorypaths, name, isReflectionOnly);
 
-    protected override bool DoesFileExist(string filePath) => DoesFileExistSetter?.Invoke(filePath) ?? base.DoesFileExist(filePath);
+    protected override bool DoesFileExist(string filePath)
+        => DoesFileExistSetter?.Invoke(filePath) ?? base.DoesFileExist(filePath);
 
-    protected override Assembly LoadAssemblyFrom(string path) => LoadAssemblyFromSetter == null ? base.LoadAssemblyFrom(path) : LoadAssemblyFromSetter(path);
+    protected override Assembly LoadAssemblyFrom(string path)
+        => LoadAssemblyFromSetter == null ? base.LoadAssemblyFrom(path) : LoadAssemblyFromSetter(path);
 
-    protected override Assembly ReflectionOnlyLoadAssemblyFrom(string path) => ReflectionOnlyLoadAssemblyFromSetter == null
+    protected override Assembly ReflectionOnlyLoadAssemblyFrom(string path)
+        => ReflectionOnlyLoadAssemblyFromSetter == null
             ? base.ReflectionOnlyLoadAssemblyFrom(path)
             : ReflectionOnlyLoadAssemblyFromSetter(path);
 }

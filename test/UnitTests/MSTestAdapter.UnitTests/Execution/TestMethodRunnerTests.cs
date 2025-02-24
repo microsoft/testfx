@@ -8,7 +8,6 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using Moq;
 
@@ -389,11 +388,11 @@ public class TestMethodRunnerTests : TestContainer
 
     private void RunTestMethodWithEmptyDataSourceShouldFailIfConsiderEmptyDataSourceAsInconclusiveIsNotTrueHelper(bool considerEmptyAsInconclusive)
     {
-        Mock<PlatformServices.Interface.IReflectionOperations2> existingMock = _testablePlatformServiceProvider.MockReflectionOperations;
+        Mock<PlatformServices.Interface.IReflectionOperations2>? existingMock = _testablePlatformServiceProvider.MockReflectionOperations;
         try
         {
             // We want this test to go through the "real" reflection to hit the product code path relevant for the test.
-            _testablePlatformServiceProvider.MockReflectionOperations = null;
+            _testablePlatformServiceProvider.MockReflectionOperations = null!;
 
             string xml =
                 $$"""
@@ -477,12 +476,12 @@ public class TestMethodRunnerTests : TestContainer
     {
         public static Action<DummyTestClassBase> BaseTestClassMethodBody { get; set; } = null!;
 
-        public void DummyBaseTestClassMethod() => BaseTestClassMethodBody(this);
+        public void DummyBaseTestClassMethod() => BaseTestClassMethodBody!(this);
     }
 
     public class DummyTestClass : DummyTestClassBase
     {
-        public DummyTestClass() => TestConstructorMethodBody();
+        public DummyTestClass() => TestConstructorMethodBody!();
 
         public static Action TestConstructorMethodBody { get; set; } = null!;
 
@@ -503,26 +502,25 @@ public class TestMethodRunnerTests : TestContainer
         public TestContext TestContext
         {
             get => throw new NotImplementedException();
-
-            set => TestContextSetterBody(value);
+            set => TestContextSetterBody!(value);
         }
 
-        public static void DummyAssemblyInit(TestContext tc) => AssemblyInitializeMethodBody(tc);
+        public static void DummyAssemblyInit(TestContext tc) => AssemblyInitializeMethodBody!(tc);
 
-        public static void DummyClassInit(TestContext tc) => ClassInitializeMethodBody(tc);
+        public static void DummyClassInit(TestContext tc) => ClassInitializeMethodBody!(tc);
 
-        public void DummyTestInitializeMethod() => TestInitializeMethodBody(this);
+        public void DummyTestInitializeMethod() => TestInitializeMethodBody!(this);
 
-        public void DummyTestCleanupMethod() => TestCleanupMethodBody(this);
+        public void DummyTestCleanupMethod() => TestCleanupMethodBody!(this);
 
-        public void DummyTestMethod() => TestMethodBody(this);
+        public void DummyTestMethod() => TestMethodBody!(this);
 
         [DataSource("DummyConnectionString", "DummyTableName")]
         public void DummyDataSourceTestMethod() => TestMethodBody(this);
 
         public Task DummyAsyncTestMethod() =>
             // We use this method to validate async TestInitialize, TestCleanup, TestMethod
-            DummyAsyncTestMethodBody();
+            DummyAsyncTestMethodBody!();
     }
 
     public class DummyTestClassWithParameterizedCtor

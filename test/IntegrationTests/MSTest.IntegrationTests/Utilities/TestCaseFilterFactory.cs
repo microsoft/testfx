@@ -113,7 +113,8 @@ internal static class TestCaseFilterFactory
 
         public string TestCaseFilterValue { get; }
 
-        public bool MatchTestCase(TestCase testCase, Func<string, object?> propertyValueProvider) => _expression(propertyValueProvider);
+        public bool MatchTestCase(TestCase testCase, Func<string, object?> propertyValueProvider)
+            => _expression(propertyValueProvider);
     }
 
     private static void MergeExpression(Stack<Expression<Func<Func<string, object?>, bool>>> exp, Operator op)

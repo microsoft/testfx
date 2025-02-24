@@ -13,7 +13,8 @@ public class TimeoutTests : CLITestBase
 
     public void ValidateTimeoutTests_net462() => ValidateTimeoutTests("net462");
 
-    public void ValidateTimeoutTests_netcoreapp31() => ValidateTimeoutTests("netcoreapp3.1");
+    [SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "Disabled as it's not working on CIA fatal error occurred. The required library hostfxr.dll could not be found.")]
+    private void ValidateTimeoutTests_netcoreapp31() => ValidateTimeoutTests("netcoreapp3.1");
 
     private void ValidateTimeoutTests(string targetFramework)
     {
