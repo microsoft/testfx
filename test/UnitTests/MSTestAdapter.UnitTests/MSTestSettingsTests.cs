@@ -1386,7 +1386,7 @@ public class MSTestSettingsTests : TestContainer
 
         var mockConfig = new Mock<IConfiguration>();
         mockConfig.Setup(config => config[It.IsAny<string>()])
-                  .Returns((string key) => configDictionary.TryGetValue(key, out string? value) ? value : null);
+                  .Returns((string key) => configDictionary.TryGetValue(key, out string value) ? value : null);
 
         var settings = new MSTestSettings();
 
