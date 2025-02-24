@@ -331,9 +331,10 @@ public partial class CLITestBase : TestContainer
         var currentDirectory = new DirectoryInfo(Directory.GetCurrentDirectory());
         do
         {
-            if (currentDirectory.EnumerateDirectories(".dotnet").Any())
+            string folderName = ".dotnet";
+            if (currentDirectory.EnumerateDirectories(folderName).Any())
             {
-                return currentDirectory.FullName;
+                return Path.Combine(currentDirectory.FullName, folderName);
             }
         }
         while ((currentDirectory = currentDirectory.Parent) != null);

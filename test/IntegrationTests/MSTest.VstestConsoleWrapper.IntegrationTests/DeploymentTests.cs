@@ -21,8 +21,7 @@ public class DeploymentTests : CLITestBase
     public void ValidateTestSourceDependencyDeployment_net462()
         => ValidateTestSourceDependencyDeployment("net462");
 
-    [SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "Disabled as it's not working on CIA fatal error occurred. The required library hostfxr.dll could not be found.")]
-    private void ValidateTestSourceDependencyDeployment_netcoreapp31()
+    public void ValidateTestSourceDependencyDeployment_netcoreapp31()
         => ValidateTestSourceDependencyDeployment("netcoreapp3.1");
 
     private void ValidateTestSourceDependencyDeployment(string targetFramework)
@@ -49,8 +48,7 @@ public class DeploymentTests : CLITestBase
     public void ValidateDirectoryDeployment_net462()
         => ValidateDirectoryDeployment("net462");
 
-    [SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "Disabled as it's not working on CIA fatal error occurred. The required library hostfxr.dll could not be found.")]
-    private void ValidateDirectoryDeployment_netcoreapp31()
+    public void ValidateDirectoryDeployment_netcoreapp31()
         => ValidateDirectoryDeployment("netcoreapp3.1");
 
     public void ValidateDirectoryDeployment(string targetFramework)
@@ -62,8 +60,7 @@ public class DeploymentTests : CLITestBase
     public void ValidateFileDeployment_net462()
         => ValidateFileDeployment("net462");
 
-    [SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "Disabled as it's not working on CIA fatal error occurred. The required library hostfxr.dll could not be found.")]
-    private void ValidateFileDeployment_netcoreapp31()
+    public void ValidateFileDeployment_netcoreapp31()
         => ValidateFileDeployment("netcoreapp3.1");
 
     public void ValidateFileDeployment(string targetFramework)
