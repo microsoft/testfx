@@ -149,7 +149,9 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
         Assert.IsTrue(File.Exists(outputFileLog), $"Expected file '{outputFileLog}'");
         string logFileContent = File.ReadAllText(outputFileLog);
         Assert.IsTrue(Regex.IsMatch(logFileContent, ".*win-x86.*"), logFileContent);
-        Assert.IsTrue(Regex.IsMatch(logFileContent, @"\.dotnet\\x86\\dotnet\.exe"), logFileContent);
+
+        // This is the architecture part that's written by TerminalOutputDevice when there is no banner specified.
+        Assert.Contains($"[win-x86 - {TargetFrameworks.NetCurrent}]", logFileContent);
     }
 
     [TestMethod]
@@ -209,7 +211,8 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
         string outputFileLog = Directory.GetFiles(testAsset.TargetAssetPath, "MSBuild Tests_net9.0_x64.log", SearchOption.AllDirectories).Single();
         Assert.IsTrue(File.Exists(outputFileLog), $"Expected file '{outputFileLog}'");
         string logFileContent = File.ReadAllText(outputFileLog);
-        Assert.IsTrue(Regex.IsMatch(logFileContent, @"\.dotnet\\dotnet\.exe"), logFileContent);
+        // This is the architecture part that's written by TerminalOutputDevice when there is no banner specified.
+        Assert.Contains($"[win-x64 - {TargetFrameworks.NetCurrent}]", logFileContent);
     }
 
     private static void CommonAssert(DotnetMuxerResult compilationResult, string tfm, bool testSucceeded, string testResultFolder)
