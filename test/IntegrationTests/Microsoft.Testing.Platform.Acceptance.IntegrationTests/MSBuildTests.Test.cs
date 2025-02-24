@@ -176,8 +176,31 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
             AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
             failIfReturnValueIsNotZero: false);
 
-        result.AssertOutputContains("error MSB6003: The specified task executable \"MSBuild Tests.exe\" could not be run. System.ComponentModel.Win32Exception (216): An error occurred trying to start process");
-        result.AssertOutputContains("The specified executable is not a valid application for this OS platform.");
+        // On Windows, we run the exe directly.
+        // On other OSes, we run with dotnet exec.
+        // This yields two different outputs, pointing to the same issue.
+        if (OperatingSystem.IsWindows())
+        {
+            result.AssertOutputContains("error MSB6003: The specified task executable \"MSBuild Tests.exe\" could not be run. System.ComponentModel.Win32Exception (216): An error occurred trying to start process");
+            result.AssertOutputContains("The specified executable is not a valid application for this OS platform.");
+        }
+        else
+        {
+            // The output looks like:
+            /*
+                D:\a\_work\1\s\artifacts\tmp\Debug\testsuite\tidOn\.packages\microsoft.testing.platform.msbuild\1.5.0-ci\buildMultiTargeting\Microsoft.Testing.Platform.MSBuild.targets(320,5): error : Could not find 'dotnet.exe' host for the 'arm64' architecture. [D:\a\_work\1\s\artifacts\tmp\Debug\testsuite\vf8vR\MSBuildTests\MSBuild Tests.csproj]
+                D:\a\_work\1\s\artifacts\tmp\Debug\testsuite\tidOn\.packages\microsoft.testing.platform.msbuild\1.5.0-ci\buildMultiTargeting\Microsoft.Testing.Platform.MSBuild.targets(320,5): error :  [D:\a\_work\1\s\artifacts\tmp\Debug\testsuite\vf8vR\MSBuildTests\MSBuild Tests.csproj]
+                D:\a\_work\1\s\artifacts\tmp\Debug\testsuite\tidOn\.packages\microsoft.testing.platform.msbuild\1.5.0-ci\buildMultiTargeting\Microsoft.Testing.Platform.MSBuild.targets(320,5): error : You can resolve the problem by installing the 'arm64' .NET. [D:\a\_work\1\s\artifacts\tmp\Debug\testsuite\vf8vR\MSBuildTests\MSBuild Tests.csproj]
+                D:\a\_work\1\s\artifacts\tmp\Debug\testsuite\tidOn\.packages\microsoft.testing.platform.msbuild\1.5.0-ci\buildMultiTargeting\Microsoft.Testing.Platform.MSBuild.targets(320,5): error :  [D:\a\_work\1\s\artifacts\tmp\Debug\testsuite\vf8vR\MSBuildTests\MSBuild Tests.csproj]
+                D:\a\_work\1\s\artifacts\tmp\Debug\testsuite\tidOn\.packages\microsoft.testing.platform.msbuild\1.5.0-ci\buildMultiTargeting\Microsoft.Testing.Platform.MSBuild.targets(320,5): error : The specified framework can be found at: [D:\a\_work\1\s\artifacts\tmp\Debug\testsuite\vf8vR\MSBuildTests\MSBuild Tests.csproj]
+                D:\a\_work\1\s\artifacts\tmp\Debug\testsuite\tidOn\.packages\microsoft.testing.platform.msbuild\1.5.0-ci\buildMultiTargeting\Microsoft.Testing.Platform.MSBuild.targets(320,5): error :   - https://aka.ms/dotnet-download [D:\a\_work\1\s\artifacts\tmp\Debug\testsuite\vf8vR\MSBuildTests\MSBuild Tests.csproj]
+             */
+            // Assert each error line separately for simplicity.
+            result.AssertOutputContains($"Could not find '{(OperatingSystem.IsWindows() ? "dotnet.exe" : "dotnet")}' host for the '{incompatibleArchitecture}' architecture.");
+            result.AssertOutputContains($"You can resolve the problem by installing the '{incompatibleArchitecture}' .NET.");
+            result.AssertOutputContains("The specified framework can be found at:");
+            result.AssertOutputContains("  - https://aka.ms/dotnet-download");
+        }
     }
 
     [TestMethod]
