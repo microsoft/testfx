@@ -973,6 +973,9 @@ namespace Jsonite
                             writer.Write('t');
                             break;
                         default:
+                            // Intentionally diverging from the upstream code from xoofx/jsonite. See https://github.com/microsoft/testfx/issues/5120
+
+                            // Also, https://datatracker.ietf.org/doc/html/rfc4627#section-2.5
                             if (c < ' ' || IsHighSurrogate(c) || IsLowSurrogate(c))
                             {
                                 writer.Write('\\');
