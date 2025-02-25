@@ -64,6 +64,35 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
     [Required]
     public ITaskItem TargetPath { get; set; }
 
+    // -------- BEGIN the following properties shouldn't be used. See https://github.com/microsoft/testfx/issues/5091 --------
+
+    /// <summary>
+    /// Gets or sets the value of MSBuild property UseAppHost.
+    /// </summary>
+    public ITaskItem? UseAppHost { get; set; }
+
+    /// <summary>
+    /// Gets or sets the value of MSBuild property _IsExecutable.
+    /// </summary>
+    public ITaskItem? IsExecutable { get; set; }
+
+    /// <summary>
+    /// Gets or sets the value of MSBuild property TargetDir.
+    /// </summary>
+    public ITaskItem? TargetDir { get; set; }
+
+    /// <summary>
+    /// Gets or sets the value of MSBuild property AssemblyName.
+    /// </summary>
+    public ITaskItem? AssemblyName { get; set; }
+
+    /// <summary>
+    /// Gets or sets the value of MSBuild property _NativeExecutableExtension.
+    /// </summary>
+    public ITaskItem? NativeExecutableExtension { get; set; }
+
+    // -------- END the previous properties shouldn't be used. See https://github.com/microsoft/testfx/issues/5091 --------
+
     /// <summary>
     /// Gets or sets the target framework.
     /// </summary>
@@ -122,6 +151,12 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
     {
         get
         {
+            if (TryGetRunCommand() is string runCommand)
+            {
+                Log.LogMessage(MessageImportance.Low, $"Constructed target path via similar logic as to RunCommand: '{runCommand}'");
+                return Path.GetFileName(runCommand);
+            }
+
             // If target dll ends with .dll we're in the "dotnet" context
             if (TargetPath.ItemSpec.EndsWith(".dll", StringComparison.InvariantCultureIgnoreCase))
             {
@@ -146,6 +181,11 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
     /// <inheritdoc />
     protected override string? GenerateFullPathToTool()
     {
+        if (TryGetRunCommand() is string runCommand)
+        {
+            return runCommand;
+        }
+
         // If it's not netcore and we're on Windows we expect the TargetPath to be the executable, otherwise we try with mono.
         if (!IsNetCoreApp && RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
@@ -201,6 +241,32 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
 
     private bool IsCurrentProcessArchitectureCompatible() =>
         _currentProcessArchitecture == EnumPolyfill.Parse<Architecture>(TestArchitecture.ItemSpec, ignoreCase: true);
+
+    private string? TryGetRunCommand()
+    {
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            // Currently fails on Linux and macOS.
+            // Not yet investigated.
+            return null;
+        }
+
+        // This condition specifically handles this part:
+        // https://github.com/dotnet/sdk/blob/5846d648f2280b54a54e481f55de4d9eea0e6a0e/src/Tasks/Microsoft.NET.Build.Tasks/targets/Microsoft.NET.Sdk.targets#L1152-L1155
+        // The more correct logic is implementing https://github.com/microsoft/testfx/issues/5091
+        if (IsNetCoreApp &&
+            bool.TryParse(IsExecutable?.ItemSpec, out bool isExecutable) && isExecutable &&
+            bool.TryParse(UseAppHost?.ItemSpec, out bool useAppHost) && useAppHost)
+        {
+            string runCommand = $"{TargetDir?.ItemSpec}{AssemblyName?.ItemSpec}{NativeExecutableExtension?.ItemSpec}";
+            if (File.Exists(runCommand))
+            {
+                return runCommand;
+            }
+        }
+
+        return null;
+    }
 
     /// <inheritdoc />
     protected override string GenerateCommandLineCommands()
@@ -307,6 +373,18 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
     /// <inheritdoc />
     public override bool Execute()
     {
+        var list = new List<string>();
+        foreach (DictionaryEntry entry in new SystemEnvironment().GetEnvironmentVariables())
+        {
+            if (entry.Key is string key && key.StartsWith("DOTNET_ROOT", StringComparison.OrdinalIgnoreCase))
+            {
+                list.Add($"{key}={entry.Value}");
+            }
+        }
+
+        // This should be done before the base.Execute() call.
+        EnvironmentVariables = list.ToArray();
+
         bool returnValue = base.Execute();
         if (_toolCommand is not null)
         {

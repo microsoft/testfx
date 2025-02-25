@@ -1,0 +1,772 @@
+From 427f0c914d83cf95b94f2f9c4c66249ae192e7dc Mon Sep 17 00:00:00 2001
+From: Youssef1313 <youssefvictor00@gmail.com>
+Date: Fri, 21 Feb 2025 10:47:31 +0100
+Subject: [PATCH 01/18] Update InvokeTestingPlatformTask to prefer running Exe
+ over `dotnet exec dll`
+
+---
+ .../Tasks/InvokeTestingPlatformTask.cs        | 64 +++++++++++++++++++
+ ...Microsoft.Testing.Platform.MSBuild.targets |  8 +++
+ 2 files changed, 72 insertions(+)
+
+diff --git a/src/Platform/Microsoft.Testing.Platform.MSBuild/Tasks/InvokeTestingPlatformTask.cs b/src/Platform/Microsoft.Testing.Platform.MSBuild/Tasks/InvokeTestingPlatformTask.cs
+index 7d2442f2a8..7bcfa49e1f 100644
+--- a/src/Platform/Microsoft.Testing.Platform.MSBuild/Tasks/InvokeTestingPlatformTask.cs
++++ b/src/Platform/Microsoft.Testing.Platform.MSBuild/Tasks/InvokeTestingPlatformTask.cs
+@@ -64,6 +64,40 @@ public InvokeTestingPlatformTask()
+     [Required]
+     public ITaskItem TargetPath { get; set; }
+ 
++    // -------- BEGIN the following properties shouldn't be used. See https://github.com/microsoft/testfx/issues/5091 --------
++
++    /// <summary>
++    /// Gets or sets the value of MSBuild property UseAppHost.
++    /// </summary>
++    [Required]
++    public ITaskItem UseAppHost { get; set; }
++
++    /// <summary>
++    /// Gets or sets the value of MSBuild property _IsExecutable.
++    /// </summary>
++    [Required]
++    public ITaskItem IsExecutable { get; set; }
++
++    /// <summary>
++    /// Gets or sets the value of MSBuild property TargetDir.
++    /// </summary>
++    [Required]
++    public ITaskItem TargetDir { get; set; }
++
++    /// <summary>
++    /// Gets or sets the value of MSBuild property AssemblyName.
++    /// </summary>
++    [Required]
++    public ITaskItem AssemblyName { get; set; }
++
++    /// <summary>
++    /// Gets or sets the value of MSBuild property _NativeExecutableExtension.
++    /// </summary>
++    [Required]
++    public ITaskItem NativeExecutableExtension { get; set; }
++
++    // -------- END the previous properties shouldn't be used. See https://github.com/microsoft/testfx/issues/5091 --------
++
+     /// <summary>
+     /// Gets or sets the target framework.
+     /// </summary>
+@@ -122,6 +156,12 @@ protected override string ToolName
+     {
+         get
+         {
++            if (TryGetRunCommand() is string runCommand)
++            {
++                Log.LogMessage(MessageImportance.Low, $"Constructed target path via similar logic as to RunCommand: '{runCommand}'");
++                return Path.GetFileName(runCommand);
++            }
++
+             // If target dll ends with .dll we're in the "dotnet" context
+             if (TargetPath.ItemSpec.EndsWith(".dll", StringComparison.InvariantCultureIgnoreCase))
+             {
+@@ -146,6 +186,11 @@ protected override string ToolName
+     /// <inheritdoc />
+     protected override string? GenerateFullPathToTool()
+     {
++        if (TryGetRunCommand() is string runCommand)
++        {
++            return runCommand;
++        }
++
+         // If it's not netcore and we're on Windows we expect the TargetPath to be the executable, otherwise we try with mono.
+         if (!IsNetCoreApp && RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+         {
+@@ -202,6 +247,25 @@ protected override string ToolName
+     private bool IsCurrentProcessArchitectureCompatible() =>
+         _currentProcessArchitecture == EnumPolyfill.Parse<Architecture>(TestArchitecture.ItemSpec, ignoreCase: true);
+ 
++    private string? TryGetRunCommand()
++    {
++        // This condition specifically handles this part:
++        // https://github.com/dotnet/sdk/blob/5846d648f2280b54a54e481f55de4d9eea0e6a0e/src/Tasks/Microsoft.NET.Build.Tasks/targets/Microsoft.NET.Sdk.targets#L1152-L1155
++        // The more correct logic is implementing https://github.com/microsoft/testfx/issues/5091
++        if (IsNetCoreApp &&
++            bool.TryParse(IsExecutable.ItemSpec, out bool isExecutable) && isExecutable &&
++            bool.TryParse(UseAppHost.ItemSpec, out bool useAppHost) && useAppHost)
++        {
++            string runCommand = $"{TargetDir.ItemSpec}{AssemblyName.ItemSpec}{NativeExecutableExtension.ItemSpec}";
++            if (File.Exists(runCommand))
++            {
++                return runCommand;
++            }
++        }
++
++        return null;
++    }
++
+     /// <inheritdoc />
+     protected override string GenerateCommandLineCommands()
+     {
+diff --git a/src/Platform/Microsoft.Testing.Platform.MSBuild/buildMultiTargeting/Microsoft.Testing.Platform.MSBuild.targets b/src/Platform/Microsoft.Testing.Platform.MSBuild/buildMultiTargeting/Microsoft.Testing.Platform.MSBuild.targets
+index 16fd28a842..dce33967b1 100644
+--- a/src/Platform/Microsoft.Testing.Platform.MSBuild/buildMultiTargeting/Microsoft.Testing.Platform.MSBuild.targets
++++ b/src/Platform/Microsoft.Testing.Platform.MSBuild/buildMultiTargeting/Microsoft.Testing.Platform.MSBuild.targets
+@@ -358,8 +358,16 @@
+       This let's terminal logger know that it should show `Testing` in the output,
+       and not the additional internal details, such as target names.
+     -->
++    <!-- Passing UseAppHost, IsExecutable, TargetDir, AssemblyName, and _NativeExecutableExtensions is mostly workaround -->
++    <!-- until we implement https://github.com/microsoft/testfx/issues/5091 properly -->
++    <!-- For now, we construct the correct "RunCommand" via these properties for a specific scenario that's known to be broken -->
+     <CallTarget Targets="_TestRunStart" />
+     <InvokeTestingPlatformTask TargetPath="$(TargetPath)"
++                               UseAppHost="$(UseAppHost)"
++                               IsExecutable="$(_IsExecutable)"
++                               TargetDir="$(TargetDir)"
++                               AssemblyName="$(AssemblyName)"
++                               NativeExecutableExtension="$(_NativeExecutableExtension)"
+                                TargetFrameworkIdentifier="$(TargetFrameworkIdentifier)"
+                                TargetFramework="$(TargetFramework)"
+                                TestArchitecture="$(_TestArchitecture)"
+
+From bf24a3d93cde65e06d36820b4bca45f8b9e3d650 Mon Sep 17 00:00:00 2001
+From: Youssef1313 <youssefvictor00@gmail.com>
+Date: Fri, 21 Feb 2025 11:48:14 +0100
+Subject: [PATCH 02/18] Remove wrong Required. It can be empty
+
+---
+ .../Tasks/InvokeTestingPlatformTask.cs                           | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/src/Platform/Microsoft.Testing.Platform.MSBuild/Tasks/InvokeTestingPlatformTask.cs b/src/Platform/Microsoft.Testing.Platform.MSBuild/Tasks/InvokeTestingPlatformTask.cs
+index 7bcfa49e1f..095701bc0e 100644
+--- a/src/Platform/Microsoft.Testing.Platform.MSBuild/Tasks/InvokeTestingPlatformTask.cs
++++ b/src/Platform/Microsoft.Testing.Platform.MSBuild/Tasks/InvokeTestingPlatformTask.cs
+@@ -93,7 +93,6 @@ public InvokeTestingPlatformTask()
+     /// <summary>
+     /// Gets or sets the value of MSBuild property _NativeExecutableExtension.
+     /// </summary>
+-    [Required]
+     public ITaskItem NativeExecutableExtension { get; set; }
+ 
+     // -------- END the previous properties shouldn't be used. See https://github.com/microsoft/testfx/issues/5091 --------
+
+From b314156c429126762e27cae74ca59323f1ea487f Mon Sep 17 00:00:00 2001
+From: Youssef1313 <youssefvictor00@gmail.com>
+Date: Fri, 21 Feb 2025 12:30:24 +0100
+Subject: [PATCH 03/18] Fix NRE
+
+---
+ .../Tasks/InvokeTestingPlatformTask.cs                        | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/src/Platform/Microsoft.Testing.Platform.MSBuild/Tasks/InvokeTestingPlatformTask.cs b/src/Platform/Microsoft.Testing.Platform.MSBuild/Tasks/InvokeTestingPlatformTask.cs
+index 095701bc0e..6d6d6decfa 100644
+--- a/src/Platform/Microsoft.Testing.Platform.MSBuild/Tasks/InvokeTestingPlatformTask.cs
++++ b/src/Platform/Microsoft.Testing.Platform.MSBuild/Tasks/InvokeTestingPlatformTask.cs
+@@ -93,7 +93,7 @@ public InvokeTestingPlatformTask()
+     /// <summary>
+     /// Gets or sets the value of MSBuild property _NativeExecutableExtension.
+     /// </summary>
+-    public ITaskItem NativeExecutableExtension { get; set; }
++    public ITaskItem? NativeExecutableExtension { get; set; }
+ 
+     // -------- END the previous properties shouldn't be used. See https://github.com/microsoft/testfx/issues/5091 --------
+ 
+@@ -255,7 +255,7 @@ private bool IsCurrentProcessArchitectureCompatible() =>
+             bool.TryParse(IsExecutable.ItemSpec, out bool isExecutable) && isExecutable &&
+             bool.TryParse(UseAppHost.ItemSpec, out bool useAppHost) && useAppHost)
+         {
+-            string runCommand = $"{TargetDir.ItemSpec}{AssemblyName.ItemSpec}{NativeExecutableExtension.ItemSpec}";
++            string runCommand = $"{TargetDir.ItemSpec}{AssemblyName.ItemSpec}{NativeExecutableExtension?.ItemSpec}";
+             if (File.Exists(runCommand))
+             {
+                 return runCommand;
+
+From edb7ac249d470b98a48047051a77f8fc91baabb6 Mon Sep 17 00:00:00 2001
+From: Youssef1313 <youssefvictor00@gmail.com>
+Date: Fri, 21 Feb 2025 12:57:04 +0100
+Subject: [PATCH 04/18] Windows-only
+
+---
+ .../Tasks/InvokeTestingPlatformTask.cs                     | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/src/Platform/Microsoft.Testing.Platform.MSBuild/Tasks/InvokeTestingPlatformTask.cs b/src/Platform/Microsoft.Testing.Platform.MSBuild/Tasks/InvokeTestingPlatformTask.cs
+index 6d6d6decfa..d2d0043056 100644
+--- a/src/Platform/Microsoft.Testing.Platform.MSBuild/Tasks/InvokeTestingPlatformTask.cs
++++ b/src/Platform/Microsoft.Testing.Platform.MSBuild/Tasks/InvokeTestingPlatformTask.cs
+@@ -248,6 +248,13 @@ private bool IsCurrentProcessArchitectureCompatible() =>
+ 
+     private string? TryGetRunCommand()
+     {
++        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
++        {
++            // Currently fails on Linux and macOS.
++            // Not yet investigated.
++            return null;
++        }
++
+         // This condition specifically handles this part:
+         // https://github.com/dotnet/sdk/blob/5846d648f2280b54a54e481f55de4d9eea0e6a0e/src/Tasks/Microsoft.NET.Build.Tasks/targets/Microsoft.NET.Sdk.targets#L1152-L1155
+         // The more correct logic is implementing https://github.com/microsoft/testfx/issues/5091
+
+From 27bf3f57020f1c1372a37e3f0d1abb91042ff66c Mon Sep 17 00:00:00 2001
+From: Youssef1313 <youssefvictor00@gmail.com>
+Date: Fri, 21 Feb 2025 13:47:50 +0100
+Subject: [PATCH 05/18] Fix
+
+---
+ .../Tasks/InvokeTestingPlatformTask.cs         | 18 +++++++-----------
+ 1 file changed, 7 insertions(+), 11 deletions(-)
+
+diff --git a/src/Platform/Microsoft.Testing.Platform.MSBuild/Tasks/InvokeTestingPlatformTask.cs b/src/Platform/Microsoft.Testing.Platform.MSBuild/Tasks/InvokeTestingPlatformTask.cs
+index d2d0043056..2a1fa9cdc4 100644
+--- a/src/Platform/Microsoft.Testing.Platform.MSBuild/Tasks/InvokeTestingPlatformTask.cs
++++ b/src/Platform/Microsoft.Testing.Platform.MSBuild/Tasks/InvokeTestingPlatformTask.cs
+@@ -69,26 +69,22 @@ public InvokeTestingPlatformTask()
+     /// <summary>
+     /// Gets or sets the value of MSBuild property UseAppHost.
+     /// </summary>
+-    [Required]
+-    public ITaskItem UseAppHost { get; set; }
++    public ITaskItem? UseAppHost { get; set; }
+ 
+     /// <summary>
+     /// Gets or sets the value of MSBuild property _IsExecutable.
+     /// </summary>
+-    [Required]
+-    public ITaskItem IsExecutable { get; set; }
++    public ITaskItem? IsExecutable { get; set; }
+ 
+     /// <summary>
+     /// Gets or sets the value of MSBuild property TargetDir.
+     /// </summary>
+-    [Required]
+-    public ITaskItem TargetDir { get; set; }
++    public ITaskItem? TargetDir { get; set; }
+ 
+     /// <summary>
+     /// Gets or sets the value of MSBuild property AssemblyName.
+     /// </summary>
+-    [Required]
+-    public ITaskItem AssemblyName { get; set; }
++    public ITaskItem? AssemblyName { get; set; }
+ 
+     /// <summary>
+     /// Gets or sets the value of MSBuild property _NativeExecutableExtension.
+@@ -259,10 +255,10 @@ private bool IsCurrentProcessArchitectureCompatible() =>
+         // https://github.com/dotnet/sdk/blob/5846d648f2280b54a54e481f55de4d9eea0e6a0e/src/Tasks/Microsoft.NET.Build.Tasks/targets/Microsoft.NET.Sdk.targets#L1152-L1155
+         // The more correct logic is implementing https://github.com/microsoft/testfx/issues/5091
+         if (IsNetCoreApp &&
+-            bool.TryParse(IsExecutable.ItemSpec, out bool isExecutable) && isExecutable &&
+-            bool.TryParse(UseAppHost.ItemSpec, out bool useAppHost) && useAppHost)
++            bool.TryParse(IsExecutable?.ItemSpec, out bool isExecutable) && isExecutable &&
++            bool.TryParse(UseAppHost?.ItemSpec, out bool useAppHost) && useAppHost)
+         {
+-            string runCommand = $"{TargetDir.ItemSpec}{AssemblyName.ItemSpec}{NativeExecutableExtension?.ItemSpec}";
++            string runCommand = $"{TargetDir?.ItemSpec}{AssemblyName?.ItemSpec}{NativeExecutableExtension?.ItemSpec}";
+             if (File.Exists(runCommand))
+             {
+                 return runCommand;
+
+From 63a15051ec0740872300d3d02f82ff695d1673f9 Mon Sep 17 00:00:00 2001
+From: Youssef1313 <youssefvictor00@gmail.com>
+Date: Mon, 24 Feb 2025 08:53:53 +0100
+Subject: [PATCH 06/18] Keep DOTNET_ROOT
+
+---
+ .../MSBuildTests.Test.cs                      | 22 ++++---------------
+ 1 file changed, 4 insertions(+), 18 deletions(-)
+
+diff --git a/test/IntegrationTests/Microsoft.Testing.Platform.Acceptance.IntegrationTests/MSBuildTests.Test.cs b/test/IntegrationTests/Microsoft.Testing.Platform.Acceptance.IntegrationTests/MSBuildTests.Test.cs
+index 0953fbb993..1568846c69 100644
+--- a/test/IntegrationTests/Microsoft.Testing.Platform.Acceptance.IntegrationTests/MSBuildTests.Test.cs
++++ b/test/IntegrationTests/Microsoft.Testing.Platform.Acceptance.IntegrationTests/MSBuildTests.Test.cs
+@@ -113,10 +113,7 @@ public async Task RunUsingTestTargetWithNetfxMSBuild()
+         var commandLine = new TestInfrastructure.CommandLine();
+         string binlogFile = Path.Combine(TempDirectory.TestSuiteDirectory, $"{nameof(RunUsingTestTargetWithNetfxMSBuild)}.binlog");
+         await commandLine.RunAsync($"\"{msbuildExe}\" {testAsset.TargetAssetPath} /t:Restore");
+-        await commandLine.RunAsync($"\"{msbuildExe}\" {testAsset.TargetAssetPath} /t:\"Build;Test\" /bl:\"{binlogFile}\"", environmentVariables: new Dictionary<string, string?>()
+-        {
+-            ["DOTNET_ROOT"] = string.Empty,
+-        });
++        await commandLine.RunAsync($"\"{msbuildExe}\" {testAsset.TargetAssetPath} /t:\"Build;Test\" /bl:\"{binlogFile}\"");
+         StringAssert.Contains(commandLine.StandardOutput, "Tests succeeded");
+     }
+ 
+@@ -176,20 +173,9 @@ public async Task Invoke_DotnetTest_With_Incompatible_Arch()
+             $"test --arch {incompatibleArchitecture} -p:TestingPlatformDotnetTestSupport=True \"{testAsset.TargetAssetPath}\"",
+             AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
+             failIfReturnValueIsNotZero: false);
+-        // The output looks like:
+-        /*
+-            D:\a\_work\1\s\artifacts\tmp\Debug\testsuite\tidOn\.packages\microsoft.testing.platform.msbuild\1.5.0-ci\buildMultiTargeting\Microsoft.Testing.Platform.MSBuild.targets(320,5): error : Could not find 'dotnet.exe' host for the 'arm64' architecture. [D:\a\_work\1\s\artifacts\tmp\Debug\testsuite\vf8vR\MSBuildTests\MSBuild Tests.csproj]
+-            D:\a\_work\1\s\artifacts\tmp\Debug\testsuite\tidOn\.packages\microsoft.testing.platform.msbuild\1.5.0-ci\buildMultiTargeting\Microsoft.Testing.Platform.MSBuild.targets(320,5): error :  [D:\a\_work\1\s\artifacts\tmp\Debug\testsuite\vf8vR\MSBuildTests\MSBuild Tests.csproj]
+-            D:\a\_work\1\s\artifacts\tmp\Debug\testsuite\tidOn\.packages\microsoft.testing.platform.msbuild\1.5.0-ci\buildMultiTargeting\Microsoft.Testing.Platform.MSBuild.targets(320,5): error : You can resolve the problem by installing the 'arm64' .NET. [D:\a\_work\1\s\artifacts\tmp\Debug\testsuite\vf8vR\MSBuildTests\MSBuild Tests.csproj]
+-            D:\a\_work\1\s\artifacts\tmp\Debug\testsuite\tidOn\.packages\microsoft.testing.platform.msbuild\1.5.0-ci\buildMultiTargeting\Microsoft.Testing.Platform.MSBuild.targets(320,5): error :  [D:\a\_work\1\s\artifacts\tmp\Debug\testsuite\vf8vR\MSBuildTests\MSBuild Tests.csproj]
+-            D:\a\_work\1\s\artifacts\tmp\Debug\testsuite\tidOn\.packages\microsoft.testing.platform.msbuild\1.5.0-ci\buildMultiTargeting\Microsoft.Testing.Platform.MSBuild.targets(320,5): error : The specified framework can be found at: [D:\a\_work\1\s\artifacts\tmp\Debug\testsuite\vf8vR\MSBuildTests\MSBuild Tests.csproj]
+-            D:\a\_work\1\s\artifacts\tmp\Debug\testsuite\tidOn\.packages\microsoft.testing.platform.msbuild\1.5.0-ci\buildMultiTargeting\Microsoft.Testing.Platform.MSBuild.targets(320,5): error :   - https://aka.ms/dotnet-download [D:\a\_work\1\s\artifacts\tmp\Debug\testsuite\vf8vR\MSBuildTests\MSBuild Tests.csproj]
+-         */
+-        // Assert each error line separately for simplicity.
+-        result.AssertOutputContains($"Could not find '{(OperatingSystem.IsWindows() ? "dotnet.exe" : "dotnet")}' host for the '{incompatibleArchitecture}' architecture.");
+-        result.AssertOutputContains($"You can resolve the problem by installing the '{incompatibleArchitecture}' .NET.");
+-        result.AssertOutputContains("The specified framework can be found at:");
+-        result.AssertOutputContains("  - https://aka.ms/dotnet-download");
++
++        result.AssertOutputContains("error MSB6003: The specified task executable \"MSBuild Tests.exe\" could not be run. System.ComponentModel.Win32Exception (216): An error occurred trying to start process");
++        result.AssertOutputContains("The specified executable is not a valid application for this OS platform.");
+     }
+ 
+     [TestMethod]
+
+From 09463f07096eb553c65ca225b058a02bd61ff342 Mon Sep 17 00:00:00 2001
+From: Youssef1313 <youssefvictor00@gmail.com>
+Date: Mon, 24 Feb 2025 09:09:50 +0100
+Subject: [PATCH 07/18] Adjust tests
+
+---
+ .../MSBuildTests.Test.cs                                   | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
+
+diff --git a/test/IntegrationTests/Microsoft.Testing.Platform.Acceptance.IntegrationTests/MSBuildTests.Test.cs b/test/IntegrationTests/Microsoft.Testing.Platform.Acceptance.IntegrationTests/MSBuildTests.Test.cs
+index 1568846c69..15f604024b 100644
+--- a/test/IntegrationTests/Microsoft.Testing.Platform.Acceptance.IntegrationTests/MSBuildTests.Test.cs
++++ b/test/IntegrationTests/Microsoft.Testing.Platform.Acceptance.IntegrationTests/MSBuildTests.Test.cs
+@@ -149,7 +149,9 @@ await DotnetCli.RunAsync(
+         Assert.IsTrue(File.Exists(outputFileLog), $"Expected file '{outputFileLog}'");
+         string logFileContent = File.ReadAllText(outputFileLog);
+         Assert.IsTrue(Regex.IsMatch(logFileContent, ".*win-x86.*"), logFileContent);
+-        Assert.IsTrue(Regex.IsMatch(logFileContent, @"\.dotnet\\x86\\dotnet\.exe"), logFileContent);
++
++        // This is the architecture part that's written by TerminalOutputDevice when there is no banner specified.
++        Assert.Contains($"[win-x86 - {TargetFrameworks.NetCurrent}]", logFileContent);
+     }
+ 
+     [TestMethod]
+@@ -209,7 +211,8 @@ await DotnetCli.RunAsync(
+         string outputFileLog = Directory.GetFiles(testAsset.TargetAssetPath, "MSBuild Tests_net9.0_x64.log", SearchOption.AllDirectories).Single();
+         Assert.IsTrue(File.Exists(outputFileLog), $"Expected file '{outputFileLog}'");
+         string logFileContent = File.ReadAllText(outputFileLog);
+-        Assert.IsTrue(Regex.IsMatch(logFileContent, @"\.dotnet\\dotnet\.exe"), logFileContent);
++        // This is the architecture part that's written by TerminalOutputDevice when there is no banner specified.
++        Assert.Contains($"[win-x64 - {TargetFrameworks.NetCurrent}]", logFileContent);
+     }
+ 
+     private static void CommonAssert(DotnetMuxerResult compilationResult, string tfm, bool testSucceeded, string testResultFolder)
+
+From f233fbea863bf98e305a177af6984d55c32a4fdc Mon Sep 17 00:00:00 2001
+From: Youssef1313 <youssefvictor00@gmail.com>
+Date: Mon, 24 Feb 2025 09:29:15 +0100
+Subject: [PATCH 08/18] Adjust again
+
+---
+ .../MSBuildTests.Test.cs                      | 27 +++++++++++++++++--
+ 1 file changed, 25 insertions(+), 2 deletions(-)
+
+diff --git a/test/IntegrationTests/Microsoft.Testing.Platform.Acceptance.IntegrationTests/MSBuildTests.Test.cs b/test/IntegrationTests/Microsoft.Testing.Platform.Acceptance.IntegrationTests/MSBuildTests.Test.cs
+index 15f604024b..edf2836a5f 100644
+--- a/test/IntegrationTests/Microsoft.Testing.Platform.Acceptance.IntegrationTests/MSBuildTests.Test.cs
++++ b/test/IntegrationTests/Microsoft.Testing.Platform.Acceptance.IntegrationTests/MSBuildTests.Test.cs
+@@ -176,8 +176,31 @@ public async Task Invoke_DotnetTest_With_Incompatible_Arch()
+             AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
+             failIfReturnValueIsNotZero: false);
+ 
+-        result.AssertOutputContains("error MSB6003: The specified task executable \"MSBuild Tests.exe\" could not be run. System.ComponentModel.Win32Exception (216): An error occurred trying to start process");
+-        result.AssertOutputContains("The specified executable is not a valid application for this OS platform.");
++        // On Windows, we run the exe directly.
++        // On other OSes, we run with dotnet exec.
++        // This yields two different outputs, pointing to the same issue.
++        if (OperatingSystem.IsWindows())
++        {
++            result.AssertOutputContains("error MSB6003: The specified task executable \"MSBuild Tests.exe\" could not be run. System.ComponentModel.Win32Exception (216): An error occurred trying to start process");
++            result.AssertOutputContains("The specified executable is not a valid application for this OS platform.");
++        }
++        else
++        {
++            // The output looks like:
++            /*
++                D:\a\_work\1\s\artifacts\tmp\Debug\testsuite\tidOn\.packages\microsoft.testing.platform.msbuild\1.5.0-ci\buildMultiTargeting\Microsoft.Testing.Platform.MSBuild.targets(320,5): error : Could not find 'dotnet.exe' host for the 'arm64' architecture. [D:\a\_work\1\s\artifacts\tmp\Debug\testsuite\vf8vR\MSBuildTests\MSBuild Tests.csproj]
++                D:\a\_work\1\s\artifacts\tmp\Debug\testsuite\tidOn\.packages\microsoft.testing.platform.msbuild\1.5.0-ci\buildMultiTargeting\Microsoft.Testing.Platform.MSBuild.targets(320,5): error :  [D:\a\_work\1\s\artifacts\tmp\Debug\testsuite\vf8vR\MSBuildTests\MSBuild Tests.csproj]
++                D:\a\_work\1\s\artifacts\tmp\Debug\testsuite\tidOn\.packages\microsoft.testing.platform.msbuild\1.5.0-ci\buildMultiTargeting\Microsoft.Testing.Platform.MSBuild.targets(320,5): error : You can resolve the problem by installing the 'arm64' .NET. [D:\a\_work\1\s\artifacts\tmp\Debug\testsuite\vf8vR\MSBuildTests\MSBuild Tests.csproj]
++                D:\a\_work\1\s\artifacts\tmp\Debug\testsuite\tidOn\.packages\microsoft.testing.platform.msbuild\1.5.0-ci\buildMultiTargeting\Microsoft.Testing.Platform.MSBuild.targets(320,5): error :  [D:\a\_work\1\s\artifacts\tmp\Debug\testsuite\vf8vR\MSBuildTests\MSBuild Tests.csproj]
++                D:\a\_work\1\s\artifacts\tmp\Debug\testsuite\tidOn\.packages\microsoft.testing.platform.msbuild\1.5.0-ci\buildMultiTargeting\Microsoft.Testing.Platform.MSBuild.targets(320,5): error : The specified framework can be found at: [D:\a\_work\1\s\artifacts\tmp\Debug\testsuite\vf8vR\MSBuildTests\MSBuild Tests.csproj]
++                D:\a\_work\1\s\artifacts\tmp\Debug\testsuite\tidOn\.packages\microsoft.testing.platform.msbuild\1.5.0-ci\buildMultiTargeting\Microsoft.Testing.Platform.MSBuild.targets(320,5): error :   - https://aka.ms/dotnet-download [D:\a\_work\1\s\artifacts\tmp\Debug\testsuite\vf8vR\MSBuildTests\MSBuild Tests.csproj]
++             */
++            // Assert each error line separately for simplicity.
++            result.AssertOutputContains($"Could not find '{(OperatingSystem.IsWindows() ? "dotnet.exe" : "dotnet")}' host for the '{incompatibleArchitecture}' architecture.");
++            result.AssertOutputContains($"You can resolve the problem by installing the '{incompatibleArchitecture}' .NET.");
++            result.AssertOutputContains("The specified framework can be found at:");
++            result.AssertOutputContains("  - https://aka.ms/dotnet-download");
++        }
+     }
+ 
+     [TestMethod]
+
+From f4a45c2d3ea093693657b0159a9234de346d3f6c Mon Sep 17 00:00:00 2001
+From: Youssef1313 <youssefvictor00@gmail.com>
+Date: Mon, 24 Feb 2025 11:57:50 +0100
+Subject: [PATCH 09/18] Propagate DOTNET_ROOT
+
+---
+ .../Tasks/InvokeTestingPlatformTask.cs               | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
+
+diff --git a/src/Platform/Microsoft.Testing.Platform.MSBuild/Tasks/InvokeTestingPlatformTask.cs b/src/Platform/Microsoft.Testing.Platform.MSBuild/Tasks/InvokeTestingPlatformTask.cs
+index 2a1fa9cdc4..b602c1204c 100644
+--- a/src/Platform/Microsoft.Testing.Platform.MSBuild/Tasks/InvokeTestingPlatformTask.cs
++++ b/src/Platform/Microsoft.Testing.Platform.MSBuild/Tasks/InvokeTestingPlatformTask.cs
+@@ -373,6 +373,18 @@ protected override void ProcessStarted()
+     /// <inheritdoc />
+     public override bool Execute()
+     {
++        var list = new List<string>();
++        foreach (DictionaryEntry entry in new SystemEnvironment().GetEnvironmentVariables())
++        {
++            if (entry.Key is string key && key.StartsWith("DOTNET_ROOT", StringComparison.OrdinalIgnoreCase))
++            {
++                list.Add($"{key}={entry.Value}");
++            }
++        }
++
++        // This should be done before the base.Execute() call.
++        EnvironmentVariables = list.ToArray();
++
+         bool returnValue = base.Execute();
+         if (_toolCommand is not null)
+         {
+
+From 22caa5c0aaeabb96c244df7b80a619eccc511604 Mon Sep 17 00:00:00 2001
+From: Youssef1313 <youssefvictor00@gmail.com>
+Date: Mon, 24 Feb 2025 12:50:30 +0100
+Subject: [PATCH 10/18] Propagate DOTNET_ROOT
+
+---
+ .../MSBuildTests.Test.cs                                     | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/test/IntegrationTests/Microsoft.Testing.Platform.Acceptance.IntegrationTests/MSBuildTests.Test.cs b/test/IntegrationTests/Microsoft.Testing.Platform.Acceptance.IntegrationTests/MSBuildTests.Test.cs
+index edf2836a5f..3994d915d6 100644
+--- a/test/IntegrationTests/Microsoft.Testing.Platform.Acceptance.IntegrationTests/MSBuildTests.Test.cs
++++ b/test/IntegrationTests/Microsoft.Testing.Platform.Acceptance.IntegrationTests/MSBuildTests.Test.cs
+@@ -113,7 +113,10 @@ public async Task RunUsingTestTargetWithNetfxMSBuild()
+         var commandLine = new TestInfrastructure.CommandLine();
+         string binlogFile = Path.Combine(TempDirectory.TestSuiteDirectory, $"{nameof(RunUsingTestTargetWithNetfxMSBuild)}.binlog");
+         await commandLine.RunAsync($"\"{msbuildExe}\" {testAsset.TargetAssetPath} /t:Restore");
+-        await commandLine.RunAsync($"\"{msbuildExe}\" {testAsset.TargetAssetPath} /t:\"Build;Test\" /bl:\"{binlogFile}\"");
++        await commandLine.RunAsync($"\"{msbuildExe}\" {testAsset.TargetAssetPath} /t:\"Build;Test\" /bl:\"{binlogFile}\"", environmentVariables: new Dictionary<string, string?>()
++        {
++            ["DOTNET_ROOT"] = Environment.GetEnvironmentVariable("DOTNET_ROOT"),
++        });
+         StringAssert.Contains(commandLine.StandardOutput, "Tests succeeded");
+     }
+ 
+
+From f0393936715f3f1f6c793cee131dffa0a5429682 Mon Sep 17 00:00:00 2001
+From: Youssef1313 <youssefvictor00@gmail.com>
+Date: Mon, 24 Feb 2025 14:37:04 +0100
+Subject: [PATCH 11/18] Adjust
+
+---
+ .../MSBuildTests.Test.cs                                        | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/test/IntegrationTests/Microsoft.Testing.Platform.Acceptance.IntegrationTests/MSBuildTests.Test.cs b/test/IntegrationTests/Microsoft.Testing.Platform.Acceptance.IntegrationTests/MSBuildTests.Test.cs
+index 3994d915d6..8dad802851 100644
+--- a/test/IntegrationTests/Microsoft.Testing.Platform.Acceptance.IntegrationTests/MSBuildTests.Test.cs
++++ b/test/IntegrationTests/Microsoft.Testing.Platform.Acceptance.IntegrationTests/MSBuildTests.Test.cs
+@@ -115,7 +115,7 @@ public async Task RunUsingTestTargetWithNetfxMSBuild()
+         await commandLine.RunAsync($"\"{msbuildExe}\" {testAsset.TargetAssetPath} /t:Restore");
+         await commandLine.RunAsync($"\"{msbuildExe}\" {testAsset.TargetAssetPath} /t:\"Build;Test\" /bl:\"{binlogFile}\"", environmentVariables: new Dictionary<string, string?>()
+         {
+-            ["DOTNET_ROOT"] = Environment.GetEnvironmentVariable("DOTNET_ROOT"),
++            ["DOTNET_ROOT"] = Path.Combine(RootFinder.Find(), ".dotnet"),
+         });
+         StringAssert.Contains(commandLine.StandardOutput, "Tests succeeded");
+     }
+
+From 0fdf36bc78b60ef549072a824670006ced52a44e Mon Sep 17 00:00:00 2001
+From: Youssef1313 <youssefvictor00@gmail.com>
+Date: Mon, 24 Feb 2025 14:37:46 +0100
+Subject: [PATCH 12/18] Adjust, and get back Linux and macOS to investigate why
+ they fail
+
+---
+ .../Tasks/InvokeTestingPlatformTask.cs            | 15 +++++++++------
+ .../CommandLine.cs                                |  2 +-
+ 2 files changed, 10 insertions(+), 7 deletions(-)
+
+diff --git a/src/Platform/Microsoft.Testing.Platform.MSBuild/Tasks/InvokeTestingPlatformTask.cs b/src/Platform/Microsoft.Testing.Platform.MSBuild/Tasks/InvokeTestingPlatformTask.cs
+index b602c1204c..9fe69dd309 100644
+--- a/src/Platform/Microsoft.Testing.Platform.MSBuild/Tasks/InvokeTestingPlatformTask.cs
++++ b/src/Platform/Microsoft.Testing.Platform.MSBuild/Tasks/InvokeTestingPlatformTask.cs
+@@ -244,16 +244,18 @@ private bool IsCurrentProcessArchitectureCompatible() =>
+ 
+     private string? TryGetRunCommand()
+     {
+-        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+-        {
+-            // Currently fails on Linux and macOS.
+-            // Not yet investigated.
+-            return null;
+-        }
++        // if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
++        // {
++        //     // Currently fails on Linux and macOS.
++        //     // Not yet investigated.
++        //     return null;
++        // }
+ 
+         // This condition specifically handles this part:
+         // https://github.com/dotnet/sdk/blob/5846d648f2280b54a54e481f55de4d9eea0e6a0e/src/Tasks/Microsoft.NET.Build.Tasks/targets/Microsoft.NET.Sdk.targets#L1152-L1155
+         // The more correct logic is implementing https://github.com/microsoft/testfx/issues/5091
++        // What we want to do here is to avoid using 'dotnet exec' if possible, and run the executable directly instead.
++        // When running with dotnet exec, we are run under dotnet.exe process, which can break some scenarios (e.g, loading PRI in WinUI tests).
+         if (IsNetCoreApp &&
+             bool.TryParse(IsExecutable?.ItemSpec, out bool isExecutable) && isExecutable &&
+             bool.TryParse(UseAppHost?.ItemSpec, out bool useAppHost) && useAppHost)
+@@ -374,6 +376,7 @@ protected override void ProcessStarted()
+     public override bool Execute()
+     {
+         var list = new List<string>();
++        Debugger.Launch();
+         foreach (DictionaryEntry entry in new SystemEnvironment().GetEnvironmentVariables())
+         {
+             if (entry.Key is string key && key.StartsWith("DOTNET_ROOT", StringComparison.OrdinalIgnoreCase))
+diff --git a/test/Utilities/Microsoft.Testing.TestInfrastructure/CommandLine.cs b/test/Utilities/Microsoft.Testing.TestInfrastructure/CommandLine.cs
+index 3fd02adb5b..26782804af 100644
+--- a/test/Utilities/Microsoft.Testing.TestInfrastructure/CommandLine.cs
++++ b/test/Utilities/Microsoft.Testing.TestInfrastructure/CommandLine.cs
+@@ -72,7 +72,7 @@ public async Task<int> RunAsyncAndReturnExitCodeAsync(
+         IDictionary<string, string?>? environmentVariables = null,
+         string? workingDirectory = null,
+         bool cleanDefaultEnvironmentVariableIfCustomAreProvided = false,
+-        int timeoutInSeconds = 60)
++        int timeoutInSeconds = 100000)
+     {
+         await s_maxOutstandingCommands_semaphore.WaitAsync();
+         try
+
+From 2b08b8dc5925f8e182a8d3ef33c2a57ef9ef00e3 Mon Sep 17 00:00:00 2001
+From: Youssef1313 <youssefvictor00@gmail.com>
+Date: Mon, 24 Feb 2025 15:46:35 +0100
+Subject: [PATCH 13/18] Progress
+
+---
+ .../Tasks/InvokeTestingPlatformTask.cs        |  2 +-
+ .../MSBuildTests.Test.cs                      | 30 +++++++++----------
+ 2 files changed, 16 insertions(+), 16 deletions(-)
+
+diff --git a/src/Platform/Microsoft.Testing.Platform.MSBuild/Tasks/InvokeTestingPlatformTask.cs b/src/Platform/Microsoft.Testing.Platform.MSBuild/Tasks/InvokeTestingPlatformTask.cs
+index 9fe69dd309..bf5f6179d2 100644
+--- a/src/Platform/Microsoft.Testing.Platform.MSBuild/Tasks/InvokeTestingPlatformTask.cs
++++ b/src/Platform/Microsoft.Testing.Platform.MSBuild/Tasks/InvokeTestingPlatformTask.cs
+@@ -256,6 +256,7 @@ private bool IsCurrentProcessArchitectureCompatible() =>
+         // The more correct logic is implementing https://github.com/microsoft/testfx/issues/5091
+         // What we want to do here is to avoid using 'dotnet exec' if possible, and run the executable directly instead.
+         // When running with dotnet exec, we are run under dotnet.exe process, which can break some scenarios (e.g, loading PRI in WinUI tests).
++        // It seems like WinUI would try to resolve the PRI file relative to the path of the process, so relative to, e.g, C:\Program Files\dotnet
+         if (IsNetCoreApp &&
+             bool.TryParse(IsExecutable?.ItemSpec, out bool isExecutable) && isExecutable &&
+             bool.TryParse(UseAppHost?.ItemSpec, out bool useAppHost) && useAppHost)
+@@ -376,7 +377,6 @@ protected override void ProcessStarted()
+     public override bool Execute()
+     {
+         var list = new List<string>();
+-        Debugger.Launch();
+         foreach (DictionaryEntry entry in new SystemEnvironment().GetEnvironmentVariables())
+         {
+             if (entry.Key is string key && key.StartsWith("DOTNET_ROOT", StringComparison.OrdinalIgnoreCase))
+diff --git a/test/IntegrationTests/Microsoft.Testing.Platform.Acceptance.IntegrationTests/MSBuildTests.Test.cs b/test/IntegrationTests/Microsoft.Testing.Platform.Acceptance.IntegrationTests/MSBuildTests.Test.cs
+index 8dad802851..56590f6722 100644
+--- a/test/IntegrationTests/Microsoft.Testing.Platform.Acceptance.IntegrationTests/MSBuildTests.Test.cs
++++ b/test/IntegrationTests/Microsoft.Testing.Platform.Acceptance.IntegrationTests/MSBuildTests.Test.cs
+@@ -182,27 +182,27 @@ public async Task Invoke_DotnetTest_With_Incompatible_Arch()
+         // On Windows, we run the exe directly.
+         // On other OSes, we run with dotnet exec.
+         // This yields two different outputs, pointing to the same issue.
++        string executableName = OperatingSystem.IsWindows() ? "MSBuild Tests.exe" : "MSBuild Tests";
++
++        result.AssertOutputContains($"error MSB6003: The specified task executable \"{executableName}\" could not be run. System.ComponentModel.Win32Exception");
++        result.AssertOutputContains("An error occurred trying to start process");
++
+         if (OperatingSystem.IsWindows())
+         {
+-            result.AssertOutputContains("error MSB6003: The specified task executable \"MSBuild Tests.exe\" could not be run. System.ComponentModel.Win32Exception (216): An error occurred trying to start process");
+             result.AssertOutputContains("The specified executable is not a valid application for this OS platform.");
+         }
++        else if (OperatingSystem.IsMacOS())
++        {
++            result.AssertOutputContains("Bad CPU type in executable");
++        }
++        else if (OperatingSystem.IsLinux())
++        {
++            result.AssertOutputContains("Exec format error");
++        }
+         else
+         {
+-            // The output looks like:
+-            /*
+-                D:\a\_work\1\s\artifacts\tmp\Debug\testsuite\tidOn\.packages\microsoft.testing.platform.msbuild\1.5.0-ci\buildMultiTargeting\Microsoft.Testing.Platform.MSBuild.targets(320,5): error : Could not find 'dotnet.exe' host for the 'arm64' architecture. [D:\a\_work\1\s\artifacts\tmp\Debug\testsuite\vf8vR\MSBuildTests\MSBuild Tests.csproj]
+-                D:\a\_work\1\s\artifacts\tmp\Debug\testsuite\tidOn\.packages\microsoft.testing.platform.msbuild\1.5.0-ci\buildMultiTargeting\Microsoft.Testing.Platform.MSBuild.targets(320,5): error :  [D:\a\_work\1\s\artifacts\tmp\Debug\testsuite\vf8vR\MSBuildTests\MSBuild Tests.csproj]
+-                D:\a\_work\1\s\artifacts\tmp\Debug\testsuite\tidOn\.packages\microsoft.testing.platform.msbuild\1.5.0-ci\buildMultiTargeting\Microsoft.Testing.Platform.MSBuild.targets(320,5): error : You can resolve the problem by installing the 'arm64' .NET. [D:\a\_work\1\s\artifacts\tmp\Debug\testsuite\vf8vR\MSBuildTests\MSBuild Tests.csproj]
+-                D:\a\_work\1\s\artifacts\tmp\Debug\testsuite\tidOn\.packages\microsoft.testing.platform.msbuild\1.5.0-ci\buildMultiTargeting\Microsoft.Testing.Platform.MSBuild.targets(320,5): error :  [D:\a\_work\1\s\artifacts\tmp\Debug\testsuite\vf8vR\MSBuildTests\MSBuild Tests.csproj]
+-                D:\a\_work\1\s\artifacts\tmp\Debug\testsuite\tidOn\.packages\microsoft.testing.platform.msbuild\1.5.0-ci\buildMultiTargeting\Microsoft.Testing.Platform.MSBuild.targets(320,5): error : The specified framework can be found at: [D:\a\_work\1\s\artifacts\tmp\Debug\testsuite\vf8vR\MSBuildTests\MSBuild Tests.csproj]
+-                D:\a\_work\1\s\artifacts\tmp\Debug\testsuite\tidOn\.packages\microsoft.testing.platform.msbuild\1.5.0-ci\buildMultiTargeting\Microsoft.Testing.Platform.MSBuild.targets(320,5): error :   - https://aka.ms/dotnet-download [D:\a\_work\1\s\artifacts\tmp\Debug\testsuite\vf8vR\MSBuildTests\MSBuild Tests.csproj]
+-             */
+-            // Assert each error line separately for simplicity.
+-            result.AssertOutputContains($"Could not find '{(OperatingSystem.IsWindows() ? "dotnet.exe" : "dotnet")}' host for the '{incompatibleArchitecture}' architecture.");
+-            result.AssertOutputContains($"You can resolve the problem by installing the '{incompatibleArchitecture}' .NET.");
+-            result.AssertOutputContains("The specified framework can be found at:");
+-            result.AssertOutputContains("  - https://aka.ms/dotnet-download");
++            // Unexpected OS.
++            throw ApplicationStateGuard.Unreachable();
+         }
+     }
+ 
+
+From a1352e84a913c517028b2fe9bfea9669f29d15f4 Mon Sep 17 00:00:00 2001
+From: Youssef1313 <youssefvictor00@gmail.com>
+Date: Mon, 24 Feb 2025 15:47:24 +0100
+Subject: [PATCH 14/18] Revert unintended change
+
+---
+ .../Microsoft.Testing.TestInfrastructure/CommandLine.cs         | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/test/Utilities/Microsoft.Testing.TestInfrastructure/CommandLine.cs b/test/Utilities/Microsoft.Testing.TestInfrastructure/CommandLine.cs
+index 26782804af..3fd02adb5b 100644
+--- a/test/Utilities/Microsoft.Testing.TestInfrastructure/CommandLine.cs
++++ b/test/Utilities/Microsoft.Testing.TestInfrastructure/CommandLine.cs
+@@ -72,7 +72,7 @@ public async Task<int> RunAsyncAndReturnExitCodeAsync(
+         IDictionary<string, string?>? environmentVariables = null,
+         string? workingDirectory = null,
+         bool cleanDefaultEnvironmentVariableIfCustomAreProvided = false,
+-        int timeoutInSeconds = 100000)
++        int timeoutInSeconds = 60)
+     {
+         await s_maxOutstandingCommands_semaphore.WaitAsync();
+         try
+
+From d2a13f1c67c126974290b9ace27e9b60b5837e9d Mon Sep 17 00:00:00 2001
+From: Youssef1313 <youssefvictor00@gmail.com>
+Date: Mon, 24 Feb 2025 17:11:37 +0100
+Subject: [PATCH 15/18] Remove workaround
+
+---
+ .../Tasks/InvokeTestingPlatformTask.cs                     | 7 -------
+ 1 file changed, 7 deletions(-)
+
+diff --git a/src/Platform/Microsoft.Testing.Platform.MSBuild/Tasks/InvokeTestingPlatformTask.cs b/src/Platform/Microsoft.Testing.Platform.MSBuild/Tasks/InvokeTestingPlatformTask.cs
+index bf5f6179d2..134b17681a 100644
+--- a/src/Platform/Microsoft.Testing.Platform.MSBuild/Tasks/InvokeTestingPlatformTask.cs
++++ b/src/Platform/Microsoft.Testing.Platform.MSBuild/Tasks/InvokeTestingPlatformTask.cs
+@@ -244,13 +244,6 @@ private bool IsCurrentProcessArchitectureCompatible() =>
+ 
+     private string? TryGetRunCommand()
+     {
+-        // if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+-        // {
+-        //     // Currently fails on Linux and macOS.
+-        //     // Not yet investigated.
+-        //     return null;
+-        // }
+-
+         // This condition specifically handles this part:
+         // https://github.com/dotnet/sdk/blob/5846d648f2280b54a54e481f55de4d9eea0e6a0e/src/Tasks/Microsoft.NET.Build.Tasks/targets/Microsoft.NET.Sdk.targets#L1152-L1155
+         // The more correct logic is implementing https://github.com/microsoft/testfx/issues/5091
+
+From 6dc1c670a8830647c110c25ce6642d2003a2407a Mon Sep 17 00:00:00 2001
+From: Youssef1313 <youssefvictor00@gmail.com>
+Date: Mon, 24 Feb 2025 17:29:42 +0100
+Subject: [PATCH 16/18] Is it still needed?
+
+---
+ .../Tasks/InvokeTestingPlatformTask.cs        | 22 +++++++++----------
+ 1 file changed, 11 insertions(+), 11 deletions(-)
+
+diff --git a/src/Platform/Microsoft.Testing.Platform.MSBuild/Tasks/InvokeTestingPlatformTask.cs b/src/Platform/Microsoft.Testing.Platform.MSBuild/Tasks/InvokeTestingPlatformTask.cs
+index 134b17681a..af391a6b80 100644
+--- a/src/Platform/Microsoft.Testing.Platform.MSBuild/Tasks/InvokeTestingPlatformTask.cs
++++ b/src/Platform/Microsoft.Testing.Platform.MSBuild/Tasks/InvokeTestingPlatformTask.cs
+@@ -369,17 +369,17 @@ protected override void ProcessStarted()
+     /// <inheritdoc />
+     public override bool Execute()
+     {
+-        var list = new List<string>();
+-        foreach (DictionaryEntry entry in new SystemEnvironment().GetEnvironmentVariables())
+-        {
+-            if (entry.Key is string key && key.StartsWith("DOTNET_ROOT", StringComparison.OrdinalIgnoreCase))
+-            {
+-                list.Add($"{key}={entry.Value}");
+-            }
+-        }
+-
+-        // This should be done before the base.Execute() call.
+-        EnvironmentVariables = list.ToArray();
++        // var list = new List<string>();
++        // foreach (DictionaryEntry entry in new SystemEnvironment().GetEnvironmentVariables())
++        // {
++        //     if (entry.Key is string key && key.StartsWith("DOTNET_ROOT", StringComparison.OrdinalIgnoreCase))
++        //     {
++        //         list.Add($"{key}={entry.Value}");
++        //     }
++        // }
++
++        //// This should be done before the base.Execute() call.
++        // EnvironmentVariables = list.ToArray();
+ 
+         bool returnValue = base.Execute();
+         if (_toolCommand is not null)
+
+From dc64dcd2953c1a4e078ba927d5c8b507f6286a76 Mon Sep 17 00:00:00 2001
+From: Youssef1313 <youssefvictor00@gmail.com>
+Date: Mon, 24 Feb 2025 17:29:59 +0100
+Subject: [PATCH 17/18] Fix warning
+
+---
+ .../Tasks/InvokeTestingPlatformTask.cs                           | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/src/Platform/Microsoft.Testing.Platform.MSBuild/Tasks/InvokeTestingPlatformTask.cs b/src/Platform/Microsoft.Testing.Platform.MSBuild/Tasks/InvokeTestingPlatformTask.cs
+index af391a6b80..247b2b8e28 100644
+--- a/src/Platform/Microsoft.Testing.Platform.MSBuild/Tasks/InvokeTestingPlatformTask.cs
++++ b/src/Platform/Microsoft.Testing.Platform.MSBuild/Tasks/InvokeTestingPlatformTask.cs
+@@ -380,7 +380,6 @@ public override bool Execute()
+ 
+         //// This should be done before the base.Execute() call.
+         // EnvironmentVariables = list.ToArray();
+-
+         bool returnValue = base.Execute();
+         if (_toolCommand is not null)
+         {
+
+From 1e0b3b2130b42cff257faf69395d30f0e75eee81 Mon Sep 17 00:00:00 2001
+From: Youssef1313 <youssefvictor00@gmail.com>
+Date: Mon, 24 Feb 2025 18:54:00 +0100
+Subject: [PATCH 18/18] Magically not needed :)
+
+---
+ .../Tasks/InvokeTestingPlatformTask.cs                | 11 -----------
+ 1 file changed, 11 deletions(-)
+
+diff --git a/src/Platform/Microsoft.Testing.Platform.MSBuild/Tasks/InvokeTestingPlatformTask.cs b/src/Platform/Microsoft.Testing.Platform.MSBuild/Tasks/InvokeTestingPlatformTask.cs
+index 247b2b8e28..96907d237c 100644
+--- a/src/Platform/Microsoft.Testing.Platform.MSBuild/Tasks/InvokeTestingPlatformTask.cs
++++ b/src/Platform/Microsoft.Testing.Platform.MSBuild/Tasks/InvokeTestingPlatformTask.cs
+@@ -369,17 +369,6 @@ protected override void ProcessStarted()
+     /// <inheritdoc />
+     public override bool Execute()
+     {
+-        // var list = new List<string>();
+-        // foreach (DictionaryEntry entry in new SystemEnvironment().GetEnvironmentVariables())
+-        // {
+-        //     if (entry.Key is string key && key.StartsWith("DOTNET_ROOT", StringComparison.OrdinalIgnoreCase))
+-        //     {
+-        //         list.Add($"{key}={entry.Value}");
+-        //     }
+-        // }
+-
+-        //// This should be done before the base.Execute() call.
+-        // EnvironmentVariables = list.ToArray();
+         bool returnValue = base.Execute();
+         if (_toolCommand is not null)
+         {
