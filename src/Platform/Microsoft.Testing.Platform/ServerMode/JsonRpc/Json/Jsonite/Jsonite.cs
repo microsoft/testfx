@@ -973,9 +973,7 @@ namespace Jsonite
                             writer.Write('t');
                             break;
                         default:
-                            ArgumentGuard.Ensure(c >= ' ', nameof(text), $"Invalid control character '{EscapeChar(c)}' found in string");
-
-                            if (IsHighSurrogate(c) || IsLowSurrogate(c))
+                            if (c < ' ' || IsHighSurrogate(c) || IsLowSurrogate(c))
                             {
                                 writer.Write('\\');
                                 writer.Write('u');
