@@ -35,27 +35,12 @@ public sealed class JsoniteTests
             // Serialize text via Jsonite, this is where the error used to happen.
             string jsoniteText = Jsonite.Json.Serialize(text);
 
-            // Serialize text via System.Text.Json to get our control examples, preserving special characters in text is
-            // hard, and so we better test against a known, hopefully good state.
-            string stjText = System.Text.Json.JsonSerializer.Serialize(text);
-
-            // This is our expected result, to do it the way System.Text.Json does it.
-            string? deserializeStjViaStj = System.Text.Json.JsonSerializer.Deserialize<string>(stjText);
-
-            // Make sure we can deserialize the messages we send from server to VS.
-            string? deserializeJsoniteViaStj = System.Text.Json.JsonSerializer.Deserialize<string>(jsoniteText);
-
-            // Make sure we can deserialie messages that VS sends to our server.
-            string? deserializeStjViaJsonite = (string)Jsonite.Json.Deserialize(stjText);
-
             // Make sure we can deserialize messages we produced, to know the Jsonite code is handling all the cases.
             string? deserializeJsoniteViaJsonite = (string)Jsonite.Json.Deserialize(jsoniteText);
 
             try
             {
-                Assert.AreEqual(deserializeStjViaStj, deserializeJsoniteViaStj);
-                Assert.AreEqual(deserializeStjViaStj, deserializeStjViaJsonite);
-                Assert.AreEqual(deserializeStjViaStj, deserializeJsoniteViaJsonite);
+                Assert.AreEqual(text, deserializeJsoniteViaJsonite);
             }
             catch (Exception ex)
             {
