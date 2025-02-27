@@ -1,13 +1,20 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Helpers;
+using Microsoft.Testing.Platform.Logging;
+using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.OutputDevice.Terminal;
+using Microsoft.Testing.Platform.Services;
+using Microsoft.Testing.Platform.TestHostControllers;
+
+using Moq;
 
 namespace Microsoft.Testing.Platform.UnitTests;
 
 [TestClass]
-public sealed class TerminalTestReporterTests
+public sealed class TerminalOutputDeviceTests
 {
     [TestMethod]
     public void AppendStackFrameFormatsStackTraceLineCorrectly()
@@ -24,7 +31,7 @@ public sealed class TerminalTestReporterTests
         }
 
         string firstStackTraceLine = err.StackTrace!.Replace("\r", string.Empty).Split('\n')[0];
-        TerminalTestReporter.AppendStackFrame(terminal, firstStackTraceLine);
+        TerminalOutputDevice.AppendStackFrame(terminal, firstStackTraceLine);
 
 #if NETCOREAPP
         StringAssert.Contains(terminal.Output, "    at Microsoft.Testing.Platform.UnitTests.TerminalTestReporterTests.AppendStackFrameFormatsStackTraceLineCorrectly() in ");
@@ -55,7 +62,7 @@ public sealed class TerminalTestReporterTests
     public void StackTraceRegexCapturesLines(string stackTraceLine, string expected)
     {
         var terminal = new StringBuilderTerminal();
-        TerminalTestReporter.AppendStackFrame(terminal, stackTraceLine);
+        TerminalOutputDevice.AppendStackFrame(terminal, stackTraceLine);
 
         // We add newline after every, but it is hard to put it in the attribute.
         expected += Environment.NewLine;
@@ -67,16 +74,7 @@ public sealed class TerminalTestReporterTests
     public void OutputFormattingIsCorrect()
     {
         var stringBuilderConsole = new StringBuilderConsole();
-        var terminalReporter = new TerminalTestReporter(stringBuilderConsole, new TerminalTestReporterOptions
-        {
-            ShowPassedTests = () => true,
-            UseAnsi = true,
-            ForceAnsi = true,
-
-            ShowAssembly = false,
-            ShowAssemblyStartAndComplete = false,
-            ShowProgress = () => false,
-        });
+        TerminalOutputDevice terminalReporter = CreateTerminalOutput(stringBuilderConsole);
 
         DateTimeOffset startTime = DateTimeOffset.MinValue;
         DateTimeOffset endTime = DateTimeOffset.MaxValue;
@@ -86,7 +84,6 @@ public sealed class TerminalTestReporterTests
         string architecture = "x64";
         string assembly = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\work\assembly.dll" : "/mnt/work/assembly.dll";
         string folder = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\work\" : "/mnt/work/";
-        string folderNoSlash = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\work" : "/mnt/work";
         string folderLink = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:/work/" : "mnt/work/";
         string folderLinkNoSlash = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:/work" : "mnt/work";
 
@@ -167,20 +164,7 @@ public sealed class TerminalTestReporterTests
     {
         var stringBuilderConsole = new StringBuilderConsole();
         var stopwatchFactory = new StopwatchFactory();
-        var terminalReporter = new TerminalTestReporter(stringBuilderConsole, new TerminalTestReporterOptions
-        {
-            ShowPassedTests = () => true,
-            UseAnsi = true,
-            ForceAnsi = true,
-
-            ShowActiveTests = true,
-            ShowAssembly = false,
-            ShowAssemblyStartAndComplete = false,
-            ShowProgress = () => true,
-        })
-        {
-            CreateStopwatch = stopwatchFactory.CreateStopwatch,
-        };
+        TerminalOutputDevice terminalReporter = CreateTerminalOutput(stringBuilderConsole, stopwatchFactory.CreateStopwatch);
 
         var startHandle = new AutoResetEvent(initialState: false);
         var stopHandle = new AutoResetEvent(initialState: false);
@@ -266,6 +250,12 @@ public sealed class TerminalTestReporterTests
         string visibleEsc = "\x241b";
         return text?.Replace(AnsiCodes.Esc, visibleEsc);
     }
+
+    private static TerminalOutputDevice CreateTerminalOutput(IConsole console, Func<IStopwatch>? createStopWatch = null)
+        => new(console, new Mock<ITestApplicationModuleInfo>().Object, new Mock<ITestHostControllerInfo>().Object, new Mock<IAsyncMonitor>().Object,
+            new Mock<IRuntimeFeature>().Object, new Mock<IEnvironment>().Object, new Mock<IPlatformInformation>().Object,
+            new Mock<ICommandLineOptions>().Object, new Mock<IFileLoggerInformation>().Object, new Mock<ILoggerFactory>().Object,
+            new Mock<IClock>().Object, new Mock<IStopPoliciesService>().Object, true, createStopWatch);
 
     internal sealed class StopwatchFactory
     {
