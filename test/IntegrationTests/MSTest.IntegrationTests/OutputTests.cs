@@ -14,9 +14,7 @@ public class OutputTests : CLITestBase
 {
     private const string TestAssetName = "OutputTestProject";
 
-#if DEBUG
     public async Task OutputIsNotMixedWhenTestsRunInParallel() => await ValidateOutputForClassAsync("UnitTest1");
-#endif
 
     public async Task OutputIsNotMixedWhenAsyncTestsRunInParallel() => await ValidateOutputForClassAsync("UnitTest2");
 
