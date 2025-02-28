@@ -1,1 +1,5 @@
 #nullable enable
+MSTest.Analyzers.DuplicateDataRowAnalyzer
+MSTest.Analyzers.DuplicateDataRowAnalyzer.DuplicateDataRowAnalyzer() -> void
+override MSTest.Analyzers.DuplicateDataRowAnalyzer.Initialize(Microsoft.CodeAnalysis.Diagnostics.AnalysisContext! context) -> void
+override MSTest.Analyzers.DuplicateDataRowAnalyzer.SupportedDiagnostics.get -> System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.DiagnosticDescriptor!>
