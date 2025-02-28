@@ -4,7 +4,6 @@
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
-using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using UnitTestOutcome = Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome;
@@ -107,6 +106,8 @@ public class TestAssemblyInfo
     /// </summary>
     internal Assembly Assembly { get; }
 
+    internal ExecutionContext? ExecutionContext { get; set; }
+
     /// <summary>
     /// Runs assembly initialize method.
     /// </summary>
@@ -143,11 +144,17 @@ public class TestAssemblyInfo
                     try
                     {
                         AssemblyInitializationException = FixtureMethodRunner.RunWithTimeoutAndCancellation(
-                            () => AssemblyInitializeMethod.InvokeAsSynchronousTask(null, testContext),
+                            () =>
+                            {
+                                AssemblyInitializeMethod.InvokeAsSynchronousTask(null, testContext);
+                                // **After** we have executed the assembly initialize, we save the current context.
+                                // This context will contain async locals set by the assembly initialize method.
+                                ExecutionContext = ExecutionContext.Capture();
+                            },
                             testContext.CancellationTokenSource,
                             AssemblyInitializeMethodTimeoutMilliseconds,
                             AssemblyInitializeMethod,
-                            new AssemblyExecutionContextScope(isCleanup: false),
+                            executionContext: null, // Assembly initialize is the first thing that we run. So just execute on the current execution context.
                             Resource.AssemblyInitializeWasCancelled,
                             Resource.AssemblyInitializeTimedOut);
                     }
@@ -220,7 +227,7 @@ public class TestAssemblyInfo
                      new CancellationTokenSource(),
                      AssemblyCleanupMethodTimeoutMilliseconds,
                      AssemblyCleanupMethod,
-                     new AssemblyExecutionContextScope(isCleanup: true),
+                     ExecutionContext,
                      Resource.AssemblyCleanupWasCancelled,
                      Resource.AssemblyCleanupTimedOut);
             }
@@ -286,7 +293,7 @@ public class TestAssemblyInfo
                      testContext.CancellationTokenSource,
                      AssemblyCleanupMethodTimeoutMilliseconds,
                      AssemblyCleanupMethod,
-                     new AssemblyExecutionContextScope(isCleanup: true),
+                     ExecutionContext,
                      Resource.AssemblyCleanupWasCancelled,
                      Resource.AssemblyCleanupTimedOut);
             }

@@ -4,7 +4,6 @@
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
-using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -232,6 +231,8 @@ public class TestClassInfo
             field = value;
         }
     }
+
+    internal ExecutionContext? ExecutionContext { get; set; }
 
     /// <summary>
     /// Gets a queue of test initialize methods to call for this type.
@@ -501,11 +502,20 @@ public class TestClassInfo
         }
 
         return FixtureMethodRunner.RunWithTimeoutAndCancellation(
-            () => methodInfo.InvokeAsSynchronousTask(null, testContext),
+            () =>
+            {
+                methodInfo.InvokeAsSynchronousTask(null, testContext);
+                // **After** we have executed the class initialize, we save the current context.
+                // This context will contain async locals set by the class initialize method.
+                ExecutionContext = ExecutionContext.Capture();
+            },
             testContext.CancellationTokenSource,
             timeout,
             methodInfo,
-            new ClassExecutionContextScope(ClassType),
+            // We run the class initialize on a copy of the execution context of the assembly.
+            // That way, async locals set by assembly initialize are visible to class initialize.
+            // But we copy so that async locals set by class initialize are not visible to assembly cleanup.
+            Parent?.ExecutionContext?.CreateCopy(),
             Resource.ClassInitializeWasCancelled,
             Resource.ClassInitializeTimedOut);
     }
@@ -543,12 +553,12 @@ public class TestClassInfo
                 try
                 {
                     classCleanupMethod = ClassCleanupMethod;
-                    ClassCleanupException = classCleanupMethod is not null ? InvokeCleanupMethod(classCleanupMethod, BaseClassCleanupMethods.Count, null!) : null;
+                    ClassCleanupException = classCleanupMethod is not null ? InvokeCleanupMethod(classCleanupMethod, null!) : null;
                     var baseClassCleanupQueue = new Queue<MethodInfo>(BaseClassCleanupMethods);
                     while (baseClassCleanupQueue.Count > 0 && ClassCleanupException is null)
                     {
                         classCleanupMethod = baseClassCleanupQueue.Dequeue();
-                        ClassCleanupException = InvokeCleanupMethod(classCleanupMethod, baseClassCleanupQueue.Count, null!);
+                        ClassCleanupException = InvokeCleanupMethod(classCleanupMethod, null!);
                     }
 
                     IsClassCleanupExecuted = ClassCleanupException is null;
@@ -628,7 +638,7 @@ public class TestClassInfo
                 {
                     if (!classCleanupMethod.DeclaringType!.IsIgnored(out _))
                     {
-                        ClassCleanupException = InvokeCleanupMethod(classCleanupMethod, remainingCleanupCount: BaseClassCleanupMethods.Count, testContext);
+                        ClassCleanupException = InvokeCleanupMethod(classCleanupMethod, testContext);
                     }
                 }
 
@@ -639,7 +649,7 @@ public class TestClassInfo
                         classCleanupMethod = BaseClassCleanupMethods[i];
                         if (!classCleanupMethod.DeclaringType!.IsIgnored(out _))
                         {
-                            ClassCleanupException = InvokeCleanupMethod(classCleanupMethod, remainingCleanupCount: BaseClassCleanupMethods.Count - 1 - i, testContext);
+                            ClassCleanupException = InvokeCleanupMethod(classCleanupMethod, testContext);
                             if (ClassCleanupException is not null)
                             {
                                 break;
@@ -792,7 +802,7 @@ public class TestClassInfo
         }
     }
 
-    private TestFailedException? InvokeCleanupMethod(MethodInfo methodInfo, int remainingCleanupCount, TestContext testContext)
+    private TestFailedException? InvokeCleanupMethod(MethodInfo methodInfo, TestContext testContext)
     {
         TimeoutInfo? timeout = null;
         if (ClassCleanupMethodTimeoutMilliseconds.TryGetValue(methodInfo, out TimeoutInfo localTimeout))
@@ -815,7 +825,10 @@ public class TestClassInfo
             testContext.CancellationTokenSource,
             timeout,
             methodInfo,
-            new ClassExecutionContextScope(ClassType, remainingCleanupCount),
+            // If we had a class initialize that have set the execution context, we use that.
+            // Otherwise, we still want to use the execution context of the assembly.
+            // Note that if we have a class initialize, its execution context was already a copy of the assembly's context.
+            ExecutionContext ?? Parent.ExecutionContext?.CreateCopy(),
             Resource.ClassCleanupWasCancelled,
             Resource.ClassCleanupTimedOut);
     }
