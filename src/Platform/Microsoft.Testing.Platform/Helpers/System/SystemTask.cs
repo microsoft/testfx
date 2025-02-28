@@ -8,9 +8,6 @@ internal sealed class SystemTask : ITask
     public Task Run(Action action)
         => Task.Run(action);
 
-    public Task Run(Action action, CancellationToken cancellationToken)
-        => Task.Run(action, cancellationToken);
-
     public Task Run(Func<Task> function, CancellationToken cancellationToken)
         => Task.Run(function, cancellationToken);
 
@@ -47,22 +44,15 @@ internal sealed class SystemTask : ITask
             Name = name,
         };
 
+#pragma warning disable CA1416 // Validate platform compatibility
         thread.Start();
+#pragma warning restore CA1416
 
         return taskCompletionSource.Task;
     }
 
-    public Task WhenAll(IEnumerable<Task> tasks)
-        => Task.WhenAll(tasks);
-
     public Task WhenAll(params Task[] tasks)
         => Task.WhenAll(tasks);
-
-    public Task<Task> WhenAny(params Task[] tasks)
-        => Task.WhenAny(tasks);
-
-    public Task Delay(TimeSpan timeSpan)
-        => Task.Delay(timeSpan);
 
     public Task Delay(int millisecondDelay)
         => Task.Delay(millisecondDelay);

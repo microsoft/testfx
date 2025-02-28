@@ -114,6 +114,18 @@ public sealed class UseAttributeOnTestMethodAnalyzer : DiagnosticAnalyzer
         DiagnosticSeverity.Info,
         isEnabledByDefault: true);
 
+    private const string ConditionBaseAttributeShortName = "ConditionBaseAttribute";
+    internal static readonly DiagnosticDescriptor ConditionBaseRule = DiagnosticDescriptorHelper.Create(
+        DiagnosticIds.UseAttributeOnTestMethodRuleId,
+        title: new LocalizableResourceString(
+            nameof(Resources.UseAttributeOnTestMethodAnalyzerTitle), Resources.ResourceManager, typeof(Resources), ConditionBaseAttributeShortName),
+        messageFormat: new LocalizableResourceString(
+            nameof(Resources.UseAttributeOnTestMethodAnalyzerMessageFormat), Resources.ResourceManager, typeof(Resources), ConditionBaseAttributeShortName),
+        description: null,
+        Category.Usage,
+        DiagnosticSeverity.Info,
+        isEnabledByDefault: true);
+
     // IMPORTANT: Remember to add any new rule to the rule tuple.
     private static readonly List<(string AttributeFullyQualifiedName, DiagnosticDescriptor Rule)> RuleTuples =
     [
@@ -124,12 +136,23 @@ public sealed class UseAttributeOnTestMethodAnalyzer : DiagnosticAnalyzer
         (WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingDescriptionAttribute, DescriptionRule),
         (WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingExpectedExceptionBaseAttribute, ExpectedExceptionRule),
         (WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingCssIterationAttribute, CssIterationRule),
-        (WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingCssProjectStructureAttribute, CssProjectStructureRule)
+        (WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingCssProjectStructureAttribute, CssProjectStructureRule),
+        (WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingConditionBaseAttribute, ConditionBaseRule),
     ];
 
-    public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
-        = ImmutableArray.Create(OwnerRule);
+    /// <inheritdoc />
+    public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } =
+        ImmutableArray.Create(
+            OwnerRule,
+            PriorityRule,
+            TestPropertyRule,
+            WorkItemRule,
+            DescriptionRule,
+            ExpectedExceptionRule,
+            CssIterationRule,
+            CssProjectStructureRule);
 
+    /// <inheritdoc />
     public override void Initialize(AnalysisContext context)
     {
         context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);

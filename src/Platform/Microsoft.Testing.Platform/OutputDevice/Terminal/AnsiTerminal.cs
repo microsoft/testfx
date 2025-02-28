@@ -1,10 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Globalization;
-using System.Runtime.InteropServices;
-using System.Text;
-
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Resources;
 
@@ -58,10 +54,14 @@ internal sealed class AnsiTerminal : ITerminal
     }
 
     public int Width
+#pragma warning disable CA1416 // Validate platform compatibility
         => _console.IsOutputRedirected ? int.MaxValue : _console.BufferWidth;
+#pragma warning restore CA1416 // Validate platform compatibility
 
     public int Height
+#pragma warning disable CA1416 // Validate platform compatibility
         => _console.IsOutputRedirected ? int.MaxValue : _console.BufferHeight;
+#pragma warning restore CA1416 // Validate platform compatibility
 
     public void Append(char value)
     {

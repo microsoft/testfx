@@ -1,9 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Globalization;
-using System.Reflection;
-
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
@@ -83,12 +80,12 @@ public class AssemblyEnumeratorWrapperTests : TestContainer
 
     public void GetTestsShouldReturnTestElements()
     {
-        string assemblyName = Assembly.GetExecutingAssembly().FullName;
+        string assemblyName = Assembly.GetExecutingAssembly().FullName!;
 
         // Setup mocks.
         SetupMocks(assemblyName, doesFileExist: true, isAssemblyReferenced: true);
 
-        ICollection<MSTest.TestAdapter.ObjectModel.UnitTestElement> tests = _testableAssemblyEnumeratorWrapper.GetTests(assemblyName, null, out _warnings);
+        ICollection<MSTest.TestAdapter.ObjectModel.UnitTestElement>? tests = _testableAssemblyEnumeratorWrapper.GetTests(assemblyName, null, out _warnings);
 
         Verify(tests is not null);
 
@@ -98,7 +95,7 @@ public class AssemblyEnumeratorWrapperTests : TestContainer
 
     public void GetTestsShouldCreateAnIsolatedInstanceOfAssemblyEnumerator()
     {
-        string assemblyName = Assembly.GetExecutingAssembly().FullName;
+        string assemblyName = Assembly.GetExecutingAssembly().FullName!;
 
         // Setup mocks.
         SetupMocks(assemblyName, doesFileExist: true, isAssemblyReferenced: true);

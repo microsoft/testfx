@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Reflection;
-
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
@@ -45,7 +43,7 @@ public class TestAssemblySettingsProviderTests : TestContainer
             .Returns(Assembly.GetExecutingAssembly());
 
         // Act.
-        MSTest.TestAdapter.ObjectModel.TestAssemblySettings settings = TestAssemblySettingsProvider.GetSettings("Foo");
+        MSTest.TestAdapter.ObjectModel.TestAssemblySettings settings = new TestAssemblySettingsProvider().GetSettings("Foo");
 
         // Assert.
         Verify(settings.Workers == -1);
@@ -64,7 +62,7 @@ public class TestAssemblySettingsProviderTests : TestContainer
             .Returns([new UTF.ParallelizeAttribute { Workers = 10 }]);
 
         // Act.
-        MSTest.TestAdapter.ObjectModel.TestAssemblySettings settings = TestAssemblySettingsProvider.GetSettings("Foo");
+        MSTest.TestAdapter.ObjectModel.TestAssemblySettings settings = new TestAssemblySettingsProvider().GetSettings("Foo");
 
         // Assert.
         Verify(settings.Workers == 10);
@@ -83,7 +81,7 @@ public class TestAssemblySettingsProviderTests : TestContainer
             .Returns([new UTF.ParallelizeAttribute { Workers = 0 }]);
 
         // Act.
-        MSTest.TestAdapter.ObjectModel.TestAssemblySettings settings = TestAssemblySettingsProvider.GetSettings("Foo");
+        MSTest.TestAdapter.ObjectModel.TestAssemblySettings settings = new TestAssemblySettingsProvider().GetSettings("Foo");
 
         // Assert.
         Verify(Environment.ProcessorCount == settings.Workers);
@@ -98,10 +96,10 @@ public class TestAssemblySettingsProviderTests : TestContainer
             .Returns(Assembly.GetExecutingAssembly());
 
         // Act.
-        MSTest.TestAdapter.ObjectModel.TestAssemblySettings settings = TestAssemblySettingsProvider.GetSettings("Foo");
+        MSTest.TestAdapter.ObjectModel.TestAssemblySettings settings = new TestAssemblySettingsProvider().GetSettings("Foo");
 
         // Assert.
-        Verify(settings.Scope == UTF.ExecutionScope.ClassLevel);
+        Verify(settings.Scope == ExecutionScope.ClassLevel);
     }
 
     public void GetSettingsShouldSetParallelScope()
@@ -114,13 +112,13 @@ public class TestAssemblySettingsProviderTests : TestContainer
         _testablePlatformServiceProvider
             .MockReflectionOperations
             .Setup(ro => ro.GetCustomAttributes(It.IsAny<Assembly>(), typeof(UTF.ParallelizeAttribute)))
-            .Returns([new UTF.ParallelizeAttribute { Scope = UTF.ExecutionScope.MethodLevel }]);
+            .Returns([new UTF.ParallelizeAttribute { Scope = ExecutionScope.MethodLevel }]);
 
         // Act.
-        MSTest.TestAdapter.ObjectModel.TestAssemblySettings settings = TestAssemblySettingsProvider.GetSettings("Foo");
+        MSTest.TestAdapter.ObjectModel.TestAssemblySettings settings = new TestAssemblySettingsProvider().GetSettings("Foo");
 
         // Assert.
-        Verify(settings.Scope == UTF.ExecutionScope.MethodLevel);
+        Verify(settings.Scope == ExecutionScope.MethodLevel);
     }
 
     public void GetSettingsShouldSetCanParallelizeAssemblyToTrueByDefault()
@@ -132,7 +130,7 @@ public class TestAssemblySettingsProviderTests : TestContainer
             .Returns(Assembly.GetExecutingAssembly());
 
         // Act.
-        MSTest.TestAdapter.ObjectModel.TestAssemblySettings settings = TestAssemblySettingsProvider.GetSettings("Foo");
+        MSTest.TestAdapter.ObjectModel.TestAssemblySettings settings = new TestAssemblySettingsProvider().GetSettings("Foo");
 
         // Assert.
         Verify(settings.CanParallelizeAssembly);
@@ -151,7 +149,7 @@ public class TestAssemblySettingsProviderTests : TestContainer
             .Returns([new UTF.DoNotParallelizeAttribute()]);
 
         // Act.
-        MSTest.TestAdapter.ObjectModel.TestAssemblySettings settings = TestAssemblySettingsProvider.GetSettings("Foo");
+        MSTest.TestAdapter.ObjectModel.TestAssemblySettings settings = new TestAssemblySettingsProvider().GetSettings("Foo");
 
         // Assert.
         Verify(!settings.CanParallelizeAssembly);

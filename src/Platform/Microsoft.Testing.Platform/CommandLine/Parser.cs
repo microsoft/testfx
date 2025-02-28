@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Globalization;
-
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Resources;
 
@@ -37,7 +35,7 @@ internal static class CommandLineParser
 
     private static CommandLineParseResult Parse(List<string> args, IEnvironment environment)
     {
-        List<OptionRecord> options = [];
+        List<CommandLineParseOption> options = [];
         List<string> errors = [];
 
         string? currentOption = null;

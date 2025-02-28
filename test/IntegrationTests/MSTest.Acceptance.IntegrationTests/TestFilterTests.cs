@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
@@ -7,21 +7,16 @@ using Microsoft.Testing.Platform.Helpers;
 
 namespace MSTest.Acceptance.IntegrationTests;
 
-[TestGroup]
-public class TestFilterTests : AcceptanceTestBase
+[TestClass]
+public class TestFilterTests : AcceptanceTestBase<TestFilterTests.TestAssetFixture>
 {
-    private readonly TestAssetFixture _testAssetFixture;
     private const string AssetName = "TestFilter";
 
-    // There's a bug in TAFX where we need to use it at least one time somewhere to use it inside the fixture self (AcceptanceFixture).
-    public TestFilterTests(ITestExecutionContext testExecutionContext, TestAssetFixture testAssetFixture,
-        AcceptanceFixture globalFixture)
-        : base(testExecutionContext) => _testAssetFixture = testAssetFixture;
-
-    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    [TestMethod]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     public async Task RunWithFilter_UsingTestProperty_FilteredTests(string currentTfm)
     {
-        var testHost = TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, currentTfm);
+        var testHost = TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, currentTfm);
 
         TestHostResult testHostResult = await testHost.ExecuteAsync("--filter tree=one");
 
@@ -29,10 +24,11 @@ public class TestFilterTests : AcceptanceTestBase
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
     }
 
-    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    [TestMethod]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     public async Task DiscoverTestsWithFilter_UsingTestProperty_FilteredTests(string currentTfm)
     {
-        var testHost = TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, currentTfm);
+        var testHost = TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, currentTfm);
 
         TestHostResult testHostResult = await testHost.ExecuteAsync("--filter tree=one --list-tests");
 
@@ -43,10 +39,11 @@ Test2
 """);
     }
 
-    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    [TestMethod]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     public async Task UsingTestPropertyForOwnerAndPriorityAndTestCategory_TestsFailed(string currentTfm)
     {
-        var testHost = TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, currentTfm);
+        var testHost = TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, currentTfm);
 
         TestHostResult testHostResult = await testHost.ExecuteAsync("--filter tree!~one");
 
@@ -60,10 +57,11 @@ failed TestCategoryTest (0ms)
 """);
     }
 
-    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    [TestMethod]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     public async Task RunWithFilter_UsingTestPropertyForOwner_FilteredButTestsFailed(string currentTfm)
     {
-        var testHost = TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, currentTfm);
+        var testHost = TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, currentTfm);
 
         TestHostResult testHostResult = await testHost.ExecuteAsync("--filter owner=testOwner");
 
@@ -73,10 +71,11 @@ failed OwnerTest (0ms)
 """);
     }
 
-    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    [TestMethod]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     public async Task RunWithFilter_UsingTestPropertyForPriorityAndTestCategory_NotFiltered(string currentTfm)
     {
-        var testHost = TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, currentTfm);
+        var testHost = TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, currentTfm);
 
         TestHostResult testHostResult = await testHost.ExecuteAsync("--filter TestCategory=category|Priority=1");
 
@@ -84,8 +83,40 @@ failed OwnerTest (0ms)
         testHostResult.AssertExitCodeIs(8);
     }
 
-    [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
-    public sealed class TestAssetFixture(AcceptanceFixture acceptanceFixture) : TestAssetFixtureBase(acceptanceFixture.NuGetGlobalPackagesFolder)
+    [TestMethod]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    public async Task RunWithFilterFromRunsettings(string currentTfm)
+    {
+        var testHost = TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, currentTfm);
+
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--settings CategoryA.runsettings");
+        testHostResult.AssertOutputContains("Running test: CategoryAOnly");
+        testHostResult.AssertOutputDoesNotContain("Running test: CategoryBOnly");
+        testHostResult.AssertOutputContains("Running test: CategoryAAndB");
+        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+
+        testHostResult = await testHost.ExecuteAsync("--settings NoFilter.runsettings");
+        testHostResult.AssertOutputContains("Running test: CategoryAOnly");
+        testHostResult.AssertOutputContains("Running test: CategoryBOnly");
+        testHostResult.AssertOutputContains("Running test: CategoryAAndB");
+        // PriorityTest, OwnerTest, and TestCategoryTest are reported as failing.
+        // See the test UsingTestPropertyForOwnerAndPriorityAndTestCategory_TestsFailed
+        testHostResult.AssertExitCodeIs(ExitCodes.AtLeastOneTestFailed);
+
+        testHostResult = await testHost.ExecuteAsync("--settings CategoryA.runsettings --filter TestCategory~CategoryA");
+        testHostResult.AssertOutputContains("Running test: CategoryAOnly");
+        testHostResult.AssertOutputDoesNotContain("Running test: CategoryBOnly");
+        testHostResult.AssertOutputContains("Running test: CategoryAAndB");
+        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+
+        testHostResult = await testHost.ExecuteAsync("--settings CategoryA.runsettings --filter TestCategory~CategoryB");
+        testHostResult.AssertOutputDoesNotContain("Running test: CategoryAOnly");
+        testHostResult.AssertOutputDoesNotContain("Running test: CategoryBOnly");
+        testHostResult.AssertOutputContains("Running test: CategoryAAndB");
+        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+    }
+
+    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
     {
         public string TargetAssetPath => GetAssetPath(AssetName);
 
@@ -112,7 +143,35 @@ failed OwnerTest (0ms)
     <PackageReference Include="MSTest.TestFramework" Version="$MSTestVersion$" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="*.runsettings">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>
+
+#file CategoryA.runsettings
+<?xml version="1.0" encoding="utf-8"?>
+<RunSettings>
+  <RunConfiguration>
+    <TestCaseFilter>(TestCategory~CategoryA)</TestCaseFilter>
+  </RunConfiguration>
+
+  <MSTest>
+    <CaptureTraceOutput>false</CaptureTraceOutput>
+  </MSTest>
+
+</RunSettings>
+
+#file NoFilter.runsettings
+<?xml version="1.0" encoding="utf-8"?>
+<RunSettings>
+  <MSTest>
+    <CaptureTraceOutput>false</CaptureTraceOutput>
+  </MSTest>
+
+</RunSettings>
 
 #file UnitTest1.cs
 
@@ -137,6 +196,28 @@ public class TestClass
     [TestMethod]
     [TestProperty("TestCategory", "category")]
     public void TestCategoryTest() { }
+
+    [TestMethod]
+    [TestCategory("CategoryA")]
+    public void CategoryAOnly()
+    {
+        Console.WriteLine($"Running test: {nameof(CategoryAOnly)}");
+    }
+
+    [TestMethod]
+    [TestCategory("CategoryB")]
+    public void CategoryBOnly()
+    {
+        Console.WriteLine($"Running test: {nameof(CategoryBOnly)}");
+    }
+
+    [TestMethod]
+    [TestCategory("CategoryA")]
+    [TestCategory("CategoryB")]
+    public void CategoryAAndB()
+    {
+        Console.WriteLine($"Running test: {nameof(CategoryAAndB)}");
+    }
 }
 """;
     }

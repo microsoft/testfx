@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Reflection;
-
 using Microsoft.VisualStudio.TestTools.UnitTesting.Internal;
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -11,7 +9,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// Attribute to define in-line data for a test method.
 /// </summary>
 [AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
-public class DataRowAttribute : Attribute, ITestDataSource, ITestDataSourceUnfoldingCapability
+public class DataRowAttribute : Attribute, ITestDataSource, ITestDataSourceUnfoldingCapability, ITestDataSourceIgnoreCapability
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="DataRowAttribute"/> class.
@@ -43,6 +41,9 @@ public class DataRowAttribute : Attribute, ITestDataSource, ITestDataSourceUnfol
     /// <param name="data"> The data. </param>
     public DataRowAttribute(params object?[]? data) => Data = data ?? [null];
 
+    /// <summary>
+    /// Gets the test id generation strategy.
+    /// </summary>
     protected internal static TestIdGenerationStrategy TestIdGenerationStrategy { get; internal set; }
 
     /// <summary>
@@ -54,6 +55,11 @@ public class DataRowAttribute : Attribute, ITestDataSource, ITestDataSourceUnfol
     /// Gets or sets display name in test results for customization.
     /// </summary>
     public string? DisplayName { get; set; }
+
+    /// <summary>
+    /// Gets or sets a reason to ignore the specific test case. Setting the property to non-null value will ignore the test case.
+    /// </summary>
+    public string? IgnoreMessage { get; set; }
 
     /// <inheritdoc />
     public TestDataSourceUnfoldingStrategy UnfoldingStrategy { get; set; } = TestDataSourceUnfoldingStrategy.Auto;

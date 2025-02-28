@@ -28,12 +28,13 @@ public sealed class UseParallelizeAttributeAnalyzer : DiagnosticAnalyzer
         Description,
         Category.Performance,
         DiagnosticSeverity.Info,
-        isEnabledByDefault: true,
-        isReportedAtCompilationEnd: true);
+        isEnabledByDefault: true);
 
+    /// <inheritdoc />
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
         = ImmutableArray.Create(Rule);
 
+    /// <inheritdoc />
     public override void Initialize(AnalysisContext context)
     {
         context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
@@ -44,6 +45,13 @@ public sealed class UseParallelizeAttributeAnalyzer : DiagnosticAnalyzer
 
     private static void AnalyzeCompilation(CompilationAnalysisContext context)
     {
+        bool hasTestAdapter = context.Compilation.ReferencedAssemblyNames.Any(asm => asm.Name == "Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter");
+        if (!hasTestAdapter)
+        {
+            // We shouldn't produce a diagnostic if only the test framework is referenced, but not the adapter.
+            return;
+        }
+
         INamedTypeSymbol? parallelizeAttributeSymbol = context.Compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingParallelizeAttribute);
         INamedTypeSymbol? doNotParallelizeAttributeSymbol = context.Compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingDoNotParallelizeAttribute);
 

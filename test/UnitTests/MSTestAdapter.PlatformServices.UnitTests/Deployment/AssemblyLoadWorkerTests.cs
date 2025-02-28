@@ -2,8 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if NET462
-using System.Reflection;
-
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
 
@@ -69,7 +67,7 @@ public class AssemblyLoadWorkerTests : TestContainer
                             return testableAssembly;
                         }
 
-                        return null;
+                        return null!;
                     });
 
         mockAssemblyUtility.Setup(au => au.ReflectionOnlyLoad(It.IsAny<string>()))
@@ -85,7 +83,7 @@ public class AssemblyLoadWorkerTests : TestContainer
                     return new TestableAssembly(v1AssemblyName.FullName);
                 }
 
-                return null;
+                return null!;
             });
 
         var worker = new AssemblyLoadWorker(mockAssemblyUtility.Object);
@@ -117,16 +115,14 @@ public class AssemblyLoadWorkerTests : TestContainer
             FullNameSetter = () => assemblyName;
         }
 
-        public Func<AssemblyName[]> GetReferencedAssembliesSetter { get; set; }
+        public Func<AssemblyName[]> GetReferencedAssembliesSetter { get; set; } = null!;
 
-        public Func<string> FullNameSetter { get; set; }
+        public Func<string> FullNameSetter { get; set; } = null!;
 
-        public override AssemblyName[] GetReferencedAssemblies() => GetReferencedAssembliesSetter != null ? GetReferencedAssembliesSetter.Invoke() : [];
+        public override AssemblyName[] GetReferencedAssemblies()
+            => GetReferencedAssembliesSetter != null ? GetReferencedAssembliesSetter.Invoke() : [];
 
-        public string Name
-        {
-            get; set;
-        }
+        public string? Name { get; set; }
 
         public override string FullName => FullNameSetter != null ? FullNameSetter.Invoke() : GetExecutingAssembly().FullName;
 

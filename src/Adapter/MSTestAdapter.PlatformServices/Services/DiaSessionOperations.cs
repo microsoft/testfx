@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Reflection;
-
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
 internal static class DiaSessionOperations
@@ -19,8 +17,6 @@ internal static class DiaSessionOperations
     /// <remarks>Initializes DiaSession.</remarks>
     static DiaSessionOperations()
     {
-        ApplicationStateGuard.Ensure(!SourceGeneratorToggle.UseSourceGenerator, $"{nameof(DiaSessionOperations)} should not be used in source generator mode, all code location metadata should be taken from generated code via SourceGeneratedReflectionDataProvider.");
-
         const string diaSessionTypeName = "Microsoft.VisualStudio.TestPlatform.ObjectModel.DiaSession, Microsoft.VisualStudio.TestPlatform.ObjectModel";
         const string diaNavigationDataTypeName = "Microsoft.VisualStudio.TestPlatform.ObjectModel.DiaNavigationData,  Microsoft.VisualStudio.TestPlatform.ObjectModel";
 
@@ -38,7 +34,6 @@ internal static class DiaSessionOperations
         // Create instance only when DiaSession is found in Object Model.
         if (s_typeDiaSession != null && s_typeDiaNavigationData != null)
         {
-            string messageFormatOnException = string.Join("MSTestDiscoverer:DiaSession: Could not create diaSession for source:", source, ". Reason:{0}");
 #pragma warning disable IL2077 // 'target parameter' argument does not satisfy 'DynamicallyAccessedMembersAttribute' in call to 'target method'.
             return SafeInvoke(() => Activator.CreateInstance(s_typeDiaSession, source));
 #pragma warning restore IL2077 // 'target parameter' argument does not satisfy 'DynamicallyAccessedMembersAttribute' in call to 'target method'.

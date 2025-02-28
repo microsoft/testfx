@@ -3,12 +3,7 @@
 
 #if NETCOREAPP
 using System.Threading.Channels;
-#else
-using System.Collections.Concurrent;
 #endif
-using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
-using System.Text;
 
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Resources;
@@ -149,7 +144,9 @@ internal sealed class FileLogger : IDisposable
             return;
         }
 
+#pragma warning disable CA1416 // Validate platform compatibility
         if (!_semaphore.Wait(TimeoutHelper.DefaultHangTimeSpanTimeout))
+#pragma warning restore CA1416
         {
             throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.TimeoutAcquiringSemaphoreErrorMessage, TimeoutHelper.DefaultHangTimeoutSeconds));
         }

@@ -1,22 +1,13 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Runtime.InteropServices;
-
-using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
-using Microsoft.Testing.Platform.Helpers;
-
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
-[TestGroup]
-public sealed class HangDumpOutputTests : AcceptanceTestBase
+[TestClass]
+public sealed class HangDumpOutputTests : AcceptanceTestBase<HangDumpOutputTests.TestAssetFixture>
 {
-    private readonly TestAssetFixture _testAssetFixture;
-
-    public HangDumpOutputTests(ITestExecutionContext testExecutionContext, TestAssetFixture testAssetFixture)
-        : base(testExecutionContext) => _testAssetFixture = testAssetFixture;
-
-    [Arguments("Mini")]
+    [DataRow("Mini")]
+    [TestMethod]
     public async Task HangDump_Outputs_HangingTests_EvenWhenHangingTestsHaveTheSameDisplayName(string format)
     {
         if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
@@ -30,8 +21,8 @@ public sealed class HangDumpOutputTests : AcceptanceTestBase
         // a dictionary based on DisplayName. In that case both tests were started at the same time, and only 1 entry was added
         // to currently executing tests. When first test with name Test1 completed we removed that entry, but Class2.Test1 was still
         // running. Solution is to use a more unique identifier.
-        string resultDirectory = Path.Combine(_testAssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"), format);
-        var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, "HangDump", TargetFrameworks.NetCurrent.Arguments);
+        string resultDirectory = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"), format);
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, "HangDump", TargetFrameworks.NetCurrent);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
             $"--hangdump --hangdump-timeout 8s --hangdump-type {format} --results-directory {resultDirectory} --no-progress",
             new Dictionary<string, string?>
@@ -43,10 +34,9 @@ public sealed class HangDumpOutputTests : AcceptanceTestBase
         testHostResult.AssertOutputContains("Test1");
     }
 
-    [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
-    public sealed class TestAssetFixture(AcceptanceFixture acceptanceFixture) : TestAssetFixtureBase(acceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
     {
-        private const string AssetName = "TestAssetFixture";
+        private const string AssetName = "AssetFixture";
 
         public string TargetAssetPath => GetAssetPath(AssetName);
 
@@ -76,12 +66,10 @@ public sealed class HangDumpOutputTests : AcceptanceTestBase
 </Project>
 
 #file Program.cs
-
 using System;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Globalization;
-
 using Microsoft.Testing.Platform;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Builder;
@@ -96,22 +84,22 @@ public class Startup
     public static async Task<int> Main(string[] args)
     {
         ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
-        builder.RegisterTestFramework(_ => new TestFrameworkCapabilities(), (_,__) => new DummyTestAdapter());
+        builder.RegisterTestFramework(_ => new TestFrameworkCapabilities(), (_,__) => new DummyTestFramework());
         builder.AddHangDumpProvider();
         using ITestApplication app = await builder.BuildAsync();
         return await app.RunAsync();
     }
 }
 
-public class DummyTestAdapter : ITestFramework, IDataProducer
+public class DummyTestFramework : ITestFramework, IDataProducer
 {
-    public string Uid => nameof(DummyTestAdapter);
+    public string Uid => nameof(DummyTestFramework);
 
     public string Version => "2.0.0";
 
-    public string DisplayName => nameof(DummyTestAdapter);
+    public string DisplayName => nameof(DummyTestFramework);
 
-    public string Description => nameof(DummyTestAdapter);
+    public string Description => nameof(DummyTestFramework);
 
     public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 

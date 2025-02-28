@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Globalization;
-
 using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.TestHost;
@@ -64,13 +62,6 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
 
         _lifetimeHandlerCompositeFactories.Add(compositeServiceFactory);
         _factoryOrdering.Add(compositeServiceFactory);
-    }
-
-    public void AddDataConsumer(Func<IServiceProvider, IDataConsumer> dataConsumerFactory)
-    {
-        Guard.NotNull(dataConsumerFactory);
-        _dataConsumerFactories.Add(dataConsumerFactory);
-        _factoryOrdering.Add(dataConsumerFactory);
     }
 
     public void AddDataConsumer<T>(CompositeExtensionFactory<T> compositeServiceFactory)

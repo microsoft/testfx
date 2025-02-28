@@ -268,6 +268,15 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to String &apos;{0}&apos; does contain string &apos;{1}&apos;. {2}..
+        /// </summary>
+        internal static string DoesNotContainFail {
+            get {
+                return ResourceManager.GetString("DoesNotContainFail", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Assert.Equals should not be used for Assertions. Please use Assert.AreEqual &amp; overloads instead..
         /// </summary>
         internal static string DoNotUseAssertEquals {
@@ -295,7 +304,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Property or method {0} on {1} return type is not assignable to &apos;IEnumerable&lt;object[]&gt;&apos; (nor &apos;IEnumerable&lt;ITuple&gt;&apos; for .NET Core)..
+        ///   Looks up a localized string similar to Property or method {0} on {1} return type is not assignable to &apos;IEnumerable&apos;..
         /// </summary>
         internal static string DynamicDataIEnumerableNull {
             get {
@@ -318,6 +327,15 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         internal static string DynamicDataInvalidPropertyLayout {
             get {
                 return ResourceManager.GetString("DynamicDataInvalidPropertyLayout", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The dynamic data source &apos;{0}&apos; in type &apos;{1}&apos; should exist and be a property or a method..
+        /// </summary>
+        internal static string DynamicDataSourceShouldExistAndBeValid {
+            get {
+                return ResourceManager.GetString("DynamicDataSourceShouldExistAndBeValid", resourceCulture);
             }
         }
         
@@ -369,6 +387,24 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Expected collection of size {1}. Actual: {2}. {0}.
+        /// </summary>
+        internal static string HasCountFailMsg {
+            get {
+                return ResourceManager.GetString("HasCountFailMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Invalid GitHub ticket URL.
+        /// </summary>
+        internal static string InvalidGitHubUrl {
+            get {
+                return ResourceManager.GetString("InvalidGitHubUrl", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The property {0} has type {1}; expected type {2}..
         /// </summary>
         internal static string InvalidPropertyType {
@@ -392,6 +428,15 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         internal static string IsMatchFail {
             get {
                 return ResourceManager.GetString("IsMatchFail", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Expected collection to contain any item but it is empty. {0}.
+        /// </summary>
+        internal static string IsNotEmptyFailMsg {
+            get {
+                return ResourceManager.GetString("IsNotEmptyFailMsg", resourceCulture);
             }
         }
         

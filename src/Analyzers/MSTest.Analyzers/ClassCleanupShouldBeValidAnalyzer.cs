@@ -27,8 +27,10 @@ public sealed class ClassCleanupShouldBeValidAnalyzer : DiagnosticAnalyzer
         DiagnosticSeverity.Warning,
         isEnabledByDefault: true);
 
+    /// <inheritdoc />
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } = ImmutableArray.Create(Rule);
 
+    /// <inheritdoc />
     public override void Initialize(AnalysisContext context)
     {
         context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
@@ -42,22 +44,30 @@ public sealed class ClassCleanupShouldBeValidAnalyzer : DiagnosticAnalyzer
                 INamedTypeSymbol? taskSymbol = context.Compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemThreadingTasksTask);
                 INamedTypeSymbol? inheritanceBehaviorSymbol = context.Compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingInheritanceBehavior);
                 INamedTypeSymbol? valueTaskSymbol = context.Compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemThreadingTasksValueTask);
+                INamedTypeSymbol? testContextSymbol = context.Compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestContext);
                 bool canDiscoverInternals = context.Compilation.CanDiscoverInternals();
                 context.RegisterSymbolAction(
-                    context => AnalyzeSymbol(context, classCleanupAttributeSymbol, taskSymbol, valueTaskSymbol, inheritanceBehaviorSymbol, testClassAttributeSymbol, canDiscoverInternals),
+                    context => AnalyzeSymbol(context, classCleanupAttributeSymbol, taskSymbol, valueTaskSymbol, inheritanceBehaviorSymbol, testClassAttributeSymbol, testContextSymbol, canDiscoverInternals),
                     SymbolKind.Method);
             }
         });
     }
 
-    private static void AnalyzeSymbol(SymbolAnalysisContext context, INamedTypeSymbol classCleanupAttributeSymbol, INamedTypeSymbol? taskSymbol,
-        INamedTypeSymbol? valueTaskSymbol, INamedTypeSymbol? inheritanceBehaviorSymbol, INamedTypeSymbol testClassAttributeSymbol, bool canDiscoverInternals)
+    private static void AnalyzeSymbol(
+        SymbolAnalysisContext context,
+        INamedTypeSymbol classCleanupAttributeSymbol,
+        INamedTypeSymbol? taskSymbol,
+        INamedTypeSymbol? valueTaskSymbol,
+        INamedTypeSymbol? inheritanceBehaviorSymbol,
+        INamedTypeSymbol testClassAttributeSymbol,
+        INamedTypeSymbol? testContextSymbol,
+        bool canDiscoverInternals)
     {
         var methodSymbol = (IMethodSymbol)context.Symbol;
         bool isInheritanceModeSet = methodSymbol.IsInheritanceModeSet(inheritanceBehaviorSymbol, classCleanupAttributeSymbol);
-        if (methodSymbol.IsClassInitializeMethod(classCleanupAttributeSymbol)
+        if (methodSymbol.HasAttribute(classCleanupAttributeSymbol)
             && (!methodSymbol.HasValidFixtureMethodSignature(taskSymbol, valueTaskSymbol, canDiscoverInternals, shouldBeStatic: true,
-                allowGenericType: isInheritanceModeSet, testContextSymbol: null,
+                allowGenericType: isInheritanceModeSet, FixtureParameterMode.OptionalTestContext, testContextSymbol,
                 testClassAttributeSymbol, fixtureAllowInheritedTestClass: true, out bool isFixable)
                 || (!isInheritanceModeSet && methodSymbol.ContainingType.IsAbstract)
                 || (isInheritanceModeSet && methodSymbol.ContainingType.IsSealed)))

@@ -1,14 +1,9 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Collections.Concurrent;
-using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
-using System.Reflection;
 using System.Security;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
-using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -36,6 +31,9 @@ internal class ReflectHelper : MarshalByRefObject
     /// <summary>
     /// Checks to see if a member or type is decorated with the given attribute. The type is checked exactly. If attribute is derived (inherits from) a class, e.g. [MyTestClass] from [TestClass] it won't match if you look for [TestClass]. The inherit parameter does not impact this checking.
     /// </summary>
+    /// <remarks>
+    /// Note that because derived attribute types are not considered, <typeparamref name="TAttribute"/> should be sealed.
+    /// </remarks>
     /// <typeparam name="TAttribute">Attribute to search for by fully qualified name.</typeparam>
     /// <param name="memberInfo">Member/Type to test.</param>
     /// <param name="inherit">Inspect inheritance chain of the member or class. E.g. if parent class has this attribute defined.</param>
@@ -58,28 +56,6 @@ internal class ReflectHelper : MarshalByRefObject
 
         return false;
     }
-
-    /// <summary>
-    /// Checks to see if a member or type is decorated with the given attribute. The type is checked exactly. If attribute is derived (inherits from) a class, e.g. [MyTestClass] from [TestClass] it won't match if you look for [TestClass]. The inherit parameter does not impact this checking.
-    /// </summary>
-    /// <typeparam name="TAttribute">Attribute to search for by fully qualified name.</typeparam>
-    /// <param name="type">Type to test.</param>
-    /// <param name="inherit">Inspect inheritance chain of the member or class. E.g. if parent class has this attribute defined.</param>
-    /// <returns>True if the attribute of the specified type is defined on this member or a class.</returns>
-    public virtual bool IsNonDerivedAttributeDefined<TAttribute>(Type type, bool inherit)
-        where TAttribute : Attribute
-        => IsNonDerivedAttributeDefined<TAttribute>((MemberInfo)type, inherit);
-
-    /// <summary>
-    /// Checks to see if a member or type is decorated with the given attribute, or an attribute that derives from it. e.g. [MyTestClass] from [TestClass] will match if you look for [TestClass]. The inherit parameter does not impact this checking.
-    /// </summary>
-    /// <typeparam name="TAttribute">Attribute to search for.</typeparam>
-    /// <param name="type">Type to test.</param>
-    /// <param name="inherit">Inspect inheritance chain of the member or class. E.g. if parent class has this attribute defined.</param>
-    /// <returns>True if the attribute of the specified type is defined on this member or a class.</returns>
-    public virtual bool IsDerivedAttributeDefined<TAttribute>(Type type, bool inherit)
-        where TAttribute : Attribute
-        => IsDerivedAttributeDefined<TAttribute>((MemberInfo)type, inherit);
 
     /// <summary>
     /// Checks to see if a member or type is decorated with the given attribute, or an attribute that derives from it. e.g. [MyTestClass] from [TestClass] will match if you look for [TestClass]. The inherit parameter does not impact this checking.
@@ -111,41 +87,6 @@ internal class ReflectHelper : MarshalByRefObject
     }
 
     /// <summary>
-    /// Resolves the expected exception attribute. The function will try to
-    /// get all the expected exception attributes defined for a testMethod.
-    /// </summary>
-    /// <param name="methodInfo">The MethodInfo instance.</param>
-    /// <param name="testMethod">The test method.</param>
-    /// <returns>
-    /// The expected exception attribute found for this test. Null if not found.
-    /// </returns>
-    public virtual ExpectedExceptionBaseAttribute? ResolveExpectedExceptionHelper(MethodInfo methodInfo, TestMethod testMethod)
-    {
-        DebugEx.Assert(methodInfo != null, "MethodInfo should be non-null");
-
-        // Get the expected exception attribute
-        ExpectedExceptionBaseAttribute? expectedException;
-        try
-        {
-            expectedException = GetFirstDerivedAttributeOrDefault<ExpectedExceptionBaseAttribute>(methodInfo, inherit: true);
-        }
-        catch (Exception ex)
-        {
-            // If construction of the attribute throws an exception, indicate that there was an
-            // error when trying to run the test
-            string errorMessage = string.Format(
-                CultureInfo.CurrentCulture,
-                Resource.UTA_ExpectedExceptionAttributeConstructionException,
-                testMethod.FullClassName,
-                testMethod.Name,
-                ex.GetFormattedExceptionMessage());
-            throw new TypeInspectionException(errorMessage);
-        }
-
-        return expectedException ?? null;
-    }
-
-    /// <summary>
     /// Returns object to be used for controlling lifetime, null means infinite lifetime.
     /// </summary>
     /// <returns>
@@ -158,7 +99,7 @@ internal class ReflectHelper : MarshalByRefObject
     public override object InitializeLifetimeService() => null!;
 
     /// <summary>
-    /// Gets first attribute that matches the type (but is not derived from it). Use this together with attribute that does not allow multiple.
+    /// Gets first attribute that matches the type (but is not derived from it). Use this together with attribute that is both sealed and does not allow multiple.
     /// In such case there cannot be more attributes, and this will avoid the cost of
     /// checking for more than one attribute.
     /// </summary>
@@ -166,9 +107,8 @@ internal class ReflectHelper : MarshalByRefObject
     /// <param name="attributeProvider">The type, assembly or method.</param>
     /// <param name="inherit">If we should inspect parents of this type.</param>
     /// <returns>The attribute that is found or null.</returns>
-    /// <exception cref="InvalidOperationException">Throws when multiple attributes are found (the attribute must allow multiple).</exception>
-    public TAttribute? GetFirstNonDerivedAttributeOrDefault<TAttribute>(ICustomAttributeProvider attributeProvider, bool inherit)
-    where TAttribute : Attribute
+    public virtual /* for tests, for moq */ TAttribute? GetFirstNonDerivedAttributeOrDefault<TAttribute>(ICustomAttributeProvider attributeProvider, bool inherit)
+        where TAttribute : Attribute
     {
         Attribute[] cachedAttributes = GetCustomAttributesCached(attributeProvider, inherit);
 
@@ -194,7 +134,7 @@ internal class ReflectHelper : MarshalByRefObject
     /// <returns>The attribute that is found or null.</returns>
     /// <exception cref="InvalidOperationException">Throws when multiple attributes are found (the attribute must allow multiple).</exception>
     public virtual /* for tests, for moq */ TAttribute? GetFirstDerivedAttributeOrDefault<TAttribute>(ICustomAttributeProvider attributeProvider, bool inherit)
-    where TAttribute : Attribute
+        where TAttribute : Attribute
     {
         Attribute[] cachedAttributes = GetCustomAttributesCached(attributeProvider, inherit);
 
@@ -278,7 +218,6 @@ internal class ReflectHelper : MarshalByRefObject
     /// Gets TestDataSourceDiscovery assembly level attribute.
     /// </summary>
     /// <param name="assembly"> The test assembly. </param>
-    [Obsolete]
     internal static TestDataSourceDiscoveryOption? GetTestDataSourceDiscoveryOption(Assembly assembly)
         => PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributes(assembly, typeof(TestDataSourceDiscoveryAttribute))
             .OfType<TestDataSourceDiscoveryAttribute>()

@@ -3,9 +3,6 @@
 
 #if NET462
 
-using System.Reflection;
-using System.Xml;
-
 using TestFramework.ForTestingMSTest;
 
 using static MSTestAdapter.PlatformServices.UnitTests.Utilities.AppDomainUtilitiesTests;

@@ -6,6 +6,8 @@ using FluentAssertions;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
+using TestResult = Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult;
+
 namespace MSTest.IntegrationTests;
 
 public static class VerifyE2E
@@ -28,25 +30,25 @@ public static class VerifyE2E
     public static void AtLeastTestsDiscovered(IEnumerable<TestCase> actualTests, params string[] expectedTests)
         => ContainsTestsDiscovered(actualTests, expectedTests, false);
 
-    public static void TestsPassed(IEnumerable<TestResult> actual, IEnumerable<TestCase> testCases, IEnumerable<string> expectedTests, MSTestSettings settings = null)
+    public static void TestsPassed(IEnumerable<TestResult> actual, IEnumerable<TestCase> testCases, IEnumerable<string> expectedTests, MSTestSettings? settings = null)
         => ContainsExpectedTestsWithOutcome(actual, TestOutcome.Passed, expectedTests, true);
 
     public static void TestsPassed(IEnumerable<TestResult> actual, params string[] expectedTests)
         => ContainsExpectedTestsWithOutcome(actual, TestOutcome.Passed, expectedTests, true);
 
-    public static void TestsFailed(IEnumerable<TestResult> actual, IEnumerable<TestCase> testCases, IEnumerable<string> expectedTests, MSTestSettings settings = null)
+    public static void TestsFailed(IEnumerable<TestResult> actual, IEnumerable<TestCase> testCases, IEnumerable<string> expectedTests, MSTestSettings? settings = null)
       => ContainsExpectedTestsWithOutcome(actual, TestOutcome.Failed, expectedTests, true);
 
     public static void TestsFailed(IEnumerable<TestResult> actual, params string[] expectedTests)
         => ContainsExpectedTestsWithOutcome(actual, TestOutcome.Failed, expectedTests, true);
 
-    public static void ContainsTestsPassed(IEnumerable<TestResult> actual, IEnumerable<TestCase> testCases, IEnumerable<string> expectedTests, MSTestSettings settings = null)
+    public static void ContainsTestsPassed(IEnumerable<TestResult> actual, IEnumerable<TestCase> testCases, IEnumerable<string> expectedTests, MSTestSettings? settings = null)
         => ContainsExpectedTestsWithOutcome(actual, TestOutcome.Passed, expectedTests);
 
     public static void ContainsTestsPassed(IEnumerable<TestResult> actual, params string[] expectedTests)
         => ContainsExpectedTestsWithOutcome(actual, TestOutcome.Passed, expectedTests);
 
-    public static void ContainsTestsFailed(IEnumerable<TestResult> actual, IEnumerable<TestCase> testCases, IEnumerable<string> expectedTests, MSTestSettings settings = null)
+    public static void ContainsTestsFailed(IEnumerable<TestResult> actual, IEnumerable<TestCase> testCases, IEnumerable<string> expectedTests, MSTestSettings? settings = null)
         => ContainsExpectedTestsWithOutcome(actual, TestOutcome.Failed, expectedTests);
 
     public static void ContainsTestsFailed(IEnumerable<TestResult> actual, params string[] expectedTests)

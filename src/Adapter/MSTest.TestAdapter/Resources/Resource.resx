@@ -118,7 +118,7 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="Execution_Test_Timeout" xml:space="preserve">
-    <value>Test '{0}' exceeded execution timeout period.</value>
+    <value>Test '{0}' timed out after {1}ms</value>
   </data>
   <data name="SourcesNotSupported" xml:space="preserve">
     <value>Running tests in any of the provided sources is not supported for the selected platform</value>
@@ -175,9 +175,6 @@
     <value>Unable to load types from the test source '{0}'. Some or all of the tests in this source may not be discovered.
 Error: {1}</value>
   </data>
-  <data name="UTA_ErrorGenericTestMethod" xml:space="preserve">
-    <value>UTA015: A generic method cannot be a test method. {0}.{1} has invalid signature</value>
-  </data>
   <data name="TestAssembly_FileDoesNotExist" xml:space="preserve">
     <value>File does not exist: {0}</value>
   </data>
@@ -200,7 +197,8 @@ Error: {1}</value>
     <value>Class Initialization method {0}.{1} threw exception. {2}: {3}.</value>
   </data>
   <data name="UTA_ExecuteThrewException" xml:space="preserve">
-    <value>Exception thrown while executing test. If using extension of TestMethodAttribute then please contact vendor. Error message: {0}, Stack trace: {1}</value>
+    <value>An unhandled exception was thrown by the 'Execute' method. Please report this error to the author of the attribute '{0}'.
+{1}</value>
   </data>
   <data name="UTA_NoTestResult" xml:space="preserve">
     <value>Error in executing test. No result returned by extension. If using extension of TestMethodAttribute then please contact vendor.</value>
@@ -270,8 +268,8 @@ Error: {1}</value>
     <value>The ExpectedException attribute defined on test method {0}.{1} threw an exception during construction.
 {2}</value>
   </data>
-  <data name="UTA_MultipleExpectedExceptionsOnTestMethod" xml:space="preserve">
-    <value>The test method {0}.{1} has multiple attributes derived from ExpectedExceptionBaseAttribute defined on it. Only one such attribute is allowed.</value>
+  <data name="UTA_MultipleAttributesOnTestMethod" xml:space="preserve">
+    <value>The test method '{0}.{1}' has multiple attributes derived from '{2}' defined on it. Only one such attribute is allowed.</value>
   </data>
   <data name="LegacyScenariosNotSupportedWarning" xml:space="preserve">
     <value>Warning : A testsettings file or a vsmdi file is not supported with the MSTest V2 Adapter.</value>
@@ -311,7 +309,7 @@ Error: {1}</value>
     <value>Cannot run test method '{0}.{1}': Method has parameters, but does not define any test source. Use '[DataRow]', '[DynamicData]', or a custom 'ITestDataSource' data source to provide test data.</value>
   </data>
   <data name="Execution_Test_Cancelled" xml:space="preserve">
-    <value>Test '{0}' execution has been aborted.</value>
+    <value>Test '{0}' was canceled</value>
   </data>
   <data name="CannotEnumerateIDataSourceAttribute" xml:space="preserve">
     <value>Exception occurred while enumerating IDataSource attribute on "{0}.{1}": {2}</value>
@@ -328,9 +326,6 @@ Error: {1}</value>
     <value>Exceptions thrown:</value>
     <comment>This is usually precedes by TestAssembly_AssemblyDiscoveryFailure message, and preceded by list of exceptions thrown in a test discovery session.</comment>
   </data>
-  <data name="FailedFetchAttributeCache" xml:space="preserve">
-    <value>Failed to get attribute cache. Ignoring attribute inheritance and falling into 'type defines Attribute model', so that we have some data.</value>
-  </data>
   <data name="FailedToGetCustomAttribute" xml:space="preserve">
     <value>Getting custom attributes for type {0} threw exception (will ignore and use the reflection way): {1}</value>
     <comment>{0}: Attribute full type name.
@@ -341,9 +336,6 @@ Error: {1}</value>
   </data>
   <data name="UTA_UserCodeThrewNullValueException" xml:space="preserve">
     <value>The called code threw an exception that was caught, but the exception value was null</value>
-  </data>
-  <data name="OlderTFMVersionFoundClassCleanup" xml:space="preserve">
-    <value>An older version of MSTestV2 package is loaded in assembly, test cleanup methods might not run as expected. Please make sure all your test projects references MSTest packages newer then version 2.2.8.</value>
   </data>
   <data name="CannotExpandIDataSourceAttribute" xml:space="preserve">
     <value>Exception occurred while expanding IDataSource rows from attribute on "{0}.{1}": {2}</value>
@@ -411,10 +403,16 @@ but received {4} argument(s), with types '{5}'.</value>
   <data name="InvalidValue" xml:space="preserve">
     <value>Invalid value '{0}' for runsettings entry '{1}', setting will be ignored.</value>
   </data>
-  <data name="DynamicDataShouldBeValidMessageFormat_MemberType" xml:space="preserve">
-    <value>'[DynamicData]' referenced member '{0}.{1}' should return 'IEnumerable&lt;object[]&gt;', 'IEnumerable&lt;Tuple&gt;` or 'IEnumerable&lt;ValueTuple&gt;'</value>
-  </data>
   <data name="DuplicateConfigurationError" xml:space="preserve">
     <value>Both '.runsettings' and '.testconfig.json' files have been detected. Please select only one of these test configuration files.</value>
+  </data>
+  <data name="GenericParameterCantBeInferred" xml:space="preserve">
+    <value>The type of the generic parameter '{0}' could not be inferred.</value>
+  </data>
+  <data name="GenericParameterCantBeInferredBecauseNoArguments" xml:space="preserve">
+    <value>The generic test method '{0}' doesn't have arguments, so the generic parameter cannot be inferred.</value>
+  </data>
+  <data name="GenericParameterConflict" xml:space="preserve">
+    <value>Found two conflicting types for generic parameter '{0}'. The conflicting types are '{1}' and '{2}'.</value>
   </data>
 </root>

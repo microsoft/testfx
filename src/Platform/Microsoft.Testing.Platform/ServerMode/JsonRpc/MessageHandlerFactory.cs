@@ -1,7 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Globalization;
 using System.Net;
 using System.Net.Sockets;
 
@@ -45,6 +44,7 @@ internal sealed partial class ServerModeManager
                 ? ConnectToTestPlatformClientAsync(_host, _port, cancellationToken)
                 : StartTestPlatformServerAsync(port: _port, cancellationToken);
 
+#pragma warning disable CA1416 // Validate platform compatibility
         private async Task<IMessageHandler> ConnectToTestPlatformClientAsync(string clientHost, int clientPort, CancellationToken cancellationToken)
         {
             await _outputDevice.DisplayAsync(this, new TextOutputDeviceData(string.Format(CultureInfo.InvariantCulture, PlatformResources.ConnectingToClientHost, clientHost, clientPort)));
@@ -85,6 +85,7 @@ internal sealed partial class ServerModeManager
                 throw;
             }
         }
+#pragma warning restore CA1416
 
         public Task<bool> IsEnabledAsync() => Task.FromResult(false);
     }

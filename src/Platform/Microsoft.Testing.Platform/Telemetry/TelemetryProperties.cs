@@ -5,9 +5,9 @@ namespace Microsoft.Testing.Platform.Telemetry;
 
 internal static class TelemetryProperties
 {
-    public const string VersionPropertyName = $"telemetry version";
+    public const string VersionPropertyName = "telemetry version";
     public const string SessionId = "session id";
-    public const string ReporterIdPropertyName = $"reporter id";
+    public const string ReporterIdPropertyName = "reporter id";
     public const string IsCIPropertyName = "is ci";
 
     public const string VersionValue = "19";
@@ -25,8 +25,6 @@ internal static class TelemetryProperties
         public const string TestHostPropertyName = "testhost";
         public const string HasExitedGracefullyPropertyName = "graceful exit";
         public const string TestingPlatformVersionPropertyName = "version";
-        public const string TestAdapterIdPropertyName = "adapter id";
-        public const string TestAdapterVersionPropertyName = "adapter version";
         public const string ExtensionsPropertyName = "extensions";
         public const string FrameworkDescriptionPropertyName = "framework";
         public const string RuntimeIdentifierPropertyName = "runtime";

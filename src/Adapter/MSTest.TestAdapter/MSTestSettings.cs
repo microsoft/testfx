@@ -1,14 +1,11 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
-using System.Xml;
-using System.Xml.Linq;
-
-using Microsoft.Testing.Platform.Configurations;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
+#if !WINDOWS_UWP
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
+#endif
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
@@ -20,10 +17,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 /// Adapter Settings for the run.
 /// </summary>
 [Serializable]
+#if RELEASE
 #if NET6_0_OR_GREATER
 [Obsolete(Constants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
 #else
 [Obsolete(Constants.PublicTypeObsoleteMessage)]
+#endif
 #endif
 public class MSTestSettings
 {
@@ -261,7 +260,9 @@ public class MSTestSettings
     [Obsolete("this function will be removed in v4.0.0")]
     public static void PopulateSettings(IDiscoveryContext? context) => PopulateSettings(context, null, null);
 
-    private static bool IsRunSettingsFileHasMSTestSettings(string? runSettingsXml) => IsRunSettingsFileHasSettingName(runSettingsXml, SettingsName) || IsRunSettingsFileHasSettingName(runSettingsXml, SettingsNameAlias);
+#if !WINDOWS_UWP
+    private static bool IsRunSettingsFileHasMSTestSettings(string? runSettingsXml)
+    => IsRunSettingsFileHasSettingName(runSettingsXml, SettingsName) || IsRunSettingsFileHasSettingName(runSettingsXml, SettingsNameAlias);
 
     private static bool IsRunSettingsFileHasSettingName(string? runSettingsXml, string SettingName)
     {
@@ -286,26 +287,35 @@ public class MSTestSettings
 
         return !reader.EOF;
     }
+#endif
 
     /// <summary>
     /// Populate adapter settings from the context.
     /// </summary>
-    /// <param name="context">
+    /// <param name="context">The discovery context.</param>
     /// <param name="logger"> The logger for messages. </param>
-    /// The discovery context that contains the runsettings.
-    /// </param>
+    /// <param name="configuration">The configuration.</param>
     internal static void PopulateSettings(IDiscoveryContext? context, IMessageLogger? logger, IConfiguration? configuration)
     {
-        if (configuration?["mstest"] != null && context?.RunSettings != null && IsRunSettingsFileHasMSTestSettings(context.RunSettings.SettingsXml))
+#if !WINDOWS_UWP
+        if (configuration?["mstest"] != null
+            && context?.RunSettings != null
+            && IsRunSettingsFileHasMSTestSettings(context.RunSettings.SettingsXml))
         {
             throw new InvalidOperationException(Resource.DuplicateConfigurationError);
         }
+#endif
 
         // This will contain default adapter settings
         var settings = new MSTestSettings();
         var runConfigurationSettings = RunConfigurationSettings.PopulateSettings(context);
 
-        if (!StringEx.IsNullOrEmpty(context?.RunSettings?.SettingsXml) && configuration?["mstest"] is null)
+#if !WINDOWS_UWP
+        if (!StringEx.IsNullOrEmpty(context?.RunSettings?.SettingsXml)
+            && configuration?["mstest"] is null)
+#else
+        if (!StringEx.IsNullOrEmpty(context?.RunSettings?.SettingsXml))
+#endif
         {
             MSTestSettings? aliasSettings = GetSettings(context.RunSettings.SettingsXml, SettingsNameAlias, logger);
 
@@ -323,11 +333,13 @@ public class MSTestSettings
 
             SetGlobalSettings(context.RunSettings.SettingsXml, settings, logger);
         }
+#if !WINDOWS_UWP
         else if (configuration?["mstest"] is not null)
         {
             RunConfigurationSettings.SetRunConfigurationSettingsFromConfig(configuration, runConfigurationSettings);
             SetSettingsFromConfig(configuration, logger, settings);
         }
+#endif
 
         CurrentSettings = settings;
         RunConfigurationSettings = runConfigurationSettings;
@@ -485,11 +497,7 @@ public class MSTestSettings
                                         CultureInfo.CurrentCulture,
                                         Resource.InvalidClassCleanupLifecycleValue,
                                         value,
-#if NET
-                                        string.Join(", ", Enum.GetNames<ClassCleanupBehavior>())));
-#else
                                         string.Join(", ", EnumPolyfill.GetNames<ClassCleanupBehavior>())));
-#endif
 
                             break;
                         }
@@ -816,11 +824,7 @@ public class MSTestSettings
                                         CultureInfo.CurrentCulture,
                                         Resource.InvalidParallelScopeValue,
                                         value,
-#if NET
-                                        string.Join(", ", Enum.GetNames<ExecutionScope>())));
-#else
                                         string.Join(", ", EnumPolyfill.GetNames<ExecutionScope>())));
-#endif
 
                             break;
                         }
@@ -847,11 +851,7 @@ public class MSTestSettings
     private static bool TryParseEnum<T>(string value, out T result)
         where T : struct, Enum
         => Enum.TryParse(value, true, out result)
-#if NET6_0_OR_GREATER
-        && Enum.IsDefined(result);
-#else
-        && Enum.IsDefined(typeof(T), result);
-#endif
+        && EnumPolyfill.IsDefined(result);
 
     private static void SetGlobalSettings(
         [StringSyntax(StringSyntaxAttribute.Xml, nameof(runsettingsXml))] string runsettingsXml,
@@ -875,6 +875,7 @@ public class MSTestSettings
         }
     }
 
+#if !WINDOWS_UWP
     private static void ParseBooleanSetting(IConfiguration configuration, string key, IMessageLogger? logger, Action<bool> setSetting)
     {
         if (configuration[$"mstest:{key}"] is not string value)
@@ -914,6 +915,7 @@ public class MSTestSettings
     /// </summary>
     /// <param name="configuration">Configuration to load the settings from.</param>
     /// <param name="logger"> The logger for messages. </param>
+    /// <param name="settings">The MSTest settings.</param>
     internal static void SetSettingsFromConfig(IConfiguration configuration, IMessageLogger? logger, MSTestSettings settings)
     {
         // Expected format of the json is: -
@@ -952,7 +954,7 @@ public class MSTestSettings
 
         ParseBooleanSetting(configuration, "output:captureTrace", logger, value => settings.CaptureDebugTraces = value);
 
-        ParseBooleanSetting(configuration, "parallelism:enabled", logger, value => settings.OrderTestsByNameInClass = value);
+        ParseBooleanSetting(configuration, "parallelism:enabled", logger, value => settings.DisableParallelization = !value);
 
         ParseBooleanSetting(configuration, "execution:mapInconclusiveToFailed", logger, value => settings.MapInconclusiveToFailed = value);
         ParseBooleanSetting(configuration, "execution:mapNotRunnableToFailed", logger, value => settings.MapNotRunnableToFailed = value);
@@ -972,22 +974,16 @@ public class MSTestSettings
 
         if (configuration["mstest:classCleanupLifecycle"] is string classCleanupLifecycle)
         {
-            if (TryParseEnum(classCleanupLifecycle, out ClassCleanupBehavior lifecycle))
-            {
-                settings.ClassCleanupLifecycle = lifecycle;
-            }
-            else
+            if (!TryParseEnum(classCleanupLifecycle, out ClassCleanupBehavior lifecycle))
             {
                 throw new AdapterSettingsException(string.Format(
                     CultureInfo.CurrentCulture,
                     Resource.InvalidClassCleanupLifecycleValue,
                     classCleanupLifecycle,
-#if NET
-                    string.Join(", ", Enum.GetNames<ClassCleanupBehavior>())));
-#else
                     string.Join(", ", EnumPolyfill.GetNames<ClassCleanupBehavior>())));
-#endif
             }
+
+            settings.ClassCleanupLifecycle = lifecycle;
         }
 
         if (configuration["mstest:parallelism:workers"] is string workers)
@@ -1010,25 +1006,20 @@ public class MSTestSettings
         if (configuration["mstest:parallelism:scope"] is string value)
         {
             value = value.Equals("class", StringComparison.OrdinalIgnoreCase) ? "ClassLevel"
-                    : value.Equals("methood", StringComparison.OrdinalIgnoreCase) ? "MethodLevel" : value;
-            if (TryParseEnum(value, out ExecutionScope scope))
-            {
-                settings.ParallelizationScope = scope;
-            }
-            else
+                    : value.Equals("method", StringComparison.OrdinalIgnoreCase) ? "MethodLevel" : value;
+            if (!TryParseEnum(value, out ExecutionScope scope))
             {
                 throw new AdapterSettingsException(string.Format(
                     CultureInfo.CurrentCulture,
                     Resource.InvalidParallelScopeValue,
                     value,
-#if NET
-                    string.Join(", ", Enum.GetNames<ExecutionScope>())));
-#else
                     string.Join(", ", EnumPolyfill.GetNames<ExecutionScope>())));
-#endif
             }
+
+            settings.ParallelizationScope = scope;
         }
 
         MSTestSettingsProvider.Load(configuration);
     }
+#endif
 }

@@ -1,10 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
-using System.Reflection;
-
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -41,7 +37,7 @@ internal static class ExceptionExtensions
     /// </summary>
     /// <param name="exception">An <see cref="Exception"/> object.</param>
     /// <returns>Exception message.</returns>
-    internal static string TryGetMessage(this Exception exception)
+    internal static string TryGetMessage(this Exception? exception)
     {
         if (exception == null)
         {

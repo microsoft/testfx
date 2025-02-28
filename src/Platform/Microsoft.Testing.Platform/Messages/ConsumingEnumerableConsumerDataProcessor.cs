@@ -2,8 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if !NETCOREAPP
-using System.Collections.Concurrent;
-
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Helpers;
@@ -39,7 +37,7 @@ internal sealed class AsyncConsumerDataProcessor : IDisposable
     public Task PublishAsync(IDataProducer dataProducer, IData data)
     {
         Interlocked.Increment(ref _totalPayloadReceived);
-        _payloads.Add((dataProducer, data));
+        _payloads.Add((dataProducer, data), _cancellationToken);
         return Task.CompletedTask;
     }
 

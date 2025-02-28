@@ -10,7 +10,7 @@
 -it should not be 'async void'
 -it should not be a special method (finalizer, operator...).
 -it should not be generic
--it should not take any parameter
+-it should either not take any parameter, or take a single parameter of type 'TestContext'
 -return type should be 'void', 'Task' or 'ValueTask'
 
 The type declaring these methods should also respect the following rules:
@@ -24,12 +24,12 @@ The type declaring these methods should also respect the following rules:
 -'public' olmalıdır
 -'static' olmalıdır
 -'async void' olmamalıdır
--özel bir yöntem (sonlandırıcı, işleç...) olmamalıdır.
+-özel bir metot (sonlandırıcı, işleç...) olmamalıdır.
 - genel olmamalıdır
-- herhangi bir parametre almamalıdır
-- dönüş türü 'void', 'Task' veya 'ValueTask' olmalı
+-herhangi bir parametre almamalı veya 'TestContext' türünde tek bir parametre almalıdır
+- dönüş türü 'void', 'Task' veya 'ValueTask' olmalıdır
 
-Bu yöntemleri bildiren tipin ayrıca aşağıdaki kurallara uyması gerekir:
+Bu metotları bildiren türün ayrıca aşağıdaki kurallara uyması gerekir:
 -Tür bir sınıf olmalıdır
 -Sınıf 'public' veya 'internal' olmalıdır (test projesi '[DiscoverInternals]' niteliğini kullanıyorsa)
 -Sınıf 'static' olmamalıdır
@@ -117,19 +117,49 @@ Bu yöntemleri bildiren tipin ayrıca aşağıdaki kurallara uyması gerekir:
         <target state="translated">Onay deyimi bağımsız değişkenleri doğru sıralama düzeninde geçirilmelidir</target>
         <note />
       </trans-unit>
+      <trans-unit id="AvoidAssertAreSameWithValueTypesDescription">
+        <source>Use 'Assert.AreEqual'/'Assert.AreNotEqual' instead of 'Assert.AreSame'/'Assert.AreNotSame' when comparing value types. Passing a value type to 'Assert.AreSame'/'Assert.AreNotSame' will be boxed (creating a new object). Because 'Assert.AreSame'/'Assert.AreNotSame' does the comparison by reference, 'Assert.AreSame' will fail when boxing happens, and 'Assert.AreNotSame' will always pass.</source>
+        <target state="translated">Değer türlerini karşılaştırılırken 'Assert.AreSame'/'Assert.AreNotSame' yerine 'Assert.AreEqual'/'Assert.AreNotSame' kullanın. 'Assert.AreSame'/'Assert.AreNotSame' değerine bir değer türü geçirilemedi (yeni bir nesne oluşturuluyor). 'Assert.AreSame'/'Assert.AreNotSame' başvuruya göre karşılaştırmayı yapar, kutulama gerçekleşirken 'Assert.AreSame' başarısız olur ve 'Assert.AreNotSame' her zaman başarılı olur.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidAssertAreSameWithValueTypesMessageFormat">
+        <source>Use '{0}' instead of '{1}' when comparing value types</source>
+        <target state="translated">Değer '{0}' karşılaştırılırken '{1}' yerine farklı bir ad kullanın</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidAssertAreSameWithValueTypesTitle">
+        <source>Don't use 'Assert.AreSame' or 'Assert.AreNotSame' with value types</source>
+        <target state="translated">Değer türleriyle 'Assert.AreSame' veya 'Assert.AreNotSame' kullanma</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AvoidExpectedExceptionAttributeDescription">
-        <source>Prefer 'Assert.ThrowsException' or 'Assert.ThrowsExceptionAsync' over '[ExpectedException]' as it ensures that only the expected call throws the expected exception. The assert APIs also provide more flexibility and allow you to assert extra properties of the exeption.</source>
-        <target state="translated">Yalnızca beklenen çağrının beklenen özel durumu oluşturmasını sağladığı için '[ExpectedException]' yerine 'Assert.ThrowsException' veya 'Assert.ThrowsExceptionAsync' tercih edin. Onaylama API'leri de daha fazla esneklik sağlar ve özel durumun ek özelliklerini onaylamanıza izin verir.</target>
+        <source>Prefer 'Assert.ThrowsExactly' or 'Assert.ThrowsExactlyAsync' over '[ExpectedException]' as it ensures that only the expected call throws the expected exception. The assert APIs also provide more flexibility and allow you to assert extra properties of the exception.</source>
+        <target state="translated">Yalnızca beklenen çağrının beklenen özel durumu oluşturmasını sağladığı için '[ExpectedException]' yerine 'Assert.ThrowsExactly' veya 'Assert.ThrowsExceptionAsync' tercih edin. Onaylama API'leri de daha fazla esneklik sağlar ve özel durumun ek özelliklerini onaylamanıza izin verir.</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidExpectedExceptionAttributeMessageFormat">
-        <source>Prefer 'Assert.ThrowsException/ThrowsExceptionAsync' over '[ExpectedException]'</source>
-        <target state="translated">'[ExpectedException]' yerine 'Assert.ThrowsException/ThrowsExceptionAsync' tercih edin</target>
+        <source>Prefer 'Assert.ThrowsExactly/ThrowsExactlyAsync' over '[ExpectedException]'</source>
+        <target state="translated">'[ExpectedException]' yerine 'Assert.ThrowsExactly/ThrowsExactlyAsync' tercih edin</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidExpectedExceptionAttributeTitle">
         <source>Avoid '[ExpectedException]'</source>
         <target state="translated">'[ExpectedException]' kullanmayın</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidUsingAssertsInAsyncVoidContextDescription">
+        <source>Do not assert inside 'async void' methods, local functions, or lambdas. Exceptions that are thrown in this context will be unhandled exceptions. When using VSTest under .NET Framework, they will be silently swallowed. When using Microsoft.Testing.Platform or VSTest under modern .NET, they may crash the process.</source>
+        <target state="translated">'async void' metotları, yerel işlevler veya lambdalar içinde onaylamayın. Bu bağlamda oluşturulan özel durumlar işlenmeyen özel durumlar olacak. VsTest'i .NET Framework, sessizce kırılır. Modern .NET altında Microsoft.Testing.Platform veya VSTest kullanırken işlemi kilitler.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidUsingAssertsInAsyncVoidContextMessageFormat">
+        <source>Do not assert inside 'async void' methods, local functions, or lambdas because they may not fail the test</source>
+        <target state="translated">'async void' metotları, yerel işlevler veya lambdalar içinde onaylamayın çünkü test başarısız olamazlar</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidUsingAssertsInAsyncVoidContextTitle">
+        <source>Do not assert inside 'async void' contexts</source>
+        <target state="translated">'async void' bağlamları içinde onaylama</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassCleanupShouldBeValidDescription">
@@ -140,7 +170,7 @@ Bu yöntemleri bildiren tipin ayrıca aşağıdaki kurallara uyması gerekir:
 -it should not be 'async void'
 -it should not be a special method (finalizer, operator...).
 -it should not be generic
--it should not take any parameter
+-it should either not take any parameter, or take a single parameter of type 'TestContext'
 -return type should be 'void', 'Task' or 'ValueTask'
 -'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'
 -'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should not be specified if the class is 'sealed'
@@ -156,18 +186,18 @@ The type declaring these methods should also respect the following rules:
 -'public' olmalıdır
 -'static' olmalıdır
 -'async void' olmamalıdır
--özel bir yöntem (sonlandırıcı, işleç...) olmamalıdır.
+-özel bir metot (sonlandırıcı, işleç...) olmamalıdır.
 - genel olmamalıdır
-- herhangi bir parametre almamalıdır
-- dönüş türü 'void', 'Task' veya 'ValueTask' olmalı
--Sınıf 'abstract' ise 'InheritanceBehavior.BeforeEachDerivedClass' öznitelik parametresi belirtilmelidir.
+-herhangi bir parametre almamalı veya 'TestContext' türünde tek bir parametre almalıdır
+- dönüş türü 'void', 'Task' veya 'ValueTask' olmalıdır
+-Sınıf 'abstract' ise 'InheritanceBehavior.BeforeEachDerivedClass' öznitelik parametresi belirtilmelidir
 -'InheritanceBehavior.BeforeEachDerivedClass' öznitelik parametresi, sınıf 'sealed' ise belirtilmemelidir
 
-Bu yöntemleri bildiren tipin ayrıca aşağıdaki kurallara uyması gerekir:
+Bu metotları bildiren türün ayrıca aşağıdaki kurallara uyması gerekir:
 -Tür bir sınıf olmalıdır
 -Sınıf 'public' veya 'internal' olmalıdır (test projesi '[DiscoverInternals]' niteliğini kullanıyorsa)
 -Sınıf 'static' olmamalıdır
--Sınıf 'sealed' ise '[TestClass]' (veya türetilmiş bir öznitelik) ile işaretlenmelidir.
+-Sınıf 'sealed' ise '[TestClass]' (veya türetilmiş bir öznitelik) ile işaretlenmelidir
 -sınıf genel olmamalıdır.</target>
         <note />
       </trans-unit>
@@ -249,6 +279,16 @@ Bu yöntemleri bildiren tipin ayrıca aşağıdaki kurallara uyması gerekir:
       <trans-unit id="DataRowShouldBeValidMessageFormat_ArgumentTypeMismatch">
         <source>DataRow argument type should match method parameter type. Mismatches occur at indices: {0}</source>
         <target state="translated">DataRow bağımsız değişken türü, yöntem parametresinin türüyle eşleşmelidir. Dizinler sırasında uyuşmazlıklar oluştu: {0}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DataRowShouldBeValidMessageFormat_GenericTypeArgumentConflictingTypes">
+        <source>Found two conflicting types for generic parameter '{0}'. The conflicting types are '{1}' and '{2}'.</source>
+        <target state="translated">Genel parametre türü için iki çakışan tür '{0}'. Çakışan türler '{1}' '{2}'.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DataRowShouldBeValidMessageFormat_GenericTypeArgumentNotResolved">
+        <source>The type of the generic parameter '{0}' could not be inferred.</source>
+        <target state="translated">Genel parametre türü '{0}' çıkarsanamadı.</target>
         <note />
       </trans-unit>
       <trans-unit id="DataRowShouldBeValidMessageFormat_OnTestMethod">
@@ -353,18 +393,23 @@ Bu yöntemleri bildiren tipin ayrıca aşağıdaki kurallara uyması gerekir:
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_SourceTypeMethod">
-        <source>'[DynamicData]' member '{0}.{1}' is a method so you should set 'DynamicDataSourceType.Method'</source>
-        <target state="translated">'[DynamicData]' üyesi '{0}.{1}' bir yöntem olduğundan 'DynamicDataSourceType.Method' öğesini ayarlamalısınız</target>
+        <source>'[DynamicData]' member '{0}.{1}' is a method so you should use 'DynamicDataSourceType.AutoDetect' or 'DynamicDataSourceType.Method' (auto detect is the default when not specified explicitly, and is recommended)</source>
+        <target state="translated">'[DynamicData]' üyesi '{0}.{1}' bir metot olduğundan 'DynamicDataSourceType.AutoDetect' veya 'DynamicDataSourceType.Method' kullanmalısınız (otomatik algılama açıkça belirtilmediğinden varsayılandır ve önerilir)</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DynamicDataShouldBeValidMessageFormat_SourceTypeNotPropertyOrMethod">
+        <source>'[DynamicData]' member '{0}.{1}' is not a property nor a method. Only properties and methods are supported.</source>
+        <target state="translated">'[DynamicData]' '{0}.{1}' üyesi bir özellik veya yöntem değil. Yalnızca özellikler ve yöntemler desteklenir.</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_SourceTypeProperty">
-        <source>'[DynamicData]' member '{0}.{1}' is a property so you should set 'DynamicDataSourceType.Property'</source>
-        <target state="translated">'[DynamicData]' üyesi '{0}.{1}' bir özellik olduğundan 'DynamicDataSourceType.Property' öğesini ayarlamalısınız</target>
+        <source>'[DynamicData]' member '{0}.{1}' is a property so you should use 'DynamicDataSourceType.AutoDetect' or 'DynamicDataSourceType.Property' (auto detect is the default when not specified explicitly, and is recommended)</source>
+        <target state="translated">'[DynamicData]' üyesi '{0}.{1}' bir özelliktir, bu nedenle 'DynamicDataSourceType.AutoDetect' veya 'DynamicDataSourceType.Property' kullanmalısınız (otomatik algılama açıkça belirtilmediğinden varsayılandır ve önerilir)</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_TooManyMembers">
-        <source>'[DynamicDta]' member '{0}.{1}' is found more than once</source>
-        <target state="translated">'[DynamicDta]' üyesi '{0}.{1}' birden çok kez bulundu</target>
+        <source>'[DynamicData]' member '{0}.{1}' is found more than once</source>
+        <target state="translated">'[DynamicData]' üyesi '{0}.{1}' birden çok kez bulundu</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidTitle">
@@ -434,17 +479,17 @@ Bu yöntemleri bildiren tipin ayrıca aşağıdaki kurallara uyması gerekir:
       </trans-unit>
       <trans-unit id="PublicMethodShouldBeTestMethodAnalyzerDescription">
         <source>Public methods should be test methods (marked with `[TestMethod]`).</source>
-        <target state="new">Public methods should be test methods (marked with `[TestMethod]`).</target>
+        <target state="translated">Genel metotlar test metotları olmalıdır ('[TestMethod]' ile işaretlendi).</target>
         <note />
       </trans-unit>
       <trans-unit id="PublicMethodShouldBeTestMethodAnalyzerFormat">
         <source>Public method '{0}' should be a test method</source>
-        <target state="new">Public method '{0}' should be a test method</target>
+        <target state="translated">Genel metot '{0}' bir test metodu olmalıdır</target>
         <note />
       </trans-unit>
       <trans-unit id="PublicMethodShouldBeTestMethodAnalyzerTitle">
         <source>Public methods should be test methods</source>
-        <target state="new">Public methods should be test methods</target>
+        <target state="translated">Genel metotlar test metotları olmalıdır</target>
         <note />
       </trans-unit>
       <trans-unit id="PublicTypeShouldBeTestClassDescription">
@@ -630,16 +675,16 @@ Bu yöntemleri bildiren tipin ayrıca aşağıdaki kurallara uyması gerekir:
         <source>Test methods, methods marked with the '[TestMethod]' attribute, should respect the following layout to be considered valid by MSTest:
 - it should be 'public' (or 'internal' if '[assembly: DiscoverInternals]' attribute is set)
 - it should not be 'static'
-- it should not be generic
+- it should may be generic as long as type parameters can be inferred and argument types are compatible
 - it should not be 'abstract'
 - return type should be 'void', 'Task' or 'ValueTask'
 - it should not be 'async void'
 - it should not be a special method (finalizer, operator...).</source>
         <target state="translated">'[TestMethod]' özniteliğiyle işaretlenen test yöntemleri, MSTest:
- tarafından geçerli kabul edilmesi için aşağıdaki düzene göre düzenlenmelidir.
+ tarafından geçerli kabul edilebilmesi için aşağıdaki düzene uygun olacak şekilde düzenlenmelidir
 - 'public' (veya '[assembly: DiscoverInternals]' özniteliği ayarlanmışsa 'internal') olmalıdır
 - 'static' olmamalıdır
-- genel olmamalıdır
+- Tür parametreleri çıkarsandıkça ve bağımsız değişken türleri uyumlu olduğu sürece genel olmalıdır
 - 'abstract' olmamalıdır
 - dönüş türü 'void', 'Task' veya 'ValueTask' olmalıdır
 - 'async void' olmamalıdır
@@ -701,6 +746,16 @@ Bu yöntemleri bildiren tipin ayrıca aşağıdaki kurallara uyması gerekir:
         <target state="translated">[{0}] yalnızca [TestMethod] ile işaretli yöntemlerde ayarlanabilir</target>
         <note />
       </trans-unit>
+      <trans-unit id="UseConditionBaseWithTestClassMessageFormat">
+        <source>The attribute '{0}' which derives from 'ConditionBaseAttribute' should be used only on classes marked with `TestClassAttribute`</source>
+        <target state="translated">'ConditionBaseAttribute' öğesinden türetilen '{0}' özniteliği yalnızca 'TestClassAttribute' ile işaretlenmiş sınıflarda kullanılmalıdır</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseConditionBaseWithTestClassTitle">
+        <source>Use 'ConditionBaseAttribute' on test classes</source>
+        <target state="translated">Test sınıflarda 'ConditionBaseAttribute' kullanın</target>
+        <note />
+      </trans-unit>
       <trans-unit id="UseDeploymentItemWithTestMethodOrTestClassMessageFormat">
         <source>'[DeploymentItem]' can be specified only on test class or test method</source>
         <target state="translated">'[DeploymentItem]' yalnızca test sınıfında veya test yönteminde belirtilebilir</target>
@@ -709,6 +764,16 @@ Bu yöntemleri bildiren tipin ayrıca aşağıdaki kurallara uyması gerekir:
       <trans-unit id="UseDeploymentItemWithTestMethodOrTestClassTitle">
         <source>'[DeploymentItem]' can be specified only on test class or test method</source>
         <target state="translated">'[DeploymentItem]' yalnızca test sınıfında veya test yönteminde belirtilebilir</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseNewerAssertThrowsMessageFormat">
+        <source>Use 'Assert.ThrowsExactly' instead of 'Assert.ThrowsException'</source>
+        <target state="translated">'Assert.ThrowsException' yerine 'Assert.ThrowsExactly' kullanın</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseNewerAssertThrowsTitle">
+        <source>Use newer methods to assert exceptions</source>
+        <target state="translated">Özel durumları onaylamak için daha yeni yöntemler kullanın</target>
         <note />
       </trans-unit>
       <trans-unit id="UseParallelizeAttributeAnalyzerDescription">

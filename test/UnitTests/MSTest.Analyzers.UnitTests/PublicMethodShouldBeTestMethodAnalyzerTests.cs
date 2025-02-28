@@ -7,9 +7,10 @@ using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
 
 namespace MSTest.Analyzers.Test;
 
-[TestGroup]
-public sealed class PublicMethodShouldBeTestMethodAnalyzerTests(ITestExecutionContext testExecutionContext) : TestBase(testExecutionContext)
+[TestClass]
+public sealed class PublicMethodShouldBeTestMethodAnalyzerTests
 {
+    [TestMethod]
     public async Task WhenMethodIsPrivate_NoDiagnostic()
     {
         string code = """
@@ -27,6 +28,7 @@ public sealed class PublicMethodShouldBeTestMethodAnalyzerTests(ITestExecutionCo
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
     public async Task WhenMethodIsPublicButWithInvalidTestMethodSignature_NoDiagnostic()
     {
         string code = """
@@ -44,6 +46,7 @@ public sealed class PublicMethodShouldBeTestMethodAnalyzerTests(ITestExecutionCo
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
     public async Task WhenMethodIsPublicAndMarkedAsTestMethod_NoDiagnostic()
     {
         string code = """
@@ -62,6 +65,7 @@ public sealed class PublicMethodShouldBeTestMethodAnalyzerTests(ITestExecutionCo
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
     public async Task WhenMethodIsPrivateButNotInsideTestClass_NoDiagnostic()
     {
         string code = """
@@ -78,6 +82,7 @@ public sealed class PublicMethodShouldBeTestMethodAnalyzerTests(ITestExecutionCo
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
     public async Task WhenMethodIsPublicAndMarkedAsDerivedTestMethodAttribute_NoDiagnostic()
     {
         string code = """
@@ -99,6 +104,7 @@ public sealed class PublicMethodShouldBeTestMethodAnalyzerTests(ITestExecutionCo
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
     public async Task WhenMethodIsPublicAndNotMarkedAsTestMethodWithInheritanceFromBaseTestClass_NoDiagnostic()
     {
         string code = """
@@ -120,6 +126,7 @@ public sealed class PublicMethodShouldBeTestMethodAnalyzerTests(ITestExecutionCo
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
     public async Task WhenMethodIsPrivateAndNotMarkedAsTestMethodWithInheritedTestClassAttribute_NoDiagnostic()
     {
         string code = """
@@ -141,6 +148,7 @@ public sealed class PublicMethodShouldBeTestMethodAnalyzerTests(ITestExecutionCo
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
     public async Task WhenMethodIsPublicAndNotMarkedAsTestMethod_Diagnostic()
     {
         string code = """
@@ -171,6 +179,7 @@ public sealed class PublicMethodShouldBeTestMethodAnalyzerTests(ITestExecutionCo
         await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
+    [TestMethod]
     public async Task WhenMethodIsPublicAndNotMarkedAsTestMethodWithInheritedTestClassAttribute_Diagnostic()
     {
         string code = """
@@ -208,6 +217,7 @@ public sealed class PublicMethodShouldBeTestMethodAnalyzerTests(ITestExecutionCo
         await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
+    [TestMethod]
     public async Task WhenMethodIsPublicAndMarkedAsTestInitialize_NoDiagnostic()
     {
         string code = """
@@ -225,6 +235,7 @@ public sealed class PublicMethodShouldBeTestMethodAnalyzerTests(ITestExecutionCo
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
     public async Task WhenMethodIsPublicAndMarkedAsTestCleanup_NoDiagnostic()
     {
         string code = """
@@ -240,5 +251,95 @@ public sealed class PublicMethodShouldBeTestMethodAnalyzerTests(ITestExecutionCo
             }
             """;
         await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenMethodIsPublicAndImplementsDispose_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System;
+
+            [TestClass]
+            public class MyTestClass : IDisposable
+            {
+                public void Dispose()
+                {
+                }
+            }
+            """;
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenMethodIsPublicAndImplementsUserDefinedInterface_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System;
+
+            public interface IMyInterface
+            {
+                void MyMethod();
+            }
+
+            [TestClass]
+            public class MyTestClass : IMyInterface
+            {
+                public void MyMethod()
+                {
+                }
+            }
+            """;
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenMethodIsPublicAndImplementsExplicitlyUserDefinedInterface_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System;
+
+            public interface IMyInterface
+            {
+                void MyMethod();
+            }
+
+            [TestClass]
+            public class MyTestClass : IMyInterface
+            {
+                void IMyInterface.MyMethod()
+                {
+                }
+            }
+            """;
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenMethodIsPublicAndImplementsDisposeAsVirtual_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System;
+
+            [TestClass]
+            public class MyTestClass : IDisposable
+            {
+                public virtual void Dispose()
+                {
+                }
+            }
+
+            [TestClass]
+            public class SubTestClass : MyTestClass
+            {
+                public override void Dispose()
+                {
+                }
+            }
+            """;
+        await VerifyCS.VerifyAnalyzerAsync(code);
     }
 }

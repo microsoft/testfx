@@ -1,10 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Diagnostics;
-using System.Globalization;
-using System.Runtime.InteropServices;
-
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
@@ -14,7 +10,6 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interfa
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.TestTools.UnitTesting.Internal;
 
-using UnitTestOutcome = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestOutcome;
 using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
@@ -66,15 +61,15 @@ internal sealed class TestMethodRunner
     /// Executes a test.
     /// </summary>
     /// <returns>The test results.</returns>
-    internal UnitTestResult[] Execute(string initializationLogs, string initializationErrorLogs, string initializationTrace, string initializationTestContextMessages)
+    internal TestResult[] Execute(string initializationLogs, string initializationErrorLogs, string initializationTrace, string initializationTestContextMessages)
     {
         bool isSTATestClass = AttributeComparer.IsDerived<STATestClassAttribute>(_testMethodInfo.Parent.ClassAttribute);
-        bool isSTATestMethod = _testMethodInfo.TestMethodOptions.Executor is not null && AttributeComparer.IsDerived<STATestMethodAttribute>(_testMethodInfo.TestMethodOptions.Executor);
+        bool isSTATestMethod = AttributeComparer.IsDerived<STATestMethodAttribute>(_testMethodInfo.Executor);
         bool isSTARequested = isSTATestClass || isSTATestMethod;
         bool isWindowsOS = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
         if (isSTARequested && isWindowsOS && Thread.CurrentThread.GetApartmentState() != ApartmentState.STA)
         {
-            UnitTestResult[] results = Array.Empty<UnitTestResult>();
+            TestResult[]? results = null;
             Thread entryPointThread = new(() => results = SafeRunTestMethod(initializationLogs, initializationErrorLogs, initializationTrace, initializationTestContextMessages))
             {
                 Name = (isSTATestClass, isSTATestMethod) switch
@@ -97,7 +92,7 @@ internal sealed class TestMethodRunner
                 PlatformServiceProvider.Instance.AdapterTraceLogger.LogError(ex.ToString());
             }
 
-            return results;
+            return results ?? Array.Empty<TestResult>();
         }
         else
         {
@@ -111,9 +106,9 @@ internal sealed class TestMethodRunner
         }
 
         // Local functions
-        UnitTestResult[] SafeRunTestMethod(string initializationLogs, string initializationErrorLogs, string initializationTrace, string initializationTestContextMessages)
+        TestResult[] SafeRunTestMethod(string initializationLogs, string initializationErrorLogs, string initializationTrace, string initializationTestContextMessages)
         {
-            UnitTestResult[]? result = null;
+            TestResult[]? result = null;
 
             try
             {
@@ -121,20 +116,21 @@ internal sealed class TestMethodRunner
             }
             catch (TestFailedException ex)
             {
-                result = [new UnitTestResult(ex)];
+                result = [new TestResult() { TestFailureException = ex }];
             }
             catch (Exception ex)
             {
                 if (result == null || result.Length == 0)
                 {
-                    result = [new()];
+                    result = [new TestResult() { Outcome = UTF.UnitTestOutcome.Error }];
                 }
 
 #pragma warning disable IDE0056 // Use index operator
-                result[result.Length - 1] = new UnitTestResult(new TestFailedException(UnitTestOutcome.Error, ex.TryGetMessage(), ex.TryGetStackTraceInformation()))
+                result[result.Length - 1] = new TestResult()
                 {
-                    StandardOut = result[result.Length - 1].StandardOut,
-                    StandardError = result[result.Length - 1].StandardError,
+                    TestFailureException = new TestFailedException(UTF.UnitTestOutcome.Error, ex.TryGetMessage(), ex.TryGetStackTraceInformation()),
+                    LogOutput = result[result.Length - 1].LogOutput,
+                    LogError = result[result.Length - 1].LogError,
                     DebugTrace = result[result.Length - 1].DebugTrace,
                     TestContextMessages = result[result.Length - 1].TestContextMessages,
                     Duration = result[result.Length - 1].Duration,
@@ -144,9 +140,9 @@ internal sealed class TestMethodRunner
             finally
             {
                 // Assembly initialize and class initialize logs are pre-pended to the first result.
-                UnitTestResult firstResult = result![0];
-                firstResult.StandardOut = initializationLogs + firstResult.StandardOut;
-                firstResult.StandardError = initializationErrorLogs + firstResult.StandardError;
+                TestResult firstResult = result![0];
+                firstResult.LogOutput = initializationLogs + firstResult.LogOutput;
+                firstResult.LogError = initializationErrorLogs + firstResult.LogError;
                 firstResult.DebugTrace = initializationTrace + firstResult.DebugTrace;
                 firstResult.TestContextMessages = initializationTestContextMessages + firstResult.TestContextMessages;
             }
@@ -159,49 +155,53 @@ internal sealed class TestMethodRunner
     /// Runs the test method.
     /// </summary>
     /// <returns>The test results.</returns>
-    internal UnitTestResult[] RunTestMethod()
+    internal TestResult[] RunTestMethod()
     {
         DebugEx.Assert(_test != null, "Test should not be null.");
         DebugEx.Assert(_testMethodInfo.TestMethod != null, "Test method should not be null.");
 
         List<TestResult> results = [];
+        if (_testMethodInfo.Executor == null)
+        {
+            throw ApplicationStateGuard.Unreachable();
+        }
+
         bool isDataDriven = false;
         var parentStopwatch = Stopwatch.StartNew();
-
-        if (_testMethodInfo.TestMethodOptions.Executor != null)
+        if (_test.DataType == DynamicDataType.ITestDataSource)
         {
-            if (_test.DataType == DynamicDataType.ITestDataSource)
+            if (_test.TestDataSourceIgnoreMessage is not null)
             {
-                object?[]? data = DataSerializationHelper.Deserialize(_test.SerializedData);
-                TestResult[] testResults = ExecuteTestWithDataSource(null, data);
-                results.AddRange(testResults);
+                _testContext.SetOutcome(UTF.UnitTestOutcome.Ignored);
+                return [TestResult.CreateIgnoredResult(_test.TestDataSourceIgnoreMessage)];
             }
-            else if (ExecuteDataSourceBasedTests(results))
-            {
-                isDataDriven = true;
-            }
-            else
-            {
-                _testContext.SetDisplayName(_test.DisplayName);
-                TestResult[] testResults = ExecuteTest(_testMethodInfo);
 
-                foreach (TestResult testResult in testResults)
-                {
-                    if (StringEx.IsNullOrWhiteSpace(testResult.DisplayName))
-                    {
-                        testResult.DisplayName = _test.DisplayName;
-                    }
-                }
-
-                results.AddRange(testResults);
-            }
+            object?[]? data = DataSerializationHelper.Deserialize(_test.SerializedData);
+            TestResult[] testResults = ExecuteTestWithDataSource(null, data);
+            results.AddRange(testResults);
+        }
+        else if (TryExecuteDataSourceBasedTests(results))
+        {
+            isDataDriven = true;
+        }
+        else if (TryExecuteFoldedDataDrivenTests(results))
+        {
+            isDataDriven = true;
         }
         else
         {
-            PlatformServiceProvider.Instance.AdapterTraceLogger.LogError(
-            "Not able to get executor for method {0}.{1}",
-            _testMethodInfo.TestClassName,
-            _testMethodInfo.TestMethodName);
+            _testContext.SetDisplayName(_test.DisplayName);
+            TestResult[] testResults = ExecuteTest(_testMethodInfo);
+
+            foreach (TestResult testResult in testResults)
+            {
+                if (StringEx.IsNullOrWhiteSpace(testResult.DisplayName))
+                {
+                    testResult.DisplayName = _test.DisplayName;
+                }
+            }
+
+            results.AddRange(testResults);
         }
 
         // Get aggregate outcome.
@@ -214,6 +214,7 @@ internal sealed class TestMethodRunner
             // In legacy scenario
 #pragma warning disable CS0618 // Type or member is obsolete
             if (_test.TestIdGenerationStrategy == TestIdGenerationStrategy.Legacy)
+#pragma warning restore CS0618 // Type or member is obsolete
             {
                 parentStopwatch.Stop();
                 var parentResult = new TestResult
@@ -225,7 +226,6 @@ internal sealed class TestMethodRunner
 
                 results = UpdateResultsWithParentInfo(results, parentResult);
             }
-#pragma warning restore CS0618 // Type or member is obsolete
             else
             {
                 results = UpdateResultsWithParentInfo(results);
@@ -238,117 +238,127 @@ internal sealed class TestMethodRunner
             TestResult emptyResult = new()
             {
                 Outcome = aggregateOutcome,
-                TestFailureException = new TestFailedException(UnitTestOutcome.Error, Resource.UTA_NoTestResult),
+                TestFailureException = new TestFailedException(UTF.UnitTestOutcome.Error, Resource.UTA_NoTestResult),
             };
 
             results.Add(emptyResult);
         }
 
-        return results.ToUnitTestResults();
+        return results.ToArray();
     }
 
-    private bool ExecuteDataSourceBasedTests(List<TestResult> results)
+    private bool TryExecuteDataSourceBasedTests(List<TestResult> results)
     {
-        bool isDataDriven = false;
-
         DataSourceAttribute[] dataSourceAttribute = _testMethodInfo.GetAttributes<DataSourceAttribute>(false);
         if (dataSourceAttribute is { Length: 1 })
         {
-            isDataDriven = true;
-            Stopwatch watch = new();
-            watch.Start();
+            ExecuteTestFromDataSourceAttribute(results);
+            return true;
+        }
+
+        return false;
+    }
+
+    private bool TryExecuteFoldedDataDrivenTests(List<TestResult> results)
+    {
+        IEnumerable<UTF.ITestDataSource>? testDataSources = _testMethodInfo.GetAttributes<Attribute>(false)?.OfType<UTF.ITestDataSource>();
+        if (testDataSources?.Any() != true)
+        {
+            return false;
+        }
+
+        foreach (UTF.ITestDataSource testDataSource in testDataSources)
+        {
+            if (testDataSource is ITestDataSourceIgnoreCapability { IgnoreMessage: { } ignoreMessage })
+            {
+                results.Add(TestResult.CreateIgnoredResult(ignoreMessage));
+                continue;
+            }
+
+            IEnumerable<object?[]>? dataSource;
+
+            // This code is to execute tests. To discover the tests code is in AssemblyEnumerator.ProcessTestDataSourceTests.
+            // Any change made here should be reflected in AssemblyEnumerator.ProcessTestDataSourceTests as well.
+            dataSource = testDataSource.GetData(_testMethodInfo.MethodInfo);
+
+            if (!dataSource.Any())
+            {
+                if (!MSTestSettings.CurrentSettings.ConsiderEmptyDataSourceAsInconclusive)
+                {
+                    throw testDataSource.GetExceptionForEmptyDataSource(_testMethodInfo.MethodInfo);
+                }
+
+                var inconclusiveResult = new TestResult
+                {
+                    Outcome = UTF.UnitTestOutcome.Inconclusive,
+                };
+                results.Add(inconclusiveResult);
+                continue;
+            }
+
+            foreach (object?[] data in dataSource)
+            {
+                try
+                {
+                    TestResult[] testResults = ExecuteTestWithDataSource(testDataSource, data);
+
+                    results.AddRange(testResults);
+                }
+                finally
+                {
+                    _testMethodInfo.SetArguments(null);
+                }
+            }
+        }
+
+        return true;
+    }
+
+    private void ExecuteTestFromDataSourceAttribute(List<TestResult> results)
+    {
+        Stopwatch watch = new();
+        watch.Start();
+
+        try
+        {
+            IEnumerable<object>? dataRows = PlatformServiceProvider.Instance.TestDataSource.GetData(_testMethodInfo, _testContext);
+            if (dataRows == null)
+            {
+                var inconclusiveResult = new TestResult
+                {
+                    Outcome = UTF.UnitTestOutcome.Inconclusive,
+                    Duration = watch.Elapsed,
+                };
+                results.Add(inconclusiveResult);
+                return;
+            }
 
             try
             {
-                IEnumerable<object>? dataRows = PlatformServiceProvider.Instance.TestDataSource.GetData(_testMethodInfo, _testContext);
+                int rowIndex = 0;
 
-                if (dataRows == null)
+                foreach (object dataRow in dataRows)
                 {
-                    var inconclusiveResult = new TestResult
-                    {
-                        Outcome = UTF.UnitTestOutcome.Inconclusive,
-                        Duration = watch.Elapsed,
-                    };
-                    results.Add(inconclusiveResult);
-                }
-                else
-                {
-                    try
-                    {
-                        int rowIndex = 0;
-
-                        foreach (object dataRow in dataRows)
-                        {
-                            TestResult[] testResults = ExecuteTestWithDataRow(dataRow, rowIndex++);
-                            results.AddRange(testResults);
-                        }
-                    }
-                    finally
-                    {
-                        _testContext.SetDataConnection(null);
-                        _testContext.SetDataRow(null);
-                    }
+                    TestResult[] testResults = ExecuteTestWithDataRow(dataRow, rowIndex++);
+                    results.AddRange(testResults);
                 }
             }
-            catch (Exception ex)
+            finally
             {
-                var failedResult = new TestResult
-                {
-                    Outcome = UTF.UnitTestOutcome.Error,
-                    TestFailureException = ex,
-                    Duration = watch.Elapsed,
-                };
-                results.Add(failedResult);
+                _testContext.SetDataConnection(null);
+                _testContext.SetDataRow(null);
             }
         }
-        else
+        catch (Exception ex)
         {
-            IEnumerable<UTF.ITestDataSource>? testDataSources = _testMethodInfo.GetAttributes<Attribute>(false)?.OfType<UTF.ITestDataSource>();
-
-            if (testDataSources != null)
+            var failedResult = new TestResult
             {
-                foreach (UTF.ITestDataSource testDataSource in testDataSources)
-                {
-                    isDataDriven = true;
-                    IEnumerable<object?[]>? dataSource;
-
-                    // This code is to execute tests. To discover the tests code is in AssemblyEnumerator.ProcessTestDataSourceTests.
-                    // Any change made here should be reflected in AssemblyEnumerator.ProcessTestDataSourceTests as well.
-                    dataSource = testDataSource.GetData(_testMethodInfo.MethodInfo);
-
-                    if (!dataSource.Any())
-                    {
-                        if (!MSTestSettings.CurrentSettings.ConsiderEmptyDataSourceAsInconclusive)
-                        {
-                            throw testDataSource.GetExceptionForEmptyDataSource(_testMethodInfo.MethodInfo);
-                        }
-
-                        var inconclusiveResult = new TestResult
-                        {
-                            Outcome = UTF.UnitTestOutcome.Inconclusive,
-                        };
-                        results.Add(inconclusiveResult);
-                        continue;
-                    }
-
-                    foreach (object?[] data in dataSource)
-                    {
-                        try
-                        {
-                            TestResult[] testResults = ExecuteTestWithDataSource(testDataSource, data);
-
-                            results.AddRange(testResults);
-                        }
-                        finally
-                        {
-                            _testMethodInfo.SetArguments(null);
-                        }
-                    }
-                }
-            }
+                Outcome = UTF.UnitTestOutcome.Error,
+                TestFailureException = ex,
+                Duration = watch.Elapsed,
+            };
+            results.Add(failedResult);
         }
-
-        return isDataDriven;
     }
 
     private TestResult[] ExecuteTestWithDataSource(UTF.ITestDataSource? testDataSource, object?[]? data)
@@ -356,16 +366,50 @@ internal sealed class TestMethodRunner
         string? displayName = StringEx.IsNullOrWhiteSpace(_test.DisplayName)
             ? _test.Name
             : _test.DisplayName;
-        if (testDataSource != null)
+
+        string? displayNameFromTestDataRow = null;
+        string? ignoreFromTestDataRow = null;
+        if (data is not null &&
+            TestDataSourceHelpers.TryHandleITestDataRow(data, _testMethodInfo.ParameterTypes, out data, out ignoreFromTestDataRow, out displayNameFromTestDataRow))
         {
-            displayName = testDataSource.GetDisplayName(new ReflectionTestMethodInfo(_testMethodInfo.MethodInfo, _test.DisplayName), data);
+            // Handled already.
         }
+        else if (TestDataSourceHelpers.IsDataConsideredSingleArgumentValue(data, _testMethodInfo.ParameterTypes))
+        {
+            // SPECIAL CASE:
+            // This condition is a duplicate of the condition in InvokeAsSynchronousTask.
+            //
+            // The known scenario we know of that shows importance of that check is if we have DynamicData using this member
+            //
+            // public static IEnumerable<object[]> GetData()
+            // {
+            //     yield return new object[] { ("Hello", "World") };
+            // }
+            //
+            // If the test method has a single parameter which is 'object[]', then we should pass the tuple array as is.
+            // Note that normally, the array in this code path represents the arguments of the test method.
+            // However, InvokeAsSynchronousTask uses the above check to mean "the whole array is the single argument to the test method"
+        }
+        else if (data?.Length == 1 && TestDataSourceHelpers.TryHandleTupleDataSource(data[0], _testMethodInfo.ParameterTypes, out object?[] tupleExpandedToArray))
+        {
+            data = tupleExpandedToArray;
+        }
+
+        displayName = testDataSource != null
+            ? displayNameFromTestDataRow
+                ?? testDataSource.GetDisplayName(new ReflectionTestMethodInfo(_testMethodInfo.MethodInfo, _test.DisplayName), data)
+                ?? displayName
+            : displayNameFromTestDataRow ?? displayName;
 
         var stopwatch = Stopwatch.StartNew();
         _testMethodInfo.SetArguments(data);
         _testContext.SetTestData(data);
         _testContext.SetDisplayName(displayName);
-        TestResult[] testResults = ExecuteTest(_testMethodInfo);
+
+        TestResult[] testResults = ignoreFromTestDataRow is not null
+            ? [TestResult.CreateIgnoredResult(ignoreFromTestDataRow)]
+            : ExecuteTest(_testMethodInfo);
+
         stopwatch.Stop();
 
         foreach (TestResult testResult in testResults)
@@ -413,7 +457,7 @@ internal sealed class TestMethodRunner
     {
         try
         {
-            return _testMethodInfo.TestMethodOptions.Executor!.Execute(testMethodInfo);
+            return _testMethodInfo.Executor.Execute(testMethodInfo);
         }
         catch (Exception ex)
         {
@@ -421,10 +465,13 @@ internal sealed class TestMethodRunner
             [
                 new TestResult()
                 {
-                    // TODO: We need to change the exception type to more specific one.
-#pragma warning disable CA2201 // Do not raise reserved exception types
-                    TestFailureException = new Exception(string.Format(CultureInfo.CurrentCulture, Resource.UTA_ExecuteThrewException, ex.Message, ex.StackTrace), ex),
-#pragma warning restore CA2201 // Do not raise reserved exception types
+                    TestFailureException = new InvalidOperationException(
+                        string.Format(
+                            CultureInfo.CurrentCulture,
+                            Resource.UTA_ExecuteThrewException,
+                            _testMethodInfo.Executor.GetType().FullName,
+                            ex.ToString()),
+                        ex),
                 },
             ];
         }
@@ -447,7 +494,7 @@ internal sealed class TestMethodRunner
         UTF.UnitTestOutcome aggregateOutcome = results[0].Outcome;
         foreach (TestResult result in results)
         {
-            aggregateOutcome = UnitTestOutcomeExtensions.GetMoreImportantOutcome(aggregateOutcome, result.Outcome);
+            aggregateOutcome = aggregateOutcome.GetMoreImportantOutcome(result.Outcome);
         }
 
         return aggregateOutcome;

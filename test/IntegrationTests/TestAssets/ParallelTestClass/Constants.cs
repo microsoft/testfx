@@ -4,6 +4,8 @@
 // Parallel configuration
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
+using ExecutionScope = Microsoft.VisualStudio.TestTools.UnitTesting.ExecutionScope;
+
 [assembly: Parallelize(Workers = 2, Scope = ExecutionScope.ClassLevel)]
 
 namespace ParallelClassesTestProject;

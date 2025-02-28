@@ -1,7 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Reflection;
 using System.Security;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
@@ -24,12 +23,23 @@ internal sealed class TestAssemblySettingsProvider : MarshalByRefObject
 #endif
     public override object InitializeLifetimeService() => null!;
 
-    internal static TestAssemblySettings GetSettings(string source)
+    [SuppressMessage(
+        "Performance",
+        "CA1822:Mark members as static",
+        Justification = "Intentionally not static. We call it from a different AppDomain")]
+    internal TestAssemblySettings GetSettings(string source)
     {
         var testAssemblySettings = new TestAssemblySettings();
 
         // Load the source.
         Assembly testAssembly = PlatformServiceProvider.Instance.FileOperations.LoadAssembly(source, isReflectionOnly: false);
+
+        TestIdGenerationStrategy testIdGenerationStrategy = ReflectHelper.GetTestIdGenerationStrategy(testAssembly);
+
+        // Set the test ID generation strategy for DataRowAttribute and DynamicDataAttribute so we can improve display name without
+        // causing a breaking change.
+        DataRowAttribute.TestIdGenerationStrategy = testIdGenerationStrategy;
+        DynamicDataAttribute.TestIdGenerationStrategy = testIdGenerationStrategy;
 
         ParallelizeAttribute? parallelizeAttribute = ReflectHelper.GetParallelizeAttribute(testAssembly);
 

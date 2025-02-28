@@ -29,11 +29,14 @@ public sealed class TestMethodShouldBeValidAnalyzer : DiagnosticAnalyzer
         Description,
         Category.Usage,
         DiagnosticSeverity.Warning,
-        isEnabledByDefault: true);
+        isEnabledByDefault: true,
+        escalateToErrorInRecommended: true);
 
+    /// <inheritdoc />
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
         = ImmutableArray.Create(ValidTestMethodSignatureRule);
 
+    /// <inheritdoc />
     public override void Initialize(AnalysisContext context)
     {
         context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
@@ -53,6 +56,32 @@ public sealed class TestMethodShouldBeValidAnalyzer : DiagnosticAnalyzer
         });
     }
 
+    private static bool IsOrHasTypeParameter(ITypeSymbol type, ITypeParameterSymbol typeParameter)
+    {
+        if (SymbolEqualityComparer.Default.Equals(type, typeParameter))
+        {
+            return true;
+        }
+
+        if (type is IArrayTypeSymbol array)
+        {
+            return IsOrHasTypeParameter(array.ElementType, typeParameter);
+        }
+
+        if (type is INamedTypeSymbol namedType)
+        {
+            foreach (ITypeSymbol typeArgument in namedType.TypeArguments)
+            {
+                if (IsOrHasTypeParameter(typeArgument, typeParameter))
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
     private static void AnalyzeSymbol(SymbolAnalysisContext context, INamedTypeSymbol testMethodAttributeSymbol, INamedTypeSymbol? taskSymbol,
         INamedTypeSymbol? valueTaskSymbol, bool canDiscoverInternals)
     {
@@ -69,7 +98,20 @@ public sealed class TestMethodShouldBeValidAnalyzer : DiagnosticAnalyzer
             return;
         }
 
-        if (methodSymbol.IsGenericMethod || methodSymbol.IsStatic || methodSymbol.IsAbstract || methodSymbol is { ReturnsVoid: true, IsAsync: true }
+        if (methodSymbol.IsGenericMethod)
+        {
+            foreach (ITypeParameterSymbol typeParameter in methodSymbol.TypeParameters)
+            {
+                // If none of the parameters contains the type parameter, then that generic type can't be inferred.
+                // By "contains", we mean if the type parameter is 'T', we could have 'T', 'T[]', or 'List<T>'.
+                if (!methodSymbol.Parameters.Any(p => IsOrHasTypeParameter(p.Type, typeParameter)))
+                {
+                    context.ReportDiagnostic(methodSymbol.CreateDiagnostic(ValidTestMethodSignatureRule, methodSymbol.Name));
+                }
+            }
+        }
+
+        if (methodSymbol.IsStatic || methodSymbol.IsAbstract || methodSymbol is { ReturnsVoid: true, IsAsync: true }
             || (!methodSymbol.ReturnsVoid
             && (taskSymbol is null || !SymbolEqualityComparer.Default.Equals(methodSymbol.ReturnType, taskSymbol))
             && (valueTaskSymbol is null || !SymbolEqualityComparer.Default.Equals(methodSymbol.ReturnType, valueTaskSymbol))))

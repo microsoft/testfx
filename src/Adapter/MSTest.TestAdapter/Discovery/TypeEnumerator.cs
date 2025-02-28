@@ -1,10 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
-using System.Reflection;
-
 using Microsoft.TestPlatform.AdapterUtilities;
 using Microsoft.TestPlatform.AdapterUtilities.ManagedNameUtilities;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
@@ -133,12 +129,9 @@ internal class TypeEnumerator
         // null if the current instance represents a generic type parameter.
         DebugEx.Assert(_type.AssemblyQualifiedName != null, "AssemblyQualifiedName for method is null.");
 
-        // This allows void returning async test method to be valid test method. Though they will be executed similar to non-async test method.
-        bool isAsync = ReflectHelper.MatchReturnType(method, typeof(Task));
-
         ManagedNameHelper.GetManagedName(method, out string managedType, out string managedMethod, out string?[]? hierarchyValues);
         hierarchyValues[HierarchyConstants.Levels.ContainerIndex] = null; // This one will be set by test windows to current test project name.
-        var testMethod = new TestMethod(managedType, managedMethod, hierarchyValues, method.Name, _type.FullName!, _assemblyFilePath, isAsync, null, _testIdGenerationStrategy);
+        var testMethod = new TestMethod(managedType, managedMethod, hierarchyValues, method.Name, _type.FullName!, _assemblyFilePath, null, _testIdGenerationStrategy);
 
         if (!string.Equals(method.DeclaringType!.FullName, _type.FullName, StringComparison.Ordinal))
         {
@@ -159,7 +152,6 @@ internal class TypeEnumerator
             TestCategory = _reflectHelper.GetTestCategories(method, _type),
             DoNotParallelize = _reflectHelper.IsDoNotParallelizeSet(method, _type),
             Priority = _reflectHelper.GetPriority(method),
-            Ignored = _reflectHelper.IsNonDerivedAttributeDefined<IgnoreAttribute>(method, inherit: false),
             DeploymentItems = PlatformServiceProvider.Instance.TestDeployment.GetDeploymentItems(method, _type, warnings),
         };
 

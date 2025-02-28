@@ -1,9 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Diagnostics;
-using System.Globalization;
-
 using Microsoft.Testing.Platform.CommandLine;
 
 namespace Microsoft.Testing.Platform.Helpers;
@@ -29,9 +26,11 @@ internal sealed class NonCooperativeParentProcessListener : IDisposable
 
         try
         {
+#pragma warning disable CA1416 // Validate platform compatibility
             _parentProcess = Process.GetProcessById(int.Parse(pid[0], CultureInfo.InvariantCulture));
             _parentProcess.EnableRaisingEvents = true;
             _parentProcess.Exited += ParentProcess_Exited;
+#pragma warning restore CA1416
         }
         catch (ArgumentException)
         {

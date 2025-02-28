@@ -1,14 +1,5 @@
-﻿#nullable enable
-Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute.UnfoldingStrategy.get -> Microsoft.VisualStudio.TestTools.UnitTesting.TestDataSourceUnfoldingStrategy
-Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute.UnfoldingStrategy.set -> void
-Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataAttribute.UnfoldingStrategy.get -> Microsoft.VisualStudio.TestTools.UnitTesting.TestDataSourceUnfoldingStrategy
-Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataAttribute.UnfoldingStrategy.set -> void
-Microsoft.VisualStudio.TestTools.UnitTesting.ITestDataSourceUnfoldingCapability
-Microsoft.VisualStudio.TestTools.UnitTesting.ITestDataSourceUnfoldingCapability.UnfoldingStrategy.get -> Microsoft.VisualStudio.TestTools.UnitTesting.TestDataSourceUnfoldingStrategy
-Microsoft.VisualStudio.TestTools.UnitTesting.TestDataSourceOptionsAttribute
-Microsoft.VisualStudio.TestTools.UnitTesting.TestDataSourceOptionsAttribute.TestDataSourceOptionsAttribute(Microsoft.VisualStudio.TestTools.UnitTesting.TestDataSourceUnfoldingStrategy unfoldingStrategy) -> void
-Microsoft.VisualStudio.TestTools.UnitTesting.TestDataSourceOptionsAttribute.UnfoldingStrategy.get -> Microsoft.VisualStudio.TestTools.UnitTesting.TestDataSourceUnfoldingStrategy
-Microsoft.VisualStudio.TestTools.UnitTesting.TestDataSourceUnfoldingStrategy
-Microsoft.VisualStudio.TestTools.UnitTesting.TestDataSourceUnfoldingStrategy.Auto = 0 -> Microsoft.VisualStudio.TestTools.UnitTesting.TestDataSourceUnfoldingStrategy
-Microsoft.VisualStudio.TestTools.UnitTesting.TestDataSourceUnfoldingStrategy.Fold = 2 -> Microsoft.VisualStudio.TestTools.UnitTesting.TestDataSourceUnfoldingStrategy
-Microsoft.VisualStudio.TestTools.UnitTesting.TestDataSourceUnfoldingStrategy.Unfold = 1 -> Microsoft.VisualStudio.TestTools.UnitTesting.TestDataSourceUnfoldingStrategy
+#nullable enable
+Microsoft.VisualStudio.TestTools.UnitTesting.AssertFailedException.AssertFailedException(System.Runtime.Serialization.SerializationInfo! info, System.Runtime.Serialization.StreamingContext context) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.AssertInconclusiveException.AssertInconclusiveException(System.Runtime.Serialization.SerializationInfo! info, System.Runtime.Serialization.StreamingContext context) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.InternalTestFailureException.InternalTestFailureException(System.Runtime.Serialization.SerializationInfo! info, System.Runtime.Serialization.StreamingContext context) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestAssertException.UnitTestAssertException(System.Runtime.Serialization.SerializationInfo! info, System.Runtime.Serialization.StreamingContext context) -> void

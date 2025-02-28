@@ -1,9 +1,16 @@
 <Project>
 
-  <Import Project="../Directory.Build.props" />
-
   <PropertyGroup>
     <Nullable>enable</Nullable>
+    <!-- This needs to happen before importing Arcade props (which is imported via the parent Directory.Build.props) -->
+    <!-- Otherwise, Arcade would have already included 1591 in NoWarn -->
+    <SkipArcadeNoWarnCS1591>true</SkipArcadeNoWarnCS1591>
   </PropertyGroup>
 
+  <Import Project="../Directory.Build.props" />
+
+  <!-- Pack config -->
+  <PropertyGroup>
+    <CommonPackageTags>Microsoft test testing unittest unittesting unit-testing tdd</CommonPackageTags>
+  </PropertyGroup>
 </Project>

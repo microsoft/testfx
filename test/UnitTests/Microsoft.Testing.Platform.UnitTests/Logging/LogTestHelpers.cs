@@ -16,6 +16,9 @@ internal static class LogTestHelpers
         => typeof(LogLevel).GetEnumValues().Cast<LogLevel>();
 #endif
 
+    public static IEnumerable<object[]> GetLogLevelsForDynamicData()
+        => GetLogLevels().Select(x => new object[] { x });
+
     public static IEnumerable<(LogLevel DefaultLevel, LogLevel CurrentLevel)> GetLogLevelCombinations()
     {
         List<(LogLevel, LogLevel)> logLevelCombinations = new();

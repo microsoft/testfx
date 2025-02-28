@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-
 using TestFramework.ForTestingMSTest;
 
 namespace UnitTestFramework.Tests;
@@ -17,7 +15,7 @@ public class ExpectedExceptionAttributeTests : TestContainer
     /// </summary>
     public void ExpectedExceptionAttributeConstructorShouldThrowArgumentNullExceptionWhenExceptionTypeIsNull()
     {
-        static void A() => _ = new ExpectedExceptionAttribute(null, "Dummy");
+        static void A() => _ = new ExpectedExceptionAttribute(null!, "Dummy");
 
         Exception ex = VerifyThrows(A);
         Verify(ex is ArgumentNullException);
@@ -32,7 +30,8 @@ public class ExpectedExceptionAttributeTests : TestContainer
     /// <summary>
     /// ExpectedExceptionAttribute constructor should not throw exception when parameter exceptionType = typeof(AnyClassDerivedFromExceptionClass).
     /// </summary>
-    public void ExpectedExceptionAttributeConstructorShouldNotThrowAnyException() => _ = new ExpectedExceptionAttribute(typeof(DummyTestClassDerivedFromException), "Dummy");
+    public void ExpectedExceptionAttributeConstructorShouldNotThrowAnyException()
+        => _ = new ExpectedExceptionAttribute(typeof(DummyTestClassDerivedFromException), "Dummy");
 
     public void GetExceptionMsgShouldReturnExceptionMessage()
     {

@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if NET462
-using System.Reflection;
 using System.Security.Policy;
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
@@ -21,7 +20,7 @@ public class DesktopTestSourceHostTests : TestContainer
     public void GetResolutionPathsShouldAddPublicAndPrivateAssemblyPath()
     {
         // Setup
-        TestSourceHost sut = new(null, null, null);
+        TestSourceHost sut = new(null!, null, null);
 
         // Execute
         // It should return public and private path if it is not running in portable mode.
@@ -30,33 +29,33 @@ public class DesktopTestSourceHostTests : TestContainer
         // Assert
         if (!string.IsNullOrWhiteSpace(VSInstallationUtilities.PathToPublicAssemblies))
         {
-            Verify(result.Contains(VSInstallationUtilities.PathToPublicAssemblies));
+            Verify(result.Contains(VSInstallationUtilities.PathToPublicAssemblies!));
         }
 
         if (!string.IsNullOrWhiteSpace(VSInstallationUtilities.PathToPrivateAssemblies))
         {
-            Verify(result.Contains(VSInstallationUtilities.PathToPrivateAssemblies));
+            Verify(result.Contains(VSInstallationUtilities.PathToPrivateAssemblies!));
         }
     }
 
     public void GetResolutionPathsShouldNotAddPublicAndPrivateAssemblyPathInPortableMode()
     {
         // Setup
-        TestSourceHost sut = new(null, null, null);
+        TestSourceHost sut = new(null!, null, null);
 
         // Execute
         // It should not return public and private path if it is running in portable mode.
         List<string> result = sut.GetResolutionPaths("DummyAssembly.dll", isPortableMode: true);
 
         // Assert
-        Verify(!result.Contains(VSInstallationUtilities.PathToPublicAssemblies));
-        Verify(!result.Contains(VSInstallationUtilities.PathToPrivateAssemblies));
+        Verify(!result.Contains(VSInstallationUtilities.PathToPublicAssemblies!));
+        Verify(!result.Contains(VSInstallationUtilities.PathToPrivateAssemblies!));
     }
 
     public void GetResolutionPathsShouldAddAdapterFolderPath()
     {
         // Setup
-        TestSourceHost sut = new(null, null, null);
+        TestSourceHost sut = new(null!, null, null);
 
         // Execute
         List<string> result = sut.GetResolutionPaths("DummyAssembly.dll", isPortableMode: false);
@@ -68,7 +67,7 @@ public class DesktopTestSourceHostTests : TestContainer
     public void GetResolutionPathsShouldAddTestPlatformFolderPath()
     {
         // Setup
-        TestSourceHost sut = new(null, null, null);
+        TestSourceHost sut = new(null!, null, null);
 
         // Execute
         List<string> result = sut.GetResolutionPaths("DummyAssembly.dll", isPortableMode: false);
@@ -112,7 +111,7 @@ public class DesktopTestSourceHostTests : TestContainer
             var expectedObject = sourceHost.Object.CreateInstanceForType(typeof(DummyClass), null) as DummyClass;
 
             // Assert
-            Verify(Path.GetDirectoryName(typeof(DesktopTestSourceHostTests).Assembly.Location) == expectedObject.AppDomainAppBase);
+            Verify(Path.GetDirectoryName(typeof(DesktopTestSourceHostTests).Assembly.Location) == expectedObject?.AppDomainAppBase);
         }
         finally
         {
@@ -124,7 +123,7 @@ public class DesktopTestSourceHostTests : TestContainer
     {
         // Arrange
         DummyClass dummyClass = new();
-        string runSettingxml =
+        string runSettingsXml =
             """
             <RunSettings>
               <RunConfiguration>
@@ -135,7 +134,7 @@ public class DesktopTestSourceHostTests : TestContainer
 
         string location = typeof(TestSourceHost).Assembly.Location;
         var mockRunSettings = new Mock<IRunSettings>();
-        mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
+        mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
 
         TestSourceHost sourceHost = new(location, mockRunSettings.Object, null);
 
@@ -146,7 +145,7 @@ public class DesktopTestSourceHostTests : TestContainer
             var expectedObject = sourceHost.CreateInstanceForType(typeof(DummyClass), null) as DummyClass;
 
             // Assert
-            Verify(Path.GetDirectoryName(typeof(DesktopTestSourceHostTests).Assembly.Location) == expectedObject.AppDomainAppBase);
+            Verify(Path.GetDirectoryName(typeof(DesktopTestSourceHostTests).Assembly.Location) == expectedObject?.AppDomainAppBase);
         }
         finally
         {
@@ -198,7 +197,7 @@ public class DesktopTestSourceHostTests : TestContainer
     {
         // Arrange
         DummyClass dummyClass = new();
-        string runSettingxml =
+        string runSettingsXml =
         @"<RunSettings>
                 <RunConfiguration>
                     <DisableAppDomain>True</DisableAppDomain>
@@ -207,7 +206,7 @@ public class DesktopTestSourceHostTests : TestContainer
 
         string location = typeof(TestSourceHost).Assembly.Location;
         var mockRunSettings = new Mock<IRunSettings>();
-        mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
+        mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
 
         Mock<TestSourceHost> testSourceHost = new(location, mockRunSettings.Object, null) { CallBase = true };
 
@@ -227,7 +226,7 @@ public class DesktopTestSourceHostTests : TestContainer
     {
         // Arrange
         DummyClass dummyClass = new();
-        string runSettingxml =
+        string runSettingsXml =
             """
             <RunSettings>
               <RunConfiguration>
@@ -238,7 +237,7 @@ public class DesktopTestSourceHostTests : TestContainer
 
         string location = typeof(TestSourceHost).Assembly.Location;
         var mockRunSettings = new Mock<IRunSettings>();
-        mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
+        mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
 
         Mock<TestSourceHost> testSourceHost = new(location, mockRunSettings.Object, null) { CallBase = true };
 

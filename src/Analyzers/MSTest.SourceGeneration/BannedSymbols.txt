@@ -1,0 +1,2 @@
+﻿M:System.Text.StringBuilder.AppendLine(); Calls to 'Environment.NewLine' should be avoided in source generators
+M:System.Text.StringBuilder.AppendLine(System.String); Calls to 'Environment.NewLine' should be avoided in source generators

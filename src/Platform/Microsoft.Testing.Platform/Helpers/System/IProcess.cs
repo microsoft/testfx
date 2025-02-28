@@ -5,10 +5,13 @@ namespace Microsoft.Testing.Platform.Helpers;
 
 internal interface IProcess : IDisposable
 {
-    public event EventHandler Exited;
+    event EventHandler Exited;
 
     /// <inheritdoc cref="System.Diagnostics.Process.Id" />
     int Id { get; }
+
+    /// <inheritdoc cref="System.Diagnostics.Process.ProcessName" />
+    string Name { get; }
 
     /// <inheritdoc cref="System.Diagnostics.Process.ExitCode" />
     int ExitCode { get; }

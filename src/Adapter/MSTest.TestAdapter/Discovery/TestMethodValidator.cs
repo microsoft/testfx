@@ -1,10 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
-using System.Reflection;
-
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -19,15 +15,6 @@ internal class TestMethodValidator
 {
     private readonly ReflectHelper _reflectHelper;
     private readonly bool _discoverInternals;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="TestMethodValidator"/> class.
-    /// </summary>
-    /// <param name="reflectHelper">An instance to reflection helper for type information.</param>
-    internal TestMethodValidator(ReflectHelper reflectHelper)
-        : this(reflectHelper, false)
-    {
-    }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TestMethodValidator"/> class.
@@ -62,23 +49,13 @@ internal class TestMethodValidator
             return false;
         }
 
-        // Generic method Definitions are not valid.
-        if (testMethodInfo.IsGenericMethodDefinition)
-        {
-            string message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorGenericTestMethod, testMethodInfo.DeclaringType!.FullName, testMethodInfo.Name);
-            warnings.Add(message);
-            return false;
-        }
-
         bool isAccessible = testMethodInfo.IsPublic
             || (_discoverInternals && testMethodInfo.IsAssembly);
 
         // Todo: Decide whether parameter count matters.
-        // The isGenericMethod check below id to verify that there are no closed generic methods slipping through.
-        // Closed generic methods being GenericMethod<int> and open being GenericMethod<TAttribute>.
         bool isValidTestMethod = isAccessible &&
-                                 testMethodInfo is { IsAbstract: false, IsStatic: false, IsGenericMethod: false } &&
-                                 testMethodInfo.IsValidReturnType();
+                                 testMethodInfo is { IsAbstract: false, IsStatic: false } &&
+                                 testMethodInfo.IsValidReturnType(_reflectHelper);
 
         if (!isValidTestMethod)
         {

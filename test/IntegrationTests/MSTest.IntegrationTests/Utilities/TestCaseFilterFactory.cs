@@ -2,13 +2,12 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Linq.Expressions;
-using System.Reflection;
-using System.Text;
-using System.Text.RegularExpressions;
 
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
+
+using Polyfills;
 
 namespace DiscoveryAndExecutionTests.Utilities;
 
@@ -29,7 +28,7 @@ internal static class TestCaseFilterFactory
         IEnumerable<string> tokens = TokenizeFilter(filterString);
 
         var ops = new Stack<Operator>();
-        var exp = new Stack<Expression<Func<Func<string, object>, bool>>>();
+        var exp = new Stack<Expression<Func<Func<string, object?>, bool>>>();
 
         // simplified version of microsoft/vstest/src/Microsoft.TestPlatform.Common/Filtering/FilterExpression.cs
 
@@ -81,7 +80,7 @@ internal static class TestCaseFilterFactory
                     continue;
 
                 default:
-                    Expression<Func<Func<string, object>, bool>> e = ConditionExpression(token);
+                    Expression<Func<Func<string, object?>, bool>> e = ConditionExpression(token);
                     exp.Push(e);
                     break;
             }
@@ -97,16 +96,16 @@ internal static class TestCaseFilterFactory
             throw new FormatException($"Invalid filter, missing operator: {filterString}");
         }
 
-        Func<Func<string, object>, bool> lambda = exp.Pop().Compile();
+        Func<Func<string, object?>, bool> lambda = exp.Pop().Compile();
 
         return new TestFilterExpression(filterString, lambda);
     }
 
     private class TestFilterExpression : ITestCaseFilterExpression
     {
-        private readonly Func<Func<string, object>, bool> _expression;
+        private readonly Func<Func<string, object?>, bool> _expression;
 
-        public TestFilterExpression(string filter, Func<Func<string, object>, bool> expression)
+        public TestFilterExpression(string filter, Func<Func<string, object?>, bool> expression)
         {
             TestCaseFilterValue = filter;
             _expression = expression;
@@ -114,10 +113,11 @@ internal static class TestCaseFilterFactory
 
         public string TestCaseFilterValue { get; }
 
-        public bool MatchTestCase(TestCase testCase, Func<string, object> propertyValueProvider) => _expression(propertyValueProvider);
+        public bool MatchTestCase(TestCase testCase, Func<string, object?> propertyValueProvider)
+            => _expression(propertyValueProvider);
     }
 
-    private static void MergeExpression(Stack<Expression<Func<Func<string, object>, bool>>> exp, Operator op)
+    private static void MergeExpression(Stack<Expression<Func<Func<string, object?>, bool>>> exp, Operator op)
     {
         Guard.NotNull(exp);
         if (op is not Operator.And and not Operator.Or)
@@ -136,7 +136,7 @@ internal static class TestCaseFilterFactory
 
         Expression body = op == Operator.And ? Expression.And(left, right) : Expression.Or(left, right);
 
-        var lambda = Expression.Lambda<Func<Func<string, object>, bool>>(body, parameter);
+        var lambda = Expression.Lambda<Func<Func<string, object?>, bool>>(body, parameter);
 
         exp.Push(lambda);
     }
@@ -234,7 +234,7 @@ internal static class TestCaseFilterFactory
         }
     }
 
-    private static string[] GetMultiValue(object value)
+    private static string[]? GetMultiValue(object value)
     {
         if (value is string[] i)
         {
@@ -284,7 +284,7 @@ internal static class TestCaseFilterFactory
         return false;
     }
 
-    private static Expression<Func<Func<string, object>, bool>> ConditionExpression(string conditionString)
+    private static Expression<Func<Func<string, object?>, bool>> ConditionExpression(string conditionString)
     {
         Guard.NotNull(conditionString);
 
@@ -325,7 +325,7 @@ internal static class TestCaseFilterFactory
             expression = Expression.Not(expression);
         }
 
-        var lambda = Expression.Lambda<Func<Func<string, object>, bool>>(expression, parameter);
+        var lambda = Expression.Lambda<Func<Func<string, object?>, bool>>(expression, parameter);
 
         return lambda;
     }

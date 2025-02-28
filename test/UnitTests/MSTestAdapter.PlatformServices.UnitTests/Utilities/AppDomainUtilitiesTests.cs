@@ -2,9 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if NET462
-
-using System.Xml;
-
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
 
 using TestFramework.ForTestingMSTest;
@@ -54,7 +51,7 @@ public class AppDomainUtilitiesTests : TestContainer
             """;
 
         byte[] observedConfigBytes = setup.GetConfigurationBytes();
-        string observedXml = System.Text.Encoding.UTF8.GetString(observedConfigBytes);
+        string observedXml = Encoding.UTF8.GetString(observedConfigBytes);
 
         Verify(SanitizeString(observedXml).Contains(SanitizeString(expectedRedir)), "Config must have OM redirection");
 
@@ -99,7 +96,7 @@ public class AppDomainUtilitiesTests : TestContainer
 
     internal class TestableXmlUtilities : XmlUtilities
     {
-        internal string ConfigXml { get; set; }
+        internal string ConfigXml { get; set; } = null!;
 
         internal override XmlDocument GetXmlDocument(string configFile)
         {

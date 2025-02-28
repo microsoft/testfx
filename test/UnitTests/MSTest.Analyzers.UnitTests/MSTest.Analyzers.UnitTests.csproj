@@ -1,11 +1,16 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
-    <UseVSTestRunner>false</UseVSTestRunner>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <GenerateBindingRedirectsOutputType>true</GenerateBindingRedirectsOutputType>
-    <UseAppHost>true</UseAppHost>
+    
+    <!-- Analyzers project need to explicitly exclude compile and runtime assets from MSTest.TestFramework NuGet package -->
+    <!-- This is to ensure that the assembly built from source is what is being used in tests -->
+    <!-- This will exclude compile and runtime assets from NuGet so that they flow via ProjectReference -->
+    <UseMSTestFromSource>true</UseMSTestFromSource>
+    <EnableMSTestRunner>true</EnableMSTestRunner>
+    <OutputType>Exe</OutputType>
   </PropertyGroup>
 
   <ItemGroup>
@@ -17,15 +22,16 @@
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Analyzer.Testing" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.CodeFix.Testing" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.CodeRefactoring.Testing" />
-    <!-- CVE-2024-0057 / Transitive deps of code analysis testing packages -->
-    <PackageReference Include="NuGet.Packaging" />
+
+    <!-- Deps of MSTest.TestAdapter -->
+    <PackageReference Include="Microsoft.TestPlatform.AdapterUtilities" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="$(RepoRoot)src\Analyzers\MSTest.Analyzers\MSTest.Analyzers.csproj" />
     <ProjectReference Include="$(RepoRoot)src\Analyzers\MSTest.Analyzers.CodeFixes\MSTest.Analyzers.CodeFixes.csproj" />
-    <ProjectReference Include="$(RepoRoot)src\TestFramework\TestFramework\TestFramework.csproj" />
     <ProjectReference Include="$(RepoRoot)src\TestFramework\TestFramework.Extensions\TestFramework.Extensions.csproj" />
+    <ProjectReference Include="$(RepoRoot)src\Adapter\MSTest.TestAdapter\MSTest.TestAdapter.csproj" />
   </ItemGroup>
 
 </Project>

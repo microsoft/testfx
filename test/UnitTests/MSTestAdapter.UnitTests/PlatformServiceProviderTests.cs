@@ -58,18 +58,18 @@ public class PlatformServiceProviderTests : TestContainer
     {
         // Arrange.
         var testMethod = new Mock<Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ObjectModel.ITestMethod>();
-        var writer = new ThreadSafeStringWriter(null, "test");
-        var properties = new Dictionary<string, object> { { "prop", "value" } };
+        var writer = new ThreadSafeStringWriter(null!, "test");
+        var properties = new Dictionary<string, object?> { { "prop", "value" } };
         testMethod.Setup(tm => tm.FullClassName).Returns("A.C.M");
         testMethod.Setup(tm => tm.Name).Returns("M");
 
         // Act.
-        PlatformServices.Interface.ITestContext testContext = PlatformServiceProvider.Instance.GetTestContext(testMethod.Object, writer, properties);
+        PlatformServices.Interface.ITestContext testContext = PlatformServiceProvider.Instance.GetTestContext(testMethod.Object, writer, properties, null!, default);
 
         // Assert.
         Verify(testContext.Context.FullyQualifiedTestClassName == "A.C.M");
         Verify(testContext.Context.TestName == "M");
         Verify(testContext.Context.Properties.Contains(properties.ToArray()[0].Key));
-        Verify(((IDictionary<string, object>)testContext.Context.Properties).Contains(properties.ToArray()[0]));
+        Verify(((IDictionary<string, object>)testContext.Context.Properties).Contains(properties.ToArray()[0]!));
     }
 }

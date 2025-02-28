@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Reflection;
-
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 #if LEGACY_TEST_ID
@@ -91,7 +89,7 @@ public class TestIdCases
     {
         public IEnumerable<object[]> GetData(MethodInfo methodInfo) => ArraysData;
 
-        public string GetDisplayName(MethodInfo methodInfo, object[] data) => "Custom name";
+        public string GetDisplayName(MethodInfo methodInfo, object?[]? data) => "Custom name";
     }
 
     [DataTestMethod]
@@ -104,7 +102,7 @@ public class TestIdCases
     {
         public IEnumerable<object[]> GetData(MethodInfo methodInfo) => TuplesData;
 
-        public string GetDisplayName(MethodInfo methodInfo, object[] data) => "Custom name";
+        public string GetDisplayName(MethodInfo methodInfo, object?[]? data) => "Custom name";
     }
 
     [DataTestMethod]
@@ -117,6 +115,6 @@ public class TestIdCases
     {
         public IEnumerable<object[]> GetData(MethodInfo methodInfo) => GenericCollectionsData;
 
-        public string GetDisplayName(MethodInfo methodInfo, object[] data) => "Custom name";
+        public string GetDisplayName(MethodInfo methodInfo, object?[]? data) => "Custom name";
     }
 }

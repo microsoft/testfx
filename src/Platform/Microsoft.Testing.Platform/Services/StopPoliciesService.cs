@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Collections.Concurrent;
-
 using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Platform.Services;
@@ -32,7 +30,9 @@ internal sealed class StopPoliciesService : IStopPoliciesService
     public bool IsAbortTriggered { get; private set; }
 
     private static void RegisterCallback<T>(ref BlockingCollection<T>? callbacks, T callback)
+#pragma warning disable CA1416 // Validate platform compatibility
         => (callbacks ??= new()).Add(callback);
+#pragma warning restore CA1416
 
     public async Task ExecuteMaxFailedTestsCallbacksAsync(int maxFailedTests, CancellationToken cancellationToken)
     {

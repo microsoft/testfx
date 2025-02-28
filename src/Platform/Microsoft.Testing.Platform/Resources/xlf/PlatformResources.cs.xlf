@@ -2,9 +2,14 @@
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
   <file datatype="xml" source-language="en" target-language="cs" original="../PlatformResources.resx">
     <body>
+      <trans-unit id="AbortForMaxFailedTestsCapabilityNotAvailable">
+        <source>The current test framework does not implement 'IGracefulStopTestExecutionCapability' which is required for '--maximum-failed-tests' feature.</source>
+        <target state="translated">Aktuální testovací architektura neimplementuje rozhraní IGracefulStopTestExecutionCapability, které je vyžadováno pro funkci --maximum-failed-tests.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AbortForMaxFailedTestsDescription">
         <source>Extension used to support '--maximum-failed-tests'. When a given failures threshold is reached, the test run will be aborted.</source>
-        <target state="new">Extension used to support '--maximum-failed-tests'. When a given failures threshold is reached, the test run will be aborted.</target>
+        <target state="translated">Rozšíření, které podporuje --maximum-failed-tests Když se dosáhne prahové hodnoty pro dané chyby, testovací běh se přeruší.</target>
         <note />
       </trans-unit>
       <trans-unit id="Aborted">
@@ -198,13 +203,13 @@
         <note />
       </trans-unit>
       <trans-unit id="DiagnosticFileLevelWithAsyncFlush">
-        <source>Diagnostic file (level '{0}' with async flush): {1}"</source>
+        <source>Diagnostic file (level '{0}' with async flush): {1}</source>
         <target state="translated">Diagnostický soubor (úroveň {0} s asynchronním vyprázdněním): {1}</target>
         <note>0 level such as verbose, 
 1 path to file</note>
       </trans-unit>
       <trans-unit id="DiagnosticFileLevelWithFlush">
-        <source>Diagnostic file (level '{0}' with sync flush): {1}"</source>
+        <source>Diagnostic file (level '{0}' with sync flush): {1}</source>
         <target state="translated">Diagnostický soubor (úroveň {0} se synchronním vyprázdněním): {1}</target>
         <note>0 level such as verbose, 
 1 path to file</note>
@@ -378,7 +383,7 @@
       </trans-unit>
       <trans-unit id="MaxFailedTestsMustBePositive">
         <source>The option '--maximum-failed-tests' must be a positive integer. The value '{0}' is not valid.</source>
-        <target state="new">The option '--maximum-failed-tests' must be a positive integer. The value '{0}' is not valid.</target>
+        <target state="translated">Možnost --maximum-failed-tests musí být kladné celé číslo. Hodnota '{0}' není platná.</target>
         <note />
       </trans-unit>
       <trans-unit id="MessageBusNotReady">
@@ -398,7 +403,7 @@
       </trans-unit>
       <trans-unit id="ActiveTestsRunning_MoreTestsCount">
         <source>and {0} more</source>
-        <target state="new">and {0} more</target>
+        <target state="translated">a ještě {0}</target>
         <note />
       </trans-unit>
       <trans-unit id="ActiveTestsRunning_FullTestsCount">
@@ -547,7 +552,7 @@ Dostupné hodnoty jsou Trace, Debug, Information, Warning, Error a Critical.</ta
       </trans-unit>
       <trans-unit id="PlatformCommandLineMaxFailedTestsOptionDescription">
         <source>Specifies a maximum number of test failures that, when exceeded, will abort the test run.</source>
-        <target state="new">Specifies a maximum number of test failures that, when exceeded, will abort the test run.</target>
+        <target state="translated">Určuje maximální počet neúspěšných testů, které při překročení přeruší testovací běh.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineMinimumExpectedTestsIncompatibleDiscoverTests">
@@ -640,7 +645,7 @@ Může mít jenom jeden argument jako řetězec ve formátu &lt;value&gt;[h|m|s]
       </trans-unit>
       <trans-unit id="ReachedMaxFailedTestsMessage">
         <source>Test session is aborting due to reaching failures ('{0}') specified by the '--maximum-failed-tests' option.</source>
-        <target state="new">Test session is aborting due to reaching failures ('{0}') specified by the '--maximum-failed-tests' option.</target>
+        <target state="translated">Testovací relace se přerušuje, protože se dosáhlo chyb ('{0}') zadaných možností --maximum-failed-tests.</target>
         <note>{0} is the number of max failed tests.</note>
       </trans-unit>
       <trans-unit id="RetryFailedAfterTriesErrorMessage">

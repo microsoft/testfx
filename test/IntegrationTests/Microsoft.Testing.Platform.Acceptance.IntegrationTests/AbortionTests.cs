@@ -1,24 +1,16 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Runtime.InteropServices;
-
-using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
-using Microsoft.Testing.Platform.Helpers;
-
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
-[TestGroup]
-public class AbortionTests : AcceptanceTestBase
+[TestClass]
+public class AbortionTests : AcceptanceTestBase<AbortionTests.TestAssetFixture>
 {
     private const string AssetName = "Abort";
-    private readonly TestAssetFixture _testAssetFixture;
-
-    public AbortionTests(ITestExecutionContext testExecutionContext, TestAssetFixture testAssetFixture)
-        : base(testExecutionContext) => _testAssetFixture = testAssetFixture;
 
     // We retry because sometime the Canceling the session message is not showing up.
-    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
     public async Task AbortWithCTRLPlusC_TestHost_Succeeded(string tfm)
     {
         // We expect the same semantic for Linux, the test setup is not cross and we're using specific
@@ -28,14 +20,14 @@ public class AbortionTests : AcceptanceTestBase
             return;
         }
 
-        var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, tfm);
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync();
 
         testHostResult.AssertExitCodeIs(ExitCodes.TestSessionAborted);
 
         // We check only in netcore for netfx is now showing in CI every time, the same behavior in local something works sometime nope.
         // Manual test works pretty always as expected, looks like the implementation is different, we care more on .NET Core.
-        if (TargetFrameworks.Net.Select(x => x.Arguments).Contains(tfm))
+        if (TargetFrameworks.Net.Contains(tfm))
         {
             testHostResult.AssertOutputMatchesRegex("Canceling the test session.*");
         }
@@ -43,8 +35,7 @@ public class AbortionTests : AcceptanceTestBase
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 0, skipped: 0, aborted: true);
     }
 
-    [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
-    public sealed class TestAssetFixture(AcceptanceFixture acceptanceFixture) : TestAssetFixtureBase(acceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
     {
         private const string Sources = """
 #file Abort.csproj
@@ -78,11 +69,11 @@ internal sealed class Program
     public static async Task<int> Main(string[] args)
     {
         ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
-        builder.RegisterTestFramework(_ => new Capabilities(), (_, __) => new DummyAdapter());
+        builder.RegisterTestFramework(_ => new Capabilities(), (_, __) => new DummyTestFramework());
         using ITestApplication app = await builder.BuildAsync();
         _ = Task.Run(() =>
         {
-            DummyAdapter.FireCancel.Wait();
+            DummyTestFramework.FireCancel.Wait();
 
             if (!GenerateConsoleCtrlEvent(ConsoleCtrlEvent.CTRL_C, 0))
             {
@@ -105,10 +96,10 @@ internal sealed class Program
 
 }
 
-internal class DummyAdapter : ITestFramework, IDataProducer
+internal class DummyTestFramework : ITestFramework, IDataProducer
 {
     public static readonly ManualResetEventSlim FireCancel = new ManualResetEventSlim(false);
-    public string Uid => nameof(DummyAdapter);
+    public string Uid => nameof(DummyTestFramework);
 
     public string Version => string.Empty;
 
@@ -118,9 +109,11 @@ internal class DummyAdapter : ITestFramework, IDataProducer
 
     public Type[] DataTypesProduced => new[] { typeof(TestNodeUpdateMessage) };
 
-    public Task<CloseTestSessionResult> CloseTestSessionAsync(CloseTestSessionContext context) => Task.FromResult(new CloseTestSessionResult() { IsSuccess = true });
+    public Task<CloseTestSessionResult> CloseTestSessionAsync(CloseTestSessionContext context)
+        => Task.FromResult(new CloseTestSessionResult() { IsSuccess = true });
 
-    public Task<CreateTestSessionResult> CreateTestSessionAsync(CreateTestSessionContext context) => Task.FromResult(new CreateTestSessionResult() { IsSuccess = true });
+    public Task<CreateTestSessionResult> CreateTestSessionAsync(CreateTestSessionContext context)
+        => Task.FromResult(new CreateTestSessionResult() { IsSuccess = true });
 
     public async Task ExecuteRequestAsync(ExecuteRequestContext context)
     {

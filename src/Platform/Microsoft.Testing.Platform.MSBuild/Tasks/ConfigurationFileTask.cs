@@ -8,6 +8,9 @@ using Microsoft.Build.Utilities;
 
 namespace Microsoft.Testing.Platform.MSBuild;
 
+/// <summary>
+/// A task that copies the Microsoft Testing Platform configuration file to the output directory.
+/// </summary>
 // Took inspiration from https://github.com/dotnet/sdk/blob/main/src/Tasks/Microsoft.NET.Build.Tasks/GenerateRuntimeConfigurationFiles.cs
 public sealed class ConfigurationFileTask : Build.Utilities.Task
 {
@@ -20,32 +23,51 @@ public sealed class ConfigurationFileTask : Build.Utilities.Task
         _fileSystem = fileSystem;
     }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ConfigurationFileTask"/> class.
+    /// </summary>
     public ConfigurationFileTask()
         : this(new FileSystem())
     {
     }
 
+    /// <summary>
+    /// Gets or sets the Microsoft Testing Platform configuration file source.
+    /// </summary>
     [Required]
     public ITaskItem TestingPlatformConfigurationFileSource { get; set; }
 
+    /// <summary>
+    /// Gets or sets the MSBuild project directory.
+    /// </summary>
     [Required]
     public ITaskItem MSBuildProjectDirectory { get; set; }
 
+    /// <summary>
+    /// Gets or sets the assembly name.
+    /// </summary>
     [Required]
     public ITaskItem AssemblyName { get; set; }
 
+    /// <summary>
+    /// Gets or sets the output path.
+    /// </summary>
     [Required]
     public ITaskItem OutputPath { get; set; }
 
+    /// <summary>
+    /// Gets or sets the final Microsoft Testing Platform configuration file.
+    /// </summary>
     [Output]
     public ITaskItem FinalTestingPlatformConfigurationFile { get; set; }
 
+    /// <inheritdoc/>
     public override bool Execute()
     {
         Log.LogMessage(MessageImportance.Normal, $"Microsoft Testing Platform configuration file: '{TestingPlatformConfigurationFileSource.ItemSpec}'");
         if (!_fileSystem.Exist(TestingPlatformConfigurationFileSource.ItemSpec))
         {
-            Log.LogMessage(MessageImportance.Normal, $"Microsoft Testing Platform configuration file not found");
+            Log.LogMessage(MessageImportance.Normal, "Microsoft Testing Platform configuration file not found");
             return true;
         }
 
@@ -62,7 +84,7 @@ public sealed class ConfigurationFileTask : Build.Utilities.Task
         Log.LogMessage(MessageImportance.Normal, $"Configuration file found: '{TestingPlatformConfigurationFileSource.ItemSpec}'");
         _fileSystem.CopyFile(TestingPlatformConfigurationFileSource.ItemSpec, finalFileName);
         FinalTestingPlatformConfigurationFile = new TaskItem(finalFileName);
-        Log.LogMessage(MessageImportance.Normal, $"Microsoft Testing Platform configuration file written");
+        Log.LogMessage(MessageImportance.Normal, "Microsoft Testing Platform configuration file written");
 
         return true;
     }

@@ -1,13 +1,9 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Collections;
-using System.Reflection;
-
 using FluentAssertions;
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using SampleFrameworkExtensions;
 
@@ -41,7 +37,7 @@ public class ReflectionUtilityTests : TestContainer
 
     public void GetCustomAttributesShouldReturnAllAttributes()
     {
-        MethodInfo methodInfo = _testAsset.GetType("TestProjectForDiscovery.AttributeTestBaseClass").GetMethod("DummyVTestMethod1");
+        MethodInfo methodInfo = _testAsset.GetType("TestProjectForDiscovery.AttributeTestBaseClass").GetMethod("DummyVTestMethod1")!;
 
         IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributes(methodInfo, false);
 
@@ -54,7 +50,7 @@ public class ReflectionUtilityTests : TestContainer
 
     public void GetCustomAttributesShouldReturnAllAttributesIgnoringBaseInheritance()
     {
-        MethodInfo methodInfo = _testAsset.GetType("TestProjectForDiscovery.AttributeTestClass").GetMethod("DummyVTestMethod1");
+        MethodInfo methodInfo = _testAsset.GetType("TestProjectForDiscovery.AttributeTestClass").GetMethod("DummyVTestMethod1")!;
 
         IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributes(methodInfo, false);
 
@@ -67,7 +63,7 @@ public class ReflectionUtilityTests : TestContainer
 
     public void GetCustomAttributesShouldReturnAllAttributesWithBaseInheritance()
     {
-        MethodInfo methodInfo = _testAsset.GetType("TestProjectForDiscovery.AttributeTestClass").GetMethod("DummyVTestMethod1");
+        MethodInfo methodInfo = _testAsset.GetType("TestProjectForDiscovery.AttributeTestClass").GetMethod("DummyVTestMethod1")!;
 
         IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributes(methodInfo, true);
 
@@ -120,7 +116,7 @@ public class ReflectionUtilityTests : TestContainer
 
     public void GetSpecificCustomAttributesShouldReturnAllAttributes()
     {
-        MethodInfo methodInfo = _testAsset.GetType("TestProjectForDiscovery.AttributeTestBaseClass").GetMethod("DummyVTestMethod1");
+        MethodInfo methodInfo = _testAsset.GetType("TestProjectForDiscovery.AttributeTestBaseClass").GetMethod("DummyVTestMethod1")!;
 
         IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributes(methodInfo, typeof(TestCategoryAttribute), false);
 
@@ -133,7 +129,7 @@ public class ReflectionUtilityTests : TestContainer
 
     public void GetSpecificCustomAttributesShouldReturnAllAttributesIgnoringBaseInheritance()
     {
-        MethodInfo methodInfo = _testAsset.GetType("TestProjectForDiscovery.AttributeTestClass").GetMethod("DummyVTestMethod1");
+        MethodInfo methodInfo = _testAsset.GetType("TestProjectForDiscovery.AttributeTestClass").GetMethod("DummyVTestMethod1")!;
 
         IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributes(methodInfo, typeof(TestCategoryAttribute), false);
 
@@ -147,7 +143,7 @@ public class ReflectionUtilityTests : TestContainer
     public void GetSpecificCustomAttributesShouldReturnAllAttributesWithBaseInheritance()
     {
         MethodInfo methodInfo =
-            _testAsset.GetType("TestProjectForDiscovery.AttributeTestClass").GetMethod("DummyVTestMethod1");
+            _testAsset.GetType("TestProjectForDiscovery.AttributeTestClass").GetMethod("DummyVTestMethod1")!;
 
         IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributes(methodInfo, typeof(TestCategoryAttribute), true);
 
@@ -160,7 +156,7 @@ public class ReflectionUtilityTests : TestContainer
 
     public void GetCustomAttributesShouldReturnAllAttributesIncludingUserDefinedAttributes()
     {
-        MethodInfo methodInfo = _testAsset.GetType("TestProjectForDiscovery.AttributeTestClassWithCustomAttributes").GetMethod("DummyVTestMethod1");
+        MethodInfo methodInfo = _testAsset.GetType("TestProjectForDiscovery.AttributeTestClassWithCustomAttributes").GetMethod("DummyVTestMethod1")!;
 
         IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributes(methodInfo, null, true);
 
@@ -173,7 +169,7 @@ public class ReflectionUtilityTests : TestContainer
 
     public void GetSpecificCustomAttributesShouldReturnAllAttributesIncludingUserDefinedAttributes()
     {
-        MethodInfo methodInfo = _testAsset.GetType("TestProjectForDiscovery.AttributeTestClassWithCustomAttributes").GetMethod("DummyVTestMethod1");
+        MethodInfo methodInfo = _testAsset.GetType("TestProjectForDiscovery.AttributeTestClassWithCustomAttributes").GetMethod("DummyVTestMethod1")!;
 
         IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributes(methodInfo, typeof(TestPropertyAttribute), true);
 
@@ -186,7 +182,7 @@ public class ReflectionUtilityTests : TestContainer
 
     public void GetSpecificCustomAttributesShouldReturnArrayAttributesAsWell()
     {
-        MethodInfo methodInfo = _testAsset.GetType("TestProjectForDiscovery.AttributeTestClassWithCustomAttributes").GetMethod("DummyTestMethod2");
+        MethodInfo methodInfo = _testAsset.GetType("TestProjectForDiscovery.AttributeTestClassWithCustomAttributes").GetMethod("DummyTestMethod2")!;
 
         IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributes(methodInfo, typeof(CategoryArrayAttribute), true);
 
@@ -249,7 +245,7 @@ public class ReflectionUtilityTests : TestContainer
         GetAttributeValuePairs(attributes).Should().Equal(expectedAttributes);
     }
 
-    private Assembly ReflectionOnlyOnResolve(object sender, ResolveEventArgs args)
+    private static Assembly ReflectionOnlyOnResolve(object sender, ResolveEventArgs args)
     {
         string assemblyNameToLoad = AppDomain.CurrentDomain.ApplyPolicy(args.Name);
 

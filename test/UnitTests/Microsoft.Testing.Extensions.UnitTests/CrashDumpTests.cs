@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Globalization;
-
 using Microsoft.Testing.Extensions.Diagnostics;
 using Microsoft.Testing.Extensions.Diagnostics.Resources;
 using Microsoft.Testing.Extensions.UnitTests.Helpers;
@@ -10,13 +8,14 @@ using Microsoft.Testing.Platform.Extensions.CommandLine;
 
 namespace Microsoft.Testing.Extensions.UnitTests;
 
-[TestGroup]
-public class CrashDumpTests(ITestExecutionContext testExecutionContext) : TestBase(testExecutionContext)
+[TestClass]
+public sealed class CrashDumpTests
 {
-    [Arguments("Mini")]
-    [Arguments("Heap")]
-    [Arguments("Triage")]
-    [Arguments("Full")]
+    [TestMethod]
+    [DataRow("Mini")]
+    [DataRow("Heap")]
+    [DataRow("Triage")]
+    [DataRow("Full")]
     public async Task IsValid_If_CrashDumpType_Has_CorrectValue(string crashDumpType)
     {
         var provider = new CrashDumpCommandLineProvider();
@@ -27,6 +26,7 @@ public class CrashDumpTests(ITestExecutionContext testExecutionContext) : TestBa
         Assert.IsTrue(string.IsNullOrEmpty(validateOptionsResult.ErrorMessage));
     }
 
+    [TestMethod]
     public async Task IsInvValid_If_CrashDumpType_Has_IncorrectValue()
     {
         var provider = new CrashDumpCommandLineProvider();
@@ -37,6 +37,7 @@ public class CrashDumpTests(ITestExecutionContext testExecutionContext) : TestBa
         Assert.AreEqual(string.Format(CultureInfo.InvariantCulture, CrashDumpResources.CrashDumpTypeOptionInvalidType, "invalid"), validateOptionsResult.ErrorMessage);
     }
 
+    [TestMethod]
     public async Task CrashDump_CommandLineOptions_Are_AlwaysValid()
     {
         var provider = new CrashDumpCommandLineProvider();

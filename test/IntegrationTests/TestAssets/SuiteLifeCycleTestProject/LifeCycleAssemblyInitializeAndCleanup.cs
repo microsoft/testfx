@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Diagnostics;
-
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace SuiteLifeCycleTestProject;
@@ -10,7 +8,7 @@ namespace SuiteLifeCycleTestProject;
 [TestClass]
 public class LifeCycleAssemblyInitializeAndCleanup
 {
-    private static TestContext s_testContext;
+    private static TestContext s_testContext = null!;
 
     [AssemblyInitialize]
     public static void AssemblyInit(TestContext testContext)

@@ -1,9 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Collections.Concurrent;
-using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
 using System.Net.Sockets;
 
 using Microsoft.Testing.Internal.Framework;
@@ -123,9 +120,7 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
         e.SetObserved();
         _logger.LogWarning($"[ServerTestHost.OnTaskSchedulerUnobservedTaskException] Unhandled exception: {e.Exception}");
 
-        // Looks like nothing in this message to really be localized?
-        // All are class names, method names, property names, and placeholders. So none is localizable?
-        ServiceProvider.GetOutputDevice().DisplayAsync(this, new WarningMessageOutputDeviceData(PlatformResources.UnobservedTaskExceptionWarningMessage))
+        ServiceProvider.GetOutputDevice().DisplayAsync(this, new WarningMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, PlatformResources.UnobservedTaskExceptionWarningMessage, e.Exception.ToString())))
             .GetAwaiter().GetResult();
     }
 

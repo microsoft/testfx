@@ -973,9 +973,10 @@ namespace Jsonite
                             writer.Write('t');
                             break;
                         default:
-                            ArgumentGuard.Ensure(c >= ' ', nameof(text), $"Invalid control character '{EscapeChar(c)}' found in string");
+                            // Intentionally diverging from the upstream code from xoofx/jsonite. See https://github.com/microsoft/testfx/issues/5120
 
-                            if (IsHighSurrogate(c) || IsLowSurrogate(c))
+                            // Also, https://datatracker.ietf.org/doc/html/rfc4627#section-2.5
+                            if (c < ' ' || IsHighSurrogate(c) || IsLowSurrogate(c))
                             {
                                 writer.Write('\\');
                                 writer.Write('u');

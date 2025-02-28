@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Globalization;
-
 using Microsoft.Testing.Extensions.VSTestBridge.CommandLine;
 using Microsoft.Testing.Extensions.VSTestBridge.Resources;
 using Microsoft.Testing.Extensions.VSTestBridge.UnitTests.Helpers;
@@ -10,10 +8,10 @@ using Microsoft.Testing.Platform.Extensions.CommandLine;
 
 namespace Microsoft.Testing.Extensions.VSTestBridge.UnitTests.CommandLine;
 
-[TestGroup]
-public sealed class TestRunParameterCommandLineOptionsProviderTests(ITestExecutionContext testExecutionContext)
-    : TestBase(testExecutionContext)
+[TestClass]
+public sealed class TestRunParameterCommandLineOptionsProviderTests
 {
+    [TestMethod]
     public async Task TestRunParameterOption_WhenArgumentDoesNotContainEqual_IsNotValid()
     {
         // Arrange
@@ -28,6 +26,7 @@ public sealed class TestRunParameterCommandLineOptionsProviderTests(ITestExecuti
         Assert.AreEqual(string.Format(CultureInfo.CurrentCulture, ExtensionResources.TestRunParameterOptionArgumentIsNotParameter, "something"), result.ErrorMessage);
     }
 
+    [TestMethod]
     public async Task TestRunParameterOption_WhenArgumentContainsEqual_IsValid()
     {
         // Arrange

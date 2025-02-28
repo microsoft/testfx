@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Diagnostics;
-
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace SuiteLifeCycleTestProject;
@@ -15,9 +13,9 @@ public sealed class LifeCycleClassCleanupEndOfClass
     : IDisposable
 #endif
 {
-    private static TestContext s_testContext;
+    private static TestContext s_testContext = null!;
 
-    public TestContext TestContext { get; set; }
+    public TestContext TestContext { get; set; } = null!;
 
     public LifeCycleClassCleanupEndOfClass()
     {

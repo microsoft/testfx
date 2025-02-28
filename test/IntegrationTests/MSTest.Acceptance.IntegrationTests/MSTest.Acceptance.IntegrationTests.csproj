@@ -1,10 +1,10 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFrameworks>$(NetCurrent)</TargetFrameworks>
-    <UseVSTestRunner>false</UseVSTestRunner>
-    <DefineConstants Condition=" '$(FastAcceptanceTest)' == 'true'">$(DefineConstants);SKIP_INTERMEDIATE_TARGET_FRAMEWORKS</DefineConstants>
+    <EnableMSTestRunner>true</EnableMSTestRunner>
     <OutputType>Exe</OutputType>
+    <DefineConstants Condition=" '$(FastAcceptanceTest)' == 'true'">$(DefineConstants);SKIP_INTERMEDIATE_TARGET_FRAMEWORKS</DefineConstants>
     <UseAppHost>true</UseAppHost>
   </PropertyGroup>
 
@@ -12,6 +12,7 @@
     <Compile Include="$(RepoRoot)test\IntegrationTests\Microsoft.Testing.Platform.Acceptance.IntegrationTests\Helpers\AcceptanceAssert.cs" Link="Helpers\AcceptanceAssert.cs" />
     <Compile Include="$(RepoRoot)test\IntegrationTests\Microsoft.Testing.Platform.Acceptance.IntegrationTests\Helpers\AcceptanceFixture.cs" Link="Helpers\AcceptanceFixture.cs" />
     <Compile Include="$(RepoRoot)test\IntegrationTests\Microsoft.Testing.Platform.Acceptance.IntegrationTests\Helpers\AcceptanceTestBase.cs" Link="Helpers\AcceptanceTestBase.cs" />
+    <Compile Include="$(RepoRoot)test\IntegrationTests\Microsoft.Testing.Platform.Acceptance.IntegrationTests\ServerMode\**\*.cs" Link="ServerMode\%(RecursiveDir)%(FileName)%(Extension)" />
   </ItemGroup>
 
   <ItemGroup>
@@ -22,8 +23,6 @@
   <!-- Packages needed for the test assets but that we don't want to reference -->
   <ItemGroup>
     <PackageDownload Include="Aspire.Hosting.Testing" Version="[$(AspireHostingTestingVersion)]" />
-    <PackageDownload Include="MSTest.Engine" Version="[$(MSTestEngineVersion)]" />
-    <PackageDownload Include="MSTest.SourceGeneration" Version="[$(MSTestEngineVersion)]" />
   </ItemGroup>
 
   <Target Name="CopyNuGetPackagesForTestAssets" BeforeTargets="BeforeBuild">
@@ -34,8 +33,6 @@
     <Copy SkipUnchangedFiles="true" SourceFiles="@(MicrosoftTestingExtensionsCodeCoveragePackage)" DestinationFiles="$(ArtifactsTmpDir)/packages/%(Filename)%(Extension)" />
 
     <Copy SkipUnchangedFiles="true" SourceFiles="$(NuGetPackageRoot)aspire.hosting.testing\$(AspireHostingTestingVersion)\aspire.hosting.testing.$(AspireHostingTestingVersion).nupkg" DestinationFiles="$(ArtifactsTmpDir)/packages/aspire.hosting.testing.$(AspireHostingTestingVersion).nupkg" />
-    <Copy SkipUnchangedFiles="true" SourceFiles="$(NuGetPackageRoot)mstest.engine\$(MSTestEngineVersion)\mstest.engine.$(MSTestEngineVersion).nupkg" DestinationFiles="$(ArtifactsTmpDir)/packages/mstest.engine.$(MSTestEngineVersion).nupkg" />
-    <Copy SkipUnchangedFiles="true" SourceFiles="$(NuGetPackageRoot)mstest.sourcegeneration\$(MSTestEngineVersion)\mstest.sourcegeneration.$(MSTestEngineVersion).nupkg" DestinationFiles="$(ArtifactsTmpDir)/packages/mstest.sourcegeneration.$(MSTestEngineVersion).nupkg" />
   </Target>
 
 </Project>

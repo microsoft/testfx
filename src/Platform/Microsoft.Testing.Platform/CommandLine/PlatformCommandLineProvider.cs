@@ -1,9 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Diagnostics;
-using System.Globalization;
-
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.CommandLine;
 using Microsoft.Testing.Platform.Helpers;
@@ -194,7 +191,9 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
             {
                 // We let the api to do the validity check before to go down the subscription path.
                 // If we don't fail here but we fail below means that the parent process is not there anymore and we can take it as exited.
+#pragma warning disable CA1416 // Validate platform compatibility
                 _ = Process.GetProcessById(parentProcessPid);
+#pragma warning restore CA1416
             }
             catch (ArgumentException ex)
             {

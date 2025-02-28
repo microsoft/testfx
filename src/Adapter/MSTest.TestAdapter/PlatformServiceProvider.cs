@@ -1,14 +1,12 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Diagnostics.CodeAnalysis;
-
-#if !WINDOWS_UWP
-using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.SourceGeneration;
-#endif
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ObjectModel;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
+
+using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 
@@ -22,22 +20,16 @@ internal sealed class PlatformServiceProvider : IPlatformServiceProvider
     /// <summary>
     /// Initializes a new instance of the <see cref="PlatformServiceProvider"/> class - a singleton.
     /// </summary>
-    private PlatformServiceProvider() =>
-#if !WINDOWS_UWP
-        // Set the provider that is used by DynamicDataAttribute when generating data, to allow substituting functionality
-        // in TestFramework without having to put all the stuff in that library.
-        TestTools.UnitTesting.DynamicDataProvider.Instance = SourceGeneratorToggle.UseSourceGenerator
-            ? new SourceGeneratedDynamicDataOperations()
-            : new DynamicDataOperations();
-#else
-        TestTools.UnitTesting.DynamicDataProvider.Instance = new DynamicDataOperations();
-#endif
+    private PlatformServiceProvider()
+    {
+    }
 
     /// <summary>
     /// Gets an instance to the platform service validator for test sources.
     /// </summary>
     [field: AllowNull]
     [field: MaybeNull]
+    [AllowNull]
     public ITestSource TestSource
     {
         get => field ??= new TestSource();
@@ -49,6 +41,7 @@ internal sealed class PlatformServiceProvider : IPlatformServiceProvider
     /// </summary>
     [field: AllowNull]
     [field: MaybeNull]
+    [AllowNull]
     public ITestDataSource TestDataSource
     {
         get => field ??= new TestDataSource();
@@ -60,35 +53,27 @@ internal sealed class PlatformServiceProvider : IPlatformServiceProvider
     /// </summary>
     [field: AllowNull]
     [field: MaybeNull]
+    [AllowNull]
     public IFileOperations FileOperations
     {
-        get => field ??=
-#if !WINDOWS_UWP
-            SourceGeneratorToggle.UseSourceGenerator
-                ? new SourceGeneratedFileOperations()
-                : new FileOperations();
-#else
-            new FileOperations();
-#endif
+        get => field ??= new FileOperations();
         private set;
     }
 
     /// <summary>
-    /// Gets an instance to the platform service for trace logging.
+    /// Gets or sets an instance to the platform service for trace logging.
     /// </summary>
     [field: AllowNull]
     [field: MaybeNull]
-    public IAdapterTraceLogger AdapterTraceLogger
-    {
-        get => field ??= new AdapterTraceLogger();
-        private set;
-    }
+    [AllowNull]
+    public IAdapterTraceLogger AdapterTraceLogger { get => field ??= new AdapterTraceLogger(); set; }
 
     /// <summary>
     /// Gets an instance of the test deployment service.
     /// </summary>
     [field: AllowNull]
     [field: MaybeNull]
+    [AllowNull]
     public ITestDeployment TestDeployment
     {
         get => field ??= new TestDeployment();
@@ -100,6 +85,7 @@ internal sealed class PlatformServiceProvider : IPlatformServiceProvider
     /// </summary>
     [field: AllowNull]
     [field: MaybeNull]
+    [AllowNull]
     public ISettingsProvider SettingsProvider
     {
         get => field ??= new MSTestSettingsProvider();
@@ -111,6 +97,7 @@ internal sealed class PlatformServiceProvider : IPlatformServiceProvider
     /// </summary>
     [field: AllowNull]
     [field: MaybeNull]
+    [AllowNull]
     public IThreadOperations ThreadOperations
     {
         get => field ??= new ThreadOperations();
@@ -122,16 +109,10 @@ internal sealed class PlatformServiceProvider : IPlatformServiceProvider
     /// </summary>
     [field: AllowNull]
     [field: MaybeNull]
+    [AllowNull]
     public IReflectionOperations2 ReflectionOperations
     {
-        get => field ??=
-#if !WINDOWS_UWP
-             SourceGeneratorToggle.UseSourceGenerator
-                 ? new SourceGeneratedReflectionOperations()
-                 : new ReflectionOperations2();
-#else
-            new ReflectionOperations2();
-#endif
+        get => field ??= new ReflectionOperations2();
         private set;
     }
 
@@ -140,11 +121,14 @@ internal sealed class PlatformServiceProvider : IPlatformServiceProvider
     /// </summary>
     public TestRunCancellationToken? TestRunCancellationToken { get; set; }
 
+    public bool IsGracefulStopRequested { get; set; }
+
     /// <summary>
     /// Gets or sets the instance for the platform service.
     /// </summary>
     [field: AllowNull]
     [field: MaybeNull]
+    [AllowNull]
     internal static IPlatformServiceProvider Instance
     {
         get => field ??= new PlatformServiceProvider();
@@ -216,16 +200,19 @@ internal sealed class PlatformServiceProvider : IPlatformServiceProvider
     /// <param name="properties">
     /// The default set of properties the test context needs to be filled with.
     /// </param>
+    /// <param name="messageLogger">The message logger.</param>
+    /// <param name="outcome">The test outcome.</param>
     /// <returns>
     /// The <see cref="ITestContext"/> instance.
     /// </returns>
     /// <remarks>
     /// This was required for compatibility reasons since the TestContext object that the V1 adapter had for desktop is not .Net Core compliant.
     /// </remarks>
-    public ITestContext GetTestContext(ITestMethod testMethod, StringWriter writer, IDictionary<string, object?> properties)
+    public ITestContext GetTestContext(ITestMethod testMethod, StringWriter writer, IDictionary<string, object?> properties, IMessageLogger messageLogger, UTF.UnitTestOutcome outcome)
     {
-        var testContextImplementation = new TestContextImplementation(testMethod, writer, properties);
+        var testContextImplementation = new TestContextImplementation(testMethod, writer, properties, messageLogger);
         TestRunCancellationToken?.Register(CancelDelegate, testContextImplementation);
+        testContextImplementation.SetOutcome(outcome);
         return testContextImplementation;
     }
 }

@@ -31,9 +31,11 @@ public sealed class DoNotUseSystemDescriptionAttributeAnalyzer : DiagnosticAnaly
         DiagnosticSeverity.Info,
         isEnabledByDefault: true);
 
+    /// <inheritdoc />
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
         = ImmutableArray.Create(DoNotUseSystemDescriptionAttributeRule);
 
+    /// <inheritdoc />
     public override void Initialize(AnalysisContext context)
     {
         context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);

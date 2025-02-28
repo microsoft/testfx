@@ -28,11 +28,14 @@ public sealed class PreferDisposeOverTestCleanupAnalyzer : DiagnosticAnalyzer
         null,
         Category.Design,
         DiagnosticSeverity.Info,
-        isEnabledByDefault: false);
+        isEnabledByDefault: false,
+        disableInAllMode: true);
 
+    /// <inheritdoc />
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
         = ImmutableArray.Create(Rule);
 
+    /// <inheritdoc />
     public override void Initialize(AnalysisContext context)
     {
         context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
@@ -53,7 +56,7 @@ public sealed class PreferDisposeOverTestCleanupAnalyzer : DiagnosticAnalyzer
     {
         var methodSymbol = (IMethodSymbol)context.Symbol;
 
-        if (methodSymbol.IsTestCleanupMethod(testCleanupAttributeSymbol))
+        if (methodSymbol.HasAttribute(testCleanupAttributeSymbol))
         {
             // We want to report only if the TestCleanup method returns void or if IAsyncDisposable is available.
             if (iasyncDisposableSymbol is not null

@@ -37,6 +37,11 @@
         <target state="translated">Soubor TRX, který se má porovnat se standardními hodnotami</target>
         <note />
       </trans-unit>
+      <trans-unit id="TrxFileExistsAndWillBeOverwritten">
+        <source>Warning: Trx file '{0}' already exists and will be overwritten.</source>
+        <target state="translated">Upozornění: Soubor Trx '{0}' již existuje a bude přepsán.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TrxReportArtifactDescription">
         <source>Test session</source>
         <target state="translated">Relace testu</target>

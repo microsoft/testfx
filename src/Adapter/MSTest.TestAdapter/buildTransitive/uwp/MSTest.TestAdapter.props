@@ -1,0 +1,7 @@
+<Project>
+
+  <PropertyGroup>
+    <EnableMSTestV2CopyResources Condition=" '$(EnableMSTestV2CopyResources)' == '' ">true</EnableMSTestV2CopyResources>
+  </PropertyGroup>
+
+</Project>

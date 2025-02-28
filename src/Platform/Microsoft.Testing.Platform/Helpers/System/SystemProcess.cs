@@ -1,14 +1,13 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Diagnostics;
-
 namespace Microsoft.Testing.Platform.Helpers;
 
 internal sealed class SystemProcess : IProcess, IDisposable
 {
     private readonly Process _process;
 
+#pragma warning disable CA1416 // Validate platform compatibility
     public SystemProcess(Process process)
     {
         _process = process;
@@ -20,6 +19,8 @@ internal sealed class SystemProcess : IProcess, IDisposable
     public bool HasExited => _process.HasExited;
 
     public int Id => _process.Id;
+
+    public string Name => _process.ProcessName;
 
     public int ExitCode => _process.ExitCode;
 
@@ -51,4 +52,5 @@ internal sealed class SystemProcess : IProcess, IDisposable
 #endif
 
     public void Dispose() => _process.Dispose();
+#pragma warning restore CA1416
 }

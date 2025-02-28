@@ -1,26 +1,19 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
-using System.Reflection;
-using System.Text;
-
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using Moq;
 
 using TestFramework.ForTestingMSTest;
 
-using AdapterTestOutcome = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestOutcome;
 using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
-using UTFExtension = Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution;
 
@@ -28,7 +21,7 @@ public class TestMethodRunnerTests : TestContainer
 {
     private readonly MethodInfo _methodInfo;
 
-    private readonly UTF.TestMethodAttribute _testMethodAttribute;
+    private readonly TestMethodAttribute _testMethodAttribute;
 
     private readonly TestContextImplementation _testContextImplementation;
 
@@ -43,13 +36,13 @@ public class TestMethodRunnerTests : TestContainer
     public TestMethodRunnerTests()
     {
         _methodInfo = typeof(DummyTestClass).GetMethods().Single(m => m.Name.Equals("DummyTestMethod", StringComparison.Ordinal));
-        _testMethodAttribute = new UTF.TestMethodAttribute();
+        _testMethodAttribute = new TestMethodAttribute();
 
         _testMethod = new TestMethod("dummyTestName", "dummyClassName", "dummyAssemblyName", false);
-        _testContextImplementation = new TestContextImplementation(_testMethod, new ThreadSafeStringWriter(null, "test"), new Dictionary<string, object>());
+        _testContextImplementation = new TestContextImplementation(_testMethod, new ThreadSafeStringWriter(null!, "test"), new Dictionary<string, object?>());
         _testClassInfo = GetTestClassInfo<DummyTestClass>();
 
-        _testMethodOptions = new TestMethodOptions(TimeoutInfo.FromTimeout(200), null, _testContextImplementation, false, _testMethodAttribute);
+        _testMethodOptions = new TestMethodOptions(TimeoutInfo.FromTimeout(200), _testContextImplementation, _testMethodAttribute);
 
         // Reset test hooks
         DummyTestClass.TestConstructorMethodBody = () => { };
@@ -69,10 +62,9 @@ public class TestMethodRunnerTests : TestContainer
     private static TestClassInfo GetTestClassInfo<T>()
     {
         ConstructorInfo constructorInfo = typeof(T).GetConstructor([])!;
-        PropertyInfo testContextProperty = typeof(T).GetProperty("TestContext");
-        var classAttribute = new UTF.TestClassAttribute();
+        var classAttribute = new TestClassAttribute();
         var testAssemblyInfo = new TestAssemblyInfo(typeof(T).Assembly);
-        return new TestClassInfo(typeof(T), constructorInfo, isParameterlessConstructor: true, testContextProperty, classAttribute, testAssemblyInfo);
+        return new TestClassInfo(typeof(T), constructorInfo, isParameterlessConstructor: true, classAttribute, testAssemblyInfo);
     }
 
     protected override void Dispose(bool disposing)
@@ -84,34 +76,39 @@ public class TestMethodRunnerTests : TestContainer
         }
     }
 
-    public void ExecuteForTestThrowingExceptionShouldReturnUnitTestResultWithFailedOutcome()
+    public void ExecuteForTestThrowingExceptionShouldReturnTestResultWithFailedOutcome()
     {
         var testMethodInfo = new TestableTestMethodInfo(_methodInfo, _testClassInfo, _testMethodOptions, () => throw new Exception("DummyException"));
         var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation);
 
-        UnitTestResult[] results = testMethodRunner.Execute(string.Empty, string.Empty, string.Empty, string.Empty);
-        Verify(results[0].Outcome == AdapterTestOutcome.Failed);
-        Verify(results[0].ErrorMessage.Contains("Exception thrown while executing test"));
+        TestResult[] results = testMethodRunner.Execute(string.Empty, string.Empty, string.Empty, string.Empty);
+        Verify(results[0].Outcome == UTF.UnitTestOutcome.Failed);
+        Verify(results[0].ExceptionMessage!.StartsWith(
+            """            
+            An unhandled exception was thrown by the 'Execute' method. Please report this error to the author of the attribute 'Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute'.
+            System.Exception: DummyException
+            """,
+            StringComparison.Ordinal));
     }
 
-    public void ExecuteForPassingTestShouldReturnUnitTestResultWithPassedOutcome()
+    public void ExecuteForPassingTestShouldReturnTestResultWithPassedOutcome()
     {
-        var testMethodInfo = new TestableTestMethodInfo(_methodInfo, _testClassInfo, _testMethodOptions, () => new UTF.TestResult() { Outcome = UTF.UnitTestOutcome.Passed });
+        var testMethodInfo = new TestableTestMethodInfo(_methodInfo, _testClassInfo, _testMethodOptions, () => new TestResult() { Outcome = UTF.UnitTestOutcome.Passed });
         var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation);
 
-        UnitTestResult[] results = testMethodRunner.Execute(string.Empty, string.Empty, string.Empty, string.Empty);
-        Verify(results[0].Outcome == AdapterTestOutcome.Passed);
+        TestResult[] results = testMethodRunner.Execute(string.Empty, string.Empty, string.Empty, string.Empty);
+        Verify(results[0].Outcome == UTF.UnitTestOutcome.Passed);
     }
 
     public void ExecuteShouldNotFillInDebugAndTraceLogsIfDebugTraceDisabled()
     {
-        var testMethodInfo = new TestableTestMethodInfo(_methodInfo, _testClassInfo, _testMethodOptions, () => new UTF.TestResult() { Outcome = UTF.UnitTestOutcome.Passed });
+        var testMethodInfo = new TestableTestMethodInfo(_methodInfo, _testClassInfo, _testMethodOptions, () => new TestResult() { Outcome = UTF.UnitTestOutcome.Passed });
         var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation);
 
         StringWriter writer = new(new StringBuilder("DummyTrace"));
         _testablePlatformServiceProvider.MockTraceListener.Setup(tl => tl.GetWriter()).Returns(writer);
 
-        UnitTestResult[] results = testMethodRunner.Execute(string.Empty, string.Empty, string.Empty, string.Empty);
+        TestResult[] results = testMethodRunner.Execute(string.Empty, string.Empty, string.Empty, string.Empty);
         Verify(results[0].DebugTrace == string.Empty);
     }
 
@@ -125,7 +122,7 @@ public class TestMethodRunnerTests : TestContainer
             () =>
             {
                 writer.Write("InTestMethod");
-                return new UTF.TestResult()
+                return new TestResult()
                 {
                     Outcome = UTF.UnitTestOutcome.Passed,
                 };
@@ -133,108 +130,112 @@ public class TestMethodRunnerTests : TestContainer
         var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation);
         _testablePlatformServiceProvider.MockTraceListener.Setup(tl => tl.GetWriter()).Returns(writer);
 
-        UnitTestResult[] results = testMethodRunner.Execute(string.Empty, string.Empty, string.Empty, string.Empty);
+        TestResult[] results = testMethodRunner.Execute(string.Empty, string.Empty, string.Empty, string.Empty);
 
         Verify(results[0].DebugTrace == string.Empty);
     }
 
-    public void RunTestMethodForTestThrowingExceptionShouldReturnUnitTestResultWithFailedOutcome()
+    public void RunTestMethodForTestThrowingExceptionShouldReturnTestResultWithFailedOutcome()
     {
         var testMethodInfo = new TestableTestMethodInfo(_methodInfo, _testClassInfo, _testMethodOptions, () => throw new Exception("Dummy Exception"));
         var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation);
 
-        UnitTestResult[] results = testMethodRunner.RunTestMethod();
-        Verify(results[0].Outcome == AdapterTestOutcome.Failed);
-        Verify(results[0].ErrorMessage.Contains("Exception thrown while executing test"));
+        TestResult[] results = testMethodRunner.RunTestMethod();
+        Verify(results[0].Outcome == UTF.UnitTestOutcome.Failed);
+        Verify(results[0].ExceptionMessage!.StartsWith(
+            """            
+            An unhandled exception was thrown by the 'Execute' method. Please report this error to the author of the attribute 'Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute'.
+            System.Exception: Dummy Exception
+            """,
+            StringComparison.Ordinal));
     }
 
     public void RunTestMethodForMultipleResultsReturnMultipleResults()
     {
-        var testMethodAttributeMock = new Mock<UTF.TestMethodAttribute>();
-        testMethodAttributeMock.Setup(_ => _.Execute(It.IsAny<UTF.ITestMethod>())).Returns(
+        var testMethodAttributeMock = new Mock<TestMethodAttribute>();
+        testMethodAttributeMock.Setup(_ => _.Execute(It.IsAny<ITestMethod>())).Returns(
         [
-            new UTF.TestResult { Outcome = UTF.UnitTestOutcome.Passed },
-            new UTF.TestResult { Outcome = UTF.UnitTestOutcome.Failed },
+            new TestResult { Outcome = UTF.UnitTestOutcome.Passed },
+            new TestResult { Outcome = UTF.UnitTestOutcome.Failed },
         ]);
 
-        var localTestMethodOptions = new TestMethodOptions(TimeoutInfo.FromTimeout(200), null, _testContextImplementation, false, testMethodAttributeMock.Object);
+        var localTestMethodOptions = new TestMethodOptions(TimeoutInfo.FromTimeout(200), _testContextImplementation, testMethodAttributeMock.Object);
 
-        var testMethodInfo = new TestableTestMethodInfo(_methodInfo, _testClassInfo, localTestMethodOptions, null);
+        var testMethodInfo = new TestableTestMethodInfo(_methodInfo, _testClassInfo, localTestMethodOptions, null!);
         var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation);
 
-        UnitTestResult[] results = testMethodRunner.Execute(string.Empty, string.Empty, string.Empty, string.Empty);
+        TestResult[] results = testMethodRunner.Execute(string.Empty, string.Empty, string.Empty, string.Empty);
         Verify(results.Length == 2);
 
-        Verify(results[0].Outcome == AdapterTestOutcome.Passed);
-        Verify(results[1].Outcome == AdapterTestOutcome.Failed);
+        Verify(results[0].Outcome == UTF.UnitTestOutcome.Passed);
+        Verify(results[1].Outcome == UTF.UnitTestOutcome.Failed);
     }
 
-    public void RunTestMethodForPassingTestThrowingExceptionShouldReturnUnitTestResultWithPassedOutcome()
+    public void RunTestMethodForPassingTestThrowingExceptionShouldReturnTestResultWithPassedOutcome()
     {
-        var testMethodInfo = new TestableTestMethodInfo(_methodInfo, _testClassInfo, _testMethodOptions, () => new UTF.TestResult() { Outcome = UTF.UnitTestOutcome.Passed });
+        var testMethodInfo = new TestableTestMethodInfo(_methodInfo, _testClassInfo, _testMethodOptions, () => new TestResult() { Outcome = UTF.UnitTestOutcome.Passed });
         var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation);
 
-        UnitTestResult[] results = testMethodRunner.Execute(string.Empty, string.Empty, string.Empty, string.Empty);
-        Verify(results[0].Outcome == AdapterTestOutcome.Passed);
+        TestResult[] results = testMethodRunner.Execute(string.Empty, string.Empty, string.Empty, string.Empty);
+        Verify(results[0].Outcome == UTF.UnitTestOutcome.Passed);
     }
 
-    public void RunTestMethodForFailingTestThrowingExceptionShouldReturnUnitTestResultWithFailedOutcome()
+    public void RunTestMethodForFailingTestThrowingExceptionShouldReturnTestResultWithFailedOutcome()
     {
-        var testMethodInfo = new TestableTestMethodInfo(_methodInfo, _testClassInfo, _testMethodOptions, () => new UTF.TestResult() { Outcome = UTF.UnitTestOutcome.Failed });
+        var testMethodInfo = new TestableTestMethodInfo(_methodInfo, _testClassInfo, _testMethodOptions, () => new TestResult() { Outcome = UTF.UnitTestOutcome.Failed });
         var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation);
 
-        UnitTestResult[] results = testMethodRunner.Execute(string.Empty, string.Empty, string.Empty, string.Empty);
-        Verify(results[0].Outcome == AdapterTestOutcome.Failed);
+        TestResult[] results = testMethodRunner.Execute(string.Empty, string.Empty, string.Empty, string.Empty);
+        Verify(results[0].Outcome == UTF.UnitTestOutcome.Failed);
     }
 
     public void RunTestMethodShouldGiveTestResultAsPassedWhenTestMethodPasses()
     {
-        var testMethodInfo = new TestableTestMethodInfo(_methodInfo, _testClassInfo, _testMethodOptions, () => new UTF.TestResult() { Outcome = UTF.UnitTestOutcome.Passed });
+        var testMethodInfo = new TestableTestMethodInfo(_methodInfo, _testClassInfo, _testMethodOptions, () => new TestResult() { Outcome = UTF.UnitTestOutcome.Passed });
         var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation);
 
-        UnitTestResult[] results = testMethodRunner.RunTestMethod();
+        TestResult[] results = testMethodRunner.RunTestMethod();
 
         // Since data is not provided, tests run normally giving passed as outcome.
-        Verify(results[0].Outcome == AdapterTestOutcome.Passed);
+        Verify(results[0].Outcome == UTF.UnitTestOutcome.Passed);
     }
 
     public void RunTestMethodShouldGiveTestResultAsFailedWhenTestMethodFails()
     {
-        var testMethodInfo = new TestableTestMethodInfo(_methodInfo, _testClassInfo, _testMethodOptions, () => new UTF.TestResult() { Outcome = UTF.UnitTestOutcome.Failed });
+        var testMethodInfo = new TestableTestMethodInfo(_methodInfo, _testClassInfo, _testMethodOptions, () => new TestResult() { Outcome = UTF.UnitTestOutcome.Failed });
         var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation);
 
-        UnitTestResult[] results = testMethodRunner.RunTestMethod();
+        TestResult[] results = testMethodRunner.RunTestMethod();
 
         // Since data is not provided, tests run normally giving passed as outcome.
-        Verify(results[0].Outcome == AdapterTestOutcome.Failed);
+        Verify(results[0].Outcome == UTF.UnitTestOutcome.Failed);
     }
 
     public void RunTestMethodShouldRunDataDrivenTestsWhenDataIsProvidedUsingDataSourceAttribute()
     {
-        var testMethodInfo = new TestableTestMethodInfo(_methodInfo, _testClassInfo, _testMethodOptions, () => new UTF.TestResult() { Outcome = UTF.UnitTestOutcome.Passed });
-        var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation);
-
-        UTF.DataSourceAttribute dataSourceAttribute = new("DummyConnectionString", "DummyTableName");
+        DataSourceAttribute dataSourceAttribute = new("DummyConnectionString", "DummyTableName");
 
         var attributes = new Attribute[] { dataSourceAttribute };
 
-        TestDataSource testDataSource = new();
-
         // Setup mocks
         _testablePlatformServiceProvider.MockReflectionOperations.Setup(rf => rf.GetCustomAttributes(_methodInfo, It.IsAny<bool>())).Returns(attributes);
+
+        var testMethodInfo = new TestableTestMethodInfo(_methodInfo, _testClassInfo, _testMethodOptions, () => new TestResult() { Outcome = UTF.UnitTestOutcome.Passed });
         _testablePlatformServiceProvider.MockTestDataSource.Setup(tds => tds.GetData(testMethodInfo, _testContextImplementation)).Returns([1, 2, 3]);
 
-        UnitTestResult[] results = testMethodRunner.RunTestMethod();
+        var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation);
+
+        TestResult[] results = testMethodRunner.RunTestMethod();
 
         // check for outcome
-        Verify(results[0].Outcome == AdapterTestOutcome.Passed);
-        Verify(results[1].Outcome == AdapterTestOutcome.Passed);
-        Verify(results[2].Outcome == AdapterTestOutcome.Passed);
+        Verify(results[0].Outcome == UTF.UnitTestOutcome.Passed);
+        Verify(results[1].Outcome == UTF.UnitTestOutcome.Passed);
+        Verify(results[2].Outcome == UTF.UnitTestOutcome.Passed);
     }
 
     public void RunTestMethodShouldRunDataDrivenTestsWhenDataIsProvidedUsingDataRowAttribute()
     {
-        UTF.TestResult testResult = new()
+        TestResult testResult = new()
         {
             Outcome = UTF.UnitTestOutcome.Inconclusive,
         };
@@ -244,7 +245,7 @@ public class TestMethodRunnerTests : TestContainer
 
         int dummyIntData = 2;
         string dummyStringData = "DummyString";
-        UTF.DataRowAttribute dataRowAttribute = new(
+        DataRowAttribute dataRowAttribute = new(
             dummyIntData,
             dummyStringData);
 
@@ -253,24 +254,24 @@ public class TestMethodRunnerTests : TestContainer
         // Setup mocks
         _testablePlatformServiceProvider.MockReflectionOperations.Setup(ro => ro.GetCustomAttributes(_methodInfo, It.IsAny<Type>(), It.IsAny<bool>())).Returns(attributes);
 
-        UnitTestResult[] results = testMethodRunner.RunTestMethod();
-        Verify(results[0].Outcome == AdapterTestOutcome.Inconclusive);
+        TestResult[] results = testMethodRunner.RunTestMethod();
+        Verify(results[0].Outcome == UTF.UnitTestOutcome.Inconclusive);
     }
 
     public void RunTestMethodShouldSetDataRowIndexForDataDrivenTestsWhenDataIsProvidedUsingDataSourceAttribute()
     {
-        var testMethodInfo = new TestableTestMethodInfo(_methodInfo, _testClassInfo, _testMethodOptions, () => new UTF.TestResult());
-        var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation);
-
-        UTF.DataSourceAttribute dataSourceAttribute = new("DummyConnectionString", "DummyTableName");
-
-        var attributes = new Attribute[] { dataSourceAttribute };
+        MethodInfo methodInfo = typeof(DummyTestClass).GetMethods().Single(m => m.Name.Equals(nameof(DummyTestClass.DummyDataSourceTestMethod), StringComparison.Ordinal));
+        object[] attributes = methodInfo.GetCustomAttributes(inherit: false);
 
         // Setup mocks
-        _testablePlatformServiceProvider.MockReflectionOperations.Setup(rf => rf.GetCustomAttributes(_methodInfo, It.IsAny<bool>())).Returns(attributes);
+        _testablePlatformServiceProvider.MockReflectionOperations.Setup(rf => rf.GetCustomAttributes(methodInfo, It.IsAny<bool>())).Returns(attributes);
+
+        var testMethodInfo = new TestableTestMethodInfo(methodInfo, _testClassInfo, _testMethodOptions, () => new UTF.TestResult());
+        var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation);
+
         _testablePlatformServiceProvider.MockTestDataSource.Setup(tds => tds.GetData(testMethodInfo, _testContextImplementation)).Returns([1, 2, 3]);
 
-        UnitTestResult[] results = testMethodRunner.RunTestMethod();
+        TestResult[] results = testMethodRunner.RunTestMethod();
 
         // check for datarowIndex
         Verify(results[0].DatarowIndex == 0);
@@ -280,13 +281,10 @@ public class TestMethodRunnerTests : TestContainer
 
     public void RunTestMethodShouldRunOnlyDataSourceTestsWhenBothDataSourceAndDataRowAreProvided()
     {
-        var testMethodInfo = new TestableTestMethodInfo(_methodInfo, _testClassInfo, _testMethodOptions, () => new UTF.TestResult());
-        var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation);
-
-        UTF.DataSourceAttribute dataSourceAttribute = new("DummyConnectionString", "DummyTableName");
+        DataSourceAttribute dataSourceAttribute = new("DummyConnectionString", "DummyTableName");
         int dummyIntData = 2;
         string dummyStringData = "DummyString";
-        UTF.DataRowAttribute dataRowAttribute = new(
+        DataRowAttribute dataRowAttribute = new(
             dummyIntData,
             dummyStringData);
 
@@ -294,9 +292,13 @@ public class TestMethodRunnerTests : TestContainer
 
         // Setup mocks
         _testablePlatformServiceProvider.MockReflectionOperations.Setup(rf => rf.GetCustomAttributes(_methodInfo, It.IsAny<bool>())).Returns(attributes);
+
+        var testMethodInfo = new TestableTestMethodInfo(_methodInfo, _testClassInfo, _testMethodOptions, () => new UTF.TestResult());
+        var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation);
+
         _testablePlatformServiceProvider.MockTestDataSource.Setup(tds => tds.GetData(testMethodInfo, _testContextImplementation)).Returns([1, 2, 3]);
 
-        UnitTestResult[] results = testMethodRunner.RunTestMethod();
+        TestResult[] results = testMethodRunner.RunTestMethod();
 
         // check for datarowIndex as only DataSource Tests are Run
         Verify(results[0].DatarowIndex == 0);
@@ -306,13 +308,11 @@ public class TestMethodRunnerTests : TestContainer
 
     public void RunTestMethodShouldFillInDisplayNameWithDataRowDisplayNameIfProvidedForDataDrivenTests()
     {
-        UTF.TestResult testResult = new();
-        var testMethodInfo = new TestableTestMethodInfo(_methodInfo, _testClassInfo, _testMethodOptions, () => testResult);
-        var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation);
+        TestResult testResult = new();
 
         int dummyIntData = 2;
         string dummyStringData = "DummyString";
-        UTF.DataRowAttribute dataRowAttribute = new(dummyIntData, dummyStringData)
+        DataRowAttribute dataRowAttribute = new(dummyIntData, dummyStringData)
         {
             DisplayName = "DataRowTestDisplayName",
         };
@@ -322,7 +322,10 @@ public class TestMethodRunnerTests : TestContainer
         // Setup mocks
         _testablePlatformServiceProvider.MockReflectionOperations.Setup(ro => ro.GetCustomAttributes(_methodInfo, It.IsAny<bool>())).Returns(attributes);
 
-        UnitTestResult[] results = testMethodRunner.RunTestMethod();
+        var testMethodInfo = new TestableTestMethodInfo(_methodInfo, _testClassInfo, _testMethodOptions, () => testResult);
+        var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation);
+
+        TestResult[] results = testMethodRunner.RunTestMethod();
 
         Verify(results.Length == 1);
         Verify(results[0].DisplayName == "DataRowTestDisplayName");
@@ -330,13 +333,11 @@ public class TestMethodRunnerTests : TestContainer
 
     public void RunTestMethodShouldFillInDisplayNameWithDataRowArgumentsIfNoDisplayNameIsProvidedForDataDrivenTests()
     {
-        UTF.TestResult testResult = new();
-        var testMethodInfo = new TestableTestMethodInfo(_methodInfo, _testClassInfo, _testMethodOptions, () => testResult);
-        var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation);
+        TestResult testResult = new();
 
         int dummyIntData = 2;
         string dummyStringData = "DummyString";
-        UTF.DataRowAttribute dataRowAttribute = new(
+        DataRowAttribute dataRowAttribute = new(
             dummyIntData,
             dummyStringData);
 
@@ -345,7 +346,10 @@ public class TestMethodRunnerTests : TestContainer
         // Setup mocks
         _testablePlatformServiceProvider.MockReflectionOperations.Setup(rf => rf.GetCustomAttributes(_methodInfo, It.IsAny<bool>())).Returns(attributes);
 
-        UnitTestResult[] results = testMethodRunner.RunTestMethod();
+        var testMethodInfo = new TestableTestMethodInfo(_methodInfo, _testClassInfo, _testMethodOptions, () => testResult);
+        var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation);
+
+        TestResult[] results = testMethodRunner.RunTestMethod();
 
         Verify(results.Length == 1);
         Verify(results[0].DisplayName is "dummyTestName (2,\"DummyString\")" or "DummyTestMethod (2,DummyString)", $"Display name: {results[0].DisplayName}");
@@ -353,27 +357,27 @@ public class TestMethodRunnerTests : TestContainer
 
     public void RunTestMethodShouldSetResultFilesIfPresentForDataDrivenTests()
     {
-        UTF.TestResult testResult = new()
+        TestResult testResult = new()
         {
             ResultFiles = new List<string>() { "C:\\temp.txt" },
         };
 
-        var testMethodInfo = new TestableTestMethodInfo(_methodInfo, _testClassInfo, _testMethodOptions, () => testResult);
-        var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation);
-
         int dummyIntData1 = 1;
         int dummyIntData2 = 2;
-        UTF.DataRowAttribute dataRowAttribute1 = new(dummyIntData1);
-        UTF.DataRowAttribute dataRowAttribute2 = new(dummyIntData2);
+        DataRowAttribute dataRowAttribute1 = new(dummyIntData1);
+        DataRowAttribute dataRowAttribute2 = new(dummyIntData2);
 
         var attributes = new Attribute[] { dataRowAttribute1, dataRowAttribute2 };
 
         // Setup mocks
         _testablePlatformServiceProvider.MockReflectionOperations.Setup(rf => rf.GetCustomAttributes(_methodInfo, It.IsAny<bool>())).Returns(attributes);
 
-        UnitTestResult[] results = testMethodRunner.RunTestMethod();
-        Verify(results[0].ResultFiles.ToList().Contains("C:\\temp.txt"));
-        Verify(results[1].ResultFiles.ToList().Contains("C:\\temp.txt"));
+        var testMethodInfo = new TestableTestMethodInfo(_methodInfo, _testClassInfo, _testMethodOptions, () => testResult);
+        var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation);
+
+        TestResult[] results = testMethodRunner.RunTestMethod();
+        Verify(results[0].ResultFiles!.Contains("C:\\temp.txt"));
+        Verify(results[1].ResultFiles!.Contains("C:\\temp.txt"));
     }
 
     public void RunTestMethodWithEmptyDataSourceShouldFailBecauseConsiderEmptyDataSourceAsInconclusiveIsFalse()
@@ -384,11 +388,11 @@ public class TestMethodRunnerTests : TestContainer
 
     private void RunTestMethodWithEmptyDataSourceShouldFailIfConsiderEmptyDataSourceAsInconclusiveIsNotTrueHelper(bool considerEmptyAsInconclusive)
     {
-        Mock<PlatformServices.Interface.IReflectionOperations2> existingMock = _testablePlatformServiceProvider.MockReflectionOperations;
+        Mock<PlatformServices.Interface.IReflectionOperations2>? existingMock = _testablePlatformServiceProvider.MockReflectionOperations;
         try
         {
             // We want this test to go through the "real" reflection to hit the product code path relevant for the test.
-            _testablePlatformServiceProvider.MockReflectionOperations = null;
+            _testablePlatformServiceProvider.MockReflectionOperations = null!;
 
             string xml =
                 $$"""
@@ -400,10 +404,10 @@ public class TestMethodRunnerTests : TestContainer
                 """;
 
             var settings = MSTestSettings.GetSettings(xml, MSTestSettings.SettingsNameAlias, null);
-            MSTestSettings.PopulateSettings(settings);
+            MSTestSettings.PopulateSettings(settings!);
 
             var testMethodInfo = new TestableTestMethodInfo(
-                typeof(DummyTestClassEmptyDataSource).GetMethod(nameof(DummyTestClassEmptyDataSource.TestMethod)),
+                typeof(DummyTestClassEmptyDataSource).GetMethod(nameof(DummyTestClassEmptyDataSource.TestMethod))!,
                 GetTestClassInfo<DummyTestClassEmptyDataSource>(),
                 _testMethodOptions,
                 () => throw ApplicationStateGuard.Unreachable());
@@ -411,8 +415,8 @@ public class TestMethodRunnerTests : TestContainer
 
             if (considerEmptyAsInconclusive)
             {
-                UnitTestResult[] results = testMethodRunner.RunTestMethod();
-                Verify(results[0].Outcome == AdapterTestOutcome.Inconclusive);
+                TestResult[] results = testMethodRunner.RunTestMethod();
+                Verify(results[0].Outcome == UTF.UnitTestOutcome.Inconclusive);
             }
             else
             {
@@ -429,71 +433,94 @@ public class TestMethodRunnerTests : TestContainer
     #region Test data
 
     [SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "Use through reflection")]
-    private static void InitMethodThrowingException(UTFExtension.TestContext tc)
+    private static void InitMethodThrowingException(TestContext tc)
         // TODO: Fix exception type
 #pragma warning disable CA2208 // Instantiate argument exceptions correctly
         => throw new ArgumentException();
 #pragma warning restore CA2208 // Instantiate argument exceptions correctly
 
-    public class TestableTestMethodInfo : TestMethodInfo
+    private sealed class TestMethodOptions
     {
-        private readonly Func<UTF.TestResult> _invokeTest;
+        public TimeoutInfo TimeoutInfo { get; }
+
+        public ITestContext TestContext { get; }
+
+        public TestMethodAttribute TestMethodAttribute { get; }
+
+        public TestMethodOptions(TimeoutInfo timeoutInfo, ITestContext testContextImplementation, TestMethodAttribute testMethodAttribute)
+        {
+            TimeoutInfo = timeoutInfo;
+            TestContext = testContextImplementation;
+            TestMethodAttribute = testMethodAttribute;
+        }
+    }
+
+    private class TestableTestMethodInfo : TestMethodInfo
+    {
+        private readonly Func<TestResult> _invokeTest;
 
         internal TestableTestMethodInfo(MethodInfo testMethod, TestClassInfo parent, TestMethodOptions testMethodOptions, Func<UTF.TestResult> invoke)
-            : base(testMethod, parent, testMethodOptions) => _invokeTest = invoke;
+            : base(testMethod, parent, testMethodOptions.TestContext)
+        {
+            TimeoutInfo = testMethodOptions.TimeoutInfo;
+            Executor = testMethodOptions.TestMethodAttribute;
+            _invokeTest = invoke;
+        }
 
-        public override UTF.TestResult Invoke(object[] arguments) =>
+        public override TestResult Invoke(object?[]? arguments) =>
             // Ignore args for now
             _invokeTest();
     }
 
     public class DummyTestClassBase
     {
-        public static Action<DummyTestClassBase> BaseTestClassMethodBody { get; set; }
+        public static Action<DummyTestClassBase> BaseTestClassMethodBody { get; set; } = null!;
 
-        public void DummyBaseTestClassMethod() => BaseTestClassMethodBody(this);
+        public void DummyBaseTestClassMethod() => BaseTestClassMethodBody!(this);
     }
 
     public class DummyTestClass : DummyTestClassBase
     {
-        public DummyTestClass() => TestConstructorMethodBody();
+        public DummyTestClass() => TestConstructorMethodBody!();
 
-        public static Action TestConstructorMethodBody { get; set; }
+        public static Action TestConstructorMethodBody { get; set; } = null!;
 
-        public static Action<object> TestContextSetterBody { get; set; }
+        public static Action<object> TestContextSetterBody { get; set; } = null!;
 
-        public static Action<DummyTestClass> TestInitializeMethodBody { get; set; }
+        public static Action<DummyTestClass> TestInitializeMethodBody { get; set; } = null!;
 
-        public static Action<DummyTestClass> TestMethodBody { get; set; }
+        public static Action<DummyTestClass> TestMethodBody { get; set; } = null!;
 
-        public static Action<DummyTestClass> TestCleanupMethodBody { get; set; }
+        public static Action<DummyTestClass> TestCleanupMethodBody { get; set; } = null!;
 
-        public static Func<Task> DummyAsyncTestMethodBody { get; set; }
+        public static Func<Task> DummyAsyncTestMethodBody { get; set; } = null!;
 
-        public static Action<UTFExtension.TestContext> AssemblyInitializeMethodBody { get; set; }
+        public static Action<TestContext> AssemblyInitializeMethodBody { get; set; } = null!;
 
-        public static Action<UTFExtension.TestContext> ClassInitializeMethodBody { get; set; }
+        public static Action<TestContext> ClassInitializeMethodBody { get; set; } = null!;
 
-        public UTFExtension.TestContext TestContext
+        public TestContext TestContext
         {
             get => throw new NotImplementedException();
-
-            set => TestContextSetterBody(value);
+            set => TestContextSetterBody!(value);
         }
 
-        public static void DummyAssemblyInit(UTFExtension.TestContext tc) => AssemblyInitializeMethodBody(tc);
+        public static void DummyAssemblyInit(TestContext tc) => AssemblyInitializeMethodBody!(tc);
 
-        public static void DummyClassInit(UTFExtension.TestContext tc) => ClassInitializeMethodBody(tc);
+        public static void DummyClassInit(TestContext tc) => ClassInitializeMethodBody!(tc);
 
-        public void DummyTestInitializeMethod() => TestInitializeMethodBody(this);
+        public void DummyTestInitializeMethod() => TestInitializeMethodBody!(this);
 
-        public void DummyTestCleanupMethod() => TestCleanupMethodBody(this);
+        public void DummyTestCleanupMethod() => TestCleanupMethodBody!(this);
 
-        public void DummyTestMethod() => TestMethodBody(this);
+        public void DummyTestMethod() => TestMethodBody!(this);
+
+        [DataSource("DummyConnectionString", "DummyTableName")]
+        public void DummyDataSourceTestMethod() => TestMethodBody(this);
 
         public Task DummyAsyncTestMethod() =>
             // We use this method to validate async TestInitialize, TestCleanup, TestMethod
-            DummyAsyncTestMethodBody();
+            DummyAsyncTestMethodBody!();
     }
 
     public class DummyTestClassWithParameterizedCtor
@@ -505,7 +532,7 @@ public class TestMethodRunnerTests : TestContainer
 
     public class DummyTestClassWithTestContextWithoutSetter
     {
-        public UTFExtension.TestContext TestContext { get; }
+        public TestContext TestContext { get; } = null!;
     }
 
     public class DummyTestClassEmptyDataSource

@@ -5,19 +5,15 @@ using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Platform.UnitTests;
 
-[TestGroup]
-public class CountDownEventTests : TestBase
+[TestClass]
+public sealed class CountDownEventTests
 {
-    public CountDownEventTests(ITestExecutionContext testExecutionContext)
-        : base(testExecutionContext)
-    {
-    }
-
+    [TestMethod]
     public async Task CountDownEvent_WaitAsync_Succeeded()
     {
         CountdownEvent countdownEvent = new(3);
-        var waiter1 = Task.Run(() => countdownEvent.WaitAsync(CancellationToken.None));
-        var waiter2 = Task.Run(() => countdownEvent.WaitAsync(CancellationToken.None));
+        Task<bool> waiter1 = Task.Run(() => countdownEvent.WaitAsync(CancellationToken.None));
+        Task<bool> waiter2 = Task.Run(() => countdownEvent.WaitAsync(CancellationToken.None));
 
         await Task.Delay(500);
         countdownEvent.Signal();
@@ -36,20 +32,22 @@ public class CountDownEventTests : TestBase
         Assert.IsTrue(await waiter1);
     }
 
+    [TestMethod]
     public async Task CountDownEvent_WaitAsyncCanceled_Succeeded()
     {
         CountdownEvent countdownEvent = new(1);
         CancellationTokenSource cts = new();
         CancellationToken cancelToken = cts.Token;
-        var waiter = Task.Run(() => countdownEvent.WaitAsync(cancelToken), cancelToken);
+        Task<bool> waiter = Task.Run(() => countdownEvent.WaitAsync(cancelToken), cancelToken);
         await cts.CancelAsync();
         await Assert.ThrowsAsync<OperationCanceledException>(async () => await waiter);
     }
 
+    [TestMethod]
     public async Task CountDownEvent_WaitAsyncCanceledByTimeout_Succeeded()
     {
         CountdownEvent countdownEvent = new(1);
-        var waiter = Task.Run(() => countdownEvent.WaitAsync(TimeSpan.FromMilliseconds(500), CancellationToken.None));
+        Task<bool> waiter = Task.Run(() => countdownEvent.WaitAsync(TimeSpan.FromMilliseconds(500), CancellationToken.None));
         await waiter.TimeoutAfterAsync(TimeSpan.FromSeconds(30));
         Assert.IsFalse(await waiter);
     }

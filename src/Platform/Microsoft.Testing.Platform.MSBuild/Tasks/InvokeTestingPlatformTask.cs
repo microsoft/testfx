@@ -3,11 +3,6 @@
 
 #pragma warning disable CS8618 // Properties below are set by MSBuild.
 
-using System.Diagnostics;
-using System.Globalization;
-using System.Runtime.InteropServices;
-using System.Text;
-
 using Microsoft.Build.Framework;
 using Microsoft.Testing.Extensions.MSBuild;
 using Microsoft.Testing.Extensions.MSBuild.Serializers;
@@ -25,10 +20,13 @@ using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.Testing.Platform.MSBuild;
 
+/// <summary>
+/// Task that invokes the Testing Platform.
+/// </summary>
 public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
 {
     private const string MonoRunnerName = "mono";
-    private const string DotnetRunnerName = "dotnet";
+    private static readonly string DotnetRunnerName = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "dotnet.exe" : "dotnet";
 
     private readonly IFileSystem _fileSystem;
     private readonly PipeNameDescription _pipeNameDescription;
@@ -36,7 +34,6 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
     private readonly List<NamedPipeServer> _connections = new();
     private readonly StringBuilder _output = new();
     private readonly Lock _initLock = new();
-    private readonly Process _currentProcess = Process.GetCurrentProcess();
     private readonly Architecture _currentProcessArchitecture = RuntimeInformation.ProcessArchitecture;
 
     private Task? _connectionLoopTask;
@@ -45,6 +42,9 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
     private StreamWriter? _outputFileStream;
     private string? _toolCommand;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="InvokeTestingPlatformTask"/> class.
+    /// </summary>
     public InvokeTestingPlatformTask()
        : this(new FileSystem())
     {
@@ -58,44 +58,110 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
 
     internal InvokeTestingPlatformTask(IFileSystem fileSystem) => _fileSystem = fileSystem;
 
+    /// <summary>
+    /// Gets or sets the target path.
+    /// </summary>
     [Required]
     public ITaskItem TargetPath { get; set; }
 
+    // -------- BEGIN the following properties shouldn't be used. See https://github.com/microsoft/testfx/issues/5091 --------
+
+    /// <summary>
+    /// Gets or sets the value of MSBuild property UseAppHost.
+    /// </summary>
+    public ITaskItem? UseAppHost { get; set; }
+
+    /// <summary>
+    /// Gets or sets the value of MSBuild property _IsExecutable.
+    /// </summary>
+    public ITaskItem? IsExecutable { get; set; }
+
+    /// <summary>
+    /// Gets or sets the value of MSBuild property TargetDir.
+    /// </summary>
+    public ITaskItem? TargetDir { get; set; }
+
+    /// <summary>
+    /// Gets or sets the value of MSBuild property AssemblyName.
+    /// </summary>
+    public ITaskItem? AssemblyName { get; set; }
+
+    /// <summary>
+    /// Gets or sets the value of MSBuild property _NativeExecutableExtension.
+    /// </summary>
+    public ITaskItem? NativeExecutableExtension { get; set; }
+
+    // -------- END the previous properties shouldn't be used. See https://github.com/microsoft/testfx/issues/5091 --------
+
+    /// <summary>
+    /// Gets or sets the target framework.
+    /// </summary>
     [Required]
     public ITaskItem TargetFramework { get; set; }
 
+    /// <summary>
+    /// Gets or sets the test architecture.
+    /// </summary>
     [Required]
     public ITaskItem TestArchitecture { get; set; }
 
+    /// <summary>
+    /// Gets or sets the target framework identifier.
+    /// </summary>
     [Required]
     public ITaskItem TargetFrameworkIdentifier { get; set; }
 
+    /// <summary>
+    /// Gets or sets the testing platform show tests failure.
+    /// </summary>
     [Required]
     public ITaskItem TestingPlatformShowTestsFailure { get; set; }
 
+    /// <summary>
+    /// Gets or sets the testing platform capture output.
+    /// </summary>
     [Required]
     public ITaskItem TestingPlatformCaptureOutput { get; set; }
 
+    /// <summary>
+    /// Gets or sets the project full path.
+    /// </summary>
     [Required]
     public ITaskItem ProjectFullPath { get; set; }
 
+    /// <summary>
+    /// Gets or sets the dotnet host path.
+    /// </summary>
     public ITaskItem? DotnetHostPath { get; set; }
 
+    /// <summary>
+    /// Gets or sets the testing platform command line arguments.
+    /// </summary>
     public ITaskItem? TestingPlatformCommandLineArguments { get; set; }
 
+    /// <summary>
+    /// Gets or sets the VSTestCLI run settings.
+    /// </summary>
     public ITaskItem[]? VSTestCLIRunSettings { get; set; }
 
     private bool IsNetCoreApp => TargetFrameworkIdentifier.ItemSpec == ".NETCoreApp";
 
+    /// <inheritdoc />
     protected override string ToolName
     {
         get
         {
+            if (TryGetRunCommand() is string runCommand)
+            {
+                Log.LogMessage(MessageImportance.Low, $"Constructed target path via similar logic as to RunCommand: '{runCommand}'");
+                return Path.GetFileName(runCommand);
+            }
+
             // If target dll ends with .dll we're in the "dotnet" context
             if (TargetPath.ItemSpec.EndsWith(".dll", StringComparison.InvariantCultureIgnoreCase))
             {
                 Log.LogMessage(MessageImportance.Low, $"Target path is a dll '{TargetPath.ItemSpec}'");
-                return DotnetRunnerName + (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? ".exe" : string.Empty);
+                return DotnetRunnerName;
             }
 
             // If the target is an exe and we're not on Windows we try with the mono runner.
@@ -109,10 +175,17 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
         }
     }
 
+    /// <inheritdoc />
     public override string ToolExe { get => base.ToolExe; set => throw new NotSupportedException(); }
 
+    /// <inheritdoc />
     protected override string? GenerateFullPathToTool()
     {
+        if (TryGetRunCommand() is string runCommand)
+        {
+            return runCommand;
+        }
+
         // If it's not netcore and we're on Windows we expect the TargetPath to be the executable, otherwise we try with mono.
         if (!IsNetCoreApp && RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
@@ -126,39 +199,27 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
         // We look for dotnet muxer only if we're not running with mono.
         if (dotnetRunnerName != MonoRunnerName)
         {
-            if (!IsCurrentProcessArchitectureCompatible())
+            if (DotnetHostPath is not null && File.Exists(DotnetHostPath.ItemSpec) && IsCurrentProcessArchitectureCompatible())
             {
-                Log.LogMessage(MessageImportance.Low, $"Current process architecture '{_currentProcessArchitecture}' is not compatible with '{TestArchitecture.ItemSpec}'");
-                PlatformArchitecture targetArchitecture = EnumPolyfill.Parse<PlatformArchitecture>(TestArchitecture.ItemSpec, ignoreCase: true);
-                StringBuilder resolutionLog = new();
-                DotnetMuxerLocator dotnetMuxerLocator = new(log => resolutionLog.AppendLine(log));
-                if (dotnetMuxerLocator.TryGetDotnetPathByArchitecture(targetArchitecture, out string? dotnetPath))
-                {
-                    Log.LogMessage(MessageImportance.Low, resolutionLog.ToString());
-                    Log.LogMessage(MessageImportance.Low, $"dotnet muxer tool path found using architecture: '{TestArchitecture.ItemSpec}' '{dotnetPath}'");
-                    return dotnetPath;
-                }
-                else
-                {
-                    Log.LogMessage(MessageImportance.Low, resolutionLog.ToString());
-                    Log.LogError(string.Format(CultureInfo.InvariantCulture, Resources.MSBuildResources.IncompatibleArchitecture, dotnetRunnerName, TestArchitecture.ItemSpec));
-                    return null;
-                }
+                Log.LogMessage(MessageImportance.Low, $"dotnet muxer tool path found using DOTNET_HOST_PATH environment variable: '{DotnetHostPath.ItemSpec}'");
+                return DotnetHostPath.ItemSpec;
+            }
+
+            Log.LogMessage(MessageImportance.Low, $"Current process architecture '{_currentProcessArchitecture}'. Requested test architecture '{TestArchitecture.ItemSpec}'");
+            PlatformArchitecture targetArchitecture = EnumPolyfill.Parse<PlatformArchitecture>(TestArchitecture.ItemSpec, ignoreCase: true);
+            StringBuilder resolutionLog = new();
+            DotnetMuxerLocator dotnetMuxerLocator = new(log => resolutionLog.AppendLine(log));
+            if (dotnetMuxerLocator.TryGetDotnetPathByArchitecture(targetArchitecture, out string? dotnetPath))
+            {
+                Log.LogMessage(MessageImportance.Low, resolutionLog.ToString());
+                Log.LogMessage(MessageImportance.Low, $"dotnet muxer tool path found using architecture: '{TestArchitecture.ItemSpec}' '{dotnetPath}'");
+                return dotnetPath;
             }
             else
             {
-                if (DotnetHostPath is not null && File.Exists(DotnetHostPath.ItemSpec))
-                {
-                    Log.LogMessage(MessageImportance.Low, $"dotnet muxer tool path found using DOTNET_HOST_PATH environment variable: '{DotnetHostPath.ItemSpec}'");
-                    return DotnetHostPath.ItemSpec;
-                }
-
-                ProcessModule? mainModule = _currentProcess.MainModule;
-                if (mainModule != null && Path.GetFileName(mainModule.FileName)!.Equals(dotnetRunnerName, StringComparison.OrdinalIgnoreCase))
-                {
-                    Log.LogMessage(MessageImportance.Low, $"dotnet muxer tool path found using current process: '{mainModule.FileName}' architecture: '{_currentProcessArchitecture}'");
-                    return mainModule.FileName;
-                }
+                Log.LogMessage(MessageImportance.Low, resolutionLog.ToString());
+                Log.LogError(string.Format(CultureInfo.InvariantCulture, Resources.MSBuildResources.IncompatibleArchitecture, dotnetRunnerName, TestArchitecture.ItemSpec));
+                return null;
             }
         }
 
@@ -181,28 +242,52 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
     private bool IsCurrentProcessArchitectureCompatible() =>
         _currentProcessArchitecture == EnumPolyfill.Parse<Architecture>(TestArchitecture.ItemSpec, ignoreCase: true);
 
+    private string? TryGetRunCommand()
+    {
+        // This condition specifically handles this part:
+        // https://github.com/dotnet/sdk/blob/5846d648f2280b54a54e481f55de4d9eea0e6a0e/src/Tasks/Microsoft.NET.Build.Tasks/targets/Microsoft.NET.Sdk.targets#L1152-L1155
+        // The more correct logic is implementing https://github.com/microsoft/testfx/issues/5091
+        // What we want to do here is to avoid using 'dotnet exec' if possible, and run the executable directly instead.
+        // When running with dotnet exec, we are run under dotnet.exe process, which can break some scenarios (e.g, loading PRI in WinUI tests).
+        // It seems like WinUI would try to resolve the PRI file relative to the path of the process, so relative to, e.g, C:\Program Files\dotnet
+        if (IsNetCoreApp &&
+            bool.TryParse(IsExecutable?.ItemSpec, out bool isExecutable) && isExecutable &&
+            bool.TryParse(UseAppHost?.ItemSpec, out bool useAppHost) && useAppHost)
+        {
+            string runCommand = $"{TargetDir?.ItemSpec}{AssemblyName?.ItemSpec}{NativeExecutableExtension?.ItemSpec}";
+            if (File.Exists(runCommand))
+            {
+                return runCommand;
+            }
+        }
+
+        return null;
+    }
+
+    /// <inheritdoc />
     protected override string GenerateCommandLineCommands()
     {
         Build.Utilities.CommandLineBuilder builder = new();
 
-        if (IsNetCoreApp)
+        if (ToolName == DotnetRunnerName && IsNetCoreApp)
         {
-            string dotnetRunnerName = ToolName;
-            if (dotnetRunnerName != MonoRunnerName && Path.GetFileName(_currentProcess.MainModule!.FileName!).Equals(dotnetRunnerName, StringComparison.OrdinalIgnoreCase))
-            {
-                builder.AppendSwitch("exec");
-                builder.AppendFileNameIfNotNull(TargetPath.ItemSpec);
-            }
+            // In most cases, if ToolName is "dotnet.exe", that means we are given a "dll" file.
+            // In turn, that means we are not .NET Framework (because we will use Exe otherwise).
+            // In case ToolName ended up being "dotnet.exe" and we are
+            // .NET Framework, that means it's the user's assembly that is named "dotnet".
+            // In that case, we want to execute the tool (user's executable) directly.
+            // So, we only only "exec" if we are .NETCoreApp
+            builder.AppendSwitch("exec");
+            builder.AppendFileNameIfNotNull(TargetPath.ItemSpec);
         }
-        else
+        else if (ToolName == MonoRunnerName)
         {
-            // If the target is an exe and we're not on Windows we try with the mono runner and so we pass the test module to the mono runner.
-            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && TargetPath.ItemSpec.EndsWith(".exe", StringComparison.InvariantCultureIgnoreCase))
-            {
-                builder.AppendFileNameIfNotNull(TargetPath.ItemSpec);
-            }
+            // If ToolName is "mono", that means TargetPath is an "exe" file and we are not running on Windows.
+            // In this case, we use the given exe file as an argument to mono.
+            builder.AppendFileNameIfNotNull(TargetPath.ItemSpec);
         }
 
+        // If we are not "dotnet.exe" and not "mono", then we are given an executable from user and we are running on Windows.
         builder.AppendSwitchIfNotNull($"--{MSBuildConstants.MSBuildNodeOptionKey} ", _pipeNameDescription.Name);
 
         if (!string.IsNullOrEmpty(TestingPlatformCommandLineArguments?.ItemSpec))
@@ -221,6 +306,7 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
         return builder.ToString();
     }
 
+    /// <inheritdoc />
     protected override bool ValidateParameters()
     {
         if (!_fileSystem.Exist(TargetPath.ItemSpec))
@@ -232,12 +318,15 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
         return true;
     }
 
+    /// <inheritdoc />
     protected override MessageImportance StandardOutputLoggingImportance
         => MessageImportance.Low;
 
+    /// <inheritdoc />
     protected override MessageImportance StandardErrorLoggingImportance
         => MessageImportance.Low;
 
+    /// <inheritdoc />
     protected override void LogEventsFromTextOutput(string singleLine, MessageImportance messageImportance)
     {
         if (!bool.Parse(TestingPlatformCaptureOutput.ItemSpec))
@@ -249,6 +338,7 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
         _output.AppendLine(singleLine);
     }
 
+    /// <inheritdoc />
     protected override void ProcessStarted()
         => _connectionLoopTask = Task.Run(async () =>
         {
@@ -276,6 +366,7 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
             }
         });
 
+    /// <inheritdoc />
     public override bool Execute()
     {
         bool returnValue = base.Execute();
@@ -302,6 +393,7 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
         return returnValue;
     }
 
+    /// <inheritdoc />
     protected override void LogToolCommand(string message)
     {
         _toolCommand = message;
@@ -309,6 +401,7 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
         Log.LogMessage(MessageImportance.High, Resources.MSBuildResources.RunTests, TargetPath.ItemSpec.Trim(), TargetFramework.ItemSpec, TestArchitecture.ItemSpec);
     }
 
+    /// <inheritdoc />
     protected override bool HandleTaskExecutionErrors()
     {
         // This is an unexpected situation we simply print to the console the output and return false.
@@ -431,6 +524,7 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
         public Task LogAsync<TState>(LogLevel logLevel, TState state, Exception? exception, Func<TState, Exception?, string> formatter) => Task.CompletedTask;
     }
 
+    /// <inheritdoc />
     public void Dispose()
     {
         _outputFileStream?.Dispose();

@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-
 namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests;
 
 public partial class AssertTests
@@ -10,7 +8,7 @@ public partial class AssertTests
     #region That tests
     public void ThatShouldReturnAnInstanceOfAssert() => Verify(Assert.That is not null);
 
-    public void ThatShouldCacheAssertInstance() => Verify(object.ReferenceEquals(Assert.That, Assert.That));
+    public void ThatShouldCacheAssertInstance() => Verify(ReferenceEquals(Assert.That, Assert.That));
     #endregion
 
     #region ReplaceNullChars tests
@@ -39,4 +37,24 @@ public partial class AssertTests
         Verify(message == "{");
     }
     #endregion
+
+    private static Task<string> GetHelloStringAsync()
+        => Task.FromResult("Hello");
+
+    private sealed class DummyClassTrackingToStringCalls
+    {
+        public bool WasToStringCalled { get; private set; }
+
+        public override string ToString()
+        {
+            WasToStringCalled = true;
+            return nameof(DummyClassTrackingToStringCalls);
+        }
+    }
+
+    private sealed class DummyIFormattable : IFormattable
+    {
+        public string ToString(string? format, IFormatProvider? formatProvider)
+            => "DummyIFormattable.ToString()";
+    }
 }

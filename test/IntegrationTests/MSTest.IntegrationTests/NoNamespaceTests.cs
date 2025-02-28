@@ -22,17 +22,17 @@ public class NoNamespaceTests : CLITestBase
         // Assert
         testCases.Should().HaveCount(2);
 
-        VerifyHierarchy(testCases[0], null, "ClassWithNoNamespace", "MyMethodUnderTest");
+        VerifyHierarchy(testCases[0], null!, "ClassWithNoNamespace", "MyMethodUnderTest");
         VerifyHierarchy(testCases[1], "SomeNamespace.WithMultipleLevels", "ClassWithNamespace", "MyMethodUnderTest");
     }
 
     private static void VerifyHierarchy(TestCase testCase, string expectedNamespace, string expectedClassName, string expectedMethodName)
     {
-        string[] hierarchy = testCase.GetPropertyValue(TestCaseExtensions.HierarchyProperty) as string[];
+        string[]? hierarchy = testCase.GetPropertyValue(TestCaseExtensions.HierarchyProperty) as string[];
         hierarchy.Should().HaveCount(4);
 
         // This level is always null.
-        hierarchy[0].Should().BeNull();
+        hierarchy![0].Should().BeNull();
         hierarchy[1].Should().Be(expectedNamespace);
         hierarchy[2].Should().Be(expectedClassName);
         hierarchy[3].Should().Be(expectedMethodName);

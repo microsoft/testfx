@@ -3,7 +3,8 @@
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+using Polyfills;
 
 using TestFramework.ForTestingMSTest;
 
@@ -25,7 +26,7 @@ public class UnitTestElementTests : TestContainer
     #region Ctor tests
 
     public void UnitTestElementConstructorShouldThrowIfTestMethodIsNull() =>
-        VerifyThrows<ArgumentNullException>(() => _ = new UnitTestElement(null));
+        VerifyThrows<ArgumentNullException>(() => _ = new UnitTestElement(null!));
 
     #endregion
 
@@ -87,19 +88,6 @@ public class UnitTestElementTests : TestContainer
         Verify((testCase.GetPropertyValue(Constants.DeclaringClassNameProperty) as string) == "DC");
     }
 
-    public void ToTestCaseShouldSetIsAsyncProperty()
-    {
-        _unitTestElement.IsAsync = true;
-        var testCase = _unitTestElement.ToTestCase();
-
-        Verify((bool)testCase.GetPropertyValue(Constants.AsyncTestProperty));
-
-        _unitTestElement.IsAsync = false;
-        testCase = _unitTestElement.ToTestCase();
-
-        Verify(!(bool)testCase.GetPropertyValue(Constants.AsyncTestProperty));
-    }
-
     public void ToTestCaseShouldSetTestCategoryIfPresent()
     {
         _unitTestElement.TestCategory = null;
@@ -115,7 +103,7 @@ public class UnitTestElementTests : TestContainer
         _unitTestElement.TestCategory = ["TC"];
         testCase = _unitTestElement.ToTestCase();
 
-        Verify(new string[] { "TC" }.SequenceEqual((string[])testCase.GetPropertyValue(Constants.TestCategoryProperty)));
+        Verify(new string[] { "TC" }.SequenceEqual((string[])testCase.GetPropertyValue(Constants.TestCategoryProperty)!));
     }
 
     public void ToTestCaseShouldSetPriorityIfPresent()
@@ -123,12 +111,12 @@ public class UnitTestElementTests : TestContainer
         _unitTestElement.Priority = null;
         var testCase = _unitTestElement.ToTestCase();
 
-        Verify((int)testCase.GetPropertyValue(Constants.PriorityProperty) == 0);
+        Verify((int)testCase.GetPropertyValue(Constants.PriorityProperty)! == 0);
 
         _unitTestElement.Priority = 1;
         testCase = _unitTestElement.ToTestCase();
 
-        Verify((int)testCase.GetPropertyValue(Constants.PriorityProperty) == 1);
+        Verify((int)testCase.GetPropertyValue(Constants.PriorityProperty)! == 1);
     }
 
     public void ToTestCaseShouldSetTraitsIfPresent()
@@ -161,7 +149,7 @@ public class UnitTestElementTests : TestContainer
         Verify((testCase.GetPropertyValue(Constants.CssIterationProperty) as string) == "12");
         Verify((testCase.GetPropertyValue(Constants.CssProjectStructureProperty) as string) == "ProjectStructure");
         Verify((testCase.GetPropertyValue(Constants.DescriptionProperty) as string) == "I am a dummy test");
-        Verify(new string[] { "2312", "22332" }.SequenceEqual((string[])testCase.GetPropertyValue(Constants.WorkItemIdsProperty)));
+        Verify(new string[] { "2312", "22332" }.SequenceEqual((string[])testCase.GetPropertyValue(Constants.WorkItemIdsProperty)!));
     }
 
     public void ToTestCaseShouldSetDeploymentItemPropertyIfPresent()
@@ -186,12 +174,12 @@ public class UnitTestElementTests : TestContainer
     public void ToTestCase_WhenStrategyIsLegacy_UsesDefaultTestCaseId()
     {
 #pragma warning disable CA2263 // Prefer generic overload when type is known
-        foreach (DynamicDataType dataType in Enum.GetValues(typeof(DynamicDataType)))
+        foreach (DynamicDataType dataType in EnumPolyfill.GetValues<DynamicDataType>())
         {
-            var testCase = new UnitTestElement(new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", false, null, TestIdGenerationStrategy.Legacy) { DataType = dataType }).ToTestCase();
+            var testCase = new UnitTestElement(new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", null, TestIdGenerationStrategy.Legacy) { DataType = dataType }).ToTestCase();
             var expectedTestCase = new TestCase(testCase.FullyQualifiedName, testCase.ExecutorUri, testCase.Source);
             Verify(expectedTestCase.Id == testCase.Id);
-            Verify(testCase.GetPropertyValue(Constants.TestIdGenerationStrategyProperty).Equals((int)TestIdGenerationStrategy.Legacy));
+            Verify(testCase.GetPropertyValue(Constants.TestIdGenerationStrategyProperty)!.Equals((int)TestIdGenerationStrategy.Legacy));
         }
 #pragma warning restore CA2263 // Prefer generic overload when type is known
     }
@@ -200,9 +188,9 @@ public class UnitTestElementTests : TestContainer
     public void ToTestCase_WhenStrategyIsDisplayName_DoesNotUseDefaultTestCaseId()
     {
 #pragma warning disable CA2263 // Prefer generic overload when type is known
-        foreach (DynamicDataType dataType in Enum.GetValues(typeof(DynamicDataType)))
+        foreach (DynamicDataType dataType in EnumPolyfill.GetValues<DynamicDataType>())
         {
-            var testCase = new UnitTestElement(new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", false, null, TestIdGenerationStrategy.DisplayName) { DataType = dataType }).ToTestCase();
+            var testCase = new UnitTestElement(new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", null, TestIdGenerationStrategy.DisplayName) { DataType = dataType }).ToTestCase();
             var expectedTestCase = new TestCase(testCase.FullyQualifiedName, testCase.ExecutorUri, testCase.Source);
             if (dataType == DynamicDataType.None)
             {
@@ -213,7 +201,7 @@ public class UnitTestElementTests : TestContainer
                 Verify(expectedTestCase.Id != testCase.Id);
             }
 
-            Verify(testCase.GetPropertyValue(Constants.TestIdGenerationStrategyProperty).Equals((int)TestIdGenerationStrategy.DisplayName));
+            Verify(testCase.GetPropertyValue(Constants.TestIdGenerationStrategyProperty)!.Equals((int)TestIdGenerationStrategy.DisplayName));
         }
 #pragma warning restore CA2263 // Prefer generic overload when type is known
     }
@@ -221,12 +209,12 @@ public class UnitTestElementTests : TestContainer
     public void ToTestCase_WhenStrategyIsData_DoesNotUseDefaultTestCaseId()
     {
 #pragma warning disable CA2263 // Prefer generic overload when type is known
-        foreach (DynamicDataType dataType in Enum.GetValues(typeof(DynamicDataType)))
+        foreach (DynamicDataType dataType in EnumPolyfill.GetValues<DynamicDataType>())
         {
-            var testCase = new UnitTestElement(new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", false, null, TestIdGenerationStrategy.FullyQualified) { DataType = dataType }).ToTestCase();
+            var testCase = new UnitTestElement(new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", null, TestIdGenerationStrategy.FullyQualified) { DataType = dataType }).ToTestCase();
             var expectedTestCase = new TestCase(testCase.FullyQualifiedName, testCase.ExecutorUri, testCase.Source);
             Verify(expectedTestCase.Id != testCase.Id);
-            Verify(testCase.GetPropertyValue(Constants.TestIdGenerationStrategyProperty).Equals((int)TestIdGenerationStrategy.FullyQualified));
+            Verify(testCase.GetPropertyValue(Constants.TestIdGenerationStrategyProperty)!.Equals((int)TestIdGenerationStrategy.FullyQualified));
         }
 #pragma warning restore CA2263 // Prefer generic overload when type is known
     }
@@ -238,19 +226,19 @@ public class UnitTestElementTests : TestContainer
         TestCase[] testCases =
         [
             new UnitTestElement(
-                new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", false, null, testIdStrategy))
+                new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", null, testIdStrategy))
             .ToTestCase(),
             new UnitTestElement(
-                new("MyOtherMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", false, null, testIdStrategy))
+                new("MyOtherMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", null, testIdStrategy))
             .ToTestCase(),
             new UnitTestElement(
-                new("MyMethod", "MyOtherProduct.MyNamespace.MyClass", "MyAssembly", false, null, testIdStrategy))
+                new("MyMethod", "MyOtherProduct.MyNamespace.MyClass", "MyAssembly", null, testIdStrategy))
             .ToTestCase(),
             new UnitTestElement(
-                new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyOtherAssembly", false, null, testIdStrategy))
+                new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyOtherAssembly", null, testIdStrategy))
             .ToTestCase(),
             new UnitTestElement(
-                new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", false, null, testIdStrategy)
+                new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", null, testIdStrategy)
                 {
                     DataType = DynamicDataType.DataSourceAttribute,
                 })
@@ -259,7 +247,7 @@ public class UnitTestElementTests : TestContainer
             }
             .ToTestCase(),
             new UnitTestElement(
-                new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", false, null, testIdStrategy)
+                new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", null, testIdStrategy)
                 {
                     DataType = DynamicDataType.ITestDataSource,
                 })
@@ -279,34 +267,34 @@ public class UnitTestElementTests : TestContainer
         TestCase[] testCases =
         [
             new UnitTestElement(
-                new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", false, null, testIdStrategy)
+                new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", null, testIdStrategy)
                 {
                     DataType = DynamicDataType.DataSourceAttribute,
                 })
             .ToTestCase(),
             new UnitTestElement(
-                new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", false, null, testIdStrategy)
+                new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", null, testIdStrategy)
                 {
                     DataType = DynamicDataType.DataSourceAttribute,
                     SerializedData = ["1"],
                 })
             .ToTestCase(),
             new UnitTestElement(
-                new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", false, null, testIdStrategy)
+                new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", null, testIdStrategy)
                 {
                     DataType = DynamicDataType.DataSourceAttribute,
                     SerializedData = ["2"],
                 })
             .ToTestCase(),
             new UnitTestElement(
-                new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", false, null, testIdStrategy)
+                new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", null, testIdStrategy)
                 {
                     DataType = DynamicDataType.ITestDataSource,
                     SerializedData = ["1"],
                 })
             .ToTestCase(),
             new UnitTestElement(
-                new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", false, null, testIdStrategy)
+                new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", null, testIdStrategy)
                 {
                     DataType = DynamicDataType.ITestDataSource,
                     SerializedData = ["2"],
@@ -323,31 +311,31 @@ public class UnitTestElementTests : TestContainer
         TestCase[] testCases =
         [
             new UnitTestElement(
-                new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", false, null, testIdStrategy))
+                new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", null, testIdStrategy))
             .ToTestCase(),
             new UnitTestElement(
-                new("MyOtherMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", false, null, testIdStrategy))
+                new("MyOtherMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", null, testIdStrategy))
             .ToTestCase(),
             new UnitTestElement(
-                new("MyMethod", "MyOtherProduct.MyNamespace.MyClass", "MyAssembly", false, null, testIdStrategy))
+                new("MyMethod", "MyOtherProduct.MyNamespace.MyClass", "MyAssembly", null, testIdStrategy))
             .ToTestCase(),
             new UnitTestElement(
-                new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyOtherAssembly", false, null, testIdStrategy))
+                new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyOtherAssembly", null, testIdStrategy))
             .ToTestCase(),
             new UnitTestElement(
-                new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", false, null, testIdStrategy)
+                new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", null, testIdStrategy)
                 {
                     SerializedData = ["System.Int32[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089", "[]"],
                 })
             .ToTestCase(),
             new UnitTestElement(
-                new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", false, null, testIdStrategy)
+                new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", null, testIdStrategy)
                 {
                     SerializedData = ["System.Int32[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089", "[1]"],
                 })
             .ToTestCase(),
             new UnitTestElement(
-                new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", false, null, testIdStrategy)
+                new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", null, testIdStrategy)
                 {
                     SerializedData = ["System.Int32[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089", "[1,1]"],
                 })

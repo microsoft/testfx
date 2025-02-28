@@ -5,7 +5,7 @@
   <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" Condition=" '$(OS)' != 'Windows_NT' " />
 
   <PropertyGroup>
-    <TargetFrameworks Condition=" '$(OS)' == 'Windows_NT' ">netstandard2.0;$(NetFrameworkMinimum);$(SupportedNetFrameworks);$(UwpMinimum);$(WinUiMinimum)</TargetFrameworks>
+    <TargetFrameworks Condition=" '$(OS)' == 'Windows_NT' ">netstandard2.0;$(NetFrameworkMinimum);$(SupportedNetFrameworks);$(UwpMinimum);$(ModernUwpMinimum);$(WinUiMinimum)</TargetFrameworks>
     <TargetFrameworks Condition=" '$(OS)' != 'Windows_NT' ">$(SupportedNetFrameworks);netstandard2.0</TargetFrameworks>
     <UseAssemblyVersion14>true</UseAssemblyVersion14>
   </PropertyGroup>
@@ -25,10 +25,12 @@
       Supported platforms:
       - .NET 4.6.2+
       - .NET Core 3.1+
-      - .NET 6.0
+      - .NET 6.0+
       - .NET 6.0 Windows.18362+
       - UWP 10.0.16299
+      - UWP 10.0.17763 with .NET 9+
     </PackageDescription>
+    <NoWarn>$(NoWarn);NU5100</NoWarn>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -46,8 +48,8 @@
     <RuntimeIdentifiers>win10-x86;win10-x64;win10-arm64</RuntimeIdentifiers>
   </PropertyGroup>
   <!-- UWP specific properties -->
-  <PropertyGroup Condition=" '$(TargetFramework)' == '$(UwpMinimum)' ">
-    <DefineConstants>$(DefineConstants);NETFX_CORE;WINDOWS_UWP</DefineConstants>
+  <PropertyGroup Condition=" '$(TargetFramework)' == '$(UwpMinimum)' OR '$(TargetFramework)' == '$(ModernUwpMinimum)' ">
+    <DefineConstants>$(DefineConstants);WINDOWS_UWP</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>
@@ -64,7 +66,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Condition=" '$(TargetFramework)' == '$(UwpMinimum)' " Update="Properties\Extension.UWP.rd.xml" />
+    <EmbeddedResource Condition=" '$(TargetFramework)' == '$(UwpMinimum)' OR '$(TargetFramework)' == '$(ModernUwpMinimum)' " Update="Properties\Extension.UWP.rd.xml" />
     <!-- API that is common to all frameworks that we build for. -->
     <AdditionalFiles Include="PublicAPI\PublicAPI.Shipped.txt" />
     <AdditionalFiles Include="PublicAPI\PublicAPI.Unshipped.txt" />
@@ -82,7 +84,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="build\winui\MSTest.TestFramework.targets">
+    <InternalsVisibleTo Include="Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter" Key="$(VsPublicKey)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="buildTransitive\winui+uwp\MSTest.TestFramework.targets">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

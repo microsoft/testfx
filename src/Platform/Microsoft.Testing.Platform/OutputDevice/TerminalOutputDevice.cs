@@ -1,12 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Globalization;
-using System.Reflection;
-using System.Runtime.InteropServices;
-using System.Runtime.Versioning;
-using System.Text;
-
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.Messages;
@@ -25,6 +19,7 @@ namespace Microsoft.Testing.Platform.OutputDevice;
 /// <summary>
 /// Implementation of output device that writes to terminal with progress and optionally with ANSI.
 /// </summary>
+[UnsupportedOSPlatform("browser")]
 internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDevice,
     IDataConsumer,
     IOutputDeviceDataProducer,
@@ -36,14 +31,11 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
     private const string TESTINGPLATFORM_CONSOLEOUTPUTDEVICE_SKIP_BANNER = nameof(TESTINGPLATFORM_CONSOLEOUTPUTDEVICE_SKIP_BANNER);
 #pragma warning restore SA1310 // Field names should not contain underscore
 
-    private readonly ITestApplicationCancellationTokenSource _testApplicationCancellationTokenSource;
     private readonly IConsole _console;
-    private readonly ITestApplicationModuleInfo _testApplicationModuleInfo;
     private readonly ITestHostControllerInfo _testHostControllerInfo;
     private readonly IAsyncMonitor _asyncMonitor;
     private readonly IRuntimeFeature _runtimeFeature;
     private readonly IEnvironment _environment;
-    private readonly IProcessHandler _process;
     private readonly IPlatformInformation _platformInformation;
     private readonly ICommandLineOptions _commandLineOptions;
     private readonly IFileLoggerInformation? _fileLoggerInformation;
@@ -64,26 +56,23 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
     private TerminalTestReporter? _terminalTestReporter;
     private bool _firstCallTo_OnSessionStartingAsync = true;
     private bool _bannerDisplayed;
-    private TestRequestExecutionTimeInfo? _testRequestExecutionTimeInfo;
     private bool _isVSTestMode;
     private bool _isListTests;
     private bool _isServerMode;
     private ILogger? _logger;
 
-    public TerminalOutputDevice(ITestApplicationCancellationTokenSource testApplicationCancellationTokenSource, IConsole console,
+    public TerminalOutputDevice(
+        IConsole console,
         ITestApplicationModuleInfo testApplicationModuleInfo, ITestHostControllerInfo testHostControllerInfo, IAsyncMonitor asyncMonitor,
-        IRuntimeFeature runtimeFeature, IEnvironment environment, IProcessHandler process, IPlatformInformation platformInformation,
+        IRuntimeFeature runtimeFeature, IEnvironment environment, IPlatformInformation platformInformation,
         ICommandLineOptions commandLineOptions, IFileLoggerInformation? fileLoggerInformation, ILoggerFactory loggerFactory, IClock clock,
         IStopPoliciesService policiesService)
     {
-        _testApplicationCancellationTokenSource = testApplicationCancellationTokenSource;
         _console = console;
-        _testApplicationModuleInfo = testApplicationModuleInfo;
         _testHostControllerInfo = testHostControllerInfo;
         _asyncMonitor = asyncMonitor;
         _runtimeFeature = runtimeFeature;
         _environment = environment;
-        _process = process;
         _platformInformation = platformInformation;
         _commandLineOptions = commandLineOptions;
         _fileLoggerInformation = fileLoggerInformation;
@@ -95,7 +84,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
         {
 #if !NETCOREAPP
             _longArchitecture = RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant();
-            _shortArchitecture = GetShortArchitecture(RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant());
+            _shortArchitecture = GetShortArchitecture(_longArchitecture);
 #else
             // RID has the operating system, we want to see that in the banner, but not next to every dll.
             _longArchitecture = RuntimeInformation.RuntimeIdentifier;
@@ -105,7 +94,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
             _targetFramework = TargetFrameworkParser.GetShortTargetFramework(Assembly.GetEntryAssembly()?.GetCustomAttribute<TargetFrameworkAttribute>()?.FrameworkDisplayName) ?? _runtimeFramework;
         }
 
-        _assemblyName = _testApplicationModuleInfo.GetCurrentTestApplicationFullPath();
+        _assemblyName = testApplicationModuleInfo.GetDisplayName();
 
         if (environment.GetEnvironmentVariable(TESTINGPLATFORM_CONSOLEOUTPUTDEVICE_SKIP_BANNER) is not null)
         {
@@ -157,9 +146,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
             // func.
             : () => _isVSTestMode || _isListTests || _isServerMode
                 ? false
-                : _testHostControllerInfo.IsCurrentProcessTestHostController == null
-                    ? null
-                    : !_testHostControllerInfo.IsCurrentProcessTestHostController;
+                : !_testHostControllerInfo.IsCurrentProcessTestHostController;
 
         // This is single exe run, don't show all the details of assemblies and their summaries.
         _terminalTestReporter = new TerminalTestReporter(_console, new()
@@ -186,7 +173,6 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
         typeof(SessionFileArtifact),
         typeof(TestNodeFileArtifact),
         typeof(FileArtifact),
-        typeof(TestRequestExecutionTimeInfo),
     ];
 
     /// <inheritdoc />
@@ -402,19 +388,13 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
         }
     }
 
-    public async Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken)
+    public Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken)
     {
         RoslynDebug.Assert(_terminalTestReporter is not null);
 
-        if (_isServerMode)
+        if (_isServerMode || cancellationToken.IsCancellationRequested)
         {
-            return;
-        }
-
-        await Task.CompletedTask;
-        if (cancellationToken.IsCancellationRequested)
-        {
-            return;
+            return Task.CompletedTask;
         }
 
         switch (value)
@@ -447,6 +427,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
                             testNodeStateChanged.TestNode.DisplayName,
                             TestOutcome.Error,
                             duration,
+                            null,
                             errorState.Explanation,
                             errorState.Exception,
                             expected: null,
@@ -465,6 +446,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
                              testNodeStateChanged.TestNode.DisplayName,
                              TestOutcome.Fail,
                              duration,
+                             null,
                              failedState.Explanation,
                              failedState.Exception,
                              expected: failedState.Exception?.Data["assert.expected"] as string,
@@ -483,6 +465,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
                              testNodeStateChanged.TestNode.DisplayName,
                              TestOutcome.Timeout,
                              duration,
+                             null,
                              timeoutState.Explanation,
                              timeoutState.Exception,
                              expected: null,
@@ -501,6 +484,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
                              testNodeStateChanged.TestNode.DisplayName,
                              TestOutcome.Canceled,
                              duration,
+                             null,
                              cancelledState.Explanation,
                              cancelledState.Exception,
                              expected: null,
@@ -519,6 +503,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
                             testNodeStateChanged.TestNode.DisplayName,
                             outcome: TestOutcome.Passed,
                             duration: duration,
+                            informativeMessage: null,
                             errorMessage: null,
                             exception: null,
                             expected: null,
@@ -527,7 +512,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
                             standardError);
                         break;
 
-                    case SkippedTestNodeStateProperty:
+                    case SkippedTestNodeStateProperty skippedState:
                         _terminalTestReporter.TestCompleted(
                             _assemblyName,
                             _targetFramework,
@@ -537,6 +522,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
                             testNodeStateChanged.TestNode.DisplayName,
                             TestOutcome.Skipped,
                             duration,
+                            informativeMessage: skippedState.Explanation,
                             errorMessage: null,
                             exception: null,
                             expected: null,
@@ -591,10 +577,9 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
                 }
 
                 break;
-            case TestRequestExecutionTimeInfo testRequestExecutionTimeInfo:
-                _testRequestExecutionTimeInfo = testRequestExecutionTimeInfo;
-                break;
         }
+
+        return Task.CompletedTask;
     }
 
     public void Dispose()

@@ -1,10 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Globalization;
-using System.Text;
-using System.Xml.Linq;
-
 using Microsoft.Testing.TestInfrastructure;
 
 namespace MSTest.Performance.Runner.Steps;
@@ -129,14 +125,6 @@ internal class Scenario1 : IStep<NoInputOutput, SingleProject>
 
         string packageFullName = Path.GetFileName(matches[0]);
         return packageFullName.Substring(packagePrefixName.Length, packageFullName.Length - packagePrefixName.Length - NuGetPackageExtensionName.Length);
-    }
-
-    private static string ExtractVersionFromVersionPropsFile(XDocument versionPropsXmlDocument, string entryName)
-    {
-        XElement[] matches = versionPropsXmlDocument.Descendants(entryName).ToArray();
-        return matches.Length != 1
-            ? throw new InvalidOperationException($"Was expecting to find a single entry for '{entryName}' but found {matches.Length}.")
-            : matches[0].Value;
     }
 
     protected const string CurrentMSTestSourceCode = """

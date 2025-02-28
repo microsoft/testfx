@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Runtime.InteropServices;
-
 using Microsoft.Extensions.FileSystemGlobbing;
 
 namespace MSTest.Performance.Runner;
@@ -43,9 +41,9 @@ internal class PipelinesRunner
                 { "PipelineName", pipeline.PipelineName },
             };
 
-            foreach (KeyValuePair<string, object> item in parametersBag)
+            foreach ((string key, object value) in parametersBag)
             {
-                pipelinePropertyBag.Add(item.Key, item.Value);
+                pipelinePropertyBag.Add(key, value);
             }
 
             pipeline.UpdatePropertyBag?.Invoke(pipelinePropertyBag);

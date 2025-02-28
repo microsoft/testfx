@@ -14,6 +14,9 @@
   <ItemGroup>
     <AdditionalFiles Include="PublicAPI\PublicAPI.Shipped.txt" />
     <AdditionalFiles Include="PublicAPI\PublicAPI.Unshipped.txt" />
+
+    <AdditionalFiles Include="PublicAPI\net\PublicAPI.Shipped.txt" Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'netcoreapp3.1'))" />
+    <AdditionalFiles Include="PublicAPI\net\PublicAPI.Unshipped.txt" Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'netcoreapp3.1'))" />
   </ItemGroup>
 
   <ItemGroup>
@@ -26,7 +29,7 @@
 
   <PropertyGroup>
     <!-- Enable AOT analyzer warnings to make sure we don't call APIs that would fail when we use source generator mode together with NativeAOT. -->
-    <IsAotCompatible Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net7.0'))">$(EnableIotAnalyzers)</IsAotCompatible>
+    <IsAotCompatible Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net7.0'))">$(EnableAotAnalyzers)</IsAotCompatible>
   </PropertyGroup>
 
   <ItemGroup>

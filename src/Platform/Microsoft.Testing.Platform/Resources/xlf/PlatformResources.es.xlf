@@ -2,9 +2,14 @@
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
   <file datatype="xml" source-language="en" target-language="es" original="../PlatformResources.resx">
     <body>
+      <trans-unit id="AbortForMaxFailedTestsCapabilityNotAvailable">
+        <source>The current test framework does not implement 'IGracefulStopTestExecutionCapability' which is required for '--maximum-failed-tests' feature.</source>
+        <target state="translated">El marco de pruebas actual no implementa "IGracefulStopTestExecutionCapability", que es necesario para la característica "--maximum-failed-tests".</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AbortForMaxFailedTestsDescription">
         <source>Extension used to support '--maximum-failed-tests'. When a given failures threshold is reached, the test run will be aborted.</source>
-        <target state="new">Extension used to support '--maximum-failed-tests'. When a given failures threshold is reached, the test run will be aborted.</target>
+        <target state="translated">Extensión usada para admitir "--maximum-failed-tests". Cuando se alcance un umbral de errores determinado, se anulará la serie de pruebas.</target>
         <note />
       </trans-unit>
       <trans-unit id="Aborted">
@@ -198,14 +203,14 @@
         <note />
       </trans-unit>
       <trans-unit id="DiagnosticFileLevelWithAsyncFlush">
-        <source>Diagnostic file (level '{0}' with async flush): {1}"</source>
-        <target state="translated">Archivo de diagnóstico (nivel '{0}' con vaciado asincrónico): {1}"</target>
+        <source>Diagnostic file (level '{0}' with async flush): {1}</source>
+        <target state="translated">Archivo de diagnóstico (nivel '{0}' con vaciado asincrónico): {1}</target>
         <note>0 level such as verbose, 
 1 path to file</note>
       </trans-unit>
       <trans-unit id="DiagnosticFileLevelWithFlush">
-        <source>Diagnostic file (level '{0}' with sync flush): {1}"</source>
-        <target state="translated">Archivo de diagnóstico (nivel '{0}' con vaciado sincrónico): {1}"</target>
+        <source>Diagnostic file (level '{0}' with sync flush): {1}</source>
+        <target state="translated">Archivo de diagnóstico (nivel '{0}' con vaciado de sincronización): {1}</target>
         <note>0 level such as verbose, 
 1 path to file</note>
       </trans-unit>
@@ -378,7 +383,7 @@
       </trans-unit>
       <trans-unit id="MaxFailedTestsMustBePositive">
         <source>The option '--maximum-failed-tests' must be a positive integer. The value '{0}' is not valid.</source>
-        <target state="new">The option '--maximum-failed-tests' must be a positive integer. The value '{0}' is not valid.</target>
+        <target state="translated">La opción '--maximum-failed-tests' debe ser un entero positivo. El valor '{0}' no es válido.</target>
         <note />
       </trans-unit>
       <trans-unit id="MessageBusNotReady">
@@ -547,7 +552,7 @@ Los valores disponibles son 'Seguimiento', 'Depurar', 'Información', 'Advertenc
       </trans-unit>
       <trans-unit id="PlatformCommandLineMaxFailedTestsOptionDescription">
         <source>Specifies a maximum number of test failures that, when exceeded, will abort the test run.</source>
-        <target state="new">Specifies a maximum number of test failures that, when exceeded, will abort the test run.</target>
+        <target state="translated">Especifica un número máximo de errores de prueba que, si se superan, anularán la serie de pruebas.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineMinimumExpectedTestsIncompatibleDiscoverTests">
@@ -640,7 +645,7 @@ Toma un argumento como cadena con el formato &lt;value&gt;[h|m|s] donde 'value' 
       </trans-unit>
       <trans-unit id="ReachedMaxFailedTestsMessage">
         <source>Test session is aborting due to reaching failures ('{0}') specified by the '--maximum-failed-tests' option.</source>
-        <target state="new">Test session is aborting due to reaching failures ('{0}') specified by the '--maximum-failed-tests' option.</target>
+        <target state="translated">La sesión de prueba se está anulando debido a errores ('{0}') especificados por la opción "--maximum-failed-tests".</target>
         <note>{0} is the number of max failed tests.</note>
       </trans-unit>
       <trans-unit id="RetryFailedAfterTriesErrorMessage">

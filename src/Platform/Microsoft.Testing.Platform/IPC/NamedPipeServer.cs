@@ -4,9 +4,7 @@
 #if NET
 using System.Buffers;
 #endif
-using System.Globalization;
 using System.IO.Pipes;
-using System.Runtime.InteropServices;
 
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
@@ -63,7 +61,9 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
         CancellationToken cancellationToken)
     {
         Guard.NotNull(pipeNameDescription);
+#pragma warning disable CA1416 // Validate platform compatibility
         _namedPipeServerStream = new((PipeName = pipeNameDescription).Name, PipeDirection.InOut, maxNumberOfServerInstances, PipeTransmissionMode.Byte, PipeOptions.Asynchronous);
+#pragma warning restore CA1416
         _callback = callback;
         _environment = environment;
         _logger = logger;
@@ -78,7 +78,9 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
     public async Task WaitConnectionAsync(CancellationToken cancellationToken)
     {
         await _logger.LogDebugAsync($"Waiting for connection for the pipe name {PipeName.Name}");
+#pragma warning disable CA1416 // Validate platform compatibility
         await _namedPipeServerStream.WaitForConnectionAsync(cancellationToken);
+#pragma warning restore CA1416
         WasConnected = true;
         await _logger.LogDebugAsync($"Client connected to {PipeName.Name}");
         _loopTask = _task.Run(
@@ -115,7 +117,9 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
         {
             int currentReadIndex = 0;
 #if NET
+#pragma warning disable CA1416 // Validate platform compatibility
             int currentReadBytes = await _namedPipeServerStream.ReadAsync(_readBuffer.AsMemory(currentReadIndex, _readBuffer.Length), cancellationToken);
+#pragma warning restore CA1416
 #else
             int currentReadBytes = await _namedPipeServerStream.ReadAsync(_readBuffer, currentReadIndex, _readBuffer.Length, cancellationToken);
 #endif
@@ -229,11 +233,15 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
                 try
                 {
 #if NET
+#pragma warning disable CA1416 // Validate platform compatibility
                     await _namedPipeServerStream.WriteAsync(_messageBuffer.GetBuffer().AsMemory(0, (int)_messageBuffer.Position), cancellationToken);
+#pragma warning restore CA1416
 #else
                     await _namedPipeServerStream.WriteAsync(_messageBuffer.GetBuffer(), 0, (int)_messageBuffer.Position, cancellationToken);
 #endif
+#pragma warning disable CA1416 // Validate platform compatibility
                     await _namedPipeServerStream.FlushAsync(cancellationToken);
+#pragma warning restore CA1416
                     if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                     {
                         _namedPipeServerStream.WaitForPipeDrain();

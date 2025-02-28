@@ -3,9 +3,6 @@
 
 #if NETFRAMEWORK
 
-using System.Globalization;
-using System.Reflection;
-
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -39,7 +36,7 @@ internal sealed class AssemblyLoadWorker : MarshalByRefObject
     /// <param name="assemblyPath"> Path to the assembly file to load from. </param>
     /// <param name="warnings"> The warnings. </param>
     /// <returns> Full path to dependent assemblies. </returns>
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
+    [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
     public IReadOnlyCollection<string> GetFullPathToDependentAssemblies(string assemblyPath, out IList<string> warnings)
     {
         DebugEx.Assert(!StringEx.IsNullOrEmpty(assemblyPath), "assemblyPath");
@@ -82,6 +79,7 @@ internal sealed class AssemblyLoadWorker : MarshalByRefObject
     /// Get the target dotNet framework string for the assembly.
     /// </summary>
     /// <param name="path">Path of the assembly file.</param>
+    /// <param name="errorMessage">Error message if any.</param>
     /// <returns> String representation of the target dotNet framework e.g. .NETFramework,Version=v4.0. </returns>
     internal string GetTargetFrameworkVersionStringFromPath(string path, out string? errorMessage)
     {
@@ -220,7 +218,7 @@ internal sealed class AssemblyLoadWorker : MarshalByRefObject
     /// <param name="result"> The result. </param>
     /// <param name="visitedAssemblies"> The visited Assemblies. </param>
     /// <param name="warnings"> The warnings. </param>
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
+    [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
     private void GetDependentAssembliesInternal(string assemblyString, IList<string> result, ISet<string> visitedAssemblies, IList<string> warnings)
     {
         DebugEx.Assert(!StringEx.IsNullOrEmpty(assemblyString), "assemblyString");

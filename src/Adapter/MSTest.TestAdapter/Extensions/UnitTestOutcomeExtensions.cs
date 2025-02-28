@@ -7,10 +7,15 @@ using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 
+/// <summary>
+/// Extension methods for <see cref="UTF.UnitTestOutcome"/>.
+/// </summary>
+#if RELEASE
 #if NET6_0_OR_GREATER
 [Obsolete(Constants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
 #else
 [Obsolete(Constants.PublicTypeObsoleteMessage)]
+#endif
 #endif
 public static class UnitTestOutcomeExtensions
 {
@@ -29,6 +34,7 @@ public static class UnitTestOutcomeExtensions
             UTF.UnitTestOutcome.Timeout => UnitTestOutcome.Timeout,
             UTF.UnitTestOutcome.NotRunnable => UnitTestOutcome.NotRunnable,
             UTF.UnitTestOutcome.NotFound => UnitTestOutcome.NotFound,
+            UTF.UnitTestOutcome.Ignored => UnitTestOutcome.Ignored,
             _ => UnitTestOutcome.Error,
         };
 

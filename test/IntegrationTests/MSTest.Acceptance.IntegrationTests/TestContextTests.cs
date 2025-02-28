@@ -6,17 +6,13 @@ using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
 
 namespace MSTest.Acceptance.IntegrationTests;
 
-[TestGroup]
-public sealed class TestContextTests : AcceptanceTestBase
+[TestClass]
+public sealed class TestContextTests : AcceptanceTestBase<TestContextTests.TestAssetFixture>
 {
-    private readonly TestAssetFixture _testAssetFixture;
-
-    public TestContextTests(ITestExecutionContext testExecutionContext, TestAssetFixture testAssetFixture)
-        : base(testExecutionContext) => _testAssetFixture = testAssetFixture;
-
+    [TestMethod]
     public async Task TestContextsAreCorrectlySet()
     {
-        var testHost = TestHost.LocateFrom(_testAssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent.Arguments);
+        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--filter ClassName~TestContextCtor");
 
         // Assert
@@ -24,9 +20,10 @@ public sealed class TestContextTests : AcceptanceTestBase
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 5, skipped: 0);
     }
 
+    [TestMethod]
     public async Task TestContext_TestData_PropertyContainsExpectedValue()
     {
-        var testHost = TestHost.LocateFrom(_testAssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent.Arguments);
+        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--filter ClassName~TestContextData");
 
         // Assert
@@ -34,9 +31,10 @@ public sealed class TestContextTests : AcceptanceTestBase
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 3, skipped: 0);
     }
 
+    [TestMethod]
     public async Task TestContext_TestException_PropertyContainsExpectedValue()
     {
-        var testHost = TestHost.LocateFrom(_testAssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent.Arguments);
+        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--filter ClassName~TestContextException");
 
         // Assert
@@ -46,9 +44,10 @@ public sealed class TestContextTests : AcceptanceTestBase
         testHostResult.AssertOutputContains("Test method TestContextExceptionFailingInTestMethod.TestFailingInTestMethod threw exception:");
     }
 
+    [TestMethod]
     public async Task TestContext_TestDisplayName_PropertyContainsExpectedValue()
     {
-        var testHost = TestHost.LocateFrom(_testAssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent.Arguments);
+        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--filter ClassName~TestContextDisplayName");
 
         // Assert
@@ -56,8 +55,7 @@ public sealed class TestContextTests : AcceptanceTestBase
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 4, skipped: 0);
     }
 
-    [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
-    public sealed class TestAssetFixture(AcceptanceFixture acceptanceFixture) : TestAssetFixtureBase(acceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
     {
         public const string ProjectName = "TestTestContext";
 
@@ -79,6 +77,13 @@ public sealed class TestContextTests : AcceptanceTestBase
     <OutputType>Exe</OutputType>
     <EnableMSTestRunner>true</EnableMSTestRunner>
     <TargetFrameworks>$TargetFrameworks$</TargetFrameworks>
+
+    <!--
+        This property is not required by users and is only set to simplify our testing infrastructure. When testing out in local or ci,
+        we end up with a -dev or -ci version which will lose resolution over -preview dependency of code coverage. Because we want to
+        ensure we are testing with locally built version, we force adding the platform dependency.
+    -->
+    <EnableMicrosoftTestingPlatform>true</EnableMicrosoftTestingPlatform>
   </PropertyGroup>
 
   <ItemGroup>

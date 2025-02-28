@@ -18,17 +18,23 @@ using MSTest.Analyzers.Helpers;
 
 namespace MSTest.Analyzers;
 
+/// <summary>
+/// Code fixer for the PreferConstructorOverTestInitialize rule.
+/// </summary>
 [ExportCodeFixProvider(LanguageNames.CSharp, Name = nameof(ClassInitializeShouldBeValidFixer))]
 [Shared]
 public sealed class PreferConstructorOverTestInitializeFixer : CodeFixProvider
 {
+    /// <inheritdoc />
     public override ImmutableArray<string> FixableDiagnosticIds { get; }
         = ImmutableArray.Create(DiagnosticIds.PreferConstructorOverTestInitializeRuleId);
 
+    /// <inheritdoc />
     public override FixAllProvider GetFixAllProvider()
         // See https://github.com/dotnet/roslyn/blob/main/docs/analyzers/FixAllProvider.md for more information on Fix All Providers
         => WellKnownFixAllProviders.BatchFixer;
 
+    /// <inheritdoc />
     public override async Task RegisterCodeFixesAsync(CodeFixContext context)
     {
         SyntaxNode root = await context.Document.GetRequiredSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false);
@@ -43,7 +49,7 @@ public sealed class PreferConstructorOverTestInitializeFixer : CodeFixProvider
         }
 
         // Find the method declaration identified by the diagnostic.
-        MethodDeclarationSyntax methodDeclaration = syntaxToken.Parent.AncestorsAndSelf().OfType<MethodDeclarationSyntax>().FirstOrDefault();
+        MethodDeclarationSyntax? methodDeclaration = syntaxToken.Parent.AncestorsAndSelf().OfType<MethodDeclarationSyntax>().FirstOrDefault();
         if (methodDeclaration == null)
         {
             return;
@@ -64,7 +70,7 @@ public sealed class PreferConstructorOverTestInitializeFixer : CodeFixProvider
         // Find the class containing the method
         if (testInitializeMethod.Parent is ClassDeclarationSyntax containingClass)
         {
-            ConstructorDeclarationSyntax existingConstructor = containingClass.Members
+            ConstructorDeclarationSyntax? existingConstructor = containingClass.Members
                  .OfType<ConstructorDeclarationSyntax>()
                  .FirstOrDefault();
 

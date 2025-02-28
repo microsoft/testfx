@@ -22,6 +22,8 @@ public sealed class AvoidExpectedExceptionAttributeAnalyzer : DiagnosticAnalyzer
     private static readonly LocalizableResourceString Description = new(nameof(Resources.AvoidExpectedExceptionAttributeDescription), Resources.ResourceManager, typeof(Resources));
     private static readonly LocalizableResourceString MessageFormat = new(nameof(Resources.AvoidExpectedExceptionAttributeMessageFormat), Resources.ResourceManager, typeof(Resources));
 
+    internal const string AllowDerivedTypesKey = nameof(AllowDerivedTypesKey);
+
     internal static readonly DiagnosticDescriptor Rule = DiagnosticDescriptorHelper.Create(
         DiagnosticIds.AvoidExpectedExceptionAttributeRuleId,
         Title,
@@ -31,9 +33,11 @@ public sealed class AvoidExpectedExceptionAttributeAnalyzer : DiagnosticAnalyzer
         DiagnosticSeverity.Info,
         isEnabledByDefault: true);
 
+    /// <inheritdoc />
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
         = ImmutableArray.Create(Rule);
 
+    /// <inheritdoc />
     public override void Initialize(AnalysisContext context)
     {
         context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
@@ -59,7 +63,7 @@ public sealed class AvoidExpectedExceptionAttributeAnalyzer : DiagnosticAnalyzer
             // Assert.ThrowsException checks the exact Exception type. So, we cannot offer a fix to ThrowsException if the user sets AllowDerivedTypes to true.
             context.ReportDiagnostic(
                 allowsDerivedTypes
-                ? methodSymbol.CreateDiagnostic(Rule, properties: DiagnosticDescriptorHelper.CannotFixProperties)
+                ? methodSymbol.CreateDiagnostic(Rule, properties: ImmutableDictionary<string, string?>.Empty.Add(AllowDerivedTypesKey, null))
                 : methodSymbol.CreateDiagnostic(Rule));
         }
     }

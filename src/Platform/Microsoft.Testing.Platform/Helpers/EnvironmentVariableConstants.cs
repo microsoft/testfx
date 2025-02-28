@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Diagnostics.CodeAnalysis;
-
 namespace Microsoft.Testing.Platform.Helpers;
 
 [SuppressMessage("StyleCop.CSharp.NamingRules", "SA1310:Field names should not contain underscore", Justification = "Use nameof pattern")]
@@ -34,6 +32,7 @@ internal static class EnvironmentVariableConstants
 
     // Debugging
     public const string TESTINGPLATFORM_LAUNCH_ATTACH_DEBUGGER = nameof(TESTINGPLATFORM_LAUNCH_ATTACH_DEBUGGER);
+    public const string TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER = nameof(TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER);
 
     // dotnet test
     public const string TESTINGPLATFORM_DOTNETTEST_EXECUTIONID = nameof(TESTINGPLATFORM_DOTNETTEST_EXECUTIONID);

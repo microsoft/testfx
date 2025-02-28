@@ -1,8 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.Testing.Platform.Configurations;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
@@ -42,7 +42,7 @@ public class RunConfigurationSettingsTests : TestContainer
 
     public void CollectSourceInformationIsByDefaultTrueWhenNotSpecified()
     {
-        string runSettingxml =
+        string runSettingsXml =
             """
             <RunSettings>
               <RunConfiguration>
@@ -50,13 +50,13 @@ public class RunConfigurationSettingsTests : TestContainer
             </RunSettings>
             """;
 
-        var configurationSettings = RunConfigurationSettings.GetSettings(runSettingxml, RunConfigurationSettings.SettingsName);
+        RunConfigurationSettings configurationSettings = RunConfigurationSettings.GetSettings(runSettingsXml, RunConfigurationSettings.SettingsName)!;
         Verify(configurationSettings.CollectSourceInformation);
     }
 
     public void CollectSourceInformationShouldBeConsumedFromRunSettingsWhenSpecified()
     {
-        string runSettingxml =
+        string runSettingsXml =
             """
             <?xml version="1.0" encoding="utf-8"?>
             <RunSettings>
@@ -67,7 +67,7 @@ public class RunConfigurationSettingsTests : TestContainer
             </RunSettings>
             """;
 
-        var configurationSettings = RunConfigurationSettings.GetSettings(runSettingxml, RunConfigurationSettings.SettingsName);
+        RunConfigurationSettings configurationSettings = RunConfigurationSettings.GetSettings(runSettingsXml, RunConfigurationSettings.SettingsName)!;
         Verify(!configurationSettings.CollectSourceInformation);
     }
 
@@ -108,7 +108,7 @@ public class RunConfigurationSettingsTests : TestContainer
 
     public void PopulateSettingsShouldInitializeDefaultSettingsWhenRunSettingsXmlIsEmpty()
     {
-        _mockDiscoveryContext.Setup(md => md.RunSettings.SettingsXml).Returns(string.Empty);
+        _mockDiscoveryContext.Setup(md => md.RunSettings!.SettingsXml).Returns(string.Empty);
         MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object, null);
 
         RunConfigurationSettings settings = MSTestSettings.RunConfigurationSettings;
@@ -117,7 +117,7 @@ public class RunConfigurationSettingsTests : TestContainer
 
     public void PopulateSettingsShouldInitializeSettingsToDefaultIfNotSpecified()
     {
-        string runSettingxml =
+        string runSettingsXml =
             """
             <RunSettings>
               <FooUnit>
@@ -127,7 +127,7 @@ public class RunConfigurationSettingsTests : TestContainer
             """;
 
         _mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
-        _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
+        _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
         MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object, null);
 
         RunConfigurationSettings settings = MSTestSettings.RunConfigurationSettings;
@@ -139,7 +139,7 @@ public class RunConfigurationSettingsTests : TestContainer
 
     public void PopulateSettingsShouldInitializeSettingsFromRunConfigurationSection()
     {
-        string runSettingxml =
+        string runSettingsXml =
             """
             <RunSettings>
               <RunConfiguration>
@@ -150,7 +150,7 @@ public class RunConfigurationSettingsTests : TestContainer
             """;
 
         _mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
-        _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
+        _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
         MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object, null);
 
         RunConfigurationSettings settings = MSTestSettings.RunConfigurationSettings;
@@ -174,7 +174,7 @@ public class RunConfigurationSettingsTests : TestContainer
 
         var mockConfig = new Mock<IConfiguration>();
         mockConfig.Setup(config => config[It.IsAny<string>()])
-                  .Returns((string key) => configDictionary.TryGetValue(key, out string value) ? value : null);
+                  .Returns((string key) => configDictionary.TryGetValue(key, out string? value) ? value : null);
 
         var settings = new RunConfigurationSettings();
 

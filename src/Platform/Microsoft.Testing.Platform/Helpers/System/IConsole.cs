@@ -8,41 +8,48 @@ namespace Microsoft.Testing.Platform.Helpers;
 /// </summary>
 internal interface IConsole
 {
+    [UnsupportedOSPlatform("android")]
+    [UnsupportedOSPlatform("ios")]
+    [UnsupportedOSPlatform("tvos")]
+    [UnsupportedOSPlatform("browser")]
     event ConsoleCancelEventHandler? CancelKeyPress;
 
+    [UnsupportedOSPlatform("android")]
+    [UnsupportedOSPlatform("browser")]
+    [UnsupportedOSPlatform("ios")]
+    [UnsupportedOSPlatform("tvos")]
     public int BufferHeight { get; }
 
+    [UnsupportedOSPlatform("android")]
+    [UnsupportedOSPlatform("browser")]
+    [UnsupportedOSPlatform("ios")]
+    [UnsupportedOSPlatform("tvos")]
     public int BufferWidth { get; }
 
     public bool IsOutputRedirected { get; }
 
+    [UnsupportedOSPlatform("android")]
+    [UnsupportedOSPlatform("ios")]
+    [UnsupportedOSPlatform("tvos")]
+    [UnsupportedOSPlatform("browser")]
     void SetForegroundColor(ConsoleColor color);
 
-    void SetBackgroundColor(ConsoleColor color);
-
+    [UnsupportedOSPlatform("android")]
+    [UnsupportedOSPlatform("ios")]
+    [UnsupportedOSPlatform("tvos")]
+    [UnsupportedOSPlatform("browser")]
     ConsoleColor GetForegroundColor();
-
-    ConsoleColor GetBackgroundColor();
 
     void WriteLine();
 
     void WriteLine(string? value);
 
-    void WriteLine(object? value);
-
-    void WriteLine(string format, object? arg0);
-
-    void WriteLine(string format, object? arg0, object? arg1);
-
-    void WriteLine(string format, object? arg0, object? arg1, object? arg2);
-
-    void WriteLine(string format, object?[]? args);
-
-    void Write(string format, object?[]? args);
-
     void Write(string? value);
 
     void Write(char value);
 
+    [UnsupportedOSPlatform("android")]
+    [UnsupportedOSPlatform("ios")]
+    [UnsupportedOSPlatform("tvos")]
     void Clear();
 }

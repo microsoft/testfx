@@ -82,6 +82,11 @@
         <target state="translated">'{0}' dizesi, '{1}' dizesini içermiyor. {2}.</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="DoesNotContainFail">
+        <source>String '{0}' does contain string '{1}'. {2}.</source>
+        <target state="translated">'{0}' dizesi, '{1}' dizesini içermiyor. {2}.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="DynamicDataInvalidMethodLayout">
         <source>Dynamic data method '{0}' should be static, parameterless and non-generic.</source>
         <target state="translated">'{0}' dinamik veri yöntemi statik ve parametresiz olmalı ve genel olmamalıdır.</target>
@@ -90,6 +95,11 @@
       <trans-unit id="DynamicDataInvalidPropertyLayout">
         <source>Dynamic data property '{0}' should be static and have a getter.</source>
         <target state="translated">'{0}' dinamik veri özelliği statik olmalı ve bir alıcı içermelidir.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DynamicDataSourceShouldExistAndBeValid">
+        <source>The dynamic data source '{0}' in type '{1}' should exist and be a property or a method.</source>
+        <target state="translated">Dinamik veri kaynağı '{0}' türdeki '{1}' bir özellik veya yöntem olmalıdır.</target>
         <note />
       </trans-unit>
       <trans-unit id="ElementNumbersDontMatch">
@@ -121,6 +131,16 @@ Gerçekte olan: {2}</target>
         <target state="translated">{0} başarısız. {1}</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="HasCountFailMsg">
+        <source>Expected collection of size {1}. Actual: {2}. {0}</source>
+        <target state="translated">Beklenen boyut {1}. Gerçek: {2}. {0}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="InvalidGitHubUrl">
+        <source>Invalid GitHub ticket URL</source>
+        <target state="translated">Geçersiz GitHub anahtar URL'si</target>
+        <note />
+      </trans-unit>
       <trans-unit id="IsInstanceOfFailMsg">
         <source>{0} Expected type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;.</source>
         <target state="translated">{0} Beklenen tür:&lt;{1}&gt;. Gerçek tür:&lt;{2}&gt;.</target>
@@ -130,6 +150,11 @@ Gerçekte olan: {2}</target>
         <source>String '{0}' does not match pattern '{1}'. {2}.</source>
         <target state="translated">'{0}' dizesi, '{1}' deseni ile eşleşmiyor. {2}.</target>
         <note></note>
+      </trans-unit>
+      <trans-unit id="IsNotEmptyFailMsg">
+        <source>Expected collection to contain any item but it is empty. {0}</source>
+        <target state="translated">Koleksiyonun herhangi bir öğe içermesi bekleniyordu ancak boş. {0}</target>
+        <note />
       </trans-unit>
       <trans-unit id="IsNotInstanceOfFailMsg">
         <source>Wrong Type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;. {0}</source>
@@ -253,8 +278,8 @@ Gerçekte olan: {2}</target>
         <note></note>
       </trans-unit>
       <trans-unit id="DynamicDataIEnumerableNull">
-        <source>Property or method {0} on {1} return type is not assignable to 'IEnumerable&lt;object[]&gt;' (nor 'IEnumerable&lt;ITuple&gt;' for .NET Core).</source>
-        <target state="translated">{1} dönüş türündeki {0} özelliği veya yöntemi 'IEnumerable&lt;object[]&gt;' öğesine (veya .NET Core için 'IEnumerable&lt;ITuple&gt;' öğesine) atanamaz.</target>
+        <source>Property or method {0} on {1} return type is not assignable to 'IEnumerable'.</source>
+        <target state="translated">{1} dönüş türündeki {0} özelliği veya yöntemi 'IEnumerable' öğesine atanamaz.</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataValueNull">

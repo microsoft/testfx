@@ -3,8 +3,6 @@
 
 #pragma warning disable TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
 
-using System.Diagnostics.CodeAnalysis;
-
 using Microsoft.Testing.Extensions.TrxReport.Abstractions;
 using Microsoft.Testing.Platform;
 using Microsoft.Testing.Platform.Extensions.Messages;
@@ -26,14 +24,14 @@ internal static class ObjectModelConverters
     /// <summary>
     /// Converts a VSTest <see cref="TestCase"/> to a Microsoft Testing Platform <see cref="TestNode"/>.
     /// </summary>
-    public static TestNode ToTestNode(this TestCase testCase, bool isTrxEnabled, IClientInfo client)
+    public static TestNode ToTestNode(this TestCase testCase, bool isTrxEnabled, IClientInfo client, string? displayNameFromTestResult = null)
     {
         string testNodeUid = testCase.Id.ToString();
 
         TestNode testNode = new()
         {
             Uid = new TestNodeUid(testNodeUid),
-            DisplayName = testCase.DisplayName ?? testCase.FullyQualifiedName,
+            DisplayName = displayNameFromTestResult ?? testCase.DisplayName ?? testCase.FullyQualifiedName,
         };
 
         CopyVSTestProperties(testCase.Properties, testNode, testCase, testCase.GetPropertyValue, isTrxEnabled, client);
@@ -131,7 +129,7 @@ internal static class ObjectModelConverters
     /// </summary>
     public static TestNode ToTestNode(this TestResult testResult, bool isTrxEnabled, IClientInfo client)
     {
-        var testNode = testResult.TestCase.ToTestNode(isTrxEnabled, client);
+        var testNode = testResult.TestCase.ToTestNode(isTrxEnabled, client, testResult.DisplayName);
         CopyVSTestProperties(testResult.Properties, testNode, testResult.TestCase, testResult.GetPropertyValue, isTrxEnabled, client);
         testNode.AddOutcome(testResult);
 
@@ -162,19 +160,33 @@ internal static class ObjectModelConverters
 
         testNode.Properties.Add(new TimingProperty(new(testResult.StartTime, testResult.EndTime, testResult.Duration), []));
 
+        var standardErrorMessages = new List<string>();
+        var standardOutputMessages = new List<string>();
         foreach (TestResultMessage testResultMessage in testResult.Messages)
         {
             if (testResultMessage.Category == TestResultMessage.StandardErrorCategory)
             {
-                testNode.Properties.Add(new SerializableKeyValuePairStringProperty("vstest.TestCase.StandardError", testResultMessage.Text ?? string.Empty));
-                testNode.Properties.Add(new StandardErrorProperty(testResultMessage.Text ?? string.Empty));
+                string message = testResultMessage.Text ?? string.Empty;
+                testNode.Properties.Add(new SerializableKeyValuePairStringProperty("vstest.TestCase.StandardError", message));
+                standardErrorMessages.Add(message);
             }
 
             if (testResultMessage.Category == TestResultMessage.StandardOutCategory)
             {
-                testNode.Properties.Add(new SerializableKeyValuePairStringProperty("vstest.TestCase.StandardOutput", testResultMessage.Text ?? string.Empty));
-                testNode.Properties.Add(new StandardOutputProperty(testResultMessage.Text ?? string.Empty));
+                string message = testResultMessage.Text ?? string.Empty;
+                testNode.Properties.Add(new SerializableKeyValuePairStringProperty("vstest.TestCase.StandardOutput", message));
+                standardOutputMessages.Add(message);
             }
+        }
+
+        if (standardErrorMessages.Count > 0)
+        {
+            testNode.Properties.Add(new StandardErrorProperty(string.Join(Environment.NewLine, standardErrorMessages)));
+        }
+
+        if (standardOutputMessages.Count > 0)
+        {
+            testNode.Properties.Add(new StandardOutputProperty(string.Join(Environment.NewLine, standardOutputMessages)));
         }
 
         return testNode;
@@ -199,7 +211,9 @@ internal static class ObjectModelConverters
             // It seems that NUnit inconclusive tests are reported as None which should be considered as Skipped.
             case TestOutcome.None:
             case TestOutcome.Skipped:
-                testNode.Properties.Add(SkippedTestNodeStateProperty.CachedInstance);
+                testNode.Properties.Add(testResult.ErrorMessage is null
+                    ? SkippedTestNodeStateProperty.CachedInstance
+                    : new SkippedTestNodeStateProperty(testResult.ErrorMessage));
                 break;
 
             default:

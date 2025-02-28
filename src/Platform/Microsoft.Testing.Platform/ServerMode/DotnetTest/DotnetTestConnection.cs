@@ -1,9 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Globalization;
-using System.Runtime.InteropServices;
-
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions.CommandLine;
 using Microsoft.Testing.Platform.Helpers;
@@ -40,8 +37,6 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol,
     }
 
     public bool IsServerMode => _dotnetTestPipeClient?.IsConnected == true;
-
-    public string Name => PlatformCommandLineProvider.DotnetTestCliProtocolName;
 
     public Task<IPushOnlyProtocolConsumer> GetDataConsumerAsync()
         => Task.FromResult((IPushOnlyProtocolConsumer)new DotnetTestDataConsumer(this, _environment));

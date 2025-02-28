@@ -1,13 +1,10 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Reflection;
-
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using Moq;
 
@@ -174,7 +171,7 @@ public class ReflectHelperTests : TestContainer
         var rh = new ReflectHelper();
 
         // Not using mocks here because for some reason a dictionary match of the mock is not returning true in the product code.
-        MethodInfo memberInfo = typeof(ReflectHelperTests).GetMethod("IsAttributeDefinedShouldReturnFromCache");
+        MethodInfo memberInfo = typeof(ReflectHelperTests).GetMethod("IsAttributeDefinedShouldReturnFromCache")!;
 
         // new Mock<MemberInfo>();
         var attributes = new Attribute[] { new TestMethodAttribute() };
@@ -224,7 +221,7 @@ public class ReflectHelperTests : TestContainer
         var rh = new ReflectHelper();
 
         // Not using mocks here because for some reason a dictionary match of the mock is not returning true in the product code.
-        MethodInfo memberInfo = typeof(ReflectHelperTests).GetMethod("HasAttributeDerivedFromShouldReturnFromCache");
+        MethodInfo memberInfo = typeof(ReflectHelperTests).GetMethod("HasAttributeDerivedFromShouldReturnFromCache")!;
 
         // new Mock<MemberInfo>();
         var attributes = new Attribute[] { new TestableExtendedTestMethod() };
@@ -251,7 +248,7 @@ public class ReflectHelperTests : TestContainer
 
         _testablePlatformServiceProvider.MockReflectionOperations.
             Setup(ro => ro.GetCustomAttributes(mockMemberInfo.Object, true)).
-            Returns((object[])null);
+            Returns((object[])null!);
 
         _testablePlatformServiceProvider.MockReflectionOperations.
             Setup(ro => ro.GetCustomAttributes(mockMemberInfo.Object, typeof(TestMethodAttribute), true)).

@@ -1,32 +1,27 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Globalization;
-
 using Microsoft.Testing.Extensions.Diagnostics;
 using Microsoft.Testing.Extensions.Diagnostics.Resources;
 using Microsoft.Testing.Extensions.UnitTests.Helpers;
 using Microsoft.Testing.Platform.Extensions.CommandLine;
-using Microsoft.Testing.Platform.IPC;
 using Microsoft.Testing.Platform.Services;
 
 using Moq;
 
 namespace Microsoft.Testing.Extensions.UnitTests;
 
-[TestGroup]
-public class HangDumpTests(ITestExecutionContext testExecutionContext) : TestBase(testExecutionContext)
+[TestClass]
+public sealed class HangDumpTests
 {
     private HangDumpCommandLineProvider GetProvider()
     {
         var testApplicationModuleInfo = new Mock<ITestApplicationModuleInfo>();
         _ = testApplicationModuleInfo.Setup(x => x.GetCurrentTestApplicationFullPath()).Returns("FullPath");
-        return new(new HangDumpConfiguration(
-            testApplicationModuleInfo.Object,
-            new PipeNameDescription("pipeName", false),
-            "suffix"));
+        return new();
     }
 
+    [TestMethod]
     public async Task IsValid_If_Timeout_Value_Has_CorrectValue()
     {
         HangDumpCommandLineProvider hangDumpCommandLineProvider = GetProvider();
@@ -37,6 +32,7 @@ public class HangDumpTests(ITestExecutionContext testExecutionContext) : TestBas
         Assert.IsTrue(string.IsNullOrEmpty(validateOptionsResult.ErrorMessage));
     }
 
+    [TestMethod]
     public async Task IsInvalid_If_Timeout_Value_Has_IncorrectValue()
     {
         HangDumpCommandLineProvider hangDumpCommandLineProvider = GetProvider();
@@ -47,12 +43,13 @@ public class HangDumpTests(ITestExecutionContext testExecutionContext) : TestBas
         Assert.AreEqual(ExtensionResources.HangDumpTimeoutOptionInvalidArgument, validateOptionsResult.ErrorMessage);
     }
 
+    [TestMethod]
 #if NETCOREAPP
-    [Arguments("Triage")]
+    [DataRow("Triage")]
 #endif
-    [Arguments("Mini")]
-    [Arguments("Heap")]
-    [Arguments("Full")]
+    [DataRow("Mini")]
+    [DataRow("Heap")]
+    [DataRow("Full")]
     public async Task IsValid_If_HangDumpType_Has_CorrectValue(string dumpType)
     {
         HangDumpCommandLineProvider hangDumpCommandLineProvider = GetProvider();
@@ -63,6 +60,7 @@ public class HangDumpTests(ITestExecutionContext testExecutionContext) : TestBas
         Assert.IsTrue(string.IsNullOrEmpty(validateOptionsResult.ErrorMessage));
     }
 
+    [TestMethod]
     public async Task IsInvalid_If_HangDumpType_Has_IncorrectValue()
     {
         HangDumpCommandLineProvider hangDumpCommandLineProvider = GetProvider();
@@ -73,9 +71,10 @@ public class HangDumpTests(ITestExecutionContext testExecutionContext) : TestBas
         Assert.AreEqual(string.Format(CultureInfo.InvariantCulture, ExtensionResources.HangDumpTypeOptionInvalidType, "invalid"), validateOptionsResult.ErrorMessage);
     }
 
-    [Arguments(HangDumpCommandLineProvider.HangDumpFileNameOptionName)]
-    [Arguments(HangDumpCommandLineProvider.HangDumpTimeoutOptionName)]
-    [Arguments(HangDumpCommandLineProvider.HangDumpTypeOptionName)]
+    [TestMethod]
+    [DataRow(HangDumpCommandLineProvider.HangDumpFileNameOptionName)]
+    [DataRow(HangDumpCommandLineProvider.HangDumpTimeoutOptionName)]
+    [DataRow(HangDumpCommandLineProvider.HangDumpTypeOptionName)]
     public async Task Missing_HangDumpMainOption_ShouldReturn_IsInvalid(string hangDumpArgument)
     {
         HangDumpCommandLineProvider hangDumpCommandLineProvider = GetProvider();
@@ -86,12 +85,13 @@ public class HangDumpTests(ITestExecutionContext testExecutionContext) : TestBas
 
         ValidationResult validateOptionsResult = await hangDumpCommandLineProvider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(options));
         Assert.IsFalse(validateOptionsResult.IsValid);
-        Assert.AreEqual(validateOptionsResult.ErrorMessage, "You specified one or more hang dump parameters but did not enable it, add --hangdump to the command line");
+        Assert.AreEqual("You specified one or more hang dump parameters but did not enable it, add --hangdump to the command line", validateOptionsResult.ErrorMessage);
     }
 
-    [Arguments(HangDumpCommandLineProvider.HangDumpFileNameOptionName)]
-    [Arguments(HangDumpCommandLineProvider.HangDumpTimeoutOptionName)]
-    [Arguments(HangDumpCommandLineProvider.HangDumpTypeOptionName)]
+    [TestMethod]
+    [DataRow(HangDumpCommandLineProvider.HangDumpFileNameOptionName)]
+    [DataRow(HangDumpCommandLineProvider.HangDumpTimeoutOptionName)]
+    [DataRow(HangDumpCommandLineProvider.HangDumpTypeOptionName)]
     public async Task If_HangDumpMainOption_IsSpecified_ShouldReturn_IsValid(string hangDumpArgument)
     {
         HangDumpCommandLineProvider hangDumpCommandLineProvider = GetProvider();

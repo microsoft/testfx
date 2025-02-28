@@ -2,14 +2,11 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if NET462
-using System.Reflection;
-
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using Moq;
 
@@ -55,8 +52,8 @@ public class DesktopTestDeploymentTests : TestContainer
 
         Verify(testDeployment.Deploy(new List<TestCase> { testCase }, mockRunContext.Object, new Mock<IFrameworkHandle>().Object));
 
-        string warning;
-        string sourceFile = Assembly.GetExecutingAssembly().GetName().Name + ".dll";
+        string? warning;
+        string sourceFile = Assembly.GetExecutingAssembly().GetName().Name + ".exe";
         _mockFileUtility.Verify(
             fu =>
             fu.CopyFileOverwrite(
@@ -80,8 +77,8 @@ public class DesktopTestDeploymentTests : TestContainer
 
         Verify(testDeployment.Deploy(new List<TestCase> { testCase1, testCase2 }, mockRunContext.Object, new Mock<IFrameworkHandle>().Object));
 
-        string warning;
-        string sourceFile1 = Assembly.GetExecutingAssembly().GetName().Name + ".dll";
+        string? warning;
+        string sourceFile1 = Assembly.GetExecutingAssembly().GetName().Name + ".exe";
         _mockFileUtility.Verify(
             fu =>
             fu.CopyFileOverwrite(
@@ -156,7 +153,7 @@ public class DesktopTestDeploymentTests : TestContainer
 
         testRunDirectories = new TestRunDirectories(currentExecutingFolder);
 
-        _mockFileUtility.Setup(fu => fu.DoesDirectoryExist(It.Is<string>(s => !s.EndsWith(".dll")))).Returns(true);
+        _mockFileUtility.Setup(fu => fu.DoesDirectoryExist(It.Is<string>(s => !s.EndsWith(".dll") && !s.EndsWith(".exe")))).Returns(true);
         _mockFileUtility.Setup(fu => fu.DoesFileExist(It.IsAny<string>())).Returns(true);
         var mockAssemblyUtility = new Mock<AssemblyUtility>();
         mockAssemblyUtility.Setup(

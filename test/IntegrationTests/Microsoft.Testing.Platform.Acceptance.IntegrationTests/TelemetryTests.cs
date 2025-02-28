@@ -1,31 +1,23 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Text.RegularExpressions;
-
-using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
 using Microsoft.Testing.Platform.Configurations;
-using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
-[TestGroup]
-public class TelemetryTests : AcceptanceTestBase
+[TestClass]
+public class TelemetryTests : AcceptanceTestBase<TelemetryTests.TestAssetFixture>
 {
     private const string AssetName = "TelemetryTest";
 
-    private readonly TestAssetFixture _testAssetFixture;
-
-    public TelemetryTests(ITestExecutionContext testExecutionContext, TestAssetFixture testAssetFixture)
-        : base(testExecutionContext) => _testAssetFixture = testAssetFixture;
-
-    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
     public async Task Telemetry_ByDefault_TelemetryIsEnabled(string tfm)
     {
-        string diagPath = Path.Combine(_testAssetFixture.TargetAssetPath, "bin", "Release", tfm, AggregatedConfiguration.DefaultTestResultFolderName);
+        string diagPath = Path.Combine(AssetFixture.TargetAssetPath, "bin", "Release", tfm, AggregatedConfiguration.DefaultTestResultFolderName);
         string diagPathPattern = Path.Combine(diagPath, @"log_.*.diag").Replace(@"\", @"\\");
 
-        var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, tfm);
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--diagnostic", disableTelemetry: false);
 
         testHostResult.AssertExitCodeIs(ExitCodes.ZeroTests);
@@ -40,13 +32,14 @@ public class TelemetryTests : AcceptanceTestBase
         await AssertDiagnosticReportAsync(testHostResult, diagPathPattern, diagContentsPattern);
     }
 
-    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
     public async Task Telemetry_WhenOptingOutTelemetry_WithEnvironmentVariable_TelemetryIsDisabled(string tfm)
     {
-        string diagPath = Path.Combine(_testAssetFixture.TargetAssetPath, "bin", "Release", tfm, AggregatedConfiguration.DefaultTestResultFolderName);
+        string diagPath = Path.Combine(AssetFixture.TargetAssetPath, "bin", "Release", tfm, AggregatedConfiguration.DefaultTestResultFolderName);
         string diagPathPattern = Path.Combine(diagPath, @"log_.*.diag").Replace(@"\", @"\\");
 
-        var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, tfm);
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
             "--diagnostic",
             new Dictionary<string, string?>
@@ -67,13 +60,14 @@ public class TelemetryTests : AcceptanceTestBase
         await AssertDiagnosticReportAsync(testHostResult, diagPathPattern, diagContentsPattern);
     }
 
-    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
     public async Task Telemetry_WhenOptingOutTelemetry_With_DOTNET_CLI_EnvironmentVariable_TelemetryIsDisabled(string tfm)
     {
-        string diagPath = Path.Combine(_testAssetFixture.TargetAssetPath, "bin", "Release", tfm, AggregatedConfiguration.DefaultTestResultFolderName);
+        string diagPath = Path.Combine(AssetFixture.TargetAssetPath, "bin", "Release", tfm, AggregatedConfiguration.DefaultTestResultFolderName);
         string diagPathPattern = Path.Combine(diagPath, @"log_.*.diag").Replace(@"\", @"\\");
 
-        var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, tfm);
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
             "--diagnostic",
             new Dictionary<string, string?>
@@ -94,13 +88,14 @@ public class TelemetryTests : AcceptanceTestBase
         await AssertDiagnosticReportAsync(testHostResult, diagPathPattern, diagContentsPattern);
     }
 
-    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
     public async Task Telemetry_WhenEnableTelemetryIsFalse_WithTestApplicationOptions_TelemetryIsDisabled(string tfm)
     {
-        string diagPath = Path.Combine(_testAssetFixture.TargetAssetPathWithDisableTelemetry, "bin", "Release", tfm, AggregatedConfiguration.DefaultTestResultFolderName);
+        string diagPath = Path.Combine(AssetFixture.TargetAssetPathWithDisableTelemetry, "bin", "Release", tfm, AggregatedConfiguration.DefaultTestResultFolderName);
         string diagPathPattern = Path.Combine(diagPath, @"log_.*.diag").Replace(@"\", @"\\");
 
-        var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPathWithDisableTelemetry, AssetName, tfm);
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPathWithDisableTelemetry, AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--diagnostic", disableTelemetry: false);
 
         testHostResult.AssertExitCodeIs(ExitCodes.ZeroTests);
@@ -115,7 +110,7 @@ public class TelemetryTests : AcceptanceTestBase
         await AssertDiagnosticReportAsync(testHostResult, diagPathPattern, diagContentsPattern);
     }
 
-    private async Task<string> AssertDiagnosticReportAsync(TestHostResult testHostResult, string diagPathPattern, string diagContentsPattern, string level = "Trace", string flushType = "async")
+    private static async Task<string> AssertDiagnosticReportAsync(TestHostResult testHostResult, string diagPathPattern, string diagContentsPattern, string level = "Trace", string flushType = "async")
     {
         testHostResult.AssertExitCodeIs(ExitCodes.ZeroTests);
 
@@ -131,15 +126,14 @@ Diagnostic file \(level '{level}' with {flushType} flush\): {diagPathPattern}
         return match.Value;
     }
 
-    private async Task<(bool IsMatch, string Content)> CheckDiagnosticContentsMatchAsync(string path, string pattern)
+    private static async Task<(bool IsMatch, string Content)> CheckDiagnosticContentsMatchAsync(string path, string pattern)
     {
         using var reader = new StreamReader(path);
         string content = await reader.ReadToEndAsync();
         return (Regex.IsMatch(content, pattern), content);
     }
 
-    [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
-    public sealed class TestAssetFixture(AcceptanceFixture acceptanceFixture) : TestAssetFixtureBase(acceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
     {
         private const string WithTelemetry = nameof(WithTelemetry);
         private const string WithoutTelemetry = nameof(WithoutTelemetry);
@@ -171,21 +165,21 @@ public class Program
     public static async Task<int> Main(string[] args)
     {
         ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args$TelemetryArg$);
-        builder.RegisterTestFramework(_ => new TestFrameworkCapabilities(), (_,__) => new DummyTestAdapter());
+        builder.RegisterTestFramework(_ => new TestFrameworkCapabilities(), (_,__) => new DummyTestFramework());
         using ITestApplication app = await builder.BuildAsync();
         return await app.RunAsync();
     }
 }
 
-public class DummyTestAdapter : ITestFramework
+public class DummyTestFramework : ITestFramework
 {
-    public string Uid => nameof(DummyTestAdapter);
+    public string Uid => nameof(DummyTestFramework);
 
     public string Version => "2.0.0";
 
-    public string DisplayName => nameof(DummyTestAdapter);
+    public string DisplayName => nameof(DummyTestFramework);
 
-    public string Description => nameof(DummyTestAdapter);
+    public string Description => nameof(DummyTestFramework);
 
     public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 

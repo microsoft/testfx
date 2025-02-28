@@ -1,47 +1,35 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Collections;
-
 using Microsoft.Build.Framework;
-#if NET8_0_OR_GREATER
+
 using Moq;
-#endif
 
 namespace Microsoft.Testing.Platform.MSBuild.UnitTests;
 
-[TestGroup]
-public class MSBuildTests : TestBase
+[TestClass]
+public sealed class MSBuildTests
 {
-#if NET8_0_OR_GREATER
     private readonly Mock<IBuildEngine> _buildEngine;
     private readonly List<BuildErrorEventArgs> _errors;
-#endif
 
-    public MSBuildTests(ITestExecutionContext testExecutionContext)
-        : base(testExecutionContext)
+    public MSBuildTests()
     {
-#if NET8_0_OR_GREATER
         _buildEngine = new Mock<IBuildEngine>();
         _errors = new List<BuildErrorEventArgs>();
         _buildEngine.Setup(x => x.LogErrorEvent(It.IsAny<BuildErrorEventArgs>())).Callback<BuildErrorEventArgs>(e => _errors.Add(e));
-#endif
     }
 
+    [TestMethod]
     public void Verify_Correct_Registration_Order_For_WellKnown_Extensions()
     {
-#if !NET8_0_OR_GREATER
-        // On netfx, net6.0, and net7.0 this is failing with:
-        // Could not load file or assembly 'Microsoft.Build.Framework, Version=15.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a' or one of its dependencies. The system cannot find the file specified.
-        // This is because the NuGet Package is "compatible" with netstandard2.0, so it can be installed everywhere, but it restores dlls only into specific (new) versions of .NET Framework and .NET.
-        return;
-#else
         InMemoryFileSystem inMemoryFileSystem = new();
         TestingPlatformEntryPointTask testingPlatformEntryPoint = new(inMemoryFileSystem)
         {
             BuildEngine = _buildEngine.Object,
             TestingPlatformEntryPointSourcePath = new CustomTaskItem("obj/entryPointFile"),
             Language = new CustomTaskItem("C#"),
+            RootNamespace = "SomeNamespace",
         };
 
         testingPlatformEntryPoint.Execute();
@@ -53,23 +41,25 @@ public class MSBuildTests : TestBase
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-[global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
-internal sealed class TestingPlatformEntryPoint
+namespace SomeNamespace
 {
-    public static async global::System.Threading.Tasks.Task<int> Main(string[] args)
+    [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
+    internal sealed class TestingPlatformEntryPoint
     {
-        global::Microsoft.Testing.Platform.Builder.ITestApplicationBuilder builder = await global::Microsoft.Testing.Platform.Builder.TestApplication.CreateBuilderAsync(args);
-        SelfRegisteredExtensions.AddSelfRegisteredExtensions(builder, args);
-        using (global::Microsoft.Testing.Platform.Builder.ITestApplication app = await builder.BuildAsync())
+        public static async global::System.Threading.Tasks.Task<int> Main(string[] args)
         {
-            return await app.RunAsync();
+            global::Microsoft.Testing.Platform.Builder.ITestApplicationBuilder builder = await global::Microsoft.Testing.Platform.Builder.TestApplication.CreateBuilderAsync(args);
+            SelfRegisteredExtensions.AddSelfRegisteredExtensions(builder, args);
+            using (global::Microsoft.Testing.Platform.Builder.ITestApplication app = await builder.BuildAsync())
+            {
+                return await app.RunAsync();
+            }
         }
     }
 }
 """;
 
         Assert.AreEqual(expectedSourceOrder, inMemoryFileSystem.Files["obj/entryPointFile"]);
-#endif
     }
 
     private sealed class InMemoryFileSystem : IFileSystem

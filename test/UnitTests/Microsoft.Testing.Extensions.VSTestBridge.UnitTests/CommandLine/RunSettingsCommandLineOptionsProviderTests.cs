@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Globalization;
-
 using Microsoft.Testing.Extensions.VSTestBridge.CommandLine;
 using Microsoft.Testing.Extensions.VSTestBridge.Resources;
 using Microsoft.Testing.Extensions.VSTestBridge.UnitTests.Helpers;
@@ -13,10 +11,10 @@ using Moq;
 
 namespace Microsoft.Testing.Extensions.VSTestBridge.UnitTests.CommandLine;
 
-[TestGroup]
-public sealed class RunSettingsCommandLineOptionsProviderTests(ITestExecutionContext testExecutionContext)
-    : TestBase(testExecutionContext)
+[TestClass]
+public sealed class RunSettingsCommandLineOptionsProviderTests
 {
+    [TestMethod]
     public async Task RunSettingsOption_WhenFileDoesNotExist_IsNotValid()
     {
         // Arrange
@@ -35,6 +33,7 @@ public sealed class RunSettingsCommandLineOptionsProviderTests(ITestExecutionCon
         Assert.AreEqual(string.Format(CultureInfo.CurrentCulture, ExtensionResources.RunsettingsFileDoesNotExist, filePath), result.ErrorMessage);
     }
 
+    [TestMethod]
     public async Task RunSettingsOption_WhenFileCannotBeOpen_IsNotValid()
     {
         // Arrange
@@ -54,6 +53,7 @@ public sealed class RunSettingsCommandLineOptionsProviderTests(ITestExecutionCon
         Assert.AreEqual(string.Format(CultureInfo.CurrentCulture, ExtensionResources.RunsettingsFileCannotBeRead, filePath), result.ErrorMessage);
     }
 
+    [TestMethod]
     public async Task RunSettingsOption_WhenFileExistsAndCanBeOpen_IsValid()
     {
         // Arrange

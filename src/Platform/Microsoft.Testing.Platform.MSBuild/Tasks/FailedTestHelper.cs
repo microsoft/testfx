@@ -1,9 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Globalization;
-using System.Text;
-
 using Microsoft.Testing.Extensions.MSBuild.Serializers;
 
 namespace Microsoft.Testing.Platform.MSBuild;
@@ -80,13 +77,11 @@ internal static class FailedTestHelper
         }
     }
 
-    private static string? JoinSingleLineAndShorten(string? first, string? second)
-        => first != null && second != null
-            ? SingleLineAndShorten(first) + " " + SingleLineAndShorten(second)
-            : SingleLineAndShorten(first) ?? SingleLineAndShorten(second);
+    private static string? JoinSingleLineAndShorten(string first, string? second)
+        => second == null
+            ? SingleLineAndShorten(first)
+            : SingleLineAndShorten(first) + " " + SingleLineAndShorten(second);
 
     private static string? SingleLineAndShorten(string? text)
-#pragma warning disable IDE0057 // Use range operator
-        => text == null ? null : (text.Length <= 1000 ? text : text.Substring(0, 1000)).Replace('\r', ' ').Replace('\n', ' ');
-#pragma warning restore IDE0057 // Use range operator
+        => text == null ? null : (text.Length <= 1000 ? text : text[..1000]).Replace('\r', ' ').Replace('\n', ' ');
 }

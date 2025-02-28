@@ -3,11 +3,6 @@
 
 #if !WINDOWS_UWP
 
-using System.Collections;
-using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
-using System.Reflection;
-
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -264,9 +259,9 @@ internal sealed class DeploymentItemUtility
 
         IList<DeploymentItem> result = new List<DeploymentItem>();
 
-        foreach (KeyValuePair<string, string> deploymentItemData in deploymentItemsData)
+        foreach ((string? key, string? value) in deploymentItemsData)
         {
-            AddDeploymentItem(result, new DeploymentItem(deploymentItemData.Key, deploymentItemData.Value));
+            AddDeploymentItem(result, new DeploymentItem(key, value));
         }
 
         return result;

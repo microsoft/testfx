@@ -509,12 +509,12 @@ Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplat
     <value>Canceling the test session...</value>
   </data>
   <data name="DiagnosticFileLevelWithAsyncFlush" xml:space="preserve">
-    <value>Diagnostic file (level '{0}' with async flush): {1}"</value>
+    <value>Diagnostic file (level '{0}' with async flush): {1}</value>
     <comment>0 level such as verbose, 
 1 path to file</comment>
   </data>
   <data name="DiagnosticFileLevelWithFlush" xml:space="preserve">
-    <value>Diagnostic file (level '{0}' with sync flush): {1}"</value>
+    <value>Diagnostic file (level '{0}' with sync flush): {1}</value>
     <comment>0 level such as verbose, 
 1 path to file</comment>
   </data>
@@ -712,5 +712,8 @@ Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is
   <data name="ReachedMaxFailedTestsMessage" xml:space="preserve">
     <value>Test session is aborting due to reaching failures ('{0}') specified by the '--maximum-failed-tests' option.</value>
     <comment>{0} is the number of max failed tests.</comment>
+  </data>
+  <data name="AbortForMaxFailedTestsCapabilityNotAvailable" xml:space="preserve">
+    <value>The current test framework does not implement 'IGracefulStopTestExecutionCapability' which is required for '--maximum-failed-tests' feature.</value>
   </data>
 </root>

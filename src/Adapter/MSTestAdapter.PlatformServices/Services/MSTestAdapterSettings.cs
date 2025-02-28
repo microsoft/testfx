@@ -2,20 +2,23 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if !WINDOWS_UWP
-using System.Globalization;
-using System.Xml;
 
-using Microsoft.Testing.Platform.Configurations;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
+/// <summary>
+/// The MSTest settings.
+/// </summary>
+#if RELEASE
 #if NET6_0_OR_GREATER
 [Obsolete(Constants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
 #else
 [Obsolete(Constants.PublicTypeObsoleteMessage)]
+#endif
 #endif
 public class MSTestAdapterSettings
 {
@@ -171,6 +174,11 @@ public class MSTestAdapterSettings
         return settings;
     }
 
+    /// <summary>
+    /// Determines if the AppDomain are disabled based of the runsettings.
+    /// </summary>
+    /// <param name="settingsXml">The XML runsettings content.</param>
+    /// <returns><c>true</c> if AppDomains are disabled; <c>false</c> otherwise.</returns>
     public static bool IsAppDomainCreationDisabled(string? settingsXml)
     {
         // Expected format of the json is: -
@@ -234,10 +242,10 @@ public class MSTestAdapterSettings
     /// <param name="path">The path to be expanded.</param>
     /// <param name="baseDirectory">The base directory for the path which is not rooted path.</param>
     /// <returns>The expanded path.</returns>
-    internal string? ResolveEnvironmentVariableAndReturnFullPathIfExist(string path, string baseDirectory)
+    internal string? ResolveEnvironmentVariableAndReturnFullPathIfExist(string? path, string? baseDirectory)
     {
         // Trim beginning and trailing white space from the path.
-        path = path.Trim(' ', '\t');
+        path = path?.Trim(' ', '\t');
 
         if (StringEx.IsNullOrEmpty(path))
         {
@@ -258,7 +266,7 @@ public class MSTestAdapterSettings
             }
             else
             {
-                warningMessage = $"The Directory: {path}, has following problem: {"This is not an absolute path. A base directory should be provided for this to be used as a relative path."}";
+                warningMessage = $"The Directory: {path}, has following problem: This is not an absolute path. A base directory should be provided for this to be used as a relative path.";
 
                 if (EqtTrace.IsWarningEnabled)
                 {

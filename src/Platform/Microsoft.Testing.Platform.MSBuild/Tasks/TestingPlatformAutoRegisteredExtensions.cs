@@ -3,16 +3,16 @@
 
 #pragma warning disable CS8618 // Properties below are set by MSBuild.
 
-using System.Diagnostics;
-using System.Globalization;
-using System.Text;
-
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
+using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Platform.MSBuild;
 
-public sealed class TestingPlatformAutoRegisteredExtensions : Build.Utilities.Task
+/// <summary>
+/// Task to generate the self-registered extensions source file.
+/// </summary>
+public sealed class TestingPlatformSelfRegisteredExtensions : Build.Utilities.Task
 {
     private const string DisplayNameMetadataName = "DisplayName";
     private const string TypeFullNameMetadataName = "TypeFullName";
@@ -21,12 +21,15 @@ public sealed class TestingPlatformAutoRegisteredExtensions : Build.Utilities.Ta
     private const string FSharpLanguageSymbol = "F#";
     private const string VBLanguageSymbol = "VB";
 
-    public TestingPlatformAutoRegisteredExtensions()
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TestingPlatformSelfRegisteredExtensions"/> class.
+    /// </summary>
+    public TestingPlatformSelfRegisteredExtensions()
         : this(new FileSystem())
     {
     }
 
-    internal TestingPlatformAutoRegisteredExtensions(IFileSystem fileSystem)
+    internal TestingPlatformSelfRegisteredExtensions(IFileSystem fileSystem)
     {
         if (Environment.GetEnvironmentVariable("TESTINGPLATFORM_MSBUILD_LAUNCH_ATTACH_DEBUGGER") == "1")
         {
@@ -36,17 +39,35 @@ public sealed class TestingPlatformAutoRegisteredExtensions : Build.Utilities.Ta
         _fileSystem = fileSystem;
     }
 
+    /// <summary>
+    /// Gets or sets the path to the source file.
+    /// </summary>
     [Required]
-    public ITaskItem AutoRegisteredExtensionsSourcePath { get; set; }
+    public ITaskItem SelfRegisteredExtensionsSourcePath { get; set; }
 
+    /// <summary>
+    /// Gets or sets the language of the source file.
+    /// </summary>
     [Required]
     public ITaskItem Language { get; set; }
 
+    /// <summary>
+    /// Gets or sets the builder hooks.
+    /// </summary>
     [Required]
-    public ITaskItem[] AutoRegisteredExtensionsBuilderHook { get; set; }
+    public ITaskItem[] SelfRegisteredExtensionsBuilderHook { get; set; }
 
+    /// <summary>
+    /// Gets or sets the root namespace.
+    /// </summary>
+    [Required]
+    public string RootNamespace { get; set; }
+
+    /// <summary>
+    /// Gets or sets the path to the generated file.
+    /// </summary>
     [Output]
-    public ITaskItem AutoRegisteredExtensionsGeneratedFilePath { get; set; }
+    public ITaskItem SelfRegisteredExtensionsGeneratedFilePath { get; set; }
 
     private readonly string _expectedItemSpec = """
 Expected item spec:
@@ -65,18 +86,19 @@ static Contoso.BuilderHook.AddExtensions(Microsoft.Testing.Platform.Builder.Test
 
     private readonly IFileSystem _fileSystem;
 
+    /// <inheritdoc />
     public override bool Execute()
     {
-        Log.LogMessage(MessageImportance.Normal, $"AutoRegisteredExtensionsSourcePath: '{AutoRegisteredExtensionsSourcePath.ItemSpec}'");
+        Log.LogMessage(MessageImportance.Normal, $"SelfRegisteredExtensionsSourcePath: '{SelfRegisteredExtensionsSourcePath.ItemSpec}'");
         Log.LogMessage(MessageImportance.Normal, $"Language: '{Language.ItemSpec}'");
 
-        if (AutoRegisteredExtensionsBuilderHook.Length > 0)
+        if (SelfRegisteredExtensionsBuilderHook.Length > 0)
         {
             StringBuilder stringBuilder = new();
             stringBuilder.AppendLine("TestingPlatformExtensionFullTypeNames:");
 
             // Distinct by ItemSpec and take the first one.
-            foreach (ITaskItem item in AutoRegisteredExtensionsBuilderHook.GroupBy(x => x.ItemSpec).Select(x => x.First()))
+            foreach (ITaskItem item in SelfRegisteredExtensionsBuilderHook.GroupBy(x => x.ItemSpec).Select(x => x.First()))
             {
                 if (string.IsNullOrEmpty(item.GetMetadata(DisplayNameMetadataName)))
                 {
@@ -96,19 +118,19 @@ static Contoso.BuilderHook.AddExtensions(Microsoft.Testing.Platform.Builder.Test
 
         if (!Log.HasLoggedErrors)
         {
-            ITaskItem[] taskItems = Reorder(AutoRegisteredExtensionsBuilderHook);
+            ITaskItem[] taskItems = Reorder(SelfRegisteredExtensionsBuilderHook);
 
             if (!Language.ItemSpec.Equals(CSharpLanguageSymbol, StringComparison.OrdinalIgnoreCase) &&
                 !Language.ItemSpec.Equals(VBLanguageSymbol, StringComparison.OrdinalIgnoreCase) &&
                 !Language.ItemSpec.Equals(FSharpLanguageSymbol, StringComparison.OrdinalIgnoreCase))
             {
-                AutoRegisteredExtensionsGeneratedFilePath = default!;
+                SelfRegisteredExtensionsGeneratedFilePath = default!;
                 Log.LogError($"Language '{Language.ItemSpec}' is not supported.");
             }
             else
             {
-                GenerateCode(Language.ItemSpec, taskItems, AutoRegisteredExtensionsSourcePath, _fileSystem, Log);
-                AutoRegisteredExtensionsGeneratedFilePath = AutoRegisteredExtensionsSourcePath;
+                GenerateCode(Language.ItemSpec, RootNamespace, taskItems, SelfRegisteredExtensionsSourcePath, _fileSystem, Log);
+                SelfRegisteredExtensionsGeneratedFilePath = SelfRegisteredExtensionsSourcePath;
             }
         }
 
@@ -138,7 +160,7 @@ static Contoso.BuilderHook.AddExtensions(Microsoft.Testing.Platform.Builder.Test
         return result.ToArray();
     }
 
-    private static void GenerateCode(string language, ITaskItem[] taskItems, ITaskItem testingPlatformEntryPointSourcePath, IFileSystem fileSystem, TaskLoggingHelper taskLoggingHelper)
+    private static void GenerateCode(string language, string rootNamespace, ITaskItem[] taskItems, ITaskItem testingPlatformEntryPointSourcePath, IFileSystem fileSystem, TaskLoggingHelper taskLoggingHelper)
     {
         StringBuilder builder = new();
 
@@ -150,23 +172,37 @@ static Contoso.BuilderHook.AddExtensions(Microsoft.Testing.Platform.Builder.Test
                 builder.Append("        ");
             }
 
-            builder.Append(CultureInfo.InvariantCulture, $"{taskItems[i].GetMetadata(TypeFullNameMetadataName)}.AddExtensions(builder, args){(language == CSharpLanguageSymbol ? ";" : string.Empty)}");
+            string global = language switch
+            {
+                CSharpLanguageSymbol => "global::",
+                VBLanguageSymbol => "Global.",
+                FSharpLanguageSymbol => "global.",
+                _ => throw ApplicationStateGuard.Unreachable(),
+            };
+
+            builder.Append(CultureInfo.InvariantCulture, $"{global}{taskItems[i].GetMetadata(TypeFullNameMetadataName)}.AddExtensions(builder, args){(language == CSharpLanguageSymbol ? ";" : string.Empty)}");
             if (i < taskItems.Length - 1)
             {
                 builder.AppendLine();
             }
         }
 
-        string entryPointSource = GetSourceCode(language, builder.ToString());
-        taskLoggingHelper.LogMessage(MessageImportance.Normal, $"AutoRegisteredExtensions source:\n'{entryPointSource}'");
+        string entryPointSource = GetSourceCode(language, rootNamespace, builder.ToString());
+        taskLoggingHelper.LogMessage(MessageImportance.Normal, $"SelfRegisteredExtensions source:\n'{entryPointSource}'");
         fileSystem.WriteAllText(testingPlatformEntryPointSourcePath.ItemSpec, entryPointSource);
     }
 
-    private static string GetSourceCode(string language, string extensionsFragments)
+    private static string GetSourceCode(string language, string rootNamespace, string extensionsFragments)
     {
+        if (language != VBLanguageSymbol && !string.IsNullOrEmpty(rootNamespace))
+        {
+            rootNamespace = NamespaceHelpers.ToSafeNamespace(rootNamespace);
+        }
+
         if (language == CSharpLanguageSymbol)
         {
-            return $$"""
+            return string.IsNullOrEmpty(rootNamespace)
+                ? $$"""
 //------------------------------------------------------------------------------
 // <auto-generated>
 //     This code was generated by Microsoft.Testing.Platform.MSBuild
@@ -181,10 +217,32 @@ internal static class SelfRegisteredExtensions
         {{extensionsFragments}}
     }
 }
+"""
+                : $$"""
+//------------------------------------------------------------------------------
+// <auto-generated>
+//     This code was generated by Microsoft.Testing.Platform.MSBuild
+// </auto-generated>
+//------------------------------------------------------------------------------
+
+namespace {{rootNamespace}}
+{
+    [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
+    internal static class SelfRegisteredExtensions
+    {
+        public static void AddSelfRegisteredExtensions(this global::Microsoft.Testing.Platform.Builder.ITestApplicationBuilder builder, string[] args)
+        {
+            {{extensionsFragments}}
+        }
+    }
+}
 """;
         }
         else if (language == VBLanguageSymbol)
         {
+            // NOTE: We don't use the value of RootNamespace here.
+            // The compiler *already* wraps types in RootNamespace for Visual Basic
+            // This is not the case for C# or F#.
             return $$"""
 '------------------------------------------------------------------------------
 ' <auto-generated>
@@ -194,18 +252,17 @@ internal static class SelfRegisteredExtensions
 
 <System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage>
 Friend Module SelfRegisteredExtensions
-
     <System.Runtime.CompilerServices.Extension>
     Public Sub AddSelfRegisteredExtensions(ByVal builder As Global.Microsoft.Testing.Platform.Builder.ITestApplicationBuilder, ByVal args As Global.System.String())
         {{extensionsFragments}}
     End Sub
-
 End Module
 """;
         }
         else if (language == FSharpLanguageSymbol)
         {
-            return $$"""
+            return string.IsNullOrEmpty(rootNamespace)
+                ? $$"""
 //------------------------------------------------------------------------------
 // <auto-generated>
 //     This code was generated by Microsoft.Testing.Platform.MSBuild
@@ -213,6 +270,25 @@ End Module
 //------------------------------------------------------------------------------
 
 namespace Microsoft.TestingPlatform.Extensions
+
+open System.Runtime.CompilerServices
+
+[<System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage>]
+[<Extension>]
+type SelfRegisteredExtensions() =
+
+    [<Extension>]
+    static member AddSelfRegisteredExtensions (builder: Microsoft.Testing.Platform.Builder.ITestApplicationBuilder, args: string[]) =
+        {{(extensionsFragments.Length > 0 ? extensionsFragments : "()")}}
+"""
+                : $$"""
+//------------------------------------------------------------------------------
+// <auto-generated>
+//     This code was generated by Microsoft.Testing.Platform.MSBuild
+// </auto-generated>
+//------------------------------------------------------------------------------
+
+namespace {{rootNamespace}}
 
 open System.Runtime.CompilerServices
 

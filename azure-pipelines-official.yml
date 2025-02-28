@@ -148,6 +148,22 @@ extends:
                 name: Test
                 displayName: Test
 
+              - task: CopyFiles@2
+                displayName: 'Copy binlogs'
+                inputs:
+                  SourceFolder: '$(Build.SourcesDirectory)/artifacts/tmp/$(_BuildConfig)/testsuite'
+                  Contents: |
+                    **/*.binlog
+                  TargetFolder: '$(Build.ArtifactStagingDirectory)/binlogs'
+                condition: always()
+
+              - task: 1ES.PublishBuildArtifacts@1
+                displayName: 'Publish integration tests binlogs'
+                inputs:
+                  PathtoPublish: '$(Build.ArtifactStagingDirectory)/binlogs'
+                  ArtifactName: Integration_Tests_Windows_Binlogs_$(_BuildConfig)
+                condition: always()
+
               # Remove temporary artifacts to avoid finding binskim issues for exes we don't own.
               - pwsh: |
                   Remove-Item -Path $(Build.SourcesDirectory)/artifacts/tmp -Recurse -Force
@@ -159,7 +175,7 @@ extends:
                 displayName: 'Publish Test Results folders'
                 inputs:
                   PathtoPublish: '$(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)'
-                  ArtifactName: TestResults
+                  ArtifactName: TestResults_Windows
                 condition: failed()
 
             - task: NuGetAuthenticate@1
@@ -195,6 +211,15 @@ extends:
                   ./test.sh --configuration $(_BuildConfig) --ci --test --integrationTest --nobl
                 name: Test
                 displayName: Tests
+
+              # This step is only helpful for diagnosing some issues with vstest/test host that would not appear
+              # through the console or trx
+              - task: 1ES.PublishBuildArtifacts@1
+                displayName: 'Publish Test Results folders'
+                inputs:
+                  PathtoPublish: '$(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)'
+                  ArtifactName: TestResults_Linux
+                condition: failed()
 
       - ${{ if eq(variables['Build.SourceBranchName'], 'main') }}:
         - template: /eng/common/templates-official/job/onelocbuild.yml@self

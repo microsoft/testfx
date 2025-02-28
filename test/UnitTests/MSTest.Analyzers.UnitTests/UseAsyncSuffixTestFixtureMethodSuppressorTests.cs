@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Immutable;
-using System.Diagnostics.CodeAnalysis;
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
@@ -13,9 +12,10 @@ using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
 
 namespace MSTest.Analyzers.UnitTests;
 
-[TestGroup]
-public sealed class UseAsyncSuffixTestFixtureMethodSuppressorTests(ITestExecutionContext testExecutionContext) : TestBase(testExecutionContext)
+[TestClass]
+public sealed class UseAsyncSuffixTestFixtureMethodSuppressorTests
 {
+    [TestMethod]
     public async Task AsyncTestFixtureMethodsWithoutSuffix_DiagnosticIsSuppressed()
     {
         string code = @"
@@ -57,6 +57,7 @@ public class SomeClass
         }.RunAsync();
     }
 
+    [TestMethod]
     public async Task AsyncTestMethodWithSuffix_NoDiagnostic()
     {
         string code = """
@@ -113,7 +114,7 @@ public class SomeClass
             context.RegisterSymbolAction(AnalyzeSymbol, SymbolKind.Method);
         }
 
-        private void AnalyzeSymbol(SymbolAnalysisContext context)
+        private static void AnalyzeSymbol(SymbolAnalysisContext context)
         {
             var method = (IMethodSymbol)context.Symbol;
             if (method.Name.EndsWith("Async", StringComparison.Ordinal))

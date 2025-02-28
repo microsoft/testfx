@@ -1,15 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if !NET7_0_OR_GREATER
-using System.Diagnostics.CodeAnalysis;
-using System.Reflection;
-#endif
-
-using System.Collections.Concurrent;
-using System.Globalization;
-using System.Text.RegularExpressions;
-
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Resources;
 
@@ -18,6 +9,7 @@ namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 /// <summary>
 /// Terminal test reporter that outputs test progress and is capable of writing ANSI or non-ANSI output via the given terminal.
 /// </summary>
+[UnsupportedOSPlatform("browser")]
 internal sealed partial class TerminalTestReporter : IDisposable
 {
     /// <summary>
@@ -66,7 +58,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
 #if NET7_0_OR_GREATER
     // Specifying no timeout, the regex is linear. And the timeout does not measure the regex only, but measures also any
     // thread suspends, so the regex gets blamed incorrectly.
-    [GeneratedRegex(@$"^   at ((?<code>.+) in (?<file>.+):line (?<line>\d+)|(?<code1>.+))$", RegexOptions.ExplicitCapture)]
+    [GeneratedRegex(@"^   at ((?<code>.+) in (?<file>.+):line (?<line>\d+)|(?<code1>.+))$", RegexOptions.ExplicitCapture)]
     private static partial Regex GetFrameRegex();
 #else
     private static Regex? s_regex;
@@ -393,6 +385,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
        string displayName,
        TestOutcome outcome,
        TimeSpan duration,
+       string? informativeMessage,
        string? errorMessage,
        Exception? exception,
        string? expected,
@@ -410,6 +403,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
             displayName,
             outcome,
             duration,
+            informativeMessage,
             flatExceptions,
             expected,
             actual,
@@ -417,7 +411,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
             errorOutput);
     }
 
-    internal void TestCompleted(
+    private void TestCompleted(
         string assembly,
         string? targetFramework,
         string? architecture,
@@ -426,6 +420,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
         string displayName,
         TestOutcome outcome,
         TimeSpan duration,
+        string? informativeMessage,
         FlatException[] exceptions,
         string? expected,
         string? actual,
@@ -469,6 +464,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
                 displayName,
                 outcome,
                 duration,
+                informativeMessage,
                 exceptions,
                 expected,
                 actual,
@@ -483,7 +479,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
         return _shouldShowPassedTests.Value;
     }
 
-    internal /* for testing */ void RenderTestCompleted(
+    private void RenderTestCompleted(
         ITerminal terminal,
         string assembly,
         string? targetFramework,
@@ -491,6 +487,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
         string displayName,
         TestOutcome outcome,
         TimeSpan duration,
+        string? informativeMessage,
         FlatException[] flatExceptions,
         string? expected,
         string? actual,
@@ -537,6 +534,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
 
         terminal.AppendLine();
 
+        AppendIndentedLine(terminal, informativeMessage, SingleIndentation);
         FormatErrorMessage(terminal, flatExceptions, outcome, 0);
         FormatExpectedAndActual(terminal, expected, actual);
         FormatStackTrace(terminal, flatExceptions, 0);
@@ -977,9 +975,6 @@ internal sealed partial class TerminalTestReporter : IDisposable
             terminal.AppendLine();
         }
     }
-
-    public void AssemblyDiscoveryCompleted(int testCount) =>
-        _terminalWithProgress.WriteToTerminal(terminal => terminal.Append($"Found {testCount} tests"));
 
     private static TerminalColor ToTerminalColor(ConsoleColor consoleColor)
         => consoleColor switch

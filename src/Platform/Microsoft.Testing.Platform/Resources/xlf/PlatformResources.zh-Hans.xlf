@@ -2,9 +2,14 @@
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
   <file datatype="xml" source-language="en" target-language="zh-Hans" original="../PlatformResources.resx">
     <body>
+      <trans-unit id="AbortForMaxFailedTestsCapabilityNotAvailable">
+        <source>The current test framework does not implement 'IGracefulStopTestExecutionCapability' which is required for '--maximum-failed-tests' feature.</source>
+        <target state="translated">当前测试框架未实现 “--maximum-failed-tests” 功能所需的 “IGracefulStopTestExecutionCapability”。</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AbortForMaxFailedTestsDescription">
         <source>Extension used to support '--maximum-failed-tests'. When a given failures threshold is reached, the test run will be aborted.</source>
-        <target state="new">Extension used to support '--maximum-failed-tests'. When a given failures threshold is reached, the test run will be aborted.</target>
+        <target state="translated">用于支持 “--maximum-failed-tests” 的扩展。达到给定失败阈值时，将中止测试运行。</target>
         <note />
       </trans-unit>
       <trans-unit id="Aborted">
@@ -198,14 +203,14 @@
         <note />
       </trans-unit>
       <trans-unit id="DiagnosticFileLevelWithAsyncFlush">
-        <source>Diagnostic file (level '{0}' with async flush): {1}"</source>
-        <target state="translated">诊断文件(具有异步刷新的级别“{0}”): {1}”</target>
+        <source>Diagnostic file (level '{0}' with async flush): {1}</source>
+        <target state="translated">诊断文件(具有异步刷新的级别“{0}”): {1}</target>
         <note>0 level such as verbose, 
 1 path to file</note>
       </trans-unit>
       <trans-unit id="DiagnosticFileLevelWithFlush">
-        <source>Diagnostic file (level '{0}' with sync flush): {1}"</source>
-        <target state="translated">诊断文件(具有同步刷新的级别“{0}”): {1}”</target>
+        <source>Diagnostic file (level '{0}' with sync flush): {1}</source>
+        <target state="translated">诊断文件(具有同步刷新的级别“{0}”): {1}</target>
         <note>0 level such as verbose, 
 1 path to file</note>
       </trans-unit>
@@ -378,7 +383,7 @@
       </trans-unit>
       <trans-unit id="MaxFailedTestsMustBePositive">
         <source>The option '--maximum-failed-tests' must be a positive integer. The value '{0}' is not valid.</source>
-        <target state="new">The option '--maximum-failed-tests' must be a positive integer. The value '{0}' is not valid.</target>
+        <target state="translated">选项 “--maximum-failed-tests” 必须是正整数。值 '{0}' 无效。</target>
         <note />
       </trans-unit>
       <trans-unit id="MessageBusNotReady">
@@ -547,7 +552,7 @@ The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', an
       </trans-unit>
       <trans-unit id="PlatformCommandLineMaxFailedTestsOptionDescription">
         <source>Specifies a maximum number of test failures that, when exceeded, will abort the test run.</source>
-        <target state="new">Specifies a maximum number of test failures that, when exceeded, will abort the test run.</target>
+        <target state="translated">指定超过测试失败数后将中止测试运行的最大数目。</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineMinimumExpectedTestsIncompatibleDiscoverTests">
@@ -640,7 +645,7 @@ Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is
       </trans-unit>
       <trans-unit id="ReachedMaxFailedTestsMessage">
         <source>Test session is aborting due to reaching failures ('{0}') specified by the '--maximum-failed-tests' option.</source>
-        <target state="new">Test session is aborting due to reaching failures ('{0}') specified by the '--maximum-failed-tests' option.</target>
+        <target state="translated">由于达到“--maximum-failed-tests”选项指定的失败 ('{0}')，测试会话正在中止。</target>
         <note>{0} is the number of max failed tests.</note>
       </trans-unit>
       <trans-unit id="RetryFailedAfterTriesErrorMessage">

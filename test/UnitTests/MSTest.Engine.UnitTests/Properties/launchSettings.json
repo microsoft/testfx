@@ -1,0 +1,11 @@
+{
+  "profiles": {
+    "MSTest.Engine.UnitTests": {
+      "commandName": "Project",
+      "commandLineArgs": "",
+      "environmentVariables": {
+        //"TESTINGPLATFORM_HOTRELOAD_ENABLED": "1"
+      }
+    }
+  }
+}

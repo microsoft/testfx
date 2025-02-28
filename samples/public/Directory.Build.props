@@ -1,13 +1,13 @@
 <Project>
 
   <PropertyGroup>
-    <AspireTestingVersion>8.2.2</AspireTestingVersion>
+    <AspireTestingVersion>9.0.0</AspireTestingVersion>
     <CodeCoverageVersion>17.13.1</CodeCoverageVersion>
-    <MSTestVersion>3.6.4</MSTestVersion>
-    <MSTestAOTVersion>1.0.0-alpha.24530.4</MSTestAOTVersion>
-    <PlaywrightVersion>1.49.0</PlaywrightVersion>
-    <TestingPlatformVersion>1.4.3</TestingPlatformVersion>
-    <VSTestVersion>17.12.0</VSTestVersion>
+    <MSTestVersion>3.8.2</MSTestVersion>
+    <MSTestAOTVersion>1.0.0-alpha.25119.7</MSTestAOTVersion>
+    <PlaywrightVersion>1.50.0</PlaywrightVersion>
+    <TestingPlatformVersion>1.6.2</TestingPlatformVersion>
+    <VSTestVersion>17.13.0</VSTestVersion>
   </PropertyGroup>
 
 </Project>

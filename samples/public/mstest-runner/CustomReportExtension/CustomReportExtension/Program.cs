@@ -11,8 +11,8 @@ builder.AddMSTest(() => new[] { typeof(Program).Assembly });
 
 // This is a convenience helper that simplifies the process of creating a composite extension (a type that implements multiple extension points).
 // Thanks to that, you can implement multiple extension points in a single class and you don't have to handle communication/synchronization between them.
-CompositeExtensionFactory<TestResultConsoleLogger> testUpdateConsoleReporter =
-    new(serviceProvider => new TestResultConsoleLogger());
+CompositeExtensionFactory<TestResultConsoleReporter> testUpdateConsoleReporter =
+    new(serviceProvider => new TestResultConsoleReporter());
 
 // Register the extension as a data consumer and test session lifetime handler.
 builder.TestHost.AddDataConsumer(testUpdateConsoleReporter);

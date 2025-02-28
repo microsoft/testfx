@@ -3,9 +3,12 @@
 
 using Microsoft.Testing.Extensions;
 
+[assembly: Parallelize(Scope = ExecutionScope.MethodLevel, Workers = 0)]
+[assembly: ClassCleanupExecution(ClassCleanupBehavior.EndOfClass)]
+
 // DebuggerUtility.AttachVSToCurrentProcess();
 ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
-builder.AddTestFramework(new Microsoft.Testing.Platform.MSBuild.UnitTests.SourceGeneratedTestNodesBuilder());
+builder.AddMSTest(() => [Assembly.GetEntryAssembly()!]);
 #if ENABLE_CODECOVERAGE
 builder.AddCodeCoverageProvider();
 #endif

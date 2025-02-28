@@ -2,8 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if NET462
-using System.Reflection;
-
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
 using TestFramework.ForTestingMSTest;
@@ -134,7 +132,7 @@ public class AssemblyResolverTests : TestContainer
                     count++;
                 }
 
-                return null;
+                return null!;
             };
 
         ResolveEventArgs dummyArgs = new("DummyTestDllForTest");
@@ -154,13 +152,13 @@ public class AssemblyResolverTests : TestContainer
         bool isAssemblyLoaded = false;
         bool isAssemblyReflectionOnlyLoaded = false;
 
-        assemblyResolver.LoadAssemblyFromSetter = (string path) =>
+        assemblyResolver.LoadAssemblyFromSetter = path =>
         {
             isAssemblyLoaded = true;
             return typeof(AssemblyResolverTests).Assembly;
         };
 
-        assemblyResolver.ReflectionOnlyLoadAssemblyFromSetter = (string path) =>
+        assemblyResolver.ReflectionOnlyLoadAssemblyFromSetter = path =>
         {
             isAssemblyReflectionOnlyLoaded = true;
             return typeof(AssemblyResolverTests).Assembly;
@@ -179,7 +177,7 @@ public class AssemblyResolverTests : TestContainer
         isAssemblyLoaded = false;
 
         // Simulate loading the assembly in Reflection-only context.
-        assemblyResolver.ReflectionOnlyOnResolve(null, new ResolveEventArgs(currentAssembly.FullName));
+        assemblyResolver.ReflectionOnlyOnResolve(null!, new ResolveEventArgs(currentAssembly.FullName));
 
         // The below assertions ensure that a cached version is not returned out because it actually Reflection only loads the assembly.
         Verify(!isAssemblyLoaded);
@@ -194,31 +192,37 @@ public class TestableAssemblyResolver : AssemblyResolver
     {
     }
 
-    public Func<string, bool> DoesDirectoryExistSetter { get; set; }
+    public Func<string, bool> DoesDirectoryExistSetter { get; set; } = null!;
 
-    public Func<string, string[]> GetDirectoriesSetter { get; set; }
+    public Func<string, string[]> GetDirectoriesSetter { get; set; } = null!;
 
-    public Func<string, bool> DoesFileExistSetter { get; set; }
+    public Func<string, bool> DoesFileExistSetter { get; set; } = null!;
 
-    public Func<string, Assembly> LoadAssemblyFromSetter { get; set; }
+    public Func<string, Assembly> LoadAssemblyFromSetter { get; set; } = null!;
 
-    public Func<string, Assembly> ReflectionOnlyLoadAssemblyFromSetter { get; set; }
+    public Func<string, Assembly> ReflectionOnlyLoadAssemblyFromSetter { get; set; } = null!;
 
-    public Func<List<string>, string, bool, Assembly> SearchAssemblySetter { get; internal set; }
+    public Func<List<string>, string, bool, Assembly> SearchAssemblySetter { get; internal set; } = null!;
 
-    protected override bool DoesDirectoryExist(string path) => DoesDirectoryExistSetter == null ? base.DoesDirectoryExist(path) : DoesDirectoryExistSetter(path);
+    protected override bool DoesDirectoryExist(string path)
+        => DoesDirectoryExistSetter?.Invoke(path) ?? base.DoesDirectoryExist(path);
 
-    protected override string[] GetDirectories(string path) => GetDirectoriesSetter == null ? base.GetDirectories(path) : GetDirectoriesSetter(path);
+    protected override string[] GetDirectories(string path)
+        => GetDirectoriesSetter == null ? base.GetDirectories(path) : GetDirectoriesSetter(path);
 
-    protected override Assembly SearchAssembly(List<string> searchDirectorypaths, string name, bool isReflectionOnly) => SearchAssemblySetter == null
+    protected override Assembly? SearchAssembly(List<string> searchDirectorypaths, string name, bool isReflectionOnly)
+        => SearchAssemblySetter == null
             ? base.SearchAssembly(searchDirectorypaths, name, isReflectionOnly)
             : SearchAssemblySetter(searchDirectorypaths, name, isReflectionOnly);
 
-    protected override bool DoesFileExist(string filePath) => DoesFileExistSetter == null ? base.DoesFileExist(filePath) : DoesFileExistSetter(filePath);
+    protected override bool DoesFileExist(string filePath)
+        => DoesFileExistSetter?.Invoke(filePath) ?? base.DoesFileExist(filePath);
 
-    protected override Assembly LoadAssemblyFrom(string path) => LoadAssemblyFromSetter == null ? base.LoadAssemblyFrom(path) : LoadAssemblyFromSetter(path);
+    protected override Assembly LoadAssemblyFrom(string path)
+        => LoadAssemblyFromSetter == null ? base.LoadAssemblyFrom(path) : LoadAssemblyFromSetter(path);
 
-    protected override Assembly ReflectionOnlyLoadAssemblyFrom(string path) => ReflectionOnlyLoadAssemblyFromSetter == null
+    protected override Assembly ReflectionOnlyLoadAssemblyFrom(string path)
+        => ReflectionOnlyLoadAssemblyFromSetter == null
             ? base.ReflectionOnlyLoadAssemblyFrom(path)
             : ReflectionOnlyLoadAssemblyFromSetter(path);
 }

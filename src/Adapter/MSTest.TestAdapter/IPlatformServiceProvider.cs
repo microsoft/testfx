@@ -3,6 +3,9 @@
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ObjectModel;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
+
+using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 
@@ -27,9 +30,9 @@ internal interface IPlatformServiceProvider
     IFileOperations FileOperations { get; }
 
     /// <summary>
-    /// Gets an instance to the platform service for trace logging.
+    /// Gets or sets an instance to the platform service for trace logging.
     /// </summary>
-    IAdapterTraceLogger AdapterTraceLogger { get; }
+    IAdapterTraceLogger AdapterTraceLogger { get; set; }
 
     /// <summary>
     /// Gets an instance of the test deployment service.
@@ -55,6 +58,11 @@ internal interface IPlatformServiceProvider
     /// Gets or sets an instance to the platform service for cancellation token supporting cancellation of a test run.
     /// </summary>
     TestRunCancellationToken? TestRunCancellationToken { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether a graceful stop is requested.
+    /// </summary>
+    bool IsGracefulStopRequested { get; set; }
 
     /// <summary>
     /// Creates an instance to the platform service for a test source host.
@@ -115,11 +123,13 @@ internal interface IPlatformServiceProvider
     /// <param name="properties">
     /// The default set of properties the test context needs to be filled with.
     /// </param>
+    /// <param name="messageLogger">The message logger.</param>
+    /// <param name="outcome">The test outcome.</param>
     /// <returns>
     /// The <see cref="ITestContext"/> instance.
     /// </returns>
     /// <remarks>
     /// This was required for compatibility reasons since the TestContext object that the V1 adapter had for desktop is not .Net Core compliant.
     /// </remarks>
-    ITestContext GetTestContext(ITestMethod testMethod, StringWriter writer, IDictionary<string, object?> properties);
+    ITestContext GetTestContext(ITestMethod testMethod, StringWriter writer, IDictionary<string, object?> properties, IMessageLogger messageLogger, UTF.UnitTestOutcome outcome);
 }

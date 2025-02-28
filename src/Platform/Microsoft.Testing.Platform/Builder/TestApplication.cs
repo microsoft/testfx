@@ -1,15 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Diagnostics;
-using System.Globalization;
-using System.Reflection;
-#if NETCOREAPP
-using System.Runtime.CompilerServices;
-#endif
-using System.Runtime.InteropServices;
-using System.Text;
-
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Helpers;
@@ -82,17 +73,18 @@ public sealed class TestApplication : ITestApplication
         string createBuilderEntryTime = createBuilderStart.ToString("HH:mm:ss.fff", CultureInfo.InvariantCulture);
         testApplicationOptions ??= new TestApplicationOptions();
 
-        LaunchAttachDebugger(systemEnvironment);
+        SystemConsole systemConsole = new();
+        SystemProcessHandler systemProcess = new();
+        AttachDebuggerIfNeeded(systemEnvironment, systemConsole, systemProcess);
 
         // First step is to parse the command line from where we get the second input layer.
         // The first one should be the env vars handled autonomously by extensions and part of the test platform.
         CommandLineParseResult parseResult = CommandLineParser.Parse(args, systemEnvironment);
         TestHostControllerInfo testHostControllerInfo = new(parseResult);
-        SystemProcessHandler systemProcess = new();
         CurrentTestApplicationModuleInfo testApplicationModuleInfo = new(systemEnvironment, systemProcess);
 
         // Create the UnhandledExceptionHandler that will be set inside the TestHostBuilder.
-        LazyInitializer.EnsureInitialized(ref s_unhandledExceptionHandler, () => new UnhandledExceptionHandler(systemEnvironment, new SystemConsole(), parseResult.IsOptionSet(PlatformCommandLineProvider.TestHostControllerPIDOptionKey)));
+        LazyInitializer.EnsureInitialized(ref s_unhandledExceptionHandler, () => new UnhandledExceptionHandler(systemEnvironment, systemConsole, parseResult.IsOptionSet(PlatformCommandLineProvider.TestHostControllerPIDOptionKey)));
         ApplicationStateGuard.Ensure(s_unhandledExceptionHandler is not null);
 
         // First task is to setup the logger if enabled and we take the info from the command line or env vars.
@@ -136,7 +128,7 @@ public sealed class TestApplication : ITestApplication
         }
         else
         {
-            await logger.LogInformationAsync($"Version attribute not found");
+            await logger.LogInformationAsync("Version attribute not found");
         }
 
         await logger.LogInformationAsync("Logging mode: " + (syncWrite ? "synchronous" : "asynchronous"));
@@ -187,7 +179,7 @@ public sealed class TestApplication : ITestApplication
 #endif
         await logger.LogInformationAsync($"IsDynamicCodeSupported: {isDynamicCodeSupported}");
 
-        string moduleName = testApplicationModuleInfo.GetCurrentTestApplicationFullPath();
+        string moduleName = testApplicationModuleInfo.GetDisplayName();
         await logger.LogInformationAsync($"Test module: {moduleName}");
         await logger.LogInformationAsync($"Command line arguments: '{(args.Length == 0 ? string.Empty : args.Aggregate((a, b) => $"{a} {b}"))}'");
 
@@ -233,6 +225,7 @@ public sealed class TestApplication : ITestApplication
         => (_testHost as IDisposable)?.Dispose();
 
 #if NETCOREAPP
+    /// <inheritdoc />
     public ValueTask DisposeAsync()
         => _testHost is IAsyncDisposable asyncDisposable
             ? asyncDisposable.DisposeAsync()
@@ -243,11 +236,24 @@ public sealed class TestApplication : ITestApplication
     public async Task<int> RunAsync()
         => await _testHost.RunAsync();
 
-    private static void LaunchAttachDebugger(SystemEnvironment environment)
+    private static void AttachDebuggerIfNeeded(SystemEnvironment environment, SystemConsole console, SystemProcessHandler systemProcess)
     {
         if (environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_LAUNCH_ATTACH_DEBUGGER) == "1")
         {
             Debugger.Launch();
+        }
+
+        if (environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER) == "1")
+        {
+            IProcess currentProcess = systemProcess.GetCurrentProcess();
+            console.WriteLine($"Waiting for debugger to attach... Process Id: {currentProcess.Id}, Name: {currentProcess.Name}");
+
+            while (!Debugger.IsAttached)
+            {
+                Thread.Sleep(1000);
+            }
+
+            Debugger.Break();
         }
     }
 
@@ -305,7 +311,7 @@ public sealed class TestApplication : ITestApplication
         }
 
         // Set the directory to the default test result directory
-        string directory = Path.Combine(Path.GetDirectoryName(testApplicationModuleInfo.GetCurrentTestApplicationFullPath())!, AggregatedConfiguration.DefaultTestResultFolderName);
+        string directory = Path.Combine(testApplicationModuleInfo.GetCurrentTestApplicationDirectory(), AggregatedConfiguration.DefaultTestResultFolderName);
         bool customDirectory = false;
 
         if (result.TryGetOptionArgumentList(PlatformCommandLineProvider.ResultDirectoryOptionKey, out string[]? resultDirectoryArg))

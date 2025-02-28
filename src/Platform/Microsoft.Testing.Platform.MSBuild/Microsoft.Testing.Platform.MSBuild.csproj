@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>$(MicrosoftTestingTargetFrameworks);netstandard2.0</TargetFrameworks>
     <DefineConstants>PLATFORM_MSBUILD</DefineConstants>
@@ -12,7 +12,7 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Build.Framework" PrivateAssets="All" />
     <PackageReference Include="Microsoft.Build.Utilities.Core" PrivateAssets="All" />
-    <PackageReference Include="Microsoft.Win32.Registry" PrivateAssets="All" />
+    <PackageReference Include="Microsoft.Win32.Registry" PrivateAssets="All" Condition="'$(TargetFrameworkIdentifier)' != '.NETCoreApp'" />
   </ItemGroup>
 
   <ItemGroup>
@@ -47,6 +47,7 @@ This package provides MSBuild integration of the platform, its extensions and co
     <ItemGroup>
       <TfmSpecificPackageFile Include="@(ReferenceCopyLocalPaths->WithMetadataValue('ReferenceSourceTarget', 'ProjectReference')->WithMetadataValue('PrivateAssets', 'All'))" PackagePath="lib\$(TargetFramework)\%(ReferenceCopyLocalPaths.DestinationSubDirectory)" />
       <BuildOutputInPackage Include="@(ReferenceCopyLocalPaths->WithMetadataValue('ReferenceSourceTarget', 'ProjectReference')->WithMetadataValue('CopyToBuildOutput', 'true'))" TargetPath="%(ReferenceCopyLocalPaths.DestinationSubDirectory)" />
+      <BuildOutputInPackage Include="@(RuntimeTargetsCopyLocalItems->HasMetadata('NuGetPackageId'))" TargetPath="%(RuntimeCopyLocalPaths.DestinationSubPath)" />
     </ItemGroup>
   </Target>
 

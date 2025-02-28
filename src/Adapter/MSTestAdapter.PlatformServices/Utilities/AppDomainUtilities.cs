@@ -3,10 +3,6 @@
 
 #if NETFRAMEWORK
 
-using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
-using System.Reflection;
-
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -28,6 +24,7 @@ internal static class AppDomainUtilities
     /// </summary>
     [field: AllowNull]
     [field: MaybeNull]
+    [AllowNull]
     internal static XmlUtilities XmlUtilities
     {
         get => field ??= new XmlUtilities();
@@ -45,7 +42,7 @@ internal static class AppDomainUtilities
     {
         if (GetTargetFrameworkVersionFromVersionString(frameworkVersionString).CompareTo(Version45) > 0)
         {
-            PropertyInfo pInfo = typeof(AppDomainSetup).GetProperty(Constants.TargetFrameworkName);
+            PropertyInfo? pInfo = typeof(AppDomainSetup).GetProperty(Constants.TargetFrameworkName);
             pInfo?.SetValue(setup, frameworkVersionString, null);
         }
     }
@@ -185,7 +182,7 @@ internal static class AppDomainUtilities
         string? typeAssemblyLocation = type.Assembly.Location;
         string? fullFilePath = typeAssemblyLocation == null ? null : Path.Combine(appDomain.SetupInformation.ApplicationBase, Path.GetFileName(typeAssemblyLocation));
 
-        EnsureAppDomainUsesCorrectUICulture(appDomain, CultureInfo.DefaultThreadCurrentUICulture);
+        EnsureRelevantStaticStateIsRestored(appDomain);
 
         if (fullFilePath == null || File.Exists(fullFilePath))
         {
@@ -245,21 +242,22 @@ internal static class AppDomainUtilities
         return DefaultVersion;
     }
 
-    internal /* for testing purposes */ static void EnsureAppDomainUsesCorrectUICulture(AppDomain appDomain, CultureInfo uiCulture)
+    private static void EnsureRelevantStaticStateIsRestored(AppDomain appDomain)
     {
-        // AppDomain is not preserving the culture info. So we need to set it explicitly.
+        // AppDomain is not preserving the state static (by-design, as it's for isolation).
+        // However, there is some static state that we want to preserve, so we need to set it explicitly.
+        Type staticStateHelperType = typeof(StaticStateHelper);
+        var staticStateHelper = appDomain.CreateInstanceFromAndUnwrap(staticStateHelperType.Assembly.Location, staticStateHelperType.FullName) as StaticStateHelper;
+        staticStateHelper?.SetUICulture(CultureInfo.DefaultThreadCurrentUICulture);
+    }
+
+    private sealed class StaticStateHelper : MarshalByRefObject
+    {
+#pragma warning disable CA1822 // Mark members as static - Should not be static for our need
         // The overloads of CreateInstanceAndUnwrap that takes the culture info are actually not setting the culture
         // of the AppDomain but only using this culture for the cast/conversion of the arguments.
         // For the problem reported by vendors, we would only need to set the DefaultThreadCurrentUICulture as it's
         // the culture we want to use for the resx.
-        Type cultureHelperType = typeof(AppDomainCultureHelper);
-        var appDomainCultureHelper = appDomain.CreateInstanceFromAndUnwrap(cultureHelperType.Assembly.Location, cultureHelperType.FullName) as AppDomainCultureHelper;
-        appDomainCultureHelper?.SetUICulture(uiCulture);
-    }
-
-    private sealed class AppDomainCultureHelper : MarshalByRefObject
-    {
-#pragma warning disable CA1822 // Mark members as static - Should not be static for our need
         public void SetUICulture(CultureInfo uiCulture) => CultureInfo.DefaultThreadCurrentUICulture = uiCulture;
     }
 }

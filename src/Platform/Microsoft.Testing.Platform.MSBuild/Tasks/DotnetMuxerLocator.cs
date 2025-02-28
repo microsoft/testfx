@@ -2,10 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 // Adapted from https://github.com/microsoft/vstest/blob/main/src/Microsoft.TestPlatform.CoreUtilities/Helpers/DotnetHostHelper.cs
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
-using System.Runtime.InteropServices;
-
 using Microsoft.Win32;
 
 namespace Microsoft.Testing.Platform.MSBuild.Tasks;
@@ -86,7 +82,7 @@ internal sealed class DotnetMuxerLocator
         if ((envVar == null || !Directory.Exists(envVar)) &&
             targetArchitecture == PlatformArchitecture.X86 && isWinOs)
         {
-            envKey = $"DOTNET_ROOT(x86)";
+            envKey = "DOTNET_ROOT(x86)";
             envVar = Environment.GetEnvironmentVariable(envKey);
         }
 
@@ -128,7 +124,20 @@ internal sealed class DotnetMuxerLocator
             }
         }
 
-        _resolutionLog($"DotnetHostHelper.TryGetDotnetPathByArchitecture: Muxer was not found using DOTNET_ROOT* env variables.");
+        _resolutionLog("DotnetHostHelper.TryGetDotnetPathByArchitecture: Muxer was not found using DOTNET_ROOT* env variables.");
+
+        // Search in path
+        muxerPath = GetMuxerFromPath();
+        if (muxerPath is not null)
+        {
+            if (IsValidArchitectureMuxer(targetArchitecture, muxerPath))
+            {
+                _resolutionLog($"DotnetHostHelper.TryGetDotnetPathByArchitecture: Muxer compatible with '{targetArchitecture}' resolved from PATH: '{muxerPath}'");
+                return true;
+            }
+
+            _resolutionLog($"DotnetHostHelper.TryGetDotnetPathByArchitecture: Muxer resolved using PATH is not compatible with the target architecture: '{muxerPath}'");
+        }
 
         // Try to search for global registration
         muxerPath = isWinOs ? GetMuxerFromGlobalRegistrationWin(targetArchitecture) : GetMuxerFromGlobalRegistrationOnUnix(targetArchitecture);
@@ -155,7 +164,7 @@ internal sealed class DotnetMuxerLocator
             return true;
         }
 
-        _resolutionLog($"DotnetHostHelper.TryGetDotnetPathByArchitecture: Muxer not found using global registrations");
+        _resolutionLog("DotnetHostHelper.TryGetDotnetPathByArchitecture: Muxer not found using global registrations");
 
         // Try searching in default installation location if it exists
         if (isWinOs)
@@ -209,6 +218,22 @@ internal sealed class DotnetMuxerLocator
         return true;
     }
 
+    private string? GetMuxerFromPath()
+    {
+        string values = Environment.GetEnvironmentVariable("PATH")!;
+        foreach (string? p in values.Split(Path.PathSeparator))
+        {
+            string fullPath = Path.Combine(p, _muxerName);
+            if (File.Exists(fullPath))
+            {
+                _resolutionLog($"DotnetMuxerLocator.GetMuxerFromPath: Found {_muxerName} using PATH environment variable: '{fullPath}'");
+                return fullPath;
+            }
+        }
+
+        return null;
+    }
+
     private string? GetMuxerFromGlobalRegistrationWin(PlatformArchitecture targetArchitecture)
     {
         if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
@@ -223,14 +248,14 @@ internal sealed class DotnetMuxerLocator
         using var hklm = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32);
         if (hklm == null)
         {
-            _resolutionLog($@"DotnetHostHelper.GetMuxerFromGlobalRegistrationWin: Missing SOFTWARE\dotnet\Setup\InstalledVersions subkey");
+            _resolutionLog(@"DotnetHostHelper.GetMuxerFromGlobalRegistrationWin: Missing SOFTWARE\dotnet\Setup\InstalledVersions subkey");
             return null;
         }
 
         using RegistryKey? dotnetInstalledVersion = hklm.OpenSubKey(@"SOFTWARE\dotnet\Setup\InstalledVersions");
         if (dotnetInstalledVersion == null)
         {
-            _resolutionLog($@"DotnetHostHelper.GetMuxerFromGlobalRegistrationWin: Missing RegistryHive.LocalMachine for RegistryView.Registry32");
+            _resolutionLog(@"DotnetHostHelper.GetMuxerFromGlobalRegistrationWin: Missing RegistryHive.LocalMachine for RegistryView.Registry32");
             return null;
         }
 
@@ -238,7 +263,7 @@ internal sealed class DotnetMuxerLocator
         string? installLocation = nativeArch?.GetValue("InstallLocation")?.ToString();
         if (installLocation == null)
         {
-            _resolutionLog($@"DotnetHostHelper.GetMuxerFromGlobalRegistrationWin: Missing registry InstallLocation");
+            _resolutionLog(@"DotnetHostHelper.GetMuxerFromGlobalRegistrationWin: Missing registry InstallLocation");
             return null;
         }
 
@@ -311,7 +336,7 @@ internal sealed class DotnetMuxerLocator
         // Check if the offset is invalid
         if (peHeader > fs.Length - 5)
         {
-            resolutionLog($"[GetMuxerArchitectureByPEHeaderOnWin]Invalid offset");
+            resolutionLog("[GetMuxerArchitectureByPEHeaderOnWin]Invalid offset");
             validImage = false;
         }
 
@@ -325,7 +350,7 @@ internal sealed class DotnetMuxerLocator
             if (reader.ReadUInt32() != 0x00004550)
             {
                 validImage = false;
-                resolutionLog($"[GetMuxerArchitectureByPEHeaderOnWin]Missing PE signature");
+                resolutionLog("[GetMuxerArchitectureByPEHeaderOnWin]Missing PE signature");
             }
 
             if (validImage)
@@ -373,7 +398,7 @@ internal sealed class DotnetMuxerLocator
             }
         }
 
-        return archType is null ? throw new InvalidOperationException("Invalid image") : archType;
+        return archType ?? throw new InvalidOperationException("Invalid image");
     }
 
     // See https://opensource.apple.com/source/xnu/xnu-2050.18.24/EXTERNAL_HEADERS/mach-o/loader.h

@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Xml;
-
 using FluentAssertions;
 
 using TestFramework.ForTestingMSTest;
@@ -18,10 +16,8 @@ public partial class CLITestBase : TestContainer
         "Release";
 #endif
 
-#pragma warning disable IDE0051 // Remove unused private members
-    private const string TestPlatformCLIPackageName = "Microsoft.TestPlatform";
-#pragma warning restore IDE0051 // Remove unused private members
     private const string DefaultTargetFramework = "net462";
+    internal const string TestPlatformCLIPackageName = "Microsoft.TestPlatform";
 
     protected static XmlDocument ReadCPMFile()
     {
@@ -39,14 +35,14 @@ public partial class CLITestBase : TestContainer
     protected static string GetTestPlatformVersion()
     {
         XmlDocument cpmXml = ReadCPMFile();
-        XmlNode testSdkVersion = cpmXml.DocumentElement.SelectSingleNode($"PropertyGroup/MicrosoftNETTestSdkVersion");
+        XmlNode testSdkVersion = cpmXml.DocumentElement.SelectSingleNode("PropertyGroup/MicrosoftNETTestSdkVersion");
 
         return testSdkVersion.InnerText;
     }
 
     protected static string GetArtifactsBinFolderPath()
     {
-        string assemblyLocation = System.Reflection.Assembly.GetExecutingAssembly().Location;
+        string assemblyLocation = Assembly.GetExecutingAssembly().Location;
 
         string artifactsBinFolder = Path.GetFullPath(Path.Combine(assemblyLocation, @"..\..\..\.."));
         Directory.Exists(artifactsBinFolder).Should().BeTrue();
@@ -56,7 +52,7 @@ public partial class CLITestBase : TestContainer
 
     protected static string GetArtifactsTestResultsFolderPath()
     {
-        string assemblyLocation = System.Reflection.Assembly.GetExecutingAssembly().Location;
+        string assemblyLocation = Assembly.GetExecutingAssembly().Location;
 
         string artifactsFolder = Path.GetFullPath(Path.Combine(assemblyLocation, @"..\..\..\..\.."));
         Directory.Exists(artifactsFolder).Should().BeTrue();
@@ -67,7 +63,7 @@ public partial class CLITestBase : TestContainer
         return testResultsFolder;
     }
 
-    protected static string GetAssetFullPath(string assetName, string configuration = null, string targetFramework = null)
+    protected static string GetAssetFullPath(string assetName, string? configuration = null, string? targetFramework = null)
     {
         configuration ??= Configuration;
         targetFramework ??= DefaultTargetFramework;
@@ -78,13 +74,10 @@ public partial class CLITestBase : TestContainer
     }
 
     /// <summary>
-    /// Gets the RunSettingXml having testadapterpath filled in specified by argument.
-    /// Inserts testAdapterPath in existing runSetting if not present already,
+    /// Gets the RunSettingXml with the TestAdapterPath inserted,
     /// or generates new runSettings with testAdapterPath if runSettings is Empty.
     /// </summary>
-    /// <param name="settingsXml">RunSettings provided for discovery/execution.</param>
-    /// <returns>RunSettingXml as string.</returns>
-    protected static string GetRunSettingXml(string settingsXml)
+    protected static string GetRunSettingsXml(string settingsXml)
     {
         if (string.IsNullOrEmpty(settingsXml))
         {

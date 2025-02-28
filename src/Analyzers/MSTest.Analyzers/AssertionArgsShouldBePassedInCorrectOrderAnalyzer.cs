@@ -40,9 +40,11 @@ public sealed class AssertionArgsShouldBePassedInCorrectOrderAnalyzer : Diagnost
         DiagnosticSeverity.Info,
         isEnabledByDefault: true);
 
+    /// <inheritdoc />
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
         = ImmutableArray.Create(Rule);
 
+    /// <inheritdoc />
     public override void Initialize(AnalysisContext context)
     {
         context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
@@ -57,6 +59,9 @@ public sealed class AssertionArgsShouldBePassedInCorrectOrderAnalyzer : Diagnost
         });
     }
 
+    private static bool IsConstant(IArgumentOperation argumentOperation)
+        => argumentOperation.Value.ConstantValue.HasValue;
+
     private static void AnalyzeOperation(OperationAnalysisContext context, INamedTypeSymbol assertSymbol)
     {
         var invocationOperation = (IInvocationOperation)context.Operation;
@@ -69,9 +74,10 @@ public sealed class AssertionArgsShouldBePassedInCorrectOrderAnalyzer : Diagnost
             return;
         }
 
-        // If the actual value is a constant or a literal, then the arguments are in the wrong order.
-        if (actualArgument.Value.Kind == OperationKind.Literal
-            || actualArgument.Value.ConstantValue.HasValue)
+        // If the actual value is a constant or a literal and expected is not, then the arguments are in the wrong order.
+        // Note that we don't report if both are literals or constants, as there is no real fix for this.
+        // If both are literals or constants, the assert will always pass or always fail.
+        if (IsConstant(actualArgument) && !IsConstant(expectedArgument))
         {
             context.ReportDiagnostic(invocationOperation.CreateDiagnostic(Rule));
             return;

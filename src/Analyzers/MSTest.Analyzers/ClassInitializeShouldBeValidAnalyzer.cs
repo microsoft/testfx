@@ -27,8 +27,10 @@ public sealed class ClassInitializeShouldBeValidAnalyzer : DiagnosticAnalyzer
         DiagnosticSeverity.Warning,
         isEnabledByDefault: true);
 
+    /// <inheritdoc />
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } = ImmutableArray.Create(Rule);
 
+    /// <inheritdoc />
     public override void Initialize(AnalysisContext context)
     {
         context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
@@ -59,9 +61,9 @@ public sealed class ClassInitializeShouldBeValidAnalyzer : DiagnosticAnalyzer
     {
         var methodSymbol = (IMethodSymbol)context.Symbol;
         bool isInheritanceModeSet = methodSymbol.IsInheritanceModeSet(inheritanceBehaviorSymbol, classInitializeAttributeSymbol);
-        if (methodSymbol.IsClassInitializeMethod(classInitializeAttributeSymbol)
+        if (methodSymbol.HasAttribute(classInitializeAttributeSymbol)
             && ((!methodSymbol.HasValidFixtureMethodSignature(taskSymbol, valueTaskSymbol, canDiscoverInternals, shouldBeStatic: true,
-                allowGenericType: isInheritanceModeSet, testContextSymbol,
+                allowGenericType: isInheritanceModeSet, FixtureParameterMode.MustHaveTestContext, testContextSymbol,
                 testClassAttributeSymbol, fixtureAllowInheritedTestClass: true, out bool isFixable))
                 || (!isInheritanceModeSet && methodSymbol.ContainingType.IsAbstract)
                 || (isInheritanceModeSet && methodSymbol.ContainingType.IsSealed)))

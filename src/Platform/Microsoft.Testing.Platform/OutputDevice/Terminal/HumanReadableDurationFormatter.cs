@@ -1,54 +1,54 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Globalization;
-using System.Text;
-
 namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 
 internal static class HumanReadableDurationFormatter
 {
     public static void Append(ITerminal terminal, TimeSpan duration, bool wrapInParentheses = true)
+        => Append(terminal, static (terminal, s) => terminal!.Append(s), duration, wrapInParentheses);
+
+    public static void Append<T>(T? state, Action<T?, string> appender, TimeSpan duration, bool wrapInParentheses = true)
     {
         bool hasParentValue = false;
 
         if (wrapInParentheses)
         {
-            terminal.Append('(');
+            appender(state, "(");
         }
 
         if (duration.Days > 0)
         {
-            terminal.Append($"{duration.Days}d");
+            appender(state, $"{duration.Days}d");
             hasParentValue = true;
         }
 
         if (duration.Hours > 0 || hasParentValue)
         {
-            terminal.Append(GetFormattedPart(duration.Hours, hasParentValue, "h"));
+            appender(state, GetFormattedPart(duration.Hours, hasParentValue, "h"));
             hasParentValue = true;
         }
 
         if (duration.Minutes > 0 || hasParentValue)
         {
-            terminal.Append(GetFormattedPart(duration.Minutes, hasParentValue, "m"));
+            appender(state, GetFormattedPart(duration.Minutes, hasParentValue, "m"));
             hasParentValue = true;
         }
 
         if (duration.Seconds > 0 || hasParentValue)
         {
-            terminal.Append(GetFormattedPart(duration.Seconds, hasParentValue, "s"));
+            appender(state, GetFormattedPart(duration.Seconds, hasParentValue, "s"));
             hasParentValue = true;
         }
 
         if (duration.Milliseconds >= 0 || hasParentValue)
         {
-            terminal.Append(GetFormattedPart(duration.Milliseconds, hasParentValue, "ms", paddingWitdh: 3));
+            appender(state, GetFormattedPart(duration.Milliseconds, hasParentValue, "ms", paddingWitdh: 3));
         }
 
         if (wrapInParentheses)
         {
-            terminal.Append(')');
+            appender(state, ")");
         }
     }
 

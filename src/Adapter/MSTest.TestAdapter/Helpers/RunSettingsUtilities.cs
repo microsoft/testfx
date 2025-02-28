@@ -1,10 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
-using System.Xml;
-
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -16,18 +12,11 @@ internal static class RunSettingsUtilities
     /// <summary>
     /// Gets the settings to be used while creating XmlReader for runsettings.
     /// </summary>
-    internal static XmlReaderSettings ReaderSettings
+    internal static XmlReaderSettings ReaderSettings { get; } = new XmlReaderSettings
     {
-        get
-        {
-            var settings = new XmlReaderSettings
-            {
-                IgnoreComments = true,
-                IgnoreWhitespace = true,
-            };
-            return settings;
-        }
-    }
+        IgnoreComments = true,
+        IgnoreWhitespace = true,
+    };
 
     /// <summary>
     /// Gets the set of user defined test run parameters from settings xml as key value pairs.

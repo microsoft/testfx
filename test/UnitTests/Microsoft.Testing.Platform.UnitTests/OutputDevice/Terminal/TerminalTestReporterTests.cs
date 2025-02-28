@@ -1,22 +1,15 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Runtime.InteropServices;
-using System.Text;
-
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.OutputDevice.Terminal;
 
 namespace Microsoft.Testing.Platform.UnitTests;
 
-[TestGroup]
-public sealed class TerminalTestReporterTests : TestBase
+[TestClass]
+public sealed class TerminalTestReporterTests
 {
-    public TerminalTestReporterTests(ITestExecutionContext testExecutionContext)
-        : base(testExecutionContext)
-    {
-    }
-
+    [TestMethod]
     public void AppendStackFrameFormatsStackTraceLineCorrectly()
     {
         var terminal = new StringBuilderTerminal();
@@ -34,30 +27,31 @@ public sealed class TerminalTestReporterTests : TestBase
         TerminalTestReporter.AppendStackFrame(terminal, firstStackTraceLine);
 
 #if NETCOREAPP
-        Assert.Contains("    at Microsoft.Testing.Platform.UnitTests.TerminalTestReporterTests.AppendStackFrameFormatsStackTraceLineCorrectly() in ", terminal.Output);
+        StringAssert.Contains(terminal.Output, "    at Microsoft.Testing.Platform.UnitTests.TerminalTestReporterTests.AppendStackFrameFormatsStackTraceLineCorrectly() in ");
 #else
-        Assert.Contains("    at Microsoft.Testing.Platform.UnitTests.TerminalTestReporterTests.AppendStackFrameFormatsStackTraceLineCorrectly()", terminal.Output);
+        StringAssert.Contains(terminal.Output, "    at Microsoft.Testing.Platform.UnitTests.TerminalTestReporterTests.AppendStackFrameFormatsStackTraceLineCorrectly()");
 #endif
         // Line number without the respective file
-        Assert.That(!terminal.Output.ToString().Contains(" :0"));
+        Assert.IsFalse(terminal.Output.Contains(" :0"));
     }
 
     // Code with line when we have symbols
-    [Arguments(
+    [DataRow(
         "   at TestingPlatformEntryPoint.Main(String[]) in /_/TUnit.TestProject/obj/Release/net8.0/osx-x64/TestPlatformEntryPoint.cs:line 16",
-        $"    at TestingPlatformEntryPoint.Main(String[]) in /_/TUnit.TestProject/obj/Release/net8.0/osx-x64/TestPlatformEntryPoint.cs:16")]
+        "    at TestingPlatformEntryPoint.Main(String[]) in /_/TUnit.TestProject/obj/Release/net8.0/osx-x64/TestPlatformEntryPoint.cs:16")]
     // code without line when we don't have symbols
-    [Arguments(
+    [DataRow(
         "   at TestingPlatformEntryPoint.<Main>(String[])",
         "    at TestingPlatformEntryPoint.<Main>(String[])")]
     // stack trace when published as NativeAOT
-    [Arguments(
+    [DataRow(
         "   at BenchmarkTest.ExceptionThrower.<Nested1>d__2.MoveNext() + 0x9d",
         "    at BenchmarkTest.ExceptionThrower.<Nested1>d__2.MoveNext() + 0x9d")]
     // spanners that we want to keep, to not lose information
-    [Arguments(
+    [DataRow(
         "--- End of stack trace from previous location ---",
         "    --- End of stack trace from previous location ---")]
+    [TestMethod]
     public void StackTraceRegexCapturesLines(string stackTraceLine, string expected)
     {
         var terminal = new StringBuilderTerminal();
@@ -69,6 +63,7 @@ public sealed class TerminalTestReporterTests : TestBase
         Assert.AreEqual(expected, terminal.Output);
     }
 
+    [TestMethod]
     public void OutputFormattingIsCorrect()
     {
         var stringBuilderConsole = new StringBuilderConsole();
@@ -100,16 +95,16 @@ public sealed class TerminalTestReporterTests : TestBase
         string errorOutput = "Oh no!";
 
         terminalReporter.TestCompleted(assembly, targetFramework, architecture, executionId: null, testNodeUid: "PassedTest1", "PassedTest1", TestOutcome.Passed, TimeSpan.FromSeconds(10),
-            errorMessage: null, exception: null, expected: null, actual: null, standardOutput, errorOutput);
+            informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null, standardOutput, errorOutput);
         terminalReporter.TestCompleted(assembly, targetFramework, architecture, executionId: null, testNodeUid: "SkippedTest1", "SkippedTest1", TestOutcome.Skipped, TimeSpan.FromSeconds(10),
-            errorMessage: null, exception: null, expected: null, actual: null, standardOutput, errorOutput);
+            informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null, standardOutput, errorOutput);
         // timed out + canceled + failed should all report as failed in summary
         terminalReporter.TestCompleted(assembly, targetFramework, architecture, executionId: null, testNodeUid: "TimedoutTest1", "TimedoutTest1", TestOutcome.Timeout, TimeSpan.FromSeconds(10),
-            errorMessage: null, exception: null, expected: null, actual: null, standardOutput, errorOutput);
+            informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null, standardOutput, errorOutput);
         terminalReporter.TestCompleted(assembly, targetFramework, architecture, executionId: null, testNodeUid: "CanceledTest1", "CanceledTest1", TestOutcome.Canceled, TimeSpan.FromSeconds(10),
-            errorMessage: null, exception: null, expected: null, actual: null, standardOutput, errorOutput);
+            informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null, standardOutput, errorOutput);
         terminalReporter.TestCompleted(assembly, targetFramework, architecture, executionId: null, testNodeUid: "FailedTest1", "FailedTest1", TestOutcome.Fail, TimeSpan.FromSeconds(10),
-            errorMessage: "Tests failed", exception: new StackTraceException(@$"   at FailingTest() in {folder}codefile.cs:line 10"), expected: "ABC", actual: "DEF", standardOutput, errorOutput);
+            informativeMessage: null, errorMessage: "Tests failed", exception: new StackTraceException(@$"   at FailingTest() in {folder}codefile.cs:line 10"), expected: "ABC", actual: "DEF", standardOutput, errorOutput);
         terminalReporter.ArtifactAdded(outOfProcess: true, assembly, targetFramework, architecture, executionId: null, testName: null, @$"{folder}artifact1.txt");
         terminalReporter.ArtifactAdded(outOfProcess: false, assembly, targetFramework, architecture, executionId: null, testName: null, @$"{folder}artifact2.txt");
         terminalReporter.AssemblyRunCompleted(assembly, targetFramework, architecture, executionId: null, exitCode: null, outputData: null, errorData: null);
@@ -167,6 +162,7 @@ public sealed class TerminalTestReporterTests : TestBase
         Assert.AreEqual(expected, ShowEscape(output));
     }
 
+    [TestMethod]
     public void OutputProgressFrameIsCorrect()
     {
         var stringBuilderConsole = new StringBuilderConsole();
@@ -223,9 +219,9 @@ public sealed class TerminalTestReporterTests : TestBase
         stopwatchFactory.AddTime(TimeSpan.FromSeconds(1));
 
         terminalReporter.TestCompleted(assembly, targetFramework, architecture, executionId: null, testNodeUid: "PassedTest1", "PassedTest1", TestOutcome.Passed, TimeSpan.FromSeconds(10),
-            errorMessage: null, exception: null, expected: null, actual: null, standardOutput, errorOutput);
+            informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null, standardOutput, errorOutput);
         terminalReporter.TestCompleted(assembly, targetFramework, architecture, executionId: null, testNodeUid: "SkippedTest1", "SkippedTest1", TestOutcome.Skipped, TimeSpan.FromSeconds(10),
-            errorMessage: null, exception: null, expected: null, actual: null, standardOutput, errorOutput);
+            informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null, standardOutput, errorOutput);
 
         string output = stringBuilderConsole.Output;
         startHandle.Set();
@@ -319,18 +315,12 @@ public sealed class TerminalTestReporterTests : TestBase
 
         public void Clear() => throw new NotImplementedException();
 
-        public ConsoleColor GetBackgroundColor() => throw new NotImplementedException();
-
         public ConsoleColor GetForegroundColor() => ConsoleColor.White;
-
-        public void SetBackgroundColor(ConsoleColor color) => throw new NotImplementedException();
 
         public void SetForegroundColor(ConsoleColor color)
         {
             // do nothing
         }
-
-        public void Write(string format, object?[]? args) => throw new NotImplementedException();
 
         public void Write(string? value) => _output.Append(value);
 
@@ -339,16 +329,6 @@ public sealed class TerminalTestReporterTests : TestBase
         public void WriteLine() => _output.AppendLine();
 
         public void WriteLine(string? value) => _output.AppendLine(value);
-
-        public void WriteLine(object? value) => throw new NotImplementedException();
-
-        public void WriteLine(string format, object? arg0) => throw new NotImplementedException();
-
-        public void WriteLine(string format, object? arg0, object? arg1) => throw new NotImplementedException();
-
-        public void WriteLine(string format, object? arg0, object? arg1, object? arg2) => throw new NotImplementedException();
-
-        public void WriteLine(string format, object?[]? args) => throw new NotImplementedException();
     }
 
     internal class StringBuilderTerminal : ITerminal

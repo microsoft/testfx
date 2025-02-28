@@ -1,18 +1,29 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Text;
-
 namespace Microsoft.Testing.Platform.Extensions.Messages;
 
+/// <summary>
+/// Represents a test node.
+/// </summary>
 public class TestNode
 {
+    /// <summary>
+    /// Gets the unique identifier of the test node.
+    /// </summary>
     public required TestNodeUid Uid { get; init; }
 
+    /// <summary>
+    /// Gets the display name of the test node.
+    /// </summary>
     public required string DisplayName { get; init; }
 
+    /// <summary>
+    /// Gets the properties of the test node.
+    /// </summary>
     public PropertyBag Properties { get; init; } = new();
 
+    /// <inheritdoc />
     public override string ToString()
     {
         StringBuilder builder = new StringBuilder("TestNode { ")

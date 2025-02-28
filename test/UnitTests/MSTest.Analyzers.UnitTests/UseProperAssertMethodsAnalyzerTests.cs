@@ -8,9 +8,18 @@ using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
 namespace MSTest.Analyzers.Test;
 
 // NOTE: tests in this class are intentionally not using the [|...|] markup syntax so that we test the arguments
-[TestGroup]
-public sealed class UseProperAssertMethodsAnalyzerTests(ITestExecutionContext testExecutionContext) : TestBase(testExecutionContext)
+[TestClass]
+public sealed class UseProperAssertMethodsAnalyzerTests
 {
+    private const string SomeClassWithUserDefinedEqualityOperators = """
+        public class SomeClass
+        {
+            public static bool operator ==(SomeClass x, SomeClass y) => true;
+            public static bool operator !=(SomeClass x, SomeClass y) => false;
+        }
+        """;
+
+    [TestMethod]
     public async Task WhenAssertIsTrueWithEqualsNullArgument()
     {
         string code = """
@@ -50,6 +59,30 @@ public sealed class UseProperAssertMethodsAnalyzerTests(ITestExecutionContext te
             fixedCode);
     }
 
+    [TestMethod]
+    public async Task WhenAssertIsTrueWithEqualsNullArgumentAndUserDefinedOperator()
+    {
+        string code = $$"""
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    SomeClass x = new SomeClass();
+                    Assert.IsTrue(x == null);
+                }
+            }
+
+            {{SomeClassWithUserDefinedEqualityOperators}}
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
     public async Task WhenAssertIsTrueWithIsNullArgument()
     {
         string code = """
@@ -89,6 +122,51 @@ public sealed class UseProperAssertMethodsAnalyzerTests(ITestExecutionContext te
             fixedCode);
     }
 
+    [TestMethod]
+    public async Task WhenAssertIsTrueWithIsNullArgumentAndUserDefinedOperator()
+    {
+        string code = $$"""
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    SomeClass x = new SomeClass();
+                    {|#0:Assert.IsTrue(x is null)|};
+                }
+            }
+
+            {{SomeClassWithUserDefinedEqualityOperators}}
+            """;
+
+        string fixedCode = $$"""
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    SomeClass x = new SomeClass();
+                    Assert.IsNull(x);
+                }
+            }
+
+            {{SomeClassWithUserDefinedEqualityOperators}}
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            // /0/Test0.cs(10,9): info MSTEST0037: Use 'Assert.IsNull' instead of 'Assert.IsTrue'
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("IsNull", "IsTrue"),
+            fixedCode);
+    }
+
+    [TestMethod]
     public async Task WhenAssertIsTrueWithNotEqualsNullArgument()
     {
         string code = """
@@ -128,6 +206,30 @@ public sealed class UseProperAssertMethodsAnalyzerTests(ITestExecutionContext te
             fixedCode);
     }
 
+    [TestMethod]
+    public async Task WhenAssertIsTrueWithNotEqualsNullArgumentAndUserDefinedOperator()
+    {
+        string code = $$"""
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    SomeClass x = new SomeClass();
+                    Assert.IsTrue(x != null);
+                }
+            }
+
+            {{SomeClassWithUserDefinedEqualityOperators}}
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
     public async Task WhenAssertIsTrueWithIsNotNullArgument()
     {
         string code = """
@@ -167,6 +269,51 @@ public sealed class UseProperAssertMethodsAnalyzerTests(ITestExecutionContext te
             fixedCode);
     }
 
+    [TestMethod]
+    public async Task WhenAssertIsTrueWithIsNotNullArgumentAndUserDefinedOperator()
+    {
+        string code = $$"""
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    SomeClass x = new SomeClass();
+                    {|#0:Assert.IsTrue(x is not null)|};
+                }
+            }
+
+            {{SomeClassWithUserDefinedEqualityOperators}}
+            """;
+
+        string fixedCode = $$"""
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    SomeClass x = new SomeClass();
+                    Assert.IsNotNull(x);
+                }
+            }
+
+            {{SomeClassWithUserDefinedEqualityOperators}}
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            // /0/Test0.cs(10,9): info MSTEST0037: Use 'Assert.IsNotNull' instead of 'Assert.IsTrue'
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("IsNotNull", "IsTrue"),
+            fixedCode);
+    }
+
+    [TestMethod]
     public async Task WhenAssertIsFalseWithEqualsNullArgument()
     {
         string code = """
@@ -206,6 +353,30 @@ public sealed class UseProperAssertMethodsAnalyzerTests(ITestExecutionContext te
             fixedCode);
     }
 
+    [TestMethod]
+    public async Task WhenAssertIsFalseWithEqualsNullArgumentAndUserDefinedOperator()
+    {
+        string code = $$"""
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    SomeClass x = new SomeClass();
+                    Assert.IsFalse(x == null);
+                }
+            }
+
+            {{SomeClassWithUserDefinedEqualityOperators}}
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
     public async Task WhenAssertIsFalseWithIsNullArgument()
     {
         string code = """
@@ -245,6 +416,51 @@ public sealed class UseProperAssertMethodsAnalyzerTests(ITestExecutionContext te
             fixedCode);
     }
 
+    [TestMethod]
+    public async Task WhenAssertIsFalseWithIsNullArgumentAndUserDefinedOperator()
+    {
+        string code = $$"""
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    SomeClass x = new SomeClass();
+                    {|#0:Assert.IsFalse(x is null)|};
+                }
+            }
+
+            {{SomeClassWithUserDefinedEqualityOperators}}
+            """;
+
+        string fixedCode = $$"""
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    SomeClass x = new SomeClass();
+                    Assert.IsNotNull(x);
+                }
+            }
+
+            {{SomeClassWithUserDefinedEqualityOperators}}
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            // /0/Test0.cs(10,9): info MSTEST0037: Use 'Assert.IsNotNull' instead of 'Assert.IsFalse'
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("IsNotNull", "IsFalse"),
+            fixedCode);
+    }
+
+    [TestMethod]
     public async Task WhenAssertIsFalseWithNotEqualsNullArgument()
     {
         string code = """
@@ -284,6 +500,30 @@ public sealed class UseProperAssertMethodsAnalyzerTests(ITestExecutionContext te
             fixedCode);
     }
 
+    [TestMethod]
+    public async Task WhenAssertIsFalseWithNotEqualsNullArgumentAndUserDefinedOperator()
+    {
+        string code = $$"""
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    SomeClass x = new SomeClass();
+                    Assert.IsFalse(x != null);
+                }
+            }
+
+            {{SomeClassWithUserDefinedEqualityOperators}}
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
     public async Task WhenAssertIsFalseWithIsNotNullArgument()
     {
         string code = """
@@ -323,6 +563,51 @@ public sealed class UseProperAssertMethodsAnalyzerTests(ITestExecutionContext te
             fixedCode);
     }
 
+    [TestMethod]
+    public async Task WhenAssertIsFalseWithIsNotNullArgumentAndUserDefinedOperator()
+    {
+        string code = $$"""
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    SomeClass x = new SomeClass();
+                    {|#0:Assert.IsFalse(x is not null)|};
+                }
+            }
+
+            {{SomeClassWithUserDefinedEqualityOperators}}
+            """;
+
+        string fixedCode = $$"""
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    SomeClass x = new SomeClass();
+                    Assert.IsNull(x);
+                }
+            }
+
+            {{SomeClassWithUserDefinedEqualityOperators}}
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            // /0/Test0.cs(10,9): info MSTEST0037: Use 'Assert.IsNull' instead of 'Assert.IsFalse'
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("IsNull", "IsFalse"),
+            fixedCode);
+    }
+
+    [TestMethod]
     public async Task WhenAssertIsTrueAndArgumentIsEquality()
     {
         string code = """
@@ -364,6 +649,31 @@ public sealed class UseProperAssertMethodsAnalyzerTests(ITestExecutionContext te
             fixedCode);
     }
 
+    [TestMethod]
+    public async Task WhenAssertIsTrueAndArgumentIsEqualityAndUserDefinedOperator()
+    {
+        string code = $$"""
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    SomeClass x = new SomeClass();
+                    SomeClass y = new SomeClass();
+                    Assert.IsTrue(x == y);
+                }
+            }
+
+            {{SomeClassWithUserDefinedEqualityOperators}}
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
     public async Task WhenAssertIsTrueAndArgumentIsInequality()
     {
         string code = """
@@ -405,6 +715,31 @@ public sealed class UseProperAssertMethodsAnalyzerTests(ITestExecutionContext te
             fixedCode);
     }
 
+    [TestMethod]
+    public async Task WhenAssertIsTrueAndArgumentIsInequalityAndUserDefinedOperator()
+    {
+        string code = $$"""
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    SomeClass x = new SomeClass();
+                    SomeClass y = new SomeClass();
+                    Assert.IsTrue(x != y);
+                }
+            }
+
+            {{SomeClassWithUserDefinedEqualityOperators}}
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
     public async Task WhenAssertIsFalseAndArgumentIsEquality()
     {
         string code = """
@@ -446,6 +781,31 @@ public sealed class UseProperAssertMethodsAnalyzerTests(ITestExecutionContext te
             fixedCode);
     }
 
+    [TestMethod]
+    public async Task WhenAssertIsFalseAndArgumentIsEqualityAndUserDefinedOperator()
+    {
+        string code = $$"""
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    SomeClass x = new SomeClass();
+                    SomeClass y = new SomeClass();
+                    Assert.IsFalse(x == y);
+                }
+            }
+
+            {{SomeClassWithUserDefinedEqualityOperators}}
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
     public async Task WhenAssertIsFalseAndArgumentIsInequality()
     {
         string code = """
@@ -487,6 +847,31 @@ public sealed class UseProperAssertMethodsAnalyzerTests(ITestExecutionContext te
             fixedCode);
     }
 
+    [TestMethod]
+    public async Task WhenAssertIsFalseAndArgumentIsInequalityAndUserDefinedOperator()
+    {
+        string code = $$"""
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    SomeClass x = new SomeClass();
+                    SomeClass y = new SomeClass();
+                    Assert.IsFalse(x != y);
+                }
+            }
+
+            {{SomeClassWithUserDefinedEqualityOperators}}
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
     public async Task WhenAssertAreEqualAndExpectedIsNull()
     {
         string code = """
@@ -526,6 +911,7 @@ public sealed class UseProperAssertMethodsAnalyzerTests(ITestExecutionContext te
             fixedCode);
     }
 
+    [TestMethod]
     public async Task WhenAssertAreNotEqualAndExpectedIsNull()
     {
         string code = """
@@ -565,6 +951,7 @@ public sealed class UseProperAssertMethodsAnalyzerTests(ITestExecutionContext te
             fixedCode);
     }
 
+    [TestMethod]
     public async Task WhenAssertAreEqualAndExpectedIsTrue()
     {
         string code = """
@@ -604,6 +991,7 @@ public sealed class UseProperAssertMethodsAnalyzerTests(ITestExecutionContext te
             fixedCode);
     }
 
+    [TestMethod]
     public async Task WhenAssertAreEqualAndExpectedIsTrue_CastNotAddedWhenTypeIsBool()
     {
         string code = """
@@ -643,6 +1031,7 @@ public sealed class UseProperAssertMethodsAnalyzerTests(ITestExecutionContext te
             fixedCode);
     }
 
+    [TestMethod]
     public async Task WhenAssertAreEqualAndExpectedIsTrue_CastNotAddedWhenTypeIsNullableBool()
     {
         string code = """
@@ -682,6 +1071,7 @@ public sealed class UseProperAssertMethodsAnalyzerTests(ITestExecutionContext te
             fixedCode);
     }
 
+    [TestMethod]
     public async Task WhenAssertAreEqualAndExpectedIsTrue_CastShouldBeAddedWithParentheses()
     {
         string code = """
@@ -731,6 +1121,7 @@ public sealed class UseProperAssertMethodsAnalyzerTests(ITestExecutionContext te
             fixedCode);
     }
 
+    [TestMethod]
     public async Task WhenAssertAreNotEqualAndExpectedIsTrue()
     {
         string code = """
@@ -754,6 +1145,7 @@ public sealed class UseProperAssertMethodsAnalyzerTests(ITestExecutionContext te
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenAssertAreEqualAndExpectedIsFalse()
     {
         string code = """
@@ -793,6 +1185,7 @@ public sealed class UseProperAssertMethodsAnalyzerTests(ITestExecutionContext te
             fixedCode);
     }
 
+    [TestMethod]
     public async Task WhenAssertAreNotEqualAndExpectedIsFalse()
     {
         string code = """

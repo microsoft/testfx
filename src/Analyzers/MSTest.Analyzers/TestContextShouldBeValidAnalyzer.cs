@@ -34,8 +34,38 @@ public sealed class TestContextShouldBeValidAnalyzer : DiagnosticAnalyzer
         DiagnosticSeverity.Warning,
         isEnabledByDefault: true);
 
+    /// <inheritdoc />
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
         = ImmutableArray.Create(TestContextShouldBeValidRule);
+
+    private static IFieldSymbol? TryGetReturnedField(ImmutableArray<IOperation> operations)
+    {
+        foreach (IOperation operation in operations)
+        {
+            if (TryGetReturnedField(operation) is { } returnedMember)
+            {
+                return returnedMember;
+            }
+        }
+
+        return null;
+    }
+
+    private static IFieldSymbol? TryGetReturnedField(IOperation operation)
+    {
+        if (operation is IBlockOperation blockOperation)
+        {
+            return TryGetReturnedField(blockOperation.Operations);
+        }
+
+        if (operation is IReturnOperation { ReturnedValue: IFieldReferenceOperation { Field: { } returnedField } })
+        {
+            return returnedField;
+        }
+
+        // We can't figure out exactly the field returned by this property.
+        return null;
+    }
 
     private static bool AssignsParameterToMember(IParameterSymbol parameter, ISymbol member, ImmutableArray<IOperation> operations)
     {
@@ -69,6 +99,47 @@ public sealed class TestContextShouldBeValidAnalyzer : DiagnosticAnalyzer
             SymbolEqualityComparer.Default.Equals(parameterReference.Parameter, parameter);
     }
 
+    private static void CollectTestContextFieldsAssignedInConstructor(
+        IParameterSymbol testContextParameter,
+        ImmutableArray<IOperation> operations,
+        ConcurrentBag<IFieldSymbol> fieldsAssignedInConstructor)
+    {
+        foreach (IOperation operation in operations)
+        {
+            CollectTestContextFieldsAssignedInConstructor(testContextParameter, operation, fieldsAssignedInConstructor);
+        }
+    }
+
+    private static void CollectTestContextFieldsAssignedInConstructor(
+        IParameterSymbol testContextParameter,
+        IOperation operation,
+        ConcurrentBag<IFieldSymbol> fieldsAssignedInConstructor)
+    {
+        if (operation is IBlockOperation blockOperation)
+        {
+            CollectTestContextFieldsAssignedInConstructor(testContextParameter, blockOperation.Operations, fieldsAssignedInConstructor);
+        }
+        else if (operation is IExpressionStatementOperation expressionStatementOperation)
+        {
+            operation = expressionStatementOperation.Operation;
+        }
+
+        if (operation is ISimpleAssignmentOperation assignmentOperation &&
+            assignmentOperation.Target is IMemberReferenceOperation { Member: IFieldSymbol { } candidateField } &&
+            assignmentOperation.Value is IParameterReferenceOperation parameterReference &&
+            SymbolEqualityComparer.Default.Equals(parameterReference.Parameter, testContextParameter))
+        {
+            fieldsAssignedInConstructor.Add(candidateField);
+        }
+    }
+
+    private static IParameterSymbol? TryGetTestContextParameterIfValidConstructor(ISymbol candidate, INamedTypeSymbol testContextSymbol)
+        => candidate is IMethodSymbol { MethodKind: MethodKind.Constructor, Parameters: [{ } parameter] } &&
+            SymbolEqualityComparer.Default.Equals(parameter.Type, testContextSymbol)
+            ? parameter
+            : null;
+
+    /// <inheritdoc />
     public override void Initialize(AnalysisContext context)
     {
         context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
@@ -90,6 +161,8 @@ public sealed class TestContextShouldBeValidAnalyzer : DiagnosticAnalyzer
                         var namedType = (INamedTypeSymbol)context.Symbol;
                         foreach (ISymbol member in namedType.GetMembers())
                         {
+                            IFieldSymbol? fieldReturnedByProperty = null;
+                            ConcurrentBag<IFieldSymbol>? fieldsAssignedInConstructor = null;
                             switch (member.Kind)
                             {
                                 case SymbolKind.Property:
@@ -113,6 +186,20 @@ public sealed class TestContextShouldBeValidAnalyzer : DiagnosticAnalyzer
                                         {
                                             return;
                                         }
+
+                                        fieldsAssignedInConstructor = new();
+
+                                        context.RegisterOperationBlockAction(context =>
+                                        {
+                                            if (context.OwningSymbol.Equals(propertySymbol.GetMethod, SymbolEqualityComparer.Default))
+                                            {
+                                                fieldReturnedByProperty = TryGetReturnedField(context.OperationBlocks);
+                                            }
+                                            else if (TryGetTestContextParameterIfValidConstructor(context.OwningSymbol, testContextSymbol) is { } parameter)
+                                            {
+                                                CollectTestContextFieldsAssignedInConstructor(parameter, context.OperationBlocks, fieldsAssignedInConstructor);
+                                            }
+                                        });
                                     }
                                     else if (member is IFieldSymbol fieldSymbol)
                                     {
@@ -145,14 +232,12 @@ public sealed class TestContextShouldBeValidAnalyzer : DiagnosticAnalyzer
                                     context.RegisterOperationBlockAction(
                                         context =>
                                         {
-                                            if (context.OwningSymbol is not IMethodSymbol { MethodKind: MethodKind.Constructor } constructor ||
-                                                constructor.Parameters.Length != 1 ||
-                                                !SymbolEqualityComparer.Default.Equals(constructor.Parameters[0].Type, testContextSymbol))
+                                            if (TryGetTestContextParameterIfValidConstructor(context.OwningSymbol, testContextSymbol) is not { } parameter)
                                             {
                                                 return;
                                             }
 
-                                            if (AssignsParameterToMember(constructor.Parameters[0], member, context.OperationBlocks))
+                                            if (AssignsParameterToMember(parameter, member, context.OperationBlocks))
                                             {
                                                 isAssigned = true;
                                             }
@@ -161,6 +246,12 @@ public sealed class TestContextShouldBeValidAnalyzer : DiagnosticAnalyzer
                                     context.RegisterSymbolEndAction(
                                         context =>
                                         {
+                                            if (!isAssigned)
+                                            {
+                                                isAssigned = fieldReturnedByProperty is not null &&
+                                                    fieldsAssignedInConstructor?.Contains(fieldReturnedByProperty, SymbolEqualityComparer.Default) == true;
+                                            }
+
                                             if (!isAssigned)
                                             {
                                                 context.ReportDiagnostic(member.CreateDiagnostic(TestContextShouldBeValidRule));

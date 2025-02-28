@@ -1,17 +1,17 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Collections.Concurrent;
-
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 
 /// <summary>
 /// Cancellation token supporting cancellation of a test run.
 /// </summary>
+#if RELEASE
 #if NET6_0_OR_GREATER
 [Obsolete(Constants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
 #else
 [Obsolete(Constants.PublicTypeObsoleteMessage)]
+#endif
 #endif
 public class TestRunCancellationToken
 {
@@ -20,15 +20,6 @@ public class TestRunCancellationToken
     /// Needs to be a concurrent collection, see https://github.com/microsoft/testfx/issues/3953.
     /// </summary>
     private readonly ConcurrentBag<(Action<object?>, object?)> _registeredCallbacks = new();
-
-    public TestRunCancellationToken()
-        : this(CancellationToken.None)
-    {
-    }
-
-    internal TestRunCancellationToken(CancellationToken cancellationToken) => CancellationToken = cancellationToken;
-
-    internal CancellationToken CancellationToken { get; }
 
     /// <summary>
     /// Gets a value indicating whether the test run is canceled.
@@ -81,18 +72,9 @@ public class TestRunCancellationToken
 
     internal void ThrowIfCancellationRequested()
     {
-        CancellationToken.ThrowIfCancellationRequested();
-
         if (Canceled)
         {
-            if (CancellationToken == CancellationToken.None)
-            {
-                throw new OperationCanceledException();
-            }
-            else
-            {
-                throw new OperationCanceledException(CancellationToken);
-            }
+            throw new OperationCanceledException();
         }
     }
 }

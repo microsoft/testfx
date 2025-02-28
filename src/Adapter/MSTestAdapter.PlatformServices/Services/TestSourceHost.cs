@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Diagnostics.CodeAnalysis;
-
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 #if NETFRAMEWORK
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
@@ -11,7 +9,7 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utiliti
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 #endif
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
-#if NETFRAMEWORK || NET
+#if NETFRAMEWORK || (NET && !WINDOWS_UWP)
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
 #endif
 #if !WINDOWS_UWP
@@ -23,10 +21,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 /// <summary>
 /// A host that loads the test source. This can be in isolation for desktop using an AppDomain or just loading the source in the current context.
 /// </summary>
+#if RELEASE
 #if NET6_0_OR_GREATER
 [Obsolete(Constants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
 #else
 [Obsolete(Constants.PublicTypeObsoleteMessage)]
+#endif
 #endif
 public class TestSourceHost : ITestSourceHost
 {
@@ -37,7 +37,7 @@ public class TestSourceHost : ITestSourceHost
     private string? _currentDirectory;
 #endif
 
-#if NETFRAMEWORK || NET
+#if NETFRAMEWORK || (NET && !WINDOWS_UWP)
     /// <summary>
     /// Assembly resolver used in the current app-domain.
     /// </summary>
@@ -104,12 +104,20 @@ public class TestSourceHost : ITestSourceHost
     internal AppDomain? AppDomain { get; private set; }
 #endif
 
+#pragma warning disable CA1822 // Mark members as static - accesses instance data under .NET Framework
+    internal bool UsesAppDomain =>
+#if NETFRAMEWORK
+            !_isAppDomainCreationDisabled;
+#else
+            false;
+#endif
+
     /// <summary>
     /// Setup the isolation host.
     /// </summary>
     public void SetupHost()
     {
-#if NET
+#if NET && !WINDOWS_UWP
         List<string> resolutionPaths = GetResolutionPaths(_sourceFileName, false);
 
         if (EqtTrace.IsInfoEnabled)
@@ -214,7 +222,7 @@ public class TestSourceHost : ITestSourceHost
     /// </summary>
     public void Dispose()
     {
-#if NETFRAMEWORK || NET
+#if NETFRAMEWORK || (NET && !WINDOWS_UWP)
         if (_parentDomainAssemblyResolver != null)
         {
             _parentDomainAssemblyResolver.Dispose();
@@ -352,7 +360,7 @@ public class TestSourceHost : ITestSourceHost
         => new DeploymentUtility().GetConfigFile(sourceFileName);
 #endif
 
-#if NETFRAMEWORK || NET
+#if NETFRAMEWORK || (NET && !WINDOWS_UWP)
     /// <summary>
     /// Gets the probing paths to load the test assembly dependencies.
     /// </summary>

@@ -1,4 +1,4 @@
-﻿#nullable enable
+#nullable enable
 Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.AdapterTraceLogger
 Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.AdapterTraceLogger.AdapterTraceLogger() -> void
 Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.AdapterTraceLogger.LogError(string! format, params object?[]! args) -> void
@@ -36,11 +36,15 @@ Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ITe
 Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ITestContext.AddProperty(string! propertyName, string! propertyValue) -> void
 Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ITestContext.ClearDiagnosticMessages() -> void
 Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ITestContext.Context.get -> Microsoft.VisualStudio.TestTools.UnitTesting.TestContext!
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ITestContext.DisplayMessage(Microsoft.VisualStudio.TestTools.UnitTesting.MessageLevel messageLevel, string! message) -> void
 Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ITestContext.GetDiagnosticMessages() -> string?
 Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ITestContext.GetResultFiles() -> System.Collections.Generic.IList<string!>?
 Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ITestContext.SetDataConnection(object? dbConnection) -> void
 Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ITestContext.SetDataRow(object? dataRow) -> void
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ITestContext.SetDisplayName(string? displayName) -> void
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ITestContext.SetException(System.Exception? exception) -> void
 Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ITestContext.SetOutcome(Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome outcome) -> void
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ITestContext.SetTestData(object?[]? data) -> void
 Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ITestContext.TryGetPropertyValue(string! propertyName, out object? propertyValue) -> bool
 Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ITestDataSource
 Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ITestDataSource.GetData(Microsoft.VisualStudio.TestTools.UnitTesting.ITestMethod! testMethodInfo, Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ITestContext! testContext) -> System.Collections.Generic.IEnumerable<object!>?
@@ -93,8 +97,11 @@ Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextIm
 Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.GetResultFiles() -> System.Collections.Generic.IList<string!>?
 Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.SetDataConnection(object? dbConnection) -> void
 Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.SetDataRow(object? dataRow) -> void
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.SetDisplayName(string? displayName) -> void
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.SetException(System.Exception? exception) -> void
 Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.SetOutcome(Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome outcome) -> void
-Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.TestContextImplementation(Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ObjectModel.ITestMethod! testMethod, System.IO.StringWriter! stringWriter, System.Collections.Generic.IDictionary<string!, object?>! properties) -> void
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.SetTestData(object?[]? data) -> void
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.TestContextImplementation(Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ObjectModel.ITestMethod? testMethod, System.IO.StringWriter! stringWriter, System.Collections.Generic.IDictionary<string!, object?>! properties) -> void
 Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.TryGetPropertyValue(string! propertyName, out object? propertyValue) -> bool
 Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestDataSource
 Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestDataSource.TestDataSource() -> void
@@ -130,6 +137,7 @@ Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TraceListener
 Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TraceListenerWrapper.TraceListenerWrapper(System.IO.TextWriter! textWriter) -> void
 override Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.AddResultFile(string! fileName) -> void
 override Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.CurrentTestOutcome.get -> Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome
+override Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.DisplayMessage(Microsoft.VisualStudio.TestTools.UnitTesting.MessageLevel messageLevel, string! message) -> void
 override Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.Properties.get -> System.Collections.IDictionary!
 override Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.Write(string! format, params object?[]! args) -> void
 override Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.Write(string? message) -> void

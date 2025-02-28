@@ -1,9 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Diagnostics;
-using System.Globalization;
-
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Resources;
 
@@ -80,7 +77,7 @@ public sealed class CommandLineOption : IEquatable<CommandLineOption>
 
     internal bool IsBuiltIn { get; }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public override bool Equals(object? obj) => Equals(obj as CommandLineOption);
 
     /// <inheritdoc/>
@@ -91,7 +88,7 @@ public sealed class CommandLineOption : IEquatable<CommandLineOption>
             Arity == other.Arity &&
             IsHidden == other.IsHidden;
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public override int GetHashCode()
     {
         HashCode hc = default;

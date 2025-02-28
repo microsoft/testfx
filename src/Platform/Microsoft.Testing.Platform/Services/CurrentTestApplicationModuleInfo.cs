@@ -1,13 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if NETCOREAPP
-using System.Diagnostics.CodeAnalysis;
-#endif
-
-using System.Reflection;
-using System.Runtime.InteropServices;
-
 using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Platform.Services;
@@ -28,6 +21,17 @@ internal sealed class CurrentTestApplicationModuleInfo(IEnvironment environment,
         }
     }
 
+    public bool IsCurrentTestApplicationHostMonoMuxer
+    {
+        get
+        {
+            string? processPath = GetProcessPath(_environment, _process);
+            return processPath is not null
+                && Path.GetFileNameWithoutExtension(processPath) is { } processName
+                && processName is "mono" or "mono-sgen";
+        }
+    }
+
     public bool IsCurrentTestApplicationModuleExecutable
     {
         get
@@ -38,45 +42,47 @@ internal sealed class CurrentTestApplicationModuleInfo(IEnvironment environment,
     }
 
     public bool IsAppHostOrSingleFileOrNativeAot
-        => IsCurrentTestApplicationModuleExecutable && !IsCurrentTestApplicationHostDotnetMuxer;
+        => IsCurrentTestApplicationModuleExecutable
+        && !IsCurrentTestApplicationHostDotnetMuxer
+        && !IsCurrentTestApplicationHostMonoMuxer;
 
-#if NETCOREAPP
-    [UnconditionalSuppressMessage("SingleFile", "IL3000:Avoid accessing Assembly file path when publishing as a single file", Justification = "We handle the singlefile/native aot use case")]
-#endif
     public string GetCurrentTestApplicationFullPath()
     {
-#pragma warning disable IL3000
-        // This is empty in native app, or in single file app.
-        string? moduleName = Assembly.GetEntryAssembly()?.Location;
-#pragma warning restore IL3000
-
-        moduleName = RoslynString.IsNullOrEmpty(moduleName)
-            ? GetProcessPath(_environment, _process)
-            : moduleName;
+        string? moduleName = TryGetCurrentTestApplicationFullPath();
 
         ApplicationStateGuard.Ensure(moduleName is not null);
         return moduleName;
     }
 
+#if NETCOREAPP
+    [UnconditionalSuppressMessage("SingleFile", "IL3000:Avoid accessing Assembly file path when publishing as a single file", Justification = "We handle the singlefile/native aot use case")]
+#endif
+    public string? TryGetCurrentTestApplicationFullPath()
+    {
+        // This is empty in native app, or in single file app.
+        string? moduleName = Assembly.GetEntryAssembly()?.Location;
+
+        return RoslynString.IsNullOrEmpty(moduleName)
+            ? GetProcessPath(_environment, _process)
+            : moduleName;
+    }
+
+    public string? TryGetAssemblyName()
+    {
+        string? executableName = Assembly.GetEntryAssembly()?.GetName().Name;
+        return RoslynString.IsNullOrEmpty(executableName)
+            ? Path.GetFileNameWithoutExtension(GetProcessPath(_environment, _process))
+            : executableName;
+    }
+
+    public string GetCurrentTestApplicationDirectory()
+        => Path.GetDirectoryName(TryGetCurrentTestApplicationFullPath()) ?? AppContext.BaseDirectory;
+
+    public string GetDisplayName()
+        => TryGetCurrentTestApplicationFullPath() ?? TryGetAssemblyName() ?? "<unknown-assembly>";
+
     public string GetProcessPath()
         => GetProcessPath(_environment, _process, throwOnNull: true)!;
-
-    public string[] GetCommandLineArgs()
-        => _environment.GetCommandLineArgs();
-
-    public string GetCommandLineArguments()
-    {
-        string executableFileName = Path.GetFileNameWithoutExtension(GetCurrentTestApplicationFullPath());
-        if (IsAppHostOrSingleFileOrNativeAot)
-        {
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            {
-                executableFileName += ".exe";
-            }
-        }
-
-        return _environment.CommandLine[_environment.CommandLine.IndexOf(executableFileName, StringComparison.InvariantCultureIgnoreCase)..];
-    }
 
     private static string? GetProcessPath(IEnvironment environment, IProcessHandler process, bool throwOnNull = false)
 #if NETCOREAPP
@@ -95,18 +101,22 @@ internal sealed class CurrentTestApplicationModuleInfo(IEnvironment environment,
 
     public ExecutableInfo GetCurrentExecutableInfo()
     {
-        string currentTestApplicationFullPath = GetCurrentTestApplicationFullPath();
         bool isDotnetMuxer = IsCurrentTestApplicationHostDotnetMuxer;
         bool isAppHost = IsAppHostOrSingleFileOrNativeAot;
-        string processPath = GetProcessPath();
-        string[] commandLineArguments = GetCommandLineArgs();
-        string fileName = processPath;
-        IEnumerable<string> arguments = isAppHost
-            ? commandLineArguments.Skip(1)
-            : isDotnetMuxer
-                ? MuxerExec.Concat(commandLineArguments)
-                : commandLineArguments;
+        bool isMonoMuxer = IsCurrentTestApplicationHostMonoMuxer;
+        string[] commandLineArguments = _environment.GetCommandLineArgs();
+        IEnumerable<string> arguments = (isAppHost, isDotnetMuxer, isMonoMuxer) switch
+        {
+            // When executable
+            (true, _, _) => commandLineArguments.Skip(1),
+            // When dotnet
+            (_, true, _) => MuxerExec.Concat(commandLineArguments),
+            // When mono
+            (_, _, true) => commandLineArguments,
+            // Otherwise
+            _ => commandLineArguments,
+        };
 
-        return new(fileName, arguments, Path.GetDirectoryName(currentTestApplicationFullPath)!);
+        return new(GetProcessPath(), arguments, GetCurrentTestApplicationDirectory());
     }
 }

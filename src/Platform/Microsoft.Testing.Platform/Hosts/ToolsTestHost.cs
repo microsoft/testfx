@@ -1,10 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
-using System.Text;
-
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.CommandLine;
@@ -102,13 +98,13 @@ internal sealed class ToolsTestHost(
         }
 
         StringBuilder stringBuilder = new();
-        foreach (OptionRecord optionRecord in _commandLineHandler.ParseResult.Options)
+        foreach (CommandLineParseOption optionRecord in _commandLineHandler.ParseResult.Options)
         {
-            if (!GetAllCommandLineOptionsProviderByOptionName(optionRecord.Option).Any())
+            if (!GetAllCommandLineOptionsProviderByOptionName(optionRecord.Name).Any())
             {
                 stringBuilder.AppendLine(
                     CultureInfo.InvariantCulture,
-                    $"Unknown option '{optionRecord.Option}' for tool '{tool.DisplayName}'.");
+                    $"Unknown option '{optionRecord.Name}' for tool '{tool.DisplayName}'.");
             }
         }
 
@@ -126,7 +122,7 @@ internal sealed class ToolsTestHost(
         error = null;
 
         StringBuilder stringBuilder = new();
-        foreach (IGrouping<string, OptionRecord> optionRecord in _commandLineHandler.ParseResult.Options.GroupBy(x => x.Option))
+        foreach (IGrouping<string, CommandLineParseOption> optionRecord in _commandLineHandler.ParseResult.Options.GroupBy(x => x.Name))
         {
             string optionName = optionRecord.Key;
             int arity = optionRecord.Count();
@@ -144,7 +140,7 @@ internal sealed class ToolsTestHost(
         {
             foreach (CommandLineOption option in extension.GetCommandLineOptions())
             {
-                if (_commandLineHandler.ParseResult.Options.Count(x => x.Option == option.Name) < option.Arity.Min)
+                if (_commandLineHandler.ParseResult.Options.Count(x => x.Name == option.Name) < option.Arity.Min)
                 {
                     stringBuilder.AppendLine(
                         CultureInfo.InvariantCulture,
@@ -165,13 +161,13 @@ internal sealed class ToolsTestHost(
     private async Task<ValidationResult> ValidateOptionsArgumentsAsync(ITool tool)
     {
         StringBuilder stringBuilder = new();
-        foreach (OptionRecord optionRecord in _commandLineHandler.ParseResult.Options)
+        foreach (CommandLineParseOption optionRecord in _commandLineHandler.ParseResult.Options)
         {
-            ICommandLineOptionsProvider extension = GetAllCommandLineOptionsProviderByOptionName(optionRecord.Option).Single();
-            ValidationResult result = await extension.ValidateOptionArgumentsAsync(extension.GetCommandLineOptions().Single(x => x.Name == optionRecord.Option), optionRecord.Arguments);
+            ICommandLineOptionsProvider extension = GetAllCommandLineOptionsProviderByOptionName(optionRecord.Name).Single();
+            ValidationResult result = await extension.ValidateOptionArgumentsAsync(extension.GetCommandLineOptions().Single(x => x.Name == optionRecord.Name), optionRecord.Arguments);
             if (!result.IsValid)
             {
-                stringBuilder.AppendLine(CultureInfo.InvariantCulture, $"Invalid arguments for option '--{optionRecord.Option}': {result.ErrorMessage}, tool {tool.DisplayName}");
+                stringBuilder.AppendLine(CultureInfo.InvariantCulture, $"Invalid arguments for option '--{optionRecord.Name}': {result.ErrorMessage}, tool {tool.DisplayName}");
             }
         }
 

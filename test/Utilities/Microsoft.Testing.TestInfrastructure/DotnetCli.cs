@@ -1,9 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Collections;
-using System.Diagnostics.CodeAnalysis;
-
 using Polly;
 using Polly.Contrib.WaitAndRetry;
 
@@ -29,6 +26,8 @@ public static class DotnetCli
         "MicrosoftInstrumentationEngine_DisableCodeSignatureValidation",
         "MicrosoftInstrumentationEngine_FileLogPath"
     ];
+
+    private static int s_binlogCounter;
 
     [SuppressMessage("Style", "IDE0032:Use auto property", Justification = "It's causing some runtime bug")]
     private static int s_maxOutstandingCommand = Environment.ProcessorCount;
@@ -59,7 +58,8 @@ public static class DotnetCli
         int retryCount = 5,
         bool disableCodeCoverage = true,
         bool warnAsError = true,
-        bool suppressPreviewDotNetMessage = true)
+        bool suppressPreviewDotNetMessage = true,
+        [CallerMemberName] string callerMemberName = "")
     {
         await s_maxOutstandingCommands_semaphore.WaitAsync();
         try
@@ -83,7 +83,11 @@ public static class DotnetCli
                     }
                 }
 
-                environmentVariables.Add(key!, entry.Value!.ToString()!);
+                // We use TryAdd to let tests "overwrite" existing environment variables.
+                // Consider that the given dictionary has "TESTINGPLATFORM_UI_LANGUAGE" as a key.
+                // And also Environment.GetEnvironmentVariables() is returning TESTINGPLATFORM_UI_LANGUAGE.
+                // In that case, we do a "TryAdd" which effectively means the value from the original dictionary wins.
+                environmentVariables.TryAdd(key!, entry.Value!.ToString()!);
             }
 
             if (disableTelemetry)
@@ -106,7 +110,7 @@ public static class DotnetCli
 
             if (DoNotRetry)
             {
-                return await CallTheMuxerAsync(args, environmentVariables, workingDirectory, timeoutInSeconds, failIfReturnValueIsNotZero);
+                return await CallTheMuxerAsync(args, environmentVariables, workingDirectory, timeoutInSeconds, failIfReturnValueIsNotZero, callerMemberName);
             }
             else
             {
@@ -114,7 +118,7 @@ public static class DotnetCli
                 return await Policy
                     .Handle<Exception>()
                     .WaitAndRetryAsync(delay)
-                    .ExecuteAsync(async () => await CallTheMuxerAsync(args, environmentVariables, workingDirectory, timeoutInSeconds, failIfReturnValueIsNotZero));
+                    .ExecuteAsync(async () => await CallTheMuxerAsync(args, environmentVariables, workingDirectory, timeoutInSeconds, failIfReturnValueIsNotZero, callerMemberName));
             }
         }
         finally
@@ -123,15 +127,61 @@ public static class DotnetCli
         }
     }
 
-    private static async Task<DotnetMuxerResult> CallTheMuxerAsync(string args, Dictionary<string, string?> environmentVariables, string? workingDirectory, int timeoutInSeconds, bool failIfReturnValueIsNotZero)
+    private static bool IsDotNetTestWithExeOrDll(string args)
+        => args.StartsWith("test ", StringComparison.Ordinal) && (args.Contains(".dll") || args.Contains(".exe"));
+
+    // Workaround NuGet issue https://github.com/NuGet/Home/issues/14064
+    private static async Task<DotnetMuxerResult> CallTheMuxerAsync(string args, Dictionary<string, string?> environmentVariables, string? workingDirectory, int timeoutInSeconds, bool failIfReturnValueIsNotZero, string binlogBaseFileName)
+        => await Policy
+            .Handle<InvalidOperationException>(ex => ex.Message.Contains("MSB4236"))
+            .WaitAndRetryAsync(retryCount: 3, sleepDurationProvider: static _ => TimeSpan.FromSeconds(2))
+            .ExecuteAsync(async () => await CallTheMuxerCoreAsync(args, environmentVariables, workingDirectory, timeoutInSeconds, failIfReturnValueIsNotZero, binlogBaseFileName));
+
+    private static async Task<DotnetMuxerResult> CallTheMuxerCoreAsync(string args, Dictionary<string, string?> environmentVariables, string? workingDirectory, int timeoutInSeconds, bool failIfReturnValueIsNotZero, string binlogBaseFileName)
     {
         if (args.StartsWith("dotnet ", StringComparison.OrdinalIgnoreCase))
         {
             throw new InvalidOperationException("Command should not start with 'dotnet'");
         }
 
+        string? binlogFullPath = null;
+        if (!args.Contains("-bl:") && !IsDotNetTestWithExeOrDll(args))
+        {
+            // We do this here rather than in the caller so that different retries produce different binlog file names.
+            binlogFullPath = Path.Combine(TempDirectory.TestSuiteDirectory, $"{binlogBaseFileName}-{Interlocked.Increment(ref s_binlogCounter)}.binlog");
+            string binlogArg = $" -bl:\"{binlogFullPath}\"";
+            if (args.IndexOf("-- ", StringComparison.Ordinal) is int platformArgsIndex && platformArgsIndex > 0)
+            {
+                args = args.Insert(platformArgsIndex, binlogArg + " ");
+            }
+            else
+            {
+                args += binlogArg;
+            }
+        }
+
         using DotnetMuxer dotnet = new(environmentVariables);
         int exitCode = await dotnet.ExecuteAsync(args, workingDirectory, timeoutInSeconds);
+
+        if (dotnet.StandardError.Contains("Invalid runtimeconfig.json"))
+        {
+            // Invalid runtimeconfig.json [D:\a\_work\1\s\artifacts\tmp\Release\testsuite\gqRdj\MSTestSdk\bin\Debug\net9.0\MSTestSdk.runtimeconfig.json]
+            Match match = Regex.Match(dotnet.StandardError, @"Invalid runtimeconfig\.json \[(?<path>.+?)\]");
+            string fileContent;
+            if (!match.Success)
+            {
+                fileContent = "CANNOT MATCH PATH IN REGEX";
+            }
+            else
+            {
+                string filePath = match.Groups["path"].Value;
+                fileContent = !File.Exists(filePath)
+                    ? $"FILE DOES NOT EXIST: {filePath}"
+                    : File.ReadAllText(filePath);
+            }
+
+            throw new InvalidOperationException($"Invalid runtimeconfig.json:{fileContent}\n\nStandardOutput:\n{dotnet.StandardOutput}\nStandardError:\n{dotnet.StandardError}");
+        }
 
         if (exitCode != 0 && failIfReturnValueIsNotZero)
         {
@@ -145,6 +195,6 @@ public static class DotnetCli
         }
 
         // Return a result object and let caller decide what to do with it.
-        return new DotnetMuxerResult(args, exitCode, dotnet.StandardOutput, dotnet.StandardOutputLines, dotnet.StandardError, dotnet.StandardErrorLines);
+        return new DotnetMuxerResult(args, exitCode, dotnet.StandardOutput, dotnet.StandardOutputLines, dotnet.StandardError, dotnet.StandardErrorLines, binlogFullPath);
     }
 }

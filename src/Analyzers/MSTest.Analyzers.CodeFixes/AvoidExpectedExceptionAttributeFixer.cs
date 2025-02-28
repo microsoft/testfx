@@ -19,17 +19,23 @@ using MSTest.Analyzers.Helpers;
 
 namespace MSTest.Analyzers;
 
+/// <summary>
+/// Code fixer for <see cref="AvoidExpectedExceptionAttributeAnalyzer"/>.
+/// </summary>
 [ExportCodeFixProvider(LanguageNames.CSharp, Name = nameof(AvoidExpectedExceptionAttributeFixer))]
 [Shared]
 public sealed class AvoidExpectedExceptionAttributeFixer : CodeFixProvider
 {
+    /// <inheritdoc />
     public sealed override ImmutableArray<string> FixableDiagnosticIds { get; }
         = ImmutableArray.Create(DiagnosticIds.AvoidExpectedExceptionAttributeRuleId);
 
+    /// <inheritdoc />
     public override FixAllProvider GetFixAllProvider()
         // See https://github.com/dotnet/roslyn/blob/main/docs/analyzers/FixAllProvider.md for more information on Fix All Providers
         => WellKnownFixAllProviders.BatchFixer;
 
+    /// <inheritdoc />
     public sealed override async Task RegisterCodeFixesAsync(CodeFixContext context)
     {
         SyntaxNode root = await context.Document.GetRequiredSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false);
@@ -42,10 +48,7 @@ public sealed class AvoidExpectedExceptionAttributeFixer : CodeFixProvider
             return;
         }
 
-        if (diagnostic.Properties.ContainsKey(DiagnosticDescriptorHelper.CannotFixPropertyKey))
-        {
-            return;
-        }
+        bool allowDerivedTypes = diagnostic.Properties.ContainsKey(AvoidExpectedExceptionAttributeAnalyzer.AllowDerivedTypesKey);
 
         // Find the method declaration identified by the diagnostic.
         MethodDeclarationSyntax methodDeclaration = syntaxToken.Parent.AncestorsAndSelf().OfType<MethodDeclarationSyntax>().First();
@@ -84,35 +87,105 @@ public sealed class AvoidExpectedExceptionAttributeFixer : CodeFixProvider
         context.RegisterCodeFix(
             CodeAction.Create(
                 title: CodeFixResources.UseAssertThrowsExceptionOnLastStatementFix,
-                createChangedDocument: c => WrapLastStatementWithAssertThrowsExceptionAsync(context.Document, methodDeclaration, attributeSyntax, exceptionTypeSymbol, c),
+                createChangedDocument: c => WrapLastStatementWithAssertThrowsExceptionAsync(context.Document, methodDeclaration, attributeSyntax, exceptionTypeSymbol, allowDerivedTypes, c),
                 equivalenceKey: nameof(AvoidExpectedExceptionAttributeFixer)),
             diagnostic);
     }
+
+    private static (SyntaxNode ExpressionOrStatement, SyntaxNode NodeToReplace)? TryGetExpressionOfInterestAndNodeToFromBlockSyntax(BlockSyntax? block)
+    {
+        if (block is null)
+        {
+            return null;
+        }
+
+        for (int i = block.Statements.Count - 1; i >= 0; i--)
+        {
+            StatementSyntax statement = block.Statements[i];
+
+            if (statement is LockStatementSyntax lockStatement)
+            {
+                if (lockStatement.Statement is BlockSyntax lockBlock)
+                {
+                    if (TryGetExpressionOfInterestAndNodeToFromBlockSyntax(lockBlock) is { } resultFromLock)
+                    {
+                        return resultFromLock;
+                    }
+
+                    continue;
+                }
+
+                statement = lockStatement.Statement;
+            }
+
+            if (statement is LocalFunctionStatementSyntax or EmptyStatementSyntax)
+            {
+                continue;
+            }
+            else if (statement is BlockSyntax nestedBlock)
+            {
+                if (TryGetExpressionOfInterestAndNodeToFromBlockSyntax(nestedBlock) is { } expressionFromNestedBlock)
+                {
+                    return expressionFromNestedBlock;
+                }
+
+                // The BlockSyntax doesn't have any meaningful statements/expressions.
+                // Ignore it.
+                continue;
+            }
+            else if (statement is ExpressionStatementSyntax expressionStatement)
+            {
+                return (expressionStatement.Expression, statement);
+            }
+            else if (statement is LocalDeclarationStatementSyntax localDeclarationStatementSyntax &&
+                localDeclarationStatementSyntax.Declaration.Variables.Count == 1 &&
+                localDeclarationStatementSyntax.Declaration.Variables[0].Initializer is { } initializer)
+            {
+                return (initializer.Value, statement);
+            }
+
+            return (statement, statement);
+        }
+
+        return null;
+    }
+
+    private static (SyntaxNode ExpressionOrStatement, SyntaxNode NodeToReplace)? TryGetExpressionOfInterestAndNodeToFromExpressionBody(MethodDeclarationSyntax method)
+        => method.ExpressionBody is null ? null : (method.ExpressionBody.Expression, method.ExpressionBody.Expression);
 
     private static async Task<Document> WrapLastStatementWithAssertThrowsExceptionAsync(
         Document document,
         MethodDeclarationSyntax methodDeclaration,
         SyntaxNode attributeSyntax,
         ITypeSymbol exceptionTypeSymbol,
+        bool allowDerivedTypes,
         CancellationToken cancellationToken)
     {
         DocumentEditor editor = await DocumentEditor.CreateAsync(document, cancellationToken).ConfigureAwait(false);
         editor.RemoveNode(attributeSyntax);
 
-        SyntaxNode? oldStatement = (SyntaxNode?)methodDeclaration.Body?.Statements.LastOrDefault() ?? methodDeclaration.ExpressionBody?.Expression;
-        if (oldStatement is null)
+        (SyntaxNode ExpressionOrStatement, SyntaxNode NodeToReplace)? expressionAndNodeToReplace = TryGetExpressionOfInterestAndNodeToFromBlockSyntax(methodDeclaration.Body)
+            ?? TryGetExpressionOfInterestAndNodeToFromExpressionBody(methodDeclaration);
+
+        if (expressionAndNodeToReplace is null)
         {
             return editor.GetChangedDocument();
         }
 
-        SyntaxNode newLambdaExpression = oldStatement switch
+        SyntaxGenerator generator = editor.Generator;
+        SyntaxNode expressionToUseInLambda = expressionAndNodeToReplace.Value.ExpressionOrStatement;
+
+        expressionToUseInLambda = expressionToUseInLambda switch
         {
-            ExpressionStatementSyntax oldLambdaExpression => oldLambdaExpression.Expression,
-            _ => oldStatement,
+            ThrowStatementSyntax { Expression: not null } throwStatement => generator.ThrowExpression(throwStatement.Expression),
+            // This is the case when the last statement of the method body is a loop for example (e.g, for, foreach, while, do while).
+            // It can also happen for using statement, or switch statement.
+            // In that case, we need to wrap in a block syntax (i.e, curly braces)
+            StatementSyntax expressionToUseAsStatement => SyntaxFactory.Block(expressionToUseAsStatement),
+            _ => expressionToUseInLambda.WithoutTrivia(),
         };
 
-        SyntaxGenerator generator = editor.Generator;
-        newLambdaExpression = generator.VoidReturningLambdaExpression(newLambdaExpression);
+        SyntaxNode newLambdaExpression = generator.VoidReturningLambdaExpression(expressionToUseInLambda);
 
         bool containsAsyncCode = newLambdaExpression.DescendantNodesAndSelf().Any(n => n is AwaitExpressionSyntax);
         if (containsAsyncCode)
@@ -123,7 +196,14 @@ public sealed class AvoidExpectedExceptionAttributeFixer : CodeFixProvider
         SyntaxNode newStatement = generator.InvocationExpression(
                 generator.MemberAccessExpression(
                     generator.IdentifierName("Assert"),
-                    generator.GenericName(containsAsyncCode ? "ThrowsExceptionAsync" : "ThrowsException", [exceptionTypeSymbol])),
+                    generator.GenericName(
+                        (containsAsyncCode, allowDerivedTypes) switch
+                        {
+                            (false, false) => "ThrowsExactly",
+                            (false, true) => "Throws",
+                            (true, false) => "ThrowsExactlyAsync",
+                            (true, true) => "ThrowsAsync",
+                        }, [exceptionTypeSymbol])),
                 newLambdaExpression);
 
         if (containsAsyncCode)
@@ -137,7 +217,7 @@ public sealed class AvoidExpectedExceptionAttributeFixer : CodeFixProvider
             newStatement = generator.ExpressionStatement(newStatement);
         }
 
-        editor.ReplaceNode(oldStatement, newStatement);
+        editor.ReplaceNode(expressionAndNodeToReplace.Value.NodeToReplace, newStatement.WithTriviaFrom(expressionAndNodeToReplace.Value.NodeToReplace));
         return editor.GetChangedDocument();
     }
 }

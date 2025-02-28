@@ -1,27 +1,21 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Text.RegularExpressions;
-
 using Microsoft.Testing.Platform.ServerMode.IntegrationTests.Messages.V100;
 
 using MSTest.Acceptance.IntegrationTests.Messages.V100;
 
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
-[TestGroup]
-public sealed partial class ServerLoggingTests : ServerModeTestsBase
+[TestClass]
+public sealed partial class ServerLoggingTests : ServerModeTestsBase<ServerLoggingTests.TestAssetFixture>
 {
-    private readonly TestAssetFixture _testAssetFixture;
-
-    public ServerLoggingTests(ITestExecutionContext testExecutionContext, TestAssetFixture testAssetFixture)
-        : base(testExecutionContext) => _testAssetFixture = testAssetFixture;
-
+    [TestMethod]
     public async Task RunningInServerJsonRpcModeShouldHaveOutputDeviceLogsPushedToTestExplorer()
     {
-        string tfm = TargetFrameworks.NetCurrent.Arguments;
-        string resultDirectory = Path.Combine(_testAssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"), tfm);
-        var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, "ServerLoggingTests", tfm);
+        string tfm = TargetFrameworks.NetCurrent;
+        string resultDirectory = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"), tfm);
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, "ServerLoggingTests", tfm);
         using TestingPlatformClient jsonClient = await StartAsServerAndConnectToTheClientAsync(testHost);
         LogsCollector logs = new();
         jsonClient.RegisterLogListener(logs);
@@ -35,7 +29,7 @@ public sealed partial class ServerLoggingTests : ServerModeTestsBase
         ResponseListener runListener = await jsonClient.RunTests(Guid.NewGuid(), runCollector.CollectNodeUpdates);
 
         await Task.WhenAll(discoveryListener.WaitCompletion(), runListener.WaitCompletion());
-        Assert.IsFalse(logs.Count == 0, $"Logs are empty");
+        Assert.IsFalse(logs.Count == 0, "Logs are empty");
         string logsString = string.Join(Environment.NewLine, logs.Select(l => l.ToString()));
         string logPath = LogFilePathRegex().Match(logsString).Groups[1].Value;
         string port = PortRegex().Match(logsString).Groups[1].Value;
@@ -43,27 +37,26 @@ public sealed partial class ServerLoggingTests : ServerModeTestsBase
         Assert.AreEqual(
             $$"""
             Log { LogLevel = Information, Message = Connecting to client host '127.0.0.1' port '{{port}}' }
-            Log { LogLevel = Trace, Message = Starting test session. Log file path is '{{logPath}}'. }
+            Log { LogLevel = Trace, Message = Starting test session. The log file path is '{{logPath}}'. }
             Log { LogLevel = Error, Message = System.Exception: This is an exception output }
-            Log { LogLevel = Error, Message =    This is a red output with padding set to 3 }
-            Log { LogLevel = Warning, Message =   This is a yellow output with padding set to 2 }
+            Log { LogLevel = Information, Message =    This is a red output with padding set to 3 }
+            Log { LogLevel = Information, Message =   This is a yellow output with padding set to 2 }
             Log { LogLevel = Information, Message =  This is a blue output with padding set to 1 }
             Log { LogLevel = Information, Message = This is normal text output. }
-            Log { LogLevel = Trace, Message = Finished test session }
-            Log { LogLevel = Trace, Message = Starting test session. Log file path is '{{logPath}}'. }
+            Log { LogLevel = Trace, Message = Finished test session. }
+            Log { LogLevel = Trace, Message = Starting test session. The log file path is '{{logPath}}'. }
             Log { LogLevel = Error, Message = System.Exception: This is an exception output }
-            Log { LogLevel = Error, Message =    This is a red output with padding set to 3 }
-            Log { LogLevel = Warning, Message =   This is a yellow output with padding set to 2 }
+            Log { LogLevel = Information, Message =    This is a red output with padding set to 3 }
+            Log { LogLevel = Information, Message =   This is a yellow output with padding set to 2 }
             Log { LogLevel = Information, Message =  This is a blue output with padding set to 1 }
             Log { LogLevel = Information, Message = This is normal text output. }
-            Log { LogLevel = Trace, Message = Finished test session }
+            Log { LogLevel = Trace, Message = Finished test session. }
             """, logsString);
     }
 
-    [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
-    public sealed class TestAssetFixture(AcceptanceFixture acceptanceFixture) : TestAssetFixtureBase(acceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
     {
-        private const string AssetName = "TestAssetFixture";
+        private const string AssetName = "AssetFixture";
 
         public string TargetAssetPath => GetAssetPath(AssetName);
 
@@ -93,7 +86,6 @@ public sealed partial class ServerLoggingTests : ServerModeTestsBase
 </Project>
 
 #file Program.cs
-
 using System;
 using System.Threading.Tasks;
 using Microsoft.Testing.Platform.Builder;
@@ -109,28 +101,28 @@ public class Startup
     public static async Task<int> Main(string[] args)
     {
         ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
-        builder.RegisterTestFramework(_ => new TestFrameworkCapabilities(), (_, serviceProvider) => new DummyTestAdapter(serviceProvider));
+        builder.RegisterTestFramework(_ => new TestFrameworkCapabilities(), (_, serviceProvider) => new DummyTestFramework(serviceProvider));
         using ITestApplication app = await builder.BuildAsync();
         return await app.RunAsync();
     }
 }
 
-public class DummyTestAdapter : ITestFramework, IDataProducer, IOutputDeviceDataProducer
+public class DummyTestFramework : ITestFramework, IDataProducer, IOutputDeviceDataProducer
 {
     private readonly IOutputDevice _outputDevice;
 
-    public DummyTestAdapter(IServiceProvider serviceProvider)
+    public DummyTestFramework(IServiceProvider serviceProvider)
     {
         _outputDevice = serviceProvider.GetOutputDevice();
     }
 
-    public string Uid => nameof(DummyTestAdapter);
+    public string Uid => nameof(DummyTestFramework);
 
     public string Version => "2.0.0";
 
-    public string DisplayName => nameof(DummyTestAdapter);
+    public string DisplayName => nameof(DummyTestFramework);
 
-    public string Description => nameof(DummyTestAdapter);
+    public string Description => nameof(DummyTestFramework);
 
     public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 

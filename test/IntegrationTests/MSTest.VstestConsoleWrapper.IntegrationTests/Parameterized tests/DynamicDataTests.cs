@@ -20,8 +20,28 @@ public class DynamicDataTests : CLITestBase
         ValidatePassedTests(
             "DynamicDataTest_SourceMethod (\"John;Doe\",LibProjectReferencedByDataSourceTest.User)",
             "DynamicDataTest_SourceMethod (\"Jane;Doe\",LibProjectReferencedByDataSourceTest.User)",
+            "DynamicDataTest_SourceMethodFromBase (\"John;Doe\",LibProjectReferencedByDataSourceTest.User)",
+            "DynamicDataTest_SourceMethodFromBase (\"Jane;Doe\",LibProjectReferencedByDataSourceTest.User)",
+            "DynamicDataTest_SourceMethodShadowingBase (\"John;Doe\",LibProjectReferencedByDataSourceTest.User)",
+            "DynamicDataTest_SourceMethodShadowingBase (\"Jane;Doe\",LibProjectReferencedByDataSourceTest.User)",
+            "DynamicDataTest_SourceMethodAuto (\"John;Doe\",LibProjectReferencedByDataSourceTest.User)",
+            "DynamicDataTest_SourceMethodAuto (\"Jane;Doe\",LibProjectReferencedByDataSourceTest.User)",
+            "DynamicDataTest_SourceMethodAutoFromBase (\"John;Doe\",LibProjectReferencedByDataSourceTest.User)",
+            "DynamicDataTest_SourceMethodAutoFromBase (\"Jane;Doe\",LibProjectReferencedByDataSourceTest.User)",
+            "DynamicDataTest_SourceMethodAutoShadowingBase (\"John;Doe\",LibProjectReferencedByDataSourceTest.User)",
+            "DynamicDataTest_SourceMethodAutoShadowingBase (\"Jane;Doe\",LibProjectReferencedByDataSourceTest.User)",
             "DynamicDataTest_SourceProperty (\"John;Doe\",LibProjectReferencedByDataSourceTest.User)",
             "DynamicDataTest_SourceProperty (\"Jane;Doe\",LibProjectReferencedByDataSourceTest.User)",
+            "DynamicDataTest_SourcePropertyFromBase (\"John;Doe\",LibProjectReferencedByDataSourceTest.User)",
+            "DynamicDataTest_SourcePropertyFromBase (\"Jane;Doe\",LibProjectReferencedByDataSourceTest.User)",
+            "DynamicDataTest_SourcePropertyShadowingBase (\"John;Doe\",LibProjectReferencedByDataSourceTest.User)",
+            "DynamicDataTest_SourcePropertyShadowingBase (\"Jane;Doe\",LibProjectReferencedByDataSourceTest.User)",
+            "DynamicDataTest_SourcePropertyAuto (\"John;Doe\",LibProjectReferencedByDataSourceTest.User)",
+            "DynamicDataTest_SourcePropertyAuto (\"Jane;Doe\",LibProjectReferencedByDataSourceTest.User)",
+            "DynamicDataTest_SourcePropertyAutoFromBase (\"John;Doe\",LibProjectReferencedByDataSourceTest.User)",
+            "DynamicDataTest_SourcePropertyAutoFromBase (\"Jane;Doe\",LibProjectReferencedByDataSourceTest.User)",
+            "DynamicDataTest_SourcePropertyAutoShadowingBase (\"John;Doe\",LibProjectReferencedByDataSourceTest.User)",
+            "DynamicDataTest_SourcePropertyAutoShadowingBase (\"Jane;Doe\",LibProjectReferencedByDataSourceTest.User)",
             "Custom DynamicDataTestMethod DynamicDataTest_SourceMethod_CustomDisplayName with 2 parameters",
             "Custom DynamicDataTestMethod DynamicDataTest_SourceMethod_CustomDisplayName with 2 parameters",
             "Custom DynamicDataTestMethod DynamicDataTest_SourceProperty_CustomDisplayName with 2 parameters",
@@ -48,7 +68,10 @@ public class DynamicDataTests : CLITestBase
             "MethodWithOverload (\"1\",1)",
             "MethodWithOverload (\"2\",1)",
             "MethodWithOverload (1,\"0\")",
-            "MethodWithOverload (2,\"2\")");
+            "MethodWithOverload (2,\"2\")",
+            "DynamicDataTest_SimpleCollection (0)",
+            "DynamicDataTest_SimpleCollection (2)",
+            "DynamicDataTest_SimpleCollection (4)");
 
         ValidateFailedTestsCount(0);
     }

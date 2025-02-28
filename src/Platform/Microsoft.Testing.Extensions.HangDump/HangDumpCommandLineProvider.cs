@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Globalization;
-
 using Microsoft.Testing.Extensions.Diagnostics.Resources;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions;
@@ -31,10 +29,6 @@ internal sealed class HangDumpCommandLineProvider : ICommandLineOptionsProvider
         new(HangDumpFileNameOptionName, ExtensionResources.HangDumpFileNameOptionDescription, ArgumentArity.ExactlyOne, false),
         new(HangDumpTypeOptionName, ExtensionResources.HangDumpTypeOptionDescription, ArgumentArity.ExactlyOne, false)
     ];
-
-    private readonly HangDumpConfiguration _hangDumpConfiguration;
-
-    public HangDumpCommandLineProvider(HangDumpConfiguration hangDumpConfiguration) => _hangDumpConfiguration = hangDumpConfiguration;
 
     public string Uid => nameof(HangDumpCommandLineProvider);
 

@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Globalization;
-
 using Microsoft.Testing.Extensions.TestReports.Resources;
 using Microsoft.Testing.Extensions.TrxReport.Abstractions.Serializers;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
@@ -239,7 +237,11 @@ TrxReportGeneratorCommandLine.IsTrxReportEnabled: {_commandLineOptionsService.Is
             TrxReportEngine trxReportGeneratorEngine = new(_testApplicationModuleInfo, _environment, _commandLineOptionsService, _configuration,
             _clock, _tests.ToArray(), _failedTestsCount, _passedTestsCount, _notExecutedTestsCount, _timeoutTestsCount, _artifactsByExtension, _artifactsByTestNode,
             _adapterSupportTrxCapability, _testFramework, _testStartTime.Value, exitCode, cancellationToken);
-            string reportFileName = await trxReportGeneratorEngine.GenerateReportAsync();
+            (string reportFileName, string? warning) = await trxReportGeneratorEngine.GenerateReportAsync();
+            if (warning is not null)
+            {
+                await _outputDisplay.DisplayAsync(this, new WarningMessageOutputDeviceData(warning));
+            }
 
             if (
                 // TestController is not used when we run in server mode

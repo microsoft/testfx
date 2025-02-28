@@ -56,7 +56,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "eng", "eng", "{FE0DF239-0D8
 		eng\Build.props = eng\Build.props
 		eng\coverage.config = eng\coverage.config
 		eng\install-windows-sdk.ps1 = eng\install-windows-sdk.ps1
-		eng\stylecop.json = eng\stylecop.json
 		eng\verify-nupkgs.ps1 = eng\verify-nupkgs.ps1
 		eng\Version.Details.xml = eng\Version.Details.xml
 		eng\Versions.props = eng\Versions.props
@@ -142,8 +141,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestFramework.ForTestingMST
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MSTest", "src\Package\MSTest\MSTest.csproj", "{ED8534D1-3136-4915-8071-5547E8D84DC3}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MSTest.Internal.TestFx.Documentation", "src\Package\MSTest.Internal.TestFx.Documentation\MSTest.Internal.TestFx.Documentation.csproj", "{37F9538E-DD88-40DA-8A32-85D6C2A7FD46}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TestingPlatformRunner", "TestingPlatformRunner", "{A9F9C49E-3CDA-4207-AA53-CC80AF1798FE}"
 	ProjectSection(SolutionItems) = preProject
 		eng\TestingPlatformRunner\TestingPlatform.Runner.targets = eng\TestingPlatformRunner\TestingPlatform.Runner.targets
@@ -210,6 +207,20 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.Testing.Extensions.MSBuild", "src\Platform\Microsoft.Testing.Extensions.MSBuild\Microsoft.Testing.Extensions.MSBuild.csproj", "{8CE782A2-7374-4916-9C69-1F87E51A64A9}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MSTest.Internal.Analyzers", "src\Analyzers\MSTest.Internal.Analyzers\MSTest.Internal.Analyzers.csproj", "{4A93E1A2-B61E-31B2-33F2-478156A9B5E7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.Testing.Extensions.HotReload", "src\Platform\Microsoft.Testing.Extensions.HotReload\Microsoft.Testing.Extensions.HotReload.csproj", "{53EBA540-F6CF-0715-1F62-241A53F537EC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.Testing.Extensions.Retry", "src\Platform\Microsoft.Testing.Extensions.Retry\Microsoft.Testing.Extensions.Retry.csproj", "{FB4ED3AA-A12E-4192-861F-4B025876AA0F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MSTest.GlobalConfigsGenerator", "src\Analyzers\MSTest.GlobalConfigsGenerator\MSTest.GlobalConfigsGenerator.csproj", "{A85AA656-6DB6-4A0B-AA80-CBB4058B3DDB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MSTest.Engine", "src\Adapter\MSTest.Engine\MSTest.Engine.csproj", "{82881535-7E40-80D9-F086-A3847775F2E7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MSTest.SourceGeneration", "src\Analyzers\MSTest.SourceGeneration\MSTest.SourceGeneration.csproj", "{7BA0E74E-798E-4399-2EDE-A23BD5DA78CA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MSTest.Engine.UnitTests", "test\UnitTests\MSTest.Engine.UnitTests\MSTest.Engine.UnitTests.csproj", "{2C0DFAC0-5D58-D172-ECE4-CBB78AD03435}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MSTest.SourceGeneration.UnitTests", "test\UnitTests\MSTest.SourceGeneration.UnitTests\MSTest.SourceGeneration.UnitTests.csproj", "{E6C0466E-BE8D-C04F-149A-FD98438F1413}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -381,10 +392,6 @@ Global
 		{ED8534D1-3136-4915-8071-5547E8D84DC3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{ED8534D1-3136-4915-8071-5547E8D84DC3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{ED8534D1-3136-4915-8071-5547E8D84DC3}.Release|Any CPU.Build.0 = Release|Any CPU
-		{37F9538E-DD88-40DA-8A32-85D6C2A7FD46}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{37F9538E-DD88-40DA-8A32-85D6C2A7FD46}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{37F9538E-DD88-40DA-8A32-85D6C2A7FD46}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{37F9538E-DD88-40DA-8A32-85D6C2A7FD46}.Release|Any CPU.Build.0 = Release|Any CPU
 		{48FAB979-8DA5-492E-8B3F-5DBBE82F659A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{48FAB979-8DA5-492E-8B3F-5DBBE82F659A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{48FAB979-8DA5-492E-8B3F-5DBBE82F659A}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -489,6 +496,34 @@ Global
 		{4A93E1A2-B61E-31B2-33F2-478156A9B5E7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4A93E1A2-B61E-31B2-33F2-478156A9B5E7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4A93E1A2-B61E-31B2-33F2-478156A9B5E7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{53EBA540-F6CF-0715-1F62-241A53F537EC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{53EBA540-F6CF-0715-1F62-241A53F537EC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{53EBA540-F6CF-0715-1F62-241A53F537EC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{53EBA540-F6CF-0715-1F62-241A53F537EC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FB4ED3AA-A12E-4192-861F-4B025876AA0F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FB4ED3AA-A12E-4192-861F-4B025876AA0F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FB4ED3AA-A12E-4192-861F-4B025876AA0F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FB4ED3AA-A12E-4192-861F-4B025876AA0F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A85AA656-6DB6-4A0B-AA80-CBB4058B3DDB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A85AA656-6DB6-4A0B-AA80-CBB4058B3DDB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A85AA656-6DB6-4A0B-AA80-CBB4058B3DDB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A85AA656-6DB6-4A0B-AA80-CBB4058B3DDB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{82881535-7E40-80D9-F086-A3847775F2E7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{82881535-7E40-80D9-F086-A3847775F2E7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{82881535-7E40-80D9-F086-A3847775F2E7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{82881535-7E40-80D9-F086-A3847775F2E7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7BA0E74E-798E-4399-2EDE-A23BD5DA78CA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7BA0E74E-798E-4399-2EDE-A23BD5DA78CA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7BA0E74E-798E-4399-2EDE-A23BD5DA78CA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7BA0E74E-798E-4399-2EDE-A23BD5DA78CA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2C0DFAC0-5D58-D172-ECE4-CBB78AD03435}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2C0DFAC0-5D58-D172-ECE4-CBB78AD03435}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2C0DFAC0-5D58-D172-ECE4-CBB78AD03435}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2C0DFAC0-5D58-D172-ECE4-CBB78AD03435}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E6C0466E-BE8D-C04F-149A-FD98438F1413}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E6C0466E-BE8D-C04F-149A-FD98438F1413}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E6C0466E-BE8D-C04F-149A-FD98438F1413}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E6C0466E-BE8D-C04F-149A-FD98438F1413}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -543,7 +578,6 @@ Global
 		{35E90097-976B-4FF5-B55F-2F51561D7A33} = {33D3029D-E653-4929-BB31-C714178C4BEE}
 		{17CE999F-F3D1-48B4-A18F-8BA050C3A4AD} = {33D3029D-E653-4929-BB31-C714178C4BEE}
 		{ED8534D1-3136-4915-8071-5547E8D84DC3} = {E374A3A6-C364-4890-B315-D60F5C682B6E}
-		{37F9538E-DD88-40DA-8A32-85D6C2A7FD46} = {E374A3A6-C364-4890-B315-D60F5C682B6E}
 		{A9F9C49E-3CDA-4207-AA53-CC80AF1798FE} = {FE0DF239-0D81-46CA-9277-3342009E83F9}
 		{6AEE1440-FDF0-4729-8196-B24D0E333550} = {FF8B1B72-55A1-4FFE-809E-7B79323ED8D0}
 		{48FAB979-8DA5-492E-8B3F-5DBBE82F659A} = {6AEE1440-FDF0-4729-8196-B24D0E333550}
@@ -574,6 +608,13 @@ Global
 		{F422398C-72CD-43EA-AC8E-E0DBD08E5563} = {BB874DF1-44FE-415A-B634-A6B829107890}
 		{8CE782A2-7374-4916-9C69-1F87E51A64A9} = {6AEE1440-FDF0-4729-8196-B24D0E333550}
 		{4A93E1A2-B61E-31B2-33F2-478156A9B5E7} = {E7F15C9C-3928-47AD-8462-64FD29FFCA54}
+		{53EBA540-F6CF-0715-1F62-241A53F537EC} = {6AEE1440-FDF0-4729-8196-B24D0E333550}
+		{FB4ED3AA-A12E-4192-861F-4B025876AA0F} = {6AEE1440-FDF0-4729-8196-B24D0E333550}
+		{A85AA656-6DB6-4A0B-AA80-CBB4058B3DDB} = {E7F15C9C-3928-47AD-8462-64FD29FFCA54}
+		{82881535-7E40-80D9-F086-A3847775F2E7} = {24088844-2107-4DB2-8F3F-CBCA94FC4B28}
+		{7BA0E74E-798E-4399-2EDE-A23BD5DA78CA} = {E7F15C9C-3928-47AD-8462-64FD29FFCA54}
+		{2C0DFAC0-5D58-D172-ECE4-CBB78AD03435} = {BB874DF1-44FE-415A-B634-A6B829107890}
+		{E6C0466E-BE8D-C04F-149A-FD98438F1413} = {BB874DF1-44FE-415A-B634-A6B829107890}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {31E0F4D5-975A-41CC-933E-545B2201FAF9}

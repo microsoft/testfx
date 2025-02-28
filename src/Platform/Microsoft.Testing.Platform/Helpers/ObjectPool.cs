@@ -13,13 +13,6 @@
 // #define DETECT_LEAKS  //for now always enable DETECT_LEAKS in debug.
 // #endif
 
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
-
-#if DETECT_LEAKS
-using System.Runtime.CompilerServices;
-
-#endif
 namespace Microsoft.Testing.Platform.Helpers;
 
 /// <summary>

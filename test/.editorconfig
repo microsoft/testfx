@@ -29,3 +29,12 @@ dotnet_diagnostic.CA2201.severity = none            # CA2201: Do not raise reser
 dotnet_diagnostic.CA3075.severity = none            # CA3075: Insecure DTD processing in XML
 
 dotnet_diagnostic.IDE0060.severity = none           # IDE0060: Remove unused parameter
+
+dotnet_diagnostic.MSTEST0001.severity = warning     # MSTEST0001: Explicitly enable or disable tests parallelization
+dotnet_diagnostic.MSTEST0016.severity = warning     # MSTEST0016: Test class should have test method
+dotnet_diagnostic.MSTEST0017.severity = warning     # MSTEST0017: Assertion arguments should be passed in the correct order
+dotnet_diagnostic.MSTEST0029.severity = warning     # MSTEST0029: Public methods should be test methods
+dotnet_diagnostic.MSTEST0030.severity = warning     # MSTEST0030: Type containing '[TestMethod]' should be marked with '[TestClass]'
+dotnet_diagnostic.MSTEST0032.severity = warning     # MSTEST0032: Assertion condition is always true
+
+dotnet_analyzer_diagnostic.category-StyleCop.CSharp.DocumentationRules.severity = none # Disable StyleCop.CSharp.DocumentationRules

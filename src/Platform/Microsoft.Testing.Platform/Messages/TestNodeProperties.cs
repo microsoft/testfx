@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Diagnostics.CodeAnalysis;
-
 namespace Microsoft.Testing.Platform.Extensions.Messages;
 
 /// <summary>
@@ -53,6 +51,9 @@ public sealed record InProgressTestNodeStateProperty(string? Explanation = null)
 /// <param name="Explanation">Textual explanation of the node.</param>
 public sealed record PassedTestNodeStateProperty(string? Explanation = null) : TestNodeStateProperty(Explanation)
 {
+    /// <summary>
+    /// Gets the cached instance of the <see cref="PassedTestNodeStateProperty"/> property.
+    /// </summary>
     public static PassedTestNodeStateProperty CachedInstance { get; } = new PassedTestNodeStateProperty();
 }
 
@@ -62,6 +63,9 @@ public sealed record PassedTestNodeStateProperty(string? Explanation = null) : T
 /// <param name="Explanation">Textual explanation of the node.</param>
 public sealed record SkippedTestNodeStateProperty(string? Explanation = null) : TestNodeStateProperty(Explanation)
 {
+    /// <summary>
+    /// Gets the cached instance of the <see cref="SkippedTestNodeStateProperty"/> property.
+    /// </summary>
     public static SkippedTestNodeStateProperty CachedInstance { get; } = new SkippedTestNodeStateProperty();
 }
 
@@ -264,6 +268,17 @@ public sealed record TimingProperty : IProperty
     /// Gets the steps timing info.
     /// </summary>
     public StepTimingInfo[] StepTimings { get; }
+
+    [SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "https://github.com/dotnet/roslyn/issues/52421")]
+    private bool PrintMembers(StringBuilder builder)
+    {
+        builder.Append("GlobalTiming = ");
+        builder.Append(GlobalTiming);
+        builder.Append(", StepTimings = [");
+        builder.Append(string.Join(", ", StepTimings.Select(x => x.ToString())));
+        builder.Append(']');
+        return true;
+    }
 }
 
 /// <summary>
@@ -303,7 +318,26 @@ public sealed record TestFileLocationProperty(string FilePath, LinePositionSpan 
 /// <param name="MethodName">Method name.</param>
 /// <param name="ParameterTypeFullNames">Parameter type full name.</param>
 /// <param name="ReturnTypeFullName">Return type full name.</param>
-public sealed record TestMethodIdentifierProperty(string AssemblyFullName, string Namespace, string TypeName, string MethodName, string[] ParameterTypeFullNames, string ReturnTypeFullName) : IProperty;
+public sealed record TestMethodIdentifierProperty(string AssemblyFullName, string Namespace, string TypeName, string MethodName, string[] ParameterTypeFullNames, string ReturnTypeFullName) : IProperty
+{
+    [SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "https://github.com/dotnet/roslyn/issues/52421")]
+    private bool PrintMembers(StringBuilder builder)
+    {
+        builder.Append("AssemblyFullName = ");
+        builder.Append(AssemblyFullName);
+        builder.Append(", Namespace = ");
+        builder.Append(Namespace);
+        builder.Append(", TypeName = ");
+        builder.Append(TypeName);
+        builder.Append(", MethodName = ");
+        builder.Append(MethodName);
+        builder.Append(", ParameterTypeFullNames = [");
+        builder.Append(string.Join(", ", ParameterTypeFullNames));
+        builder.Append("], ReturnTypeFullName = ");
+        builder.Append(ReturnTypeFullName);
+        return true;
+    }
+}
 
 /// <summary>
 /// Initializes a new instance of the <see cref="TestMetadataProperty"/> class.
@@ -340,6 +374,30 @@ public record StandardErrorProperty(string StandardError) : IProperty;
 
 internal sealed record SerializableKeyValuePairStringProperty(string Key, string Value) : KeyValuePairStringProperty(Key, Value);
 
-internal sealed record SerializableNamedKeyValuePairsStringProperty(string Name, KeyValuePair<string, string>[] Pairs) : IProperty;
+internal sealed record SerializableNamedKeyValuePairsStringProperty(string Name, KeyValuePair<string, string>[] Pairs) : IProperty
+{
+    [SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "https://github.com/dotnet/roslyn/issues/52421")]
+    private bool PrintMembers(StringBuilder builder)
+    {
+        builder.Append("Name = ");
+        builder.Append(Name);
+        builder.Append(", Pairs = [");
+        builder.Append(string.Join(", ", Pairs.Select(x => x.ToString())));
+        builder.Append(']');
+        return true;
+    }
+}
 
-internal sealed record SerializableNamedArrayStringProperty(string Name, string[] Values) : IProperty;
+internal sealed record SerializableNamedArrayStringProperty(string Name, string[] Values) : IProperty
+{
+    [SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "https://github.com/dotnet/roslyn/issues/52421")]
+    private bool PrintMembers(StringBuilder builder)
+    {
+        builder.Append("Name = ");
+        builder.Append(Name);
+        builder.Append(", Values = [");
+        builder.Append(string.Join(", ", Values));
+        builder.Append(']');
+        return true;
+    }
+}

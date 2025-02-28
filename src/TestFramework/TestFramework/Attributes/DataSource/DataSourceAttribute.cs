@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Diagnostics.CodeAnalysis;
-
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 /// <summary>
@@ -105,7 +103,7 @@ public sealed class DataSourceAttribute : Attribute
     /// </summary>
     ///
     /// <returns>
-    /// One of the <see cref="Microsoft.VisualStudio.TestTools.UnitTesting.DataAccessMethod"/> values. If the <see cref="DataSourceAttribute"/> is not initialized, this will return the default value <see cref="Microsoft.VisualStudio.TestTools.UnitTesting.DataAccessMethod.Random"/>.
+    /// One of the <see cref="UnitTesting.DataAccessMethod"/> values. If the <see cref="DataSourceAttribute"/> is not initialized, this will return the default value <see cref="DataAccessMethod.Random"/>.
     /// </returns>
     public DataAccessMethod DataAccessMethod { get; }
 

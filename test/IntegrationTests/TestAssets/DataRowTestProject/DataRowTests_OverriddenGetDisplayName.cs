@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Reflection;
-
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace DataRowAttributeTestProject;
@@ -17,7 +15,7 @@ public class DataRowTests_OverriddenGetDisplayName
 
     private class DummyDataRowAttribute : DataRowAttribute
     {
-        public override string GetDisplayName(MethodInfo methodInfo, object[] data) => "Overridden DisplayName";
+        public override string? GetDisplayName(MethodInfo methodInfo, object?[]? data) => "Overridden DisplayName";
     }
 
     [TestMethod("SomeCustomDisplayName2")]

@@ -2,12 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if !WIN_UI
-using System.Runtime.InteropServices;
-#else
-using System.Runtime.Versioning;
-#endif
-
-#if !WIN_UI
 [assembly: CLSCompliant(true)]
 [assembly: ComVisible(false)]
 #else

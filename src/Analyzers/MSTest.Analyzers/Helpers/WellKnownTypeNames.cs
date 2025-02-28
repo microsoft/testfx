@@ -14,6 +14,7 @@ internal static class WellKnownTypeNames
     public const string MicrosoftVisualStudioTestToolsUnitTestingClassCleanupExecutionAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.ClassCleanupExecutionAttribute";
     public const string MicrosoftVisualStudioTestToolsUnitTestingClassInitializeAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.ClassInitializeAttribute";
     public const string MicrosoftVisualStudioTestToolsUnitTestingCollectionAssert = "Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert";
+    public const string MicrosoftVisualStudioTestToolsUnitTestingConditionBaseAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.ConditionBaseAttribute";
     public const string MicrosoftVisualStudioTestToolsUnitTestingCssIterationAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.CssIterationAttribute";
     public const string MicrosoftVisualStudioTestToolsUnitTestingCssProjectStructureAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.CssProjectStructureAttribute";
     public const string MicrosoftVisualStudioTestToolsUnitTestingDataRowAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute";
@@ -42,10 +43,10 @@ internal static class WellKnownTypeNames
     public const string System = "System";
     public const string SystemCollectionsGenericIEnumerable1 = "System.Collections.Generic.IEnumerable`1";
     public const string SystemDescriptionAttribute = "System.ComponentModel.DescriptionAttribute";
+    public const string SystemFunc1 = "System.Func`1";
     public const string SystemIAsyncDisposable = "System.IAsyncDisposable";
     public const string SystemIDisposable = "System.IDisposable";
     public const string SystemReflectionMethodInfo = "System.Reflection.MethodInfo";
-    public const string SystemRuntimeCompilerServicesITuple = "System.Runtime.CompilerServices.ITuple";
     public const string SystemThreadingTasksTask = "System.Threading.Tasks.Task";
     public const string SystemThreadingTasksTask1 = "System.Threading.Tasks.Task`1";
     public const string SystemThreadingTasksValueTask = "System.Threading.Tasks.ValueTask";

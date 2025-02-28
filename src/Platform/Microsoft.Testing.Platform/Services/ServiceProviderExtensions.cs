@@ -1,9 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
-
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
@@ -177,9 +174,6 @@ public static class ServiceProviderExtensions
     internal static ITestApplicationProcessExitCode GetTestApplicationProcessExitCode(this IServiceProvider serviceProvider)
         => serviceProvider.GetRequiredServiceInternal<ITestApplicationProcessExitCode>();
 
-    internal static IMonitor GetMonitor(this IServiceProvider serviceProvider)
-        => serviceProvider.GetRequiredServiceInternal<IMonitor>();
-
     internal static ITestApplicationCancellationTokenSource GetTestApplicationCancellationTokenSource(this IServiceProvider serviceProvider)
         => serviceProvider.GetRequiredServiceInternal<ITestApplicationCancellationTokenSource>();
 
@@ -206,9 +200,6 @@ public static class ServiceProviderExtensions
 
     internal static ITestFrameworkCapabilities GetTestFrameworkCapabilities(this IServiceProvider serviceProvider)
         => serviceProvider.GetRequiredServiceInternal<ITestFrameworkCapabilities>();
-
-    internal static CommandLineParseResult GetCommandLineParseResult(this IServiceProvider serviceProvider)
-        => serviceProvider.GetRequiredServiceInternal<ApplicationLoggingState>().CommandLineParseResult;
 
     internal static IPlatformInformation GetPlatformInformation(this IServiceProvider serviceProvider)
         => serviceProvider.GetRequiredServiceInternal<IPlatformInformation>();

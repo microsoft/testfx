@@ -1,12 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
-using System.Reflection;
 using System.Runtime.Serialization;
 using System.Security;
-using System.Text;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
@@ -66,12 +62,10 @@ internal class AssemblyEnumerator : MarshalByRefObject
     /// Enumerates through all types in the assembly in search of valid test methods.
     /// </summary>
     /// <param name="assemblyFileName">The assembly file name.</param>
-    /// <param name="runSettingsXml">The xml specifying runsettings.</param>
     /// <param name="warnings">Contains warnings if any, that need to be passed back to the caller.</param>
     /// <returns>A collection of Test Elements.</returns>
     internal ICollection<UnitTestElement> EnumerateAssembly(
         string assemblyFileName,
-        [StringSyntax(StringSyntaxAttribute.Xml, nameof(runSettingsXml))] string? runSettingsXml,
         List<string> warnings)
     {
         DebugEx.Assert(!StringEx.IsNullOrWhiteSpace(assemblyFileName), "Invalid assembly file name.");
@@ -111,7 +105,6 @@ internal class AssemblyEnumerator : MarshalByRefObject
             },
         };
 
-        Dictionary<string, object>? testRunParametersFromRunSettings = RunSettingsUtilities.GetTestRunParameters(runSettingsXml);
         foreach (Type type in types)
         {
             if (type == null)
@@ -119,7 +112,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
                 continue;
             }
 
-            List<UnitTestElement> testsInType = DiscoverTestsInType(assemblyFileName, testRunParametersFromRunSettings, type, warnings, discoverInternals,
+            List<UnitTestElement> testsInType = DiscoverTestsInType(assemblyFileName, type, warnings, discoverInternals,
                 dataSourcesUnfoldingStrategy, testIdGenerationStrategy, fixturesTests);
             tests.AddRange(testsInType);
         }
@@ -215,7 +208,6 @@ internal class AssemblyEnumerator : MarshalByRefObject
 
     private List<UnitTestElement> DiscoverTestsInType(
         string assemblyFileName,
-        Dictionary<string, object>? testRunParametersFromRunSettings,
         Type type,
         List<string> warningMessages,
         bool discoverInternals,
@@ -223,12 +215,6 @@ internal class AssemblyEnumerator : MarshalByRefObject
         TestIdGenerationStrategy testIdGenerationStrategy,
         HashSet<string> fixturesTests)
     {
-        IDictionary<string, object> tempSourceLevelParameters = PlatformServiceProvider.Instance.SettingsProvider.GetProperties(assemblyFileName);
-        tempSourceLevelParameters = testRunParametersFromRunSettings?.ConcatWithOverwrites(tempSourceLevelParameters)
-            ?? tempSourceLevelParameters
-            ?? new Dictionary<string, object>();
-        var sourceLevelParameters = tempSourceLevelParameters.ToDictionary(x => x.Key, x => (object?)x.Value);
-
         string? typeFullName = null;
         var tests = new List<UnitTestElement>();
 
@@ -272,7 +258,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
         return tests;
     }
 
-    private static void AddFixtureTests(TestMethodInfo testMethodInfo, List<UnitTestElement> tests, HashSet<string> fixtureTests)
+    private static void AddFixtureTests(DiscoveryTestMethodInfo testMethodInfo, List<UnitTestElement> tests, HashSet<string> fixtureTests)
     {
         string assemblyName = testMethodInfo.Parent.Parent.Assembly.GetName().Name!;
         string assemblyLocation = testMethodInfo.Parent.Parent.Assembly.Location;
@@ -342,17 +328,16 @@ internal class AssemblyEnumerator : MarshalByRefObject
 
         static UnitTestElement GetFixtureTest(string classFullName, string assemblyLocation, string fixtureType, string methodName, string[] hierarchy)
         {
-            var method = new TestMethod(classFullName, methodName, hierarchy, methodName, classFullName, assemblyLocation, false, null, TestIdGenerationStrategy.FullyQualified);
+            var method = new TestMethod(classFullName, methodName, hierarchy, methodName, classFullName, assemblyLocation, null, TestIdGenerationStrategy.FullyQualified);
             return new UnitTestElement(method)
             {
                 DisplayName = $"[{fixtureType}] {methodName}",
-                Ignored = true,
                 Traits = [new Trait(Constants.FixturesTestTrait, fixtureType)],
             };
         }
     }
 
-    private static bool TryUnfoldITestDataSources(UnitTestElement test, TestMethodInfo testMethodInfo, TestDataSourceUnfoldingStrategy dataSourcesUnfoldingStrategy, List<UnitTestElement> tests)
+    private static bool TryUnfoldITestDataSources(UnitTestElement test, DiscoveryTestMethodInfo testMethodInfo, TestDataSourceUnfoldingStrategy dataSourcesUnfoldingStrategy, List<UnitTestElement> tests)
     {
         // It should always be `true`, but if any part of the chain is obsolete; it might not contain those.
         // Since we depend on those properties, if they don't exist, we bail out early.
@@ -428,6 +413,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
         // This code is to discover tests. To run the tests code is in TestMethodRunner.ExecuteDataSourceBasedTests.
         // Any change made here should be reflected in TestMethodRunner.ExecuteDataSourceBasedTests as well.
         data = dataSource.GetData(methodInfo);
+        string? testDataSourceIgnoreMessage = (dataSource as ITestDataSourceIgnoreCapability)?.IgnoreMessage;
 
         if (!data.Any())
         {
@@ -439,6 +425,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
             UnitTestElement discoveredTest = test.Clone();
             // Make the test not data driven, because it had no data.
             discoveredTest.TestMethod.DataType = DynamicDataType.None;
+            discoveredTest.TestMethod.TestDataSourceIgnoreMessage = testDataSourceIgnoreMessage;
             discoveredTest.DisplayName = dataSource.GetDisplayName(methodInfo, null) ?? discoveredTest.DisplayName;
 
             tests.Add(discoveredTest);
@@ -450,10 +437,16 @@ internal class AssemblyEnumerator : MarshalByRefObject
         var discoveredTests = new List<UnitTestElement>();
         int index = 0;
 
-        foreach (object?[] d in data)
+        foreach (object?[] dataOrTestDataRow in data)
         {
+            object?[] d = dataOrTestDataRow;
+            if (TestDataSourceHelpers.TryHandleITestDataRow(d, methodInfo.GetParameters(), out d, out string? ignoreMessageFromTestDataRow, out string? displayNameFromTestDataRow))
+            {
+                testDataSourceIgnoreMessage = ignoreMessageFromTestDataRow ?? testDataSourceIgnoreMessage;
+            }
+
             UnitTestElement discoveredTest = test.Clone();
-            discoveredTest.DisplayName = dataSource.GetDisplayName(methodInfo, d) ?? discoveredTest.DisplayName;
+            discoveredTest.DisplayName = displayNameFromTestDataRow ?? dataSource.GetDisplayName(methodInfo, d) ?? discoveredTest.DisplayName;
 
             // If strategy is DisplayName and we have a duplicate test name don't expand the test, bail out.
 #pragma warning disable CS0618 // Type or member is obsolete
@@ -472,6 +465,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
             try
             {
                 discoveredTest.TestMethod.SerializedData = DataSerializationHelper.Serialize(d);
+                discoveredTest.TestMethod.TestDataSourceIgnoreMessage = testDataSourceIgnoreMessage;
                 discoveredTest.TestMethod.DataType = DynamicDataType.ITestDataSource;
             }
             catch (SerializationException ex)

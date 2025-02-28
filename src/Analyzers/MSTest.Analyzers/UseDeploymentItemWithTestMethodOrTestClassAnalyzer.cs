@@ -29,9 +29,11 @@ public sealed class UseDeploymentItemWithTestMethodOrTestClassAnalyzer : Diagnos
         DiagnosticSeverity.Info,
         isEnabledByDefault: true);
 
+    /// <inheritdoc />
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
         = ImmutableArray.Create(UseDeploymentItemWithTestMethodOrTestClassRule);
 
+    /// <inheritdoc />
     public override void Initialize(AnalysisContext context)
     {
         context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
@@ -52,6 +54,15 @@ public sealed class UseDeploymentItemWithTestMethodOrTestClassAnalyzer : Diagnos
 
     private static void AnalyzeSymbol(SymbolAnalysisContext context, INamedTypeSymbol testMethodAttributeSymbol, INamedTypeSymbol testClassAttributeSymbol, INamedTypeSymbol deploymentItemAttributeSymbol)
     {
+        if (context.Symbol is INamedTypeSymbol { IsAbstract: true })
+        {
+            // As [DeploymentItem] attribute is inherited, it's okay to be present on an abstract class that is not a test class.
+            // See https://github.com/microsoft/testfx/issues/2683 for information.
+            // For now, we do the IsAbstract check specifically for classes and not methods.
+            // If we got a convincing feedback around a false positive for the attribute on an abstract method, we can adjust the check.
+            return;
+        }
+
         bool hasDeploymentItemAttribute = false;
         bool isTestMethodOrTestClass = false;
         foreach (AttributeData attribute in context.Symbol.GetAttributes())

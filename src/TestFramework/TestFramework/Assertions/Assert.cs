@@ -1,9 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
-
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 /// <summary>
@@ -137,7 +134,7 @@ public sealed partial class Assert
         return inputString == null ? FrameworkMessages.Common_ObjectString.ToString() : ReplaceNullChars(inputString);
     }
 
-    private static int CompareInternal(string? expected, string? actual, bool ignoreCase, CultureInfo? culture)
+    private static int CompareInternal(string? expected, string? actual, bool ignoreCase, CultureInfo culture)
 #pragma warning disable CA1309 // Use ordinal string comparison
         => string.Compare(expected, actual, ignoreCase, culture);
 #pragma warning restore CA1309 // Use ordinal string comparison

@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Collections.Concurrent;
-
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Helpers;
@@ -218,22 +216,24 @@ internal sealed class PerRequestServerDataConsumer(IServiceProvider serviceProvi
             return;
         }
 
-        if (value is TestNodeUpdateMessage update)
+        switch (value)
         {
-            await ProcessTestNodeUpdateAsync(update, cancellationToken);
-            PopulateTestNodeStatistics(update);
-        }
-        else if (value is SessionFileArtifact sessionFileArtifact)
-        {
-            Artifacts.Add(new Artifact(sessionFileArtifact.FileInfo.FullName, dataProducer.Uid, FileType, sessionFileArtifact.DisplayName, sessionFileArtifact.Description));
-        }
-        else if (value is FileArtifact file)
-        {
-            Artifacts.Add(new Artifact(file.FileInfo.FullName, dataProducer.Uid, FileType, file.DisplayName, file.Description));
-        }
-        else if (value is TestNodeFileArtifact testNodeFileArtifact)
-        {
-            Artifacts.Add(new Artifact(testNodeFileArtifact.FileInfo.FullName, dataProducer.Uid, FileType, testNodeFileArtifact.DisplayName, testNodeFileArtifact.Description));
+            case TestNodeUpdateMessage update:
+                await ProcessTestNodeUpdateAsync(update, cancellationToken);
+                PopulateTestNodeStatistics(update);
+                break;
+
+            case TestNodeFileArtifact testNodeFileArtifact:
+                Artifacts.Add(new Artifact(testNodeFileArtifact.FileInfo.FullName, dataProducer.Uid, FileType, testNodeFileArtifact.DisplayName, testNodeFileArtifact.Description));
+                break;
+
+            case SessionFileArtifact sessionFileArtifact:
+                Artifacts.Add(new Artifact(sessionFileArtifact.FileInfo.FullName, dataProducer.Uid, FileType, sessionFileArtifact.DisplayName, sessionFileArtifact.Description));
+                break;
+
+            case FileArtifact file:
+                Artifacts.Add(new Artifact(file.FileInfo.FullName, dataProducer.Uid, FileType, file.DisplayName, file.Description));
+                break;
         }
     }
 

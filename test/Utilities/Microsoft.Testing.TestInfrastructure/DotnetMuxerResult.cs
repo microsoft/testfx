@@ -2,13 +2,11 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.ObjectModel;
-using System.Globalization;
-using System.Text;
 
 namespace Microsoft.Testing.TestInfrastructure;
 
 public sealed class DotnetMuxerResult(string args, int exitCode, string standardOutput, ReadOnlyCollection<string> standardOutputLines,
-    string standardError, ReadOnlyCollection<string> standardErrorLines)
+    string standardError, ReadOnlyCollection<string> standardErrorLines, string? binlogPath)
 {
     public string Args { get; } = args;
 
@@ -19,6 +17,8 @@ public sealed class DotnetMuxerResult(string args, int exitCode, string standard
     public ReadOnlyCollection<string> StandardOutputLines { get; } = standardOutputLines;
 
     public string StandardError { get; } = standardError;
+
+    public string? BinlogPath { get; } = binlogPath;
 
     public ReadOnlyCollection<string> StandardErrorLines { get; } = standardErrorLines;
 

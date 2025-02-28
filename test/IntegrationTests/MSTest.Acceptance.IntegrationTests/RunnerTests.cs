@@ -5,21 +5,17 @@ using Microsoft.Build.Logging.StructuredLogger;
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
 
-using SL = Microsoft.Build.Logging.StructuredLogger;
 using SystemTask = System.Threading.Tasks.Task;
 
 namespace MSTest.Acceptance.IntegrationTests;
 
-[TestGroup]
-public class RunnerTests : AcceptanceTestBase
+[TestClass]
+public class RunnerTests : AcceptanceTestBase<NopAssetFixture>
 {
     private const string AssetName = "MSTestProject";
-    private readonly AcceptanceFixture _acceptanceFixture;
 
-    public RunnerTests(ITestExecutionContext testExecutionContext, AcceptanceFixture acceptanceFixture)
-        : base(testExecutionContext) => _acceptanceFixture = acceptanceFixture;
-
-    [ArgumentsProvider(nameof(GetBuildMatrixTfmBuildVerbConfiguration))]
+    [TestMethod]
+    [DynamicData(nameof(GetBuildMatrixTfmBuildVerbConfiguration), typeof(AcceptanceTestBase<NopAssetFixture>), DynamicDataSourceType.Method)]
     public async SystemTask EnableMSTestRunner_True_Will_Run_Standalone(string tfm, BuildConfiguration buildConfiguration, Verb verb)
     {
         using TestAsset generator = await TestAsset.GenerateAssetAsync(
@@ -31,32 +27,30 @@ public class RunnerTests : AcceptanceTestBase
                 .PatchCodeWithReplace("$EnableMSTestRunner$", "<EnableMSTestRunner>true</EnableMSTestRunner>")
                 .PatchCodeWithReplace("$OutputType$", "<OutputType>Exe</OutputType>")
                 .PatchCodeWithReplace("$Extra$", string.Empty));
-        string binlogFile = Path.Combine(generator.TargetAssetPath, "msbuild.binlog");
         DotnetMuxerResult compilationResult = await DotnetCli.RunAsync(
             $"restore -m:1 -nodeReuse:false {generator.TargetAssetPath} -r {RID}",
-            _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
+            AcceptanceFixture.NuGetGlobalPackagesFolder.Path);
         compilationResult = await DotnetCli.RunAsync(
-            $"{verb} -m:1 -nodeReuse:false {generator.TargetAssetPath} -c {buildConfiguration} -bl:{binlogFile} -r {RID}",
-            _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
+            $"{verb} -m:1 -nodeReuse:false {generator.TargetAssetPath} -c {buildConfiguration} -r {RID}",
+            AcceptanceFixture.NuGetGlobalPackagesFolder.Path);
 
-        SL.Build binLog = Serialization.Read(binlogFile);
-        Assert.IsNotEmpty(binLog.FindChildrenRecursive<AddItem>()
-            .Where(x => x.Title.Contains("ProjectCapability"))
-            .Where(x => x.Children.Any(c => ((Item)c).Name == "TestingPlatformServer")));
+        Build binLog = Serialization.Read(compilationResult.BinlogPath);
+        Assert.AreNotEqual(0, binLog.FindChildrenRecursive<AddItem>()
+            .Count(x => x.Title.Contains("ProjectCapability") && x.Children.Any(c => ((Item)c).Name == "TestingPlatformServer")));
 
         var testHost = TestHost.LocateFrom(generator.TargetAssetPath, AssetName, tfm, buildConfiguration: buildConfiguration, verb: verb);
         TestHostResult testHostResult = await testHost.ExecuteAsync();
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
     }
 
-    [ArgumentsProvider(nameof(GetBuildMatrixTfmBuildVerbConfiguration))]
+    [TestMethod]
+    [DynamicData(nameof(GetBuildMatrixTfmBuildVerbConfiguration), typeof(AcceptanceTestBase<NopAssetFixture>), DynamicDataSourceType.Method)]
     public async SystemTask EnableMSTestRunner_True_WithCustomEntryPoint_Will_Run_Standalone(string tfm, BuildConfiguration buildConfiguration, Verb verb)
     {
         using TestAsset generator = await TestAsset.GenerateAssetAsync(
             AssetName,
             (CurrentMSTestSourceCode + """
 #file Program.cs
-
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -74,17 +68,17 @@ return await app.RunAsync();
 <GenerateTestingPlatformEntryPoint>False</GenerateTestingPlatformEntryPoint>
 <LangVersion>preview</LangVersion>
 """));
-        string binlogFile = Path.Combine(generator.TargetAssetPath, "msbuild.binlog");
-        await DotnetCli.RunAsync($"restore -m:1 -nodeReuse:false {generator.TargetAssetPath} -r {RID}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
+        await DotnetCli.RunAsync($"restore -m:1 -nodeReuse:false {generator.TargetAssetPath} -r {RID}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path);
         await DotnetCli.RunAsync(
-            $"{verb} -m:1 -nodeReuse:false {generator.TargetAssetPath} -c {buildConfiguration} -bl:{binlogFile} -r {RID}",
-            _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
+            $"{verb} -m:1 -nodeReuse:false {generator.TargetAssetPath} -c {buildConfiguration} -r {RID}",
+            AcceptanceFixture.NuGetGlobalPackagesFolder.Path);
         var testHost = TestHost.LocateFrom(generator.TargetAssetPath, AssetName, tfm, buildConfiguration: buildConfiguration, verb: verb);
         TestHostResult testHostResult = await testHost.ExecuteAsync();
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
     }
 
-    [ArgumentsProvider(nameof(GetBuildMatrixTfmBuildVerbConfiguration))]
+    [TestMethod]
+    [DynamicData(nameof(GetBuildMatrixTfmBuildVerbConfiguration), typeof(AcceptanceTestBase<NopAssetFixture>), DynamicDataSourceType.Method)]
     public async SystemTask EnableMSTestRunner_False_Will_Run_Empty_Program_EntryPoint_From_Tpv2_SDK(string tfm, BuildConfiguration buildConfiguration, Verb verb)
     {
         using TestAsset generator = await TestAsset.GenerateAssetAsync(
@@ -96,18 +90,17 @@ return await app.RunAsync();
                 .PatchCodeWithReplace("$EnableMSTestRunner$", "<EnableMSTestRunner>false</EnableMSTestRunner>")
                 .PatchCodeWithReplace("$OutputType$", "<OutputType>Exe</OutputType>")
                 .PatchCodeWithReplace("$Extra$", string.Empty));
-        string binlogFile = Path.Combine(generator.TargetAssetPath, "msbuild.binlog");
-        await DotnetCli.RunAsync($"restore -m:1 -nodeReuse:false {generator.TargetAssetPath} -r {RID}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
+        await DotnetCli.RunAsync($"restore -m:1 -nodeReuse:false {generator.TargetAssetPath} -r {RID}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path);
         try
         {
-            await DotnetCli.RunAsync($"{verb} -m:1 -nodeReuse:false {generator.TargetAssetPath} -c {buildConfiguration} -bl:{binlogFile} -r {RID}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
+            await DotnetCli.RunAsync($"{verb} -m:1 -nodeReuse:false {generator.TargetAssetPath} -c {buildConfiguration} -r {RID}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path);
             var testHost = TestHost.LocateFrom(generator.TargetAssetPath, AssetName, tfm, buildConfiguration: buildConfiguration, verb: verb);
             TestHostResult testHostResult = await testHost.ExecuteAsync();
             Assert.AreEqual(string.Empty, testHostResult.StandardOutput);
         }
         catch (Exception ex)
         {
-            if (TargetFrameworks.NetFramework.Any(x => x.Arguments == tfm))
+            if (TargetFrameworks.NetFramework.Any(x => x == tfm))
             {
                 Assert.IsTrue(ex.Message.Contains("Program does not contain a static 'Main' method suitable for an entry point"), ex.Message);
 
@@ -117,7 +110,8 @@ return await app.RunAsync();
         }
     }
 
-    [ArgumentsProvider(nameof(GetBuildMatrixTfmBuildVerbConfiguration))]
+    [TestMethod]
+    [DynamicData(nameof(GetBuildMatrixTfmBuildVerbConfiguration), typeof(AcceptanceTestBase<NopAssetFixture>), DynamicDataSourceType.Method)]
     public async SystemTask EnableMSTestRunner_False_Wont_Flow_TestingPlatformServer_Capability(string tfm, BuildConfiguration buildConfiguration, Verb verb)
     {
         using TestAsset generator = await TestAsset.GenerateAssetAsync(
@@ -130,13 +124,11 @@ return await app.RunAsync();
                 .PatchCodeWithReplace("$OutputType$", string.Empty)
                 .PatchCodeWithReplace("$Extra$", string.Empty));
 
-        string binlogFile = Path.Combine(generator.TargetAssetPath, "msbuild.binlog");
-        await DotnetCli.RunAsync($"restore -m:1 -nodeReuse:false {generator.TargetAssetPath} -r {RID}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
-        await DotnetCli.RunAsync($"{verb} -bl:{binlogFile} -m:1 -nodeReuse:false {generator.TargetAssetPath} -c {buildConfiguration} -r {RID} ", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
+        await DotnetCli.RunAsync($"restore -m:1 -nodeReuse:false {generator.TargetAssetPath} -r {RID}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path);
+        DotnetMuxerResult result = await DotnetCli.RunAsync($"{verb} -m:1 -nodeReuse:false {generator.TargetAssetPath} -c {buildConfiguration} -r {RID} ", AcceptanceFixture.NuGetGlobalPackagesFolder.Path);
 
-        SL.Build binLog = Serialization.Read(binlogFile);
-        Assert.IsEmpty(binLog.FindChildrenRecursive<AddItem>()
-            .Where(x => x.Title.Contains("ProjectCapability"))
-            .Where(x => x.Children.Any(c => ((Item)c).Name == "TestingPlatformServer")));
+        Build binLog = Serialization.Read(result.BinlogPath);
+        Assert.IsFalse(binLog.FindChildrenRecursive<AddItem>()
+            .Any(x => x.Title.Contains("ProjectCapability") && x.Children.Any(c => ((Item)c).Name == "TestingPlatformServer")));
     }
 }

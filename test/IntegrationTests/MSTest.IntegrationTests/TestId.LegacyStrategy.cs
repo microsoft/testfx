@@ -11,20 +11,20 @@ public partial class TestId : CLITestBase
 {
     private const string LegacyStrategyDll = "TestIdProject.LegacyStrategy";
 
-    public void TestIdUniqueness_DataRowArray_LegacyStrategy()
+    public async Task TestIdUniqueness_DataRowArray_LegacyStrategy()
     {
         // Arrange
         string assemblyPath = GetAssetFullPath(LegacyStrategyDll);
 
         // Act
         System.Collections.Immutable.ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestCase> testCases = DiscoverTests(assemblyPath, "FullyQualifiedName~DataRowArraysTests");
-        System.Collections.Immutable.ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult> testResults = RunTests(testCases);
+        System.Collections.Immutable.ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult> testResults = await RunTestsAsync(testCases);
 
         // Assert
         VerifyE2E.FailedTestCount(testResults, 0);
         VerifyE2E.TestsPassed(
             testResults,
-            null, // For legacy, there is an extra test result, being the parent and it has no display name
+            null!, // For legacy, there is an extra test result, being the parent and it has no display name
             "DataRowArraysTests (0,System.Int32[])",
             "DataRowArraysTests (0,System.Int32[])",
             "DataRowArraysTests (0,System.Int32[])");
@@ -33,20 +33,20 @@ public partial class TestId : CLITestBase
         testResults.Select(x => x.TestCase.Id.ToString()).Distinct().Should().ContainSingle();
     }
 
-    public void TestIdUniqueness_DataRowString_LegacyStrategy()
+    public async Task TestIdUniqueness_DataRowString_LegacyStrategy()
     {
         // Arrange
         string assemblyPath = GetAssetFullPath(LegacyStrategyDll);
 
         // Act
         System.Collections.Immutable.ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestCase> testCases = DiscoverTests(assemblyPath, "FullyQualifiedName~DataRowStringTests");
-        System.Collections.Immutable.ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult> testResults = RunTests(testCases);
+        System.Collections.Immutable.ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult> testResults = await RunTestsAsync(testCases);
 
         // Assert
         VerifyE2E.FailedTestCount(testResults, 0);
         VerifyE2E.TestsPassed(
             testResults,
-            null, // For legacy, there is an extra test result, being the parent and it has no display name
+            null!, // For legacy, there is an extra test result, being the parent and it has no display name
             "DataRowStringTests ()",
             "DataRowStringTests ()",
             "DataRowStringTests ( )",
@@ -56,20 +56,20 @@ public partial class TestId : CLITestBase
         testResults.Select(x => x.TestCase.Id.ToString()).Distinct().Should().ContainSingle();
     }
 
-    public void TestIdUniqueness_DynamicDataArrays_LegacyStrategy()
+    public async Task TestIdUniqueness_DynamicDataArrays_LegacyStrategy()
     {
         // Arrange
         string assemblyPath = GetAssetFullPath(LegacyStrategyDll);
 
         // Act
         System.Collections.Immutable.ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestCase> testCases = DiscoverTests(assemblyPath, "FullyQualifiedName~DynamicDataArraysTests");
-        System.Collections.Immutable.ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult> testResults = RunTests(testCases);
+        System.Collections.Immutable.ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult> testResults = await RunTestsAsync(testCases);
 
         // Assert
         VerifyE2E.FailedTestCount(testResults, 0);
         VerifyE2E.TestsPassed(
             testResults,
-            null, // For legacy, there is an extra test result, being the parent and it has no display name
+            null!, // For legacy, there is an extra test result, being the parent and it has no display name
             "DynamicDataArraysTests (0,System.Int32[])",
             "DynamicDataArraysTests (0,System.Int32[])",
             "DynamicDataArraysTests (0,System.Int32[])");
@@ -78,20 +78,20 @@ public partial class TestId : CLITestBase
         testResults.Select(x => x.TestCase.Id.ToString()).Distinct().Should().ContainSingle();
     }
 
-    public void TestIdUniqueness_DynamicDataTuple_LegacyStrategy()
+    public async Task TestIdUniqueness_DynamicDataTuple_LegacyStrategy()
     {
         // Arrange
         string assemblyPath = GetAssetFullPath(LegacyStrategyDll);
 
         // Act
         System.Collections.Immutable.ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestCase> testCases = DiscoverTests(assemblyPath, "FullyQualifiedName~DynamicDataTuplesTests");
-        System.Collections.Immutable.ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult> testResults = RunTests(testCases);
+        System.Collections.Immutable.ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult> testResults = await RunTestsAsync(testCases);
 
         // Assert
         VerifyE2E.FailedTestCount(testResults, 0);
         VerifyE2E.TestsPassed(
             testResults,
-            null, // For legacy, there is an extra test result, being the parent and it has no display name
+            null!, // For legacy, there is an extra test result, being the parent and it has no display name
             "DynamicDataTuplesTests ((1, text, True))",
             "DynamicDataTuplesTests ((1, text, False))");
 
@@ -99,20 +99,20 @@ public partial class TestId : CLITestBase
         testResults.Select(x => x.TestCase.Id.ToString()).Distinct().Should().ContainSingle();
     }
 
-    public void TestIdUniqueness_DynamicDataGenericCollections_LegacyStrategy()
+    public async Task TestIdUniqueness_DynamicDataGenericCollections_LegacyStrategy()
     {
         // Arrange
         string assemblyPath = GetAssetFullPath(LegacyStrategyDll);
 
         // Act
         System.Collections.Immutable.ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestCase> testCases = DiscoverTests(assemblyPath, "FullyQualifiedName~DynamicDataGenericCollectionsTests");
-        System.Collections.Immutable.ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult> testResults = RunTests(testCases);
+        System.Collections.Immutable.ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult> testResults = await RunTestsAsync(testCases);
 
         // Assert
         VerifyE2E.FailedTestCount(testResults, 0);
         VerifyE2E.TestsPassed(
             testResults,
-            null, // For legacy, there is an extra test result, being the parent and it has no display name
+            null!, // For legacy, there is an extra test result, being the parent and it has no display name
             "DynamicDataGenericCollectionsTests (System.Collections.Generic.List`1[System.Int32],System.Collections.Generic.List`1[System.String],System.Collections.Generic.List`1[System.Boolean])",
             "DynamicDataGenericCollectionsTests (System.Collections.Generic.List`1[System.Int32],System.Collections.Generic.List`1[System.String],System.Collections.Generic.List`1[System.Boolean])",
             "DynamicDataGenericCollectionsTests (System.Collections.Generic.List`1[System.Int32],System.Collections.Generic.List`1[System.String],System.Collections.Generic.List`1[System.Boolean])",
@@ -122,20 +122,20 @@ public partial class TestId : CLITestBase
         testResults.Select(x => x.TestCase.Id.ToString()).Distinct().Should().ContainSingle();
     }
 
-    public void TestIdUniqueness_TestDataSourceArrays_LegacyStrategy()
+    public async Task TestIdUniqueness_TestDataSourceArrays_LegacyStrategy()
     {
         // Arrange
         string assemblyPath = GetAssetFullPath(LegacyStrategyDll);
 
         // Act
         System.Collections.Immutable.ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestCase> testCases = DiscoverTests(assemblyPath, "FullyQualifiedName~TestDataSourceArraysTests");
-        System.Collections.Immutable.ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult> testResults = RunTests(testCases);
+        System.Collections.Immutable.ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult> testResults = await RunTestsAsync(testCases);
 
         // Assert
         VerifyE2E.FailedTestCount(testResults, 0);
         VerifyE2E.TestsPassed(
             testResults,
-            null, // For legacy, there is an extra test result, being the parent and it has no display name
+            null!, // For legacy, there is an extra test result, being the parent and it has no display name
             "Custom name",
             "Custom name",
             "Custom name");
@@ -144,20 +144,20 @@ public partial class TestId : CLITestBase
         testResults.Select(x => x.TestCase.Id.ToString()).Distinct().Should().ContainSingle();
     }
 
-    public void TestIdUniqueness_TestDataSourceTuples_LegacyStrategy()
+    public async Task TestIdUniqueness_TestDataSourceTuples_LegacyStrategy()
     {
         // Arrange
         string assemblyPath = GetAssetFullPath(LegacyStrategyDll);
 
         // Act
         System.Collections.Immutable.ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestCase> testCases = DiscoverTests(assemblyPath, "FullyQualifiedName~TestDataSourceTuplesTests");
-        System.Collections.Immutable.ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult> testResults = RunTests(testCases);
+        System.Collections.Immutable.ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult> testResults = await RunTestsAsync(testCases);
 
         // Assert
         VerifyE2E.FailedTestCount(testResults, 0);
         VerifyE2E.TestsPassed(
             testResults,
-            null, // For legacy, there is an extra test result, being the parent and it has no display name
+            null!, // For legacy, there is an extra test result, being the parent and it has no display name
             "Custom name",
             "Custom name");
 
@@ -165,20 +165,20 @@ public partial class TestId : CLITestBase
         testResults.Select(x => x.TestCase.Id.ToString()).Distinct().Should().ContainSingle();
     }
 
-    public void TestIdUniqueness_TestDataSourceGenericCollections_LegacyStrategy()
+    public async Task TestIdUniqueness_TestDataSourceGenericCollections_LegacyStrategy()
     {
         // Arrange
         string assemblyPath = GetAssetFullPath(LegacyStrategyDll);
 
         // Act
         System.Collections.Immutable.ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestCase> testCases = DiscoverTests(assemblyPath, "FullyQualifiedName~TestDataSourceGenericCollectionsTests");
-        System.Collections.Immutable.ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult> testResults = RunTests(testCases);
+        System.Collections.Immutable.ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult> testResults = await RunTestsAsync(testCases);
 
         // Assert
         VerifyE2E.FailedTestCount(testResults, 0);
         VerifyE2E.TestsPassed(
             testResults,
-            null, // For legacy, there is an extra test result, being the parent and it has no display name
+            null!, // For legacy, there is an extra test result, being the parent and it has no display name
             "Custom name",
             "Custom name",
             "Custom name",

@@ -37,9 +37,22 @@ public sealed class DataRowShouldBeValidAnalyzer : DiagnosticAnalyzer
     internal static readonly DiagnosticDescriptor ArgumentTypeMismatchRule = DataRowOnTestMethodRule
         .WithMessage(new(nameof(Resources.DataRowShouldBeValidMessageFormat_ArgumentTypeMismatch), Resources.ResourceManager, typeof(Resources)));
 
-    public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
-        = ImmutableArray.Create(DataRowOnTestMethodRule);
+    internal static readonly DiagnosticDescriptor GenericTypeArgumentNotResolvedRule = DataRowOnTestMethodRule
+        .WithMessage(new(nameof(Resources.DataRowShouldBeValidMessageFormat_GenericTypeArgumentNotResolved), Resources.ResourceManager, typeof(Resources)));
 
+    internal static readonly DiagnosticDescriptor GenericTypeArgumentConflictingTypesRule = DataRowOnTestMethodRule
+        .WithMessage(new(nameof(Resources.DataRowShouldBeValidMessageFormat_GenericTypeArgumentConflictingTypes), Resources.ResourceManager, typeof(Resources)));
+
+    /// <inheritdoc />
+    public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
+        = ImmutableArray.Create(
+            DataRowOnTestMethodRule,
+            ArgumentCountMismatchRule,
+            ArgumentTypeMismatchRule,
+            GenericTypeArgumentNotResolvedRule,
+            GenericTypeArgumentConflictingTypesRule);
+
+    /// <inheritdoc />
     public override void Initialize(AnalysisContext context)
     {
         context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
@@ -168,6 +181,8 @@ public sealed class DataRowShouldBeValidAnalyzer : DiagnosticAnalyzer
             return;
         }
 
+        AnalyzeGenericMethod(context, dataRowSyntax, methodSymbol, constructorArguments);
+
         // Check constructor argument types match method parameter types.
         List<(int ConstructorArgumentIndex, int MethodParameterIndex)> typeMismatchIndices = new();
         for (int currentArgumentIndex = 0; currentArgumentIndex < constructorArguments.Length; currentArgumentIndex++)
@@ -179,7 +194,14 @@ public sealed class DataRowShouldBeValidAnalyzer : DiagnosticAnalyzer
             }
 
             ITypeSymbol? argumentType = constructorArguments[currentArgumentIndex].Type;
-            ITypeSymbol paramType = GetParameterType(methodSymbol, currentArgumentIndex, constructorArguments.Length);
+            ITypeSymbol paramType = GetParameterType(methodSymbol.Parameters, currentArgumentIndex, constructorArguments.Length);
+            if (paramType.TypeKind == TypeKind.TypeParameter ||
+                paramType is IArrayTypeSymbol { ElementType.TypeKind: TypeKind.TypeParameter })
+            {
+                // That means the actual type cannot be determined. We should have issued a separate
+                // diagnostic for that in AnalyzeGenericMethod call above.
+                continue;
+            }
 
             if (argumentType is not null && !argumentType.IsAssignableTo(paramType, context.Compilation))
             {
@@ -196,11 +218,129 @@ public sealed class DataRowShouldBeValidAnalyzer : DiagnosticAnalyzer
         }
     }
 
-    private static ITypeSymbol GetParameterType(IMethodSymbol methodSymbol, int currentArgumentIndex, int argumentsCount)
+    private static Type GetSystemType(ITypeSymbol type)
     {
-        if (currentArgumentIndex >= methodSymbol.Parameters.Length - 1)
+        if (type.TypeKind == TypeKind.Enum)
         {
-            IParameterSymbol lastParameter = methodSymbol.Parameters[^1];
+            if (((INamedTypeSymbol)type).EnumUnderlyingType is { } underlyingType)
+            {
+                type = underlyingType;
+            }
+            else
+            {
+                // If this is reachable, it will be an error scenario.
+                return typeof(int);
+            }
+        }
+
+        return type.SpecialType switch
+        {
+            SpecialType.System_Boolean => typeof(bool),
+            SpecialType.System_Byte => typeof(byte),
+            SpecialType.System_Char => typeof(char),
+            SpecialType.System_Decimal => typeof(decimal),
+            SpecialType.System_Double => typeof(double),
+            SpecialType.System_Int16 => typeof(short),
+            SpecialType.System_Int32 => typeof(int),
+            SpecialType.System_Int64 => typeof(long),
+            SpecialType.System_IntPtr => typeof(IntPtr),
+            SpecialType.System_SByte => typeof(sbyte),
+            SpecialType.System_Single => typeof(float),
+            SpecialType.System_String => typeof(string),
+            SpecialType.System_UInt16 => typeof(ushort),
+            SpecialType.System_UInt32 => typeof(uint),
+            SpecialType.System_UInt64 => typeof(ulong),
+            SpecialType.System_UIntPtr => typeof(UIntPtr),
+            // All types that can be constants should hopefully be handled above.
+            _ => throw new ArgumentException($"Unexpected SpecialType '{type.SpecialType}'."),
+        };
+    }
+
+    private static void AnalyzeGenericMethod(
+        SymbolAnalysisContext context,
+        SyntaxNode dataRowSyntax,
+        IMethodSymbol methodSymbol,
+        ImmutableArray<TypedConstant> constructorArguments)
+    {
+        if (!methodSymbol.IsGenericMethod)
+        {
+            return;
+        }
+
+        var parameterTypesSubstitutions = new Dictionary<ITypeSymbol, (ITypeSymbol Symbol, Type SystemType)>(SymbolEqualityComparer.Default);
+        foreach (IParameterSymbol parameter in methodSymbol.Parameters)
+        {
+            TypedConstant constructorArgument = constructorArguments[parameter.Ordinal];
+
+            // This happens for [DataRow(null)] which ends up being resolved
+            // to DataRow(string?[]? stringArrayData) constructor.
+            // It also happens with [DataRow((object[]?)null)] which resolves
+            // to the params object[] constructor
+            // In this case, the argument is simply "null".
+            if (constructorArgument.Kind == TypedConstantKind.Array && constructorArgument.IsNull)
+            {
+                continue;
+            }
+
+            if (constructorArgument.Type is null)
+            {
+                // That's an error scenario. The compiler will be complaining about something already.
+                continue;
+            }
+
+            Type? argumentType = constructorArgument.Kind == TypedConstantKind.Array
+                ? GetSystemType(((IArrayTypeSymbol)constructorArgument.Type).ElementType)
+                : constructorArgument.Value?.GetType();
+
+            if (argumentType is null)
+            {
+                continue;
+            }
+
+            ITypeSymbol parameterType = constructorArgument.Kind == TypedConstantKind.Array
+                ? ((IArrayTypeSymbol)parameter.Type).ElementType
+                : parameter.Type;
+
+            if (parameterType.Kind != SymbolKind.TypeParameter)
+            {
+                continue;
+            }
+
+            if (parameterTypesSubstitutions.TryGetValue(parameterType, out (ITypeSymbol Symbol, Type SystemType) existingType))
+            {
+                if (argumentType.IsAssignableTo(existingType.SystemType))
+                {
+                    continue;
+                }
+                else if (existingType.SystemType.IsAssignableTo(argumentType))
+                {
+                    parameterTypesSubstitutions[parameterType] = (parameterType, argumentType);
+                }
+                else
+                {
+                    context.ReportDiagnostic(dataRowSyntax.CreateDiagnostic(GenericTypeArgumentConflictingTypesRule, parameterType.Name, existingType.Symbol.Name, constructorArgument.Type.Name));
+                }
+            }
+            else
+            {
+                parameterTypesSubstitutions.Add(parameterType, (constructorArgument.Type, argumentType));
+            }
+        }
+
+        foreach (ITypeParameterSymbol typeParameter in methodSymbol.TypeParameters)
+        {
+            if (!parameterTypesSubstitutions.ContainsKey(typeParameter))
+            {
+                context.ReportDiagnostic(dataRowSyntax.CreateDiagnostic(GenericTypeArgumentNotResolvedRule, typeParameter.Name));
+            }
+        }
+    }
+
+    private static ITypeSymbol GetParameterType(ImmutableArray<IParameterSymbol> parameters, int currentArgumentIndex, int argumentsCount)
+    {
+        if (currentArgumentIndex >= parameters.Length - 1)
+        {
+            IParameterSymbol lastParameter = parameters[^1];
 
             // When last parameter is params, we want to check that the extra arguments match the type of the array
             if (lastParameter.IsParams)
@@ -209,13 +349,13 @@ public sealed class DataRowShouldBeValidAnalyzer : DiagnosticAnalyzer
             }
 
             // When only parameter is array and we have more than one argument, we want to check the array type
-            if (argumentsCount > 1 && methodSymbol.Parameters.Length == 1 && lastParameter.Type.Kind == SymbolKind.ArrayType)
+            if (argumentsCount > 1 && parameters.Length == 1 && lastParameter.Type.Kind == SymbolKind.ArrayType)
             {
                 return ((IArrayTypeSymbol)lastParameter.Type).ElementType;
             }
         }
 
-        return methodSymbol.Parameters[currentArgumentIndex].Type;
+        return parameters[currentArgumentIndex].Type;
     }
 
     private static bool IsArgumentCountMismatch(int constructorArgumentsLength, ImmutableArray<IParameterSymbol> methodParameters)

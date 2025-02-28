@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Xml;
-
 namespace Microsoft.MSTestV2.CLIAutomation;
 
 /// <summary>
@@ -26,7 +24,7 @@ public class RunConfiguration
     /// </summary>
     public string[] TestAdaptersPaths { get; }
 
-    public string TestResultsDirectory { get; set; }
+    public string? TestResultsDirectory { get; set; }
 
     /// <summary>
     /// Converts the setting to be an XmlElement.

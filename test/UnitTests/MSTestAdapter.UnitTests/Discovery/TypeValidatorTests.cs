@@ -1,9 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Globalization;
-using System.Reflection;
-
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
@@ -415,17 +412,17 @@ public class GenericClass<T>;
 
 public class ClassWithTestContextGetterOnly
 {
-    public UTFExtension.TestContext TestContext { get; }
+    public UTFExtension.TestContext TestContext { get; } = null!;
 }
 
 public class ClassWithTestContextPrivateSetter
 {
-    public UTFExtension.TestContext TestContext { get; private set; }
+    public UTFExtension.TestContext TestContext { get; private set; } = null!;
 }
 
 public class ClassWithStaticTestContext
 {
-    public static UTFExtension.TestContext TestContext { get; set; }
+    public static UTFExtension.TestContext TestContext { get; set; } = null!;
 }
 
 public abstract class ClassWithAbstractTestContext
@@ -435,16 +432,16 @@ public abstract class ClassWithAbstractTestContext
 
 public class ClassWithTestContext
 {
-    public UTFExtension.TestContext TestContext { get; set; }
+    public UTFExtension.TestContext TestContext { get; set; } = null!;
 }
 
 public class GenericClassWithProperty<T>
 {
 #pragma warning disable CA1000 // Do not declare static members on generic types
-    public static T ReturnAStableSomething { get; }
+    public static T ReturnAStableSomething { get; } = default!;
 #pragma warning restore CA1000 // Do not declare static members on generic types
 
-    public T ReturnSomething { get; set; }
+    public T ReturnSomething { get; set; } = default!;
 
     public bool Something { get; }
 }
@@ -452,14 +449,14 @@ public class GenericClassWithProperty<T>
 public class GenericClassWithTestContext<T>
 {
 #pragma warning disable CA1000 // Do not declare static members on generic types
-    public static T ReturnAStableSomething { get; }
+    public static T ReturnAStableSomething { get; } = default!;
 #pragma warning restore CA1000 // Do not declare static members on generic types
 
-    public T ReturnSomething { get; set; }
+    public T ReturnSomething { get; set; } = default!;
 
     public bool Something { get; }
 
-    public UTFExtension.TestContext TestContext { get; set; }
+    public UTFExtension.TestContext TestContext { get; set; } = null!;
 }
 
 public class PublicTestClass;
@@ -553,25 +550,25 @@ internal class InternalClass2
 /// </summary>
 internal class PrivateClassNames
 {
-    public string ProtectedInteralNestedClassInPublicClass { get; }
+    public string ProtectedInteralNestedClassInPublicClass { get; } = null!;
 
-    public string ProtectedNestedClassInPublicClass { get; }
+    public string ProtectedNestedClassInPublicClass { get; } = null!;
 
-    public string PrivateProtectedNestedClassInPublicClass { get; }
+    public string PrivateProtectedNestedClassInPublicClass { get; } = null!;
 
-    public string PrivateClassNestedInPublicClass { get; }
+    public string PrivateClassNestedInPublicClass { get; } = null!;
 
-    public string ProtectedInteralClassNestedInInternalClass { get; }
+    public string ProtectedInteralClassNestedInInternalClass { get; } = null!;
 
-    public string ProtectedClassNestedInInternalClass { get; }
+    public string ProtectedClassNestedInInternalClass { get; } = null!;
 
-    public string PrivateProtectedClassNestedInInternalClass { get; }
+    public string PrivateProtectedClassNestedInInternalClass { get; } = null!;
 
-    public string PrivateClassNestedInInternalClass { get; }
+    public string PrivateClassNestedInInternalClass { get; } = null!;
 
-    public string PublicClassNestedInPrivateClassNestedInPublicClass { get; }
+    public string PublicClassNestedInPrivateClassNestedInPublicClass { get; } = null!;
 
-    public string PublicClassNestedInPrivateClassNestedInInternalClass { get; }
+    public string PublicClassNestedInPrivateClassNestedInInternalClass { get; } = null!;
 }
 
 #endregion

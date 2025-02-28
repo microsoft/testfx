@@ -3,7 +3,9 @@
 
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.CommandLine;
+using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
+using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.TestHost;
 using Microsoft.Testing.Platform.TestHostControllers;
 
@@ -28,6 +30,18 @@ public interface ITestApplicationBuilder
     /// Gets the command line manager.
     /// </summary>
     ICommandLineManager CommandLine { get; }
+
+    /// <summary>
+    /// Gets the configuration manager.
+    /// </summary>
+    [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
+    IConfigurationManager Configuration { get; }
+
+    /// <summary>
+    /// Gets the logging manager.
+    /// </summary>
+    [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
+    ILoggingManager Logging { get; }
 
     /// <summary>
     /// Registers a test framework with the application builder.

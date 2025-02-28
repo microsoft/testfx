@@ -1,6 +1,13 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <Project>
 
+  <PropertyGroup>
+    <!--
+      Indicate to other targets that MSTest.Sdk is being used.
+    -->
+    <UsingMSTestSdk>true</UsingMSTestSdk>
+  </PropertyGroup>
+
   <!-- Implicit top import -->
   <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
 
@@ -16,7 +23,6 @@
     <AspireHostingTestingVersion Condition=" '$(AspireHostingTestingVersion)' == '' ">${AspireHostingTestingVersion}</AspireHostingTestingVersion>
     <MicrosoftNETTestSdkVersion Condition=" '$(MicrosoftNETTestSdkVersion)' == '' ">${MicrosoftNETTestSdkVersion}</MicrosoftNETTestSdkVersion>
     <MicrosoftPlaywrightVersion Condition=" '$(MicrosoftPlaywrightVersion)' == '' ">${MicrosoftPlaywrightVersion}</MicrosoftPlaywrightVersion>
-    <MicrosoftTestingEntrepriseExtensionsVersion Condition=" '$(MicrosoftTestingEntrepriseExtensionsVersion)' == '' ">${MicrosoftTestingEntrepriseExtensionsVersion}</MicrosoftTestingEntrepriseExtensionsVersion>
     <MicrosoftTestingExtensionsCodeCoverageVersion Condition=" '$(MicrosoftTestingExtensionsCodeCoverageVersion)' == '' " >${MicrosoftTestingExtensionsCodeCoverageVersion}</MicrosoftTestingExtensionsCodeCoverageVersion>
     <MicrosoftTestingExtensionsFakesVersion Condition=" '$(MicrosoftTestingExtensionsFakesVersion)' == '' " >${MicrosoftTestingExtensionsFakesVersion}</MicrosoftTestingExtensionsFakesVersion>
     <MicrosoftTestingPlatformVersion Condition=" '$(MicrosoftTestingPlatformVersion)' == '' " >${MicrosoftTestingPlatformVersion}</MicrosoftTestingPlatformVersion>

@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Globalization;
-
 namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 
 /// <summary>
@@ -344,8 +342,6 @@ internal sealed class AnsiTerminalTestProgressFrame
         public long ProgressId { get; }
 
         public long ProgressVersion { get; }
-
-        public int RenderedHeight { get; set; }
 
         public int RenderedDurationLength { get; set; }
     }

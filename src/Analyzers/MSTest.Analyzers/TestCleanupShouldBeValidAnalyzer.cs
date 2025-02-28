@@ -27,8 +27,10 @@ public sealed class TestCleanupShouldBeValidAnalyzer : DiagnosticAnalyzer
         DiagnosticSeverity.Warning,
         isEnabledByDefault: true);
 
+    /// <inheritdoc />
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } = ImmutableArray.Create(Rule);
 
+    /// <inheritdoc />
     public override void Initialize(AnalysisContext context)
     {
         context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
@@ -53,9 +55,9 @@ public sealed class TestCleanupShouldBeValidAnalyzer : DiagnosticAnalyzer
         INamedTypeSymbol? valueTaskSymbol, INamedTypeSymbol testClassAttributeSymbol, bool canDiscoverInternals)
     {
         var methodSymbol = (IMethodSymbol)context.Symbol;
-        if (methodSymbol.IsTestCleanupMethod(testCleanupAttributeSymbol)
+        if (methodSymbol.HasAttribute(testCleanupAttributeSymbol)
             && !methodSymbol.HasValidFixtureMethodSignature(taskSymbol, valueTaskSymbol, canDiscoverInternals, shouldBeStatic: false,
-                allowGenericType: true, testContextSymbol: null, testClassAttributeSymbol, fixtureAllowInheritedTestClass: true, out bool isFixable))
+                allowGenericType: true, FixtureParameterMode.MustNotHaveTestContext, testContextSymbol: null, testClassAttributeSymbol, fixtureAllowInheritedTestClass: true, out bool isFixable))
         {
             context.ReportDiagnostic(isFixable
                 ? methodSymbol.CreateDiagnostic(Rule, methodSymbol.Name)

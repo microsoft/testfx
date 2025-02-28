@@ -10,7 +10,6 @@ using Microsoft.Testing.Platform.Extensions.TestHostOrchestrator;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Hosts;
 using Microsoft.Testing.Platform.Logging;
-using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.Resources;
 using Microsoft.Testing.Platform.ServerMode;
 using Microsoft.Testing.Platform.Services;
@@ -56,14 +55,20 @@ internal sealed class TestApplicationBuilder : ITestApplicationBuilder
 
     internal IServerModeManager ServerMode => _testHostBuilder.ServerMode;
 
+    internal ITestHostOrchestratorManager TestHostOrchestrator => _testHostBuilder.TestHostOrchestratorManager;
+
+    [Obsolete("Remove in v2. Avoid breaking change with the rename of the property. See https://github.com/microsoft/testfx/issues/5015", error: true)]
     internal ITestHostOrchestratorManager TestHostControllersManager => _testHostBuilder.TestHostOrchestratorManager;
 
-    internal IConfigurationManager Configuration => _testHostBuilder.Configuration;
+    [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
+    public IConfigurationManager Configuration => _testHostBuilder.Configuration;
 
-    internal ILoggingManager Logging => _testHostBuilder.Logging;
+    [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
+    public ILoggingManager Logging => _testHostBuilder.Logging;
 
-    internal IPlatformOutputDeviceManager OutputDisplay => _testHostBuilder.OutputDisplay;
+    internal ITelemetryManager Telemetry => _testHostBuilder.Telemetry;
 
+    [Obsolete("Remove in v2. Avoid breaking change with the rename of the property. See https://github.com/microsoft/testfx/issues/5015", error: true)]
     internal ITelemetryManager TelemetryManager => _testHostBuilder.Telemetry;
 
     internal IToolsManager Tools => _testHostBuilder.Tools;

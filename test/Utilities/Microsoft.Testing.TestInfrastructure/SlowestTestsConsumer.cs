@@ -9,7 +9,7 @@ namespace Microsoft.Testing.TestInfrastructure;
 
 public sealed class SlowestTestsConsumer : IDataConsumer, ITestSessionLifetimeHandler
 {
-    private readonly List<(string TestId, double Milliseconds)> _testPerf = [];
+    private readonly List<(string TestId, string DisplayName, double Milliseconds)> _testPerf = [];
 
     public Type[] DataTypesConsumed => [typeof(TestNodeUpdateMessage)];
 
@@ -32,7 +32,7 @@ public sealed class SlowestTestsConsumer : IDataConsumer, ITestSessionLifetimeHa
         }
 
         double milliseconds = testNodeUpdatedMessage.TestNode.Properties.Single<TimingProperty>().GlobalTiming.Duration.TotalMilliseconds;
-        _testPerf.Add((testNodeUpdatedMessage.TestNode.Uid, milliseconds));
+        _testPerf.Add((testNodeUpdatedMessage.TestNode.Uid, testNodeUpdatedMessage.TestNode.DisplayName, milliseconds));
 
         return Task.CompletedTask;
     }
@@ -40,9 +40,9 @@ public sealed class SlowestTestsConsumer : IDataConsumer, ITestSessionLifetimeHa
     public Task OnTestSessionFinishingAsync(SessionUid sessionUid, CancellationToken cancellationToken)
     {
         Console.WriteLine("Slowest 10 tests");
-        foreach ((string testId, double milliseconds) in _testPerf.OrderByDescending(x => x.Milliseconds).Take(10))
+        foreach ((_, string displayName, double milliseconds) in _testPerf.OrderByDescending(x => x.Milliseconds).Take(10))
         {
-            Console.WriteLine($"{testId} {TimeSpan.FromMilliseconds(milliseconds).TotalSeconds:F5}s");
+            Console.WriteLine($"{displayName} {TimeSpan.FromMilliseconds(milliseconds).TotalSeconds:F5}s");
         }
 
         return Task.CompletedTask;

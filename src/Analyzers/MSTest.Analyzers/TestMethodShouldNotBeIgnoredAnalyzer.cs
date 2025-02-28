@@ -29,11 +29,14 @@ public sealed class TestMethodShouldNotBeIgnoredAnalyzer : DiagnosticAnalyzer
         Description,
         Category.Design,
         DiagnosticSeverity.Info,
-        isEnabledByDefault: true);
+        isEnabledByDefault: false,
+        disableInAllMode: true);
 
+    /// <inheritdoc />
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
         = ImmutableArray.Create(TestMethodShouldNotBeIgnoredRule);
 
+    /// <inheritdoc />
     public override void Initialize(AnalysisContext context)
     {
         context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);

@@ -1,27 +1,25 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
-using System.Reflection;
-
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-using UnitTestOutcome = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestOutcome;
+using UnitTestOutcome = Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 
 /// <summary>
 /// Defines TestAssembly Info object.
 /// </summary>
+#if RELEASE
 #if NET6_0_OR_GREATER
 [Obsolete(Constants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
 #else
 [Obsolete(Constants.PublicTypeObsoleteMessage)]
+#endif
 #endif
 public class TestAssemblyInfo
 {
@@ -262,11 +260,11 @@ public class TestAssemblyInfo
     /// It is a replacement for RunAssemblyCleanup but as we are in a bug-fix version, we do not want to touch
     /// public API and so we introduced this method.
     /// </remarks>
-    internal void ExecuteAssemblyCleanup()
+    internal TestFailedException? ExecuteAssemblyCleanup(TestContext testContext)
     {
         if (AssemblyCleanupMethod == null)
         {
-            return;
+            return null;
         }
 
         lock (_assemblyInfoExecuteSyncObject)
@@ -274,8 +272,18 @@ public class TestAssemblyInfo
             try
             {
                 AssemblyCleanupException = FixtureMethodRunner.RunWithTimeoutAndCancellation(
-                     () => AssemblyCleanupMethod.InvokeAsSynchronousTask(null),
-                     new CancellationTokenSource(),
+                     () =>
+                     {
+                         if (AssemblyCleanupMethod.GetParameters().Length == 0)
+                         {
+                             AssemblyCleanupMethod.InvokeAsSynchronousTask(null);
+                         }
+                         else
+                         {
+                             AssemblyCleanupMethod.InvokeAsSynchronousTask(null, testContext);
+                         }
+                     },
+                     testContext.CancellationTokenSource,
                      AssemblyCleanupMethodTimeoutMilliseconds,
                      AssemblyCleanupMethod,
                      new AssemblyExecutionContextScope(isCleanup: true),
@@ -291,13 +299,13 @@ public class TestAssemblyInfo
         // If assemblyCleanup was successful, then don't do anything
         if (AssemblyCleanupException is null)
         {
-            return;
+            return null;
         }
 
         // If the exception is already a `TestFailedException` we throw it as-is
-        if (AssemblyCleanupException is TestFailedException)
+        if (AssemblyCleanupException is TestFailedException assemblyCleanupEx)
         {
-            throw AssemblyCleanupException;
+            return assemblyCleanupEx;
         }
 
         Exception realException = AssemblyCleanupException.GetRealException();
@@ -310,7 +318,7 @@ public class TestAssemblyInfo
         StackTraceInformation? exceptionStackTraceInfo = realException.GetStackTraceInformation();
         DebugEx.Assert(AssemblyCleanupMethod.DeclaringType?.Name is not null, "AssemblyCleanupMethod.DeclaringType.Name is null");
 
-        throw new TestFailedException(
+        return new TestFailedException(
             UnitTestOutcome.Failed,
             string.Format(
                 CultureInfo.CurrentCulture,

@@ -1,10 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Reflection;
-
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-
 using Moq;
 
 using TestFramework.ForTestingMSTest;
@@ -33,7 +29,7 @@ public class DataRowAttributeTests : TestContainer
     {
         var dataRow = new DataRowAttribute(null);
 
-        Verify(new object[] { null }.SequenceEqual(dataRow.Data));
+        Verify(new object?[] { null }.SequenceEqual(dataRow.Data));
     }
 
     public void ConstructorShouldSetMultipleDataValuesPassed()
@@ -47,14 +43,14 @@ public class DataRowAttributeTests : TestContainer
     {
         var dataRow = new DataRowAttribute("neptune", null);
 
-        Verify(new object[] { "neptune", null }.SequenceEqual(dataRow.Data));
+        Verify(new object?[] { "neptune", null }.SequenceEqual(dataRow.Data));
     }
 
     public void ConstructorShouldSetANullDataValuePassedInAsADataArg()
     {
         var dataRow = new DataRowAttribute(null, "logos");
 
-        Verify(new object[] { null, "logos" }.SequenceEqual(dataRow.Data));
+        Verify(new object?[] { null, "logos" }.SequenceEqual(dataRow.Data));
     }
 
     public void ConstructorShouldSetMultipleDataArrays()
@@ -71,7 +67,7 @@ public class DataRowAttributeTests : TestContainer
     {
         var dataRow = new DataRowAttribute("mercury");
 
-        Verify(new object[] { "mercury" }.SequenceEqual(dataRow.GetData(null).Single()));
+        Verify(new object[] { "mercury" }.SequenceEqual(dataRow.GetData(null!).Single()));
     }
 
     public void GetDisplayNameShouldReturnAppropriateName()
@@ -79,13 +75,13 @@ public class DataRowAttributeTests : TestContainer
         var dataRowAttribute = new DataRowAttribute(null);
 
         var dummyTestClass = new DummyTestClass();
-        MethodInfo testMethodInfo = dummyTestClass.GetType().GetTypeInfo().GetDeclaredMethod("DataRowTestMethod");
+        MethodInfo testMethodInfo = dummyTestClass.GetType().GetTypeInfo().GetDeclaredMethod("DataRowTestMethod")!;
 
-        string[] data = ["First", "Second", null];
-        string[] data1 = [null, "First", "Second"];
-        string[] data2 = ["First", null, "Second"];
+        string?[] data = ["First", "Second", null];
+        string?[] data1 = [null, "First", "Second"];
+        string?[] data2 = ["First", null, "Second"];
 
-        string displayName = dataRowAttribute.GetDisplayName(testMethodInfo, data);
+        string? displayName = dataRowAttribute.GetDisplayName(testMethodInfo, data);
         Verify(displayName == "DataRowTestMethod (\"First\",\"Second\",null)");
 
         displayName = dataRowAttribute.GetDisplayName(testMethodInfo, data1);
@@ -103,11 +99,11 @@ public class DataRowAttributeTests : TestContainer
         };
 
         var dummyTestClass = new DummyTestClass();
-        MethodInfo testMethodInfo = dummyTestClass.GetType().GetTypeInfo().GetDeclaredMethod("DataRowTestMethod");
+        MethodInfo testMethodInfo = dummyTestClass.GetType().GetTypeInfo().GetDeclaredMethod("DataRowTestMethod")!;
 
-        string[] data = ["First", "Second", null];
+        string?[] data = ["First", "Second", null];
 
-        string displayName = dataRowAttribute.GetDisplayName(testMethodInfo, data);
+        string? displayName = dataRowAttribute.GetDisplayName(testMethodInfo, data);
         Verify(displayName == "DataRowTestWithDisplayName");
     }
 
@@ -119,7 +115,7 @@ public class DataRowAttributeTests : TestContainer
         methodInfoMock.SetupGet(x => x.Name).Returns("MyMethod");
 
         // Act
-        string displayName = dataRow.GetDisplayName(methodInfoMock.Object, dataRow.Data);
+        string? displayName = dataRow.GetDisplayName(methodInfoMock.Object, dataRow.Data);
 
         // Assert
         Verify(displayName == "MyMethod ([\"a\"])");
@@ -132,7 +128,7 @@ public class DataRowAttributeTests : TestContainer
         var methodInfoMock = new Mock<MethodInfo>();
 
         // Act
-        string displayName = dataRow.GetDisplayName(methodInfoMock.Object, dataRow.Data);
+        string? displayName = dataRow.GetDisplayName(methodInfoMock.Object, dataRow.Data);
 
         // Assert
         Verify(displayName == "Overridden DisplayName");
@@ -146,7 +142,7 @@ public class DataRowAttributeTests : TestContainer
         methodInfoMock.SetupGet(x => x.Name).Returns("MyMethod");
 
         // Act
-        string displayName = dataRow.GetDisplayName(methodInfoMock.Object, dataRow.Data);
+        string? displayName = dataRow.GetDisplayName(methodInfoMock.Object, dataRow.Data);
 
         // Assert
         Verify(displayName == "MyMethod ([\"a\",\"b\",\"c\"])");
@@ -160,7 +156,7 @@ public class DataRowAttributeTests : TestContainer
         methodInfoMock.SetupGet(x => x.Name).Returns("MyMethod");
 
         // Act
-        string displayName = dataRow.GetDisplayName(methodInfoMock.Object, dataRow.Data);
+        string? displayName = dataRow.GetDisplayName(methodInfoMock.Object, dataRow.Data);
 
         // Assert
         Verify(displayName == "MyMethod ([\"a\"],[\"1\"])");
@@ -174,7 +170,7 @@ public class DataRowAttributeTests : TestContainer
         methodInfoMock.SetupGet(x => x.Name).Returns("MyMethod");
 
         // Act
-        string displayName = dataRow.GetDisplayName(methodInfoMock.Object, dataRow.Data);
+        string? displayName = dataRow.GetDisplayName(methodInfoMock.Object, dataRow.Data);
 
         // Assert
         Verify(displayName == "MyMethod ([\"a\",\"b\",\"c\"],[\"1\",\"2\",\"3\"])");
@@ -188,7 +184,7 @@ public class DataRowAttributeTests : TestContainer
         methodInfoMock.SetupGet(x => x.Name).Returns("MyMethod");
 
         // Act
-        string displayName = dataRow.GetDisplayName(methodInfoMock.Object, dataRow.Data);
+        string? displayName = dataRow.GetDisplayName(methodInfoMock.Object, dataRow.Data);
 
         // Assert
         Verify(displayName == "MyMethod ([1,2,3],[4,5,6])");
@@ -202,7 +198,7 @@ public class DataRowAttributeTests : TestContainer
         methodInfoMock.SetupGet(x => x.Name).Returns("MyMethod");
 
         // Act
-        string displayName = dataRow.GetDisplayName(methodInfoMock.Object, dataRow.Data);
+        string? displayName = dataRow.GetDisplayName(methodInfoMock.Object, dataRow.Data);
 
         // Assert
         Verify(displayName == "MyMethod ([[\"a\",\"b\",\"c\"],[\"d\",\"e\",\"f\"],[\"gh\",\"ij\",\"kl\"]],['m','n','o'],[[\"1\",\"2\",\"3\"],[\"4\",\"5\",\"6\"],[\"7\",\"8\",\"9\"]])");
@@ -210,7 +206,7 @@ public class DataRowAttributeTests : TestContainer
 
     private class DummyDataRowAttribute : DataRowAttribute
     {
-        public override string GetDisplayName(MethodInfo methodInfo, object[] data) => "Overridden DisplayName";
+        public override string GetDisplayName(MethodInfo methodInfo, object?[]? data) => "Overridden DisplayName";
     }
 }
 

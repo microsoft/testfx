@@ -1,11 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
-using System.Reflection;
-
-using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 
@@ -29,7 +24,7 @@ public class TestMethodValidatorTests : TestContainer
     public TestMethodValidatorTests()
     {
         _mockReflectHelper = new Mock<ReflectHelper>();
-        _testMethodValidator = new TestMethodValidator(_mockReflectHelper.Object);
+        _testMethodValidator = new TestMethodValidator(_mockReflectHelper.Object, discoverInternals: false);
         _warnings = [];
 
         _mockMethodInfo = new Mock<MethodInfo>();
@@ -43,28 +38,36 @@ public class TestMethodValidatorTests : TestContainer
         Verify(!_testMethodValidator.IsValidTestMethod(_mockMethodInfo.Object, _type, _warnings));
     }
 
+    // TODO: Fix this test. It should be returning true, but we get false for a different reason (IsPublic is false)
+    // https://github.com/microsoft/testfx/issues/4207
     public void IsValidTestMethodShouldReturnFalseForGenericTestMethodDefinitions()
     {
         SetupTestMethod();
         _mockMethodInfo.Setup(mi => mi.IsGenericMethodDefinition).Returns(true);
-        _mockMethodInfo.Setup(mi => mi.DeclaringType.FullName).Returns("DummyTestClass");
+        _mockMethodInfo.Setup(mi => mi.DeclaringType!.FullName).Returns("DummyTestClass");
         _mockMethodInfo.Setup(mi => mi.Name).Returns("DummyTestMethod");
 
         Verify(!_testMethodValidator.IsValidTestMethod(_mockMethodInfo.Object, _type, _warnings));
     }
 
-    public void IsValidTestMethodShouldReportWarningsForGenericTestMethodDefinitions()
+    // TODO: Fix this test. It should be returning true, but we get false for a different reason (IsPublic is false)
+    // https://github.com/microsoft/testfx/issues/4207
+    public void IsValidTestMethodShouldNotReportWarningsForGenericTestMethodDefinitions()
     {
         SetupTestMethod();
 
-        _mockMethodInfo.Setup(mi => mi.IsGenericMethodDefinition).Returns(true);
-        _mockMethodInfo.Setup(mi => mi.DeclaringType.FullName).Returns("DummyTestClass");
-        _mockMethodInfo.Setup(mi => mi.Name).Returns("DummyTestMethod");
+        _mockReflectHelper
+            .Setup(x => x.GetFirstNonDerivedAttributeOrDefault<AsyncStateMachineAttribute>(_mockMethodInfo.Object, false))
+            .Returns(default(AsyncStateMachineAttribute?));
 
+        _mockMethodInfo.Setup(mi => mi.IsGenericMethodDefinition).Returns(true);
+        _mockMethodInfo.Setup(mi => mi.DeclaringType!.FullName).Returns("DummyTestClass");
+        _mockMethodInfo.Setup(mi => mi.Name).Returns("DummyTestMethod");
+        _mockMethodInfo.Setup(mi => mi.Attributes).Returns(MethodAttributes.Public);
+        _mockMethodInfo.Setup(mi => mi.ReturnType).Returns(typeof(void));
         _testMethodValidator.IsValidTestMethod(_mockMethodInfo.Object, _type, _warnings);
 
-        Verify(_warnings.Count == 1);
-        Verify(_warnings.Contains(string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorGenericTestMethod, "DummyTestClass", "DummyTestMethod")));
+        Verify(_warnings.Count == 0);
     }
 
     public void IsValidTestMethodShouldReturnFalseForNonPublicMethods()
@@ -72,7 +75,7 @@ public class TestMethodValidatorTests : TestContainer
         SetupTestMethod();
         MethodInfo methodInfo = typeof(DummyTestClass).GetMethod(
             "InternalTestMethod",
-            BindingFlags.Instance | BindingFlags.NonPublic);
+            BindingFlags.Instance | BindingFlags.NonPublic)!;
 
         Verify(!_testMethodValidator.IsValidTestMethod(methodInfo, typeof(DummyTestClass), _warnings));
     }
@@ -82,7 +85,7 @@ public class TestMethodValidatorTests : TestContainer
         SetupTestMethod();
         MethodInfo methodInfo = typeof(DummyTestClass).GetMethod(
             "AbstractTestMethod",
-            BindingFlags.Instance | BindingFlags.Public);
+            BindingFlags.Instance | BindingFlags.Public)!;
 
         Verify(!_testMethodValidator.IsValidTestMethod(methodInfo, typeof(DummyTestClass), _warnings));
     }
@@ -92,7 +95,7 @@ public class TestMethodValidatorTests : TestContainer
         SetupTestMethod();
         MethodInfo methodInfo = typeof(DummyTestClass).GetMethod(
             "StaticTestMethod",
-            BindingFlags.Static | BindingFlags.Public);
+            BindingFlags.Static | BindingFlags.Public)!;
 
         Verify(!_testMethodValidator.IsValidTestMethod(methodInfo, typeof(DummyTestClass), _warnings));
     }
@@ -110,7 +113,9 @@ public class TestMethodValidatorTests : TestContainer
         SetupTestMethod();
         MethodInfo methodInfo = typeof(DummyTestClass).GetMethod(
             "AsyncMethodWithVoidReturnType",
-            BindingFlags.Instance | BindingFlags.Public);
+            BindingFlags.Instance | BindingFlags.Public)!;
+        _mockReflectHelper.Setup(_mockReflectHelper => _mockReflectHelper.GetFirstNonDerivedAttributeOrDefault<AsyncStateMachineAttribute>(methodInfo, false))
+            .CallBase();
 
         Verify(!_testMethodValidator.IsValidTestMethod(methodInfo, typeof(DummyTestClass), _warnings));
     }
@@ -120,7 +125,7 @@ public class TestMethodValidatorTests : TestContainer
         SetupTestMethod();
         MethodInfo methodInfo = typeof(DummyTestClass).GetMethod(
             "MethodWithIntReturnType",
-            BindingFlags.Instance | BindingFlags.Public);
+            BindingFlags.Instance | BindingFlags.Public)!;
 
         Verify(!_testMethodValidator.IsValidTestMethod(methodInfo, typeof(DummyTestClass), _warnings));
     }
@@ -130,7 +135,7 @@ public class TestMethodValidatorTests : TestContainer
         SetupTestMethod();
         MethodInfo methodInfo = typeof(DummyTestClass).GetMethod(
             "AsyncMethodWithTaskReturnType",
-            BindingFlags.Instance | BindingFlags.Public);
+            BindingFlags.Instance | BindingFlags.Public)!;
 
         Verify(_testMethodValidator.IsValidTestMethod(methodInfo, _type, _warnings));
     }
@@ -140,7 +145,7 @@ public class TestMethodValidatorTests : TestContainer
         SetupTestMethod();
         MethodInfo methodInfo = typeof(DummyTestClass).GetMethod(
             "MethodWithTaskReturnType",
-            BindingFlags.Instance | BindingFlags.Public);
+            BindingFlags.Instance | BindingFlags.Public)!;
 
         Verify(_testMethodValidator.IsValidTestMethod(methodInfo, _type, _warnings));
     }
@@ -150,7 +155,7 @@ public class TestMethodValidatorTests : TestContainer
         SetupTestMethod();
         MethodInfo methodInfo = typeof(DummyTestClass).GetMethod(
             "MethodWithVoidReturnType",
-            BindingFlags.Instance | BindingFlags.Public);
+            BindingFlags.Instance | BindingFlags.Public)!;
 
         Verify(_testMethodValidator.IsValidTestMethod(methodInfo, _type, _warnings));
     }
@@ -162,7 +167,7 @@ public class TestMethodValidatorTests : TestContainer
         SetupTestMethod();
         MethodInfo methodInfo = typeof(DummyTestClass).GetMethod(
             "InternalTestMethod",
-            BindingFlags.Instance | BindingFlags.NonPublic);
+            BindingFlags.Instance | BindingFlags.NonPublic)!;
 
         var testMethodValidator = new TestMethodValidator(_mockReflectHelper.Object, true);
 
@@ -174,7 +179,7 @@ public class TestMethodValidatorTests : TestContainer
         SetupTestMethod();
         MethodInfo methodInfo = typeof(DummyTestClass).GetMethod(
             "PrivateTestMethod",
-            BindingFlags.Instance | BindingFlags.NonPublic);
+            BindingFlags.Instance | BindingFlags.NonPublic)!;
 
         var testMethodValidator = new TestMethodValidator(_mockReflectHelper.Object, true);
 
@@ -183,7 +188,8 @@ public class TestMethodValidatorTests : TestContainer
 
     #endregion
 
-    private void SetupTestMethod() => _mockReflectHelper.Setup(
+    private void SetupTestMethod()
+        => _mockReflectHelper.Setup(
             rh => rh.IsDerivedAttributeDefined<UTF.TestMethodAttribute>(It.IsAny<MemberInfo>(), false)).Returns(true);
 }
 

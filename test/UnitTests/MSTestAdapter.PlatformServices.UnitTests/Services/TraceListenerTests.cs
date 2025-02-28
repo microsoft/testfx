@@ -3,8 +3,6 @@
 
 #if !WIN_UI
 
-using System.Text;
-
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
 using TestFramework.ForTestingMSTest;
@@ -18,8 +16,8 @@ public class TraceListenerTests : TestContainer
     {
         StringWriter writer = new(new StringBuilder("DummyTrace"));
         var traceListener = new TraceListenerWrapper(writer);
-        TextWriter returnedWriter = traceListener.GetWriter();
-        Verify(returnedWriter.ToString() == "DummyTrace");
+        TextWriter? returnedWriter = traceListener.GetWriter();
+        Verify(returnedWriter?.ToString() == "DummyTrace");
     }
 
     public void DisposeShouldDisposeCorrespondingTextWriter()

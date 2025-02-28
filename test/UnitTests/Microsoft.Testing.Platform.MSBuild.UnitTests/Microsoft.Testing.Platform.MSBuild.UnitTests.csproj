@@ -1,9 +1,8 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>$(MicrosoftTestingTargetFrameworks);net462</TargetFrameworks>
-    <UseVSTestRunner>false</UseVSTestRunner>
-    <UseAppHost>true</UseAppHost>
+    <TargetFrameworks>net8.0;net9.0</TargetFrameworks>
+    <EnableMSTestRunner>true</EnableMSTestRunner>
     <OutputType>Exe</OutputType>
   </PropertyGroup>
 

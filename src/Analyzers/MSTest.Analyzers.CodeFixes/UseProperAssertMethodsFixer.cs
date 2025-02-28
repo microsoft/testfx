@@ -3,8 +3,6 @@
 
 using System.Collections.Immutable;
 using System.Composition;
-using System.Diagnostics;
-using System.Globalization;
 
 using Analyzer.Utilities;
 
@@ -20,17 +18,23 @@ using MSTest.Analyzers.Helpers;
 
 namespace MSTest.Analyzers;
 
+/// <summary>
+/// Code fixer for <see cref="UseProperAssertMethodsAnalyzer"/>.
+/// </summary>
 [ExportCodeFixProvider(LanguageNames.CSharp, Name = nameof(UseProperAssertMethodsFixer))]
 [Shared]
 public sealed class UseProperAssertMethodsFixer : CodeFixProvider
 {
+    /// <inheritdoc />
     public sealed override ImmutableArray<string> FixableDiagnosticIds { get; }
         = ImmutableArray.Create(DiagnosticIds.UseProperAssertMethodsRuleId);
 
+    /// <inheritdoc />
     public override FixAllProvider GetFixAllProvider()
         // See https://github.com/dotnet/roslyn/blob/main/docs/analyzers/FixAllProvider.md for more information on Fix All Providers
         => WellKnownFixAllProviders.BatchFixer;
 
+    /// <inheritdoc />
     public override async Task RegisterCodeFixesAsync(CodeFixContext context)
     {
         SyntaxNode root = await context.Document.GetRequiredSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false);

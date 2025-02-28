@@ -9,15 +9,16 @@ using Moq;
 
 namespace Microsoft.Testing.Platform.UnitTests;
 
-[TestGroup]
-public sealed class ServerTelemetryTests : TestBase
+[TestClass]
+public sealed class ServerTelemetryTests
 {
     private readonly ServerTelemetry _serverTelemetry;
     private readonly Mock<IServerTestHost> _serverTestHost = new();
 
-    public ServerTelemetryTests(ITestExecutionContext testExecutionContext)
-        : base(testExecutionContext) => _serverTelemetry = new(_serverTestHost.Object);
+    public ServerTelemetryTests()
+        => _serverTelemetry = new(_serverTestHost.Object);
 
+    [TestMethod]
     public async Task LogEvent_ForDiscovery()
     {
         Dictionary<string, object> metadata = new()
@@ -30,6 +31,7 @@ public sealed class ServerTelemetryTests : TestBase
         _serverTestHost.Verify(s => s.SendTelemetryEventUpdateAsync(new TelemetryEventArgs(TelemetryEvents.TestsDiscoveryEventName, metadata)));
     }
 
+    [TestMethod]
     public async Task LogEvent_ForRun()
     {
         Dictionary<string, object> metadata = new()

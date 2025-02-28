@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Reflection;
-
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 
 internal interface IReflectionOperations2 : IReflectionOperations
@@ -21,9 +19,9 @@ internal interface IReflectionOperations2 : IReflectionOperations
 
     MethodInfo[] GetRuntimeMethods(Type type);
 
-    MethodInfo? GetRuntimeMethod(Type declaringType, string methodName, Type[] parameters);
+    MethodInfo? GetRuntimeMethod(Type declaringType, string methodName, Type[] parameters, bool includeNonPublic);
 
-    PropertyInfo? GetRuntimeProperty(Type classType, string propertyName);
+    PropertyInfo? GetRuntimeProperty(Type classType, string propertyName, bool includeNonPublic);
 
     Type? GetType(string typeName);
 

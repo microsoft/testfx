@@ -1,9 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
-
 using Microsoft.Testing.Platform.Resources;
 
 // Most of the core logic is from:
@@ -156,7 +153,7 @@ internal static class ResponseFileHelper
 
         void Advance() => pos++;
 
-        string CurrentToken() => commandLine.Substring(startTokenIndex, IndexOfEndOfToken()).ToString().Replace("\"", string.Empty);
+        string CurrentToken() => commandLine.Substring(startTokenIndex, IndexOfEndOfToken()).Replace("\"", string.Empty);
 
         int IndexOfEndOfToken() => pos - startTokenIndex;
 

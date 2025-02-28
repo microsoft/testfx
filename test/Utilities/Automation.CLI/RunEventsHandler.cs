@@ -14,7 +14,7 @@ public class RunEventsHandler : ITestRunEventsHandler
     private readonly List<TestResult> _passedTests = [];
     private readonly List<TestResult> _failedTests = [];
     private readonly List<TestResult> _skippedTests = [];
-    private readonly List<string> _errors = [];
+    private readonly List<string?> _errors = [];
 
     /// <summary>
     /// Gets a list of Tests which passed.
@@ -31,11 +31,11 @@ public class RunEventsHandler : ITestRunEventsHandler
     /// </summary>
     public ReadOnlyCollection<TestResult> SkippedTests => _skippedTests.AsReadOnly();
 
-    public ReadOnlyCollection<string> Errors => _errors.AsReadOnly();
+    public ReadOnlyCollection<string?> Errors => _errors.AsReadOnly();
 
     public double ElapsedTimeInRunningTests { get; private set; }
 
-    public void HandleLogMessage(TestMessageLevel level, string message)
+    public void HandleLogMessage(TestMessageLevel level, string? message)
     {
         switch (level)
         {
@@ -59,11 +59,11 @@ public class RunEventsHandler : ITestRunEventsHandler
     {
     }
 
-    public void HandleTestRunComplete(TestRunCompleteEventArgs testRunCompleteArgs, TestRunChangedEventArgs lastChunkArgs, ICollection<AttachmentSet> runContextAttachments, ICollection<string> executorUris)
+    public void HandleTestRunComplete(TestRunCompleteEventArgs testRunCompleteArgs, TestRunChangedEventArgs? lastChunkArgs, ICollection<AttachmentSet>? runContextAttachments, ICollection<string>? executorUris)
     {
         if (lastChunkArgs != null)
         {
-            foreach (TestResult testResult in lastChunkArgs.NewTestResults)
+            foreach (TestResult testResult in lastChunkArgs.NewTestResults!)
             {
                 switch (testResult.Outcome)
                 {
@@ -83,11 +83,11 @@ public class RunEventsHandler : ITestRunEventsHandler
         ElapsedTimeInRunningTests = testRunCompleteArgs.ElapsedTimeInRunningTests.TotalMilliseconds;
     }
 
-    public void HandleTestRunStatsChange(TestRunChangedEventArgs testRunChangedArgs)
+    public void HandleTestRunStatsChange(TestRunChangedEventArgs? testRunChangedArgs)
     {
         if (testRunChangedArgs != null)
         {
-            foreach (TestResult testResult in testRunChangedArgs.NewTestResults)
+            foreach (TestResult testResult in testRunChangedArgs.NewTestResults!)
             {
                 switch (testResult.Outcome)
                 {
