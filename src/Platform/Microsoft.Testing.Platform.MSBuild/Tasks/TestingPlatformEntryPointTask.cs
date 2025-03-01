@@ -50,8 +50,7 @@ public sealed class TestingPlatformEntryPointTask : Build.Utilities.Task
     /// <summary>
     /// Gets or sets the root namespace of the project.
     /// </summary>
-    [Required]
-    public string RootNamespace { get; set; }
+    public string? RootNamespace { get; set; }
 
     /// <summary>
     /// Gets or sets the path to the generated Testing Platform entry point file.
