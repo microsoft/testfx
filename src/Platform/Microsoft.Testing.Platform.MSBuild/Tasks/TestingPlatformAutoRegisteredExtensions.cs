@@ -60,8 +60,7 @@ public sealed class TestingPlatformSelfRegisteredExtensions : Build.Utilities.Ta
     /// <summary>
     /// Gets or sets the root namespace.
     /// </summary>
-    [Required]
-    public string RootNamespace { get; set; }
+    public string? RootNamespace { get; set; }
 
     /// <summary>
     /// Gets or sets the path to the generated file.
@@ -160,7 +159,7 @@ static Contoso.BuilderHook.AddExtensions(Microsoft.Testing.Platform.Builder.Test
         return result.ToArray();
     }
 
-    private static void GenerateCode(string language, string rootNamespace, ITaskItem[] taskItems, ITaskItem testingPlatformEntryPointSourcePath, IFileSystem fileSystem, TaskLoggingHelper taskLoggingHelper)
+    private static void GenerateCode(string language, string? rootNamespace, ITaskItem[] taskItems, ITaskItem testingPlatformEntryPointSourcePath, IFileSystem fileSystem, TaskLoggingHelper taskLoggingHelper)
     {
         StringBuilder builder = new();
 
@@ -192,7 +191,7 @@ static Contoso.BuilderHook.AddExtensions(Microsoft.Testing.Platform.Builder.Test
         fileSystem.WriteAllText(testingPlatformEntryPointSourcePath.ItemSpec, entryPointSource);
     }
 
-    private static string GetSourceCode(string language, string rootNamespace, string extensionsFragments)
+    private static string GetSourceCode(string language, string? rootNamespace, string extensionsFragments)
     {
         if (language != VBLanguageSymbol && !string.IsNullOrEmpty(rootNamespace))
         {
