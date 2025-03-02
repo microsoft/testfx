@@ -68,10 +68,7 @@ public sealed class ThreadContextTests : AcceptanceTestBase<ThreadContextTests.T
     {
         var testHost = TestHost.LocateFrom(AssetFixture.CultureFlowsProjectPath, TestAssetFixture.CultureFlowsProjectName, tfm);
         string runSettingsFilePath = Path.Combine(testHost.DirectoryName, "sta-timeout.runsettings");
-        TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath}", environmentVariables: new()
-        {
-            ["MSTEST_TEST_FLOW_CONTEXT"] = "true",
-        });
+        TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath}");
         testHostResult.AssertExitCodeIs(0);
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
     }
@@ -82,10 +79,7 @@ public sealed class ThreadContextTests : AcceptanceTestBase<ThreadContextTests.T
     {
         var testHost = TestHost.LocateFrom(AssetFixture.CultureFlowsProjectPath, TestAssetFixture.CultureFlowsProjectName, tfm);
         string runSettingsFilePath = Path.Combine(testHost.DirectoryName, "timeout.runsettings");
-        TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath}", environmentVariables: new()
-        {
-            ["MSTEST_TEST_FLOW_CONTEXT"] = "true",
-        });
+        TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath}");
         testHostResult.AssertExitCodeIs(0);
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
     }
@@ -117,10 +111,7 @@ public sealed class ThreadContextTests : AcceptanceTestBase<ThreadContextTests.T
     {
         var testHost = TestHost.LocateFrom(AssetFixture.CultureFlowsInheritanceProjectPath, TestAssetFixture.CultureFlowsInheritanceProjectName, tfm);
         string runSettingsFilePath = Path.Combine(testHost.DirectoryName, "sta-timeout.runsettings");
-        TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath}", environmentVariables: new()
-        {
-            ["MSTEST_TEST_FLOW_CONTEXT"] = "true",
-        });
+        TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath}");
         testHostResult.AssertExitCodeIs(0);
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 8, skipped: 0);
     }
@@ -131,10 +122,7 @@ public sealed class ThreadContextTests : AcceptanceTestBase<ThreadContextTests.T
     {
         var testHost = TestHost.LocateFrom(AssetFixture.CultureFlowsInheritanceProjectPath, TestAssetFixture.CultureFlowsInheritanceProjectName, tfm);
         string runSettingsFilePath = Path.Combine(testHost.DirectoryName, "timeout.runsettings");
-        TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath}", environmentVariables: new()
-        {
-            ["MSTEST_TEST_FLOW_CONTEXT"] = "true",
-        });
+        TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath}");
         testHostResult.AssertExitCodeIs(0);
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 8, skipped: 0);
     }
@@ -332,32 +320,15 @@ public class UnitTest1
     [ClassCleanup]
     public static void ClassCleanup()
     {
-        if (Environment.GetEnvironmentVariable("MSTEST_TEST_FLOW_CONTEXT") == "true")
-        {
-            Assert.AreEqual(ClassInitCultureCodeName, CultureInfo.CurrentCulture.Name,
-                "ClassCleanup culture should have been the one set by ClassInitialize");
-        }
-        else
-        {
-            Assert.AreEqual(TestCleanupCultureCodeName, CultureInfo.CurrentCulture.Name,
-                "ClassCleanup culture should have been the one set by TestCleanup");
-            CultureInfo.CurrentCulture = new CultureInfo(ClassCleanupCultureCodeName);
-        }
+        Assert.AreEqual(ClassInitCultureCodeName, CultureInfo.CurrentCulture.Name,
+            "ClassCleanup culture should have been the one set by ClassInitialize");
     }
 
     [AssemblyCleanup]
     public static void AssemblyCleanup()
     {
-        if (Environment.GetEnvironmentVariable("MSTEST_TEST_FLOW_CONTEXT") == "true")
-        {
-            Assert.AreEqual(AssemblyInitCultureCodeName, CultureInfo.CurrentCulture.Name,
-                "AssemblyCleanup culture should have been the one set by AssemblyInitialize");
-        }
-        else
-        {
-            Assert.AreEqual(ClassCleanupCultureCodeName, CultureInfo.CurrentCulture.Name,
-                "AssemblyCleanup culture should have been the one set by ClassCleanup");
-        }
+        Assert.AreEqual(AssemblyInitCultureCodeName, CultureInfo.CurrentCulture.Name,
+            "AssemblyCleanup culture should have been the one set by AssemblyInitialize");
     }
 }
 """;
@@ -466,14 +437,7 @@ public class BaseClassWithInheritance
         switch (_testContext.ManagedMethod)
         {
             case "DerivedClassIntermediateClassWithoutInheritanceBaseClassWithInheritanceTestMethod":
-                if (Environment.GetEnvironmentVariable("MSTEST_TEST_FLOW_CONTEXT") == "true")
-                {
-                    Assert.AreEqual(ExpectedCultures.BaseClassInitCulture, CultureInfo.CurrentCulture.Name);
-                }
-                else
-                {
-                    Assert.AreEqual(ExpectedCultures.TestMethodCulture, CultureInfo.CurrentCulture.Name);
-                }
+                Assert.AreEqual(ExpectedCultures.BaseClassInitCulture, CultureInfo.CurrentCulture.Name);
                 break;
 
             case "DerivedClassIntermediateClassWithInheritanceBaseClassWithInheritanceTestMethod":
@@ -515,15 +479,7 @@ public class IntermediateClassWithInheritanceBaseClassWithInheritance : BaseClas
     [ClassCleanup(InheritanceBehavior.BeforeEachDerivedClass, ClassCleanupBehavior.EndOfClass)]
     public static void IntermediateClassCleanup()
     {
-        if (Environment.GetEnvironmentVariable("MSTEST_TEST_FLOW_CONTEXT") == "true")
-        {
-            Assert.AreEqual(ExpectedCultures.IntermediateClassInitCulture, CultureInfo.CurrentCulture.Name);
-        }
-        else
-        {
-            Assert.AreEqual(ExpectedCultures.TestMethodCulture, CultureInfo.CurrentCulture.Name);
-        }
-
+        Assert.AreEqual(ExpectedCultures.IntermediateClassInitCulture, CultureInfo.CurrentCulture.Name);
         CultureInfo.CurrentCulture = new CultureInfo(ExpectedCultures.IntermediateClassCleanupCulture);
     }
 }
@@ -540,15 +496,7 @@ public class IntermediateClassWithInheritanceBaseClassWithoutInheritance : BaseC
     [ClassCleanup(InheritanceBehavior.BeforeEachDerivedClass, ClassCleanupBehavior.EndOfClass)]
     public static void IntermediateClassCleanup()
     {
-        if (Environment.GetEnvironmentVariable("MSTEST_TEST_FLOW_CONTEXT") == "true")
-        {
-            Assert.AreEqual(ExpectedCultures.IntermediateClassInitCulture, CultureInfo.CurrentCulture.Name);
-        }
-        else
-        {
-            Assert.AreEqual(ExpectedCultures.TestMethodCulture, CultureInfo.CurrentCulture.Name);
-        }
-
+        Assert.AreEqual(ExpectedCultures.IntermediateClassInitCulture, CultureInfo.CurrentCulture.Name);
         CultureInfo.CurrentCulture = new CultureInfo(ExpectedCultures.IntermediateClassCleanupCulture);
     }
 }
