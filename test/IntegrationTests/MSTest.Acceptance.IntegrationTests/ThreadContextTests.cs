@@ -91,7 +91,7 @@ public sealed class ThreadContextTests : AcceptanceTestBase<ThreadContextTests.T
         var testHost = TestHost.LocateFrom(AssetFixture.CultureFlowsInheritanceProjectPath, TestAssetFixture.CultureFlowsInheritanceProjectName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync();
         testHostResult.AssertExitCodeIs(0);
-        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 8, skipped: 0);
+        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 16, skipped: 0);
     }
 
     [TestMethod]
@@ -102,7 +102,7 @@ public sealed class ThreadContextTests : AcceptanceTestBase<ThreadContextTests.T
         string runSettingsFilePath = Path.Combine(testHost.DirectoryName, "sta.runsettings");
         TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath}");
         testHostResult.AssertExitCodeIs(0);
-        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 8, skipped: 0);
+        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 16, skipped: 0);
     }
 
     [TestMethod]
@@ -113,7 +113,7 @@ public sealed class ThreadContextTests : AcceptanceTestBase<ThreadContextTests.T
         string runSettingsFilePath = Path.Combine(testHost.DirectoryName, "sta-timeout.runsettings");
         TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath}");
         testHostResult.AssertExitCodeIs(0);
-        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 8, skipped: 0);
+        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 16, skipped: 0);
     }
 
     [TestMethod]
@@ -124,7 +124,7 @@ public sealed class ThreadContextTests : AcceptanceTestBase<ThreadContextTests.T
         string runSettingsFilePath = Path.Combine(testHost.DirectoryName, "timeout.runsettings");
         TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath}");
         testHostResult.AssertExitCodeIs(0);
-        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 8, skipped: 0);
+        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 16, skipped: 0);
     }
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
