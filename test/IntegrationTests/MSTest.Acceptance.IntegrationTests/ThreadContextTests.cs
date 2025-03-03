@@ -163,6 +163,11 @@ public class UnitTest1
 {
     private const string CultureCodeName = "th-TH";
 
+    // Test methods should execute on the class context, and should be isolated.
+    // Changes in one shouldn't affect the other.
+    // This also makes the behavior of parallelizing and non-parallelizing tests consistent.
+    private const string CultureToBeSetInTestMethodAndNotObservedInAnother = "fr-FR";
+
     [AssemblyInitialize]
     public static void AssemblyInitialize(TestContext context)
     {
@@ -194,6 +199,14 @@ public class UnitTest1
     public void TestMethod1()
     {
         Assert.AreEqual(CultureCodeName, CultureInfo.CurrentCulture.Name);
+        CultureInfo.CurrentCulture = new CultureInfo(CultureToBeSetInTestMethodAndNotObservedInAnother);
+    }
+
+    [TestMethod]
+    public void TestMethod2()
+    {
+        Assert.AreEqual(CultureCodeName, CultureInfo.CurrentCulture.Name);
+        CultureInfo.CurrentCulture = new CultureInfo(CultureToBeSetInTestMethodAndNotObservedInAnother);
     }
 }
 """;
@@ -540,6 +553,13 @@ public class DerivedClassIntermediateClassWithInheritanceBaseClassWithInheritanc
         Assert.AreEqual(ExpectedCultures.IntermediateClassInitCulture, CultureInfo.CurrentCulture.Name);
         CultureInfo.CurrentCulture = new CultureInfo(ExpectedCultures.TestMethodCulture);
     }
+
+    [TestMethod]
+    public void DerivedClassIntermediateClassWithInheritanceBaseClassWithInheritanceTestMethod2()
+    {
+        Assert.AreEqual(ExpectedCultures.IntermediateClassInitCulture, CultureInfo.CurrentCulture.Name);
+        CultureInfo.CurrentCulture = new CultureInfo(ExpectedCultures.TestMethodCulture);
+    }
 }
 
 [TestClass]
@@ -547,6 +567,13 @@ public class DerivedClassIntermediateClassWithInheritanceBaseClassWithoutInherit
 {
     [TestMethod]
     public void DerivedClassIntermediateClassWithInheritanceBaseClassWithoutInheritanceTestMethod()
+    {
+        Assert.AreEqual(ExpectedCultures.IntermediateClassInitCulture, CultureInfo.CurrentCulture.Name);
+        CultureInfo.CurrentCulture = new CultureInfo(ExpectedCultures.TestMethodCulture);
+    }
+
+    [TestMethod]
+    public void DerivedClassIntermediateClassWithInheritanceBaseClassWithoutInheritanceTestMethod2()
     {
         Assert.AreEqual(ExpectedCultures.IntermediateClassInitCulture, CultureInfo.CurrentCulture.Name);
         CultureInfo.CurrentCulture = new CultureInfo(ExpectedCultures.TestMethodCulture);
@@ -562,6 +589,13 @@ public class DerivedClassIntermediateClassWithoutInheritanceBaseClassWithInherit
         Assert.AreEqual(ExpectedCultures.BaseClassInitCulture, CultureInfo.CurrentCulture.Name);
         CultureInfo.CurrentCulture = new CultureInfo(ExpectedCultures.TestMethodCulture);
     }
+
+    [TestMethod]
+    public void DerivedClassIntermediateClassWithoutInheritanceBaseClassWithInheritanceTestMethod2()
+    {
+        Assert.AreEqual(ExpectedCultures.BaseClassInitCulture, CultureInfo.CurrentCulture.Name);
+        CultureInfo.CurrentCulture = new CultureInfo(ExpectedCultures.TestMethodCulture);
+    }
 }
 
 [TestClass]
@@ -569,6 +603,14 @@ public class DerivedClassIntermediateClassWithoutInheritanceBaseClassWithoutInhe
 {
     [TestMethod]
     public void DerivedClassIntermediateClassWithoutInheritanceBaseClassWithoutInheritanceTestMethod()
+    {
+        Assert.AreNotEqual(ExpectedCultures.IntermediateClassInitCulture, CultureInfo.CurrentCulture.Name);
+        Assert.AreNotEqual(ExpectedCultures.BaseClassInitCulture, CultureInfo.CurrentCulture.Name);
+        CultureInfo.CurrentCulture = new CultureInfo(ExpectedCultures.TestMethodCulture);
+    }
+
+    [TestMethod]
+    public void DerivedClassIntermediateClassWithoutInheritanceBaseClassWithoutInheritanceTestMethod2()
     {
         Assert.AreNotEqual(ExpectedCultures.IntermediateClassInitCulture, CultureInfo.CurrentCulture.Name);
         Assert.AreNotEqual(ExpectedCultures.BaseClassInitCulture, CultureInfo.CurrentCulture.Name);
@@ -660,6 +702,13 @@ public class DerivedClassIntermediateClassWithTestInitCleanupBaseClassWithTestIn
         Assert.AreEqual(ExpectedCultures.IntermediateTestInitCulture, CultureInfo.CurrentCulture.Name);
         CultureInfo.CurrentCulture = new CultureInfo(ExpectedCultures.TestMethodCulture);
     }
+
+    [TestMethod]
+    public void DerivedClassIntermediateClassWithTestInitCleanupBaseClassWithTestInitCleanupTestMethod2()
+    {
+        Assert.AreEqual(ExpectedCultures.IntermediateTestInitCulture, CultureInfo.CurrentCulture.Name);
+        CultureInfo.CurrentCulture = new CultureInfo(ExpectedCultures.TestMethodCulture);
+    }
 }
 
 
@@ -668,6 +717,13 @@ public class DerivedClassIntermediateClassWithTestInitCleanupBaseClassWithoutTes
 {
     [TestMethod]
     public void DerivedClassIntermediateClassWithTestInitCleanupBaseClassWithoutTestInitCleanupTestMethod()
+    {
+        Assert.AreEqual(ExpectedCultures.IntermediateTestInitCulture, CultureInfo.CurrentCulture.Name);
+        CultureInfo.CurrentCulture = new CultureInfo(ExpectedCultures.TestMethodCulture);
+    }
+
+    [TestMethod]
+    public void DerivedClassIntermediateClassWithTestInitCleanupBaseClassWithoutTestInitCleanupTestMethod2()
     {
         Assert.AreEqual(ExpectedCultures.IntermediateTestInitCulture, CultureInfo.CurrentCulture.Name);
         CultureInfo.CurrentCulture = new CultureInfo(ExpectedCultures.TestMethodCulture);
@@ -683,6 +739,13 @@ public class DerivedClassIntermediateClassWithoutTestInitCleanupBaseClassWithTes
         Assert.AreEqual(ExpectedCultures.BaseTestInitCulture, CultureInfo.CurrentCulture.Name);
         CultureInfo.CurrentCulture = new CultureInfo(ExpectedCultures.TestMethodCulture);
     }
+
+    [TestMethod]
+    public void DerivedClassIntermediateClassWithoutTestInitCleanupBaseClassWithTestInitCleanupTestMethod2()
+    {
+        Assert.AreEqual(ExpectedCultures.BaseTestInitCulture, CultureInfo.CurrentCulture.Name);
+        CultureInfo.CurrentCulture = new CultureInfo(ExpectedCultures.TestMethodCulture);
+    }
 }
 
 [TestClass]
@@ -690,6 +753,14 @@ public class DerivedClassIntermediateClassWithoutTestInitCleanupBaseClassWithout
 {
     [TestMethod]
     public void DerivedClassIntermediateClassWithoutTestInitCleanupBaseClassWithoutTestInitCleanupTestMethod()
+    {
+        Assert.AreNotEqual(ExpectedCultures.IntermediateTestInitCulture, CultureInfo.CurrentCulture.Name);
+        Assert.AreNotEqual(ExpectedCultures.BaseTestInitCulture, CultureInfo.CurrentCulture.Name);
+        CultureInfo.CurrentCulture = new CultureInfo(ExpectedCultures.TestMethodCulture);
+    }
+
+    [TestMethod]
+    public void DerivedClassIntermediateClassWithoutTestInitCleanupBaseClassWithoutTestInitCleanupTestMethod2()
     {
         Assert.AreNotEqual(ExpectedCultures.IntermediateTestInitCulture, CultureInfo.CurrentCulture.Name);
         Assert.AreNotEqual(ExpectedCultures.BaseTestInitCulture, CultureInfo.CurrentCulture.Name);
