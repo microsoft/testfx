@@ -450,10 +450,12 @@ public class BaseClassWithInheritance
         switch (_testContext.ManagedMethod)
         {
             case "DerivedClassIntermediateClassWithoutInheritanceBaseClassWithInheritanceTestMethod":
+            case "DerivedClassIntermediateClassWithoutInheritanceBaseClassWithInheritanceTestMethod2":
                 Assert.AreEqual(ExpectedCultures.BaseClassInitCulture, CultureInfo.CurrentCulture.Name);
                 break;
 
             case "DerivedClassIntermediateClassWithInheritanceBaseClassWithInheritanceTestMethod":
+            case "DerivedClassIntermediateClassWithInheritanceBaseClassWithInheritanceTestMethod2":
                 Assert.AreEqual(ExpectedCultures.IntermediateClassCleanupCulture, CultureInfo.CurrentCulture.Name);
                 break;
 
@@ -634,10 +636,12 @@ public class BaseClassWithTestInitCleanup
         switch (TestContext.ManagedMethod)
         {
             case "DerivedClassIntermediateClassWithTestInitCleanupBaseClassWithTestInitCleanupTestMethod":
+            case "DerivedClassIntermediateClassWithTestInitCleanupBaseClassWithTestInitCleanupTestMethod2":
                 Assert.AreEqual(ExpectedCultures.IntermediateTestCleanupCulture, CultureInfo.CurrentCulture.Name);
                 break;
 
             case "DerivedClassIntermediateClassWithoutTestInitCleanupBaseClassWithTestInitCleanupTestMethod":
+            case "DerivedClassIntermediateClassWithoutTestInitCleanupBaseClassWithTestInitCleanupTestMethod2":
                 Assert.AreEqual(ExpectedCultures.TestMethodCulture, CultureInfo.CurrentCulture.Name);
                 break;
 
