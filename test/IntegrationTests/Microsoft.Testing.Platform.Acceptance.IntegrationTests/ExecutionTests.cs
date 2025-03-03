@@ -37,7 +37,7 @@ Test discovery summary: found 2 test\(s\)\ - .*\.(dll|exe) \(net.+\|.+\)
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 2, skipped: 0);
-        testHostResult.AssertOutputContains($"! - {AssetFixture.TargetAssetPath}");
+        testHostResult.AssertOutputMatchesRegex($"Passed! - .*\\.(dll|exe) \\(net.+\\|.+\\)");
     }
 
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
@@ -67,7 +67,7 @@ Test discovery summary: found 1 test\(s\)\ - .*\.(dll|exe) \(net.+\|.+\)
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
-        testHostResult.AssertOutputContains($"! - {AssetFixture.TargetAssetPath}");
+        testHostResult.AssertOutputMatchesRegex($"Passed! - .*\\.(dll|exe) \\(net.+\\|.+\\)");
     }
 
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
@@ -80,7 +80,7 @@ Test discovery summary: found 1 test\(s\)\ - .*\.(dll|exe) \(net.+\|.+\)
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 2, skipped: 0);
-        testHostResult.AssertOutputContains($"! - {AssetFixture.TargetAssetPath}");
+        testHostResult.AssertOutputMatchesRegex($"Passed! - .*\\.(dll|exe) \\(net.+\\|.+\\)");
     }
 
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
@@ -93,7 +93,7 @@ Test discovery summary: found 1 test\(s\)\ - .*\.(dll|exe) \(net.+\|.+\)
         testHostResult.AssertExitCodeIs(ExitCodes.MinimumExpectedTestsPolicyViolation);
 
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 2, skipped: 0, minimumNumberOfTests: 3);
-        testHostResult.AssertOutputContains($" - {AssetFixture.TargetAssetPath}");
+        testHostResult.AssertOutputMatchesRegex($" - .*\\.(dll|exe) \\(net.+\\|.+\\)");
     }
 
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]

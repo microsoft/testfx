@@ -922,9 +922,13 @@ internal sealed partial class TerminalTestReporter : IDisposable
     {
         TestProgressState asm = _assemblies[$"{assembly}|{targetFramework}|{architecture}|{executionId}"];
 
-        // TODO: add mode for discovered tests to the progress bar - jajares
-        asm.PassedTests++;
-        asm.TotalTests++;
+        if (_isDiscovery)
+        {
+            // TODO: add mode for discovered tests to the progress bar, to get rid of the hack here that allows updating the
+            // progress, but also breaks the total counts if not done only in discovery.
+            asm.PassedTests++;
+            asm.TotalTests++;
+        }
 
         asm.DiscoveredTests.Add(new(displayName, uid));
 
