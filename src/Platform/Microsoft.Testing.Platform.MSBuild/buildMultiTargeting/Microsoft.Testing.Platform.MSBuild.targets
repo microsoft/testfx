@@ -358,8 +358,16 @@
       This let's terminal logger know that it should show `Testing` in the output,
       and not the additional internal details, such as target names.
     -->
+    <!-- Passing UseAppHost, IsExecutable, TargetDir, AssemblyName, and _NativeExecutableExtensions is mostly workaround -->
+    <!-- until we implement https://github.com/microsoft/testfx/issues/5091 properly -->
+    <!-- For now, we construct the correct "RunCommand" via these properties for a specific scenario that's known to be broken -->
     <CallTarget Targets="_TestRunStart" />
     <InvokeTestingPlatformTask TargetPath="$(TargetPath)"
+                               UseAppHost="$(UseAppHost)"
+                               IsExecutable="$(_IsExecutable)"
+                               TargetDir="$(TargetDir)"
+                               AssemblyName="$(AssemblyName)"
+                               NativeExecutableExtension="$(_NativeExecutableExtension)"
                                TargetFrameworkIdentifier="$(TargetFrameworkIdentifier)"
                                TargetFramework="$(TargetFramework)"
                                TestArchitecture="$(_TestArchitecture)"

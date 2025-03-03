@@ -17,7 +17,15 @@ public partial class CLITestBase : TestContainer
 
     public CLITestBase()
     {
-        s_vsTestConsoleWrapper = new VsTestConsoleWrapper(GetConsoleRunnerPath());
+        s_vsTestConsoleWrapper = new(
+            GetConsoleRunnerPath(),
+            new()
+            {
+                EnvironmentVariables = new()
+                {
+                    ["DOTNET_ROOT"] = FindDotNetRoot(),
+                },
+            });
         s_vsTestConsoleWrapper.StartSession();
     }
 
@@ -240,6 +248,7 @@ public partial class CLITestBase : TestContainer
                        test.Equals(f.DisplayName, StringComparison.Ordinal));
             testFound.Should().NotBeNull("Test '{0}' does not appear in failed tests list.", test);
 
+#if DEBUG
             if (!validateStackTraceInfo)
             {
                 continue;
@@ -252,6 +261,7 @@ public partial class CLITestBase : TestContainer
             {
                 testFound.ErrorStackTrace.Should().Contain(testMethodName, "No stack trace for failed test: {0}", test);
             }
+#endif
         }
     }
 
@@ -308,5 +318,27 @@ public partial class CLITestBase : TestContainer
 
             paths[i] = !Path.IsPathRooted(path) ? GetAssetFullPath(path, targetFramework: targetFramework) : Path.GetFullPath(path);
         }
+    }
+
+    private static string FindDotNetRoot()
+    {
+        string dotNetRoot = Environment.GetEnvironmentVariable("DOTNET_ROOT");
+        if (!string.IsNullOrEmpty(dotNetRoot))
+        {
+            return dotNetRoot;
+        }
+
+        var currentDirectory = new DirectoryInfo(Directory.GetCurrentDirectory());
+        do
+        {
+            string folderName = ".dotnet";
+            if (currentDirectory.EnumerateDirectories(folderName).Any())
+            {
+                return Path.Combine(currentDirectory.FullName, folderName);
+            }
+        }
+        while ((currentDirectory = currentDirectory.Parent) != null);
+
+        throw new InvalidOperationException("Could not find .dotnet folder in the current directory or any parent directories.");
     }
 }

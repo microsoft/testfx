@@ -107,8 +107,8 @@ internal class ReflectHelper : MarshalByRefObject
     /// <param name="attributeProvider">The type, assembly or method.</param>
     /// <param name="inherit">If we should inspect parents of this type.</param>
     /// <returns>The attribute that is found or null.</returns>
-    public TAttribute? GetFirstNonDerivedAttributeOrDefault<TAttribute>(ICustomAttributeProvider attributeProvider, bool inherit)
-    where TAttribute : Attribute
+    public virtual /* for tests, for moq */ TAttribute? GetFirstNonDerivedAttributeOrDefault<TAttribute>(ICustomAttributeProvider attributeProvider, bool inherit)
+        where TAttribute : Attribute
     {
         Attribute[] cachedAttributes = GetCustomAttributesCached(attributeProvider, inherit);
 
@@ -134,7 +134,7 @@ internal class ReflectHelper : MarshalByRefObject
     /// <returns>The attribute that is found or null.</returns>
     /// <exception cref="InvalidOperationException">Throws when multiple attributes are found (the attribute must allow multiple).</exception>
     public virtual /* for tests, for moq */ TAttribute? GetFirstDerivedAttributeOrDefault<TAttribute>(ICustomAttributeProvider attributeProvider, bool inherit)
-    where TAttribute : Attribute
+        where TAttribute : Attribute
     {
         Attribute[] cachedAttributes = GetCustomAttributesCached(attributeProvider, inherit);
 

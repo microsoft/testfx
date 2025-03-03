@@ -49,6 +49,7 @@ public abstract class TestContainer : IDisposable
 
     public static void Verify(
         [DoesNotReturnIf(false)] bool condition,
+        string? message = null,
         [CallerArgumentExpression(nameof(condition))] string? expression = default,
         [CallerMemberName] string? caller = default,
         [CallerFilePath] string? filePath = default,
@@ -56,7 +57,7 @@ public abstract class TestContainer : IDisposable
     {
         if (!condition)
         {
-            Throw(expression, caller, filePath, lineNumber);
+            Throw(message, expression, caller, filePath, lineNumber);
         }
     }
 
@@ -76,7 +77,7 @@ public abstract class TestContainer : IDisposable
             return ex;
         }
 
-        Throw(expression, caller, filePath, lineNumber);
+        Throw(null, expression, caller, filePath, lineNumber);
         return null;
     }
 
@@ -96,7 +97,7 @@ public abstract class TestContainer : IDisposable
             return ex;
         }
 
-        Throw(expression, caller, filePath, lineNumber);
+        Throw(null, expression, caller, filePath, lineNumber);
         return null;
     }
 
@@ -118,7 +119,7 @@ public abstract class TestContainer : IDisposable
             return ex;
         }
 
-        Throw(expression, caller, filePath, lineNumber);
+        Throw(null, expression, caller, filePath, lineNumber);
         return null;
     }
 
@@ -140,7 +141,7 @@ public abstract class TestContainer : IDisposable
             return ex;
         }
 
-        Throw(expression, caller, filePath, lineNumber);
+        Throw(null, expression, caller, filePath, lineNumber);
         return null;
     }
 
@@ -148,12 +149,18 @@ public abstract class TestContainer : IDisposable
         [CallerMemberName] string? caller = default,
         [CallerFilePath] string? filePath = default,
         [CallerLineNumber] int lineNumber = default)
-        => Throw(string.Empty, caller, filePath, lineNumber);
+        => Throw(null, string.Empty, caller, filePath, lineNumber);
 
     [DoesNotReturn]
-    private static void Throw(string? expression, string? caller, string? filePath, int lineNumber)
+    private static void Throw(string? message, string? expression, string? caller, string? filePath, int lineNumber)
     {
-        var verifyException = new Exception($"Verification failed for {expression ?? "<expression>"} at line {lineNumber} of method '{caller ?? "<caller>"}' in file '{filePath ?? "<file-path>"}'.");
+        string exceptionMessage = $"Verification failed for {expression ?? "<expression>"} at line {lineNumber} of method '{caller ?? "<caller>"}' in file '{filePath ?? "<file-path>"}'.";
+        if (message is not null)
+        {
+            exceptionMessage += Environment.NewLine + message;
+        }
+
+        var verifyException = new Exception(exceptionMessage);
         verifyException.Data.Add(IsVerifyException, true);
         throw verifyException;
     }

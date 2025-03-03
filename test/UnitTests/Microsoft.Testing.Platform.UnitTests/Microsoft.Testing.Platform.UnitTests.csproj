@@ -2,7 +2,6 @@
 
   <PropertyGroup>
     <TargetFrameworks>$(MicrosoftTestingTargetFrameworks);net462</TargetFrameworks>
-    <UseVSTestRunner>false</UseVSTestRunner>
     <EnableMSTestRunner>true</EnableMSTestRunner>
     <OutputType>Exe</OutputType>
   </PropertyGroup>

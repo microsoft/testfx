@@ -67,7 +67,7 @@ public class TypeForwardingTests : AcceptanceTestBase<NopAssetFixture>
             .PatchTargetFrameworks(TargetFrameworks.NetCurrent)
             .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion);
 
-        TestAsset testAsset = await TestAsset.GenerateAssetAsync(AssetName, patchedSources);
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(AssetName, patchedSources);
         await DotnetCli.RunAsync($"build -m:1 -nodeReuse:false {testAsset.TargetAssetPath}/ConsoleApp -c Release", AcceptanceFixture.NuGetGlobalPackagesFolder.Path);
 
         var testHost = TestInfrastructure.TestHost.LocateFrom($"{testAsset.TargetAssetPath}/ConsoleApp", "ConsoleApp", TargetFrameworks.NetCurrent);

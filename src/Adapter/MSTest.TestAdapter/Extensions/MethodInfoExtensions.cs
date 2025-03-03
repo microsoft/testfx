@@ -87,22 +87,23 @@ internal static class MethodInfoExtensions
     /// Check is return type is void for non async and Task for async methods.
     /// </summary>
     /// <param name="method">The method to verify.</param>
+    /// <param name="reflectHelper">The reflection service to use.</param>
     /// <returns>True if the method has a void/task return type..</returns>
-    internal static bool IsValidReturnType(this MethodInfo method)
+    internal static bool IsValidReturnType(this MethodInfo method, ReflectHelper? reflectHelper = null)
         => ReflectHelper.MatchReturnType(method, typeof(Task))
         || ReflectHelper.MatchReturnType(method, typeof(ValueTask))
-        || (ReflectHelper.MatchReturnType(method, typeof(void)) && method.GetAsyncTypeName() == null);
+        || (ReflectHelper.MatchReturnType(method, typeof(void)) && method.GetAsyncTypeName(reflectHelper) == null);
 
     /// <summary>
     /// For async methods compiler generates different type and method.
     /// Gets the compiler generated type name for given async test method.
     /// </summary>
     /// <param name="method">The method to verify.</param>
+    /// <param name="reflectHelper">The reflection service to use.</param>
     /// <returns>Compiler generated type name for given async test method..</returns>
-    internal static string? GetAsyncTypeName(this MethodInfo method)
+    internal static string? GetAsyncTypeName(this MethodInfo method, ReflectHelper? reflectHelper = null)
     {
-        AsyncStateMachineAttribute? asyncStateMachineAttribute = ReflectHelper.Instance.GetFirstNonDerivedAttributeOrDefault<AsyncStateMachineAttribute>(method, inherit: false);
-
+        AsyncStateMachineAttribute? asyncStateMachineAttribute = (reflectHelper ?? ReflectHelper.Instance).GetFirstNonDerivedAttributeOrDefault<AsyncStateMachineAttribute>(method, inherit: false);
         return asyncStateMachineAttribute?.StateMachineType?.FullName;
     }
 

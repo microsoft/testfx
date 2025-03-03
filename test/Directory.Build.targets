@@ -3,10 +3,8 @@
 
   <Import Project="../Directory.Build.targets" />
 
-  <PropertyGroup Condition=" '$(UseVSTestRunner)' == 'false' ">
-    <Nullable>enable</Nullable>
-    <OutputType>Exe</OutputType>
-    <EnableMSTestRunner>true</EnableMSTestRunner>
+  <PropertyGroup Condition=" '$(EnableMSTestRunner)' == 'true' OR '$(UseInternalTestFramework)' == 'true' ">
+    <UseMSTest Condition=" '$(UseMSTest)' == '' ">true</UseMSTest>
     <GenerateProgramFile>false</GenerateProgramFile>
     <GenerateTestingPlatformEntryPoint>false</GenerateTestingPlatformEntryPoint>
     <Architecture Condition=" '$(Architecture)' == '' ">$(PlatformTarget)</Architecture>
@@ -21,8 +19,9 @@
     <!-- /Arcade runner settings -->
   </PropertyGroup>
 
-  <ItemGroup Condition=" '$(UseVSTestRunner)' == 'false' ">
-    <ProjectReference Include="$(RepoRoot)test\Utilities\Microsoft.Testing.TestInfrastructure\Microsoft.Testing.TestInfrastructure.csproj" />
+  <ItemGroup Condition=" '$(EnableMSTestRunner)' == 'true' OR '$(UseInternalTestFramework)' == 'true' ">
+    <ProjectReference Include="$(RepoRoot)test\Utilities\Microsoft.Testing.TestInfrastructure\Microsoft.Testing.TestInfrastructure.csproj"
+                      Condition="'$(UseInternalTestFramework)' != 'true'" />
     <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.CrashDump\Microsoft.Testing.Extensions.CrashDump.csproj" />
     <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.HangDump\Microsoft.Testing.Extensions.HangDump.csproj" />
     <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.Retry\Microsoft.Testing.Extensions.Retry.csproj" />
@@ -30,20 +29,22 @@
     <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" GeneratePathProperty="True" />
   </ItemGroup>
 
-  <ItemGroup Condition=" '$(UseVSTestRunner)' == 'false' AND '$(UseMSTestFromSource)' != 'true' ">
+  <ItemGroup Condition=" '$(EnableMSTestRunner)' == 'true' AND '$(UseInternalTestFramework)' != 'true' AND '$(UseMSTestFromSource)' != 'true' ">
     <PackageReference Include="MSTest.Analyzers" />
     <PackageReference Include="MSTest.TestFramework" />
     <PackageReference Include="MSTest.TestAdapter" />
   </ItemGroup>
 
-  <ItemGroup Condition=" '$(UseVSTestRunner)' == 'false' ">
+  <ItemGroup Condition=" '$(EnableMSTestRunner)' == 'true' OR '$(UseInternalTestFramework)' == 'true' ">
     <Using Include="Microsoft.Testing.Platform.Builder" />
     <Using Include="Microsoft.Testing.Platform.Extensions" />
-    <Using Include="Microsoft.Testing.TestInfrastructure" />
-    <Using Include="Microsoft.VisualStudio.TestTools.UnitTesting" />
+    <Using Include="Microsoft.Testing.TestInfrastructure"
+           Condition="'$(UseInternalTestFramework)' != 'true'" />
+    <Using Include="Microsoft.VisualStudio.TestTools.UnitTesting"
+           Condition="'$(UseMSTest)' == 'true'" />
   </ItemGroup>
 
-  <ItemGroup Condition=" '$(UseVSTestRunner)' == 'false' ">
+  <ItemGroup Condition=" '$(EnableMSTestRunner)' == 'true' OR '$(UseInternalTestFramework)' == 'true' ">
     <None Update="*.testconfig.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -54,5 +55,17 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
+
+  <ItemGroup Condition=" '$(UseInternalTestFramework)' == 'true' ">
+    <ProjectReference Include="$(RepoRoot)test\Utilities\TestFramework.ForTestingMSTest\TestFramework.ForTestingMSTest.csproj" />
+  </ItemGroup>
+
+  <ItemGroup Condition=" '$(UseInternalTestFramework)' == 'true' ">
+    <ProjectCapability Include="TestContainer" />
+    <ProjectCapability Include="TestingPlatformServer" />
+  </ItemGroup>
+
+  <Import Project="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\buildMultiTargeting\Microsoft.Testing.Platform.props"
+          Condition=" '$(UseInternalTestFramework)' == 'true' " />
 
 </Project>
