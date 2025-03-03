@@ -235,7 +235,6 @@
           Condition=" '$(GenerateSelfRegisteredExtensions)' == 'true' " >
     <TestingPlatformSelfRegisteredExtensions SelfRegisteredExtensionsSourcePath="$(_SelfRegisteredExtensionsSourcePath)"
                                              SelfRegisteredExtensionsBuilderHook="@(TestingPlatformBuilderHook)"
-                                             RootNamespace="$(RootNamespace)"
                                              Language="$(Language)" >
       <Output TaskParameter="SelfRegisteredExtensionsGeneratedFilePath" PropertyName ="SelfRegisteredExtensionsGeneratedFilePath" />
     </TestingPlatformSelfRegisteredExtensions>
