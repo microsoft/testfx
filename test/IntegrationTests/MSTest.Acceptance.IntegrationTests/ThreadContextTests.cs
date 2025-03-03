@@ -15,7 +15,7 @@ public sealed class ThreadContextTests : AcceptanceTestBase<ThreadContextTests.T
     {
         var testHost = TestHost.LocateFrom(AssetFixture.InitToTestProjectPath, TestAssetFixture.InitToTestProjectName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync();
-        testHostResult.AssertOutputContainsSummary(failed: 1, passed: 0, skipped: 0);
+        testHostResult.AssertOutputContainsSummary(failed: 2, passed: 0, skipped: 0);
     }
 
     [TestMethod]
@@ -38,7 +38,7 @@ public sealed class ThreadContextTests : AcceptanceTestBase<ThreadContextTests.T
         var testHost = TestHost.LocateFrom(AssetFixture.InitToTestProjectPath, TestAssetFixture.InitToTestProjectName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(environmentVariables: new() { [envVarKey] = "true" });
         testHostResult.AssertExitCodeIs(0);
-        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
+        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 2, skipped: 0);
     }
 
     [TestMethod]
