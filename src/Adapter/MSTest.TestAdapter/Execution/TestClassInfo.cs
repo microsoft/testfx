@@ -833,9 +833,6 @@ public class TestClassInfo
             testContext.CancellationTokenSource,
             timeout,
             methodInfo,
-            // If we had a class initialize that have set the execution context, we use that.
-            // Otherwise, we still want to use the execution context of the assembly.
-            // Note that if we have a class initialize, its execution context was already a copy of the assembly's context.
             ExecutionContext ?? Parent.ExecutionContext,
             Resource.ClassCleanupWasCancelled,
             Resource.ClassCleanupTimedOut);
