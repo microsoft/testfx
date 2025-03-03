@@ -154,7 +154,7 @@ public class TestAssemblyInfo
                             testContext.CancellationTokenSource,
                             AssemblyInitializeMethodTimeoutMilliseconds,
                             AssemblyInitializeMethod,
-                            executionContext: null, // Assembly initialize is the first thing that we run. So just execute on the current execution context.
+                            executionContext: ExecutionContext,
                             Resource.AssemblyInitializeWasCancelled,
                             Resource.AssemblyInitializeTimedOut);
                     }
@@ -223,7 +223,11 @@ public class TestAssemblyInfo
             try
             {
                 AssemblyCleanupException = FixtureMethodRunner.RunWithTimeoutAndCancellation(
-                     () => AssemblyCleanupMethod.InvokeAsSynchronousTask(null),
+                     () =>
+                     {
+                         AssemblyCleanupMethod.InvokeAsSynchronousTask(null);
+                         ExecutionContext = ExecutionContext.Capture();
+                     },
                      new CancellationTokenSource(),
                      AssemblyCleanupMethodTimeoutMilliseconds,
                      AssemblyCleanupMethod,
@@ -289,6 +293,8 @@ public class TestAssemblyInfo
                          {
                              AssemblyCleanupMethod.InvokeAsSynchronousTask(null, testContext);
                          }
+
+                         ExecutionContext = ExecutionContext.Capture();
                      },
                      testContext.CancellationTokenSource,
                      AssemblyCleanupMethodTimeoutMilliseconds,
