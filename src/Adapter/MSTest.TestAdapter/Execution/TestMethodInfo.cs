@@ -404,14 +404,27 @@ public class TestMethodInfo : ITestMethod
                         hasTestInitializePassed = true;
                         if (executionContext is null)
                         {
-                            TestMethod.InvokeAsSynchronousTask(_classInstance, arguments);
+                            try
+                            {
+                                TestMethod.InvokeAsSynchronousTask(_classInstance, arguments);
+                            }
+                            finally
+                            {
+                                executionContext = ExecutionContext.Capture();
+                            }
                         }
                         else
                         {
                             ExecutionContext.Run(executionContext, _ =>
                             {
-                                TestMethod.InvokeAsSynchronousTask(_classInstance, arguments);
-                                executionContext = ExecutionContext.Capture();
+                                try
+                                {
+                                    TestMethod.InvokeAsSynchronousTask(_classInstance, arguments);
+                                }
+                                finally
+                                {
+                                    executionContext = ExecutionContext.Capture();
+                                }
                             }, null);
                         }
 
