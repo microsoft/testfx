@@ -149,7 +149,7 @@ public class TestMethodInfo : ITestMethod
         watch.Start();
         try
         {
-            ExecutionContext? executionContext = (Parent.ExecutionContext ?? Parent.Parent.ExecutionContext)?.CreateCopy();
+            ExecutionContext? executionContext = Parent.ExecutionContext ?? Parent.Parent.ExecutionContext;
             result = IsTimeoutSet ? ExecuteInternalWithTimeout(arguments, executionContext) : ExecuteInternal(arguments, executionContext, null);
         }
         finally
@@ -361,31 +361,11 @@ public class TestMethodInfo : ITestMethod
                     if (RunTestInitializeMethod(_classInstance, result, ref executionContext, timeoutTokenSource))
                     {
                         hasTestInitializePassed = true;
-                        if (executionContext is null)
+                        FixtureMethodRunner.RunOnContext(executionContext, () =>
                         {
-                            try
-                            {
-                                TestMethod.InvokeAsSynchronousTask(_classInstance, arguments);
-                            }
-                            finally
-                            {
-                                executionContext = ExecutionContext.Capture();
-                            }
-                        }
-                        else
-                        {
-                            ExecutionContext.Run(executionContext, _ =>
-                            {
-                                try
-                                {
-                                    TestMethod.InvokeAsSynchronousTask(_classInstance, arguments);
-                                }
-                                finally
-                                {
-                                    executionContext = ExecutionContext.Capture();
-                                }
-                            }, null);
-                        }
+                            TestMethod.InvokeAsSynchronousTask(_classInstance, arguments);
+                            executionContext = ExecutionContext.Capture();
+                        });
 
                         result.Outcome = UTF.UnitTestOutcome.Passed;
                     }

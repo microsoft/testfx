@@ -521,7 +521,7 @@ public class TestClassInfo
             // We run the class initialize on a copy of the execution context of the assembly.
             // That way, async locals set by assembly initialize are visible to class initialize.
             // But we copy so that async locals set by class initialize are not visible to assembly cleanup.
-            ExecutionContext ?? Parent?.ExecutionContext?.CreateCopy(),
+            ExecutionContext ?? Parent?.ExecutionContext,
             Resource.ClassInitializeWasCancelled,
             Resource.ClassInitializeTimedOut);
     }
@@ -839,7 +839,7 @@ public class TestClassInfo
             // If we had a class initialize that have set the execution context, we use that.
             // Otherwise, we still want to use the execution context of the assembly.
             // Note that if we have a class initialize, its execution context was already a copy of the assembly's context.
-            ExecutionContext ?? Parent.ExecutionContext?.CreateCopy(),
+            ExecutionContext ?? Parent.ExecutionContext,
             Resource.ClassCleanupWasCancelled,
             Resource.ClassCleanupTimedOut);
     }
