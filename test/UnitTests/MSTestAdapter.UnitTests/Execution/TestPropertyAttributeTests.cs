@@ -7,7 +7,6 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using Moq;
 
@@ -50,8 +49,7 @@ public class TestPropertyAttributeTests : TestContainer
 
         _ = _typeCache.GetTestMethodInfo(
             testMethod,
-            testContext,
-            false);
+            testContext);
 
         Assert.IsTrue(testContext.TryGetPropertyValue("TestMethodKeyFromBase", out object? value1));
         Assert.AreEqual("TestMethodValueFromBase", value1);
@@ -81,8 +79,7 @@ public class TestPropertyAttributeTests : TestContainer
 
         _ = _typeCache.GetTestMethodInfo(
             testMethod,
-            testContext,
-            false);
+            testContext);
 
         Assert.IsTrue(testContext.TryGetPropertyValue("DerivedMethod1Key", out object? value1));
         Assert.AreEqual("DerivedMethod1Value", value1);
@@ -127,8 +124,7 @@ public class TestPropertyAttributeTests : TestContainer
 
         _ = _typeCache.GetTestMethodInfo(
             testMethod,
-            testContext,
-            false);
+            testContext);
 
         Assert.IsTrue(testContext.TryGetPropertyValue("DerivedMethod2Key", out object? value1));
         Assert.AreEqual("DerivedMethod2Value", value1);

@@ -55,7 +55,7 @@ internal class TestMethodValidator
         // Todo: Decide whether parameter count matters.
         bool isValidTestMethod = isAccessible &&
                                  testMethodInfo is { IsAbstract: false, IsStatic: false } &&
-                                 testMethodInfo.IsValidReturnType();
+                                 testMethodInfo.IsValidReturnType(_reflectHelper);
 
         if (!isValidTestMethod)
         {

@@ -64,7 +64,7 @@ internal sealed class TestMethodRunner
     internal TestResult[] Execute(string initializationLogs, string initializationErrorLogs, string initializationTrace, string initializationTestContextMessages)
     {
         bool isSTATestClass = AttributeComparer.IsDerived<STATestClassAttribute>(_testMethodInfo.Parent.ClassAttribute);
-        bool isSTATestMethod = AttributeComparer.IsDerived<STATestMethodAttribute>(_testMethodInfo.TestMethodOptions.Executor);
+        bool isSTATestMethod = AttributeComparer.IsDerived<STATestMethodAttribute>(_testMethodInfo.Executor);
         bool isSTARequested = isSTATestClass || isSTATestMethod;
         bool isWindowsOS = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
         if (isSTARequested && isWindowsOS && Thread.CurrentThread.GetApartmentState() != ApartmentState.STA)
@@ -161,7 +161,7 @@ internal sealed class TestMethodRunner
         DebugEx.Assert(_testMethodInfo.TestMethod != null, "Test method should not be null.");
 
         List<TestResult> results = [];
-        if (_testMethodInfo.TestMethodOptions.Executor == null)
+        if (_testMethodInfo.Executor == null)
         {
             throw ApplicationStateGuard.Unreachable();
         }
@@ -170,7 +170,7 @@ internal sealed class TestMethodRunner
         var parentStopwatch = Stopwatch.StartNew();
         if (_test.DataType == DynamicDataType.ITestDataSource)
         {
-            if (!string.IsNullOrEmpty(_test.TestDataSourceIgnoreMessage))
+            if (_test.TestDataSourceIgnoreMessage is not null)
             {
                 _testContext.SetOutcome(UTF.UnitTestOutcome.Ignored);
                 return [TestResult.CreateIgnoredResult(_test.TestDataSourceIgnoreMessage)];
@@ -269,7 +269,7 @@ internal sealed class TestMethodRunner
 
         foreach (UTF.ITestDataSource testDataSource in testDataSources)
         {
-            if (testDataSource is ITestDataSourceIgnoreCapability { IgnoreMessage: { Length: > 0 } ignoreMessage })
+            if (testDataSource is ITestDataSourceIgnoreCapability { IgnoreMessage: { } ignoreMessage })
             {
                 results.Add(TestResult.CreateIgnoredResult(ignoreMessage));
                 continue;
@@ -457,7 +457,7 @@ internal sealed class TestMethodRunner
     {
         try
         {
-            return _testMethodInfo.TestMethodOptions.Executor.Execute(testMethodInfo);
+            return _testMethodInfo.Executor.Execute(testMethodInfo);
         }
         catch (Exception ex)
         {
@@ -469,7 +469,7 @@ internal sealed class TestMethodRunner
                         string.Format(
                             CultureInfo.CurrentCulture,
                             Resource.UTA_ExecuteThrewException,
-                            _testMethodInfo.TestMethodOptions.Executor.GetType().FullName,
+                            _testMethodInfo.Executor.GetType().FullName,
                             ex.ToString()),
                         ex),
                 },

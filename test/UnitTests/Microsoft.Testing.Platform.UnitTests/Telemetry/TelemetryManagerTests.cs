@@ -144,6 +144,7 @@ public sealed class TelemetryManagerTests
 
         Mock<ITestApplicationModuleInfo> testApplicationModuleInfoMock = new();
         testApplicationModuleInfoMock.Setup(a => a.GetCurrentTestApplicationFullPath()).Returns("directory/myExe.exe");
+        testApplicationModuleInfoMock.Setup(a => a.TryGetCurrentTestApplicationFullPath()).Returns("directory/myExe.exe");
 
         ServiceProvider serviceProvider = new();
         serviceProvider.AddService(commandLineOptions.Object);
@@ -207,6 +208,7 @@ public sealed class TelemetryManagerTests
 
         Mock<ITestApplicationModuleInfo> testApplicationModuleInfoMock = new();
         testApplicationModuleInfoMock.Setup(a => a.GetCurrentTestApplicationFullPath()).Returns("directory/myExe.exe");
+        testApplicationModuleInfoMock.Setup(a => a.TryGetCurrentTestApplicationFullPath()).Returns("directory/myExe.exe");
 
         ServiceProvider serviceProvider = new();
         serviceProvider.AddService(commandLineOptions.Object);

@@ -8,15 +8,17 @@ using Analyzers.Utilities;
 using Microsoft.CodeAnalysis;
 using Microsoft.Testing.Framework.SourceGeneration.Helpers;
 
+using MSTest.SourceGeneration.Helpers;
+
 namespace Microsoft.Testing.Framework.SourceGeneration.ObjectModels;
 
-internal sealed class TestTypeInfo
+internal sealed record class TestTypeInfo
 {
     private readonly string _name;
     private readonly string _containingAssemblyName;
-    private readonly ImmutableArray<(string FilePath, int StartLine, int EndLine)> _declarationReferences;
+    private readonly EquatableArray<(string FilePath, int StartLine, int EndLine)> _declarationReferences;
 
-    internal ImmutableArray<TestMethodInfo> TestMethodNodes { get; }
+    internal EquatableArray<TestMethodInfo> TestMethodNodes { get; }
 
     public TimeSpan? TestExecutionTimeout { get; }
 

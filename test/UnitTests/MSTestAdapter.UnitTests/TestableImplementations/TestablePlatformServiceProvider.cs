@@ -4,11 +4,12 @@
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
-using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 
 using Moq;
 
+using ITestDataSource = Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ITestDataSource;
+using ITestMethod = Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ObjectModel.ITestMethod;
 using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
@@ -17,27 +18,26 @@ internal class TestablePlatformServiceProvider : IPlatformServiceProvider
 {
     #region Mock Implementations
 
-    public Mock<ITestSource> MockTestSourceValidator { get; set; } = new();
+    public Mock<ITestSource> MockTestSourceValidator { get; } = new();
 
-    public Mock<IFileOperations> MockFileOperations { get; set; } = new();
+    public Mock<IFileOperations> MockFileOperations { get; } = new();
 
-    public Mock<IAdapterTraceLogger> MockTraceLogger { get; set; } = new();
+    public Mock<IAdapterTraceLogger> MockTraceLogger { get; } = new();
 
-    public Mock<ITestSourceHost> MockTestSourceHost { get; set; } = new();
+    public Mock<ITestSourceHost> MockTestSourceHost { get; } = new();
 
-    public Mock<ITestDeployment> MockTestDeployment { get; set; } = new();
+    public Mock<ITestDeployment> MockTestDeployment { get; } = new();
 
-    public Mock<ISettingsProvider> MockSettingsProvider { get; set; } = new();
+    public Mock<ISettingsProvider> MockSettingsProvider { get; } = new();
 
-    public Mock<ITestDataSource> MockTestDataSource { get; set; } = new();
+    public Mock<ITestDataSource> MockTestDataSource { get; } = new();
 
-    public Mock<ITraceListener> MockTraceListener { get; set; } = new();
+    public Mock<ITraceListener> MockTraceListener { get; } = new();
 
-    public Mock<ITraceListenerManager> MockTraceListenerManager { get; set; } = new();
+    public Mock<ITraceListenerManager> MockTraceListenerManager { get; } = new();
 
-    public Mock<IThreadOperations> MockThreadOperations { get; set; } = new();
+    public Mock<IThreadOperations> MockThreadOperations { get; } = new();
 
-    [AllowNull]
     public Mock<IReflectionOperations2> MockReflectionOperations { get; set; } = null!;
 
     #endregion
@@ -54,8 +54,8 @@ internal class TestablePlatformServiceProvider : IPlatformServiceProvider
 
     public IThreadOperations ThreadOperations => MockThreadOperations.Object;
 
-    [AllowNull]
     [field: AllowNull]
+    [field: MaybeNull]
     public IReflectionOperations2 ReflectionOperations
     {
         get => MockReflectionOperations != null

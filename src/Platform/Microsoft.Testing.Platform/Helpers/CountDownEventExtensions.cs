@@ -26,12 +26,14 @@ internal static class CountDownEventExtensions
             // executeOnlyOnce set to true to indicate that the thread will no longer wait on the waitObject
             // parameter after the delegate has been called;
             // false to indicate that the timer is reset every time the wait operation completes until the wait is unregistered.
+#pragma warning disable CA1416 // Validate platform compatibility
             registeredHandle = ThreadPool.RegisterWaitForSingleObject(
                 waitObject: countdownEvent.WaitHandle,
                 callBack: (state, timedOut) => ((TaskCompletionSource<bool>)state!).TrySetResult(!timedOut),
                 state: tcs,
                 millisecondsTimeOutInterval: millisecondsTimeOutInterval,
                 executeOnlyOnce: true);
+#pragma warning restore CA1416
 #pragma warning restore SA1115 // Parameter should follow comma
 
             // Register the cancellation callback
@@ -45,7 +47,9 @@ internal static class CountDownEventExtensions
             // If the callback method executes because the WaitHandle is
             // signaled, stop future execution of the callback method
             // by unregistering the WaitHandle.
+#pragma warning disable CA1416 // Validate platform compatibility
             registeredHandle?.Unregister(null);
+#pragma warning restore CA1416
             await DisposeHelper.DisposeAsync(tokenRegistration);
         }
     }

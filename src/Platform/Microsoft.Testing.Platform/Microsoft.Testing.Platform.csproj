@@ -2,6 +2,7 @@
 
   <PropertyGroup>
     <TargetFrameworks>$(MicrosoftTestingTargetFrameworks);netstandard2.0</TargetFrameworks>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <ItemGroup>
@@ -56,6 +57,8 @@ This package provides the core platform and the .NET implementation of the proto
     <InternalsVisibleTo Include="MSTest.Acceptance.IntegrationTests" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="MSTest.Engine" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="MSTest.Engine.UnitTests" Key="$(VsPublicKey)" />
+    <InternalsVisibleTo Include="TestFramework.ForTestingMSTest" Key="$(VsPublicKey)" />
+    <InternalsVisibleTo Include="MSTest.IntegrationTests" Key="$(VsPublicKey)" />
   </ItemGroup>
 
   <ItemGroup>
@@ -72,6 +75,15 @@ This package provides the core platform and the .NET implementation of the proto
 
   <ItemGroup>
     <EmbeddedResource Update="Resources\PlatformResources.resx" GenerateSource="true" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- NOTE: SDK already adds Linux, macOS, and Windows. -->
+    <!-- See https://github.com/dotnet/sdk/blob/cb459ebc2d9374b2bc5ce944cc633a6e79ed8275/src/Tasks/Microsoft.NET.Build.Tasks/targets/Microsoft.NET.SupportedPlatforms.props -->
+    <SupportedPlatform Include="android" />
+    <SupportedPlatform Include="ios" />
+    <SupportedPlatform Include="browser" />
+    <SupportedPlatform Include="tvos" />
   </ItemGroup>
 
   <!-- Version templating -->

@@ -30,7 +30,9 @@ internal sealed class StopPoliciesService : IStopPoliciesService
     public bool IsAbortTriggered { get; private set; }
 
     private static void RegisterCallback<T>(ref BlockingCollection<T>? callbacks, T callback)
+#pragma warning disable CA1416 // Validate platform compatibility
         => (callbacks ??= new()).Add(callback);
+#pragma warning restore CA1416
 
     public async Task ExecuteMaxFailedTestsCallbacksAsync(int maxFailedTests, CancellationToken cancellationToken)
     {

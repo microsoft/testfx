@@ -15,6 +15,8 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 
 using TestFramework.ForTestingMSTest;
 
+using TestResult = Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult;
+
 namespace Microsoft.MSTestV2.CLIAutomation;
 
 public partial class CLITestBase : TestContainer
@@ -90,7 +92,7 @@ public partial class CLITestBase : TestContainer
         private readonly List<string> _messageList = [];
         private readonly ConcurrentDictionary<TestCase, ConcurrentBag<TestResult>> _testResults = new();
 
-        private ConcurrentBag<TestResult> _activeResults = null!;
+        private ConcurrentBag<TestResult> _activeResults = new();
 
         public bool EnableShutdownAfterTestRun { get; set; }
 

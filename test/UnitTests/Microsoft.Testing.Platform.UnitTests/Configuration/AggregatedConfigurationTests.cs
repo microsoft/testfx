@@ -79,6 +79,7 @@ public sealed class AggregatedConfigurationTests
     {
         Mock<ITestApplicationModuleInfo> mockTestApplicationModuleInfo = new();
         mockTestApplicationModuleInfo.Setup(x => x.GetCurrentTestApplicationFullPath()).Returns(ExpectedPath);
+        mockTestApplicationModuleInfo.Setup(x => x.GetCurrentTestApplicationDirectory()).Returns(Path.GetDirectoryName(ExpectedPath) ?? AppContext.BaseDirectory);
 
         Mock<IFileSystem> mockFileSystem = new();
         mockFileSystem.Setup(x => x.CreateDirectory(It.IsAny<string>())).Returns((string path) => path);
@@ -101,6 +102,7 @@ public sealed class AggregatedConfigurationTests
     {
         Mock<ITestApplicationModuleInfo> mockTestApplicationModuleInfo = new();
         mockTestApplicationModuleInfo.Setup(x => x.GetCurrentTestApplicationFullPath()).Returns(ExpectedPath);
+        mockTestApplicationModuleInfo.Setup(x => x.GetCurrentTestApplicationDirectory()).Returns(Path.GetDirectoryName(ExpectedPath) ?? AppContext.BaseDirectory);
 
         Mock<IFileSystem> mockFileSystem = new();
         mockFileSystem.Setup(x => x.CreateDirectory(It.IsAny<string>())).Returns((string path) => path);
@@ -123,6 +125,7 @@ public sealed class AggregatedConfigurationTests
     {
         Mock<ITestApplicationModuleInfo> mockTestApplicationModuleInfo = new();
         mockTestApplicationModuleInfo.Setup(x => x.GetCurrentTestApplicationFullPath()).Returns(ExpectedPath);
+        mockTestApplicationModuleInfo.Setup(x => x.GetCurrentTestApplicationDirectory()).Returns(Path.GetDirectoryName(ExpectedPath) ?? AppContext.BaseDirectory);
 
         Mock<IFileSystem> mockFileSystem = new();
         mockFileSystem.Setup(x => x.CreateDirectory(It.IsAny<string>())).Returns((string path) => path);

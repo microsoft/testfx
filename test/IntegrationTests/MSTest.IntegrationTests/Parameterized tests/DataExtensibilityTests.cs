@@ -6,6 +6,8 @@ using System.Collections.Immutable;
 using Microsoft.MSTestV2.CLIAutomation;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
+using TestResult = Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult;
+
 namespace MSTest.IntegrationTests;
 
 public class DataExtensibilityTests : CLITestBase

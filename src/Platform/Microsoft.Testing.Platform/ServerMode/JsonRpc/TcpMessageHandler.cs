@@ -37,6 +37,8 @@ internal sealed class TcpMessageHandler(
     protected override void Dispose(bool disposing)
     {
         base.Dispose(disposing);
+#pragma warning disable CA1416 // Validate platform compatibility
         _client.Close();
+#pragma warning restore CA1416
     }
 }

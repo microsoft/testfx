@@ -3,10 +3,10 @@
   <PropertyGroup>
     <!-- Analyzers testing tools don't yet support tfms over net6.0 -->
     <TargetFrameworks>net6.0</TargetFrameworks>
-    <NoWarn>$(NoWarn);NU1701</NoWarn>
-    <UseVSTestRunner>false</UseVSTestRunner>
-    <EnableMSTestRunner>true</EnableMSTestRunner>
     <RootNamespace>Microsoft.Testing.Framework.SourceGeneration.UnitTests</RootNamespace>
+    <NoWarn>$(NoWarn);NU1701</NoWarn>
+    <EnableMSTestRunner>true</EnableMSTestRunner>
+    <OutputType>Exe</OutputType>
   </PropertyGroup>
 
   <ItemGroup>

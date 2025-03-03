@@ -82,6 +82,9 @@ public sealed class AssertFailedException : Exception
     {
     }
 
+#if NET8_0_OR_GREATER
+    [Obsolete(DiagnosticId = "SYSLIB0051")]
+#endif
     private AssertFailedException(SerializationInfo serializationInfo, StreamingContext streamingContext)
     {
     }

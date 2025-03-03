@@ -97,7 +97,10 @@ internal sealed class TelemetryManager : ITelemetryManager, IOutputDeviceDataPro
         }
 
         IFileSystem fileSystem = serviceProvider.GetFileSystem();
-        string fileName = Path.ChangeExtension(Path.GetFileName(testApplicationModuleInfo.GetCurrentTestApplicationFullPath()), "testingPlatformFirstTimeUseSentinel");
+        string fileName = testApplicationModuleInfo.TryGetCurrentTestApplicationFullPath() is { } testApplicationFullPath
+            ? Path.ChangeExtension(Path.GetFileName(testApplicationFullPath), "testingPlatformFirstTimeUseSentinel")
+            : "testingPlatformFirstTimeUseSentinel";
+
         bool sentinelIsNotPresent =
             RoslynString.IsNullOrWhiteSpace(directory)
             || !fileSystem.Exists(Path.Combine(directory, fileName));

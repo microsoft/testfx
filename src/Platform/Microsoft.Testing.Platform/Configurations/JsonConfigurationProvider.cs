@@ -57,9 +57,11 @@ internal sealed partial class JsonConfigurationSource
             }
             else
             {
-                configFileName = $"{Path.Combine(
-                    Path.GetDirectoryName(_testApplicationModuleInfo.GetCurrentTestApplicationFullPath())!,
-                    Path.GetFileNameWithoutExtension(_testApplicationModuleInfo.GetCurrentTestApplicationFullPath()))}{PlatformConfigurationConstants.PlatformConfigSuffixFileName}";
+                configFileName = _testApplicationModuleInfo.TryGetCurrentTestApplicationFullPath() is { } fullPath
+                    ? $"{Path.Combine(
+                        Path.GetDirectoryName(fullPath)!,
+                        Path.GetFileNameWithoutExtension(fullPath))}{PlatformConfigurationConstants.PlatformConfigSuffixFileName}"
+                    : $"{_testApplicationModuleInfo.TryGetAssemblyName()}{PlatformConfigurationConstants.PlatformConfigSuffixFileName}";
 
                 if (!_fileSystem.Exists(configFileName))
                 {

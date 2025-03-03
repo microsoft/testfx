@@ -54,10 +54,14 @@ internal sealed class AnsiTerminal : ITerminal
     }
 
     public int Width
+#pragma warning disable CA1416 // Validate platform compatibility
         => _console.IsOutputRedirected ? int.MaxValue : _console.BufferWidth;
+#pragma warning restore CA1416 // Validate platform compatibility
 
     public int Height
+#pragma warning disable CA1416 // Validate platform compatibility
         => _console.IsOutputRedirected ? int.MaxValue : _console.BufferHeight;
+#pragma warning restore CA1416 // Validate platform compatibility
 
     public void Append(char value)
     {

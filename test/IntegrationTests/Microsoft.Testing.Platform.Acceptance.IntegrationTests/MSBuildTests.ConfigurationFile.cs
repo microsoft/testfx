@@ -32,8 +32,8 @@ public class MSBuildTests : AcceptanceTestBase<NopAssetFixture>
         Assert.IsTrue(Regex.IsMatch(
             compilationResult.StandardOutput,
             """
-\s*GenerateTestingPlatformConfigurationFile:
-\s*Skipping target "GenerateTestingPlatformConfigurationFile" because all output files are up\-to\-date with respect to the input files\.
+\s*_GenerateTestingPlatformConfigurationFileCore:
+\s*Skipping target "_GenerateTestingPlatformConfigurationFileCore" because all output files are up\-to\-date with respect to the input files\.
 """));
         await DotnetCli.RunAsync($"clean -c {compilationMode} -v:normal {testAsset.TargetAssetPath}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path);
 
@@ -60,7 +60,7 @@ public class MSBuildTests : AcceptanceTestBase<NopAssetFixture>
         DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"{(verb == Verb.publish ? $"publish -f {tfm}" : "build")} -v:diagnostic -nodeReuse:false {testAsset.TargetAssetPath} -c {compilationMode}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path);
 
         var testHost = TestInfrastructure.TestHost.LocateFrom(testAsset.TargetAssetPath, "MSBuildTests", tfm, verb: verb, buildConfiguration: compilationMode);
-        Assert.IsTrue(compilationResult.StandardOutput.Contains("Target \"GenerateTestingPlatformConfigurationFile\" skipped, due to false condition;"));
+        Assert.Contains("Target \"_GenerateTestingPlatformConfigurationFileCore\" skipped, due to false condition;", compilationResult.StandardOutput);
         string generatedConfigurationFile = Path.Combine(testHost.DirectoryName, "MSBuildTests.testconfig.json");
         Assert.IsFalse(File.Exists(generatedConfigurationFile));
     }

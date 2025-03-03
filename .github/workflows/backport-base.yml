@@ -228,7 +228,7 @@ jobs:
             let failed_count = 0;
             while (git_am_failed) {
               failed_count++;
-              if (failed_count >= 5) {
+              if (failed_count >= 20) {
                 await github.rest.issues.createComment({
                   owner: repo_owner,
                   repo: repo_name,
@@ -238,7 +238,7 @@ jobs:
                 return;
               }
 
-              const git_am_failed_body = `@${context.payload.comment.user.login} backporting to ${target_branch} failed, the patch most likely resulted in conflicts:\n\n\`\`\`shell\n${git_am_output}\n\`\`\`\n\n**NOTE:** A PR will be created, but needs to be revised manually!**`;
+              const git_am_failed_body = `@${context.payload.comment.user.login} backporting to ${target_branch} failed, the patch most likely resulted in conflicts:\n\n\`\`\`shell\n${git_am_output}\n\`\`\`\n\n**NOTE: A PR will be created, but needs to be revised manually!**`;
               await github.rest.issues.createComment({
                 owner: repo_owner,
                 repo: repo_name,

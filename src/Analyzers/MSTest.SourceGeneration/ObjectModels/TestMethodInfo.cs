@@ -6,23 +6,25 @@ using System.Collections.Immutable;
 using Microsoft.CodeAnalysis;
 using Microsoft.Testing.Framework.SourceGeneration.Helpers;
 
+using MSTest.SourceGeneration.Helpers;
+
 namespace Microsoft.Testing.Framework.SourceGeneration.ObjectModels;
 
-internal sealed class TestMethodInfo
+internal sealed record class TestMethodInfo
 {
     internal const string TestArgumentsEntryTypeName = "MSTF::InternalUnsafeTestArgumentsEntry";
     private const string CtorVariableName = "instance";
     private const string TestExecutionContextVariableName = "testExecutionContext";
     private const string DataVariableName = "data";
     private const string DataDotArgumentsMemberAccessName = DataVariableName + ".Arguments";
-    private readonly ImmutableArray<(string FilePath, int StartLine, int EndLine)> _declarationReferences;
+    private readonly EquatableArray<(string FilePath, int StartLine, int EndLine)> _declarationReferences;
     private readonly string _methodName;
     private readonly string _declaringAssemblyName;
     private readonly string _usingTypeFullyQualifiedName;
     private readonly bool _isAsync;
-    private readonly ImmutableArray<(string Key, string? Value)> _testProperties;
+    private readonly EquatableArray<(string Key, string? Value)> _testProperties;
     private readonly TimeSpan? _testExecutionTimeout;
-    private readonly ImmutableArray<(string RuleId, string Description)> _invocationPragmas;
+    private readonly EquatableArray<(string RuleId, string Description)> _invocationPragmas;
     private readonly string _methodIdentifierAssemblyName;
     private readonly string _methodIdentifierNamespace;
     private readonly string _methodIdentifierTypeName;

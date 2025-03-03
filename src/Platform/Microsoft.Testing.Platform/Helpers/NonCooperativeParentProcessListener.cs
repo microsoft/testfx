@@ -26,9 +26,11 @@ internal sealed class NonCooperativeParentProcessListener : IDisposable
 
         try
         {
+#pragma warning disable CA1416 // Validate platform compatibility
             _parentProcess = Process.GetProcessById(int.Parse(pid[0], CultureInfo.InvariantCulture));
             _parentProcess.EnableRaisingEvents = true;
             _parentProcess.Exited += ParentProcess_Exited;
+#pragma warning restore CA1416
         }
         catch (ArgumentException)
         {

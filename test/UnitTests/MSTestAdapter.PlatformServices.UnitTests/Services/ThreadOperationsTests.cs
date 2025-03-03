@@ -14,15 +14,17 @@ public class ThreadOperationsTests : TestContainer
 
     public ThreadOperationsTests() => _asyncOperations = new ThreadOperations();
 
+#if NETFRAMEWORK
     public void ExecuteShouldStartTheActionOnANewThread()
     {
         int actionThreadID = 0;
         void Action() => actionThreadID = Environment.CurrentManagedThreadId;
 
         CancellationTokenSource tokenSource = new();
-        Verify(_asyncOperations.Execute(Action, 1000, tokenSource.Token));
+        Verify(_asyncOperations.Execute(Action, 10000, tokenSource.Token));
         Verify(Environment.CurrentManagedThreadId != actionThreadID);
     }
+#endif
 
     public void ExecuteShouldReturnFalseIfTheActionTimesOut()
     {

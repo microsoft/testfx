@@ -7,7 +7,7 @@ using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Platform.OutputDevice;
 
-internal sealed class PlatformOutputDeviceManager : IPlatformOutputDeviceManager
+internal sealed class PlatformOutputDeviceManager
 {
     private Func<IServiceProvider, IPlatformOutputDevice>? _platformOutputDeviceFactory;
 
@@ -40,18 +40,27 @@ internal sealed class PlatformOutputDeviceManager : IPlatformOutputDeviceManager
                 : null);
     }
 
-    public static TerminalOutputDevice GetDefaultTerminalOutputDevice(ServiceProvider serviceProvider)
-        => new(
-            serviceProvider.GetConsole(),
-            serviceProvider.GetTestApplicationModuleInfo(),
-            serviceProvider.GetTestHostControllerInfo(),
-            serviceProvider.GetAsyncMonitorFactory().Create(),
-            serviceProvider.GetRuntimeFeature(),
-            serviceProvider.GetEnvironment(),
-            serviceProvider.GetPlatformInformation(),
-            serviceProvider.GetCommandLineOptions(),
-            serviceProvider.GetFileLoggerInformation(),
-            serviceProvider.GetLoggerFactory(),
-            serviceProvider.GetClock(),
-            serviceProvider.GetRequiredService<IStopPoliciesService>());
+    public static IPlatformOutputDevice GetDefaultTerminalOutputDevice(ServiceProvider serviceProvider)
+        => RuntimeInformation.IsOSPlatform(OSPlatform.Create("BROWSER"))
+            ? new BrowserOutputDevice(
+                serviceProvider.GetConsole(),
+                serviceProvider.GetTestApplicationModuleInfo(),
+                serviceProvider.GetAsyncMonitorFactory().Create(),
+                serviceProvider.GetRuntimeFeature(),
+                serviceProvider.GetEnvironment(),
+                serviceProvider.GetPlatformInformation(),
+                serviceProvider.GetRequiredService<IStopPoliciesService>())
+            : new TerminalOutputDevice(
+                serviceProvider.GetConsole(),
+                serviceProvider.GetTestApplicationModuleInfo(),
+                serviceProvider.GetTestHostControllerInfo(),
+                serviceProvider.GetAsyncMonitorFactory().Create(),
+                serviceProvider.GetRuntimeFeature(),
+                serviceProvider.GetEnvironment(),
+                serviceProvider.GetPlatformInformation(),
+                serviceProvider.GetCommandLineOptions(),
+                serviceProvider.GetFileLoggerInformation(),
+                serviceProvider.GetLoggerFactory(),
+                serviceProvider.GetClock(),
+                serviceProvider.GetRequiredService<IStopPoliciesService>());
 }

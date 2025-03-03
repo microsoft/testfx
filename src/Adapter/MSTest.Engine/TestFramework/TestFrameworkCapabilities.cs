@@ -9,12 +9,16 @@ namespace Microsoft.Testing.Framework;
 internal sealed class TestFrameworkCapabilities : ITestFrameworkCapabilities
 {
     private readonly ITestNodesBuilder[] _testNodesBuilders;
+    private readonly ITestFrameworkCapability _bannerMessageOwnerCapability;
 
-    public TestFrameworkCapabilities(ITestNodesBuilder[] testNodesBuilders)
-        => _testNodesBuilders = testNodesBuilders;
+    public TestFrameworkCapabilities(ITestNodesBuilder[] testNodesBuilders, IBannerMessageOwnerCapability bannerMessageOwnerCapability)
+    {
+        _testNodesBuilders = testNodesBuilders;
+        _bannerMessageOwnerCapability = bannerMessageOwnerCapability;
+    }
 
     public IReadOnlyCollection<ITestFrameworkCapability> Capabilities
-        => new[] { new TestFrameworkCapabilitiesSet(_testNodesBuilders) };
+        => new[] { new TestFrameworkCapabilitiesSet(_testNodesBuilders), _bannerMessageOwnerCapability };
 }
 
 internal sealed class TestFrameworkCapabilitiesSet :

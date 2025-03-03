@@ -119,8 +119,8 @@ public sealed class BFSTestNodeVisitorTests : TestBase
         Assert.AreEqual("ID1", includedTestNodes[0].StableUid);
     }
 
-    [DataRow(nameof(InternalUnsafeActionParameterizedTestNode<byte>), true)]
-    [DataRow(nameof(InternalUnsafeActionParameterizedTestNode<byte>), false)]
+    [DataRow(nameof(InternalUnsafeActionParameterizedTestNode<>), true)]
+    [DataRow(nameof(InternalUnsafeActionParameterizedTestNode<>), false)]
     [TestMethod]
     public async Task Visit_WhenNodeIsParameterizedNodeAndPropertyIsAbsentOrTrue_ExpandNode(string parameterizedTestNode, bool hasExpansionProperty)
     {
@@ -140,7 +140,7 @@ public sealed class BFSTestNodeVisitorTests : TestBase
         Assert.AreEqual(3, includedTestNodes.Count);
 
         Assert.AreEqual("ID1", includedTestNodes[0].Node.StableUid);
-        Assert.AreEqual(null, includedTestNodes[0].ParentNodeUid);
+        Assert.IsNull(includedTestNodes[0].ParentNodeUid);
 
         Assert.AreEqual("ID1 [0]", includedTestNodes[1].Node.StableUid);
         Assert.AreEqual("ID1", includedTestNodes[1].ParentNodeUid);
@@ -149,7 +149,7 @@ public sealed class BFSTestNodeVisitorTests : TestBase
         Assert.AreEqual("ID1", includedTestNodes[2].ParentNodeUid);
     }
 
-    [DataRow(nameof(InternalUnsafeActionParameterizedTestNode<byte>))]
+    [DataRow(nameof(InternalUnsafeActionParameterizedTestNode<>))]
     [TestMethod]
     public async Task Visit_WhenNodeIsParameterizedNodeAndDoesNotAllowExpansion_DoesNotExpand(string parameterizedTestNode)
     {
@@ -218,7 +218,7 @@ public sealed class BFSTestNodeVisitorTests : TestBase
         Assert.AreEqual(7, includedTestNodes.Count);
 
         Assert.AreEqual("MyModule", includedTestNodes[0].Node.StableUid);
-        Assert.AreEqual(null, includedTestNodes[0].ParentNodeUid);
+        Assert.IsNull(includedTestNodes[0].ParentNodeUid);
         Assert.AreEqual(typeof(TestNode), includedTestNodes[0].Node.GetType());
 
         Assert.AreEqual("MyNamespace", includedTestNodes[1].Node.StableUid);
@@ -250,7 +250,7 @@ public sealed class BFSTestNodeVisitorTests : TestBase
     {
         TestNode rootNode = parameterizedTestNode switch
         {
-            nameof(InternalUnsafeActionParameterizedTestNode<byte>) => new InternalUnsafeActionParameterizedTestNode<byte>()
+            nameof(InternalUnsafeActionParameterizedTestNode<>) => new InternalUnsafeActionParameterizedTestNode<byte>()
             {
                 StableUid = "ID1",
                 DisplayName = "A",

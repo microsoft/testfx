@@ -8,7 +8,6 @@ using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Extensions.TestHostOrchestrator;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
-using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.ServerMode;
 using Microsoft.Testing.Platform.Telemetry;
 using Microsoft.Testing.Platform.TestHost;
@@ -26,8 +25,6 @@ internal interface ITestHostBuilder
     IConfigurationManager Configuration { get; }
 
     ILoggingManager Logging { get; }
-
-    IPlatformOutputDeviceManager OutputDisplay { get; }
 
     ICommandLineManager CommandLine { get; }
 
