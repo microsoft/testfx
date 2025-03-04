@@ -3,8 +3,6 @@
 
 using Microsoft.Testing.Platform.Extensions.Messages;
 
-using Polyfills;
-
 namespace Microsoft.Testing.Extensions.TrxReport.Abstractions;
 
 /// <summary>
