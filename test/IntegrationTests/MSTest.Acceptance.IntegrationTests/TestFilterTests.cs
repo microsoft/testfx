@@ -33,9 +33,10 @@ public class TestFilterTests : AcceptanceTestBase<TestFilterTests.TestAssetFixtu
         TestHostResult testHostResult = await testHost.ExecuteAsync("--filter tree=one --list-tests");
 
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
-        testHostResult.AssertOutputContains("""
-The following Tests are available:
-Test2
+        testHostResult.AssertOutputMatchesRegex("""
+  Test2
+Test discovery summary: found 1 test\(s\)\ - .*\.(dll|exe) \(net.+\|.+\)
+  duration:
 """);
     }
 
