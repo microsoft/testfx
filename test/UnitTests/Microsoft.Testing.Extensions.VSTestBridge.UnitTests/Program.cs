@@ -20,14 +20,15 @@ builder.AddMSTest(() => [Assembly.GetEntryAssembly()!]);
 #if ENABLE_CODECOVERAGE
 builder.AddCodeCoverageProvider();
 #endif
-builder.AddAppInsightsTelemetryProvider();
-builder.AddHangDumpProvider();
 Console.WriteLine("NATIVE_AOT disabled");
+builder.AddAppInsightsTelemetryProvider();
+builder.AddCrashDumpProvider(ignoreIfNotSupported: true);
+builder.AddHangDumpProvider();
 #else
 Console.WriteLine("NATIVE_AOT enabled");
 #endif
 
-builder.AddCrashDumpProvider(ignoreIfNotSupported: true);
+builder.AddRetryProvider();
 builder.AddTrxReportProvider();
 
 // Custom suite tools
