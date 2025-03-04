@@ -20,4 +20,8 @@
     <AdditionalFiles Include="PublicAPI/PublicAPI.Unshipped.txt" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Using Include="Polyfills" />
+  </ItemGroup>
+
 </Project>
