@@ -134,8 +134,7 @@ public sealed class TestApplication : ITestApplication
         await logger.LogInformationAsync("Logging mode: " + (syncWrite ? "synchronous" : "asynchronous"));
         await logger.LogInformationAsync($"Logging level: {loggerLevel}");
         await logger.LogInformationAsync($"CreateBuilderAsync entry time: {createBuilderEntryTime}");
-        using IProcess currentProcess = processHandler.GetCurrentProcess();
-        await logger.LogInformationAsync($"PID: {currentProcess.Id}");
+        await logger.LogInformationAsync($"PID: {processHandler.GetCurrentProcessId()}");
 
 #if NETCOREAPP
         string runtimeInformation = $"{RuntimeInformation.RuntimeIdentifier} - {RuntimeInformation.FrameworkDescription}";
@@ -245,8 +244,8 @@ public sealed class TestApplication : ITestApplication
 
         if (environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER) == "1")
         {
-            IProcess currentProcess = systemProcess.GetCurrentProcess();
-            console.WriteLine($"Waiting for debugger to attach... Process Id: {currentProcess.Id}, Name: {currentProcess.Name}");
+            var process = systemProcess.GetCurrentProcessInfo();
+            console.WriteLine($"Waiting for debugger to attach... Process Id: {process.Id}, Name: {process.Name}");
 
             while (!Debugger.IsAttached)
             {
