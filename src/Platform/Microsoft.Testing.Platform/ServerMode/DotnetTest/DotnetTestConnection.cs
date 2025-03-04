@@ -95,7 +95,7 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol,
         string supportedProtocolVersions = ProtocolConstants.Version;
         HandshakeMessage handshakeMessage = new(new Dictionary<byte, string>()
         {
-            { HandshakeMessagePropertyNames.PID, _processHandler.GetCurrentProcess().Id.ToString(CultureInfo.InvariantCulture) },
+            { HandshakeMessagePropertyNames.PID, _processHandler.GetCurrentProcessId().ToString(CultureInfo.InvariantCulture) },
             { HandshakeMessagePropertyNames.Architecture, RuntimeInformation.ProcessArchitecture.ToString() },
             { HandshakeMessagePropertyNames.Framework, RuntimeInformation.FrameworkDescription },
             { HandshakeMessagePropertyNames.OS, RuntimeInformation.OSDescription },

@@ -5,9 +5,13 @@ namespace Microsoft.Testing.Platform.Helpers;
 
 internal interface IProcessHandler
 {
-    IProcess GetProcessById(int pid);
+    Task KillAsync(int id);
 
-    IProcess GetCurrentProcess();
+    int GetCurrentProcessId();
+
+    (int Id, string Name) GetCurrentProcessInfo();
+
+    string? GetCurrentProcessFileName();
 
     IProcess Start(ProcessStartInfo startInfo);
 }
