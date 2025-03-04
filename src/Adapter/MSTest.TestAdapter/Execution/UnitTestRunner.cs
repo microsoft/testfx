@@ -127,8 +127,6 @@ internal sealed class UnitTestRunner : MarshalByRefObject
         static UnitTestOutcome GetOutcome(Exception? exception) => exception == null ? UnitTestOutcome.Passed : UnitTestOutcome.Failed;
     }
 
-    public static AsyncLocal<string> StringAsyncLocal { get; } = new();
-
     // Task cannot cross app domains.
     // For now, TestExecutionManager will call this sync method which is hacky.
     // If we removed AppDomains in v4, we should use the async method and remove this one.
