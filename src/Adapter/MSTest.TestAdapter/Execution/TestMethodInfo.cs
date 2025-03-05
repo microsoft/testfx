@@ -677,12 +677,17 @@ public class TestMethodInfo : ITestMethod
             }
             finally
             {
-                // TODO: Maybe we should invoke Dispose on the execution context.
 #if NET6_0_OR_GREATER
-                // If you implement IAsyncDisposable without calling the DisposeAsync this would result a resource leak.
-                (_classInstance as IAsyncDisposable)?.DisposeAsync().AsTask().Wait();
+                if (_classInstance is IAsyncDisposable classInstanceAsAsyncDisposable)
+                {
+                    // If you implement IAsyncDisposable without calling the DisposeAsync this would result a resource leak.
+                    FixtureMethodRunner.RunOnContext(executionContext, () => classInstanceAsAsyncDisposable.DisposeAsync().AsTask().Wait());
+                }
 #endif
-                (_classInstance as IDisposable)?.Dispose();
+                if (_classInstance is IDisposable classInstanceAsDisposable)
+                {
+                    FixtureMethodRunner.RunOnContext(executionContext, classInstanceAsDisposable.Dispose);
+                }
             }
         }
         catch (Exception ex)
