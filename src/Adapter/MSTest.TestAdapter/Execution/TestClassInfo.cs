@@ -455,11 +455,6 @@ public class TestClassInfo
                 Outcome = TestTools.UnitTesting.UnitTestOutcome.Passed,
             };
 
-            if (this.ClassType.Name == "LifeCycleClassCleanupEndOfAssembly")
-            {
-
-            }
-
             try
             {
                 LogMessageListener? logListener = null;
