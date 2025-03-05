@@ -149,11 +149,12 @@ public class TestMethodInfo : ITestMethod
         // check if arguments are set for data driven tests
         arguments ??= Arguments;
 
-        using LogMessageListener listener = new(MSTestSettings.CurrentSettings.CaptureDebugTraces);
+        LogMessageListener? listener = null;
         watch.Start();
         try
         {
             ExecutionContext? executionContext = Parent.ExecutionContext ?? Parent.Parent.ExecutionContext;
+            FixtureMethodRunner.RunOnContext(executionContext, () => listener = new LogMessageListener(MSTestSettings.CurrentSettings.CaptureDebugTraces));
             result = IsTimeoutSet ? ExecuteInternalWithTimeout(arguments, executionContext) : ExecuteInternal(arguments, executionContext, null);
         }
         finally
@@ -164,11 +165,15 @@ public class TestMethodInfo : ITestMethod
             if (result != null)
             {
                 result.Duration = watch.Elapsed;
-                result.DebugTrace = listener.GetAndClearDebugTrace();
-                result.LogOutput = listener.GetAndClearStandardOutput();
-                result.LogError = listener.GetAndClearStandardError();
-                result.TestContextMessages = TestContext?.GetAndClearDiagnosticMessages();
-                result.ResultFiles = TestContext?.GetResultFiles();
+                if (listener is not null)
+                {
+                    result.DebugTrace = listener.GetAndClearDebugTrace();
+                    result.LogOutput = listener.GetAndClearStandardOutput();
+                    result.LogError = listener.GetAndClearStandardError();
+                    result.TestContextMessages = TestContext?.GetAndClearDiagnosticMessages();
+                    result.ResultFiles = TestContext?.GetResultFiles();
+                    listener.Dispose();
+                }
             }
         }
 
@@ -384,7 +389,7 @@ public class TestMethodInfo : ITestMethod
         var result = new TestResult();
 
         // TODO remove dry violation with TestMethodRunner
-        _classInstance = CreateTestClassInstance(result);
+        FixtureMethodRunner.RunOnContext(executionContext, () => _classInstance = CreateTestClassInstance(result));
         bool isExceptionThrown = false;
         bool hasTestInitializePassed = false;
         Exception? testRunnerException = null;

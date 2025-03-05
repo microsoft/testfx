@@ -113,9 +113,14 @@ public class TestAssemblyInfo
     /// </summary>
     /// <param name="testContext"> The test context. </param>
     /// <exception cref="TestFailedException"> Throws a test failed exception if the initialization method throws an exception. </exception>
-    [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
     public void RunAssemblyInitialize(TestContext testContext)
+        => RunAssemblyInitialize(testContext, out _);
+
+    [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
+    internal void RunAssemblyInitialize(TestContext testContext, out LogMessageListener? logListener)
     {
+        logListener = null;
+
         // No assembly initialize => nothing to do.
         if (AssemblyInitializeMethod == null)
         {
@@ -141,11 +146,14 @@ public class TestAssemblyInfo
                 // Perform a check again.
                 if (!IsAssemblyInitializeExecuted)
                 {
+                    LogMessageListener? logMessageListener = null;
+
                     try
                     {
                         AssemblyInitializationException = FixtureMethodRunner.RunWithTimeoutAndCancellation(
                             () =>
                             {
+                                logMessageListener = new LogMessageListener(MSTestSettings.CurrentSettings.CaptureDebugTraces);
                                 AssemblyInitializeMethod.InvokeAsSynchronousTask(null, testContext);
                                 // **After** we have executed the assembly initialize, we save the current context.
                                 // This context will contain async locals set by the assembly initialize method.
@@ -165,6 +173,7 @@ public class TestAssemblyInfo
                     finally
                     {
                         IsAssemblyInitializeExecuted = true;
+                        logListener = logMessageListener;
                     }
                 }
             }

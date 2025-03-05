@@ -245,17 +245,21 @@ internal sealed class UnitTestRunner : MarshalByRefObject
 
         try
         {
-            using LogMessageListener logListener = new(MSTestSettings.CurrentSettings.CaptureDebugTraces);
+            LogMessageListener? logListener = null;
             try
             {
-                testMethodInfo.Parent.Parent.RunAssemblyInitialize(testContext.Context);
+                testMethodInfo.Parent.Parent.RunAssemblyInitialize(testContext.Context, out logListener);
             }
             finally
             {
-                initializationLogs = logListener.GetAndClearStandardOutput();
-                initializationErrorLogs = logListener.GetAndClearStandardError();
-                initializationTrace = logListener.GetAndClearDebugTrace();
-                initializationTestContextMessages = testContext.GetAndClearDiagnosticMessages();
+                if (logListener is not null)
+                {
+                    initializationLogs = logListener.GetAndClearStandardOutput();
+                    initializationErrorLogs = logListener.GetAndClearStandardError();
+                    initializationTrace = logListener.GetAndClearDebugTrace();
+                    initializationTestContextMessages = testContext.GetAndClearDiagnosticMessages();
+                    logListener.Dispose();
+                }
             }
         }
         catch (TestFailedException ex)
@@ -291,7 +295,7 @@ internal sealed class UnitTestRunner : MarshalByRefObject
         string? initializationTestContextMessages = string.Empty;
         try
         {
-            using LogMessageListener logListener = new(MSTestSettings.CurrentSettings.CaptureDebugTraces);
+            LogMessageListener? logListener = null;
             try
             {
                 // TODO: We are using the same TestContext here for ClassCleanup and AssemblyCleanup.
@@ -299,7 +303,7 @@ internal sealed class UnitTestRunner : MarshalByRefObject
                 IEnumerable<TestClassInfo> classInfoCache = typeCache.ClassInfoListWithExecutableCleanupMethods;
                 foreach (TestClassInfo classInfo in classInfoCache)
                 {
-                    TestFailedException? ex = classInfo.ExecuteClassCleanup(testContext.Context);
+                    TestFailedException? ex = classInfo.ExecuteClassCleanup(testContext.Context, out logListener);
                     if (ex is not null && results.Length > 0)
                     {
 #pragma warning disable IDE0056 // Use index operator
@@ -328,10 +332,14 @@ internal sealed class UnitTestRunner : MarshalByRefObject
             }
             finally
             {
-                initializationLogs = logListener.GetAndClearStandardOutput();
-                initializationErrorLogs = logListener.GetAndClearStandardError();
-                initializationTrace = logListener.GetAndClearDebugTrace();
-                initializationTestContextMessages = testContext.GetAndClearDiagnosticMessages();
+                if (logListener is not null)
+                {
+                    initializationLogs = logListener.GetAndClearStandardOutput();
+                    initializationErrorLogs = logListener.GetAndClearStandardError();
+                    initializationTrace = logListener.GetAndClearDebugTrace();
+                    initializationTestContextMessages = testContext.GetAndClearDiagnosticMessages();
+                    logListener.Dispose();
+                }
             }
         }
         finally
