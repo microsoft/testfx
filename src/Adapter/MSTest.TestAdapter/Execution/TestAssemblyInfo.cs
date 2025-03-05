@@ -280,7 +280,7 @@ public class TestAssemblyInfo
     /// It is a replacement for RunAssemblyCleanup but as we are in a bug-fix version, we do not want to touch
     /// public API and so we introduced this method.
     /// </remarks>
-    internal TestFailedException? ExecuteAssemblyCleanup(TestContext testContext)
+    internal TestFailedException? ExecuteAssemblyCleanup(TestContext testContext, ref LogMessageListener? logListener)
     {
         if (AssemblyCleanupMethod == null)
         {
@@ -289,11 +289,13 @@ public class TestAssemblyInfo
 
         lock (_assemblyInfoExecuteSyncObject)
         {
+            LogMessageListener? logMessageListener = logListener;
             try
             {
                 AssemblyCleanupException = FixtureMethodRunner.RunWithTimeoutAndCancellation(
                      () =>
                      {
+                         logMessageListener ??= new LogMessageListener(MSTestSettings.CurrentSettings.CaptureDebugTraces);
                          if (AssemblyCleanupMethod.GetParameters().Length == 0)
                          {
                              AssemblyCleanupMethod.InvokeAsSynchronousTask(null);
@@ -315,6 +317,10 @@ public class TestAssemblyInfo
             catch (Exception ex)
             {
                 AssemblyCleanupException = ex;
+            }
+            finally
+            {
+                logListener = logMessageListener;
             }
         }
 

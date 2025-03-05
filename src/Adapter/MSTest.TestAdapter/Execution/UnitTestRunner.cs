@@ -318,7 +318,7 @@ internal sealed class UnitTestRunner : MarshalByRefObject
                 IEnumerable<TestAssemblyInfo> assemblyInfoCache = typeCache.AssemblyInfoListWithExecutableCleanupMethods;
                 foreach (TestAssemblyInfo assemblyInfo in assemblyInfoCache)
                 {
-                    TestFailedException? ex = assemblyInfo.ExecuteAssemblyCleanup(testContext.Context);
+                    TestFailedException? ex = assemblyInfo.ExecuteAssemblyCleanup(testContext.Context, ref logListener);
                     if (ex is not null && results.Length > 0)
                     {
 #pragma warning disable IDE0056 // Use index operator
