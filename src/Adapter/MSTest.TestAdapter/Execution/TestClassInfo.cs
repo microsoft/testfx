@@ -455,6 +455,11 @@ public class TestClassInfo
                 Outcome = TestTools.UnitTesting.UnitTestOutcome.Passed,
             };
 
+            if (this.ClassType.Name == "LifeCycleClassCleanupEndOfAssembly")
+            {
+
+            }
+
             try
             {
                 LogMessageListener? logListener = null;
@@ -467,11 +472,14 @@ public class TestClassInfo
                 {
                     if (logListener is not null)
                     {
-                        initializationLogs += logListener.GetAndClearStandardOutput();
-                        initializationTrace += logListener.GetAndClearDebugTrace();
-                        initializationErrorLogs += logListener.GetAndClearStandardError();
-                        initializationTestContextMessages += testContext.GetAndClearDiagnosticMessages();
-                        logListener?.Dispose();
+                        FixtureMethodRunner.RunOnContext(ExecutionContext, () =>
+                        {
+                            initializationLogs += logListener.GetAndClearStandardOutput();
+                            initializationTrace += logListener.GetAndClearDebugTrace();
+                            initializationErrorLogs += logListener.GetAndClearStandardError();
+                            initializationTestContextMessages += testContext.GetAndClearDiagnosticMessages();
+                            logListener?.Dispose();
+                        });
                     }
                 }
             }
@@ -795,11 +803,14 @@ public class TestClassInfo
                 {
                     if (logListener is not null)
                     {
-                        initializationLogs = logListener.GetAndClearStandardOutput();
-                        initializationErrorLogs = logListener.GetAndClearStandardError();
-                        initializationTrace = logListener.GetAndClearDebugTrace();
-                        initializationTestContextMessages = testContext.GetAndClearDiagnosticMessages();
-                        logListener.Dispose();
+                        FixtureMethodRunner.RunOnContext(ExecutionContext, () =>
+                        {
+                            initializationLogs = logListener.GetAndClearStandardOutput();
+                            initializationErrorLogs = logListener.GetAndClearStandardError();
+                            initializationTrace = logListener.GetAndClearDebugTrace();
+                            initializationTestContextMessages = testContext.GetAndClearDiagnosticMessages();
+                            logListener.Dispose();
+                        });
                     }
                 }
             }

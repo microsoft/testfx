@@ -151,9 +151,11 @@ public class TestMethodInfo : ITestMethod
 
         LogMessageListener? listener = null;
         watch.Start();
+
+        ExecutionContext? executionContext = Parent.ExecutionContext ?? Parent.Parent.ExecutionContext;
+
         try
         {
-            ExecutionContext? executionContext = Parent.ExecutionContext ?? Parent.Parent.ExecutionContext;
             FixtureMethodRunner.RunOnContext(executionContext, () => listener = new LogMessageListener(MSTestSettings.CurrentSettings.CaptureDebugTraces));
             result = IsTimeoutSet ? ExecuteInternalWithTimeout(arguments, executionContext) : ExecuteInternal(arguments, executionContext, null);
         }
@@ -167,12 +169,15 @@ public class TestMethodInfo : ITestMethod
                 result.Duration = watch.Elapsed;
                 if (listener is not null)
                 {
-                    result.DebugTrace = listener.GetAndClearDebugTrace();
-                    result.LogOutput = listener.GetAndClearStandardOutput();
-                    result.LogError = listener.GetAndClearStandardError();
-                    result.TestContextMessages = TestContext?.GetAndClearDiagnosticMessages();
-                    result.ResultFiles = TestContext?.GetResultFiles();
-                    listener.Dispose();
+                    FixtureMethodRunner.RunOnContext(executionContext, () =>
+                    {
+                        result.DebugTrace = listener.GetAndClearDebugTrace();
+                        result.LogOutput = listener.GetAndClearStandardOutput();
+                        result.LogError = listener.GetAndClearStandardError();
+                        result.TestContextMessages = TestContext?.GetAndClearDiagnosticMessages();
+                        result.ResultFiles = TestContext?.GetResultFiles();
+                        listener.Dispose();
+                    });
                 }
             }
         }

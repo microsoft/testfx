@@ -254,11 +254,14 @@ internal sealed class UnitTestRunner : MarshalByRefObject
             {
                 if (logListener is not null)
                 {
-                    initializationLogs = logListener.GetAndClearStandardOutput();
-                    initializationErrorLogs = logListener.GetAndClearStandardError();
-                    initializationTrace = logListener.GetAndClearDebugTrace();
-                    initializationTestContextMessages = testContext.GetAndClearDiagnosticMessages();
-                    logListener.Dispose();
+                    FixtureMethodRunner.RunOnContext(testMethodInfo.Parent.Parent.ExecutionContext, () =>
+                    {
+                        initializationLogs = logListener.GetAndClearStandardOutput();
+                        initializationErrorLogs = logListener.GetAndClearStandardError();
+                        initializationTrace = logListener.GetAndClearDebugTrace();
+                        initializationTestContextMessages = testContext.GetAndClearDiagnosticMessages();
+                        logListener.Dispose();
+                    });
                 }
             }
         }
