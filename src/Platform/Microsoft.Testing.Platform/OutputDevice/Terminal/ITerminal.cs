@@ -30,9 +30,7 @@ internal interface ITerminal
 
     void HideCursor();
 
-    void StartUpdate();
-
-    void StopUpdate();
+    void WithBatching(Action<ITerminal> action);
 
     void EraseProgress();
 

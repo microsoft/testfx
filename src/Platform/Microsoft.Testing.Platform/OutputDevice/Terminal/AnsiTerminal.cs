@@ -161,7 +161,21 @@ internal sealed class AnsiTerminal : ITerminal
         }
     }
 
-    public void StartUpdate()
+    public void WithBatching(Action<ITerminal> action)
+    {
+        StartUpdate();
+
+        try
+        {
+            action(this);
+        }
+        finally
+        {
+            StopUpdate();
+        }
+    }
+
+    private void StartUpdate()
     {
         if (_isBatching)
         {
@@ -172,7 +186,7 @@ internal sealed class AnsiTerminal : ITerminal
         _isBatching = true;
     }
 
-    public void StopUpdate()
+    private void StopUpdate()
     {
         _console.Write(_stringBuilder.ToString());
         _isBatching = false;

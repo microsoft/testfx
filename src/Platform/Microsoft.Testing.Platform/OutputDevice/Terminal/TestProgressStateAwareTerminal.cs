@@ -48,14 +48,12 @@ internal sealed partial class TestProgressStateAwareTerminal : IDisposable
                 lock (_lock)
                 {
                     OnProgressStartUpdate?.Invoke(this, EventArgs.Empty);
-                    _terminal.StartUpdate();
                     try
                     {
-                        _terminal.RenderProgress(_progressItems);
+                        _terminal.WithBatching(t => t.RenderProgress(_progressItems));
                     }
                     finally
                     {
-                        _terminal.StopUpdate();
                         OnProgressStopUpdate?.Invoke(this, EventArgs.Empty);
                     }
                 }
@@ -129,35 +127,24 @@ internal sealed partial class TestProgressStateAwareTerminal : IDisposable
         {
             lock (_lock)
             {
-                try
+                _terminal.WithBatching(terminal =>
                 {
-                    _terminal.StartUpdate();
-                    _terminal.EraseProgress();
-                    write(_terminal);
+                    terminal.EraseProgress();
+
+                    write(terminal);
+
                     if (_writeProgressImmediatelyAfterOutput)
                     {
-                        _terminal.RenderProgress(_progressItems);
+                        terminal.RenderProgress(_progressItems);
                     }
-                }
-                finally
-                {
-                    _terminal.StopUpdate();
-                }
+                });
             }
         }
         else
         {
             lock (_lock)
             {
-                try
-                {
-                    _terminal.StartUpdate();
-                    write(_terminal);
-                }
-                finally
-                {
-                    _terminal.StopUpdate();
-                }
+                _terminal.WithBatching(write);
             }
         }
     }
