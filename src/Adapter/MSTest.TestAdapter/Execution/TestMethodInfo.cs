@@ -4,6 +4,7 @@
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Extensions;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -156,7 +157,12 @@ public class TestMethodInfo : ITestMethod
 
         try
         {
-            FixtureMethodRunner.RunOnContext(executionContext, () => listener = new LogMessageListener(MSTestSettings.CurrentSettings.CaptureDebugTraces));
+            FixtureMethodRunner.RunOnContext(executionContext, () =>
+            {
+                ThreadSafeStringWriter.CleanState();
+                listener = new LogMessageListener(MSTestSettings.CurrentSettings.CaptureDebugTraces);
+                executionContext = ExecutionContext.Capture();
+            });
             result = IsTimeoutSet ? ExecuteInternalWithTimeout(arguments, executionContext) : ExecuteInternal(arguments, executionContext, null);
         }
         finally
