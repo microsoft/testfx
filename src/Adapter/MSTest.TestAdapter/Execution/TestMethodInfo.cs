@@ -394,7 +394,11 @@ public class TestMethodInfo : ITestMethod
         var result = new TestResult();
 
         // TODO remove dry violation with TestMethodRunner
-        FixtureMethodRunner.RunOnContext(executionContext, () => _classInstance = CreateTestClassInstance(result));
+        FixtureMethodRunner.RunOnContext(executionContext, () =>
+        {
+            _classInstance = CreateTestClassInstance(result);
+            executionContext = ExecutionContext.Capture();
+        });
         bool isExceptionThrown = false;
         bool hasTestInitializePassed = false;
         Exception? testRunnerException = null;
@@ -686,12 +690,20 @@ public class TestMethodInfo : ITestMethod
                 if (_classInstance is IAsyncDisposable classInstanceAsAsyncDisposable)
                 {
                     // If you implement IAsyncDisposable without calling the DisposeAsync this would result a resource leak.
-                    FixtureMethodRunner.RunOnContext(executionContext, () => classInstanceAsAsyncDisposable.DisposeAsync().AsTask().Wait());
+                    FixtureMethodRunner.RunOnContext(executionContext, () =>
+                    {
+                        classInstanceAsAsyncDisposable.DisposeAsync().AsTask().Wait();
+                        executionContext = ExecutionContext.Capture();
+                    });
                 }
 #endif
                 if (_classInstance is IDisposable classInstanceAsDisposable)
                 {
-                    FixtureMethodRunner.RunOnContext(executionContext, classInstanceAsDisposable.Dispose);
+                    FixtureMethodRunner.RunOnContext(executionContext, () =>
+                    {
+                        classInstanceAsDisposable.Dispose();
+                        executionContext = ExecutionContext.Capture();
+                    });
                 }
             }
         }
