@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Helpers;
@@ -180,7 +180,7 @@ public class TempDirectory : IDisposable
         File.WriteAllText(dotnetConfig, """
             [dotnet.test:runner]
             name= "VSTest"
-            """;
+            """);
 
         string directoryBuildProps = System.IO.Path.Combine(directoryPath, "Directory.Build.props");
         File.WriteAllText(directoryBuildProps, $"""
