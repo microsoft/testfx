@@ -216,7 +216,7 @@
       </trans-unit>
       <trans-unit id="DiscoveredTestsInAssembly">
         <source>Discovered {0} test(s) in assembly</source>
-        <target state="needs-review-translation">Testes {0} descobertos no assembly</target>
+        <target state="translated">Teste(s) {0} descoberto(s) no assembly</target>
         <note>0 is count, the sentence is followed by the path of the assebly</note>
       </trans-unit>
       <trans-unit id="DiscoveringTestsFrom">
@@ -852,12 +852,12 @@ Os valores válidos são “Normal”, “Detalhado”. O padrão é “Normal�
       </trans-unit>
       <trans-unit id="TestDiscoverySummary">
         <source>Test discovery summary: found {0} test(s) in {1} assemblies.</source>
-        <target state="needs-review-translation">Testes {0} descobertos nos assemblies {1}.</target>
+        <target state="translated">Resumo da descoberta de teste: encontrado {0} teste(s) em {1} assemblies.</target>
         <note>0 is number of tests, 1 is count of assemblies</note>
       </trans-unit>
       <trans-unit id="TestDiscoverySummarySingular">
         <source>Test discovery summary: found {0} test(s)</source>
-        <target state="needs-review-translation">Testes {0} descobertos.</target>
+        <target state="translated">Resumo da descoberta de teste: {0} teste(s) encontrado(s)</target>
         <note>0 is number of tests</note>
       </trans-unit>
       <trans-unit id="TestFrameworkProxyApiShouldNotBeCalled">
