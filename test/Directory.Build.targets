@@ -17,6 +17,8 @@
     <TestRunnerAdditionalArguments>$(TestRunnerAdditionalArguments) --hangdump --hangdump-timeout 15m</TestRunnerAdditionalArguments>
     <TestRunnerAdditionalArguments Condition=" '$(EnableCodeCoverage)' == 'True' ">$(TestRunnerAdditionalArguments) --coverage --coverage-settings $(RepoRoot)test/coverage.config --coverage-output $(ModuleName).coverage</TestRunnerAdditionalArguments>
     <!-- /Arcade runner settings -->
+
+    <MicrosoftTestingPlatformMSBuildTaskFolder>$(ArtifactsDir)bin\Microsoft.Testing.Platform.MSBuild\$(Configuration)\netstandard2.0\</MicrosoftTestingPlatformMSBuildTaskFolder>
   </PropertyGroup>
 
   <ItemGroup Condition=" '$(EnableMSTestRunner)' == 'true' OR '$(UseInternalTestFramework)' == 'true' ">
@@ -28,6 +30,12 @@
     <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.TrxReport\Microsoft.Testing.Extensions.TrxReport.csproj" />
     <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" GeneratePathProperty="True" />
   </ItemGroup>
+
+  <!-- Import the capabilities for the Microsoft.Testing.Platform -->
+  <Import Project="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\buildMultiTargeting\Microsoft.Testing.Platform.props" Condition=" '$(EnableMSTestRunner)' == 'true' OR '$(UseInternalTestFramework)' == 'true' " />
+  <Import Project="$(RepoRoot)src\Platform\Microsoft.Testing.Platform.MSBuild\buildMultiTargeting\Microsoft.Testing.Platform.MSBuild.props" Condition=" '$(EnableMSTestRunner)' == 'true' OR '$(UseInternalTestFramework)' == 'true' " />
+
+  <Import Project="$(RepoRoot)src\Platform\Microsoft.Testing.Platform.MSBuild\buildMultiTargeting\Microsoft.Testing.Platform.MSBuild.targets" Condition=" '$(EnableMSTestRunner)' == 'true' OR '$(UseInternalTestFramework)' == 'true' " />
 
   <ItemGroup Condition=" '$(EnableMSTestRunner)' == 'true' AND '$(UseInternalTestFramework)' != 'true' AND '$(UseMSTestFromSource)' != 'true' ">
     <PackageReference Include="MSTest.Analyzers" />
@@ -59,13 +67,5 @@
   <ItemGroup Condition=" '$(UseInternalTestFramework)' == 'true' ">
     <ProjectReference Include="$(RepoRoot)test\Utilities\TestFramework.ForTestingMSTest\TestFramework.ForTestingMSTest.csproj" />
   </ItemGroup>
-
-  <ItemGroup Condition=" '$(UseInternalTestFramework)' == 'true' ">
-    <ProjectCapability Include="TestContainer" />
-    <ProjectCapability Include="TestingPlatformServer" />
-  </ItemGroup>
-
-  <Import Project="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\buildMultiTargeting\Microsoft.Testing.Platform.props"
-          Condition=" '$(UseInternalTestFramework)' == 'true' " />
 
 </Project>
