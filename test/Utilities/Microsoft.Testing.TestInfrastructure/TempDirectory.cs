@@ -172,6 +172,16 @@ public class TempDirectory : IDisposable
         string directoryPath = System.IO.Path.Combine(TestSuiteDirectory, RandomId.Next());
         Directory.CreateDirectory(directoryPath);
 
+        // Our tests were originally wrote before the enhanced dotnet test support for MTP.
+        // So, by default we use VSTest.
+        // We can start to gradually move some of the MTP tests to the new dotnet test experience.
+        // Note that we have tests that are actually VSTest-specific.
+        string dotnetConfig = System.IO.Path.Combine(directoryPath, "dotnet.config");
+        File.WriteAllText(dotnetConfig, """
+            [dotnet.test:runner]
+            name= "VSTest"
+            """;
+
         string directoryBuildProps = System.IO.Path.Combine(directoryPath, "Directory.Build.props");
         File.WriteAllText(directoryBuildProps, $"""
 <?xml version="1.0" encoding="utf-8"?>
