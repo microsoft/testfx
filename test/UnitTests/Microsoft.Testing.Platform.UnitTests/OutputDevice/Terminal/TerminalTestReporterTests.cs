@@ -359,6 +359,8 @@ public sealed class TerminalTestReporterTests
             _stringBuilder.Append(lineNumber);
         }
 
+        public void WithBatching(Action<ITerminal> action) => throw new NotImplementedException();
+
         public void EraseProgress() => throw new NotImplementedException();
 
         public void HideCursor() => throw new NotImplementedException();
@@ -379,11 +381,7 @@ public sealed class TerminalTestReporterTests
 
         public void StartBusyIndicator() => throw new NotImplementedException();
 
-        public void StartUpdate() => throw new NotImplementedException();
-
         public void StopBusyIndicator() => throw new NotImplementedException();
-
-        public void StopUpdate() => throw new NotImplementedException();
     }
 
     private class StackTraceException : Exception
