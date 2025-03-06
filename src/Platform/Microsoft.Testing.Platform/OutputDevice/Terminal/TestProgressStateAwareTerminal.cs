@@ -48,9 +48,9 @@ internal sealed partial class TestProgressStateAwareTerminal : IDisposable
                 lock (_lock)
                 {
                     OnProgressStartUpdate?.Invoke(this, EventArgs.Empty);
-                    _terminal.StartUpdate();
                     try
                     {
+                        _terminal.StartUpdate();
                         _terminal.RenderProgress(_progressItems);
                     }
                     finally
