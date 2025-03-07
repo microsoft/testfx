@@ -15,6 +15,7 @@ internal sealed class NonAnsiTerminal : ITerminal
     private readonly IConsole _console;
     private readonly ConsoleColor _defaultForegroundColor;
     private bool _isBatching;
+    private object? _batchingLock;
 
     public NonAnsiTerminal(IConsole console)
     {
@@ -90,8 +91,11 @@ internal sealed class NonAnsiTerminal : ITerminal
         }
 
         bool lockTaken = false;
-        // SystemConsole.ConsoleOut is set only once in static ctor.
-        // So we are sure we will be doing Monitor.Exit on the same instance.
+
+        // We store Console.Out in a field to make sure we will be doing
+        // the Monitor.Exit call on the same instance.
+        _batchingLock = Console.Out;
+
         // Note that we need to lock on System.Out for batching to work correctly.
         // Consider the following scenario:
         // 1. We call StartUpdate
@@ -108,7 +112,7 @@ internal sealed class NonAnsiTerminal : ITerminal
         // Console methods will internally lock on Console.Out, so we are locking on the same thing.
         // This locking is the easiest way to get coloring to work correctly while preventing
         // interleaving with user's calls to Console.Write methods.
-        Monitor.Enter(SystemConsole.ConsoleOut, ref lockTaken);
+        Monitor.Enter(_batchingLock, ref lockTaken);
         if (!lockTaken)
         {
             // Can this happen? :/
@@ -120,7 +124,8 @@ internal sealed class NonAnsiTerminal : ITerminal
 
     public void StopUpdate()
     {
-        Monitor.Exit(SystemConsole.ConsoleOut);
+        Monitor.Exit(_batchingLock!);
+        _batchingLock = null;
         _isBatching = false;
     }
 
