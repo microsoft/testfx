@@ -52,7 +52,7 @@ public sealed record TrxMessagesProperty(TrxMessage[] Messages) : IProperty
     private bool PrintMembers(StringBuilder builder)
     {
         builder.Append("Messages = [");
-        builder.Append(string.Join(", ", Messages.Select(x => x.ToString())));
+        builder.AppendJoin(", ", Messages.Select(x => x.ToString()));
         builder.Append(']');
         return true;
     }
@@ -68,7 +68,7 @@ public sealed record TrxCategoriesProperty(string[] Categories) : IProperty
     private bool PrintMembers(StringBuilder builder)
     {
         builder.Append("Categories = [");
-        builder.Append(string.Join(", ", Categories));
+        builder.AppendJoin(", ", Categories);
         builder.Append(']');
         return true;
     }

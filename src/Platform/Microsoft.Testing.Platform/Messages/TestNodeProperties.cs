@@ -275,7 +275,7 @@ public sealed record TimingProperty : IProperty
         builder.Append("GlobalTiming = ");
         builder.Append(GlobalTiming);
         builder.Append(", StepTimings = [");
-        builder.Append(string.Join(", ", StepTimings.Select(x => x.ToString())));
+        builder.AppendJoin(", ", StepTimings.Select(x => x.ToString()));
         builder.Append(']');
         return true;
     }
@@ -332,7 +332,7 @@ public sealed record TestMethodIdentifierProperty(string AssemblyFullName, strin
         builder.Append(", MethodName = ");
         builder.Append(MethodName);
         builder.Append(", ParameterTypeFullNames = [");
-        builder.Append(string.Join(", ", ParameterTypeFullNames));
+        builder.AppendJoin(", ", ParameterTypeFullNames);
         builder.Append("], ReturnTypeFullName = ");
         builder.Append(ReturnTypeFullName);
         return true;
@@ -382,7 +382,7 @@ internal sealed record SerializableNamedKeyValuePairsStringProperty(string Name,
         builder.Append("Name = ");
         builder.Append(Name);
         builder.Append(", Pairs = [");
-        builder.Append(string.Join(", ", Pairs.Select(x => x.ToString())));
+        builder.AppendJoin(", ", Pairs.Select(x => x.ToString()));
         builder.Append(']');
         return true;
     }
@@ -396,7 +396,7 @@ internal sealed record SerializableNamedArrayStringProperty(string Name, string[
         builder.Append("Name = ");
         builder.Append(Name);
         builder.Append(", Values = [");
-        builder.Append(string.Join(", ", Values));
+        builder.AppendJoin(", ", Values);
         builder.Append(']');
         return true;
     }
