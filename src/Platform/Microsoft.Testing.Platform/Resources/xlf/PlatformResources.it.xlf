@@ -215,7 +215,7 @@
 1 path to file</note>
       </trans-unit>
       <trans-unit id="DiscoveredTestsInAssembly">
-        <source>Discovered {0} tests in assembly</source>
+        <source>Discovered {0} test(s) in assembly</source>
         <target state="translated">{0} individuati nell'assembly</target>
         <note>0 is count, the sentence is followed by the path of the assebly</note>
       </trans-unit>
@@ -851,13 +851,13 @@ I valori validi sono 'Normal', 'Detailed'. L'impostazione predefinita è 'Normal
         <note />
       </trans-unit>
       <trans-unit id="TestDiscoverySummary">
-        <source>Discovered {0} tests in {1} assemblies.</source>
-        <target state="translated">{0} individuati in {1} assembly.</target>
+        <source>Test discovery summary: found {0} test(s) in {1} assemblies.</source>
+        <target state="translated">Riepilogo individuazione test: trovati {0} test negli assembly {1}.</target>
         <note>0 is number of tests, 1 is count of assemblies</note>
       </trans-unit>
       <trans-unit id="TestDiscoverySummarySingular">
-        <source>Discovered {0} tests.</source>
-        <target state="translated">{0} test individuati.</target>
+        <source>Test discovery summary: found {0} test(s)</source>
+        <target state="translated">Riepilogo individuazione test: trovati {0} test</target>
         <note>0 is number of tests</note>
       </trans-unit>
       <trans-unit id="TestFrameworkProxyApiShouldNotBeCalled">

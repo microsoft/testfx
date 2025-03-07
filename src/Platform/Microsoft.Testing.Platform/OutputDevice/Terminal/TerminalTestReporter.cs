@@ -922,10 +922,16 @@ internal sealed partial class TerminalTestReporter : IDisposable
     {
         TestProgressState asm = _assemblies[$"{assembly}|{targetFramework}|{architecture}|{executionId}"];
 
-        // TODO: add mode for discovered tests to the progress bar - jajares
-        asm.PassedTests++;
-        asm.TotalTests++;
+        if (_isDiscovery)
+        {
+            // TODO: add mode for discovered tests to the progress bar, to get rid of the hack here that allows updating the
+            // progress, but also breaks the total counts if not done only in discovery.
+            asm.PassedTests++;
+            asm.TotalTests++;
+        }
+
         asm.DiscoveredTests.Add(new(displayName, uid));
+
         _terminalWithProgress.UpdateWorker(asm.SlotIndex);
     }
 
@@ -940,10 +946,14 @@ internal sealed partial class TerminalTestReporter : IDisposable
 
         foreach (TestProgressState assembly in assemblies)
         {
-            terminal.Append(string.Format(CultureInfo.CurrentCulture, PlatformResources.DiscoveredTestsInAssembly, assembly.DiscoveredTests.Count));
-            terminal.Append(" - ");
-            AppendAssemblyLinkTargetFrameworkAndArchitecture(terminal, assembly.Assembly, assembly.TargetFramework, assembly.Architecture);
-            terminal.AppendLine();
+            if (_options.ShowAssembly)
+            {
+                terminal.Append(string.Format(CultureInfo.CurrentCulture, PlatformResources.DiscoveredTestsInAssembly, assembly.DiscoveredTests.Count));
+                terminal.Append(" - ");
+                AppendAssemblyLinkTargetFrameworkAndArchitecture(terminal, assembly.Assembly, assembly.TargetFramework, assembly.Architecture);
+                terminal.AppendLine();
+            }
+
             foreach ((string? displayName, string? uid) in assembly.DiscoveredTests)
             {
                 if (displayName is not null)
@@ -959,11 +969,20 @@ internal sealed partial class TerminalTestReporter : IDisposable
         terminal.SetColor(runFailed ? TerminalColor.Red : TerminalColor.Green);
         if (assemblies.Count <= 1)
         {
-            terminal.AppendLine(string.Format(CultureInfo.CurrentCulture, PlatformResources.TestDiscoverySummarySingular, totalTests));
+            terminal.Append(string.Format(CultureInfo.CurrentCulture, PlatformResources.TestDiscoverySummarySingular, totalTests));
+
+            if (!_options.ShowAssembly && _assemblies.Count == 1)
+            {
+                TestProgressState testProgressState = _assemblies.Values.Single();
+                terminal.SetColor(TerminalColor.DarkGray);
+                terminal.Append(" - ");
+                terminal.ResetColor();
+                AppendAssemblyLinkTargetFrameworkAndArchitecture(terminal, testProgressState.Assembly, testProgressState.TargetFramework, testProgressState.Architecture);
+            }
         }
         else
         {
-            terminal.AppendLine(string.Format(CultureInfo.CurrentCulture, PlatformResources.TestDiscoverySummary, totalTests, assemblies.Count));
+            terminal.Append(string.Format(CultureInfo.CurrentCulture, PlatformResources.TestDiscoverySummary, totalTests, assemblies.Count));
         }
 
         terminal.ResetColor();
@@ -974,6 +993,12 @@ internal sealed partial class TerminalTestReporter : IDisposable
             terminal.Append(PlatformResources.Aborted);
             terminal.AppendLine();
         }
+
+        string durationText = $"{SingleIndentation}duration: ";
+        TimeSpan runDuration = _testExecutionStartTime != null && _testExecutionEndTime != null ? (_testExecutionEndTime - _testExecutionStartTime).Value : TimeSpan.Zero;
+        terminal.Append(durationText);
+        AppendLongDuration(terminal, runDuration, wrapInParentheses: false, colorize: false);
+        terminal.AppendLine();
     }
 
     private static TerminalColor ToTerminalColor(ConsoleColor consoleColor)

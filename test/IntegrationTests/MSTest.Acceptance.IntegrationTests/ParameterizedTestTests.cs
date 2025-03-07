@@ -50,23 +50,25 @@ public class ParameterizedTestTests : AcceptanceTestBase<ParameterizedTestTests.
         var testHost = TestHost.LocateFrom(AssetFixture.GetAssetPath(DynamicDataAssetName), DynamicDataAssetName, currentTfm);
 
         TestHostResult testHostResult = await testHost.ExecuteAsync("--settings AppDomainEnabled.runsettings --filter ClassName=TestDataRowTests --list-tests");
-        testHostResult.AssertOutputContains("""
-            The following Tests are available:
-            TestDataRowSingleParameterFolded
-            TestDataRowSingleParameterUnfolded ("TestDataRowSingleParameterUnfolded - Only setting value")
-            TestDataRowSingleParameterUnfolded ("TestDataRowSingleParameterUnfolded - Ignoring")
-            Display name for third row - TestDataRowSingleParameterUnfolded
-            Display name for fourth row - TestDataRowSingleParameterUnfolded
-            TestDataRowTwoParametersFolded
-            TestDataRowTwoParametersUnfolded ("TestDataRowTwoParametersUnfolded - Only setting value 1","Only setting value 2")
-            TestDataRowTwoParametersUnfolded ("TestDataRowTwoParametersUnfolded - Ignoring1","Ignoring2")
-            Display name for third row - TestDataRowTwoParametersUnfolded
-            Display name for fourth row - TestDataRowTwoParametersUnfolded
-            TestDataRowParameterIsTupleFolded
-            TestDataRowParameterIsTupleUnfolded ((TestDataRowParameterIsTupleUnfolded - Only setting value 1, Only setting value 2))
-            TestDataRowParameterIsTupleUnfolded ((TestDataRowParameterIsTupleUnfolded - Ignoring1, Ignoring2))
-            Display name for third row - TestDataRowParameterIsTupleUnfolded
-            Display name for fourth row - TestDataRowParameterIsTupleUnfolded
+        testHostResult.AssertOutputMatchesRegexLines("""
+            MSTest *
+              TestDataRowSingleParameterFolded
+              TestDataRowSingleParameterUnfolded \("TestDataRowSingleParameterUnfolded - Only setting value"\)
+              TestDataRowSingleParameterUnfolded \("TestDataRowSingleParameterUnfolded - Ignoring"\)
+              Display name for third row - TestDataRowSingleParameterUnfolded
+              Display name for fourth row - TestDataRowSingleParameterUnfolded
+              TestDataRowTwoParametersFolded
+              TestDataRowTwoParametersUnfolded \("TestDataRowTwoParametersUnfolded - Only setting value 1","Only setting value 2"\)
+              TestDataRowTwoParametersUnfolded \("TestDataRowTwoParametersUnfolded - Ignoring1","Ignoring2"\)
+              Display name for third row - TestDataRowTwoParametersUnfolded
+              Display name for fourth row - TestDataRowTwoParametersUnfolded
+              TestDataRowParameterIsTupleFolded
+              TestDataRowParameterIsTupleUnfolded \(\(TestDataRowParameterIsTupleUnfolded - Only setting value 1, Only setting value 2\)\)
+              TestDataRowParameterIsTupleUnfolded \(\(TestDataRowParameterIsTupleUnfolded - Ignoring1, Ignoring2\)\)
+              Display name for third row - TestDataRowParameterIsTupleUnfolded
+              Display name for fourth row - TestDataRowParameterIsTupleUnfolded
+            Test discovery summary: found 15 test\(s\) - *
+              duration: *
             """);
 
         // progress causes flakiness. See https://github.com/microsoft/testfx/pull/4930#issuecomment-2648506466
