@@ -43,7 +43,8 @@ public class ConsoleTests : AcceptanceTestBase<ConsoleTests.TestAssetFixture>
             };
         }
 
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--no-ansi", environmentVariables);
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--no-ansi --ignore-exit-code 8", environmentVariables);
+        testHostResult.AssertExitCodeIs(ExitCodes.Success);
         testHostResult.AssertOutputContains("ABCDEF123");
     }
 
@@ -467,7 +468,7 @@ internal class DummyTestFramework : ITestFramework, IDataProducer
         Console.SetOut(interceptor);
 
         // This goes through the interceptor after acquiring lock for ConsoleInterceptor.
-        var thread = new Thread(() => Console.WriteLine("123"));
+        var thread = new Thread(() => Console.WriteLine("ABCDEF123"));
         thread.Start();
 
         var mtpConsole = typeof(ServiceProviderExtensions).GetMethod("GetConsole", BindingFlags.NonPublic | BindingFlags.Static).Invoke(null, new object[] { _serviceProvider });
@@ -476,7 +477,7 @@ internal class DummyTestFramework : ITestFramework, IDataProducer
         Thread.Sleep(300);
 
         // This will acquire the lock for the original Console.Out, before being replaced by ConsoleInterceptor.
-        writeMethod.Invoke(mtpConsole, new object[] { "ABCDEF" });
+        writeMethod.Invoke(mtpConsole, new object[] { "" });
         context.Complete();
         return Task.CompletedTask;
     }
