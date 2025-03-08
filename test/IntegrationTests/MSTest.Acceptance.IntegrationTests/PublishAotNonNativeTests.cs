@@ -68,6 +68,10 @@ public sealed class PublishAotNonNativeTests : AcceptanceTestBase<NopAssetFixtur
     </ItemGroup>
 </Project>
 
+#file dotnet.config
+[dotnet.test:runner]
+name= "VSTest"
+
 #file UnitTest1.cs
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;

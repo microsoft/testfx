@@ -158,6 +158,7 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
     [TestMethod]
     public async Task Invoke_DotnetTest_With_Incompatible_Arch()
     {
+        // TODO: Test with both old and new dotnet test experience.
         Architecture currentArchitecture = RuntimeInformation.ProcessArchitecture;
         string incompatibleArchitecture = currentArchitecture switch
         {
@@ -313,6 +314,10 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
         <Error Text="Error from UserDefinedTestTarget.targets" />
     </Target>
 </Project>
+
+#file dotnet.config
+[dotnet.test:runner]
+name= "VSTest"
 
 #file Program.cs
 using Microsoft.Testing.Platform.Builder;
