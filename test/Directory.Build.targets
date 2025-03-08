@@ -34,8 +34,6 @@
   <Import Project="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\buildMultiTargeting\Microsoft.Testing.Platform.props" Condition=" '$(EnableMSTestRunner)' == 'true' OR '$(UseInternalTestFramework)' == 'true' " />
   <Import Project="$(RepoRoot)src\Platform\Microsoft.Testing.Platform.MSBuild\buildMultiTargeting\Microsoft.Testing.Platform.MSBuild.props" Condition=" '$(EnableMSTestRunner)' == 'true' OR '$(UseInternalTestFramework)' == 'true' " />
 
-  <Import Project="$(RepoRoot)src\Platform\Microsoft.Testing.Platform.MSBuild\buildMultiTargeting\Microsoft.Testing.Platform.MSBuild.targets" Condition=" '$(EnableMSTestRunner)' == 'true' OR '$(UseInternalTestFramework)' == 'true' " />
-
   <ItemGroup Condition=" '$(EnableMSTestRunner)' == 'true' AND '$(UseInternalTestFramework)' != 'true' AND '$(UseMSTestFromSource)' != 'true' ">
     <PackageReference Include="MSTest.Analyzers" />
     <PackageReference Include="MSTest.TestFramework" />
