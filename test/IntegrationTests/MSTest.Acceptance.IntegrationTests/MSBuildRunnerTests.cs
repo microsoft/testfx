@@ -39,7 +39,8 @@ public class MSBuildRunnerTests : AcceptanceTestBase<NopAssetFixture>
            .PatchCodeWithReplace("$MicrosoftNETTestSdkVersion$", MicrosoftNETTestSdkVersion)
            .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
            .PatchCodeWithReplace("$EnableMSTestRunner$", "<EnableMSTestRunner>true</EnableMSTestRunner>")
-           .PatchCodeWithReplace("$OutputType$", "<OutputType>Exe</OutputType>"));
+           .PatchCodeWithReplace("$OutputType$", "<OutputType>Exe</OutputType>")
+           .PatchCodeWithReplace("$Extra$", string.Empty));
 
         string projectContent = File.ReadAllText(Directory.GetFiles(generator.TargetAssetPath, "MSTestProject.csproj", SearchOption.AllDirectories).Single());
         string testSourceContent = File.ReadAllText(Directory.GetFiles(generator.TargetAssetPath, "UnitTest1.cs", SearchOption.AllDirectories).Single());
