@@ -87,7 +87,7 @@ public sealed class CommandLine : IDisposable
                 EnvironmentVariables = environmentVariables,
                 OnErrorOutput = (_, o) => _errorOutputLines.Add(ClearBOM(o)),
                 OnStandardOutput = (_, o) => _standardOutputLines.Add(ClearBOM(o)),
-                WorkingDirectory = workingDirectory,
+                WorkingDirectory = workingDirectory ?? Path.GetDirectoryName(command),
             };
             _process = ProcessFactory.Start(startInfo, cleanDefaultEnvironmentVariableIfCustomAreProvided);
 
