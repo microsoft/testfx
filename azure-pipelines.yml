@@ -101,6 +101,7 @@ stages:
           inputs:
             targetType: inline
             script: Copy-Item -Path "$(BUILD.SOURCESDIRECTORY)\artifacts\log\$(_BuildConfig)\Build.binlog" -Destination "$(BUILD.SOURCESDIRECTORY)\artifacts\log\$(_BuildConfig)\BuildStep.binlog"
+          condition: always()
 
         - ${{ if eq(parameters.SkipTests, False) }}:
           # -ci is allowing to import some environment variables and some required configurations
@@ -117,6 +118,7 @@ stages:
             inputs:
               targetType: inline
               script: Copy-Item -Path "$(BUILD.SOURCESDIRECTORY)\artifacts\log\$(_BuildConfig)\Build.binlog" -Destination "$(BUILD.SOURCESDIRECTORY)\artifacts\log\$(_BuildConfig)\TestStep.binlog"
+            condition: always()
 
           # This step is only helpful for diagnosing some issues with vstest/test host that would not appear
           # through the console or trx

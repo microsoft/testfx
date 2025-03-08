@@ -146,7 +146,7 @@ extends:
               inputs:
                 targetType: inline
                 script: Copy-Item -Path "$(BUILD.SOURCESDIRECTORY)\artifacts\log\$(_BuildConfig)\Build.binlog" -Destination "$(BUILD.SOURCESDIRECTORY)\artifacts\log\$(_BuildConfig)\BuildStep.binlog"
-
+              condition: always()
 
             - ${{ if eq(parameters.SkipTests, False) }}:
               # -ci is allowing to import some environment variables and some required configurations
@@ -163,6 +163,7 @@ extends:
                 inputs:
                   targetType: inline
                   script: Copy-Item -Path "$(BUILD.SOURCESDIRECTORY)\artifacts\log\$(_BuildConfig)\Build.binlog" -Destination "$(BUILD.SOURCESDIRECTORY)\artifacts\log\$(_BuildConfig)\TestStep.binlog"
+                condition: always()
 
               - task: CopyFiles@2
                 displayName: 'Copy binlogs'
