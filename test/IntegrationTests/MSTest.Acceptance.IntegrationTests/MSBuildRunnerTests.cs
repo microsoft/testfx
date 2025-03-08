@@ -40,7 +40,12 @@ public class MSBuildRunnerTests : AcceptanceTestBase<NopAssetFixture>
            .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
            .PatchCodeWithReplace("$EnableMSTestRunner$", "<EnableMSTestRunner>true</EnableMSTestRunner>")
            .PatchCodeWithReplace("$OutputType$", "<OutputType>Exe</OutputType>")
-           .PatchCodeWithReplace("$Extra$", string.Empty));
+           .PatchCodeWithReplace("$Extra$", command == DotnetTestVerb ?
+"""
+           <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
+           <TestingPlatformCaptureOutput>false</TestingPlatformCaptureOutput>
+""" :
+           string.Empty));
 
         string projectContent = File.ReadAllText(Directory.GetFiles(generator.TargetAssetPath, "MSTestProject.csproj", SearchOption.AllDirectories).Single());
         string testSourceContent = File.ReadAllText(Directory.GetFiles(generator.TargetAssetPath, "UnitTest1.cs", SearchOption.AllDirectories).Single());
@@ -63,7 +68,7 @@ public class MSBuildRunnerTests : AcceptanceTestBase<NopAssetFixture>
         restoreResult.AssertOutputDoesNotContain("An approximate best match of");
 
         command = command == DotnetTestVerb ? $"{command} {solution.SolutionFile}" : $"{command} --solution {solution.SolutionFile}";
-        DotnetMuxerResult testResult = await DotnetCli.RunAsync($"{command} -m:1 -nodeReuse:false", AcceptanceFixture.NuGetGlobalPackagesFolder.Path);
+        DotnetMuxerResult testResult = await DotnetCli.RunAsync($"{command} -m:1 -nodeReuse:false {solution.SolutionFile}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path);
 
         if (isMultiTfm)
         {
