@@ -93,6 +93,15 @@ stages:
           name: Build
           displayName: Build
 
+        # Both the Build and Test steps produces binlog named Build.binlog (https://github.com/dotnet/arcade/issues/15611)
+        # We want to publish both binlogs.
+        # So, as a hack, we build, rename, test, rename again.
+        - task: PowerShell@2
+          displayName: 'Rename Build.binlog to BuildStep.binlog'
+          inputs:
+            targetType: inline
+            script: Copy-Item -Path "$(BUILD.SOURCESDIRECTORY)\artifacts\log\$(_BuildConfig)\Build.binlog" -Destination "$(BUILD.SOURCESDIRECTORY)\artifacts\log\$(_BuildConfig)\BuildStep.binlog"
+
         - ${{ if eq(parameters.SkipTests, False) }}:
           # -ci is allowing to import some environment variables and some required configurations
           # -nobl avoids overwriting build binlog with binlog from tests
@@ -102,6 +111,12 @@ stages:
               -nobl
             name: Test
             displayName: Test
+
+          - task: PowerShell@2
+            displayName: 'Rename Build.binlog to TestStep.binlog'
+            inputs:
+              targetType: inline
+              script: Copy-Item -Path "$(BUILD.SOURCESDIRECTORY)\artifacts\log\$(_BuildConfig)\Build.binlog" -Destination "$(BUILD.SOURCESDIRECTORY)\artifacts\log\$(_BuildConfig)\TestStep.binlog"
 
           # This step is only helpful for diagnosing some issues with vstest/test host that would not appear
           # through the console or trx
