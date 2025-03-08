@@ -17,8 +17,6 @@
     <TestRunnerAdditionalArguments>$(TestRunnerAdditionalArguments) --hangdump --hangdump-timeout 15m</TestRunnerAdditionalArguments>
     <TestRunnerAdditionalArguments Condition=" '$(EnableCodeCoverage)' == 'True' ">$(TestRunnerAdditionalArguments) --coverage --coverage-settings $(RepoRoot)test/coverage.config --coverage-output $(ModuleName).coverage</TestRunnerAdditionalArguments>
     <!-- /Arcade runner settings -->
-
-    <MicrosoftTestingPlatformMSBuildTaskFolder>$(ArtifactsDir)bin\Microsoft.Testing.Platform.MSBuild\$(Configuration)\netstandard2.0\</MicrosoftTestingPlatformMSBuildTaskFolder>
   </PropertyGroup>
 
   <ItemGroup Condition=" '$(EnableMSTestRunner)' == 'true' OR '$(UseInternalTestFramework)' == 'true' ">
@@ -28,7 +26,7 @@
     <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.HangDump\Microsoft.Testing.Extensions.HangDump.csproj" />
     <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.Retry\Microsoft.Testing.Extensions.Retry.csproj" />
     <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.TrxReport\Microsoft.Testing.Extensions.TrxReport.csproj" />
-    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.MSBuild\Microsoft.Testing.Extensions.MSBuild.csproj" Condition="'$(UseInternalTestFramework)' == 'true'" />
+    <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Condition="'$(UseInternalTestFramework)' == 'true'" />
     <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" GeneratePathProperty="True" />
   </ItemGroup>
 
