@@ -148,6 +148,7 @@ public class TempDirectory : IDisposable
     private static string GetTestSuiteDirectory()
     {
         string testSuiteDirectory = System.IO.Path.Combine(RepoRoot, "artifacts", "tmp", Constants.BuildConfiguration, "testsuite");
+        Directory.CreateDirectory(testSuiteDirectory);
 
         // Our tests were originally wrote before the enhanced dotnet test support for MTP.
         // So, by default we use VSTest.
