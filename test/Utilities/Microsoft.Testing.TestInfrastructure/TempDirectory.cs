@@ -146,21 +146,7 @@ public class TempDirectory : IDisposable
 
     [Obsolete("Don't use directly. Use TestSuiteDirectory property instead.")]
     private static string GetTestSuiteDirectory()
-    {
-        string testSuiteDirectory = System.IO.Path.Combine(RepoRoot, "artifacts", "tmp", Constants.BuildConfiguration, "testsuite");
-        Directory.CreateDirectory(testSuiteDirectory);
-
-        // Our tests were originally wrote before the enhanced dotnet test support for MTP.
-        // So, by default we use VSTest.
-        // We can start to gradually move some of the MTP tests to the new dotnet test experience.
-        // Note that we have tests that are actually VSTest-specific.
-        string dotnetConfig = System.IO.Path.Combine(testSuiteDirectory, "dotnet.config");
-        File.WriteAllText(dotnetConfig, """
-            [dotnet.test:runner]
-            name= "VSTest"
-            """);
-        return testSuiteDirectory;
-    }
+        => System.IO.Path.Combine(RepoRoot, "artifacts", "tmp", Constants.BuildConfiguration, "testsuite");
 
     [Obsolete("Don't use directly. Use RepoRoot property instead.")]
     private static string GetRepoRoot()

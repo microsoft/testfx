@@ -9,7 +9,7 @@ public static class ProcessFactory
     {
         string fullPath = config.FileName; // Path.GetFullPath(startInfo.FileName);
         string workingDirectory = config.WorkingDirectory
-            .OrDefault(TempDirectory.TestSuiteDirectory);
+            .OrDefault(Path.GetDirectoryName(config.FileName).OrDefault(Directory.GetCurrentDirectory()));
 
         ProcessStartInfo processStartInfo = new()
         {
