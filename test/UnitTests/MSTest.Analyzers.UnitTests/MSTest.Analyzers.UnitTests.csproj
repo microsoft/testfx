@@ -32,7 +32,6 @@
     <ProjectReference Include="$(RepoRoot)src\Analyzers\MSTest.Analyzers.CodeFixes\MSTest.Analyzers.CodeFixes.csproj" />
     <ProjectReference Include="$(RepoRoot)src\TestFramework\TestFramework.Extensions\TestFramework.Extensions.csproj" />
     <ProjectReference Include="$(RepoRoot)src\Adapter\MSTest.TestAdapter\MSTest.TestAdapter.csproj" />
-    <ProjectReference Include="$(RepoRoot)\src\Platform\Microsoft.Testing.Extensions.MSBuild\Microsoft.Testing.Extensions.MSBuild.csproj" />
   </ItemGroup>
 
 </Project>
