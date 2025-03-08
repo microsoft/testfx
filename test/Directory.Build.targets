@@ -27,8 +27,12 @@
     <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.Retry\Microsoft.Testing.Extensions.Retry.csproj" />
     <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.Telemetry\Microsoft.Testing.Extensions.Telemetry.csproj" />
     <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.TrxReport\Microsoft.Testing.Extensions.TrxReport.csproj" />
+    <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Condition="'$(UseInternalTestFramework)' == 'true' OR '$(UseMSTestFromSource)' == 'true'" />
     <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" GeneratePathProperty="True" />
   </ItemGroup>
+
+  <!-- Import the capabilities for the Microsoft.Testing.Platform -->
+  <Import Project="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\buildMultiTargeting\Microsoft.Testing.Platform.props" Condition=" '$(EnableMSTestRunner)' == 'true' OR '$(UseInternalTestFramework)' == 'true' " />
 
   <ItemGroup Condition=" '$(EnableMSTestRunner)' == 'true' AND '$(UseInternalTestFramework)' != 'true' AND '$(UseMSTestFromSource)' != 'true' ">
     <PackageReference Include="MSTest.Analyzers" />
@@ -60,13 +64,5 @@
   <ItemGroup Condition=" '$(UseInternalTestFramework)' == 'true' ">
     <ProjectReference Include="$(RepoRoot)test\Utilities\TestFramework.ForTestingMSTest\TestFramework.ForTestingMSTest.csproj" />
   </ItemGroup>
-
-  <ItemGroup Condition=" '$(UseInternalTestFramework)' == 'true' ">
-    <ProjectCapability Include="TestContainer" />
-    <ProjectCapability Include="TestingPlatformServer" />
-  </ItemGroup>
-
-  <Import Project="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\buildMultiTargeting\Microsoft.Testing.Platform.props"
-          Condition=" '$(UseInternalTestFramework)' == 'true' " />
 
 </Project>
