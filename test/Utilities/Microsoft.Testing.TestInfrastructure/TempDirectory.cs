@@ -146,7 +146,20 @@ public class TempDirectory : IDisposable
 
     [Obsolete("Don't use directly. Use TestSuiteDirectory property instead.")]
     private static string GetTestSuiteDirectory()
-        => System.IO.Path.Combine(RepoRoot, "artifacts", "tmp", Constants.BuildConfiguration, "testsuite");
+    {
+        string testSuiteDirectory = System.IO.Path.Combine(RepoRoot, "artifacts", "tmp", Constants.BuildConfiguration, "testsuite");
+
+        // Our tests were originally wrote before the enhanced dotnet test support for MTP.
+        // So, by default we use VSTest.
+        // We can start to gradually move some of the MTP tests to the new dotnet test experience.
+        // Note that we have tests that are actually VSTest-specific.
+        string dotnetConfig = System.IO.Path.Combine(testSuiteDirectory, "dotnet.config");
+        File.WriteAllText(dotnetConfig, """
+            [dotnet.test:runner]
+            name= "VSTest"
+            """);
+        return testSuiteDirectory;
+    }
 
     [Obsolete("Don't use directly. Use RepoRoot property instead.")]
     private static string GetRepoRoot()
@@ -171,16 +184,6 @@ public class TempDirectory : IDisposable
     {
         string directoryPath = System.IO.Path.Combine(TestSuiteDirectory, RandomId.Next());
         Directory.CreateDirectory(directoryPath);
-
-        // Our tests were originally wrote before the enhanced dotnet test support for MTP.
-        // So, by default we use VSTest.
-        // We can start to gradually move some of the MTP tests to the new dotnet test experience.
-        // Note that we have tests that are actually VSTest-specific.
-        string dotnetConfig = System.IO.Path.Combine(TestSuiteDirectory, "dotnet.config");
-        File.WriteAllText(dotnetConfig, """
-            [dotnet.test:runner]
-            name= "VSTest"
-            """);
 
         string directoryBuildProps = System.IO.Path.Combine(directoryPath, "Directory.Build.props");
         File.WriteAllText(directoryBuildProps, $"""
