@@ -4,7 +4,6 @@
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
-using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Extensions;
 
 using UnitTestOutcome = Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome;
@@ -13,9 +12,27 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 
 internal static class FixtureMethodRunner
 {
+    internal static void RunOnContext(ExecutionContext? executionContext, Action action)
+    {
+        if (executionContext is null)
+        {
+            action();
+        }
+        else
+        {
+            // CreateCopy doesn't do anything on .NET Core as ExecutionContexts are immutable.
+            // But it's important on .NET Framework.
+            // On .NET Framework, ExecutionContext.Run cannot be called twice with the same ExecutionContext.
+            // Otherwise, it will throw InvalidOperationException with message:
+            // Cannot apply a context that has been marshaled across AppDomains, that was not acquired through a Capture operation or that has already been the argument to a Set call.
+            executionContext = executionContext.CreateCopy();
+            ExecutionContext.Run(executionContext, static action => ((Action)action!).Invoke(), action);
+        }
+    }
+
     internal static TestFailedException? RunWithTimeoutAndCancellation(
         Action action, CancellationTokenSource cancellationTokenSource, TimeoutInfo? timeoutInfo, MethodInfo methodInfo,
-        IExecutionContextScope executionContextScope, string methodCanceledMessageFormat, string methodTimedOutMessageFormat,
+        ExecutionContext? executionContext, string methodCanceledMessageFormat, string methodTimedOutMessageFormat,
         // When a test method is marked with [Timeout], this timeout is applied from ctor to destructor, so we need to take
         // that into account when processing the OCE of the action.
         (CancellationTokenSource TokenSource, int Timeout)? testTimeoutInfo = default)
@@ -33,7 +50,7 @@ internal static class FixtureMethodRunner
         {
             try
             {
-                action();
+                RunOnContext(executionContext, action);
                 return null;
             }
             catch (Exception ex)
@@ -62,16 +79,16 @@ internal static class FixtureMethodRunner
 
         if (timeoutInfo.Value.CooperativeCancellation)
         {
-            return RunWithCooperativeCancellation(action, cancellationTokenSource, timeoutInfo.Value.Timeout, methodInfo, methodCanceledMessageFormat, methodTimedOutMessageFormat);
+            return RunWithCooperativeCancellation(action, executionContext, cancellationTokenSource, timeoutInfo.Value.Timeout, methodInfo, methodCanceledMessageFormat, methodTimedOutMessageFormat);
         }
 
         // We need to start a thread to handle "cancellation" and "timeout" scenarios.
         return RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && Thread.CurrentThread.GetApartmentState() == ApartmentState.STA
-            ? RunWithTimeoutAndCancellationWithSTAThread(action, cancellationTokenSource, timeoutInfo.Value.Timeout, methodInfo, executionContextScope, methodCanceledMessageFormat, methodTimedOutMessageFormat)
-            : RunWithTimeoutAndCancellationWithThreadPool(action, cancellationTokenSource, timeoutInfo.Value.Timeout, methodInfo, executionContextScope, methodCanceledMessageFormat, methodTimedOutMessageFormat);
+            ? RunWithTimeoutAndCancellationWithSTAThread(action, executionContext, cancellationTokenSource, timeoutInfo.Value.Timeout, methodInfo, methodCanceledMessageFormat, methodTimedOutMessageFormat)
+            : RunWithTimeoutAndCancellationWithThreadPool(action, executionContext, cancellationTokenSource, timeoutInfo.Value.Timeout, methodInfo, methodCanceledMessageFormat, methodTimedOutMessageFormat);
     }
 
-    private static TestFailedException? RunWithCooperativeCancellation(Action action, CancellationTokenSource cancellationTokenSource, int timeout, MethodInfo methodInfo, string methodCanceledMessageFormat, string methodTimedOutMessageFormat)
+    private static TestFailedException? RunWithCooperativeCancellation(Action action, ExecutionContext? executionContext, CancellationTokenSource cancellationTokenSource, int timeout, MethodInfo methodInfo, string methodCanceledMessageFormat, string methodTimedOutMessageFormat)
     {
         CancellationTokenSource? timeoutTokenSource = null;
         try
@@ -92,7 +109,7 @@ internal static class FixtureMethodRunner
 
             try
             {
-                action();
+                RunOnContext(executionContext, action);
                 return null;
             }
             catch (Exception ex) when (ex.IsOperationCanceledExceptionFromToken(cancellationTokenSource.Token))
@@ -122,8 +139,8 @@ internal static class FixtureMethodRunner
     }
 
     private static TestFailedException? RunWithTimeoutAndCancellationWithThreadPool(
-        Action action, CancellationTokenSource cancellationTokenSource, int timeout, MethodInfo methodInfo,
-        IExecutionContextScope executionContextScope, string methodCanceledMessageFormat, string methodTimedOutMessageFormat)
+        Action action, ExecutionContext? executionContext, CancellationTokenSource cancellationTokenSource, int timeout, MethodInfo methodInfo,
+        string methodCanceledMessageFormat, string methodTimedOutMessageFormat)
     {
         Exception? realException = null;
         Task? executionTask;
@@ -134,7 +151,7 @@ internal static class FixtureMethodRunner
                 {
                     try
                     {
-                        ExecutionContextService.RunActionOnContext(action, executionContextScope);
+                        RunOnContext(executionContext, action);
                     }
                     catch (Exception ex)
                     {
@@ -188,15 +205,15 @@ internal static class FixtureMethodRunner
 
     [SupportedOSPlatform("windows")]
     private static TestFailedException? RunWithTimeoutAndCancellationWithSTAThread(
-        Action action, CancellationTokenSource cancellationTokenSource, int timeout, MethodInfo methodInfo,
-        IExecutionContextScope executionContextScope, string methodCanceledMessageFormat, string methodTimedOutMessageFormat)
+        Action action, ExecutionContext? executionContext, CancellationTokenSource cancellationTokenSource, int timeout, MethodInfo methodInfo,
+        string methodCanceledMessageFormat, string methodTimedOutMessageFormat)
     {
         TaskCompletionSource<int> tcs = new();
         Thread executionThread = new(() =>
         {
             try
             {
-                ExecutionContextService.RunActionOnContext(action, executionContextScope);
+                RunOnContext(executionContext, action);
                 tcs.SetResult(0);
             }
             catch (Exception ex)

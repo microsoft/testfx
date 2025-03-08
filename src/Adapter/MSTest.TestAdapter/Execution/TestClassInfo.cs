@@ -4,7 +4,6 @@
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
-using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -233,6 +232,8 @@ public class TestClassInfo
         }
     }
 
+    internal ExecutionContext? ExecutionContext { get; set; }
+
     /// <summary>
     /// Gets a queue of test initialize methods to call for this type.
     /// </summary>
@@ -248,9 +249,14 @@ public class TestClassInfo
     /// </summary>
     /// <param name="testContext"> The test context. </param>
     /// <exception cref="TestFailedException"> Throws a test failed exception if the initialization method throws an exception. </exception>
-    [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
     public void RunClassInitialize(TestContext testContext)
+        => RunClassInitialize(testContext, out _);
+
+    [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
+    internal void RunClassInitialize(TestContext testContext, out LogMessageListener? logListener)
     {
+        logListener = null;
+
         // If no class initialize and no base class initialize, return
         if (ClassInitializeMethod is null && BaseClassInitMethods.Count == 0)
         {
@@ -281,7 +287,7 @@ public class TestClassInfo
                 for (int i = BaseClassInitMethods.Count - 1; i >= 0; i--)
                 {
                     initializeMethod = BaseClassInitMethods[i];
-                    ClassInitializationException = InvokeInitializeMethod(initializeMethod, testContext);
+                    ClassInitializationException = InvokeInitializeMethod(initializeMethod, testContext, ref logListener);
                     if (ClassInitializationException is not null)
                     {
                         break;
@@ -291,7 +297,7 @@ public class TestClassInfo
                 if (ClassInitializationException is null)
                 {
                     initializeMethod = ClassInitializeMethod;
-                    ClassInitializationException = InvokeInitializeMethod(ClassInitializeMethod, testContext);
+                    ClassInitializationException = InvokeInitializeMethod(ClassInitializeMethod, testContext, ref logListener);
                 }
             }
             catch (Exception ex)
@@ -451,18 +457,25 @@ public class TestClassInfo
 
             try
             {
-                using LogMessageListener logListener = new(MSTestSettings.CurrentSettings.CaptureDebugTraces);
+                LogMessageListener? logListener = null;
                 try
                 {
                     // This runs the ClassInitialize methods only once but saves the
-                    RunClassInitialize(testContext.Context);
+                    RunClassInitialize(testContext.Context, out logListener);
                 }
                 finally
                 {
-                    initializationLogs += logListener.GetAndClearStandardOutput();
-                    initializationTrace += logListener.GetAndClearDebugTrace();
-                    initializationErrorLogs += logListener.GetAndClearStandardError();
-                    initializationTestContextMessages += testContext.GetAndClearDiagnosticMessages();
+                    if (logListener is not null)
+                    {
+                        FixtureMethodRunner.RunOnContext(ExecutionContext, () =>
+                        {
+                            initializationLogs += logListener.GetAndClearStandardOutput();
+                            initializationTrace += logListener.GetAndClearDebugTrace();
+                            initializationErrorLogs += logListener.GetAndClearStandardError();
+                            initializationTestContextMessages += testContext.GetAndClearDiagnosticMessages();
+                            logListener?.Dispose();
+                        });
+                    }
                 }
             }
             catch (TestFailedException ex)
@@ -487,7 +500,7 @@ public class TestClassInfo
         }
     }
 
-    private TestFailedException? InvokeInitializeMethod(MethodInfo? methodInfo, TestContext testContext)
+    private TestFailedException? InvokeInitializeMethod(MethodInfo? methodInfo, TestContext testContext, ref LogMessageListener? logListener)
     {
         if (methodInfo is null)
         {
@@ -500,14 +513,24 @@ public class TestClassInfo
             timeout = localTimeout;
         }
 
-        return FixtureMethodRunner.RunWithTimeoutAndCancellation(
-            () => methodInfo.InvokeAsSynchronousTask(null, testContext),
+        LogMessageListener? logMessageListener = logListener;
+        TestFailedException? result = FixtureMethodRunner.RunWithTimeoutAndCancellation(
+            () =>
+            {
+                logMessageListener ??= new LogMessageListener(MSTestSettings.CurrentSettings.CaptureDebugTraces);
+                methodInfo.InvokeAsSynchronousTask(null, testContext);
+                // **After** we have executed the class initialize, we save the current context.
+                // This context will contain async locals set by the class initialize method.
+                ExecutionContext = ExecutionContext.Capture();
+            },
             testContext.CancellationTokenSource,
             timeout,
             methodInfo,
-            new ClassExecutionContextScope(ClassType),
+            ExecutionContext ?? Parent?.ExecutionContext,
             Resource.ClassInitializeWasCancelled,
             Resource.ClassInitializeTimedOut);
+        logListener = logMessageListener;
+        return result;
     }
 
     /// <summary>
@@ -543,12 +566,13 @@ public class TestClassInfo
                 try
                 {
                     classCleanupMethod = ClassCleanupMethod;
-                    ClassCleanupException = classCleanupMethod is not null ? InvokeCleanupMethod(classCleanupMethod, BaseClassCleanupMethods.Count, null!) : null;
+                    LogMessageListener? listener = null;
+                    ClassCleanupException = classCleanupMethod is not null ? InvokeCleanupMethod(classCleanupMethod, null!, ref listener) : null;
                     var baseClassCleanupQueue = new Queue<MethodInfo>(BaseClassCleanupMethods);
                     while (baseClassCleanupQueue.Count > 0 && ClassCleanupException is null)
                     {
                         classCleanupMethod = baseClassCleanupQueue.Dequeue();
-                        ClassCleanupException = InvokeCleanupMethod(classCleanupMethod, baseClassCleanupQueue.Count, null!);
+                        ClassCleanupException = InvokeCleanupMethod(classCleanupMethod, null!, ref listener);
                     }
 
                     IsClassCleanupExecuted = ClassCleanupException is null;
@@ -600,8 +624,10 @@ public class TestClassInfo
     /// This is a replacement for RunClassCleanup but as we are on a bug fix version, we do not want to change
     /// the public API, hence this method.
     /// </remarks>
-    internal TestFailedException? ExecuteClassCleanup(TestContext testContext)
+    internal TestFailedException? ExecuteClassCleanup(TestContext testContext, out LogMessageListener? logListener)
     {
+        logListener = null;
+
         if ((ClassCleanupMethod is null && BaseClassCleanupMethods.Count == 0)
             || IsClassCleanupExecuted)
         {
@@ -628,7 +654,7 @@ public class TestClassInfo
                 {
                     if (!classCleanupMethod.DeclaringType!.IsIgnored(out _))
                     {
-                        ClassCleanupException = InvokeCleanupMethod(classCleanupMethod, remainingCleanupCount: BaseClassCleanupMethods.Count, testContext);
+                        ClassCleanupException = InvokeCleanupMethod(classCleanupMethod, testContext, ref logListener);
                     }
                 }
 
@@ -639,7 +665,7 @@ public class TestClassInfo
                         classCleanupMethod = BaseClassCleanupMethods[i];
                         if (!classCleanupMethod.DeclaringType!.IsIgnored(out _))
                         {
-                            ClassCleanupException = InvokeCleanupMethod(classCleanupMethod, remainingCleanupCount: BaseClassCleanupMethods.Count - 1 - i, testContext);
+                            ClassCleanupException = InvokeCleanupMethod(classCleanupMethod, testContext, ref logListener);
                             if (ClassCleanupException is not null)
                             {
                                 break;
@@ -755,10 +781,10 @@ public class TestClassInfo
             string? initializationTestContextMessages = string.Empty;
             try
             {
-                using LogMessageListener logListener = new(MSTestSettings.CurrentSettings.CaptureDebugTraces);
+                LogMessageListener? logListener = null;
                 try
                 {
-                    TestFailedException? ex = ExecuteClassCleanup(testContext.Context);
+                    TestFailedException? ex = ExecuteClassCleanup(testContext.Context, out logListener);
                     if (ex is not null && results.Length > 0)
                     {
 #pragma warning disable IDE0056 // Use index operator
@@ -770,10 +796,17 @@ public class TestClassInfo
                 }
                 finally
                 {
-                    initializationLogs = logListener.GetAndClearStandardOutput();
-                    initializationErrorLogs = logListener.GetAndClearStandardError();
-                    initializationTrace = logListener.GetAndClearDebugTrace();
-                    initializationTestContextMessages = testContext.GetAndClearDiagnosticMessages();
+                    if (logListener is not null)
+                    {
+                        FixtureMethodRunner.RunOnContext(ExecutionContext, () =>
+                        {
+                            initializationLogs = logListener.GetAndClearStandardOutput();
+                            initializationErrorLogs = logListener.GetAndClearStandardError();
+                            initializationTrace = logListener.GetAndClearDebugTrace();
+                            initializationTestContextMessages = testContext.GetAndClearDiagnosticMessages();
+                            logListener.Dispose();
+                        });
+                    }
                 }
             }
             finally
@@ -792,7 +825,7 @@ public class TestClassInfo
         }
     }
 
-    private TestFailedException? InvokeCleanupMethod(MethodInfo methodInfo, int remainingCleanupCount, TestContext testContext)
+    private TestFailedException? InvokeCleanupMethod(MethodInfo methodInfo, TestContext testContext, ref LogMessageListener? logListener)
     {
         TimeoutInfo? timeout = null;
         if (ClassCleanupMethodTimeoutMilliseconds.TryGetValue(methodInfo, out TimeoutInfo localTimeout))
@@ -800,9 +833,12 @@ public class TestClassInfo
             timeout = localTimeout;
         }
 
-        return FixtureMethodRunner.RunWithTimeoutAndCancellation(
+        LogMessageListener? logMessageListener = logListener;
+        TestFailedException? result = FixtureMethodRunner.RunWithTimeoutAndCancellation(
             () =>
             {
+                logMessageListener ??= new LogMessageListener(MSTestSettings.CurrentSettings.CaptureDebugTraces);
+
                 if (methodInfo.GetParameters().Length == 0)
                 {
                     methodInfo.InvokeAsSynchronousTask(null);
@@ -811,13 +847,21 @@ public class TestClassInfo
                 {
                     methodInfo.InvokeAsSynchronousTask(null, testContext);
                 }
+
+                // **After** we have executed the class cleanup, we save the current context.
+                // This context will contain async locals set by the current class cleanup method.
+                // This is essential to propagate async locals between multiple class cleanup methods.
+                ExecutionContext = ExecutionContext.Capture();
             },
             testContext.CancellationTokenSource,
             timeout,
             methodInfo,
-            new ClassExecutionContextScope(ClassType, remainingCleanupCount),
+            ExecutionContext ?? Parent.ExecutionContext,
             Resource.ClassCleanupWasCancelled,
             Resource.ClassCleanupTimedOut);
+
+        logListener = logMessageListener;
+        return result;
     }
 
     /// <summary>

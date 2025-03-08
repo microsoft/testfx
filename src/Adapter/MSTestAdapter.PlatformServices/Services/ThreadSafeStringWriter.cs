@@ -181,6 +181,14 @@ public class ThreadSafeStringWriter : StringWriter
         }
     }
 
+    internal static void CleanState()
+    {
+        lock (StaticLockObject)
+        {
+            State.Value = new();
+        }
+    }
+
     /// <summary>
     /// This StringBuilder puts locks around all the methods to avoid conflicts when writing or reading from multiple threads.
     /// </summary>
