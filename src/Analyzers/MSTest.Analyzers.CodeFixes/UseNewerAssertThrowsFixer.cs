@@ -100,7 +100,7 @@ public sealed class UseNewerAssertThrowsFixer : CodeFixProvider
             {
                 editor.ReplaceNode(
                     lambdaSyntax.ExpressionBody,
-                    AssignToDiscard(lambdaSyntax.ExpressionBody));
+                    AssignToDiscardIfNeeded(lambdaSyntax.ExpressionBody));
             }
             else if (lambdaSyntax.Block is not null)
             {
@@ -126,7 +126,7 @@ public sealed class UseNewerAssertThrowsFixer : CodeFixProvider
                         continue;
                     }
 
-                    ExpressionStatementSyntax returnReplacement = SyntaxFactory.ExpressionStatement(AssignToDiscard(returnStatement.Expression));
+                    ExpressionStatementSyntax returnReplacement = SyntaxFactory.ExpressionStatement(AssignToDiscardIfNeeded(returnStatement.Expression));
 
                     if (returnStatement.Parent is BlockSyntax blockSyntax)
                     {
@@ -151,12 +151,24 @@ public sealed class UseNewerAssertThrowsFixer : CodeFixProvider
                 SyntaxFactory.ParenthesizedLambdaExpression(
                     SyntaxFactory.ParameterList(),
                     block: null,
-                    expressionBody: AssignToDiscard(SyntaxFactory.InvocationExpression(SyntaxFactory.ParenthesizedExpression(expressionSyntax).WithAdditionalAnnotations(Simplifier.Annotation)))));
+                    expressionBody: SyntaxFactory.InvocationExpression(SyntaxFactory.ParenthesizedExpression(expressionSyntax).WithAdditionalAnnotations(Simplifier.Annotation))));
         }
 
         return editor.GetChangedRoot();
     }
 
-    private static AssignmentExpressionSyntax AssignToDiscard(ExpressionSyntax expression)
-        => SyntaxFactory.AssignmentExpression(SyntaxKind.SimpleAssignmentExpression, SyntaxFactory.IdentifierName("_"), expression);
+    private static ExpressionSyntax AssignToDiscardIfNeeded(ExpressionSyntax expression)
+        => NeedsDiscard(expression)
+            ? SyntaxFactory.AssignmentExpression(SyntaxKind.SimpleAssignmentExpression, SyntaxFactory.IdentifierName("_"), expression)
+            : expression;
+
+    private static bool NeedsDiscard(ExpressionSyntax expression)
+        => expression is not InvocationExpressionSyntax &&
+            expression is not AssignmentExpressionSyntax &&
+            !expression.IsKind(SyntaxKind.PostIncrementExpression) &&
+            !expression.IsKind(SyntaxKind.PostDecrementExpression) &&
+            !expression.IsKind(SyntaxKind.PreIncrementExpression) &&
+            !expression.IsKind(SyntaxKind.PreDecrementExpression) &&
+            expression is not AwaitExpressionSyntax &&
+            expression is not ObjectCreationExpressionSyntax;
 }

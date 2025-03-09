@@ -245,17 +245,24 @@ internal sealed class UnitTestRunner : MarshalByRefObject
 
         try
         {
-            using LogMessageListener logListener = new(MSTestSettings.CurrentSettings.CaptureDebugTraces);
+            LogMessageListener? logListener = null;
             try
             {
-                testMethodInfo.Parent.Parent.RunAssemblyInitialize(testContext.Context);
+                testMethodInfo.Parent.Parent.RunAssemblyInitialize(testContext.Context, out logListener);
             }
             finally
             {
-                initializationLogs = logListener.GetAndClearStandardOutput();
-                initializationErrorLogs = logListener.GetAndClearStandardError();
-                initializationTrace = logListener.GetAndClearDebugTrace();
-                initializationTestContextMessages = testContext.GetAndClearDiagnosticMessages();
+                if (logListener is not null)
+                {
+                    FixtureMethodRunner.RunOnContext(testMethodInfo.Parent.Parent.ExecutionContext, () =>
+                    {
+                        initializationLogs = logListener.GetAndClearStandardOutput();
+                        initializationErrorLogs = logListener.GetAndClearStandardError();
+                        initializationTrace = logListener.GetAndClearDebugTrace();
+                        initializationTestContextMessages = testContext.GetAndClearDiagnosticMessages();
+                        logListener.Dispose();
+                    });
+                }
             }
         }
         catch (TestFailedException ex)
@@ -291,47 +298,63 @@ internal sealed class UnitTestRunner : MarshalByRefObject
         string? initializationTestContextMessages = string.Empty;
         try
         {
-            using LogMessageListener logListener = new(MSTestSettings.CurrentSettings.CaptureDebugTraces);
-            try
+            LogMessageListener? logListener = null;
+            // TODO: We are using the same TestContext here for ClassCleanup and AssemblyCleanup.
+            // They should be different.
+            IEnumerable<TestClassInfo> classInfoCache = typeCache.ClassInfoListWithExecutableCleanupMethods;
+            foreach (TestClassInfo classInfo in classInfoCache)
             {
-                // TODO: We are using the same TestContext here for ClassCleanup and AssemblyCleanup.
-                // They should be different.
-                IEnumerable<TestClassInfo> classInfoCache = typeCache.ClassInfoListWithExecutableCleanupMethods;
-                foreach (TestClassInfo classInfo in classInfoCache)
+                TestFailedException? ex = classInfo.ExecuteClassCleanup(testContext.Context, out logListener);
+                if (logListener is not null)
                 {
-                    TestFailedException? ex = classInfo.ExecuteClassCleanup(testContext.Context);
-                    if (ex is not null && results.Length > 0)
+                    FixtureMethodRunner.RunOnContext(classInfo.ExecutionContext, () =>
                     {
-#pragma warning disable IDE0056 // Use index operator
-                        TestResult lastResult = results[results.Length - 1];
-#pragma warning restore IDE0056 // Use index operator
-                        lastResult.Outcome = UTF.UnitTestOutcome.Error;
-                        lastResult.TestFailureException = ex;
-                        return;
-                    }
+                        initializationLogs += logListener.GetAndClearStandardOutput();
+                        initializationErrorLogs += logListener.GetAndClearStandardError();
+                        initializationTrace += logListener.GetAndClearDebugTrace();
+                        initializationTestContextMessages += testContext.GetAndClearDiagnosticMessages();
+                        logListener.Dispose();
+                        logListener = null;
+                    });
                 }
 
-                IEnumerable<TestAssemblyInfo> assemblyInfoCache = typeCache.AssemblyInfoListWithExecutableCleanupMethods;
-                foreach (TestAssemblyInfo assemblyInfo in assemblyInfoCache)
+                if (ex is not null && results.Length > 0)
                 {
-                    TestFailedException? ex = assemblyInfo.ExecuteAssemblyCleanup(testContext.Context);
-                    if (ex is not null && results.Length > 0)
-                    {
 #pragma warning disable IDE0056 // Use index operator
-                        TestResult lastResult = results[results.Length - 1];
+                    TestResult lastResult = results[results.Length - 1];
 #pragma warning restore IDE0056 // Use index operator
-                        lastResult.Outcome = UTF.UnitTestOutcome.Error;
-                        lastResult.TestFailureException = ex;
-                        return;
-                    }
+                    lastResult.Outcome = UTF.UnitTestOutcome.Error;
+                    lastResult.TestFailureException = ex;
+                    return;
                 }
             }
-            finally
+
+            IEnumerable<TestAssemblyInfo> assemblyInfoCache = typeCache.AssemblyInfoListWithExecutableCleanupMethods;
+            foreach (TestAssemblyInfo assemblyInfo in assemblyInfoCache)
             {
-                initializationLogs = logListener.GetAndClearStandardOutput();
-                initializationErrorLogs = logListener.GetAndClearStandardError();
-                initializationTrace = logListener.GetAndClearDebugTrace();
-                initializationTestContextMessages = testContext.GetAndClearDiagnosticMessages();
+                TestFailedException? ex = assemblyInfo.ExecuteAssemblyCleanup(testContext.Context, ref logListener);
+                if (logListener is not null)
+                {
+                    FixtureMethodRunner.RunOnContext(assemblyInfo.ExecutionContext, () =>
+                    {
+                        initializationLogs += logListener.GetAndClearStandardOutput();
+                        initializationErrorLogs += logListener.GetAndClearStandardError();
+                        initializationTrace += logListener.GetAndClearDebugTrace();
+                        initializationTestContextMessages += testContext.GetAndClearDiagnosticMessages();
+                        logListener.Dispose();
+                        logListener = null;
+                    });
+                }
+
+                if (ex is not null && results.Length > 0)
+                {
+#pragma warning disable IDE0056 // Use index operator
+                    TestResult lastResult = results[results.Length - 1];
+#pragma warning restore IDE0056 // Use index operator
+                    lastResult.Outcome = UTF.UnitTestOutcome.Error;
+                    lastResult.TestFailureException = ex;
+                    return;
+                }
             }
         }
         finally
