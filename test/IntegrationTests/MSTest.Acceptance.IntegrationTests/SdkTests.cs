@@ -64,7 +64,7 @@ namespace MSTestSdkTest
             .PatchCodeWithReplace("$TargetFramework$", multiTfm)
             .PatchCodeWithReplace("$ExtraProperties$", "<UseVSTest>true</UseVSTest>"));
 
-        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"test -c {buildConfiguration} {testAsset.TargetAssetPath}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path);
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"test -c {buildConfiguration} {testAsset.TargetAssetPath}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, workingDirectory: testAsset.TargetAssetPath);
         Assert.AreEqual(0, compilationResult.ExitCode);
 
         compilationResult.AssertOutputMatchesRegex(@"Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1, Duration: .* [m]?s - MSTestSdk.dll \(net9\.0\)");
@@ -91,7 +91,7 @@ namespace MSTestSdkTest
                .PatchCodeWithReplace("$TargetFramework$", multiTfm)
                .PatchCodeWithReplace("$ExtraProperties$", string.Empty));
 
-        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"test -c {buildConfiguration} {testAsset.TargetAssetPath}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path);
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"test -c {buildConfiguration} {testAsset.TargetAssetPath}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, workingDirectory: testAsset.TargetAssetPath);
         Assert.AreEqual(0, compilationResult.ExitCode);
 
         compilationResult.AssertOutputMatchesRegex(@"Tests succeeded: .* \[net9\.0|x64\]");
@@ -359,6 +359,7 @@ namespace MSTestSdkTest
         DotnetMuxerResult dotnetTestResult = await DotnetCli.RunAsync(
             $"test {exeOrDllName}",
             AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
+            workingDirectory: AssetFixture.PlaywrightProjectPath,
             failIfReturnValueIsNotZero: false,
             warnAsError: false,
             suppressPreviewDotNetMessage: false);
@@ -402,6 +403,7 @@ namespace MSTestSdkTest
         DotnetMuxerResult dotnetTestResult = await DotnetCli.RunAsync(
             $"test {exeOrDllName}",
             AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
+            workingDirectory: AssetFixture.AspireProjectPath,
             warnAsError: false,
             suppressPreviewDotNetMessage: false);
         Assert.AreEqual(0, dotnetTestResult.ExitCode);
@@ -420,7 +422,7 @@ namespace MSTestSdkTest
                .PatchCodeWithReplace("$TargetFramework$", TargetFrameworks.NetCurrent)
                .PatchCodeWithReplace("$ExtraProperties$", "<IsTestApplication>false</IsTestApplication>"));
 
-        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"test {testAsset.TargetAssetPath}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path);
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"test {testAsset.TargetAssetPath}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, workingDirectory: testAsset.TargetAssetPath);
 
         Assert.AreEqual(0, compilationResult.ExitCode);
 
