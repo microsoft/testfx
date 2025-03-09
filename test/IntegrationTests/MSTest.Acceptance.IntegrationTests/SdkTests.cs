@@ -533,6 +533,10 @@ public class UnitTest1 : PageTest
         await Expect(Page).ToHaveURLAsync(new Regex(".*intro"));
     }
 }
+
+#file dotnet.config
+[dotnet.test:runner]
+name= "VSTest"
 """;
 
         public string AspireProjectPath => GetAssetPath(AspireProjectName);
