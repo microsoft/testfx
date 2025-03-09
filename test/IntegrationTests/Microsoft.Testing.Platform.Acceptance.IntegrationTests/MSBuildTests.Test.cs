@@ -147,6 +147,7 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
         await DotnetCli.RunAsync(
             $"test --arch x86 -p:TestingPlatformDotnetTestSupport=True -p:Configuration=Release -p:nodeReuse=false \"{testAsset.TargetAssetPath}\"",
             AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
+            workingDirectory: testAsset.TargetAssetPath,
             environmentVariables: dotnetRootX86,
             failIfReturnValueIsNotZero: false);
 
@@ -235,6 +236,7 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
         await DotnetCli.RunAsync(
             $"test -p:TestingPlatformDotnetTestSupport=True -p:Configuration=Release -p:nodeReuse=false \"{testAsset.TargetAssetPath}\"",
             AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
+            workingDirectory: testAsset.TargetAssetPath,
             environmentVariables: dotnetHostPathEnvVar,
             failIfReturnValueIsNotZero: false);
 
@@ -282,7 +284,7 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
             .PatchCodeWithReplace("$TargetFrameworks$", $"<TargetFramework>{tfm}</TargetFramework>")
             .PatchCodeWithReplace("$AssertValue$", testSucceeded.ToString().ToLowerInvariant())
             .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
-        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"{testCommand} -p:TestingPlatformShowTestsFailure=True -p:TestingPlatformCaptureOutput=False -p:Configuration={compilationMode} -p:nodeReuse=false {testAsset.TargetAssetPath}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, failIfReturnValueIsNotZero: false);
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"{testCommand} -p:TestingPlatformShowTestsFailure=True -p:TestingPlatformCaptureOutput=False -p:Configuration={compilationMode} -p:nodeReuse=false {testAsset.TargetAssetPath}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, workingDirectory: testAsset.TargetAssetPath, failIfReturnValueIsNotZero: false);
 
         compilationResult.AssertOutputContains("error test failed: Test2 (");
         compilationResult.AssertOutputContains("FAILED: Expected 'true', but got 'false'.");
