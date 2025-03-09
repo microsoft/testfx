@@ -94,7 +94,7 @@ stages:
           displayName: Build
 
         - ${{ if eq(parameters.SkipTests, False) }}:
-          - script: dotnet test -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)\artifacts\log\$(_BuildConfig)\TestStep.binlog
+          - script: $(Build.SourcesDirectory)/.dotnet/dotnet test -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)\artifacts\log\$(_BuildConfig)\TestStep.binlog
             name: Test
             displayName: Test
 
