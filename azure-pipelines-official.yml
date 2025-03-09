@@ -145,16 +145,14 @@ extends:
               displayName: 'Rename Build.binlog to BuildStep.binlog'
               inputs:
                 targetType: inline
-                script: Copy-Item -Path "$(BUILD.SOURCESDIRECTORY)\artifacts\log\$(_BuildConfig)\Build.binlog" -Destination "$(BUILD.SOURCESDIRECTORY)\artifacts\log\$(_BuildConfig)\BuildStep.binlog"
+                script: Move-Item -Path "$(BUILD.SOURCESDIRECTORY)\artifacts\log\$(_BuildConfig)\Build.binlog" -Destination "$(BUILD.SOURCESDIRECTORY)\artifacts\log\$(_BuildConfig)\BuildStep.binlog"
               condition: always()
 
             - ${{ if eq(parameters.SkipTests, False) }}:
               # -ci is allowing to import some environment variables and some required configurations
-              # -nobl avoids overwriting build binlog with binlog from tests
               - script: Test.cmd
                   -configuration $(_BuildConfig)
                   -ci
-                  -nobl
                 name: Test
                 displayName: Test
 
