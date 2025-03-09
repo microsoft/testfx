@@ -54,7 +54,7 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
             .PatchCodeWithReplace("$AssertValue$", testSucceeded.ToString().ToLowerInvariant())
             .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
         string testResultFolder = Path.Combine(testAsset.TargetAssetPath, Guid.NewGuid().ToString("N"));
-        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"{testCommand} -p:TestingPlatformCommandLineArguments=\"--results-directory %22{testResultFolder}%22\" -p:Configuration={compilationMode} -p:nodeReuse=false \"{testAsset.TargetAssetPath}\"", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, failIfReturnValueIsNotZero: false);
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"{testCommand} -p:TestingPlatformCommandLineArguments=\"--results-directory %22{testResultFolder}%22\" -p:Configuration={compilationMode} -p:nodeReuse=false \"{testAsset.TargetAssetPath}\"", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, workingDirectory: testAsset.TargetAssetPath, failIfReturnValueIsNotZero: false);
 
         foreach (string tfmToAssert in tfmsToAssert)
         {
