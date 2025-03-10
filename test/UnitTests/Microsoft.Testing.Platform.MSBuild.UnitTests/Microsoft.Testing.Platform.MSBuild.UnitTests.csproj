@@ -4,6 +4,10 @@
     <TargetFrameworks>net8.0;net9.0</TargetFrameworks>
     <EnableMSTestRunner>true</EnableMSTestRunner>
     <OutputType>Exe</OutputType>
+    <!-- While we are referencing MSTest here already, we don't get Microsoft.Testing.Platform.MSBuild props transitively. -->
+    <!-- This is most likely because we are referencing Microsoft.Testing.Platform.MSBuild.csproj and the transitive dependency is not considered -->
+    <IsTestingPlatformApplication>true</IsTestingPlatformApplication>
+
   </PropertyGroup>
 
   <ItemGroup>
