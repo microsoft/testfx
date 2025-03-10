@@ -287,7 +287,7 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
         // here we ensure to override the result directory if user passed the argument --results-directory in command line.
         // After this check users can get the result directory using IConfiguration["platformOptions:resultDirectory"] or the
         // extension method helper serviceProvider.GetConfiguration()
-        await configuration.CheckTestResultsDirectoryOverrideAndCreateItAsync(commandLineOptions, loggingState.FileLoggerProvider);
+        await configuration.CheckTestResultsDirectoryOverrideAndCreateItAsync(loggingState.FileLoggerProvider);
 
         // Display banner now because we need capture the output in case of MSBuild integration and we want to forward
         // to file disc also the banner, so at this point we need to have all services and configuration(result directory) built.
