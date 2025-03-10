@@ -21,7 +21,6 @@ internal sealed class AggregatedConfiguration(
     private readonly CommandLineParseResult _commandLineParseResult = commandLineParseResult;
     private string? _resultsDirectory;
     private string? _currentWorkingDirectory;
-    private string? _testHostWorkingDirectory;
 
     public string? this[string key]
     {
@@ -33,15 +32,10 @@ internal sealed class AggregatedConfiguration(
                 return _resultsDirectory;
             }
 
-            if (key == PlatformConfigurationConstants.PlatformCurrentWorkingDirectory)
+            if (key is PlatformConfigurationConstants.PlatformCurrentWorkingDirectory or PlatformConfigurationConstants.PlatformTestHostWorkingDirectory)
             {
                 _currentWorkingDirectory = GetCurrentWorkingDirectoryCore();
                 return _currentWorkingDirectory;
-            }
-
-            if (key == PlatformConfigurationConstants.PlatformTestHostWorkingDirectory && _testHostWorkingDirectory is not null)
-            {
-                return _testHostWorkingDirectory;
             }
 
             // Fallback to calculating from configuration providers.
@@ -64,9 +58,6 @@ internal sealed class AggregatedConfiguration(
 
     public /* for testing */ void SetCurrentWorkingDirectory(string workingDirectory) =>
         _currentWorkingDirectory = Guard.NotNull(workingDirectory);
-
-    public void SetTestHostWorkingDirectory(string workingDirectory) =>
-        _testHostWorkingDirectory = Guard.NotNull(workingDirectory);
 
     public async Task CheckTestResultsDirectoryOverrideAndCreateItAsync(IFileLoggerProvider? fileLoggerProvider)
     {

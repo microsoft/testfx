@@ -35,6 +35,7 @@ public static class ConfigurationExtensions
     /// </summary>
     /// <param name="configuration">The configuration.</param>
     /// <returns>The test host working directory.</returns>
+    [Obsolete("This API is obsolete and will be removed in v2. Use GetCurrentWorkingDirectory instead.", error: true)]
     // TODO: This is only used in unit tests. Should that be removed (maybe in v2)?
     public static string GetTestHostWorkingDirectory(this IConfiguration configuration)
     {

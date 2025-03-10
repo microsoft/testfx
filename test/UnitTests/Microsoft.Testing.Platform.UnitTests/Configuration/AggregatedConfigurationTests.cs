@@ -74,15 +74,6 @@ public sealed class AggregatedConfigurationTests
     }
 
     [TestMethod]
-    public void IndexerTest_TestHostWorkingDirectorySet_DirectoryIsNotNull()
-    {
-        AggregatedConfiguration aggregatedConfiguration = new([], _testApplicationModuleInfoMock.Object, _fileSystemMock.Object, new(null, [], []));
-
-        aggregatedConfiguration.SetTestHostWorkingDirectory(ExpectedPath);
-        Assert.AreEqual(ExpectedPath, aggregatedConfiguration[PlatformConfigurationConstants.PlatformTestHostWorkingDirectory]);
-    }
-
-    [TestMethod]
     public async ValueTask CheckTestResultsDirectoryOverrideAndCreateItAsync_ResultsDirectoryIsNull_GetDirectoryFromCommandLineProvider()
     {
         Mock<ITestApplicationModuleInfo> mockTestApplicationModuleInfo = new();
