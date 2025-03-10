@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.CommandLine;
@@ -70,12 +70,7 @@ internal sealed class AggregatedConfiguration(
 
     public async Task CheckTestResultsDirectoryOverrideAndCreateItAsync(IFileLoggerProvider? fileLoggerProvider)
     {
-<<<<<<< HEAD
-        // Load Configuration
-        _currentWorkingDirectory = Path.GetDirectoryName(_testApplicationModuleInfo.GetCurrentTestApplicationFullPath())!;
-=======
         _resultsDirectory = _fileSystem.CreateDirectory(this[PlatformConfigurationConstants.PlatformResultDirectory]!);
->>>>>>> Consider `--results-directory` before configuration
 
         // In case of the result directory is overridden by the config file we move logs to it.
         // This can happen in case of VSTest mode where the result directory is set to a different location.
@@ -117,5 +112,5 @@ internal sealed class AggregatedConfiguration(
             // If first time calculating it, prefer the value from configuration,
             ?? CalculateFromConfigurationProviders(PlatformConfigurationConstants.PlatformCurrentWorkingDirectory)
             // then fallback to the actual working directory.
-            ?? _testApplicationModuleInfo.GetCurrentTestApplicationDirectory();
+            ?? Path.GetDirectoryName(_testApplicationModuleInfo.GetCurrentTestApplicationFullPath())!;
 }
