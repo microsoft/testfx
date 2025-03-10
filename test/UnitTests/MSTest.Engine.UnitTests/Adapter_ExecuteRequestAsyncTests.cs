@@ -116,7 +116,7 @@ public class Adapter_ExecuteRequestAsyncTests : TestBase
             ServiceProvider.AddService(new FakeClock());
             ServiceProvider.AddService(new SystemTask());
 #pragma warning disable TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
-            ServiceProvider.AddService(new AggregatedConfiguration(Array.Empty<IConfigurationProvider>(), new CurrentTestApplicationModuleInfo(new SystemEnvironment(), new SystemProcessHandler()), new SystemFileSystem()));
+            ServiceProvider.AddService(new AggregatedConfiguration(Array.Empty<IConfigurationProvider>(), new CurrentTestApplicationModuleInfo(new SystemEnvironment(), new SystemProcessHandler()), new SystemFileSystem(), new(null, [], [])));
 #pragma warning restore TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
         }
 
