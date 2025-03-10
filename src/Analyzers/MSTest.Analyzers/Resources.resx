@@ -573,4 +573,10 @@ The type declaring these methods should also respect the following rules:
   <data name="UseConditionBaseWithTestClassMessageFormat" xml:space="preserve">
     <value>The attribute '{0}' which derives from 'ConditionBaseAttribute' should be used only on classes marked with `TestClassAttribute`</value>
   </data>
+  <data name="DuplicateDataRowTitle" xml:space="preserve">
+    <value>A duplicate 'DataRow' attribute is found</value>
+  </data>
+  <data name="DuplicateDataRowMessageFormat" xml:space="preserve">
+    <value>Do not duplicate 'DataRow' attributes. This is usually a copy/paste error.</value>
+  </data>
 </root>
