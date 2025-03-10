@@ -72,6 +72,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "IntegrationTests", "Integra
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TestAssets", "TestAssets", "{C9F82701-0E0F-4E61-B05B-AE387E7631F6}"
 	ProjectSection(SolutionItems) = preProject
+		test\IntegrationTests\TestAssets\Directory.Build.props = test\IntegrationTests\TestAssets\Directory.Build.props
 		test\IntegrationTests\TestAssets\Directory.Build.targets = test\IntegrationTests\TestAssets\Directory.Build.targets
 	EndProjectSection
 EndProject
