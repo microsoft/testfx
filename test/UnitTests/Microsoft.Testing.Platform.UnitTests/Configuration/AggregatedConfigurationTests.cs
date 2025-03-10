@@ -29,7 +29,7 @@ public sealed class AggregatedConfigurationTests
         {
             PlatformConfigurationConstants.PlatformResultDirectory => Path.Combine("TestAppDir", "TestResults"),
             PlatformConfigurationConstants.PlatformCurrentWorkingDirectory => "TestAppDir",
-            PlatformConfigurationConstants.PlatformTestHostWorkingDirectory => null,
+            PlatformConfigurationConstants.PlatformTestHostWorkingDirectory => "TestAppDir",
             _ => throw ApplicationStateGuard.Unreachable(),
         };
 
