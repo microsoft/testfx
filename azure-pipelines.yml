@@ -99,7 +99,7 @@ stages:
           # Otherwise, props/targets are not imported. It's important that they are imported so that IsTestingPlatformApplication ends up being set.
           - script: $(Build.SourcesDirectory)/.dotnet/dotnet test -p:NUGET_PACKAGES=$(BUILD.SOURCESDIRECTORY)\.packages -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)\artifacts\log\$(_BuildConfig)\TestStep.binlog
             env:
-              DOTNET_CLI_TEST_TRACEFILE: $(Build.SourcesDirectory)/artifacts/TestResults/dotnet-test-trace-logs.txt
+              DOTNET_CLI_TEST_TRACEFILE: $(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)/dotnet-test-trace-logs.txt
             name: Test
             displayName: Test
 
