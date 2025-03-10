@@ -94,6 +94,10 @@ stages:
           displayName: Build
 
         - ${{ if eq(parameters.SkipTests, False) }}:
+
+          # Workaround for https://github.com/microsoft/testfx/issues/5205
+          - powershell: New-Item -Path "$(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)" -Type Directory
+
           # Because the build step is using -ci flag, restore is done in a local .packages directory.
           # We need to pass NUGET_PACKAGES so that when dotnet test is doing evaluation phase on the projects, it can resolve .props/.targets from packages and import them.
           # Otherwise, props/targets are not imported. It's important that they are imported so that IsTestingPlatformApplication ends up being set.
