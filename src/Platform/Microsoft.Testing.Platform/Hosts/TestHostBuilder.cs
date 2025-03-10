@@ -563,9 +563,8 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
         await logger.LogDebugAsync($"Connected to named pipe '{pipeName}'");
 
         // Send the PID
-        using IProcess currentProcess = processHandler.GetCurrentProcess();
         await client.RequestReplyAsync<TestHostProcessPIDRequest, VoidResponse>(
-            new TestHostProcessPIDRequest(currentProcess.Id),
+            new TestHostProcessPIDRequest(processHandler.GetCurrentProcessId()),
             testApplicationCancellationTokenSource.CancellationToken);
         return client;
     }
