@@ -433,7 +433,6 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
         // Out of the test host controller extension the current working directory is the test host working directory.
         string? currentWorkingDirectory = configuration[PlatformConfigurationConstants.PlatformCurrentWorkingDirectory];
         ApplicationStateGuard.Ensure(currentWorkingDirectory is not null);
-        configuration.SetTestHostWorkingDirectory(currentWorkingDirectory);
 
         testHostControllerInfo.IsCurrentProcessTestHostController = false;
 

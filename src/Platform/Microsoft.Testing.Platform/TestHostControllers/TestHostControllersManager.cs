@@ -85,7 +85,6 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
         var aggregatedConfiguration = (AggregatedConfiguration)serviceProvider.GetConfiguration();
         string? currentWorkingDirectory = aggregatedConfiguration[PlatformConfigurationConstants.PlatformCurrentWorkingDirectory];
         ApplicationStateGuard.Ensure(currentWorkingDirectory is not null);
-        aggregatedConfiguration.SetTestHostWorkingDirectory(currentWorkingDirectory);
 
         List<(ITestHostEnvironmentVariableProvider TestHostEnvironmentVariableProvider, int RegistrationOrder)> environmentVariableProviders = [];
         foreach (Func<IServiceProvider, ITestHostEnvironmentVariableProvider> environmentVariableProviderFactory in _environmentVariableProviderFactories)
