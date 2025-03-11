@@ -24,7 +24,7 @@ public sealed class AggregatedConfigurationTests
     [DataRow(PlatformConfigurationConstants.PlatformTestHostWorkingDirectory)]
     public void IndexerTest_DirectoryNotSetAndNoConfigurationProviders(string key)
     {
-        _testApplicationModuleInfoMock.Setup(x => x.GetCurrentTestApplicationDirectory()).Returns("TestAppDir");
+        _testApplicationModuleInfoMock.Setup(x => x.GetCurrentTestApplicationFullPath()).Returns("TestAppDir/test.exe");
         string? expected = key switch
         {
             PlatformConfigurationConstants.PlatformResultDirectory => Path.Combine("TestAppDir", "TestResults"),
