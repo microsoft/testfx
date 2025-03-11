@@ -80,7 +80,7 @@ public sealed class DuplicateDataRowAnalyzer : DiagnosticAnalyzer
 
             for (int i = 0; i < x.Length; i++)
             {
-                if (AreTypedConstantEquals(x[i], y[i]))
+                if (!AreTypedConstantEquals(x[i], y[i]))
                 {
                     return false;
                 }
@@ -93,7 +93,7 @@ public sealed class DuplicateDataRowAnalyzer : DiagnosticAnalyzer
         {
             // If the Kind doesn't match or the Type doesn't match, they are not equal.
             if (typedConstant1.Kind != typedConstant2.Kind ||
-                SymbolEqualityComparer.Default.Equals(typedConstant1.Type, typedConstant2.Type))
+                !SymbolEqualityComparer.Default.Equals(typedConstant1.Type, typedConstant2.Type))
             {
                 return false;
             }
