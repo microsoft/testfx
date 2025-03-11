@@ -152,7 +152,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
         _terminalWithProgress.StartShowingProgress(workerCount);
     }
 
-    public void AssemblyRunStarted(string assembly, string? targetFramework, string? architecture, string? executionId)
+    public void AssemblyRunStarted(string assembly, string? targetFramework, string? architecture)
     {
         if (_options.ShowAssembly && _options.ShowAssemblyStartAndComplete)
         {
@@ -165,12 +165,12 @@ internal sealed partial class TerminalTestReporter : IDisposable
             });
         }
 
-        GetOrAddAssemblyRun(assembly, targetFramework, architecture, executionId);
+        GetOrAddAssemblyRun(assembly, targetFramework, architecture);
     }
 
-    private TestProgressState GetOrAddAssemblyRun(string assembly, string? targetFramework, string? architecture, string? executionId)
+    private TestProgressState GetOrAddAssemblyRun(string assembly, string? targetFramework, string? architecture)
     {
-        string key = $"{assembly}|{targetFramework}|{architecture}|{executionId}";
+        string key = $"{assembly}|{targetFramework}|{architecture}";
         return _assemblies.GetOrAdd(key, _ =>
         {
             IStopwatch sw = CreateStopwatch();
@@ -380,7 +380,6 @@ internal sealed partial class TerminalTestReporter : IDisposable
        string assembly,
        string? targetFramework,
        string? architecture,
-       string? executionId,
        string testNodeUid,
        string displayName,
        TestOutcome outcome,
@@ -398,7 +397,6 @@ internal sealed partial class TerminalTestReporter : IDisposable
             assembly,
             targetFramework,
             architecture,
-            executionId,
             testNodeUid,
             displayName,
             outcome,
@@ -415,7 +413,6 @@ internal sealed partial class TerminalTestReporter : IDisposable
         string assembly,
         string? targetFramework,
         string? architecture,
-        string? executionId,
         string testNodeUid,
         string displayName,
         TestOutcome outcome,
@@ -427,7 +424,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
         string? standardOutput,
         string? errorOutput)
     {
-        TestProgressState asm = _assemblies[$"{assembly}|{targetFramework}|{architecture}|{executionId}"];
+        TestProgressState asm = _assemblies[$"{assembly}|{targetFramework}|{architecture}"];
 
         if (_options.ShowActiveTests)
         {
@@ -737,12 +734,12 @@ internal sealed partial class TerminalTestReporter : IDisposable
         }
     }
 
-    internal void AssemblyRunCompleted(string assembly, string? targetFramework, string? architecture, string? executionId,
+    internal void AssemblyRunCompleted(string assembly, string? targetFramework, string? architecture,
         // These parameters are useful only for "remote" runs in dotnet test, where we are reporting on multiple processes.
         // In single process run, like with testing platform .exe we report these via messages, and run exit.
         int? exitCode, string? outputData, string? errorData)
     {
-        TestProgressState assemblyRun = GetOrAddAssemblyRun(assembly, targetFramework, architecture, executionId);
+        TestProgressState assemblyRun = GetOrAddAssemblyRun(assembly, targetFramework, architecture);
         assemblyRun.Stopwatch.Stop();
 
         _terminalWithProgress.RemoveWorker(assemblyRun.SlotIndex);
@@ -816,8 +813,8 @@ internal sealed partial class TerminalTestReporter : IDisposable
 
     public void Dispose() => _terminalWithProgress.Dispose();
 
-    public void ArtifactAdded(bool outOfProcess, string? assembly, string? targetFramework, string? architecture, string? executionId, string? testName, string path)
-        => _artifacts.Add(new TestRunArtifact(outOfProcess, assembly, targetFramework, architecture, executionId, testName, path));
+    public void ArtifactAdded(bool outOfProcess, string? assembly, string? targetFramework, string? architecture, string? testName, string path)
+        => _artifacts.Add(new TestRunArtifact(outOfProcess, assembly, targetFramework, architecture, testName, path));
 
     /// <summary>
     /// Let the user know that cancellation was triggered.
@@ -833,9 +830,9 @@ internal sealed partial class TerminalTestReporter : IDisposable
         });
     }
 
-    internal void WriteErrorMessage(string assembly, string? targetFramework, string? architecture, string? executionId, string text, int? padding)
+    internal void WriteErrorMessage(string assembly, string? targetFramework, string? architecture, string text, int? padding)
     {
-        TestProgressState asm = GetOrAddAssemblyRun(assembly, targetFramework, architecture, executionId);
+        TestProgressState asm = GetOrAddAssemblyRun(assembly, targetFramework, architecture);
         asm.AddError(text);
 
         _terminalWithProgress.WriteToTerminal(terminal =>
@@ -854,9 +851,9 @@ internal sealed partial class TerminalTestReporter : IDisposable
         });
     }
 
-    internal void WriteWarningMessage(string assembly, string? targetFramework, string? architecture, string? executionId, string text, int? padding)
+    internal void WriteWarningMessage(string assembly, string? targetFramework, string? architecture, string text, int? padding)
     {
-        TestProgressState asm = GetOrAddAssemblyRun(assembly, targetFramework, architecture, executionId);
+        TestProgressState asm = GetOrAddAssemblyRun(assembly, targetFramework, architecture);
         asm.AddWarning(text);
         _terminalWithProgress.WriteToTerminal(terminal =>
         {
@@ -874,8 +871,8 @@ internal sealed partial class TerminalTestReporter : IDisposable
         });
     }
 
-    internal void WriteErrorMessage(string assembly, string? targetFramework, string? architecture, string? executionId, Exception exception)
-        => WriteErrorMessage(assembly, targetFramework, architecture, executionId, exception.ToString(), padding: null);
+    internal void WriteErrorMessage(string assembly, string? targetFramework, string? architecture, Exception exception)
+        => WriteErrorMessage(assembly, targetFramework, architecture, exception.ToString(), padding: null);
 
     public void WriteMessage(string text, SystemConsoleColor? color = null, int? padding = null)
     {
@@ -916,11 +913,10 @@ internal sealed partial class TerminalTestReporter : IDisposable
         string assembly,
         string? targetFramework,
         string? architecture,
-        string? executionId,
         string? displayName,
         string? uid)
     {
-        TestProgressState asm = _assemblies[$"{assembly}|{targetFramework}|{architecture}|{executionId}"];
+        TestProgressState asm = _assemblies[$"{assembly}|{targetFramework}|{architecture}"];
 
         if (_isDiscovery)
         {
@@ -1028,10 +1024,9 @@ internal sealed partial class TerminalTestReporter : IDisposable
         string? targetFramework,
         string? architecture,
         string testNodeUid,
-        string displayName,
-        string? executionId)
+        string displayName)
     {
-        TestProgressState asm = _assemblies[$"{assembly}|{targetFramework}|{architecture}|{executionId}"];
+        TestProgressState asm = _assemblies[$"{assembly}|{targetFramework}|{architecture}"];
 
         if (_options.ShowActiveTests)
         {
