@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8" ?>
+<?xml version="1.0" encoding="utf-8" ?>
 <Project>
   <PropertyGroup>
     <!-- This is the knob to disable completely for this project the machinery -->
@@ -22,7 +22,9 @@
   </ItemGroup>
 
   <Target Name="_MTPAddArguments" BeforeTargets="ComputeRunArguments">
-    <RunArguments Condition="'(TestingPlatformCommandLineArguments)' != ''">$(RunArguments) $(TestingPlatformCommandLineArguments)</RunArguments>
+    <PropertyGroup>
+      <RunArguments Condition="'(TestingPlatformCommandLineArguments)' != ''">$(RunArguments) $(TestingPlatformCommandLineArguments)</RunArguments>
+    </PropertyGroup>
   </Target>
 
 </Project>
