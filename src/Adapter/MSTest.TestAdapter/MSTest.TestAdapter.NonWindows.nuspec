@@ -55,9 +55,7 @@
     <file src="net6.0\buildTransitive\common\MSTest.TestAdapter.props" target="buildTransitive\net6.0\MSTest.TestAdapter.props" />
     <file src="net6.0\buildTransitive\common\MSTest.TestAdapter.targets" target="buildTransitive\net6.0\MSTest.TestAdapter.targets" />
     <file src="net6.0\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll" target="buildTransitive\net6.0\" />
-    <file src="$ArtifactsBinDir$MSTestAdapter.PlatformServices\$Configuration$\net6.0-windows10.0.18362.0\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll" target="buildTransitive\net6.0\winui\" />
     <file src="net6.0\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.dll" target="buildTransitive\net6.0\" />
-    <file src="net6.0-windows10.0.18362.0\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.dll" target="buildTransitive\net6.0\winui" />
     <file src="net6.0\Microsoft.TestPlatform.AdapterUtilities.dll" target="buildTransitive\net6.0\" />
     <file src="$RepoRoot$src\Adapter\MSTest.TestAdapter\build\net6.0\MSTest.TestAdapter.props" target="build\net6.0\" />
     <file src="$RepoRoot$src\Adapter\MSTest.TestAdapter\build\net6.0\MSTest.TestAdapter.targets" target="build\net6.0\" />
