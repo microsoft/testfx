@@ -1,15 +1,16 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" DefaultTargets="Build">
 
-  <!-- Acknowledge users choices -->
-  <PropertyGroup Condition=" $(IsTestingPlatformApplication) == 'True' ">
-    <GenerateTestingPlatformConfigurationFile Condition=" '$(GenerateTestingPlatformConfigurationFile)' == '' " >True</GenerateTestingPlatformConfigurationFile>
-    <GenerateTestingPlatformEntryPoint Condition=" '$(GenerateTestingPlatformEntryPoint)' == '' " >True</GenerateTestingPlatformEntryPoint>
-    <GenerateSelfRegisteredExtensions Condition=" '$(GenerateSelfRegisteredExtensions)' == '' ">True</GenerateSelfRegisteredExtensions>
+  <PropertyGroup>
+    <!-- This is the knob to disable completely for this project the machinery -->
+    <IsTestingPlatformApplication Condition=" '$(IsTestingPlatformApplication)' == '' ">true</IsTestingPlatformApplication>
   </PropertyGroup>
 
   <!-- Declare our capability to Visual Studio/Visual Studio Code -->
-  <ItemGroup Condition=" '$(DisableTestingPlatformServerCapability)' != 'True' ">
+  <!-- Note: DisableTestingPlatformServerCapability or IsTestingPlatformApplication may be set by TestAdapter targets -->
+  <!-- While TestAdapter targets file is imported *after* this file, MSBuild evaluates properties -->
+  <!-- first, then items. So, we will be able to pick up the correct value here. -->
+  <ItemGroup Condition=" '$(DisableTestingPlatformServerCapability)' != 'true' AND '$(IsTestingPlatformApplication)' == 'true' ">
     <ProjectCapability Include="TestingPlatformServer" />
 
     <!-- Old capability expected by VS/VSCode -->
@@ -18,7 +19,7 @@
 
   <!-- Add assembly attribute metadata for reflection usage -->
   <ItemGroup>
-    <AssemblyMetadata Include="Microsoft.Testing.Platform.Application" Value="True" Condition=" '$(IsTestingPlatformApplication)' == 'True' " />
+    <AssemblyMetadata Include="Microsoft.Testing.Platform.Application" Value="true" Condition=" '$(IsTestingPlatformApplication)' == 'true' " />
   </ItemGroup>
 
   <!-- Setup the task folder -->
@@ -48,10 +49,23 @@
     <_TestingPlatformConfigurationFileName>$(AssemblyName).testconfig.json</_TestingPlatformConfigurationFileName>
     <_TestingPlatformConfigurationFile>$([System.IO.Path]::Combine($(MSBuildProjectDirectory),$(OutputPath),$(_TestingPlatformConfigurationFileName)))</_TestingPlatformConfigurationFile>
   </PropertyGroup>
+
+  <Target Name="_CalculateGenerateTestingPlatformConfigurationFile">
+    <PropertyGroup>
+      <!-- We add this to a target to allow setting IsTestingPlatformApplication as late as possible -->
+      <!-- For example, MSTest.TestAdapter.targets is imported *after* Microsoft.Testing.Platform.MSBuild.targets -->
+      <!-- We want to allow MSTest.TestAdapter.targets to set IsTestingPlatformApplication to false if EnableMSTestRunner is not set to true. -->
+      <GenerateTestingPlatformConfigurationFile Condition=" '$(GenerateTestingPlatformConfigurationFile)' == '' " >$(IsTestingPlatformApplication)</GenerateTestingPlatformConfigurationFile>
+    </PropertyGroup>
+  </Target>
+
   <Target Name="GenerateTestingPlatformConfigurationFile" BeforeTargets="CopyFilesToOutputDirectory"
+          DependsOnTargets="_CalculateGenerateTestingPlatformConfigurationFile;_GenerateTestingPlatformConfigurationFileCore" />
+
+  <Target Name="_GenerateTestingPlatformConfigurationFileCore"
           Inputs="$(_TestingPlatformConfigurationFileSourcePath)"
           Outputs="$(_TestingPlatformConfigurationFile)"
-          Condition=" '$(GenerateTestingPlatformConfigurationFile)' == 'True' And Exists('$(_TestingPlatformConfigurationFileSourcePath)') " >
+          Condition=" '$(GenerateTestingPlatformConfigurationFile)' == 'true' And Exists('$(_TestingPlatformConfigurationFileSourcePath)') " >
     <ConfigurationFileTask
       MSBuildProjectDirectory="$(MSBuildProjectDirectory)"
       AssemblyName="$(AssemblyName)"
@@ -79,7 +93,16 @@
   <UsingTask TaskName="Microsoft.Testing.Platform.MSBuild.TestingPlatformEntryPointTask"
          AssemblyFile="$(MicrosoftTestingPlatformMSBuildTaskFolder)Microsoft.Testing.Platform.MSBuild.dll"/>
 
-  <Target Name="_GenerateTestingPlatformEntryPointFileInputCache" BeforeTargets="_GenerateTestingPlatformEntryPoint" Condition=" '$(GenerateTestingPlatformEntryPoint)' == 'True' " >
+  <Target Name="_CalculateGenerateTestingPlatformEntryPoint">
+    <PropertyGroup>
+      <!-- We add this to a target to allow setting IsTestingPlatformApplication as late as possible -->
+      <!-- For example, MSTest.TestAdapter.targets is imported *after* Microsoft.Testing.Platform.MSBuild.targets -->
+      <!-- We want to allow MSTest.TestAdapter.targets to set IsTestingPlatformApplication to false if EnableMSTestRunner is not set to true. -->
+      <GenerateTestingPlatformEntryPoint Condition=" '$(GenerateTestingPlatformEntryPoint)' == '' " >$(IsTestingPlatformApplication)</GenerateTestingPlatformEntryPoint>
+    </PropertyGroup>
+  </Target>
+
+  <Target Name="_GenerateTestingPlatformEntryPointFileInputCache" DependsOnTargets="_CalculateGenerateTestingPlatformEntryPoint">
     <PropertyGroup>
       <!-- Cache file to check -->
       <_GenerateTestingPlatformEntryPointInputsCachFilePath>$(IntermediateOutputPath)$(MSBuildProjectName).gentestingplatformentrypointinputcache.cache</_GenerateTestingPlatformEntryPointInputsCachFilePath>
@@ -89,6 +112,7 @@
       <!-- Items to hash-->
       <_GenerateTestingPlatformEntryPointInputsCacheToHash Include="@(TestingPlatformBuilderHook)"/>
       <_GenerateTestingPlatformEntryPointInputsCacheToHash Include="$(RootNamespace)"/>
+      <_GenerateTestingPlatformEntryPointInputsCacheToHash Include="$(GenerateTestingPlatformEntryPoint)" />
 
       <!-- Export the items name for the _GenerateTestingPlatformInjectEntryPoint task-->
       <GenerateTestingPlatformEntryPointInputsCacheFilePath Include="$(_GenerateTestingPlatformEntryPointInputsCachFilePath)" />
@@ -100,8 +124,8 @@
     <!-- Write the hash value to the cache file -->
     <WriteLinesToFile Lines="$(_GenerateTestingPlatformEntryPointInputsCache)"
                   File="$(_GenerateTestingPlatformEntryPointInputsCachFilePath)"
-                  Overwrite="True"
-                  WriteOnlyWhenDifferent="True" />
+                  Overwrite="true"
+                  WriteOnlyWhenDifferent="true" />
     <ItemGroup>
       <FileWrites Include="$(_GenerateTestingPlatformEntryPointInputsCachFilePath)" />
     </ItemGroup>
@@ -109,16 +133,13 @@
 
   <!-- Generate the entry point source using the user extensions informations -->
   <PropertyGroup>
-    <_TestingPlatformEntryPointSourceNameWithoutExtension>TestPlatformEntryPoint</_TestingPlatformEntryPointSourceNameWithoutExtension>
-    <_TestingPlatformEntryPointSourceName Condition=" $(Language) == 'C#' " >$(_TestingPlatformEntryPointSourceNameWithoutExtension).cs</_TestingPlatformEntryPointSourceName>
-    <_TestingPlatformEntryPointSourceName Condition=" $(Language) == 'VB' " >$(_TestingPlatformEntryPointSourceNameWithoutExtension).vb</_TestingPlatformEntryPointSourceName>
-    <_TestingPlatformEntryPointSourceName Condition=" $(Language) == 'F#' " >$(_TestingPlatformEntryPointSourceNameWithoutExtension).fs</_TestingPlatformEntryPointSourceName>
+    <_TestingPlatformEntryPointSourceName>TestPlatformEntryPoint$(DefaultLanguageSourceExtension)</_TestingPlatformEntryPointSourceName>
     <_TestingPlatformEntryPointSourcePath>$([System.IO.Path]::Combine($(IntermediateOutputPath),$(_TestingPlatformEntryPointSourceName)))</_TestingPlatformEntryPointSourcePath>
     <_TestingPlatformEntryPointSourcePath>$([MSBuild]::NormalizePath($(MSBuildProjectDirectory), $(_TestingPlatformEntryPointSourcePath)))</_TestingPlatformEntryPointSourcePath>
   </PropertyGroup>
-  <Target Name="_GenerateTestingPlatformEntryPoint" BeforeTargets="_IncludeGenerateTestingPlatformEntryPointIntoCompilation"
+  <Target Name="_GenerateTestingPlatformEntryPoint"
           Inputs="@(GenerateTestingPlatformEntryPointInputsCacheFilePath)" Outputs="$(_TestingPlatformEntryPointSourcePath)"
-          Condition=" '$(GenerateTestingPlatformEntryPoint)' == 'True' " >
+          Condition=" '$(GenerateTestingPlatformEntryPoint)' == 'true' " >
     <TestingPlatformEntryPointTask TestingPlatformEntryPointSourcePath="$(_TestingPlatformEntryPointSourcePath)"
                                    RootNamespace="$(RootNamespace)"
                                    Language="$(Language)" >
@@ -129,13 +150,20 @@
     </ItemGroup>
   </Target>
 
-  <!-- We always include the entry point also if the task _GenerateTestingPlatformInjectEntryPoint is skipped for caching reason -->
-  <Target Name="_IncludeGenerateTestingPlatformEntryPointIntoCompilation" BeforeTargets="BeforeCompile;XamlPreCompile" Condition=" '$(GenerateTestingPlatformEntryPoint)' == 'True' " >
-    <ItemGroup>
-      <Compile Include="$(_TestingPlatformEntryPointSourcePath)" />
-    </ItemGroup>
-    <!-- We need to report to the FileWrites here because is possible that we skip _GenerateTestingPlatformInjectEntryPoint and we want to correctly handle the "dotnet clean" target -->
-    <ItemGroup>
+  <Target Name="_IncludeGenerateTestingPlatformEntryPointIntoCompilation" BeforeTargets="BeforeCompile;XamlPreCompile"
+          DependsOnTargets="_CalculateGenerateTestingPlatformEntryPoint;_GenerateTestingPlatformEntryPointFileInputCache;_GenerateTestingPlatformEntryPoint">
+
+    <ItemGroup Condition=" '$(GenerateTestingPlatformEntryPoint)' == 'true' ">
+      <!-- Order of files matter in F#. Make sure to include the entry-point last. -->
+      <!-- See https://github.com/dotnet/fsharp/blob/27db996c58a511386ad754e34f4b57877aa1d99e/src/FSharp.Build/Microsoft.FSharp.Targets#L258-L277 -->
+      <!-- IMPORTANT: We use CompileAfter and not CompileLast as CompileLast is quite recent: https://github.com/dotnet/fsharp/pull/17103 -->
+      <!-- Note that we only add the entry point in CompileAfter. The self-registered extensions is still in Compile -->
+      <!-- If the user enables only self-registered extensions generation and decides to write their own entry point, they should add
+           their entry point file to CompileAfter as well -->
+      <Compile Include="$(_TestingPlatformEntryPointSourcePath)" Condition=" '$(Language)' != 'F#' " />
+      <CompileAfter Include="$(_TestingPlatformEntryPointSourcePath)" Condition=" '$(Language)' == 'F#' " />
+
+      <!-- We need to report to the FileWrites here because is possible that we skip _GenerateTestingPlatformInjectEntryPoint and we want to correctly handle the "dotnet clean" target -->
       <FileWrites Include="$(_TestingPlatformEntryPointSourcePath)" />
     </ItemGroup>
   </Target>
@@ -158,7 +186,16 @@
   <UsingTask TaskName="Microsoft.Testing.Platform.MSBuild.TestingPlatformSelfRegisteredExtensions"
          AssemblyFile="$(MicrosoftTestingPlatformMSBuildTaskFolder)Microsoft.Testing.Platform.MSBuild.dll"/>
 
-  <Target Name="_GenerateSelfRegisteredExtensionsFileInputCache" BeforeTargets="_GenerateTestingPlatformEntryPoint" Condition=" '$(GenerateSelfRegisteredExtensions)' == 'True' " >
+  <Target Name="_CalculateGenerateSelfRegisteredExtensions">
+    <PropertyGroup>
+      <!-- We add this to a target to allow setting IsTestingPlatformApplication as late as possible -->
+      <!-- For example, MSTest.TestAdapter.targets is imported *after* Microsoft.Testing.Platform.MSBuild.targets -->
+      <!-- We want to allow MSTest.TestAdapter.targets to set IsTestingPlatformApplication to false if EnableMSTestRunner is not set to true. -->
+      <GenerateSelfRegisteredExtensions Condition=" '$(GenerateSelfRegisteredExtensions)' == '' " >$(IsTestingPlatformApplication)</GenerateSelfRegisteredExtensions>
+    </PropertyGroup>
+  </Target>
+
+  <Target Name="_GenerateSelfRegisteredExtensionsFileInputCache" DependsOnTargets="_CalculateGenerateSelfRegisteredExtensions">
     <PropertyGroup>
       <!-- Cache file to check -->
       <_GenerateSelfRegisteredExtensionsInputsCachFilePath>$(IntermediateOutputPath)$(MSBuildProjectName).genautoregisteredextensionsinputcache.cache</_GenerateSelfRegisteredExtensionsInputsCachFilePath>
@@ -168,6 +205,7 @@
       <!-- Items to hash-->
       <_GenerateSelfRegisteredExtensionsInputsCacheToHash Include="@(TestingPlatformBuilderHook)"/>
       <_GenerateSelfRegisteredExtensionsInputsCacheToHash Include="$(RootNamespace)"/>
+      <_GenerateSelfRegisteredExtensionsInputsCacheToHash Include="$(GenerateSelfRegisteredExtensions)"/>
 
       <!-- Export the items name for the _GenerateSelfRegisteredExtensions task-->
       <GenerateSelfRegisteredExtensionsInputsCacheFilePath Include="$(_GenerateSelfRegisteredExtensionsInputsCachFilePath)" />
@@ -179,8 +217,8 @@
     <!-- Write the hash value to the cache file -->
     <WriteLinesToFile Lines="$(_GenerateSelfRegisteredExtensionsInputsCache)"
                   File="$(_GenerateSelfRegisteredExtensionsInputsCachFilePath)"
-                  Overwrite="True"
-                  WriteOnlyWhenDifferent="True" />
+                  Overwrite="true"
+                  WriteOnlyWhenDifferent="true" />
     <ItemGroup>
       <FileWrites Include="$(_GenerateSelfRegisteredExtensionsInputsCachFilePath)" />
     </ItemGroup>
@@ -188,16 +226,13 @@
 
   <!-- Generate the extensions source file using the user extensions informations -->
   <PropertyGroup>
-    <_SelfRegisteredExtensionsSourceNameWithoutExtension>SelfRegisteredExtensions</_SelfRegisteredExtensionsSourceNameWithoutExtension>
-    <_SelfRegisteredExtensionsSourceName Condition=" $(Language) == 'C#' " >$(_SelfRegisteredExtensionsSourceNameWithoutExtension).cs</_SelfRegisteredExtensionsSourceName>
-    <_SelfRegisteredExtensionsSourceName Condition=" $(Language) == 'VB' " >$(_SelfRegisteredExtensionsSourceNameWithoutExtension).vb</_SelfRegisteredExtensionsSourceName>
-    <_SelfRegisteredExtensionsSourceName Condition=" $(Language) == 'F#' " >$(_SelfRegisteredExtensionsSourceNameWithoutExtension).fs</_SelfRegisteredExtensionsSourceName>
+    <_SelfRegisteredExtensionsSourceName>SelfRegisteredExtensions$(DefaultLanguageSourceExtension)</_SelfRegisteredExtensionsSourceName>
     <_SelfRegisteredExtensionsSourcePath>$([System.IO.Path]::Combine($(IntermediateOutputPath),$(_SelfRegisteredExtensionsSourceName)))</_SelfRegisteredExtensionsSourcePath>
     <_SelfRegisteredExtensionsSourcePath>$([MSBuild]::NormalizePath($(MSBuildProjectDirectory), $(_SelfRegisteredExtensionsSourcePath)))</_SelfRegisteredExtensionsSourcePath>
   </PropertyGroup>
-  <Target Name="_GenerateSelfRegisteredExtensions" BeforeTargets="_IncludeGenerateAutoRegisteredExtensionsIntoCompilation;_GenerateTestingPlatformEntryPoint"
+  <Target Name="_GenerateSelfRegisteredExtensions"
           Inputs="@(GenerateSelfRegisteredExtensionsInputsCacheFilePath)" Outputs="$(_SelfRegisteredExtensionsSourcePath)"
-          Condition=" '$(GenerateSelfRegisteredExtensions)' == 'True' " >
+          Condition=" '$(GenerateSelfRegisteredExtensions)' == 'true' " >
     <TestingPlatformSelfRegisteredExtensions SelfRegisteredExtensionsSourcePath="$(_SelfRegisteredExtensionsSourcePath)"
                                              SelfRegisteredExtensionsBuilderHook="@(TestingPlatformBuilderHook)"
                                              RootNamespace="$(RootNamespace)"
@@ -211,12 +246,13 @@
 
   <!-- We always include the entry point also if the task _GenerateSelfRegisteredExtensions is skipped for caching reason -->
   <!-- !!! DO NOT CHANGE THE NAME OF THIS TARGET IS USED BY ADAPTERS https://github.com/microsoft/testfx/issues/3478#issuecomment-2313889212 !!! -->
-  <Target Name="_IncludeGenerateAutoRegisteredExtensionsIntoCompilation" BeforeTargets="_IncludeGenerateTestingPlatformEntryPointIntoCompilation;BeforeCompile;XamlPreCompile" Condition=" '$(GenerateSelfRegisteredExtensions)' == 'True' " >
-    <ItemGroup>
+  <Target Name="_IncludeGenerateAutoRegisteredExtensionsIntoCompilation" BeforeTargets="BeforeCompile;XamlPreCompile"
+          DependsOnTargets="_CalculateGenerateSelfRegisteredExtensions;_GenerateSelfRegisteredExtensionsFileInputCache;_GenerateSelfRegisteredExtensions">
+
+    <ItemGroup Condition=" '$(GenerateSelfRegisteredExtensions)' == 'true' ">
       <Compile Include="$(_SelfRegisteredExtensionsSourcePath)" />
-    </ItemGroup>
-    <!-- We need to report to the FileWrites here because is possible that we skip _GenerateSelfRegisteredExtensions and we want to correctly handle the "dotnet clean" target -->
-    <ItemGroup>
+
+      <!-- We need to report to the FileWrites here because is possible that we skip _GenerateSelfRegisteredExtensions and we want to correctly handle the "dotnet clean" target -->
       <FileWrites Include="$(_SelfRegisteredExtensionsSourcePath)" />
     </ItemGroup>
   </Target>
@@ -244,22 +280,22 @@
         https://github.com/dotnet/msbuild/blob/main/src/Tasks/Microsoft.Common.CurrentVersion.targets#L6807
         https://github.com/dotnet/msbuild/blob/main/src/Tasks/Microsoft.Common.Test.targets
     -->
-    <_MSBuildTestInfrastructureAvailable Condition="Exists('$(MSBuildExtensionsPath)\Microsoft.Common.Test.targets')" >True</_MSBuildTestInfrastructureAvailable>
+    <_MSBuildTestInfrastructureAvailable Condition="Exists('$(MSBuildExtensionsPath)\Microsoft.Common.Test.targets')" >true</_MSBuildTestInfrastructureAvailable>
   </PropertyGroup>
 
-  <Target Name="_SetCustomVSTargetForVSTest" BeforeTargets="VSTest" Condition=" '$(TestingPlatformDotnetTestSupport)' == 'True' ">
+  <Target Name="_SetCustomVSTargetForVSTest" BeforeTargets="VSTest" Condition=" '$(TestingPlatformDotnetTestSupport)' == 'true' ">
     <PropertyGroup>
       <!-- Set our VSTest target for the multi-tfm workflow -->
-      <InnerVSTestTargets Condition=" '$(TestingPlatformDotnetTestSupport)' == 'True' " >InvokeTestingPlatform</InnerVSTestTargets>
+      <InnerVSTestTargets Condition=" '$(TestingPlatformDotnetTestSupport)' == 'true' " >InvokeTestingPlatform</InnerVSTestTargets>
     </PropertyGroup>
   </Target>
   <!-- Override VSTest only in case of single tfm, for multitfm we rely on built-in mechanism -->
   <Import Project="$(MSBuildThisFileDirectory)Microsoft.Testing.Platform.MSBuild.VSTest.targets"
-          Condition=" '$(TargetFramework)' != '' AND '$(TestingPlatformDotnetTestSupport)' == 'True' "/>
+          Condition=" '$(TargetFramework)' != '' AND '$(TestingPlatformDotnetTestSupport)' == 'true' "/>
 
   <!-- Rely on VSTest infra -->
   <!-- We setup the InnerVSTestTargets is we're using the MSBuild infrastructure or if user didn't disble the custom test target -->
-  <Target Name="_SetCustomVSTargetForTest" BeforeTargets="Test" Condition=" ( '$(UseMSBuildTestInfrastructure)' == 'True' AND '$(_MSBuildTestInfrastructureAvailable)' == 'True' ) OR '$(TestingPlatformDisableCustomTestTarget)' == 'False' " >
+  <Target Name="_SetCustomVSTargetForTest" BeforeTargets="Test" Condition=" ( '$(UseMSBuildTestInfrastructure)' == 'true' AND '$(_MSBuildTestInfrastructureAvailable)' == 'true' ) OR '$(TestingPlatformDisableCustomTestTarget)' == 'False' " >
     <PropertyGroup>
       <InnerVSTestTargets>InvokeTestingPlatform</InnerVSTestTargets>
     </PropertyGroup>
@@ -269,7 +305,7 @@
     https://github.com/dotnet/msbuild/blob/main/src/Tasks/Microsoft.Common.CurrentVersion.targets#L6807
     https://github.com/dotnet/msbuild/blob/main/src/Tasks/Microsoft.Common.Test.targets
   -->
-  <Target Name="_MSBuildTest" AfterTargets="Test" Condition=" '$(UseMSBuildTestInfrastructure)' == 'True' AND '$(_MSBuildTestInfrastructureAvailable)' == 'True' " >
+  <Target Name="_MSBuildTest" AfterTargets="Test" Condition=" '$(UseMSBuildTestInfrastructure)' == 'true' AND '$(_MSBuildTestInfrastructureAvailable)' == 'true' " >
     <CallTarget Targets="_TestingPlatformTest" />
   </Target>
 
@@ -314,7 +350,7 @@
     <!-- If everyting else fails, fallback to x64. -->
     <_TestArchitecture Condition="'$(_TestArchitecture)' == '' or '$(_TestArchitecture)' == 'AnyCpu'">x64</_TestArchitecture>
     <TestingPlatformShowTestsFailure Condition=" '$(TestingPlatformShowTestsFailure)' == '' ">False</TestingPlatformShowTestsFailure>
-    <TestingPlatformCaptureOutput Condition=" '$(TestingPlatformCaptureOutput)' == '' " >True</TestingPlatformCaptureOutput>
+    <TestingPlatformCaptureOutput Condition=" '$(TestingPlatformCaptureOutput)' == '' " >true</TestingPlatformCaptureOutput>
   </PropertyGroup>
   <Target Name="InvokeTestingPlatform" >
     <!--
