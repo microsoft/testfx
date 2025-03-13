@@ -62,7 +62,7 @@ internal sealed class PassiveNode : IDisposable
 
         var requestMessage = (RequestMessage)message;
         var responseObject = new InitializeResponseArgs(
-                        ProcessId: _processHandler.GetCurrentProcess().Id,
+                        ProcessId: _processHandler.GetCurrentProcessId(),
                         ServerInfo: new ServerInfo("test-anywhere", Version: ServerTestHost.ProtocolVersion),
                         Capabilities: new ServerCapabilities(
                             new ServerTestingCapabilities(
