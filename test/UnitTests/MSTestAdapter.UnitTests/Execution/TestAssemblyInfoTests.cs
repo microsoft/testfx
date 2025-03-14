@@ -181,11 +181,20 @@ public class TestAssemblyInfoTests : TestContainer
         Verify(
             exception.Message
             == "Assembly Initialization method Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestAssemblyInfoTests+DummyTestClass.AssemblyInitializeMethod threw exception. System.ArgumentException: Some actualErrorMessage message. Aborting test execution.");
+<<<<<<< HEAD
         Verify(
             exception.StackTraceInformation.ErrorStackTrace.StartsWith(
             "    at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestAssemblyInfoTests.<>c.<RunAssemblyInitializeShouldThrowTestFailedExceptionWithNonAssertExceptions>", StringComparison.Ordinal));
         Verify(exception.InnerException.GetType() == typeof(ArgumentException));
         Verify(exception.InnerException.InnerException.GetType() == typeof(InvalidOperationException));
+=======
+#if DEBUG
+        Verify(exception.StackTraceInformation!.ErrorStackTrace.StartsWith(
+    "   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestAssemblyInfoTests.<>c.<RunAssemblyInitializeShouldThrowTestFailedExceptionWithNonAssertExceptions>", StringComparison.Ordinal));
+#endif
+        Verify(exception.InnerException!.GetType() == typeof(ArgumentException));
+        Verify(exception.InnerException.InnerException!.GetType() == typeof(InvalidOperationException));
+>>>>>>> Fix tests
     }
 
     public void RunAssemblyInitializeShouldThrowTheInnerMostExceptionWhenThereAreMultipleNestedTypeInitializationExceptions()
@@ -203,10 +212,18 @@ public class TestAssemblyInfoTests : TestContainer
         Verify(
             exception.Message
             == "Assembly Initialization method Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestAssemblyInfoTests+DummyTestClass.AssemblyInitializeMethod threw exception. System.InvalidOperationException: I fail.. Aborting test execution.");
+<<<<<<< HEAD
         Verify(
             exception.StackTraceInformation.ErrorStackTrace.StartsWith(
             "    at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestAssemblyInfoTests.FailingStaticHelper..cctor()", StringComparison.Ordinal));
         Verify(exception.InnerException.GetType() == typeof(InvalidOperationException));
+=======
+#if DEBUG
+        Verify(exception.StackTraceInformation!.ErrorStackTrace.StartsWith(
+            "   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestAssemblyInfoTests.FailingStaticHelper..cctor()", StringComparison.Ordinal));
+#endif
+        Verify(exception.InnerException!.GetType() == typeof(InvalidOperationException));
+>>>>>>> Fix tests
     }
 
     public void RunAssemblyInitializeShouldThrowForAlreadyExecutedTestAssemblyInitWithException()
