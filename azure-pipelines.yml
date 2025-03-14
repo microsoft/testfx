@@ -94,12 +94,16 @@ stages:
           displayName: Build
 
         - ${{ if eq(parameters.SkipTests, False) }}:
-          # -ci is allowing to import some environment variables and some required configurations
-          # -nobl avoids overwriting build binlog with binlog from tests
-          - script: Test.cmd
-              -configuration $(_BuildConfig)
-              -ci
-              -nobl
+
+          # Workaround for https://github.com/microsoft/testfx/issues/5205
+          - powershell: New-Item -Path "$(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)" -Type Directory
+
+          # Because the build step is using -ci flag, restore is done in a local .packages directory.
+          # We need to pass NUGET_PACKAGES so that when dotnet test is doing evaluation phase on the projects, it can resolve .props/.targets from packages and import them.
+          # Otherwise, props/targets are not imported. It's important that they are imported so that IsTestingPlatformApplication ends up being set.
+          - script: $(Build.SourcesDirectory)/.dotnet/dotnet test -p:NUGET_PACKAGES=$(BUILD.SOURCESDIRECTORY)\.packages -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)\artifacts\log\$(_BuildConfig)\TestStep.binlog
+            env:
+              DOTNET_CLI_TEST_TRACEFILE: $(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)/dotnet-test-trace-logs.txt
             name: Test
             displayName: Test
 
