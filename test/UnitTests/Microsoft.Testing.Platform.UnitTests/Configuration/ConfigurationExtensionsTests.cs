@@ -14,14 +14,12 @@ public sealed class ConfigurationExtensionsTests
     {
         PlatformConfigurationConstants.PlatformResultDirectory => configuration.GetTestResultDirectory(),
         PlatformConfigurationConstants.PlatformCurrentWorkingDirectory => configuration.GetCurrentWorkingDirectory(),
-        PlatformConfigurationConstants.PlatformTestHostWorkingDirectory => configuration.GetTestHostWorkingDirectory(),
         _ => throw new ArgumentException("Unsupported key."),
     };
 
     [TestMethod]
     [DataRow(PlatformConfigurationConstants.PlatformResultDirectory)]
     [DataRow(PlatformConfigurationConstants.PlatformCurrentWorkingDirectory)]
-    [DataRow(PlatformConfigurationConstants.PlatformTestHostWorkingDirectory)]
     public void ConfigurationExtensions_TestedMethod_ReturnsExpectedPath(string key)
     {
         string expectedPath = Path.Combine("a", "b", "c");
@@ -37,7 +35,6 @@ public sealed class ConfigurationExtensionsTests
     [TestMethod]
     [DataRow(PlatformConfigurationConstants.PlatformResultDirectory)]
     [DataRow(PlatformConfigurationConstants.PlatformCurrentWorkingDirectory)]
-    [DataRow(PlatformConfigurationConstants.PlatformTestHostWorkingDirectory)]
     public void ConfigurationExtensions_TestedMethod_ThrowsArgumentNullException(string key)
     {
         Mock<IConfiguration> configuration = new();
