@@ -200,6 +200,7 @@ extends:
                 -configuration $(_BuildConfig)
                 -prepareMachine
                 /p:Test=false
+                /p:DotNetPublishUsingPipelines=true
                 /p:NonWindowsBuild=true
               displayName: Build
 
