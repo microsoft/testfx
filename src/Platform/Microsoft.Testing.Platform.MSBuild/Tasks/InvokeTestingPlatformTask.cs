@@ -489,10 +489,7 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
                 runSummaryInfoRequest.Total,
                 runSummaryInfoRequest.Duration);
 
-            if (_moduleInfo != null)
-            {
-                summary += $" - {TargetPath.ItemSpec} ({TargetFrameworkParser.GetShortTargetFramework(TargetFramework.ItemSpec)}|{TestArchitecture.ItemSpec})";
-            }
+            summary += $" - {Path.GetFileName(TargetPath.ItemSpec)} ({TargetFrameworkParser.GetShortTargetFramework(TargetFramework.ItemSpec)}|{TestArchitecture.ItemSpec})";
 
             if (MSBuildCompatibilityHelper.SupportsTerminalLoggerWithExtendedMessages())
             {
