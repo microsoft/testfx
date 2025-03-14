@@ -208,7 +208,7 @@ public class TestClassInfoTests : TestContainer
         TestResult result = GetResultOrRunClassInitialize(null);
         var exception = result.TestFailureException as TestFailedException;
         Verify(exception is not null);
-        Verify(result.Outcome == UTF.UnitTestOutcome.Failed);
+        Verify(result.Outcome == UTF.UnitTestOutcome.Error);
         Verify(exception.Message == "TestContext cannot be Null.");
     }
 
