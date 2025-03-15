@@ -185,7 +185,7 @@ public class TestAssemblyInfoTests : TestContainer
             == "Assembly Initialization method Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestAssemblyInfoTests+DummyTestClass.AssemblyInitializeMethod threw exception. System.ArgumentException: Some actualErrorMessage message. Aborting test execution.");
 #if DEBUG
         Verify(exception.StackTraceInformation!.ErrorStackTrace.StartsWith(
-    "    at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestAssemblyInfoTests.<>c.<RunAssemblyInitializeShouldThrowTestFailedExceptionWithNonAssertExceptions>", StringComparison.Ordinal));
+    "   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestAssemblyInfoTests.<>c.<RunAssemblyInitializeShouldThrowTestFailedExceptionWithNonAssertExceptions>", StringComparison.Ordinal));
 #endif
         Verify(exception.InnerException!.GetType() == typeof(ArgumentException));
         Verify(exception.InnerException.InnerException!.GetType() == typeof(InvalidOperationException));
@@ -208,7 +208,7 @@ public class TestAssemblyInfoTests : TestContainer
             == "Assembly Initialization method Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestAssemblyInfoTests+DummyTestClass.AssemblyInitializeMethod threw exception. System.InvalidOperationException: I fail.. Aborting test execution.");
 #if DEBUG
         Verify(exception.StackTraceInformation!.ErrorStackTrace.StartsWith(
-            "    at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestAssemblyInfoTests.FailingStaticHelper..cctor()", StringComparison.Ordinal));
+            "   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestAssemblyInfoTests.FailingStaticHelper..cctor()", StringComparison.Ordinal));
 #endif
         Verify(exception.InnerException!.GetType() == typeof(InvalidOperationException));
     }
