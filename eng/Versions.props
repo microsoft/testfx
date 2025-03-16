@@ -1,21 +1,9 @@
 <Project>
   <PropertyGroup Label="Version settings">
     <!-- MSTest version -->
-<<<<<<< HEAD
-<<<<<<< HEAD
     <VersionPrefix>3.8.3</VersionPrefix>
     <!-- Testing Platform version -->
     <TestingPlatformVersionPrefix>1.6.3</TestingPlatformVersionPrefix>
-=======
-    <VersionPrefix>3.10.0</VersionPrefix>
-    <!-- Testing Platform version -->
-    <TestingPlatformVersionPrefix>1.8.0</TestingPlatformVersionPrefix>
->>>>>>> Add assembly name
-=======
-    <VersionPrefix>3.9.0</VersionPrefix>
-    <!-- Testing Platform version -->
-    <TestingPlatformVersionPrefix>1.7.0</TestingPlatformVersionPrefix>
->>>>>>> Address
     <PreReleaseVersionLabel>preview</PreReleaseVersionLabel>
   </PropertyGroup>
   <PropertyGroup Label="MSTest prod dependencies - darc updated">
