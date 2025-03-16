@@ -427,6 +427,7 @@ public class TestClassInfo
                     return new TestResult()
                     {
                         TestFailureException = new TestFailedException(UTFUnitTestOutcome.Error, ex.TryGetMessage(), ex.TryGetStackTraceInformation()),
+                        Outcome = UTFUnitTestOutcome.Error,
                     };
                 }
             }
@@ -468,11 +469,15 @@ public class TestClassInfo
             }
             catch (TestFailedException ex)
             {
-                result = new TestResult() { TestFailureException = ex };
+                result = new TestResult() { TestFailureException = ex, Outcome = ex.Outcome };
             }
             catch (Exception ex)
             {
-                result = new TestResult() { TestFailureException = new TestFailedException(UTFUnitTestOutcome.Error, ex.TryGetMessage(), ex.TryGetStackTraceInformation()) };
+                result = new TestResult()
+                {
+                    TestFailureException = new TestFailedException(UTFUnitTestOutcome.Error, ex.TryGetMessage(), ex.TryGetStackTraceInformation()),
+                    Outcome = UTFUnitTestOutcome.Error,
+                };
             }
             finally
             {
