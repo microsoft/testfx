@@ -104,6 +104,9 @@ stages:
           - script: $(Build.SourcesDirectory)/.dotnet/dotnet test -p:NUGET_PACKAGES=$(BUILD.SOURCESDIRECTORY)\.packages -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)\artifacts\log\$(_BuildConfig)\TestStep.binlog
             name: Test
             displayName: Test
+            env:
+              DOTNET_ROOT: $(Build.SourcesDirectory)/.dotnet
+
 
           # This step is only helpful for diagnosing some issues with vstest/test host that would not appear
           # through the console or trx
