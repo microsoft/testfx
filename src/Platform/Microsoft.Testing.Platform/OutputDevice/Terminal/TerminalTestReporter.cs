@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.ComponentModel;
+
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Resources;
 
@@ -566,6 +568,23 @@ internal sealed partial class TerminalTestReporter : IDisposable
             return;
         }
 
+        string? firstStackFrameLine = firstStackTrace?.Split(NewLineStrings, StringSplitOptions.None).FirstOrDefault();
+        if (firstStackFrameLine != null)
+        {
+            (string Code, string File, int LineNumber)? location = GetStackFrameLocation(firstStackFrameLine);
+            if (location != null)
+            {
+                string root = RootFinder.Find();
+                string file = location.Value.File;
+                string relativePath = file.StartsWith(root, StringComparison.CurrentCultureIgnoreCase) ? file.Substring(root.Length) : file;
+
+                var err = AzdoEscaper.Escape(firstErrorMessage);
+
+                terminal.AppendLine($"##vso[task.logissue type=error;sourcepath={relativePath};linenumber={location.Value.LineNumber};columnnumber=1;code=100;]{err}");
+                terminal.AppendLine($"##[error]{relativePath}({location.Value.LineNumber},1): {firstErrorMessage}");
+            }
+        }
+
         terminal.SetColor(TerminalColor.Red);
 
         if (firstStackTrace is null)
@@ -662,6 +681,30 @@ internal sealed partial class TerminalTestReporter : IDisposable
 
             terminal.Append(')');
         }
+    }
+
+    internal /* for testing */ static (string Code, string File, int LineNumber)? GetStackFrameLocation(string stackTraceLine)
+    {
+        Match match = GetFrameRegex().Match(stackTraceLine);
+        if (!match.Success)
+        {
+            return null;
+        }
+
+        bool weHaveFilePathAndCodeLine = !RoslynString.IsNullOrWhiteSpace(match.Groups["code"].Value);
+        if (!weHaveFilePathAndCodeLine)
+        {
+            return null;
+        }
+
+        if (RoslynString.IsNullOrWhiteSpace(match.Groups["file"].Value))
+        {
+            return null;
+        }
+
+        int line = int.TryParse(match.Groups["line"].Value, out int value) ? value : 0;
+
+        return (match.Groups["code"].Value, match.Groups["file"].Value, line);
     }
 
     internal /* for testing */ static void AppendStackFrame(ITerminal terminal, string stackTraceLine)
@@ -1036,5 +1079,68 @@ internal sealed partial class TerminalTestReporter : IDisposable
         }
 
         _terminalWithProgress.UpdateWorker(asm.SlotIndex);
+    }
+}
+
+internal static class RootFinder
+{
+    private static string? s_root;
+
+    public static string Find()
+    {
+        if (s_root != null)
+        {
+            return s_root;
+        }
+
+        string path = AppContext.BaseDirectory;
+        string dir = path;
+        while (Directory.GetDirectoryRoot(dir) != dir)
+        {
+            if (Directory.Exists(Path.Combine(dir, ".git")))
+            {
+                s_root = dir + Path.DirectorySeparatorChar;
+                return dir + Path.DirectorySeparatorChar;
+            }
+            else
+            {
+                dir = Directory.GetParent(dir)!.ToString();
+            }
+        }
+
+        throw new InvalidOperationException($"Could not find solution root, .git not found in {path} or any parent directory.");
+    }
+}
+
+internal static class AzdoEscaper
+{
+    public static string? Escape(string? value)
+    {
+        if (RoslynString.IsNullOrEmpty(value))
+        {
+            return value;
+        }
+
+        var result = new StringBuilder(value.Length);
+        foreach (char c in value)
+        {
+            switch (c)
+            {
+                case ';':
+                    result.Append("%3B");
+                    break;
+                case '\r':
+                    result.Append("%0D");
+                    break;
+                case '\n':
+                    result.Append("%0A");
+                    break;
+                default:
+                    result.Append(c);
+                    break;
+            }
+        }
+
+        return result.ToString();
     }
 }
