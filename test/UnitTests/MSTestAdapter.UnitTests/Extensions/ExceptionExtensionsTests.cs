@@ -60,15 +60,11 @@ public class ExceptionExtensionsTests : TestContainer
 
     public void TryGetStackTraceInformationReturnsStackTraceForAnException()
     {
-        var exception = new DummyExceptionForStackTrace(() => "   at A()\r\n    at B()");
+        var exception = new DummyExceptionForStackTrace(() => "   at A()\r\n   at B()");
 
         MSTest.TestAdapter.ObjectModel.StackTraceInformation stackTraceInformation = exception.TryGetStackTraceInformation();
 
-<<<<<<< HEAD
-        Verify(stackTraceInformation.ErrorStackTrace.StartsWith("    at A()", StringComparison.Ordinal));
-=======
-        Verify(stackTraceInformation!.ErrorStackTrace.StartsWith("   at A()", StringComparison.Ordinal));
->>>>>>> Fix tests
+        Verify(stackTraceInformation.ErrorStackTrace.StartsWith("   at A()", StringComparison.Ordinal));
         Verify(stackTraceInformation.ErrorFilePath is null);
         Verify(stackTraceInformation.ErrorLineNumber == 0);
     }
