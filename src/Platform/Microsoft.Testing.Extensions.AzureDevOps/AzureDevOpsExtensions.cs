@@ -23,9 +23,9 @@ public static class AzureDevOpsExtensions
         var compositeTestSessionAzDoService =
            new CompositeExtensionFactory<AzureDevOpsReporter>(serviceProvider =>
                new AzureDevOpsReporter(
-               serviceProvider.GetCommandLineOptions(),
-               serviceProvider.GetEnvironment(),
-               serviceProvider.GetOutputDevice()));
+                   serviceProvider.GetCommandLineOptions(),
+                   serviceProvider.GetEnvironment(),
+                   serviceProvider.GetOutputDevice()));
 
         builder.TestHost.AddDataConsumer(compositeTestSessionAzDoService);
 

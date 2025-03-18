@@ -3,7 +3,7 @@
 
 using Microsoft.Testing.Platform;
 
-namespace Microsoft.Testing.Extensions.TrxReport.Abstractions;
+namespace Microsoft.Testing.Extensions.Reporting;
 
 internal static class AzDoEscaper
 {
