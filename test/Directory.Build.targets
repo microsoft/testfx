@@ -27,7 +27,7 @@
     <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.Retry\Microsoft.Testing.Extensions.Retry.csproj" />
     <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.Telemetry\Microsoft.Testing.Extensions.Telemetry.csproj" />
     <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.TrxReport\Microsoft.Testing.Extensions.TrxReport.csproj" />
-    <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Condition="'$(UseInternalTestFramework)' == 'true' OR '$(UseMSTestFromSource)' == 'true'" />
+    <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Condition="'$(UseMSTestFromSource)' == 'true'" />
     <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" GeneratePathProperty="True" />
   </ItemGroup>
 

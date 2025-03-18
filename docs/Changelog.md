@@ -4,6 +4,33 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
+## <a name="3.8.3" />[3.8.3] - 2025-03-17
+
+See full log [here](https://github.com/microsoft/testfx/compare/v3.8.2...v3.8.3)
+
+### Fixed
+
+* Fix discard handling for newer Assert.Throws codefix by @Youssef1313 in [#5118](https://github.com/microsoft/testfx/pull/5118)
+* Fix `parallelism:enabled` incorrectly setting `OrderTestsByNameInClass` by @Youssef1313 in [#5114](https://github.com/microsoft/testfx/pull/5114)
+* Ship props/targets of MSTest.TestFramework and MSTest.TestAdapter in both build and buildTransitive by @Youssef1313 in [#5221](https://github.com/microsoft/testfx/pull/5221)
+* Fix TestFailedException outcome not propagating to TestResult outcome by @Youssef1313 in [#5244](https://github.com/microsoft/testfx/pull/5244)
+* Remove extra space by @nohwnd in [#5252](https://github.com/microsoft/testfx/pull/5252)
+
+### Artifacts
+
+* MSTest: [3.8.3](https://www.nuget.org/packages/MSTest/3.8.3)
+* MSTest.TestFramework: [3.8.3](https://www.nuget.org/packages/MSTest.TestFramework/3.8.3)
+* MSTest.TestAdapter: [3.8.3](https://www.nuget.org/packages/MSTest.TestAdapter/3.8.3)
+* MSTest.Analyzers: [3.8.3](https://www.nuget.org/packages/MSTest.Analyzers/3.8.3)
+* MSTest.Sdk: [3.8.3](https://www.nuget.org/packages/MSTest.Sdk/3.8.3)
+* Microsoft.Testing.Extensions.CrashDump: [1.6.3](https://www.nuget.org/packages/Microsoft.Testing.Extensions.CrashDump/1.6.3)
+* Microsoft.Testing.Extensions.HangDump: [1.6.3](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HangDump/1.6.3)
+* Microsoft.Testing.Extensions.HotReload: [1.6.3](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HotReload/1.6.3)
+* Microsoft.Testing.Extensions.Retry: [1.6.3](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Retry/1.6.3)
+* Microsoft.Testing.Extensions.TrxReport: [1.6.3](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport/1.6.3)
+* MSTest.SourceGeneration: [1.0.0-alpha.25167.5](https://www.nuget.org/packages/MSTest.SourceGeneration/1.0.0-alpha.25167.5)
+* MSTest.Engine: [1.0.0-alpha.25167.5](https://www.nuget.org/packages/MSTest.Engine/1.0.0-alpha.25167.5)
+
 ## <a name="3.8.2" />[3.8.2] - 2025-02-19
 
 See full log [here](https://github.com/microsoft/testfx/compare/v3.8.1...v3.8.2)

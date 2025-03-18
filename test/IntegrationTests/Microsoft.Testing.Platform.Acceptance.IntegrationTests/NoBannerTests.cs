@@ -7,7 +7,7 @@ namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 public class NoBannerTests : AcceptanceTestBase<NoBannerTests.TestAssetFixture>
 {
     private const string AssetName = "NoBannerTest";
-    private readonly string _bannerRegexMatchPattern = @".NET Testing Platform v.+ \[.+\]";
+    private readonly string _bannerRegexMatchPattern = @"Microsoft.Testing.Platform v.+ \[.+\]";
 
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     [TestMethod]

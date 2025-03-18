@@ -4,6 +4,35 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
+## <a name="1.6.3" />[1.6.3] - 2025-03-17
+
+See full log [here](https://github.com/microsoft/testfx/compare/v3.8.2...v3.8.3)
+
+### Fixed
+
+* Fix typo in determining `_TestArchitecture` by @Youssef1313 in [#5115](https://github.com/microsoft/testfx/pull/5115)
+* Update InvokeTestingPlatformTask to prefer running Exe over `dotnet exec dll` by @Youssef1313 in [#5128](https://github.com/microsoft/testfx/pull/5128)
+* Fix serializing special characters in Jsonite by @nohwnd in [#5125](https://github.com/microsoft/testfx/pull/5125)
+* Fix TestingPlatformSelfRegisteredExtensions to allow empty RootNamespace by @Youssef1313 in [#5162](https://github.com/microsoft/testfx/pull/5162)
+* Fix possible deadlock when writing to console by @Youssef1313 in [#5183](https://github.com/microsoft/testfx/pull/5183)
+* Consider `--results-directory` before configuration by @Youssef1313 in [#5204](https://github.com/microsoft/testfx/pull/5204)
+* Refactor MSBuild props/targets by @Youssef1313 in [#5219](https://github.com/microsoft/testfx/pull/5219)
+* Move logic relevant to core MTP out of MTP.MSBuild by @Youssef1313 in [#5223](https://github.com/microsoft/testfx/pull/5223)
+* Add assembly name to test run summary by @nohwnd in [#5247](https://github.com/microsoft/testfx/pull/5247)
+
+### Artifacts
+
+* Microsoft.Testing.Extensions.CrashDump: [1.6.3](https://www.nuget.org/packages/Microsoft.Testing.Extensions.CrashDump/1.6.3)
+* Microsoft.Testing.Extensions.HangDump: [1.6.3](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HangDump/1.6.3)
+* Microsoft.Testing.Extensions.HotReload: [1.6.3](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HotReload/1.6.3)
+* Microsoft.Testing.Extensions.Retry: [1.6.3](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Retry/1.6.3)
+* Microsoft.Testing.Extensions.Telemetry: [1.6.3](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Telemetry/1.6.3)
+* Microsoft.Testing.Extensions.TrxReport: [1.6.3](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport/1.6.3)
+* Microsoft.Testing.Extensions.TrxReport.Abstractions: [1.6.3](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport.Abstractions/1.6.3)
+* Microsoft.Testing.Extensions.VSTestBridge: [1.6.3](https://www.nuget.org/packages/Microsoft.Testing.Extensions.VSTestBridge/1.6.3)
+* Microsoft.Testing.Platform: [1.6.3](https://www.nuget.org/packages/Microsoft.Testing.Platform/1.6.3)
+* Microsoft.Testing.Platform.MSBuild: [1.6.3](https://www.nuget.org/packages/Microsoft.Testing.Platform.MSBuild/1.6.3)
+
 ## <a name="1.6.2" />[1.6.2] - 2025-02-19
 
 See full log [here](https://github.com/microsoft/testfx/compare/v3.8.1...v3.8.2)

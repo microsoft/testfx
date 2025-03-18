@@ -16,7 +16,7 @@ public class HelpInfoTests : AcceptanceTestBase<HelpInfoTests.TestAssetFixture>
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
         const string wildcardMatchPattern = $"""
-.NET Testing Platform v*
+Microsoft.Testing.Platform v*
 Usage {TestAssetFixture.NoExtensionAssetName}* [option providers] [extension option providers]
 Execute a .NET Test Application.
 Options:
@@ -80,7 +80,7 @@ Extension options:
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
         const string wildcardMatchPattern = $"""
-.NET Testing Platform v*
+Microsoft.Testing.Platform v*
 Usage {TestAssetFixture.NoExtensionAssetName}* [option providers] [extension option providers]
 Execute a .NET Test Application.
 Options:
@@ -101,7 +101,7 @@ Options:
         testHostResult.AssertExitCodeIs(ExitCodes.InvalidCommandLine);
 
         const string wildcardMatchPattern = $"""
-.NET Testing Platform v*
+Microsoft.Testing.Platform v*
 Unknown option '--{UnknownOption}'
 Usage {TestAssetFixture.NoExtensionAssetName}* [option providers] [extension option providers]
 Execute a .NET Test Application.
@@ -121,7 +121,7 @@ Options:
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
         string regexMatchPattern = $"""
-.NET Testing Platform v.+ \[.+\]
+Microsoft.Testing.Platform v.+ \[.+\]
 Microsoft Testing Platform:
   Version: .+
   Dynamic Code Supported: True
@@ -271,7 +271,7 @@ Registered tools:
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
         string wildcardPattern = $"""
-.NET Testing Platform v*
+Microsoft.Testing.Platform v*
 Usage {TestAssetFixture.AllExtensionsAssetName}* [option providers] [extension option providers]
 Execute a .NET Test Application.
 Options:
@@ -368,7 +368,7 @@ Extension options:
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
         string wildcardPattern = $"""
-.NET Testing Platform v*
+Microsoft.Testing.Platform v*
 Usage {TestAssetFixture.AllExtensionsAssetName}* [option providers] [extension option providers]
 Execute a .NET Test Application.
 Options:
@@ -387,7 +387,7 @@ Options:
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
         string wildcardPattern = $"""
-.NET Testing Platform v* [*]
+Microsoft.Testing.Platform v* [*]
 Microsoft Testing Platform:
   Version: *
   Dynamic Code Supported: True

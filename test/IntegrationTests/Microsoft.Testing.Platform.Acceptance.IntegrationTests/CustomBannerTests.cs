@@ -59,7 +59,7 @@ public class CustomBannerTests : AcceptanceTestBase<CustomBannerTests.TestAssetF
         TestHostResult testHostResult = await testHost.ExecuteAsync();
 
         testHostResult.AssertExitCodeIs(ExitCodes.ZeroTests);
-        testHostResult.AssertOutputMatchesRegex($"{TestAssetFixture.CustomBannerPrefix} Platform info: Name: .NET Testing Platform, Version: .+?, Hash: .*?, Date: .+?");
+        testHostResult.AssertOutputMatchesRegex($"{TestAssetFixture.CustomBannerPrefix} Platform info: Name: Microsoft.Testing.Platform, Version: .+?, Hash: .*?, Date: .+?");
     }
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)

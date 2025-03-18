@@ -282,7 +282,7 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
 
         compilationResult.AssertOutputContains("error test failed: Test2 (");
         compilationResult.AssertOutputContains("FAILED: Expected 'true', but got 'false'.");
-        compilationResult.AssertOutputContains(".NET Testing Platform");
+        compilationResult.AssertOutputContains("Microsoft.Testing.Platform");
     }
 
     [TestMethod]
