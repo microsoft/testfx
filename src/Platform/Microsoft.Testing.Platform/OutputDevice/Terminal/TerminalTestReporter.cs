@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.ComponentModel;
-
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Resources;
 
@@ -56,63 +54,6 @@ internal sealed partial class TerminalTestReporter : IDisposable
     private bool _wasCancelled;
 
     private bool? _shouldShowPassedTests;
-
-#if NET7_0_OR_GREATER
-    // Specifying no timeout, the regex is linear. And the timeout does not measure the regex only, but measures also any
-    // thread suspends, so the regex gets blamed incorrectly.
-    [GeneratedRegex(@"^   at ((?<code>.+) in (?<file>.+):line (?<line>\d+)|(?<code1>.+))$", RegexOptions.ExplicitCapture)]
-    private static partial Regex GetFrameRegex();
-#else
-    private static Regex? s_regex;
-
-    [MemberNotNull(nameof(s_regex))]
-    private static Regex GetFrameRegex()
-    {
-        if (s_regex != null)
-        {
-            return s_regex;
-        }
-
-        string atResourceName = "Word_At";
-        string inResourceName = "StackTrace_InFileLineNumber";
-
-        string? atString = null;
-        string? inString = null;
-
-        // Grab words from localized resource, in case the stack trace is localized.
-        try
-        {
-            // Get these resources: https://github.com/dotnet/runtime/blob/main/src/libraries/System.Private.CoreLib/src/Resources/Strings.resx
-#pragma warning disable RS0030 // Do not use banned APIs
-            MethodInfo? getResourceStringMethod = typeof(Environment).GetMethod(
-                "GetResourceString",
-                BindingFlags.Static | BindingFlags.NonPublic, null, [typeof(string)], null);
-#pragma warning restore RS0030 // Do not use banned APIs
-            if (getResourceStringMethod is not null)
-            {
-                // <value>at</value>
-                atString = (string?)getResourceStringMethod.Invoke(null, [atResourceName]);
-
-                // <value>in {0}:line {1}</value>
-                inString = (string?)getResourceStringMethod.Invoke(null, [inResourceName]);
-            }
-        }
-        catch
-        {
-            // If we fail, populate the defaults below.
-        }
-
-        atString = atString == null || atString == atResourceName ? "at" : atString;
-        inString = inString == null || inString == inResourceName ? "in {0}:line {1}" : inString;
-
-        string inPattern = string.Format(CultureInfo.InvariantCulture, inString, "(?<file>.+)", @"(?<line>\d+)");
-
-        // Specifying no timeout, the regex is linear. And the timeout does not measure the regex only, but measures also any
-        // thread suspends, so the regex gets blamed incorrectly.
-        s_regex = new Regex(@$"^   {atString} ((?<code>.+) {inPattern}|(?<code1>.+))$", RegexOptions.Compiled | RegexOptions.ExplicitCapture);
-        return s_regex;
-    }
-#endif
 
     private int _counter;
 
@@ -568,23 +509,6 @@ internal sealed partial class TerminalTestReporter : IDisposable
             return;
         }
 
-        string? firstStackFrameLine = firstStackTrace?.Split(NewLineStrings, StringSplitOptions.None).FirstOrDefault();
-        if (firstStackFrameLine != null)
-        {
-            (string Code, string File, int LineNumber)? location = GetStackFrameLocation(firstStackFrameLine);
-            if (location != null)
-            {
-                string root = RootFinder.Find();
-                string file = location.Value.File;
-                string relativePath = file.StartsWith(root, StringComparison.CurrentCultureIgnoreCase) ? file.Substring(root.Length) : file;
-
-                var err = AzdoEscaper.Escape(firstErrorMessage);
-
-                terminal.AppendLine($"##vso[task.logissue type=error;sourcepath={relativePath};linenumber={location.Value.LineNumber};columnnumber=1;code=100;]{err}");
-                terminal.AppendLine($"##[error]{relativePath}({location.Value.LineNumber},1): {firstErrorMessage}");
-            }
-        }
-
         terminal.SetColor(TerminalColor.Red);
 
         if (firstStackTrace is null)
@@ -683,34 +607,10 @@ internal sealed partial class TerminalTestReporter : IDisposable
         }
     }
 
-    internal /* for testing */ static (string Code, string File, int LineNumber)? GetStackFrameLocation(string stackTraceLine)
-    {
-        Match match = GetFrameRegex().Match(stackTraceLine);
-        if (!match.Success)
-        {
-            return null;
-        }
-
-        bool weHaveFilePathAndCodeLine = !RoslynString.IsNullOrWhiteSpace(match.Groups["code"].Value);
-        if (!weHaveFilePathAndCodeLine)
-        {
-            return null;
-        }
-
-        if (RoslynString.IsNullOrWhiteSpace(match.Groups["file"].Value))
-        {
-            return null;
-        }
-
-        int line = int.TryParse(match.Groups["line"].Value, out int value) ? value : 0;
-
-        return (match.Groups["code"].Value, match.Groups["file"].Value, line);
-    }
-
     internal /* for testing */ static void AppendStackFrame(ITerminal terminal, string stackTraceLine)
     {
         terminal.Append(DoubleIndentation);
-        Match match = GetFrameRegex().Match(stackTraceLine);
+        Match match = StackTraceHelper.GetFrameRegex().Match(stackTraceLine);
         if (match.Success)
         {
             bool weHaveFilePathAndCodeLine = !RoslynString.IsNullOrWhiteSpace(match.Groups["code"].Value);
@@ -1079,68 +979,5 @@ internal sealed partial class TerminalTestReporter : IDisposable
         }
 
         _terminalWithProgress.UpdateWorker(asm.SlotIndex);
-    }
-}
-
-internal static class RootFinder
-{
-    private static string? s_root;
-
-    public static string Find()
-    {
-        if (s_root != null)
-        {
-            return s_root;
-        }
-
-        string path = AppContext.BaseDirectory;
-        string dir = path;
-        while (Directory.GetDirectoryRoot(dir) != dir)
-        {
-            if (Directory.Exists(Path.Combine(dir, ".git")))
-            {
-                s_root = dir + Path.DirectorySeparatorChar;
-                return dir + Path.DirectorySeparatorChar;
-            }
-            else
-            {
-                dir = Directory.GetParent(dir)!.ToString();
-            }
-        }
-
-        throw new InvalidOperationException($"Could not find solution root, .git not found in {path} or any parent directory.");
-    }
-}
-
-internal static class AzdoEscaper
-{
-    public static string? Escape(string? value)
-    {
-        if (RoslynString.IsNullOrEmpty(value))
-        {
-            return value;
-        }
-
-        var result = new StringBuilder(value.Length);
-        foreach (char c in value)
-        {
-            switch (c)
-            {
-                case ';':
-                    result.Append("%3B");
-                    break;
-                case '\r':
-                    result.Append("%0D");
-                    break;
-                case '\n':
-                    result.Append("%0A");
-                    break;
-                default:
-                    result.Append(c);
-                    break;
-            }
-        }
-
-        return result.ToString();
     }
 }
