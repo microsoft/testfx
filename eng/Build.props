@@ -11,8 +11,7 @@
 
   <!-- When building all products on non-windows OSes -->
   <ItemGroup Condition=" '$(ProductsToBuild)' == 'all' AND '$(OS)' != 'Windows_NT' ">
-    <ProjectToBuild Include="$(RepoRoot)src/**/*.csproj" />
-    <ProjectToBuild Include="$(RepoRoot)test/**/*.csproj" />
+    <ProjectToBuild  Include="$(RepoRoot)NonWindowsTests.slnf" />
   </ItemGroup>
 
   <!-- When building MSTest only on windows OS -->
