@@ -489,11 +489,13 @@ public class TestExecutionManager
             // Queue the non parallel set
             if (nonParallelizableTestSet != null)
             {
+                // What to do?
                 await ExecuteTestsWithTestRunnerAsync(nonParallelizableTestSet, frameworkHandle, source, sourceLevelParameters, testRunner, usesAppDomains);
             }
         }
         else
         {
+            // What to do?
             await ExecuteTestsWithTestRunnerAsync(testsToRun, frameworkHandle, source, sourceLevelParameters, testRunner, usesAppDomains);
         }
 
