@@ -14,7 +14,19 @@ public sealed class AbortionTests : AcceptanceTestBase<AbortionTests.TestAssetFi
 
     [TestMethod]
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
-    public async Task AbortWithCTRLPlusC_CancellingTests(string tfm)
+    public async Task AbortWithCTRLPlusC_CancellingParallelTests(string tfm)
+    {
+        await AbortWithCTRLPlusC_CancellingTests(tfm, parallelize: true);
+    }
+
+    [TestMethod]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    public async Task AbortWithCTRLPlusC_CancellingNonParallelTests(string tfm)
+    {
+        await AbortWithCTRLPlusC_CancellingTests(tfm, parallelize: false);
+    }
+
+    internal async Task AbortWithCTRLPlusC_CancellingTests(string tfm, bool parallelize)
     {
         // We expect the same semantic for Linux, the test setup is not cross and we're using specific
         // Windows API because this gesture is not easy xplat.
@@ -25,17 +37,45 @@ public sealed class AbortionTests : AcceptanceTestBase<AbortionTests.TestAssetFi
 
         var testHost = TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
 
-        string fileCreationPath = Path.Combine(testHost.DirectoryName, "fileCreation");
-        File.WriteAllText(fileCreationPath, string.Empty);
+        string? parameters = null;
+        if (parallelize)
+        {
+            // Providing runSettings even with Parallelize Workers = 1, will "enable" parallelization and will run via different path.
+            // So providing the settings only to the parallel run.
+            string runSettingsPath = Path.Combine(testHost.DirectoryName, $"{(parallelize ? "parallel" : "serial")}.runsettings");
+            File.WriteAllText(runSettingsPath, $"""
+            <RunSettings>
+                <MSTest>
+                <Parallelize>
+                    <Workers>{(parallelize ? 0 : 1)}</Workers>
+                    <Scope>MethodLevel</Scope>
+                </Parallelize>
+                </MSTest>
+            </RunSettings>
+            """);
+            parameters = $"--settings {runSettingsPath}";
+        }
 
-        TestHostResult testHostResult = await testHost.ExecuteAsync(environmentVariables: new()
+        string fileCreationPath = Path.Combine(testHost.DirectoryName, "fileCreation");
+
+        TestHostResult testHostResult = await testHost.ExecuteAsync(parameters, environmentVariables: new()
         {
             ["FILE_DIRECTORY"] = fileCreationPath,
         });
 
-        testHostResult.AssertExitCodeIs(ExitCodes.TestSessionAborted);
+        // To ensure we don't cancel right away, so tests have chance to run, and block our
+        // cancellation if we do it wrong.
+        testHostResult.AssertOutputContains("Waiting for file creation.");
+        if (parallelize)
+        {
+            testHostResult.AssertOutputContains("Test Parallelization enabled for");
+        }
+        else
+        {
+            testHostResult.AssertOutputDoesNotContain("Test Parallelization enabled for");
+        }
 
-        testHostResult.AssertOutputMatchesRegex("Canceling the test session.*");
+        testHostResult.AssertExitCodeIs(ExitCodes.TestSessionAborted);
     }
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
@@ -92,6 +132,7 @@ public class Program
                 }
                 else
                 {
+                    Console.WriteLine("Waiting for file creation.");
                     Thread.Sleep(1000);
                 }
             }
@@ -131,12 +172,18 @@ public class UnitTest1
         var fireCtrlCTask = Task.Run(() =>
         {
             // Delay for a short period before firing CTRL+C to simulate some processing time
-            Task.Delay(1000).Wait();
             File.WriteAllText(Environment.GetEnvironmentVariable("FILE_DIRECTORY")!, string.Empty);
         });
 
-        // Start a task that represents the infinite delay, which should be canceled
-        await Task.Delay(Timeout.Infinite, TestContext.CancellationTokenSource.Token);
+        // Wait for 10s, and after that kill the process.
+        // When we cancel by CRTL+C we do non-graceful teardown so the Environment.Exit should never be reached,
+        // because the test process already terminated.
+        //
+        // If we do reach it, we will see 11111 exit code, and it will fail the test assertion, because we did not cancel.
+        // (If we don't exit here, the process will happily run to completion after 10 seconds, but will still report
+        // cancelled exit code, so that is why we are more aggressive here.)
+        await Task.Delay(10_000);
+        Environment.Exit(11111);
     }
 }
 """;
