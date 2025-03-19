@@ -473,9 +473,7 @@ public class TestExecutionManager
                 {
                     // Ensure we can abandon currently running tasks on cancellation, rather than waiting for them to complete.
                     // They will still run on background but we won't await them.
-                    var runCancelled = new TaskCompletionSource<object>();
-                    _testRunCancellationToken?.Register(() => runCancelled.TrySetCanceled());
-                    await Task.WhenAny(Task.WhenAll(tasks), runCancelled.Task);
+                    await Task.WhenAny(Task.WhenAll(tasks), _testRunCancellationToken.AsTask());
                 }
                 catch (Exception ex)
                 {
@@ -489,14 +487,16 @@ public class TestExecutionManager
             // Queue the non parallel set
             if (nonParallelizableTestSet != null)
             {
-                // What to do?
-                await ExecuteTestsWithTestRunnerAsync(nonParallelizableTestSet, frameworkHandle, source, sourceLevelParameters, testRunner, usesAppDomains);
+                // Ensure we can abandon currently running tasks on cancellation, rather than waiting for them to complete.
+                // They will still run on background but we won't await them.
+                await Task.WhenAny(ExecuteTestsWithTestRunnerAsync(nonParallelizableTestSet, frameworkHandle, source, sourceLevelParameters, testRunner, usesAppDomains), _testRunCancellationToken.AsTask());
             }
         }
         else
         {
-            // What to do?
-            await ExecuteTestsWithTestRunnerAsync(testsToRun, frameworkHandle, source, sourceLevelParameters, testRunner, usesAppDomains);
+            // Ensure we can abandon currently running tasks on cancellation, rather than waiting for them to complete.
+            // They will still run on background but we won't await them.
+            await Task.WhenAny(ExecuteTestsWithTestRunnerAsync(testsToRun, frameworkHandle, source, sourceLevelParameters, testRunner, usesAppDomains), _testRunCancellationToken.AsTask());
         }
 
         if (PlatformServiceProvider.Instance.IsGracefulStopRequested)

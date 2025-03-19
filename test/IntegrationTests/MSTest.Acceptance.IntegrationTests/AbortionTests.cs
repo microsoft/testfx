@@ -15,16 +15,12 @@ public sealed class AbortionTests : AcceptanceTestBase<AbortionTests.TestAssetFi
     [TestMethod]
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     public async Task AbortWithCTRLPlusC_CancellingParallelTests(string tfm)
-    {
-        await AbortWithCTRLPlusC_CancellingTests(tfm, parallelize: true);
-    }
+        => await AbortWithCTRLPlusC_CancellingTests(tfm, parallelize: true);
 
     [TestMethod]
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     public async Task AbortWithCTRLPlusC_CancellingNonParallelTests(string tfm)
-    {
-        await AbortWithCTRLPlusC_CancellingTests(tfm, parallelize: false);
-    }
+        => await AbortWithCTRLPlusC_CancellingTests(tfm, parallelize: false);
 
     internal async Task AbortWithCTRLPlusC_CancellingTests(string tfm, bool parallelize)
     {
