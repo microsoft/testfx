@@ -471,7 +471,11 @@ public class TestExecutionManager
 
                 try
                 {
-                    await Task.WhenAll(tasks);
+                    // Ensure we can abandon currently running tasks on cancellation, rather than waiting for them to complete.
+                    // They will still run on background but we won't await them.
+                    var runCancelled = new TaskCompletionSource<object>();
+                    _testRunCancellationToken?.Register(() => runCancelled.TrySetCanceled());
+                    await Task.WhenAny(Task.WhenAll(tasks), runCancelled.Task);
                 }
                 catch (Exception ex)
                 {
