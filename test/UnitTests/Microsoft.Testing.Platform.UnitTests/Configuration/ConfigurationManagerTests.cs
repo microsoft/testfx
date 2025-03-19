@@ -59,7 +59,7 @@ public sealed class ConfigurationManagerTests
     {
         Mock<IFileSystem> fileSystem = new();
         fileSystem.Setup(x => x.Exists(It.IsAny<string>())).Returns(true);
-        fileSystem.Setup(x => x.NewFileStream(It.IsAny<string>(), FileMode.Open)).Returns(new MemoryFileStream(Encoding.UTF8.GetBytes(string.Empty)));
+        fileSystem.Setup(x => x.NewFileStream(It.IsAny<string>(), FileMode.Open, FileAccess.Read)).Returns(new MemoryFileStream(Encoding.UTF8.GetBytes(string.Empty)));
         CurrentTestApplicationModuleInfo testApplicationModuleInfo = new(new SystemEnvironment(), new SystemProcessHandler());
         ConfigurationManager configurationManager = new(fileSystem.Object, testApplicationModuleInfo);
         configurationManager.AddConfigurationSource(() =>
@@ -75,8 +75,6 @@ public sealed class ConfigurationManagerTests
 
         Mock<IFileSystem> fileSystem = new();
         fileSystem.Setup(x => x.Exists(It.IsAny<string>())).Returns(true);
-        fileSystem.Setup(x => x.NewFileStream(It.IsAny<string>(), FileMode.Open))
-            .Returns(new MemoryFileStream(bytes));
         fileSystem.Setup(x => x.NewFileStream(It.IsAny<string>(), FileMode.Open, FileAccess.Read))
             .Returns(new MemoryFileStream(bytes));
 
