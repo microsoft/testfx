@@ -1,8 +1,9 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Extensions.AzureDevOps;
+using Microsoft.Testing.Extensions.AzureDevOps.Resources;
 using Microsoft.Testing.Extensions.Reporting;
-using Microsoft.Testing.Extensions.Reporting.Resources;
 using Microsoft.Testing.Platform;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions.Messages;
@@ -65,10 +66,7 @@ internal sealed class AzureDevOpsReporter :
             bool found = _commandLine.TryGetOptionArgumentList(AzureDevOpsCommandLineOptions.AzureDevOpsReportSeverity, out string[]? arguments);
             if (found && arguments?.Length > 0)
             {
-                if (string.Equals(arguments[0], "warning", StringComparison.OrdinalIgnoreCase))
-                {
-                    _severity = "warning";
-                }
+                _severity = arguments[0].ToLowerInvariant();
             }
         }
 
@@ -82,36 +80,27 @@ internal sealed class AzureDevOpsReporter :
             return;
         }
 
-        try
+        if (value is not TestNodeUpdateMessage nodeUpdateMessage)
         {
-            if (value is not TestNodeUpdateMessage nodeUpdateMessage)
-            {
-                return;
-            }
-
-            TestNodeStateProperty nodeState = nodeUpdateMessage.TestNode.Properties.Single<TestNodeStateProperty>();
-
-            switch (nodeState)
-            {
-                case FailedTestNodeStateProperty failed:
-                    await WriteExceptionAsync(failed.Explanation, failed.Exception);
-                    break;
-                case ErrorTestNodeStateProperty error:
-                    await WriteExceptionAsync(error.Explanation, error.Exception);
-                    break;
-                case CancelledTestNodeStateProperty cancelled:
-                    await WriteExceptionAsync(cancelled.Explanation, cancelled.Exception);
-                    break;
-                case TimeoutTestNodeStateProperty timeout:
-                    await WriteExceptionAsync(timeout.Explanation, timeout.Exception);
-                    break;
-            }
-
             return;
         }
-        catch (OperationCanceledException ex) when (ex.CancellationToken == cancellationToken)
+
+        TestNodeStateProperty nodeState = nodeUpdateMessage.TestNode.Properties.Single<TestNodeStateProperty>();
+
+        switch (nodeState)
         {
-            // Do nothing, we're stopping
+            case FailedTestNodeStateProperty failed:
+
+                break;
+            case ErrorTestNodeStateProperty error:
+                await WriteExceptionAsync(error.Explanation, error.Exception);
+                break;
+            case CancelledTestNodeStateProperty cancelled:
+                await WriteExceptionAsync(cancelled.Explanation, cancelled.Exception);
+                break;
+            case TimeoutTestNodeStateProperty timeout:
+                await WriteExceptionAsync(timeout.Explanation, timeout.Exception);
+                break;
         }
 
         return;

@@ -2,7 +2,10 @@
 
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;$(MicrosoftTestingTargetFrameworks)</TargetFrameworks>
-    <RootNamespace>Microsoft.Testing.Extensions.Reporting</RootNamespace>
+
+    <!-- Stay on 1.0.0 alpha while we are dogfooding this extension to see if it is useful. -->
+    <VersionPrefix>1.0.0</VersionPrefix>
+    <PreReleaseVersionLabel>alpha</PreReleaseVersionLabel>
   </PropertyGroup>
 
   <!-- NuGet properties -->
@@ -37,12 +40,6 @@ This package extends Microsoft Testing Platform to provide a Azure DevOps report
 
   <ItemGroup>
     <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Microsoft.Testing.Platform.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <InternalsVisibleTo Include="Microsoft.Testing.Extensions.VSTestBridge" Key="$(VsPublicKey)" />
-    <InternalsVisibleTo Include="Microsoft.Testing.Extensions.HangDump" Key="$(VsPublicKey)" />
-    <InternalsVisibleTo Include="Microsoft.Testing.Extensions.UnitTests" Key="$(VsPublicKey)" />
   </ItemGroup>
 
   <ItemGroup>
