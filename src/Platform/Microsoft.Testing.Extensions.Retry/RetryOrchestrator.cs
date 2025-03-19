@@ -68,7 +68,7 @@ internal sealed class RetryOrchestrator : ITestHostOrchestrator, IOutputDeviceDa
 
     public async Task<int> OrchestrateTestHostExecutionAsync()
     {
-        if (_commandLineOptions.IsOptionSet(PlatformCommandLineProvider.ServerOptionKey))
+        if (_commandLineOptions.IsOptionSet(PlatformCommandLineProvider.ServerOptionKey) && !_commandLineOptions.IsOptionSet(PlatformCommandLineProvider.DotNetTestPipeOptionKey))
         {
             throw new InvalidOperationException(ExtensionResources.RetryFailedTestsNotSupportedInServerModeErrorMessage);
         }

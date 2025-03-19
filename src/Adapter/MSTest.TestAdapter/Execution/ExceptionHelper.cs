@@ -78,7 +78,6 @@ internal static class ExceptionHelper
                 result.AppendLine(Resource.UTA_EndOfInnerExceptionTrace);
             }
 
-            result.Append(' ');
             result.AppendLine(stackTraces.Pop());
 
             first = false;
