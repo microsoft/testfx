@@ -44,6 +44,7 @@ internal static class DiscoveredTestMessagesFieldsId
 
     public const ushort ExecutionId = 1;
     public const ushort DiscoveredTestMessageList = 2;
+    public const ushort InstanceId = 3;
 }
 
 internal static class DiscoveredTestMessageFieldsId
@@ -59,6 +60,7 @@ internal static class TestResultMessagesFieldsId
     public const ushort ExecutionId = 1;
     public const ushort SuccessfulTestMessageList = 2;
     public const ushort FailedTestMessageList = 3;
+    public const ushort InstanceId = 4;
 }
 
 internal static class SuccessfulTestResultMessageFieldsId
@@ -99,6 +101,7 @@ internal static class FileArtifactMessagesFieldsId
 
     public const ushort ExecutionId = 1;
     public const ushort FileArtifactMessageList = 2;
+    public const ushort InstanceId = 3;
 }
 
 internal static class FileArtifactMessageFieldsId
