@@ -76,7 +76,7 @@ public sealed class ConfigurationManagerTests
         Mock<IFileSystem> fileSystem = new();
         fileSystem.Setup(x => x.Exists(It.IsAny<string>())).Returns(true);
         fileSystem.Setup(x => x.NewFileStream(It.IsAny<string>(), FileMode.Open, FileAccess.Read))
-            .Returns(new MemoryFileStream(bytes));
+            .Returns(() => new MemoryFileStream(bytes));
 
         Mock<ILogger> loggerMock = new();
         loggerMock.Setup(x => x.IsEnabled(LogLevel.Trace)).Returns(true);
