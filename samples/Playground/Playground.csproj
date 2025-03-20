@@ -6,6 +6,8 @@
     <Nullable>enable</Nullable>
     <GenerateProgramFile>false</GenerateProgramFile>
     <NoWarn>$(NoWarn);NETSDK1023</NoWarn>
+
+    <IsTestingPlatformApplication>true</IsTestingPlatformApplication>
   </PropertyGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' == 'net462' ">
