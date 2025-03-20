@@ -60,7 +60,8 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
                                 new DiscoveredTestMessage(
                                     testNodeUpdateMessage.TestNode.Uid.Value,
                                     testNodeUpdateMessage.TestNode.DisplayName),
-                            });
+                            },
+                            DotnetTestConnection.InstanceId);
 
                         await _dotnetTestConnection.SendMessageAsync(discoveredTestMessages);
                         break;
@@ -81,7 +82,8 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
                                    testNodeDetails.StandardError ?? string.Empty,
                                    testNodeUpdateMessage.SessionUid.Value),
                             },
-                            Array.Empty<FailedTestResultMessage>());
+                            Array.Empty<FailedTestResultMessage>(),
+                            DotnetTestConnection.InstanceId);
 
                         await _dotnetTestConnection.SendMessageAsync(testResultMessages);
                         break;
@@ -105,7 +107,8 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
                                    testNodeDetails.StandardOutput ?? string.Empty,
                                    testNodeDetails.StandardError ?? string.Empty,
                                    testNodeUpdateMessage.SessionUid.Value),
-                            });
+                            },
+                            DotnetTestConnection.InstanceId);
 
                         await _dotnetTestConnection.SendMessageAsync(testResultMessages);
                         break;
@@ -125,7 +128,8 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
                             testNodeFileArtifact.TestNode.Uid.Value,
                             testNodeFileArtifact.TestNode.DisplayName,
                             testNodeFileArtifact.SessionUid.Value),
-                    });
+                    },
+                    DotnetTestConnection.InstanceId);
 
                 await _dotnetTestConnection.SendMessageAsync(fileArtifactMessages);
                 break;
@@ -142,7 +146,8 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
                             string.Empty,
                             string.Empty,
                             sessionFileArtifact.SessionUid.Value),
-                    });
+                    },
+                    DotnetTestConnection.InstanceId);
 
                 await _dotnetTestConnection.SendMessageAsync(fileArtifactMessages);
                 break;
@@ -159,7 +164,8 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
                             string.Empty,
                             string.Empty,
                             string.Empty),
-                    });
+                    },
+                    DotnetTestConnection.InstanceId);
 
                 await _dotnetTestConnection.SendMessageAsync(fileArtifactMessages);
                 break;
