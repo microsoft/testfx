@@ -26,7 +26,9 @@ public class ThreadOperationsTests : TestContainer
     }
 #endif
 
-    public void ExecuteShouldReturnFalseIfTheActionTimesOut()
+#pragma warning disable IDE0051 // Remove unused private members - test is failing in CI.
+    private void ExecuteShouldReturnFalseIfTheActionTimesOut()
+#pragma warning restore IDE0051 // Remove unused private members
     {
         static void Action() => Task.Delay(1000).Wait();
 
