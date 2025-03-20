@@ -90,7 +90,7 @@ internal sealed class AzureDevOpsReporter :
         switch (nodeState)
         {
             case FailedTestNodeStateProperty failed:
-
+                await WriteExceptionAsync(failed.Explanation, failed.Exception);
                 break;
             case ErrorTestNodeStateProperty error:
                 await WriteExceptionAsync(error.Explanation, error.Exception);
@@ -131,10 +131,11 @@ internal sealed class AzureDevOpsReporter :
                 string root = RootFinder.Find();
                 string file = location.Value.File;
                 string relativePath = file.StartsWith(root, StringComparison.CurrentCultureIgnoreCase) ? file.Substring(root.Length) : file;
+                string relativeNormalizedPath = relativePath.Replace('\\', '/');
 
                 string err = AzDoEscaper.Escape(message);
 
-                string line = $"##vso[task.logissue type={_severity};sourcepath={relativePath};linenumber={location.Value.LineNumber};columnnumber=1]{err}";
+                string line = $"##vso[task.logissue type={_severity};sourcepath={relativeNormalizedPath};linenumber={location.Value.LineNumber};columnnumber=1]{err}";
                 await _outputDisplay.DisplayAsync(this, new FormattedTextOutputDeviceData(line));
             }
         }
