@@ -176,10 +176,9 @@ stages:
           #     DOTNET_ROOT: $(Build.SourcesDirectory)/.dotnet
           #     NUGET_PACKAGES: $(Build.SourcesDirectory)/.packages
           
-          - script: Test.cmd
-              -configuration $(_BuildConfig)
-              -ci
-              -nobl
+          - script: |
+              chmod +x ./test.sh
+              ./test.sh --configuration $(_BuildConfig) --ci --test --integrationTest --nobl
             name: Test
             displayName: Test
           
@@ -240,10 +239,9 @@ stages:
           #     DOTNET_ROOT: $(Build.SourcesDirectory)/.dotnet
           #     NUGET_PACKAGES: $(Build.SourcesDirectory)/.packages
               
-          - script: Test.cmd
-               -configuration $(_BuildConfig)
-               -ci
-               -nobl
+          - script: |
+              chmod +x ./test.sh
+              ./test.sh --configuration $(_BuildConfig) --ci --test --integrationTest --nobl
             name: Test
             displayName: Test
           
