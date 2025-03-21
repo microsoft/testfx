@@ -240,7 +240,7 @@ stages:
           #     DOTNET_ROOT: $(Build.SourcesDirectory)/.dotnet
           #     NUGET_PACKAGES: $(Build.SourcesDirectory)/.packages
               
-           - script: Test.cmd
+          - script: Test.cmd
                -configuration $(_BuildConfig)
                -ci
                -nobl
