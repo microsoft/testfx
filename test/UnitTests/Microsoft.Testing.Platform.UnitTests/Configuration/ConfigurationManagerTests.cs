@@ -1,5 +1,7 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using System.Text.Json;
 
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
@@ -64,7 +66,7 @@ public sealed class ConfigurationManagerTests
         ConfigurationManager configurationManager = new(fileSystem.Object, testApplicationModuleInfo);
         configurationManager.AddConfigurationSource(() =>
             new JsonConfigurationSource(testApplicationModuleInfo, fileSystem.Object, null));
-        await Assert.ThrowsAsync<NullReferenceException>(() => configurationManager.BuildAsync(null, new CommandLineParseResult(null, new List<CommandLineParseOption>(), Array.Empty<string>())), ex => ex?.ToString() ?? "No exception was thrown");
+        await Assert.ThrowsAsync<JsonException>(() => configurationManager.BuildAsync(null, new CommandLineParseResult(null, new List<CommandLineParseOption>(), Array.Empty<string>())), ex => ex?.ToString() ?? "No exception was thrown");
     }
 
     [TestMethod]
