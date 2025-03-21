@@ -291,7 +291,7 @@ public sealed class TestApplication : ITestApplication
             return new(logLevel, result);
         }
 
-        logLevel = LogLevel.Trace;
+        logLevel = LogLevel.Debug;
 
         if (result.TryGetOptionArgumentList(PlatformCommandLineProvider.DiagnosticVerbosityOptionKey, out string[]? verbosity))
         {
