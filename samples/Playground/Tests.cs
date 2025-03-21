@@ -15,7 +15,8 @@ public class TestClass
     [TestMethod]
     [DynamicData(nameof(Data))]
     public void Test3(int a, int b)
-        => Thread.Sleep(30_000);
+    {
+    }
 
     public static IEnumerable<(int A, int B)> Data
     {
