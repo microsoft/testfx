@@ -58,7 +58,9 @@ internal class TestHostTestFrameworkInvoker(IServiceProvider serviceProvider) : 
         IMessageBus messageBus = ServiceProvider.GetMessageBus();
 
         // Execute the test request
-        await ExecuteRequestAsync(testFramework, request, messageBus, cancellationToken);
+        var taskCompletionSource = new TaskCompletionSource();
+        using CancellationTokenRegistration r = cancellationToken.Register(() => taskCompletionSource.TrySetCanceled());
+        await Task.WhenAny(ExecuteRequestAsync(testFramework, request, messageBus, cancellationToken), taskCompletionSource.Task);
 
         CloseTestSessionResult closeTestSessionResult = await testFramework.CloseTestSessionAsync(new(sessionId, client, cancellationToken));
         await HandleTestSessionResultAsync(closeTestSessionResult.IsSuccess, closeTestSessionResult.WarningMessage, closeTestSessionResult.ErrorMessage);
@@ -68,6 +70,8 @@ internal class TestHostTestFrameworkInvoker(IServiceProvider serviceProvider) : 
 
     public virtual async Task ExecuteRequestAsync(ITestFramework testFramework, TestExecutionRequest request, IMessageBus messageBus, CancellationToken cancellationToken)
     {
+        await Task.Yield();
+
         using SemaphoreSlim requestSemaphore = new(0, 1);
         await testFramework.ExecuteRequestAsync(new(request, messageBus, new SemaphoreSlimRequestCompleteNotifier(requestSemaphore), cancellationToken));
         await requestSemaphore.WaitAsync(cancellationToken);

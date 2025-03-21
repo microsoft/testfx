@@ -413,7 +413,6 @@ public class TestExecutionManager
             parallelScope = MSTestSettings.CurrentSettings.ParallelizationScope.Value;
         }
 
-        Task completeWhenTestRunIsCanceled = _testRunCancellationToken.AsTask();
         if (!MSTestSettings.CurrentSettings.DisableParallelization && sourceSettings.CanParallelizeAssembly && parallelWorkers > 0)
         {
             // Parallelization is enabled. Let's do further classification for sets.
@@ -472,9 +471,7 @@ public class TestExecutionManager
 
                 try
                 {
-                    // Ensure we can abandon currently running tasks on cancellation, rather than waiting for them to complete.
-                    // They will still run on background but we won't await them.
-                    await Task.WhenAny(Task.WhenAll(tasks), completeWhenTestRunIsCanceled);
+                    await Task.WhenAll(tasks);
                 }
                 catch (Exception ex)
                 {
@@ -488,18 +485,12 @@ public class TestExecutionManager
             // Queue the non parallel set
             if (nonParallelizableTestSet != null)
             {
-                _testRunCancellationToken?.ThrowIfCancellationRequested();
-                // Ensure we can abandon currently running tasks on cancellation, rather than waiting for them to complete.
-                // They will still run on background but we won't await them.
-                await Task.WhenAny(ExecuteTestsWithTestRunnerAsync(nonParallelizableTestSet, frameworkHandle, source, sourceLevelParameters, testRunner, usesAppDomains), completeWhenTestRunIsCanceled);
+                await ExecuteTestsWithTestRunnerAsync(nonParallelizableTestSet, frameworkHandle, source, sourceLevelParameters, testRunner, usesAppDomains);
             }
         }
         else
         {
-            _testRunCancellationToken?.ThrowIfCancellationRequested();
-            // Ensure we can abandon currently running tasks on cancellation, rather than waiting for them to complete.
-            // They will still run on background but we won't await them.
-            await Task.WhenAny(ExecuteTestsWithTestRunnerAsync(testsToRun, frameworkHandle, source, sourceLevelParameters, testRunner, usesAppDomains), completeWhenTestRunIsCanceled);
+            await ExecuteTestsWithTestRunnerAsync(testsToRun, frameworkHandle, source, sourceLevelParameters, testRunner, usesAppDomains);
         }
 
         if (PlatformServiceProvider.Instance.IsGracefulStopRequested)
@@ -518,10 +509,6 @@ public class TestExecutionManager
         UnitTestRunner testRunner,
         bool usesAppDomains)
     {
-        // This method does a lot of work synchronously and cannot be easily cancelled. Make sure we run asynchronously and
-        // can abandon the work here (by calling Task.WhenAny higher in the call stack) when user cancels the test run.
-        await Task.Yield();
-
         bool hasAnyRunnableTests = false;
         var fixtureTests = new List<TestCase>();
 
