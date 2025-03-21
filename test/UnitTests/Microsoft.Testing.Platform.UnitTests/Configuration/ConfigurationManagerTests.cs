@@ -66,7 +66,13 @@ public sealed class ConfigurationManagerTests
         ConfigurationManager configurationManager = new(fileSystem.Object, testApplicationModuleInfo);
         configurationManager.AddConfigurationSource(() =>
             new JsonConfigurationSource(testApplicationModuleInfo, fileSystem.Object, null));
+
+        // The behavior difference is System.Text.Json vs Jsonite
+#if NETFRAMEWORK
+        await Assert.ThrowsAsync<FormatException>(() => configurationManager.BuildAsync(null, new CommandLineParseResult(null, new List<CommandLineParseOption>(), Array.Empty<string>())), ex => ex?.ToString() ?? "No exception was thrown");
+#else
         await Assert.ThrowsAsync<JsonException>(() => configurationManager.BuildAsync(null, new CommandLineParseResult(null, new List<CommandLineParseOption>(), Array.Empty<string>())), ex => ex?.ToString() ?? "No exception was thrown");
+#endif
     }
 
     [TestMethod]
