@@ -834,10 +834,7 @@ internal sealed class TypeCache : MarshalByRefObject
         IEnumerable<TestPropertyAttribute> attributes = _reflectionHelper.GetDerivedAttributes<TestPropertyAttribute>(testMethodInfo.TestMethod, inherit: true);
         DebugEx.Assert(attributes != null, "attributes is null");
 
-        if (testMethodInfo.TestMethod.DeclaringType is { } testClass)
-        {
-            attributes = attributes.Concat(_reflectionHelper.GetDerivedAttributes<TestPropertyAttribute>(testClass, inherit: true));
-        }
+        attributes = attributes.Concat(_reflectionHelper.GetDerivedAttributes<TestPropertyAttribute>(testMethodInfo.Parent.ClassType, inherit: true));
 
         foreach (TestPropertyAttribute attribute in attributes)
         {
