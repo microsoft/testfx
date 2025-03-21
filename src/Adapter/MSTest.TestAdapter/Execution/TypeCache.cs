@@ -145,6 +145,8 @@ internal sealed class TypeCache : MarshalByRefObject
         DebugEx.Assert(testMethod != null, "test method is null");
 
         string typeName = testMethod.FullClassName;
+        // Using GetOrAdd to ensure we calculate only once when this is called by different threads in parallel.
+        // Using a static lambda to ensure we don't capture.
         return _classInfoCache.GetOrAdd(typeName, static (typeName, tuple) =>
         {
             TestMethod testMethod = tuple.testMethod;
@@ -376,6 +378,8 @@ internal sealed class TypeCache : MarshalByRefObject
     /// <param name="assembly"> The assembly to get its info. </param>
     /// <returns> The <see cref="TestAssemblyInfo"/> instance. </returns>
     private TestAssemblyInfo GetAssemblyInfo(Assembly assembly)
+        // Using GetOrAdd to ensure we calculate only once when this is called by different threads in parallel.
+        // Using a static lambda to ensure we don't capture.
         => _testAssemblyInfoCache.GetOrAdd(assembly, static (assembly, @this) =>
             {
                 var assemblyInfo = new TestAssemblyInfo(assembly);
