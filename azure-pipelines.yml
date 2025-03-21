@@ -241,9 +241,9 @@ stages:
           #     NUGET_PACKAGES: $(Build.SourcesDirectory)/.packages
               
            - script: Test.cmd
-              -configuration $(_BuildConfig)
-              -ci
-              -nobl
+               -configuration $(_BuildConfig)
+               -ci
+               -nobl
             name: Test
             displayName: Test
           
