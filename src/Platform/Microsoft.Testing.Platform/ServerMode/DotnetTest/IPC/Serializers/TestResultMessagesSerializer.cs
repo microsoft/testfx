@@ -101,11 +101,6 @@ namespace Microsoft.Testing.Platform.IPC.Serializers;
       |---FailedTestMessageList[0].SessionUid Id---| (2 bytes)
       |---FailedTestMessageList[0].SessionUid Size---| (4 bytes)
       |---FailedTestMessageList[0].SessionUid Value---| (n bytes)
-
-  |---InstanceId Id---| (2 bytes)
-  |---InstanceId Size---| (4 bytes)
-  |---InstanceId Value---| (n bytes)
-
   */
 
 internal sealed class TestResultMessagesSerializer : BaseSerializer, INamedPipeSerializer
@@ -118,7 +113,6 @@ internal sealed class TestResultMessagesSerializer : BaseSerializer, INamedPipeS
         string? instanceId = null;
         List<SuccessfulTestResultMessage>? successfulTestResultMessages = null;
         List<FailedTestResultMessage>? failedTestResultMessages = null;
-        string? instanceId = null;
 
         ushort fieldCount = ReadShort(stream);
 
@@ -141,10 +135,6 @@ internal sealed class TestResultMessagesSerializer : BaseSerializer, INamedPipeS
                     successfulTestResultMessages = ReadSuccessfulTestMessagesPayload(stream);
                     break;
 
-                case TestResultMessagesFieldsId.InstanceId:
-                    instanceId = ReadStringValue(stream, fieldSize);
-                    break;
-
                 case TestResultMessagesFieldsId.FailedTestMessageList:
                     failedTestResultMessages = ReadFailedTestMessagesPayload(stream);
                     break;
@@ -160,8 +150,7 @@ internal sealed class TestResultMessagesSerializer : BaseSerializer, INamedPipeS
             executionId,
             instanceId,
             successfulTestResultMessages is null ? [] : [.. successfulTestResultMessages],
-            failedTestResultMessages is null ? [] : [.. failedTestResultMessages],
-            instanceId);
+            failedTestResultMessages is null ? [] : [.. failedTestResultMessages]);
     }
 
     private static List<SuccessfulTestResultMessage> ReadSuccessfulTestMessagesPayload(Stream stream)
@@ -349,7 +338,6 @@ internal sealed class TestResultMessagesSerializer : BaseSerializer, INamedPipeS
         WriteField(stream, TestResultMessagesFieldsId.InstanceId, testResultMessages.InstanceId);
         WriteSuccessfulTestMessagesPayload(stream, testResultMessages.SuccessfulTestMessages);
         WriteFailedTestMessagesPayload(stream, testResultMessages.FailedTestMessages);
-        WriteField(stream, TestResultMessagesFieldsId.InstanceId, testResultMessages.InstanceId);
     }
 
     private static void WriteSuccessfulTestMessagesPayload(Stream stream, SuccessfulTestResultMessage[]? successfulTestResultMessages)
@@ -454,8 +442,7 @@ internal sealed class TestResultMessagesSerializer : BaseSerializer, INamedPipeS
         (ushort)((testResultMessages.ExecutionId is null ? 0 : 1) +
         (testResultMessages.InstanceId is null ? 0 : 1) +
         (IsNullOrEmpty(testResultMessages.SuccessfulTestMessages) ? 0 : 1) +
-        (IsNullOrEmpty(testResultMessages.FailedTestMessages) ? 0 : 1) +
-        (testResultMessages.InstanceId is null ? 0 : 1));
+        (IsNullOrEmpty(testResultMessages.FailedTestMessages) ? 0 : 1));
 
     private static ushort GetFieldCount(SuccessfulTestResultMessage successfulTestResultMessage) =>
         (ushort)((successfulTestResultMessage.Uid is null ? 0 : 1) +

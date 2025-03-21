@@ -30,10 +30,6 @@ namespace Microsoft.Testing.Platform.IPC.Serializers;
         |---DiscoveredTestMessageList[0].DisplayName Id---| (2 bytes)
         |---DiscoveredTestMessageList[0].DisplayName Size---| (4 bytes)
         |---DiscoveredTestMessageList[0].DisplayName Value---| (n bytes)
-
-    |---InstanceId---| (2 bytes)
-    |---InstanceId Size---| (4 bytes)
-    |---InstanceId Value---| (n bytes)
     */
 
 internal sealed class DiscoveredTestMessagesSerializer : BaseSerializer, INamedPipeSerializer
