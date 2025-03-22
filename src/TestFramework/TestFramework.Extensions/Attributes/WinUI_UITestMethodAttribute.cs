@@ -41,6 +41,15 @@ public class UITestMethodAttribute : TestMethodAttribute
     /// </summary>
     public static DispatcherQueue? DispatcherQueue { get; set; }
 
+    /// <inheritdoc />
+#if NET6_0_OR_GREATER
+    [Obsolete("Execute is obsolete. Call or override ExecuteAsync instead", DiagnosticId = "MSTESTOBS")]
+#else
+    [Obsolete("Execute is obsolete. Call or override ExecuteAsync instead")]
+#endif
+    public override TestResult[] Execute(ITestMethod testMethod)
+        => base.Execute(testMethod);
+
     /// <summary>
     /// Executes the test method on the UI Thread.
     /// </summary>
@@ -52,16 +61,8 @@ public class UITestMethodAttribute : TestMethodAttribute
     /// </returns>
     /// Throws <exception cref="NotSupportedException"> when run on an async test method.
     /// </exception>
-    public override TestResult[] Execute(ITestMethod testMethod)
+    public override async Task<TestResult[]> ExecuteAsync(ITestMethod testMethod)
     {
-        AsyncStateMachineAttribute[] attribute = testMethod.GetAttributes<AsyncStateMachineAttribute>(false);
-        if (attribute.Length > 0)
-        {
-            throw new NotSupportedException(FrameworkMessages.AsyncUITestMethodNotSupported);
-        }
-
-        TestResult? result = null;
-
         // TODO: Code seems to be assuming DeclaringType is never null, but it can be null.
         // Using 'bang' notation for now to ensure same behavior.
         DispatcherQueue dispatcher = GetDispatcherQueue(testMethod.MethodInfo.DeclaringType!.Assembly) ?? throw new InvalidOperationException(FrameworkMessages.AsyncUITestMethodWithNoDispatcherQueue);
@@ -69,38 +70,34 @@ public class UITestMethodAttribute : TestMethodAttribute
         {
             try
             {
-                result = testMethod.Invoke(null);
+                return [await testMethod.InvokeAsync(null)];
             }
             catch (Exception e)
             {
                 return [new() { TestFailureException = e }];
             }
         }
-        else
+
+        var tcs = new TaskCompletionSource<TestResult>();
+
+#pragma warning disable VSTHRD101 // Avoid unsupported async delegates
+        if (!dispatcher.TryEnqueue(DispatcherQueuePriority.Normal, async () =>
         {
-            var taskCompletionSource = new TaskCompletionSource<object?>();
-
-            if (!dispatcher.TryEnqueue(DispatcherQueuePriority.Normal, () =>
-                {
-                    try
-                    {
-                        result = testMethod.Invoke([]);
-                        taskCompletionSource.SetResult(null);
-                    }
-                    catch (Exception e)
-                    {
-                        result = new TestResult { TestFailureException = e };
-                        taskCompletionSource.SetException(e);
-                    }
-                }))
+            try
             {
-                taskCompletionSource.SetResult(null);
+                tcs.SetResult(await testMethod.InvokeAsync([]));
             }
-
-            taskCompletionSource.Task.GetAwaiter().GetResult();
+            catch (Exception e)
+            {
+                tcs.SetResult(new TestResult { TestFailureException = e });
+            }
+        }))
+        {
+            tcs.SetResult(null!);
         }
+#pragma warning restore VSTHRD101 // Avoid unsupported async delegates
 
-        return [result!];
+        return [await tcs.Task];
     }
 
     private static Type? GetApplicationType(Assembly assembly)
