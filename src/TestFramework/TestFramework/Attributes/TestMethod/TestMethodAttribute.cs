@@ -50,11 +50,20 @@ public class TestMethodAttribute : Attribute
     /// </summary>
     public string? DisplayName { get; }
 
+    /// <inheritdoc cref="ExecuteAsync(ITestMethod)" />
+#if NET6_0_OR_GREATER
+    [Obsolete("Execute is obsolete. Call or override ExecuteAsync instead", DiagnosticId = "MSTESTOBS")]
+#else
+    [Obsolete("Execute is obsolete. Call or override ExecuteAsync instead")]
+#endif
+    public virtual TestResult[] Execute(ITestMethod testMethod) => [testMethod.Invoke(null)];
+
     /// <summary>
     /// Executes a test method.
     /// </summary>
     /// <param name="testMethod">The test method to execute.</param>
     /// <returns>An array of TestResult objects that represent the outcome(s) of the test.</returns>
     /// <remarks>Extensions can override this method to customize running a TestMethod.</remarks>
-    public virtual TestResult[] Execute(ITestMethod testMethod) => [testMethod.Invoke(null)];
+    // TODO: Double check whether this breaks async local propagation between test init, test, test cleanup
+    public virtual async Task<TestResult[]> ExecuteAsync(ITestMethod testMethod) => [await testMethod.InvokeAsync(null)];
 }

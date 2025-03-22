@@ -107,19 +107,7 @@ internal static class MethodInfoExtensions
         return asyncStateMachineAttribute?.StateMachineType?.FullName;
     }
 
-    /// <summary>
-    /// Invoke a <see cref="MethodInfo"/> as a synchronous <see cref="Task"/>.
-    /// </summary>
-    /// <param name="methodInfo">
-    /// <see cref="MethodInfo"/> instance.
-    /// </param>
-    /// <param name="classInstance">
-    /// Instance of the on which methodInfo is invoked.
-    /// </param>
-    /// <param name="arguments">
-    /// Arguments for the methodInfo invoke.
-    /// </param>
-    internal static void InvokeAsSynchronousTask(this MethodInfo methodInfo, object? classInstance, params object?[]? arguments)
+    internal static object? GetInvokeResult(this MethodInfo methodInfo, object? classInstance, params object?[]? arguments)
     {
         ParameterInfo[]? methodParameters = methodInfo.GetParameters();
 
@@ -183,6 +171,25 @@ internal static class MethodInfoExtensions
                         string.Join(", ", arguments?.Select(a => a?.GetType().Name ?? "null") ?? Array.Empty<string>())), ex);
             }
         }
+
+        return invokeResult;
+    }
+
+    /// <summary>
+    /// Invoke a <see cref="MethodInfo"/> as a synchronous <see cref="Task"/>.
+    /// </summary>
+    /// <param name="methodInfo">
+    /// <see cref="MethodInfo"/> instance.
+    /// </param>
+    /// <param name="classInstance">
+    /// Instance of the on which methodInfo is invoked.
+    /// </param>
+    /// <param name="arguments">
+    /// Arguments for the methodInfo invoke.
+    /// </param>
+    internal static void InvokeAsSynchronousTask(this MethodInfo methodInfo, object? classInstance, params object?[]? arguments)
+    {
+        object? invokeResult = methodInfo.GetInvokeResult(classInstance, arguments);
 
         // If methodInfo is an async method, wait for returned task
         if (invokeResult is Task task)
