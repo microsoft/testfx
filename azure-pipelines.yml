@@ -105,7 +105,6 @@ stages:
               DOTNET_ROOT: $(Build.SourcesDirectory)/.dotnet
               NUGET_PACKAGES: $(Build.SourcesDirectory)/.packages
 
-
           # This step is only helpful for diagnosing some issues with vstest/test host that would not appear
           # through the console or trx
           - task: PublishBuildArtifacts@1
