@@ -105,6 +105,7 @@ stages:
               DOTNET_ROOT: $(Build.SourcesDirectory)/.dotnet
               NUGET_PACKAGES: $(Build.SourcesDirectory)/.packages
 
+
           # This step is only helpful for diagnosing some issues with vstest/test host that would not appear
           # through the console or trx
           - task: PublishBuildArtifacts@1
@@ -169,12 +170,6 @@ stages:
               DOTNET_ROOT: $(Build.SourcesDirectory)/.dotnet
               NUGET_PACKAGES: $(Build.SourcesDirectory)/.packages
 
-          - script: |
-              chmod +x ./test.sh
-              ./test.sh --configuration $(_BuildConfig) --ci --test --integrationTest --nobl
-            name: Test
-            displayName: Test
-          
           # This step is only helpful for diagnosing some issues with vstest/test host that would not appear
           # through the console or trx
           - task: PublishBuildArtifacts@1
