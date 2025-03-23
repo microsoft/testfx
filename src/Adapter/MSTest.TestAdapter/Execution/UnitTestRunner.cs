@@ -253,7 +253,7 @@ internal sealed class UnitTestRunner : MarshalByRefObject
             {
                 if (logListener is not null)
                 {
-                    FixtureMethodRunner.RunOnContext(testMethodInfo.Parent.Parent.ExecutionContext, () =>
+                    ExecutionContextHelpers.RunOnContext(testMethodInfo.Parent.Parent.ExecutionContext, () =>
                     {
                         initializationLogs = logListener.GetAndClearStandardOutput();
                         initializationErrorLogs = logListener.GetAndClearStandardError();
@@ -306,7 +306,7 @@ internal sealed class UnitTestRunner : MarshalByRefObject
                 TestFailedException? ex = classInfo.ExecuteClassCleanup(testContext.Context, out logListener);
                 if (logListener is not null)
                 {
-                    FixtureMethodRunner.RunOnContext(classInfo.ExecutionContext, () =>
+                    ExecutionContextHelpers.RunOnContext(classInfo.ExecutionContext, () =>
                     {
                         initializationLogs += logListener.GetAndClearStandardOutput();
                         initializationErrorLogs += logListener.GetAndClearStandardError();
@@ -334,7 +334,7 @@ internal sealed class UnitTestRunner : MarshalByRefObject
                 TestFailedException? ex = assemblyInfo.ExecuteAssemblyCleanup(testContext.Context, ref logListener);
                 if (logListener is not null)
                 {
-                    FixtureMethodRunner.RunOnContext(assemblyInfo.ExecutionContext, () =>
+                    ExecutionContextHelpers.RunOnContext(assemblyInfo.ExecutionContext, () =>
                     {
                         initializationLogs += logListener.GetAndClearStandardOutput();
                         initializationErrorLogs += logListener.GetAndClearStandardError();

@@ -159,7 +159,7 @@ public class TestMethodInfo : ITestMethod
 
         try
         {
-            FixtureMethodRunner.RunOnContext(executionContext, () =>
+            ExecutionContextHelpers.RunOnContext(executionContext, () =>
             {
                 ThreadSafeStringWriter.CleanState();
                 listener = new LogMessageListener(MSTestSettings.CurrentSettings.CaptureDebugTraces);
@@ -180,7 +180,7 @@ public class TestMethodInfo : ITestMethod
                 result.Duration = watch.Elapsed;
                 if (listener is not null)
                 {
-                    FixtureMethodRunner.RunOnContext(executionContext, () =>
+                    ExecutionContextHelpers.RunOnContext(executionContext, () =>
                     {
                         result.DebugTrace = listener.GetAndClearDebugTrace();
                         result.LogOutput = listener.GetAndClearStandardOutput();
@@ -405,7 +405,7 @@ public class TestMethodInfo : ITestMethod
         var result = new TestResult();
 
         // TODO remove dry violation with TestMethodRunner
-        FixtureMethodRunner.RunOnContext(executionContext, () =>
+        ExecutionContextHelpers.RunOnContext(executionContext, () =>
         {
             _classInstance = CreateTestClassInstance(result);
             executionContext = ExecutionContext.Capture();
@@ -429,7 +429,7 @@ public class TestMethodInfo : ITestMethod
                         hasTestInitializePassed = true;
                         var tcs = new TaskCompletionSource<object?>();
 #pragma warning disable VSTHRD101 // Avoid unsupported async delegates
-                        FixtureMethodRunner.RunOnContext(executionContext, async () =>
+                        ExecutionContextHelpers.RunOnContext(executionContext, async () =>
                         {
                             try
                             {
@@ -723,7 +723,7 @@ public class TestMethodInfo : ITestMethod
                 if (_classInstance is IAsyncDisposable classInstanceAsAsyncDisposable)
                 {
                     // If you implement IAsyncDisposable without calling the DisposeAsync this would result a resource leak.
-                    FixtureMethodRunner.RunOnContext(executionContext, () =>
+                    ExecutionContextHelpers.RunOnContext(executionContext, () =>
                     {
                         classInstanceAsAsyncDisposable.DisposeAsync().AsTask().Wait();
                         executionContext = ExecutionContext.Capture();
@@ -732,7 +732,7 @@ public class TestMethodInfo : ITestMethod
 #endif
                 if (_classInstance is IDisposable classInstanceAsDisposable)
                 {
-                    FixtureMethodRunner.RunOnContext(executionContext, () =>
+                    ExecutionContextHelpers.RunOnContext(executionContext, () =>
                     {
                         classInstanceAsDisposable.Dispose();
                         executionContext = ExecutionContext.Capture();
@@ -1111,7 +1111,6 @@ public class TestMethodInfo : ITestMethod
 
                 try
                 {
-                    // TODO: Same comment as in ExecuteAsyncAction below.
                     return await ExecuteInternalAsync(arguments, executionContext, timeoutTokenSource);
                 }
                 catch (OperationCanceledException)
