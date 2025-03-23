@@ -4,27 +4,27 @@
     <body>
       <trans-unit id="Description">
         <source>Azure DevOps report generator to write errors to the output in a way that AzureDev Ops understands.</source>
-        <target state="new">Azure DevOps report generator to write errors to the output in a way that AzureDev Ops understands.</target>
+        <target state="translated">Generátor sestav Azure DevOps pro zápis chyb do výstupu způsobem, který je pro AzureDev Ops srozumitelný.</target>
         <note />
       </trans-unit>
       <trans-unit id="DisplayName">
         <source>Azure DevOps report generator</source>
-        <target state="new">Azure DevOps report generator</target>
+        <target state="translated">Generátor sestav Azure DevOps</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidSeverity">
         <source>Invalid option {0}.</source>
-        <target state="new">Invalid option {0}.</target>
+        <target state="translated">Neplatná možnost {0}.</target>
         <note />
       </trans-unit>
       <trans-unit id="OptionDescription">
         <source>Eanble Azure DevOps report generator to write errors to the output in a way that AzureDev Ops understands.</source>
-        <target state="new">Eanble Azure DevOps report generator to write errors to the output in a way that AzureDev Ops understands.</target>
+        <target state="translated">Umožňuje generátoru sestav Azure DevOps zapisovat chyby do výstupu způsobem, který je pro AzureDev Ops srozumitelný.</target>
         <note />
       </trans-unit>
       <trans-unit id="SeverityOptionDescription">
         <source>Severity to use for the reported event. Options are: error (default) and warning.</source>
-        <target state="new">Severity to use for the reported event. Options are: error (default) and warning.</target>
+        <target state="translated">Závažnost, která se má použít pro hlášenou událost. Možnosti: chyba (výchozí) a upozornění.</target>
         <note>Do not translated 'error' or 'warning' those are literal values.</note>
       </trans-unit>
     </body>

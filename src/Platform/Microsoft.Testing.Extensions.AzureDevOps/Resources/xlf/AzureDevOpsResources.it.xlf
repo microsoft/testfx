@@ -4,27 +4,27 @@
     <body>
       <trans-unit id="Description">
         <source>Azure DevOps report generator to write errors to the output in a way that AzureDev Ops understands.</source>
-        <target state="new">Azure DevOps report generator to write errors to the output in a way that AzureDev Ops understands.</target>
+        <target state="translated">Il generatore di report di Azure DevOps per scrivere gli errori nell'output in un modo che Azure DevOps comprenda.</target>
         <note />
       </trans-unit>
       <trans-unit id="DisplayName">
         <source>Azure DevOps report generator</source>
-        <target state="new">Azure DevOps report generator</target>
+        <target state="translated">Generatore di report di Azure DevOps</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidSeverity">
         <source>Invalid option {0}.</source>
-        <target state="new">Invalid option {0}.</target>
+        <target state="translated">Opzione non valida {0}.</target>
         <note />
       </trans-unit>
       <trans-unit id="OptionDescription">
         <source>Eanble Azure DevOps report generator to write errors to the output in a way that AzureDev Ops understands.</source>
-        <target state="new">Eanble Azure DevOps report generator to write errors to the output in a way that AzureDev Ops understands.</target>
+        <target state="translated">Abilitare il generatore di report di Azure DevOps per scrivere gli errori nell'output in un modo che Azure DevOps comprenda.</target>
         <note />
       </trans-unit>
       <trans-unit id="SeverityOptionDescription">
         <source>Severity to use for the reported event. Options are: error (default) and warning.</source>
-        <target state="new">Severity to use for the reported event. Options are: error (default) and warning.</target>
+        <target state="translated">Gravità da utilizzare per l'evento segnalato. Le opzioni sono: errore (impostazione predefinita) e avviso.</target>
         <note>Do not translated 'error' or 'warning' those are literal values.</note>
       </trans-unit>
     </body>

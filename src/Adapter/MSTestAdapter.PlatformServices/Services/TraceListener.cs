@@ -12,12 +12,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 /// The virtual operations of the TraceListener are implemented here
 /// like Close(), Dispose() etc.
 /// </remarks>
-#if RELEASE
 #if NET6_0_OR_GREATER
 [Obsolete(Constants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
 #else
 [Obsolete(Constants.PublicTypeObsoleteMessage)]
-#endif
 #endif
 public class TraceListenerWrapper :
 #if !WINDOWS_UWP && !WIN_UI

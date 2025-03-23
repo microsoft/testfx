@@ -10,7 +10,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// <remarks>
 /// <list type="bullet">
 /// <item>
-/// When using other attributes like <see cref="DataRowAttribute" /> or <see cref="DynamicDataAttribute" />, it
+/// When using other attributes like <see cref="DataRowAttribute" /> or <see cref="DynamicDataAttribute" />,
 /// the use of <see cref="TestMethodAttribute" /> is still required.
 /// </item>
 /// <item>
@@ -40,9 +40,7 @@ public class TestMethodAttribute : Attribute
     /// <summary>
     /// Initializes a new instance of the <see cref="TestMethodAttribute"/> class.
     /// </summary>
-    /// <param name="displayName">
-    /// Display name for the test.
-    /// </param>
+    /// <param name="displayName">Display name for the test.</param>
     public TestMethodAttribute(string? displayName)
     {
         DisplayName = displayName;
