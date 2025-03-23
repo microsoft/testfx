@@ -34,6 +34,8 @@ public class UITestMethodAttribute : TestMethodAttribute
     {
     }
 
+    private protected override bool UseAsync => true;
+
     /// <summary>
     /// Gets or sets the <see cref="UI.Dispatching.DispatcherQueue"/> that should be used to invoke the UITestMethodAttribute.
     /// If none is provided <see cref="UITestMethodAttribute"/> will check for <see cref="WinUITestTargetAttribute" />, if the attribute is defined it will start the App and use its <see cref="UI.Dispatching.DispatcherQueue"/>.
@@ -61,7 +63,7 @@ public class UITestMethodAttribute : TestMethodAttribute
     /// </returns>
     /// Throws <exception cref="NotSupportedException"> when run on an async test method.
     /// </exception>
-    public override async Task<TestResult[]> ExecuteAsync(ITestMethod testMethod)
+    internal override async Task<TestResult[]> ExecuteAsync(ITestMethod testMethod)
     {
         // TODO: Code seems to be assuming DeclaringType is never null, but it can be null.
         // Using 'bang' notation for now to ensure same behavior.

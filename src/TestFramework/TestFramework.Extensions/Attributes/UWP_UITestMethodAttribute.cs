@@ -10,6 +10,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting.AppContainer;
 /// </summary>
 public class UITestMethodAttribute : TestMethodAttribute
 {
+    private protected override bool UseAsync => true;
+
     /// <inheritdoc cref="ExecuteAsync(ITestMethod)" />
 #if NET6_0_OR_GREATER
     [Obsolete("Execute is obsolete. Call or override ExecuteAsync instead", DiagnosticId = "MSTESTOBS")]
@@ -27,7 +29,7 @@ public class UITestMethodAttribute : TestMethodAttribute
     /// <returns>
     /// An array of <see cref="TestResult"/> instances.
     /// </returns>
-    public override async Task<TestResult[]> ExecuteAsync(ITestMethod testMethod)
+    internal override async Task<TestResult[]> ExecuteAsync(ITestMethod testMethod)
     {
         var tcs = new TaskCompletionSource<TestResult>();
 #pragma warning disable VSTHRD101 // Avoid unsupported async delegates
