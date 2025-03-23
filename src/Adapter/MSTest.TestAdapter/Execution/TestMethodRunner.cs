@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Threading.Tasks;
+
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
@@ -61,7 +63,7 @@ internal sealed class TestMethodRunner
     /// Executes a test.
     /// </summary>
     /// <returns>The test results.</returns>
-    internal TestResult[] Execute(string initializationLogs, string initializationErrorLogs, string initializationTrace, string initializationTestContextMessages)
+    internal async Task<TestResult[]> ExecuteAsync(string initializationLogs, string initializationErrorLogs, string initializationTrace, string initializationTestContextMessages)
     {
         bool isSTATestClass = AttributeComparer.IsDerived<STATestClassAttribute>(_testMethodInfo.Parent.ClassAttribute);
         bool isSTATestMethod = AttributeComparer.IsDerived<STATestMethodAttribute>(_testMethodInfo.Executor);
@@ -70,7 +72,7 @@ internal sealed class TestMethodRunner
         if (isSTARequested && isWindowsOS && Thread.CurrentThread.GetApartmentState() != ApartmentState.STA)
         {
             TestResult[]? results = null;
-            Thread entryPointThread = new(() => results = SafeRunTestMethod(initializationLogs, initializationErrorLogs, initializationTrace, initializationTestContextMessages))
+            Thread entryPointThread = new(() => results = SafeRunTestMethodAsync(initializationLogs, initializationErrorLogs, initializationTrace, initializationTestContextMessages).GetAwaiter().GetResult())
             {
                 Name = (isSTATestClass, isSTATestMethod) switch
                 {
@@ -102,17 +104,17 @@ internal sealed class TestMethodRunner
                 PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning(Resource.STAIsOnlySupportedOnWindowsWarning);
             }
 
-            return SafeRunTestMethod(initializationLogs, initializationErrorLogs, initializationTrace, initializationTestContextMessages);
+            return await SafeRunTestMethodAsync(initializationLogs, initializationErrorLogs, initializationTrace, initializationTestContextMessages);
         }
 
         // Local functions
-        TestResult[] SafeRunTestMethod(string initializationLogs, string initializationErrorLogs, string initializationTrace, string initializationTestContextMessages)
+        async Task<TestResult[]> SafeRunTestMethodAsync(string initializationLogs, string initializationErrorLogs, string initializationTrace, string initializationTestContextMessages)
         {
             TestResult[]? result = null;
 
             try
             {
-                result = RunTestMethod();
+                result = await RunTestMethodAsync();
             }
             catch (TestFailedException ex)
             {
@@ -155,7 +157,7 @@ internal sealed class TestMethodRunner
     /// Runs the test method.
     /// </summary>
     /// <returns>The test results.</returns>
-    internal TestResult[] RunTestMethod()
+    internal async Task<TestResult[]> RunTestMethodAsync()
     {
         DebugEx.Assert(_test != null, "Test should not be null.");
         DebugEx.Assert(_testMethodInfo.TestMethod != null, "Test method should not be null.");
@@ -177,10 +179,10 @@ internal sealed class TestMethodRunner
             }
 
             object?[]? data = DataSerializationHelper.Deserialize(_test.SerializedData);
-            TestResult[] testResults = ExecuteTestWithDataSource(null, data);
+            TestResult[] testResults = await ExecuteTestWithDataSourceAsync(null, data);
             results.AddRange(testResults);
         }
-        else if (TryExecuteDataSourceBasedTests(results))
+        else if (await TryExecuteDataSourceBasedTestsAsync(results))
         {
             isDataDriven = true;
         }
@@ -191,7 +193,7 @@ internal sealed class TestMethodRunner
         else
         {
             _testContext.SetDisplayName(_test.DisplayName);
-            TestResult[] testResults = ExecuteTest(_testMethodInfo);
+            TestResult[] testResults = await ExecuteTestAsync(_testMethodInfo);
 
             foreach (TestResult testResult in testResults)
             {
@@ -247,12 +249,12 @@ internal sealed class TestMethodRunner
         return results.ToArray();
     }
 
-    private bool TryExecuteDataSourceBasedTests(List<TestResult> results)
+    private async Task<bool> TryExecuteDataSourceBasedTestsAsync(List<TestResult> results)
     {
         DataSourceAttribute[] dataSourceAttribute = _testMethodInfo.GetAttributes<DataSourceAttribute>(false);
         if (dataSourceAttribute is { Length: 1 })
         {
-            ExecuteTestFromDataSourceAttribute(results);
+            await ExecuteTestFromDataSourceAttributeAsync(results);
             return true;
         }
 
@@ -300,7 +302,7 @@ internal sealed class TestMethodRunner
             {
                 try
                 {
-                    TestResult[] testResults = ExecuteTestWithDataSource(testDataSource, data);
+                    TestResult[] testResults = await ExecuteTestWithDataSourceAsync(testDataSource, data);
 
                     results.AddRange(testResults);
                 }
@@ -314,7 +316,7 @@ internal sealed class TestMethodRunner
         return true;
     }
 
-    private void ExecuteTestFromDataSourceAttribute(List<TestResult> results)
+    private async Task ExecuteTestFromDataSourceAttributeAsync(List<TestResult> results)
     {
         Stopwatch watch = new();
         watch.Start();
@@ -339,7 +341,7 @@ internal sealed class TestMethodRunner
 
                 foreach (object dataRow in dataRows)
                 {
-                    TestResult[] testResults = ExecuteTestWithDataRow(dataRow, rowIndex++);
+                    TestResult[] testResults = await ExecuteTestWithDataRowAsync(dataRow, rowIndex++);
                     results.AddRange(testResults);
                 }
             }
@@ -361,7 +363,7 @@ internal sealed class TestMethodRunner
         }
     }
 
-    private TestResult[] ExecuteTestWithDataSource(UTF.ITestDataSource? testDataSource, object?[]? data)
+    private async Task<TestResult[]> ExecuteTestWithDataSourceAsync(UTF.ITestDataSource? testDataSource, object?[]? data)
     {
         string? displayName = StringEx.IsNullOrWhiteSpace(_test.DisplayName)
             ? _test.Name
@@ -408,7 +410,7 @@ internal sealed class TestMethodRunner
 
         TestResult[] testResults = ignoreFromTestDataRow is not null
             ? [TestResult.CreateIgnoredResult(ignoreFromTestDataRow)]
-            : ExecuteTest(_testMethodInfo);
+            : await ExecuteTestAsync(_testMethodInfo);
 
         stopwatch.Stop();
 
@@ -425,7 +427,7 @@ internal sealed class TestMethodRunner
         return testResults;
     }
 
-    private TestResult[] ExecuteTestWithDataRow(object dataRow, int rowIndex)
+    private async Task<TestResult[]> ExecuteTestWithDataRowAsync(object dataRow, int rowIndex)
     {
         string displayName = string.Format(CultureInfo.CurrentCulture, Resource.DataDrivenResultDisplayName, _test.DisplayName, rowIndex);
         Stopwatch? stopwatch = null;
@@ -435,7 +437,7 @@ internal sealed class TestMethodRunner
         {
             stopwatch = Stopwatch.StartNew();
             _testContext.SetDataRow(dataRow);
-            testResults = ExecuteTest(_testMethodInfo);
+            testResults = await ExecuteTestAsync(_testMethodInfo);
         }
         finally
         {
@@ -453,11 +455,11 @@ internal sealed class TestMethodRunner
         return testResults;
     }
 
-    private TestResult[] ExecuteTest(TestMethodInfo testMethodInfo)
+    private async Task<TestResult[]> ExecuteTestAsync(TestMethodInfo testMethodInfo)
     {
         try
         {
-            return _testMethodInfo.Executor.Execute(testMethodInfo);
+            return await _testMethodInfo.Executor.ExecuteAsync(testMethodInfo);
         }
         catch (Exception ex)
         {

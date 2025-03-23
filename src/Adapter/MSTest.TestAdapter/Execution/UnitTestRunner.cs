@@ -192,17 +192,16 @@ internal sealed class UnitTestRunner : MarshalByRefObject
                         testContextForTestExecution.SetOutcome(testContextForClassInit.Context.CurrentTestOutcome);
                         RetryBaseAttribute? retryAttribute = testMethodInfo.RetryAttribute;
                         var testMethodRunner = new TestMethodRunner(testMethodInfo, testMethod, testContextForTestExecution);
-                        result = testMethodRunner.Execute(classInitializeResult.LogOutput!, classInitializeResult.LogError!, classInitializeResult.DebugTrace!, classInitializeResult.TestContextMessages!);
+                        result = await testMethodRunner.ExecuteAsync(classInitializeResult.LogOutput!, classInitializeResult.LogError!, classInitializeResult.DebugTrace!, classInitializeResult.TestContextMessages!);
                         if (retryAttribute is not null && !RetryBaseAttribute.IsAcceptableResultForRetry(result))
                         {
                             RetryResult retryResult = await retryAttribute.ExecuteAsync(
                                 new RetryContext(
-                                    () => Task.FromResult(
-                                        testMethodRunner.Execute(
+                                    async () => await testMethodRunner.ExecuteAsync(
                                             classInitializeResult.LogOutput!,
                                             classInitializeResult.LogError!,
                                             classInitializeResult.DebugTrace!,
-                                            classInitializeResult.TestContextMessages!))));
+                                            classInitializeResult.TestContextMessages!)));
 
                             result = retryResult.TryGetLast() ?? throw ApplicationStateGuard.Unreachable();
                         }
