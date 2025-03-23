@@ -186,7 +186,7 @@ internal sealed class TestMethodRunner
         {
             isDataDriven = true;
         }
-        else if (TryExecuteFoldedDataDrivenTests(results))
+        else if (await TryExecuteFoldedDataDrivenTestsAsync(results))
         {
             isDataDriven = true;
         }
@@ -261,7 +261,7 @@ internal sealed class TestMethodRunner
         return false;
     }
 
-    private bool TryExecuteFoldedDataDrivenTests(List<TestResult> results)
+    private async Task<bool> TryExecuteFoldedDataDrivenTestsAsync(List<TestResult> results)
     {
         IEnumerable<UTF.ITestDataSource>? testDataSources = _testMethodInfo.GetAttributes<Attribute>(false)?.OfType<UTF.ITestDataSource>();
         if (testDataSources?.Any() != true)
