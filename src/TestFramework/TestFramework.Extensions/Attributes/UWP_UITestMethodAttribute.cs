@@ -13,11 +13,6 @@ public class UITestMethodAttribute : TestMethodAttribute
     private protected override bool UseAsync => true;
 
     /// <inheritdoc cref="ExecuteAsync(ITestMethod)" />
-#if NET6_0_OR_GREATER
-    [Obsolete("Execute is obsolete. Call or override ExecuteAsync instead", DiagnosticId = "MSTESTOBS")]
-#else
-    [Obsolete("Execute is obsolete. Call or override ExecuteAsync instead")]
-#endif
     public override TestResult[] Execute(ITestMethod testMethod) => base.Execute(testMethod);
 
     /// <summary>
