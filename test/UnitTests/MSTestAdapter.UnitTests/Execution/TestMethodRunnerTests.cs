@@ -467,9 +467,9 @@ public class TestMethodRunnerTests : TestContainer
             _invokeTest = invoke;
         }
 
-        public override TestResult Invoke(object?[]? arguments) =>
+        public override Task<TestResult> InvokeAsync(object?[]? arguments) =>
             // Ignore args for now
-            _invokeTest();
+            Task.FromResult(_invokeTest());
     }
 
     public class DummyTestClassBase
