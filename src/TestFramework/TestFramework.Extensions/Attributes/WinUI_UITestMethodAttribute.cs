@@ -82,7 +82,7 @@ public class UITestMethodAttribute : TestMethodAttribute
         {
             try
             {
-                tcs.SetResult(await testMethod.InvokeAsync([]));
+                tcs.SetResult(await testMethod.InvokeAsync(null));
             }
             catch (Exception e)
             {
