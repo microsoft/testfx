@@ -51,19 +51,25 @@ public sealed class DuplicateDataRowAnalyzer : DiagnosticAnalyzer
     private static void AnalyzeSymbol(SymbolAnalysisContext context, INamedTypeSymbol dataRowAttribute)
     {
         var methodSymbol = (IMethodSymbol)context.Symbol;
-        var dataRowArguments = new HashSet<ImmutableArray<TypedConstant>>(TypedConstantArrayComparer.Instance);
+        var dataRowArguments = new Dictionary<ImmutableArray<TypedConstant>, int>(TypedConstantArrayComparer.Instance);
 
-        foreach (AttributeData attribute in methodSymbol.GetAttributes())
+        ImmutableArray<AttributeData> attributes = methodSymbol.GetAttributes();
+        for (int i = 0; i < attributes.Length; i++)
         {
+            AttributeData attribute = attributes[i];
             if (!dataRowAttribute.Equals(attribute.AttributeClass, SymbolEqualityComparer.Default))
             {
                 continue;
             }
 
-            if (!dataRowArguments.Add(attribute.ConstructorArguments))
+            if (dataRowArguments.TryGetValue(attribute.ConstructorArguments, out int existingIndex) &&
+                attribute.ApplicationSyntaxReference is not null)
             {
-                context.ReportDiagnostic((attribute.ApplicationSyntaxReference?.GetSyntax(context.CancellationToken).GetLocation() ?? Location.None).CreateDiagnostic(Rule));
+                context.ReportDiagnostic(attribute.ApplicationSyntaxReference.CreateDiagnostic(Rule, context.CancellationToken, existingIndex, i));
+                continue;
             }
+
+            dataRowArguments[attribute.ConstructorArguments] = i;
         }
     }
 

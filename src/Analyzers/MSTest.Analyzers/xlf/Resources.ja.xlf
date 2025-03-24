@@ -352,13 +352,13 @@ The type declaring these methods should also respect the following rules:
         <note />
       </trans-unit>
       <trans-unit id="DuplicateDataRowMessageFormat">
-        <source>Do not duplicate 'DataRow' attributes. This is usually a copy/paste error.</source>
-        <target state="new">Do not duplicate 'DataRow' attributes. This is usually a copy/paste error.</target>
+        <source>Do not duplicate 'DataRow' attributes. This is usually a copy/paste error. The attribute indices are '{0}' and '{1}'.</source>
+        <target state="new">Do not duplicate 'DataRow' attributes. This is usually a copy/paste error. The attribute indices are '{0}' and '{1}'.</target>
         <note />
       </trans-unit>
       <trans-unit id="DuplicateDataRowTitle">
-        <source>A duplicate 'DataRow' attribute is found</source>
-        <target state="new">A duplicate 'DataRow' attribute is found</target>
+        <source>Avoid duplicated 'DataRow' entries</source>
+        <target state="new">Avoid duplicated 'DataRow' entries</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidDescription">

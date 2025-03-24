@@ -490,7 +490,7 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Do not duplicate &apos;DataRow&apos; attributes. This is usually a copy/paste error..
+        ///   Looks up a localized string similar to Do not duplicate &apos;DataRow&apos; attributes. This is usually a copy/paste error. The attribute indices are &apos;{0}&apos; and &apos;{1}&apos;..
         /// </summary>
         internal static string DuplicateDataRowMessageFormat {
             get {
@@ -499,7 +499,7 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to A duplicate &apos;DataRow&apos; attribute is found.
+        ///   Looks up a localized string similar to Avoid duplicated &apos;DataRow&apos; entries.
         /// </summary>
         internal static string DuplicateDataRowTitle {
             get {
