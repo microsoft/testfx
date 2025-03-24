@@ -465,6 +465,7 @@ internal static class SerializerUtilities
                 [JsonRpcStrings.Type] = ev.Type,
                 [JsonRpcStrings.DisplayName] = ev.DisplayName,
                 [JsonRpcStrings.Description] = ev.Description,
+                [JsonRpcStrings.Uid] = ev.TestNodeUid,
             };
 
             return values;

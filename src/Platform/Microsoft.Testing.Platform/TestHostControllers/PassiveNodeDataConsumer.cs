@@ -45,21 +45,21 @@ internal sealed class PassiveNodeDataConsumer : IDataConsumer, IDisposable
         {
             case TestNodeFileArtifact testNodeFileArtifact:
                 {
-                    RunTestAttachment runTestAttachment = new(testNodeFileArtifact.FileInfo.FullName, dataProducer.Uid, FileType, testNodeFileArtifact.DisplayName, testNodeFileArtifact.Description);
+                    RunTestAttachment runTestAttachment = new(testNodeFileArtifact.FileInfo.FullName, dataProducer.Uid, FileType, testNodeFileArtifact.DisplayName, testNodeFileArtifact.Description, testNodeFileArtifact.TestNode.Uid.Value);
                     await _passiveNode.SendAttachmentsAsync(new TestsAttachments([runTestAttachment]), cancellationToken);
                     break;
                 }
 
             case SessionFileArtifact sessionFileArtifact:
                 {
-                    RunTestAttachment runTestAttachment = new(sessionFileArtifact.FileInfo.FullName, dataProducer.Uid, FileType, sessionFileArtifact.DisplayName, sessionFileArtifact.Description);
+                    RunTestAttachment runTestAttachment = new(sessionFileArtifact.FileInfo.FullName, dataProducer.Uid, FileType, sessionFileArtifact.DisplayName, sessionFileArtifact.Description, null);
                     await _passiveNode.SendAttachmentsAsync(new TestsAttachments([runTestAttachment]), cancellationToken);
                     break;
                 }
 
             case FileArtifact fileArtifact:
                 {
-                    RunTestAttachment runTestAttachment = new(fileArtifact.FileInfo.FullName, dataProducer.Uid, FileType, fileArtifact.DisplayName, fileArtifact.Description);
+                    RunTestAttachment runTestAttachment = new(fileArtifact.FileInfo.FullName, dataProducer.Uid, FileType, fileArtifact.DisplayName, fileArtifact.Description, null);
                     await _passiveNode.SendAttachmentsAsync(new TestsAttachments([runTestAttachment]), cancellationToken);
                     break;
                 }

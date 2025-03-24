@@ -348,6 +348,7 @@ internal sealed class Json
                     (JsonRpcStrings.Type, info.Type),
                     (JsonRpcStrings.DisplayName, info.DisplayName),
                     (JsonRpcStrings.Description, info.Description),
+                    (JsonRpcStrings.Uid, info.TestNodeUid),
             });
 
         // Serializers

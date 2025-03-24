@@ -88,4 +88,4 @@ internal sealed record AttachDebuggerInfoArgs(int ProcessId);
 
 internal sealed record class TestsAttachments(RunTestAttachment[] Attachments);
 
-internal sealed record class RunTestAttachment(string? Uri, string? Producer, string? Type, string? DisplayName, string? Description);
+internal sealed record class RunTestAttachment(string? Uri, string? Producer, string? Type, string? DisplayName, string? Description, string? TestNodeUid);
