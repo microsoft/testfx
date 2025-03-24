@@ -1,76 +1,29 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace TestProject57
+#pragma warning disable VSTHRD200 // Use "Async" suffix for async methods
+
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+[assembly: Parallelize(Scope = ExecutionScope.MethodLevel, Workers = 0)]
+
+namespace Playground;
+
+[TestClass]
+public class TestClass
 {
-    public class MySynchronizationContext : SynchronizationContext
+    [TestMethod]
+    [DynamicData(nameof(Data))]
+    public void Test3(int a, int b)
     {
-        private readonly Queue<(SendOrPostCallback d, object? state)> _queue = new();
-
-        public MySynchronizationContext()
-        {
-            new Thread(() =>
-            {
-                SetSynchronizationContext(this);
-                while (true)
-                {
-                    if (_queue.TryDequeue(out var result))
-                    {
-                        result.d(result.state);
-                    }
-                }
-            })
-            {
-                Name = "Sync context thread",
-            }.Start();
-        }
-        public override SynchronizationContext CreateCopy()
-            => new MySynchronizationContext();
-
-        public override void Post(SendOrPostCallback d, object? state)
-        {
-            _queue.Enqueue((d, state));
-        }
-
-        public override void Send(SendOrPostCallback d, object? state)
-            => Post(d, state);
     }
 
-    public class MyTestMethodAttribute : TestMethodAttribute
+    public static IEnumerable<(int A, int B)> Data
     {
-        public override TestResult[] Execute(ITestMethod testMethod)
+        get
         {
-            TestResult result = null;
-            var tcs = new TaskCompletionSource();
-            var context = new MySynchronizationContext();
-            context.Post(_ =>
-            {
-                // This Invoke is called on the "Sync context thread" thread.
-                // When we "Invoke", MSTest will do GetAwaiter().GetResult() in InvokeAsSynchronousTask.
-                // So, we are blocking the "Sync context thread" thread here.
-                result = testMethod.Invoke(null);
-                tcs.TrySetResult();
-            }, null);
-
-            tcs.Task.GetAwaiter().GetResult();
-            return new TestResult[] { result };
-        }
-    }
-
-    [TestClass]
-    public sealed class Test1
-    {
-        [MyTestMethod]
-        public async Task TestMethod1()
-        {
-            Console.WriteLine("1");
-            await Task.Delay(100);
-            // The continuation is handed to the MySynchronizationContext queue.
-            // But InvokeAsSynchronousTask has already blocked the "Sync context thread" thread.
-            // So nothing can progress here. The "Sync context thread" is blocked until this task completes,
-            // But for the task to complete, it needs to do work on the blocked thread.
-            Console.WriteLine("2");
-            await Task.Delay(100);
-            Console.WriteLine("3");
+            yield return (1, 2);
+            yield return (3, 4);
         }
     }
 }
