@@ -8,12 +8,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 /// <summary>
 /// Class to read settings from the runsettings xml for the desktop.
 /// </summary>
-#if RELEASE
 #if NET6_0_OR_GREATER
 [Obsolete(Constants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
 #else
 [Obsolete(Constants.PublicTypeObsoleteMessage)]
-#endif
 #endif
 public class MSTestSettingsProvider : ISettingsProvider
 {

@@ -594,7 +594,7 @@ public sealed partial class Assert
     /// </exception>
     public static void DoesNotContain(string substring, string value, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message,
         params object?[]? parameters)
-        => DoesNotContain(substring, value, message, StringComparison.Ordinal, parameters);
+        => DoesNotContain(substring, value, StringComparison.Ordinal, message, parameters);
 
     /// <summary>
     /// Tests whether the specified string contains the specified substring
@@ -641,7 +641,7 @@ public sealed partial class Assert
     /// or <paramref name="value"/> does not contain <paramref name="substring"/>.
     /// </exception>
     public static void DoesNotContain(string substring, string value, StringComparison comparisonType, string? message)
-        => DoesNotContain(substring, value, message, comparisonType, string.Empty);
+        => DoesNotContain(substring, value, comparisonType, message, null);
 
     /// <summary>
     /// Tests whether the specified string contains the specified substring

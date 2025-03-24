@@ -7,12 +7,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Int
 /// Manager to perform operations on the TraceListener object passed as parameter.
 /// These operations are implemented differently for each platform service.
 /// </summary>
-#if RELEASE
 #if NET6_0_OR_GREATER
 [Obsolete(Constants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
 #else
 [Obsolete(Constants.PublicTypeObsoleteMessage)]
-#endif
 #endif
 public interface ITraceListenerManager
 {

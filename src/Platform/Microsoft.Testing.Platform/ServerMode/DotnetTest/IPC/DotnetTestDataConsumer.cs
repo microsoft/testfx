@@ -55,6 +55,7 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
                     case TestStates.Discovered:
                         DiscoveredTestMessages discoveredTestMessages = new(
                             ExecutionId,
+                            DotnetTestConnection.InstanceId,
                             new[]
                             {
                                 new DiscoveredTestMessage(
@@ -69,6 +70,7 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
                     case TestStates.Skipped:
                         TestResultMessages testResultMessages = new(
                             ExecutionId,
+                            DotnetTestConnection.InstanceId,
                             new[]
                             {
                                 new SuccessfulTestResultMessage(
@@ -92,6 +94,7 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
                     case TestStates.Cancelled:
                         testResultMessages = new(
                             ExecutionId,
+                            DotnetTestConnection.InstanceId,
                             Array.Empty<SuccessfulTestResultMessage>(),
                             new[]
                             {
@@ -116,6 +119,7 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
             case TestNodeFileArtifact testNodeFileArtifact:
                 FileArtifactMessages fileArtifactMessages = new(
                     ExecutionId,
+                    DotnetTestConnection.InstanceId,
                     new[]
                     {
                         new FileArtifactMessage(
@@ -133,6 +137,7 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
             case SessionFileArtifact sessionFileArtifact:
                 fileArtifactMessages = new(
                     ExecutionId,
+                    DotnetTestConnection.InstanceId,
                     new[]
                     {
                         new FileArtifactMessage(
@@ -150,6 +155,7 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
             case FileArtifact fileArtifact:
                 fileArtifactMessages = new(
                     ExecutionId,
+                    DotnetTestConnection.InstanceId,
                     new[]
                     {
                         new FileArtifactMessage(

@@ -5,4 +5,4 @@ namespace Microsoft.Testing.Platform.IPC.Models;
 
 internal sealed record DiscoveredTestMessage(string? Uid, string? DisplayName);
 
-internal sealed record DiscoveredTestMessages(string? ExecutionId, DiscoveredTestMessage[] DiscoveredMessages) : IRequest;
+internal sealed record DiscoveredTestMessages(string? ExecutionId, string? InstanceId, DiscoveredTestMessage[] DiscoveredMessages) : IRequest;

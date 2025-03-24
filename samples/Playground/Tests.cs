@@ -15,7 +15,8 @@ public class TestClass
     [TestMethod]
     [DynamicData(nameof(Data))]
     public void Test3(int a, int b)
-        => throw new Exception("aaaa");
+    {
+    }
 
     public static IEnumerable<(int A, int B)> Data
     {
