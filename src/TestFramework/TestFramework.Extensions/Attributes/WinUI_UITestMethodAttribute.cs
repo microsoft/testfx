@@ -44,11 +44,6 @@ public class UITestMethodAttribute : TestMethodAttribute
     public static DispatcherQueue? DispatcherQueue { get; set; }
 
     /// <inheritdoc />
-#if NET6_0_OR_GREATER
-    [Obsolete("Execute is obsolete. Call or override ExecuteAsync instead", DiagnosticId = "MSTESTOBS")]
-#else
-    [Obsolete("Execute is obsolete. Call or override ExecuteAsync instead")]
-#endif
     public override TestResult[] Execute(ITestMethod testMethod)
         => base.Execute(testMethod);
 
