@@ -3,3 +3,7 @@ Microsoft.VisualStudio.TestTools.UnitTesting.AssertFailedException.AssertFailedE
 Microsoft.VisualStudio.TestTools.UnitTesting.AssertInconclusiveException.AssertInconclusiveException(System.Runtime.Serialization.SerializationInfo! info, System.Runtime.Serialization.StreamingContext context) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.InternalTestFailureException.InternalTestFailureException(System.Runtime.Serialization.SerializationInfo! info, System.Runtime.Serialization.StreamingContext context) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestAssertException.UnitTestAssertException(System.Runtime.Serialization.SerializationInfo! info, System.Runtime.Serialization.StreamingContext context) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Throws<TException>(System.Func<object?>! action, string! message = "", params object![]! messageArgs) -> TException!
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Throws<TException>(System.Func<object?>! action, System.Func<System.Exception?, string!>! messageBuilder) -> TException!
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ThrowsExactly<TException>(System.Func<object?>! action, string! message = "", params object![]! messageArgs) -> TException!
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ThrowsExactly<TException>(System.Func<object?>! action, System.Func<System.Exception?, string!>! messageBuilder) -> TException!
