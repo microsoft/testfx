@@ -9,11 +9,19 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 [Experimental("MSTESTEXP", UrlFormat = "https://aka.ms/mstest/diagnostics#{0}")]
 public readonly struct RetryContext
 {
-    internal RetryContext(Func<Task<TestResult[]>> executeTaskGetter)
-        => ExecuteTaskGetter = executeTaskGetter;
+    internal RetryContext(Func<Task<TestResult[]>> executeTaskGetter, TestResult[] originalResults)
+    {
+        ExecuteTaskGetter = executeTaskGetter;
+        OriginalResults = originalResults;
+    }
 
     /// <summary>
     /// Gets the function that will execute the test asynchronously.
     /// </summary>
     public Func<Task<TestResult[]>> ExecuteTaskGetter { get; }
+
+    /// <summary>
+    /// Gets the test results of the initial run that failed.
+    /// </summary>
+    public TestResult[] OriginalResults { get; }
 }
