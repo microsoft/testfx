@@ -213,26 +213,6 @@ internal static class SerializerUtilities
                         continue;
                     }
 
-                    if (property is SerializableNamedKeyValuePairsStringProperty namedKvpStringProperty)
-                    {
-#if NETCOREAPP
-                        properties[namedKvpStringProperty.Name] = namedKvpStringProperty.Pairs;
-#else
-                        JsonArray collection = [];
-                        foreach ((string? key, string? value) in namedKvpStringProperty.Pairs)
-                        {
-                            JsonObject o = new()
-                            {
-                                { key, value },
-                            };
-                            collection.Add(o);
-                        }
-
-                        properties[namedKvpStringProperty.Name] = collection;
-#endif
-                        continue;
-                    }
-
                     if (property is TestFileLocationProperty fileLocationProperty)
                     {
                         properties["location.file"] = fileLocationProperty.FilePath;

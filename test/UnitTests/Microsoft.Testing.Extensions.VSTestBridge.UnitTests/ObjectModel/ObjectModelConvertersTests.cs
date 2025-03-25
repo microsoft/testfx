@@ -79,11 +79,10 @@ public sealed class ObjectModelConvertersTests
 
         var testNode = testResult.ToTestNode(false, VSTestClient);
 
-        SerializableNamedKeyValuePairsStringProperty[] errorTestNodeStateProperties = testNode.Properties.OfType<SerializableNamedKeyValuePairsStringProperty>().ToArray();
-        Assert.AreEqual(1, errorTestNodeStateProperties.Length);
-        Assert.AreEqual("traits", errorTestNodeStateProperties[0].Name);
-        Assert.AreEqual(1, errorTestNodeStateProperties[0].Pairs.Length);
-        Assert.AreEqual("category1", errorTestNodeStateProperties[0].Pairs[0].Key);
+        TestMetadataProperty[] testMetadatas = testNode.Properties.OfType<TestMetadataProperty>().ToArray();
+        Assert.AreEqual(1, testMetadatas.Length);
+        Assert.AreEqual("category1", testMetadatas[0].Key);
+        Assert.AreEqual(string.Empty, testMetadatas[0].Value);
     }
 
     [TestMethod]
@@ -259,12 +258,10 @@ public sealed class ObjectModelConvertersTests
 
         var testNode = testResult.ToTestNode(false, VSTestClient);
 
-        SerializableNamedKeyValuePairsStringProperty[] errorTestNodeStateProperties = testNode.Properties.OfType<SerializableNamedKeyValuePairsStringProperty>().ToArray();
-        Assert.AreEqual(1, errorTestNodeStateProperties.Length);
-        Assert.AreEqual("traits", errorTestNodeStateProperties[0].Name);
-        Assert.AreEqual(1, errorTestNodeStateProperties[0].Pairs.Length);
-        Assert.AreEqual("key", errorTestNodeStateProperties[0].Pairs[0].Key);
-        Assert.AreEqual("value", errorTestNodeStateProperties[0].Pairs[0].Value);
+        TestMetadataProperty[] testMetadatas = testNode.Properties.OfType<TestMetadataProperty>().ToArray();
+        Assert.AreEqual(1, testMetadatas.Length);
+        Assert.AreEqual("key", testMetadatas[0].Key);
+        Assert.AreEqual("value", testMetadatas[0].Value);
     }
 
     [TestMethod]
