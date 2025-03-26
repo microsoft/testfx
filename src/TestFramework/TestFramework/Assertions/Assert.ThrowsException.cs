@@ -180,7 +180,7 @@ public sealed partial class Assert
     public static TException Throws<TException>(Func<object?> action, string message = "", params object[] messageArgs)
 #pragma warning restore RS0026 // Do not add multiple public overloads with optional parameters
         where TException : Exception
-        => ThrowsException<TException>(() => _ = action, isStrictType: false, message, parameters: messageArgs);
+        => ThrowsException<TException>(() => _ = action(), isStrictType: false, message, parameters: messageArgs);
 
     /// <summary>
     /// Asserts that the delegate <paramref name="action"/> throws an exception of type <typeparamref name="TException"/>
@@ -209,7 +209,7 @@ public sealed partial class Assert
     /// <inheritdoc cref="Throws{TException}(Action, Func{Exception?, string})"/>
     public static TException Throws<TException>(Func<object?> action, Func<Exception?, string> messageBuilder)
         where TException : Exception
-        => ThrowsException<TException>(() => _ = action, isStrictType: false, messageBuilder);
+        => ThrowsException<TException>(() => _ = action(), isStrictType: false, messageBuilder);
 
     /// <inheritdoc cref="Throws{TException}(Action, string, object[])" />
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
