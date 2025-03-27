@@ -25,7 +25,6 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
     {
         typeof(TestNodeUpdateMessage),
         typeof(SessionFileArtifact),
-        typeof(TestNodeFileArtifact),
         typeof(FileArtifact),
         typeof(TestRequestExecutionTimeInfo),
     };
@@ -114,28 +113,30 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
                         break;
                 }
 
-                break;
-
-            case TestNodeFileArtifact testNodeFileArtifact:
-                FileArtifactMessages fileArtifactMessages = new(
-                    ExecutionId,
-                    DotnetTestConnection.InstanceId,
-                    new[]
-                    {
+                foreach (TestFileArtifactProperty artifact in testNodeUpdateMessage.Properties.OfType<TestFileArtifactProperty>())
+                {
+                    FileArtifactMessages testFileArtifactMessages = new(
+                        ExecutionId,
+                        DotnetTestConnection.InstanceId,
+                        new[]
+                        {
                         new FileArtifactMessage(
-                            testNodeFileArtifact.FileInfo.FullName,
-                            testNodeFileArtifact.DisplayName,
-                            testNodeFileArtifact.Description ?? string.Empty,
-                            testNodeFileArtifact.TestNode.Uid.Value,
-                            testNodeFileArtifact.TestNode.DisplayName,
-                            testNodeFileArtifact.SessionUid.Value),
-                    });
+                            artifact.FileInfo.FullName,
+                            artifact.DisplayName,
+                            artifact.Description ?? string.Empty,
+                            testNodeUpdateMessage.TestNode.Uid.Value,
+                            testNodeUpdateMessage.TestNode.DisplayName,
+                            artifact.SessionUid.Value),
+                        });
 
-                await _dotnetTestConnection.SendMessageAsync(fileArtifactMessages);
+                    await _dotnetTestConnection.SendMessageAsync(testFileArtifactMessages);
+                    break;
+                }
+
                 break;
 
             case SessionFileArtifact sessionFileArtifact:
-                fileArtifactMessages = new(
+                var fileArtifactMessages = new FileArtifactMessages(
                     ExecutionId,
                     DotnetTestConnection.InstanceId,
                     new[]

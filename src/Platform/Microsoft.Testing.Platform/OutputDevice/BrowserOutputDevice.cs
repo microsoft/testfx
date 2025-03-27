@@ -98,7 +98,6 @@ internal sealed partial class BrowserOutputDevice : IPlatformOutputDevice,
     [
         typeof(TestNodeUpdateMessage),
         typeof(SessionFileArtifact),
-        typeof(TestNodeFileArtifact),
         typeof(FileArtifact),
     ];
 
@@ -369,13 +368,10 @@ internal sealed partial class BrowserOutputDevice : IPlatformOutputDevice,
                         break;
                 }
 
-                break;
-
-            case TestNodeFileArtifact:
-                {
-                    // TODO
-                }
-
+                // TODO:
+                // foreach (TestFileArtifactProperty testFileArtifact in testNodeStateChanged.TestNode.Properties.OfType<TestFileArtifactProperty>())
+                // {
+                // }
                 break;
 
             case SessionFileArtifact:

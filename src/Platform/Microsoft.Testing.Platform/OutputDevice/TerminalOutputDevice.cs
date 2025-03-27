@@ -171,7 +171,6 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
     [
         typeof(TestNodeUpdateMessage),
         typeof(SessionFileArtifact),
-        typeof(TestNodeFileArtifact),
         typeof(FileArtifact),
     ];
 
@@ -405,6 +404,18 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
                 string? standardOutput = testNodeStateChanged.TestNode.Properties.SingleOrDefault<StandardOutputProperty>()?.StandardOutput;
                 string? standardError = testNodeStateChanged.TestNode.Properties.SingleOrDefault<StandardErrorProperty>()?.StandardError;
 
+                foreach (TestFileArtifactProperty artifact in testNodeStateChanged.TestNode.Properties.OfType<TestFileArtifactProperty>())
+                {
+                    bool isOutOfProcessArtifact = _firstCallTo_OnSessionStartingAsync;
+                    _terminalTestReporter.ArtifactAdded(
+                        isOutOfProcessArtifact,
+                        _assemblyName,
+                        _targetFramework,
+                        _shortArchitecture,
+                        testNodeStateChanged.TestNode.DisplayName,
+                        artifact.FileInfo.FullName);
+                }
+
                 switch (testNodeStateChanged.TestNode.Properties.SingleOrDefault<TestNodeStateProperty>())
                 {
                     case InProgressTestNodeStateProperty:
@@ -532,20 +543,6 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
                             testNodeStateChanged.TestNode.DisplayName,
                             testNodeStateChanged.TestNode.Uid);
                         break;
-                }
-
-                break;
-
-            case TestNodeFileArtifact artifact:
-                {
-                    bool isOutOfProcessArtifact = _firstCallTo_OnSessionStartingAsync;
-                    _terminalTestReporter.ArtifactAdded(
-                        isOutOfProcessArtifact,
-                        _assemblyName,
-                        _targetFramework,
-                        _shortArchitecture,
-                        artifact.TestNode.DisplayName,
-                        artifact.FileInfo.FullName);
                 }
 
                 break;

@@ -127,7 +127,7 @@ internal static class ObjectModelConverters
     /// <summary>
     /// Converts a VSTest <see cref="TestResult"/> to a Microsoft Testing Platform <see cref="TestNode"/>.
     /// </summary>
-    public static TestNode ToTestNode(this TestResult testResult, bool isTrxEnabled, IClientInfo client)
+    public static TestNode ToTestNode(this TestResult testResult, bool isTrxEnabled, IClientInfo client, SessionUid sessionUid)
     {
         var testNode = testResult.TestCase.ToTestNode(isTrxEnabled, client, testResult.DisplayName);
         CopyVSTestProperties(testResult.Properties, testNode, testResult.TestCase, testResult.GetPropertyValue, isTrxEnabled, client);
@@ -176,6 +176,14 @@ internal static class ObjectModelConverters
                 string message = testResultMessage.Text ?? string.Empty;
                 testNode.Properties.Add(new SerializableKeyValuePairStringProperty("vstest.TestCase.StandardOutput", message));
                 standardOutputMessages.Add(message);
+            }
+        }
+
+        foreach (AttachmentSet attachmentSet in testResult.Attachments)
+        {
+            foreach (UriDataAttachment attachment in attachmentSet.Attachments)
+            {
+                testNode.Properties.Add(new TestFileArtifactProperty(sessionUid, new FileInfo(attachment.Uri.LocalPath), attachmentSet.DisplayName, attachment.Description));
             }
         }
 

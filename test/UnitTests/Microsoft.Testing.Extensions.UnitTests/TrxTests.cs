@@ -27,7 +27,6 @@ public class TrxTests
     private readonly Mock<ITestFramework> _testFrameworkMock = new();
     private readonly Mock<ITestApplicationModuleInfo> _testApplicationModuleInfoMock = new();
     private readonly Mock<IFileSystem> _fileSystem = new();
-    private readonly Dictionary<TestNodeUid, List<SessionFileArtifact>> _artifactsByTestNode = new();
     private readonly Dictionary<IExtension, List<SessionFileArtifact>> _artifactsByExtension = new();
 
     [TestMethod]
@@ -381,9 +380,8 @@ public class TrxTests
     {
         // Arrange
         using MemoryFileStream memoryStream = new();
-        _artifactsByTestNode.Add("test()", [new(new SessionUid("1"), new FileInfo("fileName"), "TestMethod", "description")]);
         TrxReportEngine trxReportEngine = GenerateTrxReportEngine(1, 0,
-            new(new PassedTestNodeStateProperty()), memoryStream);
+            new(new PassedTestNodeStateProperty(), new TestFileArtifactProperty(new SessionUid("1"), new FileInfo("fileName"), "TestMethod", "description")), memoryStream);
 
         // Act
         (string fileName, string? warning) = await trxReportEngine.GenerateReportAsync();
@@ -462,7 +460,7 @@ public class TrxTests
         _ = _testApplicationModuleInfoMock.Setup(_ => _.GetCurrentTestApplicationFullPath()).Returns("TestAppPath");
         TrxReportEngine trxReportEngine = new(_fileSystem.Object, _testApplicationModuleInfoMock.Object, _environmentMock.Object, _commandLineOptionsMock.Object,
             _configurationMock.Object, _clockMock.Object, [], 0, 0, 0, 0,
-            _artifactsByExtension, _artifactsByTestNode, true, _testFrameworkMock.Object, DateTime.UtcNow, 0, CancellationToken.None,
+            _artifactsByExtension, true, _testFrameworkMock.Object, DateTime.UtcNow, 0, CancellationToken.None,
             isCopyingFileAllowed: false);
 
         // Act
@@ -510,7 +508,7 @@ public class TrxTests
 
         return new TrxReportEngine(_fileSystem.Object, _testApplicationModuleInfoMock.Object, _environmentMock.Object, _commandLineOptionsMock.Object,
                    _configurationMock.Object, _clockMock.Object, testNodeUpdatedMessages, failedTestsCount, passedTestsCount, notExecutedTestsCount, timeoutTestsCount,
-                   _artifactsByExtension, _artifactsByTestNode, adapterSupportTrxCapability, _testFrameworkMock.Object, testStartTime, 0, cancellationToken,
+                   _artifactsByExtension, adapterSupportTrxCapability, _testFrameworkMock.Object, testStartTime, 0, cancellationToken,
                    isCopyingFileAllowed: false);
     }
 

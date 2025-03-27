@@ -199,6 +199,8 @@ internal static class SerializerUtilities
 #endif
                 }
 
+                int attachmentIndex = 0;
+
                 foreach (IProperty property in n.Properties)
                 {
                     if (property is SerializableKeyValuePairStringProperty keyValuePairProperty)
@@ -361,6 +363,15 @@ internal static class SerializerUtilities
                         properties["time.start-utc"] = timingProperty.GlobalTiming.StartTime;
                         properties["time.stop-utc"] = timingProperty.GlobalTiming.EndTime;
                         properties["time.duration-ms"] = timingProperty.GlobalTiming.Duration.TotalMilliseconds;
+                        continue;
+                    }
+
+                    if (property is TestFileArtifactProperty artifact)
+                    {
+                        properties[$"attachments.{attachmentIndex}.uri"] = artifact.FileInfo.FullName;
+                        properties[$"attachments.{attachmentIndex}.display-name"] = artifact.DisplayName;
+                        properties[$"attachments.{attachmentIndex}.description"] = artifact.Description;
+                        attachmentIndex++;
                         continue;
                     }
                 }
