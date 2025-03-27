@@ -381,7 +381,7 @@ public record StandardErrorProperty(string StandardError) : IProperty;
 /// <param name="FileInfo">The file information.</param>
 /// <param name="DisplayName">The display name.</param>
 /// <param name="Description">The description.</param>
-public record TestFileArtifactProperty(SessionUid SessionUid, FileInfo FileInfo, string DisplayName, string? Description = null) : IProperty;
+public record FileArtifactProperty(SessionUid SessionUid, FileInfo FileInfo, string DisplayName, string? Description = null) : IProperty;
 
 internal sealed record SerializableKeyValuePairStringProperty(string Key, string Value) : KeyValuePairStringProperty(Key, Value);
 

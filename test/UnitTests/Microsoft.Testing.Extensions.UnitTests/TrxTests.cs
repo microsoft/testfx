@@ -381,7 +381,7 @@ public class TrxTests
         // Arrange
         using MemoryFileStream memoryStream = new();
         TrxReportEngine trxReportEngine = GenerateTrxReportEngine(1, 0,
-            new(new PassedTestNodeStateProperty(), new TestFileArtifactProperty(new SessionUid("1"), new FileInfo("fileName"), "TestMethod", "description")), memoryStream);
+            new(new PassedTestNodeStateProperty(), new FileArtifactProperty(new SessionUid("1"), new FileInfo("fileName"), "TestMethod", "description")), memoryStream);
 
         // Act
         (string fileName, string? warning) = await trxReportEngine.GenerateReportAsync();

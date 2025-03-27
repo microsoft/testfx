@@ -113,7 +113,7 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
                         break;
                 }
 
-                foreach (TestFileArtifactProperty artifact in testNodeUpdateMessage.Properties.OfType<TestFileArtifactProperty>())
+                foreach (FileArtifactProperty artifact in testNodeUpdateMessage.Properties.OfType<FileArtifactProperty>())
                 {
                     FileArtifactMessages testFileArtifactMessages = new(
                         ExecutionId,

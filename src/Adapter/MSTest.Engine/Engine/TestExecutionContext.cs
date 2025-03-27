@@ -76,7 +76,7 @@ internal sealed class TestExecutionContext : ITestExecutionContext
 
     public Task AddTestAttachmentAsync(FileInfo file, string displayName, string? description = null)
     {
-        _platformTestNode.Properties.Add(new TestFileArtifactProperty(_sessionUid, file, displayName, description));
+        _platformTestNode.Properties.Add(new FileArtifactProperty(_sessionUid, file, displayName, description));
         return Task.CompletedTask;
     }
 

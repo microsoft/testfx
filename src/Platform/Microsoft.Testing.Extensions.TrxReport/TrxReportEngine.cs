@@ -519,7 +519,7 @@ internal sealed partial class TrxReportEngine
             }
 
             XElement? resultFiles = null;
-            foreach (TestFileArtifactProperty testFileArtifact in testNode.Properties.OfType<TestFileArtifactProperty>())
+            foreach (FileArtifactProperty testFileArtifact in testNode.Properties.OfType<FileArtifactProperty>())
             {
                 resultFiles ??= new XElement("ResultFiles");
                 resultFiles.Add(new XElement(

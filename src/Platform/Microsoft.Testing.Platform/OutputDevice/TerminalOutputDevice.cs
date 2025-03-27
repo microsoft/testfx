@@ -404,7 +404,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
                 string? standardOutput = testNodeStateChanged.TestNode.Properties.SingleOrDefault<StandardOutputProperty>()?.StandardOutput;
                 string? standardError = testNodeStateChanged.TestNode.Properties.SingleOrDefault<StandardErrorProperty>()?.StandardError;
 
-                foreach (TestFileArtifactProperty artifact in testNodeStateChanged.TestNode.Properties.OfType<TestFileArtifactProperty>())
+                foreach (FileArtifactProperty artifact in testNodeStateChanged.TestNode.Properties.OfType<FileArtifactProperty>())
                 {
                     bool isOutOfProcessArtifact = _firstCallTo_OnSessionStartingAsync;
                     _terminalTestReporter.ArtifactAdded(

@@ -369,7 +369,7 @@ internal sealed partial class BrowserOutputDevice : IPlatformOutputDevice,
                 }
 
                 // TODO:
-                // foreach (TestFileArtifactProperty testFileArtifact in testNodeStateChanged.TestNode.Properties.OfType<TestFileArtifactProperty>())
+                // foreach (FileArtifactProperty testFileArtifact in testNodeStateChanged.TestNode.Properties.OfType<FileArtifactProperty>())
                 // {
                 // }
                 break;
