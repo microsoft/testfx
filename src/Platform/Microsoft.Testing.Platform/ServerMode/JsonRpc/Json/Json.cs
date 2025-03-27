@@ -291,7 +291,7 @@ internal sealed class Json
                     continue;
                 }
 
-                if (property is TestFileArtifactProperty artifact)
+                if (property is FileArtifactProperty artifact)
                 {
                     properties.Add(($"attachments.{attachmentIndex}.uri", artifact.FileInfo.FullName));
                     properties.Add(($"attachments.{attachmentIndex}.display-name", artifact.DisplayName));

@@ -366,7 +366,7 @@ internal static class SerializerUtilities
                         continue;
                     }
 
-                    if (property is TestFileArtifactProperty artifact)
+                    if (property is FileArtifactProperty artifact)
                     {
                         properties[$"attachments.{attachmentIndex}.uri"] = artifact.FileInfo.FullName;
                         properties[$"attachments.{attachmentIndex}.display-name"] = artifact.DisplayName;
