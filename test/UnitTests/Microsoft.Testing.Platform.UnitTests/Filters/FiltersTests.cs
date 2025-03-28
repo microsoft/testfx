@@ -1,4 +1,4 @@
-﻿﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
@@ -115,14 +115,14 @@ public sealed class FiltersTests
 
     private class Filter1 : ITestExecutionFilter
     {
-        public bool IsEnabled { get; set; } = true;
+        public bool IsEnabled { get; init; } = true;
 
         public bool MatchesFilter(TestNode testNode) => true;
     }
 
     private class Filter2 : ITestExecutionFilter
     {
-        public bool IsEnabled { get; set; } = true;
+        public bool IsEnabled { get; init; } = true;
 
         public bool MatchesFilter(TestNode testNode) => true;
     }

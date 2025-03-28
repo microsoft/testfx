@@ -1,1 +1,4 @@
 #nullable enable
+Microsoft.Testing.Platform.Extensions.IReceiveTestNodesExtension
+Microsoft.Testing.Platform.Extensions.IReceiveTestNodesExtension.ReceiveTestNodes(System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Extensions.Messages.TestNode!>! testNodes) -> void
+Microsoft.Testing.Platform.Requests.AggregateFilter.ReceiveTestNodes(System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Extensions.Messages.TestNode!>! testNodes) -> void
