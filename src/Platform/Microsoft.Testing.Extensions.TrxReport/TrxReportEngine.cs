@@ -87,7 +87,6 @@ internal sealed partial class TrxReportEngine
     private readonly int _notExecutedTestsCount;
     private readonly int _timeoutTestsCount;
     private readonly Dictionary<IExtension, List<SessionFileArtifact>> _artifactsByExtension;
-    private readonly Dictionary<TestNodeUid, List<SessionFileArtifact>> _artifactsByTestNode;
     private readonly bool? _adapterSupportTrxCapability;
     private readonly ITestFramework _testFrameworkAdapter;
     private readonly DateTimeOffset _testStartTime;
@@ -97,7 +96,7 @@ internal sealed partial class TrxReportEngine
     private readonly IFileSystem _fileSystem;
     private readonly bool _isCopyingFileAllowed;
 
-    public TrxReportEngine(ITestApplicationModuleInfo testApplicationModuleInfo, IEnvironment environment, ICommandLineOptions commandLineOptionsService, IConfiguration configuration, IClock clock, TestNodeUpdateMessage[] testNodeUpdatedMessages, int failedTestsCount, int passedTestsCount, int notExecutedTestsCount, int timeoutTestsCount, Dictionary<IExtension, List<SessionFileArtifact>> artifactsByExtension, Dictionary<TestNodeUid, List<SessionFileArtifact>> artifactsByTestNode, bool? adapterSupportTrxCapability, ITestFramework testFrameworkAdapter, DateTimeOffset testStartTime, int exitCode, CancellationToken cancellationToken)
+    public TrxReportEngine(ITestApplicationModuleInfo testApplicationModuleInfo, IEnvironment environment, ICommandLineOptions commandLineOptionsService, IConfiguration configuration, IClock clock, TestNodeUpdateMessage[] testNodeUpdatedMessages, int failedTestsCount, int passedTestsCount, int notExecutedTestsCount, int timeoutTestsCount, Dictionary<IExtension, List<SessionFileArtifact>> artifactsByExtension, bool? adapterSupportTrxCapability, ITestFramework testFrameworkAdapter, DateTimeOffset testStartTime, int exitCode, CancellationToken cancellationToken)
     : this(
         new SystemFileSystem(),
         testApplicationModuleInfo,
@@ -111,7 +110,6 @@ internal sealed partial class TrxReportEngine
         notExecutedTestsCount,
         timeoutTestsCount,
         artifactsByExtension,
-        artifactsByTestNode,
         adapterSupportTrxCapability,
         testFrameworkAdapter,
         testStartTime,
@@ -120,7 +118,7 @@ internal sealed partial class TrxReportEngine
     {
     }
 
-    public TrxReportEngine(IFileSystem fileSystem, ITestApplicationModuleInfo testApplicationModuleInfo, IEnvironment environment, ICommandLineOptions commandLineOptionsService, IConfiguration configuration, IClock clock, TestNodeUpdateMessage[] testNodeUpdatedMessages, int failedTestsCount, int passedTestsCount, int notExecutedTestsCount, int timeoutTestsCount, Dictionary<IExtension, List<SessionFileArtifact>> artifactsByExtension, Dictionary<TestNodeUid, List<SessionFileArtifact>> artifactsByTestNode, bool? adapterSupportTrxCapability, ITestFramework testFrameworkAdapter, DateTimeOffset testStartTime, int exitCode, CancellationToken cancellationToken, bool isCopyingFileAllowed = true)
+    public TrxReportEngine(IFileSystem fileSystem, ITestApplicationModuleInfo testApplicationModuleInfo, IEnvironment environment, ICommandLineOptions commandLineOptionsService, IConfiguration configuration, IClock clock, TestNodeUpdateMessage[] testNodeUpdatedMessages, int failedTestsCount, int passedTestsCount, int notExecutedTestsCount, int timeoutTestsCount, Dictionary<IExtension, List<SessionFileArtifact>> artifactsByExtension, bool? adapterSupportTrxCapability, ITestFramework testFrameworkAdapter, DateTimeOffset testStartTime, int exitCode, CancellationToken cancellationToken, bool isCopyingFileAllowed = true)
     {
         _testApplicationModuleInfo = testApplicationModuleInfo;
         _environment = environment;
@@ -133,7 +131,6 @@ internal sealed partial class TrxReportEngine
         _notExecutedTestsCount = notExecutedTestsCount;
         _timeoutTestsCount = timeoutTestsCount;
         _artifactsByExtension = artifactsByExtension;
-        _artifactsByTestNode = artifactsByTestNode;
         _adapterSupportTrxCapability = adapterSupportTrxCapability;
         _testFrameworkAdapter = testFrameworkAdapter;
         _testStartTime = testStartTime;
@@ -521,17 +518,17 @@ internal sealed partial class TrxReportEngine
                 unitTestResult.Add(output);
             }
 
-            if (_artifactsByTestNode.TryGetValue(testNode.Uid, out List<SessionFileArtifact>? fileArtifacts))
+            XElement? resultFiles = null;
+            foreach (FileArtifactProperty testFileArtifact in testNode.Properties.OfType<FileArtifactProperty>())
             {
-                var resultFiles = new XElement("ResultFiles");
+                resultFiles ??= new XElement("ResultFiles");
+                resultFiles.Add(new XElement(
+                    "ResultFile",
+                    new XAttribute("path", testFileArtifact.FileInfo.FullName)));
+            }
 
-                foreach (SessionFileArtifact fileArtifact in fileArtifacts)
-                {
-                    resultFiles.Add(new XElement(
-                        "ResultFile",
-                        new XAttribute("path", fileArtifact.FileInfo.FullName)));
-                }
-
+            if (resultFiles is not null)
+            {
                 unitTestResult.Add(resultFiles);
             }
 
