@@ -490,6 +490,24 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Do not duplicate &apos;DataRow&apos; attributes. This is usually a copy/paste error. The attribute indices are &apos;{0}&apos; and &apos;{1}&apos;..
+        /// </summary>
+        internal static string DuplicateDataRowMessageFormat {
+            get {
+                return ResourceManager.GetString("DuplicateDataRowMessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Avoid duplicated &apos;DataRow&apos; entries.
+        /// </summary>
+        internal static string DuplicateDataRowTitle {
+            get {
+                return ResourceManager.GetString("DuplicateDataRowTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to &apos;DynamicData&apos; entry should have the following layout to be valid:
         ///- should only be set on a test method;
         ///- member should be defined on the type specified;
