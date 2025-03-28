@@ -3,4 +3,4 @@ Microsoft.VisualStudio.TestTools.UnitTesting.AssertFailedException.AssertFailedE
 Microsoft.VisualStudio.TestTools.UnitTesting.AssertInconclusiveException.AssertInconclusiveException(System.Runtime.Serialization.SerializationInfo! info, System.Runtime.Serialization.StreamingContext context) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.InternalTestFailureException.InternalTestFailureException(System.Runtime.Serialization.SerializationInfo! info, System.Runtime.Serialization.StreamingContext context) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestAssertException.UnitTestAssertException(System.Runtime.Serialization.SerializationInfo! info, System.Runtime.Serialization.StreamingContext context) -> void
-[MSTESTEXP]Microsoft.VisualStudio.TestTools.UnitTesting.RetryContext.OriginalResults.get -> Microsoft.VisualStudio.TestTools.UnitTesting.TestResult![]!
+[MSTESTEXP]Microsoft.VisualStudio.TestTools.UnitTesting.RetryContext.FirstRunResults.get -> Microsoft.VisualStudio.TestTools.UnitTesting.TestResult![]!

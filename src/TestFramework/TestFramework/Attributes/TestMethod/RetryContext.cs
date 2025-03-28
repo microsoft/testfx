@@ -9,10 +9,10 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 [Experimental("MSTESTEXP", UrlFormat = "https://aka.ms/mstest/diagnostics#{0}")]
 public readonly struct RetryContext
 {
-    internal RetryContext(Func<Task<TestResult[]>> executeTaskGetter, TestResult[] originalResults)
+    internal RetryContext(Func<Task<TestResult[]>> executeTaskGetter, TestResult[] firstRunResults)
     {
         ExecuteTaskGetter = executeTaskGetter;
-        OriginalResults = originalResults;
+        FirstRunResults = firstRunResults;
     }
 
     /// <summary>
@@ -23,5 +23,5 @@ public readonly struct RetryContext
     /// <summary>
     /// Gets the test results of the initial run that failed.
     /// </summary>
-    public TestResult[] OriginalResults { get; }
+    public TestResult[] FirstRunResults { get; }
 }
