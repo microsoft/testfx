@@ -29,7 +29,7 @@ public sealed class BFSTestNodeVisitorTests : TestBase
             },
         };
 
-        var filter = BuildFilter("/A/B/C");
+        TreeNodeFilter filter = BuildFilter("/A/B/C");
         var visitor = new BFSTestNodeVisitor(new[] { rootNode }, filter, null!);
 
         // Act
@@ -66,7 +66,7 @@ public sealed class BFSTestNodeVisitorTests : TestBase
             },
         };
 
-        var filter = BuildFilter("/A/B" + filterEncodedSpecialString + "C");
+        TreeNodeFilter filter = BuildFilter("/A/B" + filterEncodedSpecialString + "C");
         var visitor = new BFSTestNodeVisitor(new[] { rootNode }, filter, null!);
 
         // Act
@@ -278,13 +278,11 @@ public sealed class BFSTestNodeVisitorTests : TestBase
                 : Array.Empty<IProperty>();
     }
 
-    private TreeNodeFilter BuildFilter(string filterQuery)
-    {
-        return new(new TestCommandLineOptions(new Dictionary<string, string[]>
+    private TreeNodeFilter BuildFilter(string filterQuery) =>
+        new(new TestCommandLineOptions(new Dictionary<string, string[]>
         {
             [TreeNodeFilterCommandLineOptionsProvider.TreenodeFilter] = [filterQuery],
         }));
-    }
 
     private class TestCommandLineOptions : ICommandLineOptions
     {
