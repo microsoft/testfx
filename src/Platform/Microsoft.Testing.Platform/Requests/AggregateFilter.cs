@@ -17,7 +17,7 @@ public sealed class AggregateFilter(params IReadOnlyList<ITestExecutionFilter> i
     public IReadOnlyList<ITestExecutionFilter> InnerFilters { get; } = innerFilters;
 
     /// <inheritdoc />
-    public bool IsAvailable => true;
+    public bool IsEnabled => true;
 
     /// <inheritdoc />
     public bool MatchesFilter(TestNode testNode) => InnerFilters.All(x => x.MatchesFilter(testNode));

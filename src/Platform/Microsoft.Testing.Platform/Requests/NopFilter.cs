@@ -13,7 +13,7 @@ namespace Microsoft.Testing.Platform.Requests;
 public sealed class NopFilter : ITestExecutionFilter
 {
     /// <inheritdoc />
-    public bool IsAvailable => true;
+    public bool IsEnabled => true;
 
     /// <inheritdoc />
     public bool MatchesFilter(TestNode testNode) => true;

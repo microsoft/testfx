@@ -26,9 +26,9 @@ public sealed class TreeNodeFilter : ITestExecutionFilter
 
     internal TreeNodeFilter(ICommandLineOptions commandLineOptions)
     {
-        IsAvailable = commandLineOptions.IsOptionSet(TreeNodeFilterCommandLineOptionsProvider.TreenodeFilter);
+        IsEnabled = commandLineOptions.IsOptionSet(TreeNodeFilterCommandLineOptionsProvider.TreenodeFilter);
 
-        if (IsAvailable)
+        if (IsEnabled)
         {
             commandLineOptions.TryGetOptionArgumentList(
                 TreeNodeFilterCommandLineOptionsProvider.TreenodeFilter,
@@ -49,7 +49,7 @@ public sealed class TreeNodeFilter : ITestExecutionFilter
     public string Filter { get; } = string.Empty;
 
     /// <inheritdoc />
-    public bool IsAvailable { get; }
+    public bool IsEnabled { get; }
 
     /// <inheritdoc />
     public bool MatchesFilter(TestNode testNode)

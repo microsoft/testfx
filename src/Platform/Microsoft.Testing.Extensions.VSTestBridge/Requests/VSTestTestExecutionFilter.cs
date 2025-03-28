@@ -27,7 +27,7 @@ public sealed class VSTestTestExecutionFilter : ITestExecutionFilter
     internal static VSTestTestExecutionFilter Instance { get; } = new();
 
     /// <inheritdoc />
-    public bool IsAvailable => TestCases is { IsDefaultOrEmpty: false };
+    public bool IsEnabled => TestCases is { IsDefaultOrEmpty: false };
 
     /// <inheritdoc />
     public bool MatchesFilter(TestNode testNode) => TestCases?.Any(x => x.Id.ToString() == testNode.Uid.Value) is true;

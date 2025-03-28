@@ -37,11 +37,11 @@ public sealed class FiltersTests
         {
             testHost.AddTestExecutionFilter(_ => new Filter1
             {
-                IsAvailable = false,
+                IsEnabled = false,
             });
             testHost.AddTestExecutionFilter(_ => new Filter2
             {
-                IsAvailable = false,
+                IsEnabled = false,
             });
         });
 
@@ -64,7 +64,7 @@ public sealed class FiltersTests
         {
             testHost.AddTestExecutionFilter(_ => new Filter1
             {
-                IsAvailable = false,
+                IsEnabled = false,
             });
             testHost.AddTestExecutionFilter(_ => new Filter2());
         });
@@ -115,14 +115,14 @@ public sealed class FiltersTests
 
     private class Filter1 : ITestExecutionFilter
     {
-        public bool IsAvailable { get; set; } = true;
+        public bool IsEnabled { get; set; } = true;
 
         public bool MatchesFilter(TestNode testNode) => true;
     }
 
     private class Filter2 : ITestExecutionFilter
     {
-        public bool IsAvailable { get; set; } = true;
+        public bool IsEnabled { get; set; } = true;
 
         public bool MatchesFilter(TestNode testNode) => true;
     }

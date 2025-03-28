@@ -11,9 +11,9 @@ namespace Microsoft.Testing.Platform.Requests;
 public interface ITestExecutionFilter
 {
     /// <summary>
-    /// Gets a value indicating whether the filter is available.
+    /// Gets a value indicating whether the filter should be used for filtering.
     /// </summary>
-    bool IsAvailable { get; }
+    bool IsEnabled { get; }
 
     /// <summary>
     /// Determines whether the specified test node matches the filter criteria.
