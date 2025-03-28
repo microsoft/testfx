@@ -10,7 +10,7 @@ namespace Microsoft.Testing.Platform.Extensions;
 /// An example is a Batch filter that needs to compare all of the test nodes to know whether to filter or not.
 /// Or an extension that might add some useful Test Node properties to all tests.
 /// </summary>
-public interface IReceiveTestNodesExtension
+public interface IReceivesAllTestNodesExtension
 {
     /// <summary>
     /// Receives a list of test nodes.
