@@ -39,7 +39,6 @@ internal sealed class PerRequestServerDataConsumer(IServiceProvider serviceProvi
             typeof(TestNodeUpdateMessage),
             typeof(FileArtifact),
             typeof(SessionFileArtifact),
-            typeof(TestNodeFileArtifact),
         ];
 
     /// <inheritdoc />
@@ -221,10 +220,6 @@ internal sealed class PerRequestServerDataConsumer(IServiceProvider serviceProvi
             case TestNodeUpdateMessage update:
                 await ProcessTestNodeUpdateAsync(update, cancellationToken);
                 PopulateTestNodeStatistics(update);
-                break;
-
-            case TestNodeFileArtifact testNodeFileArtifact:
-                Artifacts.Add(new Artifact(testNodeFileArtifact.FileInfo.FullName, dataProducer.Uid, FileType, testNodeFileArtifact.DisplayName, testNodeFileArtifact.Description));
                 break;
 
             case SessionFileArtifact sessionFileArtifact:

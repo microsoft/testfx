@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Platform.TestHost;
+
 namespace Microsoft.Testing.Platform.Extensions.Messages;
 
 /// <summary>
@@ -371,6 +373,15 @@ public record StandardOutputProperty(string StandardOutput) : IProperty;
 /// <param name="StandardError">The standard error.</param>
 [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
 public record StandardErrorProperty(string StandardError) : IProperty;
+
+/// <summary>
+/// Property that represents multiple artifacts/attachments to associate with a test node.
+/// </summary>
+/// <param name="SessionUid">The session UID.</param>
+/// <param name="FileInfo">The file information.</param>
+/// <param name="DisplayName">The display name.</param>
+/// <param name="Description">The description.</param>
+public record FileArtifactProperty(SessionUid SessionUid, FileInfo FileInfo, string DisplayName, string? Description = null) : IProperty;
 
 internal sealed record SerializableKeyValuePairStringProperty(string Key, string Value) : KeyValuePairStringProperty(Key, Value);
 
