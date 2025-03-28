@@ -46,7 +46,6 @@ internal static class ObjectModelConverters
     private static void CopyVSTestProperties(IEnumerable<TestProperty> testProperties, TestNode testNode, TestCase testCase, Func<TestProperty, object?> getPropertyValue,
         bool isTrxEnabled, IClientInfo client)
     {
-        List<KeyValuePair<string, string>>? testNodeTraits = null;
         foreach (TestProperty property in testProperties)
         {
             testNode.Properties.Add(new VSTestProperty(property, testCase));
@@ -90,44 +89,35 @@ internal static class ObjectModelConverters
                 {
                     testNode.Properties.Add(new SerializableNamedArrayStringProperty("vstest.TestCase.Hierarchy", testCaseHierarchy));
                 }
+            }
 
-                // ID is defined on TraitCollection but is internal so again we copy the string here.
-                else if (property.Id == "TestObject.Traits"
-                    && getPropertyValue(property) is KeyValuePair<string, string>[] traits && traits.Length > 0)
+            // ID is defined on TraitCollection but is internal so again we copy the string here.
+            if (property.Id == "TestObject.Traits"
+                && getPropertyValue(property) is KeyValuePair<string, string>[] traits && traits.Length > 0)
+            {
+                foreach (KeyValuePair<string, string> trait in traits)
                 {
-#pragma warning disable SA1010 // Opening square brackets should be spaced correctly
-                    testNodeTraits ??= [];
-#pragma warning restore SA1010 // Opening square brackets should be spaced correctly
-                    testNodeTraits.AddRange(traits);
-                }
-
-                // TPv2 is doing some special handling for MSTest... we should probably do the same.
-                // See https://github.com/microsoft/vstest/blob/main/src/Microsoft.TestPlatform.Extensions.TrxLogger/Utility/Converter.cs#L66-L70
-                else if (property.Id == "MSTestDiscoverer.TestCategory"
-                    && getPropertyValue(property) is string[] mstestCategories && mstestCategories.Length > 0)
-                {
-#pragma warning disable SA1010 // Opening square brackets should be spaced correctly
-                    testNodeTraits ??= [];
-#pragma warning restore SA1010 // Opening square brackets should be spaced correctly
-                    foreach (string category in mstestCategories)
-                    {
-                        testNodeTraits.Add(new(category, string.Empty));
-                    }
+                    testNode.Properties.Add(new TestMetadataProperty(trait.Key, trait.Value));
                 }
             }
-        }
 
-        // Add all the traits and categories we collected from different properties.
-        if (testNodeTraits != null)
-        {
-            testNode.Properties.Add(new SerializableNamedKeyValuePairsStringProperty("traits", testNodeTraits.ToArray()));
+            // TPv2 is doing some special handling for MSTest... we should probably do the same.
+            // See https://github.com/microsoft/vstest/blob/main/src/Microsoft.TestPlatform.Extensions.TrxLogger/Utility/Converter.cs#L66-L70
+            else if (property.Id == "MSTestDiscoverer.TestCategory"
+                && getPropertyValue(property) is string[] mstestCategories && mstestCategories.Length > 0)
+            {
+                foreach (string category in mstestCategories)
+                {
+                    testNode.Properties.Add(new TestMetadataProperty(category, string.Empty));
+                }
+            }
         }
     }
 
     /// <summary>
     /// Converts a VSTest <see cref="TestResult"/> to a Microsoft Testing Platform <see cref="TestNode"/>.
     /// </summary>
-    public static TestNode ToTestNode(this TestResult testResult, bool isTrxEnabled, IClientInfo client)
+    public static TestNode ToTestNode(this TestResult testResult, bool isTrxEnabled, IClientInfo client, SessionUid sessionUid)
     {
         var testNode = testResult.TestCase.ToTestNode(isTrxEnabled, client, testResult.DisplayName);
         CopyVSTestProperties(testResult.Properties, testNode, testResult.TestCase, testResult.GetPropertyValue, isTrxEnabled, client);
@@ -176,6 +166,14 @@ internal static class ObjectModelConverters
                 string message = testResultMessage.Text ?? string.Empty;
                 testNode.Properties.Add(new SerializableKeyValuePairStringProperty("vstest.TestCase.StandardOutput", message));
                 standardOutputMessages.Add(message);
+            }
+        }
+
+        foreach (AttachmentSet attachmentSet in testResult.Attachments)
+        {
+            foreach (UriDataAttachment attachment in attachmentSet.Attachments)
+            {
+                testNode.Properties.Add(new FileArtifactProperty(sessionUid, new FileInfo(attachment.Uri.LocalPath), attachmentSet.DisplayName, attachment.Description));
             }
         }
 

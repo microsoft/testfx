@@ -48,7 +48,7 @@ public sealed class ObjectModelConvertersTests
         {
             CodeFilePath = "FilePath",
         });
-        var testNode = testResult.ToTestNode(false, TestClient);
+        var testNode = testResult.ToTestNode(false, TestClient, new SessionUid("SessionUid"));
         Assert.AreEqual("FilePath", testNode.Properties.Single<TestFileLocationProperty>().FilePath);
     }
 
@@ -61,7 +61,7 @@ public sealed class ObjectModelConvertersTests
             ErrorMessage = "SomeErrorMessage",
             ErrorStackTrace = "SomeStackTrace",
         };
-        var testNode = testResult.ToTestNode(false, TestClient);
+        var testNode = testResult.ToTestNode(false, TestClient, new SessionUid("SessionUid"));
 
         FailedTestNodeStateProperty[] failedTestNodeStateProperties = testNode.Properties.OfType<FailedTestNodeStateProperty>().ToArray();
         Assert.AreEqual(1, failedTestNodeStateProperties.Length);
@@ -77,13 +77,12 @@ public sealed class ObjectModelConvertersTests
         var testCategoryProperty = TestProperty.Register("MSTestDiscoverer.TestCategory", "Label", typeof(string[]), TestPropertyAttributes.None, typeof(TestCase));
         testResult.SetPropertyValue<string[]>(testCategoryProperty, ["category1"]);
 
-        var testNode = testResult.ToTestNode(false, VSTestClient);
+        var testNode = testResult.ToTestNode(false, VSTestClient, new SessionUid("SessionUid"));
 
-        SerializableNamedKeyValuePairsStringProperty[] errorTestNodeStateProperties = testNode.Properties.OfType<SerializableNamedKeyValuePairsStringProperty>().ToArray();
-        Assert.AreEqual(1, errorTestNodeStateProperties.Length);
-        Assert.AreEqual("traits", errorTestNodeStateProperties[0].Name);
-        Assert.AreEqual(1, errorTestNodeStateProperties[0].Pairs.Length);
-        Assert.AreEqual("category1", errorTestNodeStateProperties[0].Pairs[0].Key);
+        TestMetadataProperty[] testMetadatas = testNode.Properties.OfType<TestMetadataProperty>().ToArray();
+        Assert.AreEqual(1, testMetadatas.Length);
+        Assert.AreEqual("category1", testMetadatas[0].Key);
+        Assert.AreEqual(string.Empty, testMetadatas[0].Value);
     }
 
     [TestMethod]
@@ -93,7 +92,7 @@ public sealed class ObjectModelConvertersTests
         var testCategoryProperty = TestProperty.Register("MSTestDiscoverer.TestCategory", "Label", typeof(string[]), TestPropertyAttributes.None, typeof(TestCase));
         testResult.SetPropertyValue<string[]>(testCategoryProperty, ["category1"]);
 
-        var testNode = testResult.ToTestNode(true, VSTestClient);
+        var testNode = testResult.ToTestNode(true, VSTestClient, new SessionUid("SessionUid"));
 
         TrxCategoriesProperty[] trxCategoriesProperty = testNode.Properties.OfType<TrxCategoriesProperty>().ToArray();
         Assert.AreEqual(1, trxCategoriesProperty.Length);
@@ -108,7 +107,7 @@ public sealed class ObjectModelConvertersTests
         var testCaseHierarchy = TestProperty.Register("TestCase.Hierarchy", "Label", typeof(string[]), TestPropertyAttributes.None, typeof(TestCase));
         testResult.SetPropertyValue<string[]>(testCaseHierarchy, ["assembly", "class", "category", "test"]);
 
-        var testNode = testResult.ToTestNode(false, VSTestClient);
+        var testNode = testResult.ToTestNode(false, VSTestClient, new SessionUid("SessionUid"));
 
         SerializableNamedArrayStringProperty[] trxCategoriesProperty = testNode.Properties.OfType<SerializableNamedArrayStringProperty>().ToArray();
         Assert.AreEqual(1, trxCategoriesProperty.Length);
@@ -127,7 +126,7 @@ public sealed class ObjectModelConvertersTests
 
         testResult.SetPropertyValue<Uri>(originalExecutorUriProperty, new Uri("https://vs.com/"));
 
-        var testNode = testResult.ToTestNode(false, VSTestClient);
+        var testNode = testResult.ToTestNode(false, VSTestClient, new SessionUid("SessionUid"));
 
         SerializableKeyValuePairStringProperty[] serializableKeyValuePairStringProperty = testNode.Properties.OfType<SerializableKeyValuePairStringProperty>().ToArray();
         Assert.AreEqual(3, serializableKeyValuePairStringProperty.Length);
@@ -140,7 +139,7 @@ public sealed class ObjectModelConvertersTests
     {
         TestResult testResult = new(new TestCase("assembly.class.test", new("executor://uri", UriKind.Absolute), "source.cs"));
 
-        var testNode = testResult.ToTestNode(true, TestClient);
+        var testNode = testResult.ToTestNode(true, TestClient, new SessionUid("SessionUid"));
 
         Assert.AreEqual(testNode.Properties.OfType<TrxExceptionProperty>()?.Length, 1);
         Assert.AreEqual("assembly.class", testNode.Properties.Single<TrxFullyQualifiedTypeNameProperty>().FullyQualifiedTypeName);
@@ -151,7 +150,7 @@ public sealed class ObjectModelConvertersTests
     {
         TestResult testResult = new(new TestCase("test", new("executor://uri", UriKind.Absolute), "source.cs"));
 
-        string errorMessage = Assert.ThrowsException<InvalidOperationException>(() => testResult.ToTestNode(true, TestClient)).Message;
+        string errorMessage = Assert.ThrowsException<InvalidOperationException>(() => testResult.ToTestNode(true, TestClient, new SessionUid("SessionUid"))).Message;
 
         Assert.IsTrue(errorMessage.Contains("Unable to parse fully qualified type name from test case: "));
     }
@@ -169,7 +168,7 @@ public sealed class ObjectModelConvertersTests
             EndTime = endTime,
             Duration = duration,
         };
-        var testNode = testResult.ToTestNode(false, TestClient);
+        var testNode = testResult.ToTestNode(false, TestClient, new SessionUid("SessionUid"));
         var testResultTimingProperty = new TimingProperty(new(startTime, endTime, duration), []);
 
         Assert.AreEqual<TimingProperty>(testNode.Properties.OfType<TimingProperty>()[0], testResultTimingProperty);
@@ -183,7 +182,7 @@ public sealed class ObjectModelConvertersTests
             Outcome = TestOutcome.NotFound,
             ErrorStackTrace = "SomeStackTrace",
         };
-        var testNode = testResult.ToTestNode(false, TestClient);
+        var testNode = testResult.ToTestNode(false, TestClient, new SessionUid("SessionUid"));
 
         ErrorTestNodeStateProperty[] errorTestNodeStateProperties = testNode.Properties.OfType<ErrorTestNodeStateProperty>().ToArray();
         Assert.AreEqual(1, errorTestNodeStateProperties.Length);
@@ -199,7 +198,7 @@ public sealed class ObjectModelConvertersTests
         {
             Outcome = TestOutcome.Skipped,
         };
-        var testNode = testResult.ToTestNode(false, TestClient);
+        var testNode = testResult.ToTestNode(false, TestClient, new SessionUid("SessionUid"));
 
         SkippedTestNodeStateProperty[] skipTestNodeStateProperties = testNode.Properties.OfType<SkippedTestNodeStateProperty>().ToArray();
         Assert.AreEqual(1, skipTestNodeStateProperties.Length);
@@ -212,7 +211,7 @@ public sealed class ObjectModelConvertersTests
         {
             Outcome = TestOutcome.None,
         };
-        var testNode = testResult.ToTestNode(false, TestClient);
+        var testNode = testResult.ToTestNode(false, TestClient, new SessionUid("SessionUid"));
 
         SkippedTestNodeStateProperty[] skipTestNodeStateProperties = testNode.Properties.OfType<SkippedTestNodeStateProperty>().ToArray();
         Assert.AreEqual(1, skipTestNodeStateProperties.Length);
@@ -225,7 +224,7 @@ public sealed class ObjectModelConvertersTests
         {
             Outcome = TestOutcome.Passed,
         };
-        var testNode = testResult.ToTestNode(false, TestClient);
+        var testNode = testResult.ToTestNode(false, TestClient, new SessionUid("SessionUid"));
 
         PassedTestNodeStateProperty[] passedTestNodeStateProperties = testNode.Properties.OfType<PassedTestNodeStateProperty>().ToArray();
         Assert.AreEqual(1, passedTestNodeStateProperties.Length);
@@ -239,7 +238,7 @@ public sealed class ObjectModelConvertersTests
             DisplayName = "TestName",
         };
 
-        var testNode = testResult.ToTestNode(false, VSTestClient);
+        var testNode = testResult.ToTestNode(false, VSTestClient, new SessionUid("SessionUid"));
 
         SerializableKeyValuePairStringProperty[] errorTestNodeStateProperties = testNode.Properties.OfType<SerializableKeyValuePairStringProperty>().ToArray();
         Assert.AreEqual(2, errorTestNodeStateProperties.Length, "Expected 2 SerializableKeyValuePairStringProperty");
@@ -257,14 +256,12 @@ public sealed class ObjectModelConvertersTests
             Traits = { new Trait("key", "value") },
         };
 
-        var testNode = testResult.ToTestNode(false, VSTestClient);
+        var testNode = testResult.ToTestNode(false, VSTestClient, new SessionUid("SessionUid"));
 
-        SerializableNamedKeyValuePairsStringProperty[] errorTestNodeStateProperties = testNode.Properties.OfType<SerializableNamedKeyValuePairsStringProperty>().ToArray();
-        Assert.AreEqual(1, errorTestNodeStateProperties.Length);
-        Assert.AreEqual("traits", errorTestNodeStateProperties[0].Name);
-        Assert.AreEqual(1, errorTestNodeStateProperties[0].Pairs.Length);
-        Assert.AreEqual("key", errorTestNodeStateProperties[0].Pairs[0].Key);
-        Assert.AreEqual("value", errorTestNodeStateProperties[0].Pairs[0].Value);
+        TestMetadataProperty[] testMetadatas = testNode.Properties.OfType<TestMetadataProperty>().ToArray();
+        Assert.AreEqual(1, testMetadatas.Length);
+        Assert.AreEqual("key", testMetadatas[0].Key);
+        Assert.AreEqual("value", testMetadatas[0].Value);
     }
 
     [TestMethod]
@@ -280,7 +277,7 @@ public sealed class ObjectModelConvertersTests
             },
         };
 
-        var testNode = testResult.ToTestNode(false, VSTestClient);
+        var testNode = testResult.ToTestNode(false, VSTestClient, new SessionUid("SessionUid"));
 
         StandardOutputProperty[] standardOutputProperties = testNode.Properties.OfType<StandardOutputProperty>().ToArray();
         Assert.IsTrue(standardOutputProperties.Length == 1);
@@ -300,7 +297,7 @@ public sealed class ObjectModelConvertersTests
             },
         };
 
-        var testNode = testResult.ToTestNode(false, VSTestClient);
+        var testNode = testResult.ToTestNode(false, VSTestClient, new SessionUid("SessionUid"));
 
         StandardErrorProperty[] standardErrorProperties = testNode.Properties.OfType<StandardErrorProperty>().ToArray();
         Assert.IsTrue(standardErrorProperties.Length == 1);

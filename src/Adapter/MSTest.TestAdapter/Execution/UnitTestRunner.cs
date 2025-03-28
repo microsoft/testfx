@@ -202,7 +202,8 @@ internal sealed class UnitTestRunner : MarshalByRefObject
                                             classInitializeResult.LogOutput!,
                                             classInitializeResult.LogError!,
                                             classInitializeResult.DebugTrace!,
-                                            classInitializeResult.TestContextMessages!))));
+                                            classInitializeResult.TestContextMessages!)),
+                                    result));
 
                             result = retryResult.TryGetLast() ?? throw ApplicationStateGuard.Unreachable();
                         }

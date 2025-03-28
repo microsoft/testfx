@@ -209,10 +209,10 @@ public sealed class TestNodePropertiesTests
             new TestMethodIdentifierProperty("assembly", "namespace", "type", "method", ["string"], "bool").ToString());
 
     [TestMethod]
-    public void SerializableNamedKeyValuePairsStringProperty_ToStringIsCorrect()
+    public void TestMetadataProperty_ToStringIsCorrect()
         => Assert.AreEqual(
-            "SerializableNamedKeyValuePairsStringProperty { Name = some name, Pairs = [[key, value]] }",
-            new SerializableNamedKeyValuePairsStringProperty("some name", [new("key", "value")]).ToString());
+            "TestMetadataProperty { Key = some name, Value = some value }",
+            new TestMetadataProperty("some name", "some value").ToString());
 
     [TestMethod]
     public void SerializableNamedArrayStringProperty_ToStringIsCorrect()

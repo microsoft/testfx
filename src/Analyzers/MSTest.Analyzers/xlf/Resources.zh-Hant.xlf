@@ -351,6 +351,16 @@ The type declaring these methods should also respect the following rules:
         <target state="translated">'System.ComponentModel.DescriptionAttribute' 對測試方法無影響</target>
         <note />
       </trans-unit>
+      <trans-unit id="DuplicateDataRowMessageFormat">
+        <source>Do not duplicate 'DataRow' attributes. This is usually a copy/paste error. The attribute indices are '{0}' and '{1}'.</source>
+        <target state="translated">不要複製 'DataRow' 屬性。這通常是複製/貼上錯誤。屬性索引為 '{0}' 和 '{1}'。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DuplicateDataRowTitle">
+        <source>Avoid duplicated 'DataRow' entries</source>
+        <target state="translated">避免重複的 'DataRow' 條目</target>
+        <note />
+      </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidDescription">
         <source>'DynamicData' entry should have the following layout to be valid:
 - should only be set on a test method;

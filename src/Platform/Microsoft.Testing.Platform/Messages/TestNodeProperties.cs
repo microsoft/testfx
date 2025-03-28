@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Platform.TestHost;
+
 namespace Microsoft.Testing.Platform.Extensions.Messages;
 
 /// <summary>
@@ -372,21 +374,16 @@ public record StandardOutputProperty(string StandardOutput) : IProperty;
 [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
 public record StandardErrorProperty(string StandardError) : IProperty;
 
-internal sealed record SerializableKeyValuePairStringProperty(string Key, string Value) : KeyValuePairStringProperty(Key, Value);
+/// <summary>
+/// Property that represents multiple artifacts/attachments to associate with a test node.
+/// </summary>
+/// <param name="SessionUid">The session UID.</param>
+/// <param name="FileInfo">The file information.</param>
+/// <param name="DisplayName">The display name.</param>
+/// <param name="Description">The description.</param>
+public record FileArtifactProperty(SessionUid SessionUid, FileInfo FileInfo, string DisplayName, string? Description = null) : IProperty;
 
-internal sealed record SerializableNamedKeyValuePairsStringProperty(string Name, KeyValuePair<string, string>[] Pairs) : IProperty
-{
-    [SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "https://github.com/dotnet/roslyn/issues/52421")]
-    private bool PrintMembers(StringBuilder builder)
-    {
-        builder.Append("Name = ");
-        builder.Append(Name);
-        builder.Append(", Pairs = [");
-        builder.AppendJoin(", ", Pairs.Select(x => x.ToString()));
-        builder.Append(']');
-        return true;
-    }
-}
+internal sealed record SerializableKeyValuePairStringProperty(string Key, string Value) : KeyValuePairStringProperty(Key, Value);
 
 internal sealed record SerializableNamedArrayStringProperty(string Name, string[] Values) : IProperty
 {

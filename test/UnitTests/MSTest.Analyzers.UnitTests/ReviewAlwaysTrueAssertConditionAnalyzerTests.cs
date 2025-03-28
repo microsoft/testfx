@@ -97,7 +97,7 @@ public sealed class ReviewAlwaysTrueAssertConditionAnalyzerTests
     }
 
     [TestMethod]
-    public async Task WhenIsNotNullAssertion_ValueParameterAsReferenceObjectIsNotNullable_Diagnostic()
+    public async Task WhenIsNotNullAssertion_ValueParameterAsReferenceObjectIsNotNullableByNullabilityAnalysis_NoDiagnostic()
     {
         string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -109,7 +109,7 @@ public sealed class ReviewAlwaysTrueAssertConditionAnalyzerTests
                 public void Test()
                 {
                     ObjectClass obj = new ObjectClass();
-                    [|Assert.IsNotNull(obj)|];
+                    Assert.IsNotNull(obj);
                 }
             }
 

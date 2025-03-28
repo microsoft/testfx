@@ -199,6 +199,8 @@ internal static class SerializerUtilities
 #endif
                 }
 
+                int attachmentIndex = 0;
+
                 foreach (IProperty property in n.Properties)
                 {
                     if (property is SerializableKeyValuePairStringProperty keyValuePairProperty)
@@ -210,26 +212,6 @@ internal static class SerializerUtilities
                     if (property is SerializableNamedArrayStringProperty namedArrayStringProperty)
                     {
                         properties[namedArrayStringProperty.Name] = namedArrayStringProperty.Values;
-                        continue;
-                    }
-
-                    if (property is SerializableNamedKeyValuePairsStringProperty namedKvpStringProperty)
-                    {
-#if NETCOREAPP
-                        properties[namedKvpStringProperty.Name] = namedKvpStringProperty.Pairs;
-#else
-                        JsonArray collection = [];
-                        foreach ((string? key, string? value) in namedKvpStringProperty.Pairs)
-                        {
-                            JsonObject o = new()
-                            {
-                                { key, value },
-                            };
-                            collection.Add(o);
-                        }
-
-                        properties[namedKvpStringProperty.Name] = collection;
-#endif
                         continue;
                     }
 
@@ -361,6 +343,15 @@ internal static class SerializerUtilities
                         properties["time.start-utc"] = timingProperty.GlobalTiming.StartTime;
                         properties["time.stop-utc"] = timingProperty.GlobalTiming.EndTime;
                         properties["time.duration-ms"] = timingProperty.GlobalTiming.Duration.TotalMilliseconds;
+                        continue;
+                    }
+
+                    if (property is FileArtifactProperty artifact)
+                    {
+                        properties[$"attachments.{attachmentIndex}.uri"] = artifact.FileInfo.FullName;
+                        properties[$"attachments.{attachmentIndex}.display-name"] = artifact.DisplayName;
+                        properties[$"attachments.{attachmentIndex}.description"] = artifact.Description;
+                        attachmentIndex++;
                         continue;
                     }
                 }
