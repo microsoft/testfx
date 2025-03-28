@@ -12,7 +12,6 @@ using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Editing;
-using Microsoft.CodeAnalysis.Simplification;
 
 using MSTest.Analyzers.Helpers;
 
@@ -70,12 +69,12 @@ public sealed class UseNewerAssertThrowsFixer : CodeFixProvider
         context.RegisterCodeFix(
             CodeAction.Create(
                 title: string.Format(CultureInfo.InvariantCulture, CodeFixResources.UseNewerAssertThrows, updatedMethodName),
-                ct => Task.FromResult(context.Document.WithSyntaxRoot(UpdateMethodName(new SyntaxEditor(root, context.Document.Project.Solution.Workspace), invocation, genericNameSyntax, updatedMethodName, diagnostic.AdditionalLocations))),
+                ct => Task.FromResult(context.Document.WithSyntaxRoot(UpdateMethodName(new SyntaxEditor(root, context.Document.Project.Solution.Workspace), invocation, genericNameSyntax, updatedMethodName))),
                 equivalenceKey: nameof(UseProperAssertMethodsFixer)),
             diagnostic);
     }
 
-    private static SyntaxNode UpdateMethodName(SyntaxEditor editor, InvocationExpressionSyntax invocation, GenericNameSyntax genericNameSyntax, string updatedMethodName, IReadOnlyList<Location> additionalLocations)
+    private static SyntaxNode UpdateMethodName(SyntaxEditor editor, InvocationExpressionSyntax invocation, GenericNameSyntax genericNameSyntax, string updatedMethodName)
     {
         editor.ReplaceNode(genericNameSyntax, genericNameSyntax.WithIdentifier(SyntaxFactory.Identifier(updatedMethodName).WithTriviaFrom(genericNameSyntax.Identifier)));
 
@@ -85,90 +84,6 @@ public sealed class UseNewerAssertThrowsFixer : CodeFixProvider
             editor.ReplaceNode(arg.NameColon!.Name, arg.NameColon!.Name.WithIdentifier(SyntaxFactory.Identifier("messageArgs").WithTriviaFrom(arg.NameColon.Name.Identifier)));
         }
 
-        if (additionalLocations.Count != 1)
-        {
-            return editor.GetChangedRoot();
-        }
-
-        // The existing ThrowsException call is using the Func<object> overload. The new ThrowsExactly method does not have this overload, so we need to adjust.
-        // This is a best effort handling.
-        SyntaxNode actionArgument = editor.OriginalRoot.FindNode(additionalLocations[0].SourceSpan, getInnermostNodeForTie: true);
-
-        if (actionArgument is ParenthesizedLambdaExpressionSyntax lambdaSyntax)
-        {
-            if (lambdaSyntax.ExpressionBody is not null)
-            {
-                editor.ReplaceNode(
-                    lambdaSyntax.ExpressionBody,
-                    AssignToDiscardIfNeeded(lambdaSyntax.ExpressionBody));
-            }
-            else if (lambdaSyntax.Block is not null)
-            {
-                // This is more complex. We need to iterate through all descendants of type ReturnStatementSyntax, and split it into two statements.
-                // The first statement will be an assignment expression to a discard, and the second statement will be 'return;'.
-                // We may even need to add extra braces in case the return statement (for example) is originally inside an if statement without braces.
-                // For example:
-                // if (condition)
-                //     return Whatever;
-                // should be converted to:
-                // if (condition)
-                // {
-                //     _ = Whatever;
-                //     return;
-                // }
-                // Keep in mind: When descending into descendant nodes, we shouldn't descend into potential other lambda expressions or local functions.
-                IEnumerable<ReturnStatementSyntax> returnStatements = lambdaSyntax.Block.DescendantNodes(descendIntoChildren: node => node is not (LocalFunctionStatementSyntax or AnonymousFunctionExpressionSyntax)).OfType<ReturnStatementSyntax>();
-                foreach (ReturnStatementSyntax returnStatement in returnStatements)
-                {
-                    if (returnStatement.Expression is not { } returnExpression)
-                    {
-                        // This should be an error in user code.
-                        continue;
-                    }
-
-                    ExpressionStatementSyntax returnReplacement = SyntaxFactory.ExpressionStatement(AssignToDiscardIfNeeded(returnStatement.Expression));
-
-                    if (returnStatement.Parent is BlockSyntax blockSyntax)
-                    {
-                        editor.InsertAfter(returnStatement, SyntaxFactory.ReturnStatement());
-                        editor.ReplaceNode(returnStatement, returnReplacement);
-                    }
-                    else
-                    {
-                        editor.ReplaceNode(
-                            returnStatement,
-                            SyntaxFactory.Block(
-                                returnReplacement,
-                                SyntaxFactory.ReturnStatement()));
-                    }
-                }
-            }
-        }
-        else if (actionArgument is ExpressionSyntax expressionSyntax)
-        {
-            editor.ReplaceNode(
-                expressionSyntax,
-                SyntaxFactory.ParenthesizedLambdaExpression(
-                    SyntaxFactory.ParameterList(),
-                    block: null,
-                    expressionBody: SyntaxFactory.InvocationExpression(SyntaxFactory.ParenthesizedExpression(expressionSyntax).WithAdditionalAnnotations(Simplifier.Annotation))));
-        }
-
         return editor.GetChangedRoot();
     }
-
-    private static ExpressionSyntax AssignToDiscardIfNeeded(ExpressionSyntax expression)
-        => NeedsDiscard(expression)
-            ? SyntaxFactory.AssignmentExpression(SyntaxKind.SimpleAssignmentExpression, SyntaxFactory.IdentifierName("_"), expression)
-            : expression;
-
-    private static bool NeedsDiscard(ExpressionSyntax expression)
-        => expression is not InvocationExpressionSyntax &&
-            expression is not AssignmentExpressionSyntax &&
-            !expression.IsKind(SyntaxKind.PostIncrementExpression) &&
-            !expression.IsKind(SyntaxKind.PostDecrementExpression) &&
-            !expression.IsKind(SyntaxKind.PreIncrementExpression) &&
-            !expression.IsKind(SyntaxKind.PreDecrementExpression) &&
-            expression is not AwaitExpressionSyntax &&
-            expression is not ObjectCreationExpressionSyntax;
 }
