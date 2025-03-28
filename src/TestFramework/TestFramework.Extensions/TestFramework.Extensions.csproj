@@ -59,6 +59,7 @@
 
   <ItemGroup>
     <PackageReference Condition=" '$(TargetFramework)' == '$(WinUiMinimum)' " Include="Microsoft.WindowsAppSDK" Version="$(MicrosoftWindowsAppSDKVersion)" />
+    <PackageReference Include="System.Threading.Tasks.Extensions" Condition=" '$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == '$(NetFrameworkMinimum)' OR '$(TargetFramework)' == '$(UwpMinimum)' " />
   </ItemGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' == '$(NetFrameworkMinimum)' ">
@@ -77,6 +78,7 @@
 
   <ItemGroup Label="NuGet">
     <NuspecProperty Include="RepoRoot=$(RepoRoot)" />
+    <NuspecProperty Include="SystemThreadingTasksExtensionsVersion=$(SystemThreadingTasksExtensionsVersion)" />
   </ItemGroup>
 
   <ItemGroup>
