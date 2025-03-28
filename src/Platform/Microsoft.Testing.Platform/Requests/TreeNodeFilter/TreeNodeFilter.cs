@@ -37,6 +37,10 @@ public sealed class TreeNodeFilter : ITestExecutionFilter
             Filter = Guard.NotNull(args?.ElementAtOrDefault(0));
             _filters = ParseFilter(Filter);
         }
+        else
+        {
+            _filters = [];
+        }
     }
 
     /// <summary>
