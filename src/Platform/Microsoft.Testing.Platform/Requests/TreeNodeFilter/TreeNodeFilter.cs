@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Resources;
@@ -23,16 +24,47 @@ public sealed class TreeNodeFilter : ITestExecutionFilter
     internal const string AllNodesBelowRegexString = ".*.*";
     private readonly List<FilterExpression> _filters;
 
-    internal TreeNodeFilter(string filter)
+    internal TreeNodeFilter(ICommandLineOptions commandLineOptions)
     {
-        Filter = Guard.NotNull(filter);
-        _filters = ParseFilter(filter);
+        IsAvailable = commandLineOptions.IsOptionSet(TreeNodeFilterCommandLineOptionsProvider.TreenodeFilter);
+
+        if (IsAvailable)
+        {
+            commandLineOptions.TryGetOptionArgumentList(
+                TreeNodeFilterCommandLineOptionsProvider.TreenodeFilter,
+                out string[]? args);
+
+            Filter = Guard.NotNull(args?.ElementAtOrDefault(0));
+            _filters = ParseFilter(Filter);
+        }
     }
 
     /// <summary>
     /// Gets the filter string.
     /// </summary>
-    public string Filter { get; }
+    public string Filter { get; } = string.Empty;
+
+    public bool IsAvailable { get; }
+
+    public bool MatchesFilter(TestNode testNode)
+    {
+        string path = BuildNodePath(testNode);
+
+        return MatchesFilter(path, testNode.Properties);
+    }
+
+    private static string BuildNodePath(TestNode testNode)
+    {
+        TestMethodIdentifierProperty? testMethodIdentifier = testNode.Properties.SingleOrDefault<TestMethodIdentifierProperty>();
+
+        if (testMethodIdentifier is null)
+        {
+            return "/*/*/*/*";
+        }
+
+        string? assembly = testMethodIdentifier.AssemblyFullName.Split(',').FirstOrDefault();
+        return $"/{assembly}/{testMethodIdentifier.Namespace}/{testMethodIdentifier.TypeName}/{testMethodIdentifier.MethodName}";
+    }
 
     /// <remarks>
     /// The current grammar for the filter looks as follows:

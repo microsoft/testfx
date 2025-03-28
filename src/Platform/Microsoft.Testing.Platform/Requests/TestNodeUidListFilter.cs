@@ -8,7 +8,7 @@ namespace Microsoft.Testing.Platform.Requests;
 /// <summary>
 /// Represents a filter based on test node UIDs.
 /// </summary>
-public sealed class TestNodeUidListFilter : ITestExecutionFilter
+public class TestNodeUidListFilter : ITestExecutionFilter
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="TestNodeUidListFilter"/> class.
@@ -20,4 +20,8 @@ public sealed class TestNodeUidListFilter : ITestExecutionFilter
     /// Gets the test node UIDs to filter.
     /// </summary>
     public TestNodeUid[] TestNodeUids { get; }
+
+    public bool IsAvailable => TestNodeUids.Length > 0;
+
+    public bool MatchesFilter(TestNode testNode) => TestNodeUids.Contains(testNode.Uid);
 }

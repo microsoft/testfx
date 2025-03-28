@@ -8,25 +8,16 @@ using Microsoft.Testing.Platform.TestHost;
 
 namespace Microsoft.Testing.Platform.Requests;
 
-internal sealed class ConsoleTestExecutionRequestFactory(ICommandLineOptions commandLineService, ITestExecutionFilterFactory testExecutionFilterFactory) : ITestExecutionRequestFactory
+internal sealed class ConsoleTestExecutionRequestFactory(ICommandLineOptions commandLineService, ITestExecutionFilter testExecutionFilter) : ITestExecutionRequestFactory
 {
-    private readonly ICommandLineOptions _commandLineService = commandLineService;
-    private readonly ITestExecutionFilterFactory _testExecutionFilterFactory = testExecutionFilterFactory;
-
-    public async Task<TestExecutionRequest> CreateRequestAsync(TestSessionContext session)
+    public Task<TestExecutionRequest> CreateRequestAsync(TestSessionContext session)
     {
-        (bool created, ITestExecutionFilter? testExecutionFilter) = await _testExecutionFilterFactory.TryCreateAsync();
-        if (!created)
-        {
-            throw new InvalidOperationException(PlatformResources.CannotCreateTestExecutionFilterErrorMessage);
-        }
-
         ApplicationStateGuard.Ensure(testExecutionFilter is not null);
 
-        TestExecutionRequest testExecutionRequest = _commandLineService.IsOptionSet(PlatformCommandLineProvider.DiscoverTestsOptionKey)
+        TestExecutionRequest testExecutionRequest = commandLineService.IsOptionSet(PlatformCommandLineProvider.DiscoverTestsOptionKey)
             ? new DiscoverTestExecutionRequest(session, testExecutionFilter)
             : new RunTestExecutionRequest(session, testExecutionFilter);
 
-        return testExecutionRequest;
+        return Task.FromResult(testExecutionRequest);
     }
 }

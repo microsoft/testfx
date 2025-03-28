@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Requests;
 
@@ -28,7 +29,7 @@ public sealed class BFSTestNodeVisitorTests : TestBase
             },
         };
 
-        var filter = new TreeNodeFilter("/A/B/C");
+        var filter = BuildFilter("/A/B/C");
         var visitor = new BFSTestNodeVisitor(new[] { rootNode }, filter, null!);
 
         // Act
@@ -65,7 +66,7 @@ public sealed class BFSTestNodeVisitorTests : TestBase
             },
         };
 
-        var filter = new TreeNodeFilter("/A/B" + filterEncodedSpecialString + "C");
+        var filter = BuildFilter("/A/B" + filterEncodedSpecialString + "C");
         var visitor = new BFSTestNodeVisitor(new[] { rootNode }, filter, null!);
 
         // Act
@@ -275,5 +276,24 @@ public sealed class BFSTestNodeVisitorTests : TestBase
                     },
                 }
                 : Array.Empty<IProperty>();
+    }
+
+    private TreeNodeFilter BuildFilter(string filterQuery)
+    {
+        return new(new TestCommandLineOptions(new Dictionary<string, string[]>
+        {
+            [TreeNodeFilterCommandLineOptionsProvider.TreenodeFilter] = [filterQuery],
+        }));
+    }
+
+    private class TestCommandLineOptions : ICommandLineOptions
+    {
+        private readonly Dictionary<string, string[]> _options;
+
+        public TestCommandLineOptions(Dictionary<string, string[]> options) => _options = options;
+
+        public bool IsOptionSet(string optionName) => _options.ContainsKey(optionName);
+
+        public bool TryGetOptionArgumentList(string optionName, [NotNullWhen(true)] out string[]? arguments) => _options.TryGetValue(optionName, out arguments);
     }
 }
