@@ -374,20 +374,6 @@ public record StandardErrorProperty(string StandardError) : IProperty;
 
 internal sealed record SerializableKeyValuePairStringProperty(string Key, string Value) : KeyValuePairStringProperty(Key, Value);
 
-internal sealed record SerializableNamedKeyValuePairsStringProperty(string Name, KeyValuePair<string, string>[] Pairs) : IProperty
-{
-    [SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "https://github.com/dotnet/roslyn/issues/52421")]
-    private bool PrintMembers(StringBuilder builder)
-    {
-        builder.Append("Name = ");
-        builder.Append(Name);
-        builder.Append(", Pairs = [");
-        builder.AppendJoin(", ", Pairs.Select(x => x.ToString()));
-        builder.Append(']');
-        return true;
-    }
-}
-
 internal sealed record SerializableNamedArrayStringProperty(string Name, string[] Values) : IProperty
 {
     [SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "https://github.com/dotnet/roslyn/issues/52421")]

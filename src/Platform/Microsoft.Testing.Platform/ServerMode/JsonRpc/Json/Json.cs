@@ -152,12 +152,6 @@ internal sealed class Json
                     continue;
                 }
 
-                if (property is SerializableNamedKeyValuePairsStringProperty namedKvpStringProperty)
-                {
-                    properties.Add((namedKvpStringProperty.Name, namedKvpStringProperty.Pairs));
-                    continue;
-                }
-
                 if (property is TestFileLocationProperty fileLocationProperty)
                 {
                     properties.Add(("location.file", fileLocationProperty.FilePath));
