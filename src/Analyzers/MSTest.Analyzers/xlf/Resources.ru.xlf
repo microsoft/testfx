@@ -359,12 +359,12 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="DuplicateDataRowMessageFormat">
         <source>Do not duplicate 'DataRow' attributes. This is usually a copy/paste error. The attribute indices are '{0}' and '{1}'.</source>
-        <target state="new">Do not duplicate 'DataRow' attributes. This is usually a copy/paste error. The attribute indices are '{0}' and '{1}'.</target>
+        <target state="translated">Не дублируйте атрибуты "DataRow". Обычно это ошибка копирования и вставки. Индексы атрибута — "{0}" и "{1}".</target>
         <note />
       </trans-unit>
       <trans-unit id="DuplicateDataRowTitle">
         <source>Avoid duplicated 'DataRow' entries</source>
-        <target state="new">Avoid duplicated 'DataRow' entries</target>
+        <target state="translated">Избегайте дублирования записей "DataRow"</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidDescription">
