@@ -48,8 +48,10 @@ public sealed class TreeNodeFilter : ITestExecutionFilter
     /// </summary>
     public string Filter { get; } = string.Empty;
 
+    /// <inheritdoc />
     public bool IsAvailable { get; }
 
+    /// <inheritdoc />
     public bool MatchesFilter(TestNode testNode)
     {
         string path = BuildNodePath(testNode);

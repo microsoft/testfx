@@ -21,7 +21,9 @@ public class TestNodeUidListFilter : ITestExecutionFilter
     /// </summary>
     public TestNodeUid[] TestNodeUids { get; }
 
+    /// <inheritdoc />
     public bool IsAvailable => TestNodeUids.Length > 0;
 
+    /// <inheritdoc />
     public bool MatchesFilter(TestNode testNode) => TestNodeUids.Contains(testNode.Uid);
 }

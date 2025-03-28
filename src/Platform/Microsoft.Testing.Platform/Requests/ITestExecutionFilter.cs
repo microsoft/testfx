@@ -10,7 +10,15 @@ namespace Microsoft.Testing.Platform.Requests;
 /// </summary>
 public interface ITestExecutionFilter
 {
+    /// <summary>
+    /// Gets a value indicating whether the filter is available.
+    /// </summary>
     bool IsAvailable { get; }
 
+    /// <summary>
+    /// Determines whether the specified test node matches the filter criteria.
+    /// </summary>
+    /// <param name="testNode">The test node to check against the filter.</param>
+    /// <returns><c>true</c> if the test node matches the filter; otherwise, <c>false</c>.</returns>
     bool MatchesFilter(TestNode testNode);
 }
