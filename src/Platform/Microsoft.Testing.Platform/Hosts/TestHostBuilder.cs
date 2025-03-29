@@ -479,14 +479,7 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
         }
         else
         {
-            // Add custom ITestExecutionFilterFactory to the service list if available
-            ActionResult<ITestExecutionFilterFactory> testExecutionFilterFactoryResult = await ((TestHostManager)TestHost).TryBuildTestExecutionFilterFactoryAsync(serviceProvider);
-            if (testExecutionFilterFactoryResult.IsSuccess)
-            {
-                serviceProvider.TryAddService(testExecutionFilterFactoryResult.Result);
-            }
-
-            // Add custom ITestExecutionFilterFactory to the service list if available
+            // Add custom ITestFrameworkInvoker to the service list if available
             ActionResult<ITestFrameworkInvoker> testAdapterInvokerBuilderResult = await ((TestHostManager)TestHost).TryBuildTestAdapterInvokerAsync(serviceProvider);
             if (testAdapterInvokerBuilderResult.IsSuccess)
             {
@@ -652,7 +645,6 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
         await RegisterAsServiceOrConsumerOrBothAsync(testFrameworkBuilderData.PlatformOutputDisplayService, serviceProvider, dataConsumersBuilder);
         await RegisterAsServiceOrConsumerOrBothAsync(testFrameworkBuilderData.TestExecutionRequestFactory, serviceProvider, dataConsumersBuilder);
         await RegisterAsServiceOrConsumerOrBothAsync(testFrameworkBuilderData.TestExecutionRequestInvoker, serviceProvider, dataConsumersBuilder);
-        await RegisterAsServiceOrConsumerOrBothAsync(testFrameworkBuilderData.TestExecutionFilterFactory, serviceProvider, dataConsumersBuilder);
 
         // Create the test framework adapter
         ITestFrameworkCapabilities testFrameworkCapabilities = serviceProvider.GetTestFrameworkCapabilities();

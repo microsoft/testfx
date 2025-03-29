@@ -3,6 +3,7 @@
 
 using System.Collections.Immutable;
 
+using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Requests;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
@@ -24,4 +25,10 @@ public sealed class VSTestTestExecutionFilter : ITestExecutionFilter
     public ImmutableArray<TestCase>? TestCases => null;
 
     internal static VSTestTestExecutionFilter Instance { get; } = new();
+
+    /// <inheritdoc />
+    public bool IsEnabled => false;
+
+    /// <inheritdoc />
+    public bool MatchesFilter(TestNode testNode) => false;
 }
