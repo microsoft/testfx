@@ -89,10 +89,7 @@ internal sealed class AsynchronousMessageBus : BaseMessageBus, IMessageBus, IDis
             throw new InvalidOperationException("The message bus has not been built yet.");
         }
 
-        if (_testApplicationCancellationTokenSource.CancellationToken.IsCancellationRequested)
-        {
-            return;
-        }
+        _testApplicationCancellationTokenSource.CancellationToken.ThrowIfCancellationRequested();
 
         if (_isTraceLoggingEnabled)
         {
@@ -141,10 +138,7 @@ internal sealed class AsynchronousMessageBus : BaseMessageBus, IMessageBus, IDis
         CancellationToken cancellationToken = _testApplicationCancellationTokenSource.CancellationToken;
         while (anotherRound)
         {
-            if (cancellationToken.IsCancellationRequested)
-            {
-                return;
-            }
+            cancellationToken.ThrowIfCancellationRequested();
 
             if (totalNumberOfDrainAttempt == 0)
             {
