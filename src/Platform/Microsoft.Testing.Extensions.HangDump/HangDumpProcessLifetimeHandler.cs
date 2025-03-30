@@ -173,7 +173,7 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
         }
     }
 
-    public async Task OnTestHostProcessStartedAsync(ITestHostProcessInformation testHostProcessInformation, CancellationToken cancellation)
+    public async Task OnTestHostProcessStartedAsync(ITestHostProcessInformation testHostProcessInformation, CancellationToken cancellationToken)
     {
         ApplicationStateGuard.Ensure(_waitConnectionTask is not null);
         ApplicationStateGuard.Ensure(_singleConnectionNamedPipeServer is not null);
@@ -184,10 +184,10 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
             await _logger.LogDebugAsync($"Wait for test host connection to the server pipe '{_singleConnectionNamedPipeServer.PipeName.Name}'");
             await _waitConnectionTask.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout);
             using CancellationTokenSource timeout = new(TimeoutHelper.DefaultHangTimeSpanTimeout);
-            using var linkedCancellationToken = CancellationTokenSource.CreateLinkedTokenSource(cancellation, timeout.Token);
+            using var linkedCancellationToken = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeout.Token);
             _waitConsumerPipeName.Wait(linkedCancellationToken.Token);
             ApplicationStateGuard.Ensure(_namedPipeClient is not null);
-            await _namedPipeClient.ConnectAsync(cancellation).TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout);
+            await _namedPipeClient.ConnectAsync(cancellationToken).TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout);
             await _logger.LogDebugAsync($"Connected to the test host server pipe '{_namedPipeClient.PipeName}'");
 
             // Keep the custom thread to avoid to waste one from thread pool.
@@ -203,9 +203,9 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
                         await _outputDisplay.DisplayAsync(this, new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.HangDumpFailed, e.ToString(), GetDiskInfo())));
                         throw;
                     }
-                }, "[HangDump] ActivityTimerAsync", cancellation);
+                }, "[HangDump] ActivityTimerAsync", cancellationToken);
         }
-        catch (OperationCanceledException) when (cancellation.IsCancellationRequested)
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
         }
     }
@@ -229,12 +229,9 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
         return builder.ToString();
     }
 
-    public async Task OnTestHostProcessExitedAsync(ITestHostProcessInformation testHostProcessInformation, CancellationToken cancellation)
+    public async Task OnTestHostProcessExitedAsync(ITestHostProcessInformation testHostProcessInformation, CancellationToken cancellationToken)
     {
-        if (cancellation.IsCancellationRequested)
-        {
-            return;
-        }
+        cancellationToken.ThrowIfCancellationRequested();
 
         if (!testHostProcessInformation.HasExitedGracefully)
         {

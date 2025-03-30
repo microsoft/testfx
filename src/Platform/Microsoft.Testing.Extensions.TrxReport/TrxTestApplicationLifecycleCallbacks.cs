@@ -52,7 +52,9 @@ internal sealed class TrxTestApplicationLifecycleCallbacks : ITestApplicationLif
 
     public async Task BeforeRunAsync(CancellationToken cancellationToken)
     {
-        if (!_isEnabled || cancellationToken.IsCancellationRequested)
+        cancellationToken.ThrowIfCancellationRequested();
+
+        if (!_isEnabled)
         {
             return;
         }

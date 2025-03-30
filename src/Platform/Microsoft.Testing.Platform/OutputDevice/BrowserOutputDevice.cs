@@ -234,10 +234,7 @@ internal sealed partial class BrowserOutputDevice : IPlatformOutputDevice,
 
     public Task OnTestSessionStartingAsync(SessionUid sessionUid, CancellationToken cancellationToken)
     {
-        if (cancellationToken.IsCancellationRequested)
-        {
-            return Task.CompletedTask;
-        }
+        cancellationToken.ThrowIfCancellationRequested();
 
         // We implement IDataConsumerService and IOutputDisplayService.
         // So the engine is calling us before as IDataConsumerService and after as IOutputDisplayService.
@@ -328,10 +325,7 @@ internal sealed partial class BrowserOutputDevice : IPlatformOutputDevice,
 
     public Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken)
     {
-        if (cancellationToken.IsCancellationRequested)
-        {
-            return Task.CompletedTask;
-        }
+        cancellationToken.ThrowIfCancellationRequested();
 
         switch (value)
         {
