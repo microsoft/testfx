@@ -40,12 +40,11 @@
 
   <!-- Versioning -->
   <PropertyGroup>
-    <MSTestEnginePreReleaseVersionLabel>alpha</MSTestEnginePreReleaseVersionLabel>
-
     <!--
       This is a early preview package, keep 1.0.0-alpha or similar suffix even in official builds.
     -->
     <MSTestEngineVersionPrefix>1.0.0</MSTestEngineVersionPrefix>
+    <MSTestEnginePreReleaseVersionLabel>alpha</MSTestEnginePreReleaseVersionLabel>
   </PropertyGroup>
 
   <!-- Pack config -->
@@ -68,6 +67,12 @@
   <!-- Polyfill config -->
   <PropertyGroup>
     <PolyGuard>true</PolyGuard>
+  </PropertyGroup>
+
+  <!-- Test config -->
+  <PropertyGroup>
+    <!-- Set the test runner here and not in test folder so that arcade doesn't force add xunit to any folder of the repo -->
+    <TestRunnerName>TestingPlatformRunner</TestRunnerName>
   </PropertyGroup>
 
   <ItemGroup>
