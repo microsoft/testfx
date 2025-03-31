@@ -32,11 +32,7 @@
         <target state="translated">正在取消测试会话...</target>
         <note />
       </trans-unit>
-      <trans-unit id="CannotCreateTestExecutionFilterErrorMessage">
-        <source>Failed to create a test execution filter</source>
-        <target state="translated">未能创建测试执行筛选</target>
-        <note />
-      </trans-unit>
+      <!-- Removed CannotCreateTestExecutionFilterErrorMessage -->
       <trans-unit id="CannotCreateUniqueLogFileErrorMessage">
         <source>Failed to create a unique log file after 3 seconds. Lastly tried file name is '{0}'.</source>
         <target state="translated">3 秒钟后无法创建唯一的日志文件。最后尝试的文件名为“{0}”。</target>
@@ -726,6 +722,10 @@ Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is
       <trans-unit id="StandardError">
         <source>Error output</source>
         <target state="translated">错误输出</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="StandardOutput">
+        <source>Standard output</source>
         <note />
       </trans-unit>
       <trans-unit id="StandardOutput">

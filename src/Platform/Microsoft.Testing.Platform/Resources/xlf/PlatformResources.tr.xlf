@@ -32,16 +32,6 @@
         <target state="translated">Test oturumu iptal ediliyor...</target>
         <note />
       </trans-unit>
-      <trans-unit id="CannotCreateTestExecutionFilterErrorMessage">
-        <source>Failed to create a test execution filter</source>
-        <target state="translated">Test yürütme filtresi oluşturulamadı</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="CannotCreateUniqueLogFileErrorMessage">
-        <source>Failed to create a unique log file after 3 seconds. Lastly tried file name is '{0}'.</source>
-        <target state="translated">Benzersiz bir günlük dosyası 3 saniye sonra oluşturulamadı. Son denenen dosya adı '{0}'.</target>
-        <note />
-      </trans-unit>
       <trans-unit id="CannotRemoveEnvironmentVariableAtThisStageErrorMessage">
         <source>Cannot remove environment variables at this stage</source>
         <target state="translated">Bu aşamada ortam değişkenleri kaldırılamıyor</target>

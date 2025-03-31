@@ -32,11 +32,6 @@
         <target state="translated">Annullamento della sessione di test in corso...</target>
         <note />
       </trans-unit>
-      <trans-unit id="CannotCreateTestExecutionFilterErrorMessage">
-        <source>Failed to create a test execution filter</source>
-        <target state="translated">Non è stato possibile creare un filtro di esecuzione dei test</target>
-        <note />
-      </trans-unit>
       <trans-unit id="CannotCreateUniqueLogFileErrorMessage">
         <source>Failed to create a unique log file after 3 seconds. Lastly tried file name is '{0}'.</source>
         <target state="translated">Impossibile creare un file di log univoco dopo 3 secondi. Il nome del file tentato è '{0}'.</target>
