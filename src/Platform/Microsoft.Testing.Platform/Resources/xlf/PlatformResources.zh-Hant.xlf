@@ -613,11 +613,6 @@ The default is TestResults in the directory that contains the test application.<
       </trans-unit>
       <trans-unit id="PlatformCommandLineTimeoutOptionDescription">
         <source>A global test execution timeout.
-        <target state="translated">'timeout' 選項應該有一個引數作為字串，格式為 &lt;value&gt;[h|m|s]，其中 'value' 為 float</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="PlatformCommandLineTimeoutOptionDescription">
-        <source>A global test execution timeout.
 Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is float.</source>
         <target state="translated">全域測試執行逾時。
 將一個引數作為字串，格式為 &lt;value&gt;[h|m|s]，其中 'value' 為 float。</target>

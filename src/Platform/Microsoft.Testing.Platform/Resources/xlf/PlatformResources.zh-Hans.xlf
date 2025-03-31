@@ -726,10 +726,6 @@ Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is
       </trans-unit>
       <trans-unit id="StandardOutput">
         <source>Standard output</source>
-        <note />
-      </trans-unit>
-      <trans-unit id="StandardOutput">
-        <source>Standard output</source>
         <target state="translated">标准输出</target>
         <note />
       </trans-unit>
