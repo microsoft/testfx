@@ -126,7 +126,7 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
                             artifact.Description ?? string.Empty,
                             testNodeUpdateMessage.TestNode.Uid.Value,
                             testNodeUpdateMessage.TestNode.DisplayName,
-                            artifact.SessionUid.Value),
+                            testNodeUpdateMessage.SessionUid.Value),
                         });
 
                     await _dotnetTestConnection.SendMessageAsync(testFileArtifactMessages);
