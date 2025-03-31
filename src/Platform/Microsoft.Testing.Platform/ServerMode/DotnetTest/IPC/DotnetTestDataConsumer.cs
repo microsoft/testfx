@@ -130,7 +130,6 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
                         });
 
                     await _dotnetTestConnection.SendMessageAsync(testFileArtifactMessages);
-                    break;
                 }
 
                 break;
