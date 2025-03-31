@@ -466,7 +466,7 @@ public class TestClassInfo
                 {
                     if (logListener is not null)
                     {
-                        FixtureMethodRunner.RunOnContext(ExecutionContext, () =>
+                        ExecutionContextHelpers.RunOnContext(ExecutionContext, () =>
                         {
                             initializationLogs += logListener.GetAndClearStandardOutput();
                             initializationTrace += logListener.GetAndClearDebugTrace();
@@ -801,7 +801,7 @@ public class TestClassInfo
                 {
                     if (logListener is not null)
                     {
-                        FixtureMethodRunner.RunOnContext(ExecutionContext, () =>
+                        ExecutionContextHelpers.RunOnContext(ExecutionContext, () =>
                         {
                             initializationLogs = logListener.GetAndClearStandardOutput();
                             initializationErrorLogs = logListener.GetAndClearStandardError();

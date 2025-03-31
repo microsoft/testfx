@@ -215,7 +215,7 @@ internal sealed class ThreadPoolTestNodeRunner : IDisposable
             platformTestNode.Properties.Add(new TrxFullyQualifiedTypeNameProperty(platformTestNode.Uid.Value[..platformTestNode.Uid.Value.LastIndexOf('.')]));
         }
 
-        TestExecutionContext testExecutionContext = new(_configuration, testNode, platformTestNode, _trxReportCapability, _sessionUid, _cancellationToken);
+        TestExecutionContext testExecutionContext = new(_configuration, testNode, platformTestNode, _trxReportCapability, _cancellationToken);
         try
         {
             // If we're already enqueued we cancel the test before the start

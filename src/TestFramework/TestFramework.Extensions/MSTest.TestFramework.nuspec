@@ -5,12 +5,25 @@
     <dependencies>
       <group targetFramework="netstandard2.0">
         <dependency id="MSTest.Analyzers" version="$Version$" />
+
+        <!-- This dependency is used only in adapter, but we have to add it to test framework. -->
+        <!-- See comment in MSTest.TestAdapter.nuspec for info. -->
+        <!-- START: Moved from MSTest.TestAdapter -->
+        <dependency id="System.Threading.Tasks.Extensions" version="$SystemThreadingTasksExtensionsVersion$" />
+        <!-- END: Moved from MSTest.TestAdapter -->
       </group>
       <group targetFramework="net462">
         <dependency id="MSTest.Analyzers" version="$Version$" />
+
+        <!-- This dependency is used only in adapter, but we have to add it to test framework. -->
+        <!-- See comment in MSTest.TestAdapter.nuspec for info. -->
+        <!-- START: Moved from MSTest.TestAdapter -->
+        <dependency id="System.Threading.Tasks.Extensions" version="$SystemThreadingTasksExtensionsVersion$" />
+        <!-- END: Moved from MSTest.TestAdapter -->
       </group>
       <group targetFramework="uap10.0">
         <dependency id="MSTest.Analyzers" version="$Version$" />
+        <dependency id="System.Threading.Tasks.Extensions" version="$SystemThreadingTasksExtensionsVersion$" />
       </group>
       <group targetFramework="netcoreapp3.1">
         <dependency id="MSTest.Analyzers" version="$Version$" />
