@@ -32,7 +32,6 @@
         <target state="translated">正在取消测试会话...</target>
         <note />
       </trans-unit>
-      <!-- Removed CannotCreateTestExecutionFilterErrorMessage -->
       <trans-unit id="CannotCreateUniqueLogFileErrorMessage">
         <source>Failed to create a unique log file after 3 seconds. Lastly tried file name is '{0}'.</source>
         <target state="translated">3 秒钟后无法创建唯一的日志文件。最后尝试的文件名为“{0}”。</target>
@@ -182,11 +181,6 @@
         <source>Console is already in batching mode.</source>
         <target state="translated">控制台已处于批处理模式。</target>
         <note>Exception that is thrown when console is already collecting input into a batch (into a string builder), and code asks to enable batching mode again.</note>
-      </trans-unit>
-      <trans-unit id="ConsoleTestExecutionFilterFactoryDisplayName">
-        <source>Console test execution filter factory</source>
-        <target state="translated">主机测试执行筛选工厂</target>
-        <note />
       </trans-unit>
       <trans-unit id="CouldNotFindDirectoryErrorMessage">
         <source>Could not find directory '{0}'</source>
@@ -657,16 +651,6 @@ Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is
       <trans-unit id="ServerLogMessageDisplayName">
         <source>Server log message</source>
         <target state="translated">服务器日志消息</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ServerTestExecutionFilterFactoryDescription">
-        <source>Creates the right test execution filter for server mode</source>
-        <target state="translated">为服务器模式创建正确的测试执行筛选</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ServerTestExecutionFilterFactoryDisplayName">
-        <source>Server test execution filter factory</source>
-        <target state="translated">服务器测试执行筛选工厂</target>
         <note />
       </trans-unit>
       <trans-unit id="ServerTestHostDescription">

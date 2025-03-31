@@ -32,11 +32,6 @@
         <target state="translated">テスト セッションを取り消しています...</target>
         <note />
       </trans-unit>
-      <trans-unit id="CannotCreateTestExecutionFilterErrorMessage">
-        <source>Failed to create a test execution filter</source>
-        <target state="translated">テスト実行フィルターを作成できませんでした</target>
-        <note />
-      </trans-unit>
       <trans-unit id="CannotCreateUniqueLogFileErrorMessage">
         <source>Failed to create a unique log file after 3 seconds. Lastly tried file name is '{0}'.</source>
         <target state="translated">3 秒後に一意のログ ファイルを作成できませんでした。最後に試行されたファイル名は '{0}' です。</target>
@@ -186,11 +181,6 @@
         <source>Console is already in batching mode.</source>
         <target state="translated">コンソールは既にバッチ 処理モードです。</target>
         <note>Exception that is thrown when console is already collecting input into a batch (into a string builder), and code asks to enable batching mode again.</note>
-      </trans-unit>
-      <trans-unit id="ConsoleTestExecutionFilterFactoryDisplayName">
-        <source>Console test execution filter factory</source>
-        <target state="translated">コンソール テスト実行フィルター ファクトリ</target>
-        <note />
       </trans-unit>
       <trans-unit id="CouldNotFindDirectoryErrorMessage">
         <source>Could not find directory '{0}'</source>
@@ -662,16 +652,6 @@ Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is
       <trans-unit id="ServerLogMessageDisplayName">
         <source>Server log message</source>
         <target state="translated">サーバー ログ メッセージ</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ServerTestExecutionFilterFactoryDescription">
-        <source>Creates the right test execution filter for server mode</source>
-        <target state="translated">サーバー モードに適したテスト実行フィルターを作成します</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ServerTestExecutionFilterFactoryDisplayName">
-        <source>Server test execution filter factory</source>
-        <target state="translated">サーバー テスト実行フィルター ファクトリ</target>
         <note />
       </trans-unit>
       <trans-unit id="ServerTestHostDescription">

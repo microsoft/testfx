@@ -177,16 +177,6 @@
         <target state="translated">Konsol zaten işlem grubu oluşturma modunda bulunuyor.</target>
         <note>Exception that is thrown when console is already collecting input into a batch (into a string builder), and code asks to enable batching mode again.</note>
       </trans-unit>
-      <trans-unit id="ConsoleTestExecutionFilterFactoryDescription">
-        <source>Creates the right test execution filter for console mode</source>
-        <target state="translated">Konsol modu için doğru test yürütme filtresini oluşturur</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ConsoleTestExecutionFilterFactoryDisplayName">
-        <source>Console test execution filter factory</source>
-        <target state="translated">Konsol test yürütme filtresi fabrikası</target>
-        <note />
-      </trans-unit>
       <trans-unit id="CouldNotFindDirectoryErrorMessage">
         <source>Could not find directory '{0}'</source>
         <target state="translated">'{0}' dizini bulunamadı</target>
@@ -656,16 +646,6 @@ Bir bağımsız değişkeni, 'value' değerinin kayan olduğu &lt;value&gt;[h|m|
       <trans-unit id="ServerLogMessageDisplayName">
         <source>Server log message</source>
         <target state="translated">Sunucu günlük iletisi</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ServerTestExecutionFilterFactoryDescription">
-        <source>Creates the right test execution filter for server mode</source>
-        <target state="translated">Sunucu modu için doğru test yürütme filtresini oluşturur</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ServerTestExecutionFilterFactoryDisplayName">
-        <source>Server test execution filter factory</source>
-        <target state="translated">Sunucu test yürütme filtresi fabrikası</target>
         <note />
       </trans-unit>
       <trans-unit id="ServerTestHostDescription">

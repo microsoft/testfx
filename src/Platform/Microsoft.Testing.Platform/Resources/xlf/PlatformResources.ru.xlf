@@ -32,7 +32,6 @@
         <target state="translated">Отмена тестового сеанса...</target>
         <note />
       </trans-unit>
-      <!-- Removed CannotCreateTestExecutionFilterErrorMessage -->
       <trans-unit id="CannotCreateUniqueLogFileErrorMessage">
         <source>Failed to create a unique log file after 3 seconds. Lastly tried file name is '{0}'.</source>
         <target state="translated">Не удалось создать уникальный файл журнала через 3 секунды. Последнее использованное имя файла "{0}".</target>
@@ -182,16 +181,6 @@
         <source>Console is already in batching mode.</source>
         <target state="translated">Консоль уже находится в пакетном режиме.</target>
         <note>Exception that is thrown when console is already collecting input into a batch (into a string builder), and code asks to enable batching mode again.</note>
-      </trans-unit>
-      <trans-unit id="ConsoleTestExecutionFilterFactoryDescription">
-        <source>Creates the right test execution filter for console mode</source>
-        <target state="translated">Создает фильтр выполнения правильного теста для режима консоли</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ConsoleTestExecutionFilterFactoryDisplayName">
-        <source>Console test execution filter factory</source>
-        <target state="translated">Фабрика фильтров выполнения тестов консоли</target>
-        <note />
       </trans-unit>
       <trans-unit id="CouldNotFindDirectoryErrorMessage">
         <source>Could not find directory '{0}'</source>
@@ -662,16 +651,6 @@ Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is
       <trans-unit id="ServerLogMessageDisplayName">
         <source>Server log message</source>
         <target state="translated">Сообщение журнала сервера</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ServerTestExecutionFilterFactoryDescription">
-        <source>Creates the right test execution filter for server mode</source>
-        <target state="translated">Создает фильтр выполнения правильного теста для режима сервера</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ServerTestExecutionFilterFactoryDisplayName">
-        <source>Server test execution filter factory</source>
-        <target state="translated">Фабрика фильтров выполнения тестов сервера</target>
         <note />
       </trans-unit>
       <trans-unit id="ServerTestHostDescription">

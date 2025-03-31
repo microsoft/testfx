@@ -182,16 +182,7 @@
         <target state="translated">콘솔이 이미 일괄 처리 모드에 있습니다.</target>
         <note>Exception that is thrown when console is already collecting input into a batch (into a string builder), and code asks to enable batching mode again.</note>
       </trans-unit>
-      <trans-unit id="ConsoleTestExecutionFilterFactoryDescription">
-        <source>Creates the right test execution filter for console mode</source>
-        <target state="translated">콘솔 모드에 적합한 테스트 실행 필터를 만듬</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ConsoleTestExecutionFilterFactoryDisplayName">
-        <source>Console test execution filter factory</source>
-        <target state="translated">콘솔 테스트 실행 필터 팩터리</target>
-        <note />
-      </trans-unit>
+
       <trans-unit id="CouldNotFindDirectoryErrorMessage">
         <source>Could not find directory '{0}'</source>
         <target state="translated">{0} 디렉터리를 찾을 수 없음</target>
@@ -661,16 +652,6 @@ Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is
       <trans-unit id="ServerLogMessageDisplayName">
         <source>Server log message</source>
         <target state="translated">서버 로그 메시지</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ServerTestExecutionFilterFactoryDescription">
-        <source>Creates the right test execution filter for server mode</source>
-        <target state="translated">서버 모드에 적합한 테스트 실행 필터를 만듬</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ServerTestExecutionFilterFactoryDisplayName">
-        <source>Server test execution filter factory</source>
-        <target state="translated">서버 테스트 실행 필터 팩터리</target>
         <note />
       </trans-unit>
       <trans-unit id="ServerTestHostDescription">

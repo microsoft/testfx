@@ -653,16 +653,6 @@ Může mít jenom jeden argument jako řetězec ve formátu &lt;value&gt;[h|m|s]
         <target state="translated">Zpráva protokolu serveru</target>
         <note />
       </trans-unit>
-      <trans-unit id="ServerTestExecutionFilterFactoryDescription">
-        <source>Creates the right test execution filter for server mode</source>
-        <target state="translated">Vytvoří správný filtr provádění testů pro režim serveru.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ServerTestExecutionFilterFactoryDisplayName">
-        <source>Server test execution filter factory</source>
-        <target state="translated">Objekt pro vytváření filtru provádění testů serveru</target>
-        <note />
-      </trans-unit>
       <trans-unit id="ServerTestHostDescription">
         <source>The 'ITestHost' implementation used when running server mode.</source>
         <target state="translated">Implementace ITestHost použitá při spuštění režimu serveru</target>

@@ -653,16 +653,6 @@ Prend un argument sous forme de chaîne au format &lt;value&gt;[h|m|s] où « v
         <target state="translated">Message du journal du serveur</target>
         <note />
       </trans-unit>
-      <trans-unit id="ServerTestExecutionFilterFactoryDescription">
-        <source>Creates the right test execution filter for server mode</source>
-        <target state="translated">Crée le filtre d’exécution de test approprié pour le mode serveur</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ServerTestExecutionFilterFactoryDisplayName">
-        <source>Server test execution filter factory</source>
-        <target state="translated">Fabrique de filtres d’exécution de tests du serveur</target>
-        <note />
-      </trans-unit>
       <trans-unit id="ServerTestHostDescription">
         <source>The 'ITestHost' implementation used when running server mode.</source>
         <target state="translated">Implémentation 'ITestHost' utilisée lors de l’exécution du mode serveur.</target>
