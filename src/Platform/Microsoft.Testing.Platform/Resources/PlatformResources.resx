@@ -126,9 +126,6 @@
   <data name="ConfigurationManagerCannotFindDefaultJsonConfigurationErrorMessage" xml:space="preserve">
     <value>Could not find the default json configuration</value>
   </data>
-  <data name="ConsoleTestExecutionFilterFactoryDescription" xml:space="preserve">
-    <value>Creates the right test execution filter for console mode</value>
-  </data>
   <data name="ConsoleTestExecutionFilterFactoryDisplayName" xml:space="preserve">
     <value>Console test execution filter factory</value>
   </data>

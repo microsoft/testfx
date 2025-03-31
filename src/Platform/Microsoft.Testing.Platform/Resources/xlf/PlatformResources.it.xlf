@@ -187,11 +187,6 @@
         <target state="translated">La console è già in modalità batch.</target>
         <note>Exception that is thrown when console is already collecting input into a batch (into a string builder), and code asks to enable batching mode again.</note>
       </trans-unit>
-      <trans-unit id="ConsoleTestExecutionFilterFactoryDescription">
-        <source>Creates the right test execution filter for console mode</source>
-        <target state="translated">Crea il filtro di esecuzione dei test corretto per la modalità console</target>
-        <note />
-      </trans-unit>
       <trans-unit id="ConsoleTestExecutionFilterFactoryDisplayName">
         <source>Console test execution filter factory</source>
         <target state="translated">Factory del filtro per l'esecuzione dei test della console</target>

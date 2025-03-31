@@ -187,11 +187,6 @@
         <target state="translated">O console já está no modo de lote.</target>
         <note>Exception that is thrown when console is already collecting input into a batch (into a string builder), and code asks to enable batching mode again.</note>
       </trans-unit>
-      <trans-unit id="ConsoleTestExecutionFilterFactoryDescription">
-        <source>Creates the right test execution filter for console mode</source>
-        <target state="translated">Cria o filtro de execução de teste correto para o modo console</target>
-        <note />
-      </trans-unit>
       <trans-unit id="ConsoleTestExecutionFilterFactoryDisplayName">
         <source>Console test execution filter factory</source>
         <target state="translated">Fábrica de filtros de execução de teste de console</target>
