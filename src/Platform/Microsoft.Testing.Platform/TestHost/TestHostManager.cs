@@ -13,6 +13,10 @@ namespace Microsoft.Testing.Platform.TestHost;
 
 internal sealed class TestHostManager : ITestHostManager
 {
+#pragma warning disable TPEXP
+    private readonly NopFilter _noOpFilter = new();
+#pragma warning restore TPEXP
+
     // Registration ordering
     private readonly List<object> _factoryOrdering = [];
 
@@ -58,15 +62,13 @@ internal sealed class TestHostManager : ITestHostManager
         return ActionResult.Fail<ITestFrameworkInvoker>();
     }
 
-    public async Task<ITestExecutionFilter> BuildFilterAsync(
-        IServiceProvider serviceProvider,
-        ICollection<TestNode>? testNodes)
-    {
-        if (testNodes?.Count > 0)
-        {
-            return new TestNodeUidListFilter(testNodes.Select(x => x.Uid).ToArray());
-        }
+    public Task<ITestExecutionFilter> BuildFilterAsync(ICollection<TestNode>? testNodes)
+        => testNodes is null or { Count: 0 }
+            ? Task.FromResult<ITestExecutionFilter>(_noOpFilter)
+            : Task.FromResult<ITestExecutionFilter>(new TestNodeUidListFilter(testNodes.Select(x => x.Uid).ToArray()));
 
+    public async Task<ITestExecutionFilter> BuildFilterAsync(IServiceProvider serviceProvider)
+    {
         List<ITestExecutionFilter> list = [];
 
         foreach (ITestExecutionFilter testExecutionFilter in _testExecutionFilterFactories
@@ -81,14 +83,12 @@ internal sealed class TestHostManager : ITestHostManager
             .Where(x => x.IsEnabled)
             .ToArray();
 
-        if (requestedFilters.Length == 0)
+        return requestedFilters.Length switch
         {
-#pragma warning disable TPEXP
-            return new NopFilter();
-#pragma warning restore TPEXP
-        }
-
-        return requestedFilters.Length == 1 ? requestedFilters[0] : new AggregateFilter(requestedFilters);
+            0 => _noOpFilter,
+            1 => requestedFilters[0],
+            _ => new AggregateFilter(requestedFilters),
+        };
     }
 
     public void AddTestApplicationLifecycleCallbacks(Func<IServiceProvider, ITestApplicationLifecycleCallbacks> testApplicationLifecycleCallbacks)
@@ -161,7 +161,7 @@ internal sealed class TestHostManager : ITestHostManager
             // Check if we have already extensions of the same type with same id registered
             if (dataConsumers.Any(x => x.Consumer.Uid == service.Uid))
             {
-                (IExtension consumer, int order) = dataConsumers.Single(x => x.Consumer.Uid == service.Uid);
+                (IExtension consumer, int _) = dataConsumers.Single(x => x.Consumer.Uid == service.Uid);
                 throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.ExtensionWithSameUidAlreadyRegisteredErrorMessage, service.Uid, consumer.GetType()));
             }
 

@@ -443,7 +443,7 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
         perRequestTestSessionContext.CancellationToken.ThrowIfCancellationRequested();
 
         ICollection<TestNode>? testNodes = args.TestNodes;
-        ITestExecutionFilter executionFilter = await _testSessionManager.BuildFilterAsync(ServiceProvider, testNodes);
+        ITestExecutionFilter executionFilter = await _testSessionManager.BuildFilterAsync(testNodes);
 
         ServerTestExecutionRequestFactory requestFactory = new(session =>
             method switch

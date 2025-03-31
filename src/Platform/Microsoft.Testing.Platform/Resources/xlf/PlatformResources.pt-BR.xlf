@@ -190,13 +190,13 @@
       <trans-unit id="DiagnosticFileLevelWithAsyncFlush">
         <source>Diagnostic file (level '{0}' with async flush): {1}</source>
         <target state="translated">Arquivo de diagnóstico (nível "{0}" com liberação assíncrona): {1}</target>
-        <note>0 level such as verbose, 
+        <note>0 level such as verbose,
 1 path to file</note>
       </trans-unit>
       <trans-unit id="DiagnosticFileLevelWithFlush">
         <source>Diagnostic file (level '{0}' with sync flush): {1}</source>
         <target state="translated">Arquivo de diagnóstico (nível "{0}" com liberação de sincronização): {1}</target>
-        <note>0 level such as verbose, 
+        <note>0 level such as verbose,
 1 path to file</note>
       </trans-unit>
       <trans-unit id="DiscoveredTestsInAssembly">
@@ -475,7 +475,7 @@ O arquivo será gravado no diretório de saída com o nome log_[yyMMddHHmmssfff]
       <trans-unit id="PlatformCommandLineDiagnosticOutputDirectoryOptionDescription">
         <source>Output directory of the diagnostic logging.
 If not specified the file will be generated inside the default 'TestResults' directory.</source>
-        <target state="translated">Diretório de saída do log de eventos de diagnóstico 
+        <target state="translated">Diretório de saída do log de eventos de diagnóstico
 Se não for especificado, o arquivo será gerado dentro do diretório padrão “TestResults”.</target>
         <note />
       </trans-unit>
@@ -653,6 +653,11 @@ Recebe um argumento como cadeia de caracteres no formato &lt;valor&gt;[h|m|s] em
         <target state="translated">Mensagem de log do servidor</target>
         <note />
       </trans-unit>
+      <trans-unit id="ServerTestHostDescription">
+        <source>The 'ITestHost' implementation used when running server mode.</source>
+        <target state="translated">A implementação 'ITestHost' usada ao executar o modo de servidor.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ServerTestHostDisplayName">
         <source>Server mode test host</source>
         <target state="translated">Host de teste do modo de servidor</target>
@@ -761,7 +766,7 @@ Leia mais sobre a telemetria da Plataforma de Testes da Microsoft: https://aka.m
       <trans-unit id="TerminalOutputOptionDescription">
         <source>Output verbosity when reporting tests.
 Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</source>
-        <target state="translated">Detalhamento da saída ao relatar testes 
+        <target state="translated">Detalhamento da saída ao relatar testes
 Os valores válidos são “Normal”, “Detalhado”. O padrão é “Normal”.</target>
         <note />
       </trans-unit>
