@@ -124,11 +124,11 @@ internal sealed class TestHostManager : ITestHostManager
         return testApplicationLifecycleCallbacks.ToArray();
     }
 
-    public void AddTestExecutionFilter(Func<IServiceProvider, ITestExecutionFilter> testFilterFactory)
+    public void AddTestExecutionFilter(Func<IServiceProvider, ITestExecutionFilter> testFilter)
     {
-        Guard.NotNull(testFilterFactory);
-        _testExecutionFilterFactories.Add(testFilterFactory);
-        _factoryOrdering.Add(testFilterFactory);
+        Guard.NotNull(testFilter);
+        _testExecutionFilterFactories.Add(testFilter);
+        _factoryOrdering.Add(testFilter);
     }
 
     public void AddDataConsumer(Func<IServiceProvider, IDataConsumer> dataConsumerFactory)

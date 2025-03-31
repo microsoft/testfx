@@ -18,7 +18,7 @@ Microsoft.Testing.Platform.Requests.ITestExecutionFilter.IsEnabled.get -> bool
 Microsoft.Testing.Platform.Requests.ITestExecutionFilter.MatchesFilter(Microsoft.Testing.Platform.Extensions.Messages.TestNode! testNode) -> bool
 Microsoft.Testing.Platform.Requests.TestNodeUidListFilter.IsEnabled.get -> bool
 Microsoft.Testing.Platform.Requests.TestNodeUidListFilter.MatchesFilter(Microsoft.Testing.Platform.Extensions.Messages.TestNode! testNode) -> bool
-Microsoft.Testing.Platform.TestHost.ITestHostManager.AddTestExecutionFilter(System.Func<System.IServiceProvider!, Microsoft.Testing.Platform.Requests.ITestExecutionFilter!>! testFilterFactory) -> void
+Microsoft.Testing.Platform.TestHost.ITestHostManager.AddTestExecutionFilter(System.Func<System.IServiceProvider!, Microsoft.Testing.Platform.Requests.ITestExecutionFilter!>! testFilter) -> void
 override Microsoft.Testing.Platform.Extensions.Messages.FileArtifactProperty.Equals(object? obj) -> bool
 override Microsoft.Testing.Platform.Extensions.Messages.FileArtifactProperty.GetHashCode() -> int
 override Microsoft.Testing.Platform.Extensions.Messages.FileArtifactProperty.ToString() -> string!

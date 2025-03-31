@@ -35,8 +35,8 @@ public interface ITestHostManager
     /// <summary>
     /// Registers a test execution filter.
     /// </summary>
-    /// <param name="testFilterFactory">The factory method for creating the a test execution filter.</param>
-    void AddTestExecutionFilter(Func<IServiceProvider, ITestExecutionFilter> testFilterFactory);
+    /// <param name="testFilter">The factory method for creating the a test execution filter.</param>
+    void AddTestExecutionFilter(Func<IServiceProvider, ITestExecutionFilter> testFilter);
 
     /// <summary>
     /// Adds a test session lifetime handle.
