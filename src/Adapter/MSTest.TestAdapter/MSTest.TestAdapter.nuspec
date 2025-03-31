@@ -3,18 +3,22 @@
   <metadata>
     $CommonMetadataElements$
     <dependencies>
+      <!-- 
+        WARNING! MSTest.TestAdapter shouldn't have dependencies unless they are used by MTP only.
+        MSTest.TestAdapter dll is not referenced by the test project, unless it uses MTP. So the dependency 
+        won't be considered by GenerateBindingRedirects target. When user references the same package and
+        upgrades it to version that is newer than what we reference, they will get assembly load failures, because
+        the assembly version is mismatched, and there is not binding redirect to correct it.
+      -->
       <group targetFramework="netstandard2.0">
         <dependency id="Microsoft.Testing.Extensions.VSTestBridge" version="$TestingPlatformVersion$" />
         <dependency id="Microsoft.Testing.Platform.MSBuild" version="$TestingPlatformVersion$" />
-        <dependency id="System.Threading.Tasks.Extensions" version="$SystemThreadingTasksExtensionsVersion$" />
       </group>
       <group targetFramework="net462">
         <dependency id="Microsoft.Testing.Extensions.VSTestBridge" version="$TestingPlatformVersion$" />
         <dependency id="Microsoft.Testing.Platform.MSBuild" version="$TestingPlatformVersion$" />
-        <dependency id="System.Threading.Tasks.Extensions" version="$SystemThreadingTasksExtensionsVersion$" />
       </group>
       <group targetFramework="uap10.0">
-        <dependency id="System.Threading.Tasks.Extensions" version="$SystemThreadingTasksExtensionsVersion$" />
       </group>
       <group targetFramework="netcoreapp3.1">
         <dependency id="Microsoft.Testing.Extensions.VSTestBridge" version="$TestingPlatformVersion$" />

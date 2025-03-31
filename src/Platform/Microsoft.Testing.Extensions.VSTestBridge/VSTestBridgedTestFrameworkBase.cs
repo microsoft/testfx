@@ -52,7 +52,6 @@ public abstract class VSTestBridgedTestFrameworkBase : ITestFramework, IDataProd
     [
         typeof(TestNodeUpdateMessage),
         typeof(SessionFileArtifact),
-        typeof(TestNodeFileArtifact)
     ];
 
     /// <summary>

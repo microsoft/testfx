@@ -198,10 +198,10 @@ internal sealed class UnitTestRunner : MarshalByRefObject
                             RetryResult retryResult = await retryAttribute.ExecuteAsync(
                                 new RetryContext(
                                     async () => await testMethodRunner.ExecuteAsync(
-                                            classInitializeResult.LogOutput!,
-                                            classInitializeResult.LogError!,
-                                            classInitializeResult.DebugTrace!,
-                                            classInitializeResult.TestContextMessages!)));
+                                        classInitializeResult.LogOutput!,
+                                        classInitializeResult.LogError!,
+                                        classInitializeResult.DebugTrace!,
+                                        classInitializeResult.TestContextMessages!), result));
 
                             result = retryResult.TryGetLast() ?? throw ApplicationStateGuard.Unreachable();
                         }

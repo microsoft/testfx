@@ -351,6 +351,16 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
         <target state="translated">System.ComponentModel.DescriptionAttribute nemá žádný vliv na testovací metody</target>
         <note />
       </trans-unit>
+      <trans-unit id="DuplicateDataRowMessageFormat">
+        <source>Do not duplicate 'DataRow' attributes. This is usually a copy/paste error. The attribute indices are '{0}' and '{1}'.</source>
+        <target state="translated">Neduplikujte atributy DataRow. Obvykle se jedná o chybu kopírování a vložení. Indexy atributů jsou {0} a {1}.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DuplicateDataRowTitle">
+        <source>Avoid duplicated 'DataRow' entries</source>
+        <target state="translated">Vyhněte se duplicitním položkám DataRow</target>
+        <note />
+      </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidDescription">
         <source>'DynamicData' entry should have the following layout to be valid:
 - should only be set on a test method;
