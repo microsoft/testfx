@@ -187,11 +187,7 @@
         <target state="translated">La console est déjà en mode de traitement par lot.</target>
         <note>Exception that is thrown when console is already collecting input into a batch (into a string builder), and code asks to enable batching mode again.</note>
       </trans-unit>
-      <trans-unit id="ConsoleTestExecutionFilterFactoryDisplayName">
-        <source>Console test execution filter factory</source>
-        <target state="translated">Fabrique de filtres d’exécution de tests de console</target>
-        <note />
-      </trans-unit>
+      <!-- Removed ConsoleTestExecutionFilterFactoryDisplayName -->
       <trans-unit id="CouldNotFindDirectoryErrorMessage">
         <source>Could not find directory '{0}'</source>
         <target state="translated">Répertoire « {0} » introuvable.</target>

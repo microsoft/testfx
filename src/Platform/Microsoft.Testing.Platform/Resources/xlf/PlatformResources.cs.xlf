@@ -187,11 +187,6 @@
         <target state="translated">Konzole je již v režimu dávkování.</target>
         <note>Exception that is thrown when console is already collecting input into a batch (into a string builder), and code asks to enable batching mode again.</note>
       </trans-unit>
-      <trans-unit id="ConsoleTestExecutionFilterFactoryDisplayName">
-        <source>Console test execution filter factory</source>
-        <target state="translated">Objekt pro vytváření filtru provádění testů konzoly</target>
-        <note />
-      </trans-unit>
       <trans-unit id="CouldNotFindDirectoryErrorMessage">
         <source>Could not find directory '{0}'</source>
         <target state="translated">Nepodařilo se najít adresář {0}.</target>

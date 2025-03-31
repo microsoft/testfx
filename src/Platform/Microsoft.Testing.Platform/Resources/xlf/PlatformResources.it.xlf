@@ -187,11 +187,6 @@
         <target state="translated">La console è già in modalità batch.</target>
         <note>Exception that is thrown when console is already collecting input into a batch (into a string builder), and code asks to enable batching mode again.</note>
       </trans-unit>
-      <trans-unit id="ConsoleTestExecutionFilterFactoryDisplayName">
-        <source>Console test execution filter factory</source>
-        <target state="translated">Factory del filtro per l'esecuzione dei test della console</target>
-        <note />
-      </trans-unit>
       <trans-unit id="CouldNotFindDirectoryErrorMessage">
         <source>Could not find directory '{0}'</source>
         <target state="translated">Non è stato possibile trovare la directory '{0}'</target>
