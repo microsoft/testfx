@@ -141,11 +141,11 @@
   <data name="JsonConfigurationFileParserUnsupportedTokenErrorMessage" xml:space="preserve">
     <value>Unsupported JSON token '{0}' was found</value>
   </data>
-  <data name="ServerTestExecutionFilterFactoryDescription" xml:space="preserve">
-    <value>Creates the right test execution filter for server mode</value>
-  </data>
   <data name="ServerTestExecutionFilterFactoryDisplayName" xml:space="preserve">
     <value>Server test execution filter factory</value>
+  </data>
+  <data name="ServerTestExecutionFilterFactoryDescription" xml:space="preserve">
+    <value>Creates the right test execution filter for server mode</value>
   </data>
   <data name="ServiceProviderCannotFindServiceErrorMessage" xml:space="preserve">
     <value>Cannot find service of type '{0}'</value>
