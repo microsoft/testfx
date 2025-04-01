@@ -86,6 +86,25 @@ public sealed class FiltersTests
         Assert.IsTrue(((AggregateFilter)testExecutionFilter).InnerFilters[1] is Filter2);
     }
 
+    [TestMethod]
+    public async Task AggregateFilter_CallsInner_IReceivesAllTestNodesExtension_When_Called_Itself()
+    {
+        ITestExecutionFilter testExecutionFilter = await GetBuiltFilter(testHost =>
+        {
+            testHost.AddTestExecutionFilter(_ => new ReceivableTestNodesFilter());
+            testHost.AddTestExecutionFilter(_ => new ReceivableTestNodesFilter());
+            testHost.AddTestExecutionFilter(_ => new ReceivableTestNodesFilter());
+            testHost.AddTestExecutionFilter(_ => new ReceivableTestNodesFilter());
+            testHost.AddTestExecutionFilter(_ => new ReceivableTestNodesFilter());
+        });
+
+        Assert.IsTrue(testExecutionFilter is AggregateFilter);
+
+        ((AggregateFilter)testExecutionFilter).ReceiveTestNodes([]);
+
+        Assert.IsTrue(((AggregateFilter)testExecutionFilter).InnerFilters.Cast<ReceivableTestNodesFilter>().All(x => x.ReceivedTestNodes));
+    }
+
     private static async Task<ITestExecutionFilter> GetBuiltFilter(Action<ITestHostManager> action)
     {
         TestApplicationBuilder builder = CreateTestBuilder();
@@ -125,6 +144,17 @@ public sealed class FiltersTests
         public bool IsEnabled { get; init; } = true;
 
         public bool MatchesFilter(TestNode testNode) => true;
+    }
+
+    private class ReceivableTestNodesFilter : ITestExecutionFilter, IReceivesAllTestNodesExtension
+    {
+        public bool ReceivedTestNodes { get; set; }
+
+        public bool IsEnabled { get; init; } = true;
+
+        public bool MatchesFilter(TestNode testNode) => true;
+
+        public void ReceiveTestNodes(IReadOnlyList<TestNode> testNodes) => ReceivedTestNodes = true;
     }
 
     private class DummyFramework : ITestFramework
