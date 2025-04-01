@@ -33,4 +33,4 @@ Contributors should ensure they follow these guidelines when making submissions.
 
 ## Developing
 
-Plese see our [Dev Guide](./docs/dev-guide.md) which explains how to develop, build, and test.
+Please see our [Dev Guide](./docs/dev-guide.md) which explains how to develop, build, and test.
