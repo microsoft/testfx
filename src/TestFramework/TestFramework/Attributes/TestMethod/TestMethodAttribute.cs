@@ -10,18 +10,22 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// <remarks>
 /// <list type="bullet">
 /// <item>
+/// <description>
 /// When using other attributes like <see cref="DataRowAttribute" /> or <see cref="DynamicDataAttribute" />,
 /// the use of <see cref="TestMethodAttribute" /> is still required.
+/// </description>
 /// </item>
 /// <item>
+/// <description>
 /// Test methods must be:
 /// <list type="bullet">
-/// <item>public, or if <see cref="DiscoverInternalsAttribute"/> is used then it can be internal.</item>
-/// <item>not static</item>
-/// <item>not generic</item>
-/// <item>not abstract</item>
-/// <item>return type is either <see langword="void"/>, <see cref="Task"/>, or <see cref="ValueTask"/>. If <see langword="void"/>, then it shouldn't be <see langword="async"/>.</item>
+/// <item><description>public, or if <see cref="DiscoverInternalsAttribute"/> is used then it can be internal.</description></item>
+/// <item><description>not static</description></item>
+/// <item><description>not generic</description></item>
+/// <item><description>not abstract</description></item>
+/// <item><description>return type is either <see langword="void"/>, <see cref="Task"/>, or <see cref="ValueTask"/>. If <see langword="void"/>, then it shouldn't be <see langword="async"/>.</description></item>
 /// </list>
+/// </description>
 /// </item>
 /// </list>
 /// </remarks>
