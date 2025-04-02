@@ -8,10 +8,30 @@ namespace Microsoft.Testing.Platform.Helpers;
 [SuppressMessage("ApiDesign", "RS0030:Do not use banned APIs", Justification = "This is the Process wrapper.")]
 internal sealed class SystemProcessHandler : IProcessHandler
 {
-#pragma warning disable CA1416 // Validate platform compatibility
-    public IProcess GetCurrentProcess() => new SystemProcess(Process.GetCurrentProcess());
+    public async Task KillAsync(int id)
+    {
+        using var process = Process.GetProcessById(id);
+        process.Kill();
+        await process.WaitForExitAsync();
+    }
 
-    public IProcess GetProcessById(int pid) => new SystemProcess(Process.GetProcessById(pid));
+    public int GetCurrentProcessId()
+    {
+        using var process = Process.GetCurrentProcess();
+        return process.Id;
+    }
+
+    public (int Id, string Name) GetCurrentProcessInfo()
+    {
+        using var process = Process.GetCurrentProcess();
+        return (process.Id, process.ProcessName);
+    }
+
+    public string? GetCurrentProcessFileName()
+    {
+        using var process = Process.GetCurrentProcess();
+        return process.MainModule?.FileName;
+    }
 
     public IProcess Start(ProcessStartInfo startInfo)
     {
