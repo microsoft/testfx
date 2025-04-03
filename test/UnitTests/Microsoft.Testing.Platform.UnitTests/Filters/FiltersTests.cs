@@ -69,7 +69,15 @@ public sealed class FiltersTests
             testHost.AddTestExecutionFilter(_ => new Filter2());
         });
 
-        Assert.IsTrue(testExecutionFilter is Filter2);
+        Assert.IsInstanceOfType<AggregateFilter>(testExecutionFilter);
+
+        ITestExecutionFilter filter1 = ((AggregateFilter)testExecutionFilter).InnerFilters[0];
+        Assert.IsInstanceOfType<Filter1>(filter1);
+        Assert.IsFalse(await filter1.IsEnabledAsync());
+
+        ITestExecutionFilter filter2 = ((AggregateFilter)testExecutionFilter).InnerFilters[0];
+        Assert.IsInstanceOfType<Filter2>(filter2);
+        Assert.IsTrue(await filter2.IsEnabledAsync());
     }
 
     [TestMethod]
@@ -89,6 +97,7 @@ public sealed class FiltersTests
     private static async Task<ITestExecutionFilter> GetBuiltFilter(Action<ITestHostManager> action)
     {
         TestApplicationBuilder builder = CreateTestBuilder();
+
         builder.RegisterTestFramework(
             _ => new TestFrameworkCapabilities(),
             (_, _) => new DummyFramework());
@@ -103,8 +112,7 @@ public sealed class FiltersTests
 
         var framework = (DummyFramework)GetInnerFramework((TestFrameworkProxy)app.ServiceProvider.GetTestFramework());
 
-        ITestExecutionFilter testExecutionFilter = framework.Filter;
-        return testExecutionFilter;
+        return framework.Filter;
     }
 
     private static TestApplicationBuilder CreateTestBuilder()

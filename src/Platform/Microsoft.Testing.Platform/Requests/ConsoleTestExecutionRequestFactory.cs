@@ -3,17 +3,21 @@
 
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Helpers;
-using Microsoft.Testing.Platform.TestHost;
+using Microsoft.Testing.Platform.Services;
+
+using TestSessionContext = Microsoft.Testing.Platform.TestHost.TestSessionContext;
 
 namespace Microsoft.Testing.Platform.Requests;
 
-internal sealed class ConsoleTestExecutionRequestFactory(ICommandLineOptions commandLineService, ITestExecutionFilter testExecutionFilter) : ITestExecutionRequestFactory
+internal sealed class ConsoleTestExecutionRequestFactory(ServiceProvider serviceProvider) : ITestExecutionRequestFactory
 {
     public Task<TestExecutionRequest> CreateRequestAsync(TestSessionContext session)
     {
-        ApplicationStateGuard.Ensure(testExecutionFilter is not null);
+        ApplicationStateGuard.Ensure(serviceProvider is not null);
 
-        TestExecutionRequest testExecutionRequest = commandLineService.IsOptionSet(PlatformCommandLineProvider.DiscoverTestsOptionKey)
+        ITestExecutionFilter testExecutionFilter = serviceProvider.GetTestExecutionFilter();
+
+        TestExecutionRequest testExecutionRequest = serviceProvider.GetCommandLineOptions().IsOptionSet(PlatformCommandLineProvider.DiscoverTestsOptionKey)
             ? new DiscoverTestExecutionRequest(session, testExecutionFilter)
             : new RunTestExecutionRequest(session, testExecutionFilter);
 
