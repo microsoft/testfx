@@ -55,6 +55,11 @@ public sealed class TreeNodeFilter : ITestExecutionFilter
     /// <inheritdoc />
     public Task<bool> MatchesFilterAsync(TestNode testNode)
     {
+        if (_filters.Count == 0)
+        {
+            return Task.FromResult(true);
+        }
+
         string path = BuildNodePath(testNode);
 
         return Task.FromResult(MatchesFilter(path, testNode.Properties));
