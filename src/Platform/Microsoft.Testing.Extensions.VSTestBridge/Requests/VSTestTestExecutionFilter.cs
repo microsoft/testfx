@@ -27,8 +27,8 @@ public sealed class VSTestTestExecutionFilter : ITestExecutionFilter
     internal static VSTestTestExecutionFilter Instance { get; } = new();
 
     /// <inheritdoc />
-    public bool IsEnabled => false;
+    public Task<bool> IsEnabledAsync() => Task.FromResult(false);
 
     /// <inheritdoc />
-    public bool MatchesFilter(TestNode testNode) => false;
+    public Task<bool> MatchesFilterAsync(TestNode testNode) => Task.FromResult(false);
 }

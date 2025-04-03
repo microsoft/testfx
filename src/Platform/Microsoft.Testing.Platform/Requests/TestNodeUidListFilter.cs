@@ -22,8 +22,8 @@ public sealed class TestNodeUidListFilter : ITestExecutionFilter
     public TestNodeUid[] TestNodeUids { get; }
 
     /// <inheritdoc />
-    public bool IsEnabled => TestNodeUids.Length > 0;
+    public Task<bool> IsEnabledAsync() => Task.FromResult(TestNodeUids.Length > 0);
 
     /// <inheritdoc />
-    public bool MatchesFilter(TestNode testNode) => TestNodeUids.Contains(testNode.Uid);
+    public Task<bool> MatchesFilterAsync(TestNode testNode) => Task.FromResult(TestNodeUids.Contains(testNode.Uid));
 }

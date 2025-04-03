@@ -23,12 +23,13 @@ public sealed class TreeNodeFilter : ITestExecutionFilter
     // Note: After the token gets expanded into regex ** gets converted to .*.*.
     internal const string AllNodesBelowRegexString = ".*.*";
     private readonly List<FilterExpression> _filters;
+    private readonly bool _isEnabled;
 
     internal TreeNodeFilter(ICommandLineOptions commandLineOptions)
     {
-        IsEnabled = commandLineOptions.IsOptionSet(TreeNodeFilterCommandLineOptionsProvider.TreenodeFilter);
+        _isEnabled = commandLineOptions.IsOptionSet(TreeNodeFilterCommandLineOptionsProvider.TreenodeFilter);
 
-        if (IsEnabled)
+        if (_isEnabled)
         {
             commandLineOptions.TryGetOptionArgumentList(
                 TreeNodeFilterCommandLineOptionsProvider.TreenodeFilter,
@@ -49,14 +50,14 @@ public sealed class TreeNodeFilter : ITestExecutionFilter
     public string Filter { get; } = string.Empty;
 
     /// <inheritdoc />
-    public bool IsEnabled { get; }
+    public Task<bool> IsEnabledAsync() => Task.FromResult(_isEnabled);
 
     /// <inheritdoc />
-    public bool MatchesFilter(TestNode testNode)
+    public Task<bool> MatchesFilterAsync(TestNode testNode)
     {
         string path = BuildNodePath(testNode);
 
-        return MatchesFilter(path, testNode.Properties);
+        return Task.FromResult(MatchesFilter(path, testNode.Properties));
     }
 
     private static string BuildNodePath(TestNode testNode)

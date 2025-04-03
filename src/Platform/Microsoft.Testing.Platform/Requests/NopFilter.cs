@@ -13,8 +13,8 @@ namespace Microsoft.Testing.Platform.Requests;
 public sealed class NopFilter : ITestExecutionFilter
 {
     /// <inheritdoc />
-    public bool IsEnabled => true;
+    public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 
     /// <inheritdoc />
-    public bool MatchesFilter(TestNode testNode) => true;
+    public Task<bool> MatchesFilterAsync(TestNode testNode) => Task.FromResult(true);
 }

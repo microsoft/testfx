@@ -69,21 +69,17 @@ internal sealed class TestHostManager : ITestHostManager
 
     public async Task<ITestExecutionFilter> BuildFilterAsync(IServiceProvider serviceProvider)
     {
-        List<ITestExecutionFilter> list = [];
+        List<ITestExecutionFilter> requestedFilters = [];
 
         foreach (ITestExecutionFilter testExecutionFilter in _testExecutionFilterFactories
                      .Select(testExecutionFilterFactory => testExecutionFilterFactory(serviceProvider)))
         {
             await testExecutionFilter.TryInitializeAsync();
 
-            list.Add(testExecutionFilter);
+            requestedFilters.Add(testExecutionFilter);
         }
 
-        ITestExecutionFilter[] requestedFilters = list
-            .Where(x => x.IsEnabled)
-            .ToArray();
-
-        return requestedFilters.Length switch
+        return requestedFilters.Count switch
         {
             0 => _noOpFilter,
             1 => requestedFilters[0],

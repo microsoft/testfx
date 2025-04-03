@@ -13,12 +13,12 @@ public interface ITestExecutionFilter
     /// <summary>
     /// Gets a value indicating whether the filter should be used for filtering.
     /// </summary>
-    bool IsEnabled { get; }
+    Task<bool> IsEnabledAsync();
 
     /// <summary>
     /// Determines whether the specified test node matches the filter criteria.
     /// </summary>
     /// <param name="testNode">The test node to check against the filter.</param>
     /// <returns><c>true</c> if the test node matches the filter; otherwise, <c>false</c>.</returns>
-    bool MatchesFilter(TestNode testNode);
+    Task<bool> MatchesFilterAsync(TestNode testNode);
 }

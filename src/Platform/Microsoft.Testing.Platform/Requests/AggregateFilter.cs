@@ -17,8 +17,24 @@ public sealed class AggregateFilter(params IReadOnlyList<ITestExecutionFilter> i
     public IReadOnlyList<ITestExecutionFilter> InnerFilters { get; } = innerFilters;
 
     /// <inheritdoc />
-    public bool IsEnabled => true;
+    public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 
     /// <inheritdoc />
-    public bool MatchesFilter(TestNode testNode) => InnerFilters.All(x => x.MatchesFilter(testNode));
+    public async Task<bool> MatchesFilterAsync(TestNode testNode)
+    {
+        foreach (ITestExecutionFilter testExecutionFilter in InnerFilters)
+        {
+            if (!await testExecutionFilter.IsEnabledAsync())
+            {
+                continue;
+            }
+
+            if (!await testExecutionFilter.MatchesFilterAsync(testNode))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
 }

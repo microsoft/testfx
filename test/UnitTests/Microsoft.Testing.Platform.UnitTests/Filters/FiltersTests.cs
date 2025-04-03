@@ -115,16 +115,30 @@ public sealed class FiltersTests
 
     private class Filter1 : ITestExecutionFilter
     {
-        public bool IsEnabled { get; init; } = true;
+        private readonly bool _isEnabled = true;
 
-        public bool MatchesFilter(TestNode testNode) => true;
+        public bool IsEnabled
+        {
+            init => _isEnabled = value;
+        }
+
+        public Task<bool> IsEnabledAsync() => Task.FromResult(_isEnabled);
+
+        public Task<bool> MatchesFilterAsync(TestNode testNode) => Task.FromResult(true);
     }
 
     private class Filter2 : ITestExecutionFilter
     {
-        public bool IsEnabled { get; init; } = true;
+        private readonly bool _isEnabled = true;
 
-        public bool MatchesFilter(TestNode testNode) => true;
+        public bool IsEnabled
+        {
+            init => _isEnabled = value;
+        }
+
+        public Task<bool> IsEnabledAsync() => Task.FromResult(_isEnabled);
+
+        public Task<bool> MatchesFilterAsync(TestNode testNode) => Task.FromResult(true);
     }
 
     private class DummyFramework : ITestFramework
