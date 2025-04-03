@@ -40,7 +40,8 @@ public sealed class TreeNodeFilter : ITestExecutionFilter
         }
         else
         {
-            _filters = [];
+            Filter = string.Empty;
+            _filters = [new NopExpression()];
         }
     }
 
