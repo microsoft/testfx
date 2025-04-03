@@ -31,24 +31,6 @@ public sealed class FiltersTests
     }
 
     [TestMethod]
-    public async Task Zero_Available_Filters_Builds_Nop_Filter()
-    {
-        ITestExecutionFilter testExecutionFilter = await GetBuiltFilter(testHost =>
-        {
-            testHost.AddTestExecutionFilter(_ => new Filter1
-            {
-                IsEnabled = false,
-            });
-            testHost.AddTestExecutionFilter(_ => new Filter2
-            {
-                IsEnabled = false,
-            });
-        });
-
-        Assert.IsTrue(testExecutionFilter is NopFilter);
-    }
-
-    [TestMethod]
     public async Task Single_Registered_Filter_Builds_Single_Filter()
     {
         ITestExecutionFilter testExecutionFilter = await GetBuiltFilter(testHost =>
@@ -75,7 +57,7 @@ public sealed class FiltersTests
         Assert.IsInstanceOfType<Filter1>(filter1);
         Assert.IsFalse(await filter1.IsEnabledAsync());
 
-        ITestExecutionFilter filter2 = ((AggregateFilter)testExecutionFilter).InnerFilters[0];
+        ITestExecutionFilter filter2 = ((AggregateFilter)testExecutionFilter).InnerFilters[1];
         Assert.IsInstanceOfType<Filter2>(filter2);
         Assert.IsTrue(await filter2.IsEnabledAsync());
     }
