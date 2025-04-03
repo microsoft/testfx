@@ -45,9 +45,6 @@ internal sealed class ConsoleTestHost(
         // Add the ClientInfo service to the service provider
         ServiceProvider.TryAddService(ClientInfoService);
 
-        // Use user provided filter or create no-op one.
-        ITestExecutionFilter filter = await _testHostManager.BuildFilterAsync(ServiceProvider);
-
         // Use user provided filter factory or create console default one.
         ITestFrameworkInvoker testAdapterInvoker = ServiceProvider.GetService<ITestFrameworkInvoker>()
             ?? new TestHostTestFrameworkInvoker(ServiceProvider);
@@ -55,7 +52,7 @@ internal sealed class ConsoleTestHost(
         ServiceProvider.TryAddService(new Services.TestSessionContext(abortRun));
         ITestFramework testFramework = await _buildTestFrameworkAsync(new TestFrameworkBuilderData(
             ServiceProvider,
-            new ConsoleTestExecutionRequestFactory(ServiceProvider.GetCommandLineOptions(), filter),
+            new ConsoleTestExecutionRequestFactory(ServiceProvider.GetCommandLineOptions(), ServiceProvider.GetTestExecutionFilter()),
             testAdapterInvoker,
             ServiceProvider.GetPlatformOutputDevice(),
             [],

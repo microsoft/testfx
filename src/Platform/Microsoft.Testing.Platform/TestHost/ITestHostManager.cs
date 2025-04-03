@@ -39,6 +39,14 @@ public interface ITestHostManager
     void AddTestExecutionFilter(Func<IServiceProvider, ITestExecutionFilter> testFilter);
 
     /// <summary>
+    /// Adds a filter of type T.
+    /// </summary>
+    /// <typeparam name="T">The type of the filter.</typeparam>
+    /// <param name="compositeServiceFactory">The composite extension factory for creating the filter.</param>
+    void AddTestExecutionFilter<T>(CompositeExtensionFactory<T> compositeServiceFactory)
+        where T : class, ITestExecutionFilter;
+
+    /// <summary>
     /// Adds a test session lifetime handle.
     /// </summary>
     /// <param name="testSessionLifetimeHandleFactory">The factory method for creating the test session lifetime handle.</param>

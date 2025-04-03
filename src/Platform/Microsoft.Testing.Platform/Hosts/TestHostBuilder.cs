@@ -671,12 +671,17 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
             List<ICompositeExtensionFactory> newBuiltCompositeServices = [];
             (IExtension Consumer, int RegistrationOrder)[] consumers = await testFrameworkBuilderData.TestSessionManager.BuildDataConsumersAsync(serviceProvider, newBuiltCompositeServices);
             (IExtension TestSessionLifetimeHandler, int RegistrationOrder)[] sessionLifeTimeHandlers = await testFrameworkBuilderData.TestSessionManager.BuildTestSessionLifetimeHandleAsync(serviceProvider, newBuiltCompositeServices);
+            (ITestExecutionFilter TestExecutionFilter, int RegistrationOrder)[] testExecutionFilters = await testFrameworkBuilderData.TestSessionManager.BuildFilterAsync(serviceProvider, newBuiltCompositeServices);
 
             // Register the test session lifetime handlers for the notifications
             testSessionLifetimeHandlers.AddRange(sessionLifeTimeHandlers.OrderBy(x => x.RegistrationOrder).Select(x => (ITestSessionLifetimeHandler)x.TestSessionLifetimeHandler));
 
             // Keep the registration order
-            foreach ((IExtension Extension, int _) testhostExtension in consumers.Union(sessionLifeTimeHandlers).OrderBy(x => x.RegistrationOrder))
+            foreach ((object Extension, int _) testhostExtension in consumers
+                         .Union(sessionLifeTimeHandlers)
+                         .Select(tuple => (tuple.Item1 as object, tuple.RegistrationOrder))
+                         .Union(testExecutionFilters.Select(tuple => (tuple.TestExecutionFilter as object, tuple.RegistrationOrder)))
+                         .OrderBy(x => x.RegistrationOrder))
             {
                 if (testhostExtension.Extension is IDataConsumer)
                 {

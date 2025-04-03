@@ -119,6 +119,25 @@ public static class ServiceProviderExtensions
     public static IClientInfo GetClientInfo(this IServiceProvider serviceProvider)
         => serviceProvider.GetRequiredServiceInternal<IClientInfo>();
 
+    /// <summary>
+    /// Gets the ITestExecutionFilter from the <see cref="IServiceProvider"/>.
+    /// </summary>
+    /// <param name="serviceProvider">The service provider.</param>
+    /// <returns>The ITestExecutionFilter object.</returns>
+    public static ITestExecutionFilter GetTestExecutionFilter(this IServiceProvider serviceProvider)
+    {
+        ITestExecutionFilter[] filters = serviceProvider.GetServices<ITestExecutionFilter>().ToArray();
+
+        return filters.Length switch
+        {
+#pragma warning disable TPEXP
+            0 => new NopFilter(),
+#pragma warning restore TPEXP
+            1 => filters[0],
+            _ => new AggregateFilter(filters),
+        };
+    }
+
     // Internals extensions
     internal static TService GetRequiredServiceInternal<TService>(this IServiceProvider provider)
         where TService : notnull

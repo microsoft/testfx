@@ -19,12 +19,14 @@ Microsoft.Testing.Platform.Requests.ITestExecutionFilter.MatchesFilterAsync(Micr
 Microsoft.Testing.Platform.Requests.TestNodeUidListFilter.IsEnabledAsync() -> System.Threading.Tasks.Task<bool>!
 Microsoft.Testing.Platform.Requests.TestNodeUidListFilter.MatchesFilterAsync(Microsoft.Testing.Platform.Extensions.Messages.TestNode! testNode) -> System.Threading.Tasks.Task<bool>!
 Microsoft.Testing.Platform.TestHost.ITestHostManager.AddTestExecutionFilter(System.Func<System.IServiceProvider!, Microsoft.Testing.Platform.Requests.ITestExecutionFilter!>! testFilter) -> void
+Microsoft.Testing.Platform.TestHost.ITestHostManager.AddTestExecutionFilter<T>(Microsoft.Testing.Platform.Extensions.CompositeExtensionFactory<T!>! compositeServiceFactory) -> void
 override Microsoft.Testing.Platform.Extensions.Messages.FileArtifactProperty.Equals(object? obj) -> bool
 override Microsoft.Testing.Platform.Extensions.Messages.FileArtifactProperty.GetHashCode() -> int
 override Microsoft.Testing.Platform.Extensions.Messages.FileArtifactProperty.ToString() -> string!
 static Microsoft.Testing.Platform.Extensions.Messages.FileArtifactProperty.operator !=(Microsoft.Testing.Platform.Extensions.Messages.FileArtifactProperty? left, Microsoft.Testing.Platform.Extensions.Messages.FileArtifactProperty? right) -> bool
 static Microsoft.Testing.Platform.Extensions.Messages.FileArtifactProperty.operator ==(Microsoft.Testing.Platform.Extensions.Messages.FileArtifactProperty? left, Microsoft.Testing.Platform.Extensions.Messages.FileArtifactProperty? right) -> bool
 static Microsoft.Testing.Platform.Services.ServiceProviderExtensions.GetServices<TService>(this System.IServiceProvider! provider) -> System.Collections.Generic.IEnumerable<TService!>!
+static Microsoft.Testing.Platform.Services.ServiceProviderExtensions.GetTestExecutionFilter(this System.IServiceProvider! serviceProvider) -> Microsoft.Testing.Platform.Requests.ITestExecutionFilter!
 virtual Microsoft.Testing.Platform.Extensions.Messages.FileArtifactProperty.<Clone>$() -> Microsoft.Testing.Platform.Extensions.Messages.FileArtifactProperty!
 virtual Microsoft.Testing.Platform.Extensions.Messages.FileArtifactProperty.EqualityContract.get -> System.Type!
 virtual Microsoft.Testing.Platform.Extensions.Messages.FileArtifactProperty.Equals(Microsoft.Testing.Platform.Extensions.Messages.FileArtifactProperty? other) -> bool
