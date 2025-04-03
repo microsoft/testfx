@@ -86,60 +86,6 @@ public sealed class FiltersTests
         Assert.IsTrue(((AggregateFilter)testExecutionFilter).InnerFilters[1] is Filter2);
     }
 
-    [TestMethod]
-    public async Task AggregateFilter_CallsInner_IReceivesAllTestNodesExtension_When_Called_Itself()
-    {
-        ITestExecutionFilter testExecutionFilter = await GetBuiltFilter(testHost =>
-        {
-            testHost.AddTestExecutionFilter(_ => new ReceivableTestNodesFilter());
-            testHost.AddTestExecutionFilter(_ => new ReceivableTestNodesFilter());
-            testHost.AddTestExecutionFilter(_ => new ReceivableTestNodesFilter());
-            testHost.AddTestExecutionFilter(_ => new ReceivableTestNodesFilter());
-            testHost.AddTestExecutionFilter(_ => new ReceivableTestNodesFilter());
-        });
-
-        Assert.IsTrue(testExecutionFilter is AggregateFilter);
-
-        ((AggregateFilter)testExecutionFilter).ReceiveTestNodes([]);
-
-        Assert.IsTrue(((AggregateFilter)testExecutionFilter).InnerFilters.Cast<ReceivableTestNodesFilter>().All(x => x.ReceivedTestNodes));
-    }
-
-    [TestMethod]
-    public async Task Batch_ReceivesAllTestNodes_Filter_Example()
-    {
-        TestNode[] testNodes =
-        [
-            new() { Uid = "1", DisplayName = "Test1", },
-            new() { Uid = "2", DisplayName = "Test2", },
-            new() { Uid = "3", DisplayName = "Test3", },
-            new() { Uid = "4", DisplayName = "Test4", },
-            new() { Uid = "5", DisplayName = "Test5", },
-            new() { Uid = "6", DisplayName = "Test6", },
-            new() { Uid = "7", DisplayName = "Test7", },
-            new() { Uid = "8", DisplayName = "Test8", },
-            new() { Uid = "9", DisplayName = "Test9", },
-            new() { Uid = "10", DisplayName = "Test10", },
-        ];
-
-        ITestExecutionFilter testExecutionFilter = await GetBuiltFilter(testHost => testHost.AddTestExecutionFilter(_ => new DummyBatchFilter()));
-
-        Assert.IsTrue(testExecutionFilter is DummyBatchFilter);
-
-        ((DummyBatchFilter)testExecutionFilter).ReceiveTestNodes(testNodes);
-
-        Assert.IsFalse(testExecutionFilter.MatchesFilter(testNodes[0]));
-        Assert.IsFalse(testExecutionFilter.MatchesFilter(testNodes[1]));
-        Assert.IsFalse(testExecutionFilter.MatchesFilter(testNodes[2]));
-        Assert.IsFalse(testExecutionFilter.MatchesFilter(testNodes[3]));
-        Assert.IsTrue(testExecutionFilter.MatchesFilter(testNodes[4]));
-        Assert.IsTrue(testExecutionFilter.MatchesFilter(testNodes[5]));
-        Assert.IsFalse(testExecutionFilter.MatchesFilter(testNodes[6]));
-        Assert.IsFalse(testExecutionFilter.MatchesFilter(testNodes[7]));
-        Assert.IsFalse(testExecutionFilter.MatchesFilter(testNodes[8]));
-        Assert.IsFalse(testExecutionFilter.MatchesFilter(testNodes[9]));
-    }
-
     private static async Task<ITestExecutionFilter> GetBuiltFilter(Action<ITestHostManager> action)
     {
         TestApplicationBuilder builder = CreateTestBuilder();
@@ -179,35 +125,6 @@ public sealed class FiltersTests
         public bool IsEnabled { get; init; } = true;
 
         public bool MatchesFilter(TestNode testNode) => true;
-    }
-
-    private class DummyBatchFilter : ITestExecutionFilter, IReceivesAllTestNodesExtension
-    {
-        private TestNode[][]? _batches;
-
-        private const int BatchIndex = 2;
-
-        private const int BatchSplitSize = 5;
-
-        public bool IsEnabled => true;
-
-        public bool MatchesFilter(TestNode testNode) =>
-            _batches == null
-                ? throw new InvalidOperationException("Test nodes not received from test framework.")
-                : _batches[BatchIndex].Contains(testNode);
-
-        public void ReceiveTestNodes(IReadOnlyList<TestNode> allTestNodes) => _batches = allTestNodes.Chunk(allTestNodes.Count / BatchSplitSize).ToArray();
-    }
-
-    private class ReceivableTestNodesFilter : ITestExecutionFilter, IReceivesAllTestNodesExtension
-    {
-        public bool ReceivedTestNodes { get; set; }
-
-        public bool IsEnabled { get; init; } = true;
-
-        public bool MatchesFilter(TestNode testNode) => true;
-
-        public void ReceiveTestNodes(IReadOnlyList<TestNode> testNodes) => ReceivedTestNodes = true;
     }
 
     private class DummyFramework : ITestFramework

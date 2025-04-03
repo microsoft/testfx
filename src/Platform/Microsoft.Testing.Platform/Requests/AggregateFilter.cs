@@ -10,7 +10,7 @@ namespace Microsoft.Testing.Platform.Requests;
 /// Represents an aggregate filter for test execution that combines multiple filters.
 /// </summary>
 /// <param name="innerFilters">The list of inner filters to combine.</param>
-public sealed class AggregateFilter(params IReadOnlyList<ITestExecutionFilter> innerFilters) : ITestExecutionFilter, IReceivesAllTestNodesExtension
+public sealed class AggregateFilter(params IReadOnlyList<ITestExecutionFilter> innerFilters) : ITestExecutionFilter
 {
     /// <summary>
     /// Gets the list of inner filters.
@@ -22,14 +22,4 @@ public sealed class AggregateFilter(params IReadOnlyList<ITestExecutionFilter> i
 
     /// <inheritdoc />
     public bool MatchesFilter(TestNode testNode) => InnerFilters.All(x => x.MatchesFilter(testNode));
-
-    /// <inheritdoc />
-    public void ReceiveTestNodes(IReadOnlyList<TestNode> testNodes)
-    {
-        // Notify all inner filters about the test nodes if they implement IReceiveTestNodesExtension.
-        foreach (IReceivesAllTestNodesExtension receiveTestNodesFilter in InnerFilters.OfType<IReceivesAllTestNodesExtension>())
-        {
-            receiveTestNodesFilter.ReceiveTestNodes(testNodes);
-        }
-    }
 }
