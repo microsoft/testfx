@@ -10,18 +10,19 @@ namespace Microsoft.Testing.Extensions.Policy;
 internal sealed class RetryExecutionFilter : ITestExecutionFilter
 {
     private readonly IServiceProvider _serviceProvider;
+    private readonly bool _isEnabled;
 
     public RetryExecutionFilter(IServiceProvider serviceProvider)
     {
         _serviceProvider = serviceProvider;
-        IsEnabled = serviceProvider.GetCommandLineOptions().IsOptionSet(RetryCommandLineOptionsProvider.RetryFailedTestsPipeNameOptionName);
+        _isEnabled = serviceProvider.GetCommandLineOptions().IsOptionSet(RetryCommandLineOptionsProvider.RetryFailedTestsPipeNameOptionName);
     }
 
     /// <inheritdoc />
-    public bool IsEnabled { get; }
+    public Task<bool> IsEnabledAsync() => Task.FromResult(_isEnabled);
 
     /// <inheritdoc />
-    public bool MatchesFilter(TestNode testNode) => TestNodeUidListFilter.MatchesFilter(testNode);
+    public Task<bool> MatchesFilterAsync(TestNode testNode) => TestNodeUidListFilter.MatchesFilterAsync(testNode);
 
     [field: AllowNull]
     [field: MaybeNull]
