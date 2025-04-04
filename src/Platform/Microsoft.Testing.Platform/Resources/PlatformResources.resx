@@ -117,20 +117,11 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="CannotCreateTestExecutionFilterErrorMessage" xml:space="preserve">
-    <value>Failed to create a test execution filter</value>
-  </data>
   <data name="CompositeServiceFactoryInstanceAlreadyRegistered" xml:space="preserve">
     <value>The same instance of 'CompositeExtensonFactory' is already registered</value>
   </data>
   <data name="ConfigurationManagerCannotFindDefaultJsonConfigurationErrorMessage" xml:space="preserve">
     <value>Could not find the default json configuration</value>
-  </data>
-  <data name="ConsoleTestExecutionFilterFactoryDescription" xml:space="preserve">
-    <value>Creates the right test execution filter for console mode</value>
-  </data>
-  <data name="ConsoleTestExecutionFilterFactoryDisplayName" xml:space="preserve">
-    <value>Console test execution filter factory</value>
   </data>
   <data name="ExtensionDoesNotImplementGivenInterfaceErrorMessage" xml:space="preserve">
     <value>Extension of type '{0}' is not implementing the required '{1}' interface</value>
@@ -146,12 +137,6 @@
   </data>
   <data name="JsonConfigurationFileParserUnsupportedTokenErrorMessage" xml:space="preserve">
     <value>Unsupported JSON token '{0}' was found</value>
-  </data>
-  <data name="ServerTestExecutionFilterFactoryDescription" xml:space="preserve">
-    <value>Creates the right test execution filter for server mode</value>
-  </data>
-  <data name="ServerTestExecutionFilterFactoryDisplayName" xml:space="preserve">
-    <value>Server test execution filter factory</value>
   </data>
   <data name="ServiceProviderCannotFindServiceErrorMessage" xml:space="preserve">
     <value>Cannot find service of type '{0}'</value>

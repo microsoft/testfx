@@ -40,6 +40,6 @@ public static class RetryExtensions
         ((TestHostOrchestratorManager)testApplicationBuilder.TestHostOrchestrator)
             .AddTestHostOrchestrator(serviceProvider => new RetryOrchestrator(serviceProvider));
         ((TestHostManager)builder.TestHost)
-            .AddTestExecutionFilterFactory(serviceProvider => new RetryExecutionFilterFactory(serviceProvider));
+            .AddTestExecutionFilter(serviceProvider => new RetryExecutionFilter(serviceProvider));
     }
 }

@@ -3,6 +3,7 @@
 
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.TestHost;
+using Microsoft.Testing.Platform.Requests;
 
 namespace Microsoft.Testing.Platform.TestHost;
 
@@ -30,6 +31,20 @@ public interface ITestHostManager
     /// <param name="compositeServiceFactory">The composite extension factory for creating the data consumer.</param>
     void AddDataConsumer<T>(CompositeExtensionFactory<T> compositeServiceFactory)
         where T : class, IDataConsumer;
+
+    /// <summary>
+    /// Registers a test execution filter.
+    /// </summary>
+    /// <param name="testFilter">The factory method for creating the a test execution filter.</param>
+    void AddTestExecutionFilter(Func<IServiceProvider, ITestExecutionFilter> testFilter);
+
+    /// <summary>
+    /// Adds a filter of type T.
+    /// </summary>
+    /// <typeparam name="T">The type of the filter.</typeparam>
+    /// <param name="compositeServiceFactory">The composite extension factory for creating the filter.</param>
+    void AddTestExecutionFilter<T>(CompositeExtensionFactory<T> compositeServiceFactory)
+        where T : class, ITestExecutionFilter;
 
     /// <summary>
     /// Adds a test session lifetime handle.

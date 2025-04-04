@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Resources;
@@ -22,17 +23,61 @@ public sealed class TreeNodeFilter : ITestExecutionFilter
     // Note: After the token gets expanded into regex ** gets converted to .*.*.
     internal const string AllNodesBelowRegexString = ".*.*";
     private readonly List<FilterExpression> _filters;
+    private readonly bool _isEnabled;
 
-    internal TreeNodeFilter(string filter)
+    internal TreeNodeFilter(ICommandLineOptions commandLineOptions)
     {
-        Filter = Guard.NotNull(filter);
-        _filters = ParseFilter(filter);
+        _isEnabled = commandLineOptions.IsOptionSet(TreeNodeFilterCommandLineOptionsProvider.TreenodeFilter);
+
+        if (_isEnabled)
+        {
+            commandLineOptions.TryGetOptionArgumentList(
+                TreeNodeFilterCommandLineOptionsProvider.TreenodeFilter,
+                out string[]? args);
+
+            Filter = Guard.NotNull(args?.ElementAtOrDefault(0));
+            _filters = ParseFilter(Filter);
+        }
+        else
+        {
+            Filter = string.Empty;
+            _filters = [new NopExpression()];
+        }
     }
 
     /// <summary>
     /// Gets the filter string.
     /// </summary>
-    public string Filter { get; }
+    public string Filter { get; } = string.Empty;
+
+    /// <inheritdoc />
+    public Task<bool> IsEnabledAsync() => Task.FromResult(_isEnabled);
+
+    /// <inheritdoc />
+    public Task<bool> MatchesFilterAsync(TestNode testNode)
+    {
+        if (_filters.Count == 0)
+        {
+            return Task.FromResult(true);
+        }
+
+        string path = BuildNodePath(testNode);
+
+        return Task.FromResult(MatchesFilter(path, testNode.Properties));
+    }
+
+    private static string BuildNodePath(TestNode testNode)
+    {
+        TestMethodIdentifierProperty? testMethodIdentifier = testNode.Properties.SingleOrDefault<TestMethodIdentifierProperty>();
+
+        if (testMethodIdentifier is null)
+        {
+            return "/*/*/*/*";
+        }
+
+        string? assembly = testMethodIdentifier.AssemblyFullName.Split(',').FirstOrDefault();
+        return $"/{assembly}/{testMethodIdentifier.Namespace}/{testMethodIdentifier.TypeName}/{testMethodIdentifier.MethodName}";
+    }
 
     /// <remarks>
     /// The current grammar for the filter looks as follows:

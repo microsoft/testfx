@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Extensions;
+using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Requests;
@@ -12,18 +13,23 @@ namespace Microsoft.Testing.Platform.TestHost;
 
 internal sealed class TestHostManager : ITestHostManager
 {
+#pragma warning disable TPEXP
+    private readonly NopFilter _noOpFilter = new();
+#pragma warning restore TPEXP
+
     // Registration ordering
     private readonly List<object> _factoryOrdering = [];
 
     // Exposed extension points
     private readonly List<Func<IServiceProvider, ITestApplicationLifecycleCallbacks>> _testApplicationLifecycleCallbacksFactories = [];
+    private readonly List<Func<IServiceProvider, ITestExecutionFilter>> _testExecutionFilterFactories = [];
     private readonly List<Func<IServiceProvider, IDataConsumer>> _dataConsumerFactories = [];
     private readonly List<Func<IServiceProvider, ITestSessionLifetimeHandler>> _testSessionLifetimeHandlerFactories = [];
+    private readonly List<ICompositeExtensionFactory> _testExecutionFilterCompositeServiceFactories = [];
     private readonly List<ICompositeExtensionFactory> _dataConsumersCompositeServiceFactories = [];
     private readonly List<ICompositeExtensionFactory> _testSessionLifetimeHandlerCompositeFactories = [];
 
     // Non-exposed extension points
-    private Func<IServiceProvider, ITestExecutionFilterFactory>? _testExecutionFilterFactory;
     private Func<IServiceProvider, ITestFrameworkInvoker>? _testFrameworkInvokerFactory;
 
     public void AddTestFrameworkInvoker(Func<IServiceProvider, ITestFrameworkInvoker> testFrameworkInvokerFactory)
@@ -57,35 +63,57 @@ internal sealed class TestHostManager : ITestHostManager
         return ActionResult.Fail<ITestFrameworkInvoker>();
     }
 
-    public void AddTestExecutionFilterFactory(Func<IServiceProvider, ITestExecutionFilterFactory> testExecutionFilterFactory)
+    public Task<ITestExecutionFilter> BuildFilterAsync(ICollection<TestNode>? testNodes)
+        => testNodes is null or { Count: 0 }
+            ? Task.FromResult<ITestExecutionFilter>(_noOpFilter)
+            : Task.FromResult<ITestExecutionFilter>(new TestNodeUidListFilter(testNodes.Select(x => x.Uid).ToArray()));
+
+    public async Task<(ITestExecutionFilter Filter, int RegistrationOrder)[]> BuildFilterAsync(IServiceProvider serviceProvider, List<ICompositeExtensionFactory> alreadyBuiltServices)
     {
-        Guard.NotNull(testExecutionFilterFactory);
-        if (_testExecutionFilterFactory is not null)
+        List<(ITestExecutionFilter Filter, int RegistrationOrder)> filters = [];
+
+        foreach (ITestExecutionFilter testExecutionFilter in _testExecutionFilterFactories
+                     .Select(testExecutionFilterFactory => testExecutionFilterFactory(serviceProvider)))
         {
-            throw new InvalidOperationException(PlatformResources.TEstExecutionFilterFactoryFactoryAlreadySetErrorMessage);
+            await testExecutionFilter.TryInitializeAsync();
+
+            filters.Add((testExecutionFilter, _factoryOrdering.IndexOf(testExecutionFilter)));
         }
 
-        _testExecutionFilterFactory = testExecutionFilterFactory;
-    }
-
-    internal async Task<ActionResult<ITestExecutionFilterFactory>> TryBuildTestExecutionFilterFactoryAsync(ServiceProvider serviceProvider)
-    {
-        if (_testExecutionFilterFactory is null)
+        foreach (ICompositeExtensionFactory compositeServiceFactory in _testExecutionFilterCompositeServiceFactories)
         {
-            return ActionResult.Fail<ITestExecutionFilterFactory>();
+            ICompositeExtensionFactory? compositeFactoryInstance;
+
+            // We check if the same service is already built in some other build phase
+            if ((compositeFactoryInstance = alreadyBuiltServices.SingleOrDefault(x => x.GetType() == compositeServiceFactory.GetType())) is null)
+            {
+                // We clone the instance because we want to have fresh instance per BuildTestApplicationLifecycleCallbackAsync call
+                compositeFactoryInstance = (ICompositeExtensionFactory)compositeServiceFactory.Clone();
+
+                // Create the new fresh instance
+                var instance = (ITestExecutionFilter)compositeFactoryInstance.GetInstance(serviceProvider);
+
+                // Check if we have already extensions of the same type with same id registered
+                if (filters.Any(x => x.GetType() == instance.GetType()))
+                {
+                    (ITestExecutionFilter filter, int _) = filters.Single(x => x.GetType() == instance.GetType());
+                    throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.ExtensionWithSameUidAlreadyRegisteredErrorMessage, instance.GetType().Name, filter.GetType()));
+                }
+
+                await instance.TryInitializeAsync();
+
+                // Add to the list of shared singletons
+                alreadyBuiltServices.Add(compositeFactoryInstance);
+            }
+
+            // Get the singleton
+            var testExecutionFilter = (ITestExecutionFilter)compositeFactoryInstance.GetInstance();
+
+            // Register the filter for usage
+            filters.Add((testExecutionFilter, _factoryOrdering.IndexOf(compositeServiceFactory)));
         }
 
-        ITestExecutionFilterFactory testExecutionFilterFactory = _testExecutionFilterFactory(serviceProvider);
-
-        // We initialize only if enabled
-        if (await testExecutionFilterFactory.IsEnabledAsync())
-        {
-            await testExecutionFilterFactory.TryInitializeAsync();
-
-            return ActionResult.Ok(testExecutionFilterFactory);
-        }
-
-        return ActionResult.Fail<ITestExecutionFilterFactory>();
+        return filters.ToArray();
     }
 
     public void AddTestApplicationLifecycleCallbacks(Func<IServiceProvider, ITestApplicationLifecycleCallbacks> testApplicationLifecycleCallbacks)
@@ -121,6 +149,27 @@ internal sealed class TestHostManager : ITestHostManager
         return testApplicationLifecycleCallbacks.ToArray();
     }
 
+    public void AddTestExecutionFilter(Func<IServiceProvider, ITestExecutionFilter> testFilter)
+    {
+        Guard.NotNull(testFilter);
+        _testExecutionFilterFactories.Add(testFilter);
+        _factoryOrdering.Add(testFilter);
+    }
+
+    public void AddTestExecutionFilter<T>(CompositeExtensionFactory<T> compositeServiceFactory)
+        where T : class, ITestExecutionFilter
+    {
+        Guard.NotNull(compositeServiceFactory);
+
+        if (_testExecutionFilterCompositeServiceFactories.Contains(compositeServiceFactory))
+        {
+            throw new ArgumentException(PlatformResources.CompositeServiceFactoryInstanceAlreadyRegistered);
+        }
+
+        _testExecutionFilterCompositeServiceFactories.Add(compositeServiceFactory);
+        _factoryOrdering.Add(compositeServiceFactory);
+    }
+
     public void AddDataConsumer(Func<IServiceProvider, IDataConsumer> dataConsumerFactory)
     {
         Guard.NotNull(dataConsumerFactory);
@@ -151,7 +200,7 @@ internal sealed class TestHostManager : ITestHostManager
             // Check if we have already extensions of the same type with same id registered
             if (dataConsumers.Any(x => x.Consumer.Uid == service.Uid))
             {
-                (IExtension consumer, int order) = dataConsumers.Single(x => x.Consumer.Uid == service.Uid);
+                (IExtension consumer, int _) = dataConsumers.Single(x => x.Consumer.Uid == service.Uid);
                 throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.ExtensionWithSameUidAlreadyRegisteredErrorMessage, service.Uid, consumer.GetType()));
             }
 

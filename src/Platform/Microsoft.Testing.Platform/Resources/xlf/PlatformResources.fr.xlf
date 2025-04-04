@@ -32,11 +32,6 @@
         <target state="translated">Annulation en cours de la session de test... Merci de patienter.</target>
         <note />
       </trans-unit>
-      <trans-unit id="CannotCreateTestExecutionFilterErrorMessage">
-        <source>Failed to create a test execution filter</source>
-        <target state="translated">Désolé, échec de la création d’un filtre d’exécution de test</target>
-        <note />
-      </trans-unit>
       <trans-unit id="CannotCreateUniqueLogFileErrorMessage">
         <source>Failed to create a unique log file after 3 seconds. Lastly tried file name is '{0}'.</source>
         <target state="translated">Désolé, échec de la création d’un fichier journal unique après 3 secondes. Le nom du dernier fichier essayé est « {0} ».</target>
@@ -186,16 +181,6 @@
         <source>Console is already in batching mode.</source>
         <target state="translated">La console est déjà en mode de traitement par lot.</target>
         <note>Exception that is thrown when console is already collecting input into a batch (into a string builder), and code asks to enable batching mode again.</note>
-      </trans-unit>
-      <trans-unit id="ConsoleTestExecutionFilterFactoryDescription">
-        <source>Creates the right test execution filter for console mode</source>
-        <target state="translated">Crée le filtre d’exécution de test approprié pour le mode de console</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ConsoleTestExecutionFilterFactoryDisplayName">
-        <source>Console test execution filter factory</source>
-        <target state="translated">Fabrique de filtres d’exécution de tests de console</target>
-        <note />
       </trans-unit>
       <trans-unit id="CouldNotFindDirectoryErrorMessage">
         <source>Could not find directory '{0}'</source>
@@ -666,16 +651,6 @@ Prend un argument sous forme de chaîne au format &lt;value&gt;[h|m|s] où « v
       <trans-unit id="ServerLogMessageDisplayName">
         <source>Server log message</source>
         <target state="translated">Message du journal du serveur</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ServerTestExecutionFilterFactoryDescription">
-        <source>Creates the right test execution filter for server mode</source>
-        <target state="translated">Crée le filtre d’exécution de test approprié pour le mode serveur</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ServerTestExecutionFilterFactoryDisplayName">
-        <source>Server test execution filter factory</source>
-        <target state="translated">Fabrique de filtres d’exécution de tests du serveur</target>
         <note />
       </trans-unit>
       <trans-unit id="ServerTestHostDescription">

@@ -32,11 +32,6 @@
         <target state="translated">Ruší se testovací relace...</target>
         <note />
       </trans-unit>
-      <trans-unit id="CannotCreateTestExecutionFilterErrorMessage">
-        <source>Failed to create a test execution filter</source>
-        <target state="translated">Nepovedlo se vytvořit filtr provádění testů.</target>
-        <note />
-      </trans-unit>
       <trans-unit id="CannotCreateUniqueLogFileErrorMessage">
         <source>Failed to create a unique log file after 3 seconds. Lastly tried file name is '{0}'.</source>
         <target state="translated">Nepodařilo se vytvořit jedinečný soubor protokolu po 3 sekundách. Naposledy vyzkoušený název souboru je {0}.</target>
@@ -186,16 +181,6 @@
         <source>Console is already in batching mode.</source>
         <target state="translated">Konzole je již v režimu dávkování.</target>
         <note>Exception that is thrown when console is already collecting input into a batch (into a string builder), and code asks to enable batching mode again.</note>
-      </trans-unit>
-      <trans-unit id="ConsoleTestExecutionFilterFactoryDescription">
-        <source>Creates the right test execution filter for console mode</source>
-        <target state="translated">Vytvoří správný filtr provádění testů pro režim konzoly.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ConsoleTestExecutionFilterFactoryDisplayName">
-        <source>Console test execution filter factory</source>
-        <target state="translated">Objekt pro vytváření filtru provádění testů konzoly</target>
-        <note />
       </trans-unit>
       <trans-unit id="CouldNotFindDirectoryErrorMessage">
         <source>Could not find directory '{0}'</source>
@@ -666,16 +651,6 @@ Může mít jenom jeden argument jako řetězec ve formátu &lt;value&gt;[h|m|s]
       <trans-unit id="ServerLogMessageDisplayName">
         <source>Server log message</source>
         <target state="translated">Zpráva protokolu serveru</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ServerTestExecutionFilterFactoryDescription">
-        <source>Creates the right test execution filter for server mode</source>
-        <target state="translated">Vytvoří správný filtr provádění testů pro režim serveru.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ServerTestExecutionFilterFactoryDisplayName">
-        <source>Server test execution filter factory</source>
-        <target state="translated">Objekt pro vytváření filtru provádění testů serveru</target>
         <note />
       </trans-unit>
       <trans-unit id="ServerTestHostDescription">
