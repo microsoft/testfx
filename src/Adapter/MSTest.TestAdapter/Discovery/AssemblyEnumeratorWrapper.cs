@@ -114,6 +114,10 @@ internal sealed class AssemblyEnumeratorWrapper
             PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning(Resource.OlderTFMVersionFound);
         }
 
-        return assemblyEnumerator.EnumerateAssembly(fullFilePath, warnings);
+        // This method runs inside of appdomain, when appdomains are available and enabled.
+        // Don't move the 'warning' parameter to be written into by reference, it will not return the warnings from appdomain.
+        AssemblyEnumerationResult result = assemblyEnumerator.EnumerateAssembly(fullFilePath);
+        warnings.AddRange(result.Warnings);
+        return result.TestElements;
     }
 }
