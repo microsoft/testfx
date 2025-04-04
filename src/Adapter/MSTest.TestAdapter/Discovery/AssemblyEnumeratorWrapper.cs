@@ -49,7 +49,9 @@ internal sealed class AssemblyEnumeratorWrapper
             }
 
             // Load the assembly in isolation if required.
-            return GetTestsInIsolation(fullFilePath, runSettings, warnings);
+            AssemblyEnumerationResult result = GetTestsInIsolation(fullFilePath, runSettings);
+            warnings.AddRange(result.Warnings);
+            return result.TestElements;
         }
         catch (FileNotFoundException ex)
         {
@@ -95,7 +97,7 @@ internal sealed class AssemblyEnumeratorWrapper
         }
     }
 
-    private static ICollection<UnitTestElement> GetTestsInIsolation(string fullFilePath, IRunSettings? runSettings, List<string> warnings)
+    private static AssemblyEnumerationResult GetTestsInIsolation(string fullFilePath, IRunSettings? runSettings)
     {
         using MSTestAdapter.PlatformServices.Interface.ITestSourceHost isolationHost = PlatformServiceProvider.Instance.CreateTestSourceHost(fullFilePath, runSettings, frameworkHandle: null);
 
@@ -115,9 +117,9 @@ internal sealed class AssemblyEnumeratorWrapper
         }
 
         // This method runs inside of appdomain, when appdomains are available and enabled.
-        // Don't move the 'warning' parameter to be written into by reference, it will not return the warnings from appdomain.
-        AssemblyEnumerationResult result = assemblyEnumerator.EnumerateAssembly(fullFilePath);
-        warnings.AddRange(result.Warnings);
-        return result.TestElements;
+        // Be careful how you pass data from the method. We were previously passing in a collection
+        // of strings normally (by reference), and we were mutating that collection in the appdomain.
+        // But this does not mutate the collection outside of appdomain, so we lost all warnings that happened inside.
+        return assemblyEnumerator.EnumerateAssembly(fullFilePath);
     }
 }

@@ -220,7 +220,9 @@ public class AssemblyEnumeratorTests : TestContainer
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("DummyAssembly", false))
             .Returns(mockAssembly.Object);
 
-        Verify(_assemblyEnumerator.EnumerateAssembly("DummyAssembly", _warnings).Count == 0);
+        AssemblyEnumerationResult result = _assemblyEnumerator.EnumerateAssembly("DummyAssembly");
+        _warnings.AddRange(result.Warnings);
+        Verify(result.TestElements.Count == 0);
     }
 
     public void EnumerateAssemblyShouldReturnEmptyListWhenNoTestElementsInAType()
@@ -238,7 +240,9 @@ public class AssemblyEnumeratorTests : TestContainer
         testableAssemblyEnumerator.MockTypeEnumerator.Setup(te => te.Enumerate(_warnings))
             .Returns((List<UnitTestElement>)null!);
 
-        Verify(_assemblyEnumerator.EnumerateAssembly("DummyAssembly", _warnings).Count == 0);
+        AssemblyEnumerationResult result = _assemblyEnumerator.EnumerateAssembly("DummyAssembly");
+        _warnings.AddRange(result.Warnings);
+        Verify(result.TestElements.Count == 0);
     }
 
     public void EnumerateAssemblyShouldReturnTestElementsForAType()
@@ -257,9 +261,10 @@ public class AssemblyEnumeratorTests : TestContainer
         testableAssemblyEnumerator.MockTypeEnumerator.Setup(te => te.Enumerate(_warnings))
             .Returns(new List<UnitTestElement> { unitTestElement });
 
-        ICollection<UnitTestElement> testElements = testableAssemblyEnumerator.EnumerateAssembly("DummyAssembly", _warnings);
+        AssemblyEnumerationResult result = testableAssemblyEnumerator.EnumerateAssembly("DummyAssembly");
+        _warnings.AddRange(result.Warnings);
 
-        Verify(new Collection<UnitTestElement> { unitTestElement }.SequenceEqual(testElements));
+        Verify(new Collection<UnitTestElement> { unitTestElement }.SequenceEqual(result.TestElements));
     }
 
     public void EnumerateAssemblyShouldReturnMoreThanOneTestElementForAType()
@@ -279,9 +284,10 @@ public class AssemblyEnumeratorTests : TestContainer
         testableAssemblyEnumerator.MockTypeEnumerator.Setup(te => te.Enumerate(_warnings))
             .Returns(expectedTestElements);
 
-        ICollection<UnitTestElement> testElements = testableAssemblyEnumerator.EnumerateAssembly("DummyAssembly", _warnings);
+        AssemblyEnumerationResult result = testableAssemblyEnumerator.EnumerateAssembly("DummyAssembly");
+        _warnings.AddRange(result.Warnings);
 
-        Verify(expectedTestElements.SequenceEqual(testElements));
+        Verify(expectedTestElements.SequenceEqual(result.TestElements));
     }
 
     public void EnumerateAssemblyShouldReturnMoreThanOneTestElementForMoreThanOneType()
@@ -301,11 +307,12 @@ public class AssemblyEnumeratorTests : TestContainer
         testableAssemblyEnumerator.MockTypeEnumerator.Setup(te => te.Enumerate(_warnings))
             .Returns(expectedTestElements);
 
-        ICollection<UnitTestElement> testElements = testableAssemblyEnumerator.EnumerateAssembly("DummyAssembly", _warnings);
+        AssemblyEnumerationResult result = testableAssemblyEnumerator.EnumerateAssembly("DummyAssembly");
+        _warnings.AddRange(result.Warnings);
 
         expectedTestElements.Add(unitTestElement);
         expectedTestElements.Add(unitTestElement);
-        Verify(expectedTestElements.SequenceEqual(testElements));
+        Verify(expectedTestElements.SequenceEqual(result.TestElements));
     }
 
     public void EnumerateAssemblyShouldNotLogWarningsIfNonePresent()
@@ -323,8 +330,9 @@ public class AssemblyEnumeratorTests : TestContainer
             .Returns(mockAssembly.Object);
         testableAssemblyEnumerator.MockTypeEnumerator.Setup(te => te.Enumerate(warningsFromTypeEnumerator));
 
-        testableAssemblyEnumerator.EnumerateAssembly("DummyAssembly", _warnings);
-        Verify(_warnings.Count == 0);
+        AssemblyEnumerationResult result = testableAssemblyEnumerator.EnumerateAssembly("DummyAssembly");
+        _warnings.AddRange(result.Warnings);
+        Verify(result.Warnings.Count == 0);
     }
 
     public void EnumerateAssemblyShouldLogWarningsIfPresent()
@@ -346,9 +354,10 @@ public class AssemblyEnumeratorTests : TestContainer
         testableAssemblyEnumerator.MockTypeEnumerator.Setup(te => te.Enumerate(_warnings))
             .Callback(() => _warnings.AddRange(warningsFromTypeEnumerator));
 
-        testableAssemblyEnumerator.EnumerateAssembly("DummyAssembly", _warnings);
+        AssemblyEnumerationResult result = testableAssemblyEnumerator.EnumerateAssembly("DummyAssembly");
+        _warnings.AddRange(result.Warnings);
 
-        Verify(warningsFromTypeEnumerator.SequenceEqual(_warnings));
+        Verify(warningsFromTypeEnumerator.SequenceEqual(result.Warnings));
     }
 
     public void EnumerateAssemblyShouldHandleExceptionsWhileEnumeratingAType()
@@ -366,9 +375,10 @@ public class AssemblyEnumeratorTests : TestContainer
             .Returns(mockAssembly.Object);
         testableAssemblyEnumerator.MockTypeEnumerator.Setup(te => te.Enumerate(_warnings)).Throws(exception);
 
-        testableAssemblyEnumerator.EnumerateAssembly("DummyAssembly", _warnings);
+        AssemblyEnumerationResult result = testableAssemblyEnumerator.EnumerateAssembly("DummyAssembly");
+        _warnings.AddRange(result.Warnings);
 
-        Verify(_warnings.ToList().Contains(
+        Verify(result.Warnings.Contains(
             string.Format(
                 CultureInfo.CurrentCulture,
                 Resource.CouldNotInspectTypeDuringDiscovery,
