@@ -30,5 +30,5 @@ public sealed class VSTestTestExecutionFilter : ITestExecutionFilter
     public Task<bool> IsEnabledAsync() => Task.FromResult(false);
 
     /// <inheritdoc />
-    public Task<bool> MatchesFilterAsync(TestNode testNode) => Task.FromResult(false);
+    public Task<bool> MatchesFilterAsync(TestNode testNode) => Task.FromResult(true);
 }
