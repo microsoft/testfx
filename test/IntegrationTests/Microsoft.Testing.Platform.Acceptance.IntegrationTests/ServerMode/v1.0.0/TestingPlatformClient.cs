@@ -187,7 +187,6 @@ public sealed class TestingPlatformClient : IDisposable
                 {
                     responseListener.Complete();
                     _listeners.TryRemove(runId, out _);
-                    return;
                 }
                 else
                 {
