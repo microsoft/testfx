@@ -6,7 +6,7 @@ using Microsoft.Testing.Platform.IPC.Serializers;
 
 namespace Microsoft.Testing.Extensions.HangDump.Serializers;
 
-internal sealed class GetInProgressTestsRequest() : IRequest;
+internal sealed class GetInProgressTestsRequest : IRequest;
 
 internal sealed class GetInProgressTestsRequestSerializer : BaseSerializer, INamedPipeSerializer
 {
