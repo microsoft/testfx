@@ -97,7 +97,7 @@ public class AssemblyEnumeratorTests : TestContainer
         // Setup mocks
         mockAssembly.Setup(a => a.GetTypes()).Returns(expectedTypes);
 
-        IReadOnlyList<Type> types = AssemblyEnumerator.GetTypes(mockAssembly.Object, string.Empty, _warnings);
+        Type[] types = AssemblyEnumerator.GetTypes(mockAssembly.Object, string.Empty, _warnings);
         Verify(expectedTypes.SequenceEqual(types));
     }
 
@@ -119,7 +119,7 @@ public class AssemblyEnumeratorTests : TestContainer
         // Setup mocks
         mockAssembly.Setup(a => a.GetTypes()).Throws(new ReflectionTypeLoadException(reflectedTypes, null));
 
-        IReadOnlyList<Type> types = AssemblyEnumerator.GetTypes(mockAssembly.Object, string.Empty, _warnings);
+        Type[] types = AssemblyEnumerator.GetTypes(mockAssembly.Object, string.Empty, _warnings);
 
         Verify(types is not null);
         Verify(reflectedTypes.Equals(types));
@@ -134,8 +134,9 @@ public class AssemblyEnumeratorTests : TestContainer
         mockAssembly.Setup(a => a.GetTypes()).Throws(new ReflectionTypeLoadException(null, exceptions));
         mockAssembly.Setup(a => a.GetTypes()).Throws(new ReflectionTypeLoadException(null, exceptions));
 
-        IReadOnlyList<Type> types = AssemblyEnumerator.GetTypes(mockAssembly.Object, "DummyAssembly", _warnings);
+        Type[] types = AssemblyEnumerator.GetTypes(mockAssembly.Object, "DummyAssembly", _warnings);
 
+        Verify(types is not null);
         Verify(_warnings.Count == 1);
         Verify(_warnings.ToList().Contains(
             string.Format(CultureInfo.CurrentCulture, Resource.TypeLoadFailed, "DummyAssembly", "System.Exception: DummyLoaderException\r\n")));
