@@ -50,7 +50,7 @@ internal sealed class TestFramework : IDisposable, ITestFramework
         }
 
         _sessionId = context.SessionUid;
-        return Task.FromResult(new CreateTestSessionResult() { IsSuccess = true });
+        return Task.FromResult(new CreateTestSessionResult { IsSuccess = true });
     }
 
     public async Task<CloseTestSessionResult> CloseTestSessionAsync(CloseTestSessionContext context)

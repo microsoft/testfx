@@ -116,17 +116,17 @@ internal sealed class TestMethodRunner
             }
             catch (TestFailedException ex)
             {
-                result = [new TestResult() { TestFailureException = ex }];
+                result = [new TestResult { TestFailureException = ex }];
             }
             catch (Exception ex)
             {
                 if (result == null || result.Length == 0)
                 {
-                    result = [new TestResult() { Outcome = UTF.UnitTestOutcome.Error }];
+                    result = [new TestResult { Outcome = UTF.UnitTestOutcome.Error }];
                 }
 
 #pragma warning disable IDE0056 // Use index operator
-                result[result.Length - 1] = new TestResult()
+                result[result.Length - 1] = new TestResult
                 {
                     TestFailureException = new TestFailedException(UTF.UnitTestOutcome.Error, ex.TryGetMessage(), ex.TryGetStackTraceInformation()),
                     LogOutput = result[result.Length - 1].LogOutput,
@@ -463,7 +463,7 @@ internal sealed class TestMethodRunner
         {
             return
             [
-                new TestResult()
+                new TestResult
                 {
                     TestFailureException = new InvalidOperationException(
                         string.Format(

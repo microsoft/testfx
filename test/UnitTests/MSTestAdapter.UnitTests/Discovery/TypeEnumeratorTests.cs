@@ -26,7 +26,7 @@ public partial class TypeEnumeratorTests : TestContainer
 
     public TypeEnumeratorTests()
     {
-        _mockReflectHelper = new Mock<ReflectHelper>()
+        _mockReflectHelper = new Mock<ReflectHelper>
         {
             CallBase = true,
         };

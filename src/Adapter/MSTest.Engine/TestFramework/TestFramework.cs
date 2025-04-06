@@ -59,7 +59,7 @@ internal sealed class TestFramework : IDisposable, ITestFramework
         _sessionId = context.SessionUid;
         _sessionWarningMessages.Clear();
         _sessionErrorMessages.Clear();
-        return Task.FromResult(new CreateTestSessionResult() { IsSuccess = true });
+        return Task.FromResult(new CreateTestSessionResult { IsSuccess = true });
     }
 
     public async Task<CloseTestSessionResult> CloseTestSessionAsync(CloseTestSessionContext context)
