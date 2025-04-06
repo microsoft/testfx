@@ -691,11 +691,8 @@ public class MSTestSettingsTests : TestContainer
         _testablePlatformServiceProvider.MockSettingsProvider.Setup(sp => sp.Load(It.IsAny<XmlReader>()))
             .Callback((XmlReader actualReader) =>
             {
-                if (actualReader != null)
-                {
-                    actualReader.Read();
-                    actualReader.ReadInnerXml();
-                }
+                actualReader.Read();
+                actualReader.ReadInnerXml();
             });
 
         var adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsName, _mockMessageLogger.Object);
@@ -720,11 +717,8 @@ public class MSTestSettingsTests : TestContainer
         _testablePlatformServiceProvider.MockSettingsProvider.Setup(sp => sp.Load(It.IsAny<XmlReader>()))
             .Callback((XmlReader actualReader) =>
             {
-                if (actualReader != null)
-                {
-                    actualReader.Read();
-                    observedXml = actualReader.ReadOuterXml();
-                }
+                actualReader.Read();
+                observedXml = actualReader.ReadOuterXml();
             });
 
         MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsName, _mockMessageLogger.Object);
@@ -750,29 +744,26 @@ public class MSTestSettingsTests : TestContainer
         _testablePlatformServiceProvider.MockSettingsProvider.Setup(sp => sp.Load(It.IsAny<XmlReader>()))
             .Callback((XmlReader reader) =>
             {
-                if (reader != null)
+                reader.Read();
+                while (reader.NodeType == XmlNodeType.Element)
                 {
-                    reader.Read();
-                    while (reader.NodeType == XmlNodeType.Element)
+                    string elementName = reader.Name.ToUpperInvariant();
+                    switch (elementName)
                     {
-                        string elementName = reader.Name.ToUpperInvariant();
-                        switch (elementName)
-                        {
-                            case "DUMMYPLATFORMSPECIFICSETTING":
+                        case "DUMMYPLATFORMSPECIFICSETTING":
+                            {
+                                if (bool.TryParse(reader.ReadInnerXml(), out bool result))
                                 {
-                                    if (bool.TryParse(reader.ReadInnerXml(), out bool result))
-                                    {
-                                        dummyPlatformSpecificSetting = result;
-                                    }
+                                    dummyPlatformSpecificSetting = result;
                                 }
+                            }
 
+                            break;
+                        default:
+                            {
+                                reader.Skip();
                                 break;
-                            default:
-                                {
-                                    reader.Skip();
-                                    break;
-                                }
-                        }
+                            }
                     }
                 }
             });
@@ -808,29 +799,26 @@ public class MSTestSettingsTests : TestContainer
         _testablePlatformServiceProvider.MockSettingsProvider.Setup(sp => sp.Load(It.IsAny<XmlReader>()))
             .Callback((XmlReader reader) =>
             {
-                if (reader != null)
+                reader.Read();
+                while (reader.NodeType == XmlNodeType.Element)
                 {
-                    reader.Read();
-                    while (reader.NodeType == XmlNodeType.Element)
+                    string elementName = reader.Name.ToUpperInvariant();
+                    switch (elementName)
                     {
-                        string elementName = reader.Name.ToUpperInvariant();
-                        switch (elementName)
-                        {
-                            case "DUMMYPLATFORMSPECIFICSETTING":
+                        case "DUMMYPLATFORMSPECIFICSETTING":
+                            {
+                                if (bool.TryParse(reader.ReadInnerXml(), out bool result))
                                 {
-                                    if (bool.TryParse(reader.ReadInnerXml(), out bool result))
-                                    {
-                                        dummyPlatformSpecificSetting = result;
-                                    }
+                                    dummyPlatformSpecificSetting = result;
                                 }
+                            }
 
+                            break;
+                        default:
+                            {
+                                reader.Skip();
                                 break;
-                            default:
-                                {
-                                    reader.Skip();
-                                    break;
-                                }
-                        }
+                            }
                     }
                 }
             });
@@ -864,27 +852,24 @@ public class MSTestSettingsTests : TestContainer
         _testablePlatformServiceProvider.MockSettingsProvider.Setup(sp => sp.Load(It.IsAny<XmlReader>()))
             .Callback((XmlReader reader) =>
             {
-                if (reader != null)
+                reader.Read();
+                while (reader.NodeType == XmlNodeType.Element)
                 {
-                    reader.Read();
-                    while (reader.NodeType == XmlNodeType.Element)
+                    string elementName = reader.Name.ToUpperInvariant();
+                    switch (elementName)
                     {
-                        string elementName = reader.Name.ToUpperInvariant();
-                        switch (elementName)
-                        {
-                            case "BADELEMENT":
-                                {
-                                    reader.ReadInnerXml();
-                                    outOfScopeCall = true;
-                                }
+                        case "BADELEMENT":
+                            {
+                                reader.ReadInnerXml();
+                                outOfScopeCall = true;
+                            }
 
+                            break;
+                        default:
+                            {
+                                reader.Skip();
                                 break;
-                            default:
-                                {
-                                    reader.Skip();
-                                    break;
-                                }
-                        }
+                            }
                     }
                 }
             });
@@ -920,29 +905,26 @@ public class MSTestSettingsTests : TestContainer
         _testablePlatformServiceProvider.MockSettingsProvider.Setup(sp => sp.Load(It.IsAny<XmlReader>()))
             .Callback((XmlReader reader) =>
             {
-                if (reader != null)
+                reader.Read();
+                while (reader.NodeType == XmlNodeType.Element)
                 {
-                    reader.Read();
-                    while (reader.NodeType == XmlNodeType.Element)
+                    string elementName = reader.Name.ToUpperInvariant();
+                    switch (elementName)
                     {
-                        string elementName = reader.Name.ToUpperInvariant();
-                        switch (elementName)
-                        {
-                            case "DUMMYPLATFORMSPECIFICSETTING":
+                        case "DUMMYPLATFORMSPECIFICSETTING":
+                            {
+                                if (bool.TryParse(reader.ReadInnerXml(), out bool result))
                                 {
-                                    if (bool.TryParse(reader.ReadInnerXml(), out bool result))
-                                    {
-                                        dummyPlatformSpecificSetting = result;
-                                    }
+                                    dummyPlatformSpecificSetting = result;
                                 }
+                            }
 
+                            break;
+                        default:
+                            {
+                                reader.Skip();
                                 break;
-                            default:
-                                {
-                                    reader.Skip();
-                                    break;
-                                }
-                        }
+                            }
                     }
                 }
             });
