@@ -488,7 +488,7 @@ public class CollectionAssertTests : TestContainer
     {
         if (depth == 0)
         {
-            return new List<object> { new ReadOnlyCollection<int>(Enumerable.Range(1, 10).ToList()) };
+            return [new ReadOnlyCollection<int>(Enumerable.Range(1, 10).ToList())];
         }
 
         var nestedCollection = new List<object>();

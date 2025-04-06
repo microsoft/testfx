@@ -15,11 +15,11 @@ internal sealed class ServerModePerCallOutputDevice : IPlatformOutputDevice, IOu
 {
     private readonly FileLoggerProvider? _fileLoggerProvider;
     private readonly IStopPoliciesService _policiesService;
-    private readonly ConcurrentBag<ServerLogMessage> _messages = new();
+    private readonly ConcurrentBag<ServerLogMessage> _messages = [];
 
     private IServerTestHost? _serverTestHost;
 
-    private static readonly string[] NewLineStrings = { "\r\n", "\n" };
+    private static readonly string[] NewLineStrings = ["\r\n", "\n"];
 
     public ServerModePerCallOutputDevice(FileLoggerProvider? fileLoggerProvider, IStopPoliciesService policiesService)
     {

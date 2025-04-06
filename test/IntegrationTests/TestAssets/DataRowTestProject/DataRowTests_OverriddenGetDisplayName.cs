@@ -34,7 +34,7 @@ public class DataRowTests_OverriddenGetDisplayName
     {
         get
         {
-            yield return new object[] { "SomeData" };
+            yield return ["SomeData"];
         }
     }
 }

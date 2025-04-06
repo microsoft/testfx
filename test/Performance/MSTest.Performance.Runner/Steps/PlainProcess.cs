@@ -36,7 +36,7 @@ internal class PlainProcess : IStep<BuildArtifact, Files>
 
         Console.WriteLine($"Process command: '{processStartInfo.FileName} {processStartInfo.Arguments.Trim()}' for {_numberOfRun} times");
 
-        List<object> results = new();
+        List<object> results = [];
         for (int i = 0; i < _numberOfRun; i++)
         {
             using Process process = Process.Start(processStartInfo)!;

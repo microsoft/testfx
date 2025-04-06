@@ -214,10 +214,10 @@ public sealed class TestApplicationResultTests
 
     internal static IEnumerable<object[]> FailedState()
     {
-        yield return new[] { new FailedTestNodeStateProperty() };
-        yield return new[] { new ErrorTestNodeStateProperty() };
-        yield return new[] { new CancelledTestNodeStateProperty() };
-        yield return new[] { new TimeoutTestNodeStateProperty() };
+        yield return [new FailedTestNodeStateProperty()];
+        yield return [new ErrorTestNodeStateProperty()];
+        yield return [new CancelledTestNodeStateProperty()];
+        yield return [new TimeoutTestNodeStateProperty()];
     }
 
     private sealed class CommandLineOption : ICommandLineOptions

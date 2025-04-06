@@ -43,7 +43,7 @@ public class DataExtensibilityTests : CLITestBase
         ImmutableArray<TestResult> testResults = await RunTestsAsync(testCases);
 
         // Assert
-        VerifyE2E.ContainsTestsFailed(testResults, new string[] { null! });
+        VerifyE2E.ContainsTestsFailed(testResults, [null!]);
     }
 
     public async Task AssertExtensibilityTests()

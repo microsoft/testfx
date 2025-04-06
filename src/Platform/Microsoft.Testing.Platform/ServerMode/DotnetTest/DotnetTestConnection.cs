@@ -69,7 +69,7 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol,
     {
         RoslynDebug.Assert(_dotnetTestPipeClient is not null);
 
-        List<CommandLineOptionMessage> commandLineHelpOptions = new();
+        List<CommandLineOptionMessage> commandLineHelpOptions = [];
         foreach (ICommandLineOptionsProvider commandLineOptionProvider in _commandLineHandler.CommandLineOptionsProviders)
         {
             if (commandLineOptionProvider is IToolCommandLineOptionsProvider)

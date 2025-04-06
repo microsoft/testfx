@@ -28,7 +28,7 @@ internal sealed class RetryDataConsumer : IDataConsumer, ITestSessionLifetimeHan
         _commandLineOptions = _serviceProvider.GetCommandLineOptions();
     }
 
-    public Type[] DataTypesConsumed => new[] { typeof(TestNodeUpdateMessage) };
+    public Type[] DataTypesConsumed => [typeof(TestNodeUpdateMessage)];
 
     public string Uid => nameof(RetryDataConsumer);
 

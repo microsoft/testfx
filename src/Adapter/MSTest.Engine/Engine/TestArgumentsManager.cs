@@ -53,7 +53,7 @@ internal sealed class TestArgumentsManager : ITestArgumentsManager
             };
         }
 
-        HashSet<TestNodeUid> expandedTestNodeUids = new();
+        HashSet<TestNodeUid> expandedTestNodeUids = [];
         List<TestNode> expandedTestNodes = new(currentNode.Tests);
         switch (currentNode)
         {

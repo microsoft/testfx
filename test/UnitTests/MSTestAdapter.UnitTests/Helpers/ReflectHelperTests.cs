@@ -291,7 +291,7 @@ public class ReflectHelperTests : TestContainer
         /// MemberTypes.TypeInfo for class level
         /// MemberTypes.Method for method level.
         /// </summary>
-        private readonly List<(Type Type, Attribute Attribute, MemberTypes MemberType)> _data = new();
+        private readonly List<(Type Type, Attribute Attribute, MemberTypes MemberType)> _data = [];
         private readonly Mock<IReflectionOperations2> _mockReflectionOperations;
 
         public void SetCustomAttribute(Type type, Attribute[] values, MemberTypes memberTypes)

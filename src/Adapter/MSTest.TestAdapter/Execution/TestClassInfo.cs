@@ -138,9 +138,9 @@ public class TestClassInfo
     [Obsolete("API will be dropped in v4")]
     public Stack<MethodInfo> BaseClassCleanupMethodsStack { get; } = new();
 
-    internal List<MethodInfo> BaseClassInitMethods { get; } = new();
+    internal List<MethodInfo> BaseClassInitMethods { get; } = [];
 
-    internal List<MethodInfo> BaseClassCleanupMethods { get; } = new();
+    internal List<MethodInfo> BaseClassCleanupMethods { get; } = [];
 
     /// <summary>
     /// Gets the exception thrown during <see cref="ClassInitializeAttribute"/> method invocation.

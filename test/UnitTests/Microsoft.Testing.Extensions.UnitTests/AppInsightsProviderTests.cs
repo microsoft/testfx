@@ -32,7 +32,7 @@ public sealed class AppInsightsProviderTests
         Mock<ITestApplicationCancellationTokenSource> testApplicationCancellationTokenSource = new();
         testApplicationCancellationTokenSource.Setup(x => x.CancellationToken).Returns(cancellationTokenSource.Token);
 
-        List<string> events = new();
+        List<string> events = [];
         Mock<ITelemetryClient> testTelemetryClient = new();
         testTelemetryClient.Setup(x => x.TrackEvent(It.IsAny<string>(), It.IsAny<Dictionary<string, string>>(), It.IsAny<Dictionary<string, double>>()))
         .Callback((string eventName, Dictionary<string, string> properties, Dictionary<string, double> metrics) =>

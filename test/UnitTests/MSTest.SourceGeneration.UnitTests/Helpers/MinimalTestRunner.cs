@@ -11,7 +11,7 @@ internal sealed class MinimalTestRunner
 #pragma warning disable IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
         IEnumerable<Type> classes = Assembly.GetExecutingAssembly().GetTypes().Where(c => c.IsPublic);
 #pragma warning restore IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
-        object[][] emptyRow = new[] { Array.Empty<object>() };
+        object[][] emptyRow = [[]];
 
         int total = 0;
         int failed = 0;

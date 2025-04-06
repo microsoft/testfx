@@ -102,7 +102,7 @@ public sealed class PreferDisposeOverTestCleanupFixer : CodeFixProvider
             MethodDeclarationSyntax newDisposeMethod;
             if (existingDisposeMethod.Body != null)
             {
-                BlockSyntax newDisposeBody = existingDisposeMethod.Body.AddStatements(cleanupStatements ?? Array.Empty<StatementSyntax>());
+                BlockSyntax newDisposeBody = existingDisposeMethod.Body.AddStatements(cleanupStatements ?? []);
                 newDisposeMethod = existingDisposeMethod.WithBody(newDisposeBody);
             }
             else

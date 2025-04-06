@@ -169,7 +169,7 @@ internal sealed class TestNodesGenerator : IIncrementalGenerator
 
         sourceStringBuilder.Append("MSTF::TestNode root = ");
 
-        using (sourceStringBuilder.AppendTestNode(assemblyName, assemblyName, Array.Empty<string>(), ';'))
+        using (sourceStringBuilder.AppendTestNode(assemblyName, assemblyName, [], ';'))
         {
             foreach (IGrouping<TestNamespaceInfo, TestTypeInfo> group in classesPerNamespaces)
             {

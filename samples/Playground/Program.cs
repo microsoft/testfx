@@ -57,7 +57,7 @@ public class Program
             using TestingPlatformClient client = await TestingPlatformClientFactory.StartAsServerAndConnectToTheClientAsync(Environment.ProcessPath!);
 
             await client.InitializeAsync();
-            List<TestNodeUpdate> testNodeUpdates = new();
+            List<TestNodeUpdate> testNodeUpdates = [];
             ResponseListener discoveryResponse = await client.DiscoverTestsAsync(Guid.NewGuid(), node =>
             {
                 testNodeUpdates.AddRange(node);
@@ -86,7 +86,7 @@ internal sealed class DummyAdapter() : ITestFramework, IDataProducer
 
     public string Description => string.Empty;
 
-    public Type[] DataTypesProduced => new[] { typeof(TestNodeUpdateMessage) };
+    public Type[] DataTypesProduced => [typeof(TestNodeUpdateMessage)];
 
     public Task<CloseTestSessionResult> CloseTestSessionAsync(CloseTestSessionContext context) => Task.FromResult(new CloseTestSessionResult { IsSuccess = true });
 

@@ -33,7 +33,7 @@ public partial class TypeEnumeratorTests : TestContainer
 
         _mockTypeValidator = new Mock<TypeValidator>(MockBehavior.Default, _mockReflectHelper.Object);
         _mockTestMethodValidator = new Mock<TestMethodValidator>(MockBehavior.Default, _mockReflectHelper.Object, false);
-        _warnings = new List<string>();
+        _warnings = [];
         _mockMessageLogger = new Mock<IMessageLogger>();
 
         _testablePlatformServiceProvider = new TestablePlatformServiceProvider();

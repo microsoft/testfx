@@ -32,7 +32,7 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
     private readonly IFileSystem _fileSystem;
     private readonly PipeNameDescription _pipeNameDescription;
     private readonly CancellationTokenSource _waitForConnections = new();
-    private readonly List<NamedPipeServer> _connections = new();
+    private readonly List<NamedPipeServer> _connections = [];
     private readonly StringBuilder _output = new();
     private readonly Lock _initLock = new();
     private readonly Architecture _currentProcessArchitecture = RuntimeInformation.ProcessArchitecture;

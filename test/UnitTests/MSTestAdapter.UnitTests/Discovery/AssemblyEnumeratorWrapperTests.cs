@@ -23,7 +23,7 @@ public class AssemblyEnumeratorWrapperTests : TestContainer
     public AssemblyEnumeratorWrapperTests()
     {
         _testableAssemblyEnumeratorWrapper = new AssemblyEnumeratorWrapper();
-        _warnings = new List<string>();
+        _warnings = [];
 
         _testablePlatformServiceProvider = new TestablePlatformServiceProvider();
         PlatformServiceProvider.Instance = _testablePlatformServiceProvider;

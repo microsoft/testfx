@@ -16,8 +16,8 @@ internal sealed class AnsiTerminal : ITerminal
     /// File extensions that we will link to directly, all other files
     /// are linked to their directory, to avoid opening dlls, or executables.
     /// </summary>
-    private static readonly string[] KnownFileExtensions = new string[]
-    {
+    private static readonly string[] KnownFileExtensions =
+    [
         // code files
         ".cs",
         ".vb",
@@ -33,8 +33,8 @@ internal sealed class AnsiTerminal : ITerminal
         ".nunit",
         ".trx",
         ".xml",
-        ".xunit",
-    };
+        ".xunit"
+    ];
 
     private readonly IConsole _console;
     private readonly string? _baseDirectory;

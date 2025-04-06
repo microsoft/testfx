@@ -92,7 +92,7 @@ internal sealed class TestMethodRunner
                 PlatformServiceProvider.Instance.AdapterTraceLogger.LogError(ex.ToString());
             }
 
-            return results ?? Array.Empty<TestResult>();
+            return results ?? [];
         }
         else
         {

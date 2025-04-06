@@ -44,7 +44,7 @@ internal static class TestDataSourceHelpers
         if (testMethodParameters.Length == 1 &&
             data?.GetType().IsAssignableTo(testMethodParameters[0].ParameterType) == true)
         {
-            array = Array.Empty<object>();
+            array = [];
             return false;
         }
 
@@ -103,7 +103,7 @@ internal static class TestDataSourceHelpers
         }
 #endif
 
-        array = Array.Empty<object>();
+        array = [];
         return false;
     }
 

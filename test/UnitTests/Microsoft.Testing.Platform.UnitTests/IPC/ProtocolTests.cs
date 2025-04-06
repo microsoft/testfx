@@ -14,7 +14,7 @@ public sealed class ProtocolTests
     {
         var success = new SuccessfulTestResultMessage("uid", "displayName", 1, 100, "reason", "standardOutput", "errorOutput", "sessionUid");
         var fail = new FailedTestResultMessage("uid", "displayName", 2, 200, "reason", [new ExceptionMessage("errorMessage", "errorType", "stackTrace")], "standardOutput", "errorOutput", "sessionUid");
-        var message = new TestResultMessages("executionId", "instanceId", new[] { success }, new[] { fail });
+        var message = new TestResultMessages("executionId", "instanceId", [success], [fail]);
 
         var stream = new MemoryStream();
         new TestResultMessagesSerializer().Serialize(message, stream);

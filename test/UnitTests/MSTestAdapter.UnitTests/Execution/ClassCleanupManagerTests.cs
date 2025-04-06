@@ -24,11 +24,11 @@ public class ClassCleanupManagerTests : TestContainer
 
         // Setting 2 of the same test to run, we should run assembly cleanup after both these tests
         // finish, not after the first one finishes.
-        List<UnitTestElement> testsToRun = new()
-        {
+        List<UnitTestElement> testsToRun =
+        [
             new(testMethod),
-            new(testMethod),
-        };
+            new(testMethod)
+        ];
 
         var classCleanupManager = new ClassCleanupManager(testsToRun, ClassCleanupBehavior.EndOfClass, ClassCleanupBehavior.EndOfClass, reflectHelper);
 

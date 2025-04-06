@@ -91,7 +91,7 @@ public sealed class DataRowShouldBeValidAnalyzer : DiagnosticAnalyzer
         var methodSymbol = (IMethodSymbol)context.Symbol;
 
         bool isTestMethod = false;
-        List<AttributeData> dataRowAttributes = new();
+        List<AttributeData> dataRowAttributes = [];
         foreach (AttributeData methodAttribute in methodSymbol.GetAttributes())
         {
             // Current method should be a test method or should inherit from the TestMethod attribute.
@@ -184,7 +184,7 @@ public sealed class DataRowShouldBeValidAnalyzer : DiagnosticAnalyzer
         AnalyzeGenericMethod(context, dataRowSyntax, methodSymbol, constructorArguments);
 
         // Check constructor argument types match method parameter types.
-        List<(int ConstructorArgumentIndex, int MethodParameterIndex)> typeMismatchIndices = new();
+        List<(int ConstructorArgumentIndex, int MethodParameterIndex)> typeMismatchIndices = [];
         for (int currentArgumentIndex = 0; currentArgumentIndex < constructorArguments.Length; currentArgumentIndex++)
         {
             // Null is considered as default for non-nullable types.

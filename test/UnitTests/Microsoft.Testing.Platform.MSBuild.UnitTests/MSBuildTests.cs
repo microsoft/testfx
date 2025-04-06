@@ -10,15 +10,11 @@ namespace Microsoft.Testing.Platform.MSBuild.UnitTests;
 [TestClass]
 public sealed class MSBuildTests
 {
-    private readonly Mock<IBuildEngine> _buildEngine;
-    private readonly List<BuildErrorEventArgs> _errors;
+    private readonly Mock<IBuildEngine> _buildEngine = new();
+    private readonly List<BuildErrorEventArgs> _errors = [];
 
-    public MSBuildTests()
-    {
-        _buildEngine = new Mock<IBuildEngine>();
-        _errors = new List<BuildErrorEventArgs>();
+    public MSBuildTests() =>
         _buildEngine.Setup(x => x.LogErrorEvent(It.IsAny<BuildErrorEventArgs>())).Callback<BuildErrorEventArgs>(e => _errors.Add(e));
-    }
 
     [TestMethod]
     public void Verify_Correct_Registration_Order_For_WellKnown_Extensions()

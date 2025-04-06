@@ -19,8 +19,7 @@ internal sealed class TestFrameworkEngine : IDataProducer
         _logger = loggerFactory.CreateLogger("InternalTestFrameworkEngine");
     }
 
-    public Type[] DataTypesProduced { get; }
-        = new Type[1] { typeof(TestNodeUpdateMessage) };
+    public Type[] DataTypesProduced { get; } = [typeof(TestNodeUpdateMessage)];
 
     public string Uid => _extension.Uid;
 

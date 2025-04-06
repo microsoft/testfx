@@ -68,7 +68,7 @@ public class DataRowTests_Regular
     public void NullValue(object o) => Assert.IsNull(o);
 
     [TestMethod]
-    [DataRow(new string[] { "" })]
+    [DataRow([string.Empty])]
     public void OneStringArray(string[] lines) => Assert.AreEqual(1, lines.Length);
 
     [TestMethod]

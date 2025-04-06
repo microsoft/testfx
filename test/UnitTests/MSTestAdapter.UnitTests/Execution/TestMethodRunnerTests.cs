@@ -84,7 +84,7 @@ public class TestMethodRunnerTests : TestContainer
         TestResult[] results = await testMethodRunner.ExecuteAsync(string.Empty, string.Empty, string.Empty, string.Empty);
         Verify(results[0].Outcome == UTF.UnitTestOutcome.Failed);
         Verify(results[0].ExceptionMessage!.StartsWith(
-            """            
+            """
             An unhandled exception was thrown by the 'Execute' method. Please report this error to the author of the attribute 'Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute'.
             System.Exception: DummyException
             """,
@@ -143,7 +143,7 @@ public class TestMethodRunnerTests : TestContainer
         TestResult[] results = await testMethodRunner.RunTestMethodAsync();
         Verify(results[0].Outcome == UTF.UnitTestOutcome.Failed);
         Verify(results[0].ExceptionMessage!.StartsWith(
-            """            
+            """
             An unhandled exception was thrown by the 'Execute' method. Please report this error to the author of the attribute 'Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute'.
             System.Exception: Dummy Exception
             """,
@@ -537,7 +537,7 @@ public class TestMethodRunnerTests : TestContainer
 
     public class DummyTestClassEmptyDataSource
     {
-        public static IEnumerable<object[]> EmptyProperty => Array.Empty<object[]>();
+        public static IEnumerable<object[]> EmptyProperty => [];
 
         [DynamicData("EmptyProperty")]
         public void TestMethod(int x)

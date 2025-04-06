@@ -23,8 +23,8 @@ internal sealed class TestFramework : IDisposable, ITestFramework
     private readonly TestingFrameworkExtension _extension;
     private readonly CountdownEvent _incomingRequestCounter = new(1);
     private readonly TestFrameworkEngine _engine;
-    private readonly List<string> _sessionWarningMessages = new();
-    private readonly List<string> _sessionErrorMessages = new();
+    private readonly List<string> _sessionWarningMessages = [];
+    private readonly List<string> _sessionErrorMessages = [];
     private SessionUid? _sessionId;
 
     public TestFramework(TestFrameworkConfiguration testFrameworkConfiguration, ITestNodesBuilder[] testNodesBuilders, TestingFrameworkExtension extension,

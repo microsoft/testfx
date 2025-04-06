@@ -38,8 +38,7 @@ internal sealed class TestFrameworkEngine : IDataProducer
         _configuration = new(configuration);
     }
 
-    public Type[] DataTypesProduced { get; }
-        = new Type[1] { typeof(TestNodeUpdateMessage) };
+    public Type[] DataTypesProduced { get; } = [typeof(TestNodeUpdateMessage)];
 
     public string Uid => _extension.Uid;
 
@@ -62,7 +61,7 @@ internal sealed class TestFrameworkEngine : IDataProducer
     private async Task<Result> ExecuteTestNodeRunAsync(RunTestExecutionRequest request, IMessageBus messageBus,
         CancellationToken cancellationToken)
     {
-        List<TestNode> allRootTestNodes = new();
+        List<TestNode> allRootTestNodes = [];
         TestFixtureManager fixtureManager = new(cancellationToken);
         TestArgumentsManager argumentsManager = new();
         TestSessionContext testSessionContext = new(_configuration, fixtureManager, argumentsManager, request.Session.SessionUid,
@@ -96,7 +95,7 @@ internal sealed class TestFrameworkEngine : IDataProducer
                     .OfType<FrameworkEngineMetadataProperty>()
                     .SingleOrDefault()
                     .UsedFixtureIds
-                    ?? Array.Empty<string>();
+                    ?? [];
                 fixtureManager.RegisterFixtureUsage(testNode, fixtureIds);
 
                 return Task.CompletedTask;
@@ -142,7 +141,7 @@ internal sealed class TestFrameworkEngine : IDataProducer
     private async Task<Result> ExecuteTestNodeDiscoveryAsync(DiscoverTestExecutionRequest request, IMessageBus messageBus,
         CancellationToken cancellationToken)
     {
-        List<TestNode> allRootTestNodes = new();
+        List<TestNode> allRootTestNodes = [];
         TestFixtureManager fixtureManager = new(cancellationToken);
         TestArgumentsManager argumentsManager = new();
         TestSessionContext testSessionContext = new(_configuration, fixtureManager, argumentsManager, request.Session.SessionUid,

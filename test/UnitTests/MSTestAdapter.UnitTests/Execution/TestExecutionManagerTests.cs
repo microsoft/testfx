@@ -48,7 +48,7 @@ public class TestExecutionManagerTests : TestContainer
     ];
 
     private TestableRunContextTestExecutionTests _runContext;
-    private List<string> _callers = new();
+    private List<string> _callers = [];
     private int _enqueuedParallelTestsCount;
 
     public TestExecutionManagerTests()
