@@ -123,21 +123,19 @@ internal sealed class AzureDevOpsReporter :
         string stackTrace = exception.StackTrace;
         int index = stackTrace.IndexOfAny(NewlineCharacters);
         string firstLine = index == -1 ? stackTrace : stackTrace.Substring(0, index);
-        if (firstLine != null)
+
+        (string Code, string File, int LineNumber)? location = GetStackFrameLocation(firstLine);
+        if (location != null)
         {
-            (string Code, string File, int LineNumber)? location = GetStackFrameLocation(firstLine);
-            if (location != null)
-            {
-                string root = RootFinder.Find();
-                string file = location.Value.File;
-                string relativePath = file.StartsWith(root, StringComparison.CurrentCultureIgnoreCase) ? file.Substring(root.Length) : file;
-                string relativeNormalizedPath = relativePath.Replace('\\', '/');
+            string root = RootFinder.Find();
+            string file = location.Value.File;
+            string relativePath = file.StartsWith(root, StringComparison.CurrentCultureIgnoreCase) ? file.Substring(root.Length) : file;
+            string relativeNormalizedPath = relativePath.Replace('\\', '/');
 
-                string err = AzDoEscaper.Escape(message);
+            string err = AzDoEscaper.Escape(message);
 
-                string line = $"##vso[task.logissue type={_severity};sourcepath={relativeNormalizedPath};linenumber={location.Value.LineNumber};columnnumber=1]{err}";
-                await _outputDisplay.DisplayAsync(this, new FormattedTextOutputDeviceData(line));
-            }
+            string line = $"##vso[task.logissue type={_severity};sourcepath={relativeNormalizedPath};linenumber={location.Value.LineNumber};columnnumber=1]{err}";
+            await _outputDisplay.DisplayAsync(this, new FormattedTextOutputDeviceData(line));
         }
     }
 
