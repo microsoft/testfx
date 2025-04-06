@@ -138,6 +138,15 @@
   <data name="HangDumpExtensionDisplayName" xml:space="preserve">
     <value>Hang dump</value>
   </data>
+  <data name="HangDumpFailed" xml:space="preserve">
+    <value>The following exception occurred while taking hang dump:
+{0}
+
+Disk info:
+{1}</value>
+    <comment>{0} - the exception that occurred.
+{1} - disk info detailing free space</comment>
+  </data>
   <data name="HangDumpFileNameOptionDescription" xml:space="preserve">
     <value>Specify the name of the dump file</value>
   </data>

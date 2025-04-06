@@ -191,12 +191,43 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
             await _logger.LogDebugAsync($"Connected to the test host server pipe '{_namedPipeClient.PipeName}'");
 
             // Keep the custom thread to avoid to waste one from thread pool.
-            _activityIndicatorTask = _task.RunLongRunning(ActivityTimerAsync, "[HangDump] ActivityTimerAsync", cancellation);
+            _activityIndicatorTask = _task.RunLongRunning(
+                async () =>
+                {
+                    try
+                    {
+                        await ActivityTimerAsync();
+                    }
+                    catch (Exception e)
+                    {
+                        await _outputDisplay.DisplayAsync(this, new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.HangDumpFailed, e.ToString(), GetDiskInfo())));
+                        throw;
+                    }
+                }, "[HangDump] ActivityTimerAsync", cancellation);
         }
         catch (OperationCanceledException) when (cancellation.IsCancellationRequested)
         {
             return;
         }
+    }
+
+    private static string GetDiskInfo()
+    {
+        var builder = new StringBuilder();
+        DriveInfo[] allDrives = DriveInfo.GetDrives();
+
+        foreach (DriveInfo d in allDrives)
+        {
+            builder.AppendLine(CultureInfo.InvariantCulture, $"Drive {d.Name}");
+            if (d.IsReady)
+            {
+                builder.AppendLine(CultureInfo.InvariantCulture, $"  Available free space: {d.AvailableFreeSpace} bytes");
+                builder.AppendLine(CultureInfo.InvariantCulture, $"  Total free space: {d.TotalFreeSpace} bytes");
+                builder.AppendLine(CultureInfo.InvariantCulture, $"  Total size: {d.TotalSize} bytes");
+            }
+        }
+
+        return builder.ToString();
     }
 
     public async Task OnTestHostProcessExitedAsync(ITestHostProcessInformation testHostProcessInformation, CancellationToken cancellation)
