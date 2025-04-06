@@ -75,7 +75,7 @@ internal sealed class FileLoggerProvider(
         => FileLogger.Dispose();
 
 #if NETCOREAPP
-    public ValueTask DisposeAsync()
-        => FileLogger.DisposeAsync();
+    public async ValueTask DisposeAsync()
+        => await FileLogger.DisposeAsync();
 #endif
 }
