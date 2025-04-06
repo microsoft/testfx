@@ -59,12 +59,8 @@ public sealed class AvoidExpectedExceptionAttributeFixer : CodeFixProvider
         }
 
         IMethodSymbol? methodSymbol = semanticModel.GetDeclaredSymbol(methodDeclaration, context.CancellationToken);
-        if (methodSymbol is null)
-        {
-            return;
-        }
 
-        AttributeData? attribute = methodSymbol.GetAttributes().FirstOrDefault(
+        AttributeData? attribute = methodSymbol?.GetAttributes().FirstOrDefault(
             attr => SymbolEqualityComparer.Default.Equals(attr.AttributeClass, expectedExceptionAttributeSymbol));
 
         if (attribute?.ApplicationSyntaxReference is not { } syntaxRef)

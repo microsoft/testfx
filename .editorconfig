@@ -151,7 +151,7 @@ csharp_style_throw_expression = true:warning
 dotnet_style_coalesce_expression = true:warning
 
 # IDE0031: Use null propagation
-dotnet_style_null_propagation = true:warning
+dotnet_style_null_propagation = true:error
 
 # IDE0041: Use 'is null' check
 dotnet_style_prefer_is_null_check_over_reference_equality_method = true:warning
