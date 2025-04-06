@@ -384,14 +384,19 @@ internal sealed class TypeCache : MarshalByRefObject
             {
                 var assemblyInfo = new TestAssemblyInfo(assembly);
 
-                Type[] types = AssemblyEnumerator.GetTypes(assembly, assembly.FullName!, null);
+                Type?[] types = AssemblyEnumerator.GetTypes(assembly, assembly.FullName!, null);
 
-                foreach (Type t in types)
+                foreach (Type? type in types)
                 {
+                    if (type == null)
+                    {
+                        continue;
+                    }
+
                     try
                     {
                         // Only examine classes which are TestClass or derives from TestClass attribute
-                        if (!@this._reflectionHelper.IsDerivedAttributeDefined<TestClassAttribute>(t, inherit: false))
+                        if (!@this._reflectionHelper.IsDerivedAttributeDefined<TestClassAttribute>(type, inherit: false))
                         {
                             continue;
                         }
@@ -401,7 +406,7 @@ internal sealed class TypeCache : MarshalByRefObject
                         // If we fail to discover type from an assembly, then do not abort. Pick the next type.
                         PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning(
                             "TypeCache: Exception occurred while checking whether type {0} is a test class or not. {1}",
-                            t.FullName,
+                            type.FullName,
                             ex);
 
                         continue;

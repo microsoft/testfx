@@ -75,7 +75,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
 
         Assembly assembly = PlatformServiceProvider.Instance.FileOperations.LoadAssembly(assemblyFileName, isReflectionOnly: false);
 
-        Type[] types = GetTypes(assembly, assemblyFileName, warnings);
+        Type?[] types = GetTypes(assembly, assemblyFileName, warnings);
         bool discoverInternals = ReflectHelper.GetDiscoverInternalsAttribute(assembly) != null;
         TestIdGenerationStrategy testIdGenerationStrategy = ReflectHelper.GetTestIdGenerationStrategy(assembly);
 
@@ -105,7 +105,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
             },
         };
 
-        foreach (Type type in types)
+        foreach (Type? type in types)
         {
             if (type == null)
             {
@@ -127,7 +127,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
     /// <param name="assemblyFileName">The file name of the assembly.</param>
     /// <param name="warningMessages">Contains warnings if any, that need to be passed back to the caller.</param>
     /// <returns>Gets the types defined in the provided assembly.</returns>
-    internal static Type[] GetTypes(Assembly assembly, string assemblyFileName, ICollection<string>? warningMessages)
+    internal static Type?[] GetTypes(Assembly assembly, string assemblyFileName, ICollection<string>? warningMessages)
     {
         try
         {
@@ -138,7 +138,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
             PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning($"MSTestExecutor.TryGetTests: {Resource.TestAssembly_AssemblyDiscoveryFailure}", assemblyFileName, ex);
             PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning(Resource.ExceptionsThrown);
 
-            if (ex.LoaderExceptions != null)
+            if (ex.LoaderExceptions.Any())
             {
                 // If not able to load all type, log a warning and continue with loaded types.
                 string message = string.Format(CultureInfo.CurrentCulture, Resource.TypeLoadFailed, assemblyFileName, GetLoadExceptionDetails(ex));
@@ -151,7 +151,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
                 }
             }
 
-            return ex.Types!;
+            return ex.Types;
         }
     }
 
