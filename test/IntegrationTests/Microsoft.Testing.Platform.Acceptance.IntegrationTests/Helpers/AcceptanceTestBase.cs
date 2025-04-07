@@ -44,7 +44,7 @@ public class UnitTest1
 }
 
 #file dotnet.config
-[dotnet.test:runner]
+[dotnet.test.runner]
 name= "VSTest"
 """;
 

@@ -336,7 +336,7 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
 </Project>
 
 #file dotnet.config
-[dotnet.test:runner]
+[dotnet.test.runner]
 name= "VSTest"
 
 #file Program.cs
