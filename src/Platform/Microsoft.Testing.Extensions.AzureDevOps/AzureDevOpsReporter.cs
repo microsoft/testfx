@@ -102,8 +102,6 @@ internal sealed class AzureDevOpsReporter :
                 await WriteExceptionAsync(timeout.Explanation, timeout.Exception);
                 break;
         }
-
-        return;
     }
 
     private async Task WriteExceptionAsync(string? explanation, Exception? exception)
