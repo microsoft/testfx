@@ -61,10 +61,7 @@ internal sealed class MSBuildConsumer : IDataConsumer, ITestSessionLifetimeHandl
 
     public async Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken)
     {
-        if (cancellationToken.IsCancellationRequested)
-        {
-            return;
-        }
+        cancellationToken.ThrowIfCancellationRequested();
 
         // Avoid processing messages if the session has ended.
         if (_sessionEnded)

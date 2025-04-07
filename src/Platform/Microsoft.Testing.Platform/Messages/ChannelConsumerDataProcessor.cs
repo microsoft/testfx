@@ -131,10 +131,7 @@ internal sealed class AsyncConsumerDataProcessor : IDisposable
         while (Interlocked.CompareExchange(ref _totalPayloadReceived, totalPayloadReceived, totalPayloadProcessed) != totalPayloadProcessed)
         {
             // When we cancel we throw inside ConsumeAsync and we won't drain anymore any data
-            if (_cancellationToken.IsCancellationRequested)
-            {
-                break;
-            }
+            _cancellationToken.ThrowIfCancellationRequested();
 
             await _task.Delay(currentDelayTimeMs);
             currentDelayTimeMs = Math.Min(currentDelayTimeMs + minDelayTimeMs, 200);
