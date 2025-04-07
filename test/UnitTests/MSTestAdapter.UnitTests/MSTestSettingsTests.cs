@@ -11,6 +11,7 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 using Moq;
 
 using TestFramework.ForTestingMSTest;
+#pragma warning disable CS0618 // Type or member is obsolete
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests;
 

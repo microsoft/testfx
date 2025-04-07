@@ -109,10 +109,6 @@ internal sealed class TestFramework : IDisposable, ITestFramework
             sessionResult.IsSuccess = false;
             return sessionResult;
         }
-        catch
-        {
-            throw;
-        }
     }
 
     public async Task ExecuteRequestAsync(ExecuteRequestContext context)

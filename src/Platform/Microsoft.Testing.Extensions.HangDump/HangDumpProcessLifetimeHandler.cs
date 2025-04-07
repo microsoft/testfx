@@ -195,7 +195,6 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
         }
         catch (OperationCanceledException) when (cancellation.IsCancellationRequested)
         {
-            return;
         }
     }
 
