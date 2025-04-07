@@ -684,7 +684,7 @@ csharp_style_unused_value_expression_statement_preference = discard_variable:sil
 csharp_style_prefer_primary_constructors = false
 
 # Empty constructor
-resharper_empty_constructor_highlighting = error
+resharper_empty_constructor_highlighting = warning
 
 # IDE0300: Simplify collection initialization
 dotnet_style_prefer_collection_expression = false
