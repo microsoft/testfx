@@ -115,7 +115,6 @@ public sealed class IPCTests
                 }
                 catch (Exception)
                 {
-                    continue;
                 }
             }
         });

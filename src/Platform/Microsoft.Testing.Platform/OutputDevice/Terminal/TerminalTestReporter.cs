@@ -485,7 +485,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
 
     private static void FormatInnerExceptions(ITerminal terminal, FlatException[] exceptions)
     {
-        if (exceptions is null || exceptions.Length == 0)
+        if (exceptions.Length == 0)
         {
             return;
         }

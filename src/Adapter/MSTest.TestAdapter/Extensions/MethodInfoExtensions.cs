@@ -224,7 +224,6 @@ internal static class MethodInfoExtensions
             // For example, if parameterType is `T[]` and argumentType is `string[]`, we need to infer that `T` is `string`.
             // So, we call InferGenerics with `T` and `string`.
             InferGenerics(parameterTypeElementType, argumentTypeElementType, result);
-            return;
         }
         else if (parameterType.GenericTypeArguments.Length == argumentType.GenericTypeArguments.Length)
         {

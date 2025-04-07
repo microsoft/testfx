@@ -39,7 +39,7 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
 
     private Task? _connectionLoopTask;
     private ModuleInfoRequest? _moduleInfo;
-    private string _outputFileName;
+    private string? _outputFileName;
     private StreamWriter? _outputFileStream;
     private string? _toolCommand;
 

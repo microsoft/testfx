@@ -1132,7 +1132,7 @@ public class TestMethodInfoTests : TestContainer
 
     public void TestMethodInfoInvokeShouldSetResultAsFailedWhenExceptionIsExpectedButIsNotThrown()
     {
-        DummyTestClass.TestMethodBody = o => { return; };
+        DummyTestClass.TestMethodBody = o => { };
         var testMethodInfo = new TestMethodInfo(_methodInfo, _testClassInfo, _testContextImplementation)
         {
             TimeoutInfo = TimeoutInfo.FromTimeout(3600 * 1000),

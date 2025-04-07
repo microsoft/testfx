@@ -151,10 +151,10 @@ public class TempDirectory : IDisposable
     [Obsolete("Don't use directly. Use RepoRoot property instead.")]
     private static string GetRepoRoot()
     {
-        string currentDirectory = AppContext.BaseDirectory;
+        string? currentDirectory = AppContext.BaseDirectory;
         while (System.IO.Path.GetFileName(currentDirectory) != "artifacts" && currentDirectory is not null)
         {
-            currentDirectory = System.IO.Path.GetDirectoryName(currentDirectory)!;
+            currentDirectory = System.IO.Path.GetDirectoryName(currentDirectory);
         }
 
         return System.IO.Path.GetDirectoryName(currentDirectory)
