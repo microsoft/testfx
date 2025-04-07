@@ -3,6 +3,8 @@
 
 #pragma warning disable TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
 
+using System;
+
 using Microsoft.Testing.Extensions.TrxReport.Abstractions;
 using Microsoft.Testing.Platform;
 using Microsoft.Testing.Platform.Extensions.Messages;
@@ -19,6 +21,18 @@ internal static class ObjectModelConverters
         VSTestTestNodeProperties.OriginalExecutorUriPropertyName, VSTestTestNodeProperties.OriginalExecutorUriPropertyName,
         typeof(Uri), typeof(TestNode));
 
+    private static readonly TestProperty ManagedTypeProperty = TestProperty.Register(
+        id: "TestCase.ManagedType",
+        label: "TestCase.ManagedType",
+        valueType: typeof(string),
+        owner: typeof(TestCase));
+
+    private static readonly TestProperty ManagedMethodProperty = TestProperty.Register(
+        id: "TestCase.ManagedMethod",
+        label: "TestCase.ManagedMethod",
+        valueType: typeof(string),
+        owner: typeof(TestCase));
+
     /// <summary>
     /// Converts a VSTest <see cref="TestCase"/> to a Microsoft Testing Platform <see cref="TestNode"/>.
     /// </summary>
@@ -32,7 +46,7 @@ internal static class ObjectModelConverters
             DisplayName = displayNameFromTestResult ?? testCase.DisplayName ?? testCase.FullyQualifiedName,
         };
 
-        if (TryGetMethodIdentifierProperty(testCase.FullyQualifiedName, out TestMethodIdentifierProperty? methodIdentifierProperty))
+        if (TryGetMethodIdentifierProperty(testCase, out TestMethodIdentifierProperty? methodIdentifierProperty))
         {
             testNode.Properties.Add(methodIdentifierProperty);
         }
@@ -203,7 +217,21 @@ internal static class ObjectModelConverters
         testCase.ExecutorUri = new(Constants.ExecutorUri);
     }
 
-    private static bool TryGetMethodIdentifierProperty(ReadOnlySpan<char> fullyQualifiedName, [NotNullWhen(true)] out TestMethodIdentifierProperty? methodIdentifierProperty)
+    private static bool TryGetMethodIdentifierProperty(TestCase testCase, [NotNullWhen(true)] out TestMethodIdentifierProperty? methodIdentifierProperty)
+    {
+        string? managedType = testCase.GetPropertyValue<string>(ManagedTypeProperty, defaultValue: null);
+        string? managedMethod = testCase.GetPropertyValue<string>(ManagedMethodProperty, defaultValue: null);
+        // NOTE: ManagedMethod, in case of MSTest, will have the parameter types.
+        // So, we prefer using it to display the parameter types in Test Explorer.
+        return !RoslynString.IsNullOrEmpty(managedType) && !RoslynString.IsNullOrEmpty(managedMethod)
+            ? TryGetMethodIdentifierPropertyFromManagedTypeAndManagedMethod(managedType, managedMethod, out methodIdentifierProperty)
+            : TryGetMethodIdentifierPropertyFromFullyQualifiedName(testCase.FullyQualifiedName, out methodIdentifierProperty);
+    }
+
+    private static bool TryGetMethodIdentifierPropertyFromManagedTypeAndManagedMethod(
+        ReadOnlySpan<char> managedType,
+        ReadOnlySpan<char> managedMethod,
+        [NotNullWhen(true)] out TestMethodIdentifierProperty? methodIdentifierProperty)
     {
         string assemblyFullName = string.Empty;
         string @namespace;
@@ -212,40 +240,52 @@ internal static class ObjectModelConverters
         string[] parameterTypeFullNames = Array.Empty<string>();
         string returnTypeFullName = string.Empty;
 
-        int indexOfParen = fullyQualifiedName.IndexOf('(');
+        int indexOfParen = managedMethod.IndexOf('(');
         if (indexOfParen != -1)
         {
-            parameterTypeFullNames = GetParameterTypes(fullyQualifiedName.Slice(indexOfParen + 1));
-            fullyQualifiedName = fullyQualifiedName.Slice(0, indexOfParen);
+            parameterTypeFullNames = GetParameterTypes(managedMethod.Slice(indexOfParen + 1));
+            methodName = managedMethod.Slice(0, indexOfParen).ToString();
         }
-
-        // Get method name
-        int lastIndexOfDot = fullyQualifiedName.LastIndexOf('.');
-        if (lastIndexOfDot == -1)
+        else
         {
-            methodIdentifierProperty = null;
-            return false;
+            methodName = managedMethod.ToString();
         }
-
-        methodName = fullyQualifiedName.Slice(lastIndexOfDot + 1).ToString();
-        fullyQualifiedName = fullyQualifiedName.Slice(0, lastIndexOfDot);
 
         // Get type name
-        lastIndexOfDot = fullyQualifiedName.LastIndexOf('.');
+        int lastIndexOfDot = managedType.LastIndexOf('.');
         if (lastIndexOfDot == -1)
         {
-            methodIdentifierProperty = null;
-            return false;
+            typeName = managedType.ToString();
+            @namespace = string.Empty;
         }
-
-        typeName = fullyQualifiedName.Slice(lastIndexOfDot + 1).ToString();
-        fullyQualifiedName = fullyQualifiedName.Slice(0, lastIndexOfDot);
-
-        // Get namespace
-        @namespace = fullyQualifiedName.ToString();
+        else
+        {
+            typeName = managedType.Slice(lastIndexOfDot + 1).ToString();
+            @namespace = managedType.Slice(0, lastIndexOfDot).ToString();
+        }
 
         methodIdentifierProperty = new TestMethodIdentifierProperty(assemblyFullName, @namespace, typeName, methodName, parameterTypeFullNames, returnTypeFullName);
         return true;
+    }
+
+    private static bool TryGetMethodIdentifierPropertyFromFullyQualifiedName(ReadOnlySpan<char> fullyQualifiedName, [NotNullWhen(true)] out TestMethodIdentifierProperty? methodIdentifierProperty)
+    {
+        int indexOfParen = fullyQualifiedName.IndexOf('(');
+
+        int lastIndexOfDotBeforeParen = indexOfParen == -1
+            ? fullyQualifiedName.LastIndexOf('.')
+            : fullyQualifiedName.Slice(0, indexOfParen).LastIndexOf('.');
+
+        if (lastIndexOfDotBeforeParen == -1)
+        {
+            methodIdentifierProperty = null;
+            return false;
+        }
+
+        return TryGetMethodIdentifierPropertyFromManagedTypeAndManagedMethod(
+            managedType: fullyQualifiedName.Slice(0, lastIndexOfDotBeforeParen),
+            managedMethod: fullyQualifiedName.Slice(lastIndexOfDotBeforeParen + 1),
+            out methodIdentifierProperty);
     }
 
     private static string[] GetParameterTypes(ReadOnlySpan<char> afterOpenParen)
