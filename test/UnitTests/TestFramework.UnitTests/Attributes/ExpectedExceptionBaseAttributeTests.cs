@@ -76,6 +76,5 @@ public class TestableExpectedExceptionBaseAttributeClass : ExpectedExceptionBase
 
     protected internal override void Verify(Exception exception)
     {
-        return;
     }
 }

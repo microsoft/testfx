@@ -103,7 +103,6 @@ internal sealed class ThreadPoolTestNodeRunner : IDisposable
         catch (OperationCanceledException ex) when (ex.CancellationToken == _cancellationToken)
         {
             // We are being cancelled, so we don't need to wait anymore
-            return;
         }
         finally
         {
