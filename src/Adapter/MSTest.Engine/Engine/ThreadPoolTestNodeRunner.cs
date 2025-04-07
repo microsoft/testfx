@@ -187,10 +187,6 @@ internal sealed class ThreadPoolTestNodeRunner : IDisposable
             // If the cancellation token is triggered, we don't want to report the cancellation as a failure
             return Result.Ok("Cancelled by user");
         }
-        catch
-        {
-            throw;
-        }
     }
 
     public void Dispose()
