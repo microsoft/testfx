@@ -141,18 +141,6 @@ internal sealed class Json
             int attachmentIndex = 0;
             foreach (IProperty property in message.Properties)
             {
-                if (property is SerializableKeyValuePairStringProperty keyValuePairProperty)
-                {
-                    properties.Add((keyValuePairProperty.Key, keyValuePairProperty.Value));
-                    continue;
-                }
-
-                if (property is SerializableNamedArrayStringProperty namedArrayStringProperty)
-                {
-                    properties.Add((namedArrayStringProperty.Name, namedArrayStringProperty.Values));
-                    continue;
-                }
-
                 if (property is TestFileLocationProperty fileLocationProperty)
                 {
                     properties.Add(("location.file", fileLocationProperty.FilePath));

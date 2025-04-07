@@ -62,7 +62,7 @@ public sealed class VSTestDiscoverTestExecutionRequestFactory : ITestExecutionRe
 
         ITestApplicationModuleInfo testApplicationModuleInfo = serviceProvider.GetTestApplicationModuleInfo();
         IMessageBus messageBus = serviceProvider.GetRequiredService<IMessageBus>();
-        TestCaseDiscoverySinkAdapter discoverySink = new(adapterExtension, discoverTestExecutionRequest.Session, testAssemblyPaths, testApplicationModuleInfo, loggerFactory, messageBus, adapterExtension.IsTrxEnabled, clientInfo, cancellationToken);
+        TestCaseDiscoverySinkAdapter discoverySink = new(adapterExtension, discoverTestExecutionRequest.Session, testAssemblyPaths, testApplicationModuleInfo, loggerFactory, messageBus, adapterExtension.IsTrxEnabled, cancellationToken);
 
         return new(discoverTestExecutionRequest.Session, discoverTestExecutionRequest.Filter, testAssemblyPaths, discoveryContext, messageLogger, discoverySink);
     }

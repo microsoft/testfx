@@ -30,13 +30,12 @@ internal sealed class FrameworkHandlerAdapter : IFrameworkHandle
     private readonly IMessageBus _messageBus;
     private readonly VSTestBridgedTestFrameworkBase _adapterExtensionBase;
     private readonly TestSessionContext _session;
-    private readonly IClientInfo _clientInfo;
     private readonly CancellationToken _cancellationToken;
     private readonly bool _isTrxEnabled;
     private readonly MessageLoggerAdapter _comboMessageLogger;
     private readonly string _testAssemblyPath;
 
-    public FrameworkHandlerAdapter(VSTestBridgedTestFrameworkBase adapterExtensionBase, TestSessionContext session, IClientInfo clientInfo, string[] testAssemblyPaths,
+    public FrameworkHandlerAdapter(VSTestBridgedTestFrameworkBase adapterExtensionBase, TestSessionContext session, string[] testAssemblyPaths,
         ITestApplicationModuleInfo testApplicationModuleInfo, ILoggerFactory loggerFactory, IMessageBus messageBus, IOutputDevice outputDevice,
         bool isTrxEnabled, CancellationToken cancellationToken, IFrameworkHandle? frameworkHandle = null)
     {
@@ -63,7 +62,6 @@ internal sealed class FrameworkHandlerAdapter : IFrameworkHandle
         _messageBus = messageBus;
         _adapterExtensionBase = adapterExtensionBase;
         _session = session;
-        _clientInfo = clientInfo;
         _cancellationToken = cancellationToken;
         _isTrxEnabled = isTrxEnabled;
         _comboMessageLogger = new MessageLoggerAdapter(loggerFactory, outputDevice, adapterExtensionBase, frameworkHandle);
@@ -126,7 +124,7 @@ internal sealed class FrameworkHandlerAdapter : IFrameworkHandle
         _frameworkHandle?.RecordResult(testResult);
 
         // Publish node state change to Microsoft Testing Platform
-        var testNode = testResult.ToTestNode(_isTrxEnabled, _clientInfo);
+        var testNode = testResult.ToTestNode(_isTrxEnabled);
 
         var testNodeChange = new TestNodeUpdateMessage(_session.SessionUid, testNode);
         _messageBus.PublishAsync(_adapterExtensionBase, testNodeChange).Await();
@@ -145,7 +143,7 @@ internal sealed class FrameworkHandlerAdapter : IFrameworkHandle
         _frameworkHandle?.RecordStart(testCase);
 
         // Publish node state change to Microsoft Testing Platform
-        var testNode = testCase.ToTestNode(_isTrxEnabled, _clientInfo);
+        var testNode = testCase.ToTestNode(_isTrxEnabled);
         testNode.Properties.Add(InProgressTestNodeStateProperty.CachedInstance);
         var testNodeChange = new TestNodeUpdateMessage(_session.SessionUid, testNode);
 

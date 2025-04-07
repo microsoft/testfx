@@ -11,8 +11,6 @@ namespace Microsoft.Testing.Extensions.VSTestBridge.Capabilities;
 /// </summary>
 public sealed class VSTestBridgeExtensionBaseCapabilities : ITrxReportCapability, IVSTestFlattenedTestNodesReportCapability, INamedFeatureCapability
 {
-    private const string VSTestProviderSupport = "vstestProvider";
-
     /// <inheritdoc />
     bool IVSTestFlattenedTestNodesReportCapability.IsSupported { get; } = true;
 
@@ -28,5 +26,5 @@ public sealed class VSTestBridgeExtensionBaseCapabilities : ITrxReportCapability
     void ITrxReportCapability.Enable() => IsTrxEnabled = true;
 
     /// <inheritdoc />
-    bool INamedFeatureCapability.IsSupported(string featureName) => featureName is VSTestProviderSupport;
+    bool INamedFeatureCapability.IsSupported(string featureName) => false;
 }

@@ -379,19 +379,3 @@ public record StandardErrorProperty(string StandardError) : IProperty;
 /// <param name="DisplayName">The display name.</param>
 /// <param name="Description">The description.</param>
 public record FileArtifactProperty(FileInfo FileInfo, string DisplayName, string? Description = null) : IProperty;
-
-internal sealed record SerializableKeyValuePairStringProperty(string Key, string Value) : KeyValuePairStringProperty(Key, Value);
-
-internal sealed record SerializableNamedArrayStringProperty(string Name, string[] Values) : IProperty
-{
-    [SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "https://github.com/dotnet/roslyn/issues/52421")]
-    private bool PrintMembers(StringBuilder builder)
-    {
-        builder.Append("Name = ");
-        builder.Append(Name);
-        builder.Append(", Values = [");
-        builder.AppendJoin(", ", Values);
-        builder.Append(']');
-        return true;
-    }
-}

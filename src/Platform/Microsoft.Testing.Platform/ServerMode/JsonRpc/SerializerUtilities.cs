@@ -203,18 +203,6 @@ internal static class SerializerUtilities
 
                 foreach (IProperty property in n.Properties)
                 {
-                    if (property is SerializableKeyValuePairStringProperty keyValuePairProperty)
-                    {
-                        properties[keyValuePairProperty.Key] = keyValuePairProperty.Value;
-                        continue;
-                    }
-
-                    if (property is SerializableNamedArrayStringProperty namedArrayStringProperty)
-                    {
-                        properties[namedArrayStringProperty.Name] = namedArrayStringProperty.Values;
-                        continue;
-                    }
-
                     if (property is TestFileLocationProperty fileLocationProperty)
                     {
                         properties["location.file"] = fileLocationProperty.FilePath;

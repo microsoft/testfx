@@ -137,8 +137,7 @@ public abstract class VSTestBridgedTestFrameworkBase : ITestFramework, IDataProd
         // both the original (VSTest) sink and our own.
         ITestApplicationModuleInfo testApplicationModuleInfo = ServiceProvider.GetTestApplicationModuleInfo();
         ILoggerFactory loggerFactory = ServiceProvider.GetRequiredService<ILoggerFactory>();
-        IClientInfo clientInfo = ServiceProvider.GetRequiredService<IClientInfo>();
-        TestCaseDiscoverySinkAdapter testCaseDiscoverySinkAdapter = new(this, discoverRequest.Session, discoverRequest.AssemblyPaths, testApplicationModuleInfo, loggerFactory, messageBus, IsTrxEnabled, clientInfo, cancellationToken, discoverRequest.DiscoverySink);
+        TestCaseDiscoverySinkAdapter testCaseDiscoverySinkAdapter = new(this, discoverRequest.Session, discoverRequest.AssemblyPaths, testApplicationModuleInfo, loggerFactory, messageBus, IsTrxEnabled, cancellationToken, discoverRequest.DiscoverySink);
 
         return new(discoverRequest.Session, discoverRequest.Filter, discoverRequest.AssemblyPaths, discoverRequest.DiscoveryContext,
             discoverRequest.MessageLogger, testCaseDiscoverySinkAdapter);
@@ -152,8 +151,7 @@ public abstract class VSTestBridgedTestFrameworkBase : ITestFramework, IDataProd
         ITestApplicationModuleInfo testApplicationModuleInfo = ServiceProvider.GetTestApplicationModuleInfo();
         ILoggerFactory loggerFactory = ServiceProvider.GetRequiredService<ILoggerFactory>();
         IOutputDevice outputDevice = ServiceProvider.GetOutputDevice();
-        IClientInfo clientInfo = ServiceProvider.GetClientInfo();
-        FrameworkHandlerAdapter frameworkHandlerAdapter = new(this, runRequest.Session, clientInfo, runRequest.AssemblyPaths, testApplicationModuleInfo,
+        FrameworkHandlerAdapter frameworkHandlerAdapter = new(this, runRequest.Session, runRequest.AssemblyPaths, testApplicationModuleInfo,
             loggerFactory, messageBus, outputDevice, IsTrxEnabled, cancellationToken, runRequest.FrameworkHandle);
 
         return new(runRequest.Session, runRequest.Filter, runRequest.AssemblyPaths, runRequest.RunContext,
