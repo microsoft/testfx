@@ -191,7 +191,7 @@ dotnet_diagnostic.IDE0020.severity = warning
 dotnet_diagnostic.IDE0028.severity = warning
 
 # Use collection expression syntax
-resharper_use_collection_expression_highlighting = error
+resharper_use_collection_expression_highlighting = warning
 
 # IDE0031: Use null propagation
 dotnet_diagnostic.IDE0031.severity = warning
