@@ -8,7 +8,6 @@ using Jsonite;
 #endif
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Helpers;
-using Microsoft.Testing.Platform.ServerMode.Json;
 
 namespace Microsoft.Testing.Platform.ServerMode;
 
