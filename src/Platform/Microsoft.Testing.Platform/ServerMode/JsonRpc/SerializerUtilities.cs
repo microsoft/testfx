@@ -8,6 +8,7 @@ using Jsonite;
 #endif
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Helpers;
+using Microsoft.Testing.Platform.ServerMode.Json;
 
 namespace Microsoft.Testing.Platform.ServerMode;
 
@@ -213,8 +214,21 @@ internal static class SerializerUtilities
 
                     if (property is TestMethodIdentifierProperty testMethodIdentifierProperty)
                     {
+                        string locationType = testMethodIdentifierProperty.TypeName;
+
+                        // Ideally, we should just use testMethodIdentifierProperty.
+                        // But Test Explorer had a bug where it expects location.type to also include the namespace,
+                        // and it didn't correctly consider location.namespace.
+                        // To keep compatibility with older VS, we hack it here to match the wrong behavior.
+                        // We do so only if we know VS being used doesn't have the fix
+                        if (ClientHelpers.UseWrongLocationImplementation() &&
+                            RoslynString.IsNullOrEmpty(testMethodIdentifierProperty.Namespace))
+                        {
+                            locationType = $"{testMethodIdentifierProperty.Namespace}.{testMethodIdentifierProperty.TypeName}";
+                        }
+
                         properties["location.namespace"] = testMethodIdentifierProperty.Namespace;
-                        properties["location.type"] = testMethodIdentifierProperty.TypeName;
+                        properties["location.type"] = locationType;
                         properties["location.method"] = testMethodIdentifierProperty.ParameterTypeFullNames.Length > 0
                             ? $"{testMethodIdentifierProperty.MethodName}({string.Join(",", testMethodIdentifierProperty.ParameterTypeFullNames)})"
                             : testMethodIdentifierProperty.MethodName;
