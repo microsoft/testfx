@@ -250,10 +250,10 @@ public class TempDirectory : IDisposable
     {
         internal static List<InlineFile> ParseFiles(string fileContents)
         {
-            List<InlineFile> files = new();
+            List<InlineFile> files = [];
             string? name = null;
             bool inFile = false;
-            List<string> lines = new();
+            List<string> lines = [];
             foreach (string line in fileContents.Split('\n'))
             {
                 if (line.Trim().StartsWith("### ", StringComparison.InvariantCulture))

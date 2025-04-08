@@ -5,7 +5,7 @@ namespace Microsoft.Testing.Framework;
 
 internal sealed class Result
 {
-    private readonly List<IReason> _reasons = new();
+    private readonly List<IReason> _reasons = [];
 
     private Result()
     {

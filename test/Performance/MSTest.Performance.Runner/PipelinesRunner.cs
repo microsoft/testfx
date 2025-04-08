@@ -7,7 +7,7 @@ namespace MSTest.Performance.Runner;
 
 internal class PipelinesRunner
 {
-    private readonly List<PipelineInfo> _pipelines = new();
+    private readonly List<PipelineInfo> _pipelines = [];
 
     public void AddPipeline(string groupName, string pipelineName, OSPlatform[] oSPlatform, Action<IDictionary<string, object>> func, Action<IDictionary<string, object>>? updatePropertyBag = null, string[]? traits = null) => _pipelines.Add(new PipelineInfo(groupName, pipelineName, oSPlatform, func, updatePropertyBag, traits));
 

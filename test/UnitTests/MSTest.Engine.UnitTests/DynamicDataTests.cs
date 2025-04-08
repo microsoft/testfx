@@ -10,11 +10,11 @@ namespace Microsoft.Testing.Framework.UnitTests;
 public class DynamicDataTests
 {
     public static IEnumerable<object[]> IntDataProperty
-        => new[]
-        {
-            new object[] { 1, 2 },
-            new object[] { 2, 3 },
-        };
+        =>
+        [
+            [1, 2],
+            [2, 3]
+        ];
 
     [DynamicData(nameof(IntDataProperty))]
     [TestMethod]
@@ -37,11 +37,11 @@ public class DynamicDataTests
         => Assert.AreEqual(expected, actualPlus1 - 1);
 
     public static IEnumerable<object[]> IntDataMethod()
-        => new[]
-        {
-            new object[] { 1, 2 },
-            new object[] { 2, 3 },
-        };
+        =>
+        [
+            [1, 2],
+            [2, 3]
+        ];
 
     [DynamicData(nameof(IntDataProperty), typeof(DataClass))]
     [TestMethod]
@@ -60,11 +60,11 @@ public class DynamicDataTests
     }
 
     public static IEnumerable<object[]> UserDataProperty
-        => new[]
-        {
-            new object[] { new User("Jakub"), new User("Amaury") },
-            new object[] { new User("Marco"), new User("Pavel") },
-        };
+        =>
+        [
+            [new User("Jakub"), new User("Amaury")],
+            [new User("Marco"), new User("Pavel")]
+        ];
 
     [DynamicData(nameof(UserDataMethod), DynamicDataSourceType.Method)]
     [TestMethod]
@@ -73,28 +73,28 @@ public class DynamicDataTests
     }
 
     public static IEnumerable<object[]> UserDataMethod()
-        => new[]
-        {
-            new object[] { new User("Jakub"), new User("Amaury") },
-            new object[] { new User("Marco"), new User("Pavel") },
-        };
+        =>
+        [
+            [new User("Jakub"), new User("Amaury")],
+            [new User("Marco"), new User("Pavel")]
+        ];
 }
 
 public class DataClass
 {
     public static IEnumerable<object[]> IntDataProperty
-        => new[]
-        {
-            new object[] { 1, 3 },
-            new object[] { 2, 4 },
-        };
+        =>
+        [
+            [1, 3],
+            [2, 4]
+        ];
 
     public static IEnumerable<object[]> IntDataMethod()
-        => new[]
-        {
-            new object[] { 1, 3 },
-            new object[] { 2, 4 },
-        };
+        =>
+        [
+            [1, 3],
+            [2, 4]
+        ];
 }
 
 public class User

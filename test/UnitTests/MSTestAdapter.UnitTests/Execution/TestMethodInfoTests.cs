@@ -1398,7 +1398,7 @@ public class TestMethodInfoTests : TestContainer
         MethodInfo testMethodInfo = typeof(DummyTestClassForExpectedException).GetMethod(nameof(DummyTestClassForExpectedException.DummyTestMethod1))!;
         TestClassInfo classInfo = new(
             typeof(DummyTestClassForExpectedException),
-            typeof(DummyTestClassForExpectedException).GetConstructor(Array.Empty<Type>())!,
+            typeof(DummyTestClassForExpectedException).GetConstructor([])!,
             isParameterlessConstructor: true,
             new UTF.TestClassAttribute(),
             new TestAssemblyInfo(typeof(DummyTestClassForExpectedException).Assembly));
@@ -1435,7 +1435,7 @@ public class TestMethodInfoTests : TestContainer
         MethodInfo methodInfo = type.GetMethod(nameof(DummyTestClassForExpectedException.TestMethodWithExpectedException))!;
         TestClassInfo classInfo = new(
             typeof(DummyTestClassForExpectedException),
-            typeof(DummyTestClassForExpectedException).GetConstructor(Array.Empty<Type>())!,
+            typeof(DummyTestClassForExpectedException).GetConstructor([])!,
             isParameterlessConstructor: true,
             new UTF.TestClassAttribute(),
             new TestAssemblyInfo(typeof(DummyTestClassForExpectedException).Assembly));
@@ -1456,7 +1456,7 @@ public class TestMethodInfoTests : TestContainer
         MethodInfo methodInfo = type.GetMethod(nameof(DummyTestClassForExpectedException.TestMethodWithoutExpectedException))!;
         TestClassInfo classInfo = new(
             typeof(DummyTestClassForExpectedException),
-            typeof(DummyTestClassForExpectedException).GetConstructor(Array.Empty<Type>())!,
+            typeof(DummyTestClassForExpectedException).GetConstructor([])!,
             isParameterlessConstructor: true,
             new UTF.TestClassAttribute(),
             new TestAssemblyInfo(typeof(DummyTestClassForExpectedException).Assembly));

@@ -55,10 +55,10 @@ internal sealed class TrxCompareTool : ITool, IOutputDeviceDataProducer
 
         XNamespace trxNamespace = "http://microsoft.com/schemas/VisualStudio/TeamTest/2010";
 
-        List<(string TestName, string Outcome, string Storage)> baseLineResults = new();
-        List<string> baseLineIssues = new();
-        List<(string TestName, string Outcome, string Storage)> comparedResults = new();
-        List<string> comparedIssues = new();
+        List<(string TestName, string Outcome, string Storage)> baseLineResults = [];
+        List<string> baseLineIssues = [];
+        List<(string TestName, string Outcome, string Storage)> comparedResults = [];
+        List<string> comparedIssues = [];
         await _task.WhenAll(
             _task.Run(() => CollectEntriesAndErrors(baselineFilePaths[0], trxNamespace, baseLineResults, baseLineIssues)),
             _task.Run(() => CollectEntriesAndErrors(comparedFilePaths[0], trxNamespace, comparedResults, comparedIssues)));

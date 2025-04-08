@@ -285,7 +285,7 @@ internal class DummyTestClass
     /// <summary>
     /// Gets the empty test data property.
     /// </summary>
-    public static IEnumerable<object[]> EmptyProperty => Array.Empty<object[]>();
+    public static IEnumerable<object[]> EmptyProperty => [];
 
     /// <summary>
     /// Gets the wrong test data property i.e. Property returning something other than

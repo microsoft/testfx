@@ -619,25 +619,24 @@ public sealed class TestNodesGeneratorTests : TestBase
     public async Task When_MultipleClassesFromSameNamespace_ItGeneratesASingleNamespaceTestNode()
     {
         GeneratorCompilationResult generatorResult = await GeneratorTester.TestGraph.CompileAndExecuteAsync(
-            new[]
-            {
-                $$"""
-                using System.Threading.Tasks;
-                using Microsoft.VisualStudio.TestTools.UnitTesting;
+        [
+            $$"""
+              using System.Threading.Tasks;
+              using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-                namespace MyNamespace
-                {
-                    [TestClass]
-                    public class MyType1
-                    {
-                        [TestMethod]
-                        public Task TestMethod()
-                        {
-                            return Task.CompletedTask;
-                        }
-                    }
-                }
-                """,
+              namespace MyNamespace
+              {
+                  [TestClass]
+                  public class MyType1
+                  {
+                      [TestMethod]
+                      public Task TestMethod()
+                      {
+                          return Task.CompletedTask;
+                      }
+                  }
+              }
+              """,
                 $$"""
                 using System.Threading.Tasks;
                 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -654,8 +653,8 @@ public sealed class TestNodesGeneratorTests : TestBase
                         }
                     }
                 }
-                """,
-            }, CancellationToken.None);
+                """
+        ], CancellationToken.None);
 
         generatorResult.AssertSuccessfulGeneration();
         generatorResult.GeneratedTrees.Should().HaveCount(4);
@@ -1147,27 +1146,26 @@ public sealed class TestNodesGeneratorTests : TestBase
     public async Task When_APartialTypeIsMarkedWithTestClass_ItGeneratesAGraphWithAssemblyNamespaceTypeAndMethods()
     {
         GeneratorCompilationResult generatorResult = await GeneratorTester.TestGraph.CompileAndExecuteAsync(
-            new string[]
-            {
-                $$"""
-                using System.Threading.Tasks;
-                using Microsoft.VisualStudio.TestTools.UnitTesting;
+        [
+            $$"""
+              using System.Threading.Tasks;
+              using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-                namespace MyNamespace
-                {
-                    [TestClass]
-                    public partial class MyType
-                    {
-                        public MyType(int a) { }
+              namespace MyNamespace
+              {
+                  [TestClass]
+                  public partial class MyType
+                  {
+                      public MyType(int a) { }
 
-                        [TestMethod]
-                        public Task TestMethod1()
-                        {
-                            return Task.CompletedTask;
-                        }
-                    }
-                }
-                """,
+                      [TestMethod]
+                      public Task TestMethod1()
+                      {
+                          return Task.CompletedTask;
+                      }
+                  }
+              }
+              """,
                 $$"""
                 using System.Threading.Tasks;
                 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -1189,8 +1187,8 @@ public sealed class TestNodesGeneratorTests : TestBase
                         }
                     }
                 }
-                """,
-            }, CancellationToken.None);
+                """
+        ], CancellationToken.None);
 
         generatorResult.AssertSuccessfulGeneration();
         generatorResult.GeneratedTrees.Should().HaveCount(3);

@@ -317,7 +317,7 @@ internal sealed class AnsiTerminalTestProgressFrame
         {
             detailItems[sortedItemIndex] = progressItems[sortedItemIndex].TestNodeResultsState?.GetRunningTasks(
                 linesToDistribute / progressItems.Length)
-                ?? Array.Empty<TestDetailState>();
+                ?? [];
         }
 
         for (int progressI = 0; progressI < progressItems.Length; progressI++)

@@ -24,9 +24,8 @@ internal sealed class RetryCommandLineOptionsProvider : ICommandLineOptionsProvi
 
     public string Description => ExtensionResources.RetryFailedTestsExtensionDescription;
 
-    public IReadOnlyCollection<CommandLineOption> GetCommandLineOptions()
-        => new CommandLineOption[]
-        {
+    public IReadOnlyCollection<CommandLineOption> GetCommandLineOptions() =>
+        [
             // Hide the extension for now, we will add tests and we will re-enable when will be good.
             // We'd like to have some iteration in prod with our dogfooders before.
             new(RetryFailedTestsOptionName, ExtensionResources.RetryFailedTestsOptionDescription, ArgumentArity.ExactlyOne, false, isBuiltIn: true),
@@ -34,8 +33,8 @@ internal sealed class RetryCommandLineOptionsProvider : ICommandLineOptionsProvi
             new(RetryFailedTestsMaxTestsOptionName, ExtensionResources.RetryFailedTestsMaxTestsOptionDescription, ArgumentArity.ExactlyOne, false, isBuiltIn: true),
 
             // Hidden internal args
-            new(RetryFailedTestsPipeNameOptionName, "Communication between the test host and the retry infra.", ArgumentArity.ExactlyOne, isHidden: true, isBuiltIn: true),
-        };
+            new(RetryFailedTestsPipeNameOptionName, "Communication between the test host and the retry infra.", ArgumentArity.ExactlyOne, isHidden: true, isBuiltIn: true)
+        ];
 
     public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 

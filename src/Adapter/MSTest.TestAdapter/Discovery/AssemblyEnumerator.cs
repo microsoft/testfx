@@ -352,7 +352,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
         IEnumerable<ITestDataSource> testDataSources = ReflectHelper.Instance.GetDerivedAttributes<Attribute>(testMethodInfo.MethodInfo, inherit: false).OfType<ITestDataSource>();
 
         // We need to use a temporary list to avoid adding tests to the main list if we fail to expand any data source.
-        List<UnitTestElement> tempListOfTests = new();
+        List<UnitTestElement> tempListOfTests = [];
 
         try
         {

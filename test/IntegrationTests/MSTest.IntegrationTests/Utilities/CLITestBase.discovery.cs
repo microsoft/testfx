@@ -54,7 +54,7 @@ public partial class CLITestBase : TestContainer
     {
         private readonly List<TestCase> _testCases = [];
 
-        public ImmutableArray<TestCase> DiscoveredTests => _testCases.ToImmutableArray();
+        public ImmutableArray<TestCase> DiscoveredTests => [.._testCases];
 
         public void SendTestCase(TestCase discoveredTest) => _testCases.Add(discoveredTest);
     }
@@ -92,7 +92,7 @@ public partial class CLITestBase : TestContainer
         private readonly List<string> _messageList = [];
         private readonly ConcurrentDictionary<TestCase, ConcurrentBag<TestResult>> _testResults = new();
 
-        private ConcurrentBag<TestResult> _activeResults = new();
+        private ConcurrentBag<TestResult> _activeResults = [];
 
         public bool EnableShutdownAfterTestRun { get; set; }
 

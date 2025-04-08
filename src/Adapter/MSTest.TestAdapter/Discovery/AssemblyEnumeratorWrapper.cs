@@ -26,7 +26,7 @@ internal sealed class AssemblyEnumeratorWrapper
     /// <returns> A collection of test elements. </returns>
     internal ICollection<UnitTestElement>? GetTests(string? assemblyFileName, IRunSettings? runSettings, out List<string> warnings)
     {
-        warnings = new List<string>();
+        warnings = [];
 
         if (StringEx.IsNullOrEmpty(assemblyFileName))
         {

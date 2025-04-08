@@ -12,7 +12,7 @@ internal sealed class ServerLogMessageInMemoryStore(LogLevel logLevel) : ILogger
 #if NETCOREAPP
     readonly
 #endif
-    ConcurrentBag<ServerLogMessage> _values = new();
+    ConcurrentBag<ServerLogMessage> _values = [];
 
     private ServerTestHost? _serverTestHost;
 

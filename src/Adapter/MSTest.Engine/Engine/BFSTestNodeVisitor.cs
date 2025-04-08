@@ -38,7 +38,7 @@ internal sealed class BFSTestNodeVisitor
     /// <returns>A collection of additional test nodes to visit resulting from the processing of the node.</returns>
     internal delegate ICollection<TestNode> TestNodeProcessor(TestNode node, TestNodeUid? parentNodeUid, string nodeFullPath);
 
-    internal KeyValuePair<TestNodeUid, List<TestNode>>[] DuplicatedNodes { get; private set; } = Array.Empty<KeyValuePair<TestNodeUid, List<TestNode>>>();
+    internal KeyValuePair<TestNodeUid, List<TestNode>>[] DuplicatedNodes { get; private set; } = [];
 
     public async Task VisitAsync(Func<TestNode, TestNodeUid?, Task> onIncludedTestNodeAsync)
     {

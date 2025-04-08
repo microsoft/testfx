@@ -26,7 +26,7 @@ public class AssemblyEnumeratorTests : TestContainer
     public AssemblyEnumeratorTests()
     {
         _assemblyEnumerator = new AssemblyEnumerator();
-        _warnings = new List<string>();
+        _warnings = [];
 
         _testablePlatformServiceProvider = new TestablePlatformServiceProvider();
         PlatformServiceProvider.Instance = _testablePlatformServiceProvider;
@@ -255,7 +255,7 @@ public class AssemblyEnumeratorTests : TestContainer
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("DummyAssembly", false))
             .Returns(mockAssembly.Object);
         testableAssemblyEnumerator.MockTypeEnumerator.Setup(te => te.Enumerate(_warnings))
-            .Returns(new List<UnitTestElement> { unitTestElement });
+            .Returns([unitTestElement]);
 
         ICollection<UnitTestElement> testElements = testableAssemblyEnumerator.EnumerateAssembly("DummyAssembly", _warnings);
 
@@ -387,13 +387,13 @@ public class AssemblyEnumeratorTests : TestContainer
             .Setup(a => a.GetCustomAttributes(
                 typeof(DiscoverInternalsAttribute),
                 true))
-            .Returns(Array.Empty<Attribute>());
+            .Returns([]);
 
         mockAssembly
             .Setup(a => a.GetCustomAttributes(
                 typeof(TestDataSourceOptionsAttribute),
                 true))
-            .Returns(Array.Empty<Attribute>());
+            .Returns([]);
 
         mockAssembly
             .Setup(a => a.GetCustomAttributes(
@@ -401,13 +401,13 @@ public class AssemblyEnumeratorTests : TestContainer
                 typeof(TestDataSourceDiscoveryAttribute),
 #pragma warning restore CS0618 // Type or member is obsolete
                 true))
-            .Returns(Array.Empty<Attribute>());
+            .Returns([]);
 
         mockAssembly
             .Setup(a => a.GetCustomAttributes(
                 typeof(TestIdGenerationStrategyAttribute),
                 true))
-            .Returns(Array.Empty<Attribute>());
+            .Returns([]);
 
         return mockAssembly;
     }

@@ -18,7 +18,7 @@ public sealed class ServerModeTests : ServerModeTestsBase<ServerModeTests.TestAs
         using TestingPlatformClient jsonClient = await StartAsServerAndConnectToTheClientAsync(TestHost.LocateFrom(AssetFixture.ProjectPath, "MSTestProject", tfm, buildConfiguration: BuildConfiguration.Release));
         LogsCollector logs = new();
         jsonClient.RegisterLogListener(logs);
-        TelemetryCollector telemetry = new();
+        TelemetryCollector telemetry = [];
         jsonClient.RegisterTelemetryListener(telemetry);
 
         InitializeResponse initializeResponseArgs = await jsonClient.Initialize();
@@ -50,7 +50,7 @@ public sealed class ServerModeTests : ServerModeTestsBase<ServerModeTests.TestAs
         using TestingPlatformClient jsonClient = await StartAsServerAndConnectToTheClientAsync(TestHost.LocateFrom(AssetFixture.ProjectPath, "MSTestProject", tfm, buildConfiguration: BuildConfiguration.Release));
         LogsCollector logs = new();
         jsonClient.RegisterLogListener(logs);
-        TelemetryCollector telemetry = new();
+        TelemetryCollector telemetry = [];
         jsonClient.RegisterTelemetryListener(telemetry);
 
         InitializeResponse initializeResponseArgs = await jsonClient.Initialize();
