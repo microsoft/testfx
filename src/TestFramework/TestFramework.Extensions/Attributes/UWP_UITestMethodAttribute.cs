@@ -10,6 +10,11 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting.AppContainer;
 /// </summary>
 public class UITestMethodAttribute : TestMethodAttribute
 {
+    private protected override bool UseAsync => true;
+
+    /// <inheritdoc cref="ExecuteAsync(ITestMethod)" />
+    public override TestResult[] Execute(ITestMethod testMethod) => base.Execute(testMethod);
+
     /// <summary>
     /// Executes the test method on the UI Thread.
     /// </summary>
@@ -19,22 +24,26 @@ public class UITestMethodAttribute : TestMethodAttribute
     /// <returns>
     /// An array of <see cref="TestResult"/> instances.
     /// </returns>
-    /// Throws <exception cref="NotSupportedException"> when run on an async test method.
-    /// </exception>
-    public override TestResult[] Execute(ITestMethod testMethod)
+    internal override async Task<TestResult[]> ExecuteAsync(ITestMethod testMethod)
     {
-        AsyncStateMachineAttribute[] attribute = testMethod.GetAttributes<AsyncStateMachineAttribute>(false);
-        if (attribute.Length > 0)
-        {
-            throw new NotSupportedException(FrameworkMessages.AsyncUITestMethodNotSupported);
-        }
-
-        TestResult? result = null;
-        Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(
+        var tcs = new TaskCompletionSource<TestResult>();
+#pragma warning disable VSTHRD101 // Avoid unsupported async delegates
+        await Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(
             Windows.UI.Core.CoreDispatcherPriority.Normal,
-            () => result = testMethod.Invoke(null)).AsTask().GetAwaiter().GetResult();
+            async () =>
+            {
+                try
+                {
+                    tcs.SetResult(await testMethod.InvokeAsync(null));
+                }
+                catch (Exception ex)
+                {
+                    tcs.SetException(ex);
+                }
+            });
+#pragma warning restore VSTHRD101 // Avoid unsupported async delegates
 
-        return [result!];
+        return [await tcs.Task];
     }
 }
 #endif

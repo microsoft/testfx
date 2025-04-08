@@ -141,11 +141,10 @@ internal sealed partial class TerminalTestReporter : IDisposable
 
     private void AppendTestRunSummary(ITerminal terminal)
     {
-        terminal.AppendLine();
-
         IEnumerable<IGrouping<bool, TestRunArtifact>> artifactGroups = _artifacts.GroupBy(a => a.OutOfProcess);
         if (artifactGroups.Any())
         {
+            // Add extra empty line when we will be writing any artifacts, to split it from previous output.
             terminal.AppendLine();
         }
 
@@ -169,6 +168,8 @@ internal sealed partial class TerminalTestReporter : IDisposable
                 terminal.AppendLine();
             }
         }
+
+        terminal.AppendLine();
 
         int totalTests = _assemblies.Values.Sum(a => a.TotalTests);
         int totalFailedTests = _assemblies.Values.Sum(a => a.FailedTests);
@@ -484,7 +485,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
 
     private static void FormatInnerExceptions(ITerminal terminal, FlatException[] exceptions)
     {
-        if (exceptions is null || exceptions.Length == 0)
+        if (exceptions.Length == 0)
         {
             return;
         }

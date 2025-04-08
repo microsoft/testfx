@@ -50,7 +50,7 @@ internal static class FixtureMethodRunner
         {
             try
             {
-                RunOnContext(executionContext, action);
+                ExecutionContextHelpers.RunOnContext(executionContext, action);
                 return null;
             }
             catch (Exception ex)
@@ -109,7 +109,7 @@ internal static class FixtureMethodRunner
 
             try
             {
-                RunOnContext(executionContext, action);
+                ExecutionContextHelpers.RunOnContext(executionContext, action);
                 return null;
             }
             catch (Exception ex) when (ex.IsOperationCanceledExceptionFromToken(cancellationTokenSource.Token))
@@ -151,7 +151,7 @@ internal static class FixtureMethodRunner
                 {
                     try
                     {
-                        RunOnContext(executionContext, action);
+                        ExecutionContextHelpers.RunOnContext(executionContext, action);
                     }
                     catch (Exception ex)
                     {
@@ -213,7 +213,7 @@ internal static class FixtureMethodRunner
         {
             try
             {
-                RunOnContext(executionContext, action);
+                ExecutionContextHelpers.RunOnContext(executionContext, action);
                 tcs.SetResult(0);
             }
             catch (Exception ex)

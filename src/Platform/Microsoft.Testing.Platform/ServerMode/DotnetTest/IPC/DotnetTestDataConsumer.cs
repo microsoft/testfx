@@ -113,7 +113,7 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
                         break;
                 }
 
-                foreach (FileArtifactProperty artifact in testNodeUpdateMessage.Properties.OfType<FileArtifactProperty>())
+                foreach (FileArtifactProperty artifact in testNodeUpdateMessage.TestNode.Properties.OfType<FileArtifactProperty>())
                 {
                     FileArtifactMessages testFileArtifactMessages = new(
                         ExecutionId,
@@ -126,11 +126,10 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
                             artifact.Description ?? string.Empty,
                             testNodeUpdateMessage.TestNode.Uid.Value,
                             testNodeUpdateMessage.TestNode.DisplayName,
-                            artifact.SessionUid.Value),
+                            testNodeUpdateMessage.SessionUid.Value),
                         });
 
                     await _dotnetTestConnection.SendMessageAsync(testFileArtifactMessages);
-                    break;
                 }
 
                 break;

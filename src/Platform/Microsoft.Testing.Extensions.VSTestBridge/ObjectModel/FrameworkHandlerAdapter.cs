@@ -76,10 +76,7 @@ internal sealed class FrameworkHandlerAdapter : IFrameworkHandle
         set
         {
             _logger.LogTrace($"{nameof(FrameworkHandlerAdapter)}.EnableShutdownAfterTestRun: set to {value}");
-            if (_frameworkHandle is not null)
-            {
-                _frameworkHandle.EnableShutdownAfterTestRun = value;
-            }
+            _frameworkHandle?.EnableShutdownAfterTestRun = value;
         }
     }
 
