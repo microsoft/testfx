@@ -71,7 +71,7 @@ public class DiaSessionOperationsTests : TestContainer
             DiaSessionOperations.Initialize(
                 typeof(MockDiaSession).AssemblyQualifiedName!,
                 typeof(MockDiaNavigationData).AssemblyQualifiedName!);
-            var navigationData = new MockDiaNavigationData() { FileName = "mock", MinLineNumber = 86 };
+            var navigationData = new MockDiaNavigationData { FileName = "mock", MinLineNumber = 86 };
             MockDiaSession.DiaNavigationData = navigationData;
 
             object? diaSession = _fileOperations.CreateNavigationSession(typeof(DiaSessionOperationsTests).Assembly.Location);
@@ -114,7 +114,7 @@ public class DiaSessionOperationsTests : TestContainer
             DiaSessionOperations.Initialize(
             typeof(MockDiaSession).AssemblyQualifiedName!,
             typeof(MockDiaNavigationData3).AssemblyQualifiedName!);
-            var navigationData = new MockDiaNavigationData3() { MinLineNumber = 86 };
+            var navigationData = new MockDiaNavigationData3 { MinLineNumber = 86 };
             MockDiaSession.DiaNavigationData = navigationData;
 
             object? diaSession = _fileOperations.CreateNavigationSession(typeof(DiaSessionOperationsTests).Assembly.Location);
@@ -141,7 +141,7 @@ public class DiaSessionOperationsTests : TestContainer
             DiaSessionOperations.Initialize(
                 typeof(MockDiaSession).AssemblyQualifiedName!,
                 typeof(MockDiaNavigationData2).AssemblyQualifiedName!);
-            var navigationData = new MockDiaNavigationData2() { FileName = "mock" };
+            var navigationData = new MockDiaNavigationData2 { FileName = "mock" };
             MockDiaSession.DiaNavigationData = navigationData;
 
             object? diaSession = _fileOperations.CreateNavigationSession(typeof(DiaSessionOperationsTests).Assembly.Location);
