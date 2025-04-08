@@ -818,3 +818,6 @@ dotnet_style_allow_statement_immediately_after_block_experimental = false:warnin
 
 # IDE0290: Use primary constructor
 csharp_style_prefer_primary_constructors = false
+
+# Replace with single call to FirstOrDefault
+resharper_replace_with_single_call_to_first_or_default_highlighting = error
