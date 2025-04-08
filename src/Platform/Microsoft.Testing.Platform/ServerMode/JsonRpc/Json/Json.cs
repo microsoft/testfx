@@ -159,7 +159,7 @@ internal sealed class Json
                     // To keep compatibility with older VS, we hack it here to match the wrong behavior.
                     // We do so only if we know VS being used doesn't have the fix
                     if (ClientHelpers.UseWrongLocationImplementation() &&
-                        RoslynString.IsNullOrEmpty(testMethodIdentifierProperty.Namespace))
+                        !RoslynString.IsNullOrEmpty(testMethodIdentifierProperty.Namespace))
                     {
                         locationType = $"{testMethodIdentifierProperty.Namespace}.{testMethodIdentifierProperty.TypeName}";
                     }
