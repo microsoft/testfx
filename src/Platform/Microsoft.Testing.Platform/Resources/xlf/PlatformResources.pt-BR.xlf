@@ -32,11 +32,6 @@
         <target state="translated">Cancelamento da sessão de testes...</target>
         <note />
       </trans-unit>
-      <trans-unit id="CannotCreateTestExecutionFilterErrorMessage">
-        <source>Failed to create a test execution filter</source>
-        <target state="translated">Falha ao criar um filtro de execução de teste</target>
-        <note />
-      </trans-unit>
       <trans-unit id="CannotCreateUniqueLogFileErrorMessage">
         <source>Failed to create a unique log file after 3 seconds. Lastly tried file name is '{0}'.</source>
         <target state="translated">Falha ao criar um arquivo de log exclusivo após 3 segundos. O nome do arquivo tentado pela última vez é '{0}'.</target>
@@ -187,16 +182,6 @@
         <target state="translated">O console já está no modo de lote.</target>
         <note>Exception that is thrown when console is already collecting input into a batch (into a string builder), and code asks to enable batching mode again.</note>
       </trans-unit>
-      <trans-unit id="ConsoleTestExecutionFilterFactoryDescription">
-        <source>Creates the right test execution filter for console mode</source>
-        <target state="translated">Cria o filtro de execução de teste correto para o modo console</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ConsoleTestExecutionFilterFactoryDisplayName">
-        <source>Console test execution filter factory</source>
-        <target state="translated">Fábrica de filtros de execução de teste de console</target>
-        <note />
-      </trans-unit>
       <trans-unit id="CouldNotFindDirectoryErrorMessage">
         <source>Could not find directory '{0}'</source>
         <target state="translated">Não foi possível localizar o diretório “{0}”</target>
@@ -204,13 +189,13 @@
       </trans-unit>
       <trans-unit id="DiagnosticFileLevelWithAsyncFlush">
         <source>Diagnostic file (level '{0}' with async flush): {1}</source>
-        <target state="translated">Arquivo de diagnóstico (nível "{0}" com liberação assíncrona): {1}</target>
+        <target state="needs-review-translation">Arquivo de diagnóstico (nível "{0}" com liberação assíncrona): {1}</target>
         <note>0 level such as verbose, 
 1 path to file</note>
       </trans-unit>
       <trans-unit id="DiagnosticFileLevelWithFlush">
         <source>Diagnostic file (level '{0}' with sync flush): {1}</source>
-        <target state="translated">Arquivo de diagnóstico (nível "{0}" com liberação de sincronização): {1}</target>
+        <target state="needs-review-translation">Arquivo de diagnóstico (nível "{0}" com liberação de sincronização): {1}</target>
         <note>0 level such as verbose, 
 1 path to file</note>
       </trans-unit>
@@ -490,7 +475,7 @@ O arquivo será gravado no diretório de saída com o nome log_[yyMMddHHmmssfff]
       <trans-unit id="PlatformCommandLineDiagnosticOutputDirectoryOptionDescription">
         <source>Output directory of the diagnostic logging.
 If not specified the file will be generated inside the default 'TestResults' directory.</source>
-        <target state="translated">Diretório de saída do log de eventos de diagnóstico 
+        <target state="translated">Diretório de saída do log de eventos de diagnóstico
 Se não for especificado, o arquivo será gerado dentro do diretório padrão “TestResults”.</target>
         <note />
       </trans-unit>
@@ -668,16 +653,6 @@ Recebe um argumento como cadeia de caracteres no formato &lt;valor&gt;[h|m|s] em
         <target state="translated">Mensagem de log do servidor</target>
         <note />
       </trans-unit>
-      <trans-unit id="ServerTestExecutionFilterFactoryDescription">
-        <source>Creates the right test execution filter for server mode</source>
-        <target state="translated">Cria o filtro de execução de teste correto para o modo servidor</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ServerTestExecutionFilterFactoryDisplayName">
-        <source>Server test execution filter factory</source>
-        <target state="translated">Fábrica de filtros de execução de teste de servidor</target>
-        <note />
-      </trans-unit>
       <trans-unit id="ServerTestHostDescription">
         <source>The 'ITestHost' implementation used when running server mode.</source>
         <target state="translated">A implementação 'ITestHost' usada ao executar o modo de servidor.</target>
@@ -791,7 +766,7 @@ Leia mais sobre a telemetria da Plataforma de Testes da Microsoft: https://aka.m
       <trans-unit id="TerminalOutputOptionDescription">
         <source>Output verbosity when reporting tests.
 Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</source>
-        <target state="translated">Detalhamento da saída ao relatar testes 
+        <target state="translated">Detalhamento da saída ao relatar testes
 Os valores válidos são “Normal”, “Detalhado”. O padrão é “Normal”.</target>
         <note />
       </trans-unit>

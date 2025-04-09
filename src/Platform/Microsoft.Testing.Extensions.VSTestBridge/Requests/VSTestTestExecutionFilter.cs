@@ -3,6 +3,7 @@
 
 using System.Collections.Immutable;
 
+using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Requests;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
@@ -24,4 +25,10 @@ public sealed class VSTestTestExecutionFilter : ITestExecutionFilter
     public ImmutableArray<TestCase>? TestCases => null;
 
     internal static VSTestTestExecutionFilter Instance { get; } = new();
+
+    /// <inheritdoc />
+    public Task<bool> IsEnabledAsync() => Task.FromResult(false);
+
+    /// <inheritdoc />
+    public Task<bool> MatchesFilterAsync(TestNode testNode) => Task.FromResult(true);
 }

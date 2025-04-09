@@ -56,6 +56,21 @@ public static class ServiceProviderExtensions
     }
 
     /// <summary>
+    /// Gets the services of type <typeparamref name="TService"/> from the <see cref="IServiceProvider"/>.
+    /// </summary>
+    /// <typeparam name="TService">The type of the service.</typeparam>
+    /// <param name="provider">The service provider.</param>
+    /// <returns>The services of type <typeparamref name="TService"/> or an empty collection if none found.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when the <paramref name="provider"/> is null.</exception>
+    public static IEnumerable<TService> GetServices<TService>(this IServiceProvider provider)
+        where TService : class
+    {
+        Guard.NotNull(provider);
+
+        return ((ServiceProvider)provider).GetServicesInternal(typeof(TService)).OfType<TService>();
+    }
+
+    /// <summary>
     /// Gets the message bus from the <see cref="IServiceProvider"/>.
     /// </summary>
     /// <param name="serviceProvider">The service provider.</param>
@@ -103,6 +118,25 @@ public static class ServiceProviderExtensions
     [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
     public static IClientInfo GetClientInfo(this IServiceProvider serviceProvider)
         => serviceProvider.GetRequiredServiceInternal<IClientInfo>();
+
+    /// <summary>
+    /// Gets the ITestExecutionFilter from the <see cref="IServiceProvider"/>.
+    /// </summary>
+    /// <param name="serviceProvider">The service provider.</param>
+    /// <returns>The ITestExecutionFilter object.</returns>
+    public static ITestExecutionFilter GetTestExecutionFilter(this IServiceProvider serviceProvider)
+    {
+        ITestExecutionFilter[] filters = serviceProvider.GetServices<ITestExecutionFilter>().ToArray();
+
+        return filters.Length switch
+        {
+#pragma warning disable TPEXP
+            0 => new NopFilter(),
+#pragma warning restore TPEXP
+            1 => filters[0],
+            _ => new AggregateFilter(filters),
+        };
+    }
 
     // Internals extensions
     internal static TService GetRequiredServiceInternal<TService>(this IServiceProvider provider)

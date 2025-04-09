@@ -14,8 +14,8 @@ namespace Microsoft.Testing.Platform.Extensions;
 /// This helper type is used to create a composite extension that is composed of multiple extensions without having to
 /// handle either the communication between the extensions or the lifetime of the extensions instances.
 /// </remarks>
-public class CompositeExtensionFactory<TExtension> : ICompositeExtensionFactory, ICloneable
-    where TExtension : class, IExtension
+public class CompositeExtensionFactory<TExtension> : ICompositeExtensionFactory
+    where TExtension : class
 {
     private readonly Lock _syncLock = new();
     private readonly Func<IServiceProvider, TExtension>? _factoryWithServiceProvider;

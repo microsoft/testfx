@@ -479,14 +479,7 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
         }
         else
         {
-            // Add custom ITestExecutionFilterFactory to the service list if available
-            ActionResult<ITestExecutionFilterFactory> testExecutionFilterFactoryResult = await ((TestHostManager)TestHost).TryBuildTestExecutionFilterFactoryAsync(serviceProvider);
-            if (testExecutionFilterFactoryResult.IsSuccess)
-            {
-                serviceProvider.TryAddService(testExecutionFilterFactoryResult.Result);
-            }
-
-            // Add custom ITestExecutionFilterFactory to the service list if available
+            // Add custom ITestFrameworkInvoker to the service list if available
             ActionResult<ITestFrameworkInvoker> testAdapterInvokerBuilderResult = await ((TestHostManager)TestHost).TryBuildTestAdapterInvokerAsync(serviceProvider);
             if (testAdapterInvokerBuilderResult.IsSuccess)
             {
@@ -652,7 +645,6 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
         await RegisterAsServiceOrConsumerOrBothAsync(testFrameworkBuilderData.PlatformOutputDisplayService, serviceProvider, dataConsumersBuilder);
         await RegisterAsServiceOrConsumerOrBothAsync(testFrameworkBuilderData.TestExecutionRequestFactory, serviceProvider, dataConsumersBuilder);
         await RegisterAsServiceOrConsumerOrBothAsync(testFrameworkBuilderData.TestExecutionRequestInvoker, serviceProvider, dataConsumersBuilder);
-        await RegisterAsServiceOrConsumerOrBothAsync(testFrameworkBuilderData.TestExecutionFilterFactory, serviceProvider, dataConsumersBuilder);
 
         // Create the test framework adapter
         ITestFrameworkCapabilities testFrameworkCapabilities = serviceProvider.GetTestFrameworkCapabilities();
@@ -679,12 +671,17 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
             List<ICompositeExtensionFactory> newBuiltCompositeServices = [];
             (IExtension Consumer, int RegistrationOrder)[] consumers = await testFrameworkBuilderData.TestSessionManager.BuildDataConsumersAsync(serviceProvider, newBuiltCompositeServices);
             (IExtension TestSessionLifetimeHandler, int RegistrationOrder)[] sessionLifeTimeHandlers = await testFrameworkBuilderData.TestSessionManager.BuildTestSessionLifetimeHandleAsync(serviceProvider, newBuiltCompositeServices);
+            (ITestExecutionFilter TestExecutionFilter, int RegistrationOrder)[] testExecutionFilters = await testFrameworkBuilderData.TestSessionManager.BuildFilterAsync(serviceProvider, newBuiltCompositeServices);
 
             // Register the test session lifetime handlers for the notifications
             testSessionLifetimeHandlers.AddRange(sessionLifeTimeHandlers.OrderBy(x => x.RegistrationOrder).Select(x => (ITestSessionLifetimeHandler)x.TestSessionLifetimeHandler));
 
             // Keep the registration order
-            foreach ((IExtension Extension, int _) testhostExtension in consumers.Union(sessionLifeTimeHandlers).OrderBy(x => x.RegistrationOrder))
+            foreach ((object Extension, int _) testhostExtension in consumers
+                         .Union(sessionLifeTimeHandlers)
+                         .Select(tuple => (tuple.Item1 as object, tuple.RegistrationOrder))
+                         .Union(testExecutionFilters.Select(tuple => (tuple.TestExecutionFilter as object, tuple.RegistrationOrder)))
+                         .OrderBy(x => x.RegistrationOrder))
             {
                 if (testhostExtension.Extension is IDataConsumer)
                 {

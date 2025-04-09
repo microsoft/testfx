@@ -3,30 +3,24 @@
 
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Helpers;
-using Microsoft.Testing.Platform.Resources;
-using Microsoft.Testing.Platform.TestHost;
+using Microsoft.Testing.Platform.Services;
+
+using TestSessionContext = Microsoft.Testing.Platform.TestHost.TestSessionContext;
 
 namespace Microsoft.Testing.Platform.Requests;
 
-internal sealed class ConsoleTestExecutionRequestFactory(ICommandLineOptions commandLineService, ITestExecutionFilterFactory testExecutionFilterFactory) : ITestExecutionRequestFactory
+internal sealed class ConsoleTestExecutionRequestFactory(ServiceProvider serviceProvider) : ITestExecutionRequestFactory
 {
-    private readonly ICommandLineOptions _commandLineService = commandLineService;
-    private readonly ITestExecutionFilterFactory _testExecutionFilterFactory = testExecutionFilterFactory;
-
-    public async Task<TestExecutionRequest> CreateRequestAsync(TestSessionContext session)
+    public Task<TestExecutionRequest> CreateRequestAsync(TestSessionContext session)
     {
-        (bool created, ITestExecutionFilter? testExecutionFilter) = await _testExecutionFilterFactory.TryCreateAsync();
-        if (!created)
-        {
-            throw new InvalidOperationException(PlatformResources.CannotCreateTestExecutionFilterErrorMessage);
-        }
+        ApplicationStateGuard.Ensure(serviceProvider is not null);
 
-        ApplicationStateGuard.Ensure(testExecutionFilter is not null);
+        ITestExecutionFilter testExecutionFilter = serviceProvider.GetTestExecutionFilter();
 
-        TestExecutionRequest testExecutionRequest = _commandLineService.IsOptionSet(PlatformCommandLineProvider.DiscoverTestsOptionKey)
+        TestExecutionRequest testExecutionRequest = serviceProvider.GetCommandLineOptions().IsOptionSet(PlatformCommandLineProvider.DiscoverTestsOptionKey)
             ? new DiscoverTestExecutionRequest(session, testExecutionFilter)
             : new RunTestExecutionRequest(session, testExecutionFilter);
 
-        return testExecutionRequest;
+        return Task.FromResult(testExecutionRequest);
     }
 }
