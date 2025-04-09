@@ -43,7 +43,7 @@ public class MSBuildTests_Solution : AcceptanceTestBase<NopAssetFixture>
         VSSolution solution = new(solutionFolder, "MSTestSolution");
         string nugetFile = solution.AddOrUpdateFileContent("Nuget.config", nugetConfigContent);
         solution.AddOrUpdateFileContent("dotnet.config", """
-            [dotnet.test:runner]
+            [dotnet.test.runner]
             name= "VSTest"
             """);
         for (int i = 0; i < 3; i++)

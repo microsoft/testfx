@@ -485,7 +485,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
 
     private static void FormatInnerExceptions(ITerminal terminal, FlatException[] exceptions)
     {
-        if (exceptions is null || exceptions.Length == 0)
+        if (exceptions.Length == 0)
         {
             return;
         }
@@ -530,7 +530,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
     }
 
     private static string? GetStringFromIndexOrDefault(FlatException[] exceptions, Func<FlatException, string?> property, int index) =>
-        exceptions != null && exceptions.Length >= index + 1 ? property(exceptions[index]) : null;
+        exceptions.Length >= index + 1 ? property(exceptions[index]) : null;
 
     private static void FormatExpectedAndActual(ITerminal terminal, string? expected, string? actual)
     {

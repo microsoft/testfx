@@ -346,7 +346,6 @@ internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
                 properties: properties.ToImmutable(),
                 properAssertMethod,
                 isTrueInvocation ? "IsTrue" : "IsFalse"));
-            return;
         }
     }
 

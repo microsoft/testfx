@@ -77,7 +77,7 @@ public sealed class AvoidExpectedExceptionAttributeFixer : CodeFixProvider
             return;
         }
 
-        TypedConstant exceptionTypeArgument = attribute.ConstructorArguments.Where(a => a.Kind == TypedConstantKind.Type).FirstOrDefault();
+        TypedConstant exceptionTypeArgument = attribute.ConstructorArguments.FirstOrDefault(a => a.Kind == TypedConstantKind.Type);
         if (exceptionTypeArgument.Value is not ITypeSymbol exceptionTypeSymbol)
         {
             return;
