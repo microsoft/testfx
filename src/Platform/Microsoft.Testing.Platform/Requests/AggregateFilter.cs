@@ -21,7 +21,7 @@ public sealed class AggregateFilter(params IReadOnlyList<ITestExecutionFilter> i
     /// <inheritdoc />
     public async Task<bool> IsEnabledAsync()
     {
-        await GetEnabledFiltersAsync();
+        _enabledFilters ??= await GetEnabledFiltersAsync();
         return true;
     }
 
