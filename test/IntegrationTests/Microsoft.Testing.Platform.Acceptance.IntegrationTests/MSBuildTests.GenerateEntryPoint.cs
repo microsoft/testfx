@@ -135,7 +135,7 @@ module TestingPlatformEntryPoint =
         SL.Target coreCompile = binLog.FindChildrenRecursive<SL.Target>().Single(t => t.Name == "CoreCompile" && t.Children.Count > 0);
         SL.Task csc = coreCompile.FindChildrenRecursive<SL.Task>(t => t.Name == cscProcessName).Single();
         SL.Parameter sources = csc.FindChildrenRecursive<SL.Parameter>(t => t.Name == "Sources").Single();
-        string? sourceFilePathInObj = sources.FindChildrenRecursive<SL.Item>(i => i.Text.EndsWith($"TestPlatformEntryPoint.{languageFileExtension}", StringComparison.OrdinalIgnoreCase)).SingleOrDefault()?.Text;
+        string? sourceFilePathInObj = sources.FindChildrenRecursive<SL.Item>(i => i.Text.EndsWith($"MicrosoftTestingPlatformEntryPoint.{languageFileExtension}", StringComparison.OrdinalIgnoreCase)).SingleOrDefault()?.Text;
         Assert.IsNotNull(sourceFilePathInObj);
 
         File.Delete(buildResult.BinlogPath!);
