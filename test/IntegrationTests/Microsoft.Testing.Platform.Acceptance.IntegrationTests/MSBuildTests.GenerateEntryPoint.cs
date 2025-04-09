@@ -43,7 +43,7 @@ public class MSBuildTests_EntryPoint : AcceptanceTestBase<NopAssetFixture>
 namespace MSBuildTests
 {
     [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
-    internal sealed class TestingPlatformEntryPoint
+    internal sealed class MicrosoftTestingPlatformEntryPoint
     {
         public static async global::System.Threading.Tasks.Task<int> Main(string[] args)
         {
@@ -69,7 +69,7 @@ namespace MSBuildTests
 '------------------------------------------------------------------------------
 
 <System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage>
-Module TestingPlatformEntryPoint
+Module MicrosoftTestingPlatformEntryPoint
 
     Function Main(args As String()) As Integer
         Return MainAsync(args).GetAwaiter().GetResult()
@@ -98,7 +98,7 @@ End Module'", "Vbc");
 
 namespace MSBuildTests
 
-module TestingPlatformEntryPoint =
+module MicrosoftTestingPlatformEntryPoint =
 
     [<System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage>]
     [<EntryPoint>]
