@@ -28,7 +28,9 @@ public sealed class AggregateFilter(params IReadOnlyList<ITestExecutionFilter> i
     /// <inheritdoc />
     public async Task<bool> MatchesFilterAsync(TestNode testNode)
     {
-        foreach (ITestExecutionFilter testExecutionFilter in await GetEnabledFiltersAsync())
+        List<ITestExecutionFilter> enabledFilters = _enabledFilters ??= await GetEnabledFiltersAsync();
+
+        foreach (ITestExecutionFilter testExecutionFilter in enabledFilters)
         {
             if (!await testExecutionFilter.MatchesFilterAsync(testNode))
             {
@@ -40,18 +42,17 @@ public sealed class AggregateFilter(params IReadOnlyList<ITestExecutionFilter> i
     }
 
     private async Task<List<ITestExecutionFilter>> GetEnabledFiltersAsync()
-        => _enabledFilters ??= await Task.Run(async () =>
+    {
+        var list = new List<ITestExecutionFilter>();
+
+        foreach (ITestExecutionFilter testExecutionFilter in InnerFilters)
         {
-            var list = new List<ITestExecutionFilter>();
-
-            foreach (ITestExecutionFilter testExecutionFilter in InnerFilters)
+            if (await testExecutionFilter.IsEnabledAsync())
             {
-                if (await testExecutionFilter.IsEnabledAsync())
-                {
-                    list.Add(testExecutionFilter);
-                }
+                list.Add(testExecutionFilter);
             }
+        }
 
-            return list;
-        });
+        return list;
+    }
 }
