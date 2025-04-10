@@ -419,6 +419,9 @@ public abstract class TestContextTestPropertyBase
 [TestProperty("MyProp", "MyValue")]
 public class TestContextTestPropertyImpl : TestContextTestPropertyBase
 {
+    public TestContextTestPropertyImpl(TestContext testContext) : base(testContext)
+    {
+    }
 }
 """;
     }
