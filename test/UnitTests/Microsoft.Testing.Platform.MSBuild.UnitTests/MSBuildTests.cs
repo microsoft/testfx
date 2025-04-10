@@ -60,6 +60,7 @@ namespace SomeNamespace
 """;
 
         Assert.AreEqual(expectedSourceOrder, inMemoryFileSystem.Files["obj/entryPointFile"]);
+        Assert.IsEmpty(_errors);
     }
 
     private sealed class InMemoryFileSystem : IFileSystem
