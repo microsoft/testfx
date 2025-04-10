@@ -12,7 +12,7 @@ using Microsoft.Testing.Framework.SourceGeneration.ObjectModels;
 namespace Microsoft.Testing.Framework.SourceGeneration;
 
 [Generator]
-internal sealed class TestNodesGenerator : IIncrementalGenerator
+public sealed class TestNodesGenerator : IIncrementalGenerator
 {
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
@@ -198,7 +198,7 @@ internal sealed class TestNodesGenerator : IIncrementalGenerator
     }
 
     // Borrowed from https://github.com/dotnet/templating/blob/dad34814012bf29aa35eaf8e8013af4b10b997da/src/Microsoft.TemplateEngine.Orchestrator.RunnableProjects/ValueForms/DefaultSafeNamespaceValueFormFactory.cs#L10
-    internal /* for testing purpose */ static string ToSafeNamespace(string value)
+    public static string ToSafeNamespace(string value)
     {
         const char invalidCharacterReplacement = '_';
 

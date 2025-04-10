@@ -3,7 +3,7 @@
 
 namespace Microsoft.Testing.Framework.SourceGeneration.Helpers;
 
-internal sealed class IndentedStringBuilder
+public sealed class IndentedStringBuilder
 {
     private readonly StringBuilder _builder = new();
     private bool _needsIndent = true;
