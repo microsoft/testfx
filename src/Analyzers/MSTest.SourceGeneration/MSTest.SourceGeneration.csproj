@@ -8,7 +8,7 @@
     <!-- Do not include the generator as a lib dependency -->
     <IncludeBuildOutput>false</IncludeBuildOutput>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
-    <NoWarn>NU5128</NoWarn>
+    <NoWarn>NU5128;SA0001;EnableGenerateDocumentationFile</NoWarn>
     <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
     <RootNamespace>Microsoft.Testing.Framework.SourceGeneration</RootNamespace>
     <!-- Cancel default license (closed-source) and set license as packaged license file -->
