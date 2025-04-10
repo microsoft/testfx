@@ -54,7 +54,7 @@ public partial class CLITestBase : TestContainer
     {
         private readonly List<TestCase> _testCases = [];
 
-        public ImmutableArray<TestCase> DiscoveredTests => [.._testCases];
+        public ImmutableArray<TestCase> DiscoveredTests => [.. _testCases];
 
         public void SendTestCase(TestCase discoveredTest) => _testCases.Add(discoveredTest);
     }
