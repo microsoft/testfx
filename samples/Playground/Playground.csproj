@@ -8,6 +8,8 @@
     <NoWarn>$(NoWarn);NETSDK1023</NoWarn>
 
     <IsTestingPlatformApplication>true</IsTestingPlatformApplication>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <NoWarn>SA0001;EnableGenerateDocumentationFile</NoWarn>
   </PropertyGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' == 'net462' ">
