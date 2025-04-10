@@ -63,6 +63,7 @@ internal sealed class TestMethodRunner
     /// <returns>The test results.</returns>
     internal async Task<TestResult[]> ExecuteAsync(string initializationLogs, string initializationErrorLogs, string initializationTrace, string initializationTestContextMessages)
     {
+        _testContext.Context.TestRunCount++;
         bool isSTATestClass = AttributeComparer.IsDerived<STATestClassAttribute>(_testMethodInfo.Parent.ClassAttribute);
         bool isSTATestMethod = AttributeComparer.IsDerived<STATestMethodAttribute>(_testMethodInfo.Executor);
         bool isSTARequested = isSTATestClass || isSTATestMethod;
