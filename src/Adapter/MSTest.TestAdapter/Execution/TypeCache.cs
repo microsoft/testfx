@@ -413,7 +413,7 @@ internal sealed class TypeCache : MarshalByRefObject
                     }
 
                     // Enumerate through all methods and identify the Assembly Init and cleanup methods.
-                    foreach (MethodInfo methodInfo in PlatformServiceProvider.Instance.ReflectionOperations.GetDeclaredMethods(t))
+                    foreach (MethodInfo methodInfo in PlatformServiceProvider.Instance.ReflectionOperations.GetDeclaredMethods(type))
                     {
                         if (@this.IsAssemblyOrClassInitializeMethod<AssemblyInitializeAttribute>(methodInfo))
                         {
