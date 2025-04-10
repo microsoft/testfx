@@ -58,11 +58,8 @@ public class AssemblyEnumeratorTests : TestContainer
         _testablePlatformServiceProvider.MockSettingsProvider.Setup(sp => sp.Load(It.IsAny<XmlReader>()))
             .Callback((XmlReader actualReader) =>
             {
-                if (actualReader != null)
-                {
-                    actualReader.Read();
-                    actualReader.ReadInnerXml();
-                }
+                actualReader.Read();
+                actualReader.ReadInnerXml();
             });
         var mockMessageLogger = new Mock<IMessageLogger>();
         MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsName, mockMessageLogger.Object)!;

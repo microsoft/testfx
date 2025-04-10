@@ -225,9 +225,9 @@ internal sealed class UnitTestRunner : MarshalByRefObject
             // Catch any exception thrown while inspecting the test method and return failure.
             return
             [
-                new TestResult()
+                new TestResult
                 {
-                    Outcome = UTF.UnitTestOutcome.Failed,
+                    Outcome = UnitTestOutcome.Failed,
                     IgnoreReason = ex.Message,
                 }
             ];
@@ -240,7 +240,7 @@ internal sealed class UnitTestRunner : MarshalByRefObject
         string? initializationErrorLogs = string.Empty;
         string? initializationTrace = string.Empty;
         string? initializationTestContextMessages = string.Empty;
-        var result = new TestResult() { Outcome = UTF.UnitTestOutcome.Passed };
+        var result = new TestResult { Outcome = UnitTestOutcome.Passed };
 
         try
         {
@@ -266,12 +266,12 @@ internal sealed class UnitTestRunner : MarshalByRefObject
         }
         catch (TestFailedException ex)
         {
-            result = new TestResult() { TestFailureException = ex, Outcome = ex.Outcome };
+            result = new TestResult { TestFailureException = ex, Outcome = ex.Outcome };
         }
         catch (Exception ex)
         {
             var testFailureException = new TestFailedException(UnitTestOutcome.Error, ex.TryGetMessage(), ex.TryGetStackTraceInformation());
-            result = new TestResult() { TestFailureException = testFailureException, Outcome = UnitTestOutcome.Error };
+            result = new TestResult { TestFailureException = testFailureException, Outcome = UnitTestOutcome.Error };
         }
         finally
         {
@@ -389,9 +389,9 @@ internal sealed class UnitTestRunner : MarshalByRefObject
             {
                 notRunnableResult =
                 [
-                    new TestResult()
+                    new TestResult
                     {
-                        Outcome = UTF.UnitTestOutcome.NotFound,
+                        Outcome = UnitTestOutcome.NotFound,
                         IgnoreReason = string.Format(CultureInfo.CurrentCulture, Resource.TestNotFound, testMethod.Name),
                     },
                 ];
@@ -405,9 +405,9 @@ internal sealed class UnitTestRunner : MarshalByRefObject
             {
                 notRunnableResult =
                 [
-                    new TestResult()
+                    new TestResult
                     {
-                        Outcome = UTF.UnitTestOutcome.NotRunnable,
+                        Outcome = UnitTestOutcome.NotRunnable,
                         IgnoreReason = testMethodInfo.NotRunnableReason,
                     },
                 ];

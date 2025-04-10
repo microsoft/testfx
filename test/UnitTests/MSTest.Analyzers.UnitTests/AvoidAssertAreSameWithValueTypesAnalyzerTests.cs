@@ -225,7 +225,7 @@ public sealed class AvoidAssertAreSameWithValueTypesAnalyzerTests
             }
             """;
 
-        await new VerifyCS.Test()
+        await new VerifyCS.Test
         {
             TestCode = code,
             FixedCode = fixedCode,

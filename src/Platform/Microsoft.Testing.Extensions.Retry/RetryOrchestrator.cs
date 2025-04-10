@@ -277,7 +277,6 @@ internal sealed class RetryOrchestrator : ITestHostOrchestrator, IOutputDeviceDa
 
                 finalArguments.Clear();
                 lastListOfFailedId = retryFailedTestsPipeServer.FailedUID?.ToArray();
-                continue;
             }
             else
             {

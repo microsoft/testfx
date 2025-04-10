@@ -37,6 +37,20 @@
         <target state="translated">덤프 중단</target>
         <note />
       </trans-unit>
+      <trans-unit id="HangDumpFailed">
+        <source>The following exception occurred while taking hang dump:
+{0}
+
+Disk info:
+{1}</source>
+        <target state="translated">중단 덤프를 수행하는 동안 다음 예외가 발생했습니다.
+{0}
+
+디스크 정보:
+{1}</target>
+        <note>{0} - the exception that occurred.
+{1} - disk info detailing free space</note>
+      </trans-unit>
       <trans-unit id="HangDumpFileNameOptionDescription">
         <source>Specify the name of the dump file</source>
         <target state="translated">덤프 파일의 이름 지정</target>
