@@ -102,12 +102,9 @@ internal sealed class PassiveNode : IDisposable
 
     public void Dispose()
     {
-        if (_messageHandler != null)
+        if (_messageHandler is IDisposable disposable)
         {
-            if (_messageHandler is IDisposable disposable)
-            {
-                disposable.Dispose();
-            }
+            disposable.Dispose();
         }
     }
 }
