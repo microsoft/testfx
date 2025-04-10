@@ -43,10 +43,10 @@
 
 Disk info:
 {1}</source>
-        <target state="new">The following exception occurred while taking hang dump:
+        <target state="translated">При создании дампа зависания возникло следующее исключение: 
 {0}
 
-Disk info:
+Сведения о диске:
 {1}</target>
         <note>{0} - the exception that occurred.
 {1} - disk info detailing free space</note>
