@@ -809,6 +809,16 @@ El tipo que declara estos métodos también debe respetar las reglas siguientes:
         <target state="translated">Usar métodos "Assert" adecuados</target>
         <note />
       </trans-unit>
+      <trans-unit id="UseRetryWithTestMethodMessageFormat">
+        <source>An attribute that derives from 'RetryBaseAttribute' can be specified only on a test method</source>
+        <target state="new">An attribute that derives from 'RetryBaseAttribute' can be specified only on a test method</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseRetryWithTestMethodTitle">
+        <source>Use retry attribute on test method</source>
+        <target state="new">Use retry attribute on test method</target>
+        <note />
+      </trans-unit>
     </body>
   </file>
 </xliff>
