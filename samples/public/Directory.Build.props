@@ -9,7 +9,7 @@
     <TestingPlatformVersion>1.6.3</TestingPlatformVersion>
     <VSTestVersion>17.13.0</VSTestVersion>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
-    <NoWarn>SA0001;EnableGenerateDocumentationFile</NoWarn>
+    <NoWarn>$(NoWarn);SA0001;EnableGenerateDocumentationFile</NoWarn>
   </PropertyGroup>
 
 </Project>

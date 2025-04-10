@@ -12,7 +12,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
-    <NoWarn>SA0001;EnableGenerateDocumentationFile</NoWarn>
+    <NoWarn>$(NoWarn);SA0001;EnableGenerateDocumentationFile</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
