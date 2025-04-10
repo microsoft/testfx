@@ -7,7 +7,7 @@
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <!-- Do not include the generator as a lib dependency -->
     <IncludeBuildOutput>false</IncludeBuildOutput>
-    <NoWarn>NU5128</NoWarn>
+    <NoWarn>NU5128;PolyfillTargetsForNuget</NoWarn>
     <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
     <RootNamespace>Microsoft.Testing.Framework.SourceGeneration</RootNamespace>
     <!-- Cancel default license (closed-source) and set license as packaged license file -->
@@ -57,6 +57,8 @@ This package provides the C# source generators for MSTest test framework.]]>
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" PrivateAssets="all" />
     <!-- Analyzers to help write analyzers/generators -->
     <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" PrivateAssets="all" />
+
+    <PackageReference Include="Polyfill" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>
