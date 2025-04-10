@@ -49,10 +49,6 @@ This package provides the C# source generators for MSTest test framework.]]>
   </ItemGroup>
 
   <ItemGroup>
-    <InternalsVisibleTo Include="MSTest.SourceGeneration.UnitTests" Key="$(VsPublicKey)" />
-  </ItemGroup>
-
-  <ItemGroup>
     <!-- Roslyn C# - so that we can implement the code generator -->
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" PrivateAssets="all" />
     <!-- Analyzers to help write analyzers/generators -->
