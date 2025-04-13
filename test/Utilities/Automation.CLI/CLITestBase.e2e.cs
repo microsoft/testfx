@@ -70,7 +70,7 @@ public partial class CLITestBase : TestContainer
 
     public static string GetNugetPackageFolder()
     {
-        string nugetPackagesFolderPath = Environment.GetEnvironmentVariable("NUGET_PACKAGES");
+        string? nugetPackagesFolderPath = Environment.GetEnvironmentVariable("NUGET_PACKAGES");
         if (!string.IsNullOrEmpty(nugetPackagesFolderPath))
         {
             Directory.Exists(nugetPackagesFolderPath).Should().BeTrue($"Found environment variable 'NUGET_PACKAGES' and NuGet package folder '{nugetPackagesFolderPath}' should exist");
@@ -245,7 +245,7 @@ public partial class CLITestBase : TestContainer
         foreach (string test in failedTests)
         {
             VisualStudio.TestPlatform.ObjectModel.TestResult testFound = RunEventsHandler.FailedTests.FirstOrDefault(f => test.Equals(f.TestCase?.FullyQualifiedName, StringComparison.Ordinal) ||
-                       test.Equals(f.DisplayName, StringComparison.Ordinal));
+                       test.Equals(f.DisplayName, StringComparison.Ordinal))!;
             testFound.Should().NotBeNull("Test '{0}' does not appear in failed tests list.", test);
 
 #if DEBUG
@@ -322,7 +322,7 @@ public partial class CLITestBase : TestContainer
 
     private static string FindDotNetRoot()
     {
-        string dotNetRoot = Environment.GetEnvironmentVariable("DOTNET_ROOT");
+        string? dotNetRoot = Environment.GetEnvironmentVariable("DOTNET_ROOT");
         if (!string.IsNullOrEmpty(dotNetRoot))
         {
             return dotNetRoot;

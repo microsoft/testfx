@@ -76,7 +76,7 @@ public class OutputTests : CLITestBase
 
         // Test method {methodName} was not found.
         testMethod.Should().NotBeNull();
-        TestResultMessage message = testMethod.Messages.SingleOrDefault(messageFilter);
+        TestResultMessage message = testMethod.Messages.SingleOrDefault(messageFilter)!;
 
         // Message for {testMethod.DisplayName} was not found. All messages: { string.Join(Environment.NewLine, testMethod.Messages.Select(m => $"{m.Category} - {m.Text}")) }
         message.Should().NotBeNull();

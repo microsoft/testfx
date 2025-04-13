@@ -90,7 +90,7 @@ public partial class CLITestBase : TestContainer
             doc.Load(xmlReader);
         }
 
-        XmlElement root = doc.DocumentElement;
+        XmlElement root = doc.DocumentElement!;
         RunConfiguration runConfiguration = new(string.Empty) { TestResultsDirectory = GetArtifactsTestResultsFolderPath() };
         XmlElement runConfigurationElement = runConfiguration.ToXml();
         if (root[runConfiguration.SettingsName] == null)
@@ -101,7 +101,7 @@ public partial class CLITestBase : TestContainer
         else
         {
             XmlNode newNode = doc.ImportNode(runConfigurationElement.FirstChild, true);
-            root[runConfiguration.SettingsName].AppendChild(newNode);
+            root[runConfiguration.SettingsName]!.AppendChild(newNode);
         }
 
         return doc.OuterXml;
