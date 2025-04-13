@@ -141,7 +141,7 @@ public sealed class ObjectModelConvertersTests
 
         var testNode = testResult.ToTestNode(true, TestClient);
 
-        Assert.AreEqual(testNode.Properties.OfType<TrxExceptionProperty>()?.Length, 1);
+        Assert.AreEqual(testNode.Properties.OfType<TrxExceptionProperty>().Length, 1);
         Assert.AreEqual("assembly.class", testNode.Properties.Single<TrxFullyQualifiedTypeNameProperty>().FullyQualifiedTypeName);
     }
 

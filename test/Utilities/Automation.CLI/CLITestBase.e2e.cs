@@ -211,14 +211,14 @@ public partial class CLITestBase : TestContainer
         foreach (string test in passedTests)
         {
             bool isFailed = failedTestResults.Any(
-                p => test.Equals(p.TestCase?.FullyQualifiedName, StringComparison.Ordinal)
+                p => test.Equals(p.TestCase.FullyQualifiedName, StringComparison.Ordinal)
                      || test.Equals(p.DisplayName, StringComparison.Ordinal)
-                     || test.Equals(p.TestCase!.DisplayName, StringComparison.Ordinal));
+                     || test.Equals(p.TestCase.DisplayName, StringComparison.Ordinal));
 
             bool isSkipped = skippedTestsResults.Any(
-                p => test.Equals(p.TestCase?.FullyQualifiedName, StringComparison.Ordinal)
+                p => test.Equals(p.TestCase.FullyQualifiedName, StringComparison.Ordinal)
                      || test.Equals(p.DisplayName, StringComparison.Ordinal)
-                     || test.Equals(p.TestCase!.DisplayName, StringComparison.Ordinal));
+                     || test.Equals(p.TestCase.DisplayName, StringComparison.Ordinal));
 
             string failedOrSkippedMessage = isFailed ? " (Test failed)" : isSkipped ? " (Test skipped)" : string.Empty;
 
@@ -244,7 +244,7 @@ public partial class CLITestBase : TestContainer
     {
         foreach (string test in failedTests)
         {
-            VisualStudio.TestPlatform.ObjectModel.TestResult testFound = RunEventsHandler.FailedTests.FirstOrDefault(f => test.Equals(f.TestCase?.FullyQualifiedName, StringComparison.Ordinal) ||
+            VisualStudio.TestPlatform.ObjectModel.TestResult testFound = RunEventsHandler.FailedTests.FirstOrDefault(f => test.Equals(f.TestCase.FullyQualifiedName, StringComparison.Ordinal) ||
                        test.Equals(f.DisplayName, StringComparison.Ordinal))!;
             testFound.Should().NotBeNull("Test '{0}' does not appear in failed tests list.", test);
 
