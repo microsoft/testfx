@@ -40,7 +40,7 @@ internal abstract class ContextAdapterBase
     // NOTE: Implementation is borrowed from VSTest
     // MSTest relies on this method existing and access it through reflection: https://github.com/microsoft/testfx/blob/main/src/Adapter/MSTest.TestAdapter/TestMethodFilter.cs#L115
     public ITestCaseFilterExpression? GetTestCaseFilter(
-        IEnumerable<string>? supportedProperties,
+        ICollection<string>? supportedProperties,
         Func<string, TestProperty?> propertyProvider)
     {
         if (FilterExpressionWrapper is null)

@@ -230,11 +230,11 @@ public sealed partial class PropertyBag
             throw new InvalidOperationException($"Could not find a property of type '{typeof(TProperty)}'.");
         }
 
-        IEnumerable<TProperty> matchingValues = _property is null ? Array.Empty<TProperty>() : _property.OfType<TProperty>();
+        TProperty[] matchingValues = _property is null ? [] : _property.OfType<TProperty>().ToArray();
 
-        return !matchingValues.Any()
+        return matchingValues.Length == 0
             ? throw new InvalidOperationException($"Could not find a property of type '{typeof(TProperty)}'.")
-            : matchingValues.Skip(1).Any()
+            : matchingValues.Length > 1
                 ? throw new InvalidOperationException($"Found multiple properties of type '{typeof(TProperty)}'.")
                 : matchingValues.First();
     }

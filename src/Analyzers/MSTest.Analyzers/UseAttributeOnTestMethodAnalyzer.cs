@@ -194,7 +194,7 @@ public sealed class UseAttributeOnTestMethodAnalyzer : DiagnosticAnalyzer
     private static void AnalyzeSymbol(
         SymbolAnalysisContext context,
         INamedTypeSymbol testMethodAttributeSymbol,
-        IEnumerable<(INamedTypeSymbol AttributeSymbol, DiagnosticDescriptor Rule)> attributeRuleTuples)
+        List<(INamedTypeSymbol AttributeSymbol, DiagnosticDescriptor Rule)> attributeRuleTuples)
     {
         var methodSymbol = (IMethodSymbol)context.Symbol;
 
