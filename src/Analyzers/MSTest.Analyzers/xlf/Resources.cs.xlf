@@ -811,12 +811,12 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
       </trans-unit>
       <trans-unit id="UseRetryWithTestMethodMessageFormat">
         <source>An attribute that derives from 'RetryBaseAttribute' can be specified only on a test method</source>
-        <target state="new">An attribute that derives from 'RetryBaseAttribute' can be specified only on a test method</target>
+        <target state="translated">Atribut, který je odvozen od retryBaseAttribute, lze zadat pouze v testovací metodě.</target>
         <note />
       </trans-unit>
       <trans-unit id="UseRetryWithTestMethodTitle">
         <source>Use retry attribute on test method</source>
-        <target state="new">Use retry attribute on test method</target>
+        <target state="translated">Použití atributu opakování u testovací metody</target>
         <note />
       </trans-unit>
     </body>
