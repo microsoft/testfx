@@ -60,9 +60,7 @@ public sealed class VSTestDiscoverTestExecutionRequestFactory : ITestExecutionRe
         RunSettingsAdapter runSettings = new(commandLineOptions, fileSystem, configuration, clientInfo, loggerFactory, messageLogger);
         DiscoveryContextAdapter discoveryContext = new(commandLineOptions, runSettings, discoverTestExecutionRequest.Filter);
 
-        ITestApplicationModuleInfo testApplicationModuleInfo = serviceProvider.GetTestApplicationModuleInfo();
-        IMessageBus messageBus = serviceProvider.GetRequiredService<IMessageBus>();
-        TestCaseDiscoverySinkAdapter discoverySink = new(adapterExtension, discoverTestExecutionRequest.Session, testAssemblyPaths, testApplicationModuleInfo, loggerFactory, messageBus, adapterExtension.IsTrxEnabled, cancellationToken);
+        TestCaseDiscoverySinkAdapter discoverySink = new(adapterExtension, discoverTestExecutionRequest.Session, testAssemblyPaths, serviceProvider, loggerFactory, adapterExtension.IsTrxEnabled, cancellationToken);
 
         return new(discoverTestExecutionRequest.Session, discoverTestExecutionRequest.Filter, testAssemblyPaths, discoveryContext, messageLogger, discoverySink);
     }

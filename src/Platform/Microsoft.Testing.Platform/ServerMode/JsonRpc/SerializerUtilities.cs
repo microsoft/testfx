@@ -203,6 +203,18 @@ internal static class SerializerUtilities
 
                 foreach (IProperty property in n.Properties)
                 {
+                    if (property is SerializableKeyValuePairStringProperty keyValuePairProperty)
+                    {
+                        properties[keyValuePairProperty.Key] = keyValuePairProperty.Value;
+                        continue;
+                    }
+
+                    if (property is SerializableNamedArrayStringProperty namedArrayStringProperty)
+                    {
+                        properties[namedArrayStringProperty.Name] = namedArrayStringProperty.Values;
+                        continue;
+                    }
+
                     if (property is TestFileLocationProperty fileLocationProperty)
                     {
                         properties["location.file"] = fileLocationProperty.FilePath;
@@ -215,18 +227,11 @@ internal static class SerializerUtilities
                     {
                         string locationType = testMethodIdentifierProperty.TypeName;
 
-                        // Ideally, we should just use testMethodIdentifierProperty.
-                        // But Test Explorer had a bug where it expects location.type to also include the namespace,
-                        // and it didn't correctly consider location.namespace.
-                        // To keep compatibility with older VS, we hack it here to match the wrong behavior.
-                        // We do so only if we know VS being used doesn't have the fix
-                        if (ClientHelpers.UseWrongLocationImplementation() &&
-                            !RoslynString.IsNullOrEmpty(testMethodIdentifierProperty.Namespace))
+                        if (!RoslynString.IsNullOrEmpty(testMethodIdentifierProperty.Namespace))
                         {
                             locationType = $"{testMethodIdentifierProperty.Namespace}.{testMethodIdentifierProperty.TypeName}";
                         }
 
-                        properties["location.namespace"] = testMethodIdentifierProperty.Namespace;
                         properties["location.type"] = locationType;
                         properties["location.method"] = testMethodIdentifierProperty.ParameterTypeFullNames.Length > 0
                             ? $"{testMethodIdentifierProperty.MethodName}({string.Join(",", testMethodIdentifierProperty.ParameterTypeFullNames)})"

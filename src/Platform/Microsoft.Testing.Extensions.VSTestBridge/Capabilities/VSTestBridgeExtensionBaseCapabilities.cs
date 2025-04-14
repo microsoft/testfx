@@ -9,8 +9,14 @@ namespace Microsoft.Testing.Extensions.VSTestBridge.Capabilities;
 /// <summary>
 /// The VSTest bridged test framework capabilities.
 /// </summary>
+// NOTE: MSTest no longer uses this, as we don't want to use the vstestProvider.
+// Only NUnit and Expecto use this.
+// https://github.com/nunit/nunit3-vs-adapter/blob/3d0f824243aaaeb85621d3c7dddc92e7a7c45097/src/NUnitTestAdapter/TestingPlatformAdapter/TestApplicationBuilderExtensions.cs#L20
+// https://github.com/YoloDev/YoloDev.Expecto.TestSdk/blob/0d1a3eadd65b605f61bb01d302f28382be76b8ac/src/YoloDev.Expecto.TestSdk/TestApplicationHelpers.fs#L16
 public sealed class VSTestBridgeExtensionBaseCapabilities : ITrxReportCapability, IVSTestFlattenedTestNodesReportCapability, INamedFeatureCapability
 {
+    private const string VSTestProviderSupport = "vstestProvider";
+
     /// <inheritdoc />
     bool IVSTestFlattenedTestNodesReportCapability.IsSupported { get; } = true;
 
@@ -26,5 +32,5 @@ public sealed class VSTestBridgeExtensionBaseCapabilities : ITrxReportCapability
     void ITrxReportCapability.Enable() => IsTrxEnabled = true;
 
     /// <inheritdoc />
-    bool INamedFeatureCapability.IsSupported(string featureName) => false;
+    bool INamedFeatureCapability.IsSupported(string featureName) => featureName is VSTestProviderSupport;
 }

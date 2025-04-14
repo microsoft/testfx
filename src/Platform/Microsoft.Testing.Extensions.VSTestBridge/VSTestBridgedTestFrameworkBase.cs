@@ -77,10 +77,10 @@ public abstract class VSTestBridgedTestFrameworkBase : ITestFramework, IDataProd
             Task convertedRequest = context.Request switch
             {
                 VSTestDiscoverTestExecutionRequest discoverRequest =>
-                    DiscoverTestsAsync(UpdateDiscoverRequest(discoverRequest, context.MessageBus, context.CancellationToken), context.MessageBus, context.CancellationToken),
+                    DiscoverTestsAsync(UpdateDiscoverRequest(discoverRequest, context.CancellationToken), context.MessageBus, context.CancellationToken),
 
                 VSTestRunTestExecutionRequest runRequest =>
-                    RunTestsAsync(UpdateRunRequest(runRequest, context.MessageBus, context.CancellationToken), context.MessageBus, context.CancellationToken),
+                    RunTestsAsync(UpdateRunRequest(runRequest, context.CancellationToken), context.MessageBus, context.CancellationToken),
 
                 TestExecutionRequest request => ExecuteRequestAsync(request, context.MessageBus, context.CancellationToken),
 
@@ -131,28 +131,24 @@ public abstract class VSTestBridgedTestFrameworkBase : ITestFramework, IDataProd
 
     private VSTestDiscoverTestExecutionRequest UpdateDiscoverRequest(
         VSTestDiscoverTestExecutionRequest discoverRequest,
-        IMessageBus messageBus, CancellationToken cancellationToken)
+        CancellationToken cancellationToken)
     {
         // Before passing down the request, we need to replace the discovery sink with a custom implementation calling
         // both the original (VSTest) sink and our own.
-        ITestApplicationModuleInfo testApplicationModuleInfo = ServiceProvider.GetTestApplicationModuleInfo();
         ILoggerFactory loggerFactory = ServiceProvider.GetRequiredService<ILoggerFactory>();
-        TestCaseDiscoverySinkAdapter testCaseDiscoverySinkAdapter = new(this, discoverRequest.Session, discoverRequest.AssemblyPaths, testApplicationModuleInfo, loggerFactory, messageBus, IsTrxEnabled, cancellationToken, discoverRequest.DiscoverySink);
+        TestCaseDiscoverySinkAdapter testCaseDiscoverySinkAdapter = new(this, discoverRequest.Session, discoverRequest.AssemblyPaths, ServiceProvider, loggerFactory, IsTrxEnabled, cancellationToken, discoverRequest.DiscoverySink);
 
         return new(discoverRequest.Session, discoverRequest.Filter, discoverRequest.AssemblyPaths, discoverRequest.DiscoveryContext,
             discoverRequest.MessageLogger, testCaseDiscoverySinkAdapter);
     }
 
-    private VSTestRunTestExecutionRequest UpdateRunRequest(VSTestRunTestExecutionRequest runRequest, IMessageBus messageBus,
-        CancellationToken cancellationToken)
+    private VSTestRunTestExecutionRequest UpdateRunRequest(VSTestRunTestExecutionRequest runRequest, CancellationToken cancellationToken)
     {
         // Before passing down the request, we need to replace the framework handle with a custom implementation calling
         // both the original (VSTest) framework handle and our own.
-        ITestApplicationModuleInfo testApplicationModuleInfo = ServiceProvider.GetTestApplicationModuleInfo();
         ILoggerFactory loggerFactory = ServiceProvider.GetRequiredService<ILoggerFactory>();
-        IOutputDevice outputDevice = ServiceProvider.GetOutputDevice();
-        FrameworkHandlerAdapter frameworkHandlerAdapter = new(this, runRequest.Session, runRequest.AssemblyPaths, testApplicationModuleInfo,
-            loggerFactory, messageBus, outputDevice, IsTrxEnabled, cancellationToken, runRequest.FrameworkHandle);
+        FrameworkHandlerAdapter frameworkHandlerAdapter = new(this, runRequest.Session, runRequest.AssemblyPaths, ServiceProvider,
+            loggerFactory, IsTrxEnabled, cancellationToken, runRequest.FrameworkHandle);
 
         return new(runRequest.Session, runRequest.Filter, runRequest.AssemblyPaths, runRequest.RunContext,
             frameworkHandlerAdapter);

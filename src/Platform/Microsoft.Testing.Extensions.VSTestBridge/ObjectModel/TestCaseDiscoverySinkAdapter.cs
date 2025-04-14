@@ -25,6 +25,7 @@ internal sealed class TestCaseDiscoverySinkAdapter : ITestCaseDiscoverySink
     /// </remarks>
     private readonly ITestCaseDiscoverySink? _testCaseDiscoverySink;
     private readonly ILogger<TestCaseDiscoverySinkAdapter> _logger;
+    private readonly IServiceProvider _serviceProvider;
     private readonly IMessageBus _messageBus;
     private readonly bool _isTrxEnabled;
     private readonly VSTestBridgedTestFrameworkBase _adapterExtension;
@@ -33,9 +34,9 @@ internal sealed class TestCaseDiscoverySinkAdapter : ITestCaseDiscoverySink
     private readonly string? _testAssemblyPath;
 
     public TestCaseDiscoverySinkAdapter(VSTestBridgedTestFrameworkBase adapterExtension, TestSessionContext session, string[] testAssemblyPaths,
-        ITestApplicationModuleInfo testApplicationModuleInfo,
+        IServiceProvider serviceProvider,
         ILoggerFactory loggerFactory,
-        IMessageBus messageBus, bool isTrxEnabled,
+        bool isTrxEnabled,
         CancellationToken cancellationToken,
         ITestCaseDiscoverySink? testCaseDiscoverySink = null)
     {
@@ -45,7 +46,7 @@ internal sealed class TestCaseDiscoverySinkAdapter : ITestCaseDiscoverySink
         }
         else if (testAssemblyPaths.Length > 1)
         {
-            _testAssemblyPath = testApplicationModuleInfo.GetCurrentTestApplicationFullPath();
+            _testAssemblyPath = serviceProvider.GetTestApplicationModuleInfo().GetCurrentTestApplicationFullPath();
 
             if (!testAssemblyPaths.Contains(_testAssemblyPath))
             {
@@ -59,7 +60,8 @@ internal sealed class TestCaseDiscoverySinkAdapter : ITestCaseDiscoverySink
 
         _testCaseDiscoverySink = testCaseDiscoverySink;
         _logger = loggerFactory.CreateLogger<TestCaseDiscoverySinkAdapter>();
-        _messageBus = messageBus;
+        _serviceProvider = serviceProvider;
+        _messageBus = serviceProvider.GetMessageBus();
         _isTrxEnabled = isTrxEnabled;
         _adapterExtension = adapterExtension;
         _session = session;
@@ -79,7 +81,7 @@ internal sealed class TestCaseDiscoverySinkAdapter : ITestCaseDiscoverySink
         _testCaseDiscoverySink?.SendTestCase(discoveredTest);
 
         // Publish node state change to Microsoft Testing Platform
-        var testNode = discoveredTest.ToTestNode(_isTrxEnabled);
+        var testNode = discoveredTest.ToTestNode(_isTrxEnabled, _serviceProvider);
         testNode.Properties.Add(DiscoveredTestNodeStateProperty.CachedInstance);
         var testNodeChange = new TestNodeUpdateMessage(_session.SessionUid, testNode);
 

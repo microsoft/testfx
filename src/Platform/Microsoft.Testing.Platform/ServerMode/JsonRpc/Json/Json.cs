@@ -141,6 +141,18 @@ internal sealed class Json
             int attachmentIndex = 0;
             foreach (IProperty property in message.Properties)
             {
+                if (property is SerializableKeyValuePairStringProperty keyValuePairProperty)
+                {
+                    properties.Add((keyValuePairProperty.Key, keyValuePairProperty.Value));
+                    continue;
+                }
+
+                if (property is SerializableNamedArrayStringProperty namedArrayStringProperty)
+                {
+                    properties.Add((namedArrayStringProperty.Name, namedArrayStringProperty.Values));
+                    continue;
+                }
+
                 if (property is TestFileLocationProperty fileLocationProperty)
                 {
                     properties.Add(("location.file", fileLocationProperty.FilePath));
@@ -153,18 +165,11 @@ internal sealed class Json
                 {
                     string locationType = testMethodIdentifierProperty.TypeName;
 
-                    // Ideally, we should just use testMethodIdentifierProperty.
-                    // But Test Explorer had a bug where it expects location.type to also include the namespace,
-                    // and it didn't correctly consider location.namespace.
-                    // To keep compatibility with older VS, we hack it here to match the wrong behavior.
-                    // We do so only if we know VS being used doesn't have the fix
-                    if (ClientHelpers.UseWrongLocationImplementation() &&
-                        !RoslynString.IsNullOrEmpty(testMethodIdentifierProperty.Namespace))
+                    if (!RoslynString.IsNullOrEmpty(testMethodIdentifierProperty.Namespace))
                     {
                         locationType = $"{testMethodIdentifierProperty.Namespace}.{testMethodIdentifierProperty.TypeName}";
                     }
 
-                    properties.Add(("location.namespace", testMethodIdentifierProperty.Namespace));
                     properties.Add(("location.type", locationType));
                     properties.Add(("location.method", testMethodIdentifierProperty.ParameterTypeFullNames.Length > 0
                         ? $"{testMethodIdentifierProperty.MethodName}({string.Join(",", testMethodIdentifierProperty.ParameterTypeFullNames)})"
@@ -464,15 +469,9 @@ internal sealed class Json
                 ClientInfo: json.Bind<ClientInfo>(jsonElement, JsonRpcStrings.ClientInfo),
                 Capabilities: json.Bind<ClientCapabilities>(jsonElement, JsonRpcStrings.Capabilities)));
 
-        _deserializers[typeof(ClientInfo)] = new JsonElementDeserializer<ClientInfo>((json, jsonElement) =>
-        {
-            var clientInfo = new ClientInfo(
-                            Name: json.Bind<string>(jsonElement, JsonRpcStrings.Name),
-                            Version: json.Bind<string>(jsonElement, JsonRpcStrings.Version));
-            ClientHelpers.ClientName = clientInfo.Name;
-            ClientHelpers.ClientVersion = new Version(clientInfo.Version);
-            return clientInfo;
-        });
+        _deserializers[typeof(ClientInfo)] = new JsonElementDeserializer<ClientInfo>((json, jsonElement) => new ClientInfo(
+                Name: json.Bind<string>(jsonElement, JsonRpcStrings.Name),
+                Version: json.Bind<string>(jsonElement, JsonRpcStrings.Version)));
 
         _deserializers[typeof(ClientCapabilities)] = new JsonElementDeserializer<ClientCapabilities>((json, jsonElement) =>
         {

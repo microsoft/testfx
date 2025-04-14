@@ -314,7 +314,7 @@ public sealed record TestFileLocationProperty(string FilePath, LinePositionSpan 
 /// </summary>
 /// <param name="AssemblyFullName">Assembly full name.</param>
 /// <param name="Namespace">Namespace.</param>
-/// <param name="TypeName">Type name.</param>
+/// <param name="TypeName">Type name in metadata format, not including the namespace. Generics are represented by backtick followed by arity. Nested types are represented by <c>+</c>.</param>
 /// <param name="MethodName">Method name.</param>
 /// <param name="ParameterTypeFullNames">Parameter type full name.</param>
 /// <param name="ReturnTypeFullName">Return type full name.</param>
@@ -379,3 +379,19 @@ public record StandardErrorProperty(string StandardError) : IProperty;
 /// <param name="DisplayName">The display name.</param>
 /// <param name="Description">The description.</param>
 public record FileArtifactProperty(FileInfo FileInfo, string DisplayName, string? Description = null) : IProperty;
+
+internal sealed record SerializableKeyValuePairStringProperty(string Key, string Value) : KeyValuePairStringProperty(Key, Value);
+
+internal sealed record SerializableNamedArrayStringProperty(string Name, string[] Values) : IProperty
+{
+    [SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "https://github.com/dotnet/roslyn/issues/52421")]
+    private bool PrintMembers(StringBuilder builder)
+    {
+        builder.Append("Name = ");
+        builder.Append(Name);
+        builder.Append(", Values = [");
+        builder.AppendJoin(", ", Values);
+        builder.Append(']');
+        return true;
+    }
+}

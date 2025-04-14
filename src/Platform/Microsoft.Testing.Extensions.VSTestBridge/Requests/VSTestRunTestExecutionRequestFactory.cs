@@ -55,11 +55,8 @@ public sealed class VSTestRunTestExecutionRequestFactory : ITestExecutionRequest
         IFileSystem fileSystem = serviceProvider.GetFileSystem();
         IClientInfo clientInfo = serviceProvider.GetClientInfo();
 
-        ITestApplicationModuleInfo testApplicationModuleInfo = serviceProvider.GetTestApplicationModuleInfo();
-        IMessageBus messageBus = serviceProvider.GetRequiredService<IMessageBus>();
-        IOutputDevice outputDevice = serviceProvider.GetOutputDevice();
         FrameworkHandlerAdapter frameworkHandlerAdapter = new(adapterExtension, runTestExecutionRequest.Session, testAssemblyPaths,
-            testApplicationModuleInfo, loggerFactory, messageBus, outputDevice, adapterExtension.IsTrxEnabled, cancellationToken);
+            serviceProvider, loggerFactory, adapterExtension.IsTrxEnabled, cancellationToken);
 
         RunSettingsAdapter runSettings = new(commandLineOptions, fileSystem, configuration, clientInfo, loggerFactory, frameworkHandlerAdapter);
         RunContextAdapter runContext = new(commandLineOptions, runSettings, runTestExecutionRequest.Filter);
