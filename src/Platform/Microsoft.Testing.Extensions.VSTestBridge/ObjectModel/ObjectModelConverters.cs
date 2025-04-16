@@ -297,7 +297,7 @@ internal static class ObjectModelConverters
             methodName = $"{methodName}`{arity.ToString(CultureInfo.InvariantCulture)}";
         }
 
-        parameterTypes ??= Array.Empty<string>();
+        parameterTypes ??= [];
 
         ManagedNameParser.ParseManagedTypeName(managedType, out string @namespace, out string typeName);
 
