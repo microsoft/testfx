@@ -188,7 +188,7 @@ public sealed class ThreadingTests : AcceptanceTestBase<ThreadingTests.TestAsset
             return;
         }
 
-        var testHost = TestHost.LocateFrom(AssetFixture.LifecycleAttributesTaskProjectPath, TestAssetFixture.LifecycleWithParallelAttributesTaskProjectName, tfm);
+        var testHost = TestHost.LocateFrom(AssetFixture.LifecycleWithParallelAttributesTaskProjectNamePath, TestAssetFixture.LifecycleWithParallelAttributesTaskProjectName, tfm);
         string runSettingsFilePath = Path.Combine(testHost.DirectoryName, "sta.runsettings");
         TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath}", environmentVariables: new()
         {
@@ -225,7 +225,7 @@ public sealed class ThreadingTests : AcceptanceTestBase<ThreadingTests.TestAsset
         public const string STAThreadProjectName = "STATestThreading";
         public const string LifecycleAttributesVoidProjectName = "LifecycleAttributesVoid";
         public const string LifecycleAttributesTaskProjectName = "LifecycleAttributesTask";
-        public const string LifecycleWithParallelAttributesTaskProjectName = "LifecycleAttributesTask";
+        public const string LifecycleWithParallelAttributesTaskProjectName = "LifecycleWithParallelAttributesTask";
         public const string LifecycleAttributesValueTaskProjectName = "LifecycleAttributesValueTask";
 
         public string ProjectPath => GetAssetPath(ProjectName);
@@ -264,12 +264,14 @@ public sealed class ThreadingTests : AcceptanceTestBase<ThreadingTests.TestAsset
             yield return (LifecycleAttributesTaskProjectName, LifecycleAttributesTaskProjectName,
                 LifecycleAttributesTaskSource
                 .PatchTargetFrameworks(TargetFrameworks.All)
+                .PatchCodeWithReplace("$ProjectName$", LifecycleAttributesTaskProjectName)
                 .PatchCodeWithReplace("$ParallelAttribute$", string.Empty)
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
 
             yield return (LifecycleWithParallelAttributesTaskProjectName, LifecycleWithParallelAttributesTaskProjectName,
                 LifecycleAttributesTaskSource
                 .PatchTargetFrameworks(TargetFrameworks.All)
+                .PatchCodeWithReplace("$ProjectName$", LifecycleWithParallelAttributesTaskProjectName)
                 .PatchCodeWithReplace("$ParallelAttribute$", "[assembly: Parallelize(Workers = 0, Scope = ExecutionScope.MethodLevel)]")
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
 
@@ -529,7 +531,7 @@ public class LifecycleAttributesVoidTests
     </RunConfiguration>
 </RunSettings>
 
-#file LifecycleAttributesTask.csproj
+#file $ProjectName$.csproj
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>

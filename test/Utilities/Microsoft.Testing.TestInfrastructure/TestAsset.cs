@@ -17,6 +17,12 @@ public class TestAsset : IDisposable
         Name = assetName;
         _assetCode = assetCode;
         TargetAssetPath = Path.Combine(tempDirectory.Path, assetName);
+
+        if (Directory.Exists(TargetAssetPath))
+        {
+            throw new InvalidOperationException($"Directory / asset name '{assetName}' in '{tempDirectory.Path}' already exists. Make sure the paths for your test assets are unique. Typically you need to look into GetAssetsToGenerate method on the test fixture that is used for running the failing test");
+        }
+
         tempDirectory.CreateDirectory(assetName);
     }
 
