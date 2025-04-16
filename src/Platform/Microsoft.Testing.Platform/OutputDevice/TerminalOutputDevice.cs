@@ -56,7 +56,6 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
     private TerminalTestReporter? _terminalTestReporter;
     private bool _firstCallTo_OnSessionStartingAsync = true;
     private bool _bannerDisplayed;
-    private bool _isVSTestMode;
     private bool _isListTests;
     private bool _isServerMode;
     private ILogger? _logger;
@@ -116,7 +115,6 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
             _logger = _loggerFactory.CreateLogger(GetType().ToString());
         }
 
-        _isVSTestMode = _commandLineOptions.IsOptionSet(PlatformCommandLineProvider.VSTestAdapterModeOptionKey);
         _isListTests = _commandLineOptions.IsOptionSet(PlatformCommandLineProvider.DiscoverTestsOptionKey);
         _isServerMode = _commandLineOptions.IsOptionSet(PlatformCommandLineProvider.ServerOptionKey);
         bool noAnsi = _commandLineOptions.IsOptionSet(TerminalTestReporterCommandLineOptionsProvider.NoAnsiOption);
@@ -144,7 +142,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
             // The test host controller info is not setup and populated until after this constructor, because it writes banner and then after it figures out if
             // the runner is a testHost controller, so we would always have it as null if we capture it directly. Instead we need to check it via
             // func.
-            : () => _isVSTestMode || _isListTests || _isServerMode
+            : () => _isListTests || _isServerMode
                 ? false
                 : !_testHostControllerInfo.IsCurrentProcessTestHostController;
 
@@ -200,11 +198,6 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
     public async Task DisplayBannerAsync(string? bannerMessage)
     {
         RoslynDebug.Assert(_terminalTestReporter is not null);
-
-        if (_isVSTestMode)
-        {
-            return;
-        }
 
         using (await _asyncMonitor.LockAsync(TimeoutHelper.DefaultHangTimeSpanTimeout))
         {
@@ -292,7 +285,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
 
     public async Task DisplayAfterSessionEndRunAsync()
     {
-        if (_isVSTestMode || _isServerMode)
+        if (_isServerMode)
         {
             return;
         }
@@ -349,11 +342,6 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
     public async Task DisplayAsync(IOutputDeviceDataProducer producer, IOutputDeviceData data)
     {
         RoslynDebug.Assert(_terminalTestReporter is not null);
-
-        if (_isVSTestMode)
-        {
-            return;
-        }
 
         using (await _asyncMonitor.LockAsync(TimeoutHelper.DefaultHangTimeSpanTimeout))
         {

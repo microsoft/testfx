@@ -35,10 +35,6 @@ public sealed class ClassInitializeShouldBeValidFixer : CodeFixProvider
     {
         SyntaxNode root = await context.Document.GetRequiredSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false);
         SyntaxNode node = root.FindNode(context.Span);
-        if (node == null)
-        {
-            return;
-        }
 
         if (context.Diagnostics.Any(d => !d.Properties.ContainsKey(DiagnosticDescriptorHelper.CannotFixPropertyKey)))
         {

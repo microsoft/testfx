@@ -15,7 +15,7 @@ public class TestResultExtensionsTests : TestContainer
 {
     public void ToUnitTestResultsForTestResultWithExceptionConvertsToUnitTestResultsWithFailureOutcome()
     {
-        var result = new UTF.TestResult() { TestFailureException = new Exception() };
+        var result = new TestResult { TestFailureException = new Exception() };
         var convertedResult = result.ToTestResult(new(), default, default, string.Empty, new());
 
         Verify(convertedResult.Outcome == VSTestTestOutcome.Failed);
@@ -23,7 +23,7 @@ public class TestResultExtensionsTests : TestContainer
 
     public void ToUnitTestResultsForTestResultWithExceptionConvertsToUnitTestResultsWithInconclusiveOutcome()
     {
-        var result = new UTF.TestResult() { TestFailureException = new Exception(), Outcome = UTF.UnitTestOutcome.Inconclusive };
+        var result = new TestResult { TestFailureException = new Exception(), Outcome = UTF.UnitTestOutcome.Inconclusive };
         var convertedResult = result.ToTestResult(new(), default, default, string.Empty, new());
 
         Verify(convertedResult.Outcome == VSTestTestOutcome.Skipped);
@@ -32,7 +32,7 @@ public class TestResultExtensionsTests : TestContainer
     public void ToUnitTestResultsForTestResultShouldSetLoggingDataForConvertedUnitTestResults()
     {
         var timespan = default(TimeSpan);
-        var result = new UTF.TestResult()
+        var result = new UTF.TestResult
         {
             DebugTrace = "debugTrace",
             DisplayName = "displayName",
@@ -58,7 +58,7 @@ public class TestResultExtensionsTests : TestContainer
 
     public void ToUnitTestResultsForTestResultShouldSetStandardOut()
     {
-        var result = new UTF.TestResult()
+        var result = new TestResult
         {
             LogOutput = "logOutput",
         };
@@ -70,7 +70,7 @@ public class TestResultExtensionsTests : TestContainer
 
     public void ToUnitTestResultsForTestResultShouldSetStandardError()
     {
-        var result = new UTF.TestResult()
+        var result = new TestResult
         {
             LogError = "logError",
         };
@@ -82,7 +82,7 @@ public class TestResultExtensionsTests : TestContainer
 
     public void ToUnitTestResultsForTestResultShouldSetDebugTrace()
     {
-        var result = new UTF.TestResult()
+        var result = new TestResult
         {
             DebugTrace = "debugTrace",
         };
@@ -99,7 +99,7 @@ public class TestResultExtensionsTests : TestContainer
 
     public void ToUnitTestResultsForTestResultShouldSetTestContextMessages()
     {
-        var result = new UTF.TestResult()
+        var result = new TestResult
         {
             TestContextMessages = "Context",
         };
@@ -117,7 +117,7 @@ public class TestResultExtensionsTests : TestContainer
     public void ToUnitTestResultsForTestResultShouldSetDuration()
     {
         var timespan = default(TimeSpan);
-        var result = new UTF.TestResult()
+        var result = new TestResult
         {
             Duration = timespan,
         };
@@ -129,7 +129,7 @@ public class TestResultExtensionsTests : TestContainer
 
     public void ToUnitTestResultsForTestResultShouldSetDisplayName()
     {
-        var result = new UTF.TestResult()
+        var result = new TestResult
         {
             DisplayName = "displayName",
         };
@@ -141,7 +141,7 @@ public class TestResultExtensionsTests : TestContainer
 
     public void ToUnitTestResultsForTestResultShouldSetDataRowIndex()
     {
-        var result = new UTF.TestResult()
+        var result = new TestResult
         {
             DatarowIndex = 1,
         };
@@ -157,7 +157,7 @@ public class TestResultExtensionsTests : TestContainer
         var parentExecId = Guid.NewGuid();
         int innerResultsCount = 5;
 
-        var result = new UTF.TestResult()
+        var result = new TestResult
         {
             ExecutionId = executionId,
             ParentExecId = parentExecId,
@@ -177,7 +177,7 @@ public class TestResultExtensionsTests : TestContainer
         // Otherwise, ToTestResult will crash because it calls new Uri on the result file.
         string resultFile = Path.GetFullPath("DummyFile.txt");
 
-        var result = new UTF.TestResult() { ResultFiles = new List<string>() { resultFile } };
+        var result = new TestResult { ResultFiles = new List<string>() { resultFile } };
         var convertedResult = result.ToTestResult(new(), default, default, string.Empty, new());
         Verify(convertedResult.Attachments[0].Attachments[0].Description == resultFile);
     }

@@ -246,11 +246,6 @@ internal sealed class DotnetMuxerLocator
         // "Note that this registry key is "redirected" that means that 32-bit processes see different copy of the key than 64bit processes.
         // So it's important that both installers and the host access only the 32-bit view of the registry."
         using var hklm = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32);
-        if (hklm == null)
-        {
-            _resolutionLog(@"DotnetHostHelper.GetMuxerFromGlobalRegistrationWin: Missing SOFTWARE\dotnet\Setup\InstalledVersions subkey");
-            return null;
-        }
 
         using RegistryKey? dotnetInstalledVersion = hklm.OpenSubKey(@"SOFTWARE\dotnet\Setup\InstalledVersions");
         if (dotnetInstalledVersion == null)
