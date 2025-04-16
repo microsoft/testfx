@@ -54,7 +54,7 @@ internal static class ObjectModelConverters
             testNode.Properties.Add(methodIdentifierProperty);
         }
 
-        CopyVSTestProperties(testCase.Properties, testNode, testCase, testCase.GetPropertyValue, isTrxEnabled, serviceProvider);
+        CopyVSTestProperties(testCase.Properties, testNode, testCase, testCase.GetPropertyValue, isTrxEnabled, ShouldAddVSTestProviderProperties(serviceProvider));
         if (testCase.CodeFilePath is not null)
         {
             testNode.Properties.Add(new TestFileLocationProperty(testCase.CodeFilePath, new(new(testCase.LineNumber, -1), new(testCase.LineNumber, -1))));
@@ -64,7 +64,7 @@ internal static class ObjectModelConverters
     }
 
     private static void CopyVSTestProperties(IEnumerable<TestProperty> testProperties, TestNode testNode, TestCase testCase, Func<TestProperty, object?> getPropertyValue,
-        bool isTrxEnabled, IServiceProvider serviceProvider)
+        bool isTrxEnabled, bool addVSTestProviderProperties)
     {
         foreach (TestProperty property in testProperties)
         {
@@ -84,9 +84,7 @@ internal static class ObjectModelConverters
             // If vstestProvider is enabled (only known to be true for NUnit and Expecto so far), and we are running server mode in IDE (not dotnet test),
             // we add these stuff.
             // Once NUnit and Expecto allow us to move forward and remove vstestProvider, we can remove this logic and get rid of the whole vstestProvider capability.
-            if (serviceProvider.GetService<INamedFeatureCapability>()?.IsSupported(JsonRpcStrings.VSTestProviderSupport) == true &&
-                serviceProvider.GetCommandLineOptions().IsOptionSet(PlatformCommandLineProvider.ServerOptionKey) &&
-                !serviceProvider.GetCommandLineOptions().IsOptionSet(PlatformCommandLineProvider.DotNetTestPipeOptionKey))
+            if (addVSTestProviderProperties)
             {
                 if (property.Id == TestCaseProperties.Id.Id
                         && getPropertyValue(property) is Guid testCaseId)
@@ -143,7 +141,10 @@ internal static class ObjectModelConverters
     public static TestNode ToTestNode(this TestResult testResult, bool isTrxEnabled, IServiceProvider serviceProvider)
     {
         var testNode = testResult.TestCase.ToTestNode(isTrxEnabled, serviceProvider, testResult.DisplayName);
-        CopyVSTestProperties(testResult.Properties, testNode, testResult.TestCase, testResult.GetPropertyValue, isTrxEnabled, serviceProvider);
+
+        bool addVSTestProviderProperties = ShouldAddVSTestProviderProperties(serviceProvider);
+        CopyVSTestProperties(testResult.Properties, testNode, testResult.TestCase, testResult.GetPropertyValue, isTrxEnabled, addVSTestProviderProperties);
+
         testNode.AddOutcome(testResult);
 
         if (isTrxEnabled)
@@ -180,12 +181,22 @@ internal static class ObjectModelConverters
             if (testResultMessage.Category == TestResultMessage.StandardErrorCategory)
             {
                 string message = testResultMessage.Text ?? string.Empty;
+                if (addVSTestProviderProperties)
+                {
+                    testNode.Properties.Add(new SerializableKeyValuePairStringProperty("vstest.TestCase.StandardError", message));
+                }
+
                 standardErrorMessages.Add(message);
             }
 
             if (testResultMessage.Category == TestResultMessage.StandardOutCategory)
             {
                 string message = testResultMessage.Text ?? string.Empty;
+                if (addVSTestProviderProperties)
+                {
+                    testNode.Properties.Add(new SerializableKeyValuePairStringProperty("vstest.TestCase.StandardOutput", message));
+                }
+
                 standardOutputMessages.Add(message);
             }
         }
@@ -346,4 +357,9 @@ internal static class ObjectModelConverters
         fullyQualifiedType = fullyQualifiedName[..lastDotIndexBeforeOpenBracket];
         return true;
     }
+
+    private static bool ShouldAddVSTestProviderProperties(IServiceProvider serviceProvider)
+        => serviceProvider.GetService<INamedFeatureCapability>()?.IsSupported(JsonRpcStrings.VSTestProviderSupport) == true &&
+           serviceProvider.GetCommandLineOptions().IsOptionSet(PlatformCommandLineProvider.ServerOptionKey) &&
+           !serviceProvider.GetCommandLineOptions().IsOptionSet(PlatformCommandLineProvider.DotNetTestPipeOptionKey);
 }
