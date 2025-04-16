@@ -234,7 +234,7 @@ public class DynamicDataTests : DynamicDataTestsBase
               }
             ]
             """;
-        return JsonConvert.DeserializeObject<ExampleTestCase[]>(json)
+        return JsonConvert.DeserializeObject<ExampleTestCase[]>(json)!
             .Select(testCase => new object[] { testCase });
     }
 

@@ -24,6 +24,6 @@ public sealed class ProtocolTests
 #if NET8_0_OR_GREATER
         Assert.AreEqual(System.Text.Json.JsonSerializer.Serialize(message), System.Text.Json.JsonSerializer.Serialize(actual));
 #endif
-        Assert.AreEqual(message.FailedTestMessages?[0].Exceptions?[0].ErrorMessage, actual.FailedTestMessages?[0].Exceptions?[0].ErrorMessage);
+        Assert.AreEqual(message.FailedTestMessages[0].Exceptions?[0].ErrorMessage, actual.FailedTestMessages[0].Exceptions?[0].ErrorMessage);
     }
 }

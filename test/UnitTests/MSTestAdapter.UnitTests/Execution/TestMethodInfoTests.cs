@@ -441,7 +441,7 @@ public class TestMethodInfoTests : TestContainer
             typeof(DummyTestClass).FullName,
             "System.NotImplementedException: dummyExceptionMessage");
         Verify(exception is not null);
-        Verify(errorMessage == exception?.Message);
+        Verify(errorMessage == exception.Message);
     }
 
     public void TestMethodInfoInvokeShouldSetStackTraceInformationIfSetTestContextThrows()

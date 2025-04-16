@@ -20,7 +20,7 @@ internal sealed class TestingFrameworkVerifier : IVerifier
 
     public ImmutableStack<string> Context { get; }
 
-    public void Empty<T>(string collectionName, IEnumerable<T> collection) => Assert.IsFalse(collection?.Any() == true, CreateMessage($"expected '{collectionName}' to be empty, contains '{collection?.Count()}' elements"));
+    public void Empty<T>(string collectionName, IEnumerable<T> collection) => Assert.IsFalse(collection.Any(), CreateMessage($"expected '{collectionName}' to be empty, contains '{collection.Count()}' elements"));
 
     public void Equal<T>(T expected, T actual, string? message = null)
     {
@@ -63,7 +63,7 @@ internal sealed class TestingFrameworkVerifier : IVerifier
 
     public void LanguageIsSupported(string language) => Assert.IsFalse(language is not LanguageNames.CSharp and not LanguageNames.VisualBasic, CreateMessage($"Unsupported Language: '{language}'"));
 
-    public void NotEmpty<T>(string collectionName, IEnumerable<T> collection) => Assert.IsTrue(collection?.Any() == true, CreateMessage($"expected '{collectionName}' to be non-empty, contains"));
+    public void NotEmpty<T>(string collectionName, IEnumerable<T> collection) => Assert.IsTrue(collection.Any(), CreateMessage($"expected '{collectionName}' to be non-empty, contains"));
 
     public IVerifier PushContext(string context)
     {
