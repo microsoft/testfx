@@ -48,13 +48,10 @@ internal static class ObjectModelConverters
             DisplayName = displayNameFromTestResult ?? testCase.DisplayName ?? testCase.FullyQualifiedName,
         };
 
+        // This will be false for Expecto and NUnit currently, as they don't provide ManagedType/ManagedMethod.
         if (TryGetMethodIdentifierProperty(testCase, out TestMethodIdentifierProperty? methodIdentifierProperty))
         {
             testNode.Properties.Add(methodIdentifierProperty);
-        }
-        else
-        {
-            throw new InvalidOperationException("Unable to parse fully qualified type name from test case: " + testCase.FullyQualifiedName);
         }
 
         CopyVSTestProperties(testCase.Properties, testNode, testCase, testCase.GetPropertyValue, isTrxEnabled, serviceProvider);
