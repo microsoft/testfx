@@ -19,18 +19,6 @@ internal static class AttributeDataExtensions
         return TryGetTimeoutValue(attribute, timeSpanSymbol, out executionTimeout);
     }
 
-    public static bool TryGetMethodTimeout(this AttributeData attribute, INamedTypeSymbol? methodTimeoutAttributeSymbol,
-        INamedTypeSymbol? timeSpanSymbol, out TimeSpan methodTimeout)
-    {
-        if (!SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, methodTimeoutAttributeSymbol))
-        {
-            methodTimeout = default;
-            return false;
-        }
-
-        return TryGetTimeoutValue(attribute, timeSpanSymbol, out methodTimeout);
-    }
-
     private static bool TryGetTimeoutValue(this AttributeData attribute, INamedTypeSymbol? timeSpanSymbol, out TimeSpan timeout)
     {
         if (attribute.ConstructorArguments.Length == 1
