@@ -5,8 +5,6 @@ using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
 using Microsoft.Testing.Platform.Helpers;
 
-using static Microsoft.ApplicationInsights.MetricDimensionNames.TelemetryContext;
-
 namespace MSTest.Acceptance.IntegrationTests;
 
 [TestClass]
