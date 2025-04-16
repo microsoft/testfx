@@ -81,9 +81,9 @@ internal static class ObjectModelConverters
                 }
             }
 
-            // If vstestProvider is enabled (only known to be true for NUnit so far), and we are running server mode in IDE (not dotnet test),
+            // If vstestProvider is enabled (only known to be true for NUnit and Expecto so far), and we are running server mode in IDE (not dotnet test),
             // we add these stuff.
-            // Once NUnit allows us to move forward and remove vstestProvider, we can remove this logic and get rid of the whole vstestProvider capability.
+            // Once NUnit and Expecto allow us to move forward and remove vstestProvider, we can remove this logic and get rid of the whole vstestProvider capability.
             if (serviceProvider.GetService<INamedFeatureCapability>()?.IsSupported(JsonRpcStrings.VSTestProviderSupport) == true &&
                 serviceProvider.GetCommandLineOptions().IsOptionSet(PlatformCommandLineProvider.ServerOptionKey) &&
                 !serviceProvider.GetCommandLineOptions().IsOptionSet(PlatformCommandLineProvider.DotNetTestPipeOptionKey))
