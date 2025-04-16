@@ -76,8 +76,7 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
         IConfiguration configuration = ServiceProvider.GetConfiguration();
         try
         {
-            using IProcess currentProcess = process.GetCurrentProcess();
-            int currentPID = currentProcess.Id;
+            int currentPID = process.GetCurrentProcessId();
             string processIdString = currentPID.ToString(CultureInfo.InvariantCulture);
 
             ExecutableInfo executableInfo = testApplicationModuleInfo.GetCurrentExecutableInfo();
