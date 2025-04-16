@@ -17,9 +17,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 [SuppressMessage("ApiDesign", "RS0030:Do not use banned APIs", Justification = "We can use MTP from this folder")]
 public static class TestApplicationBuilderExtensions
 {
-    /// <summary>
-    /// The VSTest bridged test framework capabilities.
-    /// </summary>
+    // NOTE: We intentionally use this class and not VSTestBridgeExtensionBaseCapabilities because
+    // we don't want MSTest to use vstestProvider capability
     private sealed class MSTestCapabilities : ITrxReportCapability
     {
         bool ITrxReportCapability.IsSupported { get; } = true;
