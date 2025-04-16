@@ -32,31 +32,25 @@ public abstract class TestAssetFixtureBase : ITestAssetFixture
             ? throw new ArgumentNullException(nameof(assetID), $"Cannot find target path for test asset '{assetID}'")
             : testAsset.TargetAssetPath;
 
-    public async Task InitializeAsync()
-    {
-        // Generate all distinct projects into the same temporary base folder. Do this in series
-        // because the work here is minimal and it gives us ability to refer from one project to another.
-        IEnumerable<(string ID, string Name, string Code)> assets = GetAssetsToGenerate();
-        foreach ((string id, string name, string code) in assets)
-        {
-            TestAsset generatedAsset = await TestAsset.GenerateAssetAsync(name, code, _tempDirectory);
-            _testAssets.TryAdd(id, generatedAsset);
-        }
-
+    public async Task InitializeAsync() =>
+        // Generate all projects into the same temporary base folder, but separate subdirectories, so we can reference one from other.
 #if NET
-        await Parallel.ForEachAsync(_testAssets.Values, async (testAsset, _) =>
-        {
-            DotnetMuxerResult result = await DotnetCli.RunAsync($"build {testAsset.TargetAssetPath} -c Release", _nugetGlobalPackagesDirectory.Path, callerMemberName: testAsset.TargetAssetPath);
-            testAsset.DotnetResult = result;
-        });
+        await Parallel.ForEachAsync(GetAssetsToGenerate(), async (asset, _) =>
+           {
+               TestAsset testAsset = await TestAsset.GenerateAssetAsync(asset.Name, asset.Code, _tempDirectory);
+               DotnetMuxerResult result = await DotnetCli.RunAsync($"build {testAsset.TargetAssetPath} -c Release", _nugetGlobalPackagesDirectory.Path, callerMemberName: asset.Name);
+               testAsset.DotnetResult = result;
+               _testAssets.TryAdd(asset.ID, testAsset);
+           });
 #else
-        await Task.WhenAll(_testAssets.Values.Select(async testAsset =>
+        await Task.WhenAll(GetAssetsToGenerate().Select(async asset =>
         {
-            DotnetMuxerResult result = await DotnetCli.RunAsync($"build {testAsset.TargetAssetPath} -c Release", _nugetGlobalPackagesDirectory.Path, callerMemberName: testAsset.Name);
+            TestAsset testAsset = await TestAsset.GenerateAssetAsync(asset.Name, asset.Code, _tempDirectory);
+            DotnetMuxerResult result = await DotnetCli.RunAsync($"build {testAsset.TargetAssetPath} -c Release", _nugetGlobalPackagesDirectory.Path, callerMemberName: asset.Name);
             testAsset.DotnetResult = result;
+            _testAssets.TryAdd(asset.ID, testAsset);
         }));
 #endif
-    }
 
     public abstract IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate();
 

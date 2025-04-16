@@ -19,6 +19,16 @@ public class TestDiscoveryWarningsTests : AcceptanceTestBase<TestDiscoveryWarnin
     {
         var testHost = TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, currentTfm);
 
+        if (currentTfm.StartsWith("net4", StringComparison.OrdinalIgnoreCase))
+        {
+            // .NET Framework will isolate the run into appdomain, there we did not write the warnings out
+            // so before running the discovery, we want to ensure that the tests do run in appdomain.
+            // We check for appdomain directly in the test, so if tests fail we did not run in appdomain.
+            TestHostResult testHostSuccessResult = await testHost.ExecuteAsync();
+
+            testHostSuccessResult.AssertExitCodeIs(ExitCodes.Success);
+        }
+
         // Delete the TestDiscoveryWarningsBaseClass.dll from the test bin folder on purpose, to break discovering
         // because the type won't be loaded on runtime, and mstest will write warning.
         File.Delete(Path.Combine(testHost.DirectoryName, $"{BaseClassAssetName}.dll"));
@@ -78,7 +88,16 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 public class TestClass1 : BaseClass
 {
     [TestMethod]
-    public void Test1_1() {}
+    public void Test1_1()
+    {
+#if NETFRAMEWORK
+        // Ensure we run in appdomain, and not directly in host, because we want to ensure that warnings are correctly passed
+        // outside of the appdomain to the rest of the engine.
+        //\
+        // We set this friendly appdomain name in src\Adapter\MSTestAdapter.PlatformServices\Services\TestSourceHost.cs:163
+        StringAssert.StartsWith(AppDomain.CurrentDomain.FriendlyName, "TestSourceHost: Enumerating source");
+#endif
+    }
 }
 
 [TestClass]
