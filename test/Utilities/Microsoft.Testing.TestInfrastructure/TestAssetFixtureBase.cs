@@ -20,6 +20,7 @@ public sealed class NopAssetFixture : ITestAssetFixture
 public abstract class TestAssetFixtureBase : ITestAssetFixture
 {
     private readonly ConcurrentDictionary<string /* asset ID */, TestAsset> _testAssets = new();
+    private readonly TempDirectory _tempDirectory = new();
     private readonly TempDirectory _nugetGlobalPackagesDirectory;
     private bool _disposedValue;
 
@@ -32,23 +33,30 @@ public abstract class TestAssetFixtureBase : ITestAssetFixture
             : testAsset.TargetAssetPath;
 
     public async Task InitializeAsync()
-#if NET
-        => await Parallel.ForEachAsync(GetAssetsToGenerate(), async (asset, _) =>
+    {
+        // Generate all distinct projects into the same temporary base folder. Do this in series
+        // because the work here is minimal and it gives us ability to refer from one project to another.
+        IEnumerable<(string ID, string Name, string Code)> assets = GetAssetsToGenerate();
+        foreach ((string id, string name, string code) in assets)
         {
-            TestAsset testAsset = await TestAsset.GenerateAssetAsync(asset.Name, asset.Code);
-            DotnetMuxerResult result = await DotnetCli.RunAsync($"build {testAsset.TargetAssetPath} -c Release", _nugetGlobalPackagesDirectory.Path, callerMemberName: asset.Name);
+            TestAsset generatedAsset = await TestAsset.GenerateAssetAsync(name, code, _tempDirectory);
+            _testAssets.TryAdd(id, generatedAsset);
+        }
+
+#if NET
+        await Parallel.ForEachAsync(_testAssets.Values, async (testAsset, _) =>
+        {
+            DotnetMuxerResult result = await DotnetCli.RunAsync($"build {testAsset.TargetAssetPath} -c Release", _nugetGlobalPackagesDirectory.Path, callerMemberName: testAsset.TargetAssetPath);
             testAsset.DotnetResult = result;
-            _testAssets.TryAdd(asset.ID, testAsset);
         });
 #else
-        => await Task.WhenAll(GetAssetsToGenerate().Select(async asset =>
+        await Task.WhenAll(_testAssets.Values.Select(async testAsset =>
         {
-            TestAsset testAsset = await TestAsset.GenerateAssetAsync(asset.Name, asset.Code);
-            DotnetMuxerResult result = await DotnetCli.RunAsync($"build {testAsset.TargetAssetPath} -c Release", _nugetGlobalPackagesDirectory.Path, callerMemberName: asset.Name);
+            DotnetMuxerResult result = await DotnetCli.RunAsync($"build {testAsset.TargetAssetPath} -c Release", _nugetGlobalPackagesDirectory.Path, callerMemberName: testAsset.Name);
             testAsset.DotnetResult = result;
-            _testAssets.TryAdd(asset.ID, testAsset);
         }));
 #endif
+    }
 
     public abstract IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate();
 
@@ -59,6 +67,7 @@ public abstract class TestAssetFixtureBase : ITestAssetFixture
             if (disposing)
             {
                 Parallel.ForEach(_testAssets, (assetPair, _) => assetPair.Value.Dispose());
+                _tempDirectory.Dispose();
             }
 
             _disposedValue = true;

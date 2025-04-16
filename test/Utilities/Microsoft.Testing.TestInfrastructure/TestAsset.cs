@@ -7,17 +7,32 @@ public class TestAsset : IDisposable
 {
     private const string FileTag = "#file";
 
-    private readonly TempDirectory _tempDirectory;
+    private readonly TempDirectory? _tempDirectory;
     private readonly string _assetCode;
+
     private bool _isDisposed;
 
-    public TestAsset(string targetPath, string assetCode)
+    public TestAsset(string assetName, string assetCode, TempDirectory tempDirectory)
     {
+        Name = assetName;
         _assetCode = assetCode;
-        _tempDirectory = new(targetPath);
+        TargetAssetPath = Path.Combine(tempDirectory.Path, assetName);
+        tempDirectory.CreateDirectory(assetName);
     }
 
-    public string TargetAssetPath => _tempDirectory.Path;
+    public TestAsset(string assetName, string assetCode)
+        : this(assetName, assetCode, new TempDirectory(subDirectory: null))
+    {
+        Name = assetName;
+        _assetCode = assetCode;
+        // Assign temp directory because we own it.
+        _tempDirectory = new TempDirectory(assetName);
+        TargetAssetPath = _tempDirectory.Path;
+    }
+
+    public string Name { get; }
+
+    public string TargetAssetPath { get; }
 
     public DotnetMuxerResult? DotnetResult { get; internal set; }
 
@@ -38,7 +53,7 @@ public class TestAsset : IDisposable
         {
             if (DotnetResult is null || DotnetResult.ExitCode == 0)
             {
-                _tempDirectory.Dispose();
+                _tempDirectory?.Dispose();
             }
         }
 
@@ -65,7 +80,20 @@ public class TestAsset : IDisposable
         foreach (string fileContent in splitFiles)
         {
             (string, string) fileInfo = ParseFile(fileContent);
-            await TempDirectory.WriteFileAsync(testAsset._tempDirectory.Path, fileInfo.Item1, fileInfo.Item2);
+            await TempDirectory.WriteFileAsync(testAsset.TargetAssetPath, fileInfo.Item1, fileInfo.Item2);
+        }
+
+        return testAsset;
+    }
+
+    public static async Task<TestAsset> GenerateAssetAsync(string assetName, string code, TempDirectory tempDirectory, bool addDefaultNuGetConfigFile = true, bool addPublicFeeds = false)
+    {
+        TestAsset testAsset = new(assetName, addDefaultNuGetConfigFile ? string.Concat(code, GetNuGetConfig(addPublicFeeds)) : code, tempDirectory);
+        string[] splitFiles = testAsset._assetCode.Split([FileTag], StringSplitOptions.RemoveEmptyEntries);
+        foreach (string fileContent in splitFiles)
+        {
+            (string, string) fileInfo = ParseFile(fileContent);
+            await TempDirectory.WriteFileAsync(testAsset.TargetAssetPath, fileInfo.Item1, fileInfo.Item2);
         }
 
         return testAsset;
