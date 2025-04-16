@@ -10,6 +10,7 @@ using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.ServerMode;
 using Microsoft.Testing.Platform.Services;
+using Microsoft.TestPlatform.AdapterUtilities.ManagedNameUtilities;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
 namespace Microsoft.Testing.Extensions.VSTestBridge.ObjectModel;
@@ -282,61 +283,31 @@ internal static class ObjectModelConverters
             return false;
         }
 
-        return TryGetMethodIdentifierPropertyFromManagedTypeAndManagedMethod(managedType, managedMethod, out methodIdentifierProperty);
-    }
-
-    private static bool TryGetMethodIdentifierPropertyFromManagedTypeAndManagedMethod(
-        ReadOnlySpan<char> managedType,
-        ReadOnlySpan<char> managedMethod,
-        [NotNullWhen(true)] out TestMethodIdentifierProperty? methodIdentifierProperty)
-    {
-        string assemblyFullName = string.Empty;
-        string @namespace;
-        string typeName;
-        string methodName;
-        string[] parameterTypeFullNames = Array.Empty<string>();
-        string returnTypeFullName = string.Empty;
-
-        int indexOfParen = managedMethod.IndexOf('(');
-        if (indexOfParen != -1)
-        {
-            parameterTypeFullNames = GetParameterTypes(managedMethod.Slice(indexOfParen + 1));
-            methodName = managedMethod.Slice(0, indexOfParen).ToString();
-        }
-        else
-        {
-            methodName = managedMethod.ToString();
-        }
-
-        // Get type name
-        int lastIndexOfDot = managedType.LastIndexOf('.');
-        if (lastIndexOfDot == -1)
-        {
-            typeName = managedType.ToString();
-            @namespace = string.Empty;
-        }
-        else
-        {
-            typeName = managedType.Slice(lastIndexOfDot + 1).ToString();
-            @namespace = managedType.Slice(0, lastIndexOfDot).ToString();
-        }
-
-        methodIdentifierProperty = new TestMethodIdentifierProperty(assemblyFullName, @namespace, typeName, methodName, parameterTypeFullNames, returnTypeFullName);
+        methodIdentifierProperty = GetMethodIdentifierPropertyFromManagedTypeAndManagedMethod(managedType, managedMethod);
         return true;
     }
 
-    private static string[] GetParameterTypes(ReadOnlySpan<char> afterOpenParen)
+    private static TestMethodIdentifierProperty GetMethodIdentifierPropertyFromManagedTypeAndManagedMethod(
+        string managedType,
+        string managedMethod)
     {
-        if (afterOpenParen[afterOpenParen.Length - 1] != ')')
+        ManagedNameParser.ParseManagedMethodName(managedMethod, out string methodName, out int arity, out string[]? parameterTypes);
+        if (arity != 0)
         {
-            // TODO: Maybe better to throw?
-            return Array.Empty<string>();
+            methodName = $"{methodName}`{arity.ToString(CultureInfo.InvariantCulture)}";
         }
 
-        afterOpenParen = afterOpenParen.Slice(0, afterOpenParen.Length - 1).Trim();
-        return afterOpenParen.Length == 0
-            ? Array.Empty<string>()
-            : afterOpenParen.ToString().Split(',', StringSplitOptions.None);
+        parameterTypes ??= Array.Empty<string>();
+
+        ManagedNameParser.ParseManagedTypeName(managedType, out string @namespace, out string typeName);
+
+        // In the context of the VSTestBridge where we only have access to VSTest object model, we cannot determine ReturnTypeFullName.
+        // For now, we lose this bit of information.
+        // If really needed in the future, we can introduce a VSTest property to hold this info.
+        // But the eventual goal should be to stop using the VSTestBridge altogether.
+        // TODO: For AssemblyFullName, can we use Assembly.GetEntryAssembly().FullName?
+        // Or alternatively, does VSTest object model expose the assembly full name somewhere?
+        return new TestMethodIdentifierProperty(AssemblyFullName: string.Empty, @namespace, typeName, methodName, parameterTypes, ReturnTypeFullName: string.Empty);
     }
 
     private static bool TryParseFullyQualifiedType(string fullyQualifiedName, [NotNullWhen(true)] out string? fullyQualifiedType)

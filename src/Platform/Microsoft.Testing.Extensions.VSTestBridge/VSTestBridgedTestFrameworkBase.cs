@@ -12,7 +12,6 @@ using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Messages;
-using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.Requests;
 using Microsoft.Testing.Platform.Services;
 
