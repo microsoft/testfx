@@ -348,11 +348,10 @@ public class AssemblyEnumeratorTests : TestContainer
             .Returns([typeof(InternalTestClass).GetTypeInfo()]);
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("DummyAssembly", false))
             .Returns(mockAssembly.Object);
-        testableAssemblyEnumerator.MockTypeEnumerator.Setup(te => te.Enumerate(_warnings))
-            .Callback(() => _warnings.AddRange(warningsFromTypeEnumerator));
+        testableAssemblyEnumerator.MockTypeEnumerator.Setup(te => te.Enumerate(It.IsAny<List<string>>()))
+            .Callback<List<string>>((w) => w.AddRange(warningsFromTypeEnumerator));
 
         AssemblyEnumerationResult result = testableAssemblyEnumerator.EnumerateAssembly("DummyAssembly");
-        _warnings.AddRange(result.Warnings);
 
         Verify(warningsFromTypeEnumerator.SequenceEqual(result.Warnings));
     }
