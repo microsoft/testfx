@@ -5,9 +5,10 @@
     <TargetFramework>net9.0</TargetFramework>
     <Nullable>enable</Nullable>
     <GenerateProgramFile>false</GenerateProgramFile>
-    <NoWarn>$(NoWarn);NETSDK1023</NoWarn>
+    <NoWarn>$(NoWarn);NETSDK1023;SA0001;EnableGenerateDocumentationFile</NoWarn>
 
     <IsTestingPlatformApplication>true</IsTestingPlatformApplication>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
   </PropertyGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' == 'net462' ">
