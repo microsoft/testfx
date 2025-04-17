@@ -188,7 +188,7 @@ public sealed class ThreadingTests : AcceptanceTestBase<ThreadingTests.TestAsset
             return;
         }
 
-        var testHost = TestHost.LocateFrom(AssetFixture.LifecycleWithParallelAttributesTaskProjectNamePath, TestAssetFixture.LifecycleWithParallelAttributesTaskProjectName, tfm);
+        var testHost = TestHost.LocateFrom(AssetFixture.LifecycleWithParallelAttributesTaskProjectNamePath, TestAssetFixture.LifecycleAttributesTaskProjectName, tfm);
         string runSettingsFilePath = Path.Combine(testHost.DirectoryName, "sta.runsettings");
         TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath}", environmentVariables: new()
         {
@@ -264,14 +264,12 @@ public sealed class ThreadingTests : AcceptanceTestBase<ThreadingTests.TestAsset
             yield return (LifecycleAttributesTaskProjectName, LifecycleAttributesTaskProjectName,
                 LifecycleAttributesTaskSource
                 .PatchTargetFrameworks(TargetFrameworks.All)
-                .PatchCodeWithReplace("$ProjectName$", LifecycleAttributesTaskProjectName)
                 .PatchCodeWithReplace("$ParallelAttribute$", string.Empty)
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
 
-            yield return (LifecycleWithParallelAttributesTaskProjectName, LifecycleWithParallelAttributesTaskProjectName,
+            yield return (LifecycleWithParallelAttributesTaskProjectName, LifecycleAttributesTaskProjectName,
                 LifecycleAttributesTaskSource
                 .PatchTargetFrameworks(TargetFrameworks.All)
-                .PatchCodeWithReplace("$ProjectName$", LifecycleWithParallelAttributesTaskProjectName)
                 .PatchCodeWithReplace("$ParallelAttribute$", "[assembly: Parallelize(Workers = 0, Scope = ExecutionScope.MethodLevel)]")
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
 
@@ -531,7 +529,7 @@ public class LifecycleAttributesVoidTests
     </RunConfiguration>
 </RunSettings>
 
-#file $ProjectName$.csproj
+#file LifecycleAttributesTask.csproj
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
