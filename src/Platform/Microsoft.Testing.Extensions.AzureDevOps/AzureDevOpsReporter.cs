@@ -24,6 +24,7 @@ internal sealed class AzureDevOpsReporter :
     private static readonly char[] NewlineCharacters = new char[] { '\r', '\n' };
     private readonly ICommandLineOptions _commandLine;
     private readonly IEnvironment _environment;
+    private readonly string _deterministicBuildRoot = $"/_/";
     private string _severity = "error";
 
     public AzureDevOpsReporter(
@@ -125,8 +126,10 @@ internal sealed class AzureDevOpsReporter :
         (string Code, string File, int LineNumber)? location = GetStackFrameLocation(firstLine);
         if (location != null)
         {
-            string root = RootFinder.Find();
             string file = location.Value.File;
+            // Deterministic build paths start with "/_/"
+            string root = file.StartsWith(_deterministicBuildRoot, StringComparison.Ordinal) ? _deterministicBuildRoot : RootFinder.Find();
+
             string relativePath = file.StartsWith(root, StringComparison.CurrentCultureIgnoreCase) ? file.Substring(root.Length) : file;
             string relativeNormalizedPath = relativePath.Replace('\\', '/');
 
