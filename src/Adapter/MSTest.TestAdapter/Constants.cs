@@ -50,7 +50,7 @@ internal static class Constants
     /// <summary>
     /// The name of test run parameters node in the runsettings.
     /// </summary>
-    internal const string TestRunParametersName = "TestRunParameters";
+    internal const string TestRunParametersName = "TestRunParameters11111";
 
     /// <summary>
     /// The executor uri for this adapter.
