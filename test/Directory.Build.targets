@@ -26,7 +26,7 @@
     <ResultsTrxPath>$(ArtifactsTestResultsDir)$(_ResultFileNameNoExt).trx</ResultsTrxPath>
     <_TestResultTrxFileName>$([System.IO.Path]::GetFileName('$(ResultsTrxPath)'))</_TestResultTrxFileName>
     <_TestResultDirectory>$([System.IO.Path]::GetDirectoryName('$(ResultsTrxPath)'))</_TestResultDirectory>
-    <TestingPlatformCommandLineArguments>$(TestingPlatformCommandLineArguments) --report-trx --report-trx-filename "$(_TestResultTrxFileName)" --results-directory "$(_TestResultDirectory)" $(TestRunnerAdditionalArguments)</TestingPlatformCommandLineArguments>
+    <TestingPlatformCommandLineArguments>$(TestingPlatformCommandLineArguments) --report-trx --report-trx-filename "$(_TestResultTrxFileName)" --results-directory "$(_TestResultDirectory)" --report-azdo $(TestRunnerAdditionalArguments)</TestingPlatformCommandLineArguments>
     <!-- /dotnet test runner settings -->
   </PropertyGroup>
 
