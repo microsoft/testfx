@@ -9,7 +9,7 @@ using Microsoft.Testing.Framework.SourceGeneration.Helpers;
 
 namespace Microsoft.Testing.Framework.SourceGeneration.ObjectModels;
 
-internal sealed class DataRowTestMethodArgumentsInfo : ITestMethodArgumentsInfo
+public sealed class DataRowTestMethodArgumentsInfo : ITestMethodArgumentsInfo
 {
     private readonly ImmutableArray<ImmutableArray<string>> _argumentsRows;
     private readonly TestMethodParametersInfo _parametersInfo;
@@ -72,7 +72,7 @@ internal sealed class DataRowTestMethodArgumentsInfo : ITestMethodArgumentsInfo
         return argumentsUidBuilder.ToString();
     }
 
-    internal /* for testing purposes */ static void EscapeArgument(string argument, StringBuilder argumentsUidBuilder)
+    public static void EscapeArgument(string argument, StringBuilder argumentsUidBuilder)
     {
         int escapeCharCount = 0;
         for (int i = 0; i < argument.Length; i++)

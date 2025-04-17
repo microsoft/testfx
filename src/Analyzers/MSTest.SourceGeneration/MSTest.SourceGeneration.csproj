@@ -7,7 +7,8 @@
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <!-- Do not include the generator as a lib dependency -->
     <IncludeBuildOutput>false</IncludeBuildOutput>
-    <NoWarn>NU5128</NoWarn>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <NoWarn>NU5128;SA0001;EnableGenerateDocumentationFile</NoWarn>
     <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
     <RootNamespace>Microsoft.Testing.Framework.SourceGeneration</RootNamespace>
     <!-- Cancel default license (closed-source) and set license as packaged license file -->
@@ -33,10 +34,6 @@ This package provides the C# source generators for MSTest test framework.]]>
 
   <ItemGroup>
     <AdditionalFiles Include="BannedSymbols.txt" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <InternalsVisibleTo Include="MSTest.SourceGeneration.UnitTests" Key="$(VsPublicKey)" />
   </ItemGroup>
 
   <ItemGroup>

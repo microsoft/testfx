@@ -3,7 +3,7 @@
 
 namespace Microsoft.Testing.Framework.SourceGeneration;
 
-internal static class Constants
+public static class Constants
 {
     public const string NewLine = "\r\n";
 }

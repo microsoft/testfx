@@ -7,7 +7,7 @@ using Microsoft.CodeAnalysis;
 
 namespace Microsoft.Testing.Framework.SourceGeneration.ObjectModels;
 
-internal sealed class TestMethodParametersInfo
+public sealed class TestMethodParametersInfo
 {
     public TestMethodParametersInfo(ImmutableArray<IParameterSymbol> parameters)
     {
