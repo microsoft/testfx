@@ -10,7 +10,7 @@ namespace Microsoft.Testing.Framework.UnitTests;
 public class DataRowTests
 {
     [DataRow(1, 2)]
-    [DataRow(2, 3)]
+    [DataRow(1000000, 3)]
     [TestMethod]
     public void DataRowDataAreConsumed(int expected, int actualPlus1)
         => Assert.AreEqual(expected, actualPlus1 - 1);
