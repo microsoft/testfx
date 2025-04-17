@@ -12,31 +12,31 @@ public class TestAsset : IDisposable
 
     private bool _isDisposed;
 
-    public TestAsset(string assetName, string assetCode, TempDirectory tempDirectory)
+    public TestAsset(string assetId, string assetCode, TempDirectory tempDirectory)
     {
-        Name = assetName;
+        AssetId = assetId;
         _assetCode = assetCode;
-        TargetAssetPath = Path.Combine(tempDirectory.Path, assetName);
+        TargetAssetPath = Path.Combine(tempDirectory.Path, assetId);
 
         if (Directory.Exists(TargetAssetPath))
         {
-            throw new InvalidOperationException($"Directory / asset name '{assetName}' in '{tempDirectory.Path}' already exists. Make sure the paths for your test assets are unique. Typically you need to look into GetAssetsToGenerate method on the test fixture that is used for running the failing test");
+            throw new InvalidOperationException($"Directory / asset id '{assetId}' in '{tempDirectory.Path}' already exists. Make sure the paths for your test assets are unique. Typically you need to look into GetAssetsToGenerate method on the test fixture that is used for running the failing test");
         }
 
-        tempDirectory.CreateDirectory(assetName);
+        tempDirectory.CreateDirectory(assetId);
     }
 
     public TestAsset(string assetName, string assetCode)
         : this(assetName, assetCode, new TempDirectory(subDirectory: null))
     {
-        Name = assetName;
+        AssetId = assetName;
         _assetCode = assetCode;
         // Assign temp directory because we own it.
         _tempDirectory = new TempDirectory(assetName);
         TargetAssetPath = _tempDirectory.Path;
     }
 
-    public string Name { get; }
+    public string AssetId { get; }
 
     public string TargetAssetPath { get; }
 
