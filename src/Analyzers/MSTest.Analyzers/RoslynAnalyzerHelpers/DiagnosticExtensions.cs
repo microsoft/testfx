@@ -119,8 +119,8 @@ internal static class DiagnosticExtensions
         ImmutableDictionary<string, string?>? properties,
         params object[] args)
     {
-        IEnumerable<Location> inSource = locations.Where(l => l.IsInSource);
-        return !inSource.Any()
+        Location[] inSource = locations.Where(l => l.IsInSource).ToArray();
+        return inSource.Length == 0
             ? Diagnostic.Create(rule, null, args)
             : Diagnostic.Create(rule,
                  location: inSource.First(),

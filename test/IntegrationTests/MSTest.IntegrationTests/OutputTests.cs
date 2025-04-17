@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Collections.Immutable;
+
 using FluentAssertions;
 
 using Microsoft.MSTestV2.CLIAutomation;
@@ -33,7 +35,7 @@ public class OutputTests : CLITestBase
         testCases.Should().HaveCount(3);
         testCases.Should().NotContainNulls();
 
-        System.Collections.Immutable.ImmutableArray<TestResult> testResults = await RunTestsAsync(testCases);
+        ImmutableArray<TestResult> testResults = await RunTestsAsync(testCases);
         testResults.Should().HaveCount(3);
         testResults.Should().NotContainNulls();
 
@@ -55,21 +57,21 @@ public class OutputTests : CLITestBase
     private static readonly Func<TestResultMessage, bool> IsStandardOutputMessage = m => m.Category == "StdOutMsgs" && !m.Text!.StartsWith(DebugTraceString, StringComparison.Ordinal);
     private static readonly Func<TestResultMessage, bool> IsStandardErrorMessage = m => m.Category == "StdErrMsgs";
 
-    private static void ValidateOutputsAreNotMixed(IEnumerable<TestResult> testResults, string methodName, string[] shouldNotContain)
+    private static void ValidateOutputsAreNotMixed(ImmutableArray<TestResult> testResults, string methodName, string[] shouldNotContain)
     {
         ValidateOutputIsNotMixed(testResults, methodName, shouldNotContain, IsStandardOutputMessage);
         ValidateOutputIsNotMixed(testResults, methodName, shouldNotContain, IsStandardErrorMessage);
         ValidateOutputIsNotMixed(testResults, methodName, shouldNotContain, IsDebugMessage);
     }
 
-    private static void ValidateInitializationsAndCleanups(IEnumerable<TestResult> testResults)
+    private static void ValidateInitializationsAndCleanups(ImmutableArray<TestResult> testResults)
     {
         ValidateInitializeAndCleanup(testResults, IsStandardOutputMessage);
         ValidateInitializeAndCleanup(testResults, IsStandardErrorMessage);
         ValidateInitializeAndCleanup(testResults, IsDebugMessage);
     }
 
-    private static void ValidateOutputIsNotMixed(IEnumerable<TestResult> testResults, string methodName, string[] shouldNotContain, Func<TestResultMessage, bool> messageFilter)
+    private static void ValidateOutputIsNotMixed(ImmutableArray<TestResult> testResults, string methodName, string[] shouldNotContain, Func<TestResultMessage, bool> messageFilter)
     {
         // Make sure that the output between methods is not mixed. And that every method has test initialize and cleanup.
         TestResult testMethod = testResults.Single(t => t.DisplayName == methodName);
@@ -86,7 +88,7 @@ public class OutputTests : CLITestBase
         message.Text.Should().NotContainAny(shouldNotContain);
     }
 
-    private static void ValidateInitializeAndCleanup(IEnumerable<TestResult> testResults, Func<TestResultMessage, bool> messageFilter)
+    private static void ValidateInitializeAndCleanup(ImmutableArray<TestResult> testResults, Func<TestResultMessage, bool> messageFilter)
     {
         // It is not deterministic where the class initialize and class cleanup will run, so we look at all tests, to make sure it is includes somewhere.
         string output = string.Join(Environment.NewLine, testResults.SelectMany(r => r.Messages).Where(messageFilter).Select(m => m.Text));
