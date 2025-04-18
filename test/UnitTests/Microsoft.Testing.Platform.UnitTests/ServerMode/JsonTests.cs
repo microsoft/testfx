@@ -1,13 +1,60 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Platform.Extensions.Messages;
+using Microsoft.Testing.Platform.ServerMode;
 using Microsoft.Testing.Platform.ServerMode.Json;
+
+using TestNode = Microsoft.Testing.Platform.Extensions.Messages.TestNode;
 
 namespace Microsoft.Testing.Platform.UnitTests;
 
 [TestClass]
 public sealed class JsonTests
 {
+    private readonly Json _json;
+
+    public JsonTests()
+    {
+        Dictionary<Type, JsonSerializer> serializers = new();
+        Dictionary<Type, JsonDeserializer> deserializers = new();
+
+        foreach (Type serializableType in SerializerUtilities.SerializerTypes)
+        {
+            serializers[serializableType] = new JsonObjectSerializer<object>(
+                o => SerializerUtilities.Serialize(serializableType, o).Select(kvp => (kvp.Key, kvp.Value)).ToArray());
+        }
+
+        foreach (Type deserializableType in SerializerUtilities.DeserializerTypes)
+        {
+            // By default we wrap the jsonite serialization, we can override specific types inside the Json .NET runtime implementation.
+            deserializers[deserializableType] = new JsonElementDeserializer<object>((json, doc)
+                => SerializerUtilities.Deserialize(deserializableType, json.Bind<JsoniteProperties>(doc)!));
+        }
+
+        _json = new Json(serializers, deserializers);
+    }
+
+    [TestMethod]
+    public async Task Serialize_TestNodeAsync()
+    {
+        // Arrange
+        PropertyBag bag = new(new SerializableKeyValuePairStringProperty("hello", "my friend"));
+
+        TestNode testNode = new()
+        {
+            DisplayName = "test",
+            Properties = bag,
+            Uid = new TestNodeUid("11111"),
+        };
+
+        // Act
+        string actual = await _json.SerializeAsync(testNode);
+
+        // Assert
+        Assert.AreEqual("""{"uid":"11111","display-name":"test","hello":"my friend","node-type":"group"}""", actual);
+    }
+
     [TestMethod]
     public async Task Serialize_Array()
     {

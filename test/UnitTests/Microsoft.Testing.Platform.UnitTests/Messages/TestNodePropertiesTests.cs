@@ -213,4 +213,10 @@ public sealed class TestNodePropertiesTests
         => Assert.AreEqual(
             "TestMetadataProperty { Key = some name, Value = some value }",
             new TestMetadataProperty("some name", "some value").ToString());
+
+    [TestMethod]
+    public void SerializableNamedArrayStringProperty_ToStringIsCorrect()
+        => Assert.AreEqual(
+            "SerializableNamedArrayStringProperty { Name = some name, Values = [value] }",
+            new SerializableNamedArrayStringProperty("some name", ["value"]).ToString());
 }
