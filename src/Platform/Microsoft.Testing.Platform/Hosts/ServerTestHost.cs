@@ -23,7 +23,7 @@ namespace Microsoft.Testing.Platform.Hosts;
 
 internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, IDisposable, IOutputDeviceDataProducer
 {
-    public const string ProtocolVersion = "1.0.0";
+    public const string ProtocolVersion = PlatformVersion.Version;
     private readonly Func<TestFrameworkBuilderData, Task<ITestFramework>> _buildTestFrameworkAsync;
 
     private readonly IMessageHandlerFactory _messageHandlerFactory;
