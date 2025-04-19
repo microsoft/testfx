@@ -328,7 +328,7 @@ internal static class ObjectModelConverters
     }
 
     private static bool ShouldAddVSTestProviderProperties(IServiceProvider serviceProvider)
-        => serviceProvider.GetService<INamedFeatureCapability>()?.IsSupported(JsonRpcStrings.VSTestProviderSupport) == true &&
+        => serviceProvider.GetTestFrameworkCapabilities().GetCapability<INamedFeatureCapability>()?.IsSupported(JsonRpcStrings.VSTestProviderSupport) == true &&
            serviceProvider.GetCommandLineOptions().IsOptionSet(PlatformCommandLineProvider.ServerOptionKey) &&
            !serviceProvider.GetCommandLineOptions().IsOptionSet(PlatformCommandLineProvider.DotNetTestPipeOptionKey);
 }
