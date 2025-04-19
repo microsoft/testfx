@@ -19,26 +19,21 @@ namespace Microsoft.Testing.Extensions.VSTestBridge.UnitTests.ObjectModel;
 [TestClass]
 public sealed class ObjectModelConvertersTests
 {
-    private sealed class NamedFeatureCapabilityWithVSTestProvider : INamedFeatureCapability
-    {
-        public bool IsSupported(string featureName) => featureName is JsonRpcStrings.VSTestProviderSupport;
-    }
-
-    private sealed class ServerModeCommandLineOptions : ICommandLineOptions
-    {
-        public bool IsOptionSet(string optionName) => optionName is PlatformCommandLineProvider.ServerOptionKey;
-
-        public bool TryGetOptionArgumentList(string optionName, [NotNullWhen(true)] out string[]? arguments) => throw new NotImplementedException();
-    }
-
-    private static readonly IServiceProvider ServiceProviderNotUsingVSTestProvider = new ServiceProvider();
+    private static readonly IServiceProvider ServiceProviderNotUsingVSTestProvider = GetServiceProviderNotUsingVSTestProvider();
     private static readonly IServiceProvider ServiceProviderUsingVSTestProvider = GetServiceProviderUsingVSTestProvider();
 
     private static IServiceProvider GetServiceProviderUsingVSTestProvider()
     {
         var serviceProvider = new ServiceProvider();
-        serviceProvider.AddService(new NamedFeatureCapabilityWithVSTestProvider());
+        serviceProvider.AddService(new TestFrameworkCapabilities(new NamedFeatureCapabilityWithVSTestProvider()));
         serviceProvider.AddService(new ServerModeCommandLineOptions());
+        return serviceProvider;
+    }
+
+    private static IServiceProvider GetServiceProviderNotUsingVSTestProvider()
+    {
+        var serviceProvider = new ServiceProvider();
+        serviceProvider.AddService(new TestFrameworkCapabilities());
         return serviceProvider;
     }
 
@@ -324,5 +319,17 @@ public sealed class ObjectModelConvertersTests
         StandardErrorProperty[] standardErrorProperties = testNode.Properties.OfType<StandardErrorProperty>().ToArray();
         Assert.IsTrue(standardErrorProperties.Length == 1);
         Assert.AreEqual($"message1{Environment.NewLine}message2", standardErrorProperties[0].StandardError);
+    }
+
+    private sealed class NamedFeatureCapabilityWithVSTestProvider : INamedFeatureCapability
+    {
+        public bool IsSupported(string featureName) => featureName is JsonRpcStrings.VSTestProviderSupport;
+    }
+
+    private sealed class ServerModeCommandLineOptions : ICommandLineOptions
+    {
+        public bool IsOptionSet(string optionName) => optionName is PlatformCommandLineProvider.ServerOptionKey;
+
+        public bool TryGetOptionArgumentList(string optionName, [NotNullWhen(true)] out string[]? arguments) => throw new NotImplementedException();
     }
 }
