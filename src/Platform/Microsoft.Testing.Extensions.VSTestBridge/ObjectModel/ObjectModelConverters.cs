@@ -69,8 +69,6 @@ internal static class ObjectModelConverters
     {
         foreach (TestProperty property in testProperties)
         {
-            testNode.Properties.Add(new VSTestProperty(property, testCase));
-
             if (isTrxEnabled)
             {
                 // TPv2 is doing some special handling for MSTest... we should probably do the same.
