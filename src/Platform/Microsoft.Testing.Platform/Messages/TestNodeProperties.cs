@@ -314,7 +314,7 @@ public sealed record TestFileLocationProperty(string FilePath, LinePositionSpan 
 /// </summary>
 /// <param name="AssemblyFullName">Assembly full name.</param>
 /// <param name="Namespace">Namespace.</param>
-/// <param name="TypeName">Type name.</param>
+/// <param name="TypeName">Type name in metadata format, not including the namespace. Generics are represented by backtick followed by arity. Nested types are represented by <c>+</c>.</param>
 /// <param name="MethodName">Method name.</param>
 /// <param name="ParameterTypeFullNames">Parameter type full name.</param>
 /// <param name="ReturnTypeFullName">Return type full name.</param>

@@ -225,8 +225,14 @@ internal static class SerializerUtilities
 
                     if (property is TestMethodIdentifierProperty testMethodIdentifierProperty)
                     {
-                        properties["location.namespace"] = testMethodIdentifierProperty.Namespace;
-                        properties["location.type"] = testMethodIdentifierProperty.TypeName;
+                        string locationType = testMethodIdentifierProperty.TypeName;
+
+                        if (!RoslynString.IsNullOrEmpty(testMethodIdentifierProperty.Namespace))
+                        {
+                            locationType = $"{testMethodIdentifierProperty.Namespace}.{testMethodIdentifierProperty.TypeName}";
+                        }
+
+                        properties["location.type"] = locationType;
                         properties["location.method"] = testMethodIdentifierProperty.ParameterTypeFullNames.Length > 0
                             ? $"{testMethodIdentifierProperty.MethodName}({string.Join(",", testMethodIdentifierProperty.ParameterTypeFullNames)})"
                             : testMethodIdentifierProperty.MethodName;

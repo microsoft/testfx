@@ -5,9 +5,12 @@
 
 using Microsoft.Testing.Extensions.TrxReport.Abstractions;
 using Microsoft.Testing.Platform;
+using Microsoft.Testing.Platform.Capabilities.TestFramework;
+using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions.Messages;
+using Microsoft.Testing.Platform.ServerMode;
 using Microsoft.Testing.Platform.Services;
-using Microsoft.Testing.Platform.TestHost;
+using Microsoft.TestPlatform.AdapterUtilities.ManagedNameUtilities;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
 namespace Microsoft.Testing.Extensions.VSTestBridge.ObjectModel;
@@ -21,10 +24,22 @@ internal static class ObjectModelConverters
         VSTestTestNodeProperties.OriginalExecutorUriPropertyName, VSTestTestNodeProperties.OriginalExecutorUriPropertyName,
         typeof(Uri), typeof(TestNode));
 
+    private static readonly TestProperty ManagedTypeProperty = TestProperty.Register(
+        id: "TestCase.ManagedType",
+        label: "TestCase.ManagedType",
+        valueType: typeof(string),
+        owner: typeof(TestCase));
+
+    private static readonly TestProperty ManagedMethodProperty = TestProperty.Register(
+        id: "TestCase.ManagedMethod",
+        label: "TestCase.ManagedMethod",
+        valueType: typeof(string),
+        owner: typeof(TestCase));
+
     /// <summary>
     /// Converts a VSTest <see cref="TestCase"/> to a Microsoft Testing Platform <see cref="TestNode"/>.
     /// </summary>
-    public static TestNode ToTestNode(this TestCase testCase, bool isTrxEnabled, IClientInfo client, string? displayNameFromTestResult = null)
+    public static TestNode ToTestNode(this TestCase testCase, bool isTrxEnabled, IServiceProvider serviceProvider, string? displayNameFromTestResult = null)
     {
         string testNodeUid = testCase.Id.ToString();
 
@@ -34,7 +49,13 @@ internal static class ObjectModelConverters
             DisplayName = displayNameFromTestResult ?? testCase.DisplayName ?? testCase.FullyQualifiedName,
         };
 
-        CopyVSTestProperties(testCase.Properties, testNode, testCase, testCase.GetPropertyValue, isTrxEnabled, client);
+        // This will be false for Expecto and NUnit currently, as they don't provide ManagedType/ManagedMethod.
+        if (TryGetMethodIdentifierProperty(testCase, out TestMethodIdentifierProperty? methodIdentifierProperty))
+        {
+            testNode.Properties.Add(methodIdentifierProperty);
+        }
+
+        CopyVSTestProperties(testCase.Properties, testNode, testCase, testCase.GetPropertyValue, isTrxEnabled, ShouldAddVSTestProviderProperties(serviceProvider));
         if (testCase.CodeFilePath is not null)
         {
             testNode.Properties.Add(new TestFileLocationProperty(testCase.CodeFilePath, new(new(testCase.LineNumber, -1), new(testCase.LineNumber, -1))));
@@ -44,12 +65,10 @@ internal static class ObjectModelConverters
     }
 
     private static void CopyVSTestProperties(IEnumerable<TestProperty> testProperties, TestNode testNode, TestCase testCase, Func<TestProperty, object?> getPropertyValue,
-        bool isTrxEnabled, IClientInfo client)
+        bool isTrxEnabled, bool addVSTestProviderProperties)
     {
         foreach (TestProperty property in testProperties)
         {
-            testNode.Properties.Add(new VSTestProperty(property, testCase));
-
             if (isTrxEnabled)
             {
                 // TPv2 is doing some special handling for MSTest... we should probably do the same.
@@ -61,9 +80,10 @@ internal static class ObjectModelConverters
                 }
             }
 
-            // Implement handling of specific vstest properties for VS/VS Code Test Explorer,
-            // see https://github.com/microsoft/testanywhere/blob/main/docs/design/proposed/IDE_Protocol_IDE_Integration.md#vstest-test-node
-            if (client.Id == WellKnownClients.VisualStudio)
+            // If vstestProvider is enabled (only known to be true for NUnit and Expecto so far), and we are running server mode in IDE (not dotnet test),
+            // we add these stuff.
+            // Once NUnit and Expecto allow us to move forward and remove vstestProvider, we can remove this logic and get rid of the whole vstestProvider capability.
+            if (addVSTestProviderProperties)
             {
                 if (property.Id == TestCaseProperties.Id.Id
                         && getPropertyValue(property) is Guid testCaseId)
@@ -117,10 +137,13 @@ internal static class ObjectModelConverters
     /// <summary>
     /// Converts a VSTest <see cref="TestResult"/> to a Microsoft Testing Platform <see cref="TestNode"/>.
     /// </summary>
-    public static TestNode ToTestNode(this TestResult testResult, bool isTrxEnabled, IClientInfo client)
+    public static TestNode ToTestNode(this TestResult testResult, bool isTrxEnabled, IServiceProvider serviceProvider)
     {
-        var testNode = testResult.TestCase.ToTestNode(isTrxEnabled, client, testResult.DisplayName);
-        CopyVSTestProperties(testResult.Properties, testNode, testResult.TestCase, testResult.GetPropertyValue, isTrxEnabled, client);
+        var testNode = testResult.TestCase.ToTestNode(isTrxEnabled, serviceProvider, testResult.DisplayName);
+
+        bool addVSTestProviderProperties = ShouldAddVSTestProviderProperties(serviceProvider);
+        CopyVSTestProperties(testResult.Properties, testNode, testResult.TestCase, testResult.GetPropertyValue, isTrxEnabled, addVSTestProviderProperties);
+
         testNode.AddOutcome(testResult);
 
         if (isTrxEnabled)
@@ -157,14 +180,22 @@ internal static class ObjectModelConverters
             if (testResultMessage.Category == TestResultMessage.StandardErrorCategory)
             {
                 string message = testResultMessage.Text ?? string.Empty;
-                testNode.Properties.Add(new SerializableKeyValuePairStringProperty("vstest.TestCase.StandardError", message));
+                if (addVSTestProviderProperties)
+                {
+                    testNode.Properties.Add(new SerializableKeyValuePairStringProperty("vstest.TestCase.StandardError", message));
+                }
+
                 standardErrorMessages.Add(message);
             }
 
             if (testResultMessage.Category == TestResultMessage.StandardOutCategory)
             {
                 string message = testResultMessage.Text ?? string.Empty;
-                testNode.Properties.Add(new SerializableKeyValuePairStringProperty("vstest.TestCase.StandardOutput", message));
+                if (addVSTestProviderProperties)
+                {
+                    testNode.Properties.Add(new SerializableKeyValuePairStringProperty("vstest.TestCase.StandardOutput", message));
+                }
+
                 standardOutputMessages.Add(message);
             }
         }
@@ -238,6 +269,45 @@ internal static class ObjectModelConverters
         testCase.ExecutorUri = new(Constants.ExecutorUri);
     }
 
+    private static bool TryGetMethodIdentifierProperty(TestCase testCase, [NotNullWhen(true)] out TestMethodIdentifierProperty? methodIdentifierProperty)
+    {
+        string? managedType = testCase.GetPropertyValue<string>(ManagedTypeProperty, defaultValue: null);
+        string? managedMethod = testCase.GetPropertyValue<string>(ManagedMethodProperty, defaultValue: null);
+        // NOTE: ManagedMethod, in case of MSTest, will have the parameter types.
+        // So, we prefer using it to display the parameter types in Test Explorer.
+        if (RoslynString.IsNullOrEmpty(managedType) || RoslynString.IsNullOrEmpty(managedMethod))
+        {
+            methodIdentifierProperty = null;
+            return false;
+        }
+
+        methodIdentifierProperty = GetMethodIdentifierPropertyFromManagedTypeAndManagedMethod(managedType, managedMethod);
+        return true;
+    }
+
+    private static TestMethodIdentifierProperty GetMethodIdentifierPropertyFromManagedTypeAndManagedMethod(
+        string managedType,
+        string managedMethod)
+    {
+        ManagedNameParser.ParseManagedMethodName(managedMethod, out string methodName, out int arity, out string[]? parameterTypes);
+        if (arity != 0)
+        {
+            methodName = $"{methodName}`{arity.ToString(CultureInfo.InvariantCulture)}";
+        }
+
+        parameterTypes ??= [];
+
+        ManagedNameParser.ParseManagedTypeName(managedType, out string @namespace, out string typeName);
+
+        // In the context of the VSTestBridge where we only have access to VSTest object model, we cannot determine ReturnTypeFullName.
+        // For now, we lose this bit of information.
+        // If really needed in the future, we can introduce a VSTest property to hold this info.
+        // But the eventual goal should be to stop using the VSTestBridge altogether.
+        // TODO: For AssemblyFullName, can we use Assembly.GetEntryAssembly().FullName?
+        // Or alternatively, does VSTest object model expose the assembly full name somewhere?
+        return new TestMethodIdentifierProperty(AssemblyFullName: string.Empty, @namespace, typeName, methodName, parameterTypes, ReturnTypeFullName: string.Empty);
+    }
+
     private static bool TryParseFullyQualifiedType(string fullyQualifiedName, [NotNullWhen(true)] out string? fullyQualifiedType)
     {
         fullyQualifiedType = null;
@@ -256,4 +326,9 @@ internal static class ObjectModelConverters
         fullyQualifiedType = fullyQualifiedName[..lastDotIndexBeforeOpenBracket];
         return true;
     }
+
+    private static bool ShouldAddVSTestProviderProperties(IServiceProvider serviceProvider)
+        => serviceProvider.GetTestFrameworkCapabilities().GetCapability<INamedFeatureCapability>()?.IsSupported(JsonRpcStrings.VSTestProviderSupport) == true &&
+           serviceProvider.GetCommandLineOptions().IsOptionSet(PlatformCommandLineProvider.ServerOptionKey) &&
+           !serviceProvider.GetCommandLineOptions().IsOptionSet(PlatformCommandLineProvider.DotNetTestPipeOptionKey);
 }

@@ -6,7 +6,6 @@ using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
-using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.Requests;
 using Microsoft.Testing.Platform.Services;
@@ -60,9 +59,7 @@ public sealed class VSTestDiscoverTestExecutionRequestFactory : ITestExecutionRe
         RunSettingsAdapter runSettings = new(commandLineOptions, fileSystem, configuration, clientInfo, loggerFactory, messageLogger);
         DiscoveryContextAdapter discoveryContext = new(commandLineOptions, runSettings, discoverTestExecutionRequest.Filter);
 
-        ITestApplicationModuleInfo testApplicationModuleInfo = serviceProvider.GetTestApplicationModuleInfo();
-        IMessageBus messageBus = serviceProvider.GetRequiredService<IMessageBus>();
-        TestCaseDiscoverySinkAdapter discoverySink = new(adapterExtension, discoverTestExecutionRequest.Session, testAssemblyPaths, testApplicationModuleInfo, loggerFactory, messageBus, adapterExtension.IsTrxEnabled, clientInfo, cancellationToken);
+        TestCaseDiscoverySinkAdapter discoverySink = new(adapterExtension, discoverTestExecutionRequest.Session, testAssemblyPaths, serviceProvider, loggerFactory, adapterExtension.IsTrxEnabled, cancellationToken);
 
         return new(discoverTestExecutionRequest.Session, discoverTestExecutionRequest.Filter, testAssemblyPaths, discoveryContext, messageLogger, discoverySink);
     }
