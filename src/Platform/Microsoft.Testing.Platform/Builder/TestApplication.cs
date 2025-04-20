@@ -235,7 +235,7 @@ public sealed class TestApplication : ITestApplication
 
         if (environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER) == "1")
         {
-            var process = systemProcess.GetCurrentProcessInfo();
+            (int Id, string Name) process = systemProcess.GetCurrentProcessInfo();
             console.WriteLine($"Waiting for debugger to attach... Process Id: {process.Id}, Name: {process.Name}");
 
             while (!Debugger.IsAttached)
