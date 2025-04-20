@@ -811,12 +811,12 @@ Typ deklarujący te metody powinien również przestrzegać następujących regu
       </trans-unit>
       <trans-unit id="UseRetryWithTestMethodMessageFormat">
         <source>An attribute that derives from 'RetryBaseAttribute' can be specified only on a test method</source>
-        <target state="new">An attribute that derives from 'RetryBaseAttribute' can be specified only on a test method</target>
+        <target state="translated">Atrybut pochodzący od atrybutu „RetryBaseAttribute” można określić tylko w metodzie testowej</target>
         <note />
       </trans-unit>
       <trans-unit id="UseRetryWithTestMethodTitle">
         <source>Use retry attribute on test method</source>
-        <target state="new">Use retry attribute on test method</target>
+        <target state="translated">Użyj atrybutu ponawiania dla metody testowej</target>
         <note />
       </trans-unit>
     </body>

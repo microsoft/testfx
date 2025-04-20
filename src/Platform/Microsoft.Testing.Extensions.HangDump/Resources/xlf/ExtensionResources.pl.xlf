@@ -43,10 +43,10 @@
 
 Disk info:
 {1}</source>
-        <target state="new">The following exception occurred while taking hang dump:
+        <target state="translated">Podczas wykonywania zrzutu zawieszenia wystąpił następujący wyjątek:
 {0}
 
-Disk info:
+Informacje o dysku:
 {1}</target>
         <note>{0} - the exception that occurred.
 {1} - disk info detailing free space</note>

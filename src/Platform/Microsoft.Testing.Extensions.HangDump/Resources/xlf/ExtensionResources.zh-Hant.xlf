@@ -43,10 +43,10 @@
 
 Disk info:
 {1}</source>
-        <target state="new">The following exception occurred while taking hang dump:
+        <target state="translated">進行擱置傾印時發生下列例外:
 {0}
 
-Disk info:
+磁碟資訊:
 {1}</target>
         <note>{0} - the exception that occurred.
 {1} - disk info detailing free space</note>
