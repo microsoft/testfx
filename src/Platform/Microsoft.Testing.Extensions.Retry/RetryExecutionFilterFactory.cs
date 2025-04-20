@@ -38,7 +38,7 @@ internal sealed class RetryExecutionFilterFactory : ITestExecutionFilterFactory
         _retryFailedTestsLifecycleCallbacks = _serviceProvider.GetRequiredService<RetryLifecycleCallbacks>();
         if (_retryFailedTestsLifecycleCallbacks.FailedTestsIDToRetry?.Length > 0)
         {
-            return (true, (ITestExecutionFilter?)new TestNodeUidListFilter(_retryFailedTestsLifecycleCallbacks.FailedTestsIDToRetry
+            return (true, new TestNodeUidListFilter(_retryFailedTestsLifecycleCallbacks.FailedTestsIDToRetry
                 .Select(x => new TestNodeUid(x)).ToArray()));
         }
         else
