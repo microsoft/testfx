@@ -43,10 +43,10 @@
 
 Disk info:
 {1}</source>
-        <target state="new">The following exception occurred while taking hang dump:
+        <target state="translated">执行挂起转储时发生以下异常:
 {0}
 
-Disk info:
+磁盘信息:
 {1}</target>
         <note>{0} - the exception that occurred.
 {1} - disk info detailing free space</note>

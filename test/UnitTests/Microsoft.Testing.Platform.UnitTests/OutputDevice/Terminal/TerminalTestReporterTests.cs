@@ -37,8 +37,8 @@ public sealed class TerminalTestReporterTests
 
     // Code with line when we have symbols
     [DataRow(
-        "   at TestingPlatformEntryPoint.Main(String[]) in /_/TUnit.TestProject/obj/Release/net8.0/osx-x64/TestPlatformEntryPoint.cs:line 16",
-        "    at TestingPlatformEntryPoint.Main(String[]) in /_/TUnit.TestProject/obj/Release/net8.0/osx-x64/TestPlatformEntryPoint.cs:16")]
+        "   at MicrosoftTestingPlatformEntryPoint.Main(String[]) in /_/TUnit.TestProject/obj/Release/net8.0/osx-x64/MicrosoftTestingPlatformEntryPoint.cs:line 16",
+        "    at MicrosoftTestingPlatformEntryPoint.Main(String[]) in /_/TUnit.TestProject/obj/Release/net8.0/osx-x64/MicrosoftTestingPlatformEntryPoint.cs:16")]
     // code without line when we don't have symbols
     [DataRow(
         "   at TestingPlatformEntryPoint.<Main>(String[])",

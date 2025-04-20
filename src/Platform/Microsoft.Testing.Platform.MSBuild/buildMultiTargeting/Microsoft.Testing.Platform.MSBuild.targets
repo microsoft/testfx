@@ -112,7 +112,7 @@
 
   <!-- Generate the entry point source using the user extensions informations -->
   <PropertyGroup>
-    <_TestingPlatformEntryPointSourceName>TestPlatformEntryPoint$(DefaultLanguageSourceExtension)</_TestingPlatformEntryPointSourceName>
+    <_TestingPlatformEntryPointSourceName>MicrosoftTestingPlatformEntryPoint$(DefaultLanguageSourceExtension)</_TestingPlatformEntryPointSourceName>
     <_TestingPlatformEntryPointSourcePath>$([System.IO.Path]::Combine($(IntermediateOutputPath),$(_TestingPlatformEntryPointSourceName)))</_TestingPlatformEntryPointSourcePath>
     <_TestingPlatformEntryPointSourcePath>$([MSBuild]::NormalizePath($(MSBuildProjectDirectory), $(_TestingPlatformEntryPointSourcePath)))</_TestingPlatformEntryPointSourcePath>
   </PropertyGroup>
