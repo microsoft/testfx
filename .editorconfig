@@ -827,3 +827,6 @@ resharper_replace_with_single_call_to_first_or_default_highlighting = warning
 
 # Conditional expression can be rewritten as null-coalescing
 resharper_replace_conditional_expression_with_null_coalescing_highlighting = warning
+
+# Redundant cast
+resharper_redundant_cast_highlighting = warning
