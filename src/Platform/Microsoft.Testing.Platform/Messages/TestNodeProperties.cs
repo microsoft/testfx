@@ -275,7 +275,7 @@ public sealed record TimingProperty : IProperty
         builder.Append("GlobalTiming = ");
         builder.Append(GlobalTiming);
         builder.Append(", StepTimings = [");
-        builder.Append(string.Join(", ", StepTimings.Select(x => x.ToString())));
+        builder.AppendJoin(", ", StepTimings.Select(x => x.ToString()));
         builder.Append(']');
         return true;
     }
@@ -332,7 +332,7 @@ public sealed record TestMethodIdentifierProperty(string AssemblyFullName, strin
         builder.Append(", MethodName = ");
         builder.Append(MethodName);
         builder.Append(", ParameterTypeFullNames = [");
-        builder.Append(string.Join(", ", ParameterTypeFullNames));
+        builder.AppendJoin(", ", ParameterTypeFullNames);
         builder.Append("], ReturnTypeFullName = ");
         builder.Append(ReturnTypeFullName);
         return true;
@@ -372,21 +372,15 @@ public record StandardOutputProperty(string StandardOutput) : IProperty;
 [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
 public record StandardErrorProperty(string StandardError) : IProperty;
 
-internal sealed record SerializableKeyValuePairStringProperty(string Key, string Value) : KeyValuePairStringProperty(Key, Value);
+/// <summary>
+/// Property that represents multiple artifacts/attachments to associate with a test node.
+/// </summary>
+/// <param name="FileInfo">The file information.</param>
+/// <param name="DisplayName">The display name.</param>
+/// <param name="Description">The description.</param>
+public record FileArtifactProperty(FileInfo FileInfo, string DisplayName, string? Description = null) : IProperty;
 
-internal sealed record SerializableNamedKeyValuePairsStringProperty(string Name, KeyValuePair<string, string>[] Pairs) : IProperty
-{
-    [SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "https://github.com/dotnet/roslyn/issues/52421")]
-    private bool PrintMembers(StringBuilder builder)
-    {
-        builder.Append("Name = ");
-        builder.Append(Name);
-        builder.Append(", Pairs = [");
-        builder.Append(string.Join(", ", Pairs.Select(x => x.ToString())));
-        builder.Append(']');
-        return true;
-    }
-}
+internal sealed record SerializableKeyValuePairStringProperty(string Key, string Value) : KeyValuePairStringProperty(Key, Value);
 
 internal sealed record SerializableNamedArrayStringProperty(string Name, string[] Values) : IProperty
 {
@@ -396,7 +390,7 @@ internal sealed record SerializableNamedArrayStringProperty(string Name, string[
         builder.Append("Name = ");
         builder.Append(Name);
         builder.Append(", Values = [");
-        builder.Append(string.Join(", ", Values));
+        builder.AppendJoin(", ", Values);
         builder.Append(']');
         return true;
     }

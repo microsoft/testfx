@@ -76,10 +76,7 @@ internal sealed class FrameworkHandlerAdapter : IFrameworkHandle
         set
         {
             _logger.LogTrace($"{nameof(FrameworkHandlerAdapter)}.EnableShutdownAfterTestRun: set to {value}");
-            if (_frameworkHandle is not null)
-            {
-                _frameworkHandle.EnableShutdownAfterTestRun = value;
-            }
+            _frameworkHandle?.EnableShutdownAfterTestRun = value;
         }
     }
 
@@ -97,7 +94,7 @@ internal sealed class FrameworkHandlerAdapter : IFrameworkHandle
     {
         _logger.LogTrace($"{nameof(FrameworkHandlerAdapter)}.RecordAttachments");
         _frameworkHandle?.RecordAttachments(attachmentSets);
-        PublishAttachmentsAsync(attachmentSets).Await();
+        PublishTestSessionAttachmentsAsync(attachmentSets).Await();
     }
 
     /// <inheritdoc/>
@@ -130,8 +127,6 @@ internal sealed class FrameworkHandlerAdapter : IFrameworkHandle
 
         var testNodeChange = new TestNodeUpdateMessage(_session.SessionUid, testNode);
         _messageBus.PublishAsync(_adapterExtensionBase, testNodeChange).Await();
-
-        PublishAttachmentsAsync(testResult.Attachments, testNode).Await();
     }
 
     /// <inheritdoc/>
@@ -158,7 +153,7 @@ internal sealed class FrameworkHandlerAdapter : IFrameworkHandle
     public void SendMessage(TestMessageLevel testMessageLevel, string message)
         => _comboMessageLogger.SendMessage(testMessageLevel, message);
 
-    private async Task PublishAttachmentsAsync(IEnumerable<AttachmentSet> attachments, TestNode? testNode = null)
+    private async Task PublishTestSessionAttachmentsAsync(IEnumerable<AttachmentSet> attachments)
     {
         foreach (AttachmentSet attachmentSet in attachments)
         {
@@ -169,9 +164,7 @@ internal sealed class FrameworkHandlerAdapter : IFrameworkHandle
                     throw new FormatException($"Test adapter {_adapterExtensionBase.DisplayName} only supports file attachments.");
                 }
 
-                SessionFileArtifact fileArtifact = testNode is null
-                    ? new SessionFileArtifact(_session.SessionUid, new(attachment.Uri.LocalPath), attachmentSet.DisplayName, attachment.Description)
-                    : new TestNodeFileArtifact(_session.SessionUid, testNode, new(attachment.Uri.LocalPath), attachmentSet.DisplayName, attachment.Description);
+                var fileArtifact = new SessionFileArtifact(_session.SessionUid, new(attachment.Uri.LocalPath), attachmentSet.DisplayName, attachment.Description);
                 await _messageBus.PublishAsync(_adapterExtensionBase, fileArtifact);
             }
         }

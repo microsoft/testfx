@@ -351,6 +351,16 @@ Le type doit être une classe
         <target state="translated">« System.ComponentModel.DescriptionAttribute » n’a aucun effet sur les méthodes de test</target>
         <note />
       </trans-unit>
+      <trans-unit id="DuplicateDataRowMessageFormat">
+        <source>Do not duplicate 'DataRow' attributes. This is usually a copy/paste error. The attribute indices are '{0}' and '{1}'.</source>
+        <target state="translated">Ne dupliquez pas les attributs 'DataRow'. Il s'agit généralement d'une erreur de copier/coller. Les indices des attributs sont '{0}' et '{1}'.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DuplicateDataRowTitle">
+        <source>Avoid duplicated 'DataRow' entries</source>
+        <target state="translated">Évitez les entrées « DataRow » dupliquées</target>
+        <note />
+      </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidDescription">
         <source>'DynamicData' entry should have the following layout to be valid:
 - should only be set on a test method;
@@ -797,6 +807,16 @@ Le type doit être une classe
       <trans-unit id="UseProperAssertMethodsTitle">
         <source>Use proper 'Assert' methods</source>
         <target state="translated">Utiliser les méthodes 'Assert' appropriées</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseRetryWithTestMethodMessageFormat">
+        <source>An attribute that derives from 'RetryBaseAttribute' can be specified only on a test method</source>
+        <target state="translated">Vous ne pouvez spécifier un attribut dérivant de « RetryBaseAttribute » que sur une méthode de test</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseRetryWithTestMethodTitle">
+        <source>Use retry attribute on test method</source>
+        <target state="translated">Utilisez l’attribut de nouvelle tentative sur la méthode de test</target>
         <note />
       </trans-unit>
     </body>

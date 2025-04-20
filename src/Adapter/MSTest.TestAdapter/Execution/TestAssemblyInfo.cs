@@ -4,7 +4,6 @@
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
-using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using UnitTestOutcome = Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome;
@@ -14,12 +13,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 /// <summary>
 /// Defines TestAssembly Info object.
 /// </summary>
-#if RELEASE
 #if NET6_0_OR_GREATER
 [Obsolete(Constants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
 #else
 [Obsolete(Constants.PublicTypeObsoleteMessage)]
-#endif
 #endif
 public class TestAssemblyInfo
 {
@@ -107,14 +104,21 @@ public class TestAssemblyInfo
     /// </summary>
     internal Assembly Assembly { get; }
 
+    internal ExecutionContext? ExecutionContext { get; set; }
+
     /// <summary>
     /// Runs assembly initialize method.
     /// </summary>
     /// <param name="testContext"> The test context. </param>
     /// <exception cref="TestFailedException"> Throws a test failed exception if the initialization method throws an exception. </exception>
-    [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
     public void RunAssemblyInitialize(TestContext testContext)
+        => RunAssemblyInitialize(testContext, out _);
+
+    [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
+    internal void RunAssemblyInitialize(TestContext testContext, out LogMessageListener? logListener)
     {
+        logListener = null;
+
         // No assembly initialize => nothing to do.
         if (AssemblyInitializeMethod == null)
         {
@@ -140,14 +144,23 @@ public class TestAssemblyInfo
                 // Perform a check again.
                 if (!IsAssemblyInitializeExecuted)
                 {
+                    LogMessageListener? logMessageListener = null;
+
                     try
                     {
                         AssemblyInitializationException = FixtureMethodRunner.RunWithTimeoutAndCancellation(
-                            () => AssemblyInitializeMethod.InvokeAsSynchronousTask(null, testContext),
+                            () =>
+                            {
+                                logMessageListener = new LogMessageListener(MSTestSettings.CurrentSettings.CaptureDebugTraces);
+                                AssemblyInitializeMethod.InvokeAsSynchronousTask(null, testContext);
+                                // **After** we have executed the assembly initialize, we save the current context.
+                                // This context will contain async locals set by the assembly initialize method.
+                                ExecutionContext = ExecutionContext.Capture();
+                            },
                             testContext.CancellationTokenSource,
                             AssemblyInitializeMethodTimeoutMilliseconds,
                             AssemblyInitializeMethod,
-                            new AssemblyExecutionContextScope(isCleanup: false),
+                            executionContext: ExecutionContext,
                             Resource.AssemblyInitializeWasCancelled,
                             Resource.AssemblyInitializeTimedOut);
                     }
@@ -158,6 +171,7 @@ public class TestAssemblyInfo
                     finally
                     {
                         IsAssemblyInitializeExecuted = true;
+                        logListener = logMessageListener;
                     }
                 }
             }
@@ -216,11 +230,15 @@ public class TestAssemblyInfo
             try
             {
                 AssemblyCleanupException = FixtureMethodRunner.RunWithTimeoutAndCancellation(
-                     () => AssemblyCleanupMethod.InvokeAsSynchronousTask(null),
+                     () =>
+                     {
+                         AssemblyCleanupMethod.InvokeAsSynchronousTask(null);
+                         ExecutionContext = ExecutionContext.Capture();
+                     },
                      new CancellationTokenSource(),
                      AssemblyCleanupMethodTimeoutMilliseconds,
                      AssemblyCleanupMethod,
-                     new AssemblyExecutionContextScope(isCleanup: true),
+                     ExecutionContext,
                      Resource.AssemblyCleanupWasCancelled,
                      Resource.AssemblyCleanupTimedOut);
             }
@@ -260,7 +278,7 @@ public class TestAssemblyInfo
     /// It is a replacement for RunAssemblyCleanup but as we are in a bug-fix version, we do not want to touch
     /// public API and so we introduced this method.
     /// </remarks>
-    internal TestFailedException? ExecuteAssemblyCleanup(TestContext testContext)
+    internal TestFailedException? ExecuteAssemblyCleanup(TestContext testContext, ref LogMessageListener? logListener)
     {
         if (AssemblyCleanupMethod == null)
         {
@@ -269,11 +287,13 @@ public class TestAssemblyInfo
 
         lock (_assemblyInfoExecuteSyncObject)
         {
+            LogMessageListener? logMessageListener = logListener;
             try
             {
                 AssemblyCleanupException = FixtureMethodRunner.RunWithTimeoutAndCancellation(
                      () =>
                      {
+                         logMessageListener ??= new LogMessageListener(MSTestSettings.CurrentSettings.CaptureDebugTraces);
                          if (AssemblyCleanupMethod.GetParameters().Length == 0)
                          {
                              AssemblyCleanupMethod.InvokeAsSynchronousTask(null);
@@ -282,17 +302,23 @@ public class TestAssemblyInfo
                          {
                              AssemblyCleanupMethod.InvokeAsSynchronousTask(null, testContext);
                          }
+
+                         ExecutionContext = ExecutionContext.Capture();
                      },
                      testContext.CancellationTokenSource,
                      AssemblyCleanupMethodTimeoutMilliseconds,
                      AssemblyCleanupMethod,
-                     new AssemblyExecutionContextScope(isCleanup: true),
+                     ExecutionContext,
                      Resource.AssemblyCleanupWasCancelled,
                      Resource.AssemblyCleanupTimedOut);
             }
             catch (Exception ex)
             {
                 AssemblyCleanupException = ex;
+            }
+            finally
+            {
+                logListener = logMessageListener;
             }
         }
 

@@ -12,6 +12,10 @@ namespace Microsoft.Testing.Platform.IPC.Serializers;
     |---ExecutionId Size---| (4 bytes)
     |---ExecutionId Value---| (n bytes)
 
+    |---InstanceId---| (2 bytes)
+    |---InstanceId Size---| (4 bytes)
+    |---InstanceId Value---| (n bytes)
+
     |---FileArtifactMessageList Id---| (2 bytes)
     |---FileArtifactMessageList Size---| (4 bytes)
     |---FileArtifactMessageList Value---| (n bytes)
@@ -51,6 +55,7 @@ internal sealed class FileArtifactMessagesSerializer : BaseSerializer, INamedPip
     public object Deserialize(Stream stream)
     {
         string? executionId = null;
+        string? instanceId = null;
         List<FileArtifactMessage>? fileArtifactMessages = null;
 
         ushort fieldCount = ReadShort(stream);
@@ -66,6 +71,10 @@ internal sealed class FileArtifactMessagesSerializer : BaseSerializer, INamedPip
                     executionId = ReadStringValue(stream, fieldSize);
                     break;
 
+                case FileArtifactMessagesFieldsId.InstanceId:
+                    instanceId = ReadStringValue(stream, fieldSize);
+                    break;
+
                 case FileArtifactMessagesFieldsId.FileArtifactMessageList:
                     fileArtifactMessages = ReadFileArtifactMessagesPayload(stream);
                     break;
@@ -77,7 +86,7 @@ internal sealed class FileArtifactMessagesSerializer : BaseSerializer, INamedPip
             }
         }
 
-        return new FileArtifactMessages(executionId, fileArtifactMessages is null ? [] : [.. fileArtifactMessages]);
+        return new FileArtifactMessages(executionId, instanceId, fileArtifactMessages is null ? [] : [.. fileArtifactMessages]);
     }
 
     private static List<FileArtifactMessage> ReadFileArtifactMessagesPayload(Stream stream)
@@ -143,6 +152,7 @@ internal sealed class FileArtifactMessagesSerializer : BaseSerializer, INamedPip
         WriteShort(stream, GetFieldCount(fileArtifactMessages));
 
         WriteField(stream, FileArtifactMessagesFieldsId.ExecutionId, fileArtifactMessages.ExecutionId);
+        WriteField(stream, FileArtifactMessagesFieldsId.InstanceId, fileArtifactMessages.InstanceId);
         WriteFileArtifactMessagesPayload(stream, fileArtifactMessages.FileArtifacts);
     }
 
@@ -180,6 +190,7 @@ internal sealed class FileArtifactMessagesSerializer : BaseSerializer, INamedPip
 
     private static ushort GetFieldCount(FileArtifactMessages fileArtifactMessages) =>
         (ushort)((fileArtifactMessages.ExecutionId is null ? 0 : 1) +
+        (fileArtifactMessages.InstanceId is null ? 0 : 1) +
         (IsNullOrEmpty(fileArtifactMessages.FileArtifacts) ? 0 : 1));
 
     private static ushort GetFieldCount(FileArtifactMessage fileArtifactMessage) =>

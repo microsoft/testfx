@@ -216,7 +216,7 @@
       </trans-unit>
       <trans-unit id="DiscoveredTestsInAssembly">
         <source>Discovered {0} test(s) in assembly</source>
-        <target state="needs-review-translation">{0} individuati nell'assembly</target>
+        <target state="translated">{0} individuati nell'assembly</target>
         <note>0 is count, the sentence is followed by the path of the assebly</note>
       </trans-unit>
       <trans-unit id="DiscoveringTestsFrom">
@@ -633,11 +633,6 @@ Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is
 Acquisisce un argomento come stringa nel formato &lt;value&gt;[h|m|s] dove 'value' è float.</target>
         <note />
       </trans-unit>
-      <trans-unit id="PlatformCommandLineVSTestAdapterModeOptionDescription">
-        <source>Bridge to VSTest APIs</source>
-        <target state="translated">Esegui il bridge con le API VSTest</target>
-        <note />
-      </trans-unit>
       <trans-unit id="ProcessHasNotYetExitedErrorMessage">
         <source>Process should have exited before we can determine this value</source>
         <target state="translated">Il processo dovrebbe essere terminato prima di poter determinare questo valore</target>
@@ -852,12 +847,12 @@ I valori validi sono 'Normal', 'Detailed'. L'impostazione predefinita è 'Normal
       </trans-unit>
       <trans-unit id="TestDiscoverySummary">
         <source>Test discovery summary: found {0} test(s) in {1} assemblies.</source>
-        <target state="needs-review-translation">{0} individuati in {1} assembly.</target>
+        <target state="translated">Riepilogo individuazione test: trovati {0} test negli assembly {1}.</target>
         <note>0 is number of tests, 1 is count of assemblies</note>
       </trans-unit>
       <trans-unit id="TestDiscoverySummarySingular">
         <source>Test discovery summary: found {0} test(s)</source>
-        <target state="needs-review-translation">{0} test individuati.</target>
+        <target state="translated">Riepilogo individuazione test: trovati {0} test</target>
         <note>0 is number of tests</note>
       </trans-unit>
       <trans-unit id="TestFrameworkProxyApiShouldNotBeCalled">

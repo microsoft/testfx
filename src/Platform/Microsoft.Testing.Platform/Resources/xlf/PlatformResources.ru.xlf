@@ -216,7 +216,7 @@
       </trans-unit>
       <trans-unit id="DiscoveredTestsInAssembly">
         <source>Discovered {0} test(s) in assembly</source>
-        <target state="needs-review-translation">Обнаружены тесты ({0}) в сборке.</target>
+        <target state="translated">В сборке найдены тесты ({0})</target>
         <note>0 is count, the sentence is followed by the path of the assebly</note>
       </trans-unit>
       <trans-unit id="DiscoveringTestsFrom">
@@ -633,11 +633,6 @@ Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is
 Принимает один аргумент в виде строки в формате &lt;value&gt;[h|m|s], где "value" — число с плавающей точкой.</target>
         <note />
       </trans-unit>
-      <trans-unit id="PlatformCommandLineVSTestAdapterModeOptionDescription">
-        <source>Bridge to VSTest APIs</source>
-        <target state="translated">Мост к API VSTest</target>
-        <note />
-      </trans-unit>
       <trans-unit id="ProcessHasNotYetExitedErrorMessage">
         <source>Process should have exited before we can determine this value</source>
         <target state="translated">Процесс должен быть завершен, прежде чем мы сможем определить это значение</target>
@@ -852,12 +847,12 @@ Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</source>
       </trans-unit>
       <trans-unit id="TestDiscoverySummary">
         <source>Test discovery summary: found {0} test(s) in {1} assemblies.</source>
-        <target state="needs-review-translation">Обнаружены тесты ({0}) в сборках ({1})</target>
+        <target state="translated">Сводка по обнаружению тестов: найдены тесты ({0}) в {1} сборках.</target>
         <note>0 is number of tests, 1 is count of assemblies</note>
       </trans-unit>
       <trans-unit id="TestDiscoverySummarySingular">
         <source>Test discovery summary: found {0} test(s)</source>
-        <target state="needs-review-translation">Обнаружены тесты ({0}).</target>
+        <target state="translated">Сводка по обнаружению тестов: найдены тесты ({0})</target>
         <note>0 is number of tests</note>
       </trans-unit>
       <trans-unit id="TestFrameworkProxyApiShouldNotBeCalled">

@@ -1,1 +1,9 @@
 #nullable enable
+MSTest.Analyzers.DuplicateDataRowAnalyzer
+MSTest.Analyzers.DuplicateDataRowAnalyzer.DuplicateDataRowAnalyzer() -> void
+MSTest.Analyzers.UseRetryWithTestMethodAnalyzer
+MSTest.Analyzers.UseRetryWithTestMethodAnalyzer.UseRetryWithTestMethodAnalyzer() -> void
+override MSTest.Analyzers.DuplicateDataRowAnalyzer.Initialize(Microsoft.CodeAnalysis.Diagnostics.AnalysisContext! context) -> void
+override MSTest.Analyzers.DuplicateDataRowAnalyzer.SupportedDiagnostics.get -> System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.DiagnosticDescriptor!>
+override MSTest.Analyzers.UseRetryWithTestMethodAnalyzer.Initialize(Microsoft.CodeAnalysis.Diagnostics.AnalysisContext! context) -> void
+override MSTest.Analyzers.UseRetryWithTestMethodAnalyzer.SupportedDiagnostics.get -> System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.DiagnosticDescriptor!>

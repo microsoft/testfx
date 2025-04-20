@@ -138,6 +138,7 @@ internal sealed class Json
                 properties.Add(("traits", metadataProperties.Select(x => new KeyValuePair<string, string>(x.Key, x.Value))));
             }
 
+            int attachmentIndex = 0;
             foreach (IProperty property in message.Properties)
             {
                 if (property is SerializableKeyValuePairStringProperty keyValuePairProperty)
@@ -149,12 +150,6 @@ internal sealed class Json
                 if (property is SerializableNamedArrayStringProperty namedArrayStringProperty)
                 {
                     properties.Add((namedArrayStringProperty.Name, namedArrayStringProperty.Values));
-                    continue;
-                }
-
-                if (property is SerializableNamedKeyValuePairsStringProperty namedKvpStringProperty)
-                {
-                    properties.Add((namedKvpStringProperty.Name, namedKvpStringProperty.Pairs));
                     continue;
                 }
 
@@ -287,6 +282,15 @@ internal sealed class Json
                     properties.Add(("time.start-utc", timingProperty.GlobalTiming.StartTime));
                     properties.Add(("time.stop-utc", timingProperty.GlobalTiming.EndTime));
                     properties.Add(("time.duration-ms", timingProperty.GlobalTiming.Duration.TotalMilliseconds));
+                    continue;
+                }
+
+                if (property is FileArtifactProperty artifact)
+                {
+                    properties.Add(($"attachments.{attachmentIndex}.uri", artifact.FileInfo.FullName));
+                    properties.Add(($"attachments.{attachmentIndex}.display-name", artifact.DisplayName));
+                    properties.Add(($"attachments.{attachmentIndex}.description", artifact.Description));
+                    attachmentIndex++;
                     continue;
                 }
             }

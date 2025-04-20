@@ -5,7 +5,6 @@ using Microsoft.Testing.Extensions.TrxReport.Abstractions;
 using Microsoft.Testing.Framework.Configurations;
 using Microsoft.Testing.Framework.Helpers;
 using Microsoft.Testing.Platform.Extensions.Messages;
-using Microsoft.Testing.Platform.TestHost;
 
 using PlatformTestNode = Microsoft.Testing.Platform.Extensions.Messages.TestNode;
 
@@ -16,18 +15,14 @@ internal sealed class TestExecutionContext : ITestExecutionContext
     private readonly CancellationTokenSource _cancellationTokenSource;
     private readonly PlatformTestNode _platformTestNode;
     private readonly ITrxReportCapability? _trxReportCapability;
-    private readonly SessionUid _sessionUid;
-    private readonly Func<IData, Task> _publishDataAsync;
     private readonly CancellationToken _originalCancellationToken;
 
     public TestExecutionContext(IConfiguration configuration, TestNode testNode, PlatformTestNode platformTestNode,
-        ITrxReportCapability? trxReportCapability, SessionUid sessionUid, Func<IData, Task> publishDataAsync, CancellationToken cancellationToken)
+        ITrxReportCapability? trxReportCapability, CancellationToken cancellationToken)
     {
         Configuration = configuration;
         _platformTestNode = platformTestNode;
         _trxReportCapability = trxReportCapability;
-        _sessionUid = sessionUid;
-        _publishDataAsync = publishDataAsync;
         TestInfo = new TestInfo(testNode);
         _cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         _originalCancellationToken = cancellationToken;
@@ -76,8 +71,11 @@ internal sealed class TestExecutionContext : ITestExecutionContext
         }
     }
 
-    public async Task AddTestAttachmentAsync(FileInfo file, string displayName, string? description = null)
-        => await _publishDataAsync(new TestNodeFileArtifact(_sessionUid, _platformTestNode, file, displayName, description));
+    public Task AddTestAttachmentAsync(FileInfo file, string displayName, string? description = null)
+    {
+        _platformTestNode.Properties.Add(new FileArtifactProperty(file, displayName, description));
+        return Task.CompletedTask;
+    }
 
     private static void AddTrxExceptionInformation(PropertyBag propertyBag, Exception? exception)
     {

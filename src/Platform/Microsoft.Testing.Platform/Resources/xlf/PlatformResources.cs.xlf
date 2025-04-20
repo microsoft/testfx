@@ -216,7 +216,7 @@
       </trans-unit>
       <trans-unit id="DiscoveredTestsInAssembly">
         <source>Discovered {0} test(s) in assembly</source>
-        <target state="needs-review-translation">Počet zjištěných testů v sestavení: {0}</target>
+        <target state="translated">Počet zjištěných testů v sestavení: {0}</target>
         <note>0 is count, the sentence is followed by the path of the assebly</note>
       </trans-unit>
       <trans-unit id="DiscoveringTestsFrom">
@@ -633,11 +633,6 @@ Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is
 Může mít jenom jeden argument jako řetězec ve formátu &lt;value&gt;[h|m|s], kde value je hodnota datového typu float.</target>
         <note />
       </trans-unit>
-      <trans-unit id="PlatformCommandLineVSTestAdapterModeOptionDescription">
-        <source>Bridge to VSTest APIs</source>
-        <target state="translated">Most k rozhraním API VSTest</target>
-        <note />
-      </trans-unit>
       <trans-unit id="ProcessHasNotYetExitedErrorMessage">
         <source>Process should have exited before we can determine this value</source>
         <target state="translated">Proces měl být ukončen před tím, než jsme mohli určit tuto hodnotu.</target>
@@ -852,12 +847,12 @@ Platné hodnoty jsou Normal a Detailed. Výchozí hodnota je Normal.</target>
       </trans-unit>
       <trans-unit id="TestDiscoverySummary">
         <source>Test discovery summary: found {0} test(s) in {1} assemblies.</source>
-        <target state="needs-review-translation">Počet zjištěných testů v(e) {1} sestaveních: {0}</target>
+        <target state="translated">Souhrn zjišťování testů: nalezené testy: {0} v(e) {1} sestaveních.</target>
         <note>0 is number of tests, 1 is count of assemblies</note>
       </trans-unit>
       <trans-unit id="TestDiscoverySummarySingular">
         <source>Test discovery summary: found {0} test(s)</source>
-        <target state="needs-review-translation">Počet zjištěných testů: {0}</target>
+        <target state="translated">Souhrn zjišťování testů: nalezené testy: {0}</target>
         <note>0 is number of tests</note>
       </trans-unit>
       <trans-unit id="TestFrameworkProxyApiShouldNotBeCalled">

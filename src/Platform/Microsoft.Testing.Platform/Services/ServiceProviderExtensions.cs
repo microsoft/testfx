@@ -34,7 +34,7 @@ public static class ServiceProviderExtensions
     {
         Guard.NotNull(provider);
 
-        object? service = ((ServiceProvider)provider).GetService(typeof(TService));
+        object? service = provider.GetService(typeof(TService));
         ApplicationStateGuard.Ensure(service is not null, string.Format(CultureInfo.InvariantCulture, PlatformResources.ServiceProviderCannotFindServiceErrorMessage, typeof(TService)));
 
         return (TService)service;
@@ -52,7 +52,7 @@ public static class ServiceProviderExtensions
     {
         Guard.NotNull(provider);
 
-        return ((ServiceProvider)provider).GetService(typeof(TService)) as TService;
+        return provider.GetService(typeof(TService)) as TService;
     }
 
     /// <summary>

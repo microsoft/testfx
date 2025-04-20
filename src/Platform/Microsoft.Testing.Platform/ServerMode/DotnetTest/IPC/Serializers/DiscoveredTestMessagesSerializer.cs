@@ -12,6 +12,10 @@ namespace Microsoft.Testing.Platform.IPC.Serializers;
     |---ExecutionId Size---| (4 bytes)
     |---ExecutionId Value---| (n bytes)
 
+    |---InstanceId---| (2 bytes)
+    |---InstanceId Size---| (4 bytes)
+    |---InstanceId Value---| (n bytes)
+
     |---DiscoveredTestMessageList Id---| (2 bytes)
     |---DiscoveredTestMessageList Size---| (4 bytes)
     |---DiscoveredTestMessageList Value---| (n bytes)
@@ -35,6 +39,7 @@ internal sealed class DiscoveredTestMessagesSerializer : BaseSerializer, INamedP
     public object Deserialize(Stream stream)
     {
         string? executionId = null;
+        string? instanceId = null;
         List<DiscoveredTestMessage>? discoveredTestMessages = null;
 
         ushort fieldCount = ReadShort(stream);
@@ -50,6 +55,10 @@ internal sealed class DiscoveredTestMessagesSerializer : BaseSerializer, INamedP
                     executionId = ReadStringValue(stream, fieldSize);
                     break;
 
+                case DiscoveredTestMessagesFieldsId.InstanceId:
+                    instanceId = ReadStringValue(stream, fieldSize);
+                    break;
+
                 case DiscoveredTestMessagesFieldsId.DiscoveredTestMessageList:
                     discoveredTestMessages = ReadDiscoveredTestMessagesPayload(stream);
                     break;
@@ -61,7 +70,7 @@ internal sealed class DiscoveredTestMessagesSerializer : BaseSerializer, INamedP
             }
         }
 
-        return new DiscoveredTestMessages(executionId, discoveredTestMessages is null ? [] : [.. discoveredTestMessages]);
+        return new DiscoveredTestMessages(executionId, instanceId, discoveredTestMessages is null ? [] : [.. discoveredTestMessages]);
     }
 
     private static List<DiscoveredTestMessage> ReadDiscoveredTestMessagesPayload(Stream stream)
@@ -111,6 +120,7 @@ internal sealed class DiscoveredTestMessagesSerializer : BaseSerializer, INamedP
         WriteShort(stream, GetFieldCount(discoveredTestMessages));
 
         WriteField(stream, DiscoveredTestMessagesFieldsId.ExecutionId, discoveredTestMessages.ExecutionId);
+        WriteField(stream, DiscoveredTestMessagesFieldsId.InstanceId, discoveredTestMessages.InstanceId);
         WriteDiscoveredTestMessagesPayload(stream, discoveredTestMessages.DiscoveredMessages);
     }
 
@@ -144,6 +154,7 @@ internal sealed class DiscoveredTestMessagesSerializer : BaseSerializer, INamedP
 
     private static ushort GetFieldCount(DiscoveredTestMessages discoveredTestMessages) =>
         (ushort)((discoveredTestMessages.ExecutionId is null ? 0 : 1) +
+        (discoveredTestMessages.InstanceId is null ? 0 : 1) +
         (IsNullOrEmpty(discoveredTestMessages.DiscoveredMessages) ? 0 : 1));
 
     private static ushort GetFieldCount(DiscoveredTestMessage discoveredTestMessage) =>

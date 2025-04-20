@@ -13,6 +13,7 @@ using Microsoft.Testing.Platform.IPC.Models;
 using Microsoft.Testing.Platform.IPC.Serializers;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.MSBuild.Tasks;
+using Microsoft.Testing.Platform.OutputDevice;
 
 using static Microsoft.Testing.Platform.MSBuild.Tasks.DotnetMuxerLocator;
 
@@ -38,7 +39,7 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
 
     private Task? _connectionLoopTask;
     private ModuleInfoRequest? _moduleInfo;
-    private string _outputFileName;
+    private string? _outputFileName;
     private StreamWriter? _outputFileStream;
     private string? _toolCommand;
 
@@ -487,6 +488,8 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
                 runSummaryInfoRequest.TotalSkipped,
                 runSummaryInfoRequest.Total,
                 runSummaryInfoRequest.Duration);
+
+            summary += $" - {Path.GetFileName(TargetPath.ItemSpec)} ({TargetFrameworkParser.GetShortTargetFramework(TargetFramework.ItemSpec)}|{TestArchitecture.ItemSpec})";
 
             if (MSBuildCompatibilityHelper.SupportsTerminalLoggerWithExtendedMessages())
             {

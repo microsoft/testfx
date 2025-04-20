@@ -319,7 +319,7 @@ public class TestMethodInfoTests : TestContainer
         Verify(exception.StackTraceInformation is not null);
         Verify(
             exception.StackTraceInformation.ErrorStackTrace.StartsWith(
-                "    at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<TestMethodInfoInvokeShouldSetStackTraceInformationIfTestClassConstructorThrows>b__", StringComparison.Ordinal));
+                "   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<TestMethodInfoInvokeShouldSetStackTraceInformationIfTestClassConstructorThrows>b__", StringComparison.Ordinal));
     }
 
     public void TestMethodInfoInvokeShouldSetStackTraceInformationIfTestClassConstructorThrowsWithoutInnerException()
@@ -338,13 +338,13 @@ public class TestMethodInfoTests : TestContainer
         Verify(exception.StackTraceInformation is not null);
         Verify(
             exception.StackTraceInformation.ErrorStackTrace.StartsWith(
-            "    at System.Reflection.RuntimeConstructorInfo.Invoke(BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)", StringComparison.Ordinal));
+            "   at System.Reflection.RuntimeConstructorInfo.Invoke(BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)", StringComparison.Ordinal));
     }
 
     public void TestMethodInfoInvokeShouldSetResultFilesIfTestContextHasAttachments()
     {
         Mock<ITestContext> testContext = new();
-        testContext.Setup(tc => tc.GetResultFiles()).Returns(new List<string>() { "C:\\temp.txt" });
+        testContext.Setup(tc => tc.GetResultFiles()).Returns(new List<string> { "C:\\temp.txt" });
         var mockInnerContext = new Mock<UTFExtension.TestContext>();
         testContext.SetupGet(tc => tc.Context).Returns(mockInnerContext.Object);
         mockInnerContext.SetupGet(tc => tc.CancellationTokenSource).Returns(new CancellationTokenSource());
@@ -454,7 +454,7 @@ public class TestMethodInfoTests : TestContainer
         Verify(exception.StackTraceInformation is not null);
         Verify(
             exception.StackTraceInformation.ErrorStackTrace.StartsWith(
-                "    at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<TestMethodInfoInvokeShouldSetStackTraceInformationIfSetTestContextThrows>b__", StringComparison.Ordinal));
+                "   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<TestMethodInfoInvokeShouldSetStackTraceInformationIfSetTestContextThrows>b__", StringComparison.Ordinal));
     }
 
     public void TestMethodInfoInvoke_WhenCtorHasOneParameterOfTypeTestContextAndTestContextProperty_InitializeBothTestContexts()
@@ -576,7 +576,7 @@ public class TestMethodInfoTests : TestContainer
         Verify(exception.InnerException.InnerException!.GetType() == typeof(InvalidOperationException));
 #if DEBUG
         Verify(exception.StackTraceInformation!.ErrorStackTrace.StartsWith(
-    "    at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<TestMethodInfoInvokeWhenTestThrowsReturnsExpectedResult>b__", StringComparison.Ordinal));
+    "   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<TestMethodInfoInvokeWhenTestThrowsReturnsExpectedResult>b__", StringComparison.Ordinal));
 #endif
     }
 
@@ -1132,7 +1132,7 @@ public class TestMethodInfoTests : TestContainer
 
     public void TestMethodInfoInvokeShouldSetResultAsFailedWhenExceptionIsExpectedButIsNotThrown()
     {
-        DummyTestClass.TestMethodBody = o => { return; };
+        DummyTestClass.TestMethodBody = o => { };
         var testMethodInfo = new TestMethodInfo(_methodInfo, _testClassInfo, _testContextImplementation)
         {
             TimeoutInfo = TimeoutInfo.FromTimeout(3600 * 1000),

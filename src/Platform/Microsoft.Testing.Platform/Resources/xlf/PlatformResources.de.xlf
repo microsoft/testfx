@@ -216,7 +216,7 @@
       </trans-unit>
       <trans-unit id="DiscoveredTestsInAssembly">
         <source>Discovered {0} test(s) in assembly</source>
-        <target state="needs-review-translation">Ermittelte {0} Tests in Assembly</target>
+        <target state="translated">{0} Test(s) in Assembly ermittelt</target>
         <note>0 is count, the sentence is followed by the path of the assebly</note>
       </trans-unit>
       <trans-unit id="DiscoveringTestsFrom">
@@ -633,11 +633,6 @@ Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is
 Nimmt ein Argument als Zeichenfolge im Format &lt;value&gt;[h|m|s], wobei "value" auf "float" festgelegt ist.</target>
         <note />
       </trans-unit>
-      <trans-unit id="PlatformCommandLineVSTestAdapterModeOptionDescription">
-        <source>Bridge to VSTest APIs</source>
-        <target state="translated">Brücke zu VSTest-APIs</target>
-        <note />
-      </trans-unit>
       <trans-unit id="ProcessHasNotYetExitedErrorMessage">
         <source>Process should have exited before we can determine this value</source>
         <target state="translated">Der Prozess hätte beendet werden müssen, bevor dieser Wert ermittelt werden kann</target>
@@ -852,12 +847,12 @@ Gültige Werte sind „Normal“, „Detailed“. Der Standardwert ist „Normal
       </trans-unit>
       <trans-unit id="TestDiscoverySummary">
         <source>Test discovery summary: found {0} test(s) in {1} assemblies.</source>
-        <target state="needs-review-translation">Ermittelte {0} Tests in {1} Assemblys.</target>
+        <target state="translated">Zusammenfassung der Testermittlung: {0} Test(s) in {1} Assemblys gefunden.</target>
         <note>0 is number of tests, 1 is count of assemblies</note>
       </trans-unit>
       <trans-unit id="TestDiscoverySummarySingular">
         <source>Test discovery summary: found {0} test(s)</source>
-        <target state="needs-review-translation">Ermittelte {0} Tests.</target>
+        <target state="translated">Zusammenfassung der Testermittlung: {0} Test(s) gefunden</target>
         <note>0 is number of tests</note>
       </trans-unit>
       <trans-unit id="TestFrameworkProxyApiShouldNotBeCalled">

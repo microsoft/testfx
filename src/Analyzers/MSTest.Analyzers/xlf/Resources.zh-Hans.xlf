@@ -351,6 +351,16 @@ The type declaring these methods should also respect the following rules:
         <target state="translated">“System.ComponentModel.DescriptionAttribute” 对测试方法没有影响</target>
         <note />
       </trans-unit>
+      <trans-unit id="DuplicateDataRowMessageFormat">
+        <source>Do not duplicate 'DataRow' attributes. This is usually a copy/paste error. The attribute indices are '{0}' and '{1}'.</source>
+        <target state="translated">不要复制 'DataRow' 属性。这通常是复制/粘贴错误。属性索引为“{0}”和“{1}”。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DuplicateDataRowTitle">
+        <source>Avoid duplicated 'DataRow' entries</source>
+        <target state="translated">避免重复的 'DataRow' 条目</target>
+        <note />
+      </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidDescription">
         <source>'DynamicData' entry should have the following layout to be valid:
 - should only be set on a test method;
@@ -797,6 +807,16 @@ The type declaring these methods should also respect the following rules:
       <trans-unit id="UseProperAssertMethodsTitle">
         <source>Use proper 'Assert' methods</source>
         <target state="translated">使用正确的“断言”方法</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseRetryWithTestMethodMessageFormat">
+        <source>An attribute that derives from 'RetryBaseAttribute' can be specified only on a test method</source>
+        <target state="translated">只能在测试方法上指定派生自 ‘RetryBaseAttribute’ 的属性</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseRetryWithTestMethodTitle">
+        <source>Use retry attribute on test method</source>
+        <target state="translated">对测试方法使用重试属性</target>
         <note />
       </trans-unit>
     </body>

@@ -241,7 +241,6 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
             catch (OperationCanceledException ex) when (ex.CancellationToken == messageHandlerStopPlusGlobalToken)
             {
                 // We're shutting down the reader
-                continue;
             }
         }
 
