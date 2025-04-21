@@ -1,7 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.Testing.Extensions.AzureDevOps;
 using Microsoft.Testing.Extensions.AzureDevOps.Resources;
 using Microsoft.Testing.Extensions.Reporting;
 using Microsoft.Testing.Platform;
@@ -12,7 +11,7 @@ using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.OutputDevice;
 
-namespace Microsoft.Testing.Extensions.TrxReport.Abstractions;
+namespace Microsoft.Testing.Extensions.AzureDevOps;
 
 internal sealed class AzureDevOpsReporter :
     IDataConsumer,
@@ -120,23 +119,30 @@ internal sealed class AzureDevOpsReporter :
         }
 
         string stackTrace = exception.StackTrace;
-        int index = stackTrace.IndexOfAny(NewlineCharacters);
-        string firstLine = index == -1 ? stackTrace : stackTrace.Substring(0, index);
-
-        (string Code, string File, int LineNumber)? location = GetStackFrameLocation(firstLine);
-        if (location != null)
+        foreach (string? stackFrame in stackTrace.Split(NewlineCharacters, StringSplitOptions.RemoveEmptyEntries))
         {
-            string file = location.Value.File;
-            // Deterministic build paths start with "/_/"
-            string root = file.StartsWith(_deterministicBuildRoot, StringComparison.Ordinal) ? _deterministicBuildRoot : RootFinder.Find();
+            (string Code, string File, int LineNumber)? location = GetStackFrameLocation(stackFrame);
+            if (location != null)
+            {
+                string file = location.Value.File;
 
-            string relativePath = file.StartsWith(root, StringComparison.CurrentCultureIgnoreCase) ? file.Substring(root.Length) : file;
-            string relativeNormalizedPath = relativePath.Replace('\\', '/');
+                // TODO: We need better rule for stackframes to opt out from being interesting.
+                if (file.EndsWith("Assert.cs", StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
 
-            string err = AzDoEscaper.Escape(message);
+                // Deterministic build paths start with "/_/"
+                string root = file.StartsWith(_deterministicBuildRoot, StringComparison.Ordinal) ? _deterministicBuildRoot : RootFinder.Find();
 
-            string line = $"##vso[task.logissue type={_severity};sourcepath={relativeNormalizedPath};linenumber={location.Value.LineNumber};columnnumber=1]{err}";
-            await _outputDisplay.DisplayAsync(this, new FormattedTextOutputDeviceData(line));
+                string relativePath = file.StartsWith(root, StringComparison.CurrentCultureIgnoreCase) ? file.Substring(root.Length) : file;
+                string relativeNormalizedPath = relativePath.Replace('\\', '/');
+
+                string err = AzDoEscaper.Escape(message);
+
+                string line = $"##vso[task.logissue type={_severity};sourcepath={relativeNormalizedPath};linenumber={location.Value.LineNumber};columnnumber=1]{err}";
+                await _outputDisplay.DisplayAsync(this, new FormattedTextOutputDeviceData(line));
+            }
         }
     }
 
