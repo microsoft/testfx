@@ -194,7 +194,7 @@ interface InitializeParams {
     // the process has not been started by another process. If the parent
     // process is not alive then the server should exit (see exit notification)
     // its process.
-    processId: PID,
+    processId: integer,
 
     clientInfo: {
         // The name of the client.
@@ -218,22 +218,6 @@ interface InitializeParams {
         testing: {
             // If true, the client supports the client/attachDebugger and client/launchDebugger requests.
             debuggerProvider: true,
-
-            // If true, the client can receive a batch of log messages under client/log request.
-            batchLoggingSupport: true,
-
-            // If true, the client supports the testing/testUpdates/attachments request.
-            attachmentsSupport: true,
-
-            // If true, the client support a port to which child processes
-            // can connect to.
-            // Note: The test runner is expected to ensure the synchronization of messages
-            // for instance if additional processes are sending test updates
-            // or attachment updates, these must complete before the
-            // test runner sends the completion notification.
-            callbackProvider: {
-                port: integer
-            }
         },
     }
 }
@@ -760,9 +744,6 @@ Notification:
 
 - method: `client/log`
 - params: `LogMessageParams | BatchLogMessageParams` defined as follows:
-- capability: If `testing.batchLoggingSupport` is true, the server can send BatchLogMessageParams instead.
-  The client will check the existence of `messages` property to determine if a batch was sent instead of a single
-  message. If `testing.batchLoggingSupport` is false, the server cannot send `BatchLogMessageParams` messages to the client.
 
 ```typescript
 interface LogMessageParams {
