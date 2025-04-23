@@ -67,29 +67,7 @@ internal static class ObjectModelConverters
             testNode.Properties.Add(methodIdentifierProperty);
         }
 
-        // TPv2 is doing some special handling for MSTest... we should probably do the same.
-        // See https://github.com/microsoft/vstest/blob/main/src/Microsoft.TestPlatform.Extensions.TrxLogger/Utility/Converter.cs#L66-L70
-        if (testCase.GetPropertyValue<string[]>(TestCategoryProperty, defaultValue: null) is string[] mstestCategories)
-        {
-            if (isTrxEnabled)
-            {
-                testNode.Properties.Add(new TrxCategoriesProperty(mstestCategories));
-            }
-
-            foreach (string category in mstestCategories)
-            {
-                testNode.Properties.Add(new TestMetadataProperty(category, string.Empty));
-            }
-        }
-
-        if (testCase.GetPropertyValue<KeyValuePair<string, string>[]>(TraitsProperty, defaultValue: null) is KeyValuePair<string, string>[] traits &&
-            traits.Length > 0)
-        {
-            foreach (KeyValuePair<string, string> trait in traits)
-            {
-                testNode.Properties.Add(new TestMetadataProperty(trait.Key, trait.Value));
-            }
-        }
+        CopyCategoryAndTraits(testCase, testNode, isTrxEnabled);
 
         if (ShouldAddVSTestProviderProperties(serviceProvider))
         {
@@ -102,6 +80,33 @@ internal static class ObjectModelConverters
         }
 
         return testNode;
+    }
+
+    private static void CopyCategoryAndTraits(TestObject testCaseOrResult, TestNode testNode, bool isTrxEnabled)
+    {
+        // TPv2 is doing some special handling for MSTest... we should probably do the same.
+        // See https://github.com/microsoft/vstest/blob/main/src/Microsoft.TestPlatform.Extensions.TrxLogger/Utility/Converter.cs#L66-L70
+        if (testCaseOrResult.GetPropertyValue<string[]>(TestCategoryProperty, defaultValue: null) is string[] mstestCategories)
+        {
+            if (isTrxEnabled)
+            {
+                testNode.Properties.Add(new TrxCategoriesProperty(mstestCategories));
+            }
+
+            foreach (string category in mstestCategories)
+            {
+                testNode.Properties.Add(new TestMetadataProperty(category, string.Empty));
+            }
+        }
+
+        if (testCaseOrResult.GetPropertyValue<KeyValuePair<string, string>[]>(TraitsProperty, defaultValue: null) is KeyValuePair<string, string>[] traits &&
+            traits.Length > 0)
+        {
+            foreach (KeyValuePair<string, string> trait in traits)
+            {
+                testNode.Properties.Add(new TestMetadataProperty(trait.Key, trait.Value));
+            }
+        }
     }
 
     private static void CopyVSTestProviderProperties(IEnumerable<TestProperty> testProperties, TestNode testNode, Func<TestProperty, object?> getPropertyValue)
@@ -144,6 +149,8 @@ internal static class ObjectModelConverters
     public static TestNode ToTestNode(this TestResult testResult, bool isTrxEnabled, IServiceProvider serviceProvider)
     {
         var testNode = testResult.TestCase.ToTestNode(isTrxEnabled, serviceProvider, testResult.DisplayName);
+
+        CopyCategoryAndTraits(testResult, testNode, isTrxEnabled);
 
         bool addVSTestProviderProperties = ShouldAddVSTestProviderProperties(serviceProvider);
         if (addVSTestProviderProperties)
