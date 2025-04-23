@@ -913,8 +913,8 @@ public class TestMethodInfoTests : TestContainer
 
         Verify(result.Outcome == UTF.UnitTestOutcome.Failed);
         Verify(exception is not null);
-        Verify(exception.Message.Contains(errorMessage));
-        Verify(exception.Message.Contains(cleanupError));
+        Verify(exception.InnerExceptions[0].Message.Contains(errorMessage));
+        Verify(exception.InnerExceptions[1].Message.Contains(cleanupError));
     }
 
     public void TestMethodInfoInvokeShouldAppendStackTraceInformationIfBothTestMethodAndTestCleanupThrows()
