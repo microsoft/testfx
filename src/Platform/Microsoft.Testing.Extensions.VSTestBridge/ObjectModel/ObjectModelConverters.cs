@@ -36,6 +36,18 @@ internal static class ObjectModelConverters
         valueType: typeof(string),
         owner: typeof(TestCase));
 
+    private static readonly TestProperty TestCategoryProperty = TestProperty.Register(
+        id: "MSTestDiscoverer.TestCategory",
+        label: "TestCategory",
+        valueType: typeof(string[]),
+        owner: typeof(TestCase));
+
+    private static readonly TestProperty TraitsProperty = TestProperty.Register(
+        id: "TestObject.Traits",
+        label: "Traits",
+        valueType: typeof(KeyValuePair<string, string>[]),
+        owner: typeof(TestObject));
+
     /// <summary>
     /// Converts a VSTest <see cref="TestCase"/> to a Microsoft Testing Platform <see cref="TestNode"/>.
     /// </summary>
@@ -55,7 +67,35 @@ internal static class ObjectModelConverters
             testNode.Properties.Add(methodIdentifierProperty);
         }
 
-        CopyVSTestProperties(testCase.Properties, testNode, testCase, testCase.GetPropertyValue, isTrxEnabled, ShouldAddVSTestProviderProperties(serviceProvider));
+        // TPv2 is doing some special handling for MSTest... we should probably do the same.
+        // See https://github.com/microsoft/vstest/blob/main/src/Microsoft.TestPlatform.Extensions.TrxLogger/Utility/Converter.cs#L66-L70
+        if (testCase.GetPropertyValue<string[]>(TestCategoryProperty, defaultValue: null) is string[] mstestCategories)
+        {
+            if (isTrxEnabled)
+            {
+                testNode.Properties.Add(new TrxCategoriesProperty(mstestCategories));
+            }
+
+            foreach (string category in mstestCategories)
+            {
+                testNode.Properties.Add(new TestMetadataProperty(category, string.Empty));
+            }
+        }
+
+        if (testCase.GetPropertyValue<KeyValuePair<string, string>[]>(TraitsProperty, defaultValue: null) is KeyValuePair<string, string>[] traits &&
+            traits.Length > 0)
+        {
+            foreach (KeyValuePair<string, string> trait in traits)
+            {
+                testNode.Properties.Add(new TestMetadataProperty(trait.Key, trait.Value));
+            }
+        }
+
+        if (ShouldAddVSTestProviderProperties(serviceProvider))
+        {
+            CopyVSTestProviderProperties(testCase.Properties, testNode, testCase.GetPropertyValue);
+        }
+
         if (testCase.CodeFilePath is not null)
         {
             testNode.Properties.Add(new TestFileLocationProperty(testCase.CodeFilePath, new(new(testCase.LineNumber, -1), new(testCase.LineNumber, -1))));
@@ -64,72 +104,36 @@ internal static class ObjectModelConverters
         return testNode;
     }
 
-    private static void CopyVSTestProperties(IEnumerable<TestProperty> testProperties, TestNode testNode, TestCase testCase, Func<TestProperty, object?> getPropertyValue,
-        bool isTrxEnabled, bool addVSTestProviderProperties)
+    private static void CopyVSTestProviderProperties(IEnumerable<TestProperty> testProperties, TestNode testNode, Func<TestProperty, object?> getPropertyValue)
     {
         foreach (TestProperty property in testProperties)
         {
-            if (isTrxEnabled)
-            {
-                // TPv2 is doing some special handling for MSTest... we should probably do the same.
-                // See https://github.com/microsoft/vstest/blob/main/src/Microsoft.TestPlatform.Extensions.TrxLogger/Utility/Converter.cs#L66-L70
-                if (property.Id == "MSTestDiscoverer.TestCategory"
-                    && getPropertyValue(property) is string[] mstestCategories)
-                {
-                    testNode.Properties.Add(new TrxCategoriesProperty(mstestCategories));
-                }
-            }
-
             // If vstestProvider is enabled (only known to be true for NUnit and Expecto so far), and we are running server mode in IDE (not dotnet test),
             // we add these stuff.
             // Once NUnit and Expecto allow us to move forward and remove vstestProvider, we can remove this logic and get rid of the whole vstestProvider capability.
-            if (addVSTestProviderProperties)
+            if (property.Id == TestCaseProperties.Id.Id
+                    && getPropertyValue(property) is Guid testCaseId)
             {
-                if (property.Id == TestCaseProperties.Id.Id
-                        && getPropertyValue(property) is Guid testCaseId)
-                {
-                    testNode.Properties.Add(new SerializableKeyValuePairStringProperty("vstest.TestCase.Id", testCaseId.ToString()));
-                }
-                else if (property.Id == TestCaseProperties.FullyQualifiedName.Id
-                    && getPropertyValue(property) is string testCaseFqn)
-                {
-                    testNode.Properties.Add(new SerializableKeyValuePairStringProperty("vstest.TestCase.FullyQualifiedName", testCaseFqn));
-                }
-                else if (property.Id == OriginalExecutorUriProperty.Id
-                    && getPropertyValue(property) is Uri originalExecutorUri)
-                {
-                    testNode.Properties.Add(new SerializableKeyValuePairStringProperty("vstest.original-executor-uri", originalExecutorUri.AbsoluteUri));
-                }
-
-                // The TP object holding the hierarchy property is defined on adapter utilities and we don't want to enforce that dependency
-                // so instead I use the string ID copied from TP.
-                else if (property.Id == "TestCase.Hierarchy"
-                    && getPropertyValue(property) is string[] testCaseHierarchy
-                    && testCaseHierarchy.Length == 4)
-                {
-                    testNode.Properties.Add(new SerializableNamedArrayStringProperty("vstest.TestCase.Hierarchy", testCaseHierarchy));
-                }
+                testNode.Properties.Add(new SerializableKeyValuePairStringProperty("vstest.TestCase.Id", testCaseId.ToString()));
+            }
+            else if (property.Id == TestCaseProperties.FullyQualifiedName.Id
+                && getPropertyValue(property) is string testCaseFqn)
+            {
+                testNode.Properties.Add(new SerializableKeyValuePairStringProperty("vstest.TestCase.FullyQualifiedName", testCaseFqn));
+            }
+            else if (property.Id == OriginalExecutorUriProperty.Id
+                && getPropertyValue(property) is Uri originalExecutorUri)
+            {
+                testNode.Properties.Add(new SerializableKeyValuePairStringProperty("vstest.original-executor-uri", originalExecutorUri.AbsoluteUri));
             }
 
-            // ID is defined on TraitCollection but is internal so again we copy the string here.
-            if (property.Id == "TestObject.Traits"
-                && getPropertyValue(property) is KeyValuePair<string, string>[] traits && traits.Length > 0)
+            // The TP object holding the hierarchy property is defined on adapter utilities and we don't want to enforce that dependency
+            // so instead I use the string ID copied from TP.
+            else if (property.Id == "TestCase.Hierarchy"
+                && getPropertyValue(property) is string[] testCaseHierarchy
+                && testCaseHierarchy.Length == 4)
             {
-                foreach (KeyValuePair<string, string> trait in traits)
-                {
-                    testNode.Properties.Add(new TestMetadataProperty(trait.Key, trait.Value));
-                }
-            }
-
-            // TPv2 is doing some special handling for MSTest... we should probably do the same.
-            // See https://github.com/microsoft/vstest/blob/main/src/Microsoft.TestPlatform.Extensions.TrxLogger/Utility/Converter.cs#L66-L70
-            else if (property.Id == "MSTestDiscoverer.TestCategory"
-                && getPropertyValue(property) is string[] mstestCategories && mstestCategories.Length > 0)
-            {
-                foreach (string category in mstestCategories)
-                {
-                    testNode.Properties.Add(new TestMetadataProperty(category, string.Empty));
-                }
+                testNode.Properties.Add(new SerializableNamedArrayStringProperty("vstest.TestCase.Hierarchy", testCaseHierarchy));
             }
         }
     }
@@ -142,7 +146,13 @@ internal static class ObjectModelConverters
         var testNode = testResult.TestCase.ToTestNode(isTrxEnabled, serviceProvider, testResult.DisplayName);
 
         bool addVSTestProviderProperties = ShouldAddVSTestProviderProperties(serviceProvider);
-        CopyVSTestProperties(testResult.Properties, testNode, testResult.TestCase, testResult.GetPropertyValue, isTrxEnabled, addVSTestProviderProperties);
+        if (addVSTestProviderProperties)
+        {
+            // TODO: This call might be unnecessary.
+            // All the relevant properties should be on TestCase, not TestResult.
+            // And properties on TestCase where already copied as part of ToTestNode call above.
+            CopyVSTestProviderProperties(testResult.Properties, testNode, testResult.GetPropertyValue);
+        }
 
         testNode.AddOutcome(testResult);
 
