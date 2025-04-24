@@ -119,10 +119,8 @@ internal sealed class AzureDevOpsReporter :
         }
 
         string stackTrace = exception.StackTrace;
-        int index = stackTrace.IndexOfAny(NewlineCharacters);
-        string firstLine = index == -1 ? stackTrace : stackTrace.Substring(0, index);
-
-        (string Code, string File, int LineNumber)? location = GetStackFrameLocation(firstLine);
+        string[] lines = stackTrace.Split(NewlineCharacters, StringSplitOptions.RemoveEmptyEntries);
+        (string Code, string File, int LineNumber)? location = lines.Select(GetStackFrameLocation).FirstOrDefault(location => location is not null);
         if (location != null)
         {
             string root = RootFinder.Find();
@@ -145,19 +143,21 @@ internal sealed class AzureDevOpsReporter :
             return null;
         }
 
-        bool weHaveFilePathAndCodeLine = !RoslynString.IsNullOrWhiteSpace(match.Groups["code"].Value);
+        string code = match.Groups["code"].Value;
+        bool weHaveFilePathAndCodeLine = !RoslynString.IsNullOrWhiteSpace(code);
         if (!weHaveFilePathAndCodeLine)
         {
             return null;
         }
 
-        if (RoslynString.IsNullOrWhiteSpace(match.Groups["file"].Value))
+        string file = match.Groups["file"].Value;
+        if (RoslynString.IsNullOrWhiteSpace(file) || !File.Exists(file))
         {
             return null;
         }
 
         int line = int.TryParse(match.Groups["line"].Value, out int value) ? value : 0;
 
-        return (match.Groups["code"].Value, match.Groups["file"].Value, line);
+        return (code, file, line);
     }
 }
