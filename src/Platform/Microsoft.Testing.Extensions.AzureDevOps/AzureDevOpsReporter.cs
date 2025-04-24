@@ -25,15 +25,18 @@ internal sealed class AzureDevOpsReporter :
     private static readonly char[] NewlineCharacters = new char[] { '\r', '\n' };
     private readonly ICommandLineOptions _commandLine;
     private readonly IEnvironment _environment;
+    private readonly IFileSystem _fileSystem;
     private string _severity = "error";
 
     public AzureDevOpsReporter(
         ICommandLineOptions commandLine,
         IEnvironment environment,
+        IFileSystem fileSystem,
         IOutputDevice outputDisplay)
     {
         _commandLine = commandLine;
         _environment = environment;
+        _fileSystem = fileSystem;
         _outputDisplay = outputDisplay;
     }
 
@@ -107,16 +110,27 @@ internal sealed class AzureDevOpsReporter :
 
     private async Task WriteExceptionAsync(string? explanation, Exception? exception)
     {
-        if (exception == null || exception.StackTrace == null)
+        string? line = GetErrorText(explanation, exception, _severity, _fileSystem);
+        if (line == null)
         {
             return;
+        }
+
+        await _outputDisplay.DisplayAsync(this, new FormattedTextOutputDeviceData(line));
+    }
+
+    internal static /* for testing */ string? GetErrorText(string? explanation, Exception? exception, string severity, IFileSystem fileSystem)
+    {
+        if (exception == null || exception.StackTrace == null)
+        {
+            return null;
         }
 
         string message = explanation ?? exception.Message;
 
         if (message == null)
         {
-            return;
+            return null;
         }
 
         string repoRoot = RootFinder.Find();
@@ -153,7 +167,7 @@ internal sealed class AzureDevOpsReporter :
                 // Path does not belong to current repo, keep it null.
             }
 
-            if (relativePath == null || !File.Exists(Path.Combine(repoRoot, relativePath)))
+            if (relativePath == null || !fileSystem.Exists(Path.Combine(repoRoot, relativePath)))
             {
                 // Path does not belong to current repository or does not exist, no need to report it because it will not show up in the PR error, we will only see it details of the run, which is the same
                 // as not reporting it this way. Maybe there can be 2 modes, but right now we want this to be usable for GitHub + AzDo, not for pure AzDo.
@@ -170,12 +184,15 @@ internal sealed class AzureDevOpsReporter :
 
             string err = AzDoEscaper.Escape(message);
 
-            string line = $"##vso[task.logissue type={_severity};sourcepath={relativeNormalizedPath};linenumber={location.Value.LineNumber};columnnumber=1]{err}";
-            await _outputDisplay.DisplayAsync(this, new FormattedTextOutputDeviceData(line));
+            string line = $"##vso[task.logissue type={severity};sourcepath={relativeNormalizedPath};linenumber={location.Value.LineNumber};columnnumber=1]{err}";
+            // Report the error only for the first stack frame that is useful.
+            return line;
         }
+
+        return null;
     }
 
-    internal /* for testing */ static (string Code, string File, int LineNumber)? GetStackFrameLocation(string stackTraceLine)
+    private static (string Code, string File, int LineNumber)? GetStackFrameLocation(string stackTraceLine)
     {
         Match match = StackTraceHelper.GetFrameRegex().Match(stackTraceLine);
         if (!match.Success)
@@ -191,7 +208,7 @@ internal sealed class AzureDevOpsReporter :
         }
 
         string file = match.Groups["file"].Value;
-        if (RoslynString.IsNullOrWhiteSpace(file) || !File.Exists(file))
+        if (RoslynString.IsNullOrWhiteSpace(file))
         {
             return null;
         }
