@@ -46,4 +46,8 @@ This package extends Microsoft Testing Platform to provide a Azure DevOps report
     <EmbeddedResource Update="Resources\AzureDevOpsResources.resx" GenerateSource="true" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="Microsoft.Testing.Extensions.UnitTests" Key="$(VsPublicKey)" />
+  </ItemGroup>
+
 </Project>
