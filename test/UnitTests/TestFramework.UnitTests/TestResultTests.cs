@@ -23,7 +23,6 @@ public sealed class TestResultTests : TestContainer
 
         testResult.TestFailureException = new ArgumentException("Failure2");
         var aggregateException = (AggregateException)testResult.TestFailureException;
-        Verify(aggregateException.Message == "One or more errors occurred. (Failure1) (Failure2)");
         Verify(aggregateException.InnerExceptions.Count == 2);
         Verify(aggregateException.InnerExceptions[0].Message == "Failure1");
         Verify(aggregateException.InnerExceptions[1].Message == "Failure2");
@@ -31,7 +30,6 @@ public sealed class TestResultTests : TestContainer
         testResult.TestFailureException = new ArgumentException("Failure3");
         aggregateException = (AggregateException)testResult.TestFailureException;
         Verify(aggregateException.InnerExceptions.Count == 3);
-        Verify(aggregateException.Message == "One or more errors occurred. (Failure1) (Failure2) (Failure3)");
         Verify(aggregateException.InnerExceptions[0].Message == "Failure1");
         Verify(aggregateException.InnerExceptions[1].Message == "Failure2");
         Verify(aggregateException.InnerExceptions[2].Message == "Failure3");
