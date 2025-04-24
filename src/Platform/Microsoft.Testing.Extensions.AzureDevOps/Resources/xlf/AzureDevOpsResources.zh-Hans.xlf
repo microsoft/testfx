@@ -2,11 +2,6 @@
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
   <file datatype="xml" source-language="en" target-language="zh-Hans" original="../AzureDevOpsResources.resx">
     <body>
-      <trans-unit id="AzureDevOpsReportSeverityRequiresAzureDevOps">
-        <source>'--report-azdo-severity' requires '--report-azdo' to be enabled</source>
-        <target state="new">'--report-azdo-severity' requires '--report-azdo' to be enabled</target>
-        <note />
-      </trans-unit>
       <trans-unit id="Description">
         <source>Azure DevOps report generator to write errors to the output in a way that AzureDev Ops understands.</source>
         <target state="translated">Azure DevOps报表生成器，可通过 Azure DevOps 可理解的方式将错误写入输出。</target>
