@@ -10,7 +10,7 @@ namespace Microsoft.Testing.Extensions.UnitTests;
 public sealed class AzureDevOpsTests
 {
     [TestMethod]
-    public async Task ReportsTheFirstExistingFileInStackTraceWithTheRightLineNumberAndEscaping()
+    public void ReportsTheFirstExistingFileInStackTraceWithTheRightLineNumberAndEscaping()
     {
         Exception error;
         try
