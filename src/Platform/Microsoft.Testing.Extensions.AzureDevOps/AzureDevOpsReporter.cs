@@ -119,6 +119,8 @@ internal sealed class AzureDevOpsReporter :
             return;
         }
 
+        string repoRoot = RootFinder.Find();
+
         string stackTrace = exception.StackTrace;
         foreach (string? stackFrame in stackTrace.Split(NewlineCharacters, StringSplitOptions.RemoveEmptyEntries))
         {
@@ -137,11 +139,23 @@ internal sealed class AzureDevOpsReporter :
             }
 
             // Deterministic build paths start with "/_/"
-            string root = file.StartsWith(DeterministicBuildRoot, StringComparison.Ordinal) ? DeterministicBuildRoot : RootFinder.Find();
-            string? relativePath = file.StartsWith(root, StringComparison.CurrentCultureIgnoreCase) ? file.Substring(root.Length) : null;
-            if (relativePath == null || !File.Exists(relativePath))
+            string? relativePath = null;
+            if (file.StartsWith(DeterministicBuildRoot, StringComparison.OrdinalIgnoreCase))
             {
-                // Path does not belong to current repository, no need to report it because it will not show up in the PR error, we will only see it details of the run, which is the same
+                relativePath = file.Substring(DeterministicBuildRoot.Length);
+            }
+            else if (file.StartsWith(repoRoot, StringComparison.CurrentCultureIgnoreCase))
+            {
+                relativePath = file.Substring(repoRoot.Length);
+            }
+            else
+            {
+                // Path does not belong to current repo, keep it null.
+            }
+
+            if (relativePath == null || !File.Exists(Path.Combine(repoRoot, relativePath)))
+            {
+                // Path does not belong to current repository or does not exist, no need to report it because it will not show up in the PR error, we will only see it details of the run, which is the same
                 // as not reporting it this way. Maybe there can be 2 modes, but right now we want this to be usable for GitHub + AzDo, not for pure AzDo.
                 //
                 // In case of deterministic build, all the paths will be relative, so if library carries symbols and matches our path we would see the error as coming from our file
