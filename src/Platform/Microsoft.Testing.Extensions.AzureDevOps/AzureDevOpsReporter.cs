@@ -123,27 +123,41 @@ internal sealed class AzureDevOpsReporter :
         foreach (string? stackFrame in stackTrace.Split(NewlineCharacters, StringSplitOptions.RemoveEmptyEntries))
         {
             (string Code, string File, int LineNumber)? location = GetStackFrameLocation(stackFrame);
-            if (location != null)
+            if (location == null)
             {
-                string file = location.Value.File;
-
-                // TODO: We need better rule for stackframes to opt out from being interesting.
-                if (file.EndsWith("Assert.cs", StringComparison.OrdinalIgnoreCase))
-                {
-                    continue;
-                }
-
-                // Deterministic build paths start with "/_/"
-                string root = file.StartsWith(DeterministicBuildRoot, StringComparison.Ordinal) ? DeterministicBuildRoot : RootFinder.Find();
-
-                string relativePath = file.StartsWith(root, StringComparison.CurrentCultureIgnoreCase) ? file.Substring(root.Length) : file;
-                string relativeNormalizedPath = relativePath.Replace('\\', '/');
-
-                string err = AzDoEscaper.Escape(message);
-
-                string line = $"##vso[task.logissue type={_severity};sourcepath={relativeNormalizedPath};linenumber={location.Value.LineNumber};columnnumber=1]{err}";
-                await _outputDisplay.DisplayAsync(this, new FormattedTextOutputDeviceData(line));
+                continue;
             }
+
+            string file = location.Value.File;
+
+            // TODO: We need better rule for stackframes to opt out from being interesting.
+            if (file.EndsWith("Assert.cs", StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            // Deterministic build paths start with "/_/"
+            string root = file.StartsWith(DeterministicBuildRoot, StringComparison.Ordinal) ? DeterministicBuildRoot : RootFinder.Find();
+            string? relativePath = file.StartsWith(root, StringComparison.CurrentCultureIgnoreCase) ? file.Substring(root.Length) : null;
+            if (relativePath == null || !File.Exists(relativePath))
+            {
+                // Path does not belong to current repository, no need to report it because it will not show up in the PR error, we will only see it details of the run, which is the same
+                // as not reporting it this way. Maybe there can be 2 modes, but right now we want this to be usable for GitHub + AzDo, not for pure AzDo.
+                //
+                // In case of deterministic build, all the paths will be relative, so if library carries symbols and matches our path we would see the error as coming from our file
+                // even though it would not. That change is slim and something we have to live with.
+                //
+                // Deterministic build will also have paths normalized to /, luckily File.Exist does not care about the slash direction (on Windows).
+                continue;
+            }
+
+            // The slashes must be / for GitHub to render the error placement correctly.
+            string relativeNormalizedPath = relativePath.Replace('\\', '/');
+
+            string err = AzDoEscaper.Escape(message);
+
+            string line = $"##vso[task.logissue type={_severity};sourcepath={relativeNormalizedPath};linenumber={location.Value.LineNumber};columnnumber=1]{err}";
+            await _outputDisplay.DisplayAsync(this, new FormattedTextOutputDeviceData(line));
         }
     }
 
