@@ -155,19 +155,21 @@ internal sealed class AzureDevOpsReporter :
             return null;
         }
 
-        bool weHaveFilePathAndCodeLine = !RoslynString.IsNullOrWhiteSpace(match.Groups["code"].Value);
+        string code = match.Groups["code"].Value;
+        bool weHaveFilePathAndCodeLine = !RoslynString.IsNullOrWhiteSpace(code);
         if (!weHaveFilePathAndCodeLine)
         {
             return null;
         }
 
-        if (RoslynString.IsNullOrWhiteSpace(match.Groups["file"].Value))
+        string file = match.Groups["file"].Value;
+        if (RoslynString.IsNullOrWhiteSpace(file) || !File.Exists(file))
         {
             return null;
         }
 
         int line = int.TryParse(match.Groups["line"].Value, out int value) ? value : 0;
 
-        return (match.Groups["code"].Value, match.Groups["file"].Value, line);
+        return (code, file, line);
     }
 }

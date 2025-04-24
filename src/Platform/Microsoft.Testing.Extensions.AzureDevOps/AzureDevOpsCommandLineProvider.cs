@@ -44,5 +44,14 @@ internal sealed class AzureDevOpsCommandLineProvider : ICommandLineOptionsProvid
     }
 
     public Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions)
-        => ValidationResult.ValidTask;
+    {
+        if (!commandLineOptions.IsOptionSet(AzureDevOpsCommandLineOptions.AzureDevOpsOptionName) &&
+            commandLineOptions.IsOptionSet(AzureDevOpsCommandLineOptions.AzureDevOpsReportSeverity))
+        {
+            // If report-azdo is not set, but report-azdo-severity is set, it's invalid.
+            return ValidationResult.InvalidTask(AzureDevOpsResources.AzureDevOpsReportSeverityRequiresAzureDevOps);
+        }
+
+        return ValidationResult.ValidTask;
+    }
 }
