@@ -11,7 +11,7 @@ using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.OutputDevice;
 
-namespace Microsoft.Testing.Extensions.AzureDevOps;
+namespace Microsoft.Testing.Extensions.AzureDevOpsReport;
 
 internal sealed class AzureDevOpsReporter :
     IDataConsumer,
