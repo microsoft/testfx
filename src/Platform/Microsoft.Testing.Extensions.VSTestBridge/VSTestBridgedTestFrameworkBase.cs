@@ -76,10 +76,10 @@ public abstract class VSTestBridgedTestFrameworkBase : ITestFramework, IDataProd
             Task convertedRequest = context.Request switch
             {
                 VSTestDiscoverTestExecutionRequest discoverRequest =>
-                    DiscoverTestsAsync(UpdateDiscoverRequest(discoverRequest, context.CancellationToken), context.MessageBus, context.CancellationToken),
+                    DiscoverTestsAsync(UpdateDiscoverRequest(discoverRequest, context.MessageBus, context.CancellationToken), context.MessageBus, context.CancellationToken),
 
                 VSTestRunTestExecutionRequest runRequest =>
-                    RunTestsAsync(UpdateRunRequest(runRequest, context.CancellationToken), context.MessageBus, context.CancellationToken),
+                    RunTestsAsync(UpdateRunRequest(runRequest, context.MessageBus, context.CancellationToken), context.MessageBus, context.CancellationToken),
 
                 TestExecutionRequest request => ExecuteRequestAsync(request, context.MessageBus, context.CancellationToken),
 
@@ -130,6 +130,7 @@ public abstract class VSTestBridgedTestFrameworkBase : ITestFramework, IDataProd
 
     private VSTestDiscoverTestExecutionRequest UpdateDiscoverRequest(
         VSTestDiscoverTestExecutionRequest discoverRequest,
+        IMessageBus messageBus,
         CancellationToken cancellationToken)
     {
         // Before passing down the request, we need to replace the discovery sink with a custom implementation calling
@@ -142,7 +143,7 @@ public abstract class VSTestBridgedTestFrameworkBase : ITestFramework, IDataProd
             ServiceProvider.GetTestApplicationModuleInfo(),
             ServiceProvider.GetTestFrameworkCapabilities().GetCapability<INamedFeatureCapability>(),
             ServiceProvider.GetCommandLineOptions(),
-            ServiceProvider.GetMessageBus(),
+            messageBus,
             loggerFactory,
             IsTrxEnabled,
             cancellationToken,
@@ -152,7 +153,10 @@ public abstract class VSTestBridgedTestFrameworkBase : ITestFramework, IDataProd
             discoverRequest.MessageLogger, testCaseDiscoverySinkAdapter);
     }
 
-    private VSTestRunTestExecutionRequest UpdateRunRequest(VSTestRunTestExecutionRequest runRequest, CancellationToken cancellationToken)
+    private VSTestRunTestExecutionRequest UpdateRunRequest(
+        VSTestRunTestExecutionRequest runRequest,
+        IMessageBus messageBus,
+        CancellationToken cancellationToken)
     {
         // Before passing down the request, we need to replace the framework handle with a custom implementation calling
         // both the original (VSTest) framework handle and our own.
@@ -164,7 +168,7 @@ public abstract class VSTestBridgedTestFrameworkBase : ITestFramework, IDataProd
             ServiceProvider.GetTestApplicationModuleInfo(),
             ServiceProvider.GetTestFrameworkCapabilities().GetCapability<INamedFeatureCapability>(),
             ServiceProvider.GetCommandLineOptions(),
-            ServiceProvider.GetMessageBus(),
+            messageBus,
             ServiceProvider.GetOutputDevice(),
             loggerFactory,
             IsTrxEnabled,
