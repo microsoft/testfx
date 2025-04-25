@@ -222,7 +222,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MSTest.Engine.UnitTests", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MSTest.SourceGeneration.UnitTests", "test\UnitTests\MSTest.SourceGeneration.UnitTests\MSTest.SourceGeneration.UnitTests.csproj", "{E6C0466E-BE8D-C04F-149A-FD98438F1413}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.Testing.Extensions.AzureDevOps", "src\Platform\Microsoft.Testing.Extensions.AzureDevOps\Microsoft.Testing.Extensions.AzureDevOps.csproj", "{F608D3A3-125B-CD88-1D51-8714ED142029}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.Testing.Extensions.AzureDevOpsReport", "src\Platform\Microsoft.Testing.Extensions.AzureDevOpsReport\Microsoft.Testing.Extensions.AzureDevOpsReport.csproj", "{F608D3A3-125B-CD88-1D51-8714ED142029}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
