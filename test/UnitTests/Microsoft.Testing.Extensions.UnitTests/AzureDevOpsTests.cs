@@ -22,7 +22,8 @@ public sealed class AzureDevOpsTests
             error = ex;
         }
 
-        string? text = AzureDevOpsReporter.GetErrorText(null, error, "severity", new SystemFileSystem());
-        Assert.AreEqual("##vso[task.logissue type=severity;sourcepath=test/UnitTests/Microsoft.Testing.Extensions.UnitTests/AzureDevOpsTests.cs;linenumber=18;columnnumber=1]this is an error%0Awith%0Dnewline", text);
+        // Trim ## so when the test fails we don't report it to AzDO, the severity is invalid, and the result is confusing.
+        string? text = AzureDevOpsReporter.GetErrorText(null, error, "severity", new SystemFileSystem())?.Trim('#');
+        Assert.AreEqual("vso[task.logissue type=severity;sourcepath=test/UnitTests/Microsoft.Testing.Extensions.UnitTests/AzureDevOpsTests.cs;linenumber=18;columnnumber=1]this is an error%0Awith%0Dnewline", text);
     }
 }
