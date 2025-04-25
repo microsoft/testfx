@@ -9,7 +9,7 @@ using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.ServerMode;
-using Microsoft.Testing.Platform.Services;
+using Microsoft.TestPlatform.AdapterUtilities;
 using Microsoft.TestPlatform.AdapterUtilities.ManagedNameUtilities;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
@@ -51,7 +51,7 @@ internal static class ObjectModelConverters
     /// <summary>
     /// Converts a VSTest <see cref="TestCase"/> to a Microsoft Testing Platform <see cref="TestNode"/>.
     /// </summary>
-    public static TestNode ToTestNode(this TestCase testCase, bool isTrxEnabled, IServiceProvider serviceProvider, string? displayNameFromTestResult = null)
+    public static TestNode ToTestNode(this TestCase testCase, bool isTrxEnabled, INamedFeatureCapability? namedFeatureCapability, ICommandLineOptions commandLineOptions, string? displayNameFromTestResult = null)
     {
         string testNodeUid = testCase.Id.ToString();
 
@@ -69,7 +69,7 @@ internal static class ObjectModelConverters
 
         CopyCategoryAndTraits(testCase, testNode, isTrxEnabled);
 
-        if (ShouldAddVSTestProviderProperties(serviceProvider))
+        if (ShouldAddVSTestProviderProperties(namedFeatureCapability, commandLineOptions))
         {
             CopyVSTestProviderProperties(testCase.Properties, testNode, testCase.GetPropertyValue);
         }
@@ -131,10 +131,7 @@ internal static class ObjectModelConverters
             {
                 testNode.Properties.Add(new SerializableKeyValuePairStringProperty("vstest.original-executor-uri", originalExecutorUri.AbsoluteUri));
             }
-
-            // The TP object holding the hierarchy property is defined on adapter utilities and we don't want to enforce that dependency
-            // so instead I use the string ID copied from TP.
-            else if (property.Id == "TestCase.Hierarchy"
+            else if (property.Id == HierarchyConstants.HierarchyPropertyId
                 && getPropertyValue(property) is string[] testCaseHierarchy
                 && testCaseHierarchy.Length == 4)
             {
@@ -146,18 +143,18 @@ internal static class ObjectModelConverters
     /// <summary>
     /// Converts a VSTest <see cref="TestResult"/> to a Microsoft Testing Platform <see cref="TestNode"/>.
     /// </summary>
-    public static TestNode ToTestNode(this TestResult testResult, bool isTrxEnabled, IServiceProvider serviceProvider)
+    public static TestNode ToTestNode(this TestResult testResult, bool isTrxEnabled, INamedFeatureCapability? namedFeatureCapability, ICommandLineOptions commandLineOptions)
     {
-        var testNode = testResult.TestCase.ToTestNode(isTrxEnabled, serviceProvider, testResult.DisplayName);
+        var testNode = testResult.TestCase.ToTestNode(isTrxEnabled, namedFeatureCapability, commandLineOptions, testResult.DisplayName);
 
         CopyCategoryAndTraits(testResult, testNode, isTrxEnabled);
 
-        bool addVSTestProviderProperties = ShouldAddVSTestProviderProperties(serviceProvider);
+        bool addVSTestProviderProperties = ShouldAddVSTestProviderProperties(namedFeatureCapability, commandLineOptions);
         if (addVSTestProviderProperties)
         {
             // TODO: This call might be unnecessary.
             // All the relevant properties should be on TestCase, not TestResult.
-            // And properties on TestCase where already copied as part of ToTestNode call above.
+            // And properties on TestCase were already copied as part of ToTestNode call above.
             CopyVSTestProviderProperties(testResult.Properties, testNode, testResult.GetPropertyValue);
         }
 
@@ -344,8 +341,8 @@ internal static class ObjectModelConverters
         return true;
     }
 
-    private static bool ShouldAddVSTestProviderProperties(IServiceProvider serviceProvider)
-        => serviceProvider.GetTestFrameworkCapabilities().GetCapability<INamedFeatureCapability>()?.IsSupported(JsonRpcStrings.VSTestProviderSupport) == true &&
-           serviceProvider.GetCommandLineOptions().IsOptionSet(PlatformCommandLineProvider.ServerOptionKey) &&
-           !serviceProvider.GetCommandLineOptions().IsOptionSet(PlatformCommandLineProvider.DotNetTestPipeOptionKey);
+    private static bool ShouldAddVSTestProviderProperties(INamedFeatureCapability? namedFeatureCapability, ICommandLineOptions commandLineOptions)
+        => namedFeatureCapability?.IsSupported(JsonRpcStrings.VSTestProviderSupport) == true &&
+           commandLineOptions.IsOptionSet(PlatformCommandLineProvider.ServerOptionKey) &&
+           !commandLineOptions.IsOptionSet(PlatformCommandLineProvider.DotNetTestPipeOptionKey);
 }

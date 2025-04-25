@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.VSTestBridge.ObjectModel;
+using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Helpers;
@@ -53,8 +54,18 @@ public sealed class VSTestRunTestExecutionRequestFactory : ITestExecutionRequest
         IFileSystem fileSystem = serviceProvider.GetFileSystem();
         IClientInfo clientInfo = serviceProvider.GetClientInfo();
 
-        FrameworkHandlerAdapter frameworkHandlerAdapter = new(adapterExtension, runTestExecutionRequest.Session, testAssemblyPaths,
-            serviceProvider, loggerFactory, adapterExtension.IsTrxEnabled, cancellationToken);
+        FrameworkHandlerAdapter frameworkHandlerAdapter = new(
+            adapterExtension,
+            runTestExecutionRequest.Session,
+            testAssemblyPaths,
+            serviceProvider.GetTestApplicationModuleInfo(),
+            serviceProvider.GetTestFrameworkCapabilities().GetCapability<INamedFeatureCapability>(),
+            serviceProvider.GetCommandLineOptions(),
+            serviceProvider.GetMessageBus(),
+            serviceProvider.GetOutputDevice(),
+            loggerFactory,
+            adapterExtension.IsTrxEnabled,
+            cancellationToken);
 
         RunSettingsAdapter runSettings = new(commandLineOptions, fileSystem, configuration, clientInfo, loggerFactory, frameworkHandlerAdapter);
         RunContextAdapter runContext = new(commandLineOptions, runSettings, runTestExecutionRequest.Filter);

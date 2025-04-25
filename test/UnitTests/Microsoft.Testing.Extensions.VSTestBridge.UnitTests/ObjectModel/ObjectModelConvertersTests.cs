@@ -9,7 +9,6 @@ using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.ServerMode;
-using Microsoft.Testing.Platform.Services;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
 using TestResult = Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult;
@@ -19,24 +18,6 @@ namespace Microsoft.Testing.Extensions.VSTestBridge.UnitTests.ObjectModel;
 [TestClass]
 public sealed class ObjectModelConvertersTests
 {
-    private static readonly IServiceProvider ServiceProviderNotUsingVSTestProvider = GetServiceProviderNotUsingVSTestProvider();
-    private static readonly IServiceProvider ServiceProviderUsingVSTestProvider = GetServiceProviderUsingVSTestProvider();
-
-    private static IServiceProvider GetServiceProviderUsingVSTestProvider()
-    {
-        var serviceProvider = new ServiceProvider();
-        serviceProvider.AddService(new TestFrameworkCapabilities(new NamedFeatureCapabilityWithVSTestProvider()));
-        serviceProvider.AddService(new ServerModeCommandLineOptions());
-        return serviceProvider;
-    }
-
-    private static IServiceProvider GetServiceProviderNotUsingVSTestProvider()
-    {
-        var serviceProvider = new ServiceProvider();
-        serviceProvider.AddService(new TestFrameworkCapabilities());
-        return serviceProvider;
-    }
-
     [TestMethod]
     public void ToTestNode_WhenTestCaseHasDisplayName_TestNodeDisplayNameUsesIt()
     {
@@ -44,7 +25,7 @@ public sealed class ObjectModelConvertersTests
         {
             DisplayName = "MyDisplayName",
         };
-        var testNode = testCase.ToTestNode(false, ServiceProviderNotUsingVSTestProvider);
+        var testNode = testCase.ToTestNode(false, null, new ConsoleCommandLineOptions());
 
         Assert.AreEqual("MyDisplayName", testNode.DisplayName);
     }
@@ -53,7 +34,7 @@ public sealed class ObjectModelConvertersTests
     public void ToTestNode_WhenTestCaseHasNoDisplayName_TestNodeDisplayNameUsesIt()
     {
         TestCase testCase = new("SomeFqn", new("executor://uri", UriKind.Absolute), "source.cs");
-        var testNode = testCase.ToTestNode(false, ServiceProviderNotUsingVSTestProvider);
+        var testNode = testCase.ToTestNode(false, null, new ConsoleCommandLineOptions());
 
         Assert.AreEqual("SomeFqn", testNode.DisplayName);
     }
@@ -65,7 +46,7 @@ public sealed class ObjectModelConvertersTests
         {
             CodeFilePath = "FilePath",
         });
-        var testNode = testResult.ToTestNode(false, ServiceProviderNotUsingVSTestProvider);
+        var testNode = testResult.ToTestNode(false, null, new ConsoleCommandLineOptions());
         Assert.AreEqual("FilePath", testNode.Properties.Single<TestFileLocationProperty>().FilePath);
     }
 
@@ -78,7 +59,7 @@ public sealed class ObjectModelConvertersTests
             ErrorMessage = "SomeErrorMessage",
             ErrorStackTrace = "SomeStackTrace",
         };
-        var testNode = testResult.ToTestNode(false, ServiceProviderNotUsingVSTestProvider);
+        var testNode = testResult.ToTestNode(false, null, new ConsoleCommandLineOptions());
 
         FailedTestNodeStateProperty[] failedTestNodeStateProperties = testNode.Properties.OfType<FailedTestNodeStateProperty>().ToArray();
         Assert.AreEqual(1, failedTestNodeStateProperties.Length);
@@ -94,7 +75,7 @@ public sealed class ObjectModelConvertersTests
         var testCategoryProperty = TestProperty.Register("MSTestDiscoverer.TestCategory", "Label", typeof(string[]), TestPropertyAttributes.None, typeof(TestCase));
         testResult.SetPropertyValue<string[]>(testCategoryProperty, ["category1"]);
 
-        var testNode = testResult.ToTestNode(false, ServiceProviderUsingVSTestProvider);
+        var testNode = testResult.ToTestNode(false, new NamedFeatureCapabilityWithVSTestProvider(), new ServerModeCommandLineOptions());
 
         TestMetadataProperty[] testMetadatas = testNode.Properties.OfType<TestMetadataProperty>().ToArray();
         Assert.AreEqual(1, testMetadatas.Length);
@@ -109,7 +90,7 @@ public sealed class ObjectModelConvertersTests
         var testCategoryProperty = TestProperty.Register("MSTestDiscoverer.TestCategory", "Label", typeof(string[]), TestPropertyAttributes.None, typeof(TestCase));
         testResult.SetPropertyValue<string[]>(testCategoryProperty, ["category1"]);
 
-        var testNode = testResult.ToTestNode(true, ServiceProviderUsingVSTestProvider);
+        var testNode = testResult.ToTestNode(true, new NamedFeatureCapabilityWithVSTestProvider(), new ServerModeCommandLineOptions());
 
         TrxCategoriesProperty[] trxCategoriesProperty = testNode.Properties.OfType<TrxCategoriesProperty>().ToArray();
         Assert.AreEqual(1, trxCategoriesProperty.Length);
@@ -124,7 +105,7 @@ public sealed class ObjectModelConvertersTests
         var testCaseHierarchy = TestProperty.Register("TestCase.Hierarchy", "Label", typeof(string[]), TestPropertyAttributes.None, typeof(TestCase));
         testResult.SetPropertyValue<string[]>(testCaseHierarchy, ["assembly", "class", "category", "test"]);
 
-        var testNode = testResult.ToTestNode(false, ServiceProviderUsingVSTestProvider);
+        var testNode = testResult.ToTestNode(false, new NamedFeatureCapabilityWithVSTestProvider(), new ServerModeCommandLineOptions());
 
         SerializableNamedArrayStringProperty[] trxCategoriesProperty = testNode.Properties.OfType<SerializableNamedArrayStringProperty>().ToArray();
         Assert.AreEqual(1, trxCategoriesProperty.Length);
@@ -143,7 +124,7 @@ public sealed class ObjectModelConvertersTests
 
         testResult.SetPropertyValue<Uri>(originalExecutorUriProperty, new Uri("https://vs.com/"));
 
-        var testNode = testResult.ToTestNode(false, ServiceProviderUsingVSTestProvider);
+        var testNode = testResult.ToTestNode(false, new NamedFeatureCapabilityWithVSTestProvider(), new ServerModeCommandLineOptions());
 
         SerializableKeyValuePairStringProperty[] serializableKeyValuePairStringProperty = testNode.Properties.OfType<SerializableKeyValuePairStringProperty>().ToArray();
         Assert.AreEqual(3, serializableKeyValuePairStringProperty.Length);
@@ -156,7 +137,7 @@ public sealed class ObjectModelConvertersTests
     {
         TestResult testResult = new(new TestCase("assembly.class.test", new("executor://uri", UriKind.Absolute), "source.cs"));
 
-        var testNode = testResult.ToTestNode(true, ServiceProviderNotUsingVSTestProvider);
+        var testNode = testResult.ToTestNode(true, null, new ConsoleCommandLineOptions());
 
         Assert.AreEqual(testNode.Properties.OfType<TrxExceptionProperty>()?.Length, 1);
         Assert.AreEqual("assembly.class", testNode.Properties.Single<TrxFullyQualifiedTypeNameProperty>().FullyQualifiedTypeName);
@@ -167,7 +148,7 @@ public sealed class ObjectModelConvertersTests
     {
         TestResult testResult = new(new TestCase("test", new("executor://uri", UriKind.Absolute), "source.cs"));
 
-        string errorMessage = Assert.ThrowsException<InvalidOperationException>(() => testResult.ToTestNode(true, ServiceProviderNotUsingVSTestProvider)).Message;
+        string errorMessage = Assert.ThrowsException<InvalidOperationException>(() => testResult.ToTestNode(true, null, new ConsoleCommandLineOptions())).Message;
 
         Assert.IsTrue(errorMessage.Contains("Unable to parse fully qualified type name from test case: "));
     }
@@ -185,7 +166,7 @@ public sealed class ObjectModelConvertersTests
             EndTime = endTime,
             Duration = duration,
         };
-        var testNode = testResult.ToTestNode(false, ServiceProviderNotUsingVSTestProvider);
+        var testNode = testResult.ToTestNode(false, null, new ConsoleCommandLineOptions());
         var testResultTimingProperty = new TimingProperty(new(startTime, endTime, duration), []);
 
         Assert.AreEqual<TimingProperty>(testNode.Properties.OfType<TimingProperty>()[0], testResultTimingProperty);
@@ -199,7 +180,7 @@ public sealed class ObjectModelConvertersTests
             Outcome = TestOutcome.NotFound,
             ErrorStackTrace = "SomeStackTrace",
         };
-        var testNode = testResult.ToTestNode(false, ServiceProviderNotUsingVSTestProvider);
+        var testNode = testResult.ToTestNode(false, null, new ConsoleCommandLineOptions());
 
         ErrorTestNodeStateProperty[] errorTestNodeStateProperties = testNode.Properties.OfType<ErrorTestNodeStateProperty>().ToArray();
         Assert.AreEqual(1, errorTestNodeStateProperties.Length);
@@ -215,7 +196,7 @@ public sealed class ObjectModelConvertersTests
         {
             Outcome = TestOutcome.Skipped,
         };
-        var testNode = testResult.ToTestNode(false, ServiceProviderNotUsingVSTestProvider);
+        var testNode = testResult.ToTestNode(false, null, new ConsoleCommandLineOptions());
 
         SkippedTestNodeStateProperty[] skipTestNodeStateProperties = testNode.Properties.OfType<SkippedTestNodeStateProperty>().ToArray();
         Assert.AreEqual(1, skipTestNodeStateProperties.Length);
@@ -228,7 +209,7 @@ public sealed class ObjectModelConvertersTests
         {
             Outcome = TestOutcome.None,
         };
-        var testNode = testResult.ToTestNode(false, ServiceProviderNotUsingVSTestProvider);
+        var testNode = testResult.ToTestNode(false, null, new ConsoleCommandLineOptions());
 
         SkippedTestNodeStateProperty[] skipTestNodeStateProperties = testNode.Properties.OfType<SkippedTestNodeStateProperty>().ToArray();
         Assert.AreEqual(1, skipTestNodeStateProperties.Length);
@@ -241,7 +222,7 @@ public sealed class ObjectModelConvertersTests
         {
             Outcome = TestOutcome.Passed,
         };
-        var testNode = testResult.ToTestNode(false, ServiceProviderNotUsingVSTestProvider);
+        var testNode = testResult.ToTestNode(false, null, new ConsoleCommandLineOptions());
 
         PassedTestNodeStateProperty[] passedTestNodeStateProperties = testNode.Properties.OfType<PassedTestNodeStateProperty>().ToArray();
         Assert.AreEqual(1, passedTestNodeStateProperties.Length);
@@ -255,7 +236,7 @@ public sealed class ObjectModelConvertersTests
             DisplayName = "TestName",
         };
 
-        var testNode = testResult.ToTestNode(false, ServiceProviderUsingVSTestProvider);
+        var testNode = testResult.ToTestNode(false, new NamedFeatureCapabilityWithVSTestProvider(), new ServerModeCommandLineOptions());
 
         SerializableKeyValuePairStringProperty[] errorTestNodeStateProperties = testNode.Properties.OfType<SerializableKeyValuePairStringProperty>().ToArray();
         Assert.AreEqual(2, errorTestNodeStateProperties.Length, "Expected 2 SerializableKeyValuePairStringProperty");
@@ -273,7 +254,7 @@ public sealed class ObjectModelConvertersTests
             Traits = { new Trait("key", "value") },
         };
 
-        var testNode = testResult.ToTestNode(false, ServiceProviderUsingVSTestProvider);
+        var testNode = testResult.ToTestNode(false, new NamedFeatureCapabilityWithVSTestProvider(), new ServerModeCommandLineOptions());
 
         TestMetadataProperty[] testMetadatas = testNode.Properties.OfType<TestMetadataProperty>().ToArray();
         Assert.AreEqual(1, testMetadatas.Length);
@@ -294,7 +275,7 @@ public sealed class ObjectModelConvertersTests
             },
         };
 
-        var testNode = testResult.ToTestNode(false, ServiceProviderUsingVSTestProvider);
+        var testNode = testResult.ToTestNode(false, new NamedFeatureCapabilityWithVSTestProvider(), new ServerModeCommandLineOptions());
 
         StandardOutputProperty[] standardOutputProperties = testNode.Properties.OfType<StandardOutputProperty>().ToArray();
         Assert.IsTrue(standardOutputProperties.Length == 1);
@@ -314,7 +295,7 @@ public sealed class ObjectModelConvertersTests
             },
         };
 
-        var testNode = testResult.ToTestNode(false, ServiceProviderUsingVSTestProvider);
+        var testNode = testResult.ToTestNode(false, new NamedFeatureCapabilityWithVSTestProvider(), new ServerModeCommandLineOptions());
 
         StandardErrorProperty[] standardErrorProperties = testNode.Properties.OfType<StandardErrorProperty>().ToArray();
         Assert.IsTrue(standardErrorProperties.Length == 1);
@@ -329,6 +310,13 @@ public sealed class ObjectModelConvertersTests
     private sealed class ServerModeCommandLineOptions : ICommandLineOptions
     {
         public bool IsOptionSet(string optionName) => optionName is PlatformCommandLineProvider.ServerOptionKey;
+
+        public bool TryGetOptionArgumentList(string optionName, [NotNullWhen(true)] out string[]? arguments) => throw new NotImplementedException();
+    }
+
+    private sealed class ConsoleCommandLineOptions : ICommandLineOptions
+    {
+        public bool IsOptionSet(string optionName) => false;
 
         public bool TryGetOptionArgumentList(string optionName, [NotNullWhen(true)] out string[]? arguments) => throw new NotImplementedException();
     }

@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.VSTestBridge.ObjectModel;
+using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Helpers;
@@ -59,7 +60,17 @@ public sealed class VSTestDiscoverTestExecutionRequestFactory : ITestExecutionRe
         RunSettingsAdapter runSettings = new(commandLineOptions, fileSystem, configuration, clientInfo, loggerFactory, messageLogger);
         DiscoveryContextAdapter discoveryContext = new(commandLineOptions, runSettings, discoverTestExecutionRequest.Filter);
 
-        TestCaseDiscoverySinkAdapter discoverySink = new(adapterExtension, discoverTestExecutionRequest.Session, testAssemblyPaths, serviceProvider, loggerFactory, adapterExtension.IsTrxEnabled, cancellationToken);
+        TestCaseDiscoverySinkAdapter discoverySink = new(
+            adapterExtension,
+            discoverTestExecutionRequest.Session,
+            testAssemblyPaths,
+            serviceProvider.GetTestApplicationModuleInfo(),
+            serviceProvider.GetTestFrameworkCapabilities().GetCapability<INamedFeatureCapability>(),
+            serviceProvider.GetCommandLineOptions(),
+            serviceProvider.GetMessageBus(),
+            loggerFactory,
+            adapterExtension.IsTrxEnabled,
+            cancellationToken);
 
         return new(discoverTestExecutionRequest.Session, discoverTestExecutionRequest.Filter, testAssemblyPaths, discoveryContext, messageLogger, discoverySink);
     }

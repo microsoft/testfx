@@ -4,6 +4,8 @@
 #pragma warning disable TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
 
 using Microsoft.Testing.Extensions.VSTestBridge.Helpers;
+using Microsoft.Testing.Platform.Capabilities.TestFramework;
+using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Messages;
@@ -25,7 +27,8 @@ internal sealed class TestCaseDiscoverySinkAdapter : ITestCaseDiscoverySink
     /// </remarks>
     private readonly ITestCaseDiscoverySink? _testCaseDiscoverySink;
     private readonly ILogger<TestCaseDiscoverySinkAdapter> _logger;
-    private readonly IServiceProvider _serviceProvider;
+    private readonly INamedFeatureCapability? _namedFeatureCapability;
+    private readonly ICommandLineOptions _commandLineOptions;
     private readonly IMessageBus _messageBus;
     private readonly bool _isTrxEnabled;
     private readonly VSTestBridgedTestFrameworkBase _adapterExtension;
@@ -33,8 +36,14 @@ internal sealed class TestCaseDiscoverySinkAdapter : ITestCaseDiscoverySink
     private readonly CancellationToken _cancellationToken;
     private readonly string? _testAssemblyPath;
 
-    public TestCaseDiscoverySinkAdapter(VSTestBridgedTestFrameworkBase adapterExtension, TestSessionContext session, string[] testAssemblyPaths,
-        IServiceProvider serviceProvider,
+    public TestCaseDiscoverySinkAdapter(
+        VSTestBridgedTestFrameworkBase adapterExtension,
+        TestSessionContext session,
+        string[] testAssemblyPaths,
+        ITestApplicationModuleInfo testApplicationModuleInfo,
+        INamedFeatureCapability? namedFeatureCapability,
+        ICommandLineOptions commandLineOptions,
+        IMessageBus messageBus,
         ILoggerFactory loggerFactory,
         bool isTrxEnabled,
         CancellationToken cancellationToken,
@@ -46,7 +55,7 @@ internal sealed class TestCaseDiscoverySinkAdapter : ITestCaseDiscoverySink
         }
         else if (testAssemblyPaths.Length > 1)
         {
-            _testAssemblyPath = serviceProvider.GetTestApplicationModuleInfo().GetCurrentTestApplicationFullPath();
+            _testAssemblyPath = testApplicationModuleInfo.GetCurrentTestApplicationFullPath();
 
             if (!testAssemblyPaths.Contains(_testAssemblyPath))
             {
@@ -60,8 +69,9 @@ internal sealed class TestCaseDiscoverySinkAdapter : ITestCaseDiscoverySink
 
         _testCaseDiscoverySink = testCaseDiscoverySink;
         _logger = loggerFactory.CreateLogger<TestCaseDiscoverySinkAdapter>();
-        _serviceProvider = serviceProvider;
-        _messageBus = serviceProvider.GetMessageBus();
+        _namedFeatureCapability = namedFeatureCapability;
+        _commandLineOptions = commandLineOptions;
+        _messageBus = messageBus;
         _isTrxEnabled = isTrxEnabled;
         _adapterExtension = adapterExtension;
         _session = session;
@@ -81,7 +91,7 @@ internal sealed class TestCaseDiscoverySinkAdapter : ITestCaseDiscoverySink
         _testCaseDiscoverySink?.SendTestCase(discoveredTest);
 
         // Publish node state change to Microsoft Testing Platform
-        var testNode = discoveredTest.ToTestNode(_isTrxEnabled, _serviceProvider);
+        var testNode = discoveredTest.ToTestNode(_isTrxEnabled, _namedFeatureCapability, _commandLineOptions);
         testNode.Properties.Add(DiscoveredTestNodeStateProperty.CachedInstance);
         var testNodeChange = new TestNodeUpdateMessage(_session.SessionUid, testNode);
 
