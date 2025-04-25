@@ -163,8 +163,10 @@ internal sealed class Json
 
                 if (property is TestMethodIdentifierProperty testMethodIdentifierProperty)
                 {
-                    properties.Add(("location.namespace", testMethodIdentifierProperty.Namespace));
-                    properties.Add(("location.type", testMethodIdentifierProperty.TypeName));
+                    properties.Add(("location.type", RoslynString.IsNullOrEmpty(testMethodIdentifierProperty.Namespace)
+                        ? testMethodIdentifierProperty.TypeName
+                        : $"{testMethodIdentifierProperty.Namespace}.{testMethodIdentifierProperty.TypeName}"));
+
                     properties.Add(("location.method", testMethodIdentifierProperty.ParameterTypeFullNames.Length > 0
                         ? $"{testMethodIdentifierProperty.MethodName}({string.Join(",", testMethodIdentifierProperty.ParameterTypeFullNames)})"
                         : testMethodIdentifierProperty.MethodName));
