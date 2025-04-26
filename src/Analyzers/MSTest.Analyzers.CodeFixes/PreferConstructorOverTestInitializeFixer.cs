@@ -43,13 +43,9 @@ public sealed class PreferConstructorOverTestInitializeFixer : CodeFixProvider
         TextSpan diagnosticSpan = diagnostic.Location.SourceSpan;
 
         SyntaxToken syntaxToken = root.FindToken(diagnosticSpan.Start);
-        if (syntaxToken.Parent is null)
-        {
-            return;
-        }
 
         // Find the method declaration identified by the diagnostic.
-        MethodDeclarationSyntax? methodDeclaration = syntaxToken.Parent.AncestorsAndSelf().OfType<MethodDeclarationSyntax>().FirstOrDefault();
+        MethodDeclarationSyntax? methodDeclaration = syntaxToken.Parent?.AncestorsAndSelf().OfType<MethodDeclarationSyntax>().FirstOrDefault();
         if (methodDeclaration == null)
         {
             return;

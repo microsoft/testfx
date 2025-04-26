@@ -91,6 +91,26 @@ public sealed class TestContextShouldBeValidAnalyzerTests
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
+    public async Task WhenTestContextIsInPrimaryConstructor_NoDiagnostic()
+    {
+        string code = $$"""
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public sealed class Test1(TestContext testContext)
+            {
+                [TestMethod]
+                public void TestMethod1()
+                {
+                    testContext.CancellationTokenSource.Cancel();
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
     [DataRow("TestContext", "private")]
     [DataRow("TestContext", "internal")]
     [DataRow("testcontext", "private")]

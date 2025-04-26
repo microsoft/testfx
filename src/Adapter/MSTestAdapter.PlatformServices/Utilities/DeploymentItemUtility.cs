@@ -232,7 +232,7 @@ internal sealed class DeploymentItemUtility
 
     private static KeyValuePair<string, string>[]? ToKeyValuePairs(IEnumerable<DeploymentItem> deploymentItemList)
     {
-        if (deploymentItemList == null || !deploymentItemList.Any())
+        if (!deploymentItemList.Any())
         {
             return null;
         }
@@ -252,7 +252,7 @@ internal sealed class DeploymentItemUtility
 
     private static IList<DeploymentItem>? FromKeyValuePairs(KeyValuePair<string, string>[] deploymentItemsData)
     {
-        if (deploymentItemsData == null || deploymentItemsData.Length == 0)
+        if (deploymentItemsData.Length == 0)
         {
             return null;
         }

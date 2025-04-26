@@ -9,8 +9,8 @@ namespace Microsoft.Testing.Framework.SourceGeneration.UnitTests.Helpers;
 
 internal sealed class SourceCodeAssertions : StringAssertions<SourceCodeAssertions>
 {
-    public SourceCodeAssertions(string value)
-        : base(value)
+    public SourceCodeAssertions(string value, AssertionChain assertionChain)
+        : base(value, assertionChain)
     {
     }
 
@@ -38,7 +38,7 @@ internal sealed class SourceCodeAssertions : StringAssertions<SourceCodeAssertio
 
         string actual = Subject.ShowWhitespace();
         string expected = expectedSourceCode.ShowWhitespace();
-        Execute.Assertion
+        CurrentAssertionChain
             .ForCondition(Contains(actual, expected, StringComparison.Ordinal))
             .BecauseOf(because, becauseArgs)
             .FailWith(message, actual, expected);
@@ -70,7 +70,8 @@ internal sealed class SourceCodeAssertions : StringAssertions<SourceCodeAssertio
 
         string actual = Subject.ShowWhitespace();
         string expected = expectedSourceCode.ShowWhitespace();
-        Execute.Assertion
+
+        CurrentAssertionChain
             .ForCondition(string.Equals(actual, expected, StringComparison.Ordinal))
             .BecauseOf(because, becauseArgs)
             .FailWith(message, actual, expected);

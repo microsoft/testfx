@@ -8,23 +8,7 @@ namespace MSTest.SourceGeneration.Helpers;
 // Copy from https://github.com/Sergio0694/ComputeSharp/blob/120aff270539996ef9fc52fe46561d12da0b89d4/src/ComputeSharp.SourceGeneration/Helpers/EquatableArray%7BT%7D.cs
 
 /// <summary>
-/// Extensions for <see cref="EquatableArray{T}"/>.
-/// </summary>
-internal static class EquatableArray
-{
-    /// <summary>
-    /// Creates an <see cref="EquatableArray{T}"/> instance from a given <see cref="ImmutableArray{T}"/>.
-    /// </summary>
-    /// <typeparam name="T">The type of items in the input array.</typeparam>
-    /// <param name="array">The input <see cref="ImmutableArray{T}"/> instance.</param>
-    /// <returns>An <see cref="EquatableArray{T}"/> instance from a given <see cref="ImmutableArray{T}"/>.</returns>
-    public static EquatableArray<T> AsEquatableArray<T>(this ImmutableArray<T> array)
-        where T : IEquatable<T>
-        => new(array);
-}
-
-/// <summary>
-/// An imutable, equatable array. This is equivalent to <see cref="ImmutableArray{T}"/> but with value equality support.
+/// An immutable, equatable array. This is equivalent to <see cref="ImmutableArray{T}"/> but with value equality support.
 /// </summary>
 /// <typeparam name="T">The type of values in the array.</typeparam>
 /// <param name="array">The input <see cref="ImmutableArray{T}"/> to wrap.</param>

@@ -52,9 +52,24 @@ public class TestResult
 
         set
         {
-            field = value;
-            ExceptionMessage = value?.Message;
-            ExceptionStackTrace = value?.StackTrace;
+            if (value is null)
+            {
+                // If the field is already null, we don't need to do anything.
+                // If the field is non-null, it means we are trying to clear an exception, which is something we shouldn't do.
+                // If it happened that we attempted to set it to null after it was non-null, we return and do
+                // nothing. This is better than potentially masking real failures silently.
+                Debug.Assert(field is null, "TestFailureException should not be set to null after it was non-null");
+                return;
+            }
+
+            field = field is null
+                ? value
+                : field is AggregateException aggregateException
+                    ? new AggregateException(aggregateException.InnerExceptions.Concat([value]))
+                    : new AggregateException(field, value);
+
+            ExceptionMessage = field.Message;
+            ExceptionStackTrace = field.StackTrace;
         }
     }
 

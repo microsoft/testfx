@@ -93,7 +93,6 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
             catch (OperationCanceledException ex) when (ex.CancellationToken == _cancellationToken)
             {
                 // We are being canceled, so we don't need to wait anymore
-                return;
             }
             catch (Exception ex)
             {

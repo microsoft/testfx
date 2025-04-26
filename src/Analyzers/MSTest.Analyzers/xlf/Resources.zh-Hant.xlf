@@ -809,6 +809,16 @@ The type declaring these methods should also respect the following rules:
         <target state="translated">使用適當的 'Assert' 方法</target>
         <note />
       </trans-unit>
+      <trans-unit id="UseRetryWithTestMethodMessageFormat">
+        <source>An attribute that derives from 'RetryBaseAttribute' can be specified only on a test method</source>
+        <target state="translated">衍生自 'RetryBaseAttribute' 的屬性只能在測試方法上指定</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseRetryWithTestMethodTitle">
+        <source>Use retry attribute on test method</source>
+        <target state="translated">在測試方法上使用重試屬性</target>
+        <note />
+      </trans-unit>
     </body>
   </file>
 </xliff>

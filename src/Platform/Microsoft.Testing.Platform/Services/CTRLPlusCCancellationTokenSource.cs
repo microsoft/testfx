@@ -29,6 +29,7 @@ internal sealed class CTRLPlusCCancellationTokenSource : ITestApplicationCancell
         => RuntimeInformation.IsOSPlatform(OSPlatform.Create("ANDROID")) ||
             RuntimeInformation.IsOSPlatform(OSPlatform.Create("IOS")) ||
             RuntimeInformation.IsOSPlatform(OSPlatform.Create("TVOS")) ||
+            RuntimeInformation.IsOSPlatform(OSPlatform.Create("WASI")) ||
             RuntimeInformation.IsOSPlatform(OSPlatform.Create("BROWSER"));
 
     public void CancelAfter(TimeSpan timeout) => _cancellationTokenSource.CancelAfter(timeout);

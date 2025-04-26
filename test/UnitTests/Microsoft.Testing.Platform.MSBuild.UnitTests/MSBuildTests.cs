@@ -44,7 +44,7 @@ public sealed class MSBuildTests
 namespace SomeNamespace
 {
     [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
-    internal sealed class TestingPlatformEntryPoint
+    internal sealed class MicrosoftTestingPlatformEntryPoint
     {
         public static async global::System.Threading.Tasks.Task<int> Main(string[] args)
         {
@@ -60,6 +60,7 @@ namespace SomeNamespace
 """;
 
         Assert.AreEqual(expectedSourceOrder, inMemoryFileSystem.Files["obj/entryPointFile"]);
+        Assert.IsEmpty(_errors);
     }
 
     private sealed class InMemoryFileSystem : IFileSystem

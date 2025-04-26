@@ -30,3 +30,7 @@ There are many ways to contribute:
 The MSTest project follows the same rules as the runtime repository [developer guide](https://github.com/dotnet/runtime/blob/main/docs/coding-guidelines/coding-style.md).
 The repository includes [.editorconfig](http://editorconfig.org) files to help enforce this convention.
 Contributors should ensure they follow these guidelines when making submissions.
+
+## Developing
+
+Please see our [Dev Guide](./docs/dev-guide.md) which explains how to develop, build, and test.

@@ -205,6 +205,9 @@ public sealed class TestContextShouldBeValidAnalyzer : DiagnosticAnalyzer
                                     {
                                         // AssociatedSymbol check is to not analyze compiler-generated backing field.
                                         if (fieldSymbol.AssociatedSymbol is not null ||
+                                            // Workaround https://github.com/dotnet/roslyn/issues/70208
+                                            // https://github.com/dotnet/roslyn/blob/05e49aa98995349ffa26a19020333293ffe99670/src/Compilers/CSharp/Portable/Symbols/Synthesized/GeneratedNameKind.cs#L47
+                                            (fieldSymbol.Name.StartsWith('<') && fieldSymbol.Name.EndsWith(">P", StringComparison.Ordinal)) ||
                                             !SymbolEqualityComparer.Default.Equals(fieldSymbol.Type, testContextSymbol))
                                         {
                                             continue;

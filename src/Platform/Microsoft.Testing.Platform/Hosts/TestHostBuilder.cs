@@ -141,9 +141,6 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
         // Check the config file, by default is not specified the policy is false.
         _ = bool.TryParse(configuration[PlatformConfigurationConstants.PlatformExitProcessOnUnhandledException]!, out bool isFileConfiguredToFailFast);
 
-        // In VSTest mode we run inside the testhost where we could have expected unhandled exception, so we don't want to fail fast.
-        bool isVsTestAdapterMode = loggingState.CommandLineParseResult.IsOptionSet(PlatformCommandLineProvider.VSTestAdapterModeOptionKey);
-
         // Check the environment variable, it wins on all the other configuration.
         string? environmentSetting = environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_EXIT_PROCESS_ON_UNHANDLED_EXCEPTION);
         bool? isEnvConfiguredToFailFast = null;
@@ -153,19 +150,12 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
         }
 
         // Environment variable has priority over the config file.
-        // In both case we don't want to fail fast in VSTest mode.
-        bool exitProcessOnUnhandledException = false;
-
-        // If we are in VSTest mode we don't want to fail fast.
-        if (!isVsTestAdapterMode)
-        {
-            // If the environment variable is not set, we check the config file.
-            exitProcessOnUnhandledException = isEnvConfiguredToFailFast is not null ? environmentSetting == "1" : isFileConfiguredToFailFast;
-        }
+        // If the environment variable is not set, we check the config file.
+        bool exitProcessOnUnhandledException = isEnvConfiguredToFailFast is not null ? environmentSetting == "1" : isFileConfiguredToFailFast;
 
         if (logger is not null)
         {
-            await logger.LogInformationAsync($"Setting PlatformExitProcessOnUnhandledException: '{exitProcessOnUnhandledException}', config file: {isFileConfiguredToFailFast} environment variable: {isEnvConfiguredToFailFast} VSTest mode: {isVsTestAdapterMode}");
+            await logger.LogInformationAsync($"Setting PlatformExitProcessOnUnhandledException: '{exitProcessOnUnhandledException}', config file: {isFileConfiguredToFailFast} environment variable: {isEnvConfiguredToFailFast}");
         }
 
         if (exitProcessOnUnhandledException)
@@ -516,9 +506,7 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
 #pragma warning disable SA1118 // Parameter should not span multiple lines
             await LogTestHostCreatedAsync(
                 serviceProvider,
-                mode: loggingState.CommandLineParseResult.IsOptionSet(PlatformCommandLineProvider.VSTestAdapterModeOptionKey)
-                    ? TelemetryProperties.ApplicationMode.VSTestAdapterMode
-                    : TelemetryProperties.ApplicationMode.Console,
+                mode: TelemetryProperties.ApplicationMode.Console,
                 metrics: builderMetrics,
                 stop: systemClock.UtcNow);
 #pragma warning restore SA1118 // Parameter should not span multiple lines

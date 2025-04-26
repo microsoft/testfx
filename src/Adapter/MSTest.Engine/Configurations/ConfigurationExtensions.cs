@@ -11,7 +11,6 @@ public static class ConfigurationExtensions
         => GetConfigurationWrapper(configuration).WrappedConfiguration.GetTestResultDirectory();
 
     private static ConfigurationWrapper GetConfigurationWrapper(IConfiguration configuration)
-        => configuration is not ConfigurationWrapper configurationWrapper
-            ? throw new ArgumentException("Current configuration is not of expected type", nameof(configuration))
-            : configurationWrapper;
+        => configuration as ConfigurationWrapper
+           ?? throw new ArgumentException("Current configuration is not of expected type", nameof(configuration));
 }

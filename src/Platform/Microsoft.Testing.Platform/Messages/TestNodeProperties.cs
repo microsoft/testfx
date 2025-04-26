@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.Testing.Platform.TestHost;
-
 namespace Microsoft.Testing.Platform.Extensions.Messages;
 
 /// <summary>
@@ -316,7 +314,7 @@ public sealed record TestFileLocationProperty(string FilePath, LinePositionSpan 
 /// </summary>
 /// <param name="AssemblyFullName">Assembly full name.</param>
 /// <param name="Namespace">Namespace.</param>
-/// <param name="TypeName">Type name.</param>
+/// <param name="TypeName">Type name in metadata format, not including the namespace. Generics are represented by backtick followed by arity. Nested types are represented by <c>+</c>.</param>
 /// <param name="MethodName">Method name.</param>
 /// <param name="ParameterTypeFullNames">Parameter type full name.</param>
 /// <param name="ReturnTypeFullName">Return type full name.</param>
@@ -377,11 +375,10 @@ public record StandardErrorProperty(string StandardError) : IProperty;
 /// <summary>
 /// Property that represents multiple artifacts/attachments to associate with a test node.
 /// </summary>
-/// <param name="SessionUid">The session UID.</param>
 /// <param name="FileInfo">The file information.</param>
 /// <param name="DisplayName">The display name.</param>
 /// <param name="Description">The description.</param>
-public record FileArtifactProperty(SessionUid SessionUid, FileInfo FileInfo, string DisplayName, string? Description = null) : IProperty;
+public record FileArtifactProperty(FileInfo FileInfo, string DisplayName, string? Description = null) : IProperty;
 
 internal sealed record SerializableKeyValuePairStringProperty(string Key, string Value) : KeyValuePairStringProperty(Key, Value);
 

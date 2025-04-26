@@ -19,7 +19,7 @@ public abstract class DynamicDataTestsBase
         yield return
         [
             "John;Doe",
-            new User()
+            new User
             {
                 FirstName = "John",
                 LastName = "Doe",
@@ -29,7 +29,7 @@ public abstract class DynamicDataTestsBase
         yield return
         [
             "Jane;Doe",
-            new User()
+            new User
             {
                 FirstName = "Jane",
                 LastName = "Doe",
@@ -44,7 +44,7 @@ public abstract class DynamicDataTestsBase
             yield return
             [
                 "John;Doe",
-                new User()
+                new User
                 {
                     FirstName = "John",
                     LastName = "Doe",
@@ -54,7 +54,7 @@ public abstract class DynamicDataTestsBase
             yield return
             [
                 "Jane;Doe",
-                new User()
+                new User
                 {
                     FirstName = "Jane",
                     LastName = "Doe",

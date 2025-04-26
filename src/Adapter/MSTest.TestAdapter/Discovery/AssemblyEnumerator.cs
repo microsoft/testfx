@@ -62,12 +62,10 @@ internal class AssemblyEnumerator : MarshalByRefObject
     /// Enumerates through all types in the assembly in search of valid test methods.
     /// </summary>
     /// <param name="assemblyFileName">The assembly file name.</param>
-    /// <param name="warnings">Contains warnings if any, that need to be passed back to the caller.</param>
     /// <returns>A collection of Test Elements.</returns>
-    internal ICollection<UnitTestElement> EnumerateAssembly(
-        string assemblyFileName,
-        List<string> warnings)
+    internal AssemblyEnumerationResult EnumerateAssembly(string assemblyFileName)
     {
+        List<string> warnings = new();
         DebugEx.Assert(!StringEx.IsNullOrWhiteSpace(assemblyFileName), "Invalid assembly file name.");
         var tests = new List<UnitTestElement>();
         // Contains list of assembly/class names for which we have already added fixture tests.
@@ -117,7 +115,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
             tests.AddRange(testsInType);
         }
 
-        return tests;
+        return new AssemblyEnumerationResult(tests, warnings);
     }
 
     /// <summary>

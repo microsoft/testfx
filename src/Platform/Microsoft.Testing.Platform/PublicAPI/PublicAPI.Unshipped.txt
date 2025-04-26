@@ -1,16 +1,14 @@
 #nullable enable
 Microsoft.Testing.Platform.Extensions.Messages.FileArtifactProperty
-Microsoft.Testing.Platform.Extensions.Messages.FileArtifactProperty.Deconstruct(out Microsoft.Testing.Platform.TestHost.SessionUid SessionUid, out System.IO.FileInfo! FileInfo, out string! DisplayName, out string? Description) -> void
+Microsoft.Testing.Platform.Extensions.Messages.FileArtifactProperty.Deconstruct(out System.IO.FileInfo! FileInfo, out string! DisplayName, out string? Description) -> void
 Microsoft.Testing.Platform.Extensions.Messages.FileArtifactProperty.Description.get -> string?
 Microsoft.Testing.Platform.Extensions.Messages.FileArtifactProperty.Description.init -> void
 Microsoft.Testing.Platform.Extensions.Messages.FileArtifactProperty.DisplayName.get -> string!
 Microsoft.Testing.Platform.Extensions.Messages.FileArtifactProperty.DisplayName.init -> void
+Microsoft.Testing.Platform.Extensions.Messages.FileArtifactProperty.FileArtifactProperty(Microsoft.Testing.Platform.Extensions.Messages.FileArtifactProperty! original) -> void
+Microsoft.Testing.Platform.Extensions.Messages.FileArtifactProperty.FileArtifactProperty(System.IO.FileInfo! FileInfo, string! DisplayName, string? Description = null) -> void
 Microsoft.Testing.Platform.Extensions.Messages.FileArtifactProperty.FileInfo.get -> System.IO.FileInfo!
 Microsoft.Testing.Platform.Extensions.Messages.FileArtifactProperty.FileInfo.init -> void
-Microsoft.Testing.Platform.Extensions.Messages.FileArtifactProperty.SessionUid.get -> Microsoft.Testing.Platform.TestHost.SessionUid
-Microsoft.Testing.Platform.Extensions.Messages.FileArtifactProperty.SessionUid.init -> void
-Microsoft.Testing.Platform.Extensions.Messages.FileArtifactProperty.FileArtifactProperty(Microsoft.Testing.Platform.Extensions.Messages.FileArtifactProperty! original) -> void
-Microsoft.Testing.Platform.Extensions.Messages.FileArtifactProperty.FileArtifactProperty(Microsoft.Testing.Platform.TestHost.SessionUid SessionUid, System.IO.FileInfo! FileInfo, string! DisplayName, string? Description = null) -> void
 override Microsoft.Testing.Platform.Extensions.Messages.FileArtifactProperty.Equals(object? obj) -> bool
 override Microsoft.Testing.Platform.Extensions.Messages.FileArtifactProperty.GetHashCode() -> int
 override Microsoft.Testing.Platform.Extensions.Messages.FileArtifactProperty.ToString() -> string!

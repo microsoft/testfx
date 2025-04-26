@@ -41,7 +41,7 @@ internal sealed class PlatformOutputDeviceManager
     }
 
     public static IPlatformOutputDevice GetDefaultTerminalOutputDevice(ServiceProvider serviceProvider)
-        => RuntimeInformation.IsOSPlatform(OSPlatform.Create("BROWSER"))
+        => RuntimeInformation.IsOSPlatform(OSPlatform.Create("BROWSER")) || RuntimeInformation.IsOSPlatform(OSPlatform.Create("WASI"))
             ? new BrowserOutputDevice(
                 serviceProvider.GetConsole(),
                 serviceProvider.GetTestApplicationModuleInfo(),

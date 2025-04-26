@@ -1194,5 +1194,23 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("UseProperAssertMethodsTitle", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to An attribute that derives from &apos;RetryBaseAttribute&apos; can be specified only on a test method.
+        /// </summary>
+        internal static string UseRetryWithTestMethodMessageFormat {
+            get {
+                return ResourceManager.GetString("UseRetryWithTestMethodMessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Use retry attribute on test method.
+        /// </summary>
+        internal static string UseRetryWithTestMethodTitle {
+            get {
+                return ResourceManager.GetString("UseRetryWithTestMethodTitle", resourceCulture);
+            }
+        }
     }
 }

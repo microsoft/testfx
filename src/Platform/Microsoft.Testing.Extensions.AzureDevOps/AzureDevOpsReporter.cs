@@ -99,8 +99,6 @@ internal sealed class AzureDevOpsReporter :
                 await WriteExceptionAsync(timeout.Explanation, timeout.Exception);
                 break;
         }
-
-        return;
     }
 
     private async Task WriteExceptionAsync(string? explanation, Exception? exception)
@@ -118,23 +116,19 @@ internal sealed class AzureDevOpsReporter :
         }
 
         string stackTrace = exception.StackTrace;
-        int index = stackTrace.IndexOfAny(NewlineCharacters);
-        string firstLine = index == -1 ? stackTrace : stackTrace.Substring(0, index);
-        if (firstLine != null)
+        string[] lines = stackTrace.Split(NewlineCharacters, StringSplitOptions.RemoveEmptyEntries);
+        (string Code, string File, int LineNumber)? location = lines.Select(GetStackFrameLocation).FirstOrDefault(location => location is not null);
+        if (location != null)
         {
-            (string Code, string File, int LineNumber)? location = GetStackFrameLocation(firstLine);
-            if (location != null)
-            {
-                string root = RootFinder.Find();
-                string file = location.Value.File;
-                string relativePath = file.StartsWith(root, StringComparison.CurrentCultureIgnoreCase) ? file.Substring(root.Length) : file;
-                string relativeNormalizedPath = relativePath.Replace('\\', '/');
+            string root = RootFinder.Find();
+            string file = location.Value.File;
+            string relativePath = file.StartsWith(root, StringComparison.CurrentCultureIgnoreCase) ? file.Substring(root.Length) : file;
+            string relativeNormalizedPath = relativePath.Replace('\\', '/');
 
-                string err = AzDoEscaper.Escape(message);
+            string err = AzDoEscaper.Escape(message);
 
-                string line = $"##vso[task.logissue type={_severity};sourcepath={relativeNormalizedPath};linenumber={location.Value.LineNumber};columnnumber=1]{err}";
-                await _outputDisplay.DisplayAsync(this, new FormattedTextOutputDeviceData(line));
-            }
+            string line = $"##vso[task.logissue type={_severity};sourcepath={relativeNormalizedPath};linenumber={location.Value.LineNumber};columnnumber=1]{err}";
+            await _outputDisplay.DisplayAsync(this, new FormattedTextOutputDeviceData(line));
         }
     }
 
@@ -146,19 +140,21 @@ internal sealed class AzureDevOpsReporter :
             return null;
         }
 
-        bool weHaveFilePathAndCodeLine = !RoslynString.IsNullOrWhiteSpace(match.Groups["code"].Value);
+        string code = match.Groups["code"].Value;
+        bool weHaveFilePathAndCodeLine = !RoslynString.IsNullOrWhiteSpace(code);
         if (!weHaveFilePathAndCodeLine)
         {
             return null;
         }
 
-        if (RoslynString.IsNullOrWhiteSpace(match.Groups["file"].Value))
+        string file = match.Groups["file"].Value;
+        if (RoslynString.IsNullOrWhiteSpace(file) || !File.Exists(file))
         {
             return null;
         }
 
         int line = int.TryParse(match.Groups["line"].Value, out int value) ? value : 0;
 
-        return (match.Groups["code"].Value, match.Groups["file"].Value, line);
+        return (code, file, line);
     }
 }

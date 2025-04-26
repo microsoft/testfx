@@ -579,7 +579,7 @@ public class TestExecutionManager
             // If there were only fixture tests, send an inconclusive result.
             if (!hasAnyRunnableTests)
             {
-                var result = new TestTools.UnitTesting.TestResult()
+                var result = new TestTools.UnitTesting.TestResult
                 {
                     Outcome = TestTools.UnitTesting.UnitTestOutcome.Inconclusive,
                 };
@@ -594,7 +594,7 @@ public class TestExecutionManager
 
             if (fixtureTestResult.IsExecuted)
             {
-                var result = new TestTools.UnitTesting.TestResult()
+                var result = new TestTools.UnitTesting.TestResult
                 {
                     Outcome = fixtureTestResult.Outcome,
                 };

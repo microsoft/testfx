@@ -6,7 +6,7 @@ namespace Microsoft.Testing.Framework.SourceGeneration.Helpers;
 internal static class TestNodeHelpers
 {
     public static string GenerateEscapedName(string name)
-        => name.Replace(".", "_");
+        => name.Replace('.', '_');
 
     public static DisposableAction AppendTestNode(this IndentedStringBuilder nodeStringBuilder, string stableUid, string displayName,
         ICollection<string> properties, char testNodeBlockSuffixChar = ',')

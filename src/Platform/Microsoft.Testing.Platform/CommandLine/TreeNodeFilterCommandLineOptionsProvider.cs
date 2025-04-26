@@ -3,7 +3,6 @@
 
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.CommandLine;
-using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Resources;
 
 namespace Microsoft.Testing.Platform.CommandLine;
@@ -16,7 +15,7 @@ internal sealed class TreeNodeFilterCommandLineOptionsProvider(IExtension extens
     public string Uid { get; } = extension.Uid;
 
     /// <inheritdoc />
-    public string Version { get; } = AppVersion.DefaultSemVer;
+    public string Version { get; } = extension.Version;
 
     /// <inheritdoc />
     public string DisplayName { get; } = extension.DisplayName;

@@ -107,19 +107,7 @@ internal static class MethodInfoExtensions
         return asyncStateMachineAttribute?.StateMachineType?.FullName;
     }
 
-    /// <summary>
-    /// Invoke a <see cref="MethodInfo"/> as a synchronous <see cref="Task"/>.
-    /// </summary>
-    /// <param name="methodInfo">
-    /// <see cref="MethodInfo"/> instance.
-    /// </param>
-    /// <param name="classInstance">
-    /// Instance of the on which methodInfo is invoked.
-    /// </param>
-    /// <param name="arguments">
-    /// Arguments for the methodInfo invoke.
-    /// </param>
-    internal static void InvokeAsSynchronousTask(this MethodInfo methodInfo, object? classInstance, params object?[]? arguments)
+    internal static object? GetInvokeResult(this MethodInfo methodInfo, object? classInstance, params object?[]? arguments)
     {
         ParameterInfo[]? methodParameters = methodInfo.GetParameters();
 
@@ -184,6 +172,25 @@ internal static class MethodInfoExtensions
             }
         }
 
+        return invokeResult;
+    }
+
+    /// <summary>
+    /// Invoke a <see cref="MethodInfo"/> as a synchronous <see cref="Task"/>.
+    /// </summary>
+    /// <param name="methodInfo">
+    /// <see cref="MethodInfo"/> instance.
+    /// </param>
+    /// <param name="classInstance">
+    /// Instance of the on which methodInfo is invoked.
+    /// </param>
+    /// <param name="arguments">
+    /// Arguments for the methodInfo invoke.
+    /// </param>
+    internal static void InvokeAsSynchronousTask(this MethodInfo methodInfo, object? classInstance, params object?[]? arguments)
+    {
+        object? invokeResult = methodInfo.GetInvokeResult(classInstance, arguments);
+
         // If methodInfo is an async method, wait for returned task
         if (invokeResult is Task task)
         {
@@ -217,7 +224,6 @@ internal static class MethodInfoExtensions
             // For example, if parameterType is `T[]` and argumentType is `string[]`, we need to infer that `T` is `string`.
             // So, we call InferGenerics with `T` and `string`.
             InferGenerics(parameterTypeElementType, argumentTypeElementType, result);
-            return;
         }
         else if (parameterType.GenericTypeArguments.Length == argumentType.GenericTypeArguments.Length)
         {

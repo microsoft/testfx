@@ -115,7 +115,6 @@ public sealed class AppInsightsProviderTests
             {
                 // Timeout for more than 3 seconds
                 Thread.Sleep(10_000);
-                return;
             }
         });
 

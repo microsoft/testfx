@@ -12,7 +12,7 @@ public class DataProvider
         yield return
         [
             "John;Doe",
-            new User()
+            new User
             {
                 FirstName = "John",
                 LastName = "Doe",
@@ -22,7 +22,7 @@ public class DataProvider
         yield return
         [
             "Jane;Doe",
-            new User()
+            new User
             {
                 FirstName = "Jane",
                 LastName = "Doe",
@@ -37,7 +37,7 @@ public class DataProvider
             yield return
             [
                 "John;Doe",
-                new User()
+                new User
                 {
                     FirstName = "John",
                     LastName = "Doe",
@@ -47,7 +47,7 @@ public class DataProvider
             yield return
             [
                 "Jane;Doe",
-                new User()
+                new User
                 {
                     FirstName = "Jane",
                     LastName = "Doe",

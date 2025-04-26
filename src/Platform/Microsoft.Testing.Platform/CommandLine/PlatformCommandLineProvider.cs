@@ -19,7 +19,6 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
     public const string DiagnosticOutputDirectoryOptionKey = "diagnostic-output-directory";
     public const string DiagnosticVerbosityOptionKey = "diagnostic-verbosity";
     public const string DiagnosticFileLoggerSynchronousWriteOptionKey = "diagnostic-filelogger-synchronouswrite";
-    public const string VSTestAdapterModeOptionKey = "internal-vstest-adapter";
     public const string NoBannerOptionKey = "no-banner";
     public const string SkipBuildersNumberCheckOptionKey = "internal-testingplatform-skipbuildercheck";
     public const string DiscoverTestsOptionKey = "list-tests";
@@ -65,7 +64,6 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
         new(ClientPortOptionKey, PlatformResources.PlatformCommandLineClientPortOptionDescription, ArgumentArity.ExactlyOne, true, isBuiltIn: true),
         new(ClientHostOptionKey, PlatformResources.PlatformCommandLineClientHostOptionDescription, ArgumentArity.ExactlyOne, true, isBuiltIn: true),
         new(SkipBuildersNumberCheckOptionKey, PlatformResources.PlatformCommandLineSkipBuildersNumberCheckOptionDescription, ArgumentArity.Zero, true, isBuiltIn: true),
-        new(VSTestAdapterModeOptionKey, PlatformResources.PlatformCommandLineVSTestAdapterModeOptionDescription, ArgumentArity.Zero, true, isBuiltIn: true),
         new(NoBannerOptionKey, PlatformResources.PlatformCommandLineNoBannerOptionDescription, ArgumentArity.ZeroOrOne, true, isBuiltIn: true),
         new(TestHostControllerPIDOptionKey, PlatformResources.PlatformCommandLineTestHostControllerPIDOptionDescription, ArgumentArity.ZeroOrOne, true, isBuiltIn: true),
         new(DotNetTestPipeOptionKey, PlatformResources.PlatformCommandLineDotnetTestPipe, ArgumentArity.ExactlyOne, true, isBuiltIn: true)

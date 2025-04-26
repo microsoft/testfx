@@ -633,11 +633,6 @@ Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is
 Pobiera jeden argument jako ciąg w formacie &lt;value&gt;[h|m|s], gdzie element „value” ma wartość zmiennoprzecinkową.</target>
         <note />
       </trans-unit>
-      <trans-unit id="PlatformCommandLineVSTestAdapterModeOptionDescription">
-        <source>Bridge to VSTest APIs</source>
-        <target state="translated">Mostek do interfejsów API narzędzia VSTest</target>
-        <note />
-      </trans-unit>
       <trans-unit id="ProcessHasNotYetExitedErrorMessage">
         <source>Process should have exited before we can determine this value</source>
         <target state="translated">Proces powinien zakończyć się przed ustaleniem tej wartości</target>

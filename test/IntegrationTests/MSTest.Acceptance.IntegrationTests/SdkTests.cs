@@ -34,7 +34,7 @@ public sealed class SdkTests : AcceptanceTestBase<SdkTests.TestAssetFixture>
 </Project>
 
 #file dotnet.config
-[dotnet.test:runner]
+[dotnet.test.runner]
 name= "VSTest"
 
 #file UnitTest1.cs
@@ -468,7 +468,7 @@ namespace MSTestSdkTest
 </Project>
 
 #file dotnet.config
-[dotnet.test:runner]
+[dotnet.test.runner]
 name= "VSTest"
 
 #file UnitTest1.cs
@@ -535,7 +535,7 @@ public class UnitTest1 : PageTest
 }
 
 #file dotnet.config
-[dotnet.test:runner]
+[dotnet.test.runner]
 name= "VSTest"
 """;
 

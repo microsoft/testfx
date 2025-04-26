@@ -432,9 +432,6 @@ The default is TestResults in the directory that contains the test application.<
   <data name="PlatformCommandLineDotnetTestPipe" xml:space="preserve">
     <value>dotnet test pipe.</value>
   </data>
-  <data name="PlatformCommandLineVSTestAdapterModeOptionDescription" xml:space="preserve">
-    <value>Bridge to VSTest APIs</value>
-  </data>
   <data name="TreeNodeFilterDescription" xml:space="preserve">
     <value>Use a tree filter to filter down the tests to execute</value>
   </data>

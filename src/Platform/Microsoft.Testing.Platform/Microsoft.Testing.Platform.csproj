@@ -85,6 +85,7 @@ This package provides the core platform and the .NET implementation of the proto
     <SupportedPlatform Include="ios" />
     <SupportedPlatform Include="browser" />
     <SupportedPlatform Include="tvos" />
+    <SupportedPlatform Include="wasi" />
   </ItemGroup>
 
   <!-- Version templating -->

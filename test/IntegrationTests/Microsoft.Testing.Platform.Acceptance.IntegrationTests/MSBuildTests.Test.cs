@@ -115,7 +115,7 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
         var commandLine = new TestInfrastructure.CommandLine();
         string binlogFile = Path.Combine(TempDirectory.TestSuiteDirectory, $"{nameof(RunUsingTestTargetWithNetfxMSBuild)}.binlog");
         await commandLine.RunAsync($"\"{msbuildExe}\" {testAsset.TargetAssetPath} /t:Restore");
-        await commandLine.RunAsync($"\"{msbuildExe}\" {testAsset.TargetAssetPath} /t:\"Build;Test\" /bl:\"{binlogFile}\"", environmentVariables: new Dictionary<string, string?>()
+        await commandLine.RunAsync($"\"{msbuildExe}\" {testAsset.TargetAssetPath} /t:\"Build;Test\" /bl:\"{binlogFile}\"", environmentVariables: new Dictionary<string, string?>
         {
             ["DOTNET_ROOT"] = Path.Combine(RootFinder.Find(), ".dotnet"),
         });
@@ -336,7 +336,7 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
 </Project>
 
 #file dotnet.config
-[dotnet.test:runner]
+[dotnet.test.runner]
 name= "VSTest"
 
 #file Program.cs

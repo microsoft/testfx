@@ -26,7 +26,7 @@ public sealed class RetryTests : AcceptanceTestBase<RetryTests.TestAssetFixture>
             """);
 
         testHostResult.AssertOutputContains("failed TestMethod5");
-        testHostResult.AssertOutputContains("Assert.Fail failed. Failing TestMethod4. Attempts: 4");
+        testHostResult.AssertOutputContains("Assert.Fail failed. Failing TestMethod4. Attempts: 4 (from TestContext: 4)");
         testHostResult.AssertOutputContainsSummary(failed: 1, passed: 4, skipped: 0);
     }
 
@@ -80,6 +80,8 @@ public class UnitTest1
     private static int _count4;
     private static int _count5;
 
+    public TestContext TestContext { get; set; }
+
     [TestMethod]
     [Retry(3)]
     public void TestMethod1()
@@ -121,7 +123,7 @@ public class UnitTest1
     {
         _count5++;
         // This will fail TestMethod5 four times. The end result is failure of this test.
-        Assert.Fail($"Failing TestMethod4. Attempts: {_count5}");
+        Assert.Fail($"Failing TestMethod4. Attempts: {_count5} (from TestContext: {TestContext.TestRunCount})");
     }
 
     [ClassCleanup]

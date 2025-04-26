@@ -482,7 +482,7 @@ internal sealed partial class TrxReportEngine
             var output = new XElement("Output");
 
             TrxMessagesProperty? trxMessages = testNode.Properties.SingleOrDefault<TrxMessagesProperty>();
-            IEnumerable<string?>? nonErrorMessages = trxMessages?.Messages.Where(x => x is not StandardErrorTrxMessage).Select(x => x.Message);
+            IEnumerable<string?>? nonErrorMessages = trxMessages?.Messages.Where(x => x is not StandardErrorTrxMessage and not DebugOrTraceTrxMessage).Select(x => x.Message);
             if (nonErrorMessages?.Any() == true)
             {
                 output.Add(new XElement("StdOut", RemoveInvalidXmlChar(string.Join(Environment.NewLine, nonErrorMessages))));
@@ -492,6 +492,12 @@ internal sealed partial class TrxReportEngine
             if (errorMessages?.Any() == true)
             {
                 output.Add(new XElement("StdErr", RemoveInvalidXmlChar(string.Join(Environment.NewLine, errorMessages))));
+            }
+
+            IEnumerable<string?>? debugOrTraceMessages = trxMessages?.Messages.Where(x => x is DebugOrTraceTrxMessage).Select(x => x.Message);
+            if (debugOrTraceMessages?.Any() == true)
+            {
+                output.Add(new XElement("DebugTrace", RemoveInvalidXmlChar(string.Join(Environment.NewLine, debugOrTraceMessages))));
             }
 
             TrxExceptionProperty? trxException = testNode.Properties.SingleOrDefault<TrxExceptionProperty>();

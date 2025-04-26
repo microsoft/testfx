@@ -6,7 +6,6 @@ using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Hosts;
 using Microsoft.Testing.Platform.Logging;
-using Microsoft.Testing.Platform.Resources;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.TestHostControllers;
 
@@ -95,14 +94,6 @@ public sealed class TestApplication : ITestApplication
             ILogger logger = loggingState.FileLoggerProvider.CreateLogger(typeof(TestApplication).ToString());
             s_unhandledExceptionHandler.SetLogger(logger);
             await LogInformationAsync(logger, testApplicationModuleInfo, testHostControllerInfo, systemProcess, systemEnvironment, createBuilderEntryTime, loggingState.IsSynchronousWrite, loggingState.LogLevel, args);
-        }
-
-        // In VSTest mode bridge we need to ensure that we're using 1 test app per process, we cannot guarantee the correct working otherwise.
-        if (loggingState.CommandLineParseResult.IsOptionSet(PlatformCommandLineProvider.VSTestAdapterModeOptionKey) &&
-            Interlocked.Increment(ref s_numberOfBuilders) > MaxNumberOfBuilders &&
-            !loggingState.CommandLineParseResult.IsOptionSet(PlatformCommandLineProvider.SkipBuildersNumberCheckOptionKey))
-        {
-            throw new InvalidOperationException(PlatformResources.TestApplicationVSTestModeTooManyBuilders);
         }
 
         // All checks are fine, create the TestApplication.

@@ -9,9 +9,9 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// <remarks>
 /// Test classes must be:
 /// <list type="bullet">
-/// <item>public, or if <see cref="DiscoverInternalsAttribute"/> is used then it can be internal.</item>
-/// <item>not static</item>
-/// <item>not generic</item>
+/// <item><description>public, or if <see cref="DiscoverInternalsAttribute"/> is used then it can be internal.</description></item>
+/// <item><description>not static</description></item>
+/// <item><description>not generic</description></item>
 /// </list>
 /// </remarks>
 [AttributeUsage(AttributeTargets.Class, Inherited = false)]

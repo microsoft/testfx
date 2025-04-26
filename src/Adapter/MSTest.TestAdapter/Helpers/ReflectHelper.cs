@@ -22,10 +22,6 @@ internal class ReflectHelper : MarshalByRefObject
     private readonly ConcurrentDictionary<ICustomAttributeProvider, Attribute[]> _inheritedAttributeCache = [];
     private readonly ConcurrentDictionary<ICustomAttributeProvider, Attribute[]> _nonInheritedAttributeCache = [];
 
-    internal /* for tests only, because of Moq */ ReflectHelper()
-    {
-    }
-
     public static ReflectHelper Instance => InstanceValue.Value;
 
     /// <summary>

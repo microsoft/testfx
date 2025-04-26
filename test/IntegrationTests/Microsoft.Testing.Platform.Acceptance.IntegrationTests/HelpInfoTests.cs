@@ -204,10 +204,6 @@ Built-in command line providers:
         Arity: 0
         Hidden: True
         Description: For testing purposes
-      --internal-vstest-adapter
-        Arity: 0
-        Hidden: True
-        Description: Bridge to VSTest APIs
       --list-tests
         Arity: 0
         Hidden: False
@@ -470,10 +466,6 @@ Built-in command line providers:
         Arity: 0
         Hidden: True
         Description: For testing purposes
-      --internal-vstest-adapter
-        Arity: 0
-        Hidden: True
-        Description: Bridge to VSTest APIs
       --list-tests
         Arity: 0
         Hidden: False

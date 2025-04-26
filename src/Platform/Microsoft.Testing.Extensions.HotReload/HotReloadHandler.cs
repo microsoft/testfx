@@ -51,6 +51,7 @@ internal sealed class HotReloadHandler
         => RuntimeInformation.IsOSPlatform(OSPlatform.Create("ANDROID")) ||
             RuntimeInformation.IsOSPlatform(OSPlatform.Create("IOS")) ||
             RuntimeInformation.IsOSPlatform(OSPlatform.Create("TVOS")) ||
+            RuntimeInformation.IsOSPlatform(OSPlatform.Create("WASI")) ||
             RuntimeInformation.IsOSPlatform(OSPlatform.Create("BROWSER"));
 
     // Called automatically by the runtime through the MetadataUpdateHandlerAttribute

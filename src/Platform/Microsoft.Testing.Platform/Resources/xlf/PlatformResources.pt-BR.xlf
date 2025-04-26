@@ -633,11 +633,6 @@ Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is
 Recebe um argumento como cadeia de caracteres no formato &lt;valor&gt;[h|m|s] em que 'valor' é float.</target>
         <note />
       </trans-unit>
-      <trans-unit id="PlatformCommandLineVSTestAdapterModeOptionDescription">
-        <source>Bridge to VSTest APIs</source>
-        <target state="translated">Ponte para APIs vsTest</target>
-        <note />
-      </trans-unit>
       <trans-unit id="ProcessHasNotYetExitedErrorMessage">
         <source>Process should have exited before we can determine this value</source>
         <target state="translated">O processo deve ter sido encerrado antes que possamos determinar esse valor</target>

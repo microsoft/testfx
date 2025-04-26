@@ -81,41 +81,6 @@ internal static partial class UnicodeCharacterUtilities
             || IsFormattingChar(cat);
     }
 
-    /// <summary>
-    /// Check that the name is a valid Unicode identifier.
-    /// </summary>
-    public static bool IsValidIdentifier(string? name)
-    {
-        if (string.IsNullOrEmpty(name))
-        {
-            return false;
-        }
-
-        if (!IsIdentifierStartCharacter(name![0]))
-        {
-            return false;
-        }
-
-        int nameLength = name.Length;
-        for (int i = 1; i < nameLength; i++) // NB: start at 1
-        {
-            if (!IsIdentifierPartCharacter(name[i]))
-            {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    /// <summary>
-    /// Returns true if the Unicode character is a formatting character (Unicode class Cf).
-    /// </summary>
-    /// <param name="ch">The Unicode character.</param>
-    internal static bool IsFormattingChar(char ch)
-        // There are no FormattingChars in ASCII range
-        => ch > 127 && IsFormattingChar(CharUnicodeInfo.GetUnicodeCategory(ch));
-
     private static bool IsLetterChar(UnicodeCategory cat)
         // letter-character:
         //   A Unicode character of classes Lu, Ll, Lt, Lm, Lo, or Nl

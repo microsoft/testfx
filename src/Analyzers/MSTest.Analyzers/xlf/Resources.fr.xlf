@@ -809,6 +809,16 @@ Le type doit être une classe
         <target state="translated">Utiliser les méthodes 'Assert' appropriées</target>
         <note />
       </trans-unit>
+      <trans-unit id="UseRetryWithTestMethodMessageFormat">
+        <source>An attribute that derives from 'RetryBaseAttribute' can be specified only on a test method</source>
+        <target state="translated">Vous ne pouvez spécifier un attribut dérivant de « RetryBaseAttribute » que sur une méthode de test</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseRetryWithTestMethodTitle">
+        <source>Use retry attribute on test method</source>
+        <target state="translated">Utilisez l’attribut de nouvelle tentative sur la méthode de test</target>
+        <note />
+      </trans-unit>
     </body>
   </file>
 </xliff>

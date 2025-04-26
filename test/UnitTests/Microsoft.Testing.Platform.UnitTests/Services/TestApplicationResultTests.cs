@@ -190,7 +190,7 @@ public sealed class TestApplicationResultTests
     [DataRow(null, ExitCodes.ZeroTests)]
     [DataRow("", ExitCodes.ZeroTests)]
     [TestMethod]
-    public void GetProcessExitCodeAsync_IgnoreExitCodes(string argument, int expectedExitCode)
+    public void GetProcessExitCodeAsync_IgnoreExitCodes(string? argument, int expectedExitCode)
     {
         Mock<IEnvironment> environment = new();
         environment.Setup(x => x.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_EXITCODE_IGNORE)).Returns(argument);

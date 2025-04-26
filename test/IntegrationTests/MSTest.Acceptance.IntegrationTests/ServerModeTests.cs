@@ -23,7 +23,7 @@ public sealed class ServerModeTests : ServerModeTestsBase<ServerModeTests.TestAs
 
         InitializeResponse initializeResponseArgs = await jsonClient.Initialize();
 
-        Assert.IsTrue(initializeResponseArgs.Capabilities.Testing.VSTestProvider);
+        Assert.IsFalse(initializeResponseArgs.Capabilities.Testing.VSTestProvider);
         Assert.IsFalse(initializeResponseArgs.Capabilities.Testing.MultiRequestSupport);
         Assert.IsTrue(initializeResponseArgs.Capabilities.Testing.SupportsDiscovery);
 

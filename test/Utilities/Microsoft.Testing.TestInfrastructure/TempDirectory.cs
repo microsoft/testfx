@@ -151,10 +151,10 @@ public class TempDirectory : IDisposable
     [Obsolete("Don't use directly. Use RepoRoot property instead.")]
     private static string GetRepoRoot()
     {
-        string currentDirectory = AppContext.BaseDirectory;
+        string? currentDirectory = AppContext.BaseDirectory;
         while (System.IO.Path.GetFileName(currentDirectory) != "artifacts" && currentDirectory is not null)
         {
-            currentDirectory = System.IO.Path.GetDirectoryName(currentDirectory)!;
+            currentDirectory = System.IO.Path.GetDirectoryName(currentDirectory);
         }
 
         return System.IO.Path.GetDirectoryName(currentDirectory)
@@ -228,58 +228,5 @@ public class TempDirectory : IDisposable
         return (directoryPath, finalDirectory);
     }
 
-    public void Add(string fileContents)
-    {
-        List<InlineFile> files = InlineFileParser.ParseFiles(fileContents);
-        foreach (InlineFile file in files)
-        {
-            File.WriteAllText(System.IO.Path.Combine(Path, file.Name), file.Content, Encoding.UTF8);
-        }
-    }
-
     public override string ToString() => Path;
-
-    internal sealed class InlineFile(string name, string content)
-    {
-        public string Name { get; } = name;
-
-        public string Content { get; } = content;
-    }
-
-    internal static class InlineFileParser
-    {
-        internal static List<InlineFile> ParseFiles(string fileContents)
-        {
-            List<InlineFile> files = new();
-            string? name = null;
-            bool inFile = false;
-            List<string> lines = new();
-            foreach (string line in fileContents.Split('\n'))
-            {
-                if (line.Trim().StartsWith("### ", StringComparison.InvariantCulture))
-                {
-                    if (inFile)
-                    {
-                        files.Add(new InlineFile(name!, string.Join(Environment.NewLine, lines)));
-                        inFile = false;
-                        name = null;
-                        lines.Clear();
-                    }
-
-                    inFile = true;
-                    name = line.Trim().TrimStart('#').Trim();
-                    continue;
-                }
-
-                lines.Add(line);
-            }
-
-            if (inFile)
-            {
-                files.Add(new InlineFile(name!, string.Join(Environment.NewLine, lines)));
-            }
-
-            return files;
-        }
-    }
 }

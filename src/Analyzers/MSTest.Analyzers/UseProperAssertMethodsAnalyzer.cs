@@ -22,16 +22,24 @@ namespace MSTest.Analyzers;
 /// The analyzer captures the following cases:
 /// <list type="bullet">
 /// <item>
+/// <description>
 /// <code>Assert.[IsTrue|IsFalse](x [==|!=|is|is not] null)</code>
+/// </description>
 /// </item>
 /// <item>
+/// <description>
 /// <code>Assert.[IsTrue|IsFalse](x [==|!=] y)</code>
+/// </description>
 /// </item>
 /// <item>
+/// <description>
 /// <code>Assert.AreEqual([true|false], x)</code>
+/// </description>
 /// </item>
 /// <item>
+/// <description>
 /// <code>Assert.[AreEqual|AreNotEqual](null, x)</code>
+/// </description>
 /// </item>
 /// </list>
 /// </remarks>
@@ -338,7 +346,6 @@ internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
                 properties: properties.ToImmutable(),
                 properAssertMethod,
                 isTrueInvocation ? "IsTrue" : "IsFalse"));
-            return;
         }
     }
 

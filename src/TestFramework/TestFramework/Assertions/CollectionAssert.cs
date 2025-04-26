@@ -1642,7 +1642,6 @@ public sealed class CollectionAssert
                 {
                     stack.Push(new(expectedEnum, actualEnum, position + 1));
                     stack.Push(new(curExpectedEnum.GetEnumerator(), curActualEnum.GetEnumerator(), 0));
-                    continue;
                 }
                 else if (comparer.Compare(curExpected, curActual) != 0)
                 {

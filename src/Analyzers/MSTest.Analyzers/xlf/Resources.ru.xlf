@@ -821,6 +821,16 @@ The type declaring these methods should also respect the following rules:
         <target state="translated">Используйте правильные методы "Assert"</target>
         <note />
       </trans-unit>
+      <trans-unit id="UseRetryWithTestMethodMessageFormat">
+        <source>An attribute that derives from 'RetryBaseAttribute' can be specified only on a test method</source>
+        <target state="translated">Атрибут, производный от "RetryBaseAttribute", может быть указан только в тестовом методе</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseRetryWithTestMethodTitle">
+        <source>Use retry attribute on test method</source>
+        <target state="translated">Использовать атрибут retry в тестовом методе</target>
+        <note />
+      </trans-unit>
     </body>
   </file>
 </xliff>

@@ -809,6 +809,16 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
         <target state="translated">Použít správné metody Assert</target>
         <note />
       </trans-unit>
+      <trans-unit id="UseRetryWithTestMethodMessageFormat">
+        <source>An attribute that derives from 'RetryBaseAttribute' can be specified only on a test method</source>
+        <target state="translated">Atribut, který je odvozen od retryBaseAttribute, lze zadat pouze v testovací metodě.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseRetryWithTestMethodTitle">
+        <source>Use retry attribute on test method</source>
+        <target state="translated">Použití atributu opakování u testovací metody</target>
+        <note />
+      </trans-unit>
     </body>
   </file>
 </xliff>

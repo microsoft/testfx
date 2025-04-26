@@ -55,6 +55,17 @@ public sealed class TestContextTests : AcceptanceTestBase<TestContextTests.TestA
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 4, skipped: 0);
     }
 
+    [TestMethod]
+    public async Task TestContext_Properties_ConsidersClassTypeCorrectly()
+    {
+        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent);
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--filter ClassName~TestContextTestPropertyImpl");
+
+        // Assert
+        testHostResult.AssertExitCodeIs(0);
+        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
+    }
+
     public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
     {
         public const string ProjectName = "TestTestContext";
@@ -385,6 +396,31 @@ public class TestContextDisplayName
         {
             yield return new object[] { true };
         }
+    }
+}
+
+[TestClass]
+public abstract class TestContextTestPropertyBase
+{
+    private readonly TestContext _testContext;
+
+    protected TestContextTestPropertyBase(TestContext testContext)
+        => _testContext = testContext;
+
+    [TestMethod]
+    public void TestMethod()
+    {
+        var value = (string)_testContext.Properties["MyProp"];
+        Assert.AreEqual("MyValue", value);
+    }
+}
+
+[TestClass]
+[TestProperty("MyProp", "MyValue")]
+public class TestContextTestPropertyImpl : TestContextTestPropertyBase
+{
+    public TestContextTestPropertyImpl(TestContext testContext) : base(testContext)
+    {
     }
 }
 """;
