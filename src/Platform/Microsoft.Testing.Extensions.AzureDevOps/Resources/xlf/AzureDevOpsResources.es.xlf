@@ -4,7 +4,7 @@
     <body>
       <trans-unit id="AzureDevOpsReportSeverityRequiresAzureDevOps">
         <source>'--report-azdo-severity' requires '--report-azdo' to be enabled</source>
-        <target state="new">'--report-azdo-severity' requires '--report-azdo' to be enabled</target>
+        <target state="translated">"--report-azdo-severity" requiere que se habilite "--report-azdo"</target>
         <note />
       </trans-unit>
       <trans-unit id="Description">
