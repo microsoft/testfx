@@ -457,7 +457,7 @@ public sealed class FormatterUtilitiesTests
 
             testNode.Properties.Add(new SerializableKeyValuePairStringProperty("key", "value"));
             testNode.Properties.Add(new TestFileLocationProperty("filePath", new LinePositionSpan(new(1, 0), new(2, 0))));
-            testNode.Properties.Add(new TestMethodIdentifierProperty("assemblyFullName", "namespace", "typeName", "methodName", ["param1", "param2"], "returnTypeFullName"));
+            testNode.Properties.Add(new TestMethodIdentifierProperty("assemblyFullName", "namespace", "typeName", "methodName", 0, ["param1", "param2"], "returnTypeFullName"));
             testNode.Properties.Add(new TimingProperty(new TimingInfo(new DateTimeOffset(2023, 01, 01, 01, 01, 01, TimeSpan.Zero), new DateTimeOffset(2023, 01, 01, 01, 01, 01, TimeSpan.Zero), TimeSpan.Zero)));
             testNode.Properties.Add(new FailedTestNodeStateProperty(new InvalidOperationException("sample")));
             testNode.Properties.Add(new StandardOutputProperty("textProperty"));
