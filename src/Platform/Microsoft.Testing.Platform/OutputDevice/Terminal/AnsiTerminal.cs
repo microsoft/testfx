@@ -45,7 +45,6 @@ internal sealed class AnsiTerminal : ITerminal
     {
         _console = console;
         _baseDirectory = baseDirectory ?? Directory.GetCurrentDirectory();
-        _console.WriteLine("This is ansi terminal");
     }
 
     public int Width
