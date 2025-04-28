@@ -98,6 +98,7 @@ internal sealed class TestFrameworkEngine : IDataProducer
                     testContainerType.Namespace!,
                     testContainerType.Name,
                     publicMethod.Name,
+                    publicMethod.GetGenericArguments().Length,
                     publicMethod.GetParameters().Select(x => x.ParameterType.FullName!).ToArray(),
                     publicMethod.ReturnType.FullName!));
 
@@ -174,6 +175,7 @@ internal sealed class TestFrameworkEngine : IDataProducer
                     testContainerType.Namespace!,
                     testContainerType.Name,
                     publicMethod.Name,
+                    publicMethod.GetGenericArguments().Length,
                     publicMethod.GetParameters().Select(x => x.ParameterType.FullName!).ToArray(),
                     publicMethod.ReturnType.FullName!));
 
