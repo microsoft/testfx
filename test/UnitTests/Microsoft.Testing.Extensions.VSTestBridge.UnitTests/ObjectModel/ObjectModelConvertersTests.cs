@@ -220,9 +220,9 @@ public sealed class ObjectModelConvertersTests
 
         SerializableKeyValuePairStringProperty[] errorTestNodeStateProperties = testNode.Properties.OfType<SerializableKeyValuePairStringProperty>().ToArray();
         Assert.AreEqual(2, errorTestNodeStateProperties.Length, "Expected 2 SerializableKeyValuePairStringProperty");
-        Assert.AreEqual("vstest.TestCase.Id", errorTestNodeStateProperties[0].Key);
-        Assert.AreEqual("vstest.TestCase.FullyQualifiedName", errorTestNodeStateProperties[1].Key);
-        Assert.AreEqual("SomeFqn", errorTestNodeStateProperties[1].Value);
+        Assert.AreEqual("vstest.TestCase.FullyQualifiedName", errorTestNodeStateProperties[0].Key);
+        Assert.AreEqual("SomeFqn", errorTestNodeStateProperties[0].Value);
+        Assert.AreEqual("vstest.TestCase.Id", errorTestNodeStateProperties[1].Key);
     }
 
     [TestMethod]
