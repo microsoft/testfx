@@ -3,7 +3,7 @@
 
 using Microsoft.Testing.Platform.Builder;
 
-namespace Microsoft.Testing.Extensions.AzureDevOps;
+namespace Microsoft.Testing.Extensions.AzureDevOpsReport;
 
 /// <summary>
 /// This class is used by Microsoft.Testing.Platform.MSBuild to hook into the Testing Platform Builder to add Azure DevOps reporting support.
