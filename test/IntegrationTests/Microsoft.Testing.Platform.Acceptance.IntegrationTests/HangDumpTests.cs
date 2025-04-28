@@ -18,7 +18,8 @@ public sealed class HangDumpTests : AcceptanceTestBase<HangDumpTests.TestAssetFi
             {
                         { "SLEEPTIMEMS1", "4000" },
                         { "SLEEPTIMEMS2", "600000" },
-            });
+            },
+            timeoutSeconds: 240);
         testHostResult.AssertExitCodeIs(ExitCodes.TestHostProcessExitedNonGracefully);
         string? dumpFile = Directory.GetFiles(resultDirectory, "HangDump*.dmp", SearchOption.AllDirectories).SingleOrDefault();
         Assert.IsTrue(dumpFile is not null, $"Dump file not found '{tfm}'\n{testHostResult}'");
@@ -35,7 +36,8 @@ public sealed class HangDumpTests : AcceptanceTestBase<HangDumpTests.TestAssetFi
             {
                 { "SLEEPTIMEMS1", "4000" },
                 { "SLEEPTIMEMS2", "600000" },
-            });
+            },
+            timeoutSeconds: 240);
         testHostResult.AssertExitCodeIs(ExitCodes.TestHostProcessExitedNonGracefully);
         string? dumpFile = Directory.GetFiles(resultDirectory, "myhungdumpfile_*.dmp", SearchOption.AllDirectories).SingleOrDefault();
         Assert.IsTrue(dumpFile is not null, $"Dump file not found '{TargetFrameworks.NetCurrent}'\n{testHostResult}'");
@@ -54,7 +56,8 @@ public sealed class HangDumpTests : AcceptanceTestBase<HangDumpTests.TestAssetFi
             {
                 { "SLEEPTIMEMS1", "4000" },
                 { "SLEEPTIMEMS2", "20000" },
-            });
+            },
+            timeoutSeconds: 240);
         testHostResult.AssertExitCodeIs(ExitCodes.TestHostProcessExitedNonGracefully);
         string? dumpFile = Directory.GetFiles(resultDirectory, "myhungdumpfile_*.dmp", SearchOption.AllDirectories).SingleOrDefault();
         Assert.IsTrue(dumpFile is not null, $"Dump file not found '{TargetFrameworks.NetCurrent}'\n{testHostResult}'");
@@ -75,7 +78,8 @@ public sealed class HangDumpTests : AcceptanceTestBase<HangDumpTests.TestAssetFi
             {
                         { "SLEEPTIMEMS1", "4000" },
                         { "SLEEPTIMEMS2", "600000" },
-            });
+            },
+            timeoutSeconds: 240);
         testHostResult.AssertExitCodeIs(ExitCodes.TestHostProcessExitedNonGracefully);
         string? dumpFile = Directory.GetFiles(resultDirectory, "HangDump*.dmp", SearchOption.AllDirectories).SingleOrDefault();
         Assert.IsTrue(dumpFile is not null, $"Dump file not found '{format}'\n{testHostResult}'");
