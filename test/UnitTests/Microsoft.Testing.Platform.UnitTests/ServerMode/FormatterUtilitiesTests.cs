@@ -176,7 +176,7 @@ public sealed class FormatterUtilitiesTests
 
         if (type == typeof(TestNode))
         {
-            Assert.AreEqual("""{"uid":"uid","display-name":"DisplayName","traits":[{"testmetadata-key":"testmetadata-value"}],"array-key":["1","2"],"standardError":"textProperty2","standardOutput":"textProperty","time.start-utc":"2023-01-01T01:01:01.0000000+00:00","time.stop-utc":"2023-01-01T01:01:01.0000000+00:00","time.duration-ms":0,"location.type":"namespace.typeName","location.method":"methodName(param1,param2)","location.file":"filePath","location.line-start":1,"location.line-end":2,"key":"value","node-type":"action","execution-state":"failed","error.message":"sample","error.stacktrace":"","assert.actual":"","assert.expected":""}""".Replace(" ", string.Empty), instanceSerialized, because);
+            Assert.AreEqual("""{"uid":"uid","display-name":"DisplayName","traits":[{"testmetadata-key":"testmetadata-value"}],"standardError":"textProperty2","standardOutput":"textProperty","time.start-utc":"2023-01-01T01:01:01.0000000+00:00","time.stop-utc":"2023-01-01T01:01:01.0000000+00:00","time.duration-ms":0,"location.type":"namespace.typeName","location.method":"methodName(param1,param2)","location.file":"filePath","location.line-start":1,"location.line-end":2,"key":"value","node-type":"action","execution-state":"failed","error.message":"sample","error.stacktrace":"","assert.actual":"","assert.expected":""}""".Replace(" ", string.Empty), instanceSerialized, because);
             return;
         }
 
@@ -188,7 +188,7 @@ public sealed class FormatterUtilitiesTests
 
         if (type == typeof(TestNodeUpdateMessage))
         {
-            Assert.AreEqual("""{"node":{"uid":"uid","display-name":"DisplayName","traits":[{"testmetadata-key":"testmetadata-value"}],"array-key":["1","2"],"standardError":"textProperty2","standardOutput":"textProperty","time.start-utc":"2023-01-01T01:01:01.0000000+00:00","time.stop-utc":"2023-01-01T01:01:01.0000000+00:00","time.duration-ms":0,"location.type":"namespace.typeName","location.method":"methodName(param1,param2)","location.file":"filePath","location.line-start":1,"location.line-end":2,"key":"value","node-type":"action","execution-state":"failed","error.message":"sample","error.stacktrace":"","assert.actual":"","assert.expected":""},"parent":"parent-uid"}""".Replace(" ", string.Empty), instanceSerialized, because);
+            Assert.AreEqual("""{"node":{"uid":"uid","display-name":"DisplayName","traits":[{"testmetadata-key":"testmetadata-value"}],"standardError":"textProperty2","standardOutput":"textProperty","time.start-utc":"2023-01-01T01:01:01.0000000+00:00","time.stop-utc":"2023-01-01T01:01:01.0000000+00:00","time.duration-ms":0,"location.type":"namespace.typeName","location.method":"methodName(param1,param2)","location.file":"filePath","location.line-start":1,"location.line-end":2,"key":"value","node-type":"action","execution-state":"failed","error.message":"sample","error.stacktrace":"","assert.actual":"","assert.expected":""},"parent":"parent-uid"}""".Replace(" ", string.Empty), instanceSerialized, because);
             return;
         }
 
@@ -462,7 +462,6 @@ public sealed class FormatterUtilitiesTests
             testNode.Properties.Add(new FailedTestNodeStateProperty(new InvalidOperationException("sample")));
             testNode.Properties.Add(new StandardOutputProperty("textProperty"));
             testNode.Properties.Add(new StandardErrorProperty("textProperty2"));
-            testNode.Properties.Add(new SerializableNamedArrayStringProperty("array-key", ["1", "2"]));
             testNode.Properties.Add(new TestMetadataProperty("testmetadata-key", "testmetadata-value"));
 
             return testNode;

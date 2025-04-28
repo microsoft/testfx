@@ -9,7 +9,6 @@ using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.ServerMode;
-using Microsoft.TestPlatform.AdapterUtilities;
 using Microsoft.TestPlatform.AdapterUtilities.ManagedNameUtilities;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
@@ -71,7 +70,7 @@ internal static class ObjectModelConverters
 
         if (ShouldAddVSTestProviderProperties(namedFeatureCapability, commandLineOptions))
         {
-            CopyVSTestProviderProperties(testCase.Properties, testNode, testCase.GetPropertyValue);
+            CopyVSTestProviderProperties(testNode, testCase);
         }
 
         if (testCase.CodeFilePath is not null)
@@ -109,34 +108,21 @@ internal static class ObjectModelConverters
         }
     }
 
-    private static void CopyVSTestProviderProperties(IEnumerable<TestProperty> testProperties, TestNode testNode, Func<TestProperty, object?> getPropertyValue)
+    private static void CopyVSTestProviderProperties(TestNode testNode, TestCase testCase)
     {
-        foreach (TestProperty property in testProperties)
+        if (testCase.Id is Guid testCaseId)
         {
-            // If vstestProvider is enabled (only known to be true for NUnit and Expecto so far), and we are running server mode in IDE (not dotnet test),
-            // we add these stuff.
-            // Once NUnit and Expecto allow us to move forward and remove vstestProvider, we can remove this logic and get rid of the whole vstestProvider capability.
-            if (property.Id == TestCaseProperties.Id.Id
-                    && getPropertyValue(property) is Guid testCaseId)
-            {
-                testNode.Properties.Add(new SerializableKeyValuePairStringProperty("vstest.TestCase.Id", testCaseId.ToString()));
-            }
-            else if (property.Id == TestCaseProperties.FullyQualifiedName.Id
-                && getPropertyValue(property) is string testCaseFqn)
-            {
-                testNode.Properties.Add(new SerializableKeyValuePairStringProperty("vstest.TestCase.FullyQualifiedName", testCaseFqn));
-            }
-            else if (property.Id == OriginalExecutorUriProperty.Id
-                && getPropertyValue(property) is Uri originalExecutorUri)
-            {
-                testNode.Properties.Add(new SerializableKeyValuePairStringProperty("vstest.original-executor-uri", originalExecutorUri.AbsoluteUri));
-            }
-            else if (property.Id == HierarchyConstants.HierarchyPropertyId
-                && getPropertyValue(property) is string[] testCaseHierarchy
-                && testCaseHierarchy.Length == 4)
-            {
-                testNode.Properties.Add(new SerializableNamedArrayStringProperty("vstest.TestCase.Hierarchy", testCaseHierarchy));
-            }
+            testNode.Properties.Add(new SerializableKeyValuePairStringProperty("vstest.TestCase.Id", testCaseId.ToString()));
+        }
+
+        if (testCase.FullyQualifiedName is string testCaseFqn)
+        {
+            testNode.Properties.Add(new SerializableKeyValuePairStringProperty("vstest.TestCase.FullyQualifiedName", testCaseFqn));
+        }
+
+        if (testCase.GetPropertyValue(OriginalExecutorUriProperty) is Uri originalExecutorUri)
+        {
+            testNode.Properties.Add(new SerializableKeyValuePairStringProperty("vstest.original-executor-uri", originalExecutorUri.AbsoluteUri));
         }
     }
 
@@ -148,15 +134,6 @@ internal static class ObjectModelConverters
         var testNode = testResult.TestCase.ToTestNode(isTrxEnabled, namedFeatureCapability, commandLineOptions, testResult.DisplayName);
 
         CopyCategoryAndTraits(testResult, testNode, isTrxEnabled);
-
-        bool addVSTestProviderProperties = ShouldAddVSTestProviderProperties(namedFeatureCapability, commandLineOptions);
-        if (addVSTestProviderProperties)
-        {
-            // TODO: This call might be unnecessary.
-            // All the relevant properties should be on TestCase, not TestResult.
-            // And properties on TestCase were already copied as part of ToTestNode call above.
-            CopyVSTestProviderProperties(testResult.Properties, testNode, testResult.GetPropertyValue);
-        }
 
         testNode.AddOutcome(testResult);
 
@@ -189,6 +166,7 @@ internal static class ObjectModelConverters
 
         var standardErrorMessages = new List<string>();
         var standardOutputMessages = new List<string>();
+        bool addVSTestProviderProperties = ShouldAddVSTestProviderProperties(namedFeatureCapability, commandLineOptions);
         foreach (TestResultMessage testResultMessage in testResult.Messages)
         {
             if (testResultMessage.Category == TestResultMessage.StandardErrorCategory)
