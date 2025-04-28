@@ -147,12 +147,6 @@ internal sealed class Json
                     continue;
                 }
 
-                if (property is SerializableNamedArrayStringProperty namedArrayStringProperty)
-                {
-                    properties.Add((namedArrayStringProperty.Name, namedArrayStringProperty.Values));
-                    continue;
-                }
-
                 if (property is TestFileLocationProperty fileLocationProperty)
                 {
                     properties.Add(("location.file", fileLocationProperty.FilePath));

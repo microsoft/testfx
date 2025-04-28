@@ -209,12 +209,6 @@ internal static class SerializerUtilities
                         continue;
                     }
 
-                    if (property is SerializableNamedArrayStringProperty namedArrayStringProperty)
-                    {
-                        properties[namedArrayStringProperty.Name] = namedArrayStringProperty.Values;
-                        continue;
-                    }
-
                     if (property is TestFileLocationProperty fileLocationProperty)
                     {
                         properties["location.file"] = fileLocationProperty.FilePath;
