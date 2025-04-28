@@ -38,19 +38,14 @@ internal sealed class AnsiTerminal : ITerminal
 
     private readonly IConsole _console;
     private readonly string? _baseDirectory;
-    private readonly bool _useBusyIndicator;
     private readonly StringBuilder _stringBuilder = new();
     private bool _isBatching;
-    private AnsiTerminalTestProgressFrame _currentFrame = new(0, 0);
 
     public AnsiTerminal(IConsole console, string? baseDirectory)
     {
         _console = console;
         _baseDirectory = baseDirectory ?? Directory.GetCurrentDirectory();
-
-        // Output ansi code to get spinner on top of a terminal, to indicate in-progress task.
-        // https://github.com/dotnet/msbuild/issues/8958: iTerm2 treats ;9 code to post a notification instead, so disable progress reporting on Mac.
-        _useBusyIndicator = !RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
+        _console.WriteLine("This is ansi terminal");
     }
 
     public int Width
@@ -243,30 +238,14 @@ internal sealed class AnsiTerminal : ITerminal
         ResetColor();
     }
 
-    public void MoveCursorUp(int lineCount)
+    public static void MoveCursorUp(int _)
     {
-        string moveCursor = $"{AnsiCodes.CSI}{lineCount}{AnsiCodes.MoveUpToLineStart}";
-        if (_isBatching)
-        {
-            _stringBuilder.AppendLine(moveCursor);
-        }
-        else
-        {
-            _console.WriteLine(moveCursor);
-        }
+        return;
     }
 
-    public void SetCursorHorizontal(int position)
+    public static void SetCursorHorizontal(int _)
     {
-        string setCursor = AnsiCodes.SetCursorHorizontal(position);
-        if (_isBatching)
-        {
-            _stringBuilder.Append(setCursor);
-        }
-        else
-        {
-            _console.Write(setCursor);
-        }
+        return;
     }
 
     /// <summary>
@@ -274,41 +253,21 @@ internal sealed class AnsiTerminal : ITerminal
     /// </summary>
     public void EraseProgress()
     {
-        if (_currentFrame.RenderedLines == null || _currentFrame.RenderedLines.Count == 0)
-        {
-            return;
-        }
-
-        AppendLine($"{AnsiCodes.CSI}{_currentFrame.RenderedLines.Count + 2}{AnsiCodes.MoveUpToLineStart}");
-        Append($"{AnsiCodes.CSI}{AnsiCodes.EraseInDisplay}");
-        _currentFrame.Clear();
+        return;
     }
 
     public void RenderProgress(TestProgressState?[] progress)
     {
-        AnsiTerminalTestProgressFrame newFrame = new(Width, Height);
-        newFrame.Render(_currentFrame, progress, terminal: this);
-
-        _currentFrame = newFrame;
+        return;
     }
 
     public void StartBusyIndicator()
     {
-        if (_useBusyIndicator)
-        {
-            Append(AnsiCodes.SetBusySpinner);
-        }
-
-        HideCursor();
+        return;
     }
 
     public void StopBusyIndicator()
     {
-        if (_useBusyIndicator)
-        {
-            Append(AnsiCodes.RemoveBusySpinner);
-        }
-
-        ShowCursor();
+        return;
     }
 }

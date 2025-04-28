@@ -79,6 +79,12 @@ internal sealed partial class TerminalTestReporter : IDisposable
         {
             // Autodetect.
             (bool consoleAcceptsAnsiCodes, bool _, uint? originalConsoleMode) = NativeMethods.QueryIsScreenAndTryEnableAnsiColorCodes();
+#pragma warning disable RS0030 // Do not use banned APIs
+            if (Environment.GetEnvironmentVariable("TF_BUILD") != null)
+            {
+                consoleAcceptsAnsiCodes = true;
+            }
+#pragma warning restore RS0030 // Do not use banned APIs
             _originalConsoleMode = originalConsoleMode;
             terminalWithProgress = consoleAcceptsAnsiCodes || _options.ForceAnsi is true
                 ? new TestProgressStateAwareTerminal(new AnsiTerminal(console, _options.BaseDirectory), showProgress, writeProgressImmediatelyAfterOutput: true, updateEvery: ansiUpdateCadenceInMs)
