@@ -87,8 +87,10 @@ public sealed class TestHost
                 .ExecuteAsync(async () =>
                 {
                     CommandLine commandLine = new();
+                    // Disable ANSI rendering by default so tests have easier time parsing the output.
+                    // Disable progress by default so tests don't mix progress with overall progress.
                     int exitCode = await commandLine.RunAsyncAndReturnExitCodeAsync(
-                        $"{FullName} {finalArguments}",
+                        $"{FullName} --no-ansi --no-progress {finalArguments}",
                         environmentVariables: environmentVariables,
                         workingDirectory: null,
                         cleanDefaultEnvironmentVariableIfCustomAreProvided: true,
