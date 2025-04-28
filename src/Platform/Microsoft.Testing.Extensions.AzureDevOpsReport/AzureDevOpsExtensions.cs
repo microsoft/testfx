@@ -26,7 +26,8 @@ public static class AzureDevOpsExtensions
                    serviceProvider.GetCommandLineOptions(),
                    serviceProvider.GetEnvironment(),
                    serviceProvider.GetFileSystem(),
-                   serviceProvider.GetOutputDevice()));
+                   serviceProvider.GetOutputDevice(),
+                   serviceProvider.GetLoggerFactory()));
 
         builder.TestHost.AddDataConsumer(compositeTestSessionAzDoService);
 
