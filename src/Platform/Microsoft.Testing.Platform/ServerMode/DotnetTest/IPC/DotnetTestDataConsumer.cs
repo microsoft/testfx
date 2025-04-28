@@ -47,7 +47,11 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
         {
             case TestNodeUpdateMessage testNodeUpdateMessage:
 
-                TestNodeDetails testNodeDetails = GetTestNodeDetails(testNodeUpdateMessage);
+                TestNodeDetails? testNodeDetails = GetTestNodeDetails(testNodeUpdateMessage);
+                if (testNodeDetails is null)
+                {
+                    return;
+                }
 
                 switch (testNodeDetails.State)
                 {
@@ -172,13 +176,18 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
         }
     }
 
-    private static TestNodeDetails GetTestNodeDetails(TestNodeUpdateMessage testNodeUpdateMessage)
+    private static TestNodeDetails? GetTestNodeDetails(TestNodeUpdateMessage testNodeUpdateMessage)
     {
         byte? state = null;
         long? duration = null;
         string? reason = string.Empty;
         ExceptionMessage[]? exceptions = null;
-        TestNodeStateProperty nodeState = testNodeUpdateMessage.TestNode.Properties.Single<TestNodeStateProperty>();
+        TestNodeStateProperty? nodeState = testNodeUpdateMessage.TestNode.Properties.SingleOrDefault<TestNodeStateProperty>();
+        if (nodeState is null)
+        {
+            return null;
+        }
+
         string? standardOutput = testNodeUpdateMessage.TestNode.Properties.SingleOrDefault<StandardOutputProperty>()?.StandardOutput;
         string? standardError = testNodeUpdateMessage.TestNode.Properties.SingleOrDefault<StandardErrorProperty>()?.StandardError;
 
