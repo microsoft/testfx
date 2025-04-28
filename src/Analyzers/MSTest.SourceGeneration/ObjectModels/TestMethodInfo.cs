@@ -173,7 +173,7 @@ internal sealed record class TestMethodInfo
                 sourceStringBuilder.AppendLine($"\"{_methodIdentifierNamespace}\",");
                 sourceStringBuilder.AppendLine($"\"{_methodIdentifierTypeName}\",");
                 sourceStringBuilder.AppendLine($"\"{_methodName}\",");
-                sourceStringBuilder.AppendLine($"\"{_methodArity}\",");
+                sourceStringBuilder.AppendLine($"{_methodArity},");
 
                 if (ParametersInfo.ParametersMethodIdentifierFullyQualifiedTypes.Length > 0)
                 {
