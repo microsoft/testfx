@@ -282,10 +282,6 @@ internal static class ObjectModelConverters
         string managedMethod)
     {
         ManagedNameParser.ParseManagedMethodName(managedMethod, out string methodName, out int arity, out string[]? parameterTypes);
-        if (arity != 0)
-        {
-            methodName = $"{methodName}`{arity.ToString(CultureInfo.InvariantCulture)}";
-        }
 
         parameterTypes ??= [];
 
@@ -297,7 +293,7 @@ internal static class ObjectModelConverters
         // But the eventual goal should be to stop using the VSTestBridge altogether.
         // TODO: For AssemblyFullName, can we use Assembly.GetEntryAssembly().FullName?
         // Or alternatively, does VSTest object model expose the assembly full name somewhere?
-        return new TestMethodIdentifierProperty(AssemblyFullName: string.Empty, @namespace, typeName, methodName, parameterTypes, ReturnTypeFullName: string.Empty);
+        return new TestMethodIdentifierProperty(AssemblyFullName: string.Empty, @namespace, typeName, methodName, arity, parameterTypes, ReturnTypeFullName: string.Empty);
     }
 
     private static bool TryParseFullyQualifiedType(string fullyQualifiedName, [NotNullWhen(true)] out string? fullyQualifiedType)

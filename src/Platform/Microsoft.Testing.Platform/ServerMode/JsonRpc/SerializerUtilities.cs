@@ -226,6 +226,14 @@ internal static class SerializerUtilities
                         properties["location.method"] = testMethodIdentifierProperty.ParameterTypeFullNames.Length > 0
                             ? $"{testMethodIdentifierProperty.MethodName}({string.Join(",", testMethodIdentifierProperty.ParameterTypeFullNames)})"
                             : testMethodIdentifierProperty.MethodName;
+
+                        if (testMethodIdentifierProperty.MethodArity != 0)
+                        {
+                            // Avoid serializing location.method-arity if it's zero for performance.
+                            // Clients should assume the value is 0 when the property is not present.
+                            properties["location.method-arity"] = testMethodIdentifierProperty.MethodArity;
+                        }
+
                         continue;
                     }
 
