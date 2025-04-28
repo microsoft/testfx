@@ -165,12 +165,7 @@ internal sealed class Json
                         ? $"{testMethodIdentifierProperty.MethodName}({string.Join(",", testMethodIdentifierProperty.ParameterTypeFullNames)})"
                         : testMethodIdentifierProperty.MethodName));
 
-                    if (testMethodIdentifierProperty.MethodArity != 0)
-                    {
-                        // Avoid serializing location.method-arity if it's zero for performance.
-                        // Clients should assume the value is 0 when the property is not present.
-                        properties.Add(("location.method-arity", testMethodIdentifierProperty.MethodArity));
-                    }
+                    properties.Add(("location.method-arity", testMethodIdentifierProperty.MethodArity));
 
                     continue;
                 }
