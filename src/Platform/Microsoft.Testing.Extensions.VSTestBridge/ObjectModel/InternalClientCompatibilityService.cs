@@ -6,7 +6,7 @@ using Microsoft.Testing.Platform.TestHost;
 
 namespace Microsoft.Testing.Extensions.VSTestBridge.ObjectModel;
 
-internal sealed class InternalClientCompatibilityService
+internal readonly struct InternalClientCompatibilityService
 {
     private readonly string _clientName;
     private readonly Version? _clientVersion;
