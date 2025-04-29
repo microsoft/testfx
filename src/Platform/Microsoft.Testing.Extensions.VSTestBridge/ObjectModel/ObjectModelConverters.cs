@@ -49,12 +49,6 @@ internal static class ObjectModelConverters
         valueType: typeof(KeyValuePair<string, string>[]),
         owner: typeof(TestObject));
 
-    // Visual Studio Test Explorer used to use location.file and location.line-start only for non-vstestProvider.
-    // And for vstestProvider, it uses vstest.TestCase.CodeFilePath and vstest.TestCase.LineNumber.
-    // This behavior changed and we now always support location.* both for vstestProvider and non-vstestProvider.
-    // However, we still want to send the vstest.TestCase.* if the client doesn't respect location.*
-    private static readonly Version VersionRespectingLocationForVSTestProvider = new("1.0.1");
-
     /// <summary>
     /// Converts a VSTest <see cref="TestCase"/> to a Microsoft Testing Platform <see cref="TestNode"/>.
     /// </summary>
@@ -78,7 +72,7 @@ internal static class ObjectModelConverters
 
         if (ShouldAddVSTestProviderProperties(namedFeatureCapability, commandLineOptions))
         {
-            CopyVSTestProviderProperties(testNode, testCase, clientInfo);
+            CopyVSTestProviderProperties(testNode, testCase, new(clientInfo));
         }
 
         if (testCase.CodeFilePath is not null)
@@ -116,7 +110,7 @@ internal static class ObjectModelConverters
         }
     }
 
-    private static void CopyVSTestProviderProperties(TestNode testNode, TestCase testCase, IClientInfo clientInfo)
+    private static void CopyVSTestProviderProperties(TestNode testNode, TestCase testCase, InternalClientCompatibilityService compatibilityService)
     {
         if (testCase.Id is Guid testCaseId)
         {
@@ -134,9 +128,7 @@ internal static class ObjectModelConverters
         }
 
         if (!RoslynString.IsNullOrEmpty(testCase.CodeFilePath) &&
-            clientInfo.Id == WellKnownClients.VisualStudio &&
-            Version.TryParse(clientInfo.Version, out Version? clientVersion) &&
-            clientVersion < VersionRespectingLocationForVSTestProvider)
+            compatibilityService.UseVSTestTestCaseLocationProperties)
         {
             testNode.Properties.Add(new SerializableKeyValuePairStringProperty("vstest.TestCase.CodeFilePath", testCase.CodeFilePath));
             testNode.Properties.Add(new SerializableKeyValuePairStringProperty("vstest.TestCase.LineNumber", testCase.LineNumber.ToString(CultureInfo.InvariantCulture)));
