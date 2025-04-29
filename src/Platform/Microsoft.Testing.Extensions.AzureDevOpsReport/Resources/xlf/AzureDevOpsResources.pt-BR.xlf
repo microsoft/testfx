@@ -4,32 +4,32 @@
     <body>
       <trans-unit id="AzureDevOpsReportSeverityRequiresAzureDevOps">
         <source>'--report-azdo-severity' requires '--report-azdo' to be enabled</source>
-        <target state="translated">'--report-azdo-severity' requer que '--report-azdo' esteja habilitado</target>
+        <target state="new">'--report-azdo-severity' requires '--report-azdo' to be enabled</target>
         <note />
       </trans-unit>
       <trans-unit id="Description">
         <source>Azure DevOps report generator to write errors to the output in a way that AzureDev Ops understands.</source>
-        <target state="translated">Gerador de relatórios do Azure DevOps para gravar erros na saída de uma forma que o Azure DevOps entenda.</target>
+        <target state="new">Azure DevOps report generator to write errors to the output in a way that AzureDev Ops understands.</target>
         <note />
       </trans-unit>
       <trans-unit id="DisplayName">
         <source>Azure DevOps report generator</source>
-        <target state="translated">Gerador de relatórios do Azure DevOps</target>
+        <target state="new">Azure DevOps report generator</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidSeverity">
         <source>Invalid option {0}.</source>
-        <target state="translated">Opção {0} inválida.</target>
+        <target state="new">Invalid option {0}.</target>
         <note />
       </trans-unit>
       <trans-unit id="OptionDescription">
         <source>Eanble Azure DevOps report generator to write errors to the output in a way that AzureDev Ops understands.</source>
-        <target state="translated">Habilitar o gerador de relatórios do Azure DevOps para gravar erros na saída de uma forma que o Azure DevOps entenda.</target>
+        <target state="new">Eanble Azure DevOps report generator to write errors to the output in a way that AzureDev Ops understands.</target>
         <note />
       </trans-unit>
       <trans-unit id="SeverityOptionDescription">
         <source>Severity to use for the reported event. Options are: error (default) and warning.</source>
-        <target state="translated">A gravidade que será usada para o evento relatado. As opções são: erro (padrão) e aviso.</target>
+        <target state="new">Severity to use for the reported event. Options are: error (default) and warning.</target>
         <note>Do not translated 'error' or 'warning' those are literal values.</note>
       </trans-unit>
     </body>
