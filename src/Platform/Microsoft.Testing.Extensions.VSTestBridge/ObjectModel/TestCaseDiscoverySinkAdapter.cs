@@ -29,6 +29,7 @@ internal sealed class TestCaseDiscoverySinkAdapter : ITestCaseDiscoverySink
     private readonly ILogger<TestCaseDiscoverySinkAdapter> _logger;
     private readonly INamedFeatureCapability? _namedFeatureCapability;
     private readonly ICommandLineOptions _commandLineOptions;
+    private readonly IClientInfo _clientInfo;
     private readonly IMessageBus _messageBus;
     private readonly bool _isTrxEnabled;
     private readonly VSTestBridgedTestFrameworkBase _adapterExtension;
@@ -43,6 +44,7 @@ internal sealed class TestCaseDiscoverySinkAdapter : ITestCaseDiscoverySink
         ITestApplicationModuleInfo testApplicationModuleInfo,
         INamedFeatureCapability? namedFeatureCapability,
         ICommandLineOptions commandLineOptions,
+        IClientInfo clientInfo,
         IMessageBus messageBus,
         ILoggerFactory loggerFactory,
         bool isTrxEnabled,
@@ -71,6 +73,7 @@ internal sealed class TestCaseDiscoverySinkAdapter : ITestCaseDiscoverySink
         _logger = loggerFactory.CreateLogger<TestCaseDiscoverySinkAdapter>();
         _namedFeatureCapability = namedFeatureCapability;
         _commandLineOptions = commandLineOptions;
+        _clientInfo = clientInfo;
         _messageBus = messageBus;
         _isTrxEnabled = isTrxEnabled;
         _adapterExtension = adapterExtension;
@@ -91,7 +94,7 @@ internal sealed class TestCaseDiscoverySinkAdapter : ITestCaseDiscoverySink
         _testCaseDiscoverySink?.SendTestCase(discoveredTest);
 
         // Publish node state change to Microsoft Testing Platform
-        var testNode = discoveredTest.ToTestNode(_isTrxEnabled, _namedFeatureCapability, _commandLineOptions);
+        var testNode = discoveredTest.ToTestNode(_isTrxEnabled, _namedFeatureCapability, _commandLineOptions, _clientInfo);
         testNode.Properties.Add(DiscoveredTestNodeStateProperty.CachedInstance);
         var testNodeChange = new TestNodeUpdateMessage(_session.SessionUid, testNode);
 

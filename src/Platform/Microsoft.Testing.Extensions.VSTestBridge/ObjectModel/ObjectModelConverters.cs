@@ -1,14 +1,13 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#pragma warning disable TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
-
 using Microsoft.Testing.Extensions.TrxReport.Abstractions;
 using Microsoft.Testing.Platform;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.ServerMode;
+using Microsoft.Testing.Platform.Services;
 using Microsoft.TestPlatform.AdapterUtilities.ManagedNameUtilities;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
@@ -50,7 +49,7 @@ internal static class ObjectModelConverters
     /// <summary>
     /// Converts a VSTest <see cref="TestCase"/> to a Microsoft Testing Platform <see cref="TestNode"/>.
     /// </summary>
-    public static TestNode ToTestNode(this TestCase testCase, bool isTrxEnabled, INamedFeatureCapability? namedFeatureCapability, ICommandLineOptions commandLineOptions, string? displayNameFromTestResult = null)
+    public static TestNode ToTestNode(this TestCase testCase, bool isTrxEnabled, INamedFeatureCapability? namedFeatureCapability, ICommandLineOptions commandLineOptions, IClientInfo clientInfo, string? displayNameFromTestResult = null)
     {
         string testNodeUid = testCase.Id.ToString();
 
@@ -70,7 +69,7 @@ internal static class ObjectModelConverters
 
         if (ShouldAddVSTestProviderProperties(namedFeatureCapability, commandLineOptions))
         {
-            CopyVSTestProviderProperties(testNode, testCase);
+            CopyVSTestProviderProperties(testNode, testCase, new(clientInfo));
         }
 
         if (testCase.CodeFilePath is not null)
@@ -108,7 +107,7 @@ internal static class ObjectModelConverters
         }
     }
 
-    private static void CopyVSTestProviderProperties(TestNode testNode, TestCase testCase)
+    private static void CopyVSTestProviderProperties(TestNode testNode, TestCase testCase, ClientCompatibilityService compatibilityService)
     {
         if (testCase.Id is Guid testCaseId)
         {
@@ -124,14 +123,21 @@ internal static class ObjectModelConverters
         {
             testNode.Properties.Add(new SerializableKeyValuePairStringProperty("vstest.original-executor-uri", originalExecutorUri.AbsoluteUri));
         }
+
+        if (!RoslynString.IsNullOrEmpty(testCase.CodeFilePath) &&
+            compatibilityService.UseVSTestTestCaseLocationProperties)
+        {
+            testNode.Properties.Add(new SerializableKeyValuePairStringProperty("vstest.TestCase.CodeFilePath", testCase.CodeFilePath));
+            testNode.Properties.Add(new SerializableKeyValuePairStringProperty("vstest.TestCase.LineNumber", testCase.LineNumber.ToString(CultureInfo.InvariantCulture)));
+        }
     }
 
     /// <summary>
     /// Converts a VSTest <see cref="TestResult"/> to a Microsoft Testing Platform <see cref="TestNode"/>.
     /// </summary>
-    public static TestNode ToTestNode(this TestResult testResult, bool isTrxEnabled, INamedFeatureCapability? namedFeatureCapability, ICommandLineOptions commandLineOptions)
+    public static TestNode ToTestNode(this TestResult testResult, bool isTrxEnabled, INamedFeatureCapability? namedFeatureCapability, ICommandLineOptions commandLineOptions, IClientInfo clientInfo)
     {
-        var testNode = testResult.TestCase.ToTestNode(isTrxEnabled, namedFeatureCapability, commandLineOptions, testResult.DisplayName);
+        var testNode = testResult.TestCase.ToTestNode(isTrxEnabled, namedFeatureCapability, commandLineOptions, clientInfo, testResult.DisplayName);
 
         CopyCategoryAndTraits(testResult, testNode, isTrxEnabled);
 

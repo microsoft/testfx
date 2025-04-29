@@ -67,6 +67,7 @@ public sealed class VSTestDiscoverTestExecutionRequestFactory : ITestExecutionRe
             serviceProvider.GetTestApplicationModuleInfo(),
             serviceProvider.GetTestFrameworkCapabilities().GetCapability<INamedFeatureCapability>(),
             serviceProvider.GetCommandLineOptions(),
+            serviceProvider.GetClientInfo(),
             serviceProvider.GetMessageBus(),
             loggerFactory,
             adapterExtension.IsTrxEnabled,
