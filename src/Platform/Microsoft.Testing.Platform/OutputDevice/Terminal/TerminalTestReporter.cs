@@ -187,7 +187,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
         bool allTestsWereSkipped = totalTests == 0 || totalTests == totalSkippedTests;
         bool anyTestFailed = totalFailedTests > 0;
         bool runFailed = anyTestFailed || notEnoughTests || allTestsWereSkipped || _wasCancelled;
-        terminal.SetColor(runFailed ? TerminalColor.Red : TerminalColor.Green);
+        terminal.SetColor(runFailed ? TerminalColor.DarkRed : TerminalColor.DarkGreen);
 
         terminal.Append(PlatformResources.TestRunSummary);
         terminal.Append(' ');
@@ -256,7 +256,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
         terminal.AppendLine(totalText);
         if (colorizeFailed)
         {
-            terminal.SetColor(TerminalColor.Red);
+            terminal.SetColor(TerminalColor.DarkRed);
         }
 
         terminal.AppendLine(failedText);
@@ -268,7 +268,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
 
         if (colorizePassed)
         {
-            terminal.SetColor(TerminalColor.Green);
+            terminal.SetColor(TerminalColor.DarkGreen);
         }
 
         terminal.AppendLine(passedText);
@@ -280,7 +280,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
 
         if (colorizeSkipped)
         {
-            terminal.SetColor(TerminalColor.Yellow);
+            terminal.SetColor(TerminalColor.DarkYellow);
         }
 
         terminal.AppendLine(skippedText);
@@ -302,7 +302,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
     {
         if (!succeeded)
         {
-            terminal.SetColor(TerminalColor.Red);
+            terminal.SetColor(TerminalColor.DarkRed);
             // If the build failed, we print one of three red strings.
             string text = (countErrors > 0, countWarnings > 0) switch
             {
@@ -316,13 +316,13 @@ internal sealed partial class TerminalTestReporter : IDisposable
         }
         else if (countWarnings > 0)
         {
-            terminal.SetColor(TerminalColor.Yellow);
+            terminal.SetColor(TerminalColor.DarkYellow);
             terminal.Append($"succeeded with {countWarnings} warning(s)");
             terminal.ResetColor();
         }
         else
         {
-            terminal.SetColor(TerminalColor.Green);
+            terminal.SetColor(TerminalColor.DarkGreen);
             terminal.Append(PlatformResources.PassedLowercase);
             terminal.ResetColor();
         }
@@ -450,9 +450,9 @@ internal sealed partial class TerminalTestReporter : IDisposable
 
         TerminalColor color = outcome switch
         {
-            TestOutcome.Error or TestOutcome.Fail or TestOutcome.Canceled or TestOutcome.Timeout => TerminalColor.Red,
-            TestOutcome.Skipped => TerminalColor.Yellow,
-            TestOutcome.Passed => TerminalColor.Green,
+            TestOutcome.Error or TestOutcome.Fail or TestOutcome.Canceled or TestOutcome.Timeout => TerminalColor.DarkRed,
+            TestOutcome.Skipped => TerminalColor.DarkYellow,
+            TestOutcome.Passed => TerminalColor.DarkGreen,
             _ => throw new NotSupportedException(),
         };
         string outcomeText = outcome switch
@@ -500,7 +500,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
 
         for (int i = 1; i < exceptions.Length; i++)
         {
-            terminal.SetColor(TerminalColor.Red);
+            terminal.SetColor(TerminalColor.DarkRed);
             terminal.Append(SingleIndentation);
             terminal.Append("--->");
             FormatErrorMessage(terminal, exceptions, TestOutcome.Error, i);
@@ -518,7 +518,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
             return;
         }
 
-        terminal.SetColor(TerminalColor.Red);
+        terminal.SetColor(TerminalColor.DarkRed);
 
         if (firstStackTrace is null)
         {
@@ -547,7 +547,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
             return;
         }
 
-        terminal.SetColor(TerminalColor.Red);
+        terminal.SetColor(TerminalColor.DarkRed);
         terminal.Append(SingleIndentation);
         terminal.AppendLine(PlatformResources.Expected);
         AppendIndentedLine(terminal, expected, DoubleIndentation);
@@ -789,7 +789,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
 
         _terminalWithProgress.WriteToTerminal(terminal =>
         {
-            terminal.SetColor(TerminalColor.Red);
+            terminal.SetColor(TerminalColor.DarkRed);
             if (padding == null)
             {
                 terminal.AppendLine(text);
@@ -809,7 +809,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
         asm.AddWarning(text);
         _terminalWithProgress.WriteToTerminal(terminal =>
         {
-            terminal.SetColor(TerminalColor.Yellow);
+            terminal.SetColor(TerminalColor.DarkYellow);
             if (padding == null)
             {
                 terminal.AppendLine(text);
@@ -914,7 +914,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
             terminal.AppendLine();
         }
 
-        terminal.SetColor(runFailed ? TerminalColor.Red : TerminalColor.Green);
+        terminal.SetColor(runFailed ? TerminalColor.DarkRed : TerminalColor.DarkGreen);
         if (assemblies.Count <= 1)
         {
             terminal.Append(string.Format(CultureInfo.CurrentCulture, PlatformResources.TestDiscoverySummarySingular, totalTests));

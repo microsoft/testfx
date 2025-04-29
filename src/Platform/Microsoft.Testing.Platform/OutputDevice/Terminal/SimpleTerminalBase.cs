@@ -11,7 +11,8 @@ internal abstract class SimpleTerminal : ITerminal
     private object? _batchingLock;
     private bool _isBatching;
 
-    public SimpleTerminal(IConsole console) => Console = console;
+    public SimpleTerminal(IConsole console)
+        => Console = console;
 
 #pragma warning disable CA1416 // Validate platform compatibility
     public int Width => Console.IsOutputRedirected ? int.MaxValue : Console.BufferWidth;
@@ -23,13 +24,13 @@ internal abstract class SimpleTerminal : ITerminal
     public void Append(char value)
         => Console.Write(value);
 
-    public void Append(string value)
+    public virtual void Append(string value)
         => Console.Write(value);
 
     public void AppendLine()
         => Console.WriteLine();
 
-    public void AppendLine(string value)
+    public virtual void AppendLine(string value)
         => Console.WriteLine(value);
 
     public void AppendLink(string path, int? lineNumber)
