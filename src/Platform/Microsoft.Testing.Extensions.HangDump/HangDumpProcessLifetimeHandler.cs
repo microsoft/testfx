@@ -380,7 +380,7 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
         await _outputDisplay.DisplayAsync(this, new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.CreatingDumpFile, finalDumpFileName)));
 
 #if NETCOREAPP
-        DiagnosticsClient diagnosticsClient = new(_testHostProcessInformation.PID);
+        var diagnosticsClient = new DiagnosticsClient(_testHostProcessInformation.PID);
         DumpType dumpType = _dumpType.ToLowerInvariant().Trim() switch
         {
             "mini" => DumpType.Normal,
@@ -397,7 +397,7 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
             finalDumpFileName = $"\"{finalDumpFileName}\"";
         }
 
-        diagnosticsClient.WriteDump(dumpType, finalDumpFileName, true);
+        diagnosticsClient.WriteDump(dumpType, finalDumpFileName, WriteDumpFlags.LoggingEnabled | WriteDumpFlags.VerboseLoggingEnabled);
 #else
         MiniDumpWriteDump.MiniDumpTypeOption miniDumpTypeOption = _dumpType.ToLowerInvariant().Trim() switch
         {
