@@ -6,7 +6,7 @@ using Microsoft.Testing.Platform.TestHost;
 
 namespace Microsoft.Testing.Extensions.VSTestBridge.ObjectModel;
 
-internal readonly struct InternalClientCompatibilityService
+internal readonly struct ClientCompatibilityService
 {
     private readonly string _clientName;
     private readonly Version? _clientVersion;
@@ -17,7 +17,7 @@ internal readonly struct InternalClientCompatibilityService
     // However, we still want to send the vstest.TestCase.* if the client doesn't respect location.*
     private static readonly Version VersionRespectingLocationForVSTestProvider = new("1.0.1");
 
-    public InternalClientCompatibilityService(IClientInfo clientInfo)
+    public ClientCompatibilityService(IClientInfo clientInfo)
     {
         _clientName = clientInfo.Id;
         _ = Version.TryParse(clientInfo.Version, out _clientVersion);

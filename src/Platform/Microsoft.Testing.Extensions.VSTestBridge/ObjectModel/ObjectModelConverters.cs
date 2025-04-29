@@ -107,7 +107,7 @@ internal static class ObjectModelConverters
         }
     }
 
-    private static void CopyVSTestProviderProperties(TestNode testNode, TestCase testCase, InternalClientCompatibilityService compatibilityService)
+    private static void CopyVSTestProviderProperties(TestNode testNode, TestCase testCase, ClientCompatibilityService compatibilityService)
     {
         if (testCase.Id is Guid testCaseId)
         {
