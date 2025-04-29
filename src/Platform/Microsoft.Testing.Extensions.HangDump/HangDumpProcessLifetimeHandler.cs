@@ -398,6 +398,7 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
             {
                 finalDumpFileName = $"\"{finalDumpFileName}\"";
             }
+
             diagnosticsClient.WriteDump(dumpType, finalDumpFileName, true);
 #else
             MiniDumpWriteDump.MiniDumpTypeOption miniDumpTypeOption = _dumpType.ToLowerInvariant().Trim() switch
