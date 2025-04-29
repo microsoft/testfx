@@ -115,7 +115,7 @@ internal sealed class AnsiTerminalTestProgressFrame
             }
         }
 
-        AnsiTerminal.SetCursorHorizontal(Width - durationString.Length);
+        terminal.SetCursorHorizontal(Width - durationString.Length);
         terminal.Append(durationString);
     }
 
@@ -133,7 +133,7 @@ internal sealed class AnsiTerminalTestProgressFrame
 
         AppendToWidth(terminal, detail.Text, nonReservedWidth, ref charsTaken);
 
-        AnsiTerminal.SetCursorHorizontal(Width - durationString.Length);
+        terminal.SetCursorHorizontal(Width - durationString.Length);
         terminal.Append(durationString);
     }
 
@@ -182,7 +182,7 @@ internal sealed class AnsiTerminalTestProgressFrame
         {
             // Move cursor back to 1st line of progress.
             // + 2 because we output and empty line right below.
-            AnsiTerminal.MoveCursorUp(previousFrame.RenderedLines.Count + 2);
+            terminal.MoveCursorUp(previousFrame.RenderedLines.Count + 2);
         }
 
         // When there is nothing to render, don't write empty lines, e.g. when we start the test run, and then we kick off build
@@ -215,7 +215,7 @@ internal sealed class AnsiTerminalTestProgressFrame
                         if (previouslyRenderedLine.RenderedDurationLength == durationString.Length)
                         {
                             // Duration is the same length rewrite just it.
-                            AnsiTerminal.SetCursorHorizontal(MaxColumn);
+                            terminal.SetCursorHorizontal(MaxColumn);
                             terminal.Append($"{AnsiCodes.SetCursorHorizontal(MaxColumn)}{AnsiCodes.MoveCursorBackward(durationString.Length)}{durationString}");
                             currentLine.RenderedDurationLength = durationString.Length;
                         }
@@ -250,7 +250,7 @@ internal sealed class AnsiTerminalTestProgressFrame
                         if (previouslyRenderedLine.RenderedDurationLength == durationString.Length)
                         {
                             // Duration is the same length rewrite just it.
-                            AnsiTerminal.SetCursorHorizontal(MaxColumn);
+                            terminal.SetCursorHorizontal(MaxColumn);
                             terminal.Append($"{AnsiCodes.SetCursorHorizontal(MaxColumn)}{AnsiCodes.MoveCursorBackward(durationString.Length)}{durationString}");
                             currentLine.RenderedDurationLength = durationString.Length;
                         }

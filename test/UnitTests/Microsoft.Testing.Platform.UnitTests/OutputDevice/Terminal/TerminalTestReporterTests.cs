@@ -29,6 +29,8 @@ public sealed class TerminalTestReporterTests
 #if NETCOREAPP
         StringAssert.Contains(terminal.Output, "    at Microsoft.Testing.Platform.UnitTests.TerminalTestReporterTests.AppendStackFrameFormatsStackTraceLineCorrectly() in ");
 #else
+        // This is caused by us using portable symbols, and .NET Framework 4.6.2, once we update to .NET Framework 4.7.2 the path to file will be included in the stacktrace and this won't be necessary.
+        // See first point here: https://learn.microsoft.com/en-us/dotnet/core/diagnostics/symbols#support-for-portable-pdbs
         StringAssert.Contains(terminal.Output, "    at Microsoft.Testing.Platform.UnitTests.TerminalTestReporterTests.AppendStackFrameFormatsStackTraceLineCorrectly()");
 #endif
         // Line number without the respective file
@@ -64,13 +66,218 @@ public sealed class TerminalTestReporterTests
     }
 
     [TestMethod]
-    public void OutputFormattingIsCorrect()
+    public void NonAnsiTerminal_OutputFormattingIsCorrect()
     {
         var stringBuilderConsole = new StringBuilderConsole();
         var terminalReporter = new TerminalTestReporter(stringBuilderConsole, new TerminalTestReporterOptions
         {
             ShowPassedTests = () => true,
+
+            // Like --no-ansi in commandline, should disable ANSI altogether.
+            UseAnsi = false,
+
+            ShowAssembly = false,
+            ShowAssemblyStartAndComplete = false,
+            ShowProgress = () => false,
+        });
+
+        DateTimeOffset startTime = DateTimeOffset.MinValue;
+        DateTimeOffset endTime = DateTimeOffset.MaxValue;
+        terminalReporter.TestExecutionStarted(startTime, 1, isDiscovery: false);
+
+        string targetFramework = "net8.0";
+        string architecture = "x64";
+        string assembly = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\work\assembly.dll" : "/mnt/work/assembly.dll";
+        string folder = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\work\" : "/mnt/work/";
+        string folderNoSlash = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\work" : "/mnt/work";
+        string folderLink = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:/work/" : "mnt/work/";
+        string folderLinkNoSlash = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:/work" : "mnt/work";
+
+        terminalReporter.AssemblyRunStarted(assembly, targetFramework, architecture);
+        string standardOutput = "Hello!";
+        string errorOutput = "Oh no!";
+
+        terminalReporter.TestCompleted(assembly, targetFramework, architecture, testNodeUid: "PassedTest1", "PassedTest1", TestOutcome.Passed, TimeSpan.FromSeconds(10),
+            informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null, standardOutput, errorOutput);
+        terminalReporter.TestCompleted(assembly, targetFramework, architecture, testNodeUid: "SkippedTest1", "SkippedTest1", TestOutcome.Skipped, TimeSpan.FromSeconds(10),
+            informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null, standardOutput, errorOutput);
+        // timed out + canceled + failed should all report as failed in summary
+        terminalReporter.TestCompleted(assembly, targetFramework, architecture, testNodeUid: "TimedoutTest1", "TimedoutTest1", TestOutcome.Timeout, TimeSpan.FromSeconds(10),
+            informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null, standardOutput, errorOutput);
+        terminalReporter.TestCompleted(assembly, targetFramework, architecture, testNodeUid: "CanceledTest1", "CanceledTest1", TestOutcome.Canceled, TimeSpan.FromSeconds(10),
+            informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null, standardOutput, errorOutput);
+        terminalReporter.TestCompleted(assembly, targetFramework, architecture, testNodeUid: "FailedTest1", "FailedTest1", TestOutcome.Fail, TimeSpan.FromSeconds(10),
+            informativeMessage: null, errorMessage: "Tests failed", exception: new StackTraceException(@$"   at FailingTest() in {folder}codefile.cs:line 10"), expected: "ABC", actual: "DEF", standardOutput, errorOutput);
+        terminalReporter.ArtifactAdded(outOfProcess: true, assembly, targetFramework, architecture, testName: null, @$"{folder}artifact1.txt");
+        terminalReporter.ArtifactAdded(outOfProcess: false, assembly, targetFramework, architecture, testName: null, @$"{folder}artifact2.txt");
+        terminalReporter.AssemblyRunCompleted(assembly, targetFramework, architecture, exitCode: null, outputData: null, errorData: null);
+        terminalReporter.TestExecutionCompleted(endTime);
+
+        string output = stringBuilderConsole.Output;
+
+        string expected = $"""
+            passed PassedTest1 (10s 000ms)
+              Standard output
+                Hello!
+              Error output
+                Oh no!
+            skipped SkippedTest1 (10s 000ms)
+              Standard output
+                Hello!
+              Error output
+                Oh no!
+            failed (canceled) TimedoutTest1 (10s 000ms)
+              Standard output
+                Hello!
+              Error output
+                Oh no!
+            failed (canceled) CanceledTest1 (10s 000ms)
+              Standard output
+                Hello!
+              Error output
+                Oh no!
+            failed FailedTest1 (10s 000ms)
+              Tests failed
+              Expected
+                ABC
+              Actual
+                DEF
+                at FailingTest() in {folder}codefile.cs:10
+              Standard output
+                Hello!
+              Error output
+                Oh no!
+
+              Out of process file artifacts produced:
+                - {folder}artifact1.txt
+              In process file artifacts produced:
+                - {folder}artifact2.txt
+
+            Test run summary: Failed! - {assembly} (net8.0|x64)
+              total: 5
+              failed: 3
+              succeeded: 1
+              skipped: 1
+              duration: 3652058d 23h 59m 59s 999ms
+
+            """;
+
+        Assert.AreEqual(expected, ShowEscape(output));
+    }
+
+    [TestMethod]
+    public void SimpleAnsiTerminal_OutputFormattingIsCorrect()
+    {
+        var stringBuilderConsole = new StringBuilderConsole();
+        var terminalReporter = new TerminalTestReporter(stringBuilderConsole, new TerminalTestReporterOptions
+        {
+            ShowPassedTests = () => true,
+            // Like if we autodetect that we are in CI (e.g. by looking at TF_BUILD, and we don't disable ANSI.
             UseAnsi = true,
+            UseCIAnsi = true,
+            ForceAnsi = true,
+
+            ShowAssembly = false,
+            ShowAssemblyStartAndComplete = false,
+            ShowProgress = () => false,
+        });
+
+        DateTimeOffset startTime = DateTimeOffset.MinValue;
+        DateTimeOffset endTime = DateTimeOffset.MaxValue;
+        terminalReporter.TestExecutionStarted(startTime, 1, isDiscovery: false);
+
+        string targetFramework = "net8.0";
+        string architecture = "x64";
+        string assembly = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\work\assembly.dll" : "/mnt/work/assembly.dll";
+        string folder = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\work\" : "/mnt/work/";
+        string folderNoSlash = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\work" : "/mnt/work";
+        string folderLink = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:/work/" : "mnt/work/";
+        string folderLinkNoSlash = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:/work" : "mnt/work";
+
+        terminalReporter.AssemblyRunStarted(assembly, targetFramework, architecture);
+        string standardOutput = "Hello!";
+        string errorOutput = "Oh no!";
+
+        terminalReporter.TestCompleted(assembly, targetFramework, architecture, testNodeUid: "PassedTest1", "PassedTest1", TestOutcome.Passed, TimeSpan.FromSeconds(10),
+            informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null, standardOutput, errorOutput);
+        terminalReporter.TestCompleted(assembly, targetFramework, architecture, testNodeUid: "SkippedTest1", "SkippedTest1", TestOutcome.Skipped, TimeSpan.FromSeconds(10),
+            informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null, standardOutput, errorOutput);
+        // timed out + canceled + failed should all report as failed in summary
+        terminalReporter.TestCompleted(assembly, targetFramework, architecture, testNodeUid: "TimedoutTest1", "TimedoutTest1", TestOutcome.Timeout, TimeSpan.FromSeconds(10),
+            informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null, standardOutput, errorOutput);
+        terminalReporter.TestCompleted(assembly, targetFramework, architecture, testNodeUid: "CanceledTest1", "CanceledTest1", TestOutcome.Canceled, TimeSpan.FromSeconds(10),
+            informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null, standardOutput, errorOutput);
+        terminalReporter.TestCompleted(assembly, targetFramework, architecture, testNodeUid: "FailedTest1", "FailedTest1", TestOutcome.Fail, TimeSpan.FromSeconds(10),
+            informativeMessage: null, errorMessage: "Tests failed", exception: new StackTraceException(@$"   at FailingTest() in {folder}codefile.cs:line 10"), expected: "ABC", actual: "DEF", standardOutput, errorOutput);
+        terminalReporter.ArtifactAdded(outOfProcess: true, assembly, targetFramework, architecture, testName: null, @$"{folder}artifact1.txt");
+        terminalReporter.ArtifactAdded(outOfProcess: false, assembly, targetFramework, architecture, testName: null, @$"{folder}artifact2.txt");
+        terminalReporter.AssemblyRunCompleted(assembly, targetFramework, architecture, exitCode: null, outputData: null, errorData: null);
+        terminalReporter.TestExecutionCompleted(endTime);
+
+        string output = stringBuilderConsole.Output;
+
+        string expected = $"""
+            ␛[92mpassed␛[m PassedTest1␛[90m ␛[90m(10s 000ms)␛[m
+            ␛[90m  Standard output
+                Hello!
+              Error output
+                Oh no!
+            ␛[m␛[93mskipped␛[m SkippedTest1␛[90m ␛[90m(10s 000ms)␛[m
+            ␛[90m  Standard output
+                Hello!
+              Error output
+                Oh no!
+            ␛[m␛[91mfailed (canceled)␛[m TimedoutTest1␛[90m ␛[90m(10s 000ms)␛[m
+            ␛[90m  Standard output
+                Hello!
+              Error output
+                Oh no!
+            ␛[m␛[91mfailed (canceled)␛[m CanceledTest1␛[90m ␛[90m(10s 000ms)␛[m
+            ␛[90m  Standard output
+                Hello!
+              Error output
+                Oh no!
+            ␛[m␛[91mfailed␛[m FailedTest1␛[90m ␛[90m(10s 000ms)␛[m
+            ␛[91m  Tests failed
+            ␛[m␛[91m  Expected
+                ABC
+              Actual
+                DEF
+            ␛[m␛[90m    at FailingTest() in {folder}codefile.cs:10␛[90m
+            ␛[m␛[90m  Standard output
+                Hello!
+              Error output
+                Oh no!
+            ␛[m
+              Out of process file artifacts produced:
+                - {folder}artifact1.txt
+              In process file artifacts produced:
+                - {folder}artifact2.txt
+
+            ␛[91mTest run summary: Failed!␛[90m - ␛[m{assembly} (net8.0|x64)
+            ␛[m  total: 5
+            ␛[91m  failed: 3
+            ␛[m  succeeded: 1
+              skipped: 1
+              duration: 3652058d 23h 59m 59s 999ms
+            
+            """;
+
+        // Write to console, so we can see it in CI and double check that it is colored.
+        Console.WriteLine(output);
+        Assert.AreEqual(expected, ShowEscape(output));
+    }
+
+    [TestMethod]
+    public void AnsiTerminal_OutputFormattingIsCorrect()
+    {
+        var stringBuilderConsole = new StringBuilderConsole();
+        var terminalReporter = new TerminalTestReporter(stringBuilderConsole, new TerminalTestReporterOptions
+        {
+            ShowPassedTests = () => true,
+            // Like if we autodetect that we are in ANSI capable terminal.
+            UseAnsi = true,
+            UseCIAnsi = false,
             ForceAnsi = true,
 
             ShowAssembly = false,
@@ -163,16 +370,16 @@ public sealed class TerminalTestReporterTests
     }
 
     [TestMethod]
-    // TODO: revert this before merging!
-    [Ignore("Broke the ansi reporter on purpose.")]
-    public void OutputProgressFrameIsCorrect()
+    public void AnsiTerminal_OutputProgressFrameIsCorrect()
     {
         var stringBuilderConsole = new StringBuilderConsole();
         var stopwatchFactory = new StopwatchFactory();
         var terminalReporter = new TerminalTestReporter(stringBuilderConsole, new TerminalTestReporterOptions
         {
             ShowPassedTests = () => true,
+            // Like if we autodetect that we are in ANSI capable terminal.
             UseAnsi = true,
+            UseCIAnsi = false,
             ForceAnsi = true,
 
             ShowActiveTests = true,

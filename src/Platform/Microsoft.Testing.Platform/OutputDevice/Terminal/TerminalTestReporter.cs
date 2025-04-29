@@ -77,18 +77,20 @@ internal sealed partial class TerminalTestReporter : IDisposable
         }
         else
         {
-            // Autodetect.
-            (bool consoleAcceptsAnsiCodes, bool _, uint? originalConsoleMode) = NativeMethods.QueryIsScreenAndTryEnableAnsiColorCodes();
-#pragma warning disable RS0030 // Do not use banned APIs
-            if (Environment.GetEnvironmentVariable("TF_BUILD") != null)
+            if (_options.UseCIAnsi)
             {
-                consoleAcceptsAnsiCodes = true;
+                // We are told externally that we are in CI, use simplified ANSI mode.
+                terminalWithProgress = new TestProgressStateAwareTerminal(new SimpleAnsiTerminal(console), showProgress, writeProgressImmediatelyAfterOutput: true, updateEvery: nonAnsiUpdateCadenceInMs);
             }
-#pragma warning restore RS0030 // Do not use banned APIs
-            _originalConsoleMode = originalConsoleMode;
-            terminalWithProgress = consoleAcceptsAnsiCodes || _options.ForceAnsi is true
-                ? new TestProgressStateAwareTerminal(new AnsiTerminal(console, _options.BaseDirectory), showProgress, writeProgressImmediatelyAfterOutput: true, updateEvery: ansiUpdateCadenceInMs)
-                : new TestProgressStateAwareTerminal(new NonAnsiTerminal(console), showProgress, writeProgressImmediatelyAfterOutput: false, updateEvery: nonAnsiUpdateCadenceInMs);
+            else
+            {
+                // We are not in CI, or in CI non-compatible with simple ANSI, autodetect terminal capabilities
+                (bool consoleAcceptsAnsiCodes, bool _, uint? originalConsoleMode) = NativeMethods.QueryIsScreenAndTryEnableAnsiColorCodes();
+                _originalConsoleMode = originalConsoleMode;
+                terminalWithProgress = consoleAcceptsAnsiCodes || _options.ForceAnsi is true
+                    ? new TestProgressStateAwareTerminal(new AnsiTerminal(console, _options.BaseDirectory), showProgress, writeProgressImmediatelyAfterOutput: true, updateEvery: ansiUpdateCadenceInMs)
+                        : new TestProgressStateAwareTerminal(new NonAnsiTerminal(console), showProgress, writeProgressImmediatelyAfterOutput: false, updateEvery: nonAnsiUpdateCadenceInMs);
+            }
         }
 
         _terminalWithProgress = terminalWithProgress;
