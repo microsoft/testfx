@@ -38,6 +38,7 @@ internal sealed class FrameworkHandlerAdapter : IFrameworkHandle
     private readonly string _testAssemblyPath;
     private readonly INamedFeatureCapability? _namedFeatureCapability;
     private readonly ICommandLineOptions _commandLineOptions;
+    private readonly IClientInfo _clientInfo;
 
     public FrameworkHandlerAdapter(
         VSTestBridgedTestFrameworkBase adapterExtensionBase,
@@ -46,6 +47,7 @@ internal sealed class FrameworkHandlerAdapter : IFrameworkHandle
         ITestApplicationModuleInfo testApplicationModuleInfo,
         INamedFeatureCapability? namedFeatureCapability,
         ICommandLineOptions commandLineOptions,
+        IClientInfo clientInfo,
         IMessageBus messageBus,
         IOutputDevice outputDevice,
         ILoggerFactory loggerFactory,
@@ -73,6 +75,7 @@ internal sealed class FrameworkHandlerAdapter : IFrameworkHandle
 
         _namedFeatureCapability = namedFeatureCapability;
         _commandLineOptions = commandLineOptions;
+        _clientInfo = clientInfo;
         _frameworkHandle = frameworkHandle;
         _logger = loggerFactory.CreateLogger<FrameworkHandlerAdapter>();
         _messageBus = messageBus;
@@ -137,7 +140,7 @@ internal sealed class FrameworkHandlerAdapter : IFrameworkHandle
         _frameworkHandle?.RecordResult(testResult);
 
         // Publish node state change to Microsoft Testing Platform
-        var testNode = testResult.ToTestNode(_isTrxEnabled, _namedFeatureCapability, _commandLineOptions);
+        var testNode = testResult.ToTestNode(_isTrxEnabled, _namedFeatureCapability, _commandLineOptions, _clientInfo);
 
         var testNodeChange = new TestNodeUpdateMessage(_session.SessionUid, testNode);
         _messageBus.PublishAsync(_adapterExtensionBase, testNodeChange).Await();
@@ -156,7 +159,7 @@ internal sealed class FrameworkHandlerAdapter : IFrameworkHandle
         _frameworkHandle?.RecordStart(testCase);
 
         // Publish node state change to Microsoft Testing Platform
-        var testNode = testCase.ToTestNode(_isTrxEnabled, _namedFeatureCapability, _commandLineOptions);
+        var testNode = testCase.ToTestNode(_isTrxEnabled, _namedFeatureCapability, _commandLineOptions, _clientInfo);
         testNode.Properties.Add(InProgressTestNodeStateProperty.CachedInstance);
         var testNodeChange = new TestNodeUpdateMessage(_session.SessionUid, testNode);
 

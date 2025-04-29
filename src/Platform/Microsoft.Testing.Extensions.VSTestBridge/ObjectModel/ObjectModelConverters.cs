@@ -9,6 +9,8 @@ using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.ServerMode;
+using Microsoft.Testing.Platform.Services;
+using Microsoft.Testing.Platform.TestHost;
 using Microsoft.TestPlatform.AdapterUtilities.ManagedNameUtilities;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
@@ -47,10 +49,16 @@ internal static class ObjectModelConverters
         valueType: typeof(KeyValuePair<string, string>[]),
         owner: typeof(TestObject));
 
+    // Visual Studio Test Explorer used to use location.file and location.line-start only for non-vstestProvider.
+    // And for vstestProvider, it uses vstest.TestCase.CodeFilePath and vstest.TestCase.LineNumber.
+    // This behavior changed and we now always support location.* both for vstestProvider and non-vstestProvider.
+    // However, we still want to send the vstest.TestCase.* if the client doesn't respect location.*
+    private static readonly Version VersionRespectingLocationForVSTestProvider = new("1.0.1");
+
     /// <summary>
     /// Converts a VSTest <see cref="TestCase"/> to a Microsoft Testing Platform <see cref="TestNode"/>.
     /// </summary>
-    public static TestNode ToTestNode(this TestCase testCase, bool isTrxEnabled, INamedFeatureCapability? namedFeatureCapability, ICommandLineOptions commandLineOptions, string? displayNameFromTestResult = null)
+    public static TestNode ToTestNode(this TestCase testCase, bool isTrxEnabled, INamedFeatureCapability? namedFeatureCapability, ICommandLineOptions commandLineOptions, IClientInfo clientInfo, string? displayNameFromTestResult = null)
     {
         string testNodeUid = testCase.Id.ToString();
 
@@ -70,7 +78,7 @@ internal static class ObjectModelConverters
 
         if (ShouldAddVSTestProviderProperties(namedFeatureCapability, commandLineOptions))
         {
-            CopyVSTestProviderProperties(testNode, testCase);
+            CopyVSTestProviderProperties(testNode, testCase, clientInfo);
         }
 
         if (testCase.CodeFilePath is not null)
@@ -108,7 +116,7 @@ internal static class ObjectModelConverters
         }
     }
 
-    private static void CopyVSTestProviderProperties(TestNode testNode, TestCase testCase)
+    private static void CopyVSTestProviderProperties(TestNode testNode, TestCase testCase, IClientInfo clientInfo)
     {
         if (testCase.Id is Guid testCaseId)
         {
@@ -124,14 +132,23 @@ internal static class ObjectModelConverters
         {
             testNode.Properties.Add(new SerializableKeyValuePairStringProperty("vstest.original-executor-uri", originalExecutorUri.AbsoluteUri));
         }
+
+        if (!RoslynString.IsNullOrEmpty(testCase.CodeFilePath) &&
+            clientInfo.Id == WellKnownClients.VisualStudio &&
+            Version.TryParse(clientInfo.Version, out Version? clientVersion) &&
+            clientVersion < VersionRespectingLocationForVSTestProvider)
+        {
+            testNode.Properties.Add(new SerializableKeyValuePairStringProperty("vstest.TestCase.CodeFilePath", testCase.CodeFilePath));
+            testNode.Properties.Add(new SerializableKeyValuePairStringProperty("vstest.TestCase.LineNumber", testCase.LineNumber.ToString(CultureInfo.InvariantCulture)));
+        }
     }
 
     /// <summary>
     /// Converts a VSTest <see cref="TestResult"/> to a Microsoft Testing Platform <see cref="TestNode"/>.
     /// </summary>
-    public static TestNode ToTestNode(this TestResult testResult, bool isTrxEnabled, INamedFeatureCapability? namedFeatureCapability, ICommandLineOptions commandLineOptions)
+    public static TestNode ToTestNode(this TestResult testResult, bool isTrxEnabled, INamedFeatureCapability? namedFeatureCapability, ICommandLineOptions commandLineOptions, IClientInfo clientInfo)
     {
-        var testNode = testResult.TestCase.ToTestNode(isTrxEnabled, namedFeatureCapability, commandLineOptions, testResult.DisplayName);
+        var testNode = testResult.TestCase.ToTestNode(isTrxEnabled, namedFeatureCapability, commandLineOptions, clientInfo, testResult.DisplayName);
 
         CopyCategoryAndTraits(testResult, testNode, isTrxEnabled);
 
