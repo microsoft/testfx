@@ -263,8 +263,6 @@ public sealed class TerminalTestReporterTests
             
             """;
 
-        // Write to console, so we can see it in CI and double check that it is colored.
-        Console.WriteLine(output);
         Assert.AreEqual(expected, ShowEscape(output));
     }
 
