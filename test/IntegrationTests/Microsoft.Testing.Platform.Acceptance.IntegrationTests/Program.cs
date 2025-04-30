@@ -22,7 +22,7 @@ builder.AddAppInsightsTelemetryProvider();
 builder.AddCrashDumpProvider(ignoreIfNotSupported: true);
 builder.AddHangDumpProvider();
 builder.AddRetryProvider();
-builder.AddTrxReportProvider();
+builder.AddAzureDevOpsProvider();
 
 // Custom suite tools
 CompositeExtensionFactory<SlowestTestsConsumer> slowestTestCompositeServiceFactory

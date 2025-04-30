@@ -30,6 +30,7 @@ Console.WriteLine("NATIVE_AOT enabled");
 
 builder.AddRetryProvider();
 builder.AddTrxReportProvider();
+builder.AddAzureDevOpsProvider();
 
 // Custom suite tools
 CompositeExtensionFactory<SlowestTestsConsumer> slowestTestCompositeServiceFactory
