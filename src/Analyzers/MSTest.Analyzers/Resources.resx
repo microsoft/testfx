@@ -573,4 +573,16 @@ The type declaring these methods should also respect the following rules:
   <data name="UseConditionBaseWithTestClassMessageFormat" xml:space="preserve">
     <value>The attribute '{0}' which derives from 'ConditionBaseAttribute' should be used only on classes marked with `TestClassAttribute`</value>
   </data>
+  <data name="DuplicateDataRowTitle" xml:space="preserve">
+    <value>Avoid duplicated 'DataRow' entries</value>
+  </data>
+  <data name="DuplicateDataRowMessageFormat" xml:space="preserve">
+    <value>Do not duplicate 'DataRow' attributes. This is usually a copy/paste error. The attribute indices are '{0}' and '{1}'.</value>
+  </data>
+  <data name="UseRetryWithTestMethodTitle" xml:space="preserve">
+    <value>Use retry attribute on test method</value>
+  </data>
+  <data name="UseRetryWithTestMethodMessageFormat" xml:space="preserve">
+    <value>An attribute that derives from 'RetryBaseAttribute' can be specified only on a test method</value>
+  </data>
 </root>

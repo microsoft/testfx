@@ -41,7 +41,12 @@ internal sealed class RetryDataConsumer : IDataConsumer, ITestSessionLifetimeHan
     public async Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken)
     {
         var testNodeUpdateMessage = (TestNodeUpdateMessage)value;
-        TestNodeStateProperty nodeState = testNodeUpdateMessage.TestNode.Properties.Single<TestNodeStateProperty>();
+        TestNodeStateProperty? nodeState = testNodeUpdateMessage.TestNode.Properties.SingleOrDefault<TestNodeStateProperty>();
+        if (nodeState is null)
+        {
+            return;
+        }
+
         if (Array.IndexOf(TestNodePropertiesCategories.WellKnownTestNodeTestRunOutcomeFailedProperties, nodeState.GetType()) != -1)
         {
             ApplicationStateGuard.Ensure(_retryFailedTestsLifecycleCallbacks is not null);

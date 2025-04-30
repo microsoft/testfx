@@ -4,7 +4,6 @@
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
-using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Extensions;
 
 using UnitTestOutcome = Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome;
@@ -15,7 +14,7 @@ internal static class FixtureMethodRunner
 {
     internal static TestFailedException? RunWithTimeoutAndCancellation(
         Action action, CancellationTokenSource cancellationTokenSource, TimeoutInfo? timeoutInfo, MethodInfo methodInfo,
-        IExecutionContextScope executionContextScope, string methodCanceledMessageFormat, string methodTimedOutMessageFormat,
+        ExecutionContext? executionContext, string methodCanceledMessageFormat, string methodTimedOutMessageFormat,
         // When a test method is marked with [Timeout], this timeout is applied from ctor to destructor, so we need to take
         // that into account when processing the OCE of the action.
         (CancellationTokenSource TokenSource, int Timeout)? testTimeoutInfo = default)
@@ -33,7 +32,7 @@ internal static class FixtureMethodRunner
         {
             try
             {
-                action();
+                ExecutionContextHelpers.RunOnContext(executionContext, action);
                 return null;
             }
             catch (Exception ex)
@@ -62,16 +61,16 @@ internal static class FixtureMethodRunner
 
         if (timeoutInfo.Value.CooperativeCancellation)
         {
-            return RunWithCooperativeCancellation(action, cancellationTokenSource, timeoutInfo.Value.Timeout, methodInfo, methodCanceledMessageFormat, methodTimedOutMessageFormat);
+            return RunWithCooperativeCancellation(action, executionContext, cancellationTokenSource, timeoutInfo.Value.Timeout, methodInfo, methodCanceledMessageFormat, methodTimedOutMessageFormat);
         }
 
         // We need to start a thread to handle "cancellation" and "timeout" scenarios.
         return RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && Thread.CurrentThread.GetApartmentState() == ApartmentState.STA
-            ? RunWithTimeoutAndCancellationWithSTAThread(action, cancellationTokenSource, timeoutInfo.Value.Timeout, methodInfo, executionContextScope, methodCanceledMessageFormat, methodTimedOutMessageFormat)
-            : RunWithTimeoutAndCancellationWithThreadPool(action, cancellationTokenSource, timeoutInfo.Value.Timeout, methodInfo, executionContextScope, methodCanceledMessageFormat, methodTimedOutMessageFormat);
+            ? RunWithTimeoutAndCancellationWithSTAThread(action, executionContext, cancellationTokenSource, timeoutInfo.Value.Timeout, methodInfo, methodCanceledMessageFormat, methodTimedOutMessageFormat)
+            : RunWithTimeoutAndCancellationWithThreadPool(action, executionContext, cancellationTokenSource, timeoutInfo.Value.Timeout, methodInfo, methodCanceledMessageFormat, methodTimedOutMessageFormat);
     }
 
-    private static TestFailedException? RunWithCooperativeCancellation(Action action, CancellationTokenSource cancellationTokenSource, int timeout, MethodInfo methodInfo, string methodCanceledMessageFormat, string methodTimedOutMessageFormat)
+    private static TestFailedException? RunWithCooperativeCancellation(Action action, ExecutionContext? executionContext, CancellationTokenSource cancellationTokenSource, int timeout, MethodInfo methodInfo, string methodCanceledMessageFormat, string methodTimedOutMessageFormat)
     {
         CancellationTokenSource? timeoutTokenSource = null;
         try
@@ -92,7 +91,7 @@ internal static class FixtureMethodRunner
 
             try
             {
-                action();
+                ExecutionContextHelpers.RunOnContext(executionContext, action);
                 return null;
             }
             catch (Exception ex) when (ex.IsOperationCanceledExceptionFromToken(cancellationTokenSource.Token))
@@ -122,8 +121,8 @@ internal static class FixtureMethodRunner
     }
 
     private static TestFailedException? RunWithTimeoutAndCancellationWithThreadPool(
-        Action action, CancellationTokenSource cancellationTokenSource, int timeout, MethodInfo methodInfo,
-        IExecutionContextScope executionContextScope, string methodCanceledMessageFormat, string methodTimedOutMessageFormat)
+        Action action, ExecutionContext? executionContext, CancellationTokenSource cancellationTokenSource, int timeout, MethodInfo methodInfo,
+        string methodCanceledMessageFormat, string methodTimedOutMessageFormat)
     {
         Exception? realException = null;
         Task? executionTask;
@@ -134,7 +133,7 @@ internal static class FixtureMethodRunner
                 {
                     try
                     {
-                        ExecutionContextService.RunActionOnContext(action, executionContextScope);
+                        ExecutionContextHelpers.RunOnContext(executionContext, action);
                     }
                     catch (Exception ex)
                     {
@@ -188,19 +187,21 @@ internal static class FixtureMethodRunner
 
     [SupportedOSPlatform("windows")]
     private static TestFailedException? RunWithTimeoutAndCancellationWithSTAThread(
-        Action action, CancellationTokenSource cancellationTokenSource, int timeout, MethodInfo methodInfo,
-        IExecutionContextScope executionContextScope, string methodCanceledMessageFormat, string methodTimedOutMessageFormat)
+        Action action, ExecutionContext? executionContext, CancellationTokenSource cancellationTokenSource, int timeout, MethodInfo methodInfo,
+        string methodCanceledMessageFormat, string methodTimedOutMessageFormat)
     {
         TaskCompletionSource<int> tcs = new();
+        Exception? realException = null;
         Thread executionThread = new(() =>
         {
             try
             {
-                ExecutionContextService.RunActionOnContext(action, executionContextScope);
+                ExecutionContextHelpers.RunOnContext(executionContext, action);
                 tcs.SetResult(0);
             }
             catch (Exception ex)
             {
+                realException = ex;
                 tcs.SetException(ex);
             }
         })
@@ -239,7 +240,12 @@ internal static class FixtureMethodRunner
         catch (Exception)
         {
             // We throw the real exception to have the original stack trace to elaborate up the chain.
-            if (tcs.Task.Exception is not null)
+            // Also note that tcs.Task.Exception can be an AggregateException, so we favor the "real exception".
+            if (realException is not null)
+            {
+                throw realException;
+            }
+            else if (tcs.Task.Exception is not null)
             {
                 throw tcs.Task.Exception;
             }

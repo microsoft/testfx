@@ -196,9 +196,12 @@ extends:
               image: 1es-ubuntu-2204
               os: linux
             steps:
-            - script: eng/common/cibuild.sh
+            - script: eng/common/build.sh
                 -configuration $(_BuildConfig)
                 -prepareMachine
+                --restore
+                --build
+                --pack
                 /p:Test=false
                 /p:NonWindowsBuild=true
               displayName: Build

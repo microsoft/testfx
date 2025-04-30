@@ -215,8 +215,8 @@
 1 path to file</note>
       </trans-unit>
       <trans-unit id="DiscoveredTestsInAssembly">
-        <source>Discovered {0} tests in assembly</source>
-        <target state="translated">{0} pruebas detectadas en el ensamblado</target>
+        <source>Discovered {0} test(s) in assembly</source>
+        <target state="translated">Pruebas {0} detectadas en el ensamblado</target>
         <note>0 is count, the sentence is followed by the path of the assebly</note>
       </trans-unit>
       <trans-unit id="DiscoveringTestsFrom">
@@ -633,11 +633,6 @@ Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is
 Toma un argumento como cadena con el formato &lt;value&gt;[h|m|s] donde 'value' es float.</target>
         <note />
       </trans-unit>
-      <trans-unit id="PlatformCommandLineVSTestAdapterModeOptionDescription">
-        <source>Bridge to VSTest APIs</source>
-        <target state="translated">Puente a las API de VSTest</target>
-        <note />
-      </trans-unit>
       <trans-unit id="ProcessHasNotYetExitedErrorMessage">
         <source>Process should have exited before we can determine this value</source>
         <target state="translated">El proceso debería haberse terminado para poder determinar este valor</target>
@@ -851,13 +846,13 @@ Los valores válidos son 'Normal', 'Detallado'. El valor predeterminado es 'Norm
         <note />
       </trans-unit>
       <trans-unit id="TestDiscoverySummary">
-        <source>Discovered {0} tests in {1} assemblies.</source>
-        <target state="translated">{0} pruebas detectadas en {1} ensamblados.</target>
+        <source>Test discovery summary: found {0} test(s) in {1} assemblies.</source>
+        <target state="translated">Resumen de detección de pruebas: se encontraron {0} pruebas en ensamblados {1}.</target>
         <note>0 is number of tests, 1 is count of assemblies</note>
       </trans-unit>
       <trans-unit id="TestDiscoverySummarySingular">
-        <source>Discovered {0} tests.</source>
-        <target state="translated">{0} pruebas detectadas.</target>
+        <source>Test discovery summary: found {0} test(s)</source>
+        <target state="translated">Resumen de detección de pruebas: se encontraron {0} pruebas</target>
         <note>0 is number of tests</note>
       </trans-unit>
       <trans-unit id="TestFrameworkProxyApiShouldNotBeCalled">

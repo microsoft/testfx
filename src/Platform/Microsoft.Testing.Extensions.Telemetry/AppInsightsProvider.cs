@@ -228,7 +228,6 @@ internal sealed partial class AppInsightsProvider :
         catch (OperationCanceledException)
         {
             // This is expected when the test application is shutting down or if flush timeout.
-            return;
         }
     }
 

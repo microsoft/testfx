@@ -16,7 +16,7 @@ public class HelpInfoTests : AcceptanceTestBase<HelpInfoTests.TestAssetFixture>
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
         const string wildcardMatchPattern = $"""
-.NET Testing Platform v*
+Microsoft.Testing.Platform v*
 Usage {TestAssetFixture.NoExtensionAssetName}* [option providers] [extension option providers]
 Execute a .NET Test Application.
 Options:
@@ -80,7 +80,7 @@ Extension options:
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
         const string wildcardMatchPattern = $"""
-.NET Testing Platform v*
+Microsoft.Testing.Platform v*
 Usage {TestAssetFixture.NoExtensionAssetName}* [option providers] [extension option providers]
 Execute a .NET Test Application.
 Options:
@@ -101,7 +101,7 @@ Options:
         testHostResult.AssertExitCodeIs(ExitCodes.InvalidCommandLine);
 
         const string wildcardMatchPattern = $"""
-.NET Testing Platform v*
+Microsoft.Testing.Platform v*
 Unknown option '--{UnknownOption}'
 Usage {TestAssetFixture.NoExtensionAssetName}* [option providers] [extension option providers]
 Execute a .NET Test Application.
@@ -121,7 +121,7 @@ Options:
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
         string regexMatchPattern = $"""
-.NET Testing Platform v.+ \[.+\]
+Microsoft.Testing.Platform v.+ \[.+\]
 Microsoft Testing Platform:
   Version: .+
   Dynamic Code Supported: True
@@ -204,10 +204,6 @@ Built-in command line providers:
         Arity: 0
         Hidden: True
         Description: For testing purposes
-      --internal-vstest-adapter
-        Arity: 0
-        Hidden: True
-        Description: Bridge to VSTest APIs
       --list-tests
         Arity: 0
         Hidden: False
@@ -271,7 +267,7 @@ Registered tools:
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
         string wildcardPattern = $"""
-.NET Testing Platform v*
+Microsoft.Testing.Platform v*
 Usage {TestAssetFixture.AllExtensionsAssetName}* [option providers] [extension option providers]
 Execute a .NET Test Application.
 Options:
@@ -368,7 +364,7 @@ Extension options:
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
         string wildcardPattern = $"""
-.NET Testing Platform v*
+Microsoft.Testing.Platform v*
 Usage {TestAssetFixture.AllExtensionsAssetName}* [option providers] [extension option providers]
 Execute a .NET Test Application.
 Options:
@@ -387,7 +383,7 @@ Options:
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
         string wildcardPattern = $"""
-.NET Testing Platform v* [*]
+Microsoft.Testing.Platform v* [*]
 Microsoft Testing Platform:
   Version: *
   Dynamic Code Supported: True
@@ -470,10 +466,6 @@ Built-in command line providers:
         Arity: 0
         Hidden: True
         Description: For testing purposes
-      --internal-vstest-adapter
-        Arity: 0
-        Hidden: True
-        Description: Bridge to VSTest APIs
       --list-tests
         Arity: 0
         Hidden: False

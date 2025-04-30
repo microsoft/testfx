@@ -25,7 +25,6 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
     {
         typeof(TestNodeUpdateMessage),
         typeof(SessionFileArtifact),
-        typeof(TestNodeFileArtifact),
         typeof(FileArtifact),
         typeof(TestRequestExecutionTimeInfo),
     };
@@ -48,13 +47,18 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
         {
             case TestNodeUpdateMessage testNodeUpdateMessage:
 
-                TestNodeDetails testNodeDetails = GetTestNodeDetails(testNodeUpdateMessage);
+                TestNodeDetails? testNodeDetails = GetTestNodeDetails(testNodeUpdateMessage);
+                if (testNodeDetails is null)
+                {
+                    return;
+                }
 
                 switch (testNodeDetails.State)
                 {
                     case TestStates.Discovered:
                         DiscoveredTestMessages discoveredTestMessages = new(
                             ExecutionId,
+                            DotnetTestConnection.InstanceId,
                             new[]
                             {
                                 new DiscoveredTestMessage(
@@ -69,6 +73,7 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
                     case TestStates.Skipped:
                         TestResultMessages testResultMessages = new(
                             ExecutionId,
+                            DotnetTestConnection.InstanceId,
                             new[]
                             {
                                 new SuccessfulTestResultMessage(
@@ -92,6 +97,7 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
                     case TestStates.Cancelled:
                         testResultMessages = new(
                             ExecutionId,
+                            DotnetTestConnection.InstanceId,
                             Array.Empty<SuccessfulTestResultMessage>(),
                             new[]
                             {
@@ -111,28 +117,31 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
                         break;
                 }
 
-                break;
-
-            case TestNodeFileArtifact testNodeFileArtifact:
-                FileArtifactMessages fileArtifactMessages = new(
-                    ExecutionId,
-                    new[]
-                    {
+                foreach (FileArtifactProperty artifact in testNodeUpdateMessage.TestNode.Properties.OfType<FileArtifactProperty>())
+                {
+                    FileArtifactMessages testFileArtifactMessages = new(
+                        ExecutionId,
+                        DotnetTestConnection.InstanceId,
+                        new[]
+                        {
                         new FileArtifactMessage(
-                            testNodeFileArtifact.FileInfo.FullName,
-                            testNodeFileArtifact.DisplayName,
-                            testNodeFileArtifact.Description ?? string.Empty,
-                            testNodeFileArtifact.TestNode.Uid.Value,
-                            testNodeFileArtifact.TestNode.DisplayName,
-                            testNodeFileArtifact.SessionUid.Value),
-                    });
+                            artifact.FileInfo.FullName,
+                            artifact.DisplayName,
+                            artifact.Description ?? string.Empty,
+                            testNodeUpdateMessage.TestNode.Uid.Value,
+                            testNodeUpdateMessage.TestNode.DisplayName,
+                            testNodeUpdateMessage.SessionUid.Value),
+                        });
 
-                await _dotnetTestConnection.SendMessageAsync(fileArtifactMessages);
+                    await _dotnetTestConnection.SendMessageAsync(testFileArtifactMessages);
+                }
+
                 break;
 
             case SessionFileArtifact sessionFileArtifact:
-                fileArtifactMessages = new(
+                var fileArtifactMessages = new FileArtifactMessages(
                     ExecutionId,
+                    DotnetTestConnection.InstanceId,
                     new[]
                     {
                         new FileArtifactMessage(
@@ -150,6 +159,7 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
             case FileArtifact fileArtifact:
                 fileArtifactMessages = new(
                     ExecutionId,
+                    DotnetTestConnection.InstanceId,
                     new[]
                     {
                         new FileArtifactMessage(
@@ -166,13 +176,18 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
         }
     }
 
-    private static TestNodeDetails GetTestNodeDetails(TestNodeUpdateMessage testNodeUpdateMessage)
+    private static TestNodeDetails? GetTestNodeDetails(TestNodeUpdateMessage testNodeUpdateMessage)
     {
         byte? state = null;
         long? duration = null;
         string? reason = string.Empty;
         ExceptionMessage[]? exceptions = null;
-        TestNodeStateProperty nodeState = testNodeUpdateMessage.TestNode.Properties.Single<TestNodeStateProperty>();
+        TestNodeStateProperty? nodeState = testNodeUpdateMessage.TestNode.Properties.SingleOrDefault<TestNodeStateProperty>();
+        if (nodeState is null)
+        {
+            return null;
+        }
+
         string? standardOutput = testNodeUpdateMessage.TestNode.Properties.SingleOrDefault<StandardOutputProperty>()?.StandardOutput;
         string? standardError = testNodeUpdateMessage.TestNode.Properties.SingleOrDefault<StandardErrorProperty>()?.StandardError;
 

@@ -1,7 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>$(MicrosoftTestingTargetFrameworks);net462</TargetFrameworks>
+    <TargetFrameworks>$(MicrosoftTestingTargetFrameworks)</TargetFrameworks>
+    <!--
+      .NET Framework 4.7.1 and earlier does not fully support portable PDBs, which breaks tests for Azure DevOps extension.
+      See: https://learn.microsoft.com/en-us/dotnet/core/diagnostics/symbols#support-for-portable-pdbs
+    -->
+    <TargetFrameworks Condition=" '$(OS)' == 'Windows_NT' ">$(TargetFrameworks);net462;net472</TargetFrameworks>
     <EnableMSTestRunner>true</EnableMSTestRunner>
     <OutputType>Exe</OutputType>
   </PropertyGroup>
@@ -14,6 +19,9 @@
       <SetTargetFramework Condition="$([MSBuild]::GetTargetFrameworkIdentifier('$(TargetFramework)')) != '.NETCoreApp'">TargetFramework=netstandard2.0</SetTargetFramework>
     </ProjectReference>
     <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.Retry\Microsoft.Testing.Extensions.Retry.csproj">
+      <SetTargetFramework Condition="$([MSBuild]::GetTargetFrameworkIdentifier('$(TargetFramework)')) != '.NETCoreApp'">TargetFramework=netstandard2.0</SetTargetFramework>
+    </ProjectReference>
+    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.AzureDevOpsReport\Microsoft.Testing.Extensions.AzureDevOpsReport.csproj">
       <SetTargetFramework Condition="$([MSBuild]::GetTargetFrameworkIdentifier('$(TargetFramework)')) != '.NETCoreApp'">TargetFramework=netstandard2.0</SetTargetFramework>
     </ProjectReference>
   </ItemGroup>

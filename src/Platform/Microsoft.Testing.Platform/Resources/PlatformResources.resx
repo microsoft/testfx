@@ -432,9 +432,6 @@ The default is TestResults in the directory that contains the test application.<
   <data name="PlatformCommandLineDotnetTestPipe" xml:space="preserve">
     <value>dotnet test pipe.</value>
   </data>
-  <data name="PlatformCommandLineVSTestAdapterModeOptionDescription" xml:space="preserve">
-    <value>Bridge to VSTest APIs</value>
-  </data>
   <data name="TreeNodeFilterDescription" xml:space="preserve">
     <value>Use a tree filter to filter down the tests to execute</value>
   </data>
@@ -641,15 +638,15 @@ Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is
     <value>Discovering tests from</value>
   </data>
   <data name="TestDiscoverySummary" xml:space="preserve">
-    <value>Discovered {0} tests in {1} assemblies.</value>
+    <value>Test discovery summary: found {0} test(s) in {1} assemblies.</value>
     <comment>0 is number of tests, 1 is count of assemblies</comment>
   </data>
   <data name="DiscoveredTestsInAssembly" xml:space="preserve">
-    <value>Discovered {0} tests in assembly</value>
+    <value>Discovered {0} test(s) in assembly</value>
     <comment>0 is count, the sentence is followed by the path of the assebly</comment>
   </data>
   <data name="TestDiscoverySummarySingular" xml:space="preserve">
-    <value>Discovered {0} tests.</value>
+    <value>Test discovery summary: found {0} test(s)</value>
     <comment>0 is number of tests</comment>
   </data>
   <data name="ExitCode" xml:space="preserve">

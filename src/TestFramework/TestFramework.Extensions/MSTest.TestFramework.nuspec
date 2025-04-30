@@ -5,12 +5,25 @@
     <dependencies>
       <group targetFramework="netstandard2.0">
         <dependency id="MSTest.Analyzers" version="$Version$" />
+
+        <!-- This dependency is used only in adapter, but we have to add it to test framework. -->
+        <!-- See comment in MSTest.TestAdapter.nuspec for info. -->
+        <!-- START: Moved from MSTest.TestAdapter -->
+        <dependency id="System.Threading.Tasks.Extensions" version="$SystemThreadingTasksExtensionsVersion$" />
+        <!-- END: Moved from MSTest.TestAdapter -->
       </group>
       <group targetFramework="net462">
         <dependency id="MSTest.Analyzers" version="$Version$" />
+
+        <!-- This dependency is used only in adapter, but we have to add it to test framework. -->
+        <!-- See comment in MSTest.TestAdapter.nuspec for info. -->
+        <!-- START: Moved from MSTest.TestAdapter -->
+        <dependency id="System.Threading.Tasks.Extensions" version="$SystemThreadingTasksExtensionsVersion$" />
+        <!-- END: Moved from MSTest.TestAdapter -->
       </group>
       <group targetFramework="uap10.0">
         <dependency id="MSTest.Analyzers" version="$Version$" />
+        <dependency id="System.Threading.Tasks.Extensions" version="$SystemThreadingTasksExtensionsVersion$" />
       </group>
       <group targetFramework="netcoreapp3.1">
         <dependency id="MSTest.Analyzers" version="$Version$" />
@@ -70,6 +83,7 @@
     <file src="net6.0\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="buildTransitive\net6.0\" />
     <file src="net6.0-windows10.0.18362.0\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll" target="buildTransitive\net6.0\winui\" />
     <file src="net6.0-windows10.0.18362.0\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="buildTransitive\net6.0\winui\" />
+    <file src="$RepoRoot$src\TestFramework\TestFramework.Extensions\build\net6.0\MSTest.TestFramework.targets" target="build\net6.0\" />
 
     <!-- net7.0 -->
     <file src="net7.0\buildTransitive\winui+uwp\MSTest.TestFramework.targets" target="buildTransitive\net7.0\" />
@@ -78,6 +92,7 @@
     <file src="net7.0\**\Microsoft.VisualStudio.TestPlatform.TestFramework.resources.dll" target="lib\net7.0\" />
     <file src="net7.0\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll" target="buildTransitive\net7.0\" />
     <file src="net7.0\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="buildTransitive\net7.0\" />
+    <file src="$RepoRoot$src\TestFramework\TestFramework.Extensions\build\net7.0\MSTest.TestFramework.targets" target="build\net7.0\" />
 
     <!-- net8.0 -->
     <file src="net8.0\buildTransitive\winui+uwp\MSTest.TestFramework.targets" target="buildTransitive\net8.0\" />
@@ -86,6 +101,7 @@
     <file src="net8.0\**\Microsoft.VisualStudio.TestPlatform.TestFramework.resources.dll" target="lib\net8.0\" />
     <file src="net8.0\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll" target="buildTransitive\net8.0\" />
     <file src="net8.0\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="buildTransitive\net8.0\" />
+    <file src="$RepoRoot$src\TestFramework\TestFramework.Extensions\build\net8.0\MSTest.TestFramework.targets" target="build\net8.0\" />
 
     <!-- net9.0 -->
     <file src="net9.0\buildTransitive\winui+uwp\MSTest.TestFramework.targets" target="buildTransitive\net9.0\" />
@@ -96,6 +112,7 @@
     <file src="net9.0\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="buildTransitive\net9.0\" />
     <file src="net9.0-windows10.0.17763.0\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll" target="buildTransitive\net9.0\uwp" />
     <file src="net9.0-windows10.0.17763.0\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="buildTransitive\net9.0\uwp" />
+    <file src="$RepoRoot$src\TestFramework\TestFramework.Extensions\build\net9.0\MSTest.TestFramework.targets" target="build\net9.0\" />
 
     <!-- Source code -->
     <file src="$srcroot$\**\*.cs" target="src" />

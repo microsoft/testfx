@@ -15,6 +15,7 @@ internal sealed class NonAnsiTerminal : ITerminal
     private readonly IConsole _console;
     private readonly ConsoleColor _defaultForegroundColor;
     private bool _isBatching;
+    private object? _batchingLock;
 
     public NonAnsiTerminal(IConsole console)
     {
@@ -90,8 +91,11 @@ internal sealed class NonAnsiTerminal : ITerminal
         }
 
         bool lockTaken = false;
-        // SystemConsole.ConsoleOut is set only once in static ctor.
-        // So we are sure we will be doing Monitor.Exit on the same instance.
+
+        // We store Console.Out in a field to make sure we will be doing
+        // the Monitor.Exit call on the same instance.
+        _batchingLock = Console.Out;
+
         // Note that we need to lock on System.Out for batching to work correctly.
         // Consider the following scenario:
         // 1. We call StartUpdate
@@ -108,7 +112,27 @@ internal sealed class NonAnsiTerminal : ITerminal
         // Console methods will internally lock on Console.Out, so we are locking on the same thing.
         // This locking is the easiest way to get coloring to work correctly while preventing
         // interleaving with user's calls to Console.Write methods.
-        Monitor.Enter(SystemConsole.ConsoleOut, ref lockTaken);
+        // One extra note:
+        // It's very important to lock on Console.Out (the current Console.Out).
+        // Consider the following scenario:
+        // 1. SystemConsole captures the original Console.Out set by runtime.
+        // 2. Framework author sets his own Console.Out which wraps the original Console.Out.
+        // 3. Two threads are writing concurrently:
+        //    - One thread is writing using Console.Write* APIs, which will use the Console.Out set by framework author.
+        //    - The other thread is writing using NonAnsiTerminal.
+        // 4. **If** we lock the original Console.Out. The following may happen (subject to race) [NOT THE CURRENT CASE - imaginary situation if we lock on the original Console.Out]:
+        //    - First thread enters the Console.Write, which will acquire the lock for the current Console.Out (set by framework author).
+        //    - Second thread executes StartUpdate, and acquires the lock for the original Console.Out.
+        //    - First thread continues in the Write implementation of the framework author, which tries to run Console.Write on the original Console.Out.
+        //    - First thread can't make any progress, because the second thread is holding the lock already.
+        //    - Second thread continues execution, and reaches into runtime code (ConsolePal.WriteFromConsoleStream - on Unix) which tries to acquire the lock for the current Console.Out (set by framework author).
+        //        - (see https://github.com/dotnet/runtime/blob/8a9d492444f06df20fcc5dfdcf7a6395af18361f/src/libraries/System.Console/src/System/ConsolePal.Unix.cs#L963)
+        //    - No thread can progress.
+        //    - Basically, what happened is that the first thread acquires the lock for current Console.Out, then for the original Console.Out.
+        //    - while the second thread acquires the lock for the original Console.Out, then for the current Console.Out.
+        //    - That's a typical deadlock where two threads are acquiring two locks in reverse order.
+        // 5. By locking the *current* Console.Out, we avoid the situation described in 4.
+        Monitor.Enter(_batchingLock, ref lockTaken);
         if (!lockTaken)
         {
             // Can this happen? :/
@@ -120,7 +144,8 @@ internal sealed class NonAnsiTerminal : ITerminal
 
     public void StopUpdate()
     {
-        Monitor.Exit(SystemConsole.ConsoleOut);
+        Monitor.Exit(_batchingLock!);
+        _batchingLock = null;
         _isBatching = false;
     }
 
@@ -250,5 +275,6 @@ internal sealed class NonAnsiTerminal : ITerminal
         => RuntimeInformation.IsOSPlatform(OSPlatform.Create("ANDROID")) ||
             RuntimeInformation.IsOSPlatform(OSPlatform.Create("IOS")) ||
             RuntimeInformation.IsOSPlatform(OSPlatform.Create("TVOS")) ||
+            RuntimeInformation.IsOSPlatform(OSPlatform.Create("WASI")) ||
             RuntimeInformation.IsOSPlatform(OSPlatform.Create("BROWSER"));
 }

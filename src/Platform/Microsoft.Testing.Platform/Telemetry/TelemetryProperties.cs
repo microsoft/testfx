@@ -103,7 +103,6 @@ internal static class TelemetryProperties
     public static class ApplicationMode
     {
         public const string Console = "Console";
-        public const string VSTestAdapterMode = "VSTestAdapterMode";
         public const string Server = "Server";
         public const string TestHostControllers = "TestHostControllers";
         public const string Tool = "Tool";

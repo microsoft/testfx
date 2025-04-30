@@ -6,12 +6,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 /// <summary>
 /// Outcome of a test.
 /// </summary>
-#if RELEASE
 #if NET6_0_OR_GREATER
 [Obsolete(Constants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
 #else
 [Obsolete(Constants.PublicTypeObsoleteMessage)]
-#endif
 #endif
 public enum UnitTestOutcome : int
 {

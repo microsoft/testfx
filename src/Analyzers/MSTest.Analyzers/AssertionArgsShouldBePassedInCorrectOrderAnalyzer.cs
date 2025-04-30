@@ -60,7 +60,7 @@ public sealed class AssertionArgsShouldBePassedInCorrectOrderAnalyzer : Diagnost
     }
 
     private static bool IsConstant(IArgumentOperation argumentOperation)
-        => argumentOperation.Value.ConstantValue.HasValue;
+        => argumentOperation.Value.WalkDownConversion().ConstantValue.HasValue;
 
     private static void AnalyzeOperation(OperationAnalysisContext context, INamedTypeSymbol assertSymbol)
     {

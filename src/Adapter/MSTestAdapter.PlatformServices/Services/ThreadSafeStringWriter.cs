@@ -6,12 +6,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 /// <summary>
 /// AsyncContext aware, thread safe string writer that allows output writes from different threads to end up in the same async local context.
 /// </summary>
-#if RELEASE
 #if NET6_0_OR_GREATER
 [Obsolete(Constants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
 #else
 [Obsolete(Constants.PublicTypeObsoleteMessage)]
-#endif
 #endif
 public class ThreadSafeStringWriter : StringWriter
 {
@@ -178,6 +176,14 @@ public class ThreadSafeStringWriter : StringWriter
                 // for the output type, just return it.
                 return stringBuilder;
             }
+        }
+    }
+
+    internal static void CleanState()
+    {
+        lock (StaticLockObject)
+        {
+            State.Value = new();
         }
     }
 

@@ -27,6 +27,8 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol,
 
     private NamedPipeClient? _dotnetTestPipeClient;
 
+    public static string InstanceId { get; } = Guid.NewGuid().ToString("N");
+
     public DotnetTestConnection(CommandLineHandler commandLineHandler, IProcessHandler processHandler, IEnvironment environment, ITestApplicationModuleInfo testApplicationModuleInfo, ITestApplicationCancellationTokenSource cancellationTokenSource)
     {
         _commandLineHandler = commandLineHandler;
@@ -93,7 +95,7 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol,
         RoslynDebug.Assert(_dotnetTestPipeClient is not null);
 
         string supportedProtocolVersions = ProtocolConstants.Version;
-        HandshakeMessage handshakeMessage = new(new Dictionary<byte, string>()
+        HandshakeMessage handshakeMessage = new(new Dictionary<byte, string>
         {
             { HandshakeMessagePropertyNames.PID, _processHandler.GetCurrentProcess().Id.ToString(CultureInfo.InvariantCulture) },
             { HandshakeMessagePropertyNames.Architecture, RuntimeInformation.ProcessArchitecture.ToString() },
@@ -103,6 +105,7 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol,
             { HandshakeMessagePropertyNames.HostType, hostType },
             { HandshakeMessagePropertyNames.ModulePath, _testApplicationModuleInfo?.GetCurrentTestApplicationFullPath() ?? string.Empty },
             { HandshakeMessagePropertyNames.ExecutionId,  _environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DOTNETTEST_EXECUTIONID) ?? string.Empty },
+            { HandshakeMessagePropertyNames.InstanceId, InstanceId },
         });
 
         HandshakeMessage response = await _dotnetTestPipeClient.RequestReplyAsync<HandshakeMessage, HandshakeMessage>(handshakeMessage, _cancellationTokenSource.CancellationToken);

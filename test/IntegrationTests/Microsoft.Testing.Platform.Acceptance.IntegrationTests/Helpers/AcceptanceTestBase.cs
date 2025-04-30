@@ -42,6 +42,10 @@ public class UnitTest1
     {
     }
 }
+
+#file dotnet.config
+[dotnet.test.runner]
+name= "VSTest"
 """;
 
     static AcceptanceTestBase()

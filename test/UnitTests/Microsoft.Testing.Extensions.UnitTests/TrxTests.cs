@@ -27,7 +27,6 @@ public class TrxTests
     private readonly Mock<ITestFramework> _testFrameworkMock = new();
     private readonly Mock<ITestApplicationModuleInfo> _testApplicationModuleInfoMock = new();
     private readonly Mock<IFileSystem> _fileSystem = new();
-    private readonly Dictionary<TestNodeUid, List<SessionFileArtifact>> _artifactsByTestNode = new();
     private readonly Dictionary<IExtension, List<SessionFileArtifact>> _artifactsByExtension = new();
 
     [TestMethod]
@@ -262,6 +261,39 @@ public class TrxTests
     }
 
     [TestMethod]
+    public async Task TrxReportEngine_GenerateReportAsync_WithTestFailed_TrxContainsDebugTrace()
+    {
+        // Arrange
+        using MemoryFileStream memoryStream = new();
+        PropertyBag propertyBag = new(
+            new FailedTestNodeStateProperty("test failed"),
+            new TrxMessagesProperty([new("base trx message"), new StandardErrorTrxMessage("stderr trx message"), new StandardOutputTrxMessage("stdout trx message"), new DebugOrTraceTrxMessage("debug trx message")]));
+        TrxReportEngine trxReportEngine = GenerateTrxReportEngine(0, 1, propertyBag, memoryStream);
+
+        // Act
+        (string fileName, string? warning) = await trxReportEngine.GenerateReportAsync();
+
+        // Assert
+        Assert.IsNull(warning);
+        AssertExpectedTrxFileName(fileName);
+        Assert.IsNotNull(memoryStream.TrxContent);
+        XDocument xml = memoryStream.TrxContent;
+        AssertTrxOutcome(xml, "Failed");
+        string trxContent = xml.ToString();
+        string trxContentsPattern = @"
+    <UnitTestResult .* testName=""TestMethod"" .* outcome=""Failed"" .*>
+      <Output>
+        <StdOut>base trx message
+stdout trx message</StdOut>
+        <StdErr>stderr trx message</StdErr>
+        <DebugTrace>debug trx message</DebugTrace>
+      </Output>
+    </UnitTestResult>
+ ";
+        Assert.IsTrue(Regex.IsMatch(trxContent, trxContentsPattern));
+    }
+
+    [TestMethod]
     public async Task TrxReportEngine_GenerateReportAsync_WithTestFailed_WithoutStandardErrorTrxMessage_TrxContainsErrorInfo()
     {
         // Arrange
@@ -381,9 +413,8 @@ public class TrxTests
     {
         // Arrange
         using MemoryFileStream memoryStream = new();
-        _artifactsByTestNode.Add("test()", [new(new SessionUid("1"), new FileInfo("fileName"), "TestMethod", "description")]);
         TrxReportEngine trxReportEngine = GenerateTrxReportEngine(1, 0,
-            new(new PassedTestNodeStateProperty()), memoryStream);
+            new(new PassedTestNodeStateProperty(), new FileArtifactProperty(new FileInfo("fileName"), "TestMethod", "description")), memoryStream);
 
         // Act
         (string fileName, string? warning) = await trxReportEngine.GenerateReportAsync();
@@ -462,7 +493,7 @@ public class TrxTests
         _ = _testApplicationModuleInfoMock.Setup(_ => _.GetCurrentTestApplicationFullPath()).Returns("TestAppPath");
         TrxReportEngine trxReportEngine = new(_fileSystem.Object, _testApplicationModuleInfoMock.Object, _environmentMock.Object, _commandLineOptionsMock.Object,
             _configurationMock.Object, _clockMock.Object, [], 0, 0, 0, 0,
-            _artifactsByExtension, _artifactsByTestNode, true, _testFrameworkMock.Object, DateTime.UtcNow, 0, CancellationToken.None,
+            _artifactsByExtension, true, _testFrameworkMock.Object, DateTime.UtcNow, 0, CancellationToken.None,
             isCopyingFileAllowed: false);
 
         // Act
@@ -510,7 +541,7 @@ public class TrxTests
 
         return new TrxReportEngine(_fileSystem.Object, _testApplicationModuleInfoMock.Object, _environmentMock.Object, _commandLineOptionsMock.Object,
                    _configurationMock.Object, _clockMock.Object, testNodeUpdatedMessages, failedTestsCount, passedTestsCount, notExecutedTestsCount, timeoutTestsCount,
-                   _artifactsByExtension, _artifactsByTestNode, adapterSupportTrxCapability, _testFrameworkMock.Object, testStartTime, 0, cancellationToken,
+                   _artifactsByExtension, adapterSupportTrxCapability, _testFrameworkMock.Object, testStartTime, 0, cancellationToken,
                    isCopyingFileAllowed: false);
     }
 
