@@ -226,6 +226,8 @@ internal static class SerializerUtilities
                         properties["location.method"] = testMethodIdentifierProperty.ParameterTypeFullNames.Length > 0
                             ? $"{testMethodIdentifierProperty.MethodName}({string.Join(",", testMethodIdentifierProperty.ParameterTypeFullNames)})"
                             : testMethodIdentifierProperty.MethodName;
+
+                        properties["location.method-arity"] = testMethodIdentifierProperty.MethodArity;
                         continue;
                     }
 

@@ -61,6 +61,7 @@ public sealed class VSTestRunTestExecutionRequestFactory : ITestExecutionRequest
             serviceProvider.GetTestApplicationModuleInfo(),
             serviceProvider.GetTestFrameworkCapabilities().GetCapability<INamedFeatureCapability>(),
             serviceProvider.GetCommandLineOptions(),
+            serviceProvider.GetClientInfo(),
             serviceProvider.GetMessageBus(),
             serviceProvider.GetOutputDevice(),
             loggerFactory,
