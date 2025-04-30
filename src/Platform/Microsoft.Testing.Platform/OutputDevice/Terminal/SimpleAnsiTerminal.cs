@@ -62,5 +62,5 @@ internal sealed class SimpleAnsiTerminal : SimpleTerminal
     }
 
     private string? SetColorPerLine(string value)
-        => _foregroundColor == null ? value : $"{_foregroundColor}{value.Replace("\n", $"\n{_foregroundColor}")}";
+        => _foregroundColor == null ? value : value.Replace("\n", $"\n{_foregroundColor}");
 }

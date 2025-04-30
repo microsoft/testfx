@@ -217,46 +217,46 @@ public sealed class TerminalTestReporterTests
         string output = stringBuilderConsole.Output;
 
         string expected = $"""
-            ␛[92mpassed␛[m PassedTest1␛[90m ␛[90m(10s 000ms)␛[m
+            ␛[32mpassed␛[m PassedTest1␛[90m ␛[90m(10s 000ms)␛[m
             ␛[90m  Standard output
-                Hello!
-              Error output
-                Oh no!
-            ␛[m␛[93mskipped␛[m SkippedTest1␛[90m ␛[90m(10s 000ms)␛[m
+            ␛[90m    Hello!
+            ␛[90m  Error output
+            ␛[90m    Oh no!
+            ␛[m␛[33mskipped␛[m SkippedTest1␛[90m ␛[90m(10s 000ms)␛[m
             ␛[90m  Standard output
-                Hello!
-              Error output
-                Oh no!
-            ␛[m␛[91mfailed (canceled)␛[m TimedoutTest1␛[90m ␛[90m(10s 000ms)␛[m
+            ␛[90m    Hello!
+            ␛[90m  Error output
+            ␛[90m    Oh no!
+            ␛[m␛[31mfailed (canceled)␛[m TimedoutTest1␛[90m ␛[90m(10s 000ms)␛[m
             ␛[90m  Standard output
-                Hello!
-              Error output
-                Oh no!
-            ␛[m␛[91mfailed (canceled)␛[m CanceledTest1␛[90m ␛[90m(10s 000ms)␛[m
+            ␛[90m    Hello!
+            ␛[90m  Error output
+            ␛[90m    Oh no!
+            ␛[m␛[31mfailed (canceled)␛[m CanceledTest1␛[90m ␛[90m(10s 000ms)␛[m
             ␛[90m  Standard output
-                Hello!
-              Error output
-                Oh no!
-            ␛[m␛[91mfailed␛[m FailedTest1␛[90m ␛[90m(10s 000ms)␛[m
-            ␛[91m  Tests failed
-            ␛[m␛[91m  Expected
-                ABC
-              Actual
-                DEF
+            ␛[90m    Hello!
+            ␛[90m  Error output
+            ␛[90m    Oh no!
+            ␛[m␛[31mfailed␛[m FailedTest1␛[90m ␛[90m(10s 000ms)␛[m
+            ␛[31m  Tests failed
+            ␛[m␛[31m  Expected
+            ␛[31m    ABC
+            ␛[31m  Actual
+            ␛[31m    DEF
             ␛[m␛[90m    at FailingTest() in {folder}codefile.cs:10␛[90m
             ␛[m␛[90m  Standard output
-                Hello!
-              Error output
-                Oh no!
+            ␛[90m    Hello!
+            ␛[90m  Error output
+            ␛[90m    Oh no!
             ␛[m
               Out of process file artifacts produced:
                 - {folder}artifact1.txt
               In process file artifacts produced:
                 - {folder}artifact2.txt
 
-            ␛[91mTest run summary: Failed!␛[90m - ␛[m{assembly} (net8.0|x64)
+            ␛[31mTest run summary: Failed!␛[90m - ␛[m{folder}assembly.dll (net8.0|x64)
             ␛[m  total: 5
-            ␛[91m  failed: 3
+            ␛[31m  failed: 3
             ␛[m  succeeded: 1
               skipped: 1
               duration: 3652058d 23h 59m 59s 999ms
@@ -318,29 +318,29 @@ public sealed class TerminalTestReporterTests
         string output = stringBuilderConsole.Output;
 
         string expected = $"""
-            ␛[92mpassed␛[m PassedTest1␛[90m ␛[90m(10s 000ms)␛[m
+            ␛[32mpassed␛[m PassedTest1␛[90m ␛[90m(10s 000ms)␛[m
             ␛[90m  Standard output
                 Hello!
               Error output
                 Oh no!
-            ␛[m␛[93mskipped␛[m SkippedTest1␛[90m ␛[90m(10s 000ms)␛[m
+            ␛[m␛[33mskipped␛[m SkippedTest1␛[90m ␛[90m(10s 000ms)␛[m
             ␛[90m  Standard output
                 Hello!
               Error output
                 Oh no!
-            ␛[m␛[91mfailed (canceled)␛[m TimedoutTest1␛[90m ␛[90m(10s 000ms)␛[m
+            ␛[m␛[31mfailed (canceled)␛[m TimedoutTest1␛[90m ␛[90m(10s 000ms)␛[m
             ␛[90m  Standard output
                 Hello!
               Error output
                 Oh no!
-            ␛[m␛[91mfailed (canceled)␛[m CanceledTest1␛[90m ␛[90m(10s 000ms)␛[m
+            ␛[m␛[31mfailed (canceled)␛[m CanceledTest1␛[90m ␛[90m(10s 000ms)␛[m
             ␛[90m  Standard output
                 Hello!
               Error output
                 Oh no!
-            ␛[m␛[91mfailed␛[m FailedTest1␛[90m ␛[90m(10s 000ms)␛[m
-            ␛[91m  Tests failed
-            ␛[m␛[91m  Expected
+            ␛[m␛[31mfailed␛[m FailedTest1␛[90m ␛[90m(10s 000ms)␛[m
+            ␛[31m  Tests failed
+            ␛[m␛[31m  Expected
                 ABC
               Actual
                 DEF
@@ -354,14 +354,14 @@ public sealed class TerminalTestReporterTests
                 - ␛[90m␛]8;;file:///{folderLink}artifact1.txt␛\{folder}artifact1.txt␛]8;;␛\␛[m
               In process file artifacts produced:
                 - ␛[90m␛]8;;file:///{folderLink}artifact2.txt␛\{folder}artifact2.txt␛]8;;␛\␛[m
-            
-            ␛[91mTest run summary: Failed!␛[90m - ␛[m␛[90m␛]8;;file:///{folderLinkNoSlash}␛\{folder}assembly.dll␛]8;;␛\␛[m (net8.0|x64)
+
+            ␛[31mTest run summary: Failed!␛[90m - ␛[m␛[90m␛]8;;file:///{folderLinkNoSlash}␛\{folder}assembly.dll␛]8;;␛\␛[m (net8.0|x64)
             ␛[m  total: 5
-            ␛[91m  failed: 3
+            ␛[31m  failed: 3
             ␛[m  succeeded: 1
               skipped: 1
               duration: 3652058d 23h 59m 59s 999ms
-
+            
             """;
 
         Assert.AreEqual(expected, ShowEscape(output));
@@ -440,29 +440,29 @@ public sealed class TerminalTestReporterTests
 
         // Note: The progress is drawn after each completed event.
         string expected = $"""
-            {busyIndicatorString}␛[?25l␛[92mpassed␛[m PassedTest1␛[90m ␛[90m(10s 000ms)␛[m
+            {busyIndicatorString}␛[?25l␛[32mpassed␛[m PassedTest1␛[90m ␛[90m(10s 000ms)␛[m
             ␛[90m  Standard output
                 Hello!
               Error output
                 Oh no!
             ␛[m
-            [␛[92m✓1␛[m/␛[91mx0␛[m/␛[93m↓0␛[m] assembly.dll (net8.0|x64)␛[2147483640G(1m 31s)
+            [␛[32m✓1␛[m/␛[31mx0␛[m/␛[33m↓0␛[m] assembly.dll (net8.0|x64)␛[2147483640G(1m 31s)
               SkippedTest1␛[2147483640G(1m 31s)
               InProgressTest1␛[2147483640G(1m 31s)
               InProgressTest2␛[2147483643G(31s)
               InProgressTest3␛[2147483644G(1s)
             ␛[7F
-            ␛[J␛[93mskipped␛[m SkippedTest1␛[90m ␛[90m(10s 000ms)␛[m
+            ␛[J␛[33mskipped␛[m SkippedTest1␛[90m ␛[90m(10s 000ms)␛[m
             ␛[90m  Standard output
                 Hello!
               Error output
                 Oh no!
             ␛[m
-            [␛[92m✓1␛[m/␛[91mx0␛[m/␛[93m↓1␛[m] assembly.dll (net8.0|x64)␛[2147483640G(1m 31s)
+            [␛[32m✓1␛[m/␛[31mx0␛[m/␛[33m↓1␛[m] assembly.dll (net8.0|x64)␛[2147483640G(1m 31s)
               InProgressTest1␛[2147483640G(1m 31s)
               InProgressTest2␛[2147483643G(31s)
               InProgressTest3␛[2147483644G(1s)
-
+            
             """;
 
         Assert.AreEqual(expected, ShowEscape(output));
