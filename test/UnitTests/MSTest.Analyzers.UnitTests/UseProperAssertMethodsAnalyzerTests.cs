@@ -62,7 +62,7 @@ public sealed class UseProperAssertMethodsAnalyzerTests
     }
 
     [TestMethod]
-    public async Task WhenPointerTypes()
+    public async Task WhenPointerTypesPassedToIsTrueOrIsFalseThenNoDiagnostic()
     {
         string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
