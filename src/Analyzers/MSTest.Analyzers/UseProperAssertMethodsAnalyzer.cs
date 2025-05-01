@@ -251,7 +251,9 @@ internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
 
     private static NullCheckStatus RecognizeNullCheck(
         IOperation operation,
-        /*We cannot express this is not null when NullCheckStatis is not Unknown*/ out SyntaxNode? expressionUnderTest,
+        // Note that expressionUnderTest is guaranteed to be non-null when the method returns a value other than NullCheckStatus.Unknown.
+        // Given the current nullability attributes, there is no way to express this.
+        out SyntaxNode? expressionUnderTest,
         out ITypeSymbol? typeOfExpressionUnderTest)
     {
         if (IsIsNullPattern(operation, out expressionUnderTest, out typeOfExpressionUnderTest) ||
