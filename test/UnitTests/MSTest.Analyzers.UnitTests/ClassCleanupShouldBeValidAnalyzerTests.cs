@@ -20,7 +20,7 @@ public sealed class ClassCleanupShouldBeValidAnalyzerTests
             public class MyTestClass
             {
                 [ClassCleanup]
-                public static void ClassCleanup()
+                public static void ClassCleanupBroken()
                 {
                 }
             }
