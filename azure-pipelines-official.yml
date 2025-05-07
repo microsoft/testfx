@@ -52,6 +52,10 @@ variables:
     - name: _ReleaseVersionKind
       value: release
 
+  # Final builds should not go into internal package feeds so we can keep re-building them until we are ready to ship.
+  - name: _Publish
+    value: {{ not parameters.isRTM }}
+
   - group: DotNet-Symbol-Server-Pats
 
 resources:
@@ -135,6 +139,7 @@ extends:
                 /p:OfficialBuildId=$(BUILD.BUILDNUMBER)
                 /p:ProductsToBuild=$(_Products)
                 /p:Test=false
+                /p:Publish=$(_Publish)
               name: Build
               displayName: Build
 
