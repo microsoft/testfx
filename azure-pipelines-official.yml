@@ -54,7 +54,7 @@ variables:
 
   # Final builds should not go into internal package feeds so we can keep re-building them until we are ready to ship.
   - name: _Publish
-    value: {{ not parameters.isRTM }}
+    value: ${{ not parameters.isRTM }}
 
   - group: DotNet-Symbol-Server-Pats
 
