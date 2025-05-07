@@ -12,7 +12,7 @@ See full log [here](https://github.com/microsoft/testfx/compare/v3.8.3...v3.9.0)
 
 * Allow async test methods for UITestMethod on UWP and WinUI by @Youssef1313 in [#5297](https://github.com/microsoft/testfx/pull/5297)
 * Add analyzer for duplicate data row by @Youssef1313 in [#5144](https://github.com/microsoft/testfx/pull/5144)
-* Add Func<object> overloads for Assert.Throws[Exactly] by @Youssef1313 in [#5313](https://github.com/microsoft/testfx/pull/5313)
+* Add `Func<object>` overloads for Assert.Throws[Exactly] by @Youssef1313 in [#5313](https://github.com/microsoft/testfx/pull/5313)
 * Add TestRunCount to TestContext by @Youssef1313 in [#5425](https://github.com/microsoft/testfx/pull/5425)
 
 ### Fixed
