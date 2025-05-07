@@ -45,10 +45,10 @@ internal sealed class NonAnsiTerminal : SimpleTerminal
     private bool IsForegroundColorNotSupported()
     {
         _colorNotSupported ??= RuntimeInformation.IsOSPlatform(OSPlatform.Create("ANDROID")) ||
-                    RuntimeInformation.IsOSPlatform(OSPlatform.Create("IOS")) ||
-                    RuntimeInformation.IsOSPlatform(OSPlatform.Create("TVOS")) ||
-                    RuntimeInformation.IsOSPlatform(OSPlatform.Create("WASI")) ||
-                    RuntimeInformation.IsOSPlatform(OSPlatform.Create("BROWSER"));
+            RuntimeInformation.IsOSPlatform(OSPlatform.Create("IOS")) ||
+            RuntimeInformation.IsOSPlatform(OSPlatform.Create("TVOS")) ||
+            RuntimeInformation.IsOSPlatform(OSPlatform.Create("WASI")) ||
+            RuntimeInformation.IsOSPlatform(OSPlatform.Create("BROWSER"));
 
         return _colorNotSupported.Value;
     }
