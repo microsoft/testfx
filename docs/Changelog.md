@@ -74,7 +74,7 @@ See full log [here](https://github.com/microsoft/testfx/compare/v3.8.3...v3.9.0)
 * Microsoft.Testing.Extensions.HotReload: [1.7.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HotReload/1.7.0)
 * Microsoft.Testing.Extensions.Retry: [1.7.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Retry/1.7.0)
 * Microsoft.Testing.Extensions.TrxReport: [1.7.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport/1.7.0)
-* Microsoft.Testing.Extensions.AzureDevOpsReport [1.7.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport/1.7.0)
+* Microsoft.Testing.Extensions.AzureDevOpsReport [1.0.0-alpha.25256.6](https://www.nuget.org/packages/Microsoft.Testing.Extensions.AzureDevOpsReport/1.0.0-alpha.25256.6)
 * MSTest.SourceGeneration: [1.0.0-alpha.25256.6](https://www.nuget.org/packages/MSTest.SourceGeneration/1.0.0-alpha.25256.6)
 * MSTest.Engine: [1.0.0-alpha.25256.6](https://www.nuget.org/packages/MSTest.Engine/1.0.0-alpha.25256.6)
 
