@@ -52,10 +52,6 @@ variables:
     - name: _ReleaseVersionKind
       value: release
 
-  # Final builds should not go into internal package feeds so we can keep re-building them until we are ready to ship.
-  - name: _Publish
-    value: ${{ not(parameters.isRTM) }}
-
   - group: DotNet-Symbol-Server-Pats
 
 resources:
@@ -95,7 +91,7 @@ extends:
           testResultsFormat: 'vstest'
           enablePublishBuildAssets: true
           # For final version build, don't publish to internal feeds.
-          enablePublishUsingPipelines: $(_Publish)
+          isAssetlessBuild:  ${{ parameters.isRTM }}
           enableTelemetry: true
           jobs:
           - job: Windows
