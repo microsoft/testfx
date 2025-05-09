@@ -236,4 +236,6 @@ extends:
             LclSource: lclFilesfromPackage
             LclPackageId: 'LCL-JUNO-PROD-TESTFX'
 
-    - template: eng\common\templates-official\post-build\post-build.yml@self
+    # For stable versions avoid publishing them to internal feeds.
+    - ${{ if eq(parameters.isRTM, False) }}:
+      - template: eng\common\templates-official\post-build\post-build.yml@self
