@@ -94,7 +94,8 @@ extends:
           enablePublishTestResults: true
           testResultsFormat: 'vstest'
           enablePublishBuildAssets: true
-          enablePublishUsingPipelines: true
+          # For final version build, don't publish to internal feeds.
+          enablePublishUsingPipelines: $(_Publish)
           enableTelemetry: true
           jobs:
           - job: Windows
@@ -139,7 +140,6 @@ extends:
                 /p:OfficialBuildId=$(BUILD.BUILDNUMBER)
                 /p:ProductsToBuild=$(_Products)
                 /p:Test=false
-                /p:Publish=$(_Publish)
               name: Build
               displayName: Build
 
@@ -186,7 +186,7 @@ extends:
             - task: NuGetAuthenticate@1
               displayName: 'NuGet Authenticate to test-tools feed'
 
-              # Final builds should not go into test-tools package feed, so we can keep re-building them until we are ready to ship.
+              # Final builds should not go into test-tools package feed, so we can keep re-building them until we are ready to ship to nuget.org.
               # This has to depend on the parameter and not on variable, variables are not defined early enough to be used in templating condition.
             - ${{ if eq(parameters.isRTM, False) }}:
               - task: 1ES.PublishNuget@1
