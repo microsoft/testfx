@@ -14,8 +14,9 @@ builder.AddMSTest(() => [Assembly.GetEntryAssembly()!]);
 #if ENABLE_CODECOVERAGE
 builder.AddCodeCoverageProvider();
 #endif
-builder.AddHangDumpProvider();
 builder.AddCrashDumpProvider(ignoreIfNotSupported: true);
+builder.AddHangDumpProvider();
+builder.AddRetryProvider();
 builder.AddTrxReportProvider();
 builder.AddAppInsightsTelemetryProvider();
 builder.AddAzureDevOpsProvider();
