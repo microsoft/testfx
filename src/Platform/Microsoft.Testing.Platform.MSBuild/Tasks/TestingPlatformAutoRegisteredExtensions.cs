@@ -156,7 +156,7 @@ static Contoso.BuilderHook.AddExtensions(Microsoft.Testing.Platform.Builder.Test
             result.Add(items[wellKnownBuilderHook_MicrosoftTestingPlatformExtensions_index]);
         }
 
-        return result.ToArray();
+        return [.. result];
     }
 
     private static void GenerateCode(string language, string? rootNamespace, ITaskItem[] taskItems, ITaskItem testingPlatformEntryPointSourcePath, IFileSystem fileSystem, TaskLoggingHelper taskLoggingHelper)

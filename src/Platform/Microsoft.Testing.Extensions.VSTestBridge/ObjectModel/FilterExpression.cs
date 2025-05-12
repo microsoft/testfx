@@ -136,7 +136,7 @@ internal sealed partial class FilterExpression
             }
             else if (invalidRight != null)
             {
-                invalidProperties = invalidProperties.Concat(invalidRight).ToArray();
+                invalidProperties = [.. invalidProperties, .. invalidRight];
             }
 
             return invalidProperties;

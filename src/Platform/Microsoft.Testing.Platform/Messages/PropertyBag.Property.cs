@@ -147,6 +147,6 @@ public sealed partial class PropertyBag
         }
 
         [DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
-        public IProperty[] Items => _property.AsEnumerable().ToArray();
+        public IProperty[] Items => [.. _property.AsEnumerable()];
     }
 }

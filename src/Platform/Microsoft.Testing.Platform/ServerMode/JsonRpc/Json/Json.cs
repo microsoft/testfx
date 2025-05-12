@@ -291,7 +291,7 @@ internal sealed class Json
                 properties.Add(("node-type", "group"));
             }
 
-            return properties.ToArray();
+            return [.. properties];
         });
 
         _serializers[typeof(LogEventArgs)] = new JsonObjectSerializer<LogEventArgs>(message =>
@@ -353,7 +353,7 @@ internal sealed class Json
 
         // _serializers[typeof(TimeSpan)] = new JsonValueSerializer<TimeSpan>((w, v) => w.WriteStringValue(v.ToString())); // Remove for now
         _serializers[typeof((string, object?)[])] = new JsonObjectSerializer<(string, object?)[]>(n => n);
-        _serializers[typeof(Dictionary<string, object>)] = new JsonObjectSerializer<Dictionary<string, object>>(d => d.Select(kvp => (kvp.Key, (object?)kvp.Value)).ToArray());
+        _serializers[typeof(Dictionary<string, object>)] = new JsonObjectSerializer<Dictionary<string, object>>(d => [.. d.Select(kvp => (kvp.Key, (object?)kvp.Value))]);
 
         // Deserializers
         _deserializers[typeof(string)] = new JsonElementDeserializer<string>((json, jsonDocument) => jsonDocument.GetString()!);
@@ -364,7 +364,7 @@ internal sealed class Json
 
         _deserializers[typeof(IDictionary<string, object?>)] = new JsonElementDeserializer<IDictionary<string, object?>>((json, jsonDocument) =>
         {
-            Dictionary<string, object?> items = new();
+            Dictionary<string, object?> items = [];
             foreach (JsonProperty kvp in jsonDocument.EnumerateObject())
             {
                 switch (kvp.Value.ValueKind)
@@ -668,7 +668,7 @@ internal sealed class Json
             return false;
         }
 
-        value = element.EnumerateArray().Select(Deserialize<T>).ToArray();
+        value = [.. element.EnumerateArray().Select(Deserialize<T>)];
         return true;
     }
 

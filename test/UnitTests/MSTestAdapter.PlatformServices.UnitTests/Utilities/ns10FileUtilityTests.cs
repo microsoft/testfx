@@ -105,10 +105,10 @@ public class FileUtilityTests : TestContainer
         _fileUtility.Setup(fu => fu.GetDirectoriesInADirectory(It.IsAny<string>())).Returns<string>(directory =>
         {
             IEnumerable<string> directories = allFiles.Where(file => IsFileUnderDirectory(directory, file)).Select(file => Path.GetDirectoryName(file)!).Distinct();
-            return directories.ToArray();
+            return [.. directories];
         });
 
-        _fileUtility.Setup(fu => fu.GetFilesInADirectory(It.IsAny<string>())).Returns<string>(directory => allFiles.Where(file => Path.GetDirectoryName(file)!.Equals(directory, StringComparison.OrdinalIgnoreCase)).Distinct().ToArray());
+        _fileUtility.Setup(fu => fu.GetFilesInADirectory(It.IsAny<string>())).Returns<string>(directory => [.. allFiles.Where(file => Path.GetDirectoryName(file)!.Equals(directory, StringComparison.OrdinalIgnoreCase)).Distinct()]);
 
         // Act
         List<string> files = _fileUtility.Object.AddFilesFromDirectory("C:\\MainClock", directory => directory.Contains("Results"), false);
@@ -145,10 +145,10 @@ public class FileUtilityTests : TestContainer
         _fileUtility.Setup(fu => fu.GetDirectoriesInADirectory(It.IsAny<string>())).Returns<string>(directory =>
         {
             IEnumerable<string> directories = allFiles.Where(file => IsFileUnderDirectory(directory, file)).Select(file => Path.GetDirectoryName(file)!).Distinct();
-            return directories.ToArray();
+            return [.. directories];
         });
 
-        _fileUtility.Setup(fu => fu.GetFilesInADirectory(It.IsAny<string>())).Returns<string>(directory => allFiles.Where(file => Path.GetDirectoryName(file)!.Equals(directory, StringComparison.OrdinalIgnoreCase)).Distinct().ToArray());
+        _fileUtility.Setup(fu => fu.GetFilesInADirectory(It.IsAny<string>())).Returns<string>(directory => [.. allFiles.Where(file => Path.GetDirectoryName(file)!.Equals(directory, StringComparison.OrdinalIgnoreCase)).Distinct()]);
 
         // Act
         List<string> files = _fileUtility.Object.AddFilesFromDirectory("C:\\MainClock", false);
@@ -171,9 +171,8 @@ public class FileUtilityTests : TestContainer
     {
         _fileUtility.Setup(fu => fu.GetFilesInADirectory(It.IsAny<string>())).Returns((string dp) =>
 #pragma warning disable CA1865 // Use char overload
-            files.Where(f => f.Contains(dp) && f.LastIndexOf('\\') == (f.IndexOf(dp, StringComparison.Ordinal) + dp.Length) && !f.EndsWith("\\", StringComparison.Ordinal))
-                    .ToArray());
-        _fileUtility.Setup(fu => fu.GetDirectoriesInADirectory(It.IsAny<string>())).Returns((string dp) => files.Where(f => f.Contains(dp) && f.LastIndexOf('\\') > (f.IndexOf(dp, StringComparison.Ordinal) + dp.Length))
+            [.. files.Where(f => f.Contains(dp) && f.LastIndexOf('\\') == (f.IndexOf(dp, StringComparison.Ordinal) + dp.Length) && !f.EndsWith("\\", StringComparison.Ordinal))]);
+        _fileUtility.Setup(fu => fu.GetDirectoriesInADirectory(It.IsAny<string>())).Returns((string dp) => [.. files.Where(f => f.Contains(dp) && f.LastIndexOf('\\') > (f.IndexOf(dp, StringComparison.Ordinal) + dp.Length))
                     .Select(f =>
                     {
 #pragma warning disable IDE0057 // Use range operator
@@ -183,8 +182,7 @@ public class FileUtilityTests : TestContainer
                         return f.Substring(0, dp.Length + 1 + val.IndexOf('\\'));
 #pragma warning restore IDE0057 // Use range operator
                     })
-                    .Distinct()
-                    .ToArray());
+                    .Distinct()]);
     }
 
     #endregion

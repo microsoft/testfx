@@ -46,6 +46,6 @@ internal sealed class TestHostOrchestratorManager : ITestHostOrchestratorManager
             }
         }
 
-        return new TestHostOrchestratorConfiguration(orchestrators.ToArray());
+        return new TestHostOrchestratorConfiguration([.. orchestrators]);
     }
 }

@@ -96,7 +96,7 @@ public partial class CLITestBase : TestContainer
 
         public bool EnableShutdownAfterTestRun { get; set; }
 
-        public void RecordStart(TestCase testCase) => _activeResults = _testResults.GetOrAdd(testCase, _ => new());
+        public void RecordStart(TestCase testCase) => _activeResults = _testResults.GetOrAdd(testCase, _ => []);
 
         public void RecordEnd(TestCase testCase, TestOutcome outcome) => _activeResults = _testResults[testCase];
 

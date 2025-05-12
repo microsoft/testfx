@@ -34,7 +34,7 @@ public class DeploymentItemUtilityTests : TestContainer
     {
         _mockReflectionUtility = new Mock<ReflectionUtility>();
         _deploymentItemUtility = new DeploymentItemUtility(_mockReflectionUtility.Object);
-        _warnings = new List<string>();
+        _warnings = [];
     }
 
     #region GetClassLevelDeploymentItems tests

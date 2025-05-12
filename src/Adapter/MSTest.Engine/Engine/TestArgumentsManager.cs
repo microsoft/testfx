@@ -7,7 +7,7 @@ namespace Microsoft.Testing.Framework;
 
 internal sealed class TestArgumentsManager : ITestArgumentsManager
 {
-    private readonly Dictionary<TestNodeUid, Func<TestArgumentsContext, ITestArgumentsEntry>> _testArgumentsEntryProviders = new();
+    private readonly Dictionary<TestNodeUid, Func<TestArgumentsContext, ITestArgumentsEntry>> _testArgumentsEntryProviders = [];
     private bool _isRegistrationFrozen;
 
     public void RegisterTestArgumentsEntryProvider<TArguments>(
@@ -54,7 +54,7 @@ internal sealed class TestArgumentsManager : ITestArgumentsManager
         }
 
         HashSet<TestNodeUid> expandedTestNodeUids = [];
-        List<TestNode> expandedTestNodes = new(currentNode.Tests);
+        List<TestNode> expandedTestNodes = [.. currentNode.Tests];
         switch (currentNode)
         {
             case IParameterizedTestNode parameterizedTestNode:
@@ -98,7 +98,7 @@ internal sealed class TestArgumentsManager : ITestArgumentsManager
             DisplayName = currentNode.DisplayName,
             OverriddenEdgeName = currentNode.OverriddenEdgeName,
             Properties = currentNode.Properties,
-            Tests = expandedTestNodes.ToArray(),
+            Tests = [.. expandedTestNodes],
         };
 
         return expandedNode;

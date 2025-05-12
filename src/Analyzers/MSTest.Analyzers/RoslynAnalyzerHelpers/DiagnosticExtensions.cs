@@ -169,7 +169,7 @@ internal static class DiagnosticExtensions
         {
 #pragma warning disable RS0030 // The symbol 'DiagnosticDescriptor.DiagnosticDescriptor.#ctor' is banned in this project: Use 'DiagnosticDescriptorHelper.Create' instead
             rule = new DiagnosticDescriptor(rule.Id, rule.Title, rule.MessageFormat, rule.Category,
-                effectiveSeverity.Value, rule.IsEnabledByDefault, rule.Description, rule.HelpLinkUri, rule.CustomTags.ToArray());
+                effectiveSeverity.Value, rule.IsEnabledByDefault, rule.Description, rule.HelpLinkUri, [.. rule.CustomTags]);
 #pragma warning restore RS0030
         }
 

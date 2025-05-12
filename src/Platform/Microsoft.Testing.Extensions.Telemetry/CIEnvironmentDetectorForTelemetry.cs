@@ -33,8 +33,8 @@ internal sealed class CIEnvironmentDetectorForTelemetry
     ];
 
     // Systems where every variable must be present and not-null before returning true
-    private static readonly string[][] AllNotNullVariables = new string[][]
-    {
+    private static readonly string[][] AllNotNullVariables =
+    [
         // AWS CodeBuild - https://docs.aws.amazon.com/codebuild/latest/userguide/build-env-ref-env-vars.html
         ["CODEBUILD_BUILD_ID", "AWS_REGION"],
 
@@ -43,7 +43,7 @@ internal sealed class CIEnvironmentDetectorForTelemetry
 
         // Google Cloud Build - https://cloud.google.com/build/docs/configuring-builds/substitute-variable-values#using_default_substitutions
         ["BUILD_ID", "PROJECT_ID"],
-    };
+    ];
 
     // Systems where the variable must be present and not-null
     private static readonly string[] IfNonNullVariables =

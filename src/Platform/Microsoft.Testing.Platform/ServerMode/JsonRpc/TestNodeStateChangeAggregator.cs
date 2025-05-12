@@ -29,6 +29,6 @@ internal sealed partial class ServerTestHost
             => _stateChanges.Add(stateChangedMessage);
 
         public TestNodeStateChangedEventArgs BuildAggregatedChange()
-            => new(RunId, _stateChanges.ToArray());
+            => new(RunId, [.. _stateChanges]);
     }
 }

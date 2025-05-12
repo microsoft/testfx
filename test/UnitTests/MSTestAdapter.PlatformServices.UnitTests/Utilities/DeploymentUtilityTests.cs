@@ -42,7 +42,7 @@ public class DeploymentUtilityTests : TestContainer
         _mockReflectionUtility = new Mock<ReflectionUtility>();
         _mockFileUtility = new Mock<FileUtility>();
         _mockAssemblyUtility = new Mock<AssemblyUtility>();
-        _warnings = new List<string>();
+        _warnings = [];
 
         _deploymentUtility = new DeploymentUtility(
             new DeploymentItemUtility(_mockReflectionUtility.Object),

@@ -78,10 +78,7 @@ internal sealed class GeneratorTester
             }
         }
 
-        MetadataReference[] metadataReferences =
-            Net60MetadataReferences.Value
-            .Concat(_additionalReferences.Select(loc => MetadataReference.CreateFromFile(loc)))
-            .ToArray();
+        MetadataReference[] metadataReferences = [.. Net60MetadataReferences.Value, .. _additionalReferences.Select(loc => MetadataReference.CreateFromFile(loc))];
 
         var compilation = CSharpCompilation.Create(
             "TestAssembly",

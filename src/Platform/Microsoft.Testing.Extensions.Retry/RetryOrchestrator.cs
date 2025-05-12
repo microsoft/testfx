@@ -94,7 +94,7 @@ internal sealed class RetryOrchestrator : ITestHostOrchestrator, IOutputDeviceDa
 
         // Find out the retry args index inside the arguments to after cleanup the command line when we restart
         List<int> indexToCleanup = [];
-        string[] executableArguments = executableInfo.Arguments.ToArray();
+        string[] executableArguments = [.. executableInfo.Arguments];
         int argIndex = GetOptionArgumentIndex(RetryCommandLineOptionsProvider.RetryFailedTestsOptionName, executableArguments);
         if (argIndex < 0)
         {

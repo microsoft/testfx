@@ -202,11 +202,10 @@ internal sealed class TrxCompareTool : ITool, IOutputDeviceDataProducer
                 continue;
             }
 
-            XElement[] matchingUnitTestDefinitions = trxTestRun
+            XElement[] matchingUnitTestDefinitions = [.. trxTestRun
                 .Elements(ns + "TestDefinitions")
                 .Elements(ns + "UnitTest")
-                .Where(x => x.Attribute("id")?.Value == testId)
-                .ToArray();
+                .Where(x => x.Attribute("id")?.Value == testId)];
             if (matchingUnitTestDefinitions.Length > 1)
             {
                 issues.Add($"Found more than one entry in 'TestDefinitions.UnitTest' matching the test ID '{testId}'.");

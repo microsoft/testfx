@@ -24,7 +24,7 @@ public class AssemblyResolverTests : TestContainer
             @"C:\unitTesting\b",
         ];
 
-        TestableAssemblyResolver assemblyResolver = new(new List<string> { @"c:\dummy" })
+        TestableAssemblyResolver assemblyResolver = new([@"c:\dummy"])
         {
             DoesDirectoryExistSetter = (str) => true,
             GetDirectoriesSetter = (str) =>
@@ -42,7 +42,7 @@ public class AssemblyResolverTests : TestContainer
                     return [@"C:\unitTesting\a\c\d"];
                 }
 
-                return new List<string>().ToArray();
+                return [];
             },
         };
 
@@ -88,7 +88,7 @@ public class AssemblyResolverTests : TestContainer
                 return [@"C:\FunctionalTesting\c"];
             }
 
-            return new List<string>().ToArray();
+            return [];
         };
 
         assemblyResolver.SearchAssemblySetter =
@@ -147,7 +147,7 @@ public class AssemblyResolverTests : TestContainer
     {
         Assembly currentAssembly = typeof(AssemblyResolverTests).Assembly;
         string currentAssemblyPath = Path.GetDirectoryName(currentAssembly.Location);
-        var assemblyResolver = new TestableAssemblyResolver(new List<string> { currentAssemblyPath });
+        var assemblyResolver = new TestableAssemblyResolver([currentAssemblyPath]);
 
         bool isAssemblyLoaded = false;
         bool isAssemblyReflectionOnlyLoaded = false;

@@ -40,7 +40,7 @@ public class ReflectionUtilityTests : TestContainer
             }
         }
 
-        return attribValuePairs.ToArray();
+        return [.. attribValuePairs];
     }
 
     [DummyA("ba")]

@@ -49,7 +49,7 @@ public class ReflectHelperTests : TestContainer
         _attributeMockingHelper.SetCustomAttribute(typeof(TestCategoryBaseAttribute), [new TestCategoryAttribute("ClassLevel")], MemberTypes.TypeInfo);
 
         string[] expected = ["ClassLevel"];
-        string[] actual = _reflectHelper.GetTestCategories(_method.Object, typeof(ReflectHelperTests)).ToArray();
+        string[] actual = [.. _reflectHelper.GetTestCategories(_method.Object, typeof(ReflectHelperTests))];
 
         Verify(expected.SequenceEqual(actual));
     }
@@ -64,7 +64,7 @@ public class ReflectHelperTests : TestContainer
         _attributeMockingHelper.SetCustomAttribute(typeof(TestCategoryBaseAttribute), [new TestCategoryAttribute("ClassLevel")], MemberTypes.TypeInfo);
         _attributeMockingHelper.SetCustomAttribute(typeof(TestCategoryBaseAttribute), [new TestCategoryAttribute("MethodLevel")], MemberTypes.Method);
 
-        string[] actual = _reflectHelper.GetTestCategories(_method.Object, typeof(ReflectHelperTests)).ToArray();
+        string[] actual = [.. _reflectHelper.GetTestCategories(_method.Object, typeof(ReflectHelperTests))];
         string[] expected = ["MethodLevel", "ClassLevel", "AsmLevel1", "AsmLevel2", "AsmLevel3"];
 
         Verify(expected.SequenceEqual(actual));
@@ -82,7 +82,7 @@ public class ReflectHelperTests : TestContainer
         _attributeMockingHelper.SetCustomAttribute(typeof(TestCategoryBaseAttribute), [new TestCategoryAttribute("MethodLevel1")], MemberTypes.Method);
         _attributeMockingHelper.SetCustomAttribute(typeof(TestCategoryBaseAttribute), [new TestCategoryAttribute("MethodLevel2")], MemberTypes.Method);
 
-        string[] actual = _reflectHelper.GetTestCategories(_method.Object, typeof(ReflectHelperTests)).ToArray();
+        string[] actual = [.. _reflectHelper.GetTestCategories(_method.Object, typeof(ReflectHelperTests))];
         string[] expected = ["MethodLevel1", "MethodLevel2", "ClassLevel1", "ClassLevel2", "AsmLevel1", "AsmLevel2"];
 
         Verify(expected.SequenceEqual(actual));
@@ -97,7 +97,7 @@ public class ReflectHelperTests : TestContainer
 
         string[] expected = ["AsmLevel"];
 
-        string[] actual = _reflectHelper.GetTestCategories(_method.Object, typeof(ReflectHelperTests)).ToArray();
+        string[] actual = [.. _reflectHelper.GetTestCategories(_method.Object, typeof(ReflectHelperTests))];
 
         Verify(expected.SequenceEqual(actual));
     }
@@ -110,7 +110,7 @@ public class ReflectHelperTests : TestContainer
         _attributeMockingHelper.SetCustomAttribute(typeof(TestCategoryBaseAttribute), [new TestCategoryAttribute("ClassLevel"), new TestCategoryAttribute("ClassLevel1")], MemberTypes.TypeInfo);
 
         string[] expected = ["ClassLevel", "ClassLevel1"];
-        string[] actual = _reflectHelper.GetTestCategories(_method.Object, typeof(ReflectHelperTests)).ToArray();
+        string[] actual = [.. _reflectHelper.GetTestCategories(_method.Object, typeof(ReflectHelperTests))];
 
         Verify(expected.SequenceEqual(actual));
     }
@@ -123,7 +123,7 @@ public class ReflectHelperTests : TestContainer
         _attributeMockingHelper.SetCustomAttribute(typeof(TestCategoryBaseAttribute), [new TestCategoryAttribute("AsmLevel"), new TestCategoryAttribute("AsmLevel1")], MemberTypes.All);
 
         string[] expected = ["AsmLevel", "AsmLevel1"];
-        string[] actual = _reflectHelper.GetTestCategories(_method.Object, typeof(ReflectHelperTests)).ToArray();
+        string[] actual = [.. _reflectHelper.GetTestCategories(_method.Object, typeof(ReflectHelperTests))];
         Verify(expected.SequenceEqual(actual));
     }
 
@@ -135,7 +135,7 @@ public class ReflectHelperTests : TestContainer
         _attributeMockingHelper.SetCustomAttribute(typeof(TestCategoryBaseAttribute), [new TestCategoryAttribute("MethodLevel")], MemberTypes.Method);
 
         string[] expected = ["MethodLevel"];
-        string[] actual = _reflectHelper.GetTestCategories(_method.Object, typeof(ReflectHelperTests)).ToArray();
+        string[] actual = [.. _reflectHelper.GetTestCategories(_method.Object, typeof(ReflectHelperTests))];
 
         Verify(expected.SequenceEqual(actual));
     }
@@ -274,8 +274,8 @@ public class ReflectHelperTests : TestContainer
             Setup(ro => ro.GetCustomAttributes(It.IsAny<Type>(), /* inherit */ false)).
             Returns([new TestClassAttribute()]);
 
-        TestClassAttribute[] inheritedAttributes = rh.GetDerivedAttributes<TestClassAttribute>(typeof(object), inherit: true).ToArray();
-        TestClassAttribute[] nonInheritedAttributes = rh.GetDerivedAttributes<TestClassAttribute>(typeof(object), inherit: false).ToArray();
+        TestClassAttribute[] inheritedAttributes = [.. rh.GetDerivedAttributes<TestClassAttribute>(typeof(object), inherit: true)];
+        TestClassAttribute[] nonInheritedAttributes = [.. rh.GetDerivedAttributes<TestClassAttribute>(typeof(object), inherit: false)];
 
         Verify(inheritedAttributes.Length == 2);
         Verify(nonInheritedAttributes.Length == 1);

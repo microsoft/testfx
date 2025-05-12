@@ -10,13 +10,13 @@ namespace Microsoft.Testing.Framework;
 
 internal sealed class TestFixtureManager : ITestFixtureManager
 {
-    private readonly Dictionary<FixtureId, Dictionary<Type, AsyncLazy<object>>> _fixtureInstancesByFixtureId = new();
-    private readonly Dictionary<TestNode, FixtureId[]> _fixtureIdsUsedByTestNode = new();
+    private readonly Dictionary<FixtureId, Dictionary<Type, AsyncLazy<object>>> _fixtureInstancesByFixtureId = [];
+    private readonly Dictionary<TestNode, FixtureId[]> _fixtureIdsUsedByTestNode = [];
 
     // We could improve this by doing some optimistic lock but we expect a rather low contention on this.
     // We use a dictionary as performance improvement because we know that when the registration is complete
     // we will only read the collection (so no need for concurrency handling).
-    private readonly Dictionary<FixtureId, CountHolder> _fixtureUses = new();
+    private readonly Dictionary<FixtureId, CountHolder> _fixtureUses = [];
     private readonly CancellationToken _cancellationToken;
     private bool _isRegistrationFrozen;
     private bool _isUsageRegistrationFrozen;
@@ -79,7 +79,7 @@ internal sealed class TestFixtureManager : ITestFixtureManager
             return;
         }
 
-        _fixtureIdsUsedByTestNode.Add(testNode, fixtureIds.Select(x => new FixtureId(x)).ToArray());
+        _fixtureIdsUsedByTestNode.Add(testNode, [.. fixtureIds.Select(x => new FixtureId(x))]);
         foreach (string fixtureId in fixtureIds)
         {
             if (!_fixtureUses.TryGetValue(fixtureId, out CountHolder? uses))

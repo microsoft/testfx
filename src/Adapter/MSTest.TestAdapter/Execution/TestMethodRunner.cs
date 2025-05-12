@@ -245,7 +245,7 @@ internal sealed class TestMethodRunner
             results.Add(emptyResult);
         }
 
-        return results.ToArray();
+        return [.. results];
     }
 
     private async Task<bool> TryExecuteDataSourceBasedTestsAsync(List<TestResult> results)

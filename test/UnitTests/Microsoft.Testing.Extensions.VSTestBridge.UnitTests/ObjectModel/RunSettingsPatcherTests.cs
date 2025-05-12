@@ -94,7 +94,7 @@ public class RunSettingsPatcherTests
         XDocument runSettingsDocument = RunSettingsPatcher.Patch(runSettings, _configuration.Object, new ClientInfoService(string.Empty, string.Empty),
             _commandLineOptions.Object);
 
-        XElement[] testRunParameters = runSettingsDocument.XPathSelectElements("RunSettings/TestRunParameters/Parameter").ToArray();
+        XElement[] testRunParameters = [.. runSettingsDocument.XPathSelectElements("RunSettings/TestRunParameters/Parameter")];
         Assert.AreEqual("key1", testRunParameters[0].Attribute("name")!.Value);
         Assert.AreEqual("value1", testRunParameters[0].Attribute("value")!.Value);
         Assert.AreEqual("key2", testRunParameters[1].Attribute("name")!.Value);
@@ -118,7 +118,7 @@ public class RunSettingsPatcherTests
         XDocument runSettingsDocument = RunSettingsPatcher.Patch(null, _configuration.Object, new ClientInfoService(string.Empty, string.Empty),
             _commandLineOptions.Object);
 
-        XElement[] testRunParameters = runSettingsDocument.XPathSelectElements("RunSettings/TestRunParameters/Parameter").ToArray();
+        XElement[] testRunParameters = [.. runSettingsDocument.XPathSelectElements("RunSettings/TestRunParameters/Parameter")];
         Assert.AreEqual("key1", testRunParameters[0].Attribute("name")!.Value);
         Assert.AreEqual("value1", testRunParameters[0].Attribute("value")!.Value);
         Assert.AreEqual("key2", testRunParameters[1].Attribute("name")!.Value);

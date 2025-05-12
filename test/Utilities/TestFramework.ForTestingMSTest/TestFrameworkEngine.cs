@@ -98,7 +98,7 @@ internal sealed class TestFrameworkEngine : IDataProducer
                     testContainerType.Name,
                     publicMethod.Name,
                     publicMethod.GetGenericArguments().Length,
-                    publicMethod.GetParameters().Select(x => x.ParameterType.FullName!).ToArray(),
+                    [.. publicMethod.GetParameters().Select(x => x.ParameterType.FullName!)],
                     publicMethod.ReturnType.FullName!));
 
                 testNode.Properties.Add(new TrxFullyQualifiedTypeNameProperty(testContainerType.FullName!));
@@ -175,7 +175,7 @@ internal sealed class TestFrameworkEngine : IDataProducer
                     testContainerType.Name,
                     publicMethod.Name,
                     publicMethod.GetGenericArguments().Length,
-                    publicMethod.GetParameters().Select(x => x.ParameterType.FullName!).ToArray(),
+                    [.. publicMethod.GetParameters().Select(x => x.ParameterType.FullName!)],
                     publicMethod.ReturnType.FullName!));
 
                 await messageBus.PublishAsync(this, new TestNodeUpdateMessage(request.Session.SessionUid, testNode));

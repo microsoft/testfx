@@ -11,7 +11,7 @@ namespace Microsoft.Testing.Framework.SourceGeneration.UnitTests.TestUtilities;
 internal sealed class TestingFrameworkVerifier : IVerifier
 {
     public TestingFrameworkVerifier()
-        : this(ImmutableStack<string>.Empty)
+        : this([])
     {
     }
 

@@ -42,7 +42,7 @@ internal sealed class ExceptionFlattener
             }
         }
 
-        return flatExceptions.ToArray();
+        return [.. flatExceptions];
     }
 }
 

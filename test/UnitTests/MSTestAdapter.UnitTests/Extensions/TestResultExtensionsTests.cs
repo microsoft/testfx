@@ -43,7 +43,7 @@ public class TestResultExtensionsTests : TestContainer
         };
 
         var convertedResult = result.ToTestResult(new() { DisplayName = result.DisplayName }, default, default, string.Empty, new());
-        VSTestTestResultMessage[] stdOutMessages = convertedResult.Messages.Where(m => m.Category == VSTestTestResultMessage.StandardOutCategory).ToArray();
+        VSTestTestResultMessage[] stdOutMessages = [.. convertedResult.Messages.Where(m => m.Category == VSTestTestResultMessage.StandardOutCategory)];
         Verify(stdOutMessages[0].Text == "logOutput");
         Verify(convertedResult.Messages.Single(m => m.Category == VSTestTestResultMessage.StandardErrorCategory).Text == "logError");
         Verify(convertedResult.DisplayName == "displayName (Data Row 1)");
@@ -177,7 +177,7 @@ public class TestResultExtensionsTests : TestContainer
         // Otherwise, ToTestResult will crash because it calls new Uri on the result file.
         string resultFile = Path.GetFullPath("DummyFile.txt");
 
-        var result = new TestResult { ResultFiles = new List<string>() { resultFile } };
+        var result = new TestResult { ResultFiles = [resultFile] };
         var convertedResult = result.ToTestResult(new(), default, default, string.Empty, new());
         Verify(convertedResult.Attachments[0].Attachments[0].Description == resultFile);
     }

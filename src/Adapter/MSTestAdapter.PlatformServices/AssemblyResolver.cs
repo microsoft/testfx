@@ -408,7 +408,7 @@ class AssemblyResolver :
                         return null;
                     }
 
-                    s_currentlyLoading ??= new List<string>();
+                    s_currentlyLoading ??= [];
                     s_currentlyLoading.Add(assemblyPath); // Push
                     isPushed = true;
                 }

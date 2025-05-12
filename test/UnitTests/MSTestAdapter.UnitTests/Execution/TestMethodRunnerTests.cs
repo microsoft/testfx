@@ -359,7 +359,7 @@ public class TestMethodRunnerTests : TestContainer
     {
         TestResult testResult = new()
         {
-            ResultFiles = new List<string> { "C:\\temp.txt" },
+            ResultFiles = ["C:\\temp.txt"],
         };
 
         int dummyIntData1 = 1;

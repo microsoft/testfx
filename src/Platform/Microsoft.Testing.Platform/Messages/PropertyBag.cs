@@ -255,7 +255,7 @@ public sealed partial class PropertyBag
         // We don't want to allocate an array if we know that we're looking for a TestNodeStateProperty
         return typeof(TestNodeStateProperty).IsAssignableFrom(typeof(TProperty))
             ? []
-            : _property is null ? [] : _property.OfType<TProperty>().ToArray();
+            : _property is null ? [] : [.. _property.OfType<TProperty>()];
     }
 
     /// <summary>

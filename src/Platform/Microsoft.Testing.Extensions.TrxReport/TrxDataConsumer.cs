@@ -40,7 +40,7 @@ internal sealed class TrxReportGenerator :
     private readonly TrxTestApplicationLifecycleCallbacks? _trxTestApplicationLifecycleCallbacks;
     private readonly ILogger<TrxReportGenerator> _logger;
     private readonly List<TestNodeUpdateMessage> _tests = [];
-    private readonly Dictionary<IExtension, List<SessionFileArtifact>> _artifactsByExtension = new();
+    private readonly Dictionary<IExtension, List<SessionFileArtifact>> _artifactsByExtension = [];
     private readonly bool _isEnabled;
 
     private DateTimeOffset? _testStartTime;
@@ -227,7 +227,7 @@ TrxReportGeneratorCommandLine.IsTrxReportEnabled: {_commandLineOptionsService.Is
 
             int exitCode = _testApplicationProcessExitCode.GetProcessExitCode();
             TrxReportEngine trxReportGeneratorEngine = new(_testApplicationModuleInfo, _environment, _commandLineOptionsService, _configuration,
-            _clock, _tests.ToArray(), _failedTestsCount, _passedTestsCount, _notExecutedTestsCount, _timeoutTestsCount, _artifactsByExtension,
+            _clock, [.. _tests], _failedTestsCount, _passedTestsCount, _notExecutedTestsCount, _timeoutTestsCount, _artifactsByExtension,
             _adapterSupportTrxCapability, _testFramework, _testStartTime.Value, exitCode, cancellationToken);
             (string reportFileName, string? warning) = await trxReportGeneratorEngine.GenerateReportAsync();
             if (warning is not null)

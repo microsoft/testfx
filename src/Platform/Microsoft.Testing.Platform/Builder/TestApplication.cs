@@ -47,10 +47,10 @@ public sealed class TestApplication : ITestApplication
         if (args.Contains($"--{PlatformCommandLineProvider.ServerOptionKey}") || args.Contains($"-{PlatformCommandLineProvider.ServerOptionKey}"))
         {
             // Remove the --server option from the args so that the builder can be created.
-            args = args.Where(arg => arg.Trim('-') != PlatformCommandLineProvider.ServerOptionKey).ToArray();
+            args = [.. args.Where(arg => arg.Trim('-') != PlatformCommandLineProvider.ServerOptionKey)];
         }
 
-        return CreateBuilderAsync(args.Append($"--{PlatformCommandLineProvider.ServerOptionKey}").ToArray(), testApplicationOptions);
+        return CreateBuilderAsync([.. args, $"--{PlatformCommandLineProvider.ServerOptionKey}"], testApplicationOptions);
     }
 
     /// <summary>

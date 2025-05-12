@@ -65,7 +65,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
     /// <returns>A collection of Test Elements.</returns>
     internal AssemblyEnumerationResult EnumerateAssembly(string assemblyFileName)
     {
-        List<string> warnings = new();
+        List<string> warnings = [];
         DebugEx.Assert(!StringEx.IsNullOrWhiteSpace(assemblyFileName), "Invalid assembly file name.");
         var tests = new List<UnitTestElement>();
         // Contains list of assembly/class names for which we have already added fixture tests.

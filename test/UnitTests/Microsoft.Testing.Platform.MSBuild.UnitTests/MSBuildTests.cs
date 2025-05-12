@@ -61,7 +61,7 @@ namespace SomeNamespace
 
     private sealed class InMemoryFileSystem : IFileSystem
     {
-        public Dictionary<string, string?> Files { get; } = new();
+        public Dictionary<string, string?> Files { get; } = [];
 
         public void CopyFile(string source, string destination) => throw new NotImplementedException();
 
@@ -76,7 +76,7 @@ namespace SomeNamespace
 
     private sealed class CustomTaskItem : ITaskItem
     {
-        private readonly Dictionary<string, string> _keyValuePairs = new();
+        private readonly Dictionary<string, string> _keyValuePairs = [];
 
         public CustomTaskItem(string itemSpec) => ItemSpec = itemSpec;
 

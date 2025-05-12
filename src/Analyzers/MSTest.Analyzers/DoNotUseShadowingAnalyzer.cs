@@ -77,7 +77,7 @@ public sealed class DoNotUseShadowingAnalyzer : DiagnosticAnalyzer
 
     private static Dictionary<string, List<ISymbol>> GetBaseMembers(INamedTypeSymbol namedTypeSymbol)
     {
-        Dictionary<string, List<ISymbol>> membersByName = new();
+        Dictionary<string, List<ISymbol>> membersByName = [];
         INamedTypeSymbol? currentType = namedTypeSymbol.BaseType;
         while (currentType is not null)
         {

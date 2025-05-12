@@ -215,7 +215,7 @@ public sealed class IPCTests
             await namedPipeClient.ConnectAsync(_testContext.CancellationTokenSource.Token);
         }
 
-        await Task.WhenAll(waitConnectionTask.ToArray());
+        await Task.WhenAll([.. waitConnectionTask]);
 
         Assert.AreEqual(3, connectionCompleted);
 
@@ -235,8 +235,7 @@ public sealed class IPCTests
     private static string RandomString(int length, Random random)
     {
         const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-        return new string(Enumerable.Repeat(chars, length)
-            .Select(s => s[random.Next(s.Length)]).ToArray());
+        return new string([.. Enumerable.Repeat(chars, length).Select(s => s[random.Next(s.Length)])]);
     }
 
     private abstract record BaseMessage : IRequest;

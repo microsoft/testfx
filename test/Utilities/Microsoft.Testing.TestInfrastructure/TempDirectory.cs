@@ -131,7 +131,7 @@ public class TempDirectory : IDisposable
             paths.Add(destination);
         }
 
-        return paths.ToArray();
+        return [.. paths];
     }
 
     /// <summary>

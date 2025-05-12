@@ -41,7 +41,7 @@ internal sealed class AssemblyLoadWorker : MarshalByRefObject
     {
         DebugEx.Assert(!StringEx.IsNullOrEmpty(assemblyPath), "assemblyPath");
 
-        warnings = new List<string>();
+        warnings = [];
         Assembly? assembly;
         try
         {

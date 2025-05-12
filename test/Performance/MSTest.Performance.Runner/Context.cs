@@ -11,7 +11,7 @@ internal class Context : IContext, IDisposable
 
     public void Init(IDictionary<string, object> properties)
     {
-        _disposables = new();
+        _disposables = [];
         Properties = properties;
     }
 

@@ -64,7 +64,7 @@ public static class DotnetCli
         await s_maxOutstandingCommands_semaphore.WaitAsync();
         try
         {
-            environmentVariables ??= new Dictionary<string, string?>();
+            environmentVariables ??= [];
             foreach (DictionaryEntry entry in Environment.GetEnvironmentVariables())
             {
                 // Skip all unwanted environment variables.

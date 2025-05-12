@@ -108,7 +108,7 @@ internal sealed partial class AppInsightsProvider :
 #else
         // Keep the custom thread to avoid to waste one from thread pool.
         // We have some await but we should stay on the custom thread if not for special cases like trace log or exception.
-        _payloads = new();
+        _payloads = [];
         _telemetryTask = _task.RunLongRunning(IngestLoopAsync, "Telemetry AppInsightsProvider", _testApplicationCancellationTokenSource.CancellationToken);
 #endif
 

@@ -248,11 +248,10 @@ internal sealed class CommandLineHandler : ICommandLineHandler, ICommandLineOpti
         async Task<bool> PrintOptionsAsync(IEnumerable<ICommandLineOptionsProvider> optionProviders, bool builtInOnly = false)
         {
             CommandLineOption[] options =
-                optionProviders
+                [.. optionProviders
                .SelectMany(provider => provider.GetCommandLineOptions())
                .Where(option => !option.IsHidden && option.IsBuiltIn == builtInOnly)
-               .OrderBy(option => option.Name)
-               .ToArray();
+               .OrderBy(option => option.Name)];
 
             if (options.Length == 0)
             {
@@ -281,9 +280,7 @@ internal sealed class CommandLineHandler : ICommandLineHandler, ICommandLineOpti
                 "System command line options should not have any tool option registered.");
             await outputDevice.DisplayAsync(this, new TextOutputDeviceData(PlatformResources.HelpOptions));
             ICommandLineOptionsProvider[] nonToolsExtensionProviders =
-                ExtensionsCommandLineOptionsProviders
-                .Where(provider => provider is not IToolCommandLineOptionsProvider)
-                .ToArray();
+                [.. ExtensionsCommandLineOptionsProviders.Where(provider => provider is not IToolCommandLineOptionsProvider)];
             // By default, only system options are built-in but some extensions (e.g. retry) are considered as built-in too,
             // so we need to union the 2 collections before printing the options.
             await PrintOptionsAsync(SystemCommandLineOptionsProviders.Union(nonToolsExtensionProviders), builtInOnly: true);
