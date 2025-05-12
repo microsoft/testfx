@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.CodeAnalysis.Testing;
+
 using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
     MSTest.Analyzers.UseProperAssertMethodsAnalyzer,
     MSTest.Analyzers.UseProperAssertMethodsFixer>;
@@ -57,6 +59,105 @@ public sealed class UseProperAssertMethodsAnalyzerTests
             // /0/Test0.cs(10,9): info MSTEST0037: Use 'Assert.IsNull' instead of 'Assert.IsTrue'
             VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("IsNull", "IsTrue"),
             fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenPointerTypesPassedToIsTrueOrIsFalseThenNoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public unsafe void MyTestMethod()
+                {
+                    {
+                        byte* x = null;
+                        delegate*<void> y = null;
+
+                        // Assert.IsTrue: null comparisons
+                        Assert.IsTrue(x is null);
+                        Assert.IsTrue(y is null);
+                        Assert.IsTrue(x == null);
+                        Assert.IsTrue(y == null);
+                        Assert.IsTrue(null == x);
+                        Assert.IsTrue(null == y);
+
+                        // Assert.IsTrue: not null comparisons
+                        Assert.IsTrue(x is not null);
+                        Assert.IsTrue(y is not null);
+                        Assert.IsTrue(x != null);
+                        Assert.IsTrue(y != null);
+                        Assert.IsTrue(null != x);
+                        Assert.IsTrue(null != y);
+
+                        // Assert.IsTrue: two pointers equality comparisons
+                        Assert.IsTrue(x == x);
+                        Assert.IsTrue(x == y);
+                        Assert.IsTrue(y == x);
+                        Assert.IsTrue(y == y);
+
+                        // Assert.IsTrue: two pointers inequality comparisons
+                        Assert.IsTrue(x != x);
+                        Assert.IsTrue(x != y);
+                        Assert.IsTrue(y != x);
+                        Assert.IsTrue(y != y);
+
+                        // Assert.IsFalse: null comparisons
+                        Assert.IsFalse(x is null);
+                        Assert.IsFalse(y is null);
+                        Assert.IsFalse(x == null);
+                        Assert.IsFalse(y == null);
+                        Assert.IsFalse(null == x);
+                        Assert.IsFalse(null == y);
+            
+                        // Assert.IsFalse: not null comparisons
+                        Assert.IsFalse(x is not null);
+                        Assert.IsFalse(y is not null);
+                        Assert.IsFalse(x != null);
+                        Assert.IsFalse(y != null);
+                        Assert.IsFalse(null != x);
+                        Assert.IsFalse(null != y);
+            
+                        // Assert.IsFalse: two pointers equality comparisons
+                        Assert.IsFalse(x == x);
+                        Assert.IsFalse(x == y);
+                        Assert.IsFalse(y == x);
+                        Assert.IsFalse(y == y);
+            
+                        // Assert.IsFalse: two pointers inequality comparisons
+                        Assert.IsFalse(x != x);
+                        Assert.IsFalse(x != y);
+                        Assert.IsFalse(y != x);
+                        Assert.IsFalse(y != y);
+
+                        // The following is to show that if we try to use IsNull or AreEqual, it will not work.
+                        // If this behavior ever changed (either as a result of some language feature, or us adding extra overloads),
+                        // then we should update the analyzer to start reporting diagnostic in the relevant cases and have the codefix handle it correctly
+                        Assert.IsNull({|#0:x|});
+                        Assert.IsNull({|#1:y|});
+                        Assert.{|#2:AreEqual|}(null, x);
+                        Assert.{|#3:AreEqual|}(null, y);
+                    }
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            [
+                // /0/Test0.cs(15,27): error CS1503: Argument 1: cannot convert from 'byte*' to 'object?'
+                DiagnosticResult.CompilerError("CS1503").WithLocation(0).WithArguments("1", "byte*", "object?"),
+                // /0/Test0.cs(16,27): error CS1503: Argument 1: cannot convert from 'delegate*<void>' to 'object?'
+                DiagnosticResult.CompilerError("CS1503").WithLocation(1).WithArguments("1", "delegate*<void>", "object?"),
+                // /0/Test0.cs(17,20): error CS0306: The type 'byte*' may not be used as a type argument
+                DiagnosticResult.CompilerError("CS0306").WithLocation(2).WithArguments("byte*"),
+                // /0/Test0.cs(18,20): error CS0306: The type 'delegate*<void>' may not be used as a type argument
+                DiagnosticResult.CompilerError("CS0306").WithLocation(3).WithArguments("delegate*<void>"),
+            ],
+            code);
     }
 
     [TestMethod]

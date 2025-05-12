@@ -1,0 +1,37 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
+  <file datatype="xml" source-language="en" target-language="tr" original="../AzureDevOpsResources.resx">
+    <body>
+      <trans-unit id="AzureDevOpsReportSeverityRequiresAzureDevOps">
+        <source>'--report-azdo-severity' requires '--report-azdo' to be enabled</source>
+        <target state="translated">'--report-azdo-severity' öğesi '--report-azdo' öğesinin etkinleştirilmesini gerektirir</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Description">
+        <source>Azure DevOps report generator to write errors to the output in a way that AzureDev Ops understands.</source>
+        <target state="translated">Hataları Azure DevOps'un anlayacağı şekilde çıktıya yazan Azure DevOps rapor oluşturucusu.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DisplayName">
+        <source>Azure DevOps report generator</source>
+        <target state="translated">Azure DevOps rapor oluşturucusu</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="InvalidSeverity">
+        <source>Invalid option {0}.</source>
+        <target state="translated">Geçersiz seçenek{0}.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="OptionDescription">
+        <source>Eanble Azure DevOps report generator to write errors to the output in a way that AzureDev Ops understands.</source>
+        <target state="translated">Azure DevOps rapor oluşturucusunu, hataları Azure DevOps'un anlayacağı şekilde çıktıya yazması için etkinleştirin.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="SeverityOptionDescription">
+        <source>Severity to use for the reported event. Options are: error (default) and warning.</source>
+        <target state="translated">Raporlanan olay için kullanılacak önem derecesi. Seçenekler şunlardır: hata (varsayılan) ve uyarı.</target>
+        <note>Do not translated 'error' or 'warning' those are literal values.</note>
+      </trans-unit>
+    </body>
+  </file>
+</xliff>
