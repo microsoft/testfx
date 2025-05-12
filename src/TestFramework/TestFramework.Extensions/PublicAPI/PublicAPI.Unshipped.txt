@@ -1,2 +1,1 @@
 #nullable enable
-Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestRunCount.get -> int
