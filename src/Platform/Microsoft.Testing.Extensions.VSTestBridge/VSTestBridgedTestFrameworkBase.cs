@@ -12,7 +12,6 @@ using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Messages;
-using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.Requests;
 using Microsoft.Testing.Platform.Services;
 
@@ -131,30 +130,51 @@ public abstract class VSTestBridgedTestFrameworkBase : ITestFramework, IDataProd
 
     private VSTestDiscoverTestExecutionRequest UpdateDiscoverRequest(
         VSTestDiscoverTestExecutionRequest discoverRequest,
-        IMessageBus messageBus, CancellationToken cancellationToken)
+        IMessageBus messageBus,
+        CancellationToken cancellationToken)
     {
         // Before passing down the request, we need to replace the discovery sink with a custom implementation calling
         // both the original (VSTest) sink and our own.
-        ITestApplicationModuleInfo testApplicationModuleInfo = ServiceProvider.GetTestApplicationModuleInfo();
         ILoggerFactory loggerFactory = ServiceProvider.GetRequiredService<ILoggerFactory>();
-        IClientInfo clientInfo = ServiceProvider.GetRequiredService<IClientInfo>();
-        TestCaseDiscoverySinkAdapter testCaseDiscoverySinkAdapter = new(this, discoverRequest.Session, discoverRequest.AssemblyPaths, testApplicationModuleInfo, loggerFactory, messageBus, IsTrxEnabled, clientInfo, cancellationToken, discoverRequest.DiscoverySink);
+        TestCaseDiscoverySinkAdapter testCaseDiscoverySinkAdapter = new(
+            this,
+            discoverRequest.Session,
+            discoverRequest.AssemblyPaths,
+            ServiceProvider.GetTestApplicationModuleInfo(),
+            ServiceProvider.GetTestFrameworkCapabilities().GetCapability<INamedFeatureCapability>(),
+            ServiceProvider.GetCommandLineOptions(),
+            ServiceProvider.GetClientInfo(),
+            messageBus,
+            loggerFactory,
+            IsTrxEnabled,
+            cancellationToken,
+            discoverRequest.DiscoverySink);
 
         return new(discoverRequest.Session, discoverRequest.Filter, discoverRequest.AssemblyPaths, discoverRequest.DiscoveryContext,
             discoverRequest.MessageLogger, testCaseDiscoverySinkAdapter);
     }
 
-    private VSTestRunTestExecutionRequest UpdateRunRequest(VSTestRunTestExecutionRequest runRequest, IMessageBus messageBus,
+    private VSTestRunTestExecutionRequest UpdateRunRequest(
+        VSTestRunTestExecutionRequest runRequest,
+        IMessageBus messageBus,
         CancellationToken cancellationToken)
     {
         // Before passing down the request, we need to replace the framework handle with a custom implementation calling
         // both the original (VSTest) framework handle and our own.
-        ITestApplicationModuleInfo testApplicationModuleInfo = ServiceProvider.GetTestApplicationModuleInfo();
         ILoggerFactory loggerFactory = ServiceProvider.GetRequiredService<ILoggerFactory>();
-        IOutputDevice outputDevice = ServiceProvider.GetOutputDevice();
-        IClientInfo clientInfo = ServiceProvider.GetClientInfo();
-        FrameworkHandlerAdapter frameworkHandlerAdapter = new(this, runRequest.Session, clientInfo, runRequest.AssemblyPaths, testApplicationModuleInfo,
-            loggerFactory, messageBus, outputDevice, IsTrxEnabled, cancellationToken, runRequest.FrameworkHandle);
+        FrameworkHandlerAdapter frameworkHandlerAdapter = new(
+            this,
+            runRequest.Session,
+            runRequest.AssemblyPaths,
+            ServiceProvider.GetTestApplicationModuleInfo(),
+            ServiceProvider.GetTestFrameworkCapabilities().GetCapability<INamedFeatureCapability>(),
+            ServiceProvider.GetCommandLineOptions(),
+            ServiceProvider.GetClientInfo(),
+            messageBus,
+            ServiceProvider.GetOutputDevice(),
+            loggerFactory,
+            IsTrxEnabled,
+            cancellationToken, runRequest.FrameworkHandle);
 
         return new(runRequest.Session, runRequest.Filter, runRequest.AssemblyPaths, runRequest.RunContext,
             frameworkHandlerAdapter);

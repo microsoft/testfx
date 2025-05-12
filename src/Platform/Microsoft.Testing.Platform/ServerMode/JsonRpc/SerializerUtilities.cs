@@ -209,12 +209,6 @@ internal static class SerializerUtilities
                         continue;
                     }
 
-                    if (property is SerializableNamedArrayStringProperty namedArrayStringProperty)
-                    {
-                        properties[namedArrayStringProperty.Name] = namedArrayStringProperty.Values;
-                        continue;
-                    }
-
                     if (property is TestFileLocationProperty fileLocationProperty)
                     {
                         properties["location.file"] = fileLocationProperty.FilePath;
@@ -225,11 +219,15 @@ internal static class SerializerUtilities
 
                     if (property is TestMethodIdentifierProperty testMethodIdentifierProperty)
                     {
-                        properties["location.namespace"] = testMethodIdentifierProperty.Namespace;
-                        properties["location.type"] = testMethodIdentifierProperty.TypeName;
+                        properties["location.type"] = RoslynString.IsNullOrEmpty(testMethodIdentifierProperty.Namespace)
+                            ? testMethodIdentifierProperty.TypeName
+                            : $"{testMethodIdentifierProperty.Namespace}.{testMethodIdentifierProperty.TypeName}";
+
                         properties["location.method"] = testMethodIdentifierProperty.ParameterTypeFullNames.Length > 0
                             ? $"{testMethodIdentifierProperty.MethodName}({string.Join(",", testMethodIdentifierProperty.ParameterTypeFullNames)})"
                             : testMethodIdentifierProperty.MethodName;
+
+                        properties["location.method-arity"] = testMethodIdentifierProperty.MethodArity;
                         continue;
                     }
 

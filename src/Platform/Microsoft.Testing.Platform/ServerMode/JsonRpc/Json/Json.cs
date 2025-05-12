@@ -147,12 +147,6 @@ internal sealed class Json
                     continue;
                 }
 
-                if (property is SerializableNamedArrayStringProperty namedArrayStringProperty)
-                {
-                    properties.Add((namedArrayStringProperty.Name, namedArrayStringProperty.Values));
-                    continue;
-                }
-
                 if (property is TestFileLocationProperty fileLocationProperty)
                 {
                     properties.Add(("location.file", fileLocationProperty.FilePath));
@@ -163,11 +157,16 @@ internal sealed class Json
 
                 if (property is TestMethodIdentifierProperty testMethodIdentifierProperty)
                 {
-                    properties.Add(("location.namespace", testMethodIdentifierProperty.Namespace));
-                    properties.Add(("location.type", testMethodIdentifierProperty.TypeName));
+                    properties.Add(("location.type", RoslynString.IsNullOrEmpty(testMethodIdentifierProperty.Namespace)
+                        ? testMethodIdentifierProperty.TypeName
+                        : $"{testMethodIdentifierProperty.Namespace}.{testMethodIdentifierProperty.TypeName}"));
+
                     properties.Add(("location.method", testMethodIdentifierProperty.ParameterTypeFullNames.Length > 0
                         ? $"{testMethodIdentifierProperty.MethodName}({string.Join(",", testMethodIdentifierProperty.ParameterTypeFullNames)})"
                         : testMethodIdentifierProperty.MethodName));
+
+                    properties.Add(("location.method-arity", testMethodIdentifierProperty.MethodArity));
+
                     continue;
                 }
 
