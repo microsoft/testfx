@@ -183,7 +183,7 @@ public class ThreadSafeStringWriter : StringWriter
     {
         lock (StaticLockObject)
         {
-            State.Value = new();
+            State.Value = [];
         }
     }
 

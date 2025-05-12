@@ -54,7 +54,7 @@ internal sealed class RetryFailedTestsPipeServer : IDisposable
     {
         if (request is FailedTestRequest failed)
         {
-            FailedUID ??= new();
+            FailedUID ??= [];
             FailedUID.Add(failed.Uid);
             return Task.FromResult((IResponse)VoidResponse.CachedInstance);
         }

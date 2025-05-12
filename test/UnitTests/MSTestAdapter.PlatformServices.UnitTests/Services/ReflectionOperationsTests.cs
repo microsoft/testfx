@@ -67,9 +67,7 @@ public class ReflectionOperationsTests : TestContainer
     }
 
     private object[] GetMemberAttributes(Type type, bool inherit)
-        => _reflectionOperations.GetCustomAttributes(type, inherit)
-            .Where(x => x.GetType().FullName != "System.Runtime.CompilerServices.NullableContextAttribute")
-            .ToArray();
+        => [.. _reflectionOperations.GetCustomAttributes(type, inherit).Where(x => x.GetType().FullName != "System.Runtime.CompilerServices.NullableContextAttribute")];
 
     public void GetCustomAttributesOnTypeShouldReturnAllAttributesIgnoringBaseInheritance()
     {
@@ -203,7 +201,7 @@ public class ReflectionOperationsTests : TestContainer
             }
         }
 
-        return attribValuePairs.ToArray();
+        return [.. attribValuePairs];
     }
 
     [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class | AttributeTargets.Assembly, AllowMultiple = true)]

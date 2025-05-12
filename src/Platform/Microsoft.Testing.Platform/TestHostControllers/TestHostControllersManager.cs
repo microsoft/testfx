@@ -286,9 +286,9 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
 
         bool requireProcessRestart = environmentVariableProviders.Count > 0 || lifetimeHandlers.Count > 0 || dataConsumers.Count > 0;
         return new TestHostControllerConfiguration(
-            environmentVariableProviders.OrderBy(x => x.RegistrationOrder).Select(x => x.TestHostEnvironmentVariableProvider).ToArray(),
-            lifetimeHandlers.OrderBy(x => x.RegistrationOrder).Select(x => x.TestHostProcessLifetimeHandler).ToArray(),
-            dataConsumers.OrderBy(x => x.RegistrationOrder).Select(x => x.Consumer).ToArray(),
+            [.. environmentVariableProviders.OrderBy(x => x.RegistrationOrder).Select(x => x.TestHostEnvironmentVariableProvider)],
+            [.. lifetimeHandlers.OrderBy(x => x.RegistrationOrder).Select(x => x.TestHostProcessLifetimeHandler)],
+            [.. dataConsumers.OrderBy(x => x.RegistrationOrder).Select(x => x.Consumer)],
             requireProcessRestart);
     }
 }

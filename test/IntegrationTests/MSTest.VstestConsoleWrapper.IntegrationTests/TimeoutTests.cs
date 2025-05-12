@@ -34,7 +34,7 @@ public class TimeoutTests : CLITestBase
             failedTests.Add("TimeoutTestProject.TimeoutTestClass.TimeoutTest_WhenUserCallsThreadAbort_AbortTest");
         }
 
-        ValidateFailedTestsContain(false, failedTests.ToArray());
+        ValidateFailedTestsContain(false, [.. failedTests]);
 
         // We should find the <TargetFramework>/TimeoutTestOutput.txt file, as it's our way to validate
         // that when the timeout expires it cancels the test context token.

@@ -253,14 +253,14 @@ public class DynamicDataTests : DynamicDataTestsBase
 
     private static IEnumerable<object[]> StringAndInt32()
     {
-        yield return new object[] { "1", 1 };
-        yield return new object[] { "2", 1 };
+        yield return ["1", 1];
+        yield return ["2", 1];
     }
 
     private static IEnumerable<object[]> Int32AndString()
     {
-        yield return new object[] { 1, "0" };
-        yield return new object[] { 2, "2" };
+        yield return [1, "0"];
+        yield return [2, "2"];
     }
 
     private static IEnumerable<int> SimpleCollection

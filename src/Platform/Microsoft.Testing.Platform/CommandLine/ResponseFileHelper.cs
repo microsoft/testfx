@@ -12,7 +12,7 @@ internal static class ResponseFileHelper
     {
         try
         {
-            newArguments = ExpandResponseFile(rspFilePath).ToArray();
+            newArguments = [.. ExpandResponseFile(rspFilePath)];
             return true;
         }
         catch (FileNotFoundException)

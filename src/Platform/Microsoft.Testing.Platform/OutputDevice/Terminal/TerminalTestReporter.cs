@@ -15,7 +15,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
     /// <summary>
     /// The two directory separator characters to be passed to methods like <see cref="string.IndexOfAny(char[])"/>.
     /// </summary>
-    private static readonly string[] NewLineStrings = { "\r\n", "\n" };
+    private static readonly string[] NewLineStrings = ["\r\n", "\n"];
 
     internal const string SingleIndentation = "  ";
 
@@ -37,7 +37,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
 
     private readonly ConcurrentDictionary<string, TestProgressState> _assemblies = new();
 
-    private readonly List<TestRunArtifact> _artifacts = new();
+    private readonly List<TestRunArtifact> _artifacts = [];
 
     private readonly TerminalTestReporterOptions _options;
 

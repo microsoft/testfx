@@ -16,7 +16,7 @@ namespace Microsoft.Testing.Framework;
 internal sealed class ThreadPoolTestNodeRunner : IDisposable
 {
     private readonly SemaphoreSlim? _maxParallelTests;
-    private readonly ConcurrentBag<Task<Result>> _runningTests = new();
+    private readonly ConcurrentBag<Task<Result>> _runningTests = [];
     private readonly ConcurrentDictionary<TestNodeUid, int> _runningTestNodeUids = new();
     private readonly CountdownEvent _ensureTaskQueuedCountdownEvent = new(1);
     private readonly Func<IData, Task> _publishDataAsync;

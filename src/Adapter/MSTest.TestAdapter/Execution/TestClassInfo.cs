@@ -102,25 +102,25 @@ public class TestClassInfo
     /// Gets the timeout for the class initialize methods.
     /// We can use a dictionary because the MethodInfo is unique in an inheritance hierarchy.
     /// </summary>
-    internal Dictionary<MethodInfo, TimeoutInfo> ClassInitializeMethodTimeoutMilliseconds { get; } = new();
+    internal Dictionary<MethodInfo, TimeoutInfo> ClassInitializeMethodTimeoutMilliseconds { get; } = [];
 
     /// <summary>
     /// Gets the timeout for the class cleanup methods.
     /// We can use a dictionary because the MethodInfo is unique in an inheritance hierarchy.
     /// </summary>
-    internal Dictionary<MethodInfo, TimeoutInfo> ClassCleanupMethodTimeoutMilliseconds { get; } = new();
+    internal Dictionary<MethodInfo, TimeoutInfo> ClassCleanupMethodTimeoutMilliseconds { get; } = [];
 
     /// <summary>
     /// Gets the timeout for the test initialize methods.
     /// We can use a dictionary because the MethodInfo is unique in an inheritance hierarchy.
     /// </summary>
-    internal Dictionary<MethodInfo, TimeoutInfo> TestInitializeMethodTimeoutMilliseconds { get; } = new();
+    internal Dictionary<MethodInfo, TimeoutInfo> TestInitializeMethodTimeoutMilliseconds { get; } = [];
 
     /// <summary>
     /// Gets the timeout for the test cleanup methods.
     /// We can use a dictionary because the MethodInfo is unique in an inheritance hierarchy.
     /// </summary>
-    internal Dictionary<MethodInfo, TimeoutInfo> TestCleanupMethodTimeoutMilliseconds { get; } = new();
+    internal Dictionary<MethodInfo, TimeoutInfo> TestCleanupMethodTimeoutMilliseconds { get; } = [];
 
     /// <summary>
     /// Gets a value indicating whether class initialize has executed.
@@ -138,9 +138,9 @@ public class TestClassInfo
     [Obsolete("API will be dropped in v4")]
     public Stack<MethodInfo> BaseClassCleanupMethodsStack { get; } = new();
 
-    internal List<MethodInfo> BaseClassInitMethods { get; } = new();
+    internal List<MethodInfo> BaseClassInitMethods { get; } = [];
 
-    internal List<MethodInfo> BaseClassCleanupMethods { get; } = new();
+    internal List<MethodInfo> BaseClassCleanupMethods { get; } = [];
 
     /// <summary>
     /// Gets the exception thrown during <see cref="ClassInitializeAttribute"/> method invocation.

@@ -15,7 +15,7 @@ public class DynamicDataNameProviderTests
         //  you will get empty string while with the call you will get "null,a".
         //
         // check that this is still true:
-        string fragment = DynamicDataNameProvider.GetUidFragment(["parameter1", "parameter2"], new object?[] { null, "a" }, 0);
+        string fragment = DynamicDataNameProvider.GetUidFragment(["parameter1", "parameter2"], [null, "a"], 0);
         Assert.AreEqual("(parameter1: null, parameter2: a)[0]", fragment);
     }
 
@@ -28,7 +28,7 @@ public class DynamicDataNameProviderTests
         //  you will get empty string while with the call you will get "null,a".
         //
         // check that this is still true:
-        ArgumentException exception = Assert.ThrowsException<ArgumentException>(() => DynamicDataNameProvider.GetUidFragment(["parameter1"], new object?[] { null, "a" }, 0));
+        ArgumentException exception = Assert.ThrowsException<ArgumentException>(() => DynamicDataNameProvider.GetUidFragment(["parameter1"], [null, "a"], 0));
         Assert.AreEqual("Parameter count mismatch. The provided data (null, a) have 2 items, but there are 1 parameters.", exception.Message);
     }
 }

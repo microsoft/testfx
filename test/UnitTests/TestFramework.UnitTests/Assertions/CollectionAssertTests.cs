@@ -488,7 +488,7 @@ public class CollectionAssertTests : TestContainer
     {
         if (depth == 0)
         {
-            return new List<object> { new ReadOnlyCollection<int>(Enumerable.Range(1, 10).ToList()) };
+            return [new ReadOnlyCollection<int>([.. Enumerable.Range(1, 10)])];
         }
 
         var nestedCollection = new List<object>();
@@ -528,14 +528,14 @@ public class CollectionAssertTests : TestContainer
 
     private ICollection? GetNonICollectionInnerCollection() => new List<ReadOnlyCollection<int>>
         {
-            new(new List<int> { 1, 2 }),
-            new(new List<int> { 3, 4 }),
+            new([1, 2]),
+            new([3, 4]),
         };
 
     private ICollection? GetNotMatchingGetNonICollectionInnerCollection() => new List<ReadOnlyCollection<int>>
         {
-            new(new List<int> { 6, 5 }),
-            new(new List<int> { 3, 4 }),
+            new([6, 5]),
+            new([3, 4]),
         };
 
     private Type? GetStringType() => typeof(string);

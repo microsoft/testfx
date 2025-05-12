@@ -29,12 +29,12 @@ internal sealed class BFSTestNodeVisitor
         _testArgumentsManager = testArgumentsManager;
     }
 
-    internal KeyValuePair<TestNodeUid, List<TestNode>>[] DuplicatedNodes { get; private set; } = Array.Empty<KeyValuePair<TestNodeUid, List<TestNode>>>();
+    internal KeyValuePair<TestNodeUid, List<TestNode>>[] DuplicatedNodes { get; private set; } = [];
 
     public async Task VisitAsync(Func<TestNode, TestNodeUid?, Task> onIncludedTestNodeAsync)
     {
         // This is case sensitive, and culture insensitive, to keep UIDs unique, and comparable between different system.
-        Dictionary<TestNodeUid, List<TestNode>> testNodesByUid = new();
+        Dictionary<TestNodeUid, List<TestNode>> testNodesByUid = [];
         Queue<(TestNode CurrentNode, TestNodeUid? ParentNodeUid, StringBuilder NodeFullPath)> queue = new();
         foreach (TestNode node in _rootTestNodes)
         {
@@ -47,7 +47,7 @@ internal sealed class BFSTestNodeVisitor
 
             if (!testNodesByUid.TryGetValue(currentNode.StableUid, out List<TestNode>? testNodes))
             {
-                testNodes = new();
+                testNodes = [];
                 testNodesByUid.Add(currentNode.StableUid, testNodes);
             }
 
@@ -94,7 +94,7 @@ internal sealed class BFSTestNodeVisitor
             }
         }
 
-        DuplicatedNodes = testNodesByUid.Where(x => x.Value.Count > 1).ToArray();
+        DuplicatedNodes = [.. testNodesByUid.Where(x => x.Value.Count > 1)];
     }
 
     private static PropertyBag CreatePropertyBagForFilter(IProperty[] properties)
