@@ -6,7 +6,7 @@ using Microsoft.Testing.Platform.IPC.Serializers;
 
 namespace Microsoft.Testing.Extensions.HangDump.Serializers;
 
-internal sealed class ExitSignalActivityIndicatorTaskRequest() : IRequest;
+internal sealed class ExitSignalActivityIndicatorTaskRequest : IRequest;
 
 internal sealed class ExitSignalActivityIndicatorTaskRequestSerializer : BaseSerializer, INamedPipeSerializer
 {

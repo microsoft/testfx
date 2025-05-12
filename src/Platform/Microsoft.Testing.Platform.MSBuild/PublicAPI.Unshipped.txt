@@ -1,0 +1,84 @@
+#nullable enable
+Microsoft.Testing.Platform.MSBuild.ConfigurationFileTask
+Microsoft.Testing.Platform.MSBuild.ConfigurationFileTask.AssemblyName.get -> Microsoft.Build.Framework.ITaskItem!
+Microsoft.Testing.Platform.MSBuild.ConfigurationFileTask.AssemblyName.set -> void
+Microsoft.Testing.Platform.MSBuild.ConfigurationFileTask.ConfigurationFileTask() -> void
+Microsoft.Testing.Platform.MSBuild.ConfigurationFileTask.FinalTestingPlatformConfigurationFile.get -> Microsoft.Build.Framework.ITaskItem!
+Microsoft.Testing.Platform.MSBuild.ConfigurationFileTask.FinalTestingPlatformConfigurationFile.set -> void
+Microsoft.Testing.Platform.MSBuild.ConfigurationFileTask.MSBuildProjectDirectory.get -> Microsoft.Build.Framework.ITaskItem!
+Microsoft.Testing.Platform.MSBuild.ConfigurationFileTask.MSBuildProjectDirectory.set -> void
+Microsoft.Testing.Platform.MSBuild.ConfigurationFileTask.OutputPath.get -> Microsoft.Build.Framework.ITaskItem!
+Microsoft.Testing.Platform.MSBuild.ConfigurationFileTask.OutputPath.set -> void
+Microsoft.Testing.Platform.MSBuild.ConfigurationFileTask.TestingPlatformConfigurationFileSource.get -> Microsoft.Build.Framework.ITaskItem!
+Microsoft.Testing.Platform.MSBuild.ConfigurationFileTask.TestingPlatformConfigurationFileSource.set -> void
+Microsoft.Testing.Platform.MSBuild.InvokeTestingPlatformTask
+Microsoft.Testing.Platform.MSBuild.InvokeTestingPlatformTask.AssemblyName.get -> Microsoft.Build.Framework.ITaskItem?
+Microsoft.Testing.Platform.MSBuild.InvokeTestingPlatformTask.AssemblyName.set -> void
+Microsoft.Testing.Platform.MSBuild.InvokeTestingPlatformTask.Dispose() -> void
+Microsoft.Testing.Platform.MSBuild.InvokeTestingPlatformTask.DotnetHostPath.get -> Microsoft.Build.Framework.ITaskItem?
+Microsoft.Testing.Platform.MSBuild.InvokeTestingPlatformTask.DotnetHostPath.set -> void
+Microsoft.Testing.Platform.MSBuild.InvokeTestingPlatformTask.InvokeTestingPlatformTask() -> void
+Microsoft.Testing.Platform.MSBuild.InvokeTestingPlatformTask.IsExecutable.get -> Microsoft.Build.Framework.ITaskItem?
+Microsoft.Testing.Platform.MSBuild.InvokeTestingPlatformTask.IsExecutable.set -> void
+Microsoft.Testing.Platform.MSBuild.InvokeTestingPlatformTask.NativeExecutableExtension.get -> Microsoft.Build.Framework.ITaskItem?
+Microsoft.Testing.Platform.MSBuild.InvokeTestingPlatformTask.NativeExecutableExtension.set -> void
+Microsoft.Testing.Platform.MSBuild.InvokeTestingPlatformTask.ProjectFullPath.get -> Microsoft.Build.Framework.ITaskItem!
+Microsoft.Testing.Platform.MSBuild.InvokeTestingPlatformTask.ProjectFullPath.set -> void
+Microsoft.Testing.Platform.MSBuild.InvokeTestingPlatformTask.TargetDir.get -> Microsoft.Build.Framework.ITaskItem?
+Microsoft.Testing.Platform.MSBuild.InvokeTestingPlatformTask.TargetDir.set -> void
+Microsoft.Testing.Platform.MSBuild.InvokeTestingPlatformTask.TargetFramework.get -> Microsoft.Build.Framework.ITaskItem!
+Microsoft.Testing.Platform.MSBuild.InvokeTestingPlatformTask.TargetFramework.set -> void
+Microsoft.Testing.Platform.MSBuild.InvokeTestingPlatformTask.TargetFrameworkIdentifier.get -> Microsoft.Build.Framework.ITaskItem!
+Microsoft.Testing.Platform.MSBuild.InvokeTestingPlatformTask.TargetFrameworkIdentifier.set -> void
+Microsoft.Testing.Platform.MSBuild.InvokeTestingPlatformTask.TargetPath.get -> Microsoft.Build.Framework.ITaskItem!
+Microsoft.Testing.Platform.MSBuild.InvokeTestingPlatformTask.TargetPath.set -> void
+Microsoft.Testing.Platform.MSBuild.InvokeTestingPlatformTask.TestArchitecture.get -> Microsoft.Build.Framework.ITaskItem!
+Microsoft.Testing.Platform.MSBuild.InvokeTestingPlatformTask.TestArchitecture.set -> void
+Microsoft.Testing.Platform.MSBuild.InvokeTestingPlatformTask.TestingPlatformCaptureOutput.get -> Microsoft.Build.Framework.ITaskItem!
+Microsoft.Testing.Platform.MSBuild.InvokeTestingPlatformTask.TestingPlatformCaptureOutput.set -> void
+Microsoft.Testing.Platform.MSBuild.InvokeTestingPlatformTask.TestingPlatformCommandLineArguments.get -> Microsoft.Build.Framework.ITaskItem?
+Microsoft.Testing.Platform.MSBuild.InvokeTestingPlatformTask.TestingPlatformCommandLineArguments.set -> void
+Microsoft.Testing.Platform.MSBuild.InvokeTestingPlatformTask.TestingPlatformShowTestsFailure.get -> Microsoft.Build.Framework.ITaskItem!
+Microsoft.Testing.Platform.MSBuild.InvokeTestingPlatformTask.TestingPlatformShowTestsFailure.set -> void
+Microsoft.Testing.Platform.MSBuild.InvokeTestingPlatformTask.UseAppHost.get -> Microsoft.Build.Framework.ITaskItem?
+Microsoft.Testing.Platform.MSBuild.InvokeTestingPlatformTask.UseAppHost.set -> void
+Microsoft.Testing.Platform.MSBuild.InvokeTestingPlatformTask.VSTestCLIRunSettings.get -> Microsoft.Build.Framework.ITaskItem![]?
+Microsoft.Testing.Platform.MSBuild.InvokeTestingPlatformTask.VSTestCLIRunSettings.set -> void
+Microsoft.Testing.Platform.MSBuild.TestingPlatformEntryPointTask
+Microsoft.Testing.Platform.MSBuild.TestingPlatformEntryPointTask.Language.get -> Microsoft.Build.Framework.ITaskItem!
+Microsoft.Testing.Platform.MSBuild.TestingPlatformEntryPointTask.Language.set -> void
+Microsoft.Testing.Platform.MSBuild.TestingPlatformEntryPointTask.RootNamespace.get -> string?
+Microsoft.Testing.Platform.MSBuild.TestingPlatformEntryPointTask.RootNamespace.set -> void
+Microsoft.Testing.Platform.MSBuild.TestingPlatformEntryPointTask.TestingPlatformEntryPointGeneratedFilePath.get -> Microsoft.Build.Framework.ITaskItem!
+Microsoft.Testing.Platform.MSBuild.TestingPlatformEntryPointTask.TestingPlatformEntryPointGeneratedFilePath.set -> void
+Microsoft.Testing.Platform.MSBuild.TestingPlatformEntryPointTask.TestingPlatformEntryPointSourcePath.get -> Microsoft.Build.Framework.ITaskItem!
+Microsoft.Testing.Platform.MSBuild.TestingPlatformEntryPointTask.TestingPlatformEntryPointSourcePath.set -> void
+Microsoft.Testing.Platform.MSBuild.TestingPlatformEntryPointTask.TestingPlatformEntryPointTask() -> void
+Microsoft.Testing.Platform.MSBuild.TestingPlatformSelfRegisteredExtensions
+Microsoft.Testing.Platform.MSBuild.TestingPlatformSelfRegisteredExtensions.Language.get -> Microsoft.Build.Framework.ITaskItem!
+Microsoft.Testing.Platform.MSBuild.TestingPlatformSelfRegisteredExtensions.Language.set -> void
+Microsoft.Testing.Platform.MSBuild.TestingPlatformSelfRegisteredExtensions.RootNamespace.get -> string?
+Microsoft.Testing.Platform.MSBuild.TestingPlatformSelfRegisteredExtensions.RootNamespace.set -> void
+Microsoft.Testing.Platform.MSBuild.TestingPlatformSelfRegisteredExtensions.SelfRegisteredExtensionsBuilderHook.get -> Microsoft.Build.Framework.ITaskItem![]!
+Microsoft.Testing.Platform.MSBuild.TestingPlatformSelfRegisteredExtensions.SelfRegisteredExtensionsBuilderHook.set -> void
+Microsoft.Testing.Platform.MSBuild.TestingPlatformSelfRegisteredExtensions.SelfRegisteredExtensionsGeneratedFilePath.get -> Microsoft.Build.Framework.ITaskItem!
+Microsoft.Testing.Platform.MSBuild.TestingPlatformSelfRegisteredExtensions.SelfRegisteredExtensionsGeneratedFilePath.set -> void
+Microsoft.Testing.Platform.MSBuild.TestingPlatformSelfRegisteredExtensions.SelfRegisteredExtensionsSourcePath.get -> Microsoft.Build.Framework.ITaskItem!
+Microsoft.Testing.Platform.MSBuild.TestingPlatformSelfRegisteredExtensions.SelfRegisteredExtensionsSourcePath.set -> void
+Microsoft.Testing.Platform.MSBuild.TestingPlatformSelfRegisteredExtensions.TestingPlatformSelfRegisteredExtensions() -> void
+override Microsoft.Testing.Platform.MSBuild.ConfigurationFileTask.Execute() -> bool
+override Microsoft.Testing.Platform.MSBuild.InvokeTestingPlatformTask.Execute() -> bool
+override Microsoft.Testing.Platform.MSBuild.InvokeTestingPlatformTask.GenerateCommandLineCommands() -> string!
+override Microsoft.Testing.Platform.MSBuild.InvokeTestingPlatformTask.GenerateFullPathToTool() -> string?
+override Microsoft.Testing.Platform.MSBuild.InvokeTestingPlatformTask.HandleTaskExecutionErrors() -> bool
+override Microsoft.Testing.Platform.MSBuild.InvokeTestingPlatformTask.LogEventsFromTextOutput(string! singleLine, Microsoft.Build.Framework.MessageImportance messageImportance) -> void
+override Microsoft.Testing.Platform.MSBuild.InvokeTestingPlatformTask.LogToolCommand(string! message) -> void
+override Microsoft.Testing.Platform.MSBuild.InvokeTestingPlatformTask.ProcessStarted() -> void
+override Microsoft.Testing.Platform.MSBuild.InvokeTestingPlatformTask.StandardErrorLoggingImportance.get -> Microsoft.Build.Framework.MessageImportance
+override Microsoft.Testing.Platform.MSBuild.InvokeTestingPlatformTask.StandardOutputLoggingImportance.get -> Microsoft.Build.Framework.MessageImportance
+override Microsoft.Testing.Platform.MSBuild.InvokeTestingPlatformTask.ToolExe.get -> string!
+override Microsoft.Testing.Platform.MSBuild.InvokeTestingPlatformTask.ToolExe.set -> void
+override Microsoft.Testing.Platform.MSBuild.InvokeTestingPlatformTask.ToolName.get -> string!
+override Microsoft.Testing.Platform.MSBuild.InvokeTestingPlatformTask.ValidateParameters() -> bool
+override Microsoft.Testing.Platform.MSBuild.TestingPlatformEntryPointTask.Execute() -> bool
+override Microsoft.Testing.Platform.MSBuild.TestingPlatformSelfRegisteredExtensions.Execute() -> bool
