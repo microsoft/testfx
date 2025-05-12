@@ -14,6 +14,7 @@ builder.AddTrxReportProvider();
 builder.AddHangDumpProvider();
 builder.AddCrashDumpProvider(ignoreIfNotSupported: true);
 builder.AddRetryProvider();
+builder.AddAzureDevOpsProvider();
 
 builder.AddInternalTestFramework();
 
