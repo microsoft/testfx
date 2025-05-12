@@ -174,6 +174,16 @@ Microsoft.Testing.Platform.Extensions.Messages.FailedTestNodeStateProperty.Faile
 Microsoft.Testing.Platform.Extensions.Messages.FileArtifact
 Microsoft.Testing.Platform.Extensions.Messages.FileArtifact.FileArtifact(System.IO.FileInfo! fileInfo, string! displayName, string? description = null) -> void
 Microsoft.Testing.Platform.Extensions.Messages.FileArtifact.FileInfo.get -> System.IO.FileInfo!
+Microsoft.Testing.Platform.Extensions.Messages.FileArtifactProperty
+Microsoft.Testing.Platform.Extensions.Messages.FileArtifactProperty.Deconstruct(out System.IO.FileInfo! FileInfo, out string! DisplayName, out string? Description) -> void
+Microsoft.Testing.Platform.Extensions.Messages.FileArtifactProperty.Description.get -> string?
+Microsoft.Testing.Platform.Extensions.Messages.FileArtifactProperty.Description.init -> void
+Microsoft.Testing.Platform.Extensions.Messages.FileArtifactProperty.DisplayName.get -> string!
+Microsoft.Testing.Platform.Extensions.Messages.FileArtifactProperty.DisplayName.init -> void
+Microsoft.Testing.Platform.Extensions.Messages.FileArtifactProperty.FileArtifactProperty(Microsoft.Testing.Platform.Extensions.Messages.FileArtifactProperty! original) -> void
+Microsoft.Testing.Platform.Extensions.Messages.FileArtifactProperty.FileArtifactProperty(System.IO.FileInfo! FileInfo, string! DisplayName, string? Description = null) -> void
+Microsoft.Testing.Platform.Extensions.Messages.FileArtifactProperty.FileInfo.get -> System.IO.FileInfo!
+Microsoft.Testing.Platform.Extensions.Messages.FileArtifactProperty.FileInfo.init -> void
 Microsoft.Testing.Platform.Extensions.Messages.FileLocationProperty
 Microsoft.Testing.Platform.Extensions.Messages.FileLocationProperty.FileLocationProperty(string! FilePath, Microsoft.Testing.Platform.Extensions.Messages.LinePositionSpan LineSpan) -> void
 Microsoft.Testing.Platform.Extensions.Messages.FileLocationProperty.FilePath.get -> string!
@@ -252,6 +262,9 @@ Microsoft.Testing.Platform.Extensions.Messages.TestMetadataProperty.Value.init -
 Microsoft.Testing.Platform.Extensions.Messages.TestMethodIdentifierProperty
 Microsoft.Testing.Platform.Extensions.Messages.TestMethodIdentifierProperty.AssemblyFullName.get -> string!
 Microsoft.Testing.Platform.Extensions.Messages.TestMethodIdentifierProperty.AssemblyFullName.init -> void
+Microsoft.Testing.Platform.Extensions.Messages.TestMethodIdentifierProperty.Deconstruct(out string! AssemblyFullName, out string! Namespace, out string! TypeName, out string! MethodName, out int MethodArity, out string![]! ParameterTypeFullNames, out string! ReturnTypeFullName) -> void
+Microsoft.Testing.Platform.Extensions.Messages.TestMethodIdentifierProperty.MethodArity.get -> int
+Microsoft.Testing.Platform.Extensions.Messages.TestMethodIdentifierProperty.MethodArity.init -> void
 Microsoft.Testing.Platform.Extensions.Messages.TestMethodIdentifierProperty.MethodName.get -> string!
 Microsoft.Testing.Platform.Extensions.Messages.TestMethodIdentifierProperty.MethodName.init -> void
 Microsoft.Testing.Platform.Extensions.Messages.TestMethodIdentifierProperty.Namespace.get -> string!
@@ -260,6 +273,7 @@ Microsoft.Testing.Platform.Extensions.Messages.TestMethodIdentifierProperty.Para
 Microsoft.Testing.Platform.Extensions.Messages.TestMethodIdentifierProperty.ParameterTypeFullNames.init -> void
 Microsoft.Testing.Platform.Extensions.Messages.TestMethodIdentifierProperty.ReturnTypeFullName.get -> string!
 Microsoft.Testing.Platform.Extensions.Messages.TestMethodIdentifierProperty.ReturnTypeFullName.init -> void
+Microsoft.Testing.Platform.Extensions.Messages.TestMethodIdentifierProperty.TestMethodIdentifierProperty(string! AssemblyFullName, string! Namespace, string! TypeName, string! MethodName, int MethodArity, string![]! ParameterTypeFullNames, string! ReturnTypeFullName) -> void
 Microsoft.Testing.Platform.Extensions.Messages.TestMethodIdentifierProperty.TestMethodIdentifierProperty(string! AssemblyFullName, string! Namespace, string! TypeName, string! MethodName, string![]! ParameterTypeFullNames, string! ReturnTypeFullName) -> void
 Microsoft.Testing.Platform.Extensions.Messages.TestMethodIdentifierProperty.TypeName.get -> string!
 Microsoft.Testing.Platform.Extensions.Messages.TestMethodIdentifierProperty.TypeName.init -> void
@@ -470,6 +484,9 @@ override Microsoft.Testing.Platform.Extensions.CommandLine.CommandLineOption.Equ
 override Microsoft.Testing.Platform.Extensions.CommandLine.CommandLineOption.GetHashCode() -> int
 override Microsoft.Testing.Platform.Extensions.Messages.DataWithSessionUid.ToString() -> string!
 override Microsoft.Testing.Platform.Extensions.Messages.FileArtifact.ToString() -> string!
+override Microsoft.Testing.Platform.Extensions.Messages.FileArtifactProperty.Equals(object? obj) -> bool
+override Microsoft.Testing.Platform.Extensions.Messages.FileArtifactProperty.GetHashCode() -> int
+override Microsoft.Testing.Platform.Extensions.Messages.FileArtifactProperty.ToString() -> string!
 override Microsoft.Testing.Platform.Extensions.Messages.PropertyBagData.ToString() -> string!
 override Microsoft.Testing.Platform.Extensions.Messages.SessionFileArtifact.ToString() -> string!
 override Microsoft.Testing.Platform.Extensions.Messages.TestNode.ToString() -> string!
@@ -487,6 +504,8 @@ static Microsoft.Testing.Platform.Configurations.ConfigurationExtensions.GetTest
 static Microsoft.Testing.Platform.Extensions.CommandLine.ArgumentArity.operator !=(Microsoft.Testing.Platform.Extensions.CommandLine.ArgumentArity left, Microsoft.Testing.Platform.Extensions.CommandLine.ArgumentArity right) -> bool
 static Microsoft.Testing.Platform.Extensions.CommandLine.ArgumentArity.operator ==(Microsoft.Testing.Platform.Extensions.CommandLine.ArgumentArity left, Microsoft.Testing.Platform.Extensions.CommandLine.ArgumentArity right) -> bool
 static Microsoft.Testing.Platform.Extensions.Messages.DiscoveredTestNodeStateProperty.CachedInstance.get -> Microsoft.Testing.Platform.Extensions.Messages.DiscoveredTestNodeStateProperty!
+static Microsoft.Testing.Platform.Extensions.Messages.FileArtifactProperty.operator !=(Microsoft.Testing.Platform.Extensions.Messages.FileArtifactProperty? left, Microsoft.Testing.Platform.Extensions.Messages.FileArtifactProperty? right) -> bool
+static Microsoft.Testing.Platform.Extensions.Messages.FileArtifactProperty.operator ==(Microsoft.Testing.Platform.Extensions.Messages.FileArtifactProperty? left, Microsoft.Testing.Platform.Extensions.Messages.FileArtifactProperty? right) -> bool
 static Microsoft.Testing.Platform.Extensions.Messages.InProgressTestNodeStateProperty.CachedInstance.get -> Microsoft.Testing.Platform.Extensions.Messages.InProgressTestNodeStateProperty!
 static Microsoft.Testing.Platform.Extensions.Messages.PassedTestNodeStateProperty.CachedInstance.get -> Microsoft.Testing.Platform.Extensions.Messages.PassedTestNodeStateProperty!
 static Microsoft.Testing.Platform.Extensions.Messages.SkippedTestNodeStateProperty.CachedInstance.get -> Microsoft.Testing.Platform.Extensions.Messages.SkippedTestNodeStateProperty!
@@ -529,3 +548,7 @@ static readonly Microsoft.Testing.Platform.Extensions.CommandLine.ArgumentArity.
 static readonly Microsoft.Testing.Platform.Extensions.CommandLine.ArgumentArity.ZeroOrOne -> Microsoft.Testing.Platform.Extensions.CommandLine.ArgumentArity
 static readonly Microsoft.Testing.Platform.TestHost.WellKnownClients.TestingPlatformConsole -> string!
 static readonly Microsoft.Testing.Platform.TestHost.WellKnownClients.VisualStudio -> string!
+virtual Microsoft.Testing.Platform.Extensions.Messages.FileArtifactProperty.<Clone>$() -> Microsoft.Testing.Platform.Extensions.Messages.FileArtifactProperty!
+virtual Microsoft.Testing.Platform.Extensions.Messages.FileArtifactProperty.EqualityContract.get -> System.Type!
+virtual Microsoft.Testing.Platform.Extensions.Messages.FileArtifactProperty.Equals(Microsoft.Testing.Platform.Extensions.Messages.FileArtifactProperty? other) -> bool
+virtual Microsoft.Testing.Platform.Extensions.Messages.FileArtifactProperty.PrintMembers(System.Text.StringBuilder! builder) -> bool
