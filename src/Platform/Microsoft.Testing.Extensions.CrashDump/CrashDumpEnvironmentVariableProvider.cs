@@ -114,7 +114,7 @@ internal sealed class CrashDumpEnvironmentVariableProvider : ITestHostEnvironmen
 
         _miniDumpNameValue = _commandLineOptions.TryGetOptionArgumentList(CrashDumpCommandLineOptions.CrashDumpFileNameOptionName, out string[]? dumpFileName)
             ? Path.Combine(_configuration.GetTestResultDirectory(), dumpFileName[0])
-            : Path.Combine(_configuration.GetTestResultDirectory(), $"{Path.GetFileName(_testApplicationModuleInfo.GetCurrentTestApplicationFullPath())}_%p_crash.dmp");
+            : Path.Combine(_configuration.GetTestResultDirectory(), $"{Path.GetFileNameWithoutExtension(_testApplicationModuleInfo.GetCurrentTestApplicationFullPath())}_%p_crash.dmp");
         _crashDumpGeneratorConfiguration.DumpFileNamePattern = _miniDumpNameValue;
         foreach (string prefix in _prefixes)
         {

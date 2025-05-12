@@ -43,13 +43,9 @@ public sealed class PreferTestInitializeOverConstructorFixer : CodeFixProvider
         TextSpan diagnosticSpan = diagnostic.Location.SourceSpan;
 
         SyntaxToken syntaxToken = root.FindToken(diagnosticSpan.Start);
-        if (syntaxToken.Parent is null)
-        {
-            return;
-        }
 
         // Find the constructor declaration identified by the diagnostic.
-        ConstructorDeclarationSyntax? constructorDeclaration = syntaxToken.Parent.AncestorsAndSelf().OfType<ConstructorDeclarationSyntax>().FirstOrDefault();
+        ConstructorDeclarationSyntax? constructorDeclaration = syntaxToken.Parent?.AncestorsAndSelf().OfType<ConstructorDeclarationSyntax>().FirstOrDefault();
         if (constructorDeclaration == null)
         {
             return;

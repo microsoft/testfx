@@ -44,13 +44,9 @@ public sealed class PreferDisposeOverTestCleanupFixer : CodeFixProvider
         TextSpan diagnosticSpan = diagnostic.Location.SourceSpan;
 
         SyntaxToken syntaxToken = root.FindToken(diagnosticSpan.Start);
-        if (syntaxToken.Parent is null)
-        {
-            return;
-        }
 
         // Find the TestCleanup method declaration identified by the diagnostic.
-        MethodDeclarationSyntax? testCleanupMethod = syntaxToken.Parent.AncestorsAndSelf().OfType<MethodDeclarationSyntax>().FirstOrDefault();
+        MethodDeclarationSyntax? testCleanupMethod = syntaxToken.Parent?.AncestorsAndSelf().OfType<MethodDeclarationSyntax>().FirstOrDefault();
         if (testCleanupMethod == null ||
             !IsTestCleanupMethodValid(testCleanupMethod) ||
             testCleanupMethod.Parent is not TypeDeclarationSyntax containingType)

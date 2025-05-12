@@ -55,7 +55,7 @@ internal class PlainProcess : IStep<BuildArtifact, Files>
 #pragma warning disable CA1869 // Cache and reuse 'JsonSerializerOptions' instances
         await File.AppendAllTextAsync(Path.Combine(Path.GetDirectoryName(payload.TestHost.FullName)!, "Result.json"), JsonSerializer.Serialize(
             results,
-            new JsonSerializerOptions() { WriteIndented = true }));
+            new JsonSerializerOptions { WriteIndented = true }));
 #pragma warning restore CA1869 // Cache and reuse 'JsonSerializerOptions' instances
 
         string sample = Path.Combine(Path.GetTempPath(), _reportFileName);

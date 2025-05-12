@@ -18,21 +18,21 @@ public sealed class BFSTestNodeVisitorTests : TestBase
         {
             StableUid = "ID1",
             DisplayName = "A",
-            Tests =
-            [
+            Tests = new[]
+            {
                 new TestNode
                 {
                     StableUid = "ID2",
                     DisplayName = "B/C",
-                }
-            ],
+                },
+            },
         };
 
         var filter = new TreeNodeFilter("/A/B/C");
-        var visitor = new BFSTestNodeVisitor([rootNode], filter, null!);
+        var visitor = new BFSTestNodeVisitor(new[] { rootNode }, filter, null!);
 
         // Act
-        List<TestNode> includedTestNodes = [];
+        List<TestNode> includedTestNodes = new();
         await visitor.VisitAsync((testNode, _) =>
         {
             includedTestNodes.Add(testNode);
@@ -55,21 +55,21 @@ public sealed class BFSTestNodeVisitorTests : TestBase
         {
             StableUid = "ID1",
             DisplayName = "A",
-            Tests =
-            [
+            Tests = new[]
+            {
                 new TestNode
                 {
                     StableUid = "ID2",
                     DisplayName = "B" + nodeSpecialString + "C",
-                }
-            ],
+                },
+            },
         };
 
         var filter = new TreeNodeFilter("/A/B" + filterEncodedSpecialString + "C");
-        var visitor = new BFSTestNodeVisitor([rootNode], filter, null!);
+        var visitor = new BFSTestNodeVisitor(new[] { rootNode }, filter, null!);
 
         // Act
-        List<TestNode> includedTestNodes = [];
+        List<TestNode> includedTestNodes = new();
         await visitor.VisitAsync((testNode, _) =>
         {
             includedTestNodes.Add(testNode);
@@ -104,10 +104,10 @@ public sealed class BFSTestNodeVisitorTests : TestBase
             _ => throw new ArgumentException($"Unknown test node type: {nonParameterizedTestNode}", nameof(nonParameterizedTestNode)),
         };
 
-        var visitor = new BFSTestNodeVisitor([rootNode], new NopFilter(), null!);
+        var visitor = new BFSTestNodeVisitor(new[] { rootNode }, new NopFilter(), null!);
 
         // Act
-        List<TestNode> includedTestNodes = [];
+        List<TestNode> includedTestNodes = new();
         await visitor.VisitAsync((testNode, _) =>
         {
             includedTestNodes.Add(testNode);
@@ -126,10 +126,10 @@ public sealed class BFSTestNodeVisitorTests : TestBase
     {
         // Arrange
         TestNode rootNode = CreateParameterizedTestNode(parameterizedTestNode, hasExpansionProperty ? false : null);
-        var visitor = new BFSTestNodeVisitor([rootNode], new NopFilter(), new TestArgumentsManager());
+        var visitor = new BFSTestNodeVisitor(new[] { rootNode }, new NopFilter(), new TestArgumentsManager());
 
         // Act
-        List<(TestNode Node, TestNodeUid? ParentNodeUid)> includedTestNodes = [];
+        List<(TestNode Node, TestNodeUid? ParentNodeUid)> includedTestNodes = new();
         await visitor.VisitAsync((testNode, parentNodeUid) =>
         {
             includedTestNodes.Add((testNode, parentNodeUid));
@@ -155,10 +155,10 @@ public sealed class BFSTestNodeVisitorTests : TestBase
     {
         // Arrange
         TestNode rootNode = CreateParameterizedTestNode(parameterizedTestNode, true);
-        var visitor = new BFSTestNodeVisitor([rootNode], new NopFilter(), new TestArgumentsManager());
+        var visitor = new BFSTestNodeVisitor(new[] { rootNode }, new NopFilter(), new TestArgumentsManager());
 
         // Act
-        List<(TestNode Node, TestNodeUid? ParentNodeUid)> includedTestNodes = [];
+        List<(TestNode Node, TestNodeUid? ParentNodeUid)> includedTestNodes = new();
         await visitor.VisitAsync((testNode, parentNodeUid) =>
         {
             includedTestNodes.Add((testNode, parentNodeUid));
@@ -177,37 +177,37 @@ public sealed class BFSTestNodeVisitorTests : TestBase
         {
             StableUid = "MyModule",
             DisplayName = "MyModule",
-            Tests =
-            [
+            Tests = new[]
+            {
                 new TestNode
                 {
                     StableUid = "MyNamespace",
                     DisplayName = "MyNamespace",
-                    Tests =
-                    [
+                    Tests = new[]
+                    {
                         new TestNode
                         {
                             StableUid = "MyType",
                             DisplayName = "MyType",
-                            Tests =
-                            [
+                            Tests = new[]
+                            {
                                 new InternalUnsafeActionParameterizedTestNode<byte>
                                 {
                                     StableUid = "MyMethod",
                                     DisplayName = "MyMethod",
-                                    GetArguments = () => [0, 1, 2],
+                                    GetArguments = () => new byte[] { 0, 1, 2 },
                                     Body = (_, _) => { },
-                                }
-                            ],
-                        }
-                    ],
-                }
-            ],
+                                },
+                            },
+                        },
+                    },
+                },
+            },
         };
-        var visitor = new BFSTestNodeVisitor([rootNode], new NopFilter(), new TestArgumentsManager());
+        var visitor = new BFSTestNodeVisitor(new[] { rootNode }, new NopFilter(), new TestArgumentsManager());
 
         // Act
-        List<(TestNode Node, TestNodeUid? ParentNodeUid)> includedTestNodes = [];
+        List<(TestNode Node, TestNodeUid? ParentNodeUid)> includedTestNodes = new();
         await visitor.VisitAsync((testNode, parentNodeUid) =>
         {
             includedTestNodes.Add((testNode, parentNodeUid));
@@ -250,7 +250,7 @@ public sealed class BFSTestNodeVisitorTests : TestBase
     {
         TestNode rootNode = parameterizedTestNode switch
         {
-            nameof(InternalUnsafeActionParameterizedTestNode<>) => new InternalUnsafeActionParameterizedTestNode<byte>()
+            nameof(InternalUnsafeActionParameterizedTestNode<>) => new InternalUnsafeActionParameterizedTestNode<byte>
             {
                 StableUid = "ID1",
                 DisplayName = "A",
@@ -264,16 +264,16 @@ public sealed class BFSTestNodeVisitorTests : TestBase
         return rootNode;
 
         // Local functions
-        static IEnumerable<byte> GetArguments() => [0, 1];
+        static IEnumerable<byte> GetArguments() => new byte[] { 0, 1 };
         static IProperty[] GetProperties(bool? hasExpansionProperty)
             => hasExpansionProperty.HasValue
-                ?
-                [
-                    new FrameworkEngineMetadataProperty()
+                ? new IProperty[1]
+                {
+                    new FrameworkEngineMetadataProperty
                     {
                         PreventArgumentsExpansion = hasExpansionProperty.Value,
-                    }
-                ]
-                : [];
+                    },
+                }
+                : Array.Empty<IProperty>();
     }
 }
