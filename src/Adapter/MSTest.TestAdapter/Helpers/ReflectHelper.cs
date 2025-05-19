@@ -339,18 +339,6 @@ internal class ReflectHelper : MarshalByRefObject
     }
 
     /// <summary>
-    /// Returns owner if attribute is applied to TestMethod, else null.
-    /// </summary>
-    /// <param name="ownerAttributeProvider">The member to inspect.</param>
-    /// <returns>owner if attribute is applied to TestMethod, else null.</returns>
-    private string? GetOwner(MemberInfo ownerAttributeProvider)
-    {
-        OwnerAttribute? ownerAttribute = GetFirstDerivedAttributeOrDefault<OwnerAttribute>(ownerAttributeProvider, inherit: true);
-
-        return ownerAttribute?.Owner;
-    }
-
-    /// <summary>
     /// Gets and caches the attributes for the given type, or method.
     /// </summary>
     /// <param name="attributeProvider">The member to inspect.</param>
