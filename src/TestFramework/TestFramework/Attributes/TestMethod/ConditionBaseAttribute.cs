@@ -19,6 +19,9 @@ public abstract class ConditionBaseAttribute : Attribute
     protected ConditionBaseAttribute(ConditionMode mode)
         => Mode = mode;
 
+    /// <summary>
+    /// Gets the condition mode.
+    /// </summary>
     public ConditionMode Mode { get; }
 
     /// <summary>
