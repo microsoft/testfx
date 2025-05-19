@@ -240,7 +240,7 @@ public class UnitTestElementTests : TestContainer
             new UnitTestElement(
                 new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", null, testIdStrategy)
                 {
-                    DataType = DynamicDataType.DataSourceAttribute,
+                    DataType = DynamicDataType.None,
                 })
             {
                 DisplayName = "SomeDisplayName",
@@ -269,20 +269,20 @@ public class UnitTestElementTests : TestContainer
             new UnitTestElement(
                 new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", null, testIdStrategy)
                 {
-                    DataType = DynamicDataType.DataSourceAttribute,
+                    DataType = DynamicDataType.None,
                 })
             .ToTestCase(),
             new UnitTestElement(
                 new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", null, testIdStrategy)
                 {
-                    DataType = DynamicDataType.DataSourceAttribute,
+                    DataType = DynamicDataType.None,
                     SerializedData = ["1"],
                 })
             .ToTestCase(),
             new UnitTestElement(
                 new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", null, testIdStrategy)
                 {
-                    DataType = DynamicDataType.DataSourceAttribute,
+                    DataType = DynamicDataType.None,
                     SerializedData = ["2"],
                 })
             .ToTestCase(),
