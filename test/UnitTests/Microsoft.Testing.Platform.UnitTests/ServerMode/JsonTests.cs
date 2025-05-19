@@ -127,8 +127,6 @@ public sealed class JsonTests
                 Name = json.Bind<string?>(jsonElement, "name"),
                 Children = json.Bind<List<Person>>(jsonElement, "children"),
             }),
-
-            [typeof(List<Person>)] = new JsonCollectionDeserializer<List<Person>, Person>(_ => [], (c, i) => c.Add(i)),
         });
 
         // Act
@@ -152,8 +150,6 @@ public sealed class JsonTests
                 Name = json.Bind<string?>(jsonElement, "name"),
                 Children = json.Bind<List<Person>>(jsonElement, "children"),
             }),
-
-            [typeof(List<Person>)] = new JsonCollectionDeserializer<List<Person>, Person>(_ => [], (c, i) => c.Add(i)),
         });
 
         // Act
