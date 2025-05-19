@@ -50,8 +50,8 @@ public sealed class DisableExpansionTests
 
     private static IEnumerable<object[]> MethodSource()
     {
-        yield return new object[] { 1, "a" };
-        yield return new object[] { 2, "b" };
+        yield return [1, "a"];
+        yield return [2, "b"];
     }
 }
 
@@ -61,7 +61,7 @@ public class DataSourceHelper
 
     public static IEnumerable<object[]> MethodSource()
     {
-        yield return new object[] { 3, "c" };
-        yield return new object[] { 4, "d" };
+        yield return [3, "c"];
+        yield return [4, "d"];
     }
 }

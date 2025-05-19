@@ -14,7 +14,7 @@ internal sealed class TestCaseDiscoverySink : ITestCaseDiscoverySink
     /// <summary>
     /// Gets the tests.
     /// </summary>
-    public ICollection<TestCase> Tests { get; } = new List<TestCase>();
+    public ICollection<TestCase> Tests { get; } = [];
 
     /// <summary>
     /// Sends the test case.

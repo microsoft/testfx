@@ -118,7 +118,7 @@ internal sealed class TestHostManager : ITestHostManager
             }
         }
 
-        return testApplicationLifecycleCallbacks.ToArray();
+        return [.. testApplicationLifecycleCallbacks];
     }
 
     public void AddDataConsumer(Func<IServiceProvider, IDataConsumer> dataConsumerFactory)
@@ -212,7 +212,7 @@ internal sealed class TestHostManager : ITestHostManager
             }
         }
 
-        return dataConsumers.ToArray();
+        return [.. dataConsumers];
     }
 
     public void AddTestSessionLifetimeHandle(Func<IServiceProvider, ITestSessionLifetimeHandler> testSessionLifetimeHandleFactory)
@@ -307,6 +307,6 @@ internal sealed class TestHostManager : ITestHostManager
             }
         }
 
-        return testSessionLifetimeHandlers.ToArray();
+        return [.. testSessionLifetimeHandlers];
     }
 }

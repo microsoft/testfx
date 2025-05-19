@@ -156,7 +156,7 @@ internal sealed record class TestTypeInfo
 
     private void AppendTestNodeCreation(IndentedStringBuilder sourceStringBuilder)
     {
-        List<string> properties = new();
+        List<string> properties = [];
         foreach ((string filePath, int startLine, int endLine) in _declarationReferences)
         {
             properties.Add($"new Msg::TestFileLocationProperty(@\"{filePath}\", new(new({startLine}, -1), new({endLine}, -1))),");

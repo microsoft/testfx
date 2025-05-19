@@ -363,7 +363,7 @@ public sealed class FormatterUtilitiesTests
 
         if (type == typeof(TestsAttachments))
         {
-            return new TestsAttachments(new RunTestAttachment[] { new("Uri", "Producer", "Type", "DisplayName", "Description") });
+            return new TestsAttachments([new("Uri", "Producer", "Type", "DisplayName", "Description")]);
         }
 
         if (type == typeof(RunTestAttachment))

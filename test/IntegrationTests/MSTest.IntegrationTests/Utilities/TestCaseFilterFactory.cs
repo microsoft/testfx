@@ -288,7 +288,7 @@ internal static class TestCaseFilterFactory
     {
         Guard.NotNull(conditionString);
 
-        string[] condition = TokenizeCondition(conditionString).ToArray();
+        string[] condition = [.. TokenizeCondition(conditionString)];
 
         Expression parameterName, expectedValue, parameterValueProvider, expression;
         string op;

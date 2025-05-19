@@ -9,5 +9,5 @@ internal readonly struct FrameworkEngineMetadataProperty() : IProperty
 {
     public bool PreventArgumentsExpansion { get; init; }
 
-    public string[] UsedFixtureIds { get; init; } = Array.Empty<string>();
+    public string[] UsedFixtureIds { get; init; } = [];
 }

@@ -110,11 +110,10 @@ internal class TypeEnumerator
             currentType = currentType.BaseType;
         }
 
-        return tests.GroupBy(
+        return [.. tests.GroupBy(
             t => t.TestMethod.Name,
             (_, elements) =>
-                elements.OrderBy(t => inheritanceDepths[t.TestMethod.DeclaringClassFullName ?? t.TestMethod.FullClassName]).First())
-            .ToList();
+                elements.OrderBy(t => inheritanceDepths[t.TestMethod.DeclaringClassFullName ?? t.TestMethod.FullClassName]).First())];
     }
 
     /// <summary>
@@ -169,7 +168,7 @@ internal class TypeEnumerator
             traits.Add(priorityTrait);
         }
 
-        testElement.Traits = traits.ToArray();
+        testElement.Traits = [.. traits];
 
         Attribute[] attributes = _reflectHelper.GetCustomAttributesCached(method, inherit: true);
         TestMethodAttribute? testMethodAttribute = null;
@@ -199,7 +198,7 @@ internal class TypeEnumerator
         IEnumerable<WorkItemAttribute> workItemAttributes = attributes.OfType<WorkItemAttribute>();
         if (workItemAttributes.Any())
         {
-            testElement.WorkItemIds = workItemAttributes.Select(x => x.Id.ToString(CultureInfo.InvariantCulture)).ToArray();
+            testElement.WorkItemIds = [.. workItemAttributes.Select(x => x.Id.ToString(CultureInfo.InvariantCulture))];
         }
 
         // In production, we always have a TestMethod attribute because GetTestFromMethod is called under IsValidTestMethod

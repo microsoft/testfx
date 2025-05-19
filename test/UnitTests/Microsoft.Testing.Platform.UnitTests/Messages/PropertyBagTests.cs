@@ -143,7 +143,7 @@ public sealed class PropertyBagTests
 
         Assert.AreEqual(0, list.Count);
 
-        list = property.AsEnumerable().ToList();
+        list = [.. property.AsEnumerable()];
         foreach (IProperty prop in property)
         {
             list.Remove(prop);

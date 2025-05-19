@@ -33,16 +33,16 @@ public class TestSource : ITestSource
          // Constants.DllExtension
     };
 
-    private static readonly HashSet<string> SystemAssemblies = new(new string[]
-    {
+    private static readonly HashSet<string> SystemAssemblies =
+        [
         "MICROSOFT.CSHARP.DLL",
         "MICROSOFT.VISUALBASIC.DLL",
         "CLRCOMPRESSION.DLL",
-    });
+        ];
 
     // Well known platform assemblies.
-    private static readonly HashSet<string> PlatformAssemblies = new(new string[]
-    {
+    private static readonly HashSet<string> PlatformAssemblies =
+        [
         "MICROSOFT.VISUALSTUDIO.TESTPLATFORM.TESTFRAMEWORK.DLL",
         "MICROSOFT.VISUALSTUDIO.TESTPLATFORM.TESTFRAMEWORK.EXTENSIONS.CORE.DLL",
         "MICROSOFT.VISUALSTUDIO.TESTPLATFORM.CORE.DLL",
@@ -54,7 +54,7 @@ public class TestSource : ITestSource
         "VSTEST_EXECUTIONENGINE_PLATFORMBRIDGE.DLL",
         "VSTEST_EXECUTIONENGINE_PLATFORMBRIDGE.WINMD",
         "VSTEST.EXECUTIONENGINE.WINDOWSPHONE.DLL",
-    });
+        ];
 #endif
 
     /// <summary>

@@ -81,7 +81,7 @@ public sealed class PreferConstructorOverTestInitializeFixer : CodeFixProvider
                 // If a constructor already exists, append the body of the TestInitialize method to it
                 if (existingConstructor.Body != null)
                 {
-                    BlockSyntax newConstructorBody = existingConstructor.Body.AddStatements(testInitializeStatements ?? Array.Empty<StatementSyntax>());
+                    BlockSyntax newConstructorBody = existingConstructor.Body.AddStatements(testInitializeStatements ?? []);
                     newConstructor = existingConstructor.WithBody(newConstructorBody);
                 }
                 else

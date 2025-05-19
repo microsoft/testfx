@@ -24,7 +24,7 @@ public static class TargetFrameworks
 
     public static string[] All { get; }
         = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
-            ? Net.Concat(NetFramework).ToArray()
+            ? [.. Net, .. NetFramework]
             : Net;
 
     public static IEnumerable<object[]> AllForDynamicData { get; } =

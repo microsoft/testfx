@@ -11,7 +11,7 @@ internal sealed class MinimalTestRunner
 #pragma warning disable IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
         IEnumerable<Type> classes = Assembly.GetExecutingAssembly().GetTypes().Where(c => c.IsPublic);
 #pragma warning restore IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
-        object[][] emptyRow = new[] { Array.Empty<object>() };
+        object[][] emptyRow = [[]];
 
         int total = 0;
         int failed = 0;
@@ -63,7 +63,7 @@ internal sealed class MinimalTestRunner
                 object?[][]? rows = null;
                 if (methodAttributes.Any(a => a.AttributeType == typeof(DataRowAttribute)))
                 {
-                    rows = methodAttributes
+                    rows = [.. methodAttributes
                         .Where(a => a.AttributeType == typeof(DataRowAttribute))
                         .SelectMany(a => a.ConstructorArguments.Select(arg =>
                         {
@@ -79,8 +79,7 @@ internal sealed class MinimalTestRunner
                                 return [arg.Value];
                             }
 #pragma warning restore IDE0046 // Convert to conditional expression
-                        }))
-                        .ToArray();
+                        }))];
                 }
 
                 foreach (object?[]? row in rows ?? emptyRow)

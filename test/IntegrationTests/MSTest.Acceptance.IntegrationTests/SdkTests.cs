@@ -428,7 +428,7 @@ namespace MSTestSdkTest
 
         SL.Build binLog = SL.Serialization.Read(compilationResult.BinlogPath!);
         SL.Task cscTask = binLog.FindChildrenRecursive<SL.Task>(task => task.Name == "Csc").Single();
-        SL.Item[] references = cscTask.FindChildrenRecursive<SL.Parameter>(p => p.Name == "References").Single().Children.OfType<SL.Item>().ToArray();
+        SL.Item[] references = [.. cscTask.FindChildrenRecursive<SL.Parameter>(p => p.Name == "References").Single().Children.OfType<SL.Item>()];
 
         // Ensure that MSTest.Framework is referenced
         Assert.IsTrue(references.Any(r => r.Text.EndsWith("Microsoft.VisualStudio.TestPlatform.TestFramework.dll", StringComparison.OrdinalIgnoreCase)));
