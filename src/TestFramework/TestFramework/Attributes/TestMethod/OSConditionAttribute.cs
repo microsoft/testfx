@@ -32,7 +32,9 @@ public sealed class OSConditionAttribute : ConditionBaseAttribute
         : base(mode)
     {
         _operatingSystems = operatingSystems;
-        IgnoreMessage = $"Test is only supported on {operatingSystems}";
+        IgnoreMessage = mode == ConditionMode.Include
+            ? $"Test is only supported on {operatingSystems}"
+            : $"Test is not supported on {operatingSystems}";
     }
 
     /// <summary>
