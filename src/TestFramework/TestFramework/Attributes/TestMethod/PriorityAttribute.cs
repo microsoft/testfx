@@ -7,7 +7,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// Priority attribute; used to specify the priority of a unit test.
 /// </summary>
 [AttributeUsage(AttributeTargets.Method)]
-public sealed class PriorityAttribute : Attribute
+public sealed class PriorityAttribute : TestPropertyAttribute
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="PriorityAttribute"/> class.
@@ -15,7 +15,8 @@ public sealed class PriorityAttribute : Attribute
     /// <param name="priority">
     /// The priority.
     /// </param>
-    public PriorityAttribute(int priority) => Priority = priority;
+    public PriorityAttribute(int priority)
+        : base("Priority", priority.ToString(CultureInfo.InvariantCulture)) => Priority = priority;
 
     /// <summary>
     /// Gets the priority.
