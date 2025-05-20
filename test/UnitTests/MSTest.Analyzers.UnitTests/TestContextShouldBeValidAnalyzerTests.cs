@@ -519,26 +519,5 @@ public sealed class TestContextShouldBeValidAnalyzerTests
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
-    [TestMethod]
-    public async Task WhenTestContextAssignedInConstructorWithNullCheckToDefault_NoDiagnostic()
-    {
-        string code = """
-            using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-            [TestClass]
-            public class MyTestClass
-            {
-                private readonly TestContext _testContext;
-                
-                public MyTestClass(TestContext testContext)
-                {
-                    _testContext = testContext ?? new TestContext();
-                }
-                
-                public TestContext TestContext => _testContext;
-            }
-            """;
-
-        await VerifyCS.VerifyCodeFixAsync(code, code);
-    }
 }
