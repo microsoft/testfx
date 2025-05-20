@@ -1,5 +1,4 @@
 #nullable enable
-<<<<<<< HEAD
 Microsoft.VisualStudio.TestTools.UnitTesting.AssertFailedException.AssertFailedException(System.Runtime.Serialization.SerializationInfo! info, System.Runtime.Serialization.StreamingContext context) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.AssertInconclusiveException.AssertInconclusiveException(System.Runtime.Serialization.SerializationInfo! info, System.Runtime.Serialization.StreamingContext context) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.ConditionBaseAttribute.Mode.get -> Microsoft.VisualStudio.TestTools.UnitTesting.ConditionMode
