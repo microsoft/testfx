@@ -726,12 +726,10 @@ internal sealed class Json
                 (string Key, object? Value)[]? properties = objectConverter.Properties(obj);
                 if (properties is not null)
                 {
-                    int count = 1;
                     foreach ((string property, object? value) in properties)
                     {
                         writer.WritePropertyName(property);
                         await SerializeAsync(value, writer);
-                        count++;
                     }
                 }
 
