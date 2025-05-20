@@ -59,7 +59,14 @@ if ($vs -or $vscode) {
         # Launch Visual Studio with the locally defined environment variables
         & "$PSScriptRoot\..\TestFx.sln"
     } else {
-        & code "$PSScriptRoot\.."
+        if (Get-Command code -ErrorAction Ignore) {
+            & code "$PSScriptRoot\.."
+        } elseif (Get-Command code-insiders -ErrorAction Ignore) {
+            & code-insiders "$PSScriptRoot\.."
+        } else {
+            Write-Host "VS Code not found. Please install it from https://code.visualstudio.com/"
+            return
+        }
     }
 
     return
