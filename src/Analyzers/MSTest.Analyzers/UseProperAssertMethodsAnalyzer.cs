@@ -185,69 +185,84 @@ internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
         }
     }
 
-    private static bool IsIsNullPattern(IOperation operation, [NotNullWhen(true)] out SyntaxNode? expressionUnderTest)
+    private static bool IsIsNullPattern(IOperation operation, [NotNullWhen(true)] out SyntaxNode? expressionUnderTest, out ITypeSymbol? typeOfExpressionUnderTest)
     {
         if (operation is IIsPatternOperation { Pattern: IConstantPatternOperation { Value: { } constantPatternValue } } isPatternOperation &&
             constantPatternValue.WalkDownConversion() is ILiteralOperation { ConstantValue: { HasValue: true, Value: null } })
         {
             expressionUnderTest = isPatternOperation.Value.Syntax;
+            typeOfExpressionUnderTest = isPatternOperation.Value.WalkDownConversion().Type;
             return true;
         }
 
         expressionUnderTest = null;
+        typeOfExpressionUnderTest = null;
         return false;
     }
 
-    private static bool IsIsNotNullPattern(IOperation operation, [NotNullWhen(true)] out SyntaxNode? expressionUnderTest)
+    private static bool IsIsNotNullPattern(IOperation operation, [NotNullWhen(true)] out SyntaxNode? expressionUnderTest, out ITypeSymbol? typeOfExpressionUnderTest)
     {
         if (operation is IIsPatternOperation { Pattern: INegatedPatternOperation { Pattern: IConstantPatternOperation { Value: { } constantPatternValue } } } isPatternOperation &&
             constantPatternValue.WalkDownConversion() is ILiteralOperation { ConstantValue: { HasValue: true, Value: null } })
         {
             expressionUnderTest = isPatternOperation.Value.Syntax;
+            typeOfExpressionUnderTest = isPatternOperation.Value.WalkDownConversion().Type;
             return true;
         }
 
         expressionUnderTest = null;
+        typeOfExpressionUnderTest = null;
         return false;
     }
 
     // TODO: Recognize 'null == something' (i.e, when null is the left operand)
-    private static bool IsEqualsNullBinaryOperator(IOperation operation, [NotNullWhen(true)] out SyntaxNode? expressionUnderTest)
+    private static bool IsEqualsNullBinaryOperator(IOperation operation, [NotNullWhen(true)] out SyntaxNode? expressionUnderTest, out ITypeSymbol? typeOfExpressionUnderTest)
     {
         if (operation is IBinaryOperation { OperatorKind: BinaryOperatorKind.Equals, RightOperand: { } rightOperand } binaryOperation &&
             binaryOperation.OperatorMethod is not { MethodKind: MethodKind.UserDefinedOperator } &&
             rightOperand.WalkDownConversion() is ILiteralOperation { ConstantValue: { HasValue: true, Value: null } })
         {
             expressionUnderTest = binaryOperation.LeftOperand.Syntax;
+            typeOfExpressionUnderTest = binaryOperation.LeftOperand.WalkDownConversion().Type;
             return true;
         }
 
         expressionUnderTest = null;
+        typeOfExpressionUnderTest = null;
         return false;
     }
 
     // TODO: Recognize 'null != something' (i.e, when null is the left operand)
-    private static bool IsNotEqualsNullBinaryOperator(IOperation operation, [NotNullWhen(true)] out SyntaxNode? expressionUnderTest)
+    private static bool IsNotEqualsNullBinaryOperator(IOperation operation, [NotNullWhen(true)] out SyntaxNode? expressionUnderTest, out ITypeSymbol? typeOfExpressionUnderTest)
     {
         if (operation is IBinaryOperation { OperatorKind: BinaryOperatorKind.NotEquals, RightOperand: { } rightOperand } binaryOperation &&
             binaryOperation.OperatorMethod is not { MethodKind: MethodKind.UserDefinedOperator } &&
             rightOperand.WalkDownConversion() is ILiteralOperation { ConstantValue: { HasValue: true, Value: null } })
         {
             expressionUnderTest = binaryOperation.LeftOperand.Syntax;
+            typeOfExpressionUnderTest = binaryOperation.LeftOperand.WalkDownConversion().Type;
             return true;
         }
 
         expressionUnderTest = null;
+        typeOfExpressionUnderTest = null;
         return false;
     }
 
-    private static NullCheckStatus RecognizeNullCheck(IOperation operation, /*We cannot express this is not null when NullCheckStatis is not Unknown*/ out SyntaxNode? expressionUnderTest)
+    private static NullCheckStatus RecognizeNullCheck(
+        IOperation operation,
+        // Note that expressionUnderTest is guaranteed to be non-null when the method returns a value other than NullCheckStatus.Unknown.
+        // Given the current nullability attributes, there is no way to express this.
+        out SyntaxNode? expressionUnderTest,
+        out ITypeSymbol? typeOfExpressionUnderTest)
     {
-        if (IsIsNullPattern(operation, out expressionUnderTest) || IsEqualsNullBinaryOperator(operation, out expressionUnderTest))
+        if (IsIsNullPattern(operation, out expressionUnderTest, out typeOfExpressionUnderTest) ||
+            IsEqualsNullBinaryOperator(operation, out expressionUnderTest, out typeOfExpressionUnderTest))
         {
             return NullCheckStatus.IsNull;
         }
-        else if (IsIsNotNullPattern(operation, out expressionUnderTest) || IsNotEqualsNullBinaryOperator(operation, out expressionUnderTest))
+        else if (IsIsNotNullPattern(operation, out expressionUnderTest, out typeOfExpressionUnderTest) ||
+            IsNotEqualsNullBinaryOperator(operation, out expressionUnderTest, out typeOfExpressionUnderTest))
         {
             return NullCheckStatus.IsNotNull;
         }
@@ -255,12 +270,19 @@ internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
         return NullCheckStatus.Unknown;
     }
 
-    private static EqualityCheckStatus RecognizeEqualityCheck(IOperation operation, out SyntaxNode? toBecomeExpected, out SyntaxNode? toBecomeActual)
+    private static EqualityCheckStatus RecognizeEqualityCheck(
+        IOperation operation,
+        out SyntaxNode? toBecomeExpected,
+        out SyntaxNode? toBecomeActual,
+        out ITypeSymbol? leftType,
+        out ITypeSymbol? rightType)
     {
         if (operation is IIsPatternOperation { Pattern: IConstantPatternOperation constantPattern1 } isPattern1)
         {
             toBecomeExpected = constantPattern1.Syntax;
             toBecomeActual = isPattern1.Value.Syntax;
+            leftType = constantPattern1.WalkDownConversion().Type;
+            rightType = isPattern1.Value.WalkDownConversion().Type;
             return EqualityCheckStatus.Equals;
         }
         else if (operation is IBinaryOperation { OperatorKind: BinaryOperatorKind.Equals } binaryOperation1 &&
@@ -269,12 +291,16 @@ internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
             // This is quite arbitrary. We can do extra checks to see which one (if any) looks like a "constant" and make it the expected.
             toBecomeExpected = binaryOperation1.RightOperand.Syntax;
             toBecomeActual = binaryOperation1.LeftOperand.Syntax;
+            leftType = binaryOperation1.RightOperand.WalkDownConversion().Type;
+            rightType = binaryOperation1.LeftOperand.WalkDownConversion().Type;
             return EqualityCheckStatus.Equals;
         }
         else if (operation is IIsPatternOperation { Pattern: INegatedPatternOperation { Pattern: IConstantPatternOperation constantPattern2 } } isPattern2)
         {
             toBecomeExpected = constantPattern2.Syntax;
             toBecomeActual = isPattern2.Value.Syntax;
+            leftType = constantPattern2.WalkDownConversion().Type;
+            rightType = isPattern2.Value.WalkDownConversion().Type;
             return EqualityCheckStatus.NotEquals;
         }
         else if (operation is IBinaryOperation { OperatorKind: BinaryOperatorKind.NotEquals } binaryOperation2 &&
@@ -283,20 +309,33 @@ internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
             // This is quite arbitrary. We can do extra checks to see which one (if any) looks like a "constant" and make it the expected.
             toBecomeExpected = binaryOperation2.RightOperand.Syntax;
             toBecomeActual = binaryOperation2.LeftOperand.Syntax;
+            leftType = binaryOperation2.RightOperand.WalkDownConversion().Type;
+            rightType = binaryOperation2.LeftOperand.WalkDownConversion().Type;
             return EqualityCheckStatus.NotEquals;
         }
 
         toBecomeExpected = null;
         toBecomeActual = null;
+        leftType = null;
+        rightType = null;
         return EqualityCheckStatus.Unknown;
     }
+
+    private static bool CanUseTypeAsObject(Compilation compilation, ITypeSymbol? type)
+        => type is null ||
+            compilation.ClassifyCommonConversion(type, compilation.GetSpecialType(SpecialType.System_Object)).Exists;
 
     private static void AnalyzeIsTrueOrIsFalseInvocation(OperationAnalysisContext context, IOperation conditionArgument, bool isTrueInvocation)
     {
         RoslynDebug.Assert(context.Operation is IInvocationOperation, "Expected IInvocationOperation.");
 
-        NullCheckStatus nullCheckStatus = RecognizeNullCheck(conditionArgument, out SyntaxNode? expressionUnderTest);
-        if (nullCheckStatus != NullCheckStatus.Unknown)
+        NullCheckStatus nullCheckStatus = RecognizeNullCheck(conditionArgument, out SyntaxNode? expressionUnderTest, out ITypeSymbol? typeOfExpressionUnderTest);
+
+        // In this code path, we will be suggesting the use of IsNull/IsNotNull.
+        // These assert methods only have an "object" overload.
+        // For example, pointer types cannot be converted to object.
+        if (nullCheckStatus != NullCheckStatus.Unknown &&
+            CanUseTypeAsObject(context.Compilation, typeOfExpressionUnderTest))
         {
             RoslynDebug.Assert(expressionUnderTest is not null, $"Unexpected null for '{nameof(expressionUnderTest)}'.");
             RoslynDebug.Assert(nullCheckStatus is NullCheckStatus.IsNull or NullCheckStatus.IsNotNull, "Unexpected NullCheckStatus value.");
@@ -322,8 +361,10 @@ internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
             return;
         }
 
-        EqualityCheckStatus equalityCheckStatus = RecognizeEqualityCheck(conditionArgument, out SyntaxNode? toBecomeExpected, out SyntaxNode? toBecomeActual);
-        if (equalityCheckStatus != EqualityCheckStatus.Unknown)
+        EqualityCheckStatus equalityCheckStatus = RecognizeEqualityCheck(conditionArgument, out SyntaxNode? toBecomeExpected, out SyntaxNode? toBecomeActual, out ITypeSymbol? leftType, out ITypeSymbol? rightType);
+        if (equalityCheckStatus != EqualityCheckStatus.Unknown &&
+            CanUseTypeAsObject(context.Compilation, leftType) &&
+            CanUseTypeAsObject(context.Compilation, rightType))
         {
             RoslynDebug.Assert(toBecomeExpected is not null, $"Unexpected null for '{nameof(toBecomeExpected)}'.");
             RoslynDebug.Assert(toBecomeActual is not null, $"Unexpected null for '{nameof(toBecomeActual)}'.");
