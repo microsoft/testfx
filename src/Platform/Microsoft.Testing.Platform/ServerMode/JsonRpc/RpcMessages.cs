@@ -63,8 +63,6 @@ internal sealed record ClientInfo(string Name, string Version);
 
 internal sealed record ClientCapabilities(bool DebuggerProvider);
 
-internal sealed record ClientTestingCapabilities(bool DebuggerProvider);
-
 internal sealed record ServerInfo(string Name, string Version);
 
 internal sealed record ServerCapabilities(ServerTestingCapabilities TestingCapabilities);
