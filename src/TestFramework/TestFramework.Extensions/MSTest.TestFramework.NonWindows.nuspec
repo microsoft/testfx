@@ -34,18 +34,22 @@
     $CommonFileElements$
 
     <!-- netstandard2.0 -->
+    <file src="buildTransitive/winui+uwp/MSTest.TestFramework.targets" target="buildTransitive/netstandard2.0/" />
     <file src="netstandard2.0/Microsoft.VisualStudio.TestPlatform.TestFramework.dll" target="lib/netstandard2.0/" />
     <file src="netstandard2.0/Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="lib/netstandard2.0/" />
     <file src="netstandard2.0/**/Microsoft.VisualStudio.TestPlatform.TestFramework.resources.dll" target="lib/netstandard2.0/" />
     <file src="netstandard2.0/Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll" target="lib/netstandard2.0/" />
     <file src="netstandard2.0/Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="lib/netstandard2.0/" />
+    <file src="$RepoRoot$src/TestFramework/TestFramework.Extensions/build/netstandard2.0/MSTest.TestFramework.targets" target="build/netstandard2.0/" />
 
     <!-- netcoreapp3.1 -->
+    <file src="buildTransitive/winui+uwp/MSTest.TestFramework.targets" target="buildTransitive/netcoreapp3.1/" />
     <file src="netcoreapp3.1/Microsoft.VisualStudio.TestPlatform.TestFramework.dll" target="lib/netcoreapp3.1/" />
     <file src="netcoreapp3.1/Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="lib/netcoreapp3.1/" />
     <file src="netcoreapp3.1/**/Microsoft.VisualStudio.TestPlatform.TestFramework.resources.dll" target="lib/netcoreapp3.1/" />
     <file src="netcoreapp3.1/Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll" target="lib/netcoreapp3.1/" />
     <file src="netcoreapp3.1/Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="lib/netcoreapp3.1/" />
+    <file src="$RepoRoot$src/TestFramework/TestFramework.Extensions/build/netcoreapp3.1/MSTest.TestFramework.targets" target="build/netcoreapp3.1/" />
 
     <!-- net6.0 -->
     <file src="net6.0/buildTransitive/winui+uwp/MSTest.TestFramework.targets" target="buildTransitive/net6.0/" />
