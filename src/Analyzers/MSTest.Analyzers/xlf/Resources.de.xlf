@@ -352,6 +352,16 @@ Der Typ, der diese Methoden deklariert, sollte auch die folgenden Regeln beachte
         <target state="translated">"System.ComponentModel.DescriptionAttribute" hat keine Auswirkungen auf Testmethoden.</target>
         <note />
       </trans-unit>
+      <trans-unit id="DuplicateDataRowMessageFormat">
+        <source>Do not duplicate 'DataRow' attributes. This is usually a copy/paste error. The attribute indices are '{0}' and '{1}'.</source>
+        <target state="translated">Duplizieren Sie keine „DataRow“-Attribute. Dies ist normalerweise ein Kopier-/Einfügefehler. Die Attributindizes sind „{0}“ und „{1}“.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DuplicateDataRowTitle">
+        <source>Avoid duplicated 'DataRow' entries</source>
+        <target state="translated">Vermeiden doppelter „DataRow“-Einträge</target>
+        <note />
+      </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidDescription">
         <source>'DynamicData' entry should have the following layout to be valid:
 - should only be set on a test method;
@@ -798,6 +808,16 @@ Der Typ, der diese Methoden deklariert, sollte auch die folgenden Regeln beachte
       <trans-unit id="UseProperAssertMethodsTitle">
         <source>Use proper 'Assert' methods</source>
         <target state="translated">Geeignete Assert-Methoden verwenden</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseRetryWithTestMethodMessageFormat">
+        <source>An attribute that derives from 'RetryBaseAttribute' can be specified only on a test method</source>
+        <target state="translated">Ein von „RetryBaseAttribute“ abgeleitetes Attribut kann nur für eine Testmethode angegeben werden.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseRetryWithTestMethodTitle">
+        <source>Use retry attribute on test method</source>
+        <target state="translated">Verwenden des Wiederholungsattributs für die Testmethode</target>
         <note />
       </trans-unit>
     </body>

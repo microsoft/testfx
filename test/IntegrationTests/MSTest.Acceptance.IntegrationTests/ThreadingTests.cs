@@ -188,7 +188,7 @@ public sealed class ThreadingTests : AcceptanceTestBase<ThreadingTests.TestAsset
             return;
         }
 
-        var testHost = TestHost.LocateFrom(AssetFixture.LifecycleAttributesTaskProjectPath, TestAssetFixture.LifecycleWithParallelAttributesTaskProjectName, tfm);
+        var testHost = TestHost.LocateFrom(AssetFixture.LifecycleWithParallelAttributesTaskProjectNamePath, TestAssetFixture.LifecycleAttributesTaskProjectName, tfm);
         string runSettingsFilePath = Path.Combine(testHost.DirectoryName, "sta.runsettings");
         TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath}", environmentVariables: new()
         {
@@ -225,7 +225,7 @@ public sealed class ThreadingTests : AcceptanceTestBase<ThreadingTests.TestAsset
         public const string STAThreadProjectName = "STATestThreading";
         public const string LifecycleAttributesVoidProjectName = "LifecycleAttributesVoid";
         public const string LifecycleAttributesTaskProjectName = "LifecycleAttributesTask";
-        public const string LifecycleWithParallelAttributesTaskProjectName = "LifecycleAttributesTask";
+        public const string LifecycleWithParallelAttributesTaskProjectName = "LifecycleWithParallelAttributesTask";
         public const string LifecycleAttributesValueTaskProjectName = "LifecycleAttributesValueTask";
 
         public string ProjectPath => GetAssetPath(ProjectName);
@@ -267,7 +267,7 @@ public sealed class ThreadingTests : AcceptanceTestBase<ThreadingTests.TestAsset
                 .PatchCodeWithReplace("$ParallelAttribute$", string.Empty)
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
 
-            yield return (LifecycleWithParallelAttributesTaskProjectName, LifecycleWithParallelAttributesTaskProjectName,
+            yield return (LifecycleWithParallelAttributesTaskProjectName, LifecycleAttributesTaskProjectName,
                 LifecycleAttributesTaskSource
                 .PatchTargetFrameworks(TargetFrameworks.All)
                 .PatchCodeWithReplace("$ParallelAttribute$", "[assembly: Parallelize(Workers = 0, Scope = ExecutionScope.MethodLevel)]")

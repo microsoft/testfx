@@ -180,10 +180,7 @@ internal sealed partial class TestProgressStateAwareTerminal : IDisposable
             _counter++;
 
             TestProgressState? progress = _progressItems[slotIndex];
-            if (progress != null)
-            {
-                progress.Version = _counter;
-            }
+            progress?.Version = _counter;
         }
     }
 

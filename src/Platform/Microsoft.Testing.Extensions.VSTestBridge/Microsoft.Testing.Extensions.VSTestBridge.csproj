@@ -12,6 +12,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.TestPlatform.ObjectModel" />
+    <PackageReference Include="Microsoft.TestPlatform.AdapterUtilities" />
   </ItemGroup>
 
   <ItemGroup>

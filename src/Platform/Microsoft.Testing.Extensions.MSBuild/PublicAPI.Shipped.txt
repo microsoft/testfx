@@ -1,0 +1,5 @@
+#nullable enable
+Microsoft.Testing.Platform.MSBuild.MSBuildExtensions
+Microsoft.Testing.Platform.MSBuild.TestingPlatformBuilderHook
+static Microsoft.Testing.Platform.MSBuild.MSBuildExtensions.AddMSBuild(this Microsoft.Testing.Platform.Builder.ITestApplicationBuilder! builder) -> void
+static Microsoft.Testing.Platform.MSBuild.TestingPlatformBuilderHook.AddExtensions(Microsoft.Testing.Platform.Builder.ITestApplicationBuilder! testApplicationBuilder, string![]! _) -> void

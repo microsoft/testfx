@@ -85,7 +85,7 @@ public partial class CLITestBase : TestContainer
         }
 
         XmlDocument doc = new();
-        using (var xmlReader = XmlReader.Create(new StringReader(settingsXml), new XmlReaderSettings() { XmlResolver = null, CloseInput = true }))
+        using (var xmlReader = XmlReader.Create(new StringReader(settingsXml), new XmlReaderSettings { XmlResolver = null, CloseInput = true }))
         {
             doc.Load(xmlReader);
         }

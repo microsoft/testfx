@@ -5,7 +5,6 @@ using Microsoft.Testing.Extensions.TestReports.Resources;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.CommandLine;
-using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Tools;
 
 namespace Microsoft.Testing.Extensions.TrxReport.Abstractions;
@@ -17,25 +16,19 @@ internal sealed class TrxCompareToolCommandLine : IToolCommandLineOptionsProvide
     private readonly IExtension _extension;
 
     public TrxCompareToolCommandLine(IExtension extension)
-    {
-        _extension = extension;
-        Uid = _extension.Uid;
-        Version = _extension.Version;
-        DisplayName = _extension.DisplayName;
-        Description = _extension.Description;
-    }
+        => _extension = extension;
 
     /// <inheritdoc />
-    public string Uid { get; }
+    public string Uid => _extension.Uid;
 
     /// <inheritdoc />
-    public string Version { get; } = AppVersion.DefaultSemVer;
+    public string Version => _extension.Version;
 
     /// <inheritdoc />
-    public string DisplayName { get; }
+    public string DisplayName => _extension.DisplayName;
 
     /// <inheritdoc />
-    public string Description { get; }
+    public string Description => _extension.Description;
 
     /// <inheritdoc />
     public string ToolName { get; } = TrxCompareTool.ToolName;

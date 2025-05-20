@@ -37,6 +37,20 @@
         <target state="translated">Zrzut zawieszenia</target>
         <note />
       </trans-unit>
+      <trans-unit id="HangDumpFailed">
+        <source>The following exception occurred while taking hang dump:
+{0}
+
+Disk info:
+{1}</source>
+        <target state="translated">Podczas wykonywania zrzutu zawieszenia wystąpił następujący wyjątek:
+{0}
+
+Informacje o dysku:
+{1}</target>
+        <note>{0} - the exception that occurred.
+{1} - disk info detailing free space</note>
+      </trans-unit>
       <trans-unit id="HangDumpFileNameOptionDescription">
         <source>Specify the name of the dump file</source>
         <target state="translated">Określ nazwę pliku zrzutu</target>

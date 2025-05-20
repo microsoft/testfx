@@ -191,12 +191,42 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
             await _logger.LogDebugAsync($"Connected to the test host server pipe '{_namedPipeClient.PipeName}'");
 
             // Keep the custom thread to avoid to waste one from thread pool.
-            _activityIndicatorTask = _task.RunLongRunning(ActivityTimerAsync, "[HangDump] ActivityTimerAsync", cancellation);
+            _activityIndicatorTask = _task.RunLongRunning(
+                async () =>
+                {
+                    try
+                    {
+                        await ActivityTimerAsync();
+                    }
+                    catch (Exception e)
+                    {
+                        await _outputDisplay.DisplayAsync(this, new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.HangDumpFailed, e.ToString(), GetDiskInfo())));
+                        throw;
+                    }
+                }, "[HangDump] ActivityTimerAsync", cancellation);
         }
         catch (OperationCanceledException) when (cancellation.IsCancellationRequested)
         {
-            return;
         }
+    }
+
+    private static string GetDiskInfo()
+    {
+        var builder = new StringBuilder();
+        DriveInfo[] allDrives = DriveInfo.GetDrives();
+
+        foreach (DriveInfo d in allDrives)
+        {
+            builder.AppendLine(CultureInfo.InvariantCulture, $"Drive {d.Name}");
+            if (d.IsReady)
+            {
+                builder.AppendLine(CultureInfo.InvariantCulture, $"  Available free space: {d.AvailableFreeSpace} bytes");
+                builder.AppendLine(CultureInfo.InvariantCulture, $"  Total free space: {d.TotalFreeSpace} bytes");
+                builder.AppendLine(CultureInfo.InvariantCulture, $"  Total size: {d.TotalSize} bytes");
+            }
+        }
+
+        return builder.ToString();
     }
 
     public async Task OnTestHostProcessExitedAsync(ITestHostProcessInformation testHostProcessInformation, CancellationToken cancellation)
@@ -349,42 +379,48 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
 
         await _outputDisplay.DisplayAsync(this, new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.CreatingDumpFile, finalDumpFileName)));
 
+        try
+        {
 #if NETCOREAPP
-        DiagnosticsClient diagnosticsClient = new(_testHostProcessInformation.PID);
-        DumpType dumpType = _dumpType.ToLowerInvariant().Trim() switch
-        {
-            "mini" => DumpType.Normal,
-            "heap" => DumpType.WithHeap,
-            "triage" => DumpType.Triage,
-            "full" => DumpType.Full,
-            _ => throw ApplicationStateGuard.Unreachable(),
-        };
+            DiagnosticsClient diagnosticsClient = new(_testHostProcessInformation.PID);
+            DumpType dumpType = _dumpType.ToLowerInvariant().Trim() switch
+            {
+                "mini" => DumpType.Normal,
+                "heap" => DumpType.WithHeap,
+                "triage" => DumpType.Triage,
+                "full" => DumpType.Full,
+                _ => throw ApplicationStateGuard.Unreachable(),
+            };
 
-        // Wrap the dump path into "" when it has space in it, this is a workaround for this runtime issue: https://github.com/dotnet/diagnostics/issues/5020
-        // It only affects windows. Otherwise the dump creation fails with: [createdump] The pid argument is no longer supported
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && finalDumpFileName.Contains(' '))
-        {
-            finalDumpFileName = $"\"{finalDumpFileName}\"";
-        }
+            // Wrap the dump path into "" when it has space in it, this is a workaround for this runtime issue: https://github.com/dotnet/diagnostics/issues/5020
+            // It only affects windows. Otherwise the dump creation fails with: [createdump] The pid argument is no longer supported
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && finalDumpFileName.Contains(' '))
+            {
+                finalDumpFileName = $"\"{finalDumpFileName}\"";
+            }
 
-        diagnosticsClient.WriteDump(dumpType, finalDumpFileName, true);
+            diagnosticsClient.WriteDump(dumpType, finalDumpFileName, true);
 #else
-        MiniDumpWriteDump.MiniDumpTypeOption miniDumpTypeOption = _dumpType.ToLowerInvariant().Trim() switch
-        {
-            "mini" => MiniDumpWriteDump.MiniDumpTypeOption.Mini,
-            "heap" => MiniDumpWriteDump.MiniDumpTypeOption.Heap,
-            "full" => MiniDumpWriteDump.MiniDumpTypeOption.Full,
-            _ => throw ApplicationStateGuard.Unreachable(),
-        };
+            MiniDumpWriteDump.MiniDumpTypeOption miniDumpTypeOption = _dumpType.ToLowerInvariant().Trim() switch
+            {
+                "mini" => MiniDumpWriteDump.MiniDumpTypeOption.Mini,
+                "heap" => MiniDumpWriteDump.MiniDumpTypeOption.Heap,
+                "full" => MiniDumpWriteDump.MiniDumpTypeOption.Full,
+                _ => throw ApplicationStateGuard.Unreachable(),
+            };
 
-        MiniDumpWriteDump.CollectDumpUsingMiniDumpWriteDump(_testHostProcessInformation.PID, finalDumpFileName, miniDumpTypeOption);
+            MiniDumpWriteDump.CollectDumpUsingMiniDumpWriteDump(_testHostProcessInformation.PID, finalDumpFileName, miniDumpTypeOption);
 #endif
 
-        NotifyCrashDumpServiceIfEnabled();
-        using IProcess process = _processHandler.GetProcessById(_testHostProcessInformation.PID);
-        process.Kill();
-        await process.WaitForExitAsync();
-        _dumpFileTaken = finalDumpFileName;
+            _dumpFileTaken = finalDumpFileName;
+        }
+        finally
+        {
+            NotifyCrashDumpServiceIfEnabled();
+            using IProcess process = _processHandler.GetProcessById(_testHostProcessInformation.PID);
+            process.Kill();
+            await process.WaitForExitAsync();
+        }
     }
 
     private static void NotifyCrashDumpServiceIfEnabled()

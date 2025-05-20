@@ -17,7 +17,7 @@ internal sealed class PassiveNodeDataConsumer : IDataConsumer, IDisposable
         => _passiveNode = passiveNode;
 
     public Type[] DataTypesConsumed
-        => [typeof(SessionFileArtifact), typeof(TestNodeFileArtifact), typeof(FileArtifact)];
+        => [typeof(SessionFileArtifact), typeof(FileArtifact)];
 
     public string Uid
         => nameof(PassiveNodeDataConsumer);
@@ -43,13 +43,6 @@ internal sealed class PassiveNodeDataConsumer : IDataConsumer, IDisposable
 
         switch (value)
         {
-            case TestNodeFileArtifact testNodeFileArtifact:
-                {
-                    RunTestAttachment runTestAttachment = new(testNodeFileArtifact.FileInfo.FullName, dataProducer.Uid, FileType, testNodeFileArtifact.DisplayName, testNodeFileArtifact.Description);
-                    await _passiveNode.SendAttachmentsAsync(new TestsAttachments([runTestAttachment]), cancellationToken);
-                    break;
-                }
-
             case SessionFileArtifact sessionFileArtifact:
                 {
                     RunTestAttachment runTestAttachment = new(sessionFileArtifact.FileInfo.FullName, dataProducer.Uid, FileType, sessionFileArtifact.DisplayName, sessionFileArtifact.Description);

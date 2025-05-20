@@ -260,7 +260,7 @@ public sealed class CommandLineHandlerTests
         // Assert
         Assert.IsTrue(result);
         Assert.IsNotNull(optionValue);
-        Assert.AreEqual(optionValue?.Length, 2);
+        Assert.AreEqual(2, optionValue?.Length);
         Assert.AreEqual("value1", optionValue?[0]);
         Assert.AreEqual("value2", optionValue?[1]);
     }

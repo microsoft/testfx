@@ -17,7 +17,7 @@ public sealed class StringAssert
     }
 
     /// <summary>
-    /// Gets the singleton instance of the CollectionAssert functionality.
+    /// Gets the singleton instance of the StringAssert functionality.
     /// </summary>
     /// <remarks>
     /// Users can use this to plug-in custom assertions through C# extension methods.

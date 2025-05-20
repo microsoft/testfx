@@ -12,24 +12,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 
 internal static class FixtureMethodRunner
 {
-    internal static void RunOnContext(ExecutionContext? executionContext, Action action)
-    {
-        if (executionContext is null)
-        {
-            action();
-        }
-        else
-        {
-            // CreateCopy doesn't do anything on .NET Core as ExecutionContexts are immutable.
-            // But it's important on .NET Framework.
-            // On .NET Framework, ExecutionContext.Run cannot be called twice with the same ExecutionContext.
-            // Otherwise, it will throw InvalidOperationException with message:
-            // Cannot apply a context that has been marshaled across AppDomains, that was not acquired through a Capture operation or that has already been the argument to a Set call.
-            executionContext = executionContext.CreateCopy();
-            ExecutionContext.Run(executionContext, static action => ((Action)action!).Invoke(), action);
-        }
-    }
-
     internal static TestFailedException? RunWithTimeoutAndCancellation(
         Action action, CancellationTokenSource cancellationTokenSource, TimeoutInfo? timeoutInfo, MethodInfo methodInfo,
         ExecutionContext? executionContext, string methodCanceledMessageFormat, string methodTimedOutMessageFormat,
@@ -50,7 +32,7 @@ internal static class FixtureMethodRunner
         {
             try
             {
-                RunOnContext(executionContext, action);
+                ExecutionContextHelpers.RunOnContext(executionContext, action);
                 return null;
             }
             catch (Exception ex)
@@ -109,7 +91,7 @@ internal static class FixtureMethodRunner
 
             try
             {
-                RunOnContext(executionContext, action);
+                ExecutionContextHelpers.RunOnContext(executionContext, action);
                 return null;
             }
             catch (Exception ex) when (ex.IsOperationCanceledExceptionFromToken(cancellationTokenSource.Token))
@@ -151,7 +133,7 @@ internal static class FixtureMethodRunner
                 {
                     try
                     {
-                        RunOnContext(executionContext, action);
+                        ExecutionContextHelpers.RunOnContext(executionContext, action);
                     }
                     catch (Exception ex)
                     {
@@ -209,15 +191,17 @@ internal static class FixtureMethodRunner
         string methodCanceledMessageFormat, string methodTimedOutMessageFormat)
     {
         TaskCompletionSource<int> tcs = new();
+        Exception? realException = null;
         Thread executionThread = new(() =>
         {
             try
             {
-                RunOnContext(executionContext, action);
+                ExecutionContextHelpers.RunOnContext(executionContext, action);
                 tcs.SetResult(0);
             }
             catch (Exception ex)
             {
+                realException = ex;
                 tcs.SetException(ex);
             }
         })
@@ -256,7 +240,12 @@ internal static class FixtureMethodRunner
         catch (Exception)
         {
             // We throw the real exception to have the original stack trace to elaborate up the chain.
-            if (tcs.Task.Exception is not null)
+            // Also note that tcs.Task.Exception can be an AggregateException, so we favor the "real exception".
+            if (realException is not null)
+            {
+                throw realException;
+            }
+            else if (tcs.Task.Exception is not null)
             {
                 throw tcs.Task.Exception;
             }

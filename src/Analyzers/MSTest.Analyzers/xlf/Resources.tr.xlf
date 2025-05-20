@@ -351,6 +351,16 @@ Bu yöntemleri bildiren tipin ayrıca aşağıdaki kurallara uyması gerekir:
         <target state="translated">'System.ComponentModel.DescriptionAttribute' test yöntemlerini etkilemez</target>
         <note />
       </trans-unit>
+      <trans-unit id="DuplicateDataRowMessageFormat">
+        <source>Do not duplicate 'DataRow' attributes. This is usually a copy/paste error. The attribute indices are '{0}' and '{1}'.</source>
+        <target state="translated">'DataRow' özniteliklerini kopyalamayın. Bu genellikle kopyala-yapıştır hatasıdır. Öznitelik dizinleri '{0}' ve '{1}'.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DuplicateDataRowTitle">
+        <source>Avoid duplicated 'DataRow' entries</source>
+        <target state="translated">'DataRow' girdilerinin yenilenmesinden kaçının</target>
+        <note />
+      </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidDescription">
         <source>'DynamicData' entry should have the following layout to be valid:
 - should only be set on a test method;
@@ -799,6 +809,16 @@ Bu yöntemleri bildiren tipin ayrıca aşağıdaki kurallara uyması gerekir:
       <trans-unit id="UseProperAssertMethodsTitle">
         <source>Use proper 'Assert' methods</source>
         <target state="translated">Uygun 'Assert' yöntemlerini kullan</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseRetryWithTestMethodMessageFormat">
+        <source>An attribute that derives from 'RetryBaseAttribute' can be specified only on a test method</source>
+        <target state="translated">'RetryBaseAttribute' özniteliğinden türetilen bir öznitelik yalnızca bir test yönteminde belirtilebilir</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseRetryWithTestMethodTitle">
+        <source>Use retry attribute on test method</source>
+        <target state="translated">Test yönteminde yeniden deneme özniteliğini kullan</target>
         <note />
       </trans-unit>
     </body>

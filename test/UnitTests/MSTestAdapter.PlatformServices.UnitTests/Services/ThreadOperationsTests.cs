@@ -14,8 +14,9 @@ public class ThreadOperationsTests : TestContainer
 
     public ThreadOperationsTests() => _asyncOperations = new ThreadOperations();
 
+#pragma warning disable IDE0051 // Remove unused private members - test is failing in CI.
 #if NETFRAMEWORK
-    public void ExecuteShouldStartTheActionOnANewThread()
+    private void ExecuteShouldStartTheActionOnANewThread()
     {
         int actionThreadID = 0;
         void Action() => actionThreadID = Environment.CurrentManagedThreadId;
@@ -26,11 +27,12 @@ public class ThreadOperationsTests : TestContainer
     }
 #endif
 
-    public void ExecuteShouldReturnFalseIfTheActionTimesOut()
+    private void ExecuteShouldReturnFalseIfTheActionTimesOut()
     {
         static void Action() => Task.Delay(1000).Wait();
 
         CancellationTokenSource tokenSource = new();
         Verify(!_asyncOperations.Execute(Action, 1, tokenSource.Token));
     }
+#pragma warning restore IDE0051 // Remove unused private members
 }

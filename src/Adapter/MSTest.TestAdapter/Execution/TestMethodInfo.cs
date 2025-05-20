@@ -17,12 +17,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 /// <summary>
 /// Defines the TestMethod Info object.
 /// </summary>
-#if RELEASE
 #if NET6_0_OR_GREATER
 [Obsolete(Constants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
 #else
 [Obsolete(Constants.PublicTypeObsoleteMessage)]
-#endif
 #endif
 public class TestMethodInfo : ITestMethod
 {
@@ -135,6 +133,10 @@ public class TestMethodInfo : ITestMethod
         where TAttributeType : Attribute
         => ReflectHelper.Instance.GetDerivedAttributes<TAttributeType>(TestMethod, inherit).ToArray();
 
+    /// <inheritdoc cref="InvokeAsync(object[])" />
+    public virtual TestResult Invoke(object?[]? arguments)
+        => InvokeAsync(arguments).GetAwaiter().GetResult();
+
     /// <summary>
     /// Execute test method. Capture failures, handle async and return result.
     /// </summary>
@@ -142,7 +144,7 @@ public class TestMethodInfo : ITestMethod
     ///  Arguments to pass to test method. (E.g. For data driven).
     /// </param>
     /// <returns>Result of test method invocation.</returns>
-    public virtual TestResult Invoke(object?[]? arguments)
+    public virtual async Task<TestResult> InvokeAsync(object?[]? arguments)
     {
         Stopwatch watch = new();
         TestResult? result = null;
@@ -157,13 +159,16 @@ public class TestMethodInfo : ITestMethod
 
         try
         {
-            FixtureMethodRunner.RunOnContext(executionContext, () =>
+            ExecutionContextHelpers.RunOnContext(executionContext, () =>
             {
                 ThreadSafeStringWriter.CleanState();
                 listener = new LogMessageListener(MSTestSettings.CurrentSettings.CaptureDebugTraces);
                 executionContext = ExecutionContext.Capture();
             });
-            result = IsTimeoutSet ? ExecuteInternalWithTimeout(arguments, executionContext) : ExecuteInternal(arguments, executionContext, null);
+
+            result = IsTimeoutSet
+                ? await ExecuteInternalWithTimeoutAsync(arguments, executionContext)
+                : await ExecuteInternalAsync(arguments, executionContext, null);
         }
         finally
         {
@@ -175,7 +180,7 @@ public class TestMethodInfo : ITestMethod
                 result.Duration = watch.Elapsed;
                 if (listener is not null)
                 {
-                    FixtureMethodRunner.RunOnContext(executionContext, () =>
+                    ExecutionContextHelpers.RunOnContext(executionContext, () =>
                     {
                         result.DebugTrace = listener.GetAndClearDebugTrace();
                         result.LogOutput = listener.GetAndClearStandardOutput();
@@ -393,14 +398,14 @@ public class TestMethodInfo : ITestMethod
     /// <param name="timeoutTokenSource">The timeout token source.</param>
     /// <returns>The result of the execution.</returns>
     [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
-    private TestResult ExecuteInternal(object?[]? arguments, ExecutionContext? executionContext, CancellationTokenSource? timeoutTokenSource)
+    private async Task<TestResult> ExecuteInternalAsync(object?[]? arguments, ExecutionContext? executionContext, CancellationTokenSource? timeoutTokenSource)
     {
         DebugEx.Assert(TestMethod != null, "UnitTestExecuter.DefaultTestMethodInvoke: testMethod = null.");
 
         var result = new TestResult();
 
         // TODO remove dry violation with TestMethodRunner
-        FixtureMethodRunner.RunOnContext(executionContext, () =>
+        ExecutionContextHelpers.RunOnContext(executionContext, () =>
         {
             _classInstance = CreateTestClassInstance(result);
             executionContext = ExecutionContext.Capture();
@@ -422,11 +427,33 @@ public class TestMethodInfo : ITestMethod
                     if (RunTestInitializeMethod(_classInstance, result, ref executionContext, timeoutTokenSource))
                     {
                         hasTestInitializePassed = true;
-                        FixtureMethodRunner.RunOnContext(executionContext, () =>
+                        var tcs = new TaskCompletionSource<object?>();
+#pragma warning disable VSTHRD101 // Avoid unsupported async delegates
+                        ExecutionContextHelpers.RunOnContext(executionContext, async () =>
                         {
-                            TestMethod.InvokeAsSynchronousTask(_classInstance, arguments);
-                            executionContext = ExecutionContext.Capture();
+                            try
+                            {
+                                object? invokeResult = TestMethod.GetInvokeResult(_classInstance, arguments);
+                                if (invokeResult is Task task)
+                                {
+                                    await task;
+                                }
+                                else if (invokeResult is ValueTask valueTask)
+                                {
+                                    await valueTask;
+                                }
+
+                                executionContext = ExecutionContext.Capture();
+                                tcs.SetResult(null);
+                            }
+                            catch (Exception ex)
+                            {
+                                tcs.SetException(ex);
+                            }
                         });
+#pragma warning restore VSTHRD101 // Avoid unsupported async delegates
+
+                        await tcs.Task;
 
                         result.Outcome = UTF.UnitTestOutcome.Passed;
                     }
@@ -696,7 +723,7 @@ public class TestMethodInfo : ITestMethod
                 if (_classInstance is IAsyncDisposable classInstanceAsAsyncDisposable)
                 {
                     // If you implement IAsyncDisposable without calling the DisposeAsync this would result a resource leak.
-                    FixtureMethodRunner.RunOnContext(executionContext, () =>
+                    ExecutionContextHelpers.RunOnContext(executionContext, () =>
                     {
                         classInstanceAsAsyncDisposable.DisposeAsync().AsTask().Wait();
                         executionContext = ExecutionContext.Capture();
@@ -705,7 +732,7 @@ public class TestMethodInfo : ITestMethod
 #endif
                 if (_classInstance is IDisposable classInstanceAsDisposable)
                 {
-                    FixtureMethodRunner.RunOnContext(executionContext, () =>
+                    ExecutionContextHelpers.RunOnContext(executionContext, () =>
                     {
                         classInstanceAsDisposable.Dispose();
                         executionContext = ExecutionContext.Capture();
@@ -724,76 +751,23 @@ public class TestMethodInfo : ITestMethod
             return;
         }
 
-        // If the exception is already a `TestFailedException` we throw it as-is
-        if (testCleanupException is TestFailedException tfe)
-        {
-            result.Outcome = tfe.Outcome;
-            result.TestFailureException = testCleanupException;
-            return;
-        }
-
-        var cleanupError = new StringBuilder();
-        var cleanupStackTrace = new StringBuilder();
-        if (result.TestFailureException is TestFailedException testFailureException)
-        {
-            if (!StringEx.IsNullOrEmpty(testFailureException.Message))
-            {
-                cleanupError.Append(testFailureException.Message);
-                cleanupError.AppendLine();
-            }
-
-            if (!StringEx.IsNullOrEmpty(testFailureException.StackTraceInformation?.ErrorStackTrace))
-            {
-                cleanupStackTrace.Append(testFailureException.StackTraceInformation.ErrorStackTrace);
-                cleanupStackTrace.Append(Environment.NewLine);
-                cleanupStackTrace.Append(Resource.UTA_CleanupStackTrace);
-                cleanupStackTrace.Append(Environment.NewLine);
-            }
-        }
-
         Exception realException = testCleanupException.GetRealException();
-        string formattedExceptionMessage = realException.GetFormattedExceptionMessage();
+        UTF.UnitTestOutcome outcomeFromRealException = realException is AssertInconclusiveException ? UTF.UnitTestOutcome.Inconclusive : UTF.UnitTestOutcome.Failed;
+        result.Outcome = result.Outcome.GetMoreImportantOutcome(outcomeFromRealException);
 
-        if (testCleanupMethod != null)
-        {
-            cleanupError.AppendFormat(
-                CultureInfo.CurrentCulture,
-                Resource.UTA_CleanupMethodThrows,
-                TestClassName,
-                testCleanupMethod.Name,
-                formattedExceptionMessage);
-        }
-        else
-        {
-            cleanupError.AppendFormat(
-                CultureInfo.CurrentCulture,
-                Resource.UTA_CleanupMethodThrowsGeneralError,
-                TestClassName,
-                formattedExceptionMessage);
-        }
+        realException = testCleanupMethod != null
+            ? new TestFailedException(
+                outcomeFromRealException,
+                string.Format(CultureInfo.CurrentCulture, Resource.UTA_CleanupMethodThrows, TestClassName, testCleanupMethod.Name, realException.GetFormattedExceptionMessage()),
+                realException.TryGetStackTraceInformation(),
+                realException)
+            : new TestFailedException(
+                outcomeFromRealException,
+                string.Format(CultureInfo.CurrentCulture, Resource.UTA_CleanupMethodThrowsGeneralError, TestClassName, realException.GetFormattedExceptionMessage()),
+                realException.TryGetStackTraceInformation(),
+                realException);
 
-        StackTraceInformation? cleanupStackTraceInfo = null;
-        StackTraceInformation? realExceptionStackTraceInfo = realException.TryGetStackTraceInformation();
-        if (realExceptionStackTraceInfo != null)
-        {
-            cleanupStackTrace.Append(realExceptionStackTraceInfo.ErrorStackTrace);
-            cleanupStackTraceInfo ??= realExceptionStackTraceInfo;
-        }
-
-        StackTraceInformation? finalStackTraceInfo = null;
-        if (cleanupStackTrace.Length != 0)
-        {
-            finalStackTraceInfo = cleanupStackTraceInfo != null
-                ? new StackTraceInformation(
-                    cleanupStackTrace.ToString(),
-                    cleanupStackTraceInfo.ErrorFilePath,
-                    cleanupStackTraceInfo.ErrorLineNumber,
-                    cleanupStackTraceInfo.ErrorColumnNumber)
-                : new StackTraceInformation(cleanupStackTrace.ToString());
-        }
-
-        result.Outcome = result.Outcome.GetMoreImportantOutcome(realException is AssertInconclusiveException ? UTF.UnitTestOutcome.Inconclusive : UTF.UnitTestOutcome.Failed);
-        result.TestFailureException = new TestFailedException(result.Outcome, cleanupError.ToString(), finalStackTraceInfo, realException);
+        result.TestFailureException = realException;
     }
 
     /// <summary>
@@ -1060,7 +1034,7 @@ public class TestMethodInfo : ITestMethod
     /// <param name="executionContext">The execution context to execute the test method on.</param>
     /// <returns>The result of execution.</returns>
     [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
-    private TestResult ExecuteInternalWithTimeout(object?[]? arguments, ExecutionContext? executionContext)
+    private async Task<TestResult> ExecuteInternalWithTimeoutAsync(object?[]? arguments, ExecutionContext? executionContext)
     {
         DebugEx.Assert(IsTimeoutSet, "Timeout should be set");
 
@@ -1084,7 +1058,7 @@ public class TestMethodInfo : ITestMethod
 
                 try
                 {
-                    return ExecuteInternal(arguments, executionContext, timeoutTokenSource);
+                    return await ExecuteInternalAsync(arguments, executionContext, timeoutTokenSource);
                 }
                 catch (OperationCanceledException)
                 {
@@ -1135,7 +1109,7 @@ public class TestMethodInfo : ITestMethod
         else
         {
             // Cancel the token source as test has timed out
-            TestContext.Context.CancellationTokenSource.Cancel();
+            await TestContext.Context.CancellationTokenSource.CancelAsync();
         }
 
         TestResult timeoutResult = new() { Outcome = UTF.UnitTestOutcome.Timeout, TestFailureException = new TestFailedException(UTFUnitTestOutcome.Timeout, errorMessage) };
@@ -1154,7 +1128,14 @@ public class TestMethodInfo : ITestMethod
         {
             try
             {
-                result = ExecuteInternal(arguments, executionContext, null);
+                // TODO: Avoid blocking.
+                // This used to always happen, but now is moved to the code path where there is a Timeout on the test method.
+                // The GetAwaiter().GetResult() call here can be a source of deadlocks, especially for UWP/WinUI.
+                // When the test method has `await`s with ConfigureAwait(true) (which is the default), the continuation is
+                // dispatched back to the SynchronizationContext which offloads the work to the UI thread.
+                // However, the GetAwaiter().GetResult() here will block the current thread which is also the UI thread.
+                // So, the continuations will not be able, thus this task never completes.
+                result = ExecuteInternalAsync(arguments, executionContext, null).GetAwaiter().GetResult();
             }
             catch (Exception ex)
             {

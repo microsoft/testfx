@@ -8,13 +8,15 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// </summary>
 /// <remarks>
 /// <list type="bullet">
-/// <item>This works only on .NET Framework and is not supported on .NET Core or later.</item>
+/// <item><description>This works only on .NET Framework and is not supported on .NET Core or later.</description></item>
 /// <item>
+/// <description>
 /// The following shows example usages for this attribute:
 /// <code>
 /// [DataSource("Provider=SQLOLEDB.1;Data Source=source;Integrated Security=SSPI;Initial Catalog=EqtCoverage;Persist Security Info=False", "MyTable")]
 /// [DataSource("dataSourceNameFromConfigFile")].
 /// </code>
+/// </description>
 /// </item>
 /// </list>
 /// </remarks>

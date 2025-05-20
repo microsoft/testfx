@@ -314,12 +314,47 @@ public sealed record TestFileLocationProperty(string FilePath, LinePositionSpan 
 /// </summary>
 /// <param name="AssemblyFullName">Assembly full name.</param>
 /// <param name="Namespace">Namespace.</param>
-/// <param name="TypeName">Type name.</param>
-/// <param name="MethodName">Method name.</param>
-/// <param name="ParameterTypeFullNames">Parameter type full name.</param>
-/// <param name="ReturnTypeFullName">Return type full name.</param>
-public sealed record TestMethodIdentifierProperty(string AssemblyFullName, string Namespace, string TypeName, string MethodName, string[] ParameterTypeFullNames, string ReturnTypeFullName) : IProperty
+/// <param name="TypeName">Type name in metadata format, not including the namespace. Generics are represented by backtick followed by arity. Nested types are represented by <c>+</c>.</param>
+/// <param name="MethodName">Method name in metadata format. This is simply the method name, it doesn't include backtick followed by arity.</param>
+/// <param name="MethodArity">The number of generic parameters of the method.</param>
+/// <param name="ParameterTypeFullNames">Parameter type full names in metadata format.</param>
+/// <param name="ReturnTypeFullName">Return type full name in metadata format.</param>
+public sealed record TestMethodIdentifierProperty(string AssemblyFullName, string Namespace, string TypeName, string MethodName, int MethodArity, string[] ParameterTypeFullNames, string ReturnTypeFullName) : IProperty
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TestMethodIdentifierProperty"/> class.
+    /// </summary>
+    /// <param name="AssemblyFullName">Assembly full name.</param>
+    /// <param name="Namespace">Namespace.</param>
+    /// <param name="TypeName">Type name in metadata format, not including the namespace. Generics are represented by backtick followed by arity. Nested types are represented by <c>+</c>.</param>
+    /// <param name="MethodName">Method name in metadata format.</param>
+    /// <param name="ParameterTypeFullNames">Parameter type full names in metadata format.</param>
+    /// <param name="ReturnTypeFullName">Return type full name in metadata format.</param>
+    [Obsolete("Use the overload with method arity instead.")]
+    public TestMethodIdentifierProperty(string AssemblyFullName, string Namespace, string TypeName, string MethodName, string[] ParameterTypeFullNames, string ReturnTypeFullName)
+        : this(AssemblyFullName, Namespace, TypeName, MethodName, 0, ParameterTypeFullNames, ReturnTypeFullName)
+    {
+    }
+
+    /// <summary>
+    /// Deconstructs properties of TestMethodIdentifierProperty, except MethodArity. This is present only for backwards compatibility.
+    /// </summary>
+    /// <param name="AssemblyFullName">The value of <see cref="AssemblyFullName" />.</param>
+    /// <param name="Namespace">The value of <see cref="Namespace" />.</param>
+    /// <param name="TypeName">The value of <see cref="TypeName" />.</param>
+    /// <param name="MethodName">The value of <see cref="MethodName" />.</param>
+    /// <param name="ParameterTypeFullNames">The value of <see cref="ParameterTypeFullNames" />.</param>
+    /// <param name="ReturnTypeFullName">The value of <see cref="ReturnTypeFullName" />.</param>
+    public void Deconstruct(out string AssemblyFullName, out string Namespace, out string TypeName, out string MethodName, out string[] ParameterTypeFullNames, out string ReturnTypeFullName)
+    {
+        AssemblyFullName = this.AssemblyFullName;
+        Namespace = this.Namespace;
+        TypeName = this.TypeName;
+        MethodName = this.MethodName;
+        ParameterTypeFullNames = this.ParameterTypeFullNames;
+        ReturnTypeFullName = this.ReturnTypeFullName;
+    }
+
     [SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "https://github.com/dotnet/roslyn/issues/52421")]
     private bool PrintMembers(StringBuilder builder)
     {
@@ -372,32 +407,12 @@ public record StandardOutputProperty(string StandardOutput) : IProperty;
 [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
 public record StandardErrorProperty(string StandardError) : IProperty;
 
+/// <summary>
+/// Property that represents multiple artifacts/attachments to associate with a test node.
+/// </summary>
+/// <param name="FileInfo">The file information.</param>
+/// <param name="DisplayName">The display name.</param>
+/// <param name="Description">The description.</param>
+public record FileArtifactProperty(FileInfo FileInfo, string DisplayName, string? Description = null) : IProperty;
+
 internal sealed record SerializableKeyValuePairStringProperty(string Key, string Value) : KeyValuePairStringProperty(Key, Value);
-
-internal sealed record SerializableNamedKeyValuePairsStringProperty(string Name, KeyValuePair<string, string>[] Pairs) : IProperty
-{
-    [SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "https://github.com/dotnet/roslyn/issues/52421")]
-    private bool PrintMembers(StringBuilder builder)
-    {
-        builder.Append("Name = ");
-        builder.Append(Name);
-        builder.Append(", Pairs = [");
-        builder.AppendJoin(", ", Pairs.Select(x => x.ToString()));
-        builder.Append(']');
-        return true;
-    }
-}
-
-internal sealed record SerializableNamedArrayStringProperty(string Name, string[] Values) : IProperty
-{
-    [SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "https://github.com/dotnet/roslyn/issues/52421")]
-    private bool PrintMembers(StringBuilder builder)
-    {
-        builder.Append("Name = ");
-        builder.Append(Name);
-        builder.Append(", Values = [");
-        builder.AppendJoin(", ", Values);
-        builder.Append(']');
-        return true;
-    }
-}

@@ -20,6 +20,7 @@ public sealed class NopAssetFixture : ITestAssetFixture
 public abstract class TestAssetFixtureBase : ITestAssetFixture
 {
     private readonly ConcurrentDictionary<string /* asset ID */, TestAsset> _testAssets = new();
+    private readonly TempDirectory _tempDirectory = new();
     private readonly TempDirectory _nugetGlobalPackagesDirectory;
     private bool _disposedValue;
 
@@ -31,25 +32,34 @@ public abstract class TestAssetFixtureBase : ITestAssetFixture
             ? throw new ArgumentNullException(nameof(assetID), $"Cannot find target path for test asset '{assetID}'")
             : testAsset.TargetAssetPath;
 
-    public async Task InitializeAsync()
+    public async Task InitializeAsync() =>
+        // Generate all projects into the same temporary base folder, but separate subdirectories, so we can reference one from other.
 #if NET
-        => await Parallel.ForEachAsync(GetAssetsToGenerate(), async (asset, _) =>
+        await Parallel.ForEachAsync(GetAssetsToGenerate(), async (asset, _) =>
         {
-            TestAsset testAsset = await TestAsset.GenerateAssetAsync(asset.Name, asset.Code);
+            TestAsset testAsset = await TestAsset.GenerateAssetAsync(asset.ID, asset.Code, _tempDirectory);
             DotnetMuxerResult result = await DotnetCli.RunAsync($"build {testAsset.TargetAssetPath} -c Release", _nugetGlobalPackagesDirectory.Path, callerMemberName: asset.Name);
             testAsset.DotnetResult = result;
             _testAssets.TryAdd(asset.ID, testAsset);
         });
 #else
-        => await Task.WhenAll(GetAssetsToGenerate().Select(async asset =>
+        await Task.WhenAll(GetAssetsToGenerate().Select(async asset =>
         {
-            TestAsset testAsset = await TestAsset.GenerateAssetAsync(asset.Name, asset.Code);
+            TestAsset testAsset = await TestAsset.GenerateAssetAsync(asset.Name, asset.Code, _tempDirectory);
             DotnetMuxerResult result = await DotnetCli.RunAsync($"build {testAsset.TargetAssetPath} -c Release", _nugetGlobalPackagesDirectory.Path, callerMemberName: asset.Name);
             testAsset.DotnetResult = result;
             _testAssets.TryAdd(asset.ID, testAsset);
         }));
 #endif
 
+    /// <summary>
+    /// Returns a list test assets to generate. A test asset has an id, name and code. A test asset is typically a project and all its files. Like MyTests.csproj, Program.cs, runsettings.runsettings etc.
+    /// The asset id determines the name of the sub-folder into which all those files will be placed, this id has to be unique within the collection returned by this method.
+    /// The asset name, identifies the file that will be built within that folder, this name does not have to be unique, so you can re-use similar sources in multiple assets, e.g. when one option needs to change
+    /// but rest of the project remains the same.
+    /// Code is the code that is split into separate files on the #file comments in the code.
+    /// </summary>
+    /// <returns></returns>
     public abstract IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate();
 
     protected virtual void Dispose(bool disposing)
@@ -59,6 +69,7 @@ public abstract class TestAssetFixtureBase : ITestAssetFixture
             if (disposing)
             {
                 Parallel.ForEach(_testAssets, (assetPair, _) => assetPair.Value.Dispose());
+                _tempDirectory.Dispose();
             }
 
             _disposedValue = true;

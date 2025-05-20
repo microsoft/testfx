@@ -171,6 +171,14 @@ public abstract class TestContext
     public Exception? TestException { get; protected set; }
 
     /// <summary>
+    /// Gets the current attempt of the test run. This property is relevant when
+    /// using <see cref="RetryAttribute"/> (or any implementation of <see cref="RetryBaseAttribute"/>).
+    /// On the first run, this property is set to 1.
+    /// On subsequent retries, the value is incremented.
+    /// </summary>
+    public int TestRunCount { get; internal set; }
+
+    /// <summary>
     /// Adds a file name to the list in TestResult.ResultFileNames.
     /// </summary>
     /// <param name="fileName">

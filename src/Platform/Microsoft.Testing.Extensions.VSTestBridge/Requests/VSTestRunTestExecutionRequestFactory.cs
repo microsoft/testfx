@@ -2,12 +2,11 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.VSTestBridge.ObjectModel;
+using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
-using Microsoft.Testing.Platform.Messages;
-using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.Requests;
 using Microsoft.Testing.Platform.Services;
 
@@ -55,11 +54,19 @@ public sealed class VSTestRunTestExecutionRequestFactory : ITestExecutionRequest
         IFileSystem fileSystem = serviceProvider.GetFileSystem();
         IClientInfo clientInfo = serviceProvider.GetClientInfo();
 
-        ITestApplicationModuleInfo testApplicationModuleInfo = serviceProvider.GetTestApplicationModuleInfo();
-        IMessageBus messageBus = serviceProvider.GetRequiredService<IMessageBus>();
-        IOutputDevice outputDevice = serviceProvider.GetOutputDevice();
-        FrameworkHandlerAdapter frameworkHandlerAdapter = new(adapterExtension, runTestExecutionRequest.Session, clientInfo, testAssemblyPaths,
-            testApplicationModuleInfo, loggerFactory, messageBus, outputDevice, adapterExtension.IsTrxEnabled, cancellationToken);
+        FrameworkHandlerAdapter frameworkHandlerAdapter = new(
+            adapterExtension,
+            runTestExecutionRequest.Session,
+            testAssemblyPaths,
+            serviceProvider.GetTestApplicationModuleInfo(),
+            serviceProvider.GetTestFrameworkCapabilities().GetCapability<INamedFeatureCapability>(),
+            serviceProvider.GetCommandLineOptions(),
+            serviceProvider.GetClientInfo(),
+            serviceProvider.GetMessageBus(),
+            serviceProvider.GetOutputDevice(),
+            loggerFactory,
+            adapterExtension.IsTrxEnabled,
+            cancellationToken);
 
         RunSettingsAdapter runSettings = new(commandLineOptions, fileSystem, configuration, clientInfo, loggerFactory, frameworkHandlerAdapter);
         RunContextAdapter runContext = new(commandLineOptions, runSettings, runTestExecutionRequest.Filter);

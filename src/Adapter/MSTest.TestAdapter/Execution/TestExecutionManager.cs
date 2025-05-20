@@ -14,12 +14,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 /// <summary>
 /// Class responsible for execution of tests at assembly level and sending tests via framework handle.
 /// </summary>
-#if RELEASE
 #if NET6_0_OR_GREATER
 [Obsolete(Constants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
 #else
 [Obsolete(Constants.PublicTypeObsoleteMessage)]
-#endif
 #endif
 public class TestExecutionManager
 {
@@ -581,7 +579,7 @@ public class TestExecutionManager
             // If there were only fixture tests, send an inconclusive result.
             if (!hasAnyRunnableTests)
             {
-                var result = new TestTools.UnitTesting.TestResult()
+                var result = new TestTools.UnitTesting.TestResult
                 {
                     Outcome = TestTools.UnitTesting.UnitTestOutcome.Inconclusive,
                 };
@@ -596,7 +594,7 @@ public class TestExecutionManager
 
             if (fixtureTestResult.IsExecuted)
             {
-                var result = new TestTools.UnitTesting.TestResult()
+                var result = new TestTools.UnitTesting.TestResult
                 {
                     Outcome = fixtureTestResult.Outcome,
                 };

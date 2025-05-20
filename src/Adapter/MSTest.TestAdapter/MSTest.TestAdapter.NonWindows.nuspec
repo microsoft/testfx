@@ -6,7 +6,6 @@
       <group targetFramework="netstandard2.0">
         <dependency id="Microsoft.Testing.Extensions.VSTestBridge" version="$TestingPlatformVersion$" />
         <dependency id="Microsoft.Testing.Platform.MSBuild" version="$TestingPlatformVersion$" />
-        <dependency id="System.Threading.Tasks.Extensions" version="$SystemThreadingTasksExtensionsVersion$" />
       </group>
       <group targetFramework="netcoreapp3.1">
         <dependency id="Microsoft.Testing.Extensions.VSTestBridge" version="$TestingPlatformVersion$" />

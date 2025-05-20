@@ -37,8 +37,8 @@ public sealed class TerminalTestReporterTests
 
     // Code with line when we have symbols
     [DataRow(
-        "   at TestingPlatformEntryPoint.Main(String[]) in /_/TUnit.TestProject/obj/Release/net8.0/osx-x64/TestPlatformEntryPoint.cs:line 16",
-        "    at TestingPlatformEntryPoint.Main(String[]) in /_/TUnit.TestProject/obj/Release/net8.0/osx-x64/TestPlatformEntryPoint.cs:16")]
+        "   at MicrosoftTestingPlatformEntryPoint.Main(String[]) in /_/TUnit.TestProject/obj/Release/net8.0/osx-x64/MicrosoftTestingPlatformEntryPoint.cs:line 16",
+        "    at MicrosoftTestingPlatformEntryPoint.Main(String[]) in /_/TUnit.TestProject/obj/Release/net8.0/osx-x64/MicrosoftTestingPlatformEntryPoint.cs:16")]
     // code without line when we don't have symbols
     [DataRow(
         "   at TestingPlatformEntryPoint.<Main>(String[])",
@@ -145,11 +145,11 @@ public sealed class TerminalTestReporterTests
               Error output
                 Oh no!
             ␛[m
-
               Out of process file artifacts produced:
                 - ␛[90m␛]8;;file:///{folderLink}artifact1.txt␛\{folder}artifact1.txt␛]8;;␛\␛[m
               In process file artifacts produced:
                 - ␛[90m␛]8;;file:///{folderLink}artifact2.txt␛\{folder}artifact2.txt␛]8;;␛\␛[m
+            
             ␛[91mTest run summary: Failed!␛[90m - ␛[m␛[90m␛]8;;file:///{folderLinkNoSlash}␛\{folder}assembly.dll␛]8;;␛\␛[m (net8.0|x64)
             ␛[m  total: 5
             ␛[91m  failed: 3

@@ -52,9 +52,23 @@ public interface ITestMethod
     /// Result of test method invocation.
     /// </returns>
     /// <remarks>
-    /// This call handles asynchronous test methods as well.
+    /// This call handles asynchronous test methods in a blocking way.
     /// </remarks>
     TestResult Invoke(object[]? arguments);
+
+    /// <summary>
+    /// Invokes the test method.
+    /// </summary>
+    /// <param name="arguments">
+    /// Arguments to pass to test method. (E.g. For data driven).
+    /// </param>
+    /// <returns>
+    /// Result of test method invocation.
+    /// </returns>
+    /// <remarks>
+    /// This call handles asynchronous test methods as well.
+    /// </remarks>
+    Task<TestResult> InvokeAsync(object[]? arguments);
 
     /// <summary>
     /// Get all attributes of the test method.

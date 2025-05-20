@@ -42,6 +42,10 @@ public class MSBuildTests_Solution : AcceptanceTestBase<NopAssetFixture>
         string solutionFolder = Path.Combine(tempDirectory.Path, "Solution");
         VSSolution solution = new(solutionFolder, "MSTestSolution");
         string nugetFile = solution.AddOrUpdateFileContent("Nuget.config", nugetConfigContent);
+        solution.AddOrUpdateFileContent("dotnet.config", """
+            [dotnet.test.runner]
+            name= "VSTest"
+            """);
         for (int i = 0; i < 3; i++)
         {
             CSharpProject project = solution.CreateCSharpProject($"TestProject{i}", isMultiTfm ? singleTfmOrMultiTfm.Split(';') : [singleTfmOrMultiTfm]);
@@ -55,7 +59,7 @@ public class MSBuildTests_Solution : AcceptanceTestBase<NopAssetFixture>
         // Build the solution
         DotnetMuxerResult restoreResult = await DotnetCli.RunAsync($"restore -nodeReuse:false {solution.SolutionFile} --configfile {nugetFile}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path);
         restoreResult.AssertOutputDoesNotContain("An approximate best match of");
-        DotnetMuxerResult testResult = await DotnetCli.RunAsync($"{command} -nodeReuse:false {solution.SolutionFile}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path);
+        DotnetMuxerResult testResult = await DotnetCli.RunAsync($"{command} -nodeReuse:false {solution.SolutionFile}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, workingDirectory: solution.FolderPath);
 
         if (isMultiTfm)
         {

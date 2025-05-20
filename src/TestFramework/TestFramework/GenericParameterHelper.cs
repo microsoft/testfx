@@ -15,12 +15,10 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 // This next suppression could mask a problem, since Equals and CompareTo may not agree!
 [SuppressMessage("Microsoft.Design", "CA1036:OverrideMethodsOnComparableTypes", Justification = "Compat reasons.")]
 [SuppressMessage("Design", "CA1010:Generic interface should also be implemented", Justification = "Part of the public API")]
-#if RELEASE
 #if NET6_0_OR_GREATER
 [Obsolete(Constants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
 #else
 [Obsolete(Constants.PublicTypeObsoleteMessage)]
-#endif
 #endif
 // GenericParameterHelper in full CLR version also implements ICloneable, but we don't have ICloneable in core CLR
 public class GenericParameterHelper : IComparable, IEnumerable

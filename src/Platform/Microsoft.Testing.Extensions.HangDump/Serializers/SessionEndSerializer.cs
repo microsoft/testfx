@@ -6,7 +6,7 @@ using Microsoft.Testing.Platform.IPC.Serializers;
 
 namespace Microsoft.Testing.Extensions.HangDump.Serializers;
 
-internal sealed class SessionEndSerializerRequest() : IRequest;
+internal sealed class SessionEndSerializerRequest : IRequest;
 
 internal sealed class SessionEndSerializerRequestSerializer : BaseSerializer, INamedPipeSerializer
 {

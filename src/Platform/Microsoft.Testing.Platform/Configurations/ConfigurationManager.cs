@@ -50,7 +50,7 @@ internal sealed class ConfigurationManager(IFileSystem fileSystem, ITestApplicat
             if (logger.IsEnabled(LogLevel.Trace)
                 && defaultJsonConfiguration?.ConfigurationFile != null)
             {
-                using IFileStream configFileStream = _fileSystem.NewFileStream(defaultJsonConfiguration.ConfigurationFile, FileMode.Open);
+                using IFileStream configFileStream = _fileSystem.NewFileStream(defaultJsonConfiguration.ConfigurationFile, FileMode.Open, FileAccess.Read);
                 StreamReader streamReader = new(configFileStream.Stream);
                 await logger.LogTraceAsync($"Configuration file ('{defaultJsonConfiguration.ConfigurationFile}') content:\n{await streamReader.ReadToEndAsync()}");
             }

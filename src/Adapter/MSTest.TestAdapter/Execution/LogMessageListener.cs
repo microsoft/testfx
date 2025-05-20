@@ -11,12 +11,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 /// Listens for log messages and Debug.WriteLine
 /// Note that this class is not thread-safe and thus should only be used when unit tests are being run serially.
 /// </summary>
-#if RELEASE
 #if NET6_0_OR_GREATER
 [Obsolete(Constants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
 #else
 [Obsolete(Constants.PublicTypeObsoleteMessage)]
-#endif
 #endif
 public class LogMessageListener : IDisposable
 {

@@ -37,6 +37,7 @@ This package provides the core platform and the .NET implementation of the proto
 
   <ItemGroup>
     <InternalsVisibleTo Include="DynamicProxyGenAssembly2" Key="$(MoqPublicKey)" />
+    <InternalsVisibleTo Include="Microsoft.Testing.Extensions.AzureDevOpsReport" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="Microsoft.Testing.Extensions.CrashDump" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="Microsoft.Testing.Extensions.Experimental" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="Microsoft.Testing.Extensions.HangDump" Key="$(VsPublicKey)" />
@@ -84,6 +85,7 @@ This package provides the core platform and the .NET implementation of the proto
     <SupportedPlatform Include="ios" />
     <SupportedPlatform Include="browser" />
     <SupportedPlatform Include="tvos" />
+    <SupportedPlatform Include="wasi" />
   </ItemGroup>
 
   <!-- Version templating -->

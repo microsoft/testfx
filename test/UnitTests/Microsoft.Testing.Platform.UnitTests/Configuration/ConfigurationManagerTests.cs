@@ -1,6 +1,10 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#if !NETFRAMEWORK
+using System.Text.Json;
+#endif
+
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Helpers;
@@ -59,12 +63,18 @@ public sealed class ConfigurationManagerTests
     {
         Mock<IFileSystem> fileSystem = new();
         fileSystem.Setup(x => x.Exists(It.IsAny<string>())).Returns(true);
-        fileSystem.Setup(x => x.NewFileStream(It.IsAny<string>(), FileMode.Open)).Returns(new MemoryFileStream(Encoding.UTF8.GetBytes(string.Empty)));
+        fileSystem.Setup(x => x.NewFileStream(It.IsAny<string>(), FileMode.Open, FileAccess.Read)).Returns(() => new MemoryFileStream(Encoding.UTF8.GetBytes(string.Empty)));
         CurrentTestApplicationModuleInfo testApplicationModuleInfo = new(new SystemEnvironment(), new SystemProcessHandler());
         ConfigurationManager configurationManager = new(fileSystem.Object, testApplicationModuleInfo);
         configurationManager.AddConfigurationSource(() =>
             new JsonConfigurationSource(testApplicationModuleInfo, fileSystem.Object, null));
-        await Assert.ThrowsAsync<NullReferenceException>(() => configurationManager.BuildAsync(null, new CommandLineParseResult(null, new List<CommandLineParseOption>(), Array.Empty<string>())));
+
+        // The behavior difference is System.Text.Json vs Jsonite
+#if NETFRAMEWORK
+        await Assert.ThrowsAsync<FormatException>(() => configurationManager.BuildAsync(null, new CommandLineParseResult(null, new List<CommandLineParseOption>(), Array.Empty<string>())), ex => ex?.ToString() ?? "No exception was thrown");
+#else
+        await Assert.ThrowsAsync<JsonException>(() => configurationManager.BuildAsync(null, new CommandLineParseResult(null, new List<CommandLineParseOption>(), Array.Empty<string>())), ex => ex?.ToString() ?? "No exception was thrown");
+#endif
     }
 
     [TestMethod]
@@ -75,10 +85,8 @@ public sealed class ConfigurationManagerTests
 
         Mock<IFileSystem> fileSystem = new();
         fileSystem.Setup(x => x.Exists(It.IsAny<string>())).Returns(true);
-        fileSystem.Setup(x => x.NewFileStream(It.IsAny<string>(), FileMode.Open))
-            .Returns(new MemoryFileStream(bytes));
         fileSystem.Setup(x => x.NewFileStream(It.IsAny<string>(), FileMode.Open, FileAccess.Read))
-            .Returns(new MemoryFileStream(bytes));
+            .Returns(() => new MemoryFileStream(bytes));
 
         Mock<ILogger> loggerMock = new();
         loggerMock.Setup(x => x.IsEnabled(LogLevel.Trace)).Returns(true);

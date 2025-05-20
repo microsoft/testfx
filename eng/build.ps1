@@ -51,6 +51,9 @@ if ($vs) {
     # Disable .NET runtime signature validation errors which errors for local builds
     $env:VSDebugger_ValidateDotnetDebugLibSignatures=0;
 
+    # Enables the logginc of Json RPC messages if diagnostic logging for Test Explorer is enabled in Visual Studio.
+    $env:_TestingPlatformDiagnostics_=1;
+
     # Launch Visual Studio with the locally defined environment variables
     & "$PSScriptRoot\..\TestFx.sln"
 

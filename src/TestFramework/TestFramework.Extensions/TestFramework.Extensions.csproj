@@ -59,6 +59,12 @@
 
   <ItemGroup>
     <PackageReference Condition=" '$(TargetFramework)' == '$(WinUiMinimum)' " Include="Microsoft.WindowsAppSDK" Version="$(MicrosoftWindowsAppSDKVersion)" />
+
+    <!-- This dependency is used only in adapter, but we have to add it to test framework. -->
+    <!-- See comment in MSTest.TestAdapter.nuspec for info. -->
+    <!-- START: Moved from MSTest.TestAdapter -->
+    <PackageReference Include="System.Threading.Tasks.Extensions" Condition=" '$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == '$(NetFrameworkMinimum)' OR '$(TargetFramework)' == '$(UwpMinimum)' " />
+    <!-- END: Moved from MSTest.TestAdapter -->
   </ItemGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' == '$(NetFrameworkMinimum)' ">
@@ -77,6 +83,7 @@
 
   <ItemGroup Label="NuGet">
     <NuspecProperty Include="RepoRoot=$(RepoRoot)" />
+    <NuspecProperty Include="SystemThreadingTasksExtensionsVersion=$(SystemThreadingTasksExtensionsVersion)" />
   </ItemGroup>
 
   <ItemGroup>

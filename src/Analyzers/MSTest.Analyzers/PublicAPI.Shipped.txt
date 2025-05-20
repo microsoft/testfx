@@ -27,6 +27,8 @@ MSTest.Analyzers.DoNotUseShadowingAnalyzer
 MSTest.Analyzers.DoNotUseShadowingAnalyzer.DoNotUseShadowingAnalyzer() -> void
 MSTest.Analyzers.DoNotUseSystemDescriptionAttributeAnalyzer
 MSTest.Analyzers.DoNotUseSystemDescriptionAttributeAnalyzer.DoNotUseSystemDescriptionAttributeAnalyzer() -> void
+MSTest.Analyzers.DuplicateDataRowAnalyzer
+MSTest.Analyzers.DuplicateDataRowAnalyzer.DuplicateDataRowAnalyzer() -> void
 MSTest.Analyzers.DynamicDataShouldBeValidAnalyzer
 MSTest.Analyzers.DynamicDataShouldBeValidAnalyzer.DynamicDataShouldBeValidAnalyzer() -> void
 MSTest.Analyzers.NonNullableReferenceNotInitializedSuppressor
@@ -77,6 +79,8 @@ MSTest.Analyzers.UseDeploymentItemWithTestMethodOrTestClassAnalyzer
 MSTest.Analyzers.UseDeploymentItemWithTestMethodOrTestClassAnalyzer.UseDeploymentItemWithTestMethodOrTestClassAnalyzer() -> void
 MSTest.Analyzers.UseParallelizeAttributeAnalyzer
 MSTest.Analyzers.UseParallelizeAttributeAnalyzer.UseParallelizeAttributeAnalyzer() -> void
+MSTest.Analyzers.UseRetryWithTestMethodAnalyzer
+MSTest.Analyzers.UseRetryWithTestMethodAnalyzer.UseRetryWithTestMethodAnalyzer() -> void
 override MSTest.Analyzers.AssemblyCleanupShouldBeValidAnalyzer.Initialize(Microsoft.CodeAnalysis.Diagnostics.AnalysisContext! context) -> void
 override MSTest.Analyzers.AssemblyCleanupShouldBeValidAnalyzer.SupportedDiagnostics.get -> System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.DiagnosticDescriptor!>
 override MSTest.Analyzers.AssemblyInitializeShouldBeValidAnalyzer.Initialize(Microsoft.CodeAnalysis.Diagnostics.AnalysisContext! context) -> void
@@ -105,6 +109,8 @@ override MSTest.Analyzers.DoNotUseShadowingAnalyzer.Initialize(Microsoft.CodeAna
 override MSTest.Analyzers.DoNotUseShadowingAnalyzer.SupportedDiagnostics.get -> System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.DiagnosticDescriptor!>
 override MSTest.Analyzers.DoNotUseSystemDescriptionAttributeAnalyzer.Initialize(Microsoft.CodeAnalysis.Diagnostics.AnalysisContext! context) -> void
 override MSTest.Analyzers.DoNotUseSystemDescriptionAttributeAnalyzer.SupportedDiagnostics.get -> System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.DiagnosticDescriptor!>
+override MSTest.Analyzers.DuplicateDataRowAnalyzer.Initialize(Microsoft.CodeAnalysis.Diagnostics.AnalysisContext! context) -> void
+override MSTest.Analyzers.DuplicateDataRowAnalyzer.SupportedDiagnostics.get -> System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.DiagnosticDescriptor!>
 override MSTest.Analyzers.DynamicDataShouldBeValidAnalyzer.Initialize(Microsoft.CodeAnalysis.Diagnostics.AnalysisContext! context) -> void
 override MSTest.Analyzers.DynamicDataShouldBeValidAnalyzer.SupportedDiagnostics.get -> System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.DiagnosticDescriptor!>
 override MSTest.Analyzers.NonNullableReferenceNotInitializedSuppressor.ReportSuppressions(Microsoft.CodeAnalysis.Diagnostics.SuppressionAnalysisContext context) -> void
@@ -155,3 +161,5 @@ override MSTest.Analyzers.UseDeploymentItemWithTestMethodOrTestClassAnalyzer.Ini
 override MSTest.Analyzers.UseDeploymentItemWithTestMethodOrTestClassAnalyzer.SupportedDiagnostics.get -> System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.DiagnosticDescriptor!>
 override MSTest.Analyzers.UseParallelizeAttributeAnalyzer.Initialize(Microsoft.CodeAnalysis.Diagnostics.AnalysisContext! context) -> void
 override MSTest.Analyzers.UseParallelizeAttributeAnalyzer.SupportedDiagnostics.get -> System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.DiagnosticDescriptor!>
+override MSTest.Analyzers.UseRetryWithTestMethodAnalyzer.Initialize(Microsoft.CodeAnalysis.Diagnostics.AnalysisContext! context) -> void
+override MSTest.Analyzers.UseRetryWithTestMethodAnalyzer.SupportedDiagnostics.get -> System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.DiagnosticDescriptor!>

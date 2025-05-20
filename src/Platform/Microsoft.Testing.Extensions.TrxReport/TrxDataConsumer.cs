@@ -40,7 +40,6 @@ internal sealed class TrxReportGenerator :
     private readonly TrxTestApplicationLifecycleCallbacks? _trxTestApplicationLifecycleCallbacks;
     private readonly ILogger<TrxReportGenerator> _logger;
     private readonly List<TestNodeUpdateMessage> _tests = [];
-    private readonly Dictionary<TestNodeUid, List<SessionFileArtifact>> _artifactsByTestNode = new();
     private readonly Dictionary<IExtension, List<SessionFileArtifact>> _artifactsByExtension = new();
     private readonly bool _isEnabled;
 
@@ -84,7 +83,6 @@ internal sealed class TrxReportGenerator :
     public Type[] DataTypesConsumed { get; } =
     [
         typeof(TestNodeUpdateMessage),
-        typeof(TestNodeFileArtifact),
         typeof(SessionFileArtifact)
     ];
 
@@ -117,7 +115,12 @@ internal sealed class TrxReportGenerator :
             switch (value)
             {
                 case TestNodeUpdateMessage nodeChangedMessage:
-                    TestNodeStateProperty nodeState = nodeChangedMessage.TestNode.Properties.Single<TestNodeStateProperty>();
+                    TestNodeStateProperty? nodeState = nodeChangedMessage.TestNode.Properties.SingleOrDefault<TestNodeStateProperty>();
+                    if (nodeState is null)
+                    {
+                        return Task.CompletedTask;
+                    }
+
                     if (nodeState is PassedTestNodeStateProperty)
                     {
                         _tests.Add(nodeChangedMessage);
@@ -140,18 +143,7 @@ internal sealed class TrxReportGenerator :
                     }
 
                     break;
-                case TestNodeFileArtifact testNodeFileArtifact:
-                    if (!_artifactsByTestNode.TryGetValue(testNodeFileArtifact.TestNode.Uid, out List<SessionFileArtifact>? nodeFileArtifacts))
-                    {
-                        nodeFileArtifacts = [testNodeFileArtifact];
-                        _artifactsByTestNode[testNodeFileArtifact.TestNode.Uid] = nodeFileArtifacts;
-                    }
-                    else
-                    {
-                        nodeFileArtifacts.Add(testNodeFileArtifact);
-                    }
 
-                    break;
                 case SessionFileArtifact fileArtifact:
                     if (!_artifactsByExtension.TryGetValue(dataProducer, out List<SessionFileArtifact>? sessionFileArtifacts))
                     {
@@ -235,7 +227,7 @@ TrxReportGeneratorCommandLine.IsTrxReportEnabled: {_commandLineOptionsService.Is
 
             int exitCode = _testApplicationProcessExitCode.GetProcessExitCode();
             TrxReportEngine trxReportGeneratorEngine = new(_testApplicationModuleInfo, _environment, _commandLineOptionsService, _configuration,
-            _clock, _tests.ToArray(), _failedTestsCount, _passedTestsCount, _notExecutedTestsCount, _timeoutTestsCount, _artifactsByExtension, _artifactsByTestNode,
+            _clock, _tests.ToArray(), _failedTestsCount, _passedTestsCount, _notExecutedTestsCount, _timeoutTestsCount, _artifactsByExtension,
             _adapterSupportTrxCapability, _testFramework, _testStartTime.Value, exitCode, cancellationToken);
             (string reportFileName, string? warning) = await trxReportGeneratorEngine.GenerateReportAsync();
             if (warning is not null)

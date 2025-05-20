@@ -1,0 +1,37 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
+  <file datatype="xml" source-language="en" target-language="pt-BR" original="../AzureDevOpsResources.resx">
+    <body>
+      <trans-unit id="AzureDevOpsReportSeverityRequiresAzureDevOps">
+        <source>'--report-azdo-severity' requires '--report-azdo' to be enabled</source>
+        <target state="translated">'--report-azdo-severity' requer que '--report-azdo' esteja habilitado</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Description">
+        <source>Azure DevOps report generator to write errors to the output in a way that AzureDev Ops understands.</source>
+        <target state="translated">Gerador de relatórios do Azure DevOps para gravar erros na saída de uma forma que o Azure DevOps entenda.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DisplayName">
+        <source>Azure DevOps report generator</source>
+        <target state="translated">Gerador de relatórios do Azure DevOps</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="InvalidSeverity">
+        <source>Invalid option {0}.</source>
+        <target state="translated">Opção {0} inválida.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="OptionDescription">
+        <source>Eanble Azure DevOps report generator to write errors to the output in a way that AzureDev Ops understands.</source>
+        <target state="translated">Habilitar o gerador de relatórios do Azure DevOps para gravar erros na saída de uma forma que o Azure DevOps entenda.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="SeverityOptionDescription">
+        <source>Severity to use for the reported event. Options are: error (default) and warning.</source>
+        <target state="translated">A gravidade que será usada para o evento relatado. As opções são: erro (padrão) e aviso.</target>
+        <note>Do not translated 'error' or 'warning' those are literal values.</note>
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

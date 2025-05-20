@@ -76,7 +76,7 @@ public class Program
     }
 }
 
-internal sealed class DummyAdapter() : ITestFramework, IDataProducer
+internal sealed class DummyAdapter : ITestFramework, IDataProducer
 {
     public string Uid => nameof(DummyAdapter);
 
@@ -100,7 +100,7 @@ internal sealed class DummyAdapter() : ITestFramework, IDataProducer
         }
         catch (Exception e)
         {
-            await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(new SessionUid("1"), new Microsoft.Testing.Platform.Extensions.Messages.TestNode()
+            await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(new SessionUid("1"), new Microsoft.Testing.Platform.Extensions.Messages.TestNode
             {
                 Uid = "2",
                 DisplayName = "Blah",

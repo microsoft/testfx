@@ -111,9 +111,6 @@ public sealed class UseNewerAssertThrowsAnalyzerTests
             }
             """;
 
-        // NOTE: The discard is needed to avoid CS0201: Only assignment, call, increment, decrement, and new object expressions can be used as a statement
-        // This is because ThrowsException has a Func<object> overload that is being used in the original code.
-        // But ThrowsExactly only has an Action overload.
         string fixedCode = """
             using System;
             using System.Threading.Tasks;
@@ -125,7 +122,7 @@ public sealed class UseNewerAssertThrowsAnalyzerTests
                 [TestMethod]
                 public void MyTestMethod()
                 {
-                    Assert.ThrowsExactly<Exception>(() => _ = 5);
+                    Assert.ThrowsExactly<Exception>(() => 5);
                 }
             }
             """;
@@ -201,17 +198,12 @@ public sealed class UseNewerAssertThrowsAnalyzerTests
             
                         if (true)
                         {
-                            _ = 1;
-                            return;
+                            return 1;
                         }
                         else if (true)
-                        {
-                            _ = 2;
-                            return;
-                        }
+                            return 2;
 
-                        _ = 3;
-                        return;
+                        return 3;
                     });
                 }
             }
@@ -250,7 +242,7 @@ public sealed class UseNewerAssertThrowsAnalyzerTests
                 public void MyTestMethod()
                 {
                     Func<object> action = () => _ = 5;
-                    Assert.ThrowsExactly<Exception>(() => action());
+                    Assert.ThrowsExactly<Exception>(action);
                 }
             }
             """;
@@ -288,7 +280,7 @@ public sealed class UseNewerAssertThrowsAnalyzerTests
                 public void MyTestMethod()
                 {
                     Func<object> action = () => _ = 5;
-                    Assert.ThrowsExactly<Exception>(() => (action + action)());
+                    Assert.ThrowsExactly<Exception>(action + action);
                 }
             }
             """;
@@ -357,8 +349,8 @@ public sealed class UseNewerAssertThrowsAnalyzerTests
                     Assert.ThrowsExactly<ArgumentException>(() => x--);
                     Assert.ThrowsExactly<ArgumentException>(() => ++x);
                     Assert.ThrowsExactly<ArgumentException>(() => --x);
-                    Assert.ThrowsExactly<ArgumentException>(() => _ = s!);
-                    Assert.ThrowsExactly<ArgumentException>(() => _ = !true);
+                    Assert.ThrowsExactly<ArgumentException>(() => s!);
+                    Assert.ThrowsExactly<ArgumentException>(() => !true);
                 }
             
                 private void VoidMethod(object o) => _ = o;

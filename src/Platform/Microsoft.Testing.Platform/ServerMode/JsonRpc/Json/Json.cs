@@ -138,23 +138,12 @@ internal sealed class Json
                 properties.Add(("traits", metadataProperties.Select(x => new KeyValuePair<string, string>(x.Key, x.Value))));
             }
 
+            int attachmentIndex = 0;
             foreach (IProperty property in message.Properties)
             {
                 if (property is SerializableKeyValuePairStringProperty keyValuePairProperty)
                 {
                     properties.Add((keyValuePairProperty.Key, keyValuePairProperty.Value));
-                    continue;
-                }
-
-                if (property is SerializableNamedArrayStringProperty namedArrayStringProperty)
-                {
-                    properties.Add((namedArrayStringProperty.Name, namedArrayStringProperty.Values));
-                    continue;
-                }
-
-                if (property is SerializableNamedKeyValuePairsStringProperty namedKvpStringProperty)
-                {
-                    properties.Add((namedKvpStringProperty.Name, namedKvpStringProperty.Pairs));
                     continue;
                 }
 
@@ -168,11 +157,16 @@ internal sealed class Json
 
                 if (property is TestMethodIdentifierProperty testMethodIdentifierProperty)
                 {
-                    properties.Add(("location.namespace", testMethodIdentifierProperty.Namespace));
-                    properties.Add(("location.type", testMethodIdentifierProperty.TypeName));
+                    properties.Add(("location.type", RoslynString.IsNullOrEmpty(testMethodIdentifierProperty.Namespace)
+                        ? testMethodIdentifierProperty.TypeName
+                        : $"{testMethodIdentifierProperty.Namespace}.{testMethodIdentifierProperty.TypeName}"));
+
                     properties.Add(("location.method", testMethodIdentifierProperty.ParameterTypeFullNames.Length > 0
                         ? $"{testMethodIdentifierProperty.MethodName}({string.Join(",", testMethodIdentifierProperty.ParameterTypeFullNames)})"
                         : testMethodIdentifierProperty.MethodName));
+
+                    properties.Add(("location.method-arity", testMethodIdentifierProperty.MethodArity));
+
                     continue;
                 }
 
@@ -287,6 +281,15 @@ internal sealed class Json
                     properties.Add(("time.start-utc", timingProperty.GlobalTiming.StartTime));
                     properties.Add(("time.stop-utc", timingProperty.GlobalTiming.EndTime));
                     properties.Add(("time.duration-ms", timingProperty.GlobalTiming.Duration.TotalMilliseconds));
+                    continue;
+                }
+
+                if (property is FileArtifactProperty artifact)
+                {
+                    properties.Add(($"attachments.{attachmentIndex}.uri", artifact.FileInfo.FullName));
+                    properties.Add(($"attachments.{attachmentIndex}.display-name", artifact.DisplayName));
+                    properties.Add(($"attachments.{attachmentIndex}.description", artifact.Description));
+                    attachmentIndex++;
                     continue;
                 }
             }
@@ -635,13 +638,6 @@ internal sealed class Json
         using var document = JsonDocument.Parse(utf8Json);
         return Bind<T>(document.RootElement, null);
     }
-
-    internal T Bind<T>(IEnumerable<JsonProperty> properties)
-        => !_deserializers.TryGetValue(typeof(T), out JsonDeserializer? deserializer)
-            ? throw new InvalidOperationException($"Cannot find deserializer for {typeof(T)}.")
-            : deserializer is not JsonPropertyCollectionDeserializer<T> propertyBagDeserializer
-            ? throw new InvalidOperationException("we need property bag deserializer")
-            : propertyBagDeserializer.CreateObject(this, properties);
 
     internal T Bind<T>(JsonElement element, string? property = null)
     {

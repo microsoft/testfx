@@ -260,7 +260,7 @@ internal sealed class RetryOrchestrator : ITestHostOrchestrator, IOutputDeviceDa
                             explanation.AppendLine(ExtensionResources.FailureThresholdPolicy);
                             if (maxPercentage is not null)
                             {
-                                double failedPercentage = Math.Round((double)(retryFailedTestsPipeServer.FailedUID!.Count / (double)retryFailedTestsPipeServer.TotalTestRan * 100), 2);
+                                double failedPercentage = Math.Round(retryFailedTestsPipeServer.FailedUID!.Count / (double)retryFailedTestsPipeServer.TotalTestRan * 100, 2);
                                 explanation.AppendLine(string.Format(CultureInfo.InvariantCulture, ExtensionResources.FailureThresholdPolicyMaxPercentage, maxPercentage, failedPercentage, retryFailedTestsPipeServer.FailedUID.Count, retryFailedTestsPipeServer.TotalTestRan));
                             }
 
@@ -277,7 +277,6 @@ internal sealed class RetryOrchestrator : ITestHostOrchestrator, IOutputDeviceDa
 
                 finalArguments.Clear();
                 lastListOfFailedId = retryFailedTestsPipeServer.FailedUID?.ToArray();
-                continue;
             }
             else
             {

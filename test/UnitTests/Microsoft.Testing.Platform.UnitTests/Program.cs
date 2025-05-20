@@ -22,6 +22,7 @@ builder.AddCodeCoverageProvider();
 builder.AddCrashDumpProvider();
 builder.AddHangDumpProvider();
 builder.AddTrxReportProvider();
+builder.AddAzureDevOpsProvider();
 
 // Custom suite tools
 CompositeExtensionFactory<SlowestTestsConsumer> slowestTestCompositeServiceFactory = new(_ => new SlowestTestsConsumer());

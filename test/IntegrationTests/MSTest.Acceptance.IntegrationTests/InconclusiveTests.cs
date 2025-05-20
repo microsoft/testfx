@@ -34,7 +34,7 @@ public sealed class InconclusiveTests : AcceptanceTestBase<InconclusiveTests.Tes
         var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
             "--settings my.runsettings",
-            environmentVariables: new Dictionary<string, string?>()
+            environmentVariables: new Dictionary<string, string?>
             {
                 [$"{inconclusiveStep}Inconclusive"] = "1",
             });

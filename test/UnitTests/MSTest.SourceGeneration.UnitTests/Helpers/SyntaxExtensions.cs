@@ -22,7 +22,7 @@ internal static class SyntaxExtensions
                 "Did you copy paste it from the test result and forgot to remove those replacements?");
         }
 
-        IDictionary<string, string> map = new Dictionary<string, string>()
+        IDictionary<string, string> map = new Dictionary<string, string>
         {
             { "\r", string.Empty },
 

@@ -56,7 +56,6 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
     private TerminalTestReporter? _terminalTestReporter;
     private bool _firstCallTo_OnSessionStartingAsync = true;
     private bool _bannerDisplayed;
-    private bool _isVSTestMode;
     private bool _isListTests;
     private bool _isServerMode;
     private ILogger? _logger;
@@ -116,7 +115,6 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
             _logger = _loggerFactory.CreateLogger(GetType().ToString());
         }
 
-        _isVSTestMode = _commandLineOptions.IsOptionSet(PlatformCommandLineProvider.VSTestAdapterModeOptionKey);
         _isListTests = _commandLineOptions.IsOptionSet(PlatformCommandLineProvider.DiscoverTestsOptionKey);
         _isServerMode = _commandLineOptions.IsOptionSet(PlatformCommandLineProvider.ServerOptionKey);
         bool noAnsi = _commandLineOptions.IsOptionSet(TerminalTestReporterCommandLineOptionsProvider.NoAnsiOption);
@@ -144,7 +142,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
             // The test host controller info is not setup and populated until after this constructor, because it writes banner and then after it figures out if
             // the runner is a testHost controller, so we would always have it as null if we capture it directly. Instead we need to check it via
             // func.
-            : () => _isVSTestMode || _isListTests || _isServerMode
+            : () => _isListTests || _isServerMode
                 ? false
                 : !_testHostControllerInfo.IsCurrentProcessTestHostController;
 
@@ -171,7 +169,6 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
     [
         typeof(TestNodeUpdateMessage),
         typeof(SessionFileArtifact),
-        typeof(TestNodeFileArtifact),
         typeof(FileArtifact),
     ];
 
@@ -201,11 +198,6 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
     public async Task DisplayBannerAsync(string? bannerMessage)
     {
         RoslynDebug.Assert(_terminalTestReporter is not null);
-
-        if (_isVSTestMode)
-        {
-            return;
-        }
 
         using (await _asyncMonitor.LockAsync(TimeoutHelper.DefaultHangTimeSpanTimeout))
         {
@@ -293,7 +285,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
 
     public async Task DisplayAfterSessionEndRunAsync()
     {
-        if (_isVSTestMode || _isServerMode)
+        if (_isServerMode)
         {
             return;
         }
@@ -351,11 +343,6 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
     {
         RoslynDebug.Assert(_terminalTestReporter is not null);
 
-        if (_isVSTestMode)
-        {
-            return;
-        }
-
         using (await _asyncMonitor.LockAsync(TimeoutHelper.DefaultHangTimeSpanTimeout))
         {
             switch (data)
@@ -404,6 +391,18 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
                 TimeSpan duration = testNodeStateChanged.TestNode.Properties.SingleOrDefault<TimingProperty>()?.GlobalTiming.Duration ?? TimeSpan.Zero;
                 string? standardOutput = testNodeStateChanged.TestNode.Properties.SingleOrDefault<StandardOutputProperty>()?.StandardOutput;
                 string? standardError = testNodeStateChanged.TestNode.Properties.SingleOrDefault<StandardErrorProperty>()?.StandardError;
+
+                foreach (FileArtifactProperty artifact in testNodeStateChanged.TestNode.Properties.OfType<FileArtifactProperty>())
+                {
+                    bool isOutOfProcessArtifact = _firstCallTo_OnSessionStartingAsync;
+                    _terminalTestReporter.ArtifactAdded(
+                        isOutOfProcessArtifact,
+                        _assemblyName,
+                        _targetFramework,
+                        _shortArchitecture,
+                        testNodeStateChanged.TestNode.DisplayName,
+                        artifact.FileInfo.FullName);
+                }
 
                 switch (testNodeStateChanged.TestNode.Properties.SingleOrDefault<TestNodeStateProperty>())
                 {
@@ -532,20 +531,6 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
                             testNodeStateChanged.TestNode.DisplayName,
                             testNodeStateChanged.TestNode.Uid);
                         break;
-                }
-
-                break;
-
-            case TestNodeFileArtifact artifact:
-                {
-                    bool isOutOfProcessArtifact = _firstCallTo_OnSessionStartingAsync;
-                    _terminalTestReporter.ArtifactAdded(
-                        isOutOfProcessArtifact,
-                        _assemblyName,
-                        _targetFramework,
-                        _shortArchitecture,
-                        artifact.TestNode.DisplayName,
-                        artifact.FileInfo.FullName);
                 }
 
                 break;

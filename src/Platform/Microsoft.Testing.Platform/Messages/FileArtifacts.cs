@@ -125,6 +125,7 @@ public class SessionFileArtifact : DataWithSessionUid
 /// <summary>
 /// Represents a test node file artifact.
 /// </summary>
+[Obsolete("This API is obsolete and will be removed in v2. Instead of publishing this to MessageBus, add FileArtifactProperty property to the TestNode when publishing TestNodeUpdateMessage with a test result", error: true)]
 public class TestNodeFileArtifact : SessionFileArtifact
 {
     /// <summary>

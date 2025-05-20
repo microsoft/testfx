@@ -14,12 +14,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 /// <summary>
 /// Defines the TestClassInfo object.
 /// </summary>
-#if RELEASE
 #if NET6_0_OR_GREATER
 [Obsolete(Constants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
 #else
 [Obsolete(Constants.PublicTypeObsoleteMessage)]
-#endif
 #endif
 public class TestClassInfo
 {
@@ -407,7 +405,7 @@ public class TestClassInfo
                 && isWindowsOS
                 && Thread.CurrentThread.GetApartmentState() != ApartmentState.STA)
             {
-                var result = new TestResult()
+                var result = new TestResult
                 {
                     Outcome = TestTools.UnitTesting.UnitTestOutcome.Error,
                     IgnoreReason = "MSTest STATestClass ClassInitialize didn't complete",
@@ -429,7 +427,7 @@ public class TestClassInfo
                 catch (Exception ex)
                 {
                     PlatformServiceProvider.Instance.AdapterTraceLogger.LogError(ex.ToString());
-                    return new TestResult()
+                    return new TestResult
                     {
                         TestFailureException = new TestFailedException(UTFUnitTestOutcome.Error, ex.TryGetMessage(), ex.TryGetStackTraceInformation()),
                         Outcome = UTFUnitTestOutcome.Error,
@@ -451,7 +449,7 @@ public class TestClassInfo
         // Local functions
         TestResult DoRun()
         {
-            var result = new TestResult()
+            var result = new TestResult
             {
                 Outcome = TestTools.UnitTesting.UnitTestOutcome.Passed,
             };
@@ -468,7 +466,7 @@ public class TestClassInfo
                 {
                     if (logListener is not null)
                     {
-                        FixtureMethodRunner.RunOnContext(ExecutionContext, () =>
+                        ExecutionContextHelpers.RunOnContext(ExecutionContext, () =>
                         {
                             initializationLogs += logListener.GetAndClearStandardOutput();
                             initializationTrace += logListener.GetAndClearDebugTrace();
@@ -481,11 +479,11 @@ public class TestClassInfo
             }
             catch (TestFailedException ex)
             {
-                result = new TestResult() { TestFailureException = ex, Outcome = ex.Outcome };
+                result = new TestResult { TestFailureException = ex, Outcome = ex.Outcome };
             }
             catch (Exception ex)
             {
-                result = new TestResult()
+                result = new TestResult
                 {
                     TestFailureException = new TestFailedException(UTFUnitTestOutcome.Error, ex.TryGetMessage(), ex.TryGetStackTraceInformation()),
                     Outcome = UTFUnitTestOutcome.Error,
@@ -803,7 +801,7 @@ public class TestClassInfo
                 {
                     if (logListener is not null)
                     {
-                        FixtureMethodRunner.RunOnContext(ExecutionContext, () =>
+                        ExecutionContextHelpers.RunOnContext(ExecutionContext, () =>
                         {
                             initializationLogs = logListener.GetAndClearStandardOutput();
                             initializationErrorLogs = logListener.GetAndClearStandardError();

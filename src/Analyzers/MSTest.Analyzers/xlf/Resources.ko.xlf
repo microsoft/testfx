@@ -351,6 +351,16 @@ The type declaring these methods should also respect the following rules:
         <target state="translated">'System.ComponentModel.DescriptionAttribute'는 테스트 메서드에 영향을 주지 않습니다.</target>
         <note />
       </trans-unit>
+      <trans-unit id="DuplicateDataRowMessageFormat">
+        <source>Do not duplicate 'DataRow' attributes. This is usually a copy/paste error. The attribute indices are '{0}' and '{1}'.</source>
+        <target state="translated">'DataRow' 특성을 복제하지 마세요. 일반적으로 복사/붙여넣기 오류입니다. 특성 인덱스는 '{0}' 및 '{1}'입니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DuplicateDataRowTitle">
+        <source>Avoid duplicated 'DataRow' entries</source>
+        <target state="translated">중복된 'DataRow' 항목 방지</target>
+        <note />
+      </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidDescription">
         <source>'DynamicData' entry should have the following layout to be valid:
 - should only be set on a test method;
@@ -797,6 +807,16 @@ The type declaring these methods should also respect the following rules:
       <trans-unit id="UseProperAssertMethodsTitle">
         <source>Use proper 'Assert' methods</source>
         <target state="translated">적절한 'Assert' 메서드 사용</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseRetryWithTestMethodMessageFormat">
+        <source>An attribute that derives from 'RetryBaseAttribute' can be specified only on a test method</source>
+        <target state="translated">'RetryBaseAttribute'에서 파생된 속성은 테스트 메서드에서만 지정할 수 있습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseRetryWithTestMethodTitle">
+        <source>Use retry attribute on test method</source>
+        <target state="translated">테스트 메서드에 재시도 속성 사용</target>
         <note />
       </trans-unit>
     </body>

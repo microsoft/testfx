@@ -5,6 +5,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Operations;
 
 namespace MSTest.Analyzers.RoslynAnalyzerHelpers;
+
 internal static class IOperationExtensions
 {
     public static ISymbol? GetReferencedMemberOrLocalOrParameter(this IOperation? operation) => operation switch

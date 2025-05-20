@@ -103,7 +103,6 @@ internal sealed class ThreadPoolTestNodeRunner : IDisposable
         catch (OperationCanceledException ex) when (ex.CancellationToken == _cancellationToken)
         {
             // We are being cancelled, so we don't need to wait anymore
-            return;
         }
         finally
         {
@@ -187,10 +186,6 @@ internal sealed class ThreadPoolTestNodeRunner : IDisposable
             // If the cancellation token is triggered, we don't want to report the cancellation as a failure
             return Result.Ok("Cancelled by user");
         }
-        catch
-        {
-            throw;
-        }
     }
 
     public void Dispose()
@@ -215,7 +210,7 @@ internal sealed class ThreadPoolTestNodeRunner : IDisposable
             platformTestNode.Properties.Add(new TrxFullyQualifiedTypeNameProperty(platformTestNode.Uid.Value[..platformTestNode.Uid.Value.LastIndexOf('.')]));
         }
 
-        TestExecutionContext testExecutionContext = new(_configuration, testNode, platformTestNode, _trxReportCapability, _sessionUid, _publishDataAsync, _cancellationToken);
+        TestExecutionContext testExecutionContext = new(_configuration, testNode, platformTestNode, _trxReportCapability, _cancellationToken);
         try
         {
             // If we're already enqueued we cancel the test before the start

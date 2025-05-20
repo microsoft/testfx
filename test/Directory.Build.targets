@@ -17,6 +17,17 @@
     <TestRunnerAdditionalArguments>$(TestRunnerAdditionalArguments) --hangdump --hangdump-timeout 15m</TestRunnerAdditionalArguments>
     <TestRunnerAdditionalArguments Condition=" '$(EnableCodeCoverage)' == 'True' ">$(TestRunnerAdditionalArguments) --coverage --coverage-settings $(RepoRoot)test/coverage.config --coverage-output $(ModuleName).coverage</TestRunnerAdditionalArguments>
     <!-- /Arcade runner settings -->
+
+    <!-- dotnet test runner settings - most duplicate from Arcade to have parity -->
+    <_TestArchitecture>$(PlatformTarget)</_TestArchitecture>
+    <_TestArchitecture Condition="'$(PlatformTarget)' == '' or '$(PlatformTarget)' == 'AnyCpu'">x64</_TestArchitecture>
+
+    <_ResultFileNameNoExt>$(MSBuildProjectName)_$(TargetFramework)_$(_TestArchitecture)</_ResultFileNameNoExt>
+    <ResultsTrxPath>$(ArtifactsTestResultsDir)$(_ResultFileNameNoExt).trx</ResultsTrxPath>
+    <_TestResultTrxFileName>$([System.IO.Path]::GetFileName('$(ResultsTrxPath)'))</_TestResultTrxFileName>
+    <_TestResultDirectory>$([System.IO.Path]::GetDirectoryName('$(ResultsTrxPath)'))</_TestResultDirectory>
+    <TestingPlatformCommandLineArguments>$(TestingPlatformCommandLineArguments) --report-trx --report-trx-filename "$(_TestResultTrxFileName)" --results-directory "$(_TestResultDirectory)" --report-azdo $(TestRunnerAdditionalArguments)</TestingPlatformCommandLineArguments>
+    <!-- /dotnet test runner settings -->
   </PropertyGroup>
 
   <ItemGroup Condition=" '$(EnableMSTestRunner)' == 'true' OR '$(UseInternalTestFramework)' == 'true' ">
@@ -26,12 +37,14 @@
     <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.HangDump\Microsoft.Testing.Extensions.HangDump.csproj" />
     <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.Retry\Microsoft.Testing.Extensions.Retry.csproj" />
     <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.TrxReport\Microsoft.Testing.Extensions.TrxReport.csproj" />
+    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.AzureDevOpsReport\Microsoft.Testing.Extensions.AzureDevOpsReport.csproj" />
     <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Condition="'$(UseMSTestFromSource)' == 'true'" />
     <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" GeneratePathProperty="True" />
   </ItemGroup>
 
   <!-- Import the capabilities for the Microsoft.Testing.Platform -->
   <Import Project="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\buildMultiTargeting\Microsoft.Testing.Platform.props" Condition=" '$(EnableMSTestRunner)' == 'true' OR '$(UseInternalTestFramework)' == 'true' " />
+  <Import Project="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\buildMultiTargeting\Microsoft.Testing.Platform.targets" Condition=" '$(EnableMSTestRunner)' == 'true' OR '$(UseInternalTestFramework)' == 'true' " />
 
   <ItemGroup Condition=" '$(EnableMSTestRunner)' == 'true' AND '$(UseInternalTestFramework)' != 'true' AND '$(UseMSTestFromSource)' != 'true' ">
     <PackageReference Include="MSTest.Analyzers" />

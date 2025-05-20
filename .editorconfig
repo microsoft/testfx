@@ -683,6 +683,12 @@ csharp_style_unused_value_expression_statement_preference = discard_variable:sil
 # IDE0290: Use primary constructor
 csharp_style_prefer_primary_constructors = false
 
+# Empty constructor
+resharper_empty_constructor_highlighting = warning
+
+# Redundant empty argument list on object creation expression
+resharper_redundant_empty_object_creation_argument_list_highlighting = warning
+
 # IDE0300: Simplify collection initialization
 dotnet_style_prefer_collection_expression = false
 
@@ -815,3 +821,12 @@ dotnet_style_allow_statement_immediately_after_block_experimental = false:warnin
 
 # IDE0290: Use primary constructor
 csharp_style_prefer_primary_constructors = false
+
+# Replace with single call to FirstOrDefault
+resharper_replace_with_single_call_to_first_or_default_highlighting = warning
+
+# Conditional expression can be rewritten as null-coalescing
+resharper_replace_conditional_expression_with_null_coalescing_highlighting = warning
+
+# Redundant cast
+resharper_redundant_cast_highlighting = warning

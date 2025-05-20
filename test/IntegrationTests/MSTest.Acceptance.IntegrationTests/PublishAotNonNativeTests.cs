@@ -24,7 +24,7 @@ public sealed class PublishAotNonNativeTests : AcceptanceTestBase<NopAssetFixtur
             .PatchCodeWithReplace("$TargetFramework$", $"<TargetFramework>{TargetFrameworks.NetCurrent}</TargetFramework>")
             .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
 
-        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"test -c Debug {generator.TargetAssetPath}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, failIfReturnValueIsNotZero: false);
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"test -c Debug {generator.TargetAssetPath}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, workingDirectory: generator.TargetAssetPath, failIfReturnValueIsNotZero: false);
 
         // In the real-world issue, access to path C:\Program Files\dotnet\ is denied, but we run this from a local .dotnet folder, where we have write access.
         // So instead of relying on the test run failing because of AccessDenied, we check the output, and see where TestResults were placed.
@@ -67,6 +67,10 @@ public sealed class PublishAotNonNativeTests : AcceptanceTestBase<NopAssetFixtur
         <PackageReference Include="MSTest" Version="$MSTestVersion$" />
     </ItemGroup>
 </Project>
+
+#file dotnet.config
+[dotnet.test.runner]
+name= "VSTest"
 
 #file UnitTest1.cs
 

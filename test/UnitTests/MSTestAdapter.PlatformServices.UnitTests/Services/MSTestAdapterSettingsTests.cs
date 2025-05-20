@@ -379,9 +379,9 @@ public class TestableMSTestAdapterSettings : MSTestAdapterSettings
 
     public TestableMSTestAdapterSettings(List<RecursiveDirectoryPath> expectedResult) => SearchDirectories.AddRange(expectedResult);
 
-    public Func<string, bool> DoesDirectoryExistSetter { get; set; } = null!;
+    public Func<string, bool>? DoesDirectoryExistSetter { get; set; }
 
-    public Func<string, string> ExpandEnvironmentVariablesSetter { get; set; } = null!;
+    public Func<string, string>? ExpandEnvironmentVariablesSetter { get; set; }
 
     protected override bool DoesDirectoryExist(string path) => DoesDirectoryExistSetter?.Invoke(path) ?? base.DoesDirectoryExist(path);
 

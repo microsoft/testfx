@@ -129,6 +129,13 @@ internal static class DiagnosticExtensions
                  messageArgs: args);
     }
 
+    public static Diagnostic CreateDiagnostic(
+        this SyntaxReference syntaxReference,
+        DiagnosticDescriptor rule,
+        CancellationToken cancellationToken,
+        params object[] args)
+        => syntaxReference.GetSyntax(cancellationToken).CreateDiagnostic(rule, args);
+
     /// <summary>
     /// TODO: Revert this reflection based workaround once we move to Microsoft.CodeAnalysis version 3.0
     /// </summary>

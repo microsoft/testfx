@@ -29,15 +29,6 @@ internal sealed class BFSTestNodeVisitor
         _testArgumentsManager = testArgumentsManager;
     }
 
-    /// <summary>
-    /// Process a test node found during tree traversal.
-    /// </summary>
-    /// <param name="node">The test node found.</param>
-    /// <param name="parentNodeUid">The UID of the node's parent.</param>
-    /// <param name="nodeFullPath">The tree full path to get to the node.</param>
-    /// <returns>A collection of additional test nodes to visit resulting from the processing of the node.</returns>
-    internal delegate ICollection<TestNode> TestNodeProcessor(TestNode node, TestNodeUid? parentNodeUid, string nodeFullPath);
-
     internal KeyValuePair<TestNodeUid, List<TestNode>>[] DuplicatedNodes { get; private set; } = Array.Empty<KeyValuePair<TestNodeUid, List<TestNode>>>();
 
     public async Task VisitAsync(Func<TestNode, TestNodeUid?, Task> onIncludedTestNodeAsync)

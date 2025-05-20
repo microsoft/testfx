@@ -107,7 +107,7 @@ public sealed class TestingPlatformEntryPointTask : Build.Utilities.Task
 //------------------------------------------------------------------------------
 
 [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
-internal sealed class TestingPlatformEntryPoint
+internal sealed class MicrosoftTestingPlatformEntryPoint
 {
     public static async global::System.Threading.Tasks.Task<int> Main(string[] args)
     {
@@ -130,7 +130,7 @@ internal sealed class TestingPlatformEntryPoint
 namespace {{rootNamespace}}
 {
     [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
-    internal sealed class TestingPlatformEntryPoint
+    internal sealed class MicrosoftTestingPlatformEntryPoint
     {
         public static async global::System.Threading.Tasks.Task<int> Main(string[] args)
         {
@@ -158,7 +158,7 @@ namespace {{rootNamespace}}
 '------------------------------------------------------------------------------
 
 <System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage>
-Module TestingPlatformEntryPoint
+Module MicrosoftTestingPlatformEntryPoint
 
     Function Main(args As String()) As Integer
         Return MainAsync(args).GetAwaiter().GetResult()
@@ -185,7 +185,7 @@ End Module
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-module TestingPlatformEntryPoint =
+module MicrosoftTestingPlatformEntryPoint =
 
     [<System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage>]
     [<EntryPoint>]
@@ -208,7 +208,7 @@ module TestingPlatformEntryPoint =
 
 namespace {{rootNamespace}}
 
-module TestingPlatformEntryPoint =
+module MicrosoftTestingPlatformEntryPoint =
 
     [<System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage>]
     [<EntryPoint>]

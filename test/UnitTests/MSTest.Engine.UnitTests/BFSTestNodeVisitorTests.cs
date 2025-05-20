@@ -250,7 +250,7 @@ public sealed class BFSTestNodeVisitorTests : TestBase
     {
         TestNode rootNode = parameterizedTestNode switch
         {
-            nameof(InternalUnsafeActionParameterizedTestNode<>) => new InternalUnsafeActionParameterizedTestNode<byte>()
+            nameof(InternalUnsafeActionParameterizedTestNode<>) => new InternalUnsafeActionParameterizedTestNode<byte>
             {
                 StableUid = "ID1",
                 DisplayName = "A",
@@ -269,7 +269,7 @@ public sealed class BFSTestNodeVisitorTests : TestBase
             => hasExpansionProperty.HasValue
                 ? new IProperty[1]
                 {
-                    new FrameworkEngineMetadataProperty()
+                    new FrameworkEngineMetadataProperty
                     {
                         PreventArgumentsExpansion = hasExpansionProperty.Value,
                     },

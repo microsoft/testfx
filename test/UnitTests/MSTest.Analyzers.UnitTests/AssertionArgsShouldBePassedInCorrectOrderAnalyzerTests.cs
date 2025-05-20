@@ -163,6 +163,48 @@ public sealed class AssertionArgsShouldBePassedInCorrectOrderAnalyzerTests
     }
 
     [TestMethod]
+    public async Task WhenUsingLiteralsAndHaveConversion_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Collections.Generic;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void NonCompliant()
+                {
+                    string s = null;
+                    [|Assert.AreEqual(s?.Length, 0)|];
+                    [|Assert.AreEqual<int?>(s.Length, 0)|];
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Collections.Generic;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void NonCompliant()
+                {
+                    string s = null;
+                    Assert.AreEqual(0, s?.Length);
+                    Assert.AreEqual<int?>(0, s.Length);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            fixedCode);
+    }
+
+    [TestMethod]
     public async Task WhenBothAreLiterals_NoDiagnostic()
     {
         string code = """

@@ -91,11 +91,7 @@ internal sealed class UnitTestElement
     internal UnitTestElement Clone()
     {
         var clone = (UnitTestElement)MemberwiseClone();
-        if (TestMethod != null)
-        {
-            clone.TestMethod = TestMethod.Clone();
-        }
-
+        clone.TestMethod = TestMethod.Clone();
         return clone;
     }
 

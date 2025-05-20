@@ -241,7 +241,6 @@ public sealed class FileLoggerTests : IDisposable
             else
             {
                 _shouldDispose = true;
-                return;
             }
         }
     }

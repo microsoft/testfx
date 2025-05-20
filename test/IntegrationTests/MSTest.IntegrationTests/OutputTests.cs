@@ -14,11 +14,11 @@ public class OutputTests : CLITestBase
 {
     private const string TestAssetName = "OutputTestProject";
 
-#if DEBUG
-    public async Task OutputIsNotMixedWhenTestsRunInParallel() => await ValidateOutputForClassAsync("UnitTest1");
-#endif
+#pragma warning disable IDE0051 // Remove unused private members - test is failing in CI.
+    private async Task OutputIsNotMixedWhenTestsRunInParallel() => await ValidateOutputForClassAsync("UnitTest1");
 
-    public async Task OutputIsNotMixedWhenAsyncTestsRunInParallel() => await ValidateOutputForClassAsync("UnitTest2");
+    private async Task OutputIsNotMixedWhenAsyncTestsRunInParallel() => await ValidateOutputForClassAsync("UnitTest2");
+#pragma warning restore IDE0051 // Remove unused private members
 
     private static async Task ValidateOutputForClassAsync(string className)
     {

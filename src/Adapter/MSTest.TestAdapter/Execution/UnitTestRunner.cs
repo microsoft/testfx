@@ -192,17 +192,16 @@ internal sealed class UnitTestRunner : MarshalByRefObject
                         testContextForTestExecution.SetOutcome(testContextForClassInit.Context.CurrentTestOutcome);
                         RetryBaseAttribute? retryAttribute = testMethodInfo.RetryAttribute;
                         var testMethodRunner = new TestMethodRunner(testMethodInfo, testMethod, testContextForTestExecution);
-                        result = testMethodRunner.Execute(classInitializeResult.LogOutput!, classInitializeResult.LogError!, classInitializeResult.DebugTrace!, classInitializeResult.TestContextMessages!);
+                        result = await testMethodRunner.ExecuteAsync(classInitializeResult.LogOutput!, classInitializeResult.LogError!, classInitializeResult.DebugTrace!, classInitializeResult.TestContextMessages!);
                         if (retryAttribute is not null && !RetryBaseAttribute.IsAcceptableResultForRetry(result))
                         {
                             RetryResult retryResult = await retryAttribute.ExecuteAsync(
                                 new RetryContext(
-                                    () => Task.FromResult(
-                                        testMethodRunner.Execute(
-                                            classInitializeResult.LogOutput!,
-                                            classInitializeResult.LogError!,
-                                            classInitializeResult.DebugTrace!,
-                                            classInitializeResult.TestContextMessages!))));
+                                    async () => await testMethodRunner.ExecuteAsync(
+                                        classInitializeResult.LogOutput!,
+                                        classInitializeResult.LogError!,
+                                        classInitializeResult.DebugTrace!,
+                                        classInitializeResult.TestContextMessages!), result));
 
                             result = retryResult.TryGetLast() ?? throw ApplicationStateGuard.Unreachable();
                         }
@@ -226,9 +225,9 @@ internal sealed class UnitTestRunner : MarshalByRefObject
             // Catch any exception thrown while inspecting the test method and return failure.
             return
             [
-                new TestResult()
+                new TestResult
                 {
-                    Outcome = UTF.UnitTestOutcome.Failed,
+                    Outcome = UnitTestOutcome.Failed,
                     IgnoreReason = ex.Message,
                 }
             ];
@@ -241,7 +240,7 @@ internal sealed class UnitTestRunner : MarshalByRefObject
         string? initializationErrorLogs = string.Empty;
         string? initializationTrace = string.Empty;
         string? initializationTestContextMessages = string.Empty;
-        var result = new TestResult() { Outcome = UTF.UnitTestOutcome.Passed };
+        var result = new TestResult { Outcome = UnitTestOutcome.Passed };
 
         try
         {
@@ -254,7 +253,7 @@ internal sealed class UnitTestRunner : MarshalByRefObject
             {
                 if (logListener is not null)
                 {
-                    FixtureMethodRunner.RunOnContext(testMethodInfo.Parent.Parent.ExecutionContext, () =>
+                    ExecutionContextHelpers.RunOnContext(testMethodInfo.Parent.Parent.ExecutionContext, () =>
                     {
                         initializationLogs = logListener.GetAndClearStandardOutput();
                         initializationErrorLogs = logListener.GetAndClearStandardError();
@@ -267,12 +266,12 @@ internal sealed class UnitTestRunner : MarshalByRefObject
         }
         catch (TestFailedException ex)
         {
-            result = new TestResult() { TestFailureException = ex, Outcome = ex.Outcome };
+            result = new TestResult { TestFailureException = ex, Outcome = ex.Outcome };
         }
         catch (Exception ex)
         {
             var testFailureException = new TestFailedException(UnitTestOutcome.Error, ex.TryGetMessage(), ex.TryGetStackTraceInformation());
-            result = new TestResult() { TestFailureException = testFailureException, Outcome = UnitTestOutcome.Error };
+            result = new TestResult { TestFailureException = testFailureException, Outcome = UnitTestOutcome.Error };
         }
         finally
         {
@@ -307,7 +306,7 @@ internal sealed class UnitTestRunner : MarshalByRefObject
                 TestFailedException? ex = classInfo.ExecuteClassCleanup(testContext.Context, out logListener);
                 if (logListener is not null)
                 {
-                    FixtureMethodRunner.RunOnContext(classInfo.ExecutionContext, () =>
+                    ExecutionContextHelpers.RunOnContext(classInfo.ExecutionContext, () =>
                     {
                         initializationLogs += logListener.GetAndClearStandardOutput();
                         initializationErrorLogs += logListener.GetAndClearStandardError();
@@ -335,7 +334,7 @@ internal sealed class UnitTestRunner : MarshalByRefObject
                 TestFailedException? ex = assemblyInfo.ExecuteAssemblyCleanup(testContext.Context, ref logListener);
                 if (logListener is not null)
                 {
-                    FixtureMethodRunner.RunOnContext(assemblyInfo.ExecutionContext, () =>
+                    ExecutionContextHelpers.RunOnContext(assemblyInfo.ExecutionContext, () =>
                     {
                         initializationLogs += logListener.GetAndClearStandardOutput();
                         initializationErrorLogs += logListener.GetAndClearStandardError();
@@ -390,9 +389,9 @@ internal sealed class UnitTestRunner : MarshalByRefObject
             {
                 notRunnableResult =
                 [
-                    new TestResult()
+                    new TestResult
                     {
-                        Outcome = UTF.UnitTestOutcome.NotFound,
+                        Outcome = UnitTestOutcome.NotFound,
                         IgnoreReason = string.Format(CultureInfo.CurrentCulture, Resource.TestNotFound, testMethod.Name),
                     },
                 ];
@@ -406,9 +405,9 @@ internal sealed class UnitTestRunner : MarshalByRefObject
             {
                 notRunnableResult =
                 [
-                    new TestResult()
+                    new TestResult
                     {
-                        Outcome = UTF.UnitTestOutcome.NotRunnable,
+                        Outcome = UnitTestOutcome.NotRunnable,
                         IgnoreReason = testMethodInfo.NotRunnableReason,
                     },
                 ];

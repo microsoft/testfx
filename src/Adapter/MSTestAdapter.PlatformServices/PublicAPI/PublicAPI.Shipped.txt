@@ -11,7 +11,7 @@ Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.FileOperation
 Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.FileOperations.FileOperations() -> void
 Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.FileOperations.GetAssemblyPath(System.Reflection.Assembly! assembly) -> string?
 Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.FileOperations.GetFullFilePath(string! assemblyFileName) -> string!
-Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.FileOperations.GetNavigationData(object! navigationSession, string! className, string! methodName, out int minLineNumber, out string? fileName) -> void
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.FileOperations.GetNavigationData(object? navigationSession, string! className, string! methodName, out int minLineNumber, out string? fileName) -> void
 Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.FileOperations.LoadAssembly(string! assemblyName, bool isReflectionOnly) -> System.Reflection.Assembly!
 Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.IAdapterTraceLogger
 Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.IAdapterTraceLogger.LogError(string! format, params object?[]! args) -> void
@@ -81,7 +81,7 @@ Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.Obj
 Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ObjectModel.ITestMethod.Name.get -> string!
 Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ObjectModel.ITestMethod.TestIdGenerationStrategy.get -> Microsoft.VisualStudio.TestTools.UnitTesting.TestIdGenerationStrategy
 Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.MSTestSettingsProvider
-Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.MSTestSettingsProvider.GetProperties(string! source) -> System.Collections.Generic.IDictionary<string!, object!>!
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.MSTestSettingsProvider.GetProperties(string? source) -> System.Collections.Generic.IDictionary<string!, object!>!
 Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.MSTestSettingsProvider.Load(System.Xml.XmlReader! reader) -> void
 Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.MSTestSettingsProvider.MSTestSettingsProvider() -> void
 Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.ReflectionOperations

@@ -60,11 +60,8 @@ public sealed class UnitTestRunnerTests : TestContainer
         _testablePlatformServiceProvider.MockSettingsProvider.Setup(sp => sp.Load(It.IsAny<XmlReader>()))
             .Callback((XmlReader actualReader) =>
             {
-                if (actualReader != null)
-                {
-                    actualReader.Read();
-                    actualReader.ReadInnerXml();
-                }
+                actualReader.Read();
+                actualReader.ReadInnerXml();
             });
 
         MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsName, _mockMessageLogger.Object)!;
@@ -325,11 +322,8 @@ public sealed class UnitTestRunnerTests : TestContainer
         _testablePlatformServiceProvider.MockSettingsProvider.Setup(sp => sp.Load(It.IsAny<XmlReader>()))
             .Callback((XmlReader actualReader) =>
             {
-                if (actualReader != null)
-                {
-                    actualReader.Read();
-                    actualReader.ReadInnerXml();
-                }
+                actualReader.Read();
+                actualReader.ReadInnerXml();
             });
 
         return MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsName, _mockMessageLogger.Object);

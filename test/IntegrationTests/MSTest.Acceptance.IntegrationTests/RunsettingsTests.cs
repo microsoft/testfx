@@ -71,8 +71,12 @@ public sealed class RunSettingsTests : AcceptanceTestBase<RunSettingsTests.TestA
         switch (expectedLocale)
         {
             case "fr-FR":
-                testHostResult.AssertOutputContains("Les loggers Runsettings ne sont pas pris en charge par Microsoft.Testing.Platform et seront ignorés");
-                testHostResult.AssertOutputContains("Les datacollecteurs Runsettings ne sont pas pris en charge par Microsoft.Testing.Platform et seront ignorés");
+                // Using regex for the "é" of ignorés as something with encoding doesn't work properly.
+                // The é shows correctly when invoking with Arcade, but not with dotnet test.
+                // This is probably because Arcade infra uses Exec MSBuild task, which seems to be having extra logic around handling encoding.
+                // See https://github.com/dotnet/msbuild/blob/bcc2dc6a6509ffb63f1253a9bbbaaa233bd53a50/src/Tasks/Exec.cs
+                testHostResult.AssertOutputMatchesRegex(@"Les loggers Runsettings ne sont pas pris en charge par Microsoft\.Testing\.Platform et seront ignor.*?s");
+                testHostResult.AssertOutputMatchesRegex(@"Les datacollecteurs Runsettings ne sont pas pris en charge par Microsoft\.Testing\.Platform et seront ignor.*?s");
                 break;
             case "it-IT":
                 testHostResult.AssertOutputContains("I logger Runsettings non sono supportati da Microsoft.Testing.Platform e verranno ignorati");

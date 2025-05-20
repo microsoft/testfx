@@ -349,7 +349,7 @@ public class DebuggerUtility
         out int returnLength);
 
     [DllImport("ole32.dll")]
-    private static extern int CreateBindCtx(uint reserved, out IBindCtx ppbc);
+    private static extern int CreateBindCtx(uint reserved, out IBindCtx? ppbc);
 }
 
 #endif

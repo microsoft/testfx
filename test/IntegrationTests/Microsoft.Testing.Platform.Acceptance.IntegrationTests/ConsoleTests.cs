@@ -37,7 +37,7 @@ public class ConsoleTests : AcceptanceTestBase<ConsoleTests.TestAssetFixture>
         Dictionary<string, string?>? environmentVariables = null;
         if (environmentVariableToSet is not null)
         {
-            environmentVariables = new Dictionary<string, string?>()
+            environmentVariables = new Dictionary<string, string?>
             {
                 { environmentVariableToSet, "1" },
             };
