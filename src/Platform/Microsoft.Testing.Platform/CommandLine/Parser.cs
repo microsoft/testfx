@@ -93,11 +93,11 @@ internal static class CommandLineParser
                     {
                         if (TryUnescape(currentArg.Trim(), currentOption, environment, out string? unescapedArg, out string? error))
                         {
-                            currentOptionArguments.Add(unescapedArg!);
+                            currentOptionArguments.Add(unescapedArg);
                         }
                         else
                         {
-                            errors.Add(error!);
+                            errors.Add(error);
                         }
 
                         currentArg = null;
@@ -114,11 +114,11 @@ internal static class CommandLineParser
             {
                 if (TryUnescape(currentArg.Trim(), currentOption, environment, out string? unescapedArg, out string? error))
                 {
-                    currentOptionArguments.Add(unescapedArg!);
+                    currentOptionArguments.Add(unescapedArg);
                 }
                 else
                 {
-                    errors.Add(error!);
+                    errors.Add(error);
                 }
             }
 
@@ -138,7 +138,7 @@ internal static class CommandLineParser
             currentOption = currentOption.TrimStart('-');
         }
 
-        static bool TryUnescape(string input, string? option, IEnvironment environment, out string? unescapedArg, out string? error)
+        static bool TryUnescape(string input, string? option, IEnvironment environment, [NotNullWhen(true)] out string? unescapedArg, [NotNullWhen(false)] out string? error)
         {
             unescapedArg = input;
             error = null;
