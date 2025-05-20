@@ -7,7 +7,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// Test Owner.
 /// </summary>
 [AttributeUsage(AttributeTargets.Method)]
-public sealed class OwnerAttribute : Attribute
+public sealed class OwnerAttribute : TestPropertyAttribute
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="OwnerAttribute"/> class.
@@ -15,10 +15,13 @@ public sealed class OwnerAttribute : Attribute
     /// <param name="owner">
     /// The owner.
     /// </param>
-    public OwnerAttribute(string? owner) => Owner = owner;
+    public OwnerAttribute(string? owner)
+        : base("Owner", owner ?? string.Empty)
+    {
+    }
 
     /// <summary>
     /// Gets the owner.
     /// </summary>
-    public string? Owner { get; }
+    public string? Owner => Value;
 }
