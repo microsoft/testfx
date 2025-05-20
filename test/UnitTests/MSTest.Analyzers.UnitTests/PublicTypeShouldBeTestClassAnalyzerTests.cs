@@ -63,6 +63,42 @@ public sealed class PublicTypeShouldBeTestClassAnalyzerTests
     }
 
     [TestMethod]
+    public async Task WhenClassIsPublicAndHasSTATestClassAttribute_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [STATestClass]
+            public class MyTestClass
+            {
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+           code,
+           code);
+    }
+
+    [TestMethod]
+    public async Task WhenClassIsPublicAndHasDerivedTestClassAttribute_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public sealed class MyTestClassAttribute : TestClassAttribute;
+
+            [MyTestClass]
+            public class MyTestClass
+            {
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+           code,
+           code);
+    }
+
+    [TestMethod]
     public async Task WhenClassIsPublicAndNotClass_NoDiagnostic()
     {
         string code = """
