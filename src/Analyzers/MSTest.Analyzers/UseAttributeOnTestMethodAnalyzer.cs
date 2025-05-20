@@ -216,6 +216,7 @@ public sealed class UseAttributeOnTestMethodAnalyzer : DiagnosticAnalyzer
                 if (methodAttribute.AttributeClass.Inherits(attributeSymbol))
                 {
                     attributes.Add((methodAttribute, rule));
+                    break;
                 }
             }
         }
@@ -227,7 +228,6 @@ public sealed class UseAttributeOnTestMethodAnalyzer : DiagnosticAnalyzer
             if (attribute.AttributeData.ApplicationSyntaxReference?.GetSyntax() is { } syntax)
             {
                 context.ReportDiagnostic(syntax.CreateDiagnostic(attribute.Rule));
-                break;
             }
         }
     }
