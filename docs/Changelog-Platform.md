@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
 ## <a name="1.7.0" />[1.7.0] - 2025-05-20
 
-See full log [here](https://github.com/microsoft/testfx/compare/v3.8.3...v3.9.0)
+See full log [of v3.8.3...v3.9.0](https://github.com/microsoft/testfx/compare/v3.8.3...v3.9.0)
 
 ### Added
 
@@ -90,7 +90,7 @@ See full log [here](https://github.com/microsoft/testfx/compare/v3.8.3...v3.9.0)
 
 ## <a name="1.6.3" />[1.6.3] - 2025-03-17
 
-See full log [here](https://github.com/microsoft/testfx/compare/v3.8.2...v3.8.3)
+See full log [of v3.8.2...v3.8.3](https://github.com/microsoft/testfx/compare/v3.8.2...v3.8.3)
 
 ### Fixed
 
@@ -119,7 +119,7 @@ See full log [here](https://github.com/microsoft/testfx/compare/v3.8.2...v3.8.3)
 
 ## <a name="1.6.2" />[1.6.2] - 2025-02-19
 
-See full log [here](https://github.com/microsoft/testfx/compare/v3.8.1...v3.8.2)
+See full log [of v3.8.1...v3.8.2](https://github.com/microsoft/testfx/compare/v3.8.1...v3.8.2)
 
 ### Fixed
 
@@ -140,7 +140,7 @@ See full log [here](https://github.com/microsoft/testfx/compare/v3.8.1...v3.8.2)
 
 ## <a name="1.6.1" />[1.6.1] - 2025-02-18
 
-See full log [here](https://github.com/microsoft/testfx/compare/v3.8.0...v3.8.1)
+See full log [of 3.8.0...v3.8.1](https://github.com/microsoft/testfx/compare/v3.8.0...v3.8.1)
 
 ### Fixed
 
@@ -163,7 +163,7 @@ See full log [here](https://github.com/microsoft/testfx/compare/v3.8.0...v3.8.1)
 
 ## <a name="1.6.0" />[1.6.0] - 2025-02-12
 
-See full log [here](https://github.com/microsoft/testfx/compare/v3.7.3...v3.8.0)
+See full log [of v3.7.3...v3.8.0](https://github.com/microsoft/testfx/compare/v3.7.3...v3.8.0)
 
 ### Added
 
@@ -201,7 +201,7 @@ See full log [here](https://github.com/microsoft/testfx/compare/v3.7.3...v3.8.0)
 
 ## <a name="1.5.3" />[1.5.3] - 2025-01-27
 
-See full log [here](https://github.com/microsoft/testfx/compare/v3.7.2...v3.7.3)
+See full log [of v3.7.2...v3.7.3](https://github.com/microsoft/testfx/compare/v3.7.2...v3.7.3)
 
 ### Fixed
 
@@ -222,7 +222,7 @@ See full log [here](https://github.com/microsoft/testfx/compare/v3.7.2...v3.7.3)
 
 ## <a name="1.5.2" />[1.5.2] - 2025-01-21
 
-See full log [here](https://github.com/microsoft/testfx/compare/v3.7.1...v3.7.2)
+See full log [of v3.7.1...v3.7.2](https://github.com/microsoft/testfx/compare/v3.7.1...v3.7.2)
 
 ### Fixed
 
@@ -243,7 +243,7 @@ See full log [here](https://github.com/microsoft/testfx/compare/v3.7.1...v3.7.2)
 
 ## <a name="1.5.1" />[1.5.1] - 2025-01-13
 
-See full log [here](https://github.com/microsoft/testfx/compare/v3.7.0...v3.7.1)
+See full log [of v3.7.0...v3.7.1](https://github.com/microsoft/testfx/compare/v3.7.0...v3.7.1)
 
 ### Fixed
 
@@ -265,7 +265,7 @@ See full log [here](https://github.com/microsoft/testfx/compare/v3.7.0...v3.7.1)
 
 ## <a name="1.5.0" />[1.5.0] - 2024-12-20
 
-See full log [here](https://github.com/microsoft/testfx/compare/v1.4.3...v1.5.0)
+See full log [of v1.4.3...v1.5.0](https://github.com/microsoft/testfx/compare/v1.4.3...v1.5.0)
 
 ### Added
 
@@ -320,7 +320,7 @@ See full log [here](https://github.com/microsoft/testfx/compare/v1.4.3...v1.5.0)
 
 ## <a name="1.4.3" />[1.4.3] - 2024-11-12
 
-See full log [here](https://github.com/microsoft/testanywhere/compare/v1.4.2...v1.4.3)
+See full log [of v1.4.2...v1.4.3](https://github.com/microsoft/testanywhere/compare/v1.4.2...v1.4.3)
 
 ### Fixed
 
@@ -343,7 +343,7 @@ See full log [here](https://github.com/microsoft/testanywhere/compare/v1.4.2...v
 
 ## <a name="1.4.2" />[1.4.2] - 2024-10-31
 
-See full log [here](https://github.com/microsoft/testanywhere/compare/v1.4.1...v1.4.2)
+See full log [of v1.4.1...v1.4.2](https://github.com/microsoft/testanywhere/compare/v1.4.1...v1.4.2)
 
 ### Fixed
 
@@ -366,7 +366,7 @@ See full log [here](https://github.com/microsoft/testanywhere/compare/v1.4.1...v
 
 ## <a name="1.4.1" />[1.4.1] - 2024-10-03
 
-See full log [here](https://github.com/microsoft/testanywhere/compare/v1.4.0...v1.4.1)
+See full log [of v1.4.0...v1.4.1](https://github.com/microsoft/testanywhere/compare/v1.4.0...v1.4.1)
 
 ### Fixed
 
@@ -389,7 +389,7 @@ See full log [here](https://github.com/microsoft/testanywhere/compare/v1.4.0...v
 
 ## <a name="1.4.0" />[1.4.0] - 2024-09-11
 
-See full log [here](https://github.com/microsoft/testanywhere/compare/v1.3.2...v1.4.0)
+See full log [of v1.3.2...v1.4.0](https://github.com/microsoft/testanywhere/compare/v1.3.2...v1.4.0)
 
 ### Added
 
@@ -461,7 +461,7 @@ See full log [here](https://github.com/microsoft/testanywhere/compare/v1.3.2...v
 
 ## <a name="1.3.2" />[1.3.2] - 2024-08-05
 
-See full log [here](https://github.com/microsoft/testanywhere/compare/v1.3.1...v1.3.2)
+See full log [of v1.3.1...v1.3.2](https://github.com/microsoft/testanywhere/compare/v1.3.1...v1.3.2)
 
 ### Fixed
 
@@ -485,7 +485,7 @@ See full log [here](https://github.com/microsoft/testanywhere/compare/v1.3.1...v
 
 ## <a name="1.3.1" />[1.3.1] - 2024-07-15
 
-See full log [here](https://github.com/microsoft/testanywhere/compare/v1.2.1...v1.3.1)
+See full log [of v1.2.1...v1.3.1](https://github.com/microsoft/testanywhere/compare/v1.2.1...v1.3.1)
 
 ### Added
 
