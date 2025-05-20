@@ -18,14 +18,6 @@ namespace Microsoft.Testing.Platform.UnitTests;
 [TestClass]
 public sealed class ConfigurationManagerTests
 {
-    private readonly ServiceProvider _serviceProvider;
-
-    public ConfigurationManagerTests()
-    {
-        _serviceProvider = new();
-        _serviceProvider.AddService(new SystemFileSystem());
-    }
-
     [TestMethod]
     [DynamicData(nameof(GetConfigurationValueFromJsonData))]
     public async ValueTask GetConfigurationValueFromJson(string jsonFileConfig, string key, string? result)
