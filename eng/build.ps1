@@ -29,11 +29,12 @@ Param(
   [switch] $nativeToolsOnMachine,
   [switch] $help,
   [switch] $vs,
+  [switch] $vscode,
   [switch] $installWindowsSdk,
   [Parameter(ValueFromRemainingArguments=$true)][String[]]$properties
 )
 
-if ($vs) {
+if ($vs -or $vscode) {
     . $PSScriptRoot\common\tools.ps1
 
     # This tells .NET Core to use the bootstrapped runtime
@@ -54,8 +55,12 @@ if ($vs) {
     # Enables the logginc of Json RPC messages if diagnostic logging for Test Explorer is enabled in Visual Studio.
     $env:_TestingPlatformDiagnostics_=1;
 
-    # Launch Visual Studio with the locally defined environment variables
-    & "$PSScriptRoot\..\TestFx.sln"
+    if ($vs) {
+        # Launch Visual Studio with the locally defined environment variables
+        & "$PSScriptRoot\..\TestFx.sln"
+    } else {
+        & code "$PSScriptRoot\.."
+    }
 
     return
 }
