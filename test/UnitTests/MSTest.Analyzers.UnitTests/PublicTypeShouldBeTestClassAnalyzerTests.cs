@@ -85,7 +85,7 @@ public sealed class PublicTypeShouldBeTestClassAnalyzerTests
         string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-            public sealed class MyTestClassAttribute : TestClassAttribute;
+            internal sealed class MyTestClassAttribute : TestClassAttribute;
 
             [MyTestClass]
             public class MyTestClass
