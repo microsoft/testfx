@@ -618,15 +618,15 @@ public class TestExecutionManager
         var testContextProperties = new Dictionary<string, object?>(capacity: 8);
 
         // Add tcm properties.
-        foreach (KeyValuePair<TestProperty, object?> kvp in tcmProperties)
+        foreach ((TestProperty key, object? value) in tcmProperties)
         {
-            testContextProperties[kvp.Key.Id] = kvp.Value;
+            testContextProperties[key.Id] = value;
         }
 
         // Add source level parameters.
-        foreach (KeyValuePair<string, object> kvp in sourceLevelParameters)
+        foreach ((string key, object value) in sourceLevelParameters)
         {
-            testContextProperties[kvp.Key] = kvp.Value;
+            testContextProperties[key] = value;
         }
 
         return testContextProperties;
