@@ -271,6 +271,7 @@ Microsoft.VisualStudio.TestTools.UnitTesting.ClassInitializeAttribute.Inheritanc
 Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert
 Microsoft.VisualStudio.TestTools.UnitTesting.ConditionBaseAttribute
 Microsoft.VisualStudio.TestTools.UnitTesting.ConditionBaseAttribute.ConditionBaseAttribute(Microsoft.VisualStudio.TestTools.UnitTesting.ConditionMode mode) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.ConditionBaseAttribute.Mode.get -> Microsoft.VisualStudio.TestTools.UnitTesting.ConditionMode
 Microsoft.VisualStudio.TestTools.UnitTesting.ConditionMode
 Microsoft.VisualStudio.TestTools.UnitTesting.ConditionMode.Exclude = 1 -> Microsoft.VisualStudio.TestTools.UnitTesting.ConditionMode
 Microsoft.VisualStudio.TestTools.UnitTesting.ConditionMode.Include = 0 -> Microsoft.VisualStudio.TestTools.UnitTesting.ConditionMode
