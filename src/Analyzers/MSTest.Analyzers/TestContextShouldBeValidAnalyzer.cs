@@ -92,11 +92,29 @@ public sealed class TestContextShouldBeValidAnalyzer : DiagnosticAnalyzer
             operation = expressionStatementOperation.Operation;
         }
 
-        return operation is ISimpleAssignmentOperation assignmentOperation &&
+        if (operation is ISimpleAssignmentOperation assignmentOperation &&
             assignmentOperation.Target is IMemberReferenceOperation targetMemberReference &&
-            SymbolEqualityComparer.Default.Equals(targetMemberReference.Member, member) &&
-            assignmentOperation.Value is IParameterReferenceOperation parameterReference &&
-            SymbolEqualityComparer.Default.Equals(parameterReference.Parameter, parameter);
+            SymbolEqualityComparer.Default.Equals(targetMemberReference.Member, member))
+        {
+            // Handle direct parameter assignment
+            if (assignmentOperation.Value is IParameterReferenceOperation parameterReference &&
+                SymbolEqualityComparer.Default.Equals(parameterReference.Parameter, parameter))
+            {
+                return true;
+            }
+
+            // Handle null-coalescing operator with parameter on left side
+            // e.g., TestContext = testContext ?? throw new ArgumentNullException(nameof(testContext));
+            if (assignmentOperation.Value is IBinaryOperation binaryOperation &&
+                binaryOperation.OperatorKind == BinaryOperatorKind.Coalescing &&
+                binaryOperation.LeftOperand is IParameterReferenceOperation coalescingParamRef &&
+                SymbolEqualityComparer.Default.Equals(coalescingParamRef.Parameter, parameter))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static void CollectTestContextFieldsAssignedInConstructor(
@@ -125,11 +143,26 @@ public sealed class TestContextShouldBeValidAnalyzer : DiagnosticAnalyzer
         }
 
         if (operation is ISimpleAssignmentOperation assignmentOperation &&
-            assignmentOperation.Target is IMemberReferenceOperation { Member: IFieldSymbol { } candidateField } &&
-            assignmentOperation.Value is IParameterReferenceOperation parameterReference &&
-            SymbolEqualityComparer.Default.Equals(parameterReference.Parameter, testContextParameter))
+            assignmentOperation.Target is IMemberReferenceOperation { Member: IFieldSymbol { } candidateField })
         {
-            fieldsAssignedInConstructor.Add(candidateField);
+            // Handle direct parameter assignment
+            if (assignmentOperation.Value is IParameterReferenceOperation parameterReference &&
+                SymbolEqualityComparer.Default.Equals(parameterReference.Parameter, testContextParameter))
+            {
+                fieldsAssignedInConstructor.Add(candidateField);
+                return;
+            }
+
+            // Handle null-coalescing operator with parameter on left side
+            // e.g., _testContext = testContext ?? throw new ArgumentNullException(nameof(testContext));
+            if (assignmentOperation.Value is IBinaryOperation binaryOperation &&
+                binaryOperation.OperatorKind == BinaryOperatorKind.Coalescing &&
+                binaryOperation.LeftOperand is IParameterReferenceOperation coalescingParamRef &&
+                SymbolEqualityComparer.Default.Equals(coalescingParamRef.Parameter, testContextParameter))
+            {
+                fieldsAssignedInConstructor.Add(candidateField);
+                return;
+            }
         }
     }
 
