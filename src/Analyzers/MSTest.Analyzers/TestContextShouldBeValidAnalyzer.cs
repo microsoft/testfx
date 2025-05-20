@@ -105,9 +105,8 @@ public sealed class TestContextShouldBeValidAnalyzer : DiagnosticAnalyzer
 
             // Handle null-coalescing operator with parameter on left side
             // e.g., TestContext = testContext ?? throw new ArgumentNullException(nameof(testContext));
-            if (assignmentOperation.Value is IBinaryOperation binaryOperation &&
-                binaryOperation.OperatorKind == BinaryOperatorKind.Coalescing &&
-                binaryOperation.LeftOperand is IParameterReferenceOperation coalescingParamRef &&
+            if (assignmentOperation.Value is ICoalesceOperation coalesceOperation &&
+                coalesceOperation.Value is IParameterReferenceOperation coalescingParamRef &&
                 SymbolEqualityComparer.Default.Equals(coalescingParamRef.Parameter, parameter))
             {
                 return true;
@@ -155,9 +154,8 @@ public sealed class TestContextShouldBeValidAnalyzer : DiagnosticAnalyzer
 
             // Handle null-coalescing operator with parameter on left side
             // e.g., _testContext = testContext ?? throw new ArgumentNullException(nameof(testContext));
-            if (assignmentOperation.Value is IBinaryOperation binaryOperation &&
-                binaryOperation.OperatorKind == BinaryOperatorKind.Coalescing &&
-                binaryOperation.LeftOperand is IParameterReferenceOperation coalescingParamRef &&
+            if (assignmentOperation.Value is ICoalesceOperation coalesceOperation &&
+                coalesceOperation.Value is IParameterReferenceOperation coalescingParamRef &&
                 SymbolEqualityComparer.Default.Equals(coalescingParamRef.Parameter, testContextParameter))
             {
                 fieldsAssignedInConstructor.Add(candidateField);
