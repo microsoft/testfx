@@ -184,6 +184,7 @@ extends:
 
               # Final builds should not go into test-tools package feed, so we can keep re-building them until we are ready to ship to nuget.org.
               # This has to depend on the parameter and not on variable, variables are not defined early enough to be used in templating condition.
+              # We still need the final builds on test-tools so that internal repos can consume it, so we will publish it manually.
             - ${{ if eq(parameters.isRTM, False) }}:
               - task: 1ES.PublishNuget@1
                 displayName: 'Publish NuGet packages to test-tools feed'
