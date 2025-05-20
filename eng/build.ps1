@@ -64,7 +64,7 @@ if ($vs -or $vscode) {
         } elseif (Get-Command code-insiders -ErrorAction Ignore) {
             & code-insiders "$PSScriptRoot\.."
         } else {
-            Write-Host "VS Code not found. Please install it from https://code.visualstudio.com/"
+            Write-Error "VS Code not found. Please install it from https://code.visualstudio.com/"
             return
         }
     }
