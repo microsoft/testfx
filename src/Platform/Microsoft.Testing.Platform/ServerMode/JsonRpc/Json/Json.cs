@@ -639,13 +639,6 @@ internal sealed class Json
         return Bind<T>(document.RootElement, null);
     }
 
-    internal T Bind<T>(IEnumerable<JsonProperty> properties)
-        => !_deserializers.TryGetValue(typeof(T), out JsonDeserializer? deserializer)
-            ? throw new InvalidOperationException($"Cannot find deserializer for {typeof(T)}.")
-            : deserializer is not JsonPropertyCollectionDeserializer<T> propertyBagDeserializer
-            ? throw new InvalidOperationException("we need property bag deserializer")
-            : propertyBagDeserializer.CreateObject(this, properties);
-
     internal T Bind<T>(JsonElement element, string? property = null)
     {
         if (property is not null)
