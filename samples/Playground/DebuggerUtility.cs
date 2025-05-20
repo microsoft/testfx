@@ -149,7 +149,6 @@ public class DebuggerUtility
 
                 if (dn.StartsWith("!VisualStudio.DTE.", StringComparison.Ordinal) && dn.EndsWith(dteSuffix, StringComparison.Ordinal))
                 {
-                    object dbg, lps;
                     runningObjectTable.GetObject(moniker[0], out object dte);
 
                     // The COM object can be busy, we retry few times, hoping that it won't be busy next time.
@@ -157,8 +156,8 @@ public class DebuggerUtility
                     {
                         try
                         {
-                            dbg = dte.GetType().InvokeMember("Debugger", BindingFlags.GetProperty, null, dte, null, CultureInfo.InvariantCulture)!;
-                            lps = dbg.GetType().InvokeMember("LocalProcesses", BindingFlags.GetProperty, null, dbg, null, CultureInfo.InvariantCulture)!;
+                            var dbg = dte.GetType().InvokeMember("Debugger", BindingFlags.GetProperty, null, dte, null, CultureInfo.InvariantCulture)!;
+                            var lps = dbg.GetType().InvokeMember("LocalProcesses", BindingFlags.GetProperty, null, dbg, null, CultureInfo.InvariantCulture)!;
                             var lpn = (System.Collections.IEnumerator)lps.GetType().InvokeMember("GetEnumerator", BindingFlags.InvokeMethod, null, lps, null, CultureInfo.InvariantCulture)!;
 
                             while (lpn.MoveNext())
