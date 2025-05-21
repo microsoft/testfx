@@ -1,11 +1,11 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if !WINDOWS_UWP
+#if !WINDOWS_UWP && !WIN_UI
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
 #endif
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
-#if !WINDOWS_UWP
+#if !WINDOWS_UWP && !WIN_UI
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
 #endif
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
@@ -13,7 +13,7 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 #if NETFRAMEWORK
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
 #endif
-#if !WINDOWS_UWP
+#if !WINDOWS_UWP && !WIN_UI
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 #endif
 
@@ -29,7 +29,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 #endif
 public class TestDeployment : ITestDeployment
 {
-#if !WINDOWS_UWP
+#if !WINDOWS_UWP && !WIN_UI
     #region Service Utility Variables
 
     private readonly DeploymentItemUtility _deploymentItemUtility;
@@ -80,7 +80,7 @@ public class TestDeployment : ITestDeployment
     /// <param name="warnings"> The warnings. </param>
     /// <returns> A string of deployment items. </returns>
     public KeyValuePair<string, string>[]? GetDeploymentItems(MethodInfo method, Type type, ICollection<string> warnings) =>
-#if WINDOWS_UWP
+#if WINDOWS_UWP || WIN_UI
         null;
 #else
         _deploymentItemUtility.GetDeploymentItems(method, _deploymentItemUtility.GetClassLevelDeploymentItems(type, warnings), warnings);
@@ -91,7 +91,7 @@ public class TestDeployment : ITestDeployment
     /// </summary>
     public void Cleanup()
     {
-#if !WINDOWS_UWP
+#if !WINDOWS_UWP && !WIN_UI
         // Delete the deployment directory
         if (RunDirectories != null && _adapterSettings?.DeleteDeploymentDirectoryAfterTestRunIsComplete == true)
         {
@@ -109,7 +109,7 @@ public class TestDeployment : ITestDeployment
     /// </summary>
     /// <returns> The deployment output directory. </returns>
     public string? GetDeploymentDirectory() =>
-#if WINDOWS_UWP
+#if WINDOWS_UWP || WIN_UI
         null;
 #else
         RunDirectories?.OutDirectory;
@@ -125,7 +125,7 @@ public class TestDeployment : ITestDeployment
     [SuppressMessage("Naming", "CA1725:Parameter names should match base declaration", Justification = "Part of the public API")]
     public bool Deploy(IEnumerable<TestCase> tests, IRunContext? runContext, IFrameworkHandle frameworkHandle)
     {
-#if WINDOWS_UWP
+#if WINDOWS_UWP || WIN_UI
         return false;
 #else
         DebugEx.Assert(tests != null, "tests");
@@ -178,7 +178,7 @@ public class TestDeployment : ITestDeployment
 #endif
     }
 
-#if !WINDOWS_UWP
+#if !WINDOWS_UWP && !WIN_UI
     internal static IDictionary<string, object> GetDeploymentInformation(string? source)
     {
         var properties = new Dictionary<string, object>(capacity: 8);
@@ -192,15 +192,15 @@ public class TestDeployment : ITestDeployment
             applicationBaseDirectory = Path.GetDirectoryName(source)!;
         }
 
-        properties[TestContext.TestRunDirectoryLabel] = RunDirectories?.RootDeploymentDirectory ?? applicationBaseDirectory;
-        properties[TestContext.DeploymentDirectoryLabel] = RunDirectories?.OutDirectory ?? applicationBaseDirectory;
-        properties[TestContext.ResultsDirectoryLabel] = RunDirectories?.InDirectory ?? applicationBaseDirectory;
-        properties[TestContext.TestRunResultsDirectoryLabel] = RunDirectories?.InMachineNameDirectory ?? applicationBaseDirectory;
-        properties[TestContext.TestResultsDirectoryLabel] = RunDirectories?.InDirectory ?? applicationBaseDirectory;
+        properties[TestContextConstants.TestRunDirectoryLabel] = RunDirectories?.RootDeploymentDirectory ?? applicationBaseDirectory;
+        properties[TestContextConstants.DeploymentDirectoryLabel] = RunDirectories?.OutDirectory ?? applicationBaseDirectory;
+        properties[TestContextConstants.ResultsDirectoryLabel] = RunDirectories?.InDirectory ?? applicationBaseDirectory;
+        properties[TestContextConstants.TestRunResultsDirectoryLabel] = RunDirectories?.InMachineNameDirectory ?? applicationBaseDirectory;
+        properties[TestContextConstants.TestResultsDirectoryLabel] = RunDirectories?.InDirectory ?? applicationBaseDirectory;
 #pragma warning disable CS0618 // Type or member is obsolete
-        properties[TestContext.TestDirLabel] = RunDirectories?.RootDeploymentDirectory ?? applicationBaseDirectory;
-        properties[TestContext.TestDeploymentDirLabel] = RunDirectories?.OutDirectory ?? applicationBaseDirectory;
-        properties[TestContext.TestLogsDirLabel] = RunDirectories?.InMachineNameDirectory ?? applicationBaseDirectory;
+        properties[TestContextConstants.TestDirLabel] = RunDirectories?.RootDeploymentDirectory ?? applicationBaseDirectory;
+        properties[TestContextConstants.TestDeploymentDirLabel] = RunDirectories?.OutDirectory ?? applicationBaseDirectory;
+        properties[TestContextConstants.TestLogsDirLabel] = RunDirectories?.InMachineNameDirectory ?? applicationBaseDirectory;
 #pragma warning restore CS0618 // Type or member is obsolete
 
         return properties;

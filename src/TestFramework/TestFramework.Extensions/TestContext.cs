@@ -13,33 +13,6 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// </summary>
 public abstract class TestContext
 {
-    internal static readonly string FullyQualifiedTestClassNameLabel = nameof(FullyQualifiedTestClassName);
-    internal static readonly string ManagedTypeLabel = nameof(ManagedType);
-    internal static readonly string ManagedMethodLabel = nameof(ManagedMethod);
-    internal static readonly string TestNameLabel = nameof(TestName);
-#if WINDOWS_UWP || WIN_UI
-    internal static readonly string TestRunDirectoryLabel = "TestRunDirectory";
-    internal static readonly string DeploymentDirectoryLabel = "DeploymentDirectory";
-    internal static readonly string ResultsDirectoryLabel = "ResultsDirectory";
-    internal static readonly string TestRunResultsDirectoryLabel = "TestRunResultsDirectory";
-    internal static readonly string TestResultsDirectoryLabel = "TestResultsDirectory";
-    internal static readonly string TestDirLabel = "TestDir";
-    internal static readonly string TestDeploymentDirLabel = "TestDeploymentDir";
-    internal static readonly string TestLogsDirLabel = "TestLogsDir";
-#else
-    internal static readonly string TestRunDirectoryLabel = nameof(TestRunDirectory);
-    internal static readonly string DeploymentDirectoryLabel = nameof(DeploymentDirectory);
-    internal static readonly string ResultsDirectoryLabel = nameof(ResultsDirectory);
-    internal static readonly string TestRunResultsDirectoryLabel = nameof(TestRunResultsDirectory);
-    internal static readonly string TestResultsDirectoryLabel = nameof(TestResultsDirectory);
-    [Obsolete("Remove when related property is removed.")]
-    internal static readonly string TestDirLabel = nameof(TestDir);
-    [Obsolete("Remove when related property is removed.")]
-    internal static readonly string TestDeploymentDirLabel = nameof(TestDeploymentDir);
-    [Obsolete("Remove when related property is removed.")]
-    internal static readonly string TestLogsDirLabel = nameof(TestLogsDir);
-#endif
-
     /// <summary>
     /// Gets test properties for a test.
     /// </summary>
@@ -78,29 +51,29 @@ public abstract class TestContext
     /// <summary>
     /// Gets base directory for the test run, under which deployed files and result files are stored.
     /// </summary>
-    public virtual string? TestRunDirectory => GetProperty<string>(TestRunDirectoryLabel);
+    public virtual string? TestRunDirectory => GetProperty<string>(TestContextConstants.TestRunDirectoryLabel);
 
     /// <summary>
     /// Gets directory for files deployed for the test run. Typically a subdirectory of <see cref="TestRunDirectory"/>.
     /// </summary>
-    public virtual string? DeploymentDirectory => GetProperty<string>(DeploymentDirectoryLabel);
+    public virtual string? DeploymentDirectory => GetProperty<string>(TestContextConstants.DeploymentDirectoryLabel);
 
     /// <summary>
     /// Gets base directory for results from the test run. Typically a subdirectory of <see cref="TestRunDirectory"/>.
     /// </summary>
-    public virtual string? ResultsDirectory => GetProperty<string>(ResultsDirectoryLabel);
+    public virtual string? ResultsDirectory => GetProperty<string>(TestContextConstants.ResultsDirectoryLabel);
 
     /// <summary>
     /// Gets directory for test run result files. Typically a subdirectory of <see cref="ResultsDirectory"/>.
     /// </summary>
-    public virtual string? TestRunResultsDirectory => GetProperty<string>(TestRunResultsDirectoryLabel);
+    public virtual string? TestRunResultsDirectory => GetProperty<string>(TestContextConstants.TestRunResultsDirectoryLabel);
 
     /// <summary>
     /// Gets directory for test result files.
     /// </summary>
     // In MSTest, it is actually "In\697105f7-004f-42e8-bccf-eb024870d3e9\User1", but we are setting it to "In" only
     // because MSTest does not create the GUID directory.
-    public virtual string? TestResultsDirectory => GetProperty<string>(TestResultsDirectoryLabel);
+    public virtual string? TestResultsDirectory => GetProperty<string>(TestContextConstants.TestResultsDirectoryLabel);
 
     #region Old names, for backwards compatibility
 
@@ -109,14 +82,14 @@ public abstract class TestContext
     /// Same as <see cref="TestRunDirectory"/>. Use that property instead.
     /// </summary>
     [Obsolete("This property is deprecated, use TestRunDirectory instead. It will be removed in next version.")]
-    public virtual string? TestDir => GetProperty<string>(TestDirLabel);
+    public virtual string? TestDir => GetProperty<string>(TestContextConstants.TestDirLabel);
 
     /// <summary>
     /// Gets directory for files deployed for the test run. Typically a subdirectory of <see cref="TestRunDirectory"/>.
     /// Same as <see cref="DeploymentDirectory"/>. Use that property instead.
     /// </summary>
     [Obsolete("This property is deprecated, use DeploymentDirectory instead. It will be removed in next version.")]
-    public virtual string? TestDeploymentDir => GetProperty<string>(TestDeploymentDirLabel);
+    public virtual string? TestDeploymentDir => GetProperty<string>(TestContextConstants.TestDeploymentDirLabel);
 
     /// <summary>
     /// Gets directory for test run result files. Typically a subdirectory of <see cref="ResultsDirectory"/>.
@@ -124,7 +97,7 @@ public abstract class TestContext
     /// <see cref="TestResultsDirectory"/> for test-specific result files instead.
     /// </summary>
     [Obsolete("This property is deprecated, use TestRunResultsDirectory for test run result files or TestResultsDirectory for test-specific result files instead. It will be removed in next version.")]
-    public virtual string? TestLogsDir => GetProperty<string>(TestLogsDirLabel);
+    public virtual string? TestLogsDir => GetProperty<string>(TestContextConstants.TestLogsDirLabel);
 
     #endregion
 
@@ -140,22 +113,22 @@ public abstract class TestContext
     /// in the test results. Users can benefit from messages that include the fully-qualified
     /// class name in addition to the name of the test method currently being executed.
     /// </remarks>
-    public virtual string? FullyQualifiedTestClassName => GetProperty<string>(FullyQualifiedTestClassNameLabel);
+    public virtual string? FullyQualifiedTestClassName => GetProperty<string>(TestContextConstants.FullyQualifiedTestClassNameLabel);
 
     /// <summary>
     /// Gets the fully specified type name metadata format.
     /// </summary>
-    public virtual string? ManagedType => GetProperty<string>(ManagedTypeLabel);
+    public virtual string? ManagedType => GetProperty<string>(TestContextConstants.ManagedTypeLabel);
 
     /// <summary>
     /// Gets the fully specified method name metadata format.
     /// </summary>
-    public virtual string? ManagedMethod => GetProperty<string>(ManagedMethodLabel);
+    public virtual string? ManagedMethod => GetProperty<string>(TestContextConstants.ManagedMethodLabel);
 
     /// <summary>
     /// Gets the name of the test method currently being executed.
     /// </summary>
-    public virtual string? TestName => GetProperty<string>(TestNameLabel);
+    public virtual string? TestName => GetProperty<string>(TestContextConstants.TestNameLabel);
 
     /// <summary>
     /// Gets the current test outcome.

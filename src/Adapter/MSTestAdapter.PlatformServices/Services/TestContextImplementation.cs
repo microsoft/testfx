@@ -99,10 +99,10 @@ public class TestContextImplementation : TestContext, ITestContext
             ? new Dictionary<string, object?>(properties)
             : new Dictionary<string, object?>(properties)
             {
-                [FullyQualifiedTestClassNameLabel] = testMethod.FullClassName,
-                [ManagedTypeLabel] = testMethod.ManagedTypeName,
-                [ManagedMethodLabel] = testMethod.ManagedMethodName,
-                [TestNameLabel] = testMethod.Name,
+                [TestContextConstants.FullyQualifiedTestClassNameLabel] = testMethod.FullClassName,
+                [TestContextConstants.ManagedTypeLabel] = testMethod.ManagedTypeName,
+                [TestContextConstants.ManagedMethodLabel] = testMethod.ManagedMethodName,
+                [TestContextConstants.TestNameLabel] = testMethod.Name,
             };
 
         _testResultFiles = [];

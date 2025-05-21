@@ -40,8 +40,15 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.TestPlatform.ObjectModel" />
+    <PackageReference Include="Polyfill" PrivateAssets="all" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Include="$(RepoRoot)src\TestFramework\TestFramework\Internal\StringEx.cs" Link="Internal\StringEx" />
+    <Compile Include="$(RepoRoot)src\TestFramework\TestFramework\Internal\DebugEx.cs" Link="Internal\DebugEx.cs" />
+    <Compile Include="$(RepoRoot)src\TestFramework\TestFramework.Extensions\TestContextConstants.cs" Link="TestFramework.Extensions" />
+  </ItemGroup>
+  
   <PropertyGroup>
     <!-- Enable AOT analyzer warnings to make sure we don't call APIs that would fail when we use source generator mode together with NativeAOT. -->
     <IsAotCompatible Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net7.0'))">true</IsAotCompatible>

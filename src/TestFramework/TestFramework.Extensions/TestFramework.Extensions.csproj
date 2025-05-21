@@ -91,10 +91,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <InternalsVisibleTo Include="Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter" Key="$(VsPublicKey)" />
-  </ItemGroup>
-
-  <ItemGroup>
     <None Update="buildTransitive\winui+uwp\MSTest.TestFramework.targets">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
