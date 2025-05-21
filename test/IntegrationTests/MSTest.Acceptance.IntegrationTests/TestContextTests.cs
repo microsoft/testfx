@@ -88,6 +88,7 @@ public sealed class TestContextTests : AcceptanceTestBase<TestContextTests.TestA
     <OutputType>Exe</OutputType>
     <EnableMSTestRunner>true</EnableMSTestRunner>
     <TargetFrameworks>$TargetFrameworks$</TargetFrameworks>
+    <LangVersion>preview</LangVersion>
 
     <!--
         This property is not required by users and is only set to simplify our testing infrastructure. When testing out in local or ci,
