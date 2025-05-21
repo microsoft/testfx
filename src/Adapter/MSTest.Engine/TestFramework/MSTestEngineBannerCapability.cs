@@ -8,10 +8,6 @@ namespace Microsoft.Testing.Framework;
 
 internal sealed class MSTestEngineBannerCapability : IBannerMessageOwnerCapability
 {
-    private readonly IPlatformInformation _platformInformation;
-
-    public MSTestEngineBannerCapability(IPlatformInformation platformInformation) => _platformInformation = platformInformation;
-
     public Task<string?> GetBannerMessageAsync()
     {
         StringBuilder bannerMessage = new();
