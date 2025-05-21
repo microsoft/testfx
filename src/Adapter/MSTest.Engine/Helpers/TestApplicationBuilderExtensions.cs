@@ -30,7 +30,7 @@ public static class TestApplicationBuilderExtensions
         TestingFrameworkExtension extension = new();
         testApplicationBuilder.AddTreeNodeFilterService(extension);
         testApplicationBuilder.RegisterTestFramework(
-            serviceProvider => new TestFrameworkCapabilities(testNodesBuilder, new MSTestEngineBannerCapability(serviceProvider.GetRequiredService<IPlatformInformation>())),
+            serviceProvider => new TestFrameworkCapabilities(testNodesBuilder, new MSTestEngineBannerCapability()),
             (capabilities, serviceProvider) =>
             new TestFramework(testFrameworkConfiguration, testNodesBuilder, extension, serviceProvider.GetSystemClock(),
                 serviceProvider.GetTask(), serviceProvider.GetConfiguration(), capabilities));
