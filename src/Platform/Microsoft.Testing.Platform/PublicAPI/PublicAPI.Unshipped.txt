@@ -1,1 +1,2 @@
 #nullable enable
+*REMOVED*[TPEXP]Microsoft.Testing.Platform.Services.IPlatformInformation.BuildDate.get -> System.DateTimeOffset?
