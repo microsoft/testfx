@@ -127,6 +127,8 @@ public sealed class UseAttributeOnTestMethodAnalyzer : DiagnosticAnalyzer
         isEnabledByDefault: true);
 
     // IMPORTANT: Remember to add any new rule to the rule tuple.
+    // IMPORTANT: The order is important. For example, Owner is also TestProperty. We report the first violation and then bail-out.
+    //            It may be a better idea to consolidate OwnerRule, PriorityRule, and TestPropertyRule into a single rule.
     private static readonly List<(string AttributeFullyQualifiedName, DiagnosticDescriptor Rule)> RuleTuples =
     [
         (WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingOwnerAttribute, OwnerRule),
@@ -214,6 +216,7 @@ public sealed class UseAttributeOnTestMethodAnalyzer : DiagnosticAnalyzer
                 if (methodAttribute.AttributeClass.Inherits(attributeSymbol))
                 {
                     attributes.Add((methodAttribute, rule));
+                    break;
                 }
             }
         }

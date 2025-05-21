@@ -4,7 +4,7 @@ The following official [learn.microsoft.com website](https://learn.microsoft.com
 
 This [blog post](https://devblogs.microsoft.com/devops/mstest-v2-now-and-ahead/) announces the vision for MSTest V2.
 
-For API documentation refer [here](https://docs.microsoft.com/dotnet/api/microsoft.visualstudio.testtools.unittesting).
+For API documentation refer [to Microsoft Documentation](https://docs.microsoft.com/dotnet/api/microsoft.visualstudio.testtools.unittesting).
 
 ## Contributing
 
