@@ -106,6 +106,7 @@ public sealed class TestContextTests : AcceptanceTestBase<TestContextTests.TestA
 #file UnitTest1.cs
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 [TestClass]
@@ -148,13 +149,22 @@ public class TestContextCtor
 public class TestContextCtorAndProperty
 {
     private TestContext _testContext;
+    private static AsyncLocal<string> s_asyncLocal = new();
 
     public TestContextCtorAndProperty(TestContext testContext)
     {
         _testContext = testContext;
     }
 
-    public TestContext TestContext { get; set; }
+    public TestContext TestContext
+    {
+        get => field;
+        set
+        {
+            field = value;
+            s_asyncLocal.Value = "TestContext is set";
+        }
+    }
 
     [TestMethod]
     public void TestMethod()
@@ -163,6 +173,7 @@ public class TestContextCtorAndProperty
         TestContext.WriteLine("Method TestContextCtorAndProperty.TestMethod() was called");
         Assert.IsNotNull(_testContext);
         Assert.IsNotNull(TestContext);
+        Assert.AreEqual("TestContext is set", s_asyncLocal.Value);
     }
 }
 
