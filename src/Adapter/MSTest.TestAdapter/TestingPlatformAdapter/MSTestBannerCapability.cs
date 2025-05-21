@@ -3,7 +3,6 @@
 
 #if !WINDOWS_UWP
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
-using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
