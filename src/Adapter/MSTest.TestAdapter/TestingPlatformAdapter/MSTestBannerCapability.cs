@@ -12,10 +12,6 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 [SuppressMessage("ApiDesign", "RS0030:Do not use banned APIs", Justification = "We can use MTP from this folder")]
 internal sealed class MSTestBannerCapability : IBannerMessageOwnerCapability
 {
-    private readonly IPlatformInformation _platformInformation;
-
-    public MSTestBannerCapability(IPlatformInformation platformInformation) => _platformInformation = platformInformation;
-
     public Task<string?> GetBannerMessageAsync()
     {
         StringBuilder bannerMessage = new();
