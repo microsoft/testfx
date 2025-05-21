@@ -2,7 +2,6 @@
 // Licensed under dual-license. See LICENSE.PLATFORMTOOLS.txt file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
-using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Framework;
 
