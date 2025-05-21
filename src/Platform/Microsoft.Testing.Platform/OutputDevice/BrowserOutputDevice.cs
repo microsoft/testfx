@@ -149,11 +149,6 @@ internal sealed partial class BrowserOutputDevice : IPlatformOutputDevice,
                 }
             }
 
-            if (_platformInformation.BuildDate is { } buildDate)
-            {
-                stringBuilder.Append(CultureInfo.InvariantCulture, $" (UTC {buildDate.UtcDateTime.ToShortDateString()})");
-            }
-
             if (_runtimeFeature.IsDynamicCodeSupported)
             {
                 stringBuilder.Append(" [");

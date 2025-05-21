@@ -18,13 +18,6 @@ internal sealed class MSTestEngineBannerCapability : IBannerMessageOwnerCapabili
         bannerMessage.Append("MSTest.Engine v");
         bannerMessage.Append(MSTestEngineRepositoryVersion.Version);
 
-        if (_platformInformation.BuildDate is { } buildDate)
-        {
-            bannerMessage.Append(" (UTC ");
-            bannerMessage.Append(buildDate.UtcDateTime.ToShortDateString());
-            bannerMessage.Append(')');
-        }
-
 #if NETCOREAPP
         if (RuntimeFeature.IsDynamicCodeCompiled)
 #endif

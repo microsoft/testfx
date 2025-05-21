@@ -59,7 +59,7 @@ public class CustomBannerTests : AcceptanceTestBase<CustomBannerTests.TestAssetF
         TestHostResult testHostResult = await testHost.ExecuteAsync();
 
         testHostResult.AssertExitCodeIs(ExitCodes.ZeroTests);
-        testHostResult.AssertOutputMatchesRegex($"{TestAssetFixture.CustomBannerPrefix} Platform info: Name: Microsoft.Testing.Platform, Version: .+?, Hash: .*?, Date: .+?");
+        testHostResult.AssertOutputMatchesRegex($"{TestAssetFixture.CustomBannerPrefix} Platform info: Name: Microsoft.Testing.Platform, Version: .+?, Hash: .*?");
     }
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
@@ -121,7 +121,6 @@ internal sealed class DummyBannerMessageOwnerCapability : IBannerMessageOwnerCap
         sb.Append($"Name: {platformInformation.Name}");
         sb.Append($", Version: {platformInformation.Version}");
         sb.Append($", Hash: {platformInformation.CommitHash}");
-        sb.Append($", Date: {platformInformation.BuildDate}");
 
         return Task.FromResult<string?>(sb.ToString());
     }

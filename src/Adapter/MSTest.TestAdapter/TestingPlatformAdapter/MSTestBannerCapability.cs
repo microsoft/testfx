@@ -22,13 +22,6 @@ internal sealed class MSTestBannerCapability : IBannerMessageOwnerCapability
         bannerMessage.Append("MSTest v");
         bannerMessage.Append(MSTestVersion.SemanticVersion);
 
-        if (_platformInformation.BuildDate is { } buildDate)
-        {
-            bannerMessage.Append(" (UTC ");
-            bannerMessage.Append(buildDate.UtcDateTime.ToShortDateString());
-            bannerMessage.Append(')');
-        }
-
 #if NETCOREAPP
         if (RuntimeFeature.IsDynamicCodeCompiled)
 #endif

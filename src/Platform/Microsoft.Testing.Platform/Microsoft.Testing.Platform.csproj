@@ -5,10 +5,6 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
-  <ItemGroup>
-    <AssemblyMetadata Include="Microsoft.Testing.Platform.Application.BuildTimeUTC" Value="$([System.DateTime]::UtcNow.ToString('yyyy/MM/dd'))" />
-  </ItemGroup>
-
   <!-- NuGet properties -->
   <PropertyGroup>
     <PackageDescription>
