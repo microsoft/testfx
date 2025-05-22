@@ -155,7 +155,7 @@ public class TestAssemblyInfo
                                 AssemblyInitializeMethod.InvokeAsSynchronousTask(null, testContext);
                                 // **After** we have executed the assembly initialize, we save the current context.
                                 // This context will contain async locals set by the assembly initialize method.
-                                ExecutionContext = ExecutionContext.Capture();
+                                ExecutionContext = Thread.CurrentThread.ExecutionContext;
                             },
                             testContext.CancellationTokenSource,
                             AssemblyInitializeMethodTimeoutMilliseconds,
@@ -233,7 +233,7 @@ public class TestAssemblyInfo
                      () =>
                      {
                          AssemblyCleanupMethod.InvokeAsSynchronousTask(null);
-                         ExecutionContext = ExecutionContext.Capture();
+                         ExecutionContext = Thread.CurrentThread.ExecutionContext;
                      },
                      new CancellationTokenSource(),
                      AssemblyCleanupMethodTimeoutMilliseconds,
@@ -303,7 +303,7 @@ public class TestAssemblyInfo
                              AssemblyCleanupMethod.InvokeAsSynchronousTask(null, testContext);
                          }
 
-                         ExecutionContext = ExecutionContext.Capture();
+                         ExecutionContext = Thread.CurrentThread.ExecutionContext;
                      },
                      testContext.CancellationTokenSource,
                      AssemblyCleanupMethodTimeoutMilliseconds,

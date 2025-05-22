@@ -524,7 +524,7 @@ public class TestClassInfo
                 methodInfo.InvokeAsSynchronousTask(null, testContext);
                 // **After** we have executed the class initialize, we save the current context.
                 // This context will contain async locals set by the class initialize method.
-                ExecutionContext = ExecutionContext.Capture();
+                ExecutionContext = Thread.CurrentThread.ExecutionContext;
             },
             testContext.CancellationTokenSource,
             timeout,
@@ -854,7 +854,7 @@ public class TestClassInfo
                 // **After** we have executed the class cleanup, we save the current context.
                 // This context will contain async locals set by the current class cleanup method.
                 // This is essential to propagate async locals between multiple class cleanup methods.
-                ExecutionContext = ExecutionContext.Capture();
+                ExecutionContext = Thread.CurrentThread.ExecutionContext;
             },
             testContext.CancellationTokenSource,
             timeout,

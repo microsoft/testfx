@@ -163,7 +163,7 @@ public class TestMethodInfo : ITestMethod
             {
                 ThreadSafeStringWriter.CleanState();
                 listener = new LogMessageListener(MSTestSettings.CurrentSettings.CaptureDebugTraces);
-                executionContext = ExecutionContext.Capture();
+                executionContext = Thread.CurrentThread.ExecutionContext;
             });
 
             result = IsTimeoutSet
@@ -408,7 +408,7 @@ public class TestMethodInfo : ITestMethod
         ExecutionContextHelpers.RunOnContext(executionContext, () =>
         {
             _classInstance = CreateTestClassInstance(result);
-            executionContext = ExecutionContext.Capture();
+            executionContext = Thread.CurrentThread.ExecutionContext;
         });
         bool isExceptionThrown = false;
         bool hasTestInitializePassed = false;
@@ -443,7 +443,7 @@ public class TestMethodInfo : ITestMethod
                                     await valueTask;
                                 }
 
-                                executionContext = ExecutionContext.Capture();
+                                executionContext = Thread.CurrentThread.ExecutionContext;
                                 tcs.SetResult(null);
                             }
                             catch (Exception ex)
@@ -726,7 +726,7 @@ public class TestMethodInfo : ITestMethod
                     ExecutionContextHelpers.RunOnContext(executionContext, () =>
                     {
                         classInstanceAsAsyncDisposable.DisposeAsync().AsTask().Wait();
-                        executionContext = ExecutionContext.Capture();
+                        executionContext = Thread.CurrentThread.ExecutionContext;
                     });
                 }
 #endif
@@ -735,7 +735,7 @@ public class TestMethodInfo : ITestMethod
                     ExecutionContextHelpers.RunOnContext(executionContext, () =>
                     {
                         classInstanceAsDisposable.Dispose();
-                        executionContext = ExecutionContext.Capture();
+                        executionContext = Thread.CurrentThread.ExecutionContext;
                     });
                 }
             }
@@ -873,7 +873,7 @@ public class TestMethodInfo : ITestMethod
                 methodInfo.InvokeAsSynchronousTask(classInstance, null);
                 // **After** we have executed the current test initialize (it could be from the current class or from base class), we save the current context.
                 // This context will contain async locals set by the test initialize method.
-                updatedExecutionContext = ExecutionContext.Capture();
+                updatedExecutionContext = Thread.CurrentThread.ExecutionContext;
             },
             TestContext!.Context.CancellationTokenSource,
             timeout,
@@ -904,7 +904,7 @@ public class TestMethodInfo : ITestMethod
                 methodInfo.InvokeAsSynchronousTask(classInstance, null);
                 // **After** we have executed the current test cleanup (it could be from the current class or from base class), we save the current context.
                 // This context will contain async locals set by the test cleanup method.
-                updatedExecutionContext = ExecutionContext.Capture();
+                updatedExecutionContext = Thread.CurrentThread.ExecutionContext;
             },
             TestContext!.Context.CancellationTokenSource,
             timeout,
