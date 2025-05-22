@@ -1,5 +1,9 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using System;
+using System.Collections.Concurrent;
+using System.Threading;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 
@@ -17,7 +21,7 @@ public class TestRunCancellationToken
     /// Callbacks to be invoked when canceled.
     /// Needs to be a concurrent collection, see https://github.com/microsoft/testfx/issues/3953.
     /// </summary>
-    private readonly ConcurrentBag<(Action<object?>, object?)> _registeredCallbacks = new();
+    private readonly ConcurrentBag<Tuple<Action<object?>, object?>> _registeredCallbacks = new();
 
     /// <summary>
     /// Gets a value indicating whether the test run is canceled.
@@ -32,9 +36,9 @@ public class TestRunCancellationToken
 
             if (!previousValue && value)
             {
-                foreach ((Action<object?> callBack, object? state) in _registeredCallbacks)
+                foreach (var callbackInfo in _registeredCallbacks)
                 {
-                    callBack.Invoke(state);
+                    callbackInfo.Item1.Invoke(callbackInfo.Item2);
                 }
             }
         }
@@ -49,9 +53,9 @@ public class TestRunCancellationToken
     /// Registers a callback method to be invoked when canceled.
     /// </summary>
     /// <param name="callback">Callback delegate for handling cancellation.</param>
-    public void Register(Action callback) => _registeredCallbacks.Add((_ => callback(), null));
+    public void Register(Action callback) => _registeredCallbacks.Add(Tuple.Create<Action<object?>, object?>((_ => callback()), null));
 
-    internal void Register(Action<object?> callback, object? state) => _registeredCallbacks.Add((callback, state));
+    internal void Register(Action<object?> callback, object? state) => _registeredCallbacks.Add(Tuple.Create(callback, state));
 
     /// <summary>
     /// Unregister the callback method.
