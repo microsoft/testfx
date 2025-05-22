@@ -202,6 +202,18 @@ public partial class AssertTests
         Verify(ex is AssertFailedException);
     }
 
+    public void Throws_WithInterpolation()
+    {
+        static string GetString() => throw new Exception();
+
+#pragma warning disable IDE0200 // Remove unnecessary lambda expression - intentionally testing overload resolution for this case.
+        Exception ex = Assert.Throws<Exception>(() => GetString(), $"Hello {GetString()}");
+#pragma warning restore IDE0200 // Remove unnecessary lambda expression
+        Exception ex2 = Assert.Throws<Exception>(GetString, $"Hello {GetString()}");
+        Verify(ex is not null);
+        Verify(ex2 is not null);
+    }
+
     public void ThrowsExactly_WhenExceptionIsDerivedFromExpectedType_ShouldThrow()
     {
         static void Action() => Assert.ThrowsExactly<ArgumentException>(() => throw new ArgumentNullException());
