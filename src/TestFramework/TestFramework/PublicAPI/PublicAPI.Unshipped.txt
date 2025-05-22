@@ -4,6 +4,11 @@ Microsoft.VisualStudio.TestTools.UnitTesting.ConditionBaseAttribute.Mode.get -> 
 Microsoft.VisualStudio.TestTools.UnitTesting.Internal.ReflectionTestMethodInfo
 Microsoft.VisualStudio.TestTools.UnitTesting.Internal.ReflectionTestMethodInfo.DisplayName.get -> string!
 Microsoft.VisualStudio.TestTools.UnitTesting.Internal.ReflectionTestMethodInfo.ReflectionTestMethodInfo(System.Reflection.MethodInfo! methodInfo, string? displayName) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.ITestDataRow
+Microsoft.VisualStudio.TestTools.UnitTesting.ITestDataRow.DisplayName.get -> string?
+Microsoft.VisualStudio.TestTools.UnitTesting.ITestDataRow.IgnoreMessage.get -> string?
+Microsoft.VisualStudio.TestTools.UnitTesting.ITestDataRow.Value.get -> object?
+Microsoft.VisualStudio.TestTools.UnitTesting.TimeoutAttribute.IsCooperativeCancellationSet.get -> bool
 override Microsoft.VisualStudio.TestTools.UnitTesting.Internal.ReflectionTestMethodInfo.Attributes.get -> System.Reflection.MethodAttributes
 override Microsoft.VisualStudio.TestTools.UnitTesting.Internal.ReflectionTestMethodInfo.ContainsGenericParameters.get -> bool
 override Microsoft.VisualStudio.TestTools.UnitTesting.Internal.ReflectionTestMethodInfo.DeclaringType.get -> System.Type?
