@@ -943,18 +943,15 @@ public class TestMethodInfo : ITestMethod
         {
             if (Parent.TestContextProperty != null && Parent.TestContextProperty.CanWrite)
             {
-                // Create a local variable to store the updated execution context
                 ExecutionContext? updatedContext = null;
 
-                // Execute the SetValue on the current execution context
                 ExecutionContextHelpers.RunOnContext(executionContext, () =>
                 {
                     Parent.TestContextProperty.SetValue(classInstance, TestContext);
-                    // Capture the execution context after setting TestContext to preserve any AsyncLocal values set
+                    // Capture the execution context to preserve AsyncLocal values set by libraries (like Verify.MSTest)
                     updatedContext = ExecutionContext.Capture();
                 });
 
-                // Update the ref parameter with the captured context
                 executionContext = updatedContext;
             }
 
