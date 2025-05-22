@@ -174,7 +174,7 @@ internal sealed class TestMethodRunner
             if (_test.TestDataSourceIgnoreMessage is not null)
             {
                 _testContext.SetOutcome(UTF.UnitTestOutcome.Ignored);
-                return [TestResult.CreateIgnoredResult(_test.TestDataSourceIgnoreMessage)];
+                return [TestResultHelpers.CreateIgnoredResult(_test.TestDataSourceIgnoreMessage)];
             }
 
             object?[]? data = DataSerializationHelper.Deserialize(_test.SerializedData);
@@ -272,7 +272,7 @@ internal sealed class TestMethodRunner
         {
             if (testDataSource is ITestDataSourceIgnoreCapability { IgnoreMessage: { } ignoreMessage })
             {
-                results.Add(TestResult.CreateIgnoredResult(ignoreMessage));
+                results.Add(TestResultHelpers.CreateIgnoredResult(ignoreMessage));
                 continue;
             }
 
@@ -396,11 +396,13 @@ internal sealed class TestMethodRunner
             data = tupleExpandedToArray;
         }
 
+#pragma warning disable CS0618 // Type or member is obsolete
         displayName = testDataSource != null
             ? displayNameFromTestDataRow
                 ?? testDataSource.GetDisplayName(new ReflectionTestMethodInfo(_testMethodInfo.MethodInfo, _test.DisplayName), data)
                 ?? displayName
             : displayNameFromTestDataRow ?? displayName;
+#pragma warning restore CS0618 // Type or member is obsolete
 
         var stopwatch = Stopwatch.StartNew();
         _testMethodInfo.SetArguments(data);
@@ -408,7 +410,7 @@ internal sealed class TestMethodRunner
         _testContext.SetDisplayName(displayName);
 
         TestResult[] testResults = ignoreFromTestDataRow is not null
-            ? [TestResult.CreateIgnoredResult(ignoreFromTestDataRow)]
+            ? [TestResultHelpers.CreateIgnoredResult(ignoreFromTestDataRow)]
             : await ExecuteTestAsync(_testMethodInfo);
 
         stopwatch.Stop();
