@@ -42,9 +42,10 @@ public class DataRowAttribute : Attribute, ITestDataSource, ITestDataSourceUnfol
     public DataRowAttribute(params object?[]? data) => Data = data ?? [null];
 
     /// <summary>
-    /// Gets the test id generation strategy.
+    /// Gets or sets the test id generation strategy.
     /// </summary>
-    protected internal static TestIdGenerationStrategy TestIdGenerationStrategy { get; internal set; }
+    [Obsolete("This property is public only for use via TestAdapter. Don't use it in your code. We will remove it in MSTest v4 and we may remove it even in a minor release.")]
+    public static TestIdGenerationStrategy TestIdGenerationStrategy { get; set; }
 
     /// <summary>
     /// Gets data for calling test method.
@@ -69,7 +70,9 @@ public class DataRowAttribute : Attribute, ITestDataSource, ITestDataSourceUnfol
 
     /// <inheritdoc />
     public virtual string? GetDisplayName(MethodInfo methodInfo, object?[]? data)
+#pragma warning disable CS0618 // Type or member is obsolete
         => !string.IsNullOrWhiteSpace(DisplayName)
             ? DisplayName
             : TestDataSourceUtilities.ComputeDefaultDisplayName(methodInfo, data, TestIdGenerationStrategy);
+#pragma warning restore CS0618 // Type or member is obsolete
 }

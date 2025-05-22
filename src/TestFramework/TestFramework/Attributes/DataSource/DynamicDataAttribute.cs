@@ -99,7 +99,11 @@ public sealed class DynamicDataAttribute : Attribute, ITestDataSource, ITestData
     public DynamicDataAttribute(string dynamicDataSourceName, Type dynamicDataDeclaringType)
         : this(dynamicDataSourceName) => _dynamicDataDeclaringType = dynamicDataDeclaringType;
 
-    internal static TestIdGenerationStrategy TestIdGenerationStrategy { get; set; }
+    /// <summary>
+    /// Gets or sets the test id generation strategy.
+    /// </summary>
+    [Obsolete("This property is public only for use via TestAdapter. Don't use it in your code. We will remove it in MSTest v4 and we may remove it even in a minor release.")]
+    public static TestIdGenerationStrategy TestIdGenerationStrategy { get; set; }
 
     /// <summary>
     /// Gets or sets the name of method used to customize the display name in test results.

@@ -9,7 +9,9 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.Attributes
 
 public class DataRowAttributeTests : TestContainer
 {
+#pragma warning disable CS0618 // Type or member is obsolete
     public DataRowAttributeTests() => DataRowAttribute.TestIdGenerationStrategy = TestIdGenerationStrategy.FullyQualified;
+#pragma warning restore CS0618 // Type or member is obsolete
 
     public void DefaultConstructorSetsEmptyArrayPassed()
     {
