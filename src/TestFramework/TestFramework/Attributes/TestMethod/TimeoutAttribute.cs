@@ -55,5 +55,8 @@ public sealed class TimeoutAttribute : Attribute
     /// </summary>
     internal bool HasCorrectTimeout => Timeout > 0;
 
-    internal bool IsCooperativeCancellationSet { get; private set; }
+    /// <summary>
+    /// Gets a value indicating whether <see cref="CooperativeCancellation"/> was set explicitly.
+    /// </summary>
+    public bool IsCooperativeCancellationSet { get; private set; }
 }

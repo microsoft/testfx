@@ -132,11 +132,4 @@ public class TestResult
     /// Gets or sets the result files attached by the test.
     /// </summary>
     public IList<string>? ResultFiles { get; set; }
-
-    internal static TestResult CreateIgnoredResult(string? ignoreReason)
-        => new()
-        {
-            Outcome = UnitTestOutcome.Ignored,
-            IgnoreReason = ignoreReason,
-        };
 }

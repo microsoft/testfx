@@ -79,8 +79,10 @@ internal class AssemblyEnumerator : MarshalByRefObject
 
         // Set the test ID generation strategy for DataRowAttribute and DynamicDataAttribute so we can improve display name without
         // causing a breaking change.
+#pragma warning disable CS0618 // Type or member is obsolete
         DataRowAttribute.TestIdGenerationStrategy = testIdGenerationStrategy;
         DynamicDataAttribute.TestIdGenerationStrategy = testIdGenerationStrategy;
+#pragma warning restore CS0618 // Type or member is obsolete
 
         TestDataSourceUnfoldingStrategy dataSourcesUnfoldingStrategy = ReflectHelper.GetTestDataSourceOptions(assembly)?.UnfoldingStrategy switch
         {
@@ -388,7 +390,9 @@ internal class AssemblyEnumerator : MarshalByRefObject
         }
     }
 
+#pragma warning disable CS0618 // Type or member is obsolete
     private static bool TryUnfoldITestDataSource(ITestDataSource dataSource, TestDataSourceUnfoldingStrategy dataSourcesUnfoldingStrategy, UnitTestElement test, ReflectionTestMethodInfo methodInfo, List<UnitTestElement> tests)
+#pragma warning restore CS0618 // Type or member is obsolete
     {
         var unfoldingCapability = dataSource as ITestDataSourceUnfoldingCapability;
 

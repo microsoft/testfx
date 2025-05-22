@@ -21,9 +21,11 @@ internal static class TestDataSourceUtilities
             ? [data.AsEnumerable()]
             : data.AsEnumerable();
 
+#pragma warning disable CS0618 // Type or member is obsolete
         string methodDisplayName = testIdGenerationStrategy == TestIdGenerationStrategy.FullyQualified && methodInfo is ReflectionTestMethodInfo reflectionTestMethodInfo
             ? reflectionTestMethodInfo.DisplayName
             : methodInfo.Name;
+#pragma warning restore CS0618 // Type or member is obsolete
 
         return string.Format(
             CultureInfo.CurrentCulture,
