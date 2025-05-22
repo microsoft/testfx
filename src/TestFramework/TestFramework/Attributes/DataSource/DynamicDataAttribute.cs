@@ -132,7 +132,9 @@ public sealed class DynamicDataAttribute : Attribute, ITestDataSource, ITestData
     {
         if (DynamicDataDisplayName == null)
         {
+#pragma warning disable CS0618 // Type or member is obsolete
             return TestDataSourceUtilities.ComputeDefaultDisplayName(methodInfo, data, TestIdGenerationStrategy);
+#pragma warning restore CS0618 // Type or member is obsolete
         }
 
         Type? dynamicDisplayNameDeclaringType = DynamicDataDisplayNameDeclaringType ?? methodInfo.DeclaringType;
