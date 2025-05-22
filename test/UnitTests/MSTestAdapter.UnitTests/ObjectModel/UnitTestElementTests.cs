@@ -240,7 +240,7 @@ public class UnitTestElementTests : TestContainer
             new UnitTestElement(
                 new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", null, testIdStrategy)
                 {
-                    DataType = DynamicDataType.DataSourceAttribute,
+                    DataType = DynamicDataType.ITestDataSource,
                 })
             {
                 DisplayName = "SomeDisplayName",
@@ -269,20 +269,20 @@ public class UnitTestElementTests : TestContainer
             new UnitTestElement(
                 new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", null, testIdStrategy)
                 {
-                    DataType = DynamicDataType.DataSourceAttribute,
+                    DataType = DynamicDataType.None,
                 })
             .ToTestCase(),
             new UnitTestElement(
                 new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", null, testIdStrategy)
                 {
-                    DataType = DynamicDataType.DataSourceAttribute,
+                    DataType = DynamicDataType.None,
                     SerializedData = ["1"],
                 })
             .ToTestCase(),
             new UnitTestElement(
                 new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", null, testIdStrategy)
                 {
-                    DataType = DynamicDataType.DataSourceAttribute,
+                    DataType = DynamicDataType.None,
                     SerializedData = ["2"],
                 })
             .ToTestCase(),
@@ -302,7 +302,10 @@ public class UnitTestElementTests : TestContainer
             .ToTestCase()
         ];
 
-        Verify(testCases.Select(tc => tc.Id.ToString()).Distinct().Count() == 1);
+        // All the test cases with DynamicDataType.None will have the same Id (showing collisions).
+        // All the test cases with DynamicDataType.ITestDataSource will have the same Id, but different one (showing collisions).
+        // So for the 5 test cases, we have 2 distinct Ids.
+        Verify(testCases.Select(tc => tc.Id.ToString()).Distinct().Count() == 2);
     }
 
     public void ToTestCase_WhenStrategyIsFullyQualifiedTest_ExamplesOfTestCaseIdUniqueness()
