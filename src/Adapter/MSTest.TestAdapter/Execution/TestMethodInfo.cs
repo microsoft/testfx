@@ -419,7 +419,7 @@ public class TestMethodInfo : ITestMethod
         {
             try
             {
-                if (_classInstance != null && SetTestContext(_classInstance, result))
+                if (_classInstance != null && SetTestContext(_classInstance, result, ref executionContext))
                 {
                     // For any failure after this point, we must run TestCleanup
                     _isTestContextSet = true;
@@ -929,11 +929,12 @@ public class TestMethodInfo : ITestMethod
     /// <param name="result">
     /// Reference to instance of <see cref="TestResult"/>.
     /// </param>
+    /// <param name="executionContext">The execution context to execute on.</param>
     /// <returns>
     /// True if there no exceptions during set context operation.
     /// </returns>
     [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
-    private bool SetTestContext(object classInstance, TestResult result)
+    private bool SetTestContext(object classInstance, TestResult result, ref ExecutionContext? executionContext)
     {
         DebugEx.Assert(classInstance != null, "classInstance != null");
         DebugEx.Assert(result != null, "result != null");
@@ -942,7 +943,16 @@ public class TestMethodInfo : ITestMethod
         {
             if (Parent.TestContextProperty != null && Parent.TestContextProperty.CanWrite)
             {
-                Parent.TestContextProperty.SetValue(classInstance, TestContext);
+                ExecutionContext? updatedContext = null;
+
+                ExecutionContextHelpers.RunOnContext(executionContext, () =>
+                {
+                    Parent.TestContextProperty.SetValue(classInstance, TestContext);
+                    // Capture the execution context to preserve AsyncLocal values set by libraries (like Verify.MSTest)
+                    updatedContext = ExecutionContext.Capture();
+                });
+
+                executionContext = updatedContext;
             }
 
             return true;
