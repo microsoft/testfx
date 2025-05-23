@@ -518,6 +518,4 @@ public sealed class TestContextShouldBeValidAnalyzerTests
 
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
-
-
 }
