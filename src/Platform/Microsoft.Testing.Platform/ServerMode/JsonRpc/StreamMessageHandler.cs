@@ -47,8 +47,7 @@ internal class StreamMessageHandler : IMessageHandler, IDisposable
         // [content]\r\n
         while (true)
         {
-            // Content type is not mandatory, and we don't use it.
-            (int commandSize, string _) = await ReadHeadersAsync(cancellationToken);
+            int commandSize = await ReadHeadersAsync(cancellationToken);
 
             // Most probably connection lost
             if (commandSize is -1)
@@ -76,10 +75,9 @@ internal class StreamMessageHandler : IMessageHandler, IDisposable
         }
     }
 
-    private async Task<(int ContentSize, string ContentType)> ReadHeadersAsync(CancellationToken cancellationToken)
+    private async Task<int> ReadHeadersAsync(CancellationToken cancellationToken)
     {
         int contentSize = -1;
-        string contentType = string.Empty;
 
         while (true)
         {
@@ -95,27 +93,19 @@ internal class StreamMessageHandler : IMessageHandler, IDisposable
                 break;
             }
 
-            string contentSizeStr = "Content-Length:";
-            string contentTypeStr = "Content-Type:";
-            if (line.StartsWith(contentSizeStr, StringComparison.OrdinalIgnoreCase))
+            const string ContentLengthHeaderName = "Content-Length:";
+            // Content type is not mandatory, and we don't use it.
+            if (line.StartsWith(ContentLengthHeaderName, StringComparison.OrdinalIgnoreCase))
             {
 #if NETCOREAPP
-                _ = int.TryParse(line.AsSpan()[contentSizeStr.Length..].Trim(), out contentSize);
+                _ = int.TryParse(line.AsSpan()[ContentLengthHeaderName.Length..].Trim(), out contentSize);
 #else
-                _ = int.TryParse(line[contentSizeStr.Length..].Trim(), out contentSize);
-#endif
-            }
-            else if (line.StartsWith(contentTypeStr, StringComparison.OrdinalIgnoreCase))
-            {
-#if NETCOREAPP
-                contentType = new(line.AsSpan()[contentTypeStr.Length..].Trim());
-#else
-                contentType = line[contentTypeStr.Length..].Trim();
+                _ = int.TryParse(line[ContentLengthHeaderName.Length..].Trim(), out contentSize);
 #endif
             }
         }
 
-        return (contentSize, contentType);
+        return contentSize;
     }
 
     public async Task WriteRequestAsync(RpcMessage message, CancellationToken cancellationToken)
