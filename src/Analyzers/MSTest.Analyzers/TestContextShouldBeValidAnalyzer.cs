@@ -96,18 +96,16 @@ public sealed class TestContextShouldBeValidAnalyzer : DiagnosticAnalyzer
             assignmentOperation.Target is IMemberReferenceOperation targetMemberReference &&
             SymbolEqualityComparer.Default.Equals(targetMemberReference.Member, member))
         {
-            // Handle direct parameter assignment
-            if (assignmentOperation.Value is IParameterReferenceOperation parameterReference &&
-                SymbolEqualityComparer.Default.Equals(parameterReference.Parameter, parameter))
+            // Extract parameter reference from the value, unwrapping from coalesce operation if necessary
+            IOperation effectiveValue = assignmentOperation.Value;
+            if (effectiveValue is ICoalesceOperation coalesceOperation)
             {
-                return true;
+                effectiveValue = coalesceOperation.Value;
             }
 
-            // Handle null-coalescing operator with parameter on left side
-            // e.g., TestContext = testContext ?? throw new ArgumentNullException(nameof(testContext));
-            if (assignmentOperation.Value is ICoalesceOperation coalesceOperation &&
-                coalesceOperation.Value is IParameterReferenceOperation coalescingParamRef &&
-                SymbolEqualityComparer.Default.Equals(coalescingParamRef.Parameter, parameter))
+            // Check if the effective value is a parameter reference to our target parameter
+            if (effectiveValue is IParameterReferenceOperation parameterReference &&
+                SymbolEqualityComparer.Default.Equals(parameterReference.Parameter, parameter))
             {
                 return true;
             }
@@ -144,22 +142,18 @@ public sealed class TestContextShouldBeValidAnalyzer : DiagnosticAnalyzer
         if (operation is ISimpleAssignmentOperation assignmentOperation &&
             assignmentOperation.Target is IMemberReferenceOperation { Member: IFieldSymbol { } candidateField })
         {
-            // Handle direct parameter assignment
-            if (assignmentOperation.Value is IParameterReferenceOperation parameterReference &&
+            // Extract parameter reference from the value, unwrapping from coalesce operation if necessary
+            IOperation effectiveValue = assignmentOperation.Value;
+            if (effectiveValue is ICoalesceOperation coalesceOperation)
+            {
+                effectiveValue = coalesceOperation.Value;
+            }
+
+            // Check if the effective value is a parameter reference to our target parameter
+            if (effectiveValue is IParameterReferenceOperation parameterReference &&
                 SymbolEqualityComparer.Default.Equals(parameterReference.Parameter, testContextParameter))
             {
                 fieldsAssignedInConstructor.Add(candidateField);
-                return;
-            }
-
-            // Handle null-coalescing operator with parameter on left side
-            // e.g., _testContext = testContext ?? throw new ArgumentNullException(nameof(testContext));
-            if (assignmentOperation.Value is ICoalesceOperation coalesceOperation &&
-                coalesceOperation.Value is IParameterReferenceOperation coalescingParamRef &&
-                SymbolEqualityComparer.Default.Equals(coalescingParamRef.Parameter, testContextParameter))
-            {
-                fieldsAssignedInConstructor.Add(candidateField);
-                return;
             }
         }
     }
