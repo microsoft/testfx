@@ -38,22 +38,18 @@ public class GenericTestMethodTests : AcceptanceTestBase<GenericTestMethodTests.
             failed ParameterizedMethodSimple \(null\) \(\d+ms\)
               Test method TestClass\.ParameterizedMethodSimple threw exception: 
               System\.InvalidOperationException: The type of the generic parameter 'T' could not be inferred\.
-                .+?
             failed ParameterizedMethodTwoGenericParametersAndFourMethodParameters \(1,"Hello world",2,3\) \(\d+ms\)
               Test method TestClass\.ParameterizedMethodTwoGenericParametersAndFourMethodParameters threw exception: 
               System\.InvalidOperationException: Found two conflicting types for generic parameter 'T2'\. The conflicting types are 'System\.Byte' and 'System\.Int32'\.
-                .+?
             failed ParameterizedMethodTwoGenericParametersAndFourMethodParameters \(null,"Hello world","Hello again",3\) \(\d+ms\)
               Assert\.Fail failed\. Test method 'ParameterizedMethodTwoGenericParametersAndFourMethodParameters' did run with parameters '<null>', 'Hello world', 'Hello again', '3' and generic types 'System\.Int32', 'System\.String'\.
                 .+?
             failed ParameterizedMethodTwoGenericParametersAndFourMethodParameters \("Hello hello","Hello world",null,null\) \(\d+ms\)
               Test method TestClass\.ParameterizedMethodTwoGenericParametersAndFourMethodParameters threw exception: 
               System\.InvalidOperationException: The type of the generic parameter 'T1' could not be inferred\.
-                .+?
             failed ParameterizedMethodTwoGenericParametersAndFourMethodParameters \(null,null,null,null\) \(\d+ms\)
               Test method TestClass\.ParameterizedMethodTwoGenericParametersAndFourMethodParameters threw exception: 
               System\.InvalidOperationException: The type of the generic parameter 'T1' could not be inferred\.
-                .+?
             failed ParameterizedMethodSimpleParams \(1\) \(\d+ms\)
               Cannot create an instance of T\[] because Type\.ContainsGenericParameters is true\.
                 .+?
