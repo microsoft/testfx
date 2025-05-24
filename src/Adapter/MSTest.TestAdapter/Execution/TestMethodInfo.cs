@@ -558,7 +558,7 @@ public class TestMethodInfo : ITestMethod
         // Pulling it out so extension writers can abort custom cleanups if need be. Having this in a finally block
         // does not allow a thread abort exception to be raised within the block but throws one after finally is executed
         // crashing the process. This was blocking writing an extension for Dynamic Timeout in VSO.
-        RunTestCleanupMethod(result, ref executionContext, timeoutTokenSource);
+        RunTestCleanupMethod(result, executionContext, timeoutTokenSource);
 
         return testRunnerException != null ? throw testRunnerException : result;
     }
