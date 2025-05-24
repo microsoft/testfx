@@ -706,7 +706,7 @@ public class TestMethodInfo : ITestMethod
     /// <param name="executionContext">The execution context to run on.</param>
     /// <param name="timeoutTokenSource">The timeout token source.</param>
     [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
-    private void RunTestCleanupMethod(TestResult result, ref ExecutionContext? executionContext, CancellationTokenSource? timeoutTokenSource)
+    private void RunTestCleanupMethod(TestResult result, ExecutionContext? executionContext, CancellationTokenSource? timeoutTokenSource)
     {
         DebugEx.Assert(result != null, "result != null");
 
@@ -1129,7 +1129,7 @@ public class TestMethodInfo : ITestMethod
 
             // It's possible that some failures happened and that the cleanup wasn't executed, so we need to run it here.
             // The method already checks if the cleanup was already executed.
-            RunTestCleanupMethod(result, ref executionContext, null);
+            RunTestCleanupMethod(result, executionContext, null);
             return result;
         }
 
@@ -1153,7 +1153,7 @@ public class TestMethodInfo : ITestMethod
 
         // We don't know when the cancellation happened so it's possible that the cleanup wasn't executed, so we need to run it here.
         // The method already checks if the cleanup was already executed.
-        RunTestCleanupMethod(timeoutResult, ref executionContext, null);
+        RunTestCleanupMethod(timeoutResult, executionContext, null);
         return timeoutResult;
 
         // Local functions
