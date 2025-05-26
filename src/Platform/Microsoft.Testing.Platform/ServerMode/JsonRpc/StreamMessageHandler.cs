@@ -11,8 +11,6 @@ namespace Microsoft.Testing.Platform.ServerMode;
 
 internal class StreamMessageHandler : IMessageHandler, IDisposable
 {
-    private readonly Stream _clientToServerStream;
-    private readonly Stream _serverToClientStream;
     private readonly StreamReader _reader;
     private readonly StreamWriter _writer;
     private readonly IMessageFormatter _formatter;
@@ -23,10 +21,8 @@ internal class StreamMessageHandler : IMessageHandler, IDisposable
         Stream serverToClientStream,
         IMessageFormatter formatter)
     {
-        _clientToServerStream = clientToServerStream;
-        _serverToClientStream = serverToClientStream;
-        _reader = new StreamReader(_clientToServerStream);
-        _writer = new StreamWriter(_serverToClientStream)
+        _reader = new StreamReader(clientToServerStream);
+        _writer = new StreamWriter(serverToClientStream)
         {
             // We need to force the NewLine because in Windows and nix different char sequence are used
             // https://learn.microsoft.com/dotnet/api/system.io.textwriter.newline?view=net-7.0
