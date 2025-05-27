@@ -193,7 +193,7 @@ internal static class CommandLineOptionsValidator
                 validOptionNames.Add(option.Name);
             }
         }
-        
+
         foreach (var provider in systemOptionsByProvider)
         {
             foreach (var option in provider.Value)
@@ -316,7 +316,7 @@ internal static class CommandLineOptionsValidator
         // Use a more efficient approach to trim without creating unnecessary intermediate strings
         string result = stringBuilder.ToString();
         int end = result.Length;
-        
+
         // Find the last non-whitespace char
         while (end > 0)
         {
@@ -327,7 +327,7 @@ internal static class CommandLineOptionsValidator
             }
             end--;
         }
-        
+
         return end == result.Length ? result : result.Substring(0, end);
     }
 }
