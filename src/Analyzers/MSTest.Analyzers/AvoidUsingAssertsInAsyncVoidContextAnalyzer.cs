@@ -51,13 +51,7 @@ public sealed class AvoidUsingAssertsInAsyncVoidContextAnalyzer : DiagnosticAnal
 
             if (assertSymbol is not null || stringAssertSymbol is not null || collectionAssertSymbol is not null)
             {
-                context.RegisterOperationAction(
-                    context => AnalyzeOperation(
-                        context, 
-                        assertSymbol, 
-                        stringAssertSymbol, 
-                        collectionAssertSymbol), 
-                    OperationKind.Invocation);
+                context.RegisterOperationAction(context => AnalyzeOperation(context, assertSymbol, stringAssertSymbol, collectionAssertSymbol), OperationKind.Invocation);
             }
         });
     }
