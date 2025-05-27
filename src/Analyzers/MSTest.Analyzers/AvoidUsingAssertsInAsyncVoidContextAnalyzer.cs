@@ -69,7 +69,7 @@ public sealed class AvoidUsingAssertsInAsyncVoidContextAnalyzer : DiagnosticAnal
         }
 
         INamedTypeSymbol targetType = operation.TargetMethod.ContainingType;
-        bool isAssertType = 
+        bool isAssertType =
             targetType.Equals(assertSymbol, SymbolEqualityComparer.Default) ||
             targetType.Equals(stringAssertSymbol, SymbolEqualityComparer.Default) ||
             targetType.Equals(collectionAssertSymbol, SymbolEqualityComparer.Default);
