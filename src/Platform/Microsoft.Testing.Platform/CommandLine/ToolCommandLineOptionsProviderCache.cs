@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Collections.Concurrent;
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.CommandLine;
 using Microsoft.Testing.Platform.Tools;
@@ -11,6 +12,7 @@ internal struct ToolCommandLineOptionsProviderCache(IToolCommandLineOptionsProvi
 {
     private readonly IToolCommandLineOptionsProvider _commandLineOptionsProvider = commandLineOptionsProvider;
     private IReadOnlyCollection<CommandLineOption>? _commandLineOptions;
+    private readonly ConcurrentDictionary<string, Task<ValidationResult>> _validationCache = new();
 
     public readonly string Uid => _commandLineOptionsProvider.Uid;
 
@@ -35,6 +37,18 @@ internal struct ToolCommandLineOptionsProviderCache(IToolCommandLineOptionsProvi
     public readonly Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions)
         => _commandLineOptionsProvider.ValidateCommandLineOptionsAsync(commandLineOptions);
 
-    public readonly Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments)
-        => _commandLineOptionsProvider.ValidateOptionArgumentsAsync(commandOption, arguments);
+    public Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments)
+    {
+        // Create a cache key from the option name and arguments
+        string key = GenerateCacheKey(commandOption, arguments);
+        
+        // Return the cached result if available, otherwise compute and cache it
+        return _validationCache.GetOrAdd(key, _ => _commandLineOptionsProvider.ValidateOptionArgumentsAsync(commandOption, arguments));
+    }
+
+    private static string GenerateCacheKey(CommandLineOption commandOption, string[] arguments)
+    {
+        // Combine the option name with all arguments to form a unique key
+        return string.Join("|", new[] { commandOption.Name }.Concat(arguments));
+    }
 }
