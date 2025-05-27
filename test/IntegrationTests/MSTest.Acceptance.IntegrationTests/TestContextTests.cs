@@ -10,9 +10,10 @@ namespace MSTest.Acceptance.IntegrationTests;
 public sealed class TestContextTests : AcceptanceTestBase<TestContextTests.TestAssetFixture>
 {
     [TestMethod]
-    public async Task TestContextsAreCorrectlySet()
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    public async Task TestContextsAreCorrectlySet(string tfm)
     {
-        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent);
+        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--filter ClassName~TestContextCtor");
 
         // Assert
@@ -76,7 +77,7 @@ public sealed class TestContextTests : AcceptanceTestBase<TestContextTests.TestA
         {
             yield return (ProjectName, ProjectName,
                 SourceCode
-                .PatchTargetFrameworks(TargetFrameworks.NetCurrent)
+                .PatchTargetFrameworks(TargetFrameworks.All)
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
         }
 
@@ -88,6 +89,7 @@ public sealed class TestContextTests : AcceptanceTestBase<TestContextTests.TestA
     <OutputType>Exe</OutputType>
     <EnableMSTestRunner>true</EnableMSTestRunner>
     <TargetFrameworks>$TargetFrameworks$</TargetFrameworks>
+    <LangVersion>preview</LangVersion>
 
     <!--
         This property is not required by users and is only set to simplify our testing infrastructure. When testing out in local or ci,
@@ -106,6 +108,10 @@ public sealed class TestContextTests : AcceptanceTestBase<TestContextTests.TestA
 #file UnitTest1.cs
 using System;
 using System.Collections.Generic;
+#if NETFRAMEWORK
+using System.Runtime.Remoting.Messaging;
+#endif
+using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 [TestClass]
@@ -148,13 +154,22 @@ public class TestContextCtor
 public class TestContextCtorAndProperty
 {
     private TestContext _testContext;
+    private static AsyncLocal<string> s_asyncLocal = new();
 
     public TestContextCtorAndProperty(TestContext testContext)
     {
         _testContext = testContext;
     }
 
-    public TestContext TestContext { get; set; }
+    public TestContext TestContext
+    {
+        get => field;
+        set
+        {
+            field = value;
+            s_asyncLocal.Value = "TestContext is set";
+        }
+    }
 
     [TestMethod]
     public void TestMethod()
@@ -163,7 +178,19 @@ public class TestContextCtorAndProperty
         TestContext.WriteLine("Method TestContextCtorAndProperty.TestMethod() was called");
         Assert.IsNotNull(_testContext);
         Assert.IsNotNull(TestContext);
+        Assert.AreEqual("TestContext is set", s_asyncLocal.Value);
+#if NETFRAMEWORK
+        Assert.AreEqual("Value from TestInitialize", CallContext.HostContext);
+#endif
     }
+
+#if NETFRAMEWORK
+    [TestInitialize]
+    public void TestInitialize()
+    {
+        CallContext.HostContext = "Value from TestInitialize";
+    }
+#endif
 }
 
 [TestClass]
