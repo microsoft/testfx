@@ -46,23 +46,44 @@ public sealed class AvoidUsingAssertsInAsyncVoidContextAnalyzer : DiagnosticAnal
         {
             Compilation compilation = context.Compilation;
             INamedTypeSymbol? assertSymbol = compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingAssert);
-            if (assertSymbol is not null)
+            INamedTypeSymbol? stringAssertSymbol = compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingStringAssert);
+            INamedTypeSymbol? collectionAssertSymbol = compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingCollectionAssert);
+
+            if (assertSymbol is not null || stringAssertSymbol is not null || collectionAssertSymbol is not null)
             {
-                context.RegisterOperationAction(context => AnalyzeOperation(context, assertSymbol), OperationKind.Invocation);
+                context.RegisterOperationAction(
+                    context => AnalyzeOperation(
+                        context, 
+                        assertSymbol, 
+                        stringAssertSymbol, 
+                        collectionAssertSymbol), 
+                    OperationKind.Invocation);
             }
         });
     }
 
-    private static void AnalyzeOperation(OperationAnalysisContext context, INamedTypeSymbol assertSymbol)
+    private static void AnalyzeOperation(
+        OperationAnalysisContext context, 
+        INamedTypeSymbol? assertSymbol, 
+        INamedTypeSymbol? stringAssertSymbol, 
+        INamedTypeSymbol? collectionAssertSymbol)
     {
         var operation = (IInvocationOperation)context.Operation;
-        if (!IsAsyncVoidContext(operation, context.ContainingSymbol) ||
-            !assertSymbol.Equals(operation.TargetMethod.ContainingType, SymbolEqualityComparer.Default))
+        if (!IsAsyncVoidContext(operation, context.ContainingSymbol))
         {
             return;
         }
 
-        context.ReportDiagnostic(operation.CreateDiagnostic(Rule));
+        var targetType = operation.TargetMethod.ContainingType;
+        bool isAssertType = 
+            (assertSymbol is not null && assertSymbol.Equals(targetType, SymbolEqualityComparer.Default)) ||
+            (stringAssertSymbol is not null && stringAssertSymbol.Equals(targetType, SymbolEqualityComparer.Default)) ||
+            (collectionAssertSymbol is not null && collectionAssertSymbol.Equals(targetType, SymbolEqualityComparer.Default));
+
+        if (isAssertType)
+        {
+            context.ReportDiagnostic(operation.CreateDiagnostic(Rule));
+        }
     }
 
     private static bool IsAsyncVoidContext(IInvocationOperation invocationOperation, ISymbol containingSymbol)
