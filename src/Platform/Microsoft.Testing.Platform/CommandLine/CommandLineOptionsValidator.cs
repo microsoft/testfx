@@ -1,15 +1,26 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.CommandLine;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Resources;
+using Roslyn.Utilities;
 
 namespace Microsoft.Testing.Platform.CommandLine;
 
+[PerformanceSensitive("https://github.com/microsoft/testfx/issues/5651", AllowGenericEnumeration = false)]
 internal static class CommandLineOptionsValidator
 {
+    [PerformanceSensitive("https://github.com/microsoft/testfx/issues/5651", AllowGenericEnumeration = false)]
     public static async Task<ValidationResult> ValidateAsync(
         CommandLineParseResult commandLineParseResult,
         IEnumerable<ICommandLineOptionsProvider> systemCommandLineOptionsProviders,
@@ -68,6 +79,7 @@ internal static class CommandLineOptionsValidator
         return await ValidateConfigurationAsync(extensionOptionsByProvider.Keys, systemOptionsByProvider.Keys, commandLineOptions);
     }
 
+    [PerformanceSensitive("https://github.com/microsoft/testfx/issues/5651", AllowGenericEnumeration = false)]
     private static ValidationResult ValidateExtensionOptionsDoNotContainReservedPrefix(
         Dictionary<ICommandLineOptionsProvider, IReadOnlyCollection<CommandLineOption>> extensionOptionsByProvider)
     {
@@ -97,44 +109,35 @@ internal static class CommandLineOptionsValidator
             : ValidationResult.Valid();
     }
 
+    [PerformanceSensitive("https://github.com/microsoft/testfx/issues/5651", AllowGenericEnumeration = false)]
     private static ValidationResult ValidateExtensionOptionsDoNotContainReservedOptions(
         Dictionary<ICommandLineOptionsProvider, IReadOnlyCollection<CommandLineOption>> extensionOptionsByProvider,
         Dictionary<ICommandLineOptionsProvider, IReadOnlyCollection<CommandLineOption>> systemOptionsByProvider)
     {
-        IEnumerable<string> allExtensionOptions = extensionOptionsByProvider.Values.SelectMany(x => x).Select(x => x.Name).Distinct();
-        IEnumerable<string> allSystemOptions = systemOptionsByProvider.Values.SelectMany(x => x).Select(x => x.Name).Distinct();
-
-        IEnumerable<string> invalidReservedOptions = allSystemOptions.Intersect(allExtensionOptions);
-        if (invalidReservedOptions.Any())
+        // Create a HashSet of all system option names for faster lookup
+        HashSet<string> systemOptionNames = new();
+        foreach (var provider in systemOptionsByProvider)
         {
-            var stringBuilder = new StringBuilder();
-            foreach (string reservedOption in invalidReservedOptions)
+            foreach (var option in provider.Value)
             {
-                IEnumerable<string> faultyProviderNames = extensionOptionsByProvider.Where(tuple => tuple.Value.Any(x => x.Name == reservedOption)).Select(tuple => tuple.Key.DisplayName);
-                stringBuilder.AppendLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineOptionIsReserved, reservedOption, string.Join("', '", faultyProviderNames)));
+                systemOptionNames.Add(option.Name);
             }
-
-            return ValidationResult.Invalid(stringBuilder.ToTrimmedString());
         }
 
-        return ValidationResult.Valid();
-    }
-
-    private static ValidationResult ValidateOptionsAreNotDuplicated(
-        Dictionary<ICommandLineOptionsProvider, IReadOnlyCollection<CommandLineOption>> extensionOptionsByProvider)
-    {
-        IEnumerable<string> duplications = extensionOptionsByProvider.Values.SelectMany(x => x)
-            .Select(x => x.Name)
-            .GroupBy(x => x)
-            .Where(x => x.Skip(1).Any())
-            .Select(x => x.Key);
-
         StringBuilder? stringBuilder = null;
-        foreach (string duplicatedOption in duplications)
+        foreach (var provider in extensionOptionsByProvider)
         {
-            IEnumerable<string> faultyProvidersDisplayNames = extensionOptionsByProvider.Where(tuple => tuple.Value.Any(x => x.Name == duplicatedOption)).Select(tuple => tuple.Key.DisplayName);
-            stringBuilder ??= new();
-            stringBuilder.AppendLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineOptionIsDeclaredByMultipleProviders, duplicatedOption, string.Join("', '", faultyProvidersDisplayNames)));
+            foreach (var option in provider.Value)
+            {
+                if (systemOptionNames.Contains(option.Name))
+                {
+                    stringBuilder ??= new StringBuilder();
+                    stringBuilder.AppendLine(string.Format(CultureInfo.InvariantCulture, 
+                        PlatformResources.CommandLineOptionIsReserved, 
+                        option.Name, 
+                        provider.Key.DisplayName));
+                }
+            }
         }
 
         return stringBuilder?.Length > 0
@@ -142,15 +145,74 @@ internal static class CommandLineOptionsValidator
             : ValidationResult.Valid();
     }
 
+    [PerformanceSensitive("https://github.com/microsoft/testfx/issues/5651", AllowGenericEnumeration = false)]
+    private static ValidationResult ValidateOptionsAreNotDuplicated(
+        Dictionary<ICommandLineOptionsProvider, IReadOnlyCollection<CommandLineOption>> extensionOptionsByProvider)
+    {
+        // Use a dictionary to track option names and their providers
+        Dictionary<string, List<ICommandLineOptionsProvider>> optionNameToProviders = new();
+        
+        foreach (var kvp in extensionOptionsByProvider)
+        {
+            var provider = kvp.Key;
+            foreach (var option in kvp.Value)
+            {
+                string name = option.Name;
+                if (!optionNameToProviders.TryGetValue(name, out var providers))
+                {
+                    providers = new List<ICommandLineOptionsProvider>();
+                    optionNameToProviders[name] = providers;
+                }
+                providers.Add(provider);
+            }
+        }
+        
+        // Check for duplications
+        StringBuilder? stringBuilder = null;
+        foreach (var kvp in optionNameToProviders)
+        {
+            if (kvp.Value.Count > 1)
+            {
+                string duplicatedOption = kvp.Key;
+                stringBuilder ??= new();
+                IEnumerable<string> faultyProvidersDisplayNames = kvp.Value.Select(p => p.DisplayName);
+                stringBuilder.AppendLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineOptionIsDeclaredByMultipleProviders, duplicatedOption, string.Join("', '", faultyProvidersDisplayNames)));
+            }
+        }
+
+        return stringBuilder?.Length > 0
+            ? ValidationResult.Invalid(stringBuilder.ToTrimmedString())
+            : ValidationResult.Valid();
+    }
+
+    [PerformanceSensitive("https://github.com/microsoft/testfx/issues/5651", AllowGenericEnumeration = false)]
     private static ValidationResult ValidateNoUnknownOptions(
         CommandLineParseResult parseResult,
         Dictionary<ICommandLineOptionsProvider, IReadOnlyCollection<CommandLineOption>> extensionOptionsByProvider,
         Dictionary<ICommandLineOptionsProvider, IReadOnlyCollection<CommandLineOption>> systemOptionsByProvider)
     {
+        // Create a HashSet of all valid option names for faster lookup
+        HashSet<string> validOptionNames = new();
+        foreach (var provider in extensionOptionsByProvider)
+        {
+            foreach (var option in provider.Value)
+            {
+                validOptionNames.Add(option.Name);
+            }
+        }
+        
+        foreach (var provider in systemOptionsByProvider)
+        {
+            foreach (var option in provider.Value)
+            {
+                validOptionNames.Add(option.Name);
+            }
+        }
+
         StringBuilder? stringBuilder = null;
         foreach (CommandLineParseOption optionRecord in parseResult.Options)
         {
-            if (!extensionOptionsByProvider.Union(systemOptionsByProvider).Any(tuple => tuple.Value.Any(x => x.Name == optionRecord.Name)))
+            if (!validOptionNames.Contains(optionRecord.Name))
             {
                 stringBuilder ??= new();
                 stringBuilder.AppendLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineUnknownOption, optionRecord.Name));
@@ -162,11 +224,12 @@ internal static class CommandLineOptionsValidator
             : ValidationResult.Valid();
     }
 
+    [PerformanceSensitive("https://github.com/microsoft/testfx/issues/5651", AllowGenericEnumeration = false)]
     private static ValidationResult ValidateOptionsArgumentArity(
         CommandLineParseResult parseResult,
         Dictionary<string, (ICommandLineOptionsProvider Provider, CommandLineOption Option)> providerAndOptionByOptionName)
     {
-        StringBuilder stringBuilder = new();
+        StringBuilder? stringBuilder = null;
         foreach (IGrouping<string, CommandLineParseOption> groupedOptions in parseResult.Options.GroupBy(x => x.Name))
         {
             // getting the arguments count for an option.
@@ -181,23 +244,27 @@ internal static class CommandLineOptionsValidator
 
             if (arity > option.Arity.Max && option.Arity.Max == 0)
             {
+                stringBuilder ??= new();
                 stringBuilder.AppendLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineOptionExpectsNoArguments, optionName, provider.DisplayName, provider.Uid));
             }
             else if (arity < option.Arity.Min)
             {
+                stringBuilder ??= new();
                 stringBuilder.AppendLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineOptionExpectsAtLeastArguments, optionName, provider.DisplayName, provider.Uid, option.Arity.Min));
             }
             else if (arity > option.Arity.Max)
             {
+                stringBuilder ??= new();
                 stringBuilder.AppendLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineOptionExpectsAtMostArguments, optionName, provider.DisplayName, provider.Uid, option.Arity.Max));
             }
         }
 
-        return stringBuilder.Length > 0
+        return stringBuilder?.Length > 0
             ? ValidationResult.Invalid(stringBuilder.ToTrimmedString())
             : ValidationResult.Valid();
     }
 
+    [PerformanceSensitive("https://github.com/microsoft/testfx/issues/5651", AllowGenericEnumeration = false)]
     private static async Task<ValidationResult> ValidateOptionsArgumentsAsync(
         CommandLineParseResult parseResult,
         Dictionary<string, (ICommandLineOptionsProvider Provider, CommandLineOption Option)> providerAndOptionByOptionName)
@@ -221,6 +288,7 @@ internal static class CommandLineOptionsValidator
             : ValidationResult.Valid();
     }
 
+    [PerformanceSensitive("https://github.com/microsoft/testfx/issues/5651", AllowGenericEnumeration = false)]
     private static async Task<ValidationResult> ValidateConfigurationAsync(
         Dictionary<ICommandLineOptionsProvider, IReadOnlyCollection<CommandLineOption>>.KeyCollection extensionsProviders,
         Dictionary<ICommandLineOptionsProvider, IReadOnlyCollection<CommandLineOption>>.KeyCollection systemProviders,
@@ -234,6 +302,7 @@ internal static class CommandLineOptionsValidator
             : ValidationResult.Valid();
     }
 
+    [PerformanceSensitive("https://github.com/microsoft/testfx/issues/5651", AllowGenericEnumeration = false)]
     private static async Task<StringBuilder?> ValidateConfigurationAsync(
         Dictionary<ICommandLineOptionsProvider, IReadOnlyCollection<CommandLineOption>>.KeyCollection providers,
         ICommandLineOptions commandLineOptions,
@@ -253,8 +322,24 @@ internal static class CommandLineOptionsValidator
         return stringBuilder;
     }
 
+    [PerformanceSensitive("https://github.com/microsoft/testfx/issues/5651", AllowGenericEnumeration = false)]
     private static string ToTrimmedString(this StringBuilder stringBuilder)
-#pragma warning disable RS0030 // Do not use banned APIs
-        => stringBuilder.ToString().TrimEnd(Environment.NewLine.ToCharArray());
-#pragma warning restore RS0030 // Do not use banned APIs
+    {
+        // Use a more efficient approach to trim without creating unnecessary intermediate strings
+        string result = stringBuilder.ToString();
+        int end = result.Length;
+        
+        // Find the last non-whitespace char
+        while (end > 0)
+        {
+            char c = result[end - 1];
+            if (c != '\r' && c != '\n')
+            {
+                break;
+            }
+            end--;
+        }
+        
+        return end == result.Length ? result : result.Substring(0, end);
+    }
 }
