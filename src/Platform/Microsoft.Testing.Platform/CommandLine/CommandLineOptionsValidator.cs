@@ -127,9 +127,9 @@ internal static class CommandLineOptionsValidator
                 if (systemOptionNames.Contains(option.Name))
                 {
                     stringBuilder ??= new StringBuilder();
-                    stringBuilder.AppendLine(string.Format(CultureInfo.InvariantCulture, 
-                        PlatformResources.CommandLineOptionIsReserved, 
-                        option.Name, 
+                    stringBuilder.AppendLine(string.Format(CultureInfo.InvariantCulture,
+                        PlatformResources.CommandLineOptionIsReserved,
+                        option.Name,
                         provider.Key.DisplayName));
                 }
             }
@@ -145,7 +145,6 @@ internal static class CommandLineOptionsValidator
     {
         // Use a dictionary to track option names and their providers
         Dictionary<string, List<ICommandLineOptionsProvider>> optionNameToProviders = new();
-        
         foreach (var kvp in extensionOptionsByProvider)
         {
             var provider = kvp.Key;
@@ -160,7 +159,7 @@ internal static class CommandLineOptionsValidator
                 providers.Add(provider);
             }
         }
-        
+
         // Check for duplications
         StringBuilder? stringBuilder = null;
         foreach (var kvp in optionNameToProviders)
