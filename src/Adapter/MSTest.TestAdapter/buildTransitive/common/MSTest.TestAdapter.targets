@@ -3,7 +3,7 @@
     <Target Name="NETStandardCompatError_MSTest_TestAdapter"
             Condition="'$(SuppressTfmSupportBuildWarnings)' == ''">
         <Warning Condition="'$(TargetFrameworkIdentifier)' == '.NETStandard'"
-                Text="MSTest.TestAdapter doesn't support $(TargetFramework) and has not been tested with it. Note that test libraries shouldn't reference MSTest.TestAdapter or MSTest metapackage. Instead, consider referencing only MSTest.TestFramework. You may also set &lt;SuppressTfmSupportBuildWarnings&gt;true&lt;/SuppressTfmSupportBuildWarnings&gt; in the project file to ignore this warning and attempt to run in this unsupported configuration at your own risk." />
+                 Text="MSTest.TestAdapter doesn't support $(TargetFramework) and has not been tested with it. Note that test libraries shouldn't reference MSTest.TestAdapter or MSTest metapackage. Instead, consider referencing only MSTest.TestFramework. You may also set &lt;SuppressTfmSupportBuildWarnings&gt;true&lt;/SuppressTfmSupportBuildWarnings&gt; in the project file to ignore this warning and attempt to run in this unsupported configuration at your own risk." />
     </Target>
 
   <!-- Handle the coexistence between testing platform and Microsoft.NET.Test.Sdk  -->
