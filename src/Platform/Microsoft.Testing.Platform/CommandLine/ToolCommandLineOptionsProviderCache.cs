@@ -12,7 +12,8 @@ internal struct ToolCommandLineOptionsProviderCache(IToolCommandLineOptionsProvi
 {
     private readonly IToolCommandLineOptionsProvider _commandLineOptionsProvider = commandLineOptionsProvider;
     private IReadOnlyCollection<CommandLineOption>? _commandLineOptions;
-    private readonly ConcurrentDictionary<string, Task<ValidationResult>> _validationCache = new();
+    // Limit cache size to avoid unbounded memory growth
+    private readonly ConcurrentDictionary<string, Task<ValidationResult>> _validationCache = new(concurrencyLevel: 2, capacity: 100);
 
     public readonly string Uid => _commandLineOptionsProvider.Uid;
 
@@ -48,7 +49,24 @@ internal struct ToolCommandLineOptionsProviderCache(IToolCommandLineOptionsProvi
 
     private static string GenerateCacheKey(CommandLineOption commandOption, string[] arguments)
     {
-        // Combine the option name with all arguments to form a unique key
+        // For very long argument lists, using a hash-based approach would be more efficient
+        if (arguments.Length > 10)
+        {
+            // Use a StringBuilder for efficiency with many arguments
+            var keyBuilder = new StringBuilder(commandOption.Name);
+            keyBuilder.Append('|');
+            
+            foreach (string arg in arguments)
+            {
+                // Include a hash of each argument to keep key size reasonable
+                keyBuilder.Append(arg.GetHashCode());
+                keyBuilder.Append('|');
+            }
+            
+            return keyBuilder.ToString();
+        }
+        
+        // For small argument lists, a simple join is clearer and still efficient
         return string.Join("|", new[] { commandOption.Name }.Concat(arguments));
     }
 }

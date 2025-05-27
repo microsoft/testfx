@@ -94,4 +94,26 @@ public class ToolCommandLineOptionsProviderCacheTests
         // Assert - should only call underlying provider once due to caching
         mockProvider.Verify(p => p.ValidateOptionArgumentsAsync(It.IsAny<CommandLineOption>(), It.IsAny<string[]>()), Times.Once);
     }
+
+    [TestMethod]
+    public async Task ValidateOptionArgumentsAsync_LargeArgumentList_StillUsesCaching()
+    {
+        // Arrange
+        var mockProvider = new Mock<IToolCommandLineOptionsProvider>();
+        mockProvider.Setup(p => p.ValidateOptionArgumentsAsync(It.IsAny<CommandLineOption>(), It.IsAny<string[]>()))
+            .ReturnsAsync(ValidationResult.Valid());
+
+        var cache = new ToolCommandLineOptionsProviderCache(mockProvider.Object);
+        var option = new CommandLineOption("option", "Option description", ArgumentArity.ZeroOrMore, false);
+        
+        // Create an array with more than 10 arguments to trigger the optimized key generation
+        var arguments = Enumerable.Range(1, 15).Select(i => $"arg{i}").ToArray();
+
+        // Act - call multiple times with same large arguments list
+        await cache.ValidateOptionArgumentsAsync(option, arguments);
+        await cache.ValidateOptionArgumentsAsync(option, arguments);
+
+        // Assert - should only call underlying provider once due to caching
+        mockProvider.Verify(p => p.ValidateOptionArgumentsAsync(It.IsAny<CommandLineOption>(), It.IsAny<string[]>()), Times.Once);
+    }
 }
