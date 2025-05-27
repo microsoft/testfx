@@ -74,11 +74,11 @@ public sealed class AvoidUsingAssertsInAsyncVoidContextAnalyzer : DiagnosticAnal
             return;
         }
 
-        var targetType = operation.TargetMethod.ContainingType;
+        INamedTypeSymbol targetType = operation.TargetMethod.ContainingType;
         bool isAssertType = 
-            (assertSymbol is not null && assertSymbol.Equals(targetType, SymbolEqualityComparer.Default)) ||
-            (stringAssertSymbol is not null && stringAssertSymbol.Equals(targetType, SymbolEqualityComparer.Default)) ||
-            (collectionAssertSymbol is not null && collectionAssertSymbol.Equals(targetType, SymbolEqualityComparer.Default));
+            targetType.Equals(assertSymbol, SymbolEqualityComparer.Default) ||
+            targetType.Equals(stringAssertSymbol, SymbolEqualityComparer.Default) ||
+            targetType.Equals(collectionAssertSymbol, SymbolEqualityComparer.Default);
 
         if (isAssertType)
         {
