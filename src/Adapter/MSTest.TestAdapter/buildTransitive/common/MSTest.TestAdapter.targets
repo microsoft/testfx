@@ -2,16 +2,6 @@
 
     <Target Name="NETStandardCompatError_MSTest_TestAdapter"
             Condition="'$(SuppressTfmSupportBuildWarnings)' == ''">
-        <PropertyGroup>
-            <_Microsoft_Extensions_Configuration_Binder_Compatible_TargetFramework
-                Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'netcoreapp2.0')) AND
-                           !$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))"
-                >net8.0</_Microsoft_Extensions_Configuration_Binder_Compatible_TargetFramework>
-            <_Microsoft_Extensions_Configuration_Binder_Compatible_TargetFramework
-                Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net461')) AND
-                           !$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net462'))"
-                >net462</_Microsoft_Extensions_Configuration_Binder_Compatible_TargetFramework>
-        </PropertyGroup>
         <Warning Condition="'$(TargetFrameworkIdentifier)' == '.NETStandard'"
                 Text="MSTest.TestAdapter doesn't support $(TargetFramework) and has not been tested with it. Note that test libraries shouldn't reference MSTest.TestAdapter or MSTest metapackage. Instead, consider referencing only MSTest.TestFramework. You may also set &lt;SuppressTfmSupportBuildWarnings&gt;true&lt;/SuppressTfmSupportBuildWarnings&gt; in the project file to ignore this warning and attempt to run in this unsupported configuration at your own risk." />
     </Target>
