@@ -156,6 +156,7 @@ internal static class CommandLineOptionsValidator
                     providers = new List<ICommandLineOptionsProvider>();
                     optionNameToProviders[name] = providers;
                 }
+
                 providers.Add(provider);
             }
         }
