@@ -140,7 +140,7 @@ See full log [of v3.8.1...v3.8.2](https://github.com/microsoft/testfx/compare/v3
 
 ## <a name="1.6.1" />[1.6.1] - 2025-02-18
 
-See full log [of 3.8.0...v3.8.1](https://github.com/microsoft/testfx/compare/v3.8.0...v3.8.1)
+See full log [of v3.8.0...v3.8.1](https://github.com/microsoft/testfx/compare/v3.8.0...v3.8.1)
 
 ### Fixed
 
