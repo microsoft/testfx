@@ -57,9 +57,9 @@ public sealed class AvoidUsingAssertsInAsyncVoidContextAnalyzer : DiagnosticAnal
     }
 
     private static void AnalyzeOperation(
-        OperationAnalysisContext context, 
-        INamedTypeSymbol? assertSymbol, 
-        INamedTypeSymbol? stringAssertSymbol, 
+        OperationAnalysisContext context,
+        INamedTypeSymbol? assertSymbol,
+        INamedTypeSymbol? stringAssertSymbol,
         INamedTypeSymbol? collectionAssertSymbol)
     {
         var operation = (IInvocationOperation)context.Operation;
