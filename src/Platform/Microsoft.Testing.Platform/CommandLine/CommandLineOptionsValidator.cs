@@ -13,14 +13,11 @@ using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.CommandLine;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Resources;
-using Roslyn.Utilities;
 
 namespace Microsoft.Testing.Platform.CommandLine;
 
-[PerformanceSensitive("https://github.com/microsoft/testfx/issues/5651", AllowGenericEnumeration = false)]
 internal static class CommandLineOptionsValidator
 {
-    [PerformanceSensitive("https://github.com/microsoft/testfx/issues/5651", AllowGenericEnumeration = false)]
     public static async Task<ValidationResult> ValidateAsync(
         CommandLineParseResult commandLineParseResult,
         IEnumerable<ICommandLineOptionsProvider> systemCommandLineOptionsProviders,
@@ -79,7 +76,6 @@ internal static class CommandLineOptionsValidator
         return await ValidateConfigurationAsync(extensionOptionsByProvider.Keys, systemOptionsByProvider.Keys, commandLineOptions);
     }
 
-    [PerformanceSensitive("https://github.com/microsoft/testfx/issues/5651", AllowGenericEnumeration = false)]
     private static ValidationResult ValidateExtensionOptionsDoNotContainReservedPrefix(
         Dictionary<ICommandLineOptionsProvider, IReadOnlyCollection<CommandLineOption>> extensionOptionsByProvider)
     {
@@ -109,7 +105,6 @@ internal static class CommandLineOptionsValidator
             : ValidationResult.Valid();
     }
 
-    [PerformanceSensitive("https://github.com/microsoft/testfx/issues/5651", AllowGenericEnumeration = false)]
     private static ValidationResult ValidateExtensionOptionsDoNotContainReservedOptions(
         Dictionary<ICommandLineOptionsProvider, IReadOnlyCollection<CommandLineOption>> extensionOptionsByProvider,
         Dictionary<ICommandLineOptionsProvider, IReadOnlyCollection<CommandLineOption>> systemOptionsByProvider)
@@ -145,7 +140,6 @@ internal static class CommandLineOptionsValidator
             : ValidationResult.Valid();
     }
 
-    [PerformanceSensitive("https://github.com/microsoft/testfx/issues/5651", AllowGenericEnumeration = false)]
     private static ValidationResult ValidateOptionsAreNotDuplicated(
         Dictionary<ICommandLineOptionsProvider, IReadOnlyCollection<CommandLineOption>> extensionOptionsByProvider)
     {
@@ -185,7 +179,6 @@ internal static class CommandLineOptionsValidator
             : ValidationResult.Valid();
     }
 
-    [PerformanceSensitive("https://github.com/microsoft/testfx/issues/5651", AllowGenericEnumeration = false)]
     private static ValidationResult ValidateNoUnknownOptions(
         CommandLineParseResult parseResult,
         Dictionary<ICommandLineOptionsProvider, IReadOnlyCollection<CommandLineOption>> extensionOptionsByProvider,
@@ -224,7 +217,6 @@ internal static class CommandLineOptionsValidator
             : ValidationResult.Valid();
     }
 
-    [PerformanceSensitive("https://github.com/microsoft/testfx/issues/5651", AllowGenericEnumeration = false)]
     private static ValidationResult ValidateOptionsArgumentArity(
         CommandLineParseResult parseResult,
         Dictionary<string, (ICommandLineOptionsProvider Provider, CommandLineOption Option)> providerAndOptionByOptionName)
@@ -264,7 +256,6 @@ internal static class CommandLineOptionsValidator
             : ValidationResult.Valid();
     }
 
-    [PerformanceSensitive("https://github.com/microsoft/testfx/issues/5651", AllowGenericEnumeration = false)]
     private static async Task<ValidationResult> ValidateOptionsArgumentsAsync(
         CommandLineParseResult parseResult,
         Dictionary<string, (ICommandLineOptionsProvider Provider, CommandLineOption Option)> providerAndOptionByOptionName)
@@ -288,7 +279,6 @@ internal static class CommandLineOptionsValidator
             : ValidationResult.Valid();
     }
 
-    [PerformanceSensitive("https://github.com/microsoft/testfx/issues/5651", AllowGenericEnumeration = false)]
     private static async Task<ValidationResult> ValidateConfigurationAsync(
         Dictionary<ICommandLineOptionsProvider, IReadOnlyCollection<CommandLineOption>>.KeyCollection extensionsProviders,
         Dictionary<ICommandLineOptionsProvider, IReadOnlyCollection<CommandLineOption>>.KeyCollection systemProviders,
@@ -302,7 +292,6 @@ internal static class CommandLineOptionsValidator
             : ValidationResult.Valid();
     }
 
-    [PerformanceSensitive("https://github.com/microsoft/testfx/issues/5651", AllowGenericEnumeration = false)]
     private static async Task<StringBuilder?> ValidateConfigurationAsync(
         Dictionary<ICommandLineOptionsProvider, IReadOnlyCollection<CommandLineOption>>.KeyCollection providers,
         ICommandLineOptions commandLineOptions,
@@ -322,7 +311,6 @@ internal static class CommandLineOptionsValidator
         return stringBuilder;
     }
 
-    [PerformanceSensitive("https://github.com/microsoft/testfx/issues/5651", AllowGenericEnumeration = false)]
     private static string ToTrimmedString(this StringBuilder stringBuilder)
     {
         // Use a more efficient approach to trim without creating unnecessary intermediate strings
