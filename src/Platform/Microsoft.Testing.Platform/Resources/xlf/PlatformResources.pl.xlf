@@ -733,11 +733,6 @@ Pobiera jeden argument jako ciąg w formacie &lt;value&gt;[h|m|s], gdzie element
         <target state="translated">Standardowe dane wyjściowe</target>
         <note />
       </trans-unit>
-      <trans-unit id="StartingServer">
-        <source>Starting server. Listening on port '{0}'</source>
-        <target state="translated">Uruchamianie serwera. Nasłuchiwanie na porcie „{0}”</target>
-        <note />
-      </trans-unit>
       <trans-unit id="StartingTestSession">
         <source>Starting test session.</source>
         <target state="translated">Rozpoczynanie sesji testowej.</target>
@@ -950,11 +945,6 @@ Prawidłowe wartości to „Normalne”, „Szczegółowe”. Wartość domyśln
       <trans-unit id="UnexpectedStateErrorMessage">
         <source>Unexpected state in file '{0}' at line '{1}'</source>
         <target state="translated">Nieoczekiwany stan w pliku „{0}” w wierszu „{1}”</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="UnknownCommunicationProtocolErrorMessage">
-        <source>The communication protocol '{0}' is not supported</source>
-        <target state="translated">Protokół komunikacyjny „{0}” nie jest obsługiwany</target>
         <note />
       </trans-unit>
       <trans-unit id="UnobservedTaskExceptionWarningMessage">
