@@ -7,7 +7,7 @@ on:
         type: string
         default: '[%target_branch%] %source_pr_title% by %source_pr_author%'
       pr_description_template:
-        description: 'The template used for the PR description. Special placeholder tokens that will be replaced with a value: %target_branch%, %source_pr_title%, %source_pr_number%, %source_pr_author%, %cc_users%.'
+        description: 'The template used for the PR description. Special placeholder tokens that will be replaced with a value: %target_branch%, %source_pr_title%, %source_pr_number%, %cc_users%.'
         required: false
         type: string
         default: |
