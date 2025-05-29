@@ -31,7 +31,6 @@ See full log [of v3.9.0...v3.9.1](https://github.com/microsoft/testfx/compare/v3
 * MSTest.SourceGeneration: [1.0.0-alpha.25277.3](https://www.nuget.org/packages/MSTest.SourceGeneration/1.0.0-alpha.25277.3)
 * MSTest.Engine: [1.0.0-alpha.25277.3](https://www.nuget.org/packages/MSTest.Engine/1.0.0-alpha.25277.3)
 
-
 ## <a name="3.9.0" />[3.9.0] - 2025-05-20
 
 See full log [of v3.8.3...v3.9.0](https://github.com/microsoft/testfx/compare/v3.8.3...v3.9.0)
