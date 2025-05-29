@@ -13,7 +13,7 @@ See full log [of v3.9.0...v3.9.1](https://github.com/microsoft/testfx/compare/v3
 * Make ConditionBaseAttribute.Mode public by @Youssef1313 in [#5581](https://github.com/microsoft/testfx/pull/5581)
 * Add missing overload for Assert.Throws by @Youssef1313 in [#5619](https://github.com/microsoft/testfx/pull/5619)
 * Fix System.MissingMethodException for KeyValuePair Deconstruction by @Youssef1313 in [#5633](https://github.com/microsoft/testfx/pull/5633)
-* Run the whole ExecuteInternal logic under the right execution context by @Youssef1313 in [#5636 ](https://github.com/microsoft/testfx/pull/5636 )
+* Run the whole ExecuteInternal logic under the right execution context by @Youssef1313 in [#5636](https://github.com/microsoft/testfx/pull/5636)
 
 ### Artifacts
 
