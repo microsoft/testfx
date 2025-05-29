@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Extensions.VSTestBridge.Capabilities;
 using Microsoft.Testing.Extensions.VSTestBridge.ObjectModel;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.CommandLine;
@@ -57,15 +58,23 @@ public sealed class VSTestDiscoverTestExecutionRequestFactory : ITestExecutionRe
         MessageLoggerAdapter messageLogger = new(loggerFactory, outputDevice, adapterExtension);
 
         ICommandLineOptions commandLineOptions = serviceProvider.GetRequiredService<ICommandLineOptions>();
+        ITestFrameworkCapabilities capabilities = serviceProvider.GetTestFrameworkCapabilities();
+        ITestNodeUidProviderCapability? uidProviderCapability = capabilities.GetCapability<ITestNodeUidProviderCapability>();
+
+        string? filterPropertyNameOverride = uidProviderCapability is null
+            ? null
+            : uidProviderCapability.GetFilterPropertyName() ?? throw new InvalidOperationException("GetFilterPropertyName should not return null.");
+
         RunSettingsAdapter runSettings = new(commandLineOptions, fileSystem, configuration, clientInfo, loggerFactory, messageLogger);
-        DiscoveryContextAdapter discoveryContext = new(commandLineOptions, runSettings, discoverTestExecutionRequest.Filter);
+        DiscoveryContextAdapter discoveryContext = new(commandLineOptions, runSettings, discoverTestExecutionRequest.Filter, filterPropertyNameOverride);
 
         TestCaseDiscoverySinkAdapter discoverySink = new(
             adapterExtension,
             discoverTestExecutionRequest.Session,
             testAssemblyPaths,
             serviceProvider.GetTestApplicationModuleInfo(),
-            serviceProvider.GetTestFrameworkCapabilities().GetCapability<INamedFeatureCapability>(),
+            capabilities.GetCapability<INamedFeatureCapability>(),
+            uidProviderCapability,
             serviceProvider.GetCommandLineOptions(),
             serviceProvider.GetClientInfo(),
             serviceProvider.GetMessageBus(),

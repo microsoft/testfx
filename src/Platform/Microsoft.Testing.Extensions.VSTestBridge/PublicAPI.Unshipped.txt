@@ -1,2 +1,4 @@
 #nullable enable
-virtual Microsoft.Testing.Extensions.VSTestBridge.VSTestBridgedTestFrameworkBase.UseFullyQualifiedNameAsTestNodeUid.get -> bool
+Microsoft.Testing.Extensions.VSTestBridge.Capabilities.ITestNodeUidProviderCapability
+Microsoft.Testing.Extensions.VSTestBridge.Capabilities.ITestNodeUidProviderCapability.GetFilterPropertyName() -> string!
+Microsoft.Testing.Extensions.VSTestBridge.Capabilities.ITestNodeUidProviderCapability.GetTestNodeUid(Microsoft.VisualStudio.TestPlatform.ObjectModel.TestCase! testCase) -> string!

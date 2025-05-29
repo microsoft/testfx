@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.TrxReport.Abstractions;
+using Microsoft.Testing.Extensions.VSTestBridge.Capabilities;
 using Microsoft.Testing.Platform;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.CommandLine;
@@ -52,13 +53,20 @@ internal static class ObjectModelConverters
     public static TestNode ToTestNode(
         this TestCase testCase,
         bool isTrxEnabled,
-        bool useFQNAsUid,
+        ITestNodeUidProviderCapability? uidProviderCapability,
         INamedFeatureCapability? namedFeatureCapability,
         ICommandLineOptions commandLineOptions,
         IClientInfo clientInfo,
         string? displayNameFromTestResult = null)
     {
-        string testNodeUid = useFQNAsUid ? testCase.FullyQualifiedName : testCase.Id.ToString();
+        // If the capability is defined, we use it.
+        // Otherwise, default to TestCase.Id.
+        // NOTE: Don't switch to uidProviderCapability?.GetTestNodeUid(testCase) ?? testCase.Id.ToString()
+        // It's semantically different as the current logic will throw if framework authors incorrectly returned null
+        // from GetTestNodeUid.
+        string testNodeUid = uidProviderCapability is not null
+            ? uidProviderCapability.GetTestNodeUid(testCase)
+            : testCase.Id.ToString();
 
         TestNode testNode = new()
         {
@@ -145,12 +153,12 @@ internal static class ObjectModelConverters
     public static TestNode ToTestNode(
         this TestResult testResult,
         bool isTrxEnabled,
-        bool useFQNAsUid,
+        ITestNodeUidProviderCapability? uidProviderCapability,
         INamedFeatureCapability? namedFeatureCapability,
         ICommandLineOptions commandLineOptions,
         IClientInfo clientInfo)
     {
-        var testNode = testResult.TestCase.ToTestNode(isTrxEnabled, useFQNAsUid, namedFeatureCapability, commandLineOptions, clientInfo, testResult.DisplayName);
+        var testNode = testResult.TestCase.ToTestNode(isTrxEnabled, uidProviderCapability, namedFeatureCapability, commandLineOptions, clientInfo, testResult.DisplayName);
 
         CopyCategoryAndTraits(testResult, testNode, isTrxEnabled);
 

@@ -3,6 +3,7 @@
 
 #pragma warning disable TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
 
+using Microsoft.Testing.Extensions.VSTestBridge.Capabilities;
 using Microsoft.Testing.Extensions.VSTestBridge.Helpers;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.CommandLine;
@@ -37,6 +38,7 @@ internal sealed class FrameworkHandlerAdapter : IFrameworkHandle
     private readonly MessageLoggerAdapter _comboMessageLogger;
     private readonly string _testAssemblyPath;
     private readonly INamedFeatureCapability? _namedFeatureCapability;
+    private readonly ITestNodeUidProviderCapability? _uidProviderCapability;
     private readonly ICommandLineOptions _commandLineOptions;
     private readonly IClientInfo _clientInfo;
 
@@ -46,6 +48,7 @@ internal sealed class FrameworkHandlerAdapter : IFrameworkHandle
         string[] testAssemblyPaths,
         ITestApplicationModuleInfo testApplicationModuleInfo,
         INamedFeatureCapability? namedFeatureCapability,
+        ITestNodeUidProviderCapability? uidProviderCapability,
         ICommandLineOptions commandLineOptions,
         IClientInfo clientInfo,
         IMessageBus messageBus,
@@ -74,6 +77,7 @@ internal sealed class FrameworkHandlerAdapter : IFrameworkHandle
         }
 
         _namedFeatureCapability = namedFeatureCapability;
+        _uidProviderCapability = uidProviderCapability;
         _commandLineOptions = commandLineOptions;
         _clientInfo = clientInfo;
         _frameworkHandle = frameworkHandle;
@@ -140,7 +144,7 @@ internal sealed class FrameworkHandlerAdapter : IFrameworkHandle
         _frameworkHandle?.RecordResult(testResult);
 
         // Publish node state change to Microsoft Testing Platform
-        var testNode = testResult.ToTestNode(_isTrxEnabled, _adapterExtensionBase.UseFullyQualifiedNameAsTestNodeUid, _namedFeatureCapability, _commandLineOptions, _clientInfo);
+        var testNode = testResult.ToTestNode(_isTrxEnabled, _uidProviderCapability, _namedFeatureCapability, _commandLineOptions, _clientInfo);
 
         var testNodeChange = new TestNodeUpdateMessage(_session.SessionUid, testNode);
         _messageBus.PublishAsync(_adapterExtensionBase, testNodeChange).Await();
@@ -159,7 +163,7 @@ internal sealed class FrameworkHandlerAdapter : IFrameworkHandle
         _frameworkHandle?.RecordStart(testCase);
 
         // Publish node state change to Microsoft Testing Platform
-        var testNode = testCase.ToTestNode(_isTrxEnabled, _adapterExtensionBase.UseFullyQualifiedNameAsTestNodeUid, _namedFeatureCapability, _commandLineOptions, _clientInfo);
+        var testNode = testCase.ToTestNode(_isTrxEnabled, _uidProviderCapability, _namedFeatureCapability, _commandLineOptions, _clientInfo);
         testNode.Properties.Add(InProgressTestNodeStateProperty.CachedInstance);
         var testNodeChange = new TestNodeUpdateMessage(_session.SessionUid, testNode);
 

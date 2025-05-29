@@ -13,8 +13,8 @@ namespace Microsoft.Testing.Extensions.VSTestBridge.ObjectModel;
 /// </summary>
 internal sealed class RunContextAdapter : ContextAdapterBase, IRunContext
 {
-    public RunContextAdapter(ICommandLineOptions commandLineOptions, IRunSettings runSettings, ITestExecutionFilter filter)
-        : base(commandLineOptions, runSettings, filter)
+    public RunContextAdapter(ICommandLineOptions commandLineOptions, IRunSettings runSettings, ITestExecutionFilter filter, string? filterPropertyNameOverride)
+        : base(commandLineOptions, runSettings, filter, filterPropertyNameOverride)
     {
         RoslynDebug.Assert(runSettings.SettingsXml is not null);
 

@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Extensions.VSTestBridge.Capabilities;
 using Microsoft.Testing.Extensions.VSTestBridge.ObjectModel;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.CommandLine;
@@ -54,12 +55,15 @@ public sealed class VSTestRunTestExecutionRequestFactory : ITestExecutionRequest
         IFileSystem fileSystem = serviceProvider.GetFileSystem();
         IClientInfo clientInfo = serviceProvider.GetClientInfo();
 
+        ITestFrameworkCapabilities capabilities = serviceProvider.GetTestFrameworkCapabilities();
+        ITestNodeUidProviderCapability? uidProviderCapability = capabilities.GetCapability<ITestNodeUidProviderCapability>();
         FrameworkHandlerAdapter frameworkHandlerAdapter = new(
             adapterExtension,
             runTestExecutionRequest.Session,
             testAssemblyPaths,
             serviceProvider.GetTestApplicationModuleInfo(),
-            serviceProvider.GetTestFrameworkCapabilities().GetCapability<INamedFeatureCapability>(),
+            capabilities.GetCapability<INamedFeatureCapability>(),
+            uidProviderCapability,
             serviceProvider.GetCommandLineOptions(),
             serviceProvider.GetClientInfo(),
             serviceProvider.GetMessageBus(),
@@ -69,7 +73,12 @@ public sealed class VSTestRunTestExecutionRequestFactory : ITestExecutionRequest
             cancellationToken);
 
         RunSettingsAdapter runSettings = new(commandLineOptions, fileSystem, configuration, clientInfo, loggerFactory, frameworkHandlerAdapter);
-        RunContextAdapter runContext = new(commandLineOptions, runSettings, runTestExecutionRequest.Filter);
+
+        string? filterPropertyNameOverride = uidProviderCapability is null
+            ? null
+            : uidProviderCapability.GetFilterPropertyName() ?? throw new InvalidOperationException("GetFilterPropertyName should not return null.");
+
+        RunContextAdapter runContext = new(commandLineOptions, runSettings, runTestExecutionRequest.Filter, filterPropertyNameOverride);
 
         return new(runTestExecutionRequest.Session, runTestExecutionRequest.Filter, testAssemblyPaths, runContext, frameworkHandlerAdapter);
     }

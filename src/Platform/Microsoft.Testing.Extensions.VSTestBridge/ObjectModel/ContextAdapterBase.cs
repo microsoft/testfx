@@ -13,8 +13,11 @@ namespace Microsoft.Testing.Extensions.VSTestBridge.ObjectModel;
 
 internal abstract class ContextAdapterBase
 {
-    protected ContextAdapterBase(ICommandLineOptions commandLineOptions, IRunSettings runSettings, ITestExecutionFilter filter)
+    private readonly string? _filterPropertyNameOverride;
+
+    protected ContextAdapterBase(ICommandLineOptions commandLineOptions, IRunSettings runSettings, ITestExecutionFilter filter, string? filterPropertyNameOverride)
     {
+        _filterPropertyNameOverride = filterPropertyNameOverride;
         RunSettings = runSettings;
 
         RoslynDebug.Assert(runSettings.SettingsXml is not null);
@@ -92,7 +95,7 @@ internal abstract class ContextAdapterBase
         if (filter is TestNodeUidListFilter testNodeUidListFilter)
         {
             StartFilter(filterBuilder);
-            BuildFilter(testNodeUidListFilter.TestNodeUids, filterBuilder);
+            BuildFilter(testNodeUidListFilter.TestNodeUids, filterBuilder, _filterPropertyNameOverride);
             EndFilter(filterBuilder);
         }
 
@@ -132,7 +135,7 @@ internal abstract class ContextAdapterBase
 
     // We use heuristic to understand if the filter should be a TestCaseId or FullyQualifiedName.
     // We know that in VSTest TestCaseId is a GUID and FullyQualifiedName is a string.
-    private static void BuildFilter(TestNodeUid[] testNodesUid, StringBuilder filter)
+    private static void BuildFilter(TestNodeUid[] testNodesUid, StringBuilder filter, string? filterPropertyNameOverride)
     {
         for (int i = 0; i < testNodesUid.Length; i++)
         {
@@ -141,7 +144,7 @@ internal abstract class ContextAdapterBase
                 filter.Append('|');
             }
 
-            if (Guid.TryParse(testNodesUid[i].Value, out Guid guid))
+            if (filterPropertyNameOverride is null && Guid.TryParse(testNodesUid[i].Value, out Guid guid))
             {
                 filter.Append("Id=");
                 filter.Append(guid.ToString());
@@ -149,7 +152,16 @@ internal abstract class ContextAdapterBase
             }
 
             TestNodeUid currentTestNodeUid = testNodesUid[i];
-            filter.Append("FullyQualifiedName=");
+            if (filterPropertyNameOverride is null)
+            {
+                filter.Append("FullyQualifiedName=");
+            }
+            else
+            {
+                filter.Append(filterPropertyNameOverride);
+                filter.Append('=');
+            }
+
             for (int k = 0; k < currentTestNodeUid.Value.Length; k++)
             {
                 char currentChar = currentTestNodeUid.Value[k];

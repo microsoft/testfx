@@ -12,8 +12,8 @@ namespace Microsoft.Testing.Extensions.VSTestBridge.ObjectModel;
 /// </summary>
 internal sealed class DiscoveryContextAdapter : ContextAdapterBase, IDiscoveryContext
 {
-    public DiscoveryContextAdapter(ICommandLineOptions commandLineOptions, IRunSettings runSettings, ITestExecutionFilter filter)
-        : base(commandLineOptions, runSettings, filter)
+    public DiscoveryContextAdapter(ICommandLineOptions commandLineOptions, IRunSettings runSettings, ITestExecutionFilter filter, string? filterPropertyNameOverride)
+        : base(commandLineOptions, runSettings, filter, filterPropertyNameOverride)
     {
     }
 }

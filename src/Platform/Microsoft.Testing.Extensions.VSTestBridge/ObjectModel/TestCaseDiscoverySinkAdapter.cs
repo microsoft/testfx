@@ -3,6 +3,7 @@
 
 #pragma warning disable TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
 
+using Microsoft.Testing.Extensions.VSTestBridge.Capabilities;
 using Microsoft.Testing.Extensions.VSTestBridge.Helpers;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.CommandLine;
@@ -28,6 +29,7 @@ internal sealed class TestCaseDiscoverySinkAdapter : ITestCaseDiscoverySink
     private readonly ITestCaseDiscoverySink? _testCaseDiscoverySink;
     private readonly ILogger<TestCaseDiscoverySinkAdapter> _logger;
     private readonly INamedFeatureCapability? _namedFeatureCapability;
+    private readonly ITestNodeUidProviderCapability? _uidProviderCapability;
     private readonly ICommandLineOptions _commandLineOptions;
     private readonly IClientInfo _clientInfo;
     private readonly IMessageBus _messageBus;
@@ -43,6 +45,7 @@ internal sealed class TestCaseDiscoverySinkAdapter : ITestCaseDiscoverySink
         string[] testAssemblyPaths,
         ITestApplicationModuleInfo testApplicationModuleInfo,
         INamedFeatureCapability? namedFeatureCapability,
+        ITestNodeUidProviderCapability? uidProviderCapability,
         ICommandLineOptions commandLineOptions,
         IClientInfo clientInfo,
         IMessageBus messageBus,
@@ -72,6 +75,7 @@ internal sealed class TestCaseDiscoverySinkAdapter : ITestCaseDiscoverySink
         _testCaseDiscoverySink = testCaseDiscoverySink;
         _logger = loggerFactory.CreateLogger<TestCaseDiscoverySinkAdapter>();
         _namedFeatureCapability = namedFeatureCapability;
+        _uidProviderCapability = uidProviderCapability;
         _commandLineOptions = commandLineOptions;
         _clientInfo = clientInfo;
         _messageBus = messageBus;
@@ -94,7 +98,7 @@ internal sealed class TestCaseDiscoverySinkAdapter : ITestCaseDiscoverySink
         _testCaseDiscoverySink?.SendTestCase(discoveredTest);
 
         // Publish node state change to Microsoft Testing Platform
-        var testNode = discoveredTest.ToTestNode(_isTrxEnabled, _adapterExtension.UseFullyQualifiedNameAsTestNodeUid, _namedFeatureCapability, _commandLineOptions, _clientInfo);
+        var testNode = discoveredTest.ToTestNode(_isTrxEnabled, _uidProviderCapability, _namedFeatureCapability, _commandLineOptions, _clientInfo);
         testNode.Properties.Add(DiscoveredTestNodeStateProperty.CachedInstance);
         var testNodeChange = new TestNodeUpdateMessage(_session.SessionUid, testNode);
 

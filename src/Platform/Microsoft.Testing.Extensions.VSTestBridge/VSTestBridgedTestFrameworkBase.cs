@@ -4,6 +4,7 @@
 #pragma warning disable TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
 
 using Microsoft.Testing.Extensions.TrxReport.Abstractions;
+using Microsoft.Testing.Extensions.VSTestBridge.Capabilities;
 using Microsoft.Testing.Extensions.VSTestBridge.Helpers;
 using Microsoft.Testing.Extensions.VSTestBridge.ObjectModel;
 using Microsoft.Testing.Extensions.VSTestBridge.Requests;
@@ -14,7 +15,6 @@ using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.Requests;
 using Microsoft.Testing.Platform.Services;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
 namespace Microsoft.Testing.Extensions.VSTestBridge;
 
@@ -58,11 +58,6 @@ public abstract class VSTestBridgedTestFrameworkBase : ITestFramework, IDataProd
     /// Gets the service provider.
     /// </summary>
     protected internal IServiceProvider ServiceProvider { get; }
-
-    /// <summary>
-    /// Gets a value indicating whether the <see cref="TestNodeUid"/> should use <see cref="TestCase.FullyQualifiedName"/> instead of <see cref="TestCase.Id"/>.
-    /// </summary>
-    protected internal virtual bool UseFullyQualifiedNameAsTestNodeUid { get; }
 
     /// <summary>
     /// Gets a value indicating whether the TRX report is enabled.
@@ -142,12 +137,14 @@ public abstract class VSTestBridgedTestFrameworkBase : ITestFramework, IDataProd
         // Before passing down the request, we need to replace the discovery sink with a custom implementation calling
         // both the original (VSTest) sink and our own.
         ILoggerFactory loggerFactory = ServiceProvider.GetRequiredService<ILoggerFactory>();
+        ITestFrameworkCapabilities capabilities = ServiceProvider.GetTestFrameworkCapabilities();
         TestCaseDiscoverySinkAdapter testCaseDiscoverySinkAdapter = new(
             this,
             discoverRequest.Session,
             discoverRequest.AssemblyPaths,
             ServiceProvider.GetTestApplicationModuleInfo(),
-            ServiceProvider.GetTestFrameworkCapabilities().GetCapability<INamedFeatureCapability>(),
+            capabilities.GetCapability<INamedFeatureCapability>(),
+            capabilities.GetCapability<ITestNodeUidProviderCapability>(),
             ServiceProvider.GetCommandLineOptions(),
             ServiceProvider.GetClientInfo(),
             messageBus,
@@ -168,12 +165,14 @@ public abstract class VSTestBridgedTestFrameworkBase : ITestFramework, IDataProd
         // Before passing down the request, we need to replace the framework handle with a custom implementation calling
         // both the original (VSTest) framework handle and our own.
         ILoggerFactory loggerFactory = ServiceProvider.GetRequiredService<ILoggerFactory>();
+        ITestFrameworkCapabilities capabilities = ServiceProvider.GetTestFrameworkCapabilities();
         FrameworkHandlerAdapter frameworkHandlerAdapter = new(
             this,
             runRequest.Session,
             runRequest.AssemblyPaths,
             ServiceProvider.GetTestApplicationModuleInfo(),
-            ServiceProvider.GetTestFrameworkCapabilities().GetCapability<INamedFeatureCapability>(),
+            capabilities.GetCapability<INamedFeatureCapability>(),
+            capabilities.GetCapability<ITestNodeUidProviderCapability>(),
             ServiceProvider.GetCommandLineOptions(),
             ServiceProvider.GetClientInfo(),
             messageBus,
