@@ -1,7 +1,7 @@
 <Project>
   <PropertyGroup Label="Version settings">
     <!-- MSTest version -->
-    <VersionPrefix>3.9.1</VersionPrefix>
+    <VersionPrefix>3.9.2</VersionPrefix>
     <!-- Testing Platform version -->
     <TestingPlatformVersionPrefix>1.7.1</TestingPlatformVersionPrefix>
     <PreReleaseVersionLabel>release</PreReleaseVersionLabel>
