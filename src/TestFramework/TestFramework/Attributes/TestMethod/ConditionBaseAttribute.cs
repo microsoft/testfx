@@ -19,7 +19,10 @@ public abstract class ConditionBaseAttribute : Attribute
     protected ConditionBaseAttribute(ConditionMode mode)
         => Mode = mode;
 
-    internal ConditionMode Mode { get; }
+    /// <summary>
+    /// Gets the condition mode.
+    /// </summary>
+    public ConditionMode Mode { get; }
 
     /// <summary>
     /// Gets the ignore message (in case <see cref="ShouldRun"/> returns <see langword="false"/>) indicating

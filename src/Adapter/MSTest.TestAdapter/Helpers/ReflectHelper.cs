@@ -259,29 +259,6 @@ internal class ReflectHelper : MarshalByRefObject
             .FirstOrDefault();
 
     /// <summary>
-    /// KeyValue pairs that are provided by TestOwnerAttribute of the given test method.
-    /// </summary>
-    /// <param name="ownerAttributeProvider">The member to inspect.</param>
-    /// <returns>The owner trait.</returns>
-    internal virtual Trait? GetTestOwnerAsTraits(MemberInfo ownerAttributeProvider)
-    {
-        string? owner = GetOwner(ownerAttributeProvider);
-
-        return StringEx.IsNullOrEmpty(owner)
-            ? null
-            : new Trait("Owner", owner);
-    }
-
-    /// <summary>
-    /// KeyValue pairs that are provided by TestPriorityAttributes of the given test method.
-    /// </summary>
-    /// <param name="testPriority">The priority.</param>
-    /// <returns>The corresponding trait.</returns>
-    internal virtual Trait? GetTestPriorityAsTraits(int? testPriority) => testPriority == null
-            ? null
-            : new Trait("Priority", ((int)testPriority).ToString(CultureInfo.InvariantCulture));
-
-    /// <summary>
     /// Priority if any set for test method. Will return priority if attribute is applied to TestMethod
     /// else null.
     /// </summary>
@@ -359,18 +336,6 @@ internal class ReflectHelper : MarshalByRefObject
                 yield return (TAttributeType)attribute;
             }
         }
-    }
-
-    /// <summary>
-    /// Returns owner if attribute is applied to TestMethod, else null.
-    /// </summary>
-    /// <param name="ownerAttributeProvider">The member to inspect.</param>
-    /// <returns>owner if attribute is applied to TestMethod, else null.</returns>
-    private string? GetOwner(MemberInfo ownerAttributeProvider)
-    {
-        OwnerAttribute? ownerAttribute = GetFirstDerivedAttributeOrDefault<OwnerAttribute>(ownerAttributeProvider, inherit: true);
-
-        return ownerAttribute?.Owner;
     }
 
     /// <summary>

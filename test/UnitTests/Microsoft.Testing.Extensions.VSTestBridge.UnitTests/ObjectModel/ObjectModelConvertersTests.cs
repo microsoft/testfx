@@ -76,7 +76,9 @@ public sealed class ObjectModelConvertersTests
     public void ToTestNode_WhenTestResultHasMSTestDiscovererTestCategoryTestProperty_TestNodePropertiesContainTheCategoryInTraits()
     {
         TestResult testResult = new(new TestCase("SomeFqn", new("executor://uri", UriKind.Absolute), "source.cs"));
-        var testCategoryProperty = TestProperty.Register("MSTestDiscoverer.TestCategory", "Label", typeof(string[]), TestPropertyAttributes.None, typeof(TestCase));
+#pragma warning disable CS0618 // Type or member is obsolete
+        var testCategoryProperty = TestProperty.Register("MSTestDiscoverer.TestCategory", "Label", typeof(string[]), TestPropertyAttributes.Trait, typeof(TestCase));
+#pragma warning restore CS0618 // Type or member is obsolete
         testResult.SetPropertyValue<string[]>(testCategoryProperty, ["category1"]);
 
         var testNode = testResult.ToTestNode(false, new NamedFeatureCapabilityWithVSTestProvider(), new ServerModeCommandLineOptions(), ClientInfo);
@@ -91,7 +93,9 @@ public sealed class ObjectModelConvertersTests
     public void ToTestNode_WhenTestResultHasMSTestDiscovererTestCategoryTestPropertyWithTrxEnabled_TestNodePropertiesContainTrxCategoriesProperty()
     {
         TestResult testResult = new(new TestCase("assembly.class.SomeFqn", new("executor://uri", UriKind.Absolute), "source.cs"));
-        var testCategoryProperty = TestProperty.Register("MSTestDiscoverer.TestCategory", "Label", typeof(string[]), TestPropertyAttributes.None, typeof(TestCase));
+#pragma warning disable CS0618 // Type or member is obsolete
+        var testCategoryProperty = TestProperty.Register("MSTestDiscoverer.TestCategory", "Label", typeof(string[]), TestPropertyAttributes.Trait, typeof(TestCase));
+#pragma warning restore CS0618 // Type or member is obsolete
         testResult.SetPropertyValue<string[]>(testCategoryProperty, ["category1"]);
 
         var testNode = testResult.ToTestNode(true, new NamedFeatureCapabilityWithVSTestProvider(), new ServerModeCommandLineOptions(), ClientInfo);

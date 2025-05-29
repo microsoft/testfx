@@ -46,8 +46,6 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
 
     public ITelemetryManager Telemetry { get; } = new TelemetryManager();
 
-    public IServerModeManager ServerMode { get; } = new ServerModeManager();
-
     public ITestHostControllersManager TestHostControllers { get; } = new TestHostControllersManager();
 
     public IToolsManager Tools { get; } = new ToolsManager();
@@ -380,7 +378,7 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
             if (hasServerFlag && isJsonRpcProtocol)
             {
                 // Build the IMessageHandlerFactory for the PassiveNode
-                IMessageHandlerFactory messageHandlerFactory = ((ServerModeManager)ServerMode).Build(serviceProvider);
+                IMessageHandlerFactory messageHandlerFactory = ServerModeManager.Build(serviceProvider);
                 passiveNode = new PassiveNode(
                     messageHandlerFactory,
                     testApplicationCancellationTokenSource,
@@ -445,7 +443,7 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
         if (hasServerFlag && isJsonRpcProtocol)
         {
             // Build the server mode with the user preferences
-            IMessageHandlerFactory messageHandlerFactory = ((ServerModeManager)ServerMode).Build(serviceProvider);
+            IMessageHandlerFactory messageHandlerFactory = ServerModeManager.Build(serviceProvider);
 
             // Build the test host
             // note that we pass the BuildTestFrameworkAsync as callback because server mode will call it per-request

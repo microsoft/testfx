@@ -444,12 +444,6 @@ The default is TestResults in the directory that contains the test application.<
   <data name="JsonRpcTcpServerToSingleClientDescription" xml:space="preserve">
     <value>JsonRpc server to client handshake, implementation based on the test platform protocol specification.</value>
   </data>
-  <data name="StartingServer" xml:space="preserve">
-    <value>Starting server. Listening on port '{0}'</value>
-  </data>
-  <data name="UnknownCommunicationProtocolErrorMessage" xml:space="preserve">
-    <value>The communication protocol '{0}' is not supported</value>
-  </data>
   <data name="TelemetryNotice" xml:space="preserve">
     <value>Telemetry
 ---------

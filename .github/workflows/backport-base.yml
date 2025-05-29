@@ -2,10 +2,10 @@ on:
   workflow_call:
     inputs:
       pr_title_template:
-        description: 'The template used for the PR title. Special placeholder tokens that will be replaced with a value: %target_branch%, %source_pr_title%, %source_pr_number%, %cc_users%.'
+        description: 'The template used for the PR title. Special placeholder tokens that will be replaced with a value: %target_branch%, %source_pr_title%, %source_pr_number%, %source_pr_author%, %cc_users%.'
         required: false
         type: string
-        default: '[%target_branch%] %source_pr_title%'
+        default: '%source_pr_title% by @%source_pr_author% in #%source_pr_number% (backport to %target_branch%)'
       pr_description_template:
         description: 'The template used for the PR description. Special placeholder tokens that will be replaced with a value: %target_branch%, %source_pr_title%, %source_pr_number%, %cc_users%.'
         required: false
@@ -116,6 +116,7 @@ jobs:
               .replace(/%target_branch%/g, target_branch)
               .replace(/%source_pr_title%/g, context.payload.issue.title)
               .replace(/%source_pr_number%/g, context.payload.issue.number)
+              .replace(/%source_pr_author%/g, context.payload.issue.user.login)
 
             return backport_pr_title;
 

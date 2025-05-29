@@ -34,18 +34,6 @@ internal static class ObjectModelConverters
         valueType: typeof(string),
         owner: typeof(TestCase));
 
-    private static readonly TestProperty TestCategoryProperty = TestProperty.Register(
-        id: "MSTestDiscoverer.TestCategory",
-        label: "TestCategory",
-        valueType: typeof(string[]),
-        owner: typeof(TestCase));
-
-    private static readonly TestProperty TraitsProperty = TestProperty.Register(
-        id: "TestObject.Traits",
-        label: "Traits",
-        valueType: typeof(KeyValuePair<string, string>[]),
-        owner: typeof(TestObject));
-
     /// <summary>
     /// Converts a VSTest <see cref="TestCase"/> to a Microsoft Testing Platform <see cref="TestNode"/>.
     /// </summary>
@@ -82,27 +70,33 @@ internal static class ObjectModelConverters
 
     private static void CopyCategoryAndTraits(TestObject testCaseOrResult, TestNode testNode, bool isTrxEnabled)
     {
-        // TPv2 is doing some special handling for MSTest... we should probably do the same.
-        // See https://github.com/microsoft/vstest/blob/main/src/Microsoft.TestPlatform.Extensions.TrxLogger/Utility/Converter.cs#L66-L70
-        if (testCaseOrResult.GetPropertyValue<string[]>(TestCategoryProperty, defaultValue: null) is string[] mstestCategories)
+        foreach (KeyValuePair<TestProperty, object?> property in testCaseOrResult.GetProperties())
         {
-            if (isTrxEnabled)
+#pragma warning disable CS0618 // Type or member is obsolete
+            if ((property.Key.Attributes & TestPropertyAttributes.Trait) == 0)
+#pragma warning restore CS0618 // Type or member is obsolete
             {
-                testNode.Properties.Add(new TrxCategoriesProperty(mstestCategories));
+                continue;
             }
 
-            foreach (string category in mstestCategories)
+            if (property.Value is string[] categories)
             {
-                testNode.Properties.Add(new TestMetadataProperty(category, string.Empty));
-            }
-        }
+                if (isTrxEnabled)
+                {
+                    testNode.Properties.Add(new TrxCategoriesProperty(categories));
+                }
 
-        if (testCaseOrResult.GetPropertyValue<KeyValuePair<string, string>[]>(TraitsProperty, defaultValue: null) is KeyValuePair<string, string>[] traits &&
-            traits.Length > 0)
-        {
-            foreach (KeyValuePair<string, string> trait in traits)
+                foreach (string category in categories)
+                {
+                    testNode.Properties.Add(new TestMetadataProperty(category, string.Empty));
+                }
+            }
+            else if (property.Value is KeyValuePair<string, string>[] traits)
             {
-                testNode.Properties.Add(new TestMetadataProperty(trait.Key, trait.Value));
+                foreach (KeyValuePair<string, string> trait in traits)
+                {
+                    testNode.Properties.Add(new TestMetadataProperty(trait.Key, trait.Value));
+                }
             }
         }
     }
