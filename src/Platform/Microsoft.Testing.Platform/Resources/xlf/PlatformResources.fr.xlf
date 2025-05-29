@@ -733,11 +733,6 @@ Prend un argument sous forme de chaîne au format &lt;value&gt;[h|m|s] où « v
         <target state="translated">Sortie standard</target>
         <note />
       </trans-unit>
-      <trans-unit id="StartingServer">
-        <source>Starting server. Listening on port '{0}'</source>
-        <target state="translated">Démarrage du serveur. Écoute sur le port « {0} »</target>
-        <note />
-      </trans-unit>
       <trans-unit id="StartingTestSession">
         <source>Starting test session.</source>
         <target state="translated">Démarrage de la session de test.</target>
@@ -950,11 +945,6 @@ Les valeurs valides sont « Normal » et « Détaillé ». La valeur par dé
       <trans-unit id="UnexpectedStateErrorMessage">
         <source>Unexpected state in file '{0}' at line '{1}'</source>
         <target state="translated">État inattendu dans le fichier « {0} » à la ligne « {1} »</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="UnknownCommunicationProtocolErrorMessage">
-        <source>The communication protocol '{0}' is not supported</source>
-        <target state="translated">Le protocole de communication « {0} » n’est pas pris en charge</target>
         <note />
       </trans-unit>
       <trans-unit id="UnobservedTaskExceptionWarningMessage">

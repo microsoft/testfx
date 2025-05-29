@@ -11,7 +11,6 @@ using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Hosts;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Resources;
-using Microsoft.Testing.Platform.ServerMode;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.Telemetry;
 using Microsoft.Testing.Platform.TestHost;
@@ -52,8 +51,6 @@ internal sealed class TestApplicationBuilder : ITestApplicationBuilder
     public ITestHostControllersManager TestHostControllers => _testHostBuilder.TestHostControllers;
 
     public ICommandLineManager CommandLine => _testHostBuilder.CommandLine;
-
-    internal IServerModeManager ServerMode => _testHostBuilder.ServerMode;
 
     internal ITestHostOrchestratorManager TestHostOrchestrator => _testHostBuilder.TestHostOrchestratorManager;
 
