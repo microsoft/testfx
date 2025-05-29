@@ -4,6 +4,30 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
+## <a name="1.7.1" />[1.7.1] - 2025-05-27
+
+See full log [of v3.9.0...v3.9.1](https://github.com/microsoft/testfx/compare/v3.9.0...v3.9.1)
+
+### Fixed
+
+* VSTestBridge: Handle TestPropertyAttributes.Trait instead of special casing specific properties by @Youssef1313 in [#5644](https://github.com/microsoft/testfx/pull/5644)
+
+### Artifacts
+
+* MSTest: [3.9.1](https://www.nuget.org/packages/MSTest/3.9.1)
+* MSTest.TestFramework: [3.9.1](https://www.nuget.org/packages/MSTest.TestFramework/3.9.1)
+* MSTest.TestAdapter: [3.9.1](https://www.nuget.org/packages/MSTest.TestAdapter/3.9.1)
+* MSTest.Analyzers: [3.9.1](https://www.nuget.org/packages/MSTest.Analyzers/3.9.1)
+* MSTest.Sdk: [3.9.1](https://www.nuget.org/packages/MSTest.Sdk/3.9.1)
+* Microsoft.Testing.Extensions.CrashDump: [1.7.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.CrashDump/1.7.1)
+* Microsoft.Testing.Extensions.HangDump: [1.7.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HangDump/1.7.1)
+* Microsoft.Testing.Extensions.HotReload: [1.7.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HotReload/1.7.1)
+* Microsoft.Testing.Extensions.Retry: [1.7.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Retry/1.7.1)
+* Microsoft.Testing.Extensions.TrxReport: [1.7.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport/1.7.1)
+* Microsoft.Testing.Extensions.AzureDevOpsReport [1.0.0-alpha.25277.3](https://www.nuget.org/packages/Microsoft.Testing.Extensions.AzureDevOpsReport/1.0.0-alpha.25277.3)
+* MSTest.SourceGeneration: [1.0.0-alpha.25277.3](https://www.nuget.org/packages/MSTest.SourceGeneration/1.0.0-alpha.25277.3)
+* MSTest.Engine: [1.0.0-alpha.25277.3](https://www.nuget.org/packages/MSTest.Engine/1.0.0-alpha.25277.3)
+
 ## <a name="1.7.0" />[1.7.0] - 2025-05-20
 
 See full log [of v3.8.3...v3.9.0](https://github.com/microsoft/testfx/compare/v3.8.3...v3.9.0)
