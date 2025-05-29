@@ -10,7 +10,7 @@ See full log [of v3.9.0...v3.9.1](https://github.com/microsoft/testfx/compare/v3
 
 ### Fixed
 
-* VSTestBridge: Handle TestPropertyAttributes.Trait instead of special casing specific properties by @youssef-backport-bot in [#5648](https://github.com/microsoft/testfx/pull/5648)
+* VSTestBridge: Handle TestPropertyAttributes.Trait instead of special casing specific properties by @Youssef1313 in [#5644](https://github.com/microsoft/testfx/pull/5644)
 
 ### Artifacts
 
