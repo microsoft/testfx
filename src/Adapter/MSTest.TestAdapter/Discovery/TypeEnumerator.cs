@@ -152,7 +152,7 @@ internal class TypeEnumerator
             DoNotParallelize = _reflectHelper.IsDoNotParallelizeSet(method, _type),
             Priority = _reflectHelper.GetPriority(method),
             DeploymentItems = PlatformServiceProvider.Instance.TestDeployment.GetDeploymentItems(method, _type, warnings),
-            Traits = _reflectHelper.GetTestPropertiesAsTraits(method).ToArray(),
+            Traits = [.. _reflectHelper.GetTestPropertiesAsTraits(method)],
         };
 
         Attribute[] attributes = _reflectHelper.GetCustomAttributesCached(method, inherit: true);
