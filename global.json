@@ -24,6 +24,7 @@
   },
   "sdk": {
     "version": "10.0.100-preview.5.25269.23",
+    "paths": [ ".dotnet", "$host$" ],
     "allowPrerelease": true,
     "rollForward": "latestFeature"
   },
