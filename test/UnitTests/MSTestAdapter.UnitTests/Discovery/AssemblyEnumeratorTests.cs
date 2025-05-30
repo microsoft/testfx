@@ -133,7 +133,12 @@ public class AssemblyEnumeratorTests : TestContainer
 
         Type[] types = AssemblyEnumerator.GetTypes(mockAssembly.Object, "DummyAssembly", _warnings);
 
+#if NETFRAMEWORK
+        Verify(types is null);
+#else
         Verify(types is not null);
+#endif
+
         Verify(_warnings.Count == 1);
         Verify(_warnings.ToList().Contains(
             string.Format(CultureInfo.CurrentCulture, Resource.TypeLoadFailed, "DummyAssembly", "System.Exception: DummyLoaderException\r\n")));
