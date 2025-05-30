@@ -152,7 +152,7 @@ public class TypeCacheTests : TestContainer
         var testMethod = new TestMethod(methodInfo.Name, type.FullName!, "A", isAsync: false);
 
         _mockReflectHelper.Setup(
-            rh => rh.IsNonDerivedAttributeDefined<TestClassAttribute>(type, true)).Returns(true);
+            rh => rh.IsAttributeDefined<TestClassAttribute>(type, true)).Returns(true);
 
         TestMethodInfo? testMethodInfo = _typeCache.GetTestMethodInfo(
                                     testMethod,
@@ -169,7 +169,7 @@ public class TypeCacheTests : TestContainer
         var testMethod = new TestMethod(methodInfo.Name, type.FullName!, "A", isAsync: false);
 
         _mockReflectHelper.Setup(
-            rh => rh.IsNonDerivedAttributeDefined<TestClassAttribute>(type, true)).Returns(true);
+            rh => rh.IsAttributeDefined<TestClassAttribute>(type, true)).Returns(true);
 
         TestMethodInfo? testMethodInfo = _typeCache.GetTestMethodInfo(
                                 testMethod,
@@ -188,7 +188,7 @@ public class TypeCacheTests : TestContainer
         var testMethod = new TestMethod(methodInfo.Name, type.FullName!, "A", isAsync: false);
 
         _mockReflectHelper.Setup(
-            rh => rh.IsNonDerivedAttributeDefined<TestClassAttribute>(type, true)).Returns(true);
+            rh => rh.IsAttributeDefined<TestClassAttribute>(type, true)).Returns(true);
 
         _typeCache.GetTestMethodInfo(
                 testMethod,
@@ -204,10 +204,10 @@ public class TypeCacheTests : TestContainer
         var testMethod = new TestMethod(methodInfo.Name, type.FullName!, "A", isAsync: false);
 
         _mockReflectHelper.Setup(
-            rh => rh.IsNonDerivedAttributeDefined<TestClassAttribute>(It.IsAny<Type>(), true)).Throws(new Exception());
+            rh => rh.IsAttributeDefined<TestClassAttribute>(It.IsAny<Type>(), true)).Throws(new Exception());
 
         _mockReflectHelper.Setup(
-            rh => rh.IsNonDerivedAttributeDefined<TestClassAttribute>(typeof(DummyTestClassWithTestMethods), true)).Returns(true);
+            rh => rh.IsAttributeDefined<TestClassAttribute>(typeof(DummyTestClassWithTestMethods), true)).Returns(true);
 
         _typeCache.GetTestMethodInfo(
                 testMethod,
@@ -222,10 +222,10 @@ public class TypeCacheTests : TestContainer
         var testMethod = new TestMethod("TestInit", type.FullName!, "A", isAsync: false);
 
         _mockReflectHelper.Setup(
-            rh => rh.IsDerivedAttributeDefined<TestClassAttribute>(type, false)).Returns(true);
+            rh => rh.IsAttributeDefined<TestClassAttribute>(type, false)).Returns(true);
 
         _mockReflectHelper.Setup(
-            rh => rh.IsNonDerivedAttributeDefined<AssemblyInitializeAttribute>(type.GetMethod("AssemblyInit")!, false)).Returns(true);
+            rh => rh.IsAttributeDefined<AssemblyInitializeAttribute>(type.GetMethod("AssemblyInit")!, false)).Returns(true);
 
         _typeCache.GetTestMethodInfo(
                 testMethod,
@@ -241,10 +241,10 @@ public class TypeCacheTests : TestContainer
         var testMethod = new TestMethod("TestCleanup", type.FullName!, "A", isAsync: false);
 
         _mockReflectHelper.Setup(
-            rh => rh.IsDerivedAttributeDefined<TestClassAttribute>(type, false)).Returns(true);
+            rh => rh.IsAttributeDefined<TestClassAttribute>(type, false)).Returns(true);
 
         _mockReflectHelper.Setup(
-            rh => rh.IsNonDerivedAttributeDefined<AssemblyCleanupAttribute>(type.GetMethod("AssemblyCleanup")!, false)).Returns(true);
+            rh => rh.IsAttributeDefined<AssemblyCleanupAttribute>(type.GetMethod("AssemblyCleanup")!, false)).Returns(true);
 
         _typeCache.GetTestMethodInfo(
                 testMethod,
@@ -260,12 +260,12 @@ public class TypeCacheTests : TestContainer
         var testMethod = new TestMethod("TestInitOrCleanup", type.FullName!, "A", isAsync: false);
 
         _mockReflectHelper.Setup(
-            rh => rh.IsDerivedAttributeDefined<TestClassAttribute>(type, false)).Returns(true);
+            rh => rh.IsAttributeDefined<TestClassAttribute>(type, false)).Returns(true);
 
         _mockReflectHelper.Setup(
-            rh => rh.IsNonDerivedAttributeDefined<AssemblyInitializeAttribute>(type.GetMethod("AssemblyInit")!, false)).Returns(true);
+            rh => rh.IsAttributeDefined<AssemblyInitializeAttribute>(type.GetMethod("AssemblyInit")!, false)).Returns(true);
         _mockReflectHelper.Setup(
-            rh => rh.IsNonDerivedAttributeDefined<AssemblyCleanupAttribute>(type.GetMethod("AssemblyCleanup")!, false)).Returns(true);
+            rh => rh.IsAttributeDefined<AssemblyCleanupAttribute>(type.GetMethod("AssemblyCleanup")!, false)).Returns(true);
 
         _typeCache.GetTestMethodInfo(
                 testMethod,
@@ -282,10 +282,10 @@ public class TypeCacheTests : TestContainer
         var testMethod = new TestMethod("M", type.FullName!, "A", isAsync: false);
 
         _mockReflectHelper.Setup(
-            rh => rh.IsDerivedAttributeDefined<TestClassAttribute>(type, false)).Returns(true);
+            rh => rh.IsAttributeDefined<TestClassAttribute>(type, false)).Returns(true);
 
         _mockReflectHelper.Setup(
-            rh => rh.IsNonDerivedAttributeDefined<AssemblyInitializeAttribute>(type.GetMethod("AssemblyInit")!, false)).Returns(true);
+            rh => rh.IsAttributeDefined<AssemblyInitializeAttribute>(type.GetMethod("AssemblyInit")!, false)).Returns(true);
 
         void A() =>
             _typeCache.GetTestMethodInfo(
@@ -311,10 +311,10 @@ public class TypeCacheTests : TestContainer
         var testMethod = new TestMethod("M", type.FullName!, "A", isAsync: false);
 
         _mockReflectHelper.Setup(
-            rh => rh.IsDerivedAttributeDefined<TestClassAttribute>(type, false)).Returns(true);
+            rh => rh.IsAttributeDefined<TestClassAttribute>(type, false)).Returns(true);
 
         _mockReflectHelper.Setup(
-            rh => rh.IsNonDerivedAttributeDefined<AssemblyCleanupAttribute>(type.GetMethod("AssemblyCleanup")!, false)).Returns(true);
+            rh => rh.IsAttributeDefined<AssemblyCleanupAttribute>(type.GetMethod("AssemblyCleanup")!, false)).Returns(true);
 
         void A() =>
             _typeCache.GetTestMethodInfo(
@@ -341,7 +341,7 @@ public class TypeCacheTests : TestContainer
         var testMethod = new TestMethod(methodInfo.Name, type.FullName!, "A", isAsync: false);
 
         _mockReflectHelper.Setup(
-            rh => rh.IsDerivedAttributeDefined<TestClassAttribute>(type, false)).Returns(true);
+            rh => rh.IsAttributeDefined<TestClassAttribute>(type, false)).Returns(true);
 
         _typeCache.GetTestMethodInfo(
                 testMethod,
@@ -351,7 +351,7 @@ public class TypeCacheTests : TestContainer
                 testMethod,
                 new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null!, "test"), new Dictionary<string, object?>()));
 
-        _mockReflectHelper.Verify(rh => rh.IsDerivedAttributeDefined<TestClassAttribute>(type, false), Times.Once);
+        _mockReflectHelper.Verify(rh => rh.IsAttributeDefined<TestClassAttribute>(type, false), Times.Once);
         Verify(_typeCache.AssemblyInfoCache.Count == 1);
     }
 
@@ -366,7 +366,7 @@ public class TypeCacheTests : TestContainer
         var testMethod = new TestMethod(methodInfo.Name, type.FullName!, "A", isAsync: false);
 
         _mockReflectHelper.Setup(
-            rh => rh.IsNonDerivedAttributeDefined<TestClassAttribute>(type, true)).Returns(true);
+            rh => rh.IsAttributeDefined<TestClassAttribute>(type, true)).Returns(true);
 
         _typeCache.GetTestMethodInfo(
                 testMethod,
@@ -383,10 +383,10 @@ public class TypeCacheTests : TestContainer
         var testMethod = new TestMethod("TestInit", type.FullName!, "A", isAsync: false);
 
         _mockReflectHelper.Setup(
-            rh => rh.IsNonDerivedAttributeDefined<TestClassAttribute>(type, true)).Returns(true);
+            rh => rh.IsAttributeDefined<TestClassAttribute>(type, true)).Returns(true);
 
         _mockReflectHelper.Setup(
-            rh => rh.IsNonDerivedAttributeDefined<ClassInitializeAttribute>(type.GetMethod("AssemblyInit")!, false)).Returns(true);
+            rh => rh.IsAttributeDefined<ClassInitializeAttribute>(type.GetMethod("AssemblyInit")!, false)).Returns(true);
 
         _typeCache.GetTestMethodInfo(
                 testMethod,
@@ -405,16 +405,16 @@ public class TypeCacheTests : TestContainer
         var testMethod = new TestMethod("TestMethod", type.FullName!, "A", false);
 
         _mockReflectHelper.Setup(
-            rh => rh.IsDerivedAttributeDefined<TestClassAttribute>(type, false)).Returns(true);
+            rh => rh.IsAttributeDefined<TestClassAttribute>(type, false)).Returns(true);
 
         _mockReflectHelper.Setup(
-           rh => rh.IsNonDerivedAttributeDefined<ClassInitializeAttribute>(baseType.GetMethod("AssemblyInit")!, false)).Returns(true);
+           rh => rh.IsAttributeDefined<ClassInitializeAttribute>(baseType.GetMethod("AssemblyInit")!, false)).Returns(true);
         _mockReflectHelper.Setup(
-            rh => rh.GetFirstDerivedAttributeOrDefault<ClassInitializeAttribute>(baseType.GetMethod("AssemblyInit")!, true))
+            rh => rh.GetFirstAttributeOrDefault<ClassInitializeAttribute>(baseType.GetMethod("AssemblyInit")!, true))
                     .Returns(new ClassInitializeAttribute(InheritanceBehavior.BeforeEachDerivedClass));
 
         _mockReflectHelper.Setup(
-           rh => rh.IsNonDerivedAttributeDefined<ClassInitializeAttribute>(type.GetMethod("ClassInit")!, false)).Returns(true);
+           rh => rh.IsAttributeDefined<ClassInitializeAttribute>(type.GetMethod("ClassInit")!, false)).Returns(true);
 
         _typeCache.GetTestMethodInfo(
             testMethod,
@@ -431,10 +431,10 @@ public class TypeCacheTests : TestContainer
         var testMethod = new TestMethod("TestCleanup", type.FullName!, "A", isAsync: false);
 
         _mockReflectHelper.Setup(
-            rh => rh.IsNonDerivedAttributeDefined<TestClassAttribute>(type, true)).Returns(true);
+            rh => rh.IsAttributeDefined<TestClassAttribute>(type, true)).Returns(true);
 
         _mockReflectHelper.Setup(
-            rh => rh.IsNonDerivedAttributeDefined<ClassCleanupAttribute>(type.GetMethod("AssemblyCleanup")!, false)).Returns(true);
+            rh => rh.IsAttributeDefined<ClassCleanupAttribute>(type.GetMethod("AssemblyCleanup")!, false)).Returns(true);
 
         _typeCache.GetTestMethodInfo(
                 testMethod,
@@ -452,11 +452,11 @@ public class TypeCacheTests : TestContainer
         var testMethod = new TestMethod("TestMethod", type.FullName!, "A", false);
 
         _mockReflectHelper.Setup(
-            rh => rh.IsDerivedAttributeDefined<TestClassAttribute>(type, false)).Returns(true);
+            rh => rh.IsAttributeDefined<TestClassAttribute>(type, false)).Returns(true);
         _mockReflectHelper.Setup(
-          rh => rh.IsNonDerivedAttributeDefined<ClassCleanupAttribute>(baseType.GetMethod("AssemblyCleanup")!, false)).Returns(true);
+          rh => rh.IsAttributeDefined<ClassCleanupAttribute>(baseType.GetMethod("AssemblyCleanup")!, false)).Returns(true);
         _mockReflectHelper.Setup(
-           rh => rh.GetFirstDerivedAttributeOrDefault<ClassCleanupAttribute>(baseType.GetMethod("AssemblyCleanup")!, true))
+           rh => rh.GetFirstAttributeOrDefault<ClassCleanupAttribute>(baseType.GetMethod("AssemblyCleanup")!, true))
                    .Returns(new ClassCleanupAttribute(InheritanceBehavior.BeforeEachDerivedClass));
 
         _typeCache.GetTestMethodInfo(
@@ -474,11 +474,11 @@ public class TypeCacheTests : TestContainer
         var testMethod = new TestMethod("TestInitOrCleanup", type.FullName!, "A", isAsync: false);
 
         _mockReflectHelper.Setup(
-            rh => rh.IsNonDerivedAttributeDefined<TestClassAttribute>(type, true)).Returns(true);
+            rh => rh.IsAttributeDefined<TestClassAttribute>(type, true)).Returns(true);
         _mockReflectHelper.Setup(
-            rh => rh.IsNonDerivedAttributeDefined<ClassInitializeAttribute>(type.GetMethod("AssemblyInit")!, false)).Returns(true);
+            rh => rh.IsAttributeDefined<ClassInitializeAttribute>(type.GetMethod("AssemblyInit")!, false)).Returns(true);
         _mockReflectHelper.Setup(
-            rh => rh.IsNonDerivedAttributeDefined<ClassCleanupAttribute>(type.GetMethod("AssemblyCleanup")!, false)).Returns(true);
+            rh => rh.IsAttributeDefined<ClassCleanupAttribute>(type.GetMethod("AssemblyCleanup")!, false)).Returns(true);
 
         _typeCache.GetTestMethodInfo(
                 testMethod,
@@ -499,23 +499,23 @@ public class TypeCacheTests : TestContainer
         MethodInfo baseCleanupMethod = baseType.GetMethod("ClassCleanup")!;
 
         _mockReflectHelper.Setup(
-            rh => rh.IsDerivedAttributeDefined<TestClassAttribute>(type, false)).Returns(true);
+            rh => rh.IsAttributeDefined<TestClassAttribute>(type, false)).Returns(true);
 
         _mockReflectHelper.Setup(
-          rh => rh.IsNonDerivedAttributeDefined<ClassInitializeAttribute>(baseInitializeMethod, false)).Returns(true);
+          rh => rh.IsAttributeDefined<ClassInitializeAttribute>(baseInitializeMethod, false)).Returns(true);
         _mockReflectHelper.Setup(
-           rh => rh.GetFirstDerivedAttributeOrDefault<ClassInitializeAttribute>(baseInitializeMethod, true))
+           rh => rh.GetFirstAttributeOrDefault<ClassInitializeAttribute>(baseInitializeMethod, true))
                    .Returns(new ClassInitializeAttribute(InheritanceBehavior.BeforeEachDerivedClass));
         _mockReflectHelper.Setup(
-            rh => rh.IsNonDerivedAttributeDefined<ClassCleanupAttribute>(baseCleanupMethod, false)).Returns(true);
+            rh => rh.IsAttributeDefined<ClassCleanupAttribute>(baseCleanupMethod, false)).Returns(true);
         _mockReflectHelper.Setup(
-            rh => rh.GetFirstDerivedAttributeOrDefault<ClassCleanupAttribute>(baseCleanupMethod, true))
+            rh => rh.GetFirstAttributeOrDefault<ClassCleanupAttribute>(baseCleanupMethod, true))
                     .Returns(new ClassCleanupAttribute(InheritanceBehavior.BeforeEachDerivedClass));
 
         _mockReflectHelper.Setup(
-            rh => rh.IsNonDerivedAttributeDefined<ClassInitializeAttribute>(type.GetMethod("AssemblyInit")!, false)).Returns(true);
+            rh => rh.IsAttributeDefined<ClassInitializeAttribute>(type.GetMethod("AssemblyInit")!, false)).Returns(true);
         _mockReflectHelper.Setup(
-            rh => rh.IsNonDerivedAttributeDefined<ClassCleanupAttribute>(type.GetMethod("AssemblyCleanup")!, false)).Returns(true);
+            rh => rh.IsAttributeDefined<ClassCleanupAttribute>(type.GetMethod("AssemblyCleanup")!, false)).Returns(true);
 
         _typeCache.GetTestMethodInfo(
                 testMethod,
@@ -541,35 +541,35 @@ public class TypeCacheTests : TestContainer
         MethodInfo parentCleanupMethod = parentType.GetMethod("ChildClassCleanup")!;
 
         _mockReflectHelper
-            .Setup(rh => rh.IsNonDerivedAttributeDefined<TestClassAttribute>(type, true))
+            .Setup(rh => rh.IsAttributeDefined<TestClassAttribute>(type, true))
             .Returns(true);
 
         // Setup grandparent class init/cleanup methods
         _mockReflectHelper
-            .Setup(rh => rh.IsNonDerivedAttributeDefined<ClassInitializeAttribute>(grandparentInitMethod, false))
+            .Setup(rh => rh.IsAttributeDefined<ClassInitializeAttribute>(grandparentInitMethod, false))
             .Returns(true);
         _mockReflectHelper
-            .Setup(rh => rh.GetFirstDerivedAttributeOrDefault<ClassInitializeAttribute>(grandparentInitMethod, true))
+            .Setup(rh => rh.GetFirstAttributeOrDefault<ClassInitializeAttribute>(grandparentInitMethod, true))
             .Returns(new ClassInitializeAttribute(InheritanceBehavior.BeforeEachDerivedClass));
         _mockReflectHelper
-            .Setup(rh => rh.IsNonDerivedAttributeDefined<ClassCleanupAttribute>(grandparentCleanupMethod, false))
+            .Setup(rh => rh.IsAttributeDefined<ClassCleanupAttribute>(grandparentCleanupMethod, false))
             .Returns(true);
         _mockReflectHelper
-            .Setup(rh => rh.GetFirstDerivedAttributeOrDefault<ClassCleanupAttribute>(grandparentCleanupMethod, true))
+            .Setup(rh => rh.GetFirstAttributeOrDefault<ClassCleanupAttribute>(grandparentCleanupMethod, true))
             .Returns(new ClassCleanupAttribute(InheritanceBehavior.BeforeEachDerivedClass));
 
         // Setup parent class init/cleanup methods
         _mockReflectHelper
-            .Setup(rh => rh.IsNonDerivedAttributeDefined<ClassInitializeAttribute>(parentInitMethod, false))
+            .Setup(rh => rh.IsAttributeDefined<ClassInitializeAttribute>(parentInitMethod, false))
             .Returns(true);
         _mockReflectHelper
-            .Setup(rh => rh.GetFirstDerivedAttributeOrDefault<ClassInitializeAttribute>(parentInitMethod, true))
+            .Setup(rh => rh.GetFirstAttributeOrDefault<ClassInitializeAttribute>(parentInitMethod, true))
             .Returns(new ClassInitializeAttribute(InheritanceBehavior.BeforeEachDerivedClass));
         _mockReflectHelper
-            .Setup(rh => rh.IsNonDerivedAttributeDefined<ClassCleanupAttribute>(parentCleanupMethod, false))
+            .Setup(rh => rh.IsAttributeDefined<ClassCleanupAttribute>(parentCleanupMethod, false))
             .Returns(true);
         _mockReflectHelper
-            .Setup(rh => rh.GetFirstDerivedAttributeOrDefault<ClassCleanupAttribute>(parentCleanupMethod, true))
+            .Setup(rh => rh.GetFirstAttributeOrDefault<ClassCleanupAttribute>(parentCleanupMethod, true))
             .Returns(new ClassCleanupAttribute(InheritanceBehavior.BeforeEachDerivedClass));
 
         var testMethod = new TestMethod("TestMethod", type.FullName!, "A", isAsync: false);
@@ -597,10 +597,10 @@ public class TypeCacheTests : TestContainer
         var testMethod = new TestMethod("M", type.FullName!, "A", isAsync: false);
 
         _mockReflectHelper.Setup(
-            rh => rh.IsDerivedAttributeDefined<TestClassAttribute>(type, false)).Returns(true);
+            rh => rh.IsAttributeDefined<TestClassAttribute>(type, false)).Returns(true);
 
         _mockReflectHelper.Setup(
-            rh => rh.IsNonDerivedAttributeDefined<ClassInitializeAttribute>(type.GetMethod("AssemblyInit")!, false)).Returns(true);
+            rh => rh.IsAttributeDefined<ClassInitializeAttribute>(type.GetMethod("AssemblyInit")!, false)).Returns(true);
 
         void A() =>
             _typeCache.GetTestMethodInfo(
@@ -626,10 +626,10 @@ public class TypeCacheTests : TestContainer
         var testMethod = new TestMethod("M", type.FullName!, "A", isAsync: false);
 
         _mockReflectHelper.Setup(
-            rh => rh.IsDerivedAttributeDefined<TestClassAttribute>(type, false)).Returns(true);
+            rh => rh.IsAttributeDefined<TestClassAttribute>(type, false)).Returns(true);
 
         _mockReflectHelper.Setup(
-            rh => rh.IsNonDerivedAttributeDefined<ClassCleanupAttribute>(type.GetMethod("AssemblyCleanup")!, false)).Returns(true);
+            rh => rh.IsAttributeDefined<ClassCleanupAttribute>(type.GetMethod("AssemblyCleanup")!, false)).Returns(true);
 
         void A() =>
             _typeCache.GetTestMethodInfo(
@@ -655,10 +655,10 @@ public class TypeCacheTests : TestContainer
         var testMethod = new TestMethod("TestInit", type.FullName!, "A", isAsync: false);
 
         _mockReflectHelper.Setup(
-            rh => rh.IsNonDerivedAttributeDefined<TestClassAttribute>(type, true)).Returns(true);
+            rh => rh.IsAttributeDefined<TestClassAttribute>(type, true)).Returns(true);
 
         _mockReflectHelper.Setup(
-            rh => rh.IsNonDerivedAttributeDefined<TestInitializeAttribute>(type.GetMethod("TestInit")!, false)).Returns(true);
+            rh => rh.IsAttributeDefined<TestInitializeAttribute>(type.GetMethod("TestInit")!, false)).Returns(true);
 
         _typeCache.GetTestMethodInfo(
                 testMethod,
@@ -674,10 +674,10 @@ public class TypeCacheTests : TestContainer
         var testMethod = new TestMethod("TestCleanup", type.FullName!, "A", isAsync: false);
 
         _mockReflectHelper.Setup(
-            rh => rh.IsNonDerivedAttributeDefined<TestClassAttribute>(type, true)).Returns(true);
+            rh => rh.IsAttributeDefined<TestClassAttribute>(type, true)).Returns(true);
 
         _mockReflectHelper.Setup(
-            rh => rh.IsNonDerivedAttributeDefined<TestCleanupAttribute>(type.GetMethod("TestCleanup")!, false)).Returns(true);
+            rh => rh.IsAttributeDefined<TestCleanupAttribute>(type.GetMethod("TestCleanup")!, false)).Returns(true);
 
         _typeCache.GetTestMethodInfo(
                 testMethod,
@@ -693,10 +693,10 @@ public class TypeCacheTests : TestContainer
         var testMethod = new TestMethod("M", type.FullName!, "A", isAsync: false);
 
         _mockReflectHelper.Setup(
-            rh => rh.IsDerivedAttributeDefined<TestClassAttribute>(type, false)).Returns(true);
+            rh => rh.IsAttributeDefined<TestClassAttribute>(type, false)).Returns(true);
 
         _mockReflectHelper.Setup(
-            rh => rh.IsNonDerivedAttributeDefined<TestInitializeAttribute>(type.GetMethod("TestInit")!, false)).Returns(true);
+            rh => rh.IsAttributeDefined<TestInitializeAttribute>(type.GetMethod("TestInit")!, false)).Returns(true);
 
         void A() =>
             _typeCache.GetTestMethodInfo(
@@ -723,10 +723,10 @@ public class TypeCacheTests : TestContainer
         var testMethod = new TestMethod("TestMethod", type.FullName!, "A", isAsync: false);
 
         _mockReflectHelper.Setup(
-            rh => rh.IsNonDerivedAttributeDefined<TestClassAttribute>(type, true)).Returns(true);
+            rh => rh.IsAttributeDefined<TestClassAttribute>(type, true)).Returns(true);
 
         _mockReflectHelper.Setup(
-            rh => rh.IsNonDerivedAttributeDefined<TestInitializeAttribute>(baseType.GetMethod("TestInit")!, false)).Returns(true);
+            rh => rh.IsAttributeDefined<TestInitializeAttribute>(baseType.GetMethod("TestInit")!, false)).Returns(true);
 
         _typeCache.GetTestMethodInfo(
                 testMethod,
@@ -743,10 +743,10 @@ public class TypeCacheTests : TestContainer
         var testMethod = new TestMethod("TestMethod", type.FullName!, "A", isAsync: false);
 
         _mockReflectHelper.Setup(
-            rh => rh.IsNonDerivedAttributeDefined<TestClassAttribute>(type, true)).Returns(true);
+            rh => rh.IsAttributeDefined<TestClassAttribute>(type, true)).Returns(true);
 
         _mockReflectHelper.Setup(
-            rh => rh.IsNonDerivedAttributeDefined<TestCleanupAttribute>(baseType.GetMethod("TestCleanup")!, false)).Returns(true);
+            rh => rh.IsAttributeDefined<TestCleanupAttribute>(baseType.GetMethod("TestCleanup")!, false)).Returns(true);
 
         _typeCache.GetTestMethodInfo(
                 testMethod,
@@ -763,7 +763,7 @@ public class TypeCacheTests : TestContainer
         var testMethod = new TestMethod(methodInfo.Name, type.FullName!, "A", isAsync: false);
 
         _mockReflectHelper.Setup(
-            rh => rh.IsNonDerivedAttributeDefined<TestClassAttribute>(type, true)).Returns(true);
+            rh => rh.IsAttributeDefined<TestClassAttribute>(type, true)).Returns(true);
 
         _typeCache.GetTestMethodInfo(
                 testMethod,
@@ -809,7 +809,7 @@ public class TypeCacheTests : TestContainer
         MethodInfo methodInfo = type.GetMethod("TestMethod")!;
         var testMethod = new TestMethod(methodInfo.Name, type.FullName!, "A", isAsync: false);
 
-        _mockReflectHelper.Setup(rh => rh.GetFirstDerivedAttributeOrDefault<TestMethodAttribute>(It.IsAny<MethodInfo>(), false)).CallBase();
+        _mockReflectHelper.Setup(rh => rh.GetFirstAttributeOrDefault<TestMethodAttribute>(It.IsAny<MethodInfo>(), false)).CallBase();
         TestMethodInfo? testMethodInfo = _typeCache.GetTestMethodInfo(
                 testMethod,
                 new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null!, "test"), new Dictionary<string, object?>()));
@@ -826,10 +826,10 @@ public class TypeCacheTests : TestContainer
         MethodInfo methodInfo = type.GetMethod("TestMethodWithTimeout")!;
         var testMethod = new TestMethod(methodInfo.Name, type.FullName!, "A", isAsync: false);
 
-        _mockReflectHelper.Setup(rh => rh.IsNonDerivedAttributeDefined<TimeoutAttribute>(methodInfo, false))
+        _mockReflectHelper.Setup(rh => rh.IsAttributeDefined<TimeoutAttribute>(methodInfo, false))
             .Returns(true);
-        _mockReflectHelper.Setup(rh => rh.GetFirstDerivedAttributeOrDefault<TestMethodAttribute>(It.IsAny<MethodInfo>(), false)).CallBase();
-        _mockReflectHelper.Setup(rh => rh.GetFirstNonDerivedAttributeOrDefault<TimeoutAttribute>(methodInfo, false)).CallBase();
+        _mockReflectHelper.Setup(rh => rh.GetFirstAttributeOrDefault<TestMethodAttribute>(It.IsAny<MethodInfo>(), false)).CallBase();
+        _mockReflectHelper.Setup(rh => rh.GetFirstAttributeOrDefault<TimeoutAttribute>(methodInfo, false)).CallBase();
         TestMethodInfo? testMethodInfo = _typeCache.GetTestMethodInfo(
                 testMethod,
                 new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null!, "test"), new Dictionary<string, object?>()));
@@ -846,9 +846,9 @@ public class TypeCacheTests : TestContainer
         MethodInfo methodInfo = type.GetMethod("TestMethodWithNegativeTimeout")!;
         var testMethod = new TestMethod(methodInfo.Name, type.FullName!, "A", isAsync: false);
 
-        _mockReflectHelper.Setup(rh => rh.IsNonDerivedAttributeDefined<TimeoutAttribute>(methodInfo, false))
+        _mockReflectHelper.Setup(rh => rh.IsAttributeDefined<TimeoutAttribute>(methodInfo, false))
             .Returns(true);
-        _mockReflectHelper.Setup(ReflectHelper => ReflectHelper.GetFirstNonDerivedAttributeOrDefault<TimeoutAttribute>(methodInfo, false))
+        _mockReflectHelper.Setup(ReflectHelper => ReflectHelper.GetFirstAttributeOrDefault<TimeoutAttribute>(methodInfo, false))
             .CallBase();
 
         void A() => _typeCache.GetTestMethodInfo(
@@ -873,9 +873,9 @@ public class TypeCacheTests : TestContainer
         MethodInfo methodInfo = type.GetMethod("TestMethodWithTimeoutOfZero")!;
         var testMethod = new TestMethod(methodInfo.Name, type.FullName!, "A", isAsync: false);
 
-        _mockReflectHelper.Setup(rh => rh.IsNonDerivedAttributeDefined<TimeoutAttribute>(methodInfo, false))
+        _mockReflectHelper.Setup(rh => rh.IsAttributeDefined<TimeoutAttribute>(methodInfo, false))
             .Returns(true);
-        _mockReflectHelper.Setup(ReflectHelper => ReflectHelper.GetFirstNonDerivedAttributeOrDefault<TimeoutAttribute>(methodInfo, false))
+        _mockReflectHelper.Setup(ReflectHelper => ReflectHelper.GetFirstAttributeOrDefault<TimeoutAttribute>(methodInfo, false))
             .CallBase();
 
         void A() => _typeCache.GetTestMethodInfo(
@@ -935,9 +935,9 @@ public class TypeCacheTests : TestContainer
         MethodInfo methodInfo = type.GetMethod("TestMethodWithTimeout")!;
         var testMethod = new TestMethod(methodInfo.Name, type.FullName!, "A", isAsync: false);
 
-        _mockReflectHelper.Setup(rh => rh.IsNonDerivedAttributeDefined<TimeoutAttribute>(methodInfo, false))
+        _mockReflectHelper.Setup(rh => rh.IsAttributeDefined<TimeoutAttribute>(methodInfo, false))
            .Returns(true);
-        _mockReflectHelper.Setup(ReflectHelper => ReflectHelper.GetFirstNonDerivedAttributeOrDefault<TimeoutAttribute>(methodInfo, false))
+        _mockReflectHelper.Setup(ReflectHelper => ReflectHelper.GetFirstAttributeOrDefault<TimeoutAttribute>(methodInfo, false))
             .CallBase();
 
         TestMethodInfo? testMethodInfo = _typeCache.GetTestMethodInfo(
@@ -977,7 +977,7 @@ public class TypeCacheTests : TestContainer
         MethodInfo methodInfo = type.GetMethod("TestMethodWithDerivedTestMethodAttribute")!;
         var testMethod = new TestMethod(methodInfo.Name, type.FullName!, "A", isAsync: false);
 
-        _mockReflectHelper.Setup(rh => rh.GetFirstDerivedAttributeOrDefault<TestMethodAttribute>(It.IsAny<MethodInfo>(), false)).CallBase();
+        _mockReflectHelper.Setup(rh => rh.GetFirstAttributeOrDefault<TestMethodAttribute>(It.IsAny<MethodInfo>(), false)).CallBase();
         TestMethodInfo? testMethodInfo = _typeCache.GetTestMethodInfo(
                 testMethod,
                 new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null!, "test"), new Dictionary<string, object?>()));
@@ -1110,7 +1110,7 @@ public class TypeCacheTests : TestContainer
         MethodInfo methodInfo = type.GetRuntimeMethod("DummyTestMethod", [])!;
         var testMethod = new TestMethod(methodInfo.Name, type.FullName!, "A", isAsync: false);
 
-        _mockReflectHelper.Setup(rh => rh.GetFirstDerivedAttributeOrDefault<TestMethodAttribute>(It.IsAny<MethodInfo>(), false)).CallBase();
+        _mockReflectHelper.Setup(rh => rh.GetFirstAttributeOrDefault<TestMethodAttribute>(It.IsAny<MethodInfo>(), false)).CallBase();
         TestMethodInfo? testMethodInfo = _typeCache.GetTestMethodInfo(
                 testMethod,
                 new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null!, "test"), new Dictionary<string, object?>()));
@@ -1127,7 +1127,7 @@ public class TypeCacheTests : TestContainer
         MethodInfo methodInfo = type.GetRuntimeMethod("OverloadedTestMethod", [])!;
         var testMethod = new TestMethod(methodInfo.Name, type.FullName!, "A", isAsync: false);
 
-        _mockReflectHelper.Setup(rh => rh.GetFirstDerivedAttributeOrDefault<TestMethodAttribute>(It.IsAny<MethodInfo>(), false)).CallBase();
+        _mockReflectHelper.Setup(rh => rh.GetFirstAttributeOrDefault<TestMethodAttribute>(It.IsAny<MethodInfo>(), false)).CallBase();
         TestMethodInfo? testMethodInfo = _typeCache.GetTestMethodInfo(
                 testMethod,
                 new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null!, "test"), new Dictionary<string, object?>()));
@@ -1148,7 +1148,7 @@ public class TypeCacheTests : TestContainer
             DeclaringClassFullName = baseType.FullName!,
         };
 
-        _mockReflectHelper.Setup(rh => rh.GetFirstDerivedAttributeOrDefault<TestMethodAttribute>(It.IsAny<MethodInfo>(), false)).CallBase();
+        _mockReflectHelper.Setup(rh => rh.GetFirstAttributeOrDefault<TestMethodAttribute>(It.IsAny<MethodInfo>(), false)).CallBase();
         TestMethodInfo? testMethodInfo = _typeCache.GetTestMethodInfo(
                 testMethod,
                 new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null!, "test"), new Dictionary<string, object?>()));
@@ -1181,10 +1181,10 @@ public class TypeCacheTests : TestContainer
         var testMethod = new TestMethod(methodInfo.Name, type.FullName!, "A", isAsync: false);
 
         _mockReflectHelper.Setup(
-            rh => rh.IsNonDerivedAttributeDefined<TestClassAttribute>(type, true)).Returns(true);
+            rh => rh.IsAttributeDefined<TestClassAttribute>(type, true)).Returns(true);
 
         _mockReflectHelper.Setup(
-            rh => rh.IsNonDerivedAttributeDefined<ClassCleanupAttribute>(type.GetMethod("TestCleanup")!, false)).Returns(false);
+            rh => rh.IsAttributeDefined<ClassCleanupAttribute>(type.GetMethod("TestCleanup")!, false)).Returns(false);
 
         _typeCache.GetTestMethodInfo(
                 testMethod,
@@ -1202,10 +1202,10 @@ public class TypeCacheTests : TestContainer
         var testMethod = new TestMethod(methodInfo.Name, type.FullName!, "A", isAsync: false);
 
         _mockReflectHelper.Setup(
-            rh => rh.IsNonDerivedAttributeDefined<TestClassAttribute>(type, true)).Returns(true);
+            rh => rh.IsAttributeDefined<TestClassAttribute>(type, true)).Returns(true);
 
         _mockReflectHelper.Setup(
-            rh => rh.IsNonDerivedAttributeDefined<ClassCleanupAttribute>(type.GetMethod("AssemblyCleanup")!, false)).Returns(true);
+            rh => rh.IsAttributeDefined<ClassCleanupAttribute>(type.GetMethod("AssemblyCleanup")!, false)).Returns(true);
 
         _typeCache.GetTestMethodInfo(
                 testMethod,
@@ -1235,10 +1235,10 @@ public class TypeCacheTests : TestContainer
         var testMethod = new TestMethod(methodInfo.Name, type.FullName!, "A", isAsync: false);
 
         _mockReflectHelper.Setup(
-            rh => rh.IsDerivedAttributeDefined<TestClassAttribute>(type, false)).Returns(true);
+            rh => rh.IsAttributeDefined<TestClassAttribute>(type, false)).Returns(true);
 
         _mockReflectHelper.Setup(
-            rh => rh.IsNonDerivedAttributeDefined<AssemblyCleanupAttribute>(type.GetMethod("AssemblyCleanup")!, false)).Returns(false);
+            rh => rh.IsAttributeDefined<AssemblyCleanupAttribute>(type.GetMethod("AssemblyCleanup")!, false)).Returns(false);
 
         _typeCache.GetTestMethodInfo(
                 testMethod,
@@ -1256,10 +1256,10 @@ public class TypeCacheTests : TestContainer
         var testMethod = new TestMethod(methodInfo.Name, type.FullName!, "A", isAsync: false);
 
         _mockReflectHelper.Setup(
-            rh => rh.IsDerivedAttributeDefined<TestClassAttribute>(type, false)).Returns(true);
+            rh => rh.IsAttributeDefined<TestClassAttribute>(type, false)).Returns(true);
 
         _mockReflectHelper.Setup(
-            rh => rh.IsNonDerivedAttributeDefined<AssemblyCleanupAttribute>(type.GetMethod("AssemblyCleanup")!, false)).Returns(true);
+            rh => rh.IsAttributeDefined<AssemblyCleanupAttribute>(type.GetMethod("AssemblyCleanup")!, false)).Returns(true);
 
         _typeCache.GetTestMethodInfo(
                 testMethod,
@@ -1281,7 +1281,7 @@ public class TypeCacheTests : TestContainer
         MethodInfo methodInfo = type.GetMethod("TestMethodWithMultipleExpectedException")!;
         var testMethod = new TestMethod(methodInfo.Name, type.FullName!, "A", isAsync: false);
 
-        _mockReflectHelper.Setup(rh => rh.IsNonDerivedAttributeDefined<ExpectedExceptionAttribute>(methodInfo, false))
+        _mockReflectHelper.Setup(rh => rh.IsAttributeDefined<ExpectedExceptionAttribute>(methodInfo, false))
             .Returns(true);
 
         try

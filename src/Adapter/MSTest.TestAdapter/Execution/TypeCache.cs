@@ -302,7 +302,7 @@ internal sealed class TypeCache : MarshalByRefObject
 
         TestAssemblyInfo assemblyInfo = GetAssemblyInfo(classType.Assembly);
 
-        TestClassAttribute? testClassAttribute = ReflectHelper.Instance.GetFirstDerivedAttributeOrDefault<TestClassAttribute>(classType, inherit: false);
+        TestClassAttribute? testClassAttribute = ReflectHelper.Instance.GetFirstAttributeOrDefault<TestClassAttribute>(classType, inherit: false);
         DebugEx.Assert(testClassAttribute is not null, "testClassAttribute is null");
         var classInfo = new TestClassInfo(classType, constructor, isParameterLessConstructor, testClassAttribute, assemblyInfo);
 
@@ -354,7 +354,7 @@ internal sealed class TypeCache : MarshalByRefObject
 
     private TimeoutInfo? TryGetTimeoutInfo(MethodInfo methodInfo, FixtureKind fixtureKind)
     {
-        TimeoutAttribute? timeoutAttribute = _reflectionHelper.GetFirstNonDerivedAttributeOrDefault<TimeoutAttribute>(methodInfo, inherit: false);
+        TimeoutAttribute? timeoutAttribute = _reflectionHelper.GetFirstAttributeOrDefault<TimeoutAttribute>(methodInfo, inherit: false);
         if (timeoutAttribute != null)
         {
             if (!timeoutAttribute.HasCorrectTimeout)
@@ -391,7 +391,7 @@ internal sealed class TypeCache : MarshalByRefObject
                     try
                     {
                         // Only examine classes which are TestClass or derives from TestClass attribute
-                        if (!@this._reflectionHelper.IsDerivedAttributeDefined<TestClassAttribute>(t, inherit: false))
+                        if (!@this._reflectionHelper.IsAttributeDefined<TestClassAttribute>(t, inherit: false))
                         {
                             continue;
                         }
@@ -440,7 +440,7 @@ internal sealed class TypeCache : MarshalByRefObject
         // {
         //    return false;
         // }
-        if (!_reflectionHelper.IsNonDerivedAttributeDefined<TInitializeAttribute>(methodInfo, false))
+        if (!_reflectionHelper.IsAttributeDefined<TInitializeAttribute>(methodInfo, false))
         {
             return false;
         }
@@ -468,7 +468,7 @@ internal sealed class TypeCache : MarshalByRefObject
         // {
         //    return false;
         // }
-        if (!_reflectionHelper.IsNonDerivedAttributeDefined<TCleanupAttribute>(methodInfo, false))
+        if (!_reflectionHelper.IsAttributeDefined<TCleanupAttribute>(methodInfo, false))
         {
             return false;
         }
@@ -550,7 +550,7 @@ internal sealed class TypeCache : MarshalByRefObject
 
             if (isBase)
             {
-                if (_reflectionHelper.GetFirstDerivedAttributeOrDefault<ClassInitializeAttribute>(methodInfo, inherit: true)?
+                if (_reflectionHelper.GetFirstAttributeOrDefault<ClassInitializeAttribute>(methodInfo, inherit: true)?
                         .InheritanceBehavior == InheritanceBehavior.BeforeEachDerivedClass)
                 {
                     initAndCleanupMethods[0] = methodInfo;
@@ -572,7 +572,7 @@ internal sealed class TypeCache : MarshalByRefObject
 
             if (isBase)
             {
-                if (_reflectionHelper.GetFirstDerivedAttributeOrDefault<ClassCleanupAttribute>(methodInfo, inherit: true)?
+                if (_reflectionHelper.GetFirstAttributeOrDefault<ClassCleanupAttribute>(methodInfo, inherit: true)?
                         .InheritanceBehavior == InheritanceBehavior.BeforeEachDerivedClass)
                 {
                     initAndCleanupMethods[1] = methodInfo;
@@ -599,8 +599,8 @@ internal sealed class TypeCache : MarshalByRefObject
         bool isBase,
         Dictionary<string, string?> instanceMethods)
     {
-        bool hasTestInitialize = _reflectionHelper.IsNonDerivedAttributeDefined<TestInitializeAttribute>(methodInfo, inherit: false);
-        bool hasTestCleanup = _reflectionHelper.IsNonDerivedAttributeDefined<TestCleanupAttribute>(methodInfo, inherit: false);
+        bool hasTestInitialize = _reflectionHelper.IsAttributeDefined<TestInitializeAttribute>(methodInfo, inherit: false);
+        bool hasTestCleanup = _reflectionHelper.IsAttributeDefined<TestCleanupAttribute>(methodInfo, inherit: false);
 
         if (!hasTestCleanup && !hasTestInitialize)
         {
@@ -778,10 +778,10 @@ internal sealed class TypeCache : MarshalByRefObject
         DebugEx.Assert(testMethodInfo != null, "testMethodInfo is Null");
         DebugEx.Assert(testMethodInfo.TestMethod != null, "testMethodInfo.TestMethod is Null");
 
-        IEnumerable<TestPropertyAttribute> attributes = _reflectionHelper.GetDerivedAttributes<TestPropertyAttribute>(testMethodInfo.TestMethod, inherit: true);
+        IEnumerable<TestPropertyAttribute> attributes = _reflectionHelper.GetAttributes<TestPropertyAttribute>(testMethodInfo.TestMethod, inherit: true);
         DebugEx.Assert(attributes != null, "attributes is null");
 
-        attributes = attributes.Concat(_reflectionHelper.GetDerivedAttributes<TestPropertyAttribute>(testMethodInfo.Parent.ClassType, inherit: true));
+        attributes = attributes.Concat(_reflectionHelper.GetAttributes<TestPropertyAttribute>(testMethodInfo.Parent.ClassType, inherit: true));
 
         foreach (TestPropertyAttribute attribute in attributes)
         {
