@@ -63,7 +63,12 @@ internal sealed class AbortForMaxFailedTestsExtension : IDataConsumer
         RoslynDebug.Assert(_maxFailedTests is not null);
         RoslynDebug.Assert(_capability is not null);
 
-        TestNodeStateProperty testNodeStateProperty = node.TestNode.Properties.Single<TestNodeStateProperty>();
+        TestNodeStateProperty? testNodeStateProperty = node.TestNode.Properties.SingleOrDefault<TestNodeStateProperty>();
+        if (testNodeStateProperty is null)
+        {
+            return;
+        }
+
         if (TestNodePropertiesCategories.WellKnownTestNodeTestRunOutcomeFailedProperties.Any(t => t == testNodeStateProperty.GetType()) &&
             ++_failCount >= _maxFailedTests.Value &&
             // If already triggered, don't do it again.

@@ -29,11 +29,12 @@ Param(
   [switch] $nativeToolsOnMachine,
   [switch] $help,
   [switch] $vs,
+  [switch] $vscode,
   [switch] $installWindowsSdk,
   [Parameter(ValueFromRemainingArguments=$true)][String[]]$properties
 )
 
-if ($vs) {
+if ($vs -or $vscode) {
     . $PSScriptRoot\common\tools.ps1
 
     # This tells .NET Core to use the bootstrapped runtime
@@ -51,8 +52,22 @@ if ($vs) {
     # Disable .NET runtime signature validation errors which errors for local builds
     $env:VSDebugger_ValidateDotnetDebugLibSignatures=0;
 
-    # Launch Visual Studio with the locally defined environment variables
-    & "$PSScriptRoot\..\TestFx.sln"
+    # Enables the logginc of Json RPC messages if diagnostic logging for Test Explorer is enabled in Visual Studio.
+    $env:_TestingPlatformDiagnostics_=1;
+
+    if ($vs) {
+        # Launch Visual Studio with the locally defined environment variables
+        & "$PSScriptRoot\..\TestFx.sln"
+    } else {
+        if (Get-Command code -ErrorAction Ignore) {
+            & code "$PSScriptRoot\.."
+        } elseif (Get-Command code-insiders -ErrorAction Ignore) {
+            & code-insiders "$PSScriptRoot\.."
+        } else {
+            Write-Error "VS Code not found. Please install it from https://code.visualstudio.com/"
+            return
+        }
+    }
 
     return
 }

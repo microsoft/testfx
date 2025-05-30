@@ -261,6 +261,39 @@ public class TrxTests
     }
 
     [TestMethod]
+    public async Task TrxReportEngine_GenerateReportAsync_WithTestFailed_TrxContainsDebugTrace()
+    {
+        // Arrange
+        using MemoryFileStream memoryStream = new();
+        PropertyBag propertyBag = new(
+            new FailedTestNodeStateProperty("test failed"),
+            new TrxMessagesProperty([new("base trx message"), new StandardErrorTrxMessage("stderr trx message"), new StandardOutputTrxMessage("stdout trx message"), new DebugOrTraceTrxMessage("debug trx message")]));
+        TrxReportEngine trxReportEngine = GenerateTrxReportEngine(0, 1, propertyBag, memoryStream);
+
+        // Act
+        (string fileName, string? warning) = await trxReportEngine.GenerateReportAsync();
+
+        // Assert
+        Assert.IsNull(warning);
+        AssertExpectedTrxFileName(fileName);
+        Assert.IsNotNull(memoryStream.TrxContent);
+        XDocument xml = memoryStream.TrxContent;
+        AssertTrxOutcome(xml, "Failed");
+        string trxContent = xml.ToString();
+        string trxContentsPattern = @"
+    <UnitTestResult .* testName=""TestMethod"" .* outcome=""Failed"" .*>
+      <Output>
+        <StdOut>base trx message
+stdout trx message</StdOut>
+        <StdErr>stderr trx message</StdErr>
+        <DebugTrace>debug trx message</DebugTrace>
+      </Output>
+    </UnitTestResult>
+ ";
+        Assert.IsTrue(Regex.IsMatch(trxContent, trxContentsPattern));
+    }
+
+    [TestMethod]
     public async Task TrxReportEngine_GenerateReportAsync_WithTestFailed_WithoutStandardErrorTrxMessage_TrxContainsErrorInfo()
     {
         // Arrange

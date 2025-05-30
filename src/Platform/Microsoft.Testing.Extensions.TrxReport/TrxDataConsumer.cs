@@ -115,7 +115,12 @@ internal sealed class TrxReportGenerator :
             switch (value)
             {
                 case TestNodeUpdateMessage nodeChangedMessage:
-                    TestNodeStateProperty nodeState = nodeChangedMessage.TestNode.Properties.Single<TestNodeStateProperty>();
+                    TestNodeStateProperty? nodeState = nodeChangedMessage.TestNode.Properties.SingleOrDefault<TestNodeStateProperty>();
+                    if (nodeState is null)
+                    {
+                        return Task.CompletedTask;
+                    }
+
                     if (nodeState is PassedTestNodeStateProperty)
                     {
                         _tests.Add(nodeChangedMessage);

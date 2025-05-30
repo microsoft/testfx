@@ -92,6 +92,8 @@
 
   <ItemGroup>
     <InternalsVisibleTo Include="Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter" Key="$(VsPublicKey)" />
+    <InternalsVisibleTo Include="Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices" Key="$(VsPublicKey)" />
+    <InternalsVisibleTo Include="MSTestAdapter.PlatformServices.UnitTests" Key="$(VsPublicKey)" />
   </ItemGroup>
 
   <ItemGroup>

@@ -4,9 +4,117 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
+## <a name="1.7.1" />[1.7.1] - 2025-05-27
+
+See full log [of v3.9.0...v3.9.1](https://github.com/microsoft/testfx/compare/v3.9.0...v3.9.1)
+
+### Fixed
+
+* VSTestBridge: Handle TestPropertyAttributes.Trait instead of special casing specific properties by @Youssef1313 in [#5644](https://github.com/microsoft/testfx/pull/5644)
+
+### Artifacts
+
+* MSTest: [3.9.1](https://www.nuget.org/packages/MSTest/3.9.1)
+* MSTest.TestFramework: [3.9.1](https://www.nuget.org/packages/MSTest.TestFramework/3.9.1)
+* MSTest.TestAdapter: [3.9.1](https://www.nuget.org/packages/MSTest.TestAdapter/3.9.1)
+* MSTest.Analyzers: [3.9.1](https://www.nuget.org/packages/MSTest.Analyzers/3.9.1)
+* MSTest.Sdk: [3.9.1](https://www.nuget.org/packages/MSTest.Sdk/3.9.1)
+* Microsoft.Testing.Extensions.CrashDump: [1.7.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.CrashDump/1.7.1)
+* Microsoft.Testing.Extensions.HangDump: [1.7.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HangDump/1.7.1)
+* Microsoft.Testing.Extensions.HotReload: [1.7.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HotReload/1.7.1)
+* Microsoft.Testing.Extensions.Retry: [1.7.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Retry/1.7.1)
+* Microsoft.Testing.Extensions.TrxReport: [1.7.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport/1.7.1)
+* Microsoft.Testing.Extensions.AzureDevOpsReport [1.0.0-alpha.25277.3](https://www.nuget.org/packages/Microsoft.Testing.Extensions.AzureDevOpsReport/1.0.0-alpha.25277.3)
+* MSTest.SourceGeneration: [1.0.0-alpha.25277.3](https://www.nuget.org/packages/MSTest.SourceGeneration/1.0.0-alpha.25277.3)
+* MSTest.Engine: [1.0.0-alpha.25277.3](https://www.nuget.org/packages/MSTest.Engine/1.0.0-alpha.25277.3)
+
+## <a name="1.7.0" />[1.7.0] - 2025-05-20
+
+See full log [of v3.8.3...v3.9.0](https://github.com/microsoft/testfx/compare/v3.8.3...v3.9.0)
+
+### Added
+
+* [Source Breaking (only for framework authors)]: Support test artifacts in VS by @Youssef1313 in [#5323](https://github.com/microsoft/testfx/pull/5323)
+* Add (alpha) Azure DevOps extension to report errors by @nohwnd in [#5260](https://github.com/microsoft/testfx/pull/5260)
+* Add banner for MSTest.Engine by @Youssef1313 in [#5051](https://github.com/microsoft/testfx/pull/5051)
+* Use terminal logger for discovery by @nohwnd in [#4907](https://github.com/microsoft/testfx/pull/4907)
+* Add RetryContext.FirstRunResults by @Youssef1313 in [#5314](https://github.com/microsoft/testfx/pull/5314)
+* VSTestBridge: Add traits as TestMetadataProperty by @Youssef1313 in [#5316](https://github.com/microsoft/testfx/pull/5316)
+* Mark APIs not supported in wasi by @Youssef1313 in [#5367](https://github.com/microsoft/testfx/pull/5367)
+* Show disk info when hang dump fails by @Youssef1313 in [#5404](https://github.com/microsoft/testfx/pull/5404)
+* Implement analyzer for RetryAttribute to be present on test methods by @Youssef1313 in [#5437](https://github.com/microsoft/testfx/pull/5437)
+* Add TestMethodIdentifierProperty constructor with arity parameter by @Youssef1313 in [#5528](https://github.com/microsoft/testfx/pull/5528)
+
+### Fixed
+
+* Kill testhost if writing hang dump fails by @Youssef1313 in [#5538](https://github.com/microsoft/testfx/pull/5538)
+* Simplify generated file name by using DefaultLanguageSourceExtension by @Youssef1313 in [#5026](https://github.com/microsoft/testfx/pull/5026)
+* Fix handling of unsupported platforms of CancelKeyPress by @Youssef1313 in [#5038](https://github.com/microsoft/testfx/pull/5038)
+* Refactor logic around GetCurrentTestApplicationFullPath by @Youssef1313 in [#5037](https://github.com/microsoft/testfx/pull/5037)
+* Enable platform compatibility warnings for android, ios, tvos, and browser by @Youssef1313 in [#5046](https://github.com/microsoft/testfx/pull/5046)
+* Improve MSTest.SourceGeneration incrementality by @Youssef1313 in [#5053](https://github.com/microsoft/testfx/pull/5053)
+* remove redundant IPlatformOutputDeviceManager by @SimonCropp in [#4848](https://github.com/microsoft/testfx/pull/4848)
+* Avoid using unsupported APIs by @Youssef1313 in [#5057](https://github.com/microsoft/testfx/pull/5057)
+* Fix binlog base name for .NET Framework tests by @Youssef1313 in [#5102](https://github.com/microsoft/testfx/pull/5102)
+* Improve ExecutionContext propagation by @Youssef1313 in [#5156](https://github.com/microsoft/testfx/pull/5156)
+* use StringBuilder AppendJoin by @SimonCropp in [#5167](https://github.com/microsoft/testfx/pull/5167)
+* Update README.md with MSTest.Sdk information by @stan-sz in [#5214](https://github.com/microsoft/testfx/pull/5214)
+* Add assembly name by @nohwnd in [#5235](https://github.com/microsoft/testfx/pull/5235)
+* Correct branding as Microsoft.Testing.Platform by @Youssef1313 in [#5240](https://github.com/microsoft/testfx/pull/5240)
+* Remove extra space by @nohwnd in [#5238](https://github.com/microsoft/testfx/pull/5238)
+* Fix Retry for dotnet test by @Youssef1313 in [#5261](https://github.com/microsoft/testfx/pull/5261)
+* Onboard to new dotnet test experience by @Evangelink in [#5111](https://github.com/microsoft/testfx/pull/5111)
+* Add InstanceId to communication with dotnet test by @mariam-abdulla in [#5279](https://github.com/microsoft/testfx/pull/5279)
+* Add instance id to dotnet test protocol by @mariam-abdulla in [#5287](https://github.com/microsoft/testfx/pull/5287)
+* Use FileAccess.Read when reading testconfig.json file by @Youssef1313 in [#5264](https://github.com/microsoft/testfx/pull/5264)
+* Fix double empty line by @nohwnd in [#5317](https://github.com/microsoft/testfx/pull/5317)
+* Remove SessionUid from FileArtifactProperty by @Youssef1313 in [#5347](https://github.com/microsoft/testfx/pull/5347)
+* Fix typo in DotnetTestDataConsumer causes only first artifact to be sent by @Youssef1313 in [#5349](https://github.com/microsoft/testfx/pull/5349)
+* fix nullability in GetRepoRoot by @SimonCropp in [#5392](https://github.com/microsoft/testfx/pull/5392)
+* remove redundant null check in FormatInnerExceptions by @SimonCropp in [#5397](https://github.com/microsoft/testfx/pull/5397)
+* fix nullability of CreateBindCtx by @SimonCropp in [#5385](https://github.com/microsoft/testfx/pull/5385)
+* remove redundant control flow statements by @SimonCropp in [#5403](https://github.com/microsoft/testfx/pull/5403)
+* fix nullability of InvokeTestingPlatformTask _outputFileName by @SimonCropp in [#5394](https://github.com/microsoft/testfx/pull/5394)
+* fix nullability of argument in GetProcessExitCodeAsync_IgnoreExitCodes by @SimonCropp in [#5386](https://github.com/microsoft/testfx/pull/5386)
+* remove redundant null check for OpenBaseKey return by @SimonCropp in [#5395](https://github.com/microsoft/testfx/pull/5395)
+* remove redundant null check in GetStringFromIndexOrDefault by @SimonCropp in [#5396](https://github.com/microsoft/testfx/pull/5396)
+* fix nullability in FileLoggerProvider by @SimonCropp in [#5398](https://github.com/microsoft/testfx/pull/5398)
+* remove un-used TestNodeProcessor by @SimonCropp in [#5430](https://github.com/microsoft/testfx/pull/5430)
+* Rename MTP entrypoint to MicrosoftTestingPlatformEntryPoint by @Youssef1313 in [#5423](https://github.com/microsoft/testfx/pull/5423)
+* use null propagation and mark as warning in editorconfig by @SimonCropp in [#5383](https://github.com/microsoft/testfx/pull/5383)
+* FindNode cant return null by @SimonCropp in [#5448](https://github.com/microsoft/testfx/pull/5448)
+* remove un-used methods in UnicodeCharacterUtilities by @SimonCropp in [#5444](https://github.com/microsoft/testfx/pull/5444)
+* remove ServerLogMessageInMemoryStore by @SimonCropp in [#5456](https://github.com/microsoft/testfx/pull/5456)
+* Remove some redundant casts and mark as a warning for rider and R# by @SimonCropp in [#5459](https://github.com/microsoft/testfx/pull/5459)
+* Use GetFileNameWithoutExtension for crashdump file name to be consistent with hangdump by @Youssef1313 in [#5454](https://github.com/microsoft/testfx/pull/5454)
+* Remove dead --internal-vstest-adapter by @Youssef1313 in [#5450](https://github.com/microsoft/testfx/pull/5450)
+* Consistent command-line options provider properties by @Youssef1313 in [#5452](https://github.com/microsoft/testfx/pull/5452)
+* Update Fakes dependency by @stan-sz in [#5482](https://github.com/microsoft/testfx/pull/5482)
+* Use PlatformVersion.Version as the server version by @Youssef1313 in [#5486](https://github.com/microsoft/testfx/pull/5486)
+* Handle DebugOrTraceTrxMessage in TrxReportEngine by @Youssef1313 in [#5510](https://github.com/microsoft/testfx/pull/5510)
+* Few improvements to AzDO extension by @Youssef1313 in [#5513](https://github.com/microsoft/testfx/pull/5513)
+* VSTestBridge+MSTest: Use TestMethodIdentifierProperty and stop sending VSTest-specifics by @Youssef1313 in [#5409](https://github.com/microsoft/testfx/pull/5409)
+* Add vstest.TestCase.CodeFilePath and vstest.TestCase.LineNumber by @Youssef1313 in [#5539](https://github.com/microsoft/testfx/pull/5539)
+
+### Artifacts
+
+* MSTest: [3.9.0](https://www.nuget.org/packages/MSTest/3.9.0)
+* MSTest.TestFramework: [3.9.0](https://www.nuget.org/packages/MSTest.TestFramework/3.9.0)
+* MSTest.TestAdapter: [3.9.0](https://www.nuget.org/packages/MSTest.TestAdapter/3.9.0)
+* MSTest.Analyzers: [3.9.0](https://www.nuget.org/packages/MSTest.Analyzers/3.9.0)
+* MSTest.Sdk: [3.9.0](https://www.nuget.org/packages/MSTest.Sdk/3.9.0)
+* Microsoft.Testing.Extensions.CrashDump: [1.7.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.CrashDump/1.7.0)
+* Microsoft.Testing.Extensions.HangDump: [1.7.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HangDump/1.7.0)
+* Microsoft.Testing.Extensions.HotReload: [1.7.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HotReload/1.7.0)
+* Microsoft.Testing.Extensions.Retry: [1.7.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Retry/1.7.0)
+* Microsoft.Testing.Extensions.TrxReport: [1.7.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport/1.7.0)
+* Microsoft.Testing.Extensions.AzureDevOpsReport [1.0.0-alpha.25256.6](https://www.nuget.org/packages/Microsoft.Testing.Extensions.AzureDevOpsReport/1.0.0-alpha.25256.6)
+* MSTest.SourceGeneration: [1.0.0-alpha.25256.6](https://www.nuget.org/packages/MSTest.SourceGeneration/1.0.0-alpha.25256.6)
+* MSTest.Engine: [1.0.0-alpha.25256.6](https://www.nuget.org/packages/MSTest.Engine/1.0.0-alpha.25256.6)
+
 ## <a name="1.6.3" />[1.6.3] - 2025-03-17
 
-See full log [here](https://github.com/microsoft/testfx/compare/v3.8.2...v3.8.3)
+See full log [of v3.8.2...v3.8.3](https://github.com/microsoft/testfx/compare/v3.8.2...v3.8.3)
 
 ### Fixed
 
@@ -35,7 +143,7 @@ See full log [here](https://github.com/microsoft/testfx/compare/v3.8.2...v3.8.3)
 
 ## <a name="1.6.2" />[1.6.2] - 2025-02-19
 
-See full log [here](https://github.com/microsoft/testfx/compare/v3.8.1...v3.8.2)
+See full log [of v3.8.1...v3.8.2](https://github.com/microsoft/testfx/compare/v3.8.1...v3.8.2)
 
 ### Fixed
 
@@ -56,7 +164,7 @@ See full log [here](https://github.com/microsoft/testfx/compare/v3.8.1...v3.8.2)
 
 ## <a name="1.6.1" />[1.6.1] - 2025-02-18
 
-See full log [here](https://github.com/microsoft/testfx/compare/v3.8.0...v3.8.1)
+See full log [of v3.8.0...v3.8.1](https://github.com/microsoft/testfx/compare/v3.8.0...v3.8.1)
 
 ### Fixed
 
@@ -79,7 +187,7 @@ See full log [here](https://github.com/microsoft/testfx/compare/v3.8.0...v3.8.1)
 
 ## <a name="1.6.0" />[1.6.0] - 2025-02-12
 
-See full log [here](https://github.com/microsoft/testfx/compare/v3.7.3...v3.8.0)
+See full log [of v3.7.3...v3.8.0](https://github.com/microsoft/testfx/compare/v3.7.3...v3.8.0)
 
 ### Added
 
@@ -117,7 +225,7 @@ See full log [here](https://github.com/microsoft/testfx/compare/v3.7.3...v3.8.0)
 
 ## <a name="1.5.3" />[1.5.3] - 2025-01-27
 
-See full log [here](https://github.com/microsoft/testfx/compare/v3.7.2...v3.7.3)
+See full log [of v3.7.2...v3.7.3](https://github.com/microsoft/testfx/compare/v3.7.2...v3.7.3)
 
 ### Fixed
 
@@ -138,7 +246,7 @@ See full log [here](https://github.com/microsoft/testfx/compare/v3.7.2...v3.7.3)
 
 ## <a name="1.5.2" />[1.5.2] - 2025-01-21
 
-See full log [here](https://github.com/microsoft/testfx/compare/v3.7.1...v3.7.2)
+See full log [of v3.7.1...v3.7.2](https://github.com/microsoft/testfx/compare/v3.7.1...v3.7.2)
 
 ### Fixed
 
@@ -159,7 +267,7 @@ See full log [here](https://github.com/microsoft/testfx/compare/v3.7.1...v3.7.2)
 
 ## <a name="1.5.1" />[1.5.1] - 2025-01-13
 
-See full log [here](https://github.com/microsoft/testfx/compare/v3.7.0...v3.7.1)
+See full log [of v3.7.0...v3.7.1](https://github.com/microsoft/testfx/compare/v3.7.0...v3.7.1)
 
 ### Fixed
 
@@ -181,7 +289,7 @@ See full log [here](https://github.com/microsoft/testfx/compare/v3.7.0...v3.7.1)
 
 ## <a name="1.5.0" />[1.5.0] - 2024-12-20
 
-See full log [here](https://github.com/microsoft/testfx/compare/v1.4.3...v1.5.0)
+See full log [of v1.4.3...v1.5.0](https://github.com/microsoft/testfx/compare/v1.4.3...v1.5.0)
 
 ### Added
 
@@ -236,7 +344,7 @@ See full log [here](https://github.com/microsoft/testfx/compare/v1.4.3...v1.5.0)
 
 ## <a name="1.4.3" />[1.4.3] - 2024-11-12
 
-See full log [here](https://github.com/microsoft/testanywhere/compare/v1.4.2...v1.4.3)
+See full log [of v1.4.2...v1.4.3](https://github.com/microsoft/testanywhere/compare/v1.4.2...v1.4.3)
 
 ### Fixed
 
@@ -259,7 +367,7 @@ See full log [here](https://github.com/microsoft/testanywhere/compare/v1.4.2...v
 
 ## <a name="1.4.2" />[1.4.2] - 2024-10-31
 
-See full log [here](https://github.com/microsoft/testanywhere/compare/v1.4.1...v1.4.2)
+See full log [of v1.4.1...v1.4.2](https://github.com/microsoft/testanywhere/compare/v1.4.1...v1.4.2)
 
 ### Fixed
 
@@ -282,7 +390,7 @@ See full log [here](https://github.com/microsoft/testanywhere/compare/v1.4.1...v
 
 ## <a name="1.4.1" />[1.4.1] - 2024-10-03
 
-See full log [here](https://github.com/microsoft/testanywhere/compare/v1.4.0...v1.4.1)
+See full log [of v1.4.0...v1.4.1](https://github.com/microsoft/testanywhere/compare/v1.4.0...v1.4.1)
 
 ### Fixed
 
@@ -305,7 +413,7 @@ See full log [here](https://github.com/microsoft/testanywhere/compare/v1.4.0...v
 
 ## <a name="1.4.0" />[1.4.0] - 2024-09-11
 
-See full log [here](https://github.com/microsoft/testanywhere/compare/v1.3.2...v1.4.0)
+See full log [of v1.3.2...v1.4.0](https://github.com/microsoft/testanywhere/compare/v1.3.2...v1.4.0)
 
 ### Added
 
@@ -377,7 +485,7 @@ See full log [here](https://github.com/microsoft/testanywhere/compare/v1.3.2...v
 
 ## <a name="1.3.2" />[1.3.2] - 2024-08-05
 
-See full log [here](https://github.com/microsoft/testanywhere/compare/v1.3.1...v1.3.2)
+See full log [of v1.3.1...v1.3.2](https://github.com/microsoft/testanywhere/compare/v1.3.1...v1.3.2)
 
 ### Fixed
 
@@ -401,7 +509,7 @@ See full log [here](https://github.com/microsoft/testanywhere/compare/v1.3.1...v
 
 ## <a name="1.3.1" />[1.3.1] - 2024-07-15
 
-See full log [here](https://github.com/microsoft/testanywhere/compare/v1.2.1...v1.3.1)
+See full log [of v1.2.1...v1.3.1](https://github.com/microsoft/testanywhere/compare/v1.2.1...v1.3.1)
 
 ### Added
 

@@ -91,6 +91,26 @@ public sealed class TestContextShouldBeValidAnalyzerTests
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
+    public async Task WhenTestContextIsInPrimaryConstructor_NoDiagnostic()
+    {
+        string code = $$"""
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public sealed class Test1(TestContext testContext)
+            {
+                [TestMethod]
+                public void TestMethod1()
+                {
+                    testContext.CancellationTokenSource.Cancel();
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
     [DataRow("TestContext", "private")]
     [DataRow("TestContext", "internal")]
     [DataRow("testcontext", "private")]
@@ -447,6 +467,52 @@ public sealed class TestContextShouldBeValidAnalyzerTests
             public class MyTestClass
             {
                 {{accessibility}} TestContext {{fieldName}};
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenTestContextAssignedInConstructorWithNullCheck_NoDiagnostic()
+    {
+        string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                private readonly TestContext _testContext;
+                
+                public MyTestClass(TestContext testContext)
+                {
+                    _testContext = testContext ?? throw new ArgumentNullException(nameof(testContext));
+                }
+                
+                public TestContext TestContext => _testContext;
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenTestContextPropertyAssignedInConstructorWithNullCheck_NoDiagnostic()
+    {
+        string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                public MyTestClass(TestContext testContext)
+                {
+                    TestContext = testContext ?? throw new ArgumentNullException(nameof(testContext));
+                }
+                
+                public TestContext TestContext { get; }
             }
             """;
 

@@ -17,7 +17,8 @@ internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, I
     private readonly ICommandLineOptions _commandLineOptions;
     private readonly IEnvironment _environment;
     private readonly IStopPoliciesService _policiesService;
-    private readonly List<TestNode> _failedTests = [];
+    private readonly bool _isDiscovery;
+    private int _failedTestsCount;
     private int _totalRanTests;
     private bool _testAdapterTestSessionFailure;
 
@@ -31,6 +32,7 @@ internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, I
         _commandLineOptions = commandLineOptions;
         _environment = environment;
         _policiesService = policiesService;
+        _isDiscovery = _commandLineOptions.IsOptionSet(PlatformCommandLineProvider.DiscoverTestsOptionKey);
     }
 
     /// <inheritdoc />
@@ -68,10 +70,10 @@ internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, I
 
         if (Array.IndexOf(TestNodePropertiesCategories.WellKnownTestNodeTestRunOutcomeFailedProperties, executionState.GetType()) != -1)
         {
-            _failedTests.Add(message.TestNode);
+            _failedTestsCount++;
         }
 
-        if (_commandLineOptions.IsOptionSet(PlatformCommandLineProvider.DiscoverTestsOptionKey)
+        if (_isDiscovery
             && Array.IndexOf(TestNodePropertiesCategories.WellKnownTestNodeDiscoveredProperties, executionState.GetType()) != -1)
         {
             _totalRanTests++;
@@ -89,7 +91,7 @@ internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, I
         int exitCode = ExitCodes.Success;
         exitCode = exitCode == ExitCodes.Success && _policiesService.IsMaxFailedTestsTriggered ? ExitCodes.TestExecutionStoppedForMaxFailedTests : exitCode;
         exitCode = exitCode == ExitCodes.Success && _testAdapterTestSessionFailure ? ExitCodes.TestAdapterTestSessionFailure : exitCode;
-        exitCode = exitCode == ExitCodes.Success && _failedTests.Count > 0 ? ExitCodes.AtLeastOneTestFailed : exitCode;
+        exitCode = exitCode == ExitCodes.Success && _failedTestsCount > 0 ? ExitCodes.AtLeastOneTestFailed : exitCode;
         exitCode = exitCode == ExitCodes.Success && _policiesService.IsAbortTriggered ? ExitCodes.TestSessionAborted : exitCode;
         exitCode = exitCode == ExitCodes.Success && _totalRanTests == 0 ? ExitCodes.ZeroTests : exitCode;
 
@@ -127,5 +129,5 @@ internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, I
     }
 
     public Statistics GetStatistics()
-        => new() { TotalRanTests = _totalRanTests, TotalFailedTests = _failedTests.Count };
+        => new() { TotalRanTests = _totalRanTests, TotalFailedTests = _failedTestsCount };
 }

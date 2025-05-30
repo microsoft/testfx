@@ -12,6 +12,8 @@
   <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
 
   <PropertyGroup>
+    <!-- If the project targets .NET Standard, it's not supposed to be a test application. So, we default to false. -->
+    <IsTestApplication Condition=" '$(IsTestApplication)' == '' AND '$(TargetFrameworkIdentifier)' == '.NETStandard' ">false</IsTestApplication>
     <IsTestApplication Condition=" '$(IsTestApplication)' == '' ">true</IsTestApplication>
   </PropertyGroup>
 

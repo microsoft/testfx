@@ -733,11 +733,6 @@ Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is
         <target state="translated">標準輸出</target>
         <note />
       </trans-unit>
-      <trans-unit id="StartingServer">
-        <source>Starting server. Listening on port '{0}'</source>
-        <target state="translated">正在啟動伺服器。正在連接埠 '{0}' 上聆聽</target>
-        <note />
-      </trans-unit>
       <trans-unit id="StartingTestSession">
         <source>Starting test session.</source>
         <target state="translated">正在啟動測試會話。</target>
@@ -950,11 +945,6 @@ Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</source>
       <trans-unit id="UnexpectedStateErrorMessage">
         <source>Unexpected state in file '{0}' at line '{1}'</source>
         <target state="translated">檔案 '{0}' 的第 '{1}' 行出現未預期的狀態</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="UnknownCommunicationProtocolErrorMessage">
-        <source>The communication protocol '{0}' is not supported</source>
-        <target state="translated">通訊協定 '{0}' 不受支援</target>
         <note />
       </trans-unit>
       <trans-unit id="UnobservedTaskExceptionWarningMessage">

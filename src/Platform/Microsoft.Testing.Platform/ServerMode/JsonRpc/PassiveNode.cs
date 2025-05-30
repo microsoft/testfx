@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Helpers;
-using Microsoft.Testing.Platform.Hosts;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Services;
 
@@ -63,7 +62,7 @@ internal sealed class PassiveNode : IDisposable
         var requestMessage = (RequestMessage)message;
         var responseObject = new InitializeResponseArgs(
                         ProcessId: _processHandler.GetCurrentProcess().Id,
-                        ServerInfo: new ServerInfo("test-anywhere", Version: ServerTestHost.ProtocolVersion),
+                        ServerInfo: new ServerInfo("test-anywhere", Version: PlatformVersion.Version),
                         Capabilities: new ServerCapabilities(
                             new ServerTestingCapabilities(
                                 SupportsDiscovery: false,

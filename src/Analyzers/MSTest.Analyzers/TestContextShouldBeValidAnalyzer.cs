@@ -92,11 +92,26 @@ public sealed class TestContextShouldBeValidAnalyzer : DiagnosticAnalyzer
             operation = expressionStatementOperation.Operation;
         }
 
-        return operation is ISimpleAssignmentOperation assignmentOperation &&
+        if (operation is ISimpleAssignmentOperation assignmentOperation &&
             assignmentOperation.Target is IMemberReferenceOperation targetMemberReference &&
-            SymbolEqualityComparer.Default.Equals(targetMemberReference.Member, member) &&
-            assignmentOperation.Value is IParameterReferenceOperation parameterReference &&
-            SymbolEqualityComparer.Default.Equals(parameterReference.Parameter, parameter);
+            SymbolEqualityComparer.Default.Equals(targetMemberReference.Member, member))
+        {
+            // Extract parameter reference from the value, unwrapping from coalesce operation if necessary
+            IOperation effectiveValue = assignmentOperation.Value;
+            if (effectiveValue is ICoalesceOperation coalesceOperation)
+            {
+                effectiveValue = coalesceOperation.Value;
+            }
+
+            // Check if the effective value is a parameter reference to our target parameter
+            if (effectiveValue is IParameterReferenceOperation parameterReference &&
+                SymbolEqualityComparer.Default.Equals(parameterReference.Parameter, parameter))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static void CollectTestContextFieldsAssignedInConstructor(
@@ -125,11 +140,21 @@ public sealed class TestContextShouldBeValidAnalyzer : DiagnosticAnalyzer
         }
 
         if (operation is ISimpleAssignmentOperation assignmentOperation &&
-            assignmentOperation.Target is IMemberReferenceOperation { Member: IFieldSymbol { } candidateField } &&
-            assignmentOperation.Value is IParameterReferenceOperation parameterReference &&
-            SymbolEqualityComparer.Default.Equals(parameterReference.Parameter, testContextParameter))
+            assignmentOperation.Target is IMemberReferenceOperation { Member: IFieldSymbol { } candidateField })
         {
-            fieldsAssignedInConstructor.Add(candidateField);
+            // Extract parameter reference from the value, unwrapping from coalesce operation if necessary
+            IOperation effectiveValue = assignmentOperation.Value;
+            if (effectiveValue is ICoalesceOperation coalesceOperation)
+            {
+                effectiveValue = coalesceOperation.Value;
+            }
+
+            // Check if the effective value is a parameter reference to our target parameter
+            if (effectiveValue is IParameterReferenceOperation parameterReference &&
+                SymbolEqualityComparer.Default.Equals(parameterReference.Parameter, testContextParameter))
+            {
+                fieldsAssignedInConstructor.Add(candidateField);
+            }
         }
     }
 
@@ -205,6 +230,9 @@ public sealed class TestContextShouldBeValidAnalyzer : DiagnosticAnalyzer
                                     {
                                         // AssociatedSymbol check is to not analyze compiler-generated backing field.
                                         if (fieldSymbol.AssociatedSymbol is not null ||
+                                            // Workaround https://github.com/dotnet/roslyn/issues/70208
+                                            // https://github.com/dotnet/roslyn/blob/05e49aa98995349ffa26a19020333293ffe99670/src/Compilers/CSharp/Portable/Symbols/Synthesized/GeneratedNameKind.cs#L47
+                                            (fieldSymbol.Name.StartsWith('<') && fieldSymbol.Name.EndsWith(">P", StringComparison.Ordinal)) ||
                                             !SymbolEqualityComparer.Default.Equals(fieldSymbol.Type, testContextSymbol))
                                         {
                                             continue;

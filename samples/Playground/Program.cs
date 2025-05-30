@@ -76,7 +76,7 @@ public class Program
     }
 }
 
-internal sealed class DummyAdapter() : ITestFramework, IDataProducer
+internal sealed class DummyAdapter : ITestFramework, IDataProducer
 {
     public string Uid => nameof(DummyAdapter);
 

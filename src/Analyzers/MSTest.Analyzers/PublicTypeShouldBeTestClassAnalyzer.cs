@@ -63,7 +63,7 @@ public sealed class PublicTypeShouldBeTestClassAnalyzer : DiagnosticAnalyzer
         }
 
         // The type is public, ensure this is a test class.
-        if (!namedTypeSymbol.GetAttributes().Any(attr => SymbolEqualityComparer.Default.Equals(attr.AttributeClass, testClassAttributeSymbol)))
+        if (!namedTypeSymbol.GetAttributes().Any(attr => attr.AttributeClass.Inherits(testClassAttributeSymbol)))
         {
             context.ReportDiagnostic(namedTypeSymbol.CreateDiagnostic(Rule, namedTypeSymbol.Name));
         }

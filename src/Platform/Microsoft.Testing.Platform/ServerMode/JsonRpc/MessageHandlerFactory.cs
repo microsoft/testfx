@@ -15,7 +15,7 @@ internal sealed partial class ServerModeManager
 {
     internal sealed class MessageHandlerFactory : IMessageHandlerFactory, IOutputDeviceDataProducer
     {
-        private readonly string? _host;
+        private readonly string _host;
         private readonly int _port;
         private readonly IOutputDevice _outputDevice;
 
@@ -39,51 +39,20 @@ internal sealed partial class ServerModeManager
 
         public string Description => nameof(MessageHandlerFactory);
 
-        public Task<IMessageHandler> CreateMessageHandlerAsync(CancellationToken cancellationToken)
-            => _host is not null
-                ? ConnectToTestPlatformClientAsync(_host, _port, cancellationToken)
-                : StartTestPlatformServerAsync(port: _port, cancellationToken);
-
 #pragma warning disable CA1416 // Validate platform compatibility
-        private async Task<IMessageHandler> ConnectToTestPlatformClientAsync(string clientHost, int clientPort, CancellationToken cancellationToken)
+        public async Task<IMessageHandler> CreateMessageHandlerAsync(CancellationToken cancellationToken)
         {
-            await _outputDevice.DisplayAsync(this, new TextOutputDeviceData(string.Format(CultureInfo.InvariantCulture, PlatformResources.ConnectingToClientHost, clientHost, clientPort)));
+            await _outputDevice.DisplayAsync(this, new TextOutputDeviceData(string.Format(CultureInfo.InvariantCulture, PlatformResources.ConnectingToClientHost, _host, _port)));
 
             TcpClient client = new();
 
 #if NETCOREAPP
-            await client.ConnectAsync(host: clientHost, port: clientPort, cancellationToken);
+            await client.ConnectAsync(host: _host, port: _port, cancellationToken);
 #else
-            await client.ConnectAsync(host: clientHost, port: clientPort).WithCancellationAsync(cancellationToken, observeException: true);
+            await client.ConnectAsync(host: _host, port: _port).WithCancellationAsync(cancellationToken, observeException: true);
 #endif
             NetworkStream stream = client.GetStream();
             return new TcpMessageHandler(client, clientToServerStream: stream, serverToClientStream: stream, FormatterUtilities.CreateFormatter());
-        }
-
-        private async Task<IMessageHandler> StartTestPlatformServerAsync(int? port, CancellationToken cancellationToken)
-        {
-            port ??= 0;
-            IPEndPoint endPoint = new(IPAddress.Loopback, port.Value);
-            TcpListener listener = new(endPoint);
-
-            listener.Start();
-            try
-            {
-                await _outputDevice.DisplayAsync(this, new TextOutputDeviceData(string.Format(CultureInfo.InvariantCulture, PlatformResources.StartingServer, ((IPEndPoint)listener.LocalEndpoint).Port)));
-
-#if NETCOREAPP
-                TcpClient client = await listener.AcceptTcpClientAsync(cancellationToken);
-#else
-                TcpClient client = await listener.AcceptTcpClientAsync().WithCancellationAsync(cancellationToken);
-#endif
-                NetworkStream stream = client.GetStream();
-                return new TcpMessageHandler(client, clientToServerStream: stream, serverToClientStream: stream, FormatterUtilities.CreateFormatter());
-            }
-            catch (OperationCanceledException oc) when (oc.CancellationToken == cancellationToken)
-            {
-                listener.Stop();
-                throw;
-            }
         }
 #pragma warning restore CA1416
 

@@ -897,7 +897,7 @@ public class TestMethodInfoTests : TestContainer
         _testClassInfo.TestCleanupMethod = typeof(DummyTestClass).GetMethod("DummyTestCleanupMethod")!;
 
         UTF.TestResult result = _testMethodInfo.Invoke(null);
-        var exception = result.TestFailureException as TestFailedException;
+        var exception = result.TestFailureException as AggregateException;
         string errorMessage = string.Format(
             CultureInfo.CurrentCulture,
             Resource.UTA_TestMethodThrows,
@@ -913,7 +913,8 @@ public class TestMethodInfoTests : TestContainer
 
         Verify(result.Outcome == UTF.UnitTestOutcome.Failed);
         Verify(exception is not null);
-        Verify(string.Concat(errorMessage, Environment.NewLine, cleanupError) == exception.Message);
+        Verify(exception.InnerExceptions[0].Message.Contains(errorMessage));
+        Verify(exception.InnerExceptions[1].Message.Contains(cleanupError));
     }
 
     public void TestMethodInfoInvokeShouldAppendStackTraceInformationIfBothTestMethodAndTestCleanupThrows()
@@ -923,14 +924,13 @@ public class TestMethodInfoTests : TestContainer
         _testClassInfo.TestCleanupMethod = typeof(DummyTestClass).GetMethod("DummyTestCleanupMethod")!;
 
         UTF.TestResult result = _testMethodInfo.Invoke(null);
-        var exception = result.TestFailureException as TestFailedException;
+        var exception = result.TestFailureException as AggregateException;
 
         Verify(result.Outcome == UTF.UnitTestOutcome.Failed);
         Verify(exception is not null);
 #if DEBUG
-        Verify(exception.StackTraceInformation!.ErrorStackTrace.Contains("Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.DummyTestClass.DummyTestMethod()"));
-        Verify(exception.StackTraceInformation.ErrorStackTrace.Contains(Resource.UTA_CleanupStackTrace));
-        Verify(exception.StackTraceInformation.ErrorStackTrace.Contains("Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.DummyTestClass.DummyTestCleanupMethod()"));
+        Verify(((TestFailedException)exception.InnerExceptions[0]).StackTraceInformation!.ErrorStackTrace.Contains("Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.DummyTestClass.DummyTestMethod()"));
+        Verify(((TestFailedException)exception.InnerExceptions[1]).StackTraceInformation!.ErrorStackTrace.Contains("Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.DummyTestClass.DummyTestCleanupMethod()"));
 #endif
     }
 

@@ -191,6 +191,7 @@ internal static class FixtureMethodRunner
         string methodCanceledMessageFormat, string methodTimedOutMessageFormat)
     {
         TaskCompletionSource<int> tcs = new();
+        Exception? realException = null;
         Thread executionThread = new(() =>
         {
             try
@@ -200,6 +201,7 @@ internal static class FixtureMethodRunner
             }
             catch (Exception ex)
             {
+                realException = ex;
                 tcs.SetException(ex);
             }
         })
@@ -238,7 +240,12 @@ internal static class FixtureMethodRunner
         catch (Exception)
         {
             // We throw the real exception to have the original stack trace to elaborate up the chain.
-            if (tcs.Task.Exception is not null)
+            // Also note that tcs.Task.Exception can be an AggregateException, so we favor the "real exception".
+            if (realException is not null)
+            {
+                throw realException;
+            }
+            else if (tcs.Task.Exception is not null)
             {
                 throw tcs.Task.Exception;
             }
