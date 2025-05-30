@@ -133,11 +133,8 @@ public class AssemblyEnumeratorTests : TestContainer
 
         Type[] types = AssemblyEnumerator.GetTypes(mockAssembly.Object, "DummyAssembly", _warnings);
 
-#if NETFRAMEWORK
-        Verify(types is null);
-#else
-        Verify(types is not null);
-#endif
+        // Depending on the TFM, .NET either gives us null or empty array.
+        Verify(types is null || types.Length == 0);
 
         Verify(_warnings.Count == 1);
         Verify(_warnings.ToList().Contains(
