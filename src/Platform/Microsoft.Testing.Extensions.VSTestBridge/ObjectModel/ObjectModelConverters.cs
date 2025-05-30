@@ -40,13 +40,13 @@ internal static class ObjectModelConverters
     public static TestNode ToTestNode(
         this TestCase testCase,
         bool isTrxEnabled,
-        bool useFQNAsUid,
+        bool useFullyQualifiedNameAsUid,
         INamedFeatureCapability? namedFeatureCapability,
         ICommandLineOptions commandLineOptions,
         IClientInfo clientInfo,
         string? displayNameFromTestResult = null)
     {
-        string testNodeUid = useFQNAsUid ? testCase.FullyQualifiedName : testCase.Id.ToString();
+        string testNodeUid = useFullyQualifiedNameAsUid ? testCase.FullyQualifiedName : testCase.Id.ToString();
 
         TestNode testNode = new()
         {
@@ -139,12 +139,12 @@ internal static class ObjectModelConverters
     public static TestNode ToTestNode(
         this TestResult testResult,
         bool isTrxEnabled,
-        bool useFQNAsUid,
+        bool useFullyQualifiedNameAsUid,
         INamedFeatureCapability? namedFeatureCapability,
         ICommandLineOptions commandLineOptions,
         IClientInfo clientInfo)
     {
-        var testNode = testResult.TestCase.ToTestNode(isTrxEnabled, useFQNAsUid, namedFeatureCapability, commandLineOptions, clientInfo, testResult.DisplayName);
+        var testNode = testResult.TestCase.ToTestNode(isTrxEnabled, useFullyQualifiedNameAsUid, namedFeatureCapability, commandLineOptions, clientInfo, testResult.DisplayName);
 
         CopyCategoryAndTraits(testResult, testNode, isTrxEnabled);
 
