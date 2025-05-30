@@ -37,9 +37,16 @@ internal static class ObjectModelConverters
     /// <summary>
     /// Converts a VSTest <see cref="TestCase"/> to a Microsoft Testing Platform <see cref="TestNode"/>.
     /// </summary>
-    public static TestNode ToTestNode(this TestCase testCase, bool isTrxEnabled, INamedFeatureCapability? namedFeatureCapability, ICommandLineOptions commandLineOptions, IClientInfo clientInfo, string? displayNameFromTestResult = null)
+    public static TestNode ToTestNode(
+        this TestCase testCase,
+        bool isTrxEnabled,
+        bool useFullyQualifiedNameAsUid,
+        INamedFeatureCapability? namedFeatureCapability,
+        ICommandLineOptions commandLineOptions,
+        IClientInfo clientInfo,
+        string? displayNameFromTestResult = null)
     {
-        string testNodeUid = testCase.Id.ToString();
+        string testNodeUid = useFullyQualifiedNameAsUid ? testCase.FullyQualifiedName : testCase.Id.ToString();
 
         TestNode testNode = new()
         {
@@ -129,9 +136,15 @@ internal static class ObjectModelConverters
     /// <summary>
     /// Converts a VSTest <see cref="TestResult"/> to a Microsoft Testing Platform <see cref="TestNode"/>.
     /// </summary>
-    public static TestNode ToTestNode(this TestResult testResult, bool isTrxEnabled, INamedFeatureCapability? namedFeatureCapability, ICommandLineOptions commandLineOptions, IClientInfo clientInfo)
+    public static TestNode ToTestNode(
+        this TestResult testResult,
+        bool isTrxEnabled,
+        bool useFullyQualifiedNameAsUid,
+        INamedFeatureCapability? namedFeatureCapability,
+        ICommandLineOptions commandLineOptions,
+        IClientInfo clientInfo)
     {
-        var testNode = testResult.TestCase.ToTestNode(isTrxEnabled, namedFeatureCapability, commandLineOptions, clientInfo, testResult.DisplayName);
+        var testNode = testResult.TestCase.ToTestNode(isTrxEnabled, useFullyQualifiedNameAsUid, namedFeatureCapability, commandLineOptions, clientInfo, testResult.DisplayName);
 
         CopyCategoryAndTraits(testResult, testNode, isTrxEnabled);
 
