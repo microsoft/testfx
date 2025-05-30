@@ -150,7 +150,7 @@ internal static class ObjectModelConverters
                 throw new InvalidOperationException("Unable to parse fully qualified type name from test case: " + testResult.TestCase.FullyQualifiedName);
             }
 
-            testNode.Properties.Add(new TrxMessagesProperty(testResult.Messages
+            testNode.Properties.Add(new TrxMessagesProperty([.. testResult.Messages
                 .Select(msg =>
                     msg.Category switch
                     {
@@ -158,8 +158,7 @@ internal static class ObjectModelConverters
                         string x when x == TestResultMessage.StandardOutCategory => new StandardOutputTrxMessage(msg.Text),
                         string x when x == TestResultMessage.DebugTraceCategory => new DebugOrTraceTrxMessage(msg.Text),
                         _ => new TrxMessage(msg.Text),
-                    })
-                .ToArray()));
+                    })]));
         }
 
         testNode.Properties.Add(new TimingProperty(new(testResult.StartTime, testResult.EndTime, testResult.Duration), []));

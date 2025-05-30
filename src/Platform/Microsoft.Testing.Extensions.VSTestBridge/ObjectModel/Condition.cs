@@ -164,7 +164,7 @@ internal sealed class Condition
             ThrownFormatExceptionForInvalidCondition(conditionString);
         }
 
-        string[] parts = TokenizeFilterConditionString(conditionString).ToArray();
+        string[] parts = [.. TokenizeFilterConditionString(conditionString)];
         if (parts.Length == 1)
         {
             // If only parameter values is passed, create condition with default property name,

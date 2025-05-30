@@ -736,7 +736,7 @@ internal sealed class TypeCache : MarshalByRefObject
         }
         else if (methodBase != null)
         {
-            Type[] parameters = methodBase.GetParameters().Select(i => i.ParameterType).ToArray();
+            Type[] parameters = [.. methodBase.GetParameters().Select(i => i.ParameterType)];
             // TODO: Should we pass true for includeNonPublic?
             testMethodInfo = PlatformServiceProvider.Instance.ReflectionOperations.GetRuntimeMethod(methodBase.DeclaringType!, methodBase.Name, parameters, includeNonPublic: false);
         }

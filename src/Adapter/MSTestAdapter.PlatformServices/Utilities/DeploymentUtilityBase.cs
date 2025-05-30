@@ -407,7 +407,7 @@ internal abstract class DeploymentUtilityBase
 
         // Do the deployment.
         EqtTrace.InfoIf(EqtTrace.IsInfoEnabled, "MSTestExecutor: Using deployment directory {0} for source {1}.", runDirectories.OutDirectory, source);
-        IEnumerable<string> warnings = Deploy(new List<DeploymentItem>(deploymentItems), source, runDirectories.OutDirectory, GetTestResultsDirectory(runContext));
+        IEnumerable<string> warnings = Deploy([.. deploymentItems], source, runDirectories.OutDirectory, GetTestResultsDirectory(runContext));
 
         // Log warnings
         LogWarnings(testExecutionRecorder, warnings);

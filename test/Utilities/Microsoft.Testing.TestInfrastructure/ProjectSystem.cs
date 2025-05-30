@@ -46,7 +46,7 @@ EndGlobal
         AddOrUpdateFileContent(_solutionFileName, MergeSolutionContent());
     }
 
-    public ICollection<Project> Projects { get; } = new List<Project>();
+    public ICollection<Project> Projects { get; } = [];
 
     public string SolutionFile { get; private set; }
 

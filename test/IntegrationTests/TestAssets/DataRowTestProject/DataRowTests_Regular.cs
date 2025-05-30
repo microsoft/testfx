@@ -68,7 +68,9 @@ public class DataRowTests_Regular
     public void NullValue(object o) => Assert.IsNull(o);
 
     [TestMethod]
-    [DataRow(new string[] { "" })]
+#pragma warning disable SA1122 // Use string.Empty for empty strings
+    [DataRow([""])]
+#pragma warning restore SA1122 // Use string.Empty for empty strings
     public void OneStringArray(string[] lines) => Assert.AreEqual(1, lines.Length);
 
     [TestMethod]
@@ -80,7 +82,9 @@ public class DataRowTests_Regular
     }
 
     [TestMethod]
-    [DataRow(new object[] { "", 1 })]
+#pragma warning disable SA1122 // Use string.Empty for empty strings
+    [DataRow(["", 1])]
+#pragma warning restore SA1122 // Use string.Empty for empty strings
     public void OneObjectArray(object[] objects) => Assert.AreEqual(2, objects.Length);
 
     [TestMethod]

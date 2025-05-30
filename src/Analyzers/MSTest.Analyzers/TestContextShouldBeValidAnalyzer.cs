@@ -212,7 +212,7 @@ public sealed class TestContextShouldBeValidAnalyzer : DiagnosticAnalyzer
                                             return;
                                         }
 
-                                        fieldsAssignedInConstructor = new();
+                                        fieldsAssignedInConstructor = [];
 
                                         context.RegisterOperationBlockAction(context =>
                                         {

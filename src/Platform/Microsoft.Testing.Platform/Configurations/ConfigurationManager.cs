@@ -58,6 +58,6 @@ internal sealed class ConfigurationManager(IFileSystem fileSystem, ITestApplicat
 
         return defaultJsonConfiguration is null
             ? throw new InvalidOperationException(PlatformResources.ConfigurationManagerCannotFindDefaultJsonConfigurationErrorMessage)
-            : new AggregatedConfiguration(configurationProviders.OrderBy(x => x.Order).Select(x => x.ConfigurationProvider).ToArray(), _testApplicationModuleInfo, _fileSystem, commandLineParseResult);
+            : new AggregatedConfiguration([.. configurationProviders.OrderBy(x => x.Order).Select(x => x.ConfigurationProvider)], _testApplicationModuleInfo, _fileSystem, commandLineParseResult);
     }
 }

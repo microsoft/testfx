@@ -172,7 +172,7 @@ public sealed class IPCTests
     {
         PipeNameDescription pipeNameDescription = NamedPipeServer.GetPipeName(Guid.NewGuid().ToString("N"));
 
-        List<NamedPipeServer> pipes = new();
+        List<NamedPipeServer> pipes = [];
         for (int i = 0; i < 3; i++)
         {
             pipes.Add(new(
@@ -196,7 +196,7 @@ public sealed class IPCTests
                 _testContext.CancellationTokenSource.Token));
         StringAssert.Contains(exception.Message, "All pipe instances are busy.");
 
-        List<Task> waitConnectionTask = new();
+        List<Task> waitConnectionTask = [];
         int connectionCompleted = 0;
         foreach (NamedPipeServer namedPipeServer in pipes)
         {
@@ -207,7 +207,7 @@ public sealed class IPCTests
             }));
         }
 
-        List<NamedPipeClient> connectedClients = new();
+        List<NamedPipeClient> connectedClients = [];
         for (int i = 0; i < waitConnectionTask.Count; i++)
         {
             NamedPipeClient namedPipeClient = new(pipeNameDescription.Name);
@@ -215,7 +215,7 @@ public sealed class IPCTests
             await namedPipeClient.ConnectAsync(_testContext.CancellationTokenSource.Token);
         }
 
-        await Task.WhenAll(waitConnectionTask.ToArray());
+        await Task.WhenAll([.. waitConnectionTask]);
 
         Assert.AreEqual(3, connectionCompleted);
 
@@ -235,8 +235,7 @@ public sealed class IPCTests
     private static string RandomString(int length, Random random)
     {
         const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-        return new string(Enumerable.Repeat(chars, length)
-            .Select(s => s[random.Next(s.Length)]).ToArray());
+        return new string([.. Enumerable.Repeat(chars, length).Select(s => s[random.Next(s.Length)])]);
     }
 
     private abstract record BaseMessage : IRequest;

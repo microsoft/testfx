@@ -26,7 +26,7 @@ internal sealed class GetInProgressTestsResponseSerializer : BaseSerializer, INa
             tests.Add((testName, unixTimeSeconds));
         }
 
-        return new GetInProgressTestsResponse(tests.ToArray());
+        return new GetInProgressTestsResponse([.. tests]);
     }
 
     public void Serialize(object objectToSerialize, Stream stream)

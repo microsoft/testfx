@@ -53,7 +53,7 @@ public class IterativeTestMethodAttribute : TestMethodAttribute
             results.AddRange(testResults);
         }
 
-        return results.ToArray();
+        return [.. results];
     }
 }
 

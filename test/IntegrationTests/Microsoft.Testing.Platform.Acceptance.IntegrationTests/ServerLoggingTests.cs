@@ -17,7 +17,7 @@ public sealed partial class ServerLoggingTests : ServerModeTestsBase<ServerLoggi
         string resultDirectory = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"), tfm);
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, "ServerLoggingTests", tfm);
         using TestingPlatformClient jsonClient = await StartAsServerAndConnectToTheClientAsync(testHost);
-        LogsCollector logs = new();
+        LogsCollector logs = [];
         jsonClient.RegisterLogListener(logs);
 
         InitializeResponse initializeResponseArgs = await jsonClient.Initialize();

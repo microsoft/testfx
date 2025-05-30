@@ -150,7 +150,7 @@ public abstract class SynchronizedSingleSessionVSTestBridgedTestFramework : VSTe
         => ExecuteRequestWithRequestCountGuardAsync(async () =>
         {
 #pragma warning disable IL3000 // Avoid accessing Assembly file path when publishing as a single file
-            string[] testAssemblyPaths = _getTestAssemblies().Select(x => x.Location).ToArray();
+            string[] testAssemblyPaths = [.. _getTestAssemblies().Select(x => x.Location)];
 #pragma warning restore IL3000 // Avoid accessing Assembly file path when publishing as a single file
             switch (request)
             {

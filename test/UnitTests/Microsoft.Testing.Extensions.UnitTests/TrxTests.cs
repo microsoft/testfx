@@ -27,7 +27,7 @@ public class TrxTests
     private readonly Mock<ITestFramework> _testFrameworkMock = new();
     private readonly Mock<ITestApplicationModuleInfo> _testApplicationModuleInfoMock = new();
     private readonly Mock<IFileSystem> _fileSystem = new();
-    private readonly Dictionary<IExtension, List<SessionFileArtifact>> _artifactsByExtension = new();
+    private readonly Dictionary<IExtension, List<SessionFileArtifact>> _artifactsByExtension = [];
 
     [TestMethod]
     public async Task TrxReportEngine_GenerateReportAsyncWithNullAdapterSupportTrxCapability_TrxDoesNotContainClassName()

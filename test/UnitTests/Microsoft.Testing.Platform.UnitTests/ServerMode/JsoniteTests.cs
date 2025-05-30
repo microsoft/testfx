@@ -22,7 +22,7 @@ public sealed class JsoniteTests
     {
         // This test is testing if we can serialize the range 0x0000 - 0x001FF correctly, this range contains special characters like NUL.
         // This is a fix for Jsonite, which throws when such characters are found in a string (but does not fail when we provide them as character).
-        List<Exception> errors = new();
+        List<Exception> errors = [];
 
         // This could be converted to Data source, but this way we have more control about where in the result message the
         // special characters will be (hopefully nowhere) so in case of failure, we can still serialize the message to IDE

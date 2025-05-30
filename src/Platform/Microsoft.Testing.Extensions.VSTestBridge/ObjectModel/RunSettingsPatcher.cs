@@ -107,7 +107,7 @@ internal static class RunSettingsPatcher
             runSettingsElement.Add(testRunParametersElement);
         }
 
-        XElement[] testRunParametersNodes = testRunParametersElement.Nodes().OfType<XElement>().ToArray();
+        XElement[] testRunParametersNodes = [.. testRunParametersElement.Nodes().OfType<XElement>()];
         foreach (string testRunParameter in testRunParameters)
         {
             string[] parts = testRunParameter.Split(TestRunParameterSeparator, 2);

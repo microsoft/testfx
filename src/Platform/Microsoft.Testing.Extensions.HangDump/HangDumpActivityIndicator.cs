@@ -140,7 +140,7 @@ internal sealed class HangDumpActivityIndicator : IDataConsumer, ITestSessionLif
         if (request is GetInProgressTestsRequest)
         {
             await _logger.LogDebugAsync($"Received '{nameof(GetInProgressTestsRequest)}'");
-            return new GetInProgressTestsResponse(_testsCurrentExecutionState.Select(x => (x.Value.Name, (int)_clock.UtcNow.Subtract(x.Value.StartTime).TotalSeconds)).ToArray());
+            return new GetInProgressTestsResponse([.. _testsCurrentExecutionState.Select(x => (x.Value.Name, (int)_clock.UtcNow.Subtract(x.Value.StartTime).TotalSeconds))]);
         }
         else if (request is ExitSignalActivityIndicatorTaskRequest)
         {

@@ -727,7 +727,7 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
             dataConsumersBuilder.Add(abortForMaxFailedTestsExtension);
         }
 
-        IDataConsumer[] dataConsumerServices = dataConsumersBuilder.ToArray();
+        IDataConsumer[] dataConsumerServices = [.. dataConsumersBuilder];
 
         AsynchronousMessageBus concreteMessageBusService = new(
             dataConsumerServices,

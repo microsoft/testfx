@@ -33,7 +33,7 @@ public class TestDeploymentTests : TestContainer
     {
         _mockReflectionUtility = new Mock<ReflectionUtility>();
         _mockFileUtility = new Mock<FileUtility>();
-        _warnings = new List<string>();
+        _warnings = [];
 
         // Reset adapter settings.
         MSTestSettingsProvider.Reset();

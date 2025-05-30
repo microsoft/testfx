@@ -143,7 +143,7 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
     public static int GetMinimumExpectedTests(ICommandLineOptions commandLineOptions)
     {
         bool hasMinimumExpectedTestsOptionKey = commandLineOptions.TryGetOptionArgumentList(MinimumExpectedTestsOptionKey, out string[]? minimumExpectedTests);
-        if (!hasMinimumExpectedTestsOptionKey || !IsMinimumExpectedTestsOptionValidAsync(MinimumExpectedTests, minimumExpectedTests ?? Array.Empty<string>()).Result.IsValid)
+        if (!hasMinimumExpectedTestsOptionKey || !IsMinimumExpectedTestsOptionValidAsync(MinimumExpectedTests, minimumExpectedTests ?? []).Result.IsValid)
         {
             return 0;
         }

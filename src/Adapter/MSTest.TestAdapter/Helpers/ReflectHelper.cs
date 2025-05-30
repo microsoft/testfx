@@ -125,7 +125,7 @@ internal class ReflectHelper : MarshalByRefObject
         IEnumerable<TestCategoryBaseAttribute> typeCategories = GetAttributes<TestCategoryBaseAttribute>(owningType, inherit: true);
         IEnumerable<TestCategoryBaseAttribute> assemblyCategories = GetAttributes<TestCategoryBaseAttribute>(owningType.Assembly, inherit: true);
 
-        return methodCategories.Concat(typeCategories).Concat(assemblyCategories).SelectMany(c => c.TestCategories).ToArray();
+        return [.. methodCategories.Concat(typeCategories).Concat(assemblyCategories).SelectMany(c => c.TestCategories)];
     }
 
     /// <summary>
@@ -311,7 +311,7 @@ internal class ReflectHelper : MarshalByRefObject
             try
             {
                 object[]? attributes = NotCachedReflectionAccessor.GetCustomAttributesNotCached(attributeProvider, inherit);
-                return attributes is null ? [] : attributes as Attribute[] ?? attributes.Cast<Attribute>().ToArray();
+                return attributes is null ? [] : attributes as Attribute[] ?? [.. attributes.Cast<Attribute>()];
             }
             catch (Exception ex)
             {
