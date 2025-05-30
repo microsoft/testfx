@@ -159,7 +159,7 @@ internal class TypeEnumerator
         Attribute[] attributes = _reflectHelper.GetCustomAttributesCached(method, inherit: true);
         TestMethodAttribute? testMethodAttribute = null;
 
-        // Backward looping for backcompat. This used to be calls to _reflectHelper.GetFirstDerivedAttributeOrDefault
+        // Backward looping for backcompat. This used to be calls to _reflectHelper.GetFirstAttributeOrDefault
         // So, to make sure the first attribute always wins, we loop from end to start.
         for (int i = attributes.Length - 1; i >= 0; i--)
         {
