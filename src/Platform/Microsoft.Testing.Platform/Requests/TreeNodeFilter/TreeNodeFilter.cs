@@ -264,7 +264,7 @@ public sealed class TreeNodeFilter : ITestExecutionFilter
         {
             while (operatorStack.Count != 0 && operatorStack.Peek() > currentOp)
             {
-                var topStackOperator = operatorStack.Pop();
+                OperatorKind topStackOperator = operatorStack.Pop();
                 ProcessStackOperator(topStackOperator, expressionStack, operatorStack);
                 break;
             }
