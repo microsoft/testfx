@@ -621,11 +621,7 @@ internal sealed class Json
             await using Utf8JsonWriter writer = new(stream);
             await SerializeAsync(obj, writer);
             await writer.FlushAsync();
-#if NETCOREAPP
             return Encoding.UTF8.GetString(stream.GetBuffer().AsMemory().Span[..(int)stream.Position]);
-#else
-            return Encoding.UTF8.GetString(stream.ToArray());
-#endif
         }
         finally
         {
@@ -726,12 +722,10 @@ internal sealed class Json
                 (string Key, object? Value)[]? properties = objectConverter.Properties(obj);
                 if (properties is not null)
                 {
-                    int count = 1;
                     foreach ((string property, object? value) in properties)
                     {
                         writer.WritePropertyName(property);
                         await SerializeAsync(value, writer);
-                        count++;
                     }
                 }
 

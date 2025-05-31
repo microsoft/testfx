@@ -137,6 +137,13 @@
     <Using Include="Microsoft.VisualStudio.TestTools.UnitTesting.ExecutionScope" Alias="ExecutionScope" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="DynamicProxyGenAssembly2" Key="$(MoqPublicKey)" />
+    <InternalsVisibleTo Include="Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests" Key="$(VsPublicKey)" />
+    <InternalsVisibleTo Include="MSTest.VstestConsoleWrapper.IntegrationTests" Key="$(VsPublicKey)" />
+    <InternalsVisibleTo Include="MSTest.IntegrationTests" Key="$(VsPublicKey)" />
+  </ItemGroup>
+
   <!-- SDK bottom import -->
   <Import Project="Sdk.targets" Sdk="MSBuild.Sdk.Extras" Condition=" '$(OS)' == 'Windows_NT' " />
   <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" Condition=" '$(OS)' != 'Windows_NT' " />

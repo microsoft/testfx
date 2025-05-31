@@ -15,7 +15,6 @@ internal sealed class EnvironmentVariablesConfigurationProvider : IConfiguration
     private const string SqlServerPrefix = "SQLCONNSTR_";
     private const string CustomConnectionStringPrefix = "CUSTOMCONNSTR_";
 
-    private readonly string _prefix;
     private readonly string _normalizedPrefix;
 
     private readonly Dictionary<string, string?> _data = new(StringComparer.OrdinalIgnoreCase);
@@ -29,8 +28,7 @@ internal sealed class EnvironmentVariablesConfigurationProvider : IConfiguration
 
     public EnvironmentVariablesConfigurationProvider(IEnvironment environmentVariables, string prefix)
     {
-        _prefix = prefix;
-        _normalizedPrefix = Normalize(_prefix);
+        _normalizedPrefix = Normalize(prefix);
         _environmentVariables = environmentVariables;
     }
 

@@ -131,4 +131,102 @@ public sealed class AvoidUsingAssertsInAsyncVoidContextAnalyzerTests
 
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
+
+    [TestMethod]
+    public async Task UseStringAssertMethodInAsyncVoidMethod_Diagnostic()
+    {
+        string code = """
+            using System.Threading.Tasks;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public async void TestMethod()
+                {
+                    await Task.Delay(1);
+                    [|StringAssert.Contains("abc", "a")|];
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task UseCollectionAssertMethodInAsyncVoidMethod_Diagnostic()
+    {
+        string code = """
+            using System.Collections;
+            using System.Threading.Tasks;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public async void TestMethod()
+                {
+                    await Task.Delay(1);
+                    [|CollectionAssert.AreEqual(new[] { 1 }, new[] { 1 })|];
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task UseStringAssertMethodInAsyncVoidLocalFunction_Diagnostic()
+    {
+        string code = """
+            using System.Threading.Tasks;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    async void d()
+                    {
+                        await Task.Delay(1);
+                        [|StringAssert.Contains("abc", "a")|];
+                    };
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task UseCollectionAssertMethodInAsyncVoidDelegate_Diagnostic()
+    {
+        string code = """
+            using System.Collections;
+            using System.Threading.Tasks;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                internal delegate void MyDelegate();
+
+                [TestMethod]
+                public void TestMethod()
+                {
+                    MyDelegate d = async () =>
+                    {
+                        await Task.Delay(1);
+                        [|CollectionAssert.AreEqual(new[] { 1 }, new[] { 1 })|];
+                    };
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
 }

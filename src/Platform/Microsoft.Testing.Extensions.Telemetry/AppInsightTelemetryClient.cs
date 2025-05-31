@@ -12,14 +12,13 @@ internal sealed class AppInsightTelemetryClient : ITelemetryClient
     private const string InstrumentationKey = "74cc1c9e-3e6e-4d05-b3fc-dde9101d0254";
     private const string TelemetryServiceEndpoint = "https://dc.services.visualstudio.com/";
 
-    private readonly TelemetryConfiguration _config;
     private readonly TelemetryClient _telemetryClient;
 
     public AppInsightTelemetryClient(string? currentSessionId, string osVersion)
     {
-        _config = TelemetryConfiguration.CreateDefault();
-        _config.ConnectionString = $"InstrumentationKey={InstrumentationKey};IngestionEndpoint={TelemetryServiceEndpoint}";
-        _telemetryClient = new TelemetryClient(_config);
+        var config = TelemetryConfiguration.CreateDefault();
+        config.ConnectionString = $"InstrumentationKey={InstrumentationKey};IngestionEndpoint={TelemetryServiceEndpoint}";
+        _telemetryClient = new TelemetryClient(config);
         _telemetryClient.Context.Session.Id = currentSessionId;
         _telemetryClient.Context.Device.OperatingSystem = osVersion;
     }

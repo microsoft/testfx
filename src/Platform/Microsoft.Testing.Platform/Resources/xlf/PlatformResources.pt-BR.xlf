@@ -733,11 +733,6 @@ Recebe um argumento como cadeia de caracteres no formato &lt;valor&gt;[h|m|s] em
         <target state="translated">Saída padrão</target>
         <note />
       </trans-unit>
-      <trans-unit id="StartingServer">
-        <source>Starting server. Listening on port '{0}'</source>
-        <target state="translated">Iniciando servidor. Escutando na porta “{0}”</target>
-        <note />
-      </trans-unit>
       <trans-unit id="StartingTestSession">
         <source>Starting test session.</source>
         <target state="translated">Iniciando sessão de teste.</target>
@@ -950,11 +945,6 @@ Os valores válidos são “Normal”, “Detalhado”. O padrão é “Normal�
       <trans-unit id="UnexpectedStateErrorMessage">
         <source>Unexpected state in file '{0}' at line '{1}'</source>
         <target state="translated">Estado inesperado no arquivo '{0}' na linha '{1}'</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="UnknownCommunicationProtocolErrorMessage">
-        <source>The communication protocol '{0}' is not supported</source>
-        <target state="translated">O protocolo de comunicação “{0}” não tem suporte</target>
         <note />
       </trans-unit>
       <trans-unit id="UnobservedTaskExceptionWarningMessage">
