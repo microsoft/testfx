@@ -15,11 +15,6 @@ public interface IPlatformInformation
     string Name { get; }
 
     /// <summary>
-    /// Gets the platform's build date.
-    /// </summary>
-    DateTimeOffset? BuildDate { get; }
-
-    /// <summary>
     /// Gets the platform's version.
     /// </summary>
     string? Version { get; }
@@ -33,7 +28,6 @@ public interface IPlatformInformation
 internal sealed class PlatformInformation : IPlatformInformation
 {
     private const char PlusSign = '+';
-    private const string BuildTimeAttributeName = "Microsoft.Testing.Platform.Application.BuildTimeUTC";
 
     public PlatformInformation()
     {
@@ -52,21 +46,9 @@ internal sealed class PlatformInformation : IPlatformInformation
                 Version = informationalVersion;
             }
         }
-
-        AssemblyMetadataAttribute? buildTime = assembly
-            .GetCustomAttributes<AssemblyMetadataAttribute>()
-            .FirstOrDefault(x => x.Key == BuildTimeAttributeName);
-
-        if (!RoslynString.IsNullOrEmpty(buildTime?.Value)
-            && DateTimeOffset.TryParse(buildTime.Value, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out DateTimeOffset date))
-        {
-            BuildDate = date;
-        }
     }
 
     public string Name { get; } = "Microsoft.Testing.Platform";
-
-    public DateTimeOffset? BuildDate { get; }
 
     public string? Version { get; }
 
