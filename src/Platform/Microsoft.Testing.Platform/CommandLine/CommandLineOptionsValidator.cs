@@ -113,16 +113,16 @@ internal static class CommandLineOptionsValidator
         HashSet<string> systemOptionNames = new();
         foreach (KeyValuePair<ICommandLineOptionsProvider, IReadOnlyCollection<CommandLineOption>> provider in systemOptionsByProvider)
         {
-            foreach (var option in provider.Value)
+            foreach (CommandLineOption option in provider.Value)
             {
                 systemOptionNames.Add(option.Name);
             }
         }
 
         StringBuilder? stringBuilder = null;
-        foreach (var provider in extensionOptionsByProvider)
+        foreach (KeyValuePair<ICommandLineOptionsProvider, IReadOnlyCollection<CommandLineOption>> provider in extensionOptionsByProvider)
         {
-            foreach (var option in provider.Value)
+            foreach (CommandLineOption option in provider.Value)
             {
                 if (systemOptionNames.Contains(option.Name))
                 {
@@ -325,6 +325,7 @@ internal static class CommandLineOptionsValidator
             {
                 break;
             }
+
             end--;
         }
 
