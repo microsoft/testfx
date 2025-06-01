@@ -127,10 +127,11 @@ internal static class CommandLineOptionsValidator
                 if (systemOptionNames.Contains(option.Name))
                 {
                     stringBuilder ??= new StringBuilder();
-                    stringBuilder.AppendLine(string.Format(CultureInfo.InvariantCulture,
-                        PlatformResources.CommandLineOptionIsReserved,
-                        option.Name,
-                        provider.Key.DisplayName));
+                    stringBuilder.AppendLine(
+                        string.Format(CultureInfo.InvariantCulture,
+                            PlatformResources.CommandLineOptionIsReserved,
+                            option.Name,
+                            provider.Key.DisplayName));
                 }
             }
         }
