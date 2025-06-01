@@ -111,7 +111,7 @@ internal static class CommandLineOptionsValidator
     {
         // Create a HashSet of all system option names for faster lookup
         HashSet<string> systemOptionNames = new();
-        foreach (var provider in systemOptionsByProvider)
+        foreach (KeyValuePair<ICommandLineOptionsProvider, IReadOnlyCollection<CommandLineOption>> provider in systemOptionsByProvider)
         {
             foreach (var option in provider.Value)
             {
