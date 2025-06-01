@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Runtime.Serialization;
 using System.Runtime.Serialization.Json;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
@@ -47,6 +48,11 @@ internal static class DataSerializationHelper
             serializedData[typeIndex] = typeName;
 
             DataContractJsonSerializer serializer = GetSerializer(type);
+#if NET7_0_OR_GREATER
+            serializer.SetSerializationSurrogateProvider(SerializationSurrogateProvider.Instance);
+#elif NETFRAMEWORK
+            // TODO: Use serializer.DataContractSurrogate.
+#endif
 
             using var memoryStream = new MemoryStream();
             // This should be safe as long as our generator mentions
@@ -93,6 +99,11 @@ internal static class DataSerializationHelper
             }
 
             DataContractJsonSerializer serializer = GetSerializer(assemblyQualifiedName);
+#if NET7_0_OR_GREATER
+            serializer.SetSerializationSurrogateProvider(SerializationSurrogateProvider.Instance);
+#elif NETFRAMEWORK
+            // TODO: Use serializer.DataContractSurrogate.
+#endif
 
             byte[] serializedDataBytes = Encoding.UTF8.GetBytes(serializedValue);
             using var memoryStream = new MemoryStream(serializedDataBytes);
@@ -130,6 +141,53 @@ internal static class DataSerializationHelper
 #pragma warning disable IL3050 // IL3050: Avoid calling members annotated with 'RequiresDynamicCodeAttribute' when publishing as Native AOT
 #pragma warning disable IL2026 // IL2026: Members attributed with RequiresUnreferencedCode may break when trimming
             _ => new DataContractJsonSerializer(type, SerializerSettings));
+
+    private sealed class SerializationSurrogateProvider : ISerializationSurrogateProvider
+    {
+        public static SerializationSurrogateProvider Instance { get; } = new();
+
+        public object GetDeserializedObject(object obj, Type targetType)
+        {
+#if NET6_0_OR_GREATER
+            if (targetType == typeof(DateOnly))
+            {
+                return DateOnly.FromDayNumber(((DateOnly)obj).DayNumber);
+            }
+            else if (targetType == typeof(TimeOnly))
+            {
+                return new TimeOnly(((TimeOnly)obj).Ticks);
+            }
+#endif
+
+            return obj;
+        }
+
+        public object GetObjectToSerialize(object obj, Type targetType)
+            => obj switch
+            {
+#if NET6_0_OR_GREATER
+                DateOnly dateOnly => dateOnly.DayNumber,
+                TimeOnly timeOnly => timeOnly.Ticks,
+#endif
+                _ => obj,
+            };
+
+        public Type GetSurrogateType(Type type)
+        {
+#if NET6_0_OR_GREATER
+            if (type == typeof(DateOnly))
+            {
+                return typeof(int);
+            }
+            else if (type == typeof(TimeOnly))
+            {
+                return typeof(long);
+            }
+#endif
+
+            return type;
+        }
+    }
 #pragma warning restore IL3050 // IL3050: Avoid calling members annotated with 'RequiresDynamicCodeAttribute' when publishing as Native AOT
 #pragma warning restore IL2026 // IL2026: Members attributed with RequiresUnreferencedCode may break when trimming
 }

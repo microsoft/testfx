@@ -118,13 +118,7 @@ internal static class DynamicDataOperations
             List<object[]> objects = new();
             foreach (object? entry in enumerable)
             {
-                if (entry is null)
-                {
-                    data = null;
-                    return false;
-                }
-
-                objects.Add(new[] { entry });
+                objects.Add(new[] { entry! });
             }
 
             data = objects;
