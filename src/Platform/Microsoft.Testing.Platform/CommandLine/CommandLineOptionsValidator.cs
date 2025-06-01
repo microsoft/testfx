@@ -127,11 +127,7 @@ internal static class CommandLineOptionsValidator
                 if (systemOptionNames.Contains(option.Name))
                 {
                     stringBuilder ??= new StringBuilder();
-                    stringBuilder.AppendLine(
-                        string.Format(CultureInfo.InvariantCulture,
-                            PlatformResources.CommandLineOptionIsReserved,
-                            option.Name,
-                            provider.Key.DisplayName));
+                    stringBuilder.AppendLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineOptionIsReserved, option.Name, provider.Key.DisplayName));
                 }
             }
         }
@@ -164,7 +160,7 @@ internal static class CommandLineOptionsValidator
 
         // Check for duplications
         StringBuilder? stringBuilder = null;
-        foreach (var kvp in optionNameToProviders)
+        foreach (KeyValuePair<string, List<ICommandLineOptionsProvider>> kvp in optionNameToProviders)
         {
             if (kvp.Value.Count > 1)
             {
@@ -187,17 +183,17 @@ internal static class CommandLineOptionsValidator
     {
         // Create a HashSet of all valid option names for faster lookup
         HashSet<string> validOptionNames = new();
-        foreach (var provider in extensionOptionsByProvider)
+        foreach (KeyValuePair<ICommandLineOptionsProvider, IReadOnlyCollection<CommandLineOption>> provider in extensionOptionsByProvider)
         {
-            foreach (var option in provider.Value)
+            foreach (CommandLineOption option in provider.Value)
             {
                 validOptionNames.Add(option.Name);
             }
         }
 
-        foreach (var provider in systemOptionsByProvider)
+        foreach (KeyValuePair<ICommandLineOptionsProvider, IReadOnlyCollection<CommandLineOption>> provider in systemOptionsByProvider)
         {
-            foreach (var option in provider.Value)
+            foreach (CommandLineOption option in provider.Value)
             {
                 validOptionNames.Add(option.Name);
             }
