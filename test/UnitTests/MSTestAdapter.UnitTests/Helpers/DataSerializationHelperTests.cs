@@ -56,7 +56,7 @@ public class DataSerializationHelperTests : TestContainer
         Verify(((DateTime)actual[0]!).Kind.Equals(source.Kind));
     }
 
-#if NET6_0_OR_GREATER
+#if NET7_0_OR_GREATER
     public void DataSerializerShouldRoundTripDateOnly()
     {
         var source = new DateOnly(1999, 11, 3);

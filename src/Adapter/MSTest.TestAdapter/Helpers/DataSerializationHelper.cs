@@ -1,6 +1,10 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#if NETFRAMEWORK
+using System.CodeDom;
+using System.Collections.ObjectModel;
+#endif
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Json;
 
@@ -14,6 +18,9 @@ internal static class DataSerializationHelper
         UseSimpleDictionaryFormat = true,
         EmitTypeInformation = System.Runtime.Serialization.EmitTypeInformation.Always,
         DateTimeFormat = new System.Runtime.Serialization.DateTimeFormat("O", CultureInfo.InvariantCulture),
+#if NETFRAMEWORK
+        DataContractSurrogate = SerializationSurrogateProvider.Instance,
+#endif
     };
 
     /// <summary>
@@ -50,8 +57,6 @@ internal static class DataSerializationHelper
             DataContractJsonSerializer serializer = GetSerializer(type);
 #if NET7_0_OR_GREATER
             serializer.SetSerializationSurrogateProvider(SerializationSurrogateProvider.Instance);
-#elif NETFRAMEWORK
-            // TODO: Use serializer.DataContractSurrogate.
 #endif
 
             using var memoryStream = new MemoryStream();
@@ -99,10 +104,9 @@ internal static class DataSerializationHelper
             }
 
             DataContractJsonSerializer serializer = GetSerializer(assemblyQualifiedName);
-#if NET7_0_OR_GREATER
+#if NET7_0_OR_GREATER // TODO: Docs say it's available on net6.0, but that's not what I see here :/
+            // https://learn.microsoft.com/en-us/dotnet/api/system.runtime.serialization.datacontractserializerextensions.setserializationsurrogateprovider?view=net-9.0#system-runtime-serialization-datacontractserializerextensions-setserializationsurrogateprovider(system-runtime-serialization-datacontractserializer-system-runtime-serialization-iserializationsurrogateprovider)
             serializer.SetSerializationSurrogateProvider(SerializationSurrogateProvider.Instance);
-#elif NETFRAMEWORK
-            // TODO: Use serializer.DataContractSurrogate.
 #endif
 
             byte[] serializedDataBytes = Encoding.UTF8.GetBytes(serializedValue);
@@ -142,9 +146,28 @@ internal static class DataSerializationHelper
 #pragma warning disable IL2026 // IL2026: Members attributed with RequiresUnreferencedCode may break when trimming
             _ => new DataContractJsonSerializer(type, SerializerSettings));
 
-    private sealed class SerializationSurrogateProvider : ISerializationSurrogateProvider
+    private sealed class SerializationSurrogateProvider
+#if NETFRAMEWORK
+        : IDataContractSurrogate
+#else
+        : ISerializationSurrogateProvider
+#endif
     {
         public static SerializationSurrogateProvider Instance { get; } = new();
+
+#if NETFRAMEWORK
+        public object GetCustomDataToExport(MemberInfo memberInfo, Type dataContractType) => null!;
+
+        public object GetCustomDataToExport(Type clrType, Type dataContractType) => null!;
+
+        public void GetKnownCustomDataTypes(Collection<Type> customDataTypes)
+        {
+        }
+
+        public Type GetReferencedTypeOnImport(string typeName, string typeNamespace, object customData) => null!;
+
+        public CodeTypeDeclaration ProcessImportedType(CodeTypeDeclaration typeDeclaration, CodeCompileUnit compileUnit) => typeDeclaration;
+#endif
 
         public object GetDeserializedObject(object obj, Type targetType)
         {
@@ -172,7 +195,11 @@ internal static class DataSerializationHelper
                 _ => obj,
             };
 
+#if NETFRAMEWORK
+        public Type GetDataContractType(Type type)
+#else
         public Type GetSurrogateType(Type type)
+#endif
         {
 #if NET6_0_OR_GREATER
             if (type == typeof(DateOnly))
