@@ -133,7 +133,7 @@ public class DebuggerUtility
                         try
                         {
                             object dbg = dte.GetType().InvokeMember("Debugger", BindingFlags.GetProperty, null, dte, null, CultureInfo.InvariantCulture)!;
-                            var lps = dbg.GetType().InvokeMember("LocalProcesses", BindingFlags.GetProperty, null, dbg, null, CultureInfo.InvariantCulture)!;
+                            object lps = dbg.GetType().InvokeMember("LocalProcesses", BindingFlags.GetProperty, null, dbg, null, CultureInfo.InvariantCulture)!;
                             var lpn = (System.Collections.IEnumerator)lps.GetType().InvokeMember("GetEnumerator", BindingFlags.InvokeMethod, null, lps, null, CultureInfo.InvariantCulture)!;
 
                             while (lpn.MoveNext())
