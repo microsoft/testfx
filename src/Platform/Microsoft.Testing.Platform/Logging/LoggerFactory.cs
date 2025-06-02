@@ -41,7 +41,7 @@ internal sealed class LoggerFactory(ILoggerProvider[] loggerProviders, LogLevel 
             loggers.Add(loggerProvider.CreateLogger(categoryName));
         }
 
-        return loggers.ToArray();
+        return [.. loggers];
     }
 
     public void Dispose()

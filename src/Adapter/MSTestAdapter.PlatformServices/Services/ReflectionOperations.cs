@@ -27,7 +27,7 @@ public class ReflectionOperations : IReflectionOperations
     [return: NotNullIfNotNull(nameof(memberInfo))]
     public object[]? GetCustomAttributes(MemberInfo memberInfo, bool inherit)
 #if NETFRAMEWORK
-         => ReflectionUtility.GetCustomAttributes(memberInfo, inherit).ToArray();
+         => [.. ReflectionUtility.GetCustomAttributes(memberInfo, inherit)];
 #else
     {
         object[] attributes = memberInfo.GetCustomAttributes(typeof(Attribute), inherit);
@@ -51,7 +51,7 @@ public class ReflectionOperations : IReflectionOperations
     [return: NotNullIfNotNull(nameof(memberInfo))]
     public object[]? GetCustomAttributes(MemberInfo memberInfo, Type type, bool inherit) =>
 #if NETFRAMEWORK
-        ReflectionUtility.GetCustomAttributes(memberInfo, type, inherit).ToArray();
+        [.. ReflectionUtility.GetCustomAttributes(memberInfo, type, inherit)];
 #else
         memberInfo.GetCustomAttributes(type, inherit);
 #endif

@@ -240,8 +240,8 @@ public class TypeValidatorTests : TestContainer
     {
         // The names of private types are not accessible by nameof or typeof, ensure that we have them in the
         // list of our test types, to avoid bugs caused by typos.
-        string[] allTypes = GetAllTestTypes().Select(t => t.Name).ToArray();
-        string[] privateTypes = typeof(PrivateClassNames).GetProperties().Select(n => n.Name).ToArray();
+        string[] allTypes = [.. GetAllTestTypes().Select(t => t.Name)];
+        string[] privateTypes = [.. typeof(PrivateClassNames).GetProperties().Select(n => n.Name)];
         Verify(privateTypes.Length >= 1);
 
         foreach (string type in privateTypes)
@@ -264,9 +264,9 @@ public class TypeValidatorTests : TestContainer
         ];
 
         bool discoverInternal = false;
-        string[] actualDiscoveredTypes = allTypes
+        string[] actualDiscoveredTypes = [.. allTypes
             .Where(t => TypeValidator.TypeHasValidAccessibility(t, discoverInternal))
-            .Select(t => t.Name).ToArray();
+            .Select(t => t.Name)];
 
         Array.Sort(actualDiscoveredTypes);
         Array.Sort(expectedDiscoveredTypes);
@@ -307,9 +307,9 @@ public class TypeValidatorTests : TestContainer
         ];
 
         bool discoverInternal = false;
-        string[] actualDiscoveredTypes = allTypes
+        string[] actualDiscoveredTypes = [.. allTypes
             .Where(t => !TypeValidator.TypeHasValidAccessibility(t, discoverInternal))
-            .Select(t => t.Name).ToArray();
+            .Select(t => t.Name)];
 
         Array.Sort(actualDiscoveredTypes);
         Array.Sort(expectedNonDiscoveredTypes);
@@ -342,9 +342,9 @@ public class TypeValidatorTests : TestContainer
         ];
 
         bool discoverInternal = true;
-        string[] actualDiscoveredTypes = allTypes
+        string[] actualDiscoveredTypes = [.. allTypes
             .Where(t => TypeValidator.TypeHasValidAccessibility(t, discoverInternal))
-            .Select(t => t.Name).ToArray();
+            .Select(t => t.Name)];
 
         Array.Sort(actualDiscoveredTypes);
         Array.Sort(expectedDiscoveredTypes);
@@ -372,9 +372,9 @@ public class TypeValidatorTests : TestContainer
         ];
 
         bool discoverInternal = true;
-        string[] actualDiscoveredTypes = allTypes
+        string[] actualDiscoveredTypes = [.. allTypes
             .Where(t => !TypeValidator.TypeHasValidAccessibility(t, discoverInternal))
-            .Select(t => t.Name).ToArray();
+            .Select(t => t.Name)];
 
         Array.Sort(actualDiscoveredTypes);
         Array.Sort(expectedNonDiscoveredTypes);
@@ -384,9 +384,9 @@ public class TypeValidatorTests : TestContainer
     private static Type[] GetAllTestTypes()
     {
         Type[] types = [typeof(PublicClass2), typeof(PublicClass3), typeof(InternalClass), typeof(InternalClass2)];
-        Type[] nestedTypes = types.SelectMany(t => t.GetNestedTypes(BindingFlags.Public | BindingFlags.NonPublic)).ToArray();
-        Type[] nestedNestedTypes = nestedTypes.SelectMany(t => t.GetNestedTypes(BindingFlags.Public | BindingFlags.NonPublic)).ToArray();
-        Type[] allTypes = new[] { types, nestedTypes, nestedNestedTypes }.SelectMany(t => t).ToArray();
+        Type[] nestedTypes = [.. types.SelectMany(t => t.GetNestedTypes(BindingFlags.Public | BindingFlags.NonPublic))];
+        Type[] nestedNestedTypes = [.. nestedTypes.SelectMany(t => t.GetNestedTypes(BindingFlags.Public | BindingFlags.NonPublic))];
+        Type[] allTypes = [.. new[] { types, nestedTypes, nestedNestedTypes }.SelectMany(t => t)];
         return allTypes;
     }
     #endregion

@@ -115,10 +115,10 @@ internal static class DynamicDataOperations
 
         if (dataSource is IEnumerable enumerable and not string)
         {
-            List<object[]> objects = new();
+            List<object[]> objects = [];
             foreach (object? entry in enumerable)
             {
-                objects.Add(new[] { entry! });
+                objects.Add([entry!]);
             }
 
             data = objects;

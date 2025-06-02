@@ -556,7 +556,7 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
         await _telemetryService.LogEventAsync(TelemetryEvents.TestsRunEventName, metadata);
 
         return method == JsonRpcMethods.TestingRunTests
-            ? new RunResponseArgs(testNodeUpdateProcessor.Artifacts.ToArray())
+            ? new RunResponseArgs([.. testNodeUpdateProcessor.Artifacts])
             : method == JsonRpcMethods.TestingDiscoverTests
                 ? (ResponseArgsBase)new DiscoverResponseArgs()
                 : throw new NotImplementedException($"Request not implemented '{method}'");

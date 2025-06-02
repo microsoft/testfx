@@ -65,7 +65,7 @@ public sealed class ObjectModelConvertersTests
         };
         var testNode = testResult.ToTestNode(false, null, new ConsoleCommandLineOptions(), ClientInfo);
 
-        FailedTestNodeStateProperty[] failedTestNodeStateProperties = testNode.Properties.OfType<FailedTestNodeStateProperty>().ToArray();
+        FailedTestNodeStateProperty[] failedTestNodeStateProperties = [.. testNode.Properties.OfType<FailedTestNodeStateProperty>()];
         Assert.AreEqual(1, failedTestNodeStateProperties.Length);
         Assert.IsTrue(failedTestNodeStateProperties[0].Exception is VSTestException);
         Assert.AreEqual(testResult.ErrorStackTrace, failedTestNodeStateProperties[0].Exception!.StackTrace);
@@ -83,7 +83,7 @@ public sealed class ObjectModelConvertersTests
 
         var testNode = testResult.ToTestNode(false, new NamedFeatureCapabilityWithVSTestProvider(), new ServerModeCommandLineOptions(), ClientInfo);
 
-        TestMetadataProperty[] testMetadatas = testNode.Properties.OfType<TestMetadataProperty>().ToArray();
+        TestMetadataProperty[] testMetadatas = [.. testNode.Properties.OfType<TestMetadataProperty>()];
         Assert.AreEqual(1, testMetadatas.Length);
         Assert.AreEqual("category1", testMetadatas[0].Key);
         Assert.AreEqual(string.Empty, testMetadatas[0].Value);
@@ -100,7 +100,7 @@ public sealed class ObjectModelConvertersTests
 
         var testNode = testResult.ToTestNode(true, new NamedFeatureCapabilityWithVSTestProvider(), new ServerModeCommandLineOptions(), ClientInfo);
 
-        TrxCategoriesProperty[] trxCategoriesProperty = testNode.Properties.OfType<TrxCategoriesProperty>().ToArray();
+        TrxCategoriesProperty[] trxCategoriesProperty = [.. testNode.Properties.OfType<TrxCategoriesProperty>()];
         Assert.AreEqual(1, trxCategoriesProperty.Length);
         Assert.AreEqual(1, trxCategoriesProperty[0].Categories.Length);
         Assert.AreEqual("category1", trxCategoriesProperty[0].Categories[0]);
@@ -117,7 +117,7 @@ public sealed class ObjectModelConvertersTests
 
         var testNode = testCase.ToTestNode(false, new NamedFeatureCapabilityWithVSTestProvider(), new ServerModeCommandLineOptions(), ClientInfo);
 
-        SerializableKeyValuePairStringProperty[] serializableKeyValuePairStringProperty = testNode.Properties.OfType<SerializableKeyValuePairStringProperty>().ToArray();
+        SerializableKeyValuePairStringProperty[] serializableKeyValuePairStringProperty = [.. testNode.Properties.OfType<SerializableKeyValuePairStringProperty>()];
         Assert.AreEqual(3, serializableKeyValuePairStringProperty.Length);
         Assert.AreEqual(VSTestTestNodeProperties.OriginalExecutorUriPropertyName, serializableKeyValuePairStringProperty[0].Key);
         Assert.AreEqual("https://vs.com/", serializableKeyValuePairStringProperty[0].Value);
@@ -173,7 +173,7 @@ public sealed class ObjectModelConvertersTests
         };
         var testNode = testResult.ToTestNode(false, null, new ConsoleCommandLineOptions(), ClientInfo);
 
-        ErrorTestNodeStateProperty[] errorTestNodeStateProperties = testNode.Properties.OfType<ErrorTestNodeStateProperty>().ToArray();
+        ErrorTestNodeStateProperty[] errorTestNodeStateProperties = [.. testNode.Properties.OfType<ErrorTestNodeStateProperty>()];
         Assert.AreEqual(1, errorTestNodeStateProperties.Length);
         Assert.IsTrue(errorTestNodeStateProperties[0].Exception is VSTestException);
         Assert.AreEqual(testResult.ErrorStackTrace, errorTestNodeStateProperties[0].Exception!.StackTrace);
@@ -189,7 +189,7 @@ public sealed class ObjectModelConvertersTests
         };
         var testNode = testResult.ToTestNode(false, null, new ConsoleCommandLineOptions(), ClientInfo);
 
-        SkippedTestNodeStateProperty[] skipTestNodeStateProperties = testNode.Properties.OfType<SkippedTestNodeStateProperty>().ToArray();
+        SkippedTestNodeStateProperty[] skipTestNodeStateProperties = [.. testNode.Properties.OfType<SkippedTestNodeStateProperty>()];
         Assert.AreEqual(1, skipTestNodeStateProperties.Length);
     }
 
@@ -202,7 +202,7 @@ public sealed class ObjectModelConvertersTests
         };
         var testNode = testResult.ToTestNode(false, null, new ConsoleCommandLineOptions(), ClientInfo);
 
-        SkippedTestNodeStateProperty[] skipTestNodeStateProperties = testNode.Properties.OfType<SkippedTestNodeStateProperty>().ToArray();
+        SkippedTestNodeStateProperty[] skipTestNodeStateProperties = [.. testNode.Properties.OfType<SkippedTestNodeStateProperty>()];
         Assert.AreEqual(1, skipTestNodeStateProperties.Length);
     }
 
@@ -215,7 +215,7 @@ public sealed class ObjectModelConvertersTests
         };
         var testNode = testResult.ToTestNode(false, null, new ConsoleCommandLineOptions(), ClientInfo);
 
-        PassedTestNodeStateProperty[] passedTestNodeStateProperties = testNode.Properties.OfType<PassedTestNodeStateProperty>().ToArray();
+        PassedTestNodeStateProperty[] passedTestNodeStateProperties = [.. testNode.Properties.OfType<PassedTestNodeStateProperty>()];
         Assert.AreEqual(1, passedTestNodeStateProperties.Length);
     }
 
@@ -226,7 +226,7 @@ public sealed class ObjectModelConvertersTests
 
         var testNode = testCase.ToTestNode(false, new NamedFeatureCapabilityWithVSTestProvider(), new ServerModeCommandLineOptions(), ClientInfo);
 
-        SerializableKeyValuePairStringProperty[] errorTestNodeStateProperties = testNode.Properties.OfType<SerializableKeyValuePairStringProperty>().ToArray();
+        SerializableKeyValuePairStringProperty[] errorTestNodeStateProperties = [.. testNode.Properties.OfType<SerializableKeyValuePairStringProperty>()];
         Assert.AreEqual(2, errorTestNodeStateProperties.Length, "Expected 2 SerializableKeyValuePairStringProperty");
         Assert.AreEqual("vstest.TestCase.FullyQualifiedName", errorTestNodeStateProperties[0].Key);
         Assert.AreEqual("SomeFqn", errorTestNodeStateProperties[0].Value);
@@ -244,7 +244,7 @@ public sealed class ObjectModelConvertersTests
 
         var testNode = testResult.ToTestNode(false, new NamedFeatureCapabilityWithVSTestProvider(), new ServerModeCommandLineOptions(), ClientInfo);
 
-        TestMetadataProperty[] testMetadatas = testNode.Properties.OfType<TestMetadataProperty>().ToArray();
+        TestMetadataProperty[] testMetadatas = [.. testNode.Properties.OfType<TestMetadataProperty>()];
         Assert.AreEqual(1, testMetadatas.Length);
         Assert.AreEqual("key", testMetadatas[0].Key);
         Assert.AreEqual("value", testMetadatas[0].Value);
@@ -265,7 +265,7 @@ public sealed class ObjectModelConvertersTests
 
         var testNode = testResult.ToTestNode(false, new NamedFeatureCapabilityWithVSTestProvider(), new ServerModeCommandLineOptions(), ClientInfo);
 
-        StandardOutputProperty[] standardOutputProperties = testNode.Properties.OfType<StandardOutputProperty>().ToArray();
+        StandardOutputProperty[] standardOutputProperties = [.. testNode.Properties.OfType<StandardOutputProperty>()];
         Assert.IsTrue(standardOutputProperties.Length == 1);
         Assert.AreEqual($"message1{Environment.NewLine}message2", standardOutputProperties[0].StandardOutput);
     }
@@ -285,7 +285,7 @@ public sealed class ObjectModelConvertersTests
 
         var testNode = testResult.ToTestNode(false, new NamedFeatureCapabilityWithVSTestProvider(), new ServerModeCommandLineOptions(), ClientInfo);
 
-        StandardErrorProperty[] standardErrorProperties = testNode.Properties.OfType<StandardErrorProperty>().ToArray();
+        StandardErrorProperty[] standardErrorProperties = [.. testNode.Properties.OfType<StandardErrorProperty>()];
         Assert.IsTrue(standardErrorProperties.Length == 1);
         Assert.AreEqual($"message1{Environment.NewLine}message2", standardErrorProperties[0].StandardError);
     }

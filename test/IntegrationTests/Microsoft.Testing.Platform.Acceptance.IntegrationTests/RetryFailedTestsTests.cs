@@ -158,9 +158,7 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
 
                 testHostResult.AssertExitCodeIs(ExitCodes.TestHostProcessExitedNonGracefully);
 
-                string[] entries = Directory.GetFiles(resultDirectory, "*.*", SearchOption.AllDirectories)
-                    .Where(x => !x.Contains("Retries", StringComparison.OrdinalIgnoreCase))
-                    .ToArray();
+                string[] entries = [.. Directory.GetFiles(resultDirectory, "*.*", SearchOption.AllDirectories).Where(x => !x.Contains("Retries", StringComparison.OrdinalIgnoreCase))];
 
                 // 1 trx file
                 Assert.AreEqual(1, entries.Count(x => x.EndsWith("trx", StringComparison.OrdinalIgnoreCase)));

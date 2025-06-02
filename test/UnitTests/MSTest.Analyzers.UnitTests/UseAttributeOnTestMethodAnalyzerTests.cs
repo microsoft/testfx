@@ -91,7 +91,7 @@ public sealed class UseAttributeOnTestMethodAnalyzerTests
 
         string fixedCode = $$"""
             using Microsoft.VisualStudio.TestTools.UnitTesting;
-            
+
             {{MyExpectedExceptionAttributeDeclaration}}
 
             [TestClass]
@@ -118,7 +118,7 @@ public sealed class UseAttributeOnTestMethodAnalyzerTests
     {
         string code = $$"""
             using Microsoft.VisualStudio.TestTools.UnitTesting;
-            
+
             {{MyExpectedExceptionAttributeDeclaration}}
 
             [TestClass]
@@ -134,7 +134,7 @@ public sealed class UseAttributeOnTestMethodAnalyzerTests
 
         string fixedCode = $$"""
             using Microsoft.VisualStudio.TestTools.UnitTesting;
-            
+
             {{MyExpectedExceptionAttributeDeclaration}}
 
             [TestClass]
@@ -149,7 +149,7 @@ public sealed class UseAttributeOnTestMethodAnalyzerTests
             }
             """;
 
-        await VerifyCS.VerifyCodeFixAsync(code, new[] { VerifyCS.Diagnostic(rule1).WithLocation(0), VerifyCS.Diagnostic(rule2).WithLocation(1) }, fixedCode);
+        await VerifyCS.VerifyCodeFixAsync(code, [VerifyCS.Diagnostic(rule1).WithLocation(0), VerifyCS.Diagnostic(rule2).WithLocation(1)], fixedCode);
     }
 
     [DynamicData(nameof(GetAttributeUsageExamples), DynamicDataSourceType.Method)]
@@ -159,7 +159,7 @@ public sealed class UseAttributeOnTestMethodAnalyzerTests
         string code = $$"""
             using System;
             using Microsoft.VisualStudio.TestTools.UnitTesting;
-            
+
             {{MyExpectedExceptionAttributeDeclaration}}
 
             [TestClass]

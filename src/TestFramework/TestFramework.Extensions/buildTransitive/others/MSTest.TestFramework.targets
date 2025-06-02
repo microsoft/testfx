@@ -1,0 +1,11 @@
+<Project>
+
+  <!--
+    Implicit imports
+    Ensure feature is available and user hasn't opted-out from it.
+    See https://github.com/dotnet/sdk/blob/f9fdf2c7d94bc86dc443e5a9ffecbd1962b1d85d/src/Tasks/Microsoft.NET.Build.Tasks/targets/Microsoft.NET.Sdk.CSharp.props#L26-L34
+    -->
+  <ItemGroup Condition="'$(ImplicitUsings)' == 'true' Or '$(ImplicitUsings)' == 'enable'">
+    <Using Include="Microsoft.VisualStudio.TestTools.UnitTesting" />
+  </ItemGroup>
+</Project>

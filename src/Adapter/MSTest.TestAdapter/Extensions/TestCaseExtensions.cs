@@ -102,7 +102,7 @@ internal static class TestCaseExtensions
 
         if (testCase.Traits.Any())
         {
-            testElement.Traits = testCase.Traits.ToArray();
+            testElement.Traits = [.. testCase.Traits];
         }
 
         string? cssIteration = testCase.GetPropertyValue<string>(Constants.CssIterationProperty, null);

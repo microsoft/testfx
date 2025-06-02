@@ -180,14 +180,13 @@ name= "VSTest"
             // Microsoft.Testing.Platform.Extensions.1.0.0.nupkg
             // So we need to find a package that contains a number after the prefix.
             // Ideally, we would want to do a full validation to check this is a nuget version number, but that's too much work for now.
-            matches = matches
+            matches = [.. matches
                 // (full path, file name without prefix)
                 .Select(path => (path, fileName: Path.GetFileName(path)[packagePrefixName.Length..]))
                 // check if first character of file name without prefix is number
                 .Where(tuple => int.TryParse(tuple.fileName[0].ToString(), CultureInfo.InvariantCulture, out _))
                 // take the full path
-                .Select(tuple => tuple.path)
-                .ToArray();
+                .Select(tuple => tuple.path)];
         }
 
         if (matches.Length != 1)

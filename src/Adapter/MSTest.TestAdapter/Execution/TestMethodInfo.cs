@@ -121,7 +121,7 @@ public class TestMethodInfo : ITestMethod
     /// <param name="inherit">Whether or not getting the attributes that are inherited.</param>
     /// <returns>An array of the attributes.</returns>
     public Attribute[]? GetAllAttributes(bool inherit)
-        => ReflectHelper.Instance.GetAttributes<Attribute>(TestMethod, inherit).ToArray();
+        => [.. ReflectHelper.Instance.GetAttributes<Attribute>(TestMethod, inherit)];
 
     /// <summary>
     /// Gets all attributes of the test method.
@@ -131,7 +131,7 @@ public class TestMethodInfo : ITestMethod
     /// <returns>An array of the attributes.</returns>
     public TAttributeType[] GetAttributes<TAttributeType>(bool inherit)
         where TAttributeType : Attribute
-        => ReflectHelper.Instance.GetAttributes<TAttributeType>(TestMethod, inherit).ToArray();
+        => [.. ReflectHelper.Instance.GetAttributes<TAttributeType>(TestMethod, inherit)];
 
     /// <inheritdoc cref="InvokeAsync(object[])" />
     public virtual TestResult Invoke(object?[]? arguments)
