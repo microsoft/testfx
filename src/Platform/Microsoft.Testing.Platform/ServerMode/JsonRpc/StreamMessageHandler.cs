@@ -3,7 +3,10 @@
 
 #if NETCOREAPP
 using System.Buffers;
-#else
+#endif
+using System.Net.Sockets;
+
+#if !NETCOREAPP
 using Microsoft.Testing.Platform.Helpers;
 #endif
 
@@ -12,22 +15,17 @@ namespace Microsoft.Testing.Platform.ServerMode;
 internal class StreamMessageHandler : IMessageHandler, IDisposable
 {
     private readonly StreamReader _reader;
-    private readonly StreamWriter _writer;
+    private readonly NetworkStream _serverToClientStream;
     private readonly IMessageFormatter _formatter;
     private bool _isDisposed;
 
     public StreamMessageHandler(
-        Stream clientToServerStream,
-        Stream serverToClientStream,
+        NetworkStream clientToServerStream,
+        NetworkStream serverToClientStream,
         IMessageFormatter formatter)
     {
         _reader = new StreamReader(clientToServerStream);
-        _writer = new StreamWriter(serverToClientStream)
-        {
-            // We need to force the NewLine because in Windows and nix different char sequence are used
-            // https://learn.microsoft.com/dotnet/api/system.io.textwriter.newline?view=net-7.0
-            NewLine = "\r\n",
-        };
+        _serverToClientStream = serverToClientStream;
         _formatter = formatter;
     }
 
@@ -104,15 +102,52 @@ internal class StreamMessageHandler : IMessageHandler, IDisposable
         return contentSize;
     }
 
+#if NETCOREAPP
+    private static ReadOnlyMemory<byte> ContentLengthPrefix { get; } = "Content-Length: "u8.ToArray();
+
+    private static ReadOnlyMemory<byte> ContentTypeLastHeader { get; } = "\r\nContent-Type: application/testingplatform\r\n\r\n"u8.ToArray();
+#else
+    private static byte[] ContentLengthPrefix { get; } = [67, 111, 110, 116, 101, 110, 116, 45, 76, 101, 110, 103, 116, 104, 58, 32];
+
+    private static byte[] ContentTypeLastHeader { get; } = [13, 10, 67, 111, 110, 116, 101, 110, 116, 45, 84, 121, 112, 101, 58, 32, 97, 112, 112, 108, 105, 99, 97, 116, 105, 111, 110, 47, 116, 101, 115, 116, 105, 110, 103, 112, 108, 97, 116, 102, 111, 114, 109, 13, 10, 13, 10];
+#endif
+
+#pragma warning disable CA1416 // Validate platform compatibility - unsupported on browser
     public async Task WriteRequestAsync(RpcMessage message, CancellationToken cancellationToken)
     {
+        // Here is what we want to write:
+        // Content-Length: <content-length>
+        // Content-Type: application/testingplatform
+        //
+        // <content>
         string messageStr = await _formatter.SerializeAsync(message);
-        await _writer.WriteLineAsync($"Content-Length: {Encoding.UTF8.GetByteCount(messageStr)}");
-        await _writer.WriteLineAsync("Content-Type: application/testingplatform");
-        await _writer.WriteLineAsync();
-        await _writer.WriteAsync(messageStr);
-        await _writer.FlushAsync(cancellationToken);
+
+#if NETCOREAPP
+        await _serverToClientStream.WriteAsync(ContentLengthPrefix, cancellationToken);
+#else
+        await _serverToClientStream.WriteAsync(ContentLengthPrefix, 0, ContentLengthPrefix.Length, cancellationToken);
+#endif
+
+        string contentLengthValue = Encoding.UTF8.GetByteCount(messageStr).ToString(CultureInfo.InvariantCulture);
+        foreach (char contentLengthDigit in contentLengthValue)
+        {
+            _serverToClientStream.WriteByte((byte)contentLengthDigit);
+        }
+
+#if NETCOREAPP
+        await _serverToClientStream.WriteAsync(ContentTypeLastHeader, cancellationToken);
+#else
+        await _serverToClientStream.WriteAsync(ContentTypeLastHeader, 0, ContentLengthPrefix.Length, cancellationToken);
+#endif
+
+        byte[] messageBytes = Encoding.UTF8.GetBytes(messageStr);
+#if NETCOREAPP
+        await _serverToClientStream.WriteAsync(messageBytes.AsMemory(), cancellationToken);
+#else
+        await _serverToClientStream.WriteAsync(messageBytes, 0, messageBytes.Length, cancellationToken);
+#endif
     }
+#pragma warning restore CA1416 // Validate platform compatibility - unsupported on browser
 
     protected virtual void Dispose(bool disposing)
     {
@@ -123,7 +158,7 @@ internal class StreamMessageHandler : IMessageHandler, IDisposable
                 _reader.Dispose();
                 try
                 {
-                    _writer.Dispose();
+                    _serverToClientStream.Dispose();
                 }
                 catch (InvalidOperationException)
                 {

@@ -7,8 +7,8 @@ namespace Microsoft.Testing.Platform.ServerMode;
 
 internal sealed class TcpMessageHandler(
     TcpClient client,
-    Stream clientToServerStream,
-    Stream serverToClientStream,
+    NetworkStream clientToServerStream,
+    NetworkStream serverToClientStream,
     IMessageFormatter formatter) : StreamMessageHandler(clientToServerStream, serverToClientStream, formatter)
 {
     private readonly TcpClient _client = client;
