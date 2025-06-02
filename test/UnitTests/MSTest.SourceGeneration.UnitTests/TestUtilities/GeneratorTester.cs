@@ -30,8 +30,7 @@ internal sealed class GeneratorTester
     public static GeneratorTester TestGraph { get; } =
         new(
             () => new TestNodesGenerator(),
-            new[]
-            {
+            [
                 // Microsoft.Testing.Platform dll
                 Assembly.GetAssembly(typeof(IProperty))!.Location,
 
@@ -45,13 +44,13 @@ internal sealed class GeneratorTester
                 Assembly.GetAssembly(typeof(TrxExceptionProperty))!.Location,
 
                 // MSTest.TestFramework  dll
-                Assembly.GetAssembly(typeof(TestClassAttribute))!.Location,
-            });
+                Assembly.GetAssembly(typeof(TestClassAttribute))!.Location
+            ]);
 
     public static ImmutableArray<MetadataReference>? Net60MetadataReferences { get; set; }
 
     public async Task<GeneratorCompilationResult> CompileAndExecuteAsync(string source, CancellationToken cancellationToken)
-        => await CompileAndExecuteAsync(new[] { source }, cancellationToken);
+        => await CompileAndExecuteAsync([source], cancellationToken);
 
     public async Task<GeneratorCompilationResult> CompileAndExecuteAsync(string[] sources, CancellationToken cancellationToken)
     {
@@ -79,10 +78,7 @@ internal sealed class GeneratorTester
             }
         }
 
-        MetadataReference[] metadataReferences =
-            Net60MetadataReferences.Value
-            .Concat(_additionalReferences.Select(loc => MetadataReference.CreateFromFile(loc)))
-            .ToArray();
+        MetadataReference[] metadataReferences = [.. Net60MetadataReferences.Value, .. _additionalReferences.Select(loc => MetadataReference.CreateFromFile(loc))];
 
         var compilation = CSharpCompilation.Create(
             "TestAssembly",
@@ -92,7 +88,7 @@ internal sealed class GeneratorTester
 
         ISourceGenerator generator = _incrementalGeneratorFactory().AsSourceGenerator();
         GeneratorDriver driver = CSharpGeneratorDriver.Create(
-           generators: new ISourceGenerator[] { generator });
+           generators: [generator]);
 
         driver = driver.RunGeneratorsAndUpdateCompilation(compilation, out Compilation? outputCompilation,
             out ImmutableArray<Diagnostic> diagnostics, cancellationToken);

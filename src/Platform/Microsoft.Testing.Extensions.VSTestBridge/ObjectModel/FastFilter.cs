@@ -37,7 +37,7 @@ internal sealed class FastFilter
             ? null
             : FilterProperties.Keys.All(name => properties.Contains(name))
                 ? null
-                : FilterProperties.Keys.Where(name => !properties.Contains(name)).ToArray();
+                : [.. FilterProperties.Keys.Where(name => !properties.Contains(name))];
 
     internal bool Evaluate(Func<string, object?> propertyValueProvider)
     {

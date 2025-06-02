@@ -17,7 +17,7 @@ public class TestRunCancellationToken
     /// Callbacks to be invoked when canceled.
     /// Needs to be a concurrent collection, see https://github.com/microsoft/testfx/issues/3953.
     /// </summary>
-    private readonly ConcurrentBag<(Action<object?>, object?)> _registeredCallbacks = new();
+    private readonly ConcurrentBag<(Action<object?>, object?)> _registeredCallbacks = [];
 
     /// <summary>
     /// Gets a value indicating whether the test run is canceled.

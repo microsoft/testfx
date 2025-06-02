@@ -30,8 +30,7 @@ internal sealed class TestNamespaceInfo : IEquatable<TestNamespaceInfo>
 
     public void AppendNamespaceTestNode(IndentedStringBuilder nodeStringBuilder, string testsVariableName)
     {
-        using (nodeStringBuilder.AppendTestNode(_containingAssembly + "." + _nameOrGlobalNamespace, _nameOrGlobalNamespace,
-            Array.Empty<string>(), testsVariableName))
+        using (nodeStringBuilder.AppendTestNode(_containingAssembly + "." + _nameOrGlobalNamespace, _nameOrGlobalNamespace, [], testsVariableName))
         {
         }
     }

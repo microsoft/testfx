@@ -23,7 +23,7 @@ internal sealed class AzureDevOpsReporter :
 
     private readonly IOutputDevice _outputDisplay;
     private readonly ILogger _logger;
-    private static readonly char[] NewlineCharacters = new char[] { '\r', '\n' };
+    private static readonly char[] NewlineCharacters = ['\r', '\n'];
     private readonly ICommandLineOptions _commandLine;
     private readonly IEnvironment _environment;
     private readonly IFileSystem _fileSystem;

@@ -126,7 +126,7 @@ internal sealed class UnitTestElement
         IReadOnlyCollection<string?> hierarchy = TestMethod.Hierarchy;
         if (hierarchy is { Count: > 0 })
         {
-            testCase.SetHierarchy(hierarchy.ToArray());
+            testCase.SetHierarchy([.. hierarchy]);
         }
 
         // Set declaring type if present so the correct method info can be retrieved

@@ -26,7 +26,7 @@ public class AssemblyEnumeratorTests : TestContainer
     public AssemblyEnumeratorTests()
     {
         _assemblyEnumerator = new AssemblyEnumerator();
-        _warnings = new List<string>();
+        _warnings = [];
 
         _testablePlatformServiceProvider = new TestablePlatformServiceProvider();
         PlatformServiceProvider.Instance = _testablePlatformServiceProvider;
@@ -259,7 +259,7 @@ public class AssemblyEnumeratorTests : TestContainer
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("DummyAssembly", false))
             .Returns(mockAssembly.Object);
         testableAssemblyEnumerator.MockTypeEnumerator.Setup(te => te.Enumerate(_warnings))
-            .Returns(new List<UnitTestElement> { unitTestElement });
+            .Returns([unitTestElement]);
 
         AssemblyEnumerationResult result = testableAssemblyEnumerator.EnumerateAssembly("DummyAssembly");
         _warnings.AddRange(result.Warnings);
@@ -392,6 +392,9 @@ public class AssemblyEnumeratorTests : TestContainer
 
         // The mock must be configured with a return value for GetCustomAttributes for this attribute type, but the
         // actual return value is irrelevant for these tests.
+        // NOTE: Don't convert Array.Empty<Attribute>()  to [] as it will cause an InvalidCastException.
+        // [] will produce `object[]`, then it will fail to cast here:
+        // https://github.com/dotnet/runtime/blob/4252c8d09b2ec537928f34dad269f02f167c8ce5/src/coreclr/System.Private.CoreLib/src/System/Attribute.CoreCLR.cs#L710
         mockAssembly
             .Setup(a => a.GetCustomAttributes(
                 typeof(DiscoverInternalsAttribute),

@@ -275,6 +275,6 @@ public class ReflectionUtilityTests : TestContainer
             }
         }
 
-        return attributeValuePairs.ToArray();
+        return [.. attributeValuePairs];
     }
 }
