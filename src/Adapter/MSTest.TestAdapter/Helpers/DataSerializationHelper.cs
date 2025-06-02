@@ -105,8 +105,7 @@ internal static class DataSerializationHelper
             }
 
             DataContractJsonSerializer serializer = GetSerializer(assemblyQualifiedName);
-#if NET7_0_OR_GREATER // TODO: Docs say it's available on net6.0, but that's not what I see here :/
-            // https://learn.microsoft.com/en-us/dotnet/api/system.runtime.serialization.datacontractserializerextensions.setserializationsurrogateprovider?view=net-9.0#system-runtime-serialization-datacontractserializerextensions-setserializationsurrogateprovider(system-runtime-serialization-datacontractserializer-system-runtime-serialization-iserializationsurrogateprovider)
+#if NET7_0_OR_GREATER
             serializer.SetSerializationSurrogateProvider(SerializationSurrogateProvider.Instance);
 #endif
 
