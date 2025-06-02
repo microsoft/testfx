@@ -389,17 +389,20 @@ public class AssemblyEnumeratorTests : TestContainer
 
         // The mock must be configured with a return value for GetCustomAttributes for this attribute type, but the
         // actual return value is irrelevant for these tests.
+        // NOTE: Don't convert Array.Empty<Attribute>()  to [] as it will cause an InvalidCastException.
+        // [] will produce `object[]`, then it will fail to cast here:
+        // https://github.com/dotnet/runtime/blob/4252c8d09b2ec537928f34dad269f02f167c8ce5/src/coreclr/System.Private.CoreLib/src/System/Attribute.CoreCLR.cs#L710
         mockAssembly
             .Setup(a => a.GetCustomAttributes(
                 typeof(DiscoverInternalsAttribute),
                 true))
-            .Returns([]);
+            .Returns(Array.Empty<Attribute>());
 
         mockAssembly
             .Setup(a => a.GetCustomAttributes(
                 typeof(TestDataSourceOptionsAttribute),
                 true))
-            .Returns([]);
+            .Returns(Array.Empty<Attribute>());
 
         mockAssembly
             .Setup(a => a.GetCustomAttributes(
@@ -407,13 +410,13 @@ public class AssemblyEnumeratorTests : TestContainer
                 typeof(TestDataSourceDiscoveryAttribute),
 #pragma warning restore CS0618 // Type or member is obsolete
                 true))
-            .Returns([]);
+            .Returns(Array.Empty<Attribute>());
 
         mockAssembly
             .Setup(a => a.GetCustomAttributes(
                 typeof(TestIdGenerationStrategyAttribute),
                 true))
-            .Returns([]);
+            .Returns(Array.Empty<Attribute>());
 
         return mockAssembly;
     }
