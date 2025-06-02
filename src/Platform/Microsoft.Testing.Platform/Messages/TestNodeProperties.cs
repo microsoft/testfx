@@ -13,6 +13,7 @@ public interface IProperty;
 /// </summary>
 /// <param name="Key">Key name.</param>
 /// <param name="Value">Key value.</param>
+[Obsolete("Use TestMetadataProperty instead. This will be removed in a future version.")]
 public record KeyValuePairStringProperty(string Key, string Value) : IProperty;
 
 /// <summary>
