@@ -221,5 +221,13 @@ public sealed class TreeNodeFilterTests
     }
 
     [TestMethod]
+    public void MatchAllFilterSubpathWithPropertyExpression_WithTestMetadataProperty()
+    {
+        TreeNodeFilter filter = new("/A/**[A=B]");
+        Assert.IsTrue(filter.MatchesFilter("/A/B/C/D", new PropertyBag(new TestMetadataProperty("A", "B"))));
+        Assert.IsFalse(filter.MatchesFilter("/B/A/C/D", new PropertyBag(new TestMetadataProperty("A", "B"))));
+    }
+
+    [TestMethod]
     public void MatchAllFilterWithPropertyExpression_DoNotAllowInMiddleOfFilter() => Assert.ThrowsException<ArgumentException>(() => _ = new TreeNodeFilter("/**/Path[A=B]"));
 }
