@@ -416,4 +416,6 @@ public record StandardErrorProperty(string StandardError) : IProperty;
 /// <param name="Description">The description.</param>
 public record FileArtifactProperty(FileInfo FileInfo, string DisplayName, string? Description = null) : IProperty;
 
+#pragma warning disable CS0618 // Type or member is obsolete
 internal sealed record SerializableKeyValuePairStringProperty(string Key, string Value) : KeyValuePairStringProperty(Key, Value);
+#pragma warning restore CS0618 // Type or member is obsolete
