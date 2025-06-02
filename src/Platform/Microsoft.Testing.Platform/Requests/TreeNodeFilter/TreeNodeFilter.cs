@@ -563,7 +563,9 @@ public sealed class TreeNodeFilter : ITestExecutionFilter
     private static bool IsMatchingProperty(IProperty prop, ValueExpression propExpr, ValueExpression valueExpr) =>
         prop switch
         {
+#pragma warning disable CS0618 // Type or member is obsolete
             KeyValuePairStringProperty kvpProperty => propExpr.Regex.IsMatch(kvpProperty.Key) && valueExpr.Regex.IsMatch(kvpProperty.Value),
+#pragma warning restore CS0618 // Type or member is obsolete
             TestMetadataProperty testMetadataProperty => propExpr.Regex.IsMatch(testMetadataProperty.Key) && valueExpr.Regex.IsMatch(testMetadataProperty.Value),
             _ => false,
         };
