@@ -21,6 +21,7 @@ internal static class DataSerializationHelper
 #if NETFRAMEWORK
         DataContractSurrogate = SerializationSurrogateProvider.Instance,
 #endif
+        KnownTypes = [typeof(SurrogatedDateOnly), typeof(SurrogatedTimeOnly)],
     };
 
     /// <summary>
@@ -119,6 +120,9 @@ internal static class DataSerializationHelper
             data[i] = serializer.ReadObject(memoryStream);
 #pragma warning restore IL3050 // IL3050: Avoid calling members annotated with 'RequiresDynamicCodeAttribute' when publishing as Native AOT
 #pragma warning restore IL2026 // IL2026: Members attributed with RequiresUnreferencedCode may break when trimming
+            // For some reason, we don't get SerializationSurrogateProvider.GetDeserializedObject to be called by .NET runtime.
+            // So we manually call it.
+            data[i] = SerializationSurrogateProvider.GetDeserializedObject(data[i]!);
         }
 
         return data;
@@ -146,6 +150,20 @@ internal static class DataSerializationHelper
 #pragma warning disable IL2026 // IL2026: Members attributed with RequiresUnreferencedCode may break when trimming
             _ => new DataContractJsonSerializer(type, SerializerSettings));
 
+    [DataContract]
+    private sealed class SurrogatedDateOnly
+    {
+        [DataMember]
+        public int DayNumber { get; set; }
+    }
+
+    [DataContract]
+    private sealed class SurrogatedTimeOnly
+    {
+        [DataMember]
+        public long Ticks { get; set; }
+    }
+
     private sealed class SerializationSurrogateProvider
 #if NETFRAMEWORK
         : IDataContractSurrogate
@@ -170,15 +188,18 @@ internal static class DataSerializationHelper
 #endif
 
         public object GetDeserializedObject(object obj, Type targetType)
+            => GetDeserializedObject(obj);
+
+        internal static object GetDeserializedObject(object obj)
         {
 #if NET6_0_OR_GREATER
-            if (targetType == typeof(DateOnly))
+            if (obj is SurrogatedDateOnly surrogatedDateOnly)
             {
-                return DateOnly.FromDayNumber(((DateOnly)obj).DayNumber);
+                return DateOnly.FromDayNumber(surrogatedDateOnly.DayNumber);
             }
-            else if (targetType == typeof(TimeOnly))
+            else if (obj is SurrogatedTimeOnly surrogatedTimeOnly)
             {
-                return new TimeOnly(((TimeOnly)obj).Ticks);
+                return new TimeOnly(surrogatedTimeOnly.Ticks);
             }
 #endif
 
@@ -189,8 +210,8 @@ internal static class DataSerializationHelper
             => obj switch
             {
 #if NET6_0_OR_GREATER
-                DateOnly dateOnly => dateOnly.DayNumber,
-                TimeOnly timeOnly => timeOnly.Ticks,
+                DateOnly dateOnly => new SurrogatedDateOnly() { DayNumber = dateOnly.DayNumber },
+                TimeOnly timeOnly => new SurrogatedTimeOnly() { Ticks = timeOnly.Ticks },
 #endif
                 _ => obj,
             };
@@ -204,11 +225,11 @@ internal static class DataSerializationHelper
 #if NET6_0_OR_GREATER
             if (type == typeof(DateOnly))
             {
-                return typeof(int);
+                return typeof(SurrogatedDateOnly);
             }
             else if (type == typeof(TimeOnly))
             {
-                return typeof(long);
+                return typeof(SurrogatedTimeOnly);
             }
 #endif
 
