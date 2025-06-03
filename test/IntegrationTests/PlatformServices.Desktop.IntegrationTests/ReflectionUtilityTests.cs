@@ -174,9 +174,9 @@ public class ReflectionUtilityTests : TestContainer
         IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributes(methodInfo, typeof(TestPropertyAttribute), true);
 
         attributes.Should().NotBeNull();
-        attributes.Should().HaveCount(1);
+        attributes.Should().HaveCount(2);
 
-        string[] expectedAttributes = ["Duration : superfast"];
+        string[] expectedAttributes = ["Duration : superfast", "Owner : base"];
         GetAttributeValuePairs(attributes).Should().Equal(expectedAttributes);
     }
 
@@ -275,6 +275,6 @@ public class ReflectionUtilityTests : TestContainer
             }
         }
 
-        return attributeValuePairs.ToArray();
+        return [.. attributeValuePairs];
     }
 }

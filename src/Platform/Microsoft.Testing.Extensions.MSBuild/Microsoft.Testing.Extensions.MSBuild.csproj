@@ -7,6 +7,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <AdditionalFiles Include="PublicAPI.Shipped.txt" />
+    <AdditionalFiles Include="PublicAPI.Unshipped.txt" />
+  </ItemGroup>
+
+  <ItemGroup>
     <InternalsVisibleTo Include="Microsoft.Testing.Platform.MSBuild.UnitTests" Key="$(VsPublicKey)" />
   </ItemGroup>
 

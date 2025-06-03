@@ -44,7 +44,7 @@ internal sealed class TrxProcessLifetimeHandler :
     private readonly IOutputDevice _outputDevice;
     private readonly ILogger<TrxProcessLifetimeHandler> _logger;
     private readonly PipeNameDescription _pipeNameDescription;
-    private readonly Dictionary<IDataProducer, List<FileArtifact>> _fileArtifacts = new();
+    private readonly Dictionary<IDataProducer, List<FileArtifact>> _fileArtifacts = [];
     private readonly DateTimeOffset _startTime;
 
     private NamedPipeServer? _singleConnectionNamedPipeServer;
@@ -144,7 +144,7 @@ internal sealed class TrxProcessLifetimeHandler :
             return;
         }
 
-        Dictionary<IExtension, List<SessionFileArtifact>> artifacts = new();
+        Dictionary<IExtension, List<SessionFileArtifact>> artifacts = [];
 
         foreach (KeyValuePair<IDataProducer, List<FileArtifact>> prodArtifacts in _fileArtifacts)
         {

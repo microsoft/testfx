@@ -110,11 +110,10 @@ internal class TypeEnumerator
             currentType = currentType.BaseType;
         }
 
-        return tests.GroupBy(
+        return [.. tests.GroupBy(
             t => t.TestMethod.Name,
             (_, elements) =>
-                elements.OrderBy(t => inheritanceDepths[t.TestMethod.DeclaringClassFullName ?? t.TestMethod.FullClassName]).First())
-            .ToList();
+                elements.OrderBy(t => inheritanceDepths[t.TestMethod.DeclaringClassFullName ?? t.TestMethod.FullClassName]).First())];
     }
 
     /// <summary>
@@ -153,28 +152,13 @@ internal class TypeEnumerator
             DoNotParallelize = _reflectHelper.IsDoNotParallelizeSet(method, _type),
             Priority = _reflectHelper.GetPriority(method),
             DeploymentItems = PlatformServiceProvider.Instance.TestDeployment.GetDeploymentItems(method, _type, warnings),
+            Traits = [.. _reflectHelper.GetTestPropertiesAsTraits(method)],
         };
-
-        var traits = _reflectHelper.GetTestPropertiesAsTraits(method).ToList();
-
-        TestPlatform.ObjectModel.Trait? ownerTrait = _reflectHelper.GetTestOwnerAsTraits(method);
-        if (ownerTrait != null)
-        {
-            traits.Add(ownerTrait);
-        }
-
-        TestPlatform.ObjectModel.Trait? priorityTrait = _reflectHelper.GetTestPriorityAsTraits(testElement.Priority);
-        if (priorityTrait != null)
-        {
-            traits.Add(priorityTrait);
-        }
-
-        testElement.Traits = traits.ToArray();
 
         Attribute[] attributes = _reflectHelper.GetCustomAttributesCached(method, inherit: true);
         TestMethodAttribute? testMethodAttribute = null;
 
-        // Backward looping for backcompat. This used to be calls to _reflectHelper.GetFirstDerivedAttributeOrDefault
+        // Backward looping for backcompat. This used to be calls to _reflectHelper.GetFirstAttributeOrDefault
         // So, to make sure the first attribute always wins, we loop from end to start.
         for (int i = attributes.Length - 1; i >= 0; i--)
         {
@@ -199,7 +183,7 @@ internal class TypeEnumerator
         IEnumerable<WorkItemAttribute> workItemAttributes = attributes.OfType<WorkItemAttribute>();
         if (workItemAttributes.Any())
         {
-            testElement.WorkItemIds = workItemAttributes.Select(x => x.Id.ToString(CultureInfo.InvariantCulture)).ToArray();
+            testElement.WorkItemIds = [.. workItemAttributes.Select(x => x.Id.ToString(CultureInfo.InvariantCulture))];
         }
 
         // In production, we always have a TestMethod attribute because GetTestFromMethod is called under IsValidTestMethod

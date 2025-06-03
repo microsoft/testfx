@@ -6,7 +6,7 @@ using Microsoft.Testing.Platform.Logging;
 
 namespace Microsoft.Testing.Platform.ServerMode;
 
-internal abstract record RpcMessage();
+internal abstract record RpcMessage;
 
 /// <summary>
 /// A request is a message for which the server should return a corresponding
@@ -62,8 +62,6 @@ internal sealed record ExitRequestArgs;
 internal sealed record ClientInfo(string Name, string Version);
 
 internal sealed record ClientCapabilities(bool DebuggerProvider);
-
-internal sealed record ClientTestingCapabilities(bool DebuggerProvider);
 
 internal sealed record ServerInfo(string Name, string Version);
 

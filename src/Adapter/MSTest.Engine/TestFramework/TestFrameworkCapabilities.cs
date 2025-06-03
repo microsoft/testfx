@@ -18,7 +18,7 @@ internal sealed class TestFrameworkCapabilities : ITestFrameworkCapabilities
     }
 
     public IReadOnlyCollection<ITestFrameworkCapability> Capabilities
-        => new[] { new TestFrameworkCapabilitiesSet(_testNodesBuilders), _bannerMessageOwnerCapability };
+        => [new TestFrameworkCapabilitiesSet(_testNodesBuilders), _bannerMessageOwnerCapability];
 }
 
 internal sealed class TestFrameworkCapabilitiesSet :

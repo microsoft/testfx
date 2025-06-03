@@ -683,11 +683,14 @@ csharp_style_unused_value_expression_statement_preference = discard_variable:sil
 # IDE0290: Use primary constructor
 csharp_style_prefer_primary_constructors = false
 
+# Empty constructor
+resharper_empty_constructor_highlighting = warning
+
 # Redundant empty argument list on object creation expression
 resharper_redundant_empty_object_creation_argument_list_highlighting = warning
 
-# IDE0300: Simplify collection initialization
-dotnet_style_prefer_collection_expression = false
+# IDE0300-IDE0306: Simplify collection initialization
+dotnet_style_prefer_collection_expression = true
 
 # IDE0065: using directive placement
 csharp_using_directive_placement = outside_namespace:warning

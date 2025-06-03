@@ -72,7 +72,7 @@ internal static class CommandLineParser
                     }
                     else
                     {
-                        options.Add(new(currentOption, currentOptionArguments.ToArray()));
+                        options.Add(new(currentOption, [.. currentOptionArguments]));
                         currentOptionArguments.Clear();
                         ParseOptionAndSeparators(args[i], out currentOption, out currentArg);
                         argumentHandled = true;
@@ -93,11 +93,11 @@ internal static class CommandLineParser
                     {
                         if (TryUnescape(currentArg.Trim(), currentOption, environment, out string? unescapedArg, out string? error))
                         {
-                            currentOptionArguments.Add(unescapedArg!);
+                            currentOptionArguments.Add(unescapedArg);
                         }
                         else
                         {
-                            errors.Add(error!);
+                            errors.Add(error);
                         }
 
                         currentArg = null;
@@ -114,15 +114,15 @@ internal static class CommandLineParser
             {
                 if (TryUnescape(currentArg.Trim(), currentOption, environment, out string? unescapedArg, out string? error))
                 {
-                    currentOptionArguments.Add(unescapedArg!);
+                    currentOptionArguments.Add(unescapedArg);
                 }
                 else
                 {
-                    errors.Add(error!);
+                    errors.Add(error);
                 }
             }
 
-            options.Add(new(currentOption, currentOptionArguments.ToArray()));
+            options.Add(new(currentOption, [.. currentOptionArguments]));
         }
 
         return new CommandLineParseResult(toolName, options, errors);
@@ -138,14 +138,14 @@ internal static class CommandLineParser
             currentOption = currentOption.TrimStart('-');
         }
 
-        static bool TryUnescape(string input, string? option, IEnvironment environment, out string? unescapedArg, out string? error)
+        static bool TryUnescape(string input, string? option, IEnvironment environment, [NotNullWhen(true)] out string? unescapedArg, [NotNullWhen(false)] out string? error)
         {
             unescapedArg = input;
             error = null;
 
             // Enclosing characters in single-quotes ( '' ) shall preserve the literal value of each character within the single-quotes.
             // A single-quote cannot occur within single-quotes.
-            if (input.StartsWith(@"'", StringComparison.OrdinalIgnoreCase) && input.EndsWith(@"'", StringComparison.OrdinalIgnoreCase))
+            if (input.StartsWith('\'') && input.EndsWith('\''))
             {
                 if (input.IndexOf('\'', 1, input.Length - 2) != -1)
                 {
@@ -165,7 +165,7 @@ internal static class CommandLineParser
             //  * The <dollar-sign> shall retain its special meaning introducing parameter expansion. [NOT SUPPORTED]
             //  * The backslash shall retain its special meaning as an escape character only when followed by one of the following characters when considered special:
             //    $   `   "   \   <newline>
-            if (input.StartsWith("\"", StringComparison.OrdinalIgnoreCase) && input.EndsWith("\"", StringComparison.OrdinalIgnoreCase))
+            if (input.StartsWith('"') && input.EndsWith('"'))
             {
                 unescapedArg = input[1..^1].Replace(@"\\", "\\")
                     .Replace(@"\""", "\"")

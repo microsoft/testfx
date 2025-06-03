@@ -31,7 +31,7 @@ public sealed class UnitTestRunnerTests : TestContainer
         _mockMessageLogger = new Mock<IMessageLogger>();
         PlatformServiceProvider.Instance = _testablePlatformServiceProvider;
 
-        _unitTestRunner = new UnitTestRunner(GetSettingsWithDebugTrace(false)!, Array.Empty<UnitTestElement>(), null);
+        _unitTestRunner = new UnitTestRunner(GetSettingsWithDebugTrace(false)!, [], null);
     }
 
     protected override void Dispose(bool disposing)
@@ -65,7 +65,7 @@ public sealed class UnitTestRunnerTests : TestContainer
             });
 
         MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsName, _mockMessageLogger.Object)!;
-        var assemblyEnumerator = new UnitTestRunner(adapterSettings, Array.Empty<UnitTestElement>(), null);
+        var assemblyEnumerator = new UnitTestRunner(adapterSettings, [], null);
 
         Verify(MSTestSettings.CurrentSettings.ForcedLegacyMode);
         Verify(MSTestSettings.CurrentSettings.TestSettingsFile == "DummyPath\\TestSettings1.testsettings");
@@ -283,7 +283,7 @@ public sealed class UnitTestRunnerTests : TestContainer
     public async Task RunSingleTestShouldCallAssemblyInitializeAndClassInitializeMethodsInOrder()
     {
         var mockReflectHelper = new Mock<ReflectHelper>();
-        _unitTestRunner = new UnitTestRunner(new MSTestSettings(), Array.Empty<UnitTestElement>(), null, mockReflectHelper.Object);
+        _unitTestRunner = new UnitTestRunner(new MSTestSettings(), [], null, mockReflectHelper.Object);
 
         Type type = typeof(DummyTestClassWithInitializeMethods);
         MethodInfo methodInfo = type.GetMethod("TestMethod")!;
@@ -292,7 +292,7 @@ public sealed class UnitTestRunnerTests : TestContainer
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("A", It.IsAny<bool>()))
             .Returns(Assembly.GetExecutingAssembly());
         mockReflectHelper.Setup(
-            rh => rh.IsNonDerivedAttributeDefined<AssemblyInitializeAttribute>(type.GetMethod("AssemblyInitialize")!, It.IsAny<bool>()))
+            rh => rh.IsAttributeDefined<AssemblyInitializeAttribute>(type.GetMethod("AssemblyInitialize")!, It.IsAny<bool>()))
             .Returns(true);
 
         int validator = 1;

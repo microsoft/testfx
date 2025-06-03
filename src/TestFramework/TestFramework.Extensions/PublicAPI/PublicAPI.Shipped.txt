@@ -18,6 +18,7 @@ Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestDisplayName.get -> 
 Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestDisplayName.set -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestException.get -> System.Exception?
 Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestException.set -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestRunCount.get -> int
 virtual Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.CancellationTokenSource.get -> System.Threading.CancellationTokenSource!
 virtual Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.CancellationTokenSource.set -> void
 virtual Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.CurrentTestOutcome.get -> Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome

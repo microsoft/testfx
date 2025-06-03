@@ -23,7 +23,7 @@
     <!-- Test Platform, .NET Test SDK and Object Model  -->
     <MicrosoftNETTestSdkVersion>17.13.0</MicrosoftNETTestSdkVersion>
     <MicrosoftPlaywrightVersion>1.50.0</MicrosoftPlaywrightVersion>
-    <MicrosoftTestingExtensionsFakesVersion>17.14.0-beta.25202.4</MicrosoftTestingExtensionsFakesVersion>
+    <MicrosoftTestingExtensionsFakesVersion>17.14.1</MicrosoftTestingExtensionsFakesVersion>
     <MicrosoftTestingInternalFrameworkVersion>1.5.0-preview.24577.4</MicrosoftTestingInternalFrameworkVersion>
     <SystemThreadingTasksExtensionsVersion>4.5.4</SystemThreadingTasksExtensionsVersion>
   </PropertyGroup>
@@ -54,7 +54,7 @@
     <PackageVersion Include="Microsoft.TestPlatform.TranslationLayer" Version="$(MicrosoftNETTestSdkVersion)" />
     <PackageVersion Include="Microsoft.Win32.Registry" Version="5.0.0" />
     <PackageVersion Include="Microsoft.WindowsAppSDK" Version="1.0.0" />
-    <PackageVersion Include="Polyfill" Version="7.21.0" />
+    <PackageVersion Include="Polyfill" Version="7.32.0" />
     <PackageVersion Include="System.Threading.Tasks.Extensions" Version="$(SystemThreadingTasksExtensionsVersion)" />
   </ItemGroup>
   <ItemGroup Label="Test dependencies">

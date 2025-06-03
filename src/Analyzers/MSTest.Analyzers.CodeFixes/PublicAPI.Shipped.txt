@@ -1,0 +1,116 @@
+#nullable enable
+MSTest.Analyzers.AddTestClassFixer
+MSTest.Analyzers.AddTestClassFixer.AddTestClassFixer() -> void
+MSTest.Analyzers.AssemblyCleanupShouldBeValidFixer
+MSTest.Analyzers.AssemblyCleanupShouldBeValidFixer.AssemblyCleanupShouldBeValidFixer() -> void
+MSTest.Analyzers.AssemblyInitializeShouldBeValidFixer
+MSTest.Analyzers.AssemblyInitializeShouldBeValidFixer.AssemblyInitializeShouldBeValidFixer() -> void
+MSTest.Analyzers.AssertionArgsShouldAvoidConditionalAccessFixer
+MSTest.Analyzers.AssertionArgsShouldAvoidConditionalAccessFixer.AssertionArgsShouldAvoidConditionalAccessFixer() -> void
+MSTest.Analyzers.AssertionArgsShouldBePassedInCorrectOrderFixer
+MSTest.Analyzers.AssertionArgsShouldBePassedInCorrectOrderFixer.AssertionArgsShouldBePassedInCorrectOrderFixer() -> void
+MSTest.Analyzers.AvoidAssertAreSameWithValueTypesFixer
+MSTest.Analyzers.AvoidAssertAreSameWithValueTypesFixer.AvoidAssertAreSameWithValueTypesFixer() -> void
+MSTest.Analyzers.AvoidExpectedExceptionAttributeFixer
+MSTest.Analyzers.AvoidExpectedExceptionAttributeFixer.AvoidExpectedExceptionAttributeFixer() -> void
+MSTest.Analyzers.ClassCleanupShouldBeValidFixer
+MSTest.Analyzers.ClassCleanupShouldBeValidFixer.ClassCleanupShouldBeValidFixer() -> void
+MSTest.Analyzers.ClassInitializeShouldBeValidFixer
+MSTest.Analyzers.ClassInitializeShouldBeValidFixer.ClassInitializeShouldBeValidFixer() -> void
+MSTest.Analyzers.PreferAssertFailOverAlwaysFalseConditionsFixer
+MSTest.Analyzers.PreferAssertFailOverAlwaysFalseConditionsFixer.PreferAssertFailOverAlwaysFalseConditionsFixer() -> void
+MSTest.Analyzers.PreferConstructorOverTestInitializeFixer
+MSTest.Analyzers.PreferConstructorOverTestInitializeFixer.PreferConstructorOverTestInitializeFixer() -> void
+MSTest.Analyzers.PreferDisposeOverTestCleanupFixer
+MSTest.Analyzers.PreferDisposeOverTestCleanupFixer.PreferDisposeOverTestCleanupFixer() -> void
+MSTest.Analyzers.PreferTestCleanupOverDisposeFixer
+MSTest.Analyzers.PreferTestCleanupOverDisposeFixer.PreferTestCleanupOverDisposeFixer() -> void
+MSTest.Analyzers.PreferTestInitializeOverConstructorFixer
+MSTest.Analyzers.PreferTestInitializeOverConstructorFixer.PreferTestInitializeOverConstructorFixer() -> void
+MSTest.Analyzers.PublicMethodShouldBeTestMethodFixer
+MSTest.Analyzers.PublicMethodShouldBeTestMethodFixer.PublicMethodShouldBeTestMethodFixer() -> void
+MSTest.Analyzers.TestClassShouldBeValidFixer
+MSTest.Analyzers.TestClassShouldBeValidFixer.TestClassShouldBeValidFixer() -> void
+MSTest.Analyzers.TestCleanupShouldBeValidFixer
+MSTest.Analyzers.TestCleanupShouldBeValidFixer.TestCleanupShouldBeValidFixer() -> void
+MSTest.Analyzers.TestContextShouldBeValidFixer
+MSTest.Analyzers.TestContextShouldBeValidFixer.TestContextShouldBeValidFixer() -> void
+MSTest.Analyzers.TestInitializeShouldBeValidFixer
+MSTest.Analyzers.TestInitializeShouldBeValidFixer.TestInitializeShouldBeValidFixer() -> void
+MSTest.Analyzers.TestMethodShouldBeValidCodeFixProvider
+MSTest.Analyzers.TestMethodShouldBeValidCodeFixProvider.TestMethodShouldBeValidCodeFixProvider() -> void
+MSTest.Analyzers.UseAttributeOnTestMethodFixer
+MSTest.Analyzers.UseAttributeOnTestMethodFixer.UseAttributeOnTestMethodFixer() -> void
+MSTest.Analyzers.UseNewerAssertThrowsFixer
+MSTest.Analyzers.UseNewerAssertThrowsFixer.UseNewerAssertThrowsFixer() -> void
+MSTest.Analyzers.UseProperAssertMethodsFixer
+MSTest.Analyzers.UseProperAssertMethodsFixer.UseProperAssertMethodsFixer() -> void
+override MSTest.Analyzers.AddTestClassFixer.GetFixAllProvider() -> Microsoft.CodeAnalysis.CodeFixes.FixAllProvider!
+override MSTest.Analyzers.AddTestClassFixer.RegisterCodeFixesAsync(Microsoft.CodeAnalysis.CodeFixes.CodeFixContext context) -> System.Threading.Tasks.Task!
+override MSTest.Analyzers.AssemblyCleanupShouldBeValidFixer.GetFixAllProvider() -> Microsoft.CodeAnalysis.CodeFixes.FixAllProvider!
+override MSTest.Analyzers.AssemblyCleanupShouldBeValidFixer.RegisterCodeFixesAsync(Microsoft.CodeAnalysis.CodeFixes.CodeFixContext context) -> System.Threading.Tasks.Task!
+override MSTest.Analyzers.AssemblyInitializeShouldBeValidFixer.GetFixAllProvider() -> Microsoft.CodeAnalysis.CodeFixes.FixAllProvider!
+override MSTest.Analyzers.AssemblyInitializeShouldBeValidFixer.RegisterCodeFixesAsync(Microsoft.CodeAnalysis.CodeFixes.CodeFixContext context) -> System.Threading.Tasks.Task!
+override MSTest.Analyzers.AssertionArgsShouldAvoidConditionalAccessFixer.GetFixAllProvider() -> Microsoft.CodeAnalysis.CodeFixes.FixAllProvider!
+override MSTest.Analyzers.AssertionArgsShouldAvoidConditionalAccessFixer.RegisterCodeFixesAsync(Microsoft.CodeAnalysis.CodeFixes.CodeFixContext context) -> System.Threading.Tasks.Task!
+override MSTest.Analyzers.AssertionArgsShouldBePassedInCorrectOrderFixer.GetFixAllProvider() -> Microsoft.CodeAnalysis.CodeFixes.FixAllProvider!
+override MSTest.Analyzers.AssertionArgsShouldBePassedInCorrectOrderFixer.RegisterCodeFixesAsync(Microsoft.CodeAnalysis.CodeFixes.CodeFixContext context) -> System.Threading.Tasks.Task!
+override MSTest.Analyzers.AvoidAssertAreSameWithValueTypesFixer.GetFixAllProvider() -> Microsoft.CodeAnalysis.CodeFixes.FixAllProvider!
+override MSTest.Analyzers.AvoidAssertAreSameWithValueTypesFixer.RegisterCodeFixesAsync(Microsoft.CodeAnalysis.CodeFixes.CodeFixContext context) -> System.Threading.Tasks.Task!
+override MSTest.Analyzers.AvoidExpectedExceptionAttributeFixer.GetFixAllProvider() -> Microsoft.CodeAnalysis.CodeFixes.FixAllProvider!
+override MSTest.Analyzers.ClassCleanupShouldBeValidFixer.GetFixAllProvider() -> Microsoft.CodeAnalysis.CodeFixes.FixAllProvider!
+override MSTest.Analyzers.ClassCleanupShouldBeValidFixer.RegisterCodeFixesAsync(Microsoft.CodeAnalysis.CodeFixes.CodeFixContext context) -> System.Threading.Tasks.Task!
+override MSTest.Analyzers.ClassInitializeShouldBeValidFixer.GetFixAllProvider() -> Microsoft.CodeAnalysis.CodeFixes.FixAllProvider!
+override MSTest.Analyzers.ClassInitializeShouldBeValidFixer.RegisterCodeFixesAsync(Microsoft.CodeAnalysis.CodeFixes.CodeFixContext context) -> System.Threading.Tasks.Task!
+override MSTest.Analyzers.PreferAssertFailOverAlwaysFalseConditionsFixer.GetFixAllProvider() -> Microsoft.CodeAnalysis.CodeFixes.FixAllProvider!
+override MSTest.Analyzers.PreferAssertFailOverAlwaysFalseConditionsFixer.RegisterCodeFixesAsync(Microsoft.CodeAnalysis.CodeFixes.CodeFixContext context) -> System.Threading.Tasks.Task!
+override MSTest.Analyzers.PreferConstructorOverTestInitializeFixer.FixableDiagnosticIds.get -> System.Collections.Immutable.ImmutableArray<string!>
+override MSTest.Analyzers.PreferConstructorOverTestInitializeFixer.GetFixAllProvider() -> Microsoft.CodeAnalysis.CodeFixes.FixAllProvider!
+override MSTest.Analyzers.PreferConstructorOverTestInitializeFixer.RegisterCodeFixesAsync(Microsoft.CodeAnalysis.CodeFixes.CodeFixContext context) -> System.Threading.Tasks.Task!
+override MSTest.Analyzers.PreferDisposeOverTestCleanupFixer.FixableDiagnosticIds.get -> System.Collections.Immutable.ImmutableArray<string!>
+override MSTest.Analyzers.PreferDisposeOverTestCleanupFixer.GetFixAllProvider() -> Microsoft.CodeAnalysis.CodeFixes.FixAllProvider!
+override MSTest.Analyzers.PreferDisposeOverTestCleanupFixer.RegisterCodeFixesAsync(Microsoft.CodeAnalysis.CodeFixes.CodeFixContext context) -> System.Threading.Tasks.Task!
+override MSTest.Analyzers.PreferTestCleanupOverDisposeFixer.FixableDiagnosticIds.get -> System.Collections.Immutable.ImmutableArray<string!>
+override MSTest.Analyzers.PreferTestCleanupOverDisposeFixer.GetFixAllProvider() -> Microsoft.CodeAnalysis.CodeFixes.FixAllProvider!
+override MSTest.Analyzers.PreferTestCleanupOverDisposeFixer.RegisterCodeFixesAsync(Microsoft.CodeAnalysis.CodeFixes.CodeFixContext context) -> System.Threading.Tasks.Task!
+override MSTest.Analyzers.PreferTestInitializeOverConstructorFixer.FixableDiagnosticIds.get -> System.Collections.Immutable.ImmutableArray<string!>
+override MSTest.Analyzers.PreferTestInitializeOverConstructorFixer.GetFixAllProvider() -> Microsoft.CodeAnalysis.CodeFixes.FixAllProvider!
+override MSTest.Analyzers.PreferTestInitializeOverConstructorFixer.RegisterCodeFixesAsync(Microsoft.CodeAnalysis.CodeFixes.CodeFixContext context) -> System.Threading.Tasks.Task!
+override MSTest.Analyzers.PublicMethodShouldBeTestMethodFixer.FixableDiagnosticIds.get -> System.Collections.Immutable.ImmutableArray<string!>
+override MSTest.Analyzers.PublicMethodShouldBeTestMethodFixer.GetFixAllProvider() -> Microsoft.CodeAnalysis.CodeFixes.FixAllProvider!
+override MSTest.Analyzers.PublicMethodShouldBeTestMethodFixer.RegisterCodeFixesAsync(Microsoft.CodeAnalysis.CodeFixes.CodeFixContext context) -> System.Threading.Tasks.Task!
+override MSTest.Analyzers.TestClassShouldBeValidFixer.GetFixAllProvider() -> Microsoft.CodeAnalysis.CodeFixes.FixAllProvider!
+override MSTest.Analyzers.TestClassShouldBeValidFixer.RegisterCodeFixesAsync(Microsoft.CodeAnalysis.CodeFixes.CodeFixContext context) -> System.Threading.Tasks.Task!
+override MSTest.Analyzers.TestCleanupShouldBeValidFixer.GetFixAllProvider() -> Microsoft.CodeAnalysis.CodeFixes.FixAllProvider!
+override MSTest.Analyzers.TestCleanupShouldBeValidFixer.RegisterCodeFixesAsync(Microsoft.CodeAnalysis.CodeFixes.CodeFixContext context) -> System.Threading.Tasks.Task!
+override MSTest.Analyzers.TestContextShouldBeValidFixer.GetFixAllProvider() -> Microsoft.CodeAnalysis.CodeFixes.FixAllProvider!
+override MSTest.Analyzers.TestContextShouldBeValidFixer.RegisterCodeFixesAsync(Microsoft.CodeAnalysis.CodeFixes.CodeFixContext context) -> System.Threading.Tasks.Task!
+override MSTest.Analyzers.TestInitializeShouldBeValidFixer.GetFixAllProvider() -> Microsoft.CodeAnalysis.CodeFixes.FixAllProvider!
+override MSTest.Analyzers.TestInitializeShouldBeValidFixer.RegisterCodeFixesAsync(Microsoft.CodeAnalysis.CodeFixes.CodeFixContext context) -> System.Threading.Tasks.Task!
+override MSTest.Analyzers.TestMethodShouldBeValidCodeFixProvider.FixableDiagnosticIds.get -> System.Collections.Immutable.ImmutableArray<string!>
+override MSTest.Analyzers.TestMethodShouldBeValidCodeFixProvider.GetFixAllProvider() -> Microsoft.CodeAnalysis.CodeFixes.FixAllProvider!
+override MSTest.Analyzers.TestMethodShouldBeValidCodeFixProvider.RegisterCodeFixesAsync(Microsoft.CodeAnalysis.CodeFixes.CodeFixContext context) -> System.Threading.Tasks.Task!
+override MSTest.Analyzers.UseAttributeOnTestMethodFixer.GetFixAllProvider() -> Microsoft.CodeAnalysis.CodeFixes.FixAllProvider!
+override MSTest.Analyzers.UseNewerAssertThrowsFixer.GetFixAllProvider() -> Microsoft.CodeAnalysis.CodeFixes.FixAllProvider!
+override MSTest.Analyzers.UseNewerAssertThrowsFixer.RegisterCodeFixesAsync(Microsoft.CodeAnalysis.CodeFixes.CodeFixContext context) -> System.Threading.Tasks.Task!
+override MSTest.Analyzers.UseProperAssertMethodsFixer.GetFixAllProvider() -> Microsoft.CodeAnalysis.CodeFixes.FixAllProvider!
+override MSTest.Analyzers.UseProperAssertMethodsFixer.RegisterCodeFixesAsync(Microsoft.CodeAnalysis.CodeFixes.CodeFixContext context) -> System.Threading.Tasks.Task!
+override sealed MSTest.Analyzers.AddTestClassFixer.FixableDiagnosticIds.get -> System.Collections.Immutable.ImmutableArray<string!>
+override sealed MSTest.Analyzers.AssemblyCleanupShouldBeValidFixer.FixableDiagnosticIds.get -> System.Collections.Immutable.ImmutableArray<string!>
+override sealed MSTest.Analyzers.AssemblyInitializeShouldBeValidFixer.FixableDiagnosticIds.get -> System.Collections.Immutable.ImmutableArray<string!>
+override sealed MSTest.Analyzers.AssertionArgsShouldAvoidConditionalAccessFixer.FixableDiagnosticIds.get -> System.Collections.Immutable.ImmutableArray<string!>
+override sealed MSTest.Analyzers.AssertionArgsShouldBePassedInCorrectOrderFixer.FixableDiagnosticIds.get -> System.Collections.Immutable.ImmutableArray<string!>
+override sealed MSTest.Analyzers.AvoidAssertAreSameWithValueTypesFixer.FixableDiagnosticIds.get -> System.Collections.Immutable.ImmutableArray<string!>
+override sealed MSTest.Analyzers.AvoidExpectedExceptionAttributeFixer.FixableDiagnosticIds.get -> System.Collections.Immutable.ImmutableArray<string!>
+override sealed MSTest.Analyzers.AvoidExpectedExceptionAttributeFixer.RegisterCodeFixesAsync(Microsoft.CodeAnalysis.CodeFixes.CodeFixContext context) -> System.Threading.Tasks.Task!
+override sealed MSTest.Analyzers.ClassCleanupShouldBeValidFixer.FixableDiagnosticIds.get -> System.Collections.Immutable.ImmutableArray<string!>
+override sealed MSTest.Analyzers.ClassInitializeShouldBeValidFixer.FixableDiagnosticIds.get -> System.Collections.Immutable.ImmutableArray<string!>
+override sealed MSTest.Analyzers.PreferAssertFailOverAlwaysFalseConditionsFixer.FixableDiagnosticIds.get -> System.Collections.Immutable.ImmutableArray<string!>
+override sealed MSTest.Analyzers.TestClassShouldBeValidFixer.FixableDiagnosticIds.get -> System.Collections.Immutable.ImmutableArray<string!>
+override sealed MSTest.Analyzers.TestCleanupShouldBeValidFixer.FixableDiagnosticIds.get -> System.Collections.Immutable.ImmutableArray<string!>
+override sealed MSTest.Analyzers.TestContextShouldBeValidFixer.FixableDiagnosticIds.get -> System.Collections.Immutable.ImmutableArray<string!>
+override sealed MSTest.Analyzers.TestInitializeShouldBeValidFixer.FixableDiagnosticIds.get -> System.Collections.Immutable.ImmutableArray<string!>
+override sealed MSTest.Analyzers.UseAttributeOnTestMethodFixer.FixableDiagnosticIds.get -> System.Collections.Immutable.ImmutableArray<string!>
+override sealed MSTest.Analyzers.UseAttributeOnTestMethodFixer.RegisterCodeFixesAsync(Microsoft.CodeAnalysis.CodeFixes.CodeFixContext context) -> System.Threading.Tasks.Task!
+override sealed MSTest.Analyzers.UseNewerAssertThrowsFixer.FixableDiagnosticIds.get -> System.Collections.Immutable.ImmutableArray<string!>
+override sealed MSTest.Analyzers.UseProperAssertMethodsFixer.FixableDiagnosticIds.get -> System.Collections.Immutable.ImmutableArray<string!>

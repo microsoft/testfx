@@ -1,2 +1,1 @@
 #nullable enable
-virtual Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestMethodInfo.InvokeAsync(object?[]? arguments) -> System.Threading.Tasks.Task<Microsoft.VisualStudio.TestTools.UnitTesting.TestResult!>!

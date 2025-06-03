@@ -65,7 +65,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
     /// <returns>A collection of Test Elements.</returns>
     internal AssemblyEnumerationResult EnumerateAssembly(string assemblyFileName)
     {
-        List<string> warnings = new();
+        List<string> warnings = [];
         DebugEx.Assert(!StringEx.IsNullOrWhiteSpace(assemblyFileName), "Invalid assembly file name.");
         var tests = new List<UnitTestElement>();
         // Contains list of assembly/class names for which we have already added fixture tests.
@@ -347,10 +347,10 @@ internal class AssemblyEnumerator : MarshalByRefObject
         // We don't have a special method to filter attributes that are not derived from Attribute, so we take all
         // attributes and filter them. We don't have to care if there is one, because this method is only entered when
         // there is at least one (we determine this in TypeEnumerator.GetTestFromMethod.
-        IEnumerable<ITestDataSource> testDataSources = ReflectHelper.Instance.GetDerivedAttributes<Attribute>(testMethodInfo.MethodInfo, inherit: false).OfType<ITestDataSource>();
+        IEnumerable<ITestDataSource> testDataSources = ReflectHelper.Instance.GetAttributes<Attribute>(testMethodInfo.MethodInfo, inherit: false).OfType<ITestDataSource>();
 
         // We need to use a temporary list to avoid adding tests to the main list if we fail to expand any data source.
-        List<UnitTestElement> tempListOfTests = new();
+        List<UnitTestElement> tempListOfTests = [];
 
         try
         {

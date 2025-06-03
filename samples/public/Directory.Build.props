@@ -2,11 +2,11 @@
 
   <PropertyGroup>
     <AspireTestingVersion>9.0.0</AspireTestingVersion>
-    <CodeCoverageVersion>17.13.1</CodeCoverageVersion>
-    <MSTestVersion>3.8.3</MSTestVersion>
-    <MSTestAOTVersion>1.0.0-alpha.25167.5</MSTestAOTVersion>
+    <CodeCoverageVersion>17.14.2</CodeCoverageVersion>
+    <MSTestVersion>3.9.0</MSTestVersion>
+    <MSTestAOTVersion>1.0.0-alpha.25256.6</MSTestAOTVersion>
     <PlaywrightVersion>1.50.0</PlaywrightVersion>
-    <TestingPlatformVersion>1.6.3</TestingPlatformVersion>
+    <TestingPlatformVersion>1.7.0</TestingPlatformVersion>
     <VSTestVersion>17.13.0</VSTestVersion>
   </PropertyGroup>
 

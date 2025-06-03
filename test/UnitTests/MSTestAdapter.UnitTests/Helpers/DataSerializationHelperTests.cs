@@ -55,4 +55,28 @@ public class DataSerializationHelperTests : TestContainer
         Verify(actual[0]!.Equals(source));
         Verify(((DateTime)actual[0]!).Kind.Equals(source.Kind));
     }
+
+#if NET7_0_OR_GREATER
+    public void DataSerializerShouldRoundTripDateOnly()
+    {
+        var source = new DateOnly(1999, 11, 3);
+
+        object?[]? actual = DataSerializationHelper.Deserialize(DataSerializationHelper.Serialize([source]));
+
+        Verify(actual!.Length == 1);
+        Verify(actual[0]!.GetType() == typeof(DateOnly));
+        Verify(actual[0]!.Equals(source));
+    }
+
+    public void DataSerializerShouldRoundTripTimeOnly()
+    {
+        var source = new TimeOnly(hour: 14, minute: 50, second: 13, millisecond: 15);
+
+        object?[]? actual = DataSerializationHelper.Deserialize(DataSerializationHelper.Serialize([source]));
+
+        Verify(actual!.Length == 1);
+        Verify(actual[0]!.GetType() == typeof(TimeOnly));
+        Verify(actual[0]!.Equals(source));
+    }
+#endif
 }

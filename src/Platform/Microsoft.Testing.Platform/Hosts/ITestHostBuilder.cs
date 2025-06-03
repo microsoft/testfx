@@ -8,7 +8,6 @@ using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Extensions.TestHostOrchestrator;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
-using Microsoft.Testing.Platform.ServerMode;
 using Microsoft.Testing.Platform.Telemetry;
 using Microsoft.Testing.Platform.TestHost;
 using Microsoft.Testing.Platform.TestHostControllers;
@@ -33,8 +32,6 @@ internal interface ITestHostBuilder
     ITestHostOrchestratorManager TestHostOrchestratorManager { get; }
 
     ITelemetryManager Telemetry { get; }
-
-    IServerModeManager ServerMode { get; }
 
     IToolsManager Tools { get; }
 

@@ -9,7 +9,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 [Experimental("MSTESTEXP", UrlFormat = "https://aka.ms/mstest/diagnostics#{0}")]
 public sealed class RetryResult
 {
-    private readonly List<TestResult[]> _testResults = new();
+    private readonly List<TestResult[]> _testResults = [];
 
     /// <summary>
     /// Adds a set of test results to the retry result.

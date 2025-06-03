@@ -7,11 +7,9 @@ using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Platform.ServerMode;
 
-internal sealed partial class ServerModeManager : IServerModeManager
+internal sealed partial class ServerModeManager
 {
-    internal ICommunicationProtocol? CommunicationProtocol { get; set; }
-
-    internal IMessageHandlerFactory Build(IServiceProvider serviceProvider)
+    internal static IMessageHandlerFactory Build(IServiceProvider serviceProvider)
     {
         ICommandLineOptions commandLineService = serviceProvider.GetCommandLineOptions();
 
@@ -20,33 +18,9 @@ internal sealed partial class ServerModeManager : IServerModeManager
             ? int.Parse(clientPortArgs[0], CultureInfo.InvariantCulture)
             : throw new InvalidOperationException(PlatformResources.MissingClientPortFoJsonRpc);
 
-        string? clientHostName;
-        clientHostName = commandLineService.TryGetOptionArgumentList(PlatformCommandLineProvider.ClientHostOptionKey, out string[]? clientHostArgs)
+        string clientHostName = commandLineService.TryGetOptionArgumentList(PlatformCommandLineProvider.ClientHostOptionKey, out string[]? clientHostArgs)
             ? clientHostArgs[0]
             : "localhost";
-
-        if (CommunicationProtocol is not null)
-        {
-            switch (CommunicationProtocol)
-            {
-                case JsonRpcTcpServerToSingleClient tcpServerToSingleClientCommunicationProtocol:
-                    {
-                        clientPort ??= tcpServerToSingleClientCommunicationProtocol.ClientPort;
-
-                        if (RoslynString.IsNullOrEmpty(clientHostName))
-                        {
-                            clientHostName = tcpServerToSingleClientCommunicationProtocol.ClientHostName;
-                        }
-
-                        break;
-                    }
-
-                default:
-                    {
-                        throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.UnknownCommunicationProtocolErrorMessage, CommunicationProtocol.GetType()));
-                    }
-            }
-        }
 
         return new MessageHandlerFactory(clientHostName, clientPort.Value, serviceProvider.GetOutputDevice());
     }
