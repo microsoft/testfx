@@ -133,11 +133,12 @@ public sealed class DuplicateDataRowAnalyzer : DiagnosticAnalyzer
                 // Behavior difference between zero and negative zero can be observed via BitConverter or ToString.
                 if (typedConstant1.Value is float float1 && typedConstant2.Value is float float2)
                 {
+                    // BitConverter.SingleToInt32Bits isn't available on netstandard2.0, so we use BitConverter.GetBytes instead.
                     return BitConverter.GetBytes(float1).SequenceEqual(BitConverter.GetBytes(float2));
                 }
                 else if (typedConstant1.Value is double double1 && typedConstant2.Value is double double2)
                 {
-                    return BitConverter.GetBytes(double1).SequenceEqual(BitConverter.GetBytes(double2));
+                    return BitConverter.DoubleToInt64Bits(double1) == BitConverter.DoubleToInt64Bits(double2);
                 }
             }
 
