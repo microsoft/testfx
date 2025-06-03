@@ -4,6 +4,9 @@
 using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
     MSTest.Analyzers.TestContextShouldBeValidAnalyzer,
     MSTest.Analyzers.TestContextShouldBeValidFixer>;
+using VerifyVB = MSTest.Analyzers.Test.VisualBasicCodeFixVerifier<
+    MSTest.Analyzers.TestContextShouldBeValidAnalyzer,
+    MSTest.Analyzers.TestContextShouldBeValidFixer>;
 
 namespace MSTest.Analyzers.Test;
 
@@ -517,5 +520,84 @@ public sealed class TestContextShouldBeValidAnalyzerTests
             """;
 
         await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+    [TestMethod]
+    public async Task WhenTestContextIsField_VB_Diagnostic()
+    {
+        string code = """
+            Imports Microsoft.VisualStudio.TestTools.UnitTesting
+
+            <TestClass>
+            Public Class MyTestClass
+                Private {|#0:TestContext|} As TestContext
+            End Class
+            """;
+        string fixedCode = """
+            Imports Microsoft.VisualStudio.TestTools.UnitTesting
+
+            <TestClass>
+            Public Class MyTestClass
+                Public Property TestContext As TestContext
+            End Class
+            """;
+        await VerifyVB.VerifyCodeFixAsync(
+            code,
+            VerifyVB.Diagnostic(TestContextShouldBeValidAnalyzer.TestContextShouldBeValidRule).WithLocation(0),
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenTestContextIsFieldWithDifferentCase_VB_Diagnostic()
+    {
+        string code = """
+            Imports Microsoft.VisualStudio.TestTools.UnitTesting
+
+            <TestClass>
+            Public Class MyTestClass
+                Private {|#0:testcontext|} As TestContext
+            End Class
+            """;
+        string fixedCode = """
+            Imports Microsoft.VisualStudio.TestTools.UnitTesting
+
+            <TestClass>
+            Public Class MyTestClass
+                Public Property TestContext As TestContext
+            End Class
+            """;
+        await VerifyVB.VerifyCodeFixAsync(
+            code,
+            VerifyVB.Diagnostic(TestContextShouldBeValidAnalyzer.TestContextShouldBeValidRule).WithLocation(0),
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenTestContextIsStaticField_VB_Diagnostic()
+    {
+        string code = """
+            Imports Microsoft.VisualStudio.TestTools.UnitTesting
+
+            <TestClass>
+            Public Class MyTestClass
+                Private Shared {|#0:TestContext|} As TestContext
+            End Class
+            """;
+        await VerifyVB.VerifyAnalyzerAsync(
+            code,
+            VerifyVB.Diagnostic(TestContextShouldBeValidAnalyzer.TestContextShouldBeValidRule).WithLocation(0));
+    }
+
+    [TestMethod]
+    public async Task WhenTestContextIsValidProperty_VB_NoDiagnostic()
+    {
+        string code = """
+            Imports Microsoft.VisualStudio.TestTools.UnitTesting
+
+            <TestClass>
+            Public Class MyTestClass
+                Public Property TestContext As TestContext
+            End Class
+            """;
+        await VerifyVB.VerifyAnalyzerAsync(code);
     }
 }

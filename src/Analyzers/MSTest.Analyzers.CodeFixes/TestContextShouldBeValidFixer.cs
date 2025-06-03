@@ -9,8 +9,6 @@ using Analyzer.Utilities;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeFixes;
-using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Editing;
 using Microsoft.CodeAnalysis.Text;
 
@@ -21,7 +19,7 @@ namespace MSTest.Analyzers;
 /// <summary>
 /// Code fix for <see cref="TestContextShouldBeValidAnalyzer"/>.
 /// </summary>
-[ExportCodeFixProvider(LanguageNames.CSharp, Name = nameof(TestContextShouldBeValidFixer))]
+[ExportCodeFixProvider(LanguageNames.CSharp, LanguageNames.VisualBasic, Name = nameof(TestContextShouldBeValidFixer))]
 [Shared]
 public sealed class TestContextShouldBeValidFixer : CodeFixProvider
 {
@@ -47,7 +45,13 @@ public sealed class TestContextShouldBeValidFixer : CodeFixProvider
             return;
         }
 
-        MemberDeclarationSyntax declaration = syntaxToken.Parent.AncestorsAndSelf().OfType<MemberDeclarationSyntax>().First();
+        SyntaxNode declaration = syntaxToken.Parent.AncestorsAndSelf().FirstOrDefault(node => 
+            SyntaxFacts.IsFieldDeclaration(node) || SyntaxFacts.IsPropertyDeclaration(node));
+        
+        if (declaration is null)
+        {
+            return;
+        }
 
         // Register a code action that will invoke the fix.
         context.RegisterCodeFix(
@@ -58,77 +62,64 @@ public sealed class TestContextShouldBeValidFixer : CodeFixProvider
             diagnostic);
     }
 
-    private static async Task<Document> FixMemberDeclarationAsync(Document document, MemberDeclarationSyntax memberDeclaration, CancellationToken cancellationToken)
+    private static async Task<Document> FixMemberDeclarationAsync(Document document, SyntaxNode memberDeclaration, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        // Get the SemanticModel and Compilation
-        SemanticModel semanticModel = await document.GetRequiredSemanticModelAsync(cancellationToken).ConfigureAwait(false);
-
         DocumentEditor editor = await DocumentEditor.CreateAsync(document, cancellationToken).ConfigureAwait(false);
+        SyntaxGenerator generator = editor.Generator;
 
-        // Remove the static and readonly modifiers if it exists
-        SyntaxTokenList modifiers = SyntaxFactory.TokenList(
-            memberDeclaration.Modifiers.Where(modifier => !modifier.IsKind(SyntaxKind.StaticKeyword) && !modifier.IsKind(SyntaxKind.ReadOnlyKeyword)));
-
-        if (!memberDeclaration.Modifiers.Any(SyntaxKind.PublicKeyword))
+        if (SyntaxFacts.IsFieldDeclaration(memberDeclaration))
         {
-            SyntaxToken visibilityModifier = SyntaxFactory.Token(SyntaxKind.PublicKeyword);
-
-            modifiers = SyntaxFactory.TokenList(
-                modifiers.Where(modifier => !modifier.IsKind(SyntaxKind.PrivateKeyword) && !modifier.IsKind(SyntaxKind.InternalKeyword) && !modifier.IsKind(SyntaxKind.ProtectedKeyword))).Add(visibilityModifier);
+            // Convert field to property
+            SyntaxNode newProperty = ConvertFieldToProperty(generator, memberDeclaration);
+            editor.ReplaceNode(memberDeclaration, newProperty);
+        }
+        else if (SyntaxFacts.IsPropertyDeclaration(memberDeclaration))
+        {
+            // Fix existing property
+            SyntaxNode newProperty = FixProperty(generator, memberDeclaration);
+            editor.ReplaceNode(memberDeclaration, newProperty);
         }
 
-        MemberDeclarationSyntax newMemberDeclaration = memberDeclaration.WithModifiers(modifiers);
-
-        if (newMemberDeclaration is FieldDeclarationSyntax fieldDeclarationSyntax)
-        {
-            newMemberDeclaration = ConvertFieldToProperty(fieldDeclarationSyntax);
-        }
-        else
-        {
-            // ensure that the property has setter and getter
-            var propertyDeclaration = (PropertyDeclarationSyntax)newMemberDeclaration;
-            if (!propertyDeclaration.Identifier.ValueText.Equals(TestContextShouldBeValidAnalyzer.TestContextPropertyName, StringComparison.Ordinal))
-            {
-                propertyDeclaration = propertyDeclaration.WithIdentifier(
-                    SyntaxFactory.Identifier(propertyDeclaration.Identifier.LeadingTrivia, TestContextShouldBeValidAnalyzer.TestContextPropertyName, propertyDeclaration.Identifier.TrailingTrivia));
-            }
-
-            SyntaxList<AccessorDeclarationSyntax> accessors = propertyDeclaration.AccessorList?.Accessors ?? default;
-
-            AccessorDeclarationSyntax getAccessor = accessors.FirstOrDefault(a => a.Kind() == SyntaxKind.GetAccessorDeclaration)
-                ?? SyntaxFactory.AccessorDeclaration(SyntaxKind.GetAccessorDeclaration).WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken));
-
-            AccessorDeclarationSyntax setAccessor = accessors.FirstOrDefault(a => a.Kind() == SyntaxKind.SetAccessorDeclaration)
-                ?? SyntaxFactory.AccessorDeclaration(SyntaxKind.SetAccessorDeclaration).WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken));
-
-            newMemberDeclaration = propertyDeclaration.WithAccessorList(SyntaxFactory.AccessorList(SyntaxFactory.List([getAccessor, setAccessor])));
-        }
-
-        // Create a new member declaration with the updated modifiers.
-        editor.ReplaceNode(memberDeclaration, newMemberDeclaration);
-        SyntaxNode newRoot = editor.GetChangedRoot();
-
-        return document.WithSyntaxRoot(newRoot);
+        return editor.GetChangedDocument();
     }
 
-    private static PropertyDeclarationSyntax ConvertFieldToProperty(FieldDeclarationSyntax fieldDeclaration)
+    private static SyntaxNode ConvertFieldToProperty(SyntaxGenerator generator, SyntaxNode fieldDeclaration)
     {
-        TypeSyntax type = fieldDeclaration.Declaration.Type;
+        var modifiers = generator.GetModifiers(fieldDeclaration);
+        var type = generator.GetType(fieldDeclaration);
+        
+        // Remove static and readonly modifiers, add public if needed
+        var newModifiers = DeclarationModifiers.None;
+        if ((modifiers & DeclarationModifiers.Static) == 0)
+        {
+            newModifiers |= DeclarationModifiers.Public;
+        }
 
-        // Create the property declaration
-        PropertyDeclarationSyntax propertyDeclaration = SyntaxFactory.PropertyDeclaration(type, TestContextShouldBeValidAnalyzer.TestContextPropertyName)
-            .WithModifiers(SyntaxFactory.TokenList(fieldDeclaration.Modifiers))
-            .WithAccessorList(SyntaxFactory.AccessorList(
-                SyntaxFactory.List(
-                [
-                    SyntaxFactory.AccessorDeclaration(SyntaxKind.GetAccessorDeclaration)
-                        .WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken)),
-                    SyntaxFactory.AccessorDeclaration(SyntaxKind.SetAccessorDeclaration)
-                        .WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken))
-                ])));
+        // Create auto-property with get and set
+        return generator.PropertyDeclaration(
+            TestContextShouldBeValidAnalyzer.TestContextPropertyName,
+            type,
+            accessibility: Accessibility.Public,
+            getAccessorStatements: null, // Auto-property
+            setAccessorStatements: null); // Auto-property
+    }
 
-        return propertyDeclaration;
+    private static SyntaxNode FixProperty(SyntaxGenerator generator, SyntaxNode propertyDeclaration)
+    {
+        var modifiers = generator.GetModifiers(propertyDeclaration);
+        var type = generator.GetType(propertyDeclaration);
+        
+        // Remove static modifier, ensure public accessibility
+        var newModifiers = DeclarationModifiers.Public;
+
+        // Ensure property has both getter and setter
+        return generator.PropertyDeclaration(
+            TestContextShouldBeValidAnalyzer.TestContextPropertyName,
+            type,
+            accessibility: Accessibility.Public,
+            getAccessorStatements: null, // Auto-property
+            setAccessorStatements: null); // Auto-property
     }
 }
