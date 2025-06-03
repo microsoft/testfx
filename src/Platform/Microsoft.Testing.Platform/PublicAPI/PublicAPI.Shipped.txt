@@ -93,6 +93,7 @@ Microsoft.Testing.Platform.Builder.ITestApplicationBuilder.BuildAsync() -> Syste
 Microsoft.Testing.Platform.Builder.ITestApplicationBuilder.CommandLine.get -> Microsoft.Testing.Platform.CommandLine.ICommandLineManager!
 Microsoft.Testing.Platform.Builder.ITestApplicationBuilder.Configuration.get -> Microsoft.Testing.Platform.Configurations.IConfigurationManager!
 Microsoft.Testing.Platform.Builder.ITestApplicationBuilder.Logging.get -> Microsoft.Testing.Platform.Logging.ILoggingManager!
+Microsoft.Testing.Platform.Builder.ITestApplicationBuilder.RegisterTestFramework(System.Func<System.IServiceProvider!, Microsoft.Testing.Platform.Capabilities.TestFramework.ITestFrameworkCapabilities!>! capabilitiesFactory, System.Func<Microsoft.Testing.Platform.Capabilities.TestFramework.ITestFrameworkCapabilities!, System.IServiceProvider!, Microsoft.Testing.Platform.Extensions.TestFramework.ITestFramework!>! adapterFactory) -> Microsoft.Testing.Platform.Builder.ITestApplicationBuilder!
 Microsoft.Testing.Platform.Builder.ITestApplicationBuilder.TestHost.get -> Microsoft.Testing.Platform.TestHost.ITestHostManager!
 Microsoft.Testing.Platform.Builder.ITestApplicationBuilder.TestHostControllers.get -> Microsoft.Testing.Platform.TestHostControllers.ITestHostControllersManager!
 Microsoft.Testing.Platform.Builder.TestApplication
