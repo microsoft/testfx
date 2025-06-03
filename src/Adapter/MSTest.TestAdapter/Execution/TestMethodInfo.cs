@@ -155,50 +155,35 @@ public class TestMethodInfo : ITestMethod
         LogMessageListener? listener = null;
         watch.Start();
 
-        ExecutionContext? executionContext = Parent.ExecutionContext ?? Parent.Parent.ExecutionContext;
-
-        var tcs = new TaskCompletionSource<object?>();
-
-#pragma warning disable VSTHRD101 // Avoid unsupported async delegates
-        ExecutionContextHelpers.RunOnContext(executionContext, async () =>
+        try
         {
-            try
-            {
-                ThreadSafeStringWriter.CleanState();
-                listener = new LogMessageListener(MSTestSettings.CurrentSettings.CaptureDebugTraces);
+            ThreadSafeStringWriter.CleanState();
+            listener = new LogMessageListener(MSTestSettings.CurrentSettings.CaptureDebugTraces);
 
-                result = IsTimeoutSet
-                    ? await ExecuteInternalWithTimeoutAsync(arguments)
-                    : await ExecuteInternalAsync(arguments, null);
-                tcs.SetResult(null);
-            }
-            catch (Exception e)
-            {
-                tcs.SetException(e);
-            }
-            finally
-            {
-                // Handle logs & debug traces.
-                watch.Stop();
+            result = IsTimeoutSet
+                ? await ExecuteInternalWithTimeoutAsync(arguments)
+                : await ExecuteInternalAsync(arguments, null);
+        }
+        finally
+        {
+            // Handle logs & debug traces.
+            watch.Stop();
 
-                if (result != null)
+            if (result != null)
+            {
+                result.Duration = watch.Elapsed;
+                if (listener is not null)
                 {
-                    result.Duration = watch.Elapsed;
-                    if (listener is not null)
-                    {
-                        result.DebugTrace = listener.GetAndClearDebugTrace();
-                        result.LogOutput = listener.GetAndClearStandardOutput();
-                        result.LogError = listener.GetAndClearStandardError();
-                        result.TestContextMessages = TestContext?.GetAndClearDiagnosticMessages();
-                        result.ResultFiles = TestContext?.GetResultFiles();
-                        listener.Dispose();
-                    }
+                    result.DebugTrace = listener.GetAndClearDebugTrace();
+                    result.LogOutput = listener.GetAndClearStandardOutput();
+                    result.LogError = listener.GetAndClearStandardError();
+                    result.TestContextMessages = TestContext?.GetAndClearDiagnosticMessages();
+                    result.ResultFiles = TestContext?.GetResultFiles();
+                    listener.Dispose();
                 }
             }
-        });
-#pragma warning restore VSTHRD101 // Avoid unsupported async delegates
+        }
 
-        await tcs.Task;
         return result!;
     }
 
