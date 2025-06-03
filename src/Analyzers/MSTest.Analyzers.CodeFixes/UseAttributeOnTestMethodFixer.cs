@@ -21,7 +21,7 @@ namespace MSTest.Analyzers;
 /// <summary>
 /// Code fixer for <see cref="UseAttributeOnTestMethodAnalyzer"/>.
 /// </summary>
-[ExportCodeFixProvider(LanguageNames.CSharp, Name = nameof(UseAttributeOnTestMethodFixer))]
+[ExportCodeFixProvider(LanguageNames.CSharp, LanguageNames.VisualBasic, Name = nameof(UseAttributeOnTestMethodFixer))]
 [Shared]
 public sealed class UseAttributeOnTestMethodFixer : CodeFixProvider
 {

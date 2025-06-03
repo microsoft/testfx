@@ -4,6 +4,9 @@
 using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
     MSTest.Analyzers.TestMethodShouldBeValidAnalyzer,
     MSTest.Analyzers.TestMethodShouldBeValidCodeFixProvider>;
+using VerifyVB = MSTest.Analyzers.Test.VisualBasicCodeFixVerifier<
+    MSTest.Analyzers.TestMethodShouldBeValidAnalyzer,
+    MSTest.Analyzers.TestMethodShouldBeValidCodeFixProvider>;
 
 namespace MSTest.Analyzers.Test;
 
@@ -457,5 +460,57 @@ public sealed class TestMethodShouldBeValidAnalyzerTests
             """;
 
         await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+    [TestMethod]
+    public async Task WhenTestMethodIsPublic_VB_NoDiagnostic()
+    {
+        string code = """
+            Imports Microsoft.VisualStudio.TestTools.UnitTesting
+
+            <TestClass>
+            Public Class MyTestClass
+                <TestMethod>
+                Public Sub MyTestMethod()
+                End Sub
+            End Class
+            """;
+
+        await VerifyVB.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenTestMethodIsPrivate_VB_Diagnostic()
+    {
+        string code = """
+            Imports Microsoft.VisualStudio.TestTools.UnitTesting
+
+            <TestClass>
+            Public Class MyTestClass
+                <TestMethod>
+                Private Sub {|#0:MyTestMethod|}()
+                End Sub
+            End Class
+            """;
+
+        await VerifyVB.VerifyAnalyzerAsync(code,
+            VerifyVB.Diagnostic(TestMethodShouldBeValidAnalyzer.MethodNotPublicRule).WithLocation(0));
+    }
+
+    [TestMethod]
+    public async Task WhenTestMethodIsStatic_VB_Diagnostic()
+    {
+        string code = """
+            Imports Microsoft.VisualStudio.TestTools.UnitTesting
+
+            <TestClass>
+            Public Class MyTestClass
+                <TestMethod>
+                Public Shared Sub {|#0:MyTestMethod|}()
+                End Sub
+            End Class
+            """;
+
+        await VerifyVB.VerifyAnalyzerAsync(code,
+            VerifyVB.Diagnostic(TestMethodShouldBeValidAnalyzer.MethodStaticRule).WithLocation(0));
     }
 }

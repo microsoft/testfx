@@ -4,6 +4,9 @@
 using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
     MSTest.Analyzers.TestClassShouldBeValidAnalyzer,
     MSTest.Analyzers.TestClassShouldBeValidFixer>;
+using VerifyVB = MSTest.Analyzers.Test.VisualBasicCodeFixVerifier<
+    MSTest.Analyzers.TestClassShouldBeValidAnalyzer,
+    MSTest.Analyzers.TestClassShouldBeValidFixer>;
 
 namespace MSTest.Analyzers.Test;
 
@@ -459,5 +462,50 @@ public sealed class TestClassShouldBeValidAnalyzerTests
                 .WithLocation(0)
                 .WithArguments("MyTestClass"),
             fixedCode);
+    }
+    [TestMethod]
+    public async Task WhenClassIsPublicAndTestClass_VB_NoDiagnostic()
+    {
+        string code = """
+            Imports Microsoft.VisualStudio.TestTools.UnitTesting
+
+            <TestClass>
+            Public Class MyTestClass
+            End Class
+            """;
+
+        await VerifyVB.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenClassIsPrivateAndTestClass_VB_Diagnostic()
+    {
+        string code = """
+            Imports Microsoft.VisualStudio.TestTools.UnitTesting
+
+            Public Class OuterClass
+                <TestClass>
+                Private Class {|#0:MyTestClass|}
+                End Class
+            End Class
+            """;
+
+        await VerifyVB.VerifyAnalyzerAsync(code,
+            VerifyVB.Diagnostic(TestClassShouldBeValidAnalyzer.ClassNotPublicRule).WithLocation(0));
+    }
+
+    [TestMethod]
+    public async Task WhenClassIsStaticAndTestClass_VB_Diagnostic()
+    {
+        string code = """
+            Imports Microsoft.VisualStudio.TestTools.UnitTesting
+
+            <TestClass>
+            Public Module {|#0:MyTestClass|}
+            End Module
+            """;
+
+        await VerifyVB.VerifyAnalyzerAsync(code,
+            VerifyVB.Diagnostic(TestClassShouldBeValidAnalyzer.ClassStaticRule).WithLocation(0));
     }
 }

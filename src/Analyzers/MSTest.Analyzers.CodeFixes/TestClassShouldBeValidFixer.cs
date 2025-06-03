@@ -21,7 +21,7 @@ namespace MSTest.Analyzers;
 /// <summary>
 /// Code fixer for <see cref="TestClassShouldBeValidAnalyzer"/>.
 /// </summary>
-[ExportCodeFixProvider(LanguageNames.CSharp, Name = nameof(TestClassShouldBeValidFixer))]
+[ExportCodeFixProvider(LanguageNames.CSharp, LanguageNames.VisualBasic, Name = nameof(TestClassShouldBeValidFixer))]
 [Shared]
 public sealed class TestClassShouldBeValidFixer : CodeFixProvider
 {
