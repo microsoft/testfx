@@ -433,13 +433,28 @@ public class TestMethodInfo : ITestMethod
                         if (executionContext is null)
                         {
                             object? invokeResult = TestMethod.GetInvokeResult(_classInstance, arguments);
-                            if (invokeResult is Task task)
+                            if (invokeResult is null)
+                            {
+                                // Do nothing.
+                                // Don't remove this if condition as we don't want to go in the "else" in this case.
+                            }
+                            else if (invokeResult is Task task)
                             {
                                 await task;
                             }
-                            else if (invokeResult is ValueTask valueTask)
+                            else
                             {
-                                await valueTask;
+                                await TryAwaitValueTaskAsync(invokeResult);
+
+                                // Avoid loading System.Threading.Tasks.Extensions if not needed.
+                                [MethodImpl(MethodImplOptions.NoInlining)]
+                                static async Task TryAwaitValueTaskAsync(object invokeResult)
+                                {
+                                    if (invokeResult is ValueTask valueTask)
+                                    {
+                                        await valueTask;
+                                    }
+                                }
                             }
                         }
                         else
@@ -452,13 +467,28 @@ public class TestMethodInfo : ITestMethod
                                 try
                                 {
                                     object? invokeResult = TestMethod.GetInvokeResult(_classInstance, arguments);
-                                    if (invokeResult is Task task)
+                                    if (invokeResult is null)
+                                    {
+                                        // Do nothing.
+                                        // Don't remove this if condition as we don't want to go in the "else" in this case.
+                                    }
+                                    else if (invokeResult is Task task)
                                     {
                                         await task;
                                     }
-                                    else if (invokeResult is ValueTask valueTask)
+                                    else
                                     {
-                                        await valueTask;
+                                        await TryAwaitValueTaskAsync(invokeResult);
+
+                                        // Avoid loading System.Threading.Tasks.Extensions if not needed.
+                                        [MethodImpl(MethodImplOptions.NoInlining)]
+                                        static async Task TryAwaitValueTaskAsync(object invokeResult)
+                                        {
+                                            if (invokeResult is ValueTask valueTask)
+                                            {
+                                                await valueTask;
+                                            }
+                                        }
                                     }
                                 }
                                 catch (Exception e)
