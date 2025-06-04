@@ -447,6 +447,9 @@ public class TestMethodInfo : ITestMethod
                                 await TryAwaitValueTaskAsync(invokeResult);
 
                                 // Avoid loading System.Threading.Tasks.Extensions if not needed.
+                                // Note: .NET runtime will load all types once it's entering the method.
+                                // So, moving this out of the method will load System.Threading.Tasks.Extensions
+                                // Even when invokeResult is null or Task.
                                 [MethodImpl(MethodImplOptions.NoInlining)]
                                 static async Task TryAwaitValueTaskAsync(object invokeResult)
                                 {
@@ -481,6 +484,9 @@ public class TestMethodInfo : ITestMethod
                                         await TryAwaitValueTaskAsync(invokeResult);
 
                                         // Avoid loading System.Threading.Tasks.Extensions if not needed.
+                                        // Note: .NET runtime will load all types once it's entering the method.
+                                        // So, moving this out of the method will load System.Threading.Tasks.Extensions
+                                        // Even when invokeResult is null or Task.
                                         [MethodImpl(MethodImplOptions.NoInlining)]
                                         static async Task TryAwaitValueTaskAsync(object invokeResult)
                                         {
