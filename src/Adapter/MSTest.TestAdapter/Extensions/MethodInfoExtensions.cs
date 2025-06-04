@@ -91,8 +91,14 @@ internal static class MethodInfoExtensions
     /// <returns>True if the method has a void/task return type..</returns>
     internal static bool IsValidReturnType(this MethodInfo method, ReflectHelper? reflectHelper = null)
         => ReflectHelper.MatchReturnType(method, typeof(Task))
-        || ReflectHelper.MatchReturnType(method, typeof(ValueTask))
-        || (ReflectHelper.MatchReturnType(method, typeof(void)) && method.GetAsyncTypeName(reflectHelper) == null);
+        || (ReflectHelper.MatchReturnType(method, typeof(void)) && method.GetAsyncTypeName(reflectHelper) == null)
+        // Keep this the last check, as it avoids loading System.Threading.Tasks.Extensions unnecessarily.
+        || method.IsValueTask();
+
+    // Avoid loading System.Threading.Tasks.Extensions if not needed.
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static bool IsValueTask(this MethodInfo method)
+        => ReflectHelper.MatchReturnType(method, typeof(ValueTask));
 
     /// <summary>
     /// For async methods compiler generates different type and method.
@@ -192,13 +198,28 @@ internal static class MethodInfoExtensions
         object? invokeResult = methodInfo.GetInvokeResult(classInstance, arguments);
 
         // If methodInfo is an async method, wait for returned task
-        if (invokeResult is Task task)
+        if (invokeResult is null)
+        {
+            // Do nothing.
+            // Don't remove this if condition as we don't want to go in the "else" in this case.
+        }
+        else if (invokeResult is Task task)
         {
             task.GetAwaiter().GetResult();
         }
-        else if (invokeResult is ValueTask valueTask)
+        else
         {
-            valueTask.GetAwaiter().GetResult();
+            TryWaitValueTask(invokeResult);
+
+            // Avoid loading System.Threading.Tasks.Extensions if not needed.
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static void TryWaitValueTask(object invokeResult)
+            {
+                if (invokeResult is ValueTask valueTask)
+                {
+                    valueTask.GetAwaiter().GetResult();
+                }
+            }
         }
     }
 
