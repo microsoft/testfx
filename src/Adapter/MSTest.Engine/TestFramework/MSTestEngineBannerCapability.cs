@@ -2,28 +2,16 @@
 // Licensed under dual-license. See LICENSE.PLATFORMTOOLS.txt file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
-using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Framework;
 
 internal sealed class MSTestEngineBannerCapability : IBannerMessageOwnerCapability
 {
-    private readonly IPlatformInformation _platformInformation;
-
-    public MSTestEngineBannerCapability(IPlatformInformation platformInformation) => _platformInformation = platformInformation;
-
     public Task<string?> GetBannerMessageAsync()
     {
         StringBuilder bannerMessage = new();
         bannerMessage.Append("MSTest.Engine v");
         bannerMessage.Append(MSTestEngineRepositoryVersion.Version);
-
-        if (_platformInformation.BuildDate is { } buildDate)
-        {
-            bannerMessage.Append(" (UTC ");
-            bannerMessage.Append(buildDate.UtcDateTime.ToShortDateString());
-            bannerMessage.Append(')');
-        }
 
 #if NETCOREAPP
         if (RuntimeFeature.IsDynamicCodeCompiled)

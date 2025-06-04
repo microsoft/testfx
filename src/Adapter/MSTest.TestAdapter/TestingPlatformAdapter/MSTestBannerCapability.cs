@@ -3,7 +3,6 @@
 
 #if !WINDOWS_UWP
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
-using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -12,22 +11,11 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 [SuppressMessage("ApiDesign", "RS0030:Do not use banned APIs", Justification = "We can use MTP from this folder")]
 internal sealed class MSTestBannerCapability : IBannerMessageOwnerCapability
 {
-    private readonly IPlatformInformation _platformInformation;
-
-    public MSTestBannerCapability(IPlatformInformation platformInformation) => _platformInformation = platformInformation;
-
     public Task<string?> GetBannerMessageAsync()
     {
         StringBuilder bannerMessage = new();
         bannerMessage.Append("MSTest v");
         bannerMessage.Append(MSTestVersion.SemanticVersion);
-
-        if (_platformInformation.BuildDate is { } buildDate)
-        {
-            bannerMessage.Append(" (UTC ");
-            bannerMessage.Append(buildDate.UtcDateTime.ToShortDateString());
-            bannerMessage.Append(')');
-        }
 
 #if NETCOREAPP
         if (RuntimeFeature.IsDynamicCodeCompiled)

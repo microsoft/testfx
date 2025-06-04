@@ -7,7 +7,6 @@ using Microsoft.Testing.Extensions.VSTestBridge.Helpers;
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.Helpers;
-using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -47,7 +46,7 @@ public static class TestApplicationBuilderExtensions
             serviceProvider => new TestFrameworkCapabilities(
                 new MSTestCapabilities(),
 #pragma warning disable TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
-                new MSTestBannerCapability(serviceProvider.GetRequiredService<IPlatformInformation>()),
+                new MSTestBannerCapability(),
                 MSTestGracefulStopTestExecutionCapability.Instance),
 #pragma warning restore TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
             (capabilities, serviceProvider) => new MSTestBridgedTestFramework(extension, getTestAssemblies, serviceProvider, capabilities));
