@@ -116,7 +116,7 @@ internal static class MethodInfoExtensions
         return asyncStateMachineAttribute?.StateMachineType?.FullName;
     }
 
-    internal static object? GetInvokeResult(this MethodInfo methodInfo, object? classInstance, params object?[]? arguments)
+    internal static Task? GetInvokeResultAsync(this MethodInfo methodInfo, object? classInstance, params object?[]? arguments)
     {
         ParameterInfo[]? methodParameters = methodInfo.GetParameters();
 
@@ -181,8 +181,21 @@ internal static class MethodInfoExtensions
             }
         }
 
-        return invokeResult;
+        return invokeResult switch
+        {
+            null => null,
+            Task t => t,
+            _ => TryGetTaskFromValueTaskAsync(invokeResult),
+        };
     }
+
+    // Avoid loading System.Threading.Tasks.Extensions if not needed.
+    // Note: .NET runtime will load all types once it's entering the method.
+    // So, moving this out of the method will load System.Threading.Tasks.Extensions
+    // Even when invokeResult is null or Task.
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static Task? TryGetTaskFromValueTaskAsync(object invokeResult)
+        => (invokeResult as ValueTask?)?.AsTask();
 
     /// <summary>
     /// Invoke a <see cref="MethodInfo"/> as a synchronous <see cref="Task"/>.
@@ -198,34 +211,11 @@ internal static class MethodInfoExtensions
     /// </param>
     internal static void InvokeAsSynchronousTask(this MethodInfo methodInfo, object? classInstance, params object?[]? arguments)
     {
-        object? invokeResult = methodInfo.GetInvokeResult(classInstance, arguments);
+        Task? invokeResult = methodInfo.GetInvokeResultAsync(classInstance, arguments);
 
-        // If methodInfo is an async method, wait for returned task
-        if (invokeResult is null)
+        if (invokeResult is not null)
         {
-            // Do nothing.
-            // Don't remove this if condition as we don't want to go in the "else" in this case.
-        }
-        else if (invokeResult is Task task)
-        {
-            task.GetAwaiter().GetResult();
-        }
-        else
-        {
-            TryWaitValueTask(invokeResult);
-
-            // Avoid loading System.Threading.Tasks.Extensions if not needed.
-            // Note: .NET runtime will load all types once it's entering the method.
-            // So, moving this out of the method will load System.Threading.Tasks.Extensions
-            // Even when invokeResult is null or Task.
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static void TryWaitValueTask(object invokeResult)
-            {
-                if (invokeResult is ValueTask valueTask)
-                {
-                    valueTask.GetAwaiter().GetResult();
-                }
-            }
+            invokeResult.GetAwaiter().GetResult();
         }
     }
 

@@ -432,32 +432,10 @@ public class TestMethodInfo : ITestMethod
 
                         if (executionContext is null)
                         {
-                            object? invokeResult = TestMethod.GetInvokeResult(_classInstance, arguments);
-                            if (invokeResult is null)
+                            Task? invokeResult = TestMethod.GetInvokeResultAsync(_classInstance, arguments);
+                            if (invokeResult is not null)
                             {
-                                // Do nothing.
-                                // Don't remove this if condition as we don't want to go in the "else" in this case.
-                            }
-                            else if (invokeResult is Task task)
-                            {
-                                await task;
-                            }
-                            else
-                            {
-                                await TryAwaitValueTaskAsync(invokeResult);
-
-                                // Avoid loading System.Threading.Tasks.Extensions if not needed.
-                                // Note: .NET runtime will load all types once it's entering the method.
-                                // So, moving this out of the method will load System.Threading.Tasks.Extensions
-                                // Even when invokeResult is null or Task.
-                                [MethodImpl(MethodImplOptions.NoInlining)]
-                                static async Task TryAwaitValueTaskAsync(object invokeResult)
-                                {
-                                    if (invokeResult is ValueTask valueTask)
-                                    {
-                                        await valueTask;
-                                    }
-                                }
+                                await invokeResult;
                             }
                         }
                         else
@@ -469,32 +447,10 @@ public class TestMethodInfo : ITestMethod
                             {
                                 try
                                 {
-                                    object? invokeResult = TestMethod.GetInvokeResult(_classInstance, arguments);
-                                    if (invokeResult is null)
+                                    Task? invokeResult = TestMethod.GetInvokeResultAsync(_classInstance, arguments);
+                                    if (invokeResult is not null)
                                     {
-                                        // Do nothing.
-                                        // Don't remove this if condition as we don't want to go in the "else" in this case.
-                                    }
-                                    else if (invokeResult is Task task)
-                                    {
-                                        await task;
-                                    }
-                                    else
-                                    {
-                                        await TryAwaitValueTaskAsync(invokeResult);
-
-                                        // Avoid loading System.Threading.Tasks.Extensions if not needed.
-                                        // Note: .NET runtime will load all types once it's entering the method.
-                                        // So, moving this out of the method will load System.Threading.Tasks.Extensions
-                                        // Even when invokeResult is null or Task.
-                                        [MethodImpl(MethodImplOptions.NoInlining)]
-                                        static async Task TryAwaitValueTaskAsync(object invokeResult)
-                                        {
-                                            if (invokeResult is ValueTask valueTask)
-                                            {
-                                                await valueTask;
-                                            }
-                                        }
+                                        await invokeResult;
                                     }
                                 }
                                 catch (Exception e)
