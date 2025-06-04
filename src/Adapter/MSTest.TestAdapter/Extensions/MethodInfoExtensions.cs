@@ -212,11 +212,7 @@ internal static class MethodInfoExtensions
     internal static void InvokeAsSynchronousTask(this MethodInfo methodInfo, object? classInstance, params object?[]? arguments)
     {
         Task? invokeResult = methodInfo.GetInvokeResultAsync(classInstance, arguments);
-
-        if (invokeResult is not null)
-        {
-            invokeResult.GetAwaiter().GetResult();
-        }
+        invokeResult?.GetAwaiter().GetResult();
     }
 
     private static void InferGenerics(Type parameterType, Type argumentType, List<(Type ParameterType, Type Substitution)> result)
