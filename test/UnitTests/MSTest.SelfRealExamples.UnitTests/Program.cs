@@ -6,6 +6,8 @@ using Microsoft.Testing.Platform.Builder;
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
+[assembly: Parallelize(Scope = Microsoft.VisualStudio.TestTools.UnitTesting.ExecutionScope.ClassLevel, Workers = 0)]
+
 ITestApplicationBuilder testApplicationBuilder = await TestApplication.CreateBuilderAsync(args);
 
 testApplicationBuilder.AddMSTest(() => [Assembly.GetEntryAssembly()!]);
