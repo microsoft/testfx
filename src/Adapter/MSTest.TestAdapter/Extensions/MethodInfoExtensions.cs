@@ -96,6 +96,9 @@ internal static class MethodInfoExtensions
         || method.IsValueTask();
 
     // Avoid loading System.Threading.Tasks.Extensions if not needed.
+    // Note: .NET runtime will load all types once it's entering the method.
+    // So, moving this out of the method will load System.Threading.Tasks.Extensions
+    // Even when invokeResult is null or Task.
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static bool IsValueTask(this MethodInfo method)
         => ReflectHelper.MatchReturnType(method, typeof(ValueTask));
@@ -212,6 +215,9 @@ internal static class MethodInfoExtensions
             TryWaitValueTask(invokeResult);
 
             // Avoid loading System.Threading.Tasks.Extensions if not needed.
+            // Note: .NET runtime will load all types once it's entering the method.
+            // So, moving this out of the method will load System.Threading.Tasks.Extensions
+            // Even when invokeResult is null or Task.
             [MethodImpl(MethodImplOptions.NoInlining)]
             static void TryWaitValueTask(object invokeResult)
             {
