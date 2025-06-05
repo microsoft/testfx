@@ -270,7 +270,7 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
             workingDirectory: testAsset.TargetAssetPath,
             failIfReturnValueIsNotZero: false);
 
-        result.AssertExitCodeIs(1);
+        Assert.AreEqual(1, result.ExitCode);
         result.AssertOutputContains("VSTest-specific properties are set but will be ignored when using Microsoft Testing Platform");
         result.AssertOutputContains("VSTestTestCaseFilter");
         result.AssertOutputContains("VSTestLogger");
@@ -294,7 +294,7 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
             workingDirectory: testAsset.TargetAssetPath,
             failIfReturnValueIsNotZero: false);
 
-        result.AssertExitCodeIs(0);
+        Assert.AreEqual(0, result.ExitCode);
     }
 
     [TestMethod]
@@ -314,7 +314,7 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
             workingDirectory: testAsset.TargetAssetPath,
             failIfReturnValueIsNotZero: false);
 
-        result.AssertExitCodeIs(0);
+        Assert.AreEqual(0, result.ExitCode);
     }
 
     private static void CommonAssert(DotnetMuxerResult compilationResult, string tfm, bool testSucceeded, string testResultFolder)
