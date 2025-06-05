@@ -260,10 +260,10 @@ internal sealed partial class AppInsightsProvider :
     }
 
 #if NET7_0_OR_GREATER
-    [System.Text.RegularExpressions.GeneratedRegex("[a-f0-9]{64}")]
-    private static partial System.Text.RegularExpressions.Regex GetValidHashPattern();
+    [GeneratedRegex("[a-f0-9]{64}")]
+    private static partial Regex GetValidHashPattern();
 #else
-    private static System.Text.RegularExpressions.Regex GetValidHashPattern()
+    private static Regex GetValidHashPattern()
         => new("[a-f0-9]{64}");
 #endif
 #endif

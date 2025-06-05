@@ -7,9 +7,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Int
 /// Operations on the TraceListener object that is implemented differently for each platform.
 /// </summary>
 #if NET6_0_OR_GREATER
-[Obsolete(Constants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
+[Obsolete(Microsoft.VisualStudio.TestTools.UnitTesting.FrameworkConstants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
 #else
-[Obsolete(Constants.PublicTypeObsoleteMessage)]
+[Obsolete(Microsoft.VisualStudio.TestTools.UnitTesting.FrameworkConstants.PublicTypeObsoleteMessage)]
 #endif
 public interface ITraceListener
 {

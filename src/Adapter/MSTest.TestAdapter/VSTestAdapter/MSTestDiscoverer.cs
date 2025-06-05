@@ -11,15 +11,15 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 /// <summary>
 /// Contains the discovery logic for this adapter.
 /// </summary>
-[DefaultExecutorUri(Constants.ExecutorUriString)]
+[DefaultExecutorUri(MSTestAdapter.PlatformServices.EngineConstants.ExecutorUriString)]
 [FileExtension(".xap")]
 [FileExtension(".appx")]
 [FileExtension(".dll")]
 [FileExtension(".exe")]
 #if NET6_0_OR_GREATER
-[Obsolete(Constants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
+[Obsolete(TestTools.UnitTesting.FrameworkConstants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
 #else
-[Obsolete(Constants.PublicTypeObsoleteMessage)]
+[Obsolete(TestTools.UnitTesting.FrameworkConstants.PublicTypeObsoleteMessage)]
 #endif
 public class MSTestDiscoverer : ITestDiscoverer
 {

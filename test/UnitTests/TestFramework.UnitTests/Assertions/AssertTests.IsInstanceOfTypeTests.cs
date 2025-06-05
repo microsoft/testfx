@@ -119,14 +119,14 @@ public partial class AssertTests
 
     public void IsInstanceOfTypeUsingGenericTypeWithOutParameter_OnSameInstance_DoesNotThrow()
     {
-        Assert.IsInstanceOfType<int>(5, out int instance);
+        Assert.IsInstanceOfType(5, out int instance);
         Verify(instance == 5);
     }
 
     public void IsInstanceOfTypeUsingGenericTypeWithOutParameter_OnSameInstanceReferenceType_DoesNotThrow()
     {
         object testInstance = new AssertTests();
-        Assert.IsInstanceOfType<AssertTests>(testInstance, out AssertTests instance);
+        Assert.IsInstanceOfType(testInstance, out AssertTests instance);
         Verify(testInstance == instance);
     }
 
@@ -135,7 +135,7 @@ public partial class AssertTests
     public void IsInstanceOfTypeUsingGenericTypeWithOutParameter_OnHigherInstance_DoesNotThrow()
     {
         object testInstance = new AssertTests();
-        Assert.IsInstanceOfType<object>(testInstance, out object instance);
+        Assert.IsInstanceOfType(testInstance, out object instance);
         Verify(instance == testInstance);
     }
 
@@ -169,7 +169,7 @@ public partial class AssertTests
     public void IsInstanceOfTypeGenericWithOutParameter_WhenNonNullNullableValue_LearnNonNull()
     {
         object? obj = GetObj();
-        Assert.IsInstanceOfType<object>(obj, out object _);
+        Assert.IsInstanceOfType(obj, out object _);
         _ = obj.ToString(); // no warning about possible null
     }
 
@@ -197,7 +197,7 @@ public partial class AssertTests
     public void IsInstanceOfTypeGenericWithOutParameter_WhenNonNullNullableValueAndMessage_LearnNonNull()
     {
         object? obj = GetObj();
-        Assert.IsInstanceOfType<object>(obj, out object _, "my message");
+        Assert.IsInstanceOfType(obj, out object _, "my message");
         _ = obj.ToString(); // no warning about possible null
     }
 
@@ -225,7 +225,7 @@ public partial class AssertTests
     public void IsInstanceOfTypeGenericWithOutParameter_WhenNonNullNullableValueAndCompositeMessage_LearnNonNull()
     {
         object? obj = GetObj();
-        Assert.IsInstanceOfType<object>(obj, out object _, "my message with {0}", "arg");
+        Assert.IsInstanceOfType(obj, out object _, "my message with {0}", "arg");
         _ = obj.ToString(); // no warning about possible null
     }
 
