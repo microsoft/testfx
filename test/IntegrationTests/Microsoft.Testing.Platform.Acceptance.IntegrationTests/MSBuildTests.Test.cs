@@ -253,6 +253,70 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
         Assert.Contains($"[win-x64 - {TargetFrameworks.NetCurrent}]", logFileContent);
     }
 
+    [TestMethod]
+    public async Task VSTestProperties_Should_Cause_Error_When_Set()
+    {
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
+            "VSTestPropertiesValidation",
+            SourceCode
+            .PatchCodeWithReplace("$PlatformTarget$", string.Empty)
+            .PatchCodeWithReplace("$TargetFrameworks$", $"<TargetFramework>{TargetFrameworks.NetCurrent}</TargetFramework>")
+            .PatchCodeWithReplace("$AssertValue$", bool.TrueString.ToLowerInvariant())
+            .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
+
+        DotnetMuxerResult result = await DotnetCli.RunAsync(
+            $"test -p:TestingPlatformDotnetTestSupport=True -p:VSTestTestCaseFilter=Category=Unit -p:VSTestLogger=trx \"{testAsset.TargetAssetPath}\"",
+            AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
+            workingDirectory: testAsset.TargetAssetPath,
+            failIfReturnValueIsNotZero: false);
+
+        result.AssertExitCodeIs(1);
+        result.AssertOutputContains("VSTest-specific properties are set but will be ignored when using Microsoft Testing Platform");
+        result.AssertOutputContains("VSTestTestCaseFilter");
+        result.AssertOutputContains("VSTestLogger");
+        result.AssertOutputContains("TestingPlatformIgnoreVSTestProperties");
+    }
+
+    [TestMethod]
+    public async Task VSTestProperties_Should_Not_Cause_Error_When_OptOut_Is_Set()
+    {
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
+            "VSTestPropertiesValidationOptOut",
+            SourceCode
+            .PatchCodeWithReplace("$PlatformTarget$", string.Empty)
+            .PatchCodeWithReplace("$TargetFrameworks$", $"<TargetFramework>{TargetFrameworks.NetCurrent}</TargetFramework>")
+            .PatchCodeWithReplace("$AssertValue$", bool.TrueString.ToLowerInvariant())
+            .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
+
+        DotnetMuxerResult result = await DotnetCli.RunAsync(
+            $"test -p:TestingPlatformDotnetTestSupport=True -p:VSTestTestCaseFilter=Category=Unit -p:TestingPlatformIgnoreVSTestProperties=true \"{testAsset.TargetAssetPath}\"",
+            AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
+            workingDirectory: testAsset.TargetAssetPath,
+            failIfReturnValueIsNotZero: false);
+
+        result.AssertExitCodeIs(0);
+    }
+
+    [TestMethod]
+    public async Task VSTestProperties_Should_Not_Cause_Error_When_Not_Set()
+    {
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
+            "VSTestPropertiesValidationNoProps",
+            SourceCode
+            .PatchCodeWithReplace("$PlatformTarget$", string.Empty)
+            .PatchCodeWithReplace("$TargetFrameworks$", $"<TargetFramework>{TargetFrameworks.NetCurrent}</TargetFramework>")
+            .PatchCodeWithReplace("$AssertValue$", bool.TrueString.ToLowerInvariant())
+            .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
+
+        DotnetMuxerResult result = await DotnetCli.RunAsync(
+            $"test -p:TestingPlatformDotnetTestSupport=True \"{testAsset.TargetAssetPath}\"",
+            AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
+            workingDirectory: testAsset.TargetAssetPath,
+            failIfReturnValueIsNotZero: false);
+
+        result.AssertExitCodeIs(0);
+    }
+
     private static void CommonAssert(DotnetMuxerResult compilationResult, string tfm, bool testSucceeded, string testResultFolder)
     {
         Assert.IsTrue(Regex.IsMatch(compilationResult.StandardOutput, $".*Run tests:.* \\[{tfm}|x64\\]"), compilationResult.StandardOutput);

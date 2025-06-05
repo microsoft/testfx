@@ -7,4 +7,10 @@
       <TypeFullName>Microsoft.Testing.Platform.MSBuild.TestingPlatformBuilderHook</TypeFullName>
     </TestingPlatformBuilderHook>
   </ItemGroup>
+
+  <!-- VSTest properties validation -->
+  <PropertyGroup>
+    <!-- Property to opt-out from VSTest properties validation error -->
+    <TestingPlatformIgnoreVSTestProperties Condition=" '$(TestingPlatformIgnoreVSTestProperties)' == '' ">false</TestingPlatformIgnoreVSTestProperties>
+  </PropertyGroup>
 </Project>
