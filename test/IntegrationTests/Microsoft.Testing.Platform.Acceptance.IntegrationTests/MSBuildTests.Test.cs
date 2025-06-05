@@ -259,7 +259,7 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
             .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
 
         DotnetMuxerResult result = await DotnetCli.RunAsync(
-            $"test -p:TestingPlatformDotnetTestSupport=True -p:VSTestTestCaseFilter=Category=Unit -p:VSTestLogger=trx \"{testAsset.TargetAssetPath}\"",
+            $"test -p:TestingPlatformDotnetTestSupport=True --filter Category=Unit --logger trx \"{testAsset.TargetAssetPath}\"",
             AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
             workingDirectory: testAsset.TargetAssetPath,
             failIfReturnValueIsNotZero: false);
@@ -268,7 +268,7 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
         result.AssertOutputContains("VSTest-specific properties are set but will be ignored when using Microsoft Testing Platform");
         result.AssertOutputContains("VSTestTestCaseFilter");
         result.AssertOutputContains("VSTestLogger");
-        result.AssertOutputContains("TestingPlatformIgnoreVSTestProperties");
+        result.AssertOutputContains("AllowVSTestOptionsIgnoredInMicrosoftTestingPlatform");
     }
 
     [TestMethod]
@@ -283,7 +283,7 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
             .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
 
         DotnetMuxerResult result = await DotnetCli.RunAsync(
-            $"test -p:TestingPlatformDotnetTestSupport=True -p:VSTestTestCaseFilter=Category=Unit -p:TestingPlatformIgnoreVSTestProperties=true \"{testAsset.TargetAssetPath}\"",
+            $"test -p:TestingPlatformDotnetTestSupport=True --filter Category=Unit -p:AllowVSTestOptionsIgnoredInMicrosoftTestingPlatform=true \"{testAsset.TargetAssetPath}\"",
             AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
             workingDirectory: testAsset.TargetAssetPath,
             failIfReturnValueIsNotZero: false);
