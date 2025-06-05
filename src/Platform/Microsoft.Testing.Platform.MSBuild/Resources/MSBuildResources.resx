@@ -164,4 +164,7 @@ You can resolve the problem by installing the '{1}' .NET.
 The specified framework can be found at:
   - https://aka.ms/dotnet-download</value>
   </data>
+  <data name="VSTestPropertiesIgnored" xml:space="preserve">
+    <value>VSTest-specific properties are set but will be ignored when using Microsoft Testing Platform. The following properties are set: {0}. To suppress this error, set TestingPlatformIgnoreVSTestProperties to true. For more information about migrating from VSTest to Microsoft Testing Platform, see: https://docs.microsoft.com/en-us/dotnet/core/testing/unit-testing-mstest-intro</value>
+  </data>
 </root>
