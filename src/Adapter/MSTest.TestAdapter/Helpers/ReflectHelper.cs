@@ -25,42 +25,13 @@ internal class ReflectHelper : MarshalByRefObject
     public static ReflectHelper Instance => InstanceValue.Value;
 
     /// <summary>
-    /// Checks to see if a member or type is decorated with the given attribute. The type is checked exactly. If attribute is derived (inherits from) a class, e.g. [MyTestClass] from [TestClass] it won't match if you look for [TestClass]. The inherit parameter does not impact this checking.
-    /// </summary>
-    /// <remarks>
-    /// Note that because derived attribute types are not considered, <typeparamref name="TAttribute"/> should be sealed.
-    /// </remarks>
-    /// <typeparam name="TAttribute">Attribute to search for by fully qualified name.</typeparam>
-    /// <param name="memberInfo">Member/Type to test.</param>
-    /// <param name="inherit">Inspect inheritance chain of the member or class. E.g. if parent class has this attribute defined.</param>
-    /// <returns>True if the attribute of the specified type is defined on this member or a class.</returns>
-    public virtual bool IsNonDerivedAttributeDefined<TAttribute>(MemberInfo memberInfo, bool inherit)
-        where TAttribute : Attribute
-    {
-        Guard.NotNull(memberInfo);
-
-        // Get attributes defined on the member from the cache.
-        Attribute[] attributes = GetCustomAttributesCached(memberInfo, inherit);
-
-        foreach (Attribute attribute in attributes)
-        {
-            if (AttributeComparer.IsNonDerived<TAttribute>(attribute))
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    /// <summary>
     /// Checks to see if a member or type is decorated with the given attribute, or an attribute that derives from it. e.g. [MyTestClass] from [TestClass] will match if you look for [TestClass]. The inherit parameter does not impact this checking.
     /// </summary>
     /// <typeparam name="TAttribute">Attribute to search for.</typeparam>
     /// <param name="memberInfo">Member to inspect for attributes.</param>
     /// <param name="inherit">Inspect inheritance chain of the member or class. E.g. if parent class has this attribute defined.</param>
     /// <returns>True if the attribute of the specified type is defined on this member or a class.</returns>
-    public virtual /* for testing */ bool IsDerivedAttributeDefined<TAttribute>(MemberInfo memberInfo, bool inherit)
+    public virtual /* for testing */ bool IsAttributeDefined<TAttribute>(MemberInfo memberInfo, bool inherit)
         where TAttribute : Attribute
     {
         Guard.NotNull(memberInfo);
@@ -73,7 +44,7 @@ internal class ReflectHelper : MarshalByRefObject
         {
             DebugEx.Assert(attribute != null, $"{nameof(ReflectHelper)}.{nameof(GetCustomAttributesCached)}: internal error: wrong value in the attributes dictionary.");
 
-            if (AttributeComparer.IsDerived<TAttribute>(attribute))
+            if (attribute is TAttribute)
             {
                 return true;
             }
@@ -95,31 +66,6 @@ internal class ReflectHelper : MarshalByRefObject
     public override object InitializeLifetimeService() => null!;
 
     /// <summary>
-    /// Gets first attribute that matches the type (but is not derived from it). Use this together with attribute that is both sealed and does not allow multiple.
-    /// In such case there cannot be more attributes, and this will avoid the cost of
-    /// checking for more than one attribute.
-    /// </summary>
-    /// <typeparam name="TAttribute">Type of the attribute to find.</typeparam>
-    /// <param name="attributeProvider">The type, assembly or method.</param>
-    /// <param name="inherit">If we should inspect parents of this type.</param>
-    /// <returns>The attribute that is found or null.</returns>
-    public virtual /* for tests, for moq */ TAttribute? GetFirstNonDerivedAttributeOrDefault<TAttribute>(ICustomAttributeProvider attributeProvider, bool inherit)
-        where TAttribute : Attribute
-    {
-        Attribute[] cachedAttributes = GetCustomAttributesCached(attributeProvider, inherit);
-
-        foreach (Attribute cachedAttribute in cachedAttributes)
-        {
-            if (AttributeComparer.IsNonDerived<TAttribute>(cachedAttribute))
-            {
-                return (TAttribute)cachedAttribute;
-            }
-        }
-
-        return null;
-    }
-
-    /// <summary>
     /// Gets first attribute that matches the type or is derived from it.
     /// Use this together with attribute that does not allow multiple. In such case there cannot be more attributes, and this will avoid the cost of
     /// checking for more than one attribute.
@@ -129,16 +75,16 @@ internal class ReflectHelper : MarshalByRefObject
     /// <param name="inherit">If we should inspect parents of this type.</param>
     /// <returns>The attribute that is found or null.</returns>
     /// <exception cref="InvalidOperationException">Throws when multiple attributes are found (the attribute must allow multiple).</exception>
-    public virtual /* for tests, for moq */ TAttribute? GetFirstDerivedAttributeOrDefault<TAttribute>(ICustomAttributeProvider attributeProvider, bool inherit)
+    public virtual /* for tests, for moq */ TAttribute? GetFirstAttributeOrDefault<TAttribute>(ICustomAttributeProvider attributeProvider, bool inherit)
         where TAttribute : Attribute
     {
         Attribute[] cachedAttributes = GetCustomAttributesCached(attributeProvider, inherit);
 
         foreach (Attribute cachedAttribute in cachedAttributes)
         {
-            if (AttributeComparer.IsDerived<TAttribute>(cachedAttribute))
+            if (cachedAttribute is TAttribute cachedAttributeAsTAttribute)
             {
-                return (TAttribute)cachedAttribute;
+                return cachedAttributeAsTAttribute;
             }
         }
 
@@ -175,11 +121,11 @@ internal class ReflectHelper : MarshalByRefObject
     /// <returns>Categories defined.</returns>
     internal virtual /* for tests, we are mocking this */ string[] GetTestCategories(MemberInfo categoryAttributeProvider, Type owningType)
     {
-        IEnumerable<TestCategoryBaseAttribute> methodCategories = GetDerivedAttributes<TestCategoryBaseAttribute>(categoryAttributeProvider, inherit: true);
-        IEnumerable<TestCategoryBaseAttribute> typeCategories = GetDerivedAttributes<TestCategoryBaseAttribute>(owningType, inherit: true);
-        IEnumerable<TestCategoryBaseAttribute> assemblyCategories = GetDerivedAttributes<TestCategoryBaseAttribute>(owningType.Assembly, inherit: true);
+        IEnumerable<TestCategoryBaseAttribute> methodCategories = GetAttributes<TestCategoryBaseAttribute>(categoryAttributeProvider, inherit: true);
+        IEnumerable<TestCategoryBaseAttribute> typeCategories = GetAttributes<TestCategoryBaseAttribute>(owningType, inherit: true);
+        IEnumerable<TestCategoryBaseAttribute> assemblyCategories = GetAttributes<TestCategoryBaseAttribute>(owningType.Assembly, inherit: true);
 
-        return methodCategories.Concat(typeCategories).Concat(assemblyCategories).SelectMany(c => c.TestCategories).ToArray();
+        return [.. methodCategories.Concat(typeCategories).Concat(assemblyCategories).SelectMany(c => c.TestCategories)];
     }
 
     /// <summary>
@@ -236,8 +182,8 @@ internal class ReflectHelper : MarshalByRefObject
     /// <param name="owningType">The type that owns <paramref name="testMethod"/>.</param>
     /// <returns>True if test method should not run in parallel.</returns>
     internal bool IsDoNotParallelizeSet(MemberInfo testMethod, Type owningType)
-        => IsDerivedAttributeDefined<DoNotParallelizeAttribute>(testMethod, inherit: true)
-        || IsDerivedAttributeDefined<DoNotParallelizeAttribute>(owningType, inherit: true);
+        => IsAttributeDefined<DoNotParallelizeAttribute>(testMethod, inherit: true)
+        || IsAttributeDefined<DoNotParallelizeAttribute>(owningType, inherit: true);
 
     /// <summary>
     /// Get the parallelization behavior for a test assembly.
@@ -265,7 +211,7 @@ internal class ReflectHelper : MarshalByRefObject
     /// <param name="priorityAttributeProvider">The member to inspect.</param>
     /// <returns>Priority value if defined. Null otherwise.</returns>
     internal virtual int? GetPriority(MemberInfo priorityAttributeProvider) =>
-        GetFirstDerivedAttributeOrDefault<PriorityAttribute>(priorityAttributeProvider, inherit: true)?.Priority;
+        GetFirstAttributeOrDefault<PriorityAttribute>(priorityAttributeProvider, inherit: true)?.Priority;
 
     /// <summary>
     /// Gets the class cleanup lifecycle for the class, if set.
@@ -283,9 +229,9 @@ internal class ReflectHelper : MarshalByRefObject
         var cleanupBehaviors =
             new HashSet<ClassCleanupBehavior?>(
                 classInfo.BaseClassCleanupMethods
-                .Select(x => GetFirstDerivedAttributeOrDefault<ClassCleanupAttribute>(x, inherit: true)?.CleanupBehavior))
+                .Select(x => GetFirstAttributeOrDefault<ClassCleanupAttribute>(x, inherit: true)?.CleanupBehavior))
             {
-                classInfo.ClassCleanupMethod == null ? null : GetFirstDerivedAttributeOrDefault<ClassCleanupAttribute>(classInfo.ClassCleanupMethod, inherit: true)?.CleanupBehavior,
+                classInfo.ClassCleanupMethod == null ? null : GetFirstAttributeOrDefault<ClassCleanupAttribute>(classInfo.ClassCleanupMethod, inherit: true)?.CleanupBehavior,
             };
 
         return cleanupBehaviors.Contains(ClassCleanupBehavior.EndOfClass)
@@ -300,11 +246,11 @@ internal class ReflectHelper : MarshalByRefObject
     /// <returns>List of traits.</returns>
     internal virtual IEnumerable<Trait> GetTestPropertiesAsTraits(MemberInfo testPropertyProvider)
     {
-        IEnumerable<TestPropertyAttribute> testPropertyAttributes = GetDerivedAttributes<TestPropertyAttribute>(testPropertyProvider, inherit: true);
+        IEnumerable<TestPropertyAttribute> testPropertyAttributes = GetAttributes<TestPropertyAttribute>(testPropertyProvider, inherit: true);
 
         if (testPropertyProvider.DeclaringType is { } testClass)
         {
-            testPropertyAttributes = testPropertyAttributes.Concat(GetDerivedAttributes<TestPropertyAttribute>(testClass, inherit: true));
+            testPropertyAttributes = testPropertyAttributes.Concat(GetAttributes<TestPropertyAttribute>(testClass, inherit: true));
         }
 
         foreach (TestPropertyAttribute testProperty in testPropertyAttributes)
@@ -321,7 +267,7 @@ internal class ReflectHelper : MarshalByRefObject
     /// <param name="attributeProvider">The member to inspect.</param>
     /// <param name="inherit">Look at inheritance chain.</param>
     /// <returns>An instance of the attribute.</returns>
-    internal virtual /* for tests, for moq */ IEnumerable<TAttributeType> GetDerivedAttributes<TAttributeType>(ICustomAttributeProvider attributeProvider, bool inherit)
+    internal virtual /* for tests, for moq */ IEnumerable<TAttributeType> GetAttributes<TAttributeType>(ICustomAttributeProvider attributeProvider, bool inherit)
         where TAttributeType : Attribute
     {
         Attribute[] attributes = GetCustomAttributesCached(attributeProvider, inherit);
@@ -331,9 +277,9 @@ internal class ReflectHelper : MarshalByRefObject
         {
             DebugEx.Assert(attribute != null, "ReflectHelper.DefinesAttributeDerivedFrom: internal error: wrong value in the attributes dictionary.");
 
-            if (AttributeComparer.IsDerived<TAttributeType>(attribute))
+            if (attribute is TAttributeType attributeAsAttributeType)
             {
-                yield return (TAttributeType)attribute;
+                yield return attributeAsAttributeType;
             }
         }
     }
@@ -365,7 +311,7 @@ internal class ReflectHelper : MarshalByRefObject
             try
             {
                 object[]? attributes = NotCachedReflectionAccessor.GetCustomAttributesNotCached(attributeProvider, inherit);
-                return attributes is null ? [] : attributes as Attribute[] ?? attributes.Cast<Attribute>().ToArray();
+                return attributes is null ? [] : attributes as Attribute[] ?? [.. attributes.Cast<Attribute>()];
             }
             catch (Exception ex)
             {

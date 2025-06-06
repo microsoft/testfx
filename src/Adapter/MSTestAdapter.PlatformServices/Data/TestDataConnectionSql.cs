@@ -282,7 +282,7 @@ internal class TestDataConnectionSql : TestDataConnection
                     return null;
                 }
 
-                return parts.ToArray();
+                return [.. parts];
             }
         }
 

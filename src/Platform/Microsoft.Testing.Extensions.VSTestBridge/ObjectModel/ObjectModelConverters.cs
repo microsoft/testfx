@@ -37,9 +37,16 @@ internal static class ObjectModelConverters
     /// <summary>
     /// Converts a VSTest <see cref="TestCase"/> to a Microsoft Testing Platform <see cref="TestNode"/>.
     /// </summary>
-    public static TestNode ToTestNode(this TestCase testCase, bool isTrxEnabled, INamedFeatureCapability? namedFeatureCapability, ICommandLineOptions commandLineOptions, IClientInfo clientInfo, string? displayNameFromTestResult = null)
+    public static TestNode ToTestNode(
+        this TestCase testCase,
+        bool isTrxEnabled,
+        bool useFullyQualifiedNameAsUid,
+        INamedFeatureCapability? namedFeatureCapability,
+        ICommandLineOptions commandLineOptions,
+        IClientInfo clientInfo,
+        string? displayNameFromTestResult = null)
     {
-        string testNodeUid = testCase.Id.ToString();
+        string testNodeUid = useFullyQualifiedNameAsUid ? testCase.FullyQualifiedName : testCase.Id.ToString();
 
         TestNode testNode = new()
         {
@@ -129,9 +136,15 @@ internal static class ObjectModelConverters
     /// <summary>
     /// Converts a VSTest <see cref="TestResult"/> to a Microsoft Testing Platform <see cref="TestNode"/>.
     /// </summary>
-    public static TestNode ToTestNode(this TestResult testResult, bool isTrxEnabled, INamedFeatureCapability? namedFeatureCapability, ICommandLineOptions commandLineOptions, IClientInfo clientInfo)
+    public static TestNode ToTestNode(
+        this TestResult testResult,
+        bool isTrxEnabled,
+        bool useFullyQualifiedNameAsUid,
+        INamedFeatureCapability? namedFeatureCapability,
+        ICommandLineOptions commandLineOptions,
+        IClientInfo clientInfo)
     {
-        var testNode = testResult.TestCase.ToTestNode(isTrxEnabled, namedFeatureCapability, commandLineOptions, clientInfo, testResult.DisplayName);
+        var testNode = testResult.TestCase.ToTestNode(isTrxEnabled, useFullyQualifiedNameAsUid, namedFeatureCapability, commandLineOptions, clientInfo, testResult.DisplayName);
 
         CopyCategoryAndTraits(testResult, testNode, isTrxEnabled);
 
@@ -150,7 +163,7 @@ internal static class ObjectModelConverters
                 throw new InvalidOperationException("Unable to parse fully qualified type name from test case: " + testResult.TestCase.FullyQualifiedName);
             }
 
-            testNode.Properties.Add(new TrxMessagesProperty(testResult.Messages
+            testNode.Properties.Add(new TrxMessagesProperty([.. testResult.Messages
                 .Select(msg =>
                     msg.Category switch
                     {
@@ -158,8 +171,7 @@ internal static class ObjectModelConverters
                         string x when x == TestResultMessage.StandardOutCategory => new StandardOutputTrxMessage(msg.Text),
                         string x when x == TestResultMessage.DebugTraceCategory => new DebugOrTraceTrxMessage(msg.Text),
                         _ => new TrxMessage(msg.Text),
-                    })
-                .ToArray()));
+                    })]));
         }
 
         testNode.Properties.Add(new TimingProperty(new(testResult.StartTime, testResult.EndTime, testResult.Duration), []));

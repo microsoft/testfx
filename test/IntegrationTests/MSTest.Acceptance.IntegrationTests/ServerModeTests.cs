@@ -16,9 +16,9 @@ public sealed class ServerModeTests : ServerModeTestsBase<ServerModeTests.TestAs
     public async Task DiscoverAndRun(string tfm)
     {
         using TestingPlatformClient jsonClient = await StartAsServerAndConnectToTheClientAsync(TestHost.LocateFrom(AssetFixture.ProjectPath, "MSTestProject", tfm, buildConfiguration: BuildConfiguration.Release));
-        LogsCollector logs = new();
+        LogsCollector logs = [];
         jsonClient.RegisterLogListener(logs);
-        TelemetryCollector telemetry = new();
+        TelemetryCollector telemetry = [];
         jsonClient.RegisterTelemetryListener(telemetry);
 
         InitializeResponse initializeResponseArgs = await jsonClient.Initialize();
@@ -48,9 +48,9 @@ public sealed class ServerModeTests : ServerModeTestsBase<ServerModeTests.TestAs
     public async Task WhenClientDies_Server_ShouldClose_Gracefully(string tfm)
     {
         using TestingPlatformClient jsonClient = await StartAsServerAndConnectToTheClientAsync(TestHost.LocateFrom(AssetFixture.ProjectPath, "MSTestProject", tfm, buildConfiguration: BuildConfiguration.Release));
-        LogsCollector logs = new();
+        LogsCollector logs = [];
         jsonClient.RegisterLogListener(logs);
-        TelemetryCollector telemetry = new();
+        TelemetryCollector telemetry = [];
         jsonClient.RegisterTelemetryListener(telemetry);
 
         InitializeResponse initializeResponseArgs = await jsonClient.Initialize();

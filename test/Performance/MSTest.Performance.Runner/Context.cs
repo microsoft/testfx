@@ -5,13 +5,13 @@ namespace MSTest.Performance.Runner;
 
 internal class Context : IContext, IDisposable
 {
-    private List<IDisposable> _disposables = new();
+    private List<IDisposable> _disposables = [];
 
     public IDictionary<string, object> Properties { get; private set; } = new Dictionary<string, object>();
 
     public void Init(IDictionary<string, object> properties)
     {
-        _disposables = new();
+        _disposables = [];
         Properties = properties;
     }
 

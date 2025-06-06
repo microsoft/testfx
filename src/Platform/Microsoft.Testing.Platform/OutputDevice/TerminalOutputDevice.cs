@@ -51,7 +51,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
     // The targeted framework, .NET 8 when application specifies <TargetFramework>net8.0</TargetFramework>
     private readonly string? _targetFramework;
     private readonly string _assemblyName;
-    private readonly char[] _dash = new char[] { '-' };
+    private readonly char[] _dash = ['-'];
 
     private TerminalTestReporter? _terminalTestReporter;
     private bool _firstCallTo_OnSessionStartingAsync = true;
@@ -118,6 +118,9 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
         _isListTests = _commandLineOptions.IsOptionSet(PlatformCommandLineProvider.DiscoverTestsOptionKey);
         _isServerMode = _commandLineOptions.IsOptionSet(PlatformCommandLineProvider.ServerOptionKey);
         bool noAnsi = _commandLineOptions.IsOptionSet(TerminalTestReporterCommandLineOptionsProvider.NoAnsiOption);
+
+        // TODO: Replace this with proper CI detection that we already have in telemetry. https://github.com/microsoft/testfx/issues/5533#issuecomment-2838893327
+        bool inCI = string.Equals(_environment.GetEnvironmentVariable("TF_BUILD"), "true", StringComparison.OrdinalIgnoreCase) || string.Equals(_environment.GetEnvironmentVariable("GITHUB_ACTIONS"), "true", StringComparison.OrdinalIgnoreCase);
         bool noProgress = _commandLineOptions.IsOptionSet(TerminalTestReporterCommandLineOptionsProvider.NoProgressOption);
 
         // _runtimeFeature.IsHotReloadEnabled is not set to true here, even if the session will be HotReload,
@@ -155,6 +158,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
             ShowPassedTests = showPassed,
             MinimumExpectedTests = PlatformCommandLineProvider.GetMinimumExpectedTests(_commandLineOptions),
             UseAnsi = !noAnsi,
+            UseCIAnsi = inCI,
             ShowActiveTests = true,
             ShowProgress = shouldShowProgress,
         });

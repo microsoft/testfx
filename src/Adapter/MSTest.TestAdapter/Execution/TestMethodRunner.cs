@@ -64,8 +64,8 @@ internal sealed class TestMethodRunner
     internal async Task<TestResult[]> ExecuteAsync(string initializationLogs, string initializationErrorLogs, string initializationTrace, string initializationTestContextMessages)
     {
         _testContext.Context.TestRunCount++;
-        bool isSTATestClass = AttributeComparer.IsDerived<STATestClassAttribute>(_testMethodInfo.Parent.ClassAttribute);
-        bool isSTATestMethod = AttributeComparer.IsDerived<STATestMethodAttribute>(_testMethodInfo.Executor);
+        bool isSTATestClass = _testMethodInfo.Parent.ClassAttribute is STATestClassAttribute;
+        bool isSTATestMethod = _testMethodInfo.Executor is STATestMethodAttribute;
         bool isSTARequested = isSTATestClass || isSTATestMethod;
         bool isWindowsOS = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
         if (isSTARequested && isWindowsOS && Thread.CurrentThread.GetApartmentState() != ApartmentState.STA)
@@ -93,7 +93,7 @@ internal sealed class TestMethodRunner
                 PlatformServiceProvider.Instance.AdapterTraceLogger.LogError(ex.ToString());
             }
 
-            return results ?? Array.Empty<TestResult>();
+            return results ?? [];
         }
         else
         {
@@ -245,7 +245,7 @@ internal sealed class TestMethodRunner
             results.Add(emptyResult);
         }
 
-        return results.ToArray();
+        return [.. results];
     }
 
     private async Task<bool> TryExecuteDataSourceBasedTestsAsync(List<TestResult> results)

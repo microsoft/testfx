@@ -103,7 +103,7 @@ internal static class MethodInfoExtensions
     /// <returns>Compiler generated type name for given async test method..</returns>
     internal static string? GetAsyncTypeName(this MethodInfo method, ReflectHelper? reflectHelper = null)
     {
-        AsyncStateMachineAttribute? asyncStateMachineAttribute = (reflectHelper ?? ReflectHelper.Instance).GetFirstNonDerivedAttributeOrDefault<AsyncStateMachineAttribute>(method, inherit: false);
+        AsyncStateMachineAttribute? asyncStateMachineAttribute = (reflectHelper ?? ReflectHelper.Instance).GetFirstAttributeOrDefault<AsyncStateMachineAttribute>(method, inherit: false);
         return asyncStateMachineAttribute?.StateMachineType?.FullName;
     }
 
@@ -166,9 +166,9 @@ internal static class MethodInfoExtensions
                         methodInfo.DeclaringType!.FullName,
                         methodInfo.Name,
                         methodParametersLengthOrZero,
-                        string.Join(", ", methodParameters?.Select(p => p.ParameterType.Name) ?? Array.Empty<string>()),
+                        string.Join(", ", methodParameters?.Select(p => p.ParameterType.Name) ?? []),
                         argumentsLengthOrZero,
-                        string.Join(", ", arguments?.Select(a => a?.GetType().Name ?? "null") ?? Array.Empty<string>())), ex);
+                        string.Join(", ", arguments?.Select(a => a?.GetType().Name ?? "null") ?? [])), ex);
             }
         }
 

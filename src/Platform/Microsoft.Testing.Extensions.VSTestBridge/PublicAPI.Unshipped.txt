@@ -1,1 +1,2 @@
 #nullable enable
+virtual Microsoft.Testing.Extensions.VSTestBridge.VSTestBridgedTestFrameworkBase.UseFullyQualifiedNameAsTestNodeUid.get -> bool

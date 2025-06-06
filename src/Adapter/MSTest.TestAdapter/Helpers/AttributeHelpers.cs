@@ -9,7 +9,7 @@ internal static class AttributeExtensions
 {
     public static bool IsIgnored(this ICustomAttributeProvider type, out string? ignoreMessage)
     {
-        IEnumerable<ConditionBaseAttribute> attributes = ReflectHelper.Instance.GetDerivedAttributes<ConditionBaseAttribute>(type, inherit: false);
+        IEnumerable<ConditionBaseAttribute> attributes = ReflectHelper.Instance.GetAttributes<ConditionBaseAttribute>(type, inherit: false);
         IEnumerable<IGrouping<string, ConditionBaseAttribute>> groups = attributes.GroupBy(attr => attr.GroupName);
         foreach (IGrouping<string, ConditionBaseAttribute>? group in groups)
         {

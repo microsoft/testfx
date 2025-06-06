@@ -14,6 +14,7 @@ using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.Requests;
 using Microsoft.Testing.Platform.Services;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
 namespace Microsoft.Testing.Extensions.VSTestBridge;
 
@@ -57,6 +58,11 @@ public abstract class VSTestBridgedTestFrameworkBase : ITestFramework, IDataProd
     /// Gets the service provider.
     /// </summary>
     protected internal IServiceProvider ServiceProvider { get; }
+
+    /// <summary>
+    /// Gets a value indicating whether the <see cref="TestNodeUid"/> should use <see cref="TestCase.FullyQualifiedName"/> instead of <see cref="TestCase.Id"/>.
+    /// </summary>
+    protected internal virtual bool UseFullyQualifiedNameAsTestNodeUid { get; }
 
     /// <summary>
     /// Gets a value indicating whether the TRX report is enabled.

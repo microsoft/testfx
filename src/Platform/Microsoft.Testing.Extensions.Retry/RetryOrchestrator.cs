@@ -93,8 +93,8 @@ internal sealed class RetryOrchestrator : ITestHostOrchestrator, IOutputDeviceDa
         int userMaxRetryCount = int.Parse(cmdRetries[0], CultureInfo.InvariantCulture);
 
         // Find out the retry args index inside the arguments to after cleanup the command line when we restart
-        List<int> indexToCleanup = new();
-        string[] executableArguments = executableInfo.Arguments.ToArray();
+        List<int> indexToCleanup = [];
+        string[] executableArguments = [.. executableInfo.Arguments];
         int argIndex = GetOptionArgumentIndex(RetryCommandLineOptionsProvider.RetryFailedTestsOptionName, executableArguments);
         if (argIndex < 0)
         {
@@ -128,12 +128,12 @@ internal sealed class RetryOrchestrator : ITestHostOrchestrator, IOutputDeviceDa
         // Override the result directory with the attempt one
         string resultDirectory = configuration.GetTestResultDirectory();
 
-        List<int> exitCodes = new();
+        List<int> exitCodes = [];
         IOutputDevice outputDevice = _serviceProvider.GetOutputDevice();
         IFileSystem fileSystem = _serviceProvider.GetFileSystem();
 
         int attemptCount = 0;
-        List<string> finalArguments = new();
+        List<string> finalArguments = [];
         string[]? lastListOfFailedId = null;
         string? currentTryResultFolder = null;
         bool thresholdPolicyKickedIn = false;
@@ -160,7 +160,7 @@ internal sealed class RetryOrchestrator : ITestHostOrchestrator, IOutputDeviceDa
             finalArguments.Add(currentTryResultFolder);
 
             // Prepare the pipeserver
-            using RetryFailedTestsPipeServer retryFailedTestsPipeServer = new(_serviceProvider, lastListOfFailedId ?? Array.Empty<string>(), logger);
+            using RetryFailedTestsPipeServer retryFailedTestsPipeServer = new(_serviceProvider, lastListOfFailedId ?? [], logger);
             finalArguments.Add($"--{RetryCommandLineOptionsProvider.RetryFailedTestsPipeNameOptionName}");
             finalArguments.Add(retryFailedTestsPipeServer.PipeName);
 
@@ -292,7 +292,7 @@ internal sealed class RetryOrchestrator : ITestHostOrchestrator, IOutputDeviceDa
             }
             else
             {
-                await outputDevice.DisplayAsync(this, new FormattedTextOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.TestSuiteCompletedSuccessfully, attemptCount)) { ForegroundColor = new SystemConsoleColor { ConsoleColor = ConsoleColor.Green } });
+                await outputDevice.DisplayAsync(this, new FormattedTextOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.TestSuiteCompletedSuccessfully, attemptCount)) { ForegroundColor = new SystemConsoleColor { ConsoleColor = ConsoleColor.DarkGreen } });
             }
         }
 

@@ -37,7 +37,7 @@ internal sealed class AnsiTerminalTestProgressFrame
 
         terminal.Append('[');
         charsTaken++;
-        terminal.SetColor(TerminalColor.Green);
+        terminal.SetColor(TerminalColor.DarkGreen);
         terminal.Append('✓');
         charsTaken++;
         string passedText = passed.ToString(CultureInfo.CurrentCulture);
@@ -48,7 +48,7 @@ internal sealed class AnsiTerminalTestProgressFrame
         terminal.Append('/');
         charsTaken++;
 
-        terminal.SetColor(TerminalColor.Red);
+        terminal.SetColor(TerminalColor.DarkRed);
         terminal.Append('x');
         charsTaken++;
         string failedText = failed.ToString(CultureInfo.CurrentCulture);
@@ -59,7 +59,7 @@ internal sealed class AnsiTerminalTestProgressFrame
         terminal.Append('/');
         charsTaken++;
 
-        terminal.SetColor(TerminalColor.Yellow);
+        terminal.SetColor(TerminalColor.DarkYellow);
         terminal.Append('↓');
         charsTaken++;
         string skippedText = skipped.ToString(CultureInfo.CurrentCulture);
@@ -308,7 +308,7 @@ internal sealed class AnsiTerminalTestProgressFrame
         // Note: We want to render the list of active tests, but this can easily fill up the full screen.
         // As such, we should balance the number of active tests shown per project.
         // We do this by distributing the remaining lines for each projects.
-        TestProgressState[] progressItems = progress.OfType<TestProgressState>().ToArray();
+        TestProgressState[] progressItems = [.. progress.OfType<TestProgressState>()];
         int linesToDistribute = (int)(Height * 0.7) - 1 - progressItems.Length;
         var detailItems = new IEnumerable<TestDetailState>[progressItems.Length];
         IEnumerable<int> sortedItemsIndices = Enumerable.Range(0, progressItems.Length).OrderBy(i => progressItems[i].TestNodeResultsState?.Count ?? 0);
@@ -317,7 +317,7 @@ internal sealed class AnsiTerminalTestProgressFrame
         {
             detailItems[sortedItemIndex] = progressItems[sortedItemIndex].TestNodeResultsState?.GetRunningTasks(
                 linesToDistribute / progressItems.Length)
-                ?? Array.Empty<TestDetailState>();
+                ?? [];
         }
 
         for (int progressI = 0; progressI < progressItems.Length; progressI++)

@@ -359,7 +359,7 @@ public class TestMethodRunnerTests : TestContainer
     {
         TestResult testResult = new()
         {
-            ResultFiles = new List<string> { "C:\\temp.txt" },
+            ResultFiles = ["C:\\temp.txt"],
         };
 
         int dummyIntData1 = 1;
@@ -537,7 +537,7 @@ public class TestMethodRunnerTests : TestContainer
 
     public class DummyTestClassEmptyDataSource
     {
-        public static IEnumerable<object[]> EmptyProperty => Array.Empty<object[]>();
+        public static IEnumerable<object[]> EmptyProperty => [];
 
         [DynamicData("EmptyProperty")]
         public void TestMethod(int x)

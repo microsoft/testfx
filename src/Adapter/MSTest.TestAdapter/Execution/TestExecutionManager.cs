@@ -389,8 +389,8 @@ public class TestExecutionManager
 
         int parallelWorkers = sourceSettings.Workers;
         ExecutionScope parallelScope = sourceSettings.Scope;
-        TestCase[] testsToRun = tests.Where(t => MatchTestFilter(filterExpression, t, _testMethodFilter)).ToArray();
-        UnitTestElement[] unitTestElements = testsToRun.Select(e => e.ToUnitTestElement(source)).ToArray();
+        TestCase[] testsToRun = [.. tests.Where(t => MatchTestFilter(filterExpression, t, _testMethodFilter))];
+        UnitTestElement[] unitTestElements = [.. testsToRun.Select(e => e.ToUnitTestElement(source))];
         // Create an instance of a type defined in adapter so that adapter gets loaded in the child app domain
         var testRunner = (UnitTestRunner)isolationHost.CreateInstanceForType(
             typeof(UnitTestRunner),
