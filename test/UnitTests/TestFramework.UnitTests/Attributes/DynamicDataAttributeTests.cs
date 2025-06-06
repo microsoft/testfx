@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
-
 using TestFramework.ForTestingMSTest;
 
 namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.Attributes;
@@ -19,8 +17,6 @@ public class DynamicDataAttributeTests : TestContainer
         _testMethodInfo = _dummyTestClass.GetType().GetTypeInfo().GetDeclaredMethod("TestMethod1")!;
         _dynamicDataAttribute = new DynamicDataAttribute("ReusableTestDataProperty");
 
-        // Initializes DynamicDataProvider. Normally this happens automatically but we are running outside of test adapter.
-        _ = PlatformServiceProvider.Instance;
         DynamicDataAttribute.TestIdGenerationStrategy = TestIdGenerationStrategy.FullyQualified;
     }
 
@@ -264,268 +260,268 @@ public class DynamicDataAttributeTests : TestContainer
         dynamicDataAttribute = new DynamicDataAttribute(nameof(TestClassTupleData.GetDataWithValueTupleWithTupleSyntax), typeof(TestClassTupleData), DynamicDataSourceType.Method);
         dynamicDataAttribute.GetData(testMethodInfo);
     }
-}
-
-/// <summary>
-/// The dummy test class.
-/// </summary>
-[TestClass]
-internal class DummyTestClass
-{
-    /// <summary>
-    /// Gets the reusable test data property.
-    /// </summary>
-    public static IEnumerable<object[]> ReusableTestDataProperty => [[1, 2, 3], [4, 5, 6]];
 
     /// <summary>
-    /// Gets the null test data property.
+    /// The dummy test class.
     /// </summary>
-    public static IEnumerable<object[]> NullProperty => null!;
-
-    /// <summary>
-    /// Gets the empty test data property.
-    /// </summary>
-    public static IEnumerable<object[]> EmptyProperty => [];
-
-    /// <summary>
-    /// Gets the wrong test data property i.e. Property returning something other than
-    /// expected data type of <see cref="IEnumerable{T}"/>.
-    /// </summary>
-    public static string WrongDataTypeProperty => "Dummy";
-
-    /// <summary>
-    /// The reusable test data method.
-    /// </summary>
-    /// <returns>
-    /// The <see cref="IEnumerable{T}"/>.
-    /// </returns>
-    public static IEnumerable<object[]> ReusableTestDataMethod() => [[1, 2, 3], [4, 5, 6]];
-
-    /// <summary>
-    /// The custom display name method.
-    /// </summary>
-    /// <param name="methodInfo">
-    /// The method info of test method.
-    /// </param>
-    /// <param name="data">
-    /// The test data which is passed to test method.
-    /// </param>
-    /// <returns>
-    /// The <see cref="string"/>.
-    /// </returns>
-    public static string GetCustomDynamicDataDisplayName(MethodInfo methodInfo, object[] data)
-        => $"DynamicDataTestWithDisplayName {methodInfo.Name} with {data.Length} parameters";
-
-    /// <summary>
-    /// Custom display name method with missing parameters.
-    /// </summary>
-    /// <returns>
-    /// The <see cref="string"/>.
-    /// </returns>
-    public static string GetDynamicDataDisplayNameWithMissingParameters() => throw new InvalidOperationException();
-
-    /// <summary>
-    /// Custom display name method with invalid return type.
-    /// </summary>
-    public static void GetDynamicDataDisplayNameWithInvalidReturnType() => throw new InvalidOperationException();
-
-    /// <summary>
-    /// Custom display name method with invalid first parameter type.
-    /// </summary>
-    /// <param name="methodInfo">
-    /// The method info of test method.
-    /// </param>
-    /// <param name="data">
-    /// The test data which is passed to test method.
-    /// </param>
-    /// <returns>
-    /// The <see cref="string"/>.
-    /// </returns>
-    public static string GetDynamicDataDisplayNameWithInvalidFirstParameterType(string methodInfo, object[] data) => throw new InvalidOperationException();
-
-    /// <summary>
-    /// Custom display name method with invalid second parameter.
-    /// </summary>
-    /// <param name="methodInfo">
-    /// The method info of test method.
-    /// </param>
-    /// <param name="data">
-    /// The test data which is passed to test method.
-    /// </param>
-    /// <returns>
-    /// The <see cref="string"/>.
-    /// </returns>
-    public static string GetDynamicDataDisplayNameWithInvalidSecondParameterType(MethodInfo methodInfo, string data) => throw new InvalidOperationException();
-
-    /// <summary>
-    /// Custom display name method that is not static.
-    /// </summary>
-    /// <param name="methodInfo">
-    /// The method info of test method.
-    /// </param>
-    /// <param name="data">
-    /// The test data which is passed to test method.
-    /// </param>
-    /// <returns>
-    /// The <see cref="string"/>.
-    /// </returns>
-    public string GetDynamicDataDisplayNameNonStatic(MethodInfo methodInfo, object[] data) => throw new InvalidOperationException();
-
-    /// <summary>
-    /// The test method 1.
-    /// </summary>
-    [TestMethod]
-    [DynamicData("ReusableTestDataProperty")]
-    public void TestMethod1()
+    [TestClass]
+    internal class DummyTestClass
     {
-    }
+        /// <summary>
+        /// Gets the reusable test data property.
+        /// </summary>
+        public static IEnumerable<object[]> ReusableTestDataProperty => [[1, 2, 3], [4, 5, 6]];
 
-    /// <summary>
-    /// The test method 2.
-    /// </summary>
-    [TestMethod]
-    [DynamicData("ReusableTestDataMethod")]
-    public void TestMethod2()
-    {
-    }
+        /// <summary>
+        /// Gets the null test data property.
+        /// </summary>
+        public static IEnumerable<object[]> NullProperty => null!;
 
-    /// <summary>
-    /// The test method 3.
-    /// </summary>
-    [TestMethod]
-    [DynamicData("WrongDataTypeProperty")]
-    public void TestMethod3()
-    {
-    }
+        /// <summary>
+        /// Gets the empty test data property.
+        /// </summary>
+        public static IEnumerable<object[]> EmptyProperty => [];
 
-    /// <summary>
-    /// The test method 4.
-    /// </summary>
-    [TestMethod]
-    [DynamicData("NullProperty")]
-    public void TestMethod4()
-    {
-    }
+        /// <summary>
+        /// Gets the wrong test data property i.e. Property returning something other than
+        /// expected data type of <see cref="IEnumerable{T}"/>.
+        /// </summary>
+        public static string WrongDataTypeProperty => "Dummy";
 
-    /// <summary>
-    /// The test method 5.
-    /// </summary>
-    [TestMethod]
-    [DynamicData("EmptyProperty")]
-    public void TestMethod5()
-    {
-    }
+        /// <summary>
+        /// The reusable test data method.
+        /// </summary>
+        /// <returns>
+        /// The <see cref="IEnumerable{T}"/>.
+        /// </returns>
+        public static IEnumerable<object[]> ReusableTestDataMethod() => [[1, 2, 3], [4, 5, 6]];
 
-    /// <summary>
-    /// DataRow test method 1.
-    /// </summary>
-    [DataRow("First", "Second", null)]
-    [DataRow(null, "First", "Second")]
-    [DataRow("First", null, "Second")]
-    [TestMethod]
-    public void DataRowTestMethod()
-    {
-    }
+        /// <summary>
+        /// The custom display name method.
+        /// </summary>
+        /// <param name="methodInfo">
+        /// The method info of test method.
+        /// </param>
+        /// <param name="data">
+        /// The test data which is passed to test method.
+        /// </param>
+        /// <returns>
+        /// The <see cref="string"/>.
+        /// </returns>
+        public static string GetCustomDynamicDataDisplayName(MethodInfo methodInfo, object[] data)
+            => $"DynamicDataTestWithDisplayName {methodInfo.Name} with {data.Length} parameters";
 
-    /// <summary>
-    /// Custom display name method that is private.
-    /// </summary>
-    /// <param name="methodInfo">
-    /// The method info of test method.
-    /// </param>
-    /// <param name="data">
-    /// The test data which is passed to test method.
-    /// </param>
-    /// <returns>
-    /// The <see cref="string"/>.
-    /// </returns>
+        /// <summary>
+        /// Custom display name method with missing parameters.
+        /// </summary>
+        /// <returns>
+        /// The <see cref="string"/>.
+        /// </returns>
+        public static string GetDynamicDataDisplayNameWithMissingParameters() => throw new InvalidOperationException();
+
+        /// <summary>
+        /// Custom display name method with invalid return type.
+        /// </summary>
+        public static void GetDynamicDataDisplayNameWithInvalidReturnType() => throw new InvalidOperationException();
+
+        /// <summary>
+        /// Custom display name method with invalid first parameter type.
+        /// </summary>
+        /// <param name="methodInfo">
+        /// The method info of test method.
+        /// </param>
+        /// <param name="data">
+        /// The test data which is passed to test method.
+        /// </param>
+        /// <returns>
+        /// The <see cref="string"/>.
+        /// </returns>
+        public static string GetDynamicDataDisplayNameWithInvalidFirstParameterType(string methodInfo, object[] data) => throw new InvalidOperationException();
+
+        /// <summary>
+        /// Custom display name method with invalid second parameter.
+        /// </summary>
+        /// <param name="methodInfo">
+        /// The method info of test method.
+        /// </param>
+        /// <param name="data">
+        /// The test data which is passed to test method.
+        /// </param>
+        /// <returns>
+        /// The <see cref="string"/>.
+        /// </returns>
+        public static string GetDynamicDataDisplayNameWithInvalidSecondParameterType(MethodInfo methodInfo, string data) => throw new InvalidOperationException();
+
+        /// <summary>
+        /// Custom display name method that is not static.
+        /// </summary>
+        /// <param name="methodInfo">
+        /// The method info of test method.
+        /// </param>
+        /// <param name="data">
+        /// The test data which is passed to test method.
+        /// </param>
+        /// <returns>
+        /// The <see cref="string"/>.
+        /// </returns>
+        public string GetDynamicDataDisplayNameNonStatic(MethodInfo methodInfo, object[] data) => throw new InvalidOperationException();
+
+        /// <summary>
+        /// The test method 1.
+        /// </summary>
+        [TestMethod]
+        [DynamicData("ReusableTestDataProperty")]
+        public void TestMethod1()
+        {
+        }
+
+        /// <summary>
+        /// The test method 2.
+        /// </summary>
+        [TestMethod]
+        [DynamicData("ReusableTestDataMethod")]
+        public void TestMethod2()
+        {
+        }
+
+        /// <summary>
+        /// The test method 3.
+        /// </summary>
+        [TestMethod]
+        [DynamicData("WrongDataTypeProperty")]
+        public void TestMethod3()
+        {
+        }
+
+        /// <summary>
+        /// The test method 4.
+        /// </summary>
+        [TestMethod]
+        [DynamicData("NullProperty")]
+        public void TestMethod4()
+        {
+        }
+
+        /// <summary>
+        /// The test method 5.
+        /// </summary>
+        [TestMethod]
+        [DynamicData("EmptyProperty")]
+        public void TestMethod5()
+        {
+        }
+
+        /// <summary>
+        /// DataRow test method 1.
+        /// </summary>
+        [DataRow("First", "Second", null)]
+        [DataRow(null, "First", "Second")]
+        [DataRow("First", null, "Second")]
+        [TestMethod]
+        public void DataRowTestMethod()
+        {
+        }
+
+        /// <summary>
+        /// Custom display name method that is private.
+        /// </summary>
+        /// <param name="methodInfo">
+        /// The method info of test method.
+        /// </param>
+        /// <param name="data">
+        /// The test data which is passed to test method.
+        /// </param>
+        /// <returns>
+        /// The <see cref="string"/>.
+        /// </returns>
 #pragma warning disable IDE0051 // Remove unused private members
-    private static string GetDynamicDataDisplayNamePrivate(MethodInfo methodInfo, object[] data) => throw new InvalidOperationException();
-}
-
-public class DummyTestClass2
-{
-    /// <summary>
-    /// Gets the reusable test data property.
-    /// </summary>
-    public static IEnumerable<object[]> ReusableTestDataProperty2 => [[1, 2, 3], [4, 5, 6]];
-
-    /// <summary>
-    /// The reusable test data method.
-    /// </summary>
-    /// <returns>
-    /// The <see cref="IEnumerable"/>.
-    /// </returns>
-    public static IEnumerable<object[]> ReusableTestDataMethod2() => [[1, 2, 3], [4, 5, 6]];
-
-    /// <summary>
-    /// The custom display name method.
-    /// </summary>
-    /// <param name="methodInfo">
-    /// The method info of test method.
-    /// </param>
-    /// <param name="data">
-    /// The test data which is passed to test method.
-    /// </param>
-    /// <returns>
-    /// The <see cref="string"/>.
-    /// </returns>
-    public static string GetCustomDynamicDataDisplayName2(MethodInfo methodInfo, object[] data)
-        => $"DynamicDataTestWithDisplayName {methodInfo.Name} with {data.Length} parameters";
-}
-
-[TestClass]
-internal class TestClassTupleData
-{
-    public static IEnumerable<Tuple<int, string>> GetDataWithTuple()
-    {
-        yield return new(0, "0");
-        yield return new(1, "1");
+        private static string GetDynamicDataDisplayNamePrivate(MethodInfo methodInfo, object[] data) => throw new InvalidOperationException();
     }
 
-    public static IEnumerable<Tuple<int, string>> DataWithTuple
+    public class DummyTestClass2
     {
-        get
+        /// <summary>
+        /// Gets the reusable test data property.
+        /// </summary>
+        public static IEnumerable<object[]> ReusableTestDataProperty2 => [[1, 2, 3], [4, 5, 6]];
+
+        /// <summary>
+        /// The reusable test data method.
+        /// </summary>
+        /// <returns>
+        /// The <see cref="IEnumerable"/>.
+        /// </returns>
+        public static IEnumerable<object[]> ReusableTestDataMethod2() => [[1, 2, 3], [4, 5, 6]];
+
+        /// <summary>
+        /// The custom display name method.
+        /// </summary>
+        /// <param name="methodInfo">
+        /// The method info of test method.
+        /// </param>
+        /// <param name="data">
+        /// The test data which is passed to test method.
+        /// </param>
+        /// <returns>
+        /// The <see cref="string"/>.
+        /// </returns>
+        public static string GetCustomDynamicDataDisplayName2(MethodInfo methodInfo, object[] data)
+            => $"DynamicDataTestWithDisplayName {methodInfo.Name} with {data.Length} parameters";
+    }
+
+    [TestClass]
+    internal class TestClassTupleData
+    {
+        public static IEnumerable<Tuple<int, string>> GetDataWithTuple()
         {
             yield return new(0, "0");
             yield return new(1, "1");
         }
-    }
 
-    [SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1141:Use tuple syntax", Justification = "We want to explicitly test this syntax")]
-    public static IEnumerable<ValueTuple<int, string>> GetDataWithValueTuple()
-    {
-        yield return new(0, "0");
-        yield return new(1, "1");
-    }
+        public static IEnumerable<Tuple<int, string>> DataWithTuple
+        {
+            get
+            {
+                yield return new(0, "0");
+                yield return new(1, "1");
+            }
+        }
 
-    [SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1141:Use tuple syntax", Justification = "We want to explicitly test this syntax")]
-    public static IEnumerable<ValueTuple<int, string>> DataWithValueTuple
-    {
-        get
+        [SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1141:Use tuple syntax", Justification = "We want to explicitly test this syntax")]
+        public static IEnumerable<ValueTuple<int, string>> GetDataWithValueTuple()
         {
             yield return new(0, "0");
             yield return new(1, "1");
         }
-    }
 
-    public static IEnumerable<(int Integer, string AsString)> GetDataWithValueTupleWithTupleSyntax()
-    {
-        yield return (0, "0");
-        yield return (1, "1");
-    }
+        [SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1141:Use tuple syntax", Justification = "We want to explicitly test this syntax")]
+        public static IEnumerable<ValueTuple<int, string>> DataWithValueTuple
+        {
+            get
+            {
+                yield return new(0, "0");
+                yield return new(1, "1");
+            }
+        }
 
-    public static IEnumerable<(int Integer, string AsString)> DataWithValueTupleWithTupleSyntax
-    {
-        get
+        public static IEnumerable<(int Integer, string AsString)> GetDataWithValueTupleWithTupleSyntax()
         {
             yield return (0, "0");
             yield return (1, "1");
         }
-    }
 
-    [DataTestMethod]
-    public void DynamicDataTestWithTuple(int value, string integerAsString)
-    {
+        public static IEnumerable<(int Integer, string AsString)> DataWithValueTupleWithTupleSyntax
+        {
+            get
+            {
+                yield return (0, "0");
+                yield return (1, "1");
+            }
+        }
+
+        [DataTestMethod]
+        public void DynamicDataTestWithTuple(int value, string integerAsString)
+        {
+        }
     }
 }

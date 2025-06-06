@@ -9,9 +9,6 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 
 using TestFramework.ForTestingMSTest;
 
-using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
-using UTFExtension = Microsoft.VisualStudio.TestTools.UnitTesting;
-
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution;
 
 public class TestMethodFilterTests : TestContainer

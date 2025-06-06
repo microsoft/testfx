@@ -2,13 +2,12 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
 using Polyfills;
 
 using TestFramework.ForTestingMSTest;
-
-using Constants = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Constants;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.ObjectModel;
 
@@ -43,7 +42,7 @@ public class UnitTestElementTests : TestContainer
     {
         var testCase = _unitTestElement.ToTestCase();
 
-        Verify(testCase.ExecutorUri == Constants.ExecutorUri);
+        Verify(testCase.ExecutorUri == EngineConstants.ExecutorUri);
     }
 
     public void ToTestCaseShouldSetAssemblyName()
@@ -72,7 +71,7 @@ public class UnitTestElementTests : TestContainer
     {
         var testCase = _unitTestElement.ToTestCase();
 
-        Verify((testCase.GetPropertyValue(Constants.TestClassNameProperty) as string) == "C");
+        Verify((testCase.GetPropertyValue(EngineConstants.TestClassNameProperty) as string) == "C");
     }
 
     public void ToTestCaseShouldSetDeclaringClassNameIfPresent()
@@ -80,12 +79,12 @@ public class UnitTestElementTests : TestContainer
         _testMethod.DeclaringClassFullName = null;
         var testCase = _unitTestElement.ToTestCase();
 
-        Verify(testCase.GetPropertyValue(Constants.DeclaringClassNameProperty) is null);
+        Verify(testCase.GetPropertyValue(EngineConstants.DeclaringClassNameProperty) is null);
 
         _testMethod.DeclaringClassFullName = "DC";
         testCase = _unitTestElement.ToTestCase();
 
-        Verify((testCase.GetPropertyValue(Constants.DeclaringClassNameProperty) as string) == "DC");
+        Verify((testCase.GetPropertyValue(EngineConstants.DeclaringClassNameProperty) as string) == "DC");
     }
 
     public void ToTestCaseShouldSetTestCategoryIfPresent()
@@ -93,17 +92,17 @@ public class UnitTestElementTests : TestContainer
         _unitTestElement.TestCategory = null;
         var testCase = _unitTestElement.ToTestCase();
 
-        Verify(testCase.GetPropertyValue(Constants.TestCategoryProperty) is null);
+        Verify(testCase.GetPropertyValue(EngineConstants.TestCategoryProperty) is null);
 
         _unitTestElement.TestCategory = [];
         testCase = _unitTestElement.ToTestCase();
 
-        Verify(testCase.GetPropertyValue(Constants.TestCategoryProperty) is null);
+        Verify(testCase.GetPropertyValue(EngineConstants.TestCategoryProperty) is null);
 
         _unitTestElement.TestCategory = ["TC"];
         testCase = _unitTestElement.ToTestCase();
 
-        Verify(new string[] { "TC" }.SequenceEqual((string[])testCase.GetPropertyValue(Constants.TestCategoryProperty)!));
+        Verify(new string[] { "TC" }.SequenceEqual((string[])testCase.GetPropertyValue(EngineConstants.TestCategoryProperty)!));
     }
 
     public void ToTestCaseShouldSetPriorityIfPresent()
@@ -111,12 +110,12 @@ public class UnitTestElementTests : TestContainer
         _unitTestElement.Priority = null;
         var testCase = _unitTestElement.ToTestCase();
 
-        Verify((int)testCase.GetPropertyValue(Constants.PriorityProperty)! == 0);
+        Verify((int)testCase.GetPropertyValue(EngineConstants.PriorityProperty)! == 0);
 
         _unitTestElement.Priority = 1;
         testCase = _unitTestElement.ToTestCase();
 
-        Verify((int)testCase.GetPropertyValue(Constants.PriorityProperty)! == 1);
+        Verify((int)testCase.GetPropertyValue(EngineConstants.PriorityProperty)! == 1);
     }
 
     public void ToTestCaseShouldSetTraitsIfPresent()
@@ -146,10 +145,10 @@ public class UnitTestElementTests : TestContainer
 
         var testCase = _unitTestElement.ToTestCase();
 
-        Verify((testCase.GetPropertyValue(Constants.CssIterationProperty) as string) == "12");
-        Verify((testCase.GetPropertyValue(Constants.CssProjectStructureProperty) as string) == "ProjectStructure");
-        Verify((testCase.GetPropertyValue(Constants.DescriptionProperty) as string) == "I am a dummy test");
-        Verify(new string[] { "2312", "22332" }.SequenceEqual((string[])testCase.GetPropertyValue(Constants.WorkItemIdsProperty)!));
+        Verify((testCase.GetPropertyValue(EngineConstants.CssIterationProperty) as string) == "12");
+        Verify((testCase.GetPropertyValue(EngineConstants.CssProjectStructureProperty) as string) == "ProjectStructure");
+        Verify((testCase.GetPropertyValue(EngineConstants.DescriptionProperty) as string) == "I am a dummy test");
+        Verify(new string[] { "2312", "22332" }.SequenceEqual((string[])testCase.GetPropertyValue(EngineConstants.WorkItemIdsProperty)!));
     }
 
     public void ToTestCaseShouldSetDeploymentItemPropertyIfPresent()
@@ -157,17 +156,17 @@ public class UnitTestElementTests : TestContainer
         _unitTestElement.DeploymentItems = null;
         var testCase = _unitTestElement.ToTestCase();
 
-        Verify(testCase.GetPropertyValue(Constants.DeploymentItemsProperty) is null);
+        Verify(testCase.GetPropertyValue(EngineConstants.DeploymentItemsProperty) is null);
 
         _unitTestElement.DeploymentItems = [];
         testCase = _unitTestElement.ToTestCase();
 
-        Verify(testCase.GetPropertyValue(Constants.DeploymentItemsProperty) is null);
+        Verify(testCase.GetPropertyValue(EngineConstants.DeploymentItemsProperty) is null);
 
         _unitTestElement.DeploymentItems = [new("s", "d")];
         testCase = _unitTestElement.ToTestCase();
 
-        Verify(_unitTestElement.DeploymentItems.SequenceEqual(testCase.GetPropertyValue(Constants.DeploymentItemsProperty) as KeyValuePair<string, string>[]));
+        Verify(_unitTestElement.DeploymentItems.SequenceEqual(testCase.GetPropertyValue(EngineConstants.DeploymentItemsProperty) as KeyValuePair<string, string>[]));
     }
 
     [Obsolete("Remove test case when enum entry is removed")]
@@ -179,7 +178,7 @@ public class UnitTestElementTests : TestContainer
             var testCase = new UnitTestElement(new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", null, TestIdGenerationStrategy.Legacy) { DataType = dataType }).ToTestCase();
             var expectedTestCase = new TestCase(testCase.FullyQualifiedName, testCase.ExecutorUri, testCase.Source);
             Verify(expectedTestCase.Id == testCase.Id);
-            Verify(testCase.GetPropertyValue(Constants.TestIdGenerationStrategyProperty)!.Equals((int)TestIdGenerationStrategy.Legacy));
+            Verify(testCase.GetPropertyValue(EngineConstants.TestIdGenerationStrategyProperty)!.Equals((int)TestIdGenerationStrategy.Legacy));
         }
 #pragma warning restore CA2263 // Prefer generic overload when type is known
     }
@@ -201,7 +200,7 @@ public class UnitTestElementTests : TestContainer
                 Verify(expectedTestCase.Id != testCase.Id);
             }
 
-            Verify(testCase.GetPropertyValue(Constants.TestIdGenerationStrategyProperty)!.Equals((int)TestIdGenerationStrategy.DisplayName));
+            Verify(testCase.GetPropertyValue(EngineConstants.TestIdGenerationStrategyProperty)!.Equals((int)TestIdGenerationStrategy.DisplayName));
         }
 #pragma warning restore CA2263 // Prefer generic overload when type is known
     }
@@ -214,7 +213,7 @@ public class UnitTestElementTests : TestContainer
             var testCase = new UnitTestElement(new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", null, TestIdGenerationStrategy.FullyQualified) { DataType = dataType }).ToTestCase();
             var expectedTestCase = new TestCase(testCase.FullyQualifiedName, testCase.ExecutorUri, testCase.Source);
             Verify(expectedTestCase.Id != testCase.Id);
-            Verify(testCase.GetPropertyValue(Constants.TestIdGenerationStrategyProperty)!.Equals((int)TestIdGenerationStrategy.FullyQualified));
+            Verify(testCase.GetPropertyValue(EngineConstants.TestIdGenerationStrategyProperty)!.Equals((int)TestIdGenerationStrategy.FullyQualified));
         }
 #pragma warning restore CA2263 // Prefer generic overload when type is known
     }
