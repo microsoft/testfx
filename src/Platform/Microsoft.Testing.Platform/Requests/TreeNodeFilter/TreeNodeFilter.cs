@@ -262,11 +262,9 @@ public sealed class TreeNodeFilter : ITestExecutionFilter
             Stack<OperatorKind> operatorStack,
             OperatorKind currentOp)
         {
-            OperatorKind topStackOperator;
-
             while (operatorStack.Count != 0 && operatorStack.Peek() > currentOp)
             {
-                topStackOperator = operatorStack.Pop();
+                OperatorKind topStackOperator = operatorStack.Pop();
                 ProcessStackOperator(topStackOperator, expressionStack, operatorStack);
                 break;
             }
