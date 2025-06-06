@@ -67,7 +67,6 @@ public class TestMethodAttribute : Attribute
     /// <param name="testMethod">The test method to execute.</param>
     /// <returns>An array of TestResult objects that represent the outcome(s) of the test.</returns>
     /// <remarks>Extensions can override this method to customize running a TestMethod.</remarks>
-    // TODO: Double check whether this breaks async local propagation between test init, test, test cleanup
     internal virtual async Task<TestResult[]> ExecuteAsync(ITestMethod testMethod)
         => UseAsync
         ? [await testMethod.InvokeAsync(null)]
