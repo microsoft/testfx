@@ -83,7 +83,7 @@ internal static class ExceptionHelper
             first = false;
         }
 
-        return CreateStackTraceInformation(ex, true, result.ToString());
+        return CreateStackTraceInformation(result.ToString());
     }
 
     /// <summary>
@@ -173,28 +173,14 @@ internal static class ExceptionHelper
     /// <summary>
     /// Create stack trace information.
     /// </summary>
-    /// <param name="ex">
-    /// The exception.
-    /// </param>
-    /// <param name="checkInnerExceptions">
-    /// Whether the inner exception needs to be checked too.
-    /// </param>
     /// <param name="stackTraceString">
     /// The stack Trace String.
     /// </param>
     /// <returns>
     /// The <see cref="StackTraceInformation"/>.
     /// </returns>
-    internal static StackTraceInformation? CreateStackTraceInformation(
-        Exception ex,
-        bool checkInnerExceptions,
-        string stackTraceString)
+    internal static StackTraceInformation? CreateStackTraceInformation(string stackTraceString)
     {
-        if (checkInnerExceptions && ex.InnerException != null)
-        {
-            return CreateStackTraceInformation(ex.InnerException, checkInnerExceptions, stackTraceString);
-        }
-
         string stackTrace = TrimStackTrace(stackTraceString);
 
         return !StringEx.IsNullOrEmpty(stackTrace) ? new StackTraceInformation(stackTrace, null, 0, 0) : null;
