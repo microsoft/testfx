@@ -255,7 +255,7 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
         {
             string arg = args[0];
             int size = arg.Length;
-            if (!float.TryParse(arg[..(size - 1)], out float value))
+            if (!float.TryParse(arg[..(size - 1)], CultureInfo.InvariantCulture, out float value))
             {
                 throw ApplicationStateGuard.Unreachable();
             }
