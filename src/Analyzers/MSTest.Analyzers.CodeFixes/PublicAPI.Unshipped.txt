@@ -1,1 +1,3 @@
 #nullable enable
+MSTest.Analyzers.PreferTestMethodOverDataTestMethodFixer
+MSTest.Analyzers.PreferTestMethodOverDataTestMethodFixer.PreferTestMethodOverDataTestMethodFixer() -> void
