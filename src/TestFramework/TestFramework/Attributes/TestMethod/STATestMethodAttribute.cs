@@ -9,7 +9,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 [AttributeUsage(AttributeTargets.Method)]
 public class STATestMethodAttribute : TestMethodAttribute
 {
-    private protected override bool UseAsync => true;
+    private protected override bool UseAsync => GetType() == typeof(STATestMethodAttribute);
 
     /// <summary>
     /// Initializes a new instance of the <see cref="STATestMethodAttribute"/> class.

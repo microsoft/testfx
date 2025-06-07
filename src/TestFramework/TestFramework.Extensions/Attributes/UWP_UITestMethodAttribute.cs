@@ -10,7 +10,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting.AppContainer;
 /// </summary>
 public class UITestMethodAttribute : TestMethodAttribute
 {
-    private protected override bool UseAsync => true;
+    private protected override bool UseAsync => GetType() == typeof(UITestMethodAttribute);
 
     /// <inheritdoc cref="ExecuteAsync(ITestMethod)" />
     public override TestResult[] Execute(ITestMethod testMethod) => base.Execute(testMethod);

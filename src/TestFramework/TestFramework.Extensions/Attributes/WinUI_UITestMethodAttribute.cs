@@ -34,7 +34,7 @@ public class UITestMethodAttribute : TestMethodAttribute
     {
     }
 
-    private protected override bool UseAsync => true;
+    private protected override bool UseAsync => GetType() == typeof(UITestMethodAttribute);
 
     /// <summary>
     /// Gets or sets the <see cref="UI.Dispatching.DispatcherQueue"/> that should be used to invoke the UITestMethodAttribute.
