@@ -585,4 +585,13 @@ The type declaring these methods should also respect the following rules:
   <data name="UseRetryWithTestMethodMessageFormat" xml:space="preserve">
     <value>An attribute that derives from 'RetryBaseAttribute' can be specified only on a test method</value>
   </data>
+  <data name="PreferTestMethodOverDataTestMethodAnalyzerTitle" xml:space="preserve">
+    <value>Prefer 'TestMethod' over 'DataTestMethod'</value>
+  </data>
+  <data name="PreferTestMethodOverDataTestMethodAnalyzerMessageFormat" xml:space="preserve">
+    <value>'DataTestMethod' is obsolete. Use 'TestMethod' instead.</value>
+  </data>
+  <data name="PreferTestMethodOverDataTestMethodAnalyzerDescription" xml:space="preserve">
+    <value>'DataTestMethodAttribute' is obsolete and provides no additional functionality over 'TestMethodAttribute'. Use 'TestMethodAttribute' for all test methods, including parameterized tests.</value>
+  </data>
 </root>
