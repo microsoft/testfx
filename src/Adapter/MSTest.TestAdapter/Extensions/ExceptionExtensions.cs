@@ -54,7 +54,7 @@ internal static class ExceptionExtensions
     /// <param name="exception">An <see cref="Exception"/> instance.</param>
     /// <returns>StackTraceInformation for the exception.</returns>
     internal static StackTraceInformation? TryGetStackTraceInformation(this Exception exception) => !StringEx.IsNullOrEmpty(exception.StackTrace)
-            ? ExceptionHelper.CreateStackTraceInformation(exception, false, exception.StackTrace)
+            ? ExceptionHelper.CreateStackTraceInformation(exception.StackTrace)
             : null;
 
     /// <summary>
