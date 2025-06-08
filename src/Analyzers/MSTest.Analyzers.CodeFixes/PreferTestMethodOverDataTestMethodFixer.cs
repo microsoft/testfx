@@ -40,28 +40,19 @@ public sealed class PreferTestMethodOverDataTestMethodFixer : CodeFixProvider
                 continue;
             }
 
-            if (context.Document.Project.Language == LanguageNames.CSharp)
+            if (diagnosticNode is not Microsoft.CodeAnalysis.CSharp.Syntax.AttributeSyntax attributeSyntax)
             {
-                RegisterCSharpCodeFixesAsync(context, root!, diagnosticNode);
+                continue;
             }
+
+            // Replace DataTestMethod with TestMethod
+            var action = CodeAction.Create(
+                title: CodeFixResources.ReplaceDataTestMethodWithTestMethodTitle,
+                createChangedDocument: c => ReplaceDataTestMethodAsync(context.Document, root!, attributeSyntax, c),
+                equivalenceKey: CodeFixResources.ReplaceDataTestMethodWithTestMethodTitle);
+
+            context.RegisterCodeFix(action, diagnostic);
         }
-    }
-
-    private static Task RegisterCSharpCodeFixesAsync(CodeFixContext context, SyntaxNode root, SyntaxNode diagnosticNode)
-    {
-        if (diagnosticNode is not Microsoft.CodeAnalysis.CSharp.Syntax.AttributeSyntax attributeSyntax)
-        {
-            return Task.CompletedTask;
-        }
-
-        // Replace DataTestMethod with TestMethod
-        var action = CodeAction.Create(
-            title: CodeFixResources.ReplaceDataTestMethodWithTestMethodTitle,
-            createChangedDocument: c => ReplaceDataTestMethodAsync(context.Document, root, attributeSyntax, c),
-            equivalenceKey: CodeFixResources.ReplaceDataTestMethodWithTestMethodTitle);
-
-        context.RegisterCodeFix(action, context.Diagnostics);
-        return Task.CompletedTask;
     }
 
     private static Task<Document> ReplaceDataTestMethodAsync(Document document, SyntaxNode root, SyntaxNode attributeSyntax, CancellationToken cancellationToken)
