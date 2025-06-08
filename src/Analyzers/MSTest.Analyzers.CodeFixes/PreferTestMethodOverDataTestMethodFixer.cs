@@ -3,7 +3,6 @@
 
 using System.Collections.Immutable;
 using System.Composition;
-using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.CodeAnalysis;
@@ -48,19 +47,19 @@ public sealed class PreferTestMethodOverDataTestMethodFixer : CodeFixProvider
             // Replace DataTestMethod with TestMethod
             var action = CodeAction.Create(
                 title: CodeFixResources.ReplaceDataTestMethodWithTestMethodTitle,
-                createChangedDocument: c => ReplaceDataTestMethodAsync(context.Document, root!, attributeSyntax, c),
+                createChangedDocument: c => Task.FromResult(ReplaceDataTestMethod(context.Document, root!, attributeSyntax)),
                 equivalenceKey: CodeFixResources.ReplaceDataTestMethodWithTestMethodTitle);
 
             context.RegisterCodeFix(action, diagnostic);
         }
     }
 
-    private static Task<Document> ReplaceDataTestMethodAsync(Document document, SyntaxNode root, SyntaxNode attributeSyntax, CancellationToken cancellationToken)
+    private static Document ReplaceDataTestMethod(Document document, SyntaxNode root, SyntaxNode attributeSyntax)
     {
         var csAttributeSyntax = (Microsoft.CodeAnalysis.CSharp.Syntax.AttributeSyntax)attributeSyntax;
         var newAttribute = csAttributeSyntax.WithName(SyntaxFactory.IdentifierName("TestMethod"));
         var newRoot = root.ReplaceNode(csAttributeSyntax, newAttribute);
 
-        return Task.FromResult(document.WithSyntaxRoot(newRoot));
+        return document.WithSyntaxRoot(newRoot);
     }
 }
