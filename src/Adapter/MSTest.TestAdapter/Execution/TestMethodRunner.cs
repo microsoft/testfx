@@ -458,7 +458,24 @@ internal sealed class TestMethodRunner
     {
         try
         {
-            return await _testMethodInfo.Executor.ExecuteAsync(testMethodInfo);
+            var tcs = new TaskCompletionSource<TestResult[]>();
+
+#pragma warning disable VSTHRD101 // Avoid unsupported async delegates
+            ExecutionContextHelpers.RunOnContext(
+                testMethodInfo.Parent.ExecutionContext ?? testMethodInfo.Parent.Parent.ExecutionContext,
+                async () =>
+                {
+                    try
+                    {
+                        tcs.SetResult(await _testMethodInfo.Executor.ExecuteAsync(testMethodInfo));
+                    }
+                    catch (Exception e)
+                    {
+                        tcs.SetException(e);
+                    }
+                });
+#pragma warning restore VSTHRD101 // Avoid unsupported async delegates
+            return await tcs.Task;
         }
         catch (Exception ex)
         {
