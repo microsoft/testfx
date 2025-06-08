@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Globalization;
+
 using Microsoft.Testing.Internal.Framework;
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
@@ -255,7 +257,7 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
         {
             string arg = args[0];
             int size = arg.Length;
-            if (!float.TryParse(arg[..(size - 1)], CultureInfo.InvariantCulture, out float value))
+            if (!float.TryParse(arg[..(size - 1)], NumberStyles.Float, CultureInfo.InvariantCulture, out float value))
             {
                 throw ApplicationStateGuard.Unreachable();
             }

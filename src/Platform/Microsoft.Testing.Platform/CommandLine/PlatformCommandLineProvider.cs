@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Globalization;
+
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.CommandLine;
 using Microsoft.Testing.Platform.Helpers;
@@ -111,7 +113,7 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
         {
             string arg = arguments[0];
             int size = arg.Length;
-            if ((char.ToLowerInvariant(arg[size - 1]) != 'h' && char.ToLowerInvariant(arg[size - 1]) != 'm' && char.ToLowerInvariant(arg[size - 1]) != 's') || !float.TryParse(arg[..(size - 1)], CultureInfo.InvariantCulture, out float _))
+            if ((char.ToLowerInvariant(arg[size - 1]) != 'h' && char.ToLowerInvariant(arg[size - 1]) != 'm' && char.ToLowerInvariant(arg[size - 1]) != 's') || !float.TryParse(arg[..(size - 1)], NumberStyles.Float, CultureInfo.InvariantCulture, out float _))
             {
                 return ValidationResult.InvalidTask(PlatformResources.PlatformCommandLineTimeoutArgumentErrorMessage);
             }
