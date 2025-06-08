@@ -155,7 +155,7 @@ public sealed class PreferTestMethodOverDataTestMethodAnalyzerTests
     }
 
     [TestMethod]
-    public async Task WhenUsingBothTestMethodAndDataTestMethod_CodeFixRemovesDataTestMethod()
+    public async Task WhenUsingBothTestMethodAndDataTestMethod_CodeFixReplacesDataTestMethodWithTestMethod()
     {
         string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -178,6 +178,7 @@ public sealed class PreferTestMethodOverDataTestMethodAnalyzerTests
             public class MyTestClass
             {
                 [TestMethod]
+                [TestMethod]
                 public void MyTestMethod()
                 {
                 }
@@ -191,7 +192,7 @@ public sealed class PreferTestMethodOverDataTestMethodAnalyzerTests
     }
 
     [TestMethod]
-    public async Task WhenUsingDataTestMethodWithMultipleAttributesInSameList_CodeFixRemovesOnlyDataTestMethod()
+    public async Task WhenUsingDataTestMethodWithMultipleAttributesInSameList_CodeFixReplacesDataTestMethodWithTestMethod()
     {
         string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -212,7 +213,7 @@ public sealed class PreferTestMethodOverDataTestMethodAnalyzerTests
             [TestClass]
             public class MyTestClass
             {
-                [TestMethod]
+                [TestMethod, TestMethod]
                 public void MyTestMethod()
                 {
                 }

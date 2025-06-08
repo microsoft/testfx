@@ -177,9 +177,6 @@
   <data name="AvoidAssertAreSameWithValueTypesFix" xml:space="preserve">
     <value>Use '{0}'</value>
   </data>
-  <data name="RemoveDataTestMethodAttributeTitle" xml:space="preserve">
-    <value>Remove 'DataTestMethod' attribute</value>
-  </data>
   <data name="ReplaceDataTestMethodWithTestMethodTitle" xml:space="preserve">
     <value>Replace 'DataTestMethod' with 'TestMethod'</value>
   </data>
