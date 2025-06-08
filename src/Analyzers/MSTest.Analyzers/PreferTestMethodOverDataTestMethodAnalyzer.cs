@@ -15,7 +15,7 @@ namespace MSTest.Analyzers;
 /// <summary>
 /// MSTEST0044: <inheritdoc cref="Resources.PreferTestMethodOverDataTestMethodAnalyzerTitle"/>.
 /// </summary>
-[DiagnosticAnalyzer(LanguageNames.CSharp, LanguageNames.VisualBasic)]
+[DiagnosticAnalyzer(LanguageNames.CSharp)]
 public sealed class PreferTestMethodOverDataTestMethodAnalyzer : DiagnosticAnalyzer
 {
     internal static readonly DiagnosticDescriptor PreferTestMethodOverDataTestMethodRule = DiagnosticDescriptorHelper.Create(
