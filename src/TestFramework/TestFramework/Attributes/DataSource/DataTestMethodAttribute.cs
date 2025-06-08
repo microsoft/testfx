@@ -1,7 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
 using System.ComponentModel;
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -12,7 +11,6 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// </summary>
 [AttributeUsage(AttributeTargets.Method)]
 [EditorBrowsable(EditorBrowsableState.Never)]
-[Obsolete("DataTestMethodAttribute is obsolete and will be removed in a future version. Use TestMethodAttribute instead. For more information visit https://aka.ms/mstest-datatestmethod-obsolete", DiagnosticId = "MSTEST0044")]
 public class DataTestMethodAttribute : TestMethodAttribute
 {
     private protected override bool UseAsync => true;
