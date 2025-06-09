@@ -417,14 +417,10 @@ public class TestMethodInfo : ITestMethod
 
                         if (executionContext is null)
                         {
-                            object? invokeResult = TestMethod.GetInvokeResult(_classInstance, arguments);
-                            if (invokeResult is Task task)
+                            Task? invokeResult = TestMethod.GetInvokeResultAsync(_classInstance, arguments);
+                            if (invokeResult is not null)
                             {
-                                await task;
-                            }
-                            else if (invokeResult is ValueTask valueTask)
-                            {
-                                await valueTask;
+                                await invokeResult;
                             }
                         }
                         else
@@ -436,14 +432,10 @@ public class TestMethodInfo : ITestMethod
                             {
                                 try
                                 {
-                                    object? invokeResult = TestMethod.GetInvokeResult(_classInstance, arguments);
-                                    if (invokeResult is Task task)
+                                    Task? invokeResult = TestMethod.GetInvokeResultAsync(_classInstance, arguments);
+                                    if (invokeResult is not null)
                                     {
-                                        await task;
-                                    }
-                                    else if (invokeResult is ValueTask valueTask)
-                                    {
-                                        await valueTask;
+                                        await invokeResult;
                                     }
                                 }
                                 catch (Exception e)
