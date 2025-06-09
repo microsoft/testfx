@@ -26,6 +26,12 @@ public static class MSBuildExtensions
                 serviceProvider.GetCommandLineOptions(),
                 serviceProvider.GetTestApplicationCancellationTokenSource()));
 
+        ((TestApplicationBuilder)builder).TestHostOrchestrator.AddTestApplicationLifecycleCallbacks(
+            serviceProvider => new MSBuildOrchestratorLifecycleCallbacks(
+                serviceProvider.GetConfiguration(),
+                serviceProvider.GetCommandLineOptions(),
+                serviceProvider.GetTestApplicationCancellationTokenSource()));
+
         CompositeExtensionFactory<MSBuildConsumer> compositeExtensionFactory
             = new(serviceProvider => new MSBuildConsumer(
                 serviceProvider,
