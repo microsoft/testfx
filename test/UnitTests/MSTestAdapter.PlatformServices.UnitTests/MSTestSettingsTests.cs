@@ -566,7 +566,7 @@ public class MSTestSettingsTests : TestContainer
             """;
 
         AdapterSettingsException exception = VerifyThrows<AdapterSettingsException>(() => MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object));
-        Verify(exception.Message.Contains("Invalid settings 'Parallelize'. Unexpected XmlElement: 'Hola'."));
+        Verify(exception.Message.Contains("MSTestAdapter encountered an unexpected element 'Hola' in its settings 'Parallelize'. Remove this element and try again."));
     }
 
     public void GetSettingsShouldBeAbleToReadAfterParallelizationSettings()

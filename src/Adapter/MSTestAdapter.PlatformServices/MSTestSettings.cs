@@ -833,8 +833,8 @@ public class MSTestSettings
                                 string.Format(
                                     CultureInfo.CurrentCulture,
                                     Resource.InvalidSettingsXmlElement,
-                                    ParallelizeSettingsName,
-                                    reader.Name));
+                                    reader.Name,
+                                    ParallelizeSettingsName));
                         }
                 }
             }
