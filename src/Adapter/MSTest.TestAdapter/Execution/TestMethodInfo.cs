@@ -1103,10 +1103,6 @@ public class TestMethodInfo : ITestMethod
             }
 
             DebugEx.Assert(result is not null, "result is not null");
-
-            // It's possible that some failures happened and that the cleanup wasn't executed, so we need to run it here.
-            // The method already checks if the cleanup was already executed.
-            RunTestCleanupMethod(result, executionContext, null);
             return result;
         }
 
