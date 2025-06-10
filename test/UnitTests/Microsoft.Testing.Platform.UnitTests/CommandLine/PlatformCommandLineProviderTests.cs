@@ -202,7 +202,7 @@ public sealed class PlatformCommandLineProviderTests
             foreach (string cultureName in new[] { "en-US", "de-DE", "fr-FR" })
             {
                 CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo(cultureName);
-                ValidationResult validateOptionsResult = await provider.ValidateOptionArgumentsAsync(option, [timeout]).ConfigureAwait(false);
+                ValidationResult validateOptionsResult = await provider.ValidateOptionArgumentsAsync(option, [timeout]);
                 Assert.IsTrue(validateOptionsResult.IsValid, $"Failed with culture {cultureName} and timeout {timeout}");
                 Assert.IsTrue(string.IsNullOrEmpty(validateOptionsResult.ErrorMessage));
             }
@@ -217,14 +217,14 @@ public sealed class PlatformCommandLineProviderTests
     [TestMethod]
     [DataRow("1,5s")] // German decimal separator
     [DataRow("invalid")]
-    [DataRow("1.5")]  // Missing unit
+    [DataRow("1.5")] // Missing unit
     [DataRow("abc.5s")]
     public async Task IsInvalid_If_Timeout_Has_IncorrectFormat(string timeout)
     {
         var provider = new PlatformCommandLineProvider();
         CommandLineOption option = provider.GetCommandLineOptions().First(x => x.Name == PlatformCommandLineProvider.TimeoutOptionKey);
 
-        ValidationResult validateOptionsResult = await provider.ValidateOptionArgumentsAsync(option, [timeout]).ConfigureAwait(false);
+        ValidationResult validateOptionsResult = await provider.ValidateOptionArgumentsAsync(option, [timeout]);
         Assert.IsFalse(validateOptionsResult.IsValid);
         Assert.AreEqual(PlatformResources.PlatformCommandLineTimeoutArgumentErrorMessage, validateOptionsResult.ErrorMessage);
     }
@@ -237,18 +237,15 @@ public sealed class PlatformCommandLineProviderTests
 
         // Save current culture
         CultureInfo originalCulture = CultureInfo.CurrentCulture;
-        
         try
         {
             // Set culture to German where decimal separator is comma
             CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("de-DE");
-            
             // This should work because we use invariant culture (period as decimal separator)
-            ValidationResult validResult = await provider.ValidateOptionArgumentsAsync(option, ["1.5s"]).ConfigureAwait(false);
+            ValidationResult validResult = await provider.ValidateOptionArgumentsAsync(option, ["1.5s"]);
             Assert.IsTrue(validResult.IsValid, "1.5s should be valid when using invariant culture");
-            
             // This should fail because comma is not valid in invariant culture
-            ValidationResult invalidResult = await provider.ValidateOptionArgumentsAsync(option, ["1,5s"]).ConfigureAwait(false);
+            ValidationResult invalidResult = await provider.ValidateOptionArgumentsAsync(option, ["1,5s"]);
             Assert.IsFalse(invalidResult.IsValid, "1,5s should be invalid when using invariant culture");
         }
         finally
