@@ -58,7 +58,10 @@ public sealed class PreferTestMethodOverDataTestMethodAnalyzer : DiagnosticAnaly
             // Only report on direct application of DataTestMethodAttribute, not inherited ones
             if (SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, dataTestMethodAttributeSymbol))
             {
-                context.ReportDiagnostic(methodSymbol.CreateDiagnostic(PreferTestMethodOverDataTestMethodRule));
+                if (attribute.ApplicationSyntaxReference is { } syntaxRef)
+                {
+                    context.ReportDiagnostic(syntaxRef.CreateDiagnostic(PreferTestMethodOverDataTestMethodRule, context.CancellationToken));
+                }
             }
         }
     }

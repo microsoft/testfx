@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
@@ -26,7 +26,7 @@ public sealed class PreferTestMethodOverDataTestMethodAnalyzerTests
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(code);
+        await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
     [TestMethod]
@@ -38,63 +38,27 @@ public sealed class PreferTestMethodOverDataTestMethodAnalyzerTests
             [TestClass]
             public class MyTestClass
             {
-                [{|#0:DataTestMethod|}]
+                [[|DataTestMethod|]]
                 public void MyTestMethod()
                 {
                 }
             }
             """;
 
-        var expected = VerifyCS.Diagnostic(PreferTestMethodOverDataTestMethodAnalyzer.PreferTestMethodOverDataTestMethodRule)
-            .WithLocation(0);
-
-        await VerifyCS.VerifyAnalyzerAsync(code, expected);
-    }
-
-    [TestMethod]
-    public async Task WhenUsingDataTestMethodWithParameters_Diagnostic()
-    {
-        string code = """
+        string fixedCode = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
             public class MyTestClass
             {
-                [{|#0:DataTestMethod|}]
-                [DataRow(1, 2)]
-                public void MyTestMethod(int a, int b)
-                {
-                }
-            }
-            """;
-
-        var expected = VerifyCS.Diagnostic(PreferTestMethodOverDataTestMethodAnalyzer.PreferTestMethodOverDataTestMethodRule)
-            .WithLocation(0);
-
-        await VerifyCS.VerifyAnalyzerAsync(code, expected);
-    }
-
-    [TestMethod]
-    public async Task WhenUsingBothTestMethodAndDataTestMethod_Diagnostic()
-    {
-        string code = """
-            using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-            [TestClass]
-            public class MyTestClass
-            {
-                [TestMethod]
-                [{|#0:DataTestMethod|}]
+                [[|TestMethod|]]
                 public void MyTestMethod()
                 {
                 }
             }
             """;
 
-        var expected = VerifyCS.Diagnostic(PreferTestMethodOverDataTestMethodAnalyzer.PreferTestMethodOverDataTestMethodRule)
-            .WithLocation(0);
-
-        await VerifyCS.VerifyAnalyzerAsync(code, expected);
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
     [TestMethod]
@@ -106,29 +70,7 @@ public sealed class PreferTestMethodOverDataTestMethodAnalyzerTests
             [TestClass]
             public class MyTestClass
             {
-                [{|#0:DataTestMethod("Display Name")|}]
-                public void MyTestMethod()
-                {
-                }
-            }
-            """;
-
-        var expected = VerifyCS.Diagnostic(PreferTestMethodOverDataTestMethodAnalyzer.PreferTestMethodOverDataTestMethodRule)
-            .WithLocation(0);
-
-        await VerifyCS.VerifyAnalyzerAsync(code, expected);
-    }
-
-    [TestMethod]
-    public async Task WhenUsingDataTestMethod_CodeFixReplacesWithTestMethod()
-    {
-        string code = """
-            using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-            [TestClass]
-            public class MyTestClass
-            {
-                [{|#0:DataTestMethod|}]
+                [[|DataTestMethod("Display Name")|]]
                 public void MyTestMethod()
                 {
                 }
@@ -141,21 +83,18 @@ public sealed class PreferTestMethodOverDataTestMethodAnalyzerTests
             [TestClass]
             public class MyTestClass
             {
-                [TestMethod]
+                [[|TestMethod("Display Name")|]]
                 public void MyTestMethod()
                 {
                 }
             }
             """;
 
-        var expected = VerifyCS.Diagnostic(PreferTestMethodOverDataTestMethodAnalyzer.PreferTestMethodOverDataTestMethodRule)
-            .WithLocation(0);
-
-        await VerifyCS.VerifyCodeFixAsync(code, expected, fixedCode);
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
     [TestMethod]
-    public async Task WhenUsingBothTestMethodAndDataTestMethod_CodeFixReplacesDataTestMethodWithTestMethod()
+    public async Task WhenUsingDataTestMethodWithMultipleAttributesInSameList_Diagnostic()
     {
         string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -163,8 +102,7 @@ public sealed class PreferTestMethodOverDataTestMethodAnalyzerTests
             [TestClass]
             public class MyTestClass
             {
-                [TestMethod]
-                [{|#0:DataTestMethod|}]
+                [Ignore, [|DataTestMethod|]]
                 public void MyTestMethod()
                 {
                 }
@@ -177,91 +115,28 @@ public sealed class PreferTestMethodOverDataTestMethodAnalyzerTests
             [TestClass]
             public class MyTestClass
             {
-                [TestMethod]
-                [TestMethod]
+                [Ignore, TestMethod]
                 public void MyTestMethod()
                 {
                 }
             }
             """;
 
-        var expected = VerifyCS.Diagnostic(PreferTestMethodOverDataTestMethodAnalyzer.PreferTestMethodOverDataTestMethodRule)
-            .WithLocation(0);
-
-        await VerifyCS.VerifyCodeFixAsync(code, expected, fixedCode);
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
     [TestMethod]
-    public async Task WhenUsingDataTestMethodWithMultipleAttributesInSameList_CodeFixReplacesDataTestMethodWithTestMethod()
+    public async Task WhenInheritingDataTestMethod_Diagnostic()
     {
+        // TODO: Codefix doesn't handle this yet. So no codefix is offered.
         string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-            [TestClass]
-            public class MyTestClass
+            internal sealed class [|MyDataTestMethodAttribute|] : DataTestMethodAttribute
             {
-                [TestMethod, {|#0:DataTestMethod|}]
-                public void MyTestMethod()
-                {
-                }
             }
             """;
 
-        string fixedCode = """
-            using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-            [TestClass]
-            public class MyTestClass
-            {
-                [TestMethod, TestMethod]
-                public void MyTestMethod()
-                {
-                }
-            }
-            """;
-
-        var expected = VerifyCS.Diagnostic(PreferTestMethodOverDataTestMethodAnalyzer.PreferTestMethodOverDataTestMethodRule)
-            .WithLocation(0);
-
-        await VerifyCS.VerifyCodeFixAsync(code, expected, fixedCode);
-    }
-
-    [TestMethod]
-    public async Task WhenUsingDataTestMethodWithParameterizedTests_CodeFixReplacesWithTestMethod()
-    {
-        string code = """
-            using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-            [TestClass]
-            public class MyTestClass
-            {
-                [{|#0:DataTestMethod|}]
-                [DataRow(1, 2)]
-                [DataRow(3, 4)]
-                public void MyTestMethod(int a, int b)
-                {
-                }
-            }
-            """;
-
-        string fixedCode = """
-            using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-            [TestClass]
-            public class MyTestClass
-            {
-                [TestMethod]
-                [DataRow(1, 2)]
-                [DataRow(3, 4)]
-                public void MyTestMethod(int a, int b)
-                {
-                }
-            }
-            """;
-
-        var expected = VerifyCS.Diagnostic(PreferTestMethodOverDataTestMethodAnalyzer.PreferTestMethodOverDataTestMethodRule)
-            .WithLocation(0);
-
-        await VerifyCS.VerifyCodeFixAsync(code, expected, fixedCode);
+        await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 }

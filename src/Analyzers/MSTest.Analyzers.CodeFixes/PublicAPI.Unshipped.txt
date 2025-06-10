@@ -1,3 +1,6 @@
 #nullable enable
 MSTest.Analyzers.PreferTestMethodOverDataTestMethodFixer
 MSTest.Analyzers.PreferTestMethodOverDataTestMethodFixer.PreferTestMethodOverDataTestMethodFixer() -> void
+override MSTest.Analyzers.PreferTestMethodOverDataTestMethodFixer.FixableDiagnosticIds.get -> System.Collections.Immutable.ImmutableArray<string!>
+override MSTest.Analyzers.PreferTestMethodOverDataTestMethodFixer.GetFixAllProvider() -> Microsoft.CodeAnalysis.CodeFixes.FixAllProvider!
+override MSTest.Analyzers.PreferTestMethodOverDataTestMethodFixer.RegisterCodeFixesAsync(Microsoft.CodeAnalysis.CodeFixes.CodeFixContext context) -> System.Threading.Tasks.Task!

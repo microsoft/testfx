@@ -1,9 +1,10 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Immutable;
 using System.Composition;
-using System.Threading.Tasks;
+
+using Analyzer.Utilities;
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CodeActions;
@@ -15,6 +16,9 @@ using MSTest.Analyzers.Helpers;
 
 namespace MSTest.Analyzers;
 
+/// <summary>
+/// Code fixer for <see cref="PreferTestMethodOverDataTestMethodAnalyzer"/>.
+/// </summary>
 [ExportCodeFixProvider(LanguageNames.CSharp, Name = nameof(PreferTestMethodOverDataTestMethodFixer))]
 [Shared]
 public sealed class PreferTestMethodOverDataTestMethodFixer : CodeFixProvider
@@ -30,7 +34,7 @@ public sealed class PreferTestMethodOverDataTestMethodFixer : CodeFixProvider
     /// <inheritdoc />
     public override async Task RegisterCodeFixesAsync(CodeFixContext context)
     {
-        SyntaxNode root = await context.Document.GetSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false);
+        SyntaxNode root = await context.Document.GetRequiredSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false);
 
         foreach (Diagnostic diagnostic in context.Diagnostics)
         {
@@ -52,8 +56,8 @@ public sealed class PreferTestMethodOverDataTestMethodFixer : CodeFixProvider
 
     private static Document ReplaceDataTestMethod(Document document, SyntaxNode root, AttributeSyntax attributeSyntax)
     {
-        var newAttribute = attributeSyntax.WithName(SyntaxFactory.IdentifierName("TestMethod"));
-        var newRoot = root.ReplaceNode(attributeSyntax, newAttribute);
+        AttributeSyntax newAttribute = attributeSyntax.WithName(SyntaxFactory.IdentifierName("TestMethod"));
+        SyntaxNode newRoot = root.ReplaceNode(attributeSyntax, newAttribute);
 
         return document.WithSyntaxRoot(newRoot);
     }
