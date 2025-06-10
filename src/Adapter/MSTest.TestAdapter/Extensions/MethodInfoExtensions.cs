@@ -91,8 +91,17 @@ internal static class MethodInfoExtensions
     /// <returns>True if the method has a void/task return type..</returns>
     internal static bool IsValidReturnType(this MethodInfo method, ReflectHelper? reflectHelper = null)
         => ReflectHelper.MatchReturnType(method, typeof(Task))
-        || ReflectHelper.MatchReturnType(method, typeof(ValueTask))
-        || (ReflectHelper.MatchReturnType(method, typeof(void)) && method.GetAsyncTypeName(reflectHelper) == null);
+        || (ReflectHelper.MatchReturnType(method, typeof(void)) && method.GetAsyncTypeName(reflectHelper) == null)
+        // Keep this the last check, as it avoids loading System.Threading.Tasks.Extensions unnecessarily.
+        || method.IsValueTask();
+
+    // Avoid loading System.Threading.Tasks.Extensions if not needed.
+    // Note: .NET runtime will load all types once it's entering the method.
+    // So, moving this out of the method will load System.Threading.Tasks.Extensions
+    // Even when invokeResult is null or Task.
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static bool IsValueTask(this MethodInfo method)
+        => ReflectHelper.MatchReturnType(method, typeof(ValueTask));
 
     /// <summary>
     /// For async methods compiler generates different type and method.
@@ -107,7 +116,7 @@ internal static class MethodInfoExtensions
         return asyncStateMachineAttribute?.StateMachineType?.FullName;
     }
 
-    internal static object? GetInvokeResult(this MethodInfo methodInfo, object? classInstance, params object?[]? arguments)
+    internal static Task? GetInvokeResultAsync(this MethodInfo methodInfo, object? classInstance, params object?[]? arguments)
     {
         ParameterInfo[]? methodParameters = methodInfo.GetParameters();
 
@@ -172,8 +181,21 @@ internal static class MethodInfoExtensions
             }
         }
 
-        return invokeResult;
+        return invokeResult switch
+        {
+            null => null,
+            Task t => t,
+            _ => TryGetTaskFromValueTaskAsync(invokeResult),
+        };
     }
+
+    // Avoid loading System.Threading.Tasks.Extensions if not needed.
+    // Note: .NET runtime will load all types once it's entering the method.
+    // So, moving this out of the method will load System.Threading.Tasks.Extensions
+    // Even when invokeResult is null or Task.
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static Task? TryGetTaskFromValueTaskAsync(object invokeResult)
+        => (invokeResult as ValueTask?)?.AsTask();
 
     /// <summary>
     /// Invoke a <see cref="MethodInfo"/> as a synchronous <see cref="Task"/>.
@@ -189,17 +211,8 @@ internal static class MethodInfoExtensions
     /// </param>
     internal static void InvokeAsSynchronousTask(this MethodInfo methodInfo, object? classInstance, params object?[]? arguments)
     {
-        object? invokeResult = methodInfo.GetInvokeResult(classInstance, arguments);
-
-        // If methodInfo is an async method, wait for returned task
-        if (invokeResult is Task task)
-        {
-            task.GetAwaiter().GetResult();
-        }
-        else if (invokeResult is ValueTask valueTask)
-        {
-            valueTask.GetAwaiter().GetResult();
-        }
+        Task? invokeResult = methodInfo.GetInvokeResultAsync(classInstance, arguments);
+        invokeResult?.GetAwaiter().GetResult();
     }
 
     private static void InferGenerics(Type parameterType, Type argumentType, List<(Type ParameterType, Type Substitution)> result)

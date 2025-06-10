@@ -54,7 +54,7 @@ public class InternalTestFailureException : UnitTestAssertException
     /// <param name="info">Serialization info.</param>
     /// <param name="context">Streaming context.</param>
 #if NET8_0_OR_GREATER
-    [Obsolete(DiagnosticId = "SYSLIB0051")]
+    [Obsolete("Legacy serialization support is deprecated since .NET 8", DiagnosticId = "SYSLIB0051")]
 #endif
     [EditorBrowsable(EditorBrowsableState.Never)]
     protected InternalTestFailureException(SerializationInfo info, StreamingContext context)
