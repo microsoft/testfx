@@ -196,14 +196,12 @@ public sealed class PlatformCommandLineProviderTests
 
         // Save current culture
         CultureInfo originalCulture = CultureInfo.CurrentCulture;
-        
         try
         {
             // Test with various cultures to ensure invariant parsing works
             foreach (string cultureName in new[] { "en-US", "de-DE", "fr-FR" })
             {
                 CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo(cultureName);
-                
                 ValidationResult validateOptionsResult = await provider.ValidateOptionArgumentsAsync(option, [timeout]).ConfigureAwait(false);
                 Assert.IsTrue(validateOptionsResult.IsValid, $"Failed with culture {cultureName} and timeout {timeout}");
                 Assert.IsTrue(string.IsNullOrEmpty(validateOptionsResult.ErrorMessage));
