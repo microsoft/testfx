@@ -54,7 +54,9 @@ public class InternalTestFailureException : UnitTestAssertException
     /// <param name="info">Serialization info.</param>
     /// <param name="context">Streaming context.</param>
 #if NET8_0_OR_GREATER
+#pragma warning disable CA1041 // Provide ObsoleteAttribute message
     [Obsolete(DiagnosticId = "SYSLIB0051")]
+#pragma warning restore CA1041 // Provide ObsoleteAttribute message
 #endif
     [EditorBrowsable(EditorBrowsableState.Never)]
     protected InternalTestFailureException(SerializationInfo info, StreamingContext context)

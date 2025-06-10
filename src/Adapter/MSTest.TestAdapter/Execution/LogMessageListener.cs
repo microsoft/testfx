@@ -169,5 +169,7 @@ public class LogMessageListener : IDisposable
 
             s_listenerCount--;
         }
+
+        GC.SuppressFinalize(this);
     }
 }

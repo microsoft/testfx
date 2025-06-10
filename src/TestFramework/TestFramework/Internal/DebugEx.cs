@@ -17,7 +17,9 @@ internal static class DebugEx
             // ends up causing the job to timeout. We use FailFast instead.
             // FailFast is better than throwing an exception to avoid anyone
             // catching an exception and masking an assert failure.
+#pragma warning disable CA2201 // Do not raise reserved exception types
             var ex = new Exception($"Debug.Assert failed: {message}");
+#pragma warning restore CA2201 // Do not raise reserved exception types
             Environment.FailFast(ex.Message, ex);
         }
     }
