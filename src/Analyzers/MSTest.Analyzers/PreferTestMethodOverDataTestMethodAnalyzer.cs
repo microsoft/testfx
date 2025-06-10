@@ -15,7 +15,7 @@ namespace MSTest.Analyzers;
 /// <summary>
 /// MSTEST0044: <inheritdoc cref="Resources.PreferTestMethodOverDataTestMethodAnalyzerTitle"/>.
 /// </summary>
-[DiagnosticAnalyzer(LanguageNames.CSharp)]
+[DiagnosticAnalyzer(LanguageNames.CSharp, LanguageNames.VisualBasic)]
 public sealed class PreferTestMethodOverDataTestMethodAnalyzer : DiagnosticAnalyzer
 {
     internal static readonly DiagnosticDescriptor PreferTestMethodOverDataTestMethodRule = DiagnosticDescriptorHelper.Create(
@@ -45,6 +45,7 @@ public sealed class PreferTestMethodOverDataTestMethodAnalyzer : DiagnosticAnaly
             }
 
             context.RegisterSymbolAction(context => AnalyzeMethod(context, dataTestMethodAttributeSymbol), SymbolKind.Method);
+            context.RegisterSymbolAction(context => AnalyzeNamedType(context, dataTestMethodAttributeSymbol), SymbolKind.NamedType);
         });
     }
 
@@ -54,9 +55,28 @@ public sealed class PreferTestMethodOverDataTestMethodAnalyzer : DiagnosticAnaly
 
         foreach (AttributeData attribute in methodSymbol.GetAttributes())
         {
-            if (attribute.AttributeClass.Inherits(dataTestMethodAttributeSymbol))
+            // Only report on direct application of DataTestMethodAttribute, not inherited ones
+            if (SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, dataTestMethodAttributeSymbol))
             {
                 if (attribute.ApplicationSyntaxReference?.GetSyntax() is { } syntax)
+                {
+                    context.ReportDiagnostic(syntax.CreateDiagnostic(PreferTestMethodOverDataTestMethodRule));
+                }
+            }
+        }
+    }
+
+    private static void AnalyzeNamedType(SymbolAnalysisContext context, INamedTypeSymbol dataTestMethodAttributeSymbol)
+    {
+        var namedTypeSymbol = (INamedTypeSymbol)context.Symbol;
+
+        // Check if this type directly inherits from DataTestMethodAttribute (not DataTestMethodAttribute itself)
+        if (namedTypeSymbol.BaseType != null && 
+            SymbolEqualityComparer.Default.Equals(namedTypeSymbol.BaseType, dataTestMethodAttributeSymbol))
+        {
+            foreach (var syntaxRef in namedTypeSymbol.DeclaringSyntaxReferences)
+            {
+                if (syntaxRef.GetSyntax() is { } syntax)
                 {
                     context.ReportDiagnostic(syntax.CreateDiagnostic(PreferTestMethodOverDataTestMethodRule));
                 }
