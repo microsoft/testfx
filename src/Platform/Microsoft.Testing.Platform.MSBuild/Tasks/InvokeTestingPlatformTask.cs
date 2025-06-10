@@ -433,6 +433,10 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
 
     private Task<IResponse> HandleRequestAsync(IRequest request)
     {
+        // For the case, of orchestrator (e.g, Retry), we can get ModuleInfoRequest from the orchestrator itself.
+        // If there is no orchestrator or the orchestrator didn't send ModuleInfoRequest, we will get it from the first test host.
+        // For the case of retry, the request is different between the orchestrator and the test host.
+        // More specifically, the results directory is different (orchestrator points to original, while test host points to the specific retry results directory).
         if (request is ModuleInfoRequest moduleInfo)
         {
             if (_moduleInfo is null)
