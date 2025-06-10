@@ -94,25 +94,25 @@ internal sealed class UnitTestRunner : MarshalByRefObject
     {
         // For the fixture methods, we need to return the appropriate result.
         // Get matching testMethodInfo from the cache and return UnitTestOutcome for the fixture test.
-        if (fixtureType is Constants.ClassInitializeFixtureTrait or Constants.ClassCleanupFixtureTrait &&
+        if (fixtureType is EngineConstants.ClassInitializeFixtureTrait or EngineConstants.ClassCleanupFixtureTrait &&
             _classFixtureTests.TryGetValue(testMethod.AssemblyName + testMethod.FullClassName, out TestClassInfo? testClassInfo))
         {
             UnitTestOutcome outcome = fixtureType switch
             {
-                Constants.ClassInitializeFixtureTrait => testClassInfo.IsClassInitializeExecuted ? GetOutcome(testClassInfo.ClassInitializationException) : UnitTestOutcome.Inconclusive,
-                Constants.ClassCleanupFixtureTrait => testClassInfo.IsClassCleanupExecuted ? GetOutcome(testClassInfo.ClassCleanupException) : UnitTestOutcome.Inconclusive,
+                EngineConstants.ClassInitializeFixtureTrait => testClassInfo.IsClassInitializeExecuted ? GetOutcome(testClassInfo.ClassInitializationException) : UnitTestOutcome.Inconclusive,
+                EngineConstants.ClassCleanupFixtureTrait => testClassInfo.IsClassCleanupExecuted ? GetOutcome(testClassInfo.ClassCleanupException) : UnitTestOutcome.Inconclusive,
                 _ => throw ApplicationStateGuard.Unreachable(),
             };
 
             return new FixtureTestResult(true, outcome);
         }
-        else if (fixtureType is Constants.AssemblyInitializeFixtureTrait or Constants.AssemblyCleanupFixtureTrait &&
+        else if (fixtureType is EngineConstants.AssemblyInitializeFixtureTrait or EngineConstants.AssemblyCleanupFixtureTrait &&
             _assemblyFixtureTests.TryGetValue(testMethod.AssemblyName, out TestAssemblyInfo? testAssemblyInfo))
         {
             Exception? exception = fixtureType switch
             {
-                Constants.AssemblyInitializeFixtureTrait => testAssemblyInfo.AssemblyInitializationException,
-                Constants.AssemblyCleanupFixtureTrait => testAssemblyInfo.AssemblyCleanupException,
+                EngineConstants.AssemblyInitializeFixtureTrait => testAssemblyInfo.AssemblyInitializationException,
+                EngineConstants.AssemblyCleanupFixtureTrait => testAssemblyInfo.AssemblyCleanupException,
                 _ => throw ApplicationStateGuard.Unreachable(),
             };
 
