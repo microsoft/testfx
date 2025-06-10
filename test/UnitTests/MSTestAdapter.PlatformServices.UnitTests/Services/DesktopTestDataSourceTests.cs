@@ -28,7 +28,7 @@ public class DesktopTestDataSourceTests : TestContainer
 
     public void GetDataShouldReadDataFromGivenDataSource()
     {
-        MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("PassingTest");
+        System.Reflection.MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("PassingTest");
         DataSourceAttribute dataSourceAttribute = new(
             "Microsoft.VisualStudio.TestTools.DataSource.XML", "DataTestSourceFile.xml", "settings", DataAccessMethod.Sequential);
 
@@ -47,7 +47,7 @@ public class DesktopTestDataSourceTests : TestContainer
 
     public void GetDataShouldSetDataConnectionInTestContextObject()
     {
-        MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("PassingTest");
+        System.Reflection.MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("PassingTest");
         DataSourceAttribute dataSourceAttribute = new(
             "Microsoft.VisualStudio.TestTools.DataSource.XML", "DataTestSourceFile.xml", "settings", DataAccessMethod.Sequential);
 

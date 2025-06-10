@@ -57,7 +57,7 @@ public class PlatformServiceProviderTests : TestContainer
     public void GetTestContextShouldReturnAValidTestContext()
     {
         // Arrange.
-        var testMethod = new Mock<PlatformServices.Interface.ObjectModel.ITestMethod>();
+        var testMethod = new Mock<Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ObjectModel.ITestMethod>();
         var writer = new ThreadSafeStringWriter(null!, "test");
         var properties = new Dictionary<string, object?> { { "prop", "value" } };
         testMethod.Setup(tm => tm.FullClassName).Returns("A.C.M");

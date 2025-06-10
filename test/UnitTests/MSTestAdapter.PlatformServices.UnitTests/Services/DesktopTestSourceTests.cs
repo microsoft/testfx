@@ -24,7 +24,7 @@ public class DesktopTestSourceTests : TestContainer
 
     public void IsAssemblyReferencedShouldReturnTrueIfSourceIsNull() => Verify(_testSource.IsAssemblyReferenced(Assembly.GetExecutingAssembly().GetName(), null!));
 
-    public void IsAssemblyReferencedShouldReturnTrueIfAnAssemblyIsReferencedInSource() => Verify(_testSource.IsAssemblyReferenced(typeof(TestMethodAttribute).Assembly.GetName(), Assembly.GetExecutingAssembly().Location));
+    public void IsAssemblyReferencedShouldReturnTrueIfAnAssemblyIsReferencedInSource() => Verify(_testSource.IsAssemblyReferenced(typeof(Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute).Assembly.GetName(), Assembly.GetExecutingAssembly().Location));
 
     public void IsAssemblyReferencedShouldReturnFalseIfAnAssemblyIsNotReferencedInSource() => Verify(!_testSource.IsAssemblyReferenced(new AssemblyName("foobar"), Assembly.GetExecutingAssembly().Location));
 }

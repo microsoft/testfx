@@ -4,6 +4,7 @@
 using FluentAssertions;
 
 using Microsoft.MSTestV2.CLIAutomation;
+
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 

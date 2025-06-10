@@ -116,7 +116,7 @@ public sealed class ObjectModelConvertersTests
         var originalExecutorUriProperty = TestProperty.Register(
         VSTestTestNodeProperties.OriginalExecutorUriPropertyName, VSTestTestNodeProperties.OriginalExecutorUriPropertyName, typeof(Uri), typeof(TestCase));
 
-        testCase.SetPropertyValue(originalExecutorUriProperty, new Uri("https://vs.com/"));
+        testCase.SetPropertyValue<Uri>(originalExecutorUriProperty, new Uri("https://vs.com/"));
 
         var testNode = testCase.ToTestNode(isTrxEnabled: false, useFullyQualifiedNameAsUid: false, new NamedFeatureCapabilityWithVSTestProvider(), new ServerModeCommandLineOptions(), ClientInfo);
 
@@ -163,7 +163,7 @@ public sealed class ObjectModelConvertersTests
         var testNode = testResult.ToTestNode(isTrxEnabled: false, useFullyQualifiedNameAsUid: false, null, new ConsoleCommandLineOptions(), ClientInfo);
         var testResultTimingProperty = new TimingProperty(new(startTime, endTime, duration), []);
 
-        Assert.AreEqual(testNode.Properties.OfType<TimingProperty>()[0], testResultTimingProperty);
+        Assert.AreEqual<TimingProperty>(testNode.Properties.OfType<TimingProperty>()[0], testResultTimingProperty);
     }
 
     [TestMethod]

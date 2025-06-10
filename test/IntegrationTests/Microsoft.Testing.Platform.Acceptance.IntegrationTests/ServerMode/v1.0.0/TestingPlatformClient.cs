@@ -109,7 +109,7 @@ public sealed class TestingPlatformClient : IDisposable
         return await CheckedInvoke(async () => await JsonRpcClient.InvokeWithParameterObjectAsync<InitializeResponse>(
             "initialize",
             new InitializeRequest(Environment.ProcessId, new ClientInfo("test-client"),
-                new MSTest.Acceptance.IntegrationTests.Messages.V100.ClientCapabilities(new ClientTestingCapabilities(DebuggerProvider: false))), cancellationToken: cancellationTokenSource.Token));
+                new MSTest.Acceptance.IntegrationTests.Messages.V100.ClientCapabilities(new MSTest.Acceptance.IntegrationTests.Messages.V100.ClientTestingCapabilities(DebuggerProvider: false))), cancellationToken: cancellationTokenSource.Token));
     }
 
     public async Task Exit(bool gracefully = true)
