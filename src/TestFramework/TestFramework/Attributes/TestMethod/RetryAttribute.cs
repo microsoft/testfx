@@ -15,10 +15,12 @@ public sealed class RetryAttribute : RetryBaseAttribute
     /// <param name="maxRetryAttempts">The maximum number of retry attempts. This must be greater than or equal to 1.</param>
     public RetryAttribute(int maxRetryAttempts)
     {
+#pragma warning disable CA1512 // Use ArgumentOutOfRangeException throw helper
         if (maxRetryAttempts < 1)
         {
             throw new ArgumentOutOfRangeException(nameof(maxRetryAttempts));
         }
+#pragma warning disable CA1512 // Use ArgumentOutOfRangeException throw helper
 
         MaxRetryAttempts = maxRetryAttempts;
     }

@@ -13,11 +13,13 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 [DataContract]
 public sealed class TestDataRow<T> : ITestDataRow
 {
+#pragma warning disable CS1574 // XML comment has cref attribute that could not be resolved
     /// <summary>
     /// Initializes a new instance of the <see cref="TestDataRow{T}"/> class.
     /// </summary>
-    /// <param name="value">The value to be held by this instance, which could be a <see cref="Tuple"/> or <see cref="T:System.VgmalueTuple"/> if the test method has more than one parameter.</param>
+    /// <param name="value">The value to be held by this instance, which could be a <see cref="Tuple"/> or <see cref="ValueTuple"/> if the test method has more than one parameter.</param>
     public TestDataRow(T value)
+#pragma warning restore CS1574 // XML comment has cref attribute that could not be resolved
         => Value = value;
 
     /// <summary>
