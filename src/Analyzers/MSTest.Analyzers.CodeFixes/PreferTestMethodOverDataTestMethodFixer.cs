@@ -9,6 +9,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 using MSTest.Analyzers.Helpers;
 
@@ -34,12 +35,7 @@ public sealed class PreferTestMethodOverDataTestMethodFixer : CodeFixProvider
         foreach (Diagnostic diagnostic in context.Diagnostics)
         {
             SyntaxNode? diagnosticNode = root?.FindNode(diagnostic.Location.SourceSpan);
-            if (diagnosticNode is null)
-            {
-                continue;
-            }
-
-            if (diagnosticNode is not Microsoft.CodeAnalysis.CSharp.Syntax.AttributeSyntax attributeSyntax)
+            if (diagnosticNode is not AttributeSyntax attributeSyntax)
             {
                 continue;
             }
@@ -54,11 +50,10 @@ public sealed class PreferTestMethodOverDataTestMethodFixer : CodeFixProvider
         }
     }
 
-    private static Document ReplaceDataTestMethod(Document document, SyntaxNode root, SyntaxNode attributeSyntax)
+    private static Document ReplaceDataTestMethod(Document document, SyntaxNode root, AttributeSyntax attributeSyntax)
     {
-        var csAttributeSyntax = (Microsoft.CodeAnalysis.CSharp.Syntax.AttributeSyntax)attributeSyntax;
-        var newAttribute = csAttributeSyntax.WithName(SyntaxFactory.IdentifierName("TestMethod"));
-        var newRoot = root.ReplaceNode(csAttributeSyntax, newAttribute);
+        var newAttribute = attributeSyntax.WithName(SyntaxFactory.IdentifierName("TestMethod"));
+        var newRoot = root.ReplaceNode(attributeSyntax, newAttribute);
 
         return document.WithSyntaxRoot(newRoot);
     }
