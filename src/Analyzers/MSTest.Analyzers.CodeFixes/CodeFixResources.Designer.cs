@@ -133,6 +133,15 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Replace &apos;DataTestMethod&apos; with &apos;TestMethod&apos;.
+        /// </summary>
+        internal static string ReplaceDataTestMethodWithTestMethodTitle {
+            get {
+                return ResourceManager.GetString("ReplaceDataTestMethodWithTestMethodTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Replace TestInitialize method with constructor.
         /// </summary>
         internal static string ReplaceWithConstructorFix {

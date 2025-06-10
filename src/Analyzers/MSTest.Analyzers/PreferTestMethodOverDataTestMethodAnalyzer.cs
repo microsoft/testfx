@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Immutable;
@@ -58,10 +58,7 @@ public sealed class PreferTestMethodOverDataTestMethodAnalyzer : DiagnosticAnaly
             // Only report on direct application of DataTestMethodAttribute, not inherited ones
             if (SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, dataTestMethodAttributeSymbol))
             {
-                if (attribute.ApplicationSyntaxReference?.GetSyntax() is { } syntax)
-                {
-                    context.ReportDiagnostic(syntax.CreateDiagnostic(PreferTestMethodOverDataTestMethodRule));
-                }
+                context.ReportDiagnostic(methodSymbol.CreateDiagnostic(PreferTestMethodOverDataTestMethodRule));
             }
         }
     }
@@ -70,17 +67,10 @@ public sealed class PreferTestMethodOverDataTestMethodAnalyzer : DiagnosticAnaly
     {
         var namedTypeSymbol = (INamedTypeSymbol)context.Symbol;
 
-        // Check if this type directly inherits from DataTestMethodAttribute (not DataTestMethodAttribute itself)
-        if (namedTypeSymbol.BaseType != null && 
-            SymbolEqualityComparer.Default.Equals(namedTypeSymbol.BaseType, dataTestMethodAttributeSymbol))
+        // Check if this type directly inherits from DataTestMethodAttribute
+        if (dataTestMethodAttributeSymbol.Equals(namedTypeSymbol.BaseType, SymbolEqualityComparer.Default))
         {
-            foreach (var syntaxRef in namedTypeSymbol.DeclaringSyntaxReferences)
-            {
-                if (syntaxRef.GetSyntax() is { } syntax)
-                {
-                    context.ReportDiagnostic(syntax.CreateDiagnostic(PreferTestMethodOverDataTestMethodRule));
-                }
-            }
+            context.ReportDiagnostic(namedTypeSymbol.CreateDiagnostic(PreferTestMethodOverDataTestMethodRule));
         }
     }
 }
