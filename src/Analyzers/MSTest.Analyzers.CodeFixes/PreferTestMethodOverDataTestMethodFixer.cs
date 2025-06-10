@@ -44,7 +44,7 @@ public sealed class PreferTestMethodOverDataTestMethodFixer : CodeFixProvider
             var action = CodeAction.Create(
                 title: CodeFixResources.ReplaceDataTestMethodWithTestMethodTitle,
                 createChangedDocument: c => Task.FromResult(ReplaceDataTestMethod(context.Document, root!, attributeSyntax)),
-                equivalenceKey: CodeFixResources.ReplaceDataTestMethodWithTestMethodTitle);
+                equivalenceKey: nameof(PreferTestMethodOverDataTestMethodFixer));
 
             context.RegisterCodeFix(action, diagnostic);
         }
