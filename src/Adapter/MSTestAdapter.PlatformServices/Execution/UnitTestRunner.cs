@@ -23,7 +23,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 /// </summary>
 internal sealed class UnitTestRunner : MarshalByRefObject
 {
-    private readonly ConcurrentDictionary<string, TestMethodInfo> _fixtureTests = new();
+    private readonly ConcurrentDictionary<string, TestAssemblyInfo> _assemblyFixtureTests = new();
+    private readonly ConcurrentDictionary<string, TestClassInfo> _classFixtureTests = new();
     private readonly TypeCache _typeCache;
     private readonly ReflectHelper _reflectHelper;
     private readonly ClassCleanupManager _classCleanupManager;
@@ -93,33 +94,29 @@ internal sealed class UnitTestRunner : MarshalByRefObject
     {
         // For the fixture methods, we need to return the appropriate result.
         // Get matching testMethodInfo from the cache and return UnitTestOutcome for the fixture test.
-        if (_fixtureTests.TryGetValue(testMethod.AssemblyName + testMethod.FullClassName, out TestMethodInfo? testMethodInfo))
+        if (fixtureType is Constants.ClassInitializeFixtureTrait or Constants.ClassCleanupFixtureTrait &&
+            _classFixtureTests.TryGetValue(testMethod.AssemblyName + testMethod.FullClassName, out TestClassInfo? testClassInfo))
         {
-            if (fixtureType == EngineConstants.ClassInitializeFixtureTrait)
+            UnitTestOutcome outcome = fixtureType switch
             {
-                return testMethodInfo.Parent.IsClassInitializeExecuted
-                    ? new(true, GetOutcome(testMethodInfo.Parent.ClassInitializationException))
-                    : new(true, UnitTestOutcome.Inconclusive);
-            }
+                Constants.ClassInitializeFixtureTrait => testClassInfo.IsClassInitializeExecuted ? GetOutcome(testClassInfo.ClassInitializationException) : UnitTestOutcome.Inconclusive,
+                Constants.ClassCleanupFixtureTrait => testClassInfo.IsClassCleanupExecuted ? GetOutcome(testClassInfo.ClassCleanupException) : UnitTestOutcome.Inconclusive,
+                _ => throw ApplicationStateGuard.Unreachable(),
+            };
 
-            if (fixtureType == EngineConstants.ClassCleanupFixtureTrait)
-            {
-                return testMethodInfo.Parent.IsClassInitializeExecuted
-                ? new(true, GetOutcome(testMethodInfo.Parent.ClassCleanupException))
-                : new(true, UnitTestOutcome.Inconclusive);
-            }
+            return new FixtureTestResult(true, outcome);
         }
-
-        if (_fixtureTests.TryGetValue(testMethod.AssemblyName, out testMethodInfo))
+        else if (fixtureType is Constants.AssemblyInitializeFixtureTrait or Constants.AssemblyCleanupFixtureTrait &&
+            _assemblyFixtureTests.TryGetValue(testMethod.AssemblyName, out TestAssemblyInfo? testAssemblyInfo))
         {
-            if (fixtureType == EngineConstants.AssemblyInitializeFixtureTrait)
+            Exception? exception = fixtureType switch
             {
-                return new(true, GetOutcome(testMethodInfo.Parent.Parent.AssemblyInitializationException));
-            }
-            else if (fixtureType == EngineConstants.AssemblyCleanupFixtureTrait)
-            {
-                return new(true, GetOutcome(testMethodInfo.Parent.Parent.AssemblyCleanupException));
-            }
+                Constants.AssemblyInitializeFixtureTrait => testAssemblyInfo.AssemblyInitializationException,
+                Constants.AssemblyCleanupFixtureTrait => testAssemblyInfo.AssemblyCleanupException,
+                _ => throw ApplicationStateGuard.Unreachable(),
+            };
+
+            return new(true, GetOutcome(exception));
         }
 
         return new(false, UnitTestOutcome.Inconclusive);
@@ -166,8 +163,8 @@ internal sealed class UnitTestRunner : MarshalByRefObject
                 DebugEx.Assert(testMethodInfo is not null, "testMethodInfo should not be null.");
 
                 // Keep track of all non-runnable methods so that we can return the appropriate result at the end.
-                _fixtureTests.TryAdd(testMethod.AssemblyName, testMethodInfo);
-                _fixtureTests.TryAdd(testMethod.AssemblyName + testMethod.FullClassName, testMethodInfo);
+                _assemblyFixtureTests.TryAdd(testMethod.AssemblyName, testMethodInfo.Parent.Parent);
+                _classFixtureTests.TryAdd(testMethod.AssemblyName + testMethod.FullClassName, testMethodInfo.Parent);
 
                 ITestContext testContextForAssemblyInit = PlatformServiceProvider.Instance.GetTestContext(testMethod, writer, properties, messageLogger, testContextForTestExecution.Context.CurrentTestOutcome);
 
