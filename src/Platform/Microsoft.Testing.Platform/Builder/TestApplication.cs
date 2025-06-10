@@ -93,7 +93,7 @@ public sealed class TestApplication : ITestApplication
         {
             ILogger logger = loggingState.FileLoggerProvider.CreateLogger(typeof(TestApplication).ToString());
             s_unhandledExceptionHandler.SetLogger(logger);
-            await LogInformationAsync(logger, testApplicationModuleInfo, testHostControllerInfo, systemProcess, systemEnvironment, createBuilderEntryTime, loggingState.IsSynchronousWrite, loggingState.LogLevel, args);
+            await LogInformationAsync(logger, testApplicationModuleInfo, testHostControllerInfo, systemProcess, systemEnvironment, createBuilderEntryTime, loggingState.IsSynchronousWrite, loggingState.LogLevel, args).ConfigureAwait(false);
         }
 
         // All checks are fine, create the TestApplication.
@@ -115,25 +115,25 @@ public sealed class TestApplication : ITestApplication
         AssemblyInformationalVersionAttribute? version = Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>();
         if (version is not null)
         {
-            await logger.LogInformationAsync($"Version: {version.InformationalVersion}");
+            await logger.LogInformationAsync($"Version: {version.InformationalVersion}").ConfigureAwait(false);
         }
         else
         {
-            await logger.LogInformationAsync("Version attribute not found");
+            await logger.LogInformationAsync("Version attribute not found").ConfigureAwait(false);
         }
 
-        await logger.LogInformationAsync("Logging mode: " + (syncWrite ? "synchronous" : "asynchronous"));
-        await logger.LogInformationAsync($"Logging level: {loggerLevel}");
-        await logger.LogInformationAsync($"CreateBuilderAsync entry time: {createBuilderEntryTime}");
+        await logger.LogInformationAsync("Logging mode: " + (syncWrite ? "synchronous" : "asynchronous")).ConfigureAwait(false);
+        await logger.LogInformationAsync($"Logging level: {loggerLevel}").ConfigureAwait(false);
+        await logger.LogInformationAsync($"CreateBuilderAsync entry time: {createBuilderEntryTime}").ConfigureAwait(false);
         using IProcess currentProcess = processHandler.GetCurrentProcess();
-        await logger.LogInformationAsync($"PID: {currentProcess.Id}");
+        await logger.LogInformationAsync($"PID: {currentProcess.Id}").ConfigureAwait(false);
 
 #if NETCOREAPP
         string runtimeInformation = $"{RuntimeInformation.RuntimeIdentifier} - {RuntimeInformation.FrameworkDescription}";
 #else
         string runtimeInformation = $"{RuntimeInformation.ProcessArchitecture} - {RuntimeInformation.FrameworkDescription}";
 #endif
-        await logger.LogInformationAsync($"Runtime information: {runtimeInformation}");
+        await logger.LogInformationAsync($"Runtime information: {runtimeInformation}").ConfigureAwait(false);
 
 #if NETCOREAPP
         if (RuntimeFeature.IsDynamicCodeSupported)
@@ -143,11 +143,11 @@ public sealed class TestApplication : ITestApplication
 #pragma warning restore IL3000 // Avoid accessing Assembly file path when publishing as a single file
             if (runtimeLocation is not null)
             {
-                await logger.LogInformationAsync($"Runtime location: {runtimeLocation}");
+                await logger.LogInformationAsync($"Runtime location: {runtimeLocation}").ConfigureAwait(false);
             }
             else
             {
-                await logger.LogInformationAsync("Runtime location not found.");
+                await logger.LogInformationAsync("Runtime location not found.").ConfigureAwait(false);
             }
         }
 #else
@@ -156,11 +156,11 @@ public sealed class TestApplication : ITestApplication
 #pragma warning restore IL3000 // Avoid accessing Assembly file path when publishing as a single file
         if (runtimeLocation is not null)
         {
-            await logger.LogInformationAsync($"Runtime location: {runtimeLocation}");
+            await logger.LogInformationAsync($"Runtime location: {runtimeLocation}").ConfigureAwait(false);
         }
         else
         {
-            await logger.LogInformationAsync($"Runtime location not found.");
+            await logger.LogInformationAsync($"Runtime location not found.").ConfigureAwait(false);
         }
 #endif
 
@@ -168,11 +168,11 @@ public sealed class TestApplication : ITestApplication
 #if NETCOREAPP
         isDynamicCodeSupported = RuntimeFeature.IsDynamicCodeSupported;
 #endif
-        await logger.LogInformationAsync($"IsDynamicCodeSupported: {isDynamicCodeSupported}");
+        await logger.LogInformationAsync($"IsDynamicCodeSupported: {isDynamicCodeSupported}").ConfigureAwait(false);
 
         string moduleName = testApplicationModuleInfo.GetDisplayName();
-        await logger.LogInformationAsync($"Test module: {moduleName}");
-        await logger.LogInformationAsync($"Command line arguments: '{(args.Length == 0 ? string.Empty : args.Aggregate((a, b) => $"{a} {b}"))}'");
+        await logger.LogInformationAsync($"Test module: {moduleName}").ConfigureAwait(false);
+        await logger.LogInformationAsync($"Command line arguments: '{(args.Length == 0 ? string.Empty : args.Aggregate((a, b) => $"{a} {b}"))}'").ConfigureAwait(false);
 
         StringBuilder machineInfo = new();
 #pragma warning disable RS0030 // Do not use banned APIs
@@ -184,15 +184,15 @@ public sealed class TestApplication : ITestApplication
 #if NETCOREAPP
         machineInfo.AppendLine(CultureInfo.InvariantCulture, $"TotalAvailableMemoryBytes(GB): {GC.GetGCMemoryInfo().TotalAvailableMemoryBytes / 1_000_000_000}");
 #endif
-        await logger.LogDebugAsync($"Machine info:\n{machineInfo}");
+        await logger.LogDebugAsync($"Machine info:\n{machineInfo}").ConfigureAwait(false);
 
         if (testHostControllerInfo.HasTestHostController)
         {
             int? testHostControllerPID = testHostControllerInfo.GetTestHostControllerPID();
 
-            await LogVariableAsync(EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_CORRELATIONID);
-            await LogVariableAsync(EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_PARENTPID);
-            await LogVariableAsync(EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_TESTHOSTPROCESSSTARTTIME);
+            await LogVariableAsync(EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_CORRELATIONID).ConfigureAwait(false);
+            await LogVariableAsync(EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_PARENTPID).ConfigureAwait(false);
+            await LogVariableAsync(EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_TESTHOSTPROCESSSTARTTIME).ConfigureAwait(false);
 
             async Task LogVariableAsync(string key)
             {
@@ -200,12 +200,12 @@ public sealed class TestApplication : ITestApplication
                 key = $"{key}_{testHostControllerPID}";
                 if ((value = environment.GetEnvironmentVariable(key)) is not null)
                 {
-                    await logger.LogDebugAsync($"{key} '{value}'");
+                    await logger.LogDebugAsync($"{key} '{value}'").ConfigureAwait(false);
                 }
             }
         }
 
-        await logger.LogInformationAsync($"{EnvironmentVariableConstants.TESTINGPLATFORM_DEFAULT_HANG_TIMEOUT}: '{environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DEFAULT_HANG_TIMEOUT)}'");
+        await logger.LogInformationAsync($"{EnvironmentVariableConstants.TESTINGPLATFORM_DEFAULT_HANG_TIMEOUT}: '{environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DEFAULT_HANG_TIMEOUT)}'").ConfigureAwait(false);
     }
 
     internal static void ReleaseBuilder()
@@ -225,7 +225,7 @@ public sealed class TestApplication : ITestApplication
 
     /// <inheritdoc />
     public async Task<int> RunAsync()
-        => await _testHost.RunAsync();
+        => await _testHost.RunAsync().ConfigureAwait(false);
 
     private static void AttachDebuggerIfNeeded(SystemEnvironment environment, SystemConsole console, SystemProcessHandler systemProcess)
     {

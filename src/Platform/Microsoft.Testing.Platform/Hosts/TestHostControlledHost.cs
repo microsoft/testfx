@@ -20,10 +20,10 @@ internal sealed class TestHostControlledHost(NamedPipeClient testHostControllerP
 
     public async Task<int> RunAsync()
     {
-        int exitCode = await _innerTestHost.RunAsync();
+        int exitCode = await _innerTestHost.RunAsync().ConfigureAwait(false);
         try
         {
-            await _namedPipeClient.RequestReplyAsync<TestHostProcessExitRequest, VoidResponse>(new TestHostProcessExitRequest(exitCode), _cancellationToken);
+            await _namedPipeClient.RequestReplyAsync<TestHostProcessExitRequest, VoidResponse>(new TestHostProcessExitRequest(exitCode), _cancellationToken).ConfigureAwait(false);
         }
         catch (OperationCanceledException oc) when (oc.CancellationToken == _cancellationToken)
         {
@@ -31,7 +31,7 @@ internal sealed class TestHostControlledHost(NamedPipeClient testHostControllerP
         }
         finally
         {
-            await DisposeHelper.DisposeAsync(_namedPipeClient);
+            await DisposeHelper.DisposeAsync(_namedPipeClient).ConfigureAwait(false);
         }
 
         return exitCode;
@@ -46,8 +46,8 @@ internal sealed class TestHostControlledHost(NamedPipeClient testHostControllerP
 #if NETCOREAPP
     public async ValueTask DisposeAsync()
     {
-        await DisposeHelper.DisposeAsync(_innerTestHost);
-        await _namedPipeClient.DisposeAsync();
+        await DisposeHelper.DisposeAsync(_innerTestHost).ConfigureAwait(false);
+        await _namedPipeClient.DisposeAsync().ConfigureAwait(false);
     }
 #endif
 }

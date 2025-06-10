@@ -92,7 +92,7 @@ public abstract class VSTestBridgedTestFrameworkBase : ITestFramework, IDataProd
                 _ => Task.CompletedTask,
             };
 
-            await convertedRequest;
+            await convertedRequest.ConfigureAwait(false);
         }
         finally
         {

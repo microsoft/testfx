@@ -68,7 +68,7 @@ internal sealed class AggregatedConfiguration(
         // This behavior is non documented and we reserve the right to change it in the future.
         if (fileLoggerProvider is not null)
         {
-            await fileLoggerProvider.CheckLogFolderAndMoveToTheNewIfNeededAsync(_resultsDirectory);
+            await fileLoggerProvider.CheckLogFolderAndMoveToTheNewIfNeededAsync(_resultsDirectory).ConfigureAwait(false);
         }
     }
 

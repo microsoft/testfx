@@ -24,7 +24,7 @@ internal sealed class SystemFileSystem : IFileSystem
     {
         using FileStream stream = new(path, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, FileOptions.Asynchronous | FileOptions.SequentialScan);
         using StreamReader reader = new(stream);
-        return await reader.ReadToEndAsync();
+        return await reader.ReadToEndAsync().ConfigureAwait(false);
     }
 #endif
 }

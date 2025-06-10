@@ -84,7 +84,7 @@ public class MSTestExecutor : ITestExecutor
             return;
         }
 
-        await RunTestsFromRightContextAsync(frameworkHandle, async testRunToken => await TestExecutionManager.RunTestsAsync(tests, runContext, frameworkHandle, testRunToken));
+        await RunTestsFromRightContextAsync(frameworkHandle, async testRunToken => await TestExecutionManager.RunTestsAsync(tests, runContext, frameworkHandle, testRunToken).ConfigureAwait(false)).ConfigureAwait(false);
     }
 
     internal async Task RunTestsAsync(IEnumerable<string>? sources, IRunContext? runContext, IFrameworkHandle? frameworkHandle, IConfiguration? configuration)
@@ -98,7 +98,7 @@ public class MSTestExecutor : ITestExecutor
         }
 
         sources = PlatformServiceProvider.Instance.TestSource.GetTestSources(sources);
-        await RunTestsFromRightContextAsync(frameworkHandle, async testRunToken => await TestExecutionManager.RunTestsAsync(sources, runContext, frameworkHandle, testRunToken));
+        await RunTestsFromRightContextAsync(frameworkHandle, async testRunToken => await TestExecutionManager.RunTestsAsync(sources, runContext, frameworkHandle, testRunToken).ConfigureAwait(false)).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -128,7 +128,7 @@ public class MSTestExecutor : ITestExecutor
             try
             {
                 var threadTask = Task.Run(entryPointThread.Join, _cancellationToken);
-                await threadTask;
+                await threadTask.ConfigureAwait(false);
             }
             catch (Exception ex)
             {
@@ -144,7 +144,7 @@ public class MSTestExecutor : ITestExecutor
                 frameworkHandle.SendMessage(TestMessageLevel.Warning, Resource.STAIsOnlySupportedOnWindowsWarning);
             }
 
-            await DoRunTestsAsync();
+            await DoRunTestsAsync().ConfigureAwait(false);
         }
 
         // Local functions
@@ -155,7 +155,7 @@ public class MSTestExecutor : ITestExecutor
                 try
                 {
                     _testRunCancellationToken = new TestRunCancellationToken();
-                    await runTestsAction(_testRunCancellationToken);
+                    await runTestsAction(_testRunCancellationToken).ConfigureAwait(false);
                 }
                 finally
                 {

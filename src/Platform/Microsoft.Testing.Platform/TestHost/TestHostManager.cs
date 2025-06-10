@@ -47,9 +47,9 @@ internal sealed class TestHostManager : ITestHostManager
         ITestFrameworkInvoker testAdapterInvoke = _testFrameworkInvokerFactory(serviceProvider);
 
         // We initialize only if enabled
-        if (await testAdapterInvoke.IsEnabledAsync())
+        if (await testAdapterInvoke.IsEnabledAsync().ConfigureAwait(false))
         {
-            await testAdapterInvoke.TryInitializeAsync();
+            await testAdapterInvoke.TryInitializeAsync().ConfigureAwait(false);
 
             return ActionResult.Ok(testAdapterInvoke);
         }
@@ -78,9 +78,9 @@ internal sealed class TestHostManager : ITestHostManager
         ITestExecutionFilterFactory testExecutionFilterFactory = _testExecutionFilterFactory(serviceProvider);
 
         // We initialize only if enabled
-        if (await testExecutionFilterFactory.IsEnabledAsync())
+        if (await testExecutionFilterFactory.IsEnabledAsync().ConfigureAwait(false))
         {
-            await testExecutionFilterFactory.TryInitializeAsync();
+            await testExecutionFilterFactory.TryInitializeAsync().ConfigureAwait(false);
 
             return ActionResult.Ok(testExecutionFilterFactory);
         }
@@ -109,9 +109,9 @@ internal sealed class TestHostManager : ITestHostManager
             }
 
             // We initialize only if enabled
-            if (await service.IsEnabledAsync())
+            if (await service.IsEnabledAsync().ConfigureAwait(false))
             {
-                await service.TryInitializeAsync();
+                await service.TryInitializeAsync().ConfigureAwait(false);
 
                 // Register the extension for usage
                 testApplicationLifecycleCallbacks.Add(service);
@@ -156,9 +156,9 @@ internal sealed class TestHostManager : ITestHostManager
             }
 
             // We initialize only if enabled
-            if (await service.IsEnabledAsync())
+            if (await service.IsEnabledAsync().ConfigureAwait(false))
             {
-                await service.TryInitializeAsync();
+                await service.TryInitializeAsync().ConfigureAwait(false);
 
                 // Register the extension for usage
                 dataConsumers.Add((service, _factoryOrdering.IndexOf(dataConsumerFactory)));
@@ -186,9 +186,9 @@ internal sealed class TestHostManager : ITestHostManager
                 }
 
                 // We initialize only if enabled
-                if (await instance.IsEnabledAsync())
+                if (await instance.IsEnabledAsync().ConfigureAwait(false))
                 {
-                    await instance.TryInitializeAsync();
+                    await instance.TryInitializeAsync().ConfigureAwait(false);
                 }
 
                 // Add to the list of shared singletons
@@ -199,7 +199,7 @@ internal sealed class TestHostManager : ITestHostManager
             var extension = (IExtension)compositeFactoryInstance.GetInstance();
 
             // We register the extension only if enabled
-            if (await extension.IsEnabledAsync())
+            if (await extension.IsEnabledAsync().ConfigureAwait(false))
             {
                 if (extension is IDataConsumer consumer)
                 {
@@ -250,9 +250,9 @@ internal sealed class TestHostManager : ITestHostManager
             }
 
             // We initialize only if enabled
-            if (await service.IsEnabledAsync())
+            if (await service.IsEnabledAsync().ConfigureAwait(false))
             {
-                await service.TryInitializeAsync();
+                await service.TryInitializeAsync().ConfigureAwait(false);
 
                 // Register the extension for usage
                 testSessionLifetimeHandlers.Add((service, _factoryOrdering.IndexOf(testSessionLifetimeHandlerFactory)));
@@ -280,9 +280,9 @@ internal sealed class TestHostManager : ITestHostManager
                 }
 
                 // We initialize only if enabled
-                if (await instance.IsEnabledAsync())
+                if (await instance.IsEnabledAsync().ConfigureAwait(false))
                 {
-                    await instance.TryInitializeAsync();
+                    await instance.TryInitializeAsync().ConfigureAwait(false);
                 }
 
                 // Add to the list of shared singletons
@@ -293,7 +293,7 @@ internal sealed class TestHostManager : ITestHostManager
             var extension = (IExtension)compositeFactoryInstance.GetInstance();
 
             // We register the extension only if enabled
-            if (await extension.IsEnabledAsync())
+            if (await extension.IsEnabledAsync().ConfigureAwait(false))
             {
                 if (extension is ITestSessionLifetimeHandler testSessionLifetimeHandler)
                 {

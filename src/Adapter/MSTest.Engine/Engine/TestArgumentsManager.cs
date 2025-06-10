@@ -67,7 +67,7 @@ internal sealed class TestArgumentsManager : ITestArgumentsManager
                 break;
 
             case ITaskParameterizedTestNode parameterizedTestNode:
-                foreach (object? arguments in await parameterizedTestNode.GetArguments())
+                foreach (object? arguments in await parameterizedTestNode.GetArguments().ConfigureAwait(false))
                 {
                     ExpandNodeWithArguments(currentNode, arguments, ref argumentsRowIndex, expandedTestNodes,
                         expandedTestNodeUids, argumentPropertiesProvider, isIndexArgumentPropertiesProvider);
@@ -77,7 +77,7 @@ internal sealed class TestArgumentsManager : ITestArgumentsManager
 
 #if NET
             case IAsyncParameterizedTestNode parameterizedTestNode:
-                await foreach (object? arguments in parameterizedTestNode.GetArguments())
+                await foreach (object? arguments in parameterizedTestNode.GetArguments().ConfigureAwait(false))
                 {
                     ExpandNodeWithArguments(currentNode, arguments, ref argumentsRowIndex, expandedTestNodes,
                         expandedTestNodeUids, argumentPropertiesProvider, isIndexArgumentPropertiesProvider);

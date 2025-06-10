@@ -64,7 +64,7 @@ internal sealed class RunSettingsConfigurationProvider(IFileSystem fileSystem) :
         {
             if (_fileSystem.Exists(runSettingsFilePath[0]))
             {
-                _runSettingsFileContent = await _fileSystem.ReadAllTextAsync(runSettingsFilePath[0]);
+                _runSettingsFileContent = await _fileSystem.ReadAllTextAsync(runSettingsFilePath[0]).ConfigureAwait(false);
             }
         }
 

@@ -21,37 +21,37 @@ internal sealed class ProxyOutputDevice : IOutputDevice
 
     public async Task DisplayAsync(IOutputDeviceDataProducer producer, IOutputDeviceData data)
     {
-        await OriginalOutputDevice.DisplayAsync(producer, data);
+        await OriginalOutputDevice.DisplayAsync(producer, data).ConfigureAwait(false);
         if (_serverModeOutputDevice is not null)
         {
-            await _serverModeOutputDevice.DisplayAsync(producer, data);
+            await _serverModeOutputDevice.DisplayAsync(producer, data).ConfigureAwait(false);
         }
     }
 
     internal async Task DisplayBannerAsync(string? bannerMessage)
     {
-        await OriginalOutputDevice.DisplayBannerAsync(bannerMessage);
+        await OriginalOutputDevice.DisplayBannerAsync(bannerMessage).ConfigureAwait(false);
         if (_serverModeOutputDevice is not null)
         {
-            await _serverModeOutputDevice.DisplayBannerAsync(bannerMessage);
+            await _serverModeOutputDevice.DisplayBannerAsync(bannerMessage).ConfigureAwait(false);
         }
     }
 
     internal async Task DisplayBeforeSessionStartAsync()
     {
-        await OriginalOutputDevice.DisplayBeforeSessionStartAsync();
+        await OriginalOutputDevice.DisplayBeforeSessionStartAsync().ConfigureAwait(false);
         if (_serverModeOutputDevice is not null)
         {
-            await _serverModeOutputDevice.DisplayBeforeSessionStartAsync();
+            await _serverModeOutputDevice.DisplayBeforeSessionStartAsync().ConfigureAwait(false);
         }
     }
 
     internal async Task DisplayAfterSessionEndRunAsync()
     {
-        await OriginalOutputDevice.DisplayAfterSessionEndRunAsync();
+        await OriginalOutputDevice.DisplayAfterSessionEndRunAsync().ConfigureAwait(false);
         if (_serverModeOutputDevice is not null)
         {
-            await _serverModeOutputDevice.DisplayAfterSessionEndRunAsync();
+            await _serverModeOutputDevice.DisplayAfterSessionEndRunAsync().ConfigureAwait(false);
         }
     }
 
@@ -59,16 +59,16 @@ internal sealed class ProxyOutputDevice : IOutputDevice
     {
         if (_serverModeOutputDevice is not null)
         {
-            await _serverModeOutputDevice.InitializeAsync(serverTestHost);
+            await _serverModeOutputDevice.InitializeAsync(serverTestHost).ConfigureAwait(false);
         }
     }
 
     internal async Task HandleProcessRoleAsync(TestProcessRole processRole)
     {
-        await OriginalOutputDevice.HandleProcessRoleAsync(processRole);
+        await OriginalOutputDevice.HandleProcessRoleAsync(processRole).ConfigureAwait(false);
         if (_serverModeOutputDevice is not null)
         {
-            await _serverModeOutputDevice.HandleProcessRoleAsync(processRole);
+            await _serverModeOutputDevice.HandleProcessRoleAsync(processRole).ConfigureAwait(false);
         }
     }
 }

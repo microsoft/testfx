@@ -52,7 +52,7 @@ public abstract class SynchronizedSingleSessionVSTestBridgedTestFramework : VSTe
     public sealed override string Version => _extension.Version;
 
     /// <inheritdoc />
-    public override async Task<bool> IsEnabledAsync() => await _extension.IsEnabledAsync();
+    public override async Task<bool> IsEnabledAsync() => await _extension.IsEnabledAsync().ConfigureAwait(false);
 
     /// <inheritdoc />
     public sealed override Task<CreateTestSessionResult> CreateTestSessionAsync(CreateTestSessionContext context)
@@ -75,7 +75,7 @@ public abstract class SynchronizedSingleSessionVSTestBridgedTestFramework : VSTe
         _incomingRequestCounter.Signal();
 
         // Wait for remaining request processing
-        await _incomingRequestCounter.WaitAsync(context.CancellationToken);
+        await _incomingRequestCounter.WaitAsync(context.CancellationToken).ConfigureAwait(false);
         _sessionUid = null;
         return new CloseTestSessionResult { IsSuccess = true };
     }
@@ -108,7 +108,7 @@ public abstract class SynchronizedSingleSessionVSTestBridgedTestFramework : VSTe
     /// <param name="cancellationToken">The cancellation token.</param>
     protected sealed override Task DiscoverTestsAsync(VSTestDiscoverTestExecutionRequest request, IMessageBus messageBus,
         CancellationToken cancellationToken)
-        => ExecuteRequestWithRequestCountGuardAsync(async () => await SynchronizedDiscoverTestsAsync(request, messageBus, cancellationToken));
+        => ExecuteRequestWithRequestCountGuardAsync(async () => await SynchronizedDiscoverTestsAsync(request, messageBus, cancellationToken).ConfigureAwait(false));
 
     /// <summary>
     /// Discovers tests asynchronously with handling of concurrency.
@@ -127,7 +127,7 @@ public abstract class SynchronizedSingleSessionVSTestBridgedTestFramework : VSTe
     /// <param name="cancellationToken">The cancellation token.</param>
     protected sealed override Task RunTestsAsync(VSTestRunTestExecutionRequest request, IMessageBus messageBus,
         CancellationToken cancellationToken)
-        => ExecuteRequestWithRequestCountGuardAsync(async () => await SynchronizedRunTestsAsync(request, messageBus, cancellationToken));
+        => ExecuteRequestWithRequestCountGuardAsync(async () => await SynchronizedRunTestsAsync(request, messageBus, cancellationToken).ConfigureAwait(false));
 
     /// <summary>
     /// Runs tests asynchronously with handling of concurrency.
@@ -157,13 +157,13 @@ public abstract class SynchronizedSingleSessionVSTestBridgedTestFramework : VSTe
                 case DiscoverTestExecutionRequest discoverRequest:
                     VSTestDiscoverTestExecutionRequest vstestDiscoverRequest =
                         VSTestDiscoverTestExecutionRequestFactory.CreateRequest(discoverRequest, this, testAssemblyPaths, cancellationToken);
-                    await SynchronizedDiscoverTestsAsync(vstestDiscoverRequest, messageBus, cancellationToken);
+                    await SynchronizedDiscoverTestsAsync(vstestDiscoverRequest, messageBus, cancellationToken).ConfigureAwait(false);
                     break;
 
                 case RunTestExecutionRequest runRequest:
                     VSTestRunTestExecutionRequest vstestRunRequest =
                         VSTestRunTestExecutionRequestFactory.CreateRequest(runRequest, this, testAssemblyPaths, cancellationToken);
-                    await SynchronizedRunTestsAsync(vstestRunRequest, messageBus, cancellationToken);
+                    await SynchronizedRunTestsAsync(vstestRunRequest, messageBus, cancellationToken).ConfigureAwait(false);
                     break;
 
                 default:
@@ -185,7 +185,7 @@ public abstract class SynchronizedSingleSessionVSTestBridgedTestFramework : VSTe
 
         try
         {
-            await asyncFunc();
+            await asyncFunc().ConfigureAwait(false);
         }
         finally
         {

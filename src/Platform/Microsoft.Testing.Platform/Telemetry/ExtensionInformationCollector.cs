@@ -25,7 +25,7 @@ internal static class ExtensionInformationCollector
         {
             if (service is IExtension extension)
             {
-                extensionsInformation.Add(new ExtensionInformation(Sha256Hasher.HashWithNormalizedCasing(extension.Uid), extension.Version, await extension.IsEnabledAsync()));
+                extensionsInformation.Add(new ExtensionInformation(Sha256Hasher.HashWithNormalizedCasing(extension.Uid), extension.Version, await extension.IsEnabledAsync().ConfigureAwait(false)));
             }
 
             if (service is MessageBusProxy messageBus)
@@ -34,7 +34,7 @@ internal static class ExtensionInformationCollector
                 {
                     if (dataConsumer is IExtension extension1)
                     {
-                        extensionsInformation.Add(new ExtensionInformation(Sha256Hasher.HashWithNormalizedCasing(extension1.Uid), extension1.Version, await extension1.IsEnabledAsync()));
+                        extensionsInformation.Add(new ExtensionInformation(Sha256Hasher.HashWithNormalizedCasing(extension1.Uid), extension1.Version, await extension1.IsEnabledAsync().ConfigureAwait(false)));
                     }
                 }
             }

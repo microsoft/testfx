@@ -73,13 +73,13 @@ public sealed class RetryAttribute : RetryBaseAttribute
         for (int i = 0; i < MaxRetryAttempts; i++)
         {
             // The caller already executed the test once. So we need to do the delay here.
-            await Task.Delay(currentDelay);
+            await Task.Delay(currentDelay).ConfigureAwait(false);
             if (BackoffType == DelayBackoffType.Exponential)
             {
                 currentDelay *= 2;
             }
 
-            TestResult[] testResults = await retryContext.ExecuteTaskGetter();
+            TestResult[] testResults = await retryContext.ExecuteTaskGetter().ConfigureAwait(false);
             result.AddResult(testResults);
             if (IsAcceptableResultForRetry(testResults))
             {

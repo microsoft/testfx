@@ -105,7 +105,7 @@ internal sealed class TestMethodRunner
                 PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning(Resource.STAIsOnlySupportedOnWindowsWarning);
             }
 
-            return await SafeRunTestMethodAsync(initializationLogs, initializationErrorLogs, initializationTrace, initializationTestContextMessages);
+            return await SafeRunTestMethodAsync(initializationLogs, initializationErrorLogs, initializationTrace, initializationTestContextMessages).ConfigureAwait(false);
         }
 
         // Local functions
@@ -115,7 +115,7 @@ internal sealed class TestMethodRunner
 
             try
             {
-                result = await RunTestMethodAsync();
+                result = await RunTestMethodAsync().ConfigureAwait(false);
             }
             catch (TestFailedException ex)
             {
@@ -180,21 +180,21 @@ internal sealed class TestMethodRunner
             }
 
             object?[]? data = DataSerializationHelper.Deserialize(_test.SerializedData);
-            TestResult[] testResults = await ExecuteTestWithDataSourceAsync(null, data);
+            TestResult[] testResults = await ExecuteTestWithDataSourceAsync(null, data).ConfigureAwait(false);
             results.AddRange(testResults);
         }
-        else if (await TryExecuteDataSourceBasedTestsAsync(results))
+        else if (await TryExecuteDataSourceBasedTestsAsync(results).ConfigureAwait(false))
         {
             isDataDriven = true;
         }
-        else if (await TryExecuteFoldedDataDrivenTestsAsync(results))
+        else if (await TryExecuteFoldedDataDrivenTestsAsync(results).ConfigureAwait(false))
         {
             isDataDriven = true;
         }
         else
         {
             _testContext.SetDisplayName(_test.DisplayName);
-            TestResult[] testResults = await ExecuteTestAsync(_testMethodInfo);
+            TestResult[] testResults = await ExecuteTestAsync(_testMethodInfo).ConfigureAwait(false);
 
             foreach (TestResult testResult in testResults)
             {
@@ -255,7 +255,7 @@ internal sealed class TestMethodRunner
         DataSourceAttribute[] dataSourceAttribute = _testMethodInfo.GetAttributes<DataSourceAttribute>(false);
         if (dataSourceAttribute is { Length: 1 })
         {
-            await ExecuteTestFromDataSourceAttributeAsync(results);
+            await ExecuteTestFromDataSourceAttributeAsync(results).ConfigureAwait(false);
             return true;
         }
 
@@ -303,7 +303,7 @@ internal sealed class TestMethodRunner
             {
                 try
                 {
-                    TestResult[] testResults = await ExecuteTestWithDataSourceAsync(testDataSource, data);
+                    TestResult[] testResults = await ExecuteTestWithDataSourceAsync(testDataSource, data).ConfigureAwait(false);
 
                     results.AddRange(testResults);
                 }
@@ -342,7 +342,7 @@ internal sealed class TestMethodRunner
 
                 foreach (object dataRow in dataRows)
                 {
-                    TestResult[] testResults = await ExecuteTestWithDataRowAsync(dataRow, rowIndex++);
+                    TestResult[] testResults = await ExecuteTestWithDataRowAsync(dataRow, rowIndex++).ConfigureAwait(false);
                     results.AddRange(testResults);
                 }
             }
@@ -411,7 +411,7 @@ internal sealed class TestMethodRunner
 
         TestResult[] testResults = ignoreFromTestDataRow is not null
             ? [TestResult.CreateIgnoredResult(ignoreFromTestDataRow)]
-            : await ExecuteTestAsync(_testMethodInfo);
+            : await ExecuteTestAsync(_testMethodInfo).ConfigureAwait(false);
 
         stopwatch.Stop();
 
@@ -438,7 +438,7 @@ internal sealed class TestMethodRunner
         {
             stopwatch = Stopwatch.StartNew();
             _testContext.SetDataRow(dataRow);
-            testResults = await ExecuteTestAsync(_testMethodInfo);
+            testResults = await ExecuteTestAsync(_testMethodInfo).ConfigureAwait(false);
         }
         finally
         {
@@ -469,7 +469,7 @@ internal sealed class TestMethodRunner
                 {
                     try
                     {
-                        tcs.SetResult(await _testMethodInfo.Executor.ExecuteAsync(testMethodInfo));
+                        tcs.SetResult(await _testMethodInfo.Executor.ExecuteAsync(testMethodInfo).ConfigureAwait(false));
                     }
                     catch (Exception e)
                     {
@@ -477,7 +477,7 @@ internal sealed class TestMethodRunner
                     }
                 });
 #pragma warning restore VSTHRD101 // Avoid unsupported async delegates
-            return await tcs.Task;
+            return await tcs.Task.ConfigureAwait(false);
         }
         catch (Exception ex)
         {

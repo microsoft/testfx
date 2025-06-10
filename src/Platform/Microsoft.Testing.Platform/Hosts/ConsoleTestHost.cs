@@ -65,13 +65,13 @@ internal sealed class ConsoleTestHost(
             _testHostManager,
             new MessageBusProxy(),
             ServiceProvider.GetCommandLineOptions().IsOptionSet(PlatformCommandLineProvider.DiscoverTestsOptionKey),
-            false));
+            false)).ConfigureAwait(false);
 
         ITelemetryCollector telemetry = ServiceProvider.GetTelemetryCollector();
         ITelemetryInformation telemetryInformation = ServiceProvider.GetTelemetryInformation();
         Statistics? statistics = null;
         string? extensionInformation = null;
-        await _logger.LogInformationAsync($"Starting test session '{ServiceProvider.GetTestSessionContext().SessionId}'");
+        await _logger.LogInformationAsync($"Starting test session '{ServiceProvider.GetTestSessionContext().SessionId}'").ConfigureAwait(false);
         int exitCode;
         DateTimeOffset adapterLoadStop = _clock.UtcNow;
         DateTimeOffset requestExecuteStart = _clock.UtcNow;
@@ -86,7 +86,7 @@ internal sealed class ConsoleTestHost(
                 ServiceProvider,
                 ServiceProvider.GetBaseMessageBus(),
                 testFramework,
-                ClientInfoHost);
+                ClientInfoHost).ConfigureAwait(false);
             requestExecuteStop = _clock.UtcNow;
 
             // Get the exit code service to be able to set the exit code
@@ -94,12 +94,12 @@ internal sealed class ConsoleTestHost(
             statistics = testApplicationResult.GetStatistics();
             exitCode = testApplicationResult.GetProcessExitCode();
 
-            await _logger.LogInformationAsync($"Test session '{ServiceProvider.GetTestSessionContext().SessionId}' ended with exit code '{exitCode}' in {consoleRunStarted.Elapsed}");
+            await _logger.LogInformationAsync($"Test session '{ServiceProvider.GetTestSessionContext().SessionId}' ended with exit code '{exitCode}' in {consoleRunStarted.Elapsed}").ConfigureAwait(false);
 
             // We collect info about the extensions before the dispose to avoid possible issue with cleanup.
             if (telemetryInformation.IsEnabled)
             {
-                extensionInformation = await ExtensionInformationCollector.CollectAndSerializeToJsonAsync(ServiceProvider);
+                extensionInformation = await ExtensionInformationCollector.CollectAndSerializeToJsonAsync(ServiceProvider).ConfigureAwait(false);
             }
         }
         catch (OperationCanceledException oc) when (oc.CancellationToken == abortRun)
@@ -107,12 +107,12 @@ internal sealed class ConsoleTestHost(
             requestExecuteStop ??= _clock.UtcNow;
 
             exitCode = ExitCodes.TestSessionAborted;
-            await _logger.LogInformationAsync("Test session canceled.");
+            await _logger.LogInformationAsync("Test session canceled.").ConfigureAwait(false);
         }
         finally
         {
             // Cleanup all services
-            await DisposeServiceProviderAsync(ServiceProvider);
+            await DisposeServiceProviderAsync(ServiceProvider).ConfigureAwait(false);
         }
 
         if (telemetryInformation.IsEnabled)
@@ -140,7 +140,7 @@ internal sealed class ConsoleTestHost(
                 metrics.Add(TelemetryProperties.HostProperties.ExtensionsPropertyName, extensionInformation);
             }
 
-            await telemetry.LogEventAsync(TelemetryEvents.ConsoleTestHostExitEventName, metrics);
+            await telemetry.LogEventAsync(TelemetryEvents.ConsoleTestHostExitEventName, metrics).ConfigureAwait(false);
         }
 
         return exitCode;
