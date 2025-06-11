@@ -340,7 +340,7 @@ public class DummyTestFramework : ITestFramework, IDataProducer
         context.Complete();
     }
 
-    private async bool TestMethod1(bool fail, string resultDir, bool crash)
+    private bool TestMethod1(bool fail, string resultDir, bool crash)
     {
         if (crash)
         {
@@ -364,7 +364,7 @@ public class DummyTestFramework : ITestFramework, IDataProducer
         return assert;        
     }
 
-    private async bool TestMethod2(bool fail, string resultDir)
+    private bool TestMethod2(bool fail, string resultDir)
     {
         bool envVar = Environment.GetEnvironmentVariable("METHOD2") is null;
         System.Console.WriteLine("envVar " + envVar);
@@ -384,7 +384,7 @@ public class DummyTestFramework : ITestFramework, IDataProducer
         return assert;
     }
 
-    private async bool TestMethod3(bool fail, string resultDir)
+    private bool TestMethod3(bool fail, string resultDir)
     {
         bool envVar = Environment.GetEnvironmentVariable("METHOD3") is null;
 
