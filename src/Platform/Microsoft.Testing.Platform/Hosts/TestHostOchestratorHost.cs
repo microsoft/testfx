@@ -1,7 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Extensions.TestHostOrchestrator;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
@@ -28,17 +27,17 @@ internal sealed class TestHostOrchestratorHost(TestHostOrchestratorConfiguration
         await logger.LogInformationAsync($"Running test orchestrator '{testHostOrchestrator.Uid}'");
         try
         {
-            foreach (ITestApplicationLifecycleCallbacks testApplicationLifecycleCallbacks in _serviceProvider.GetServicesInternal<ITestApplicationLifecycleCallbacks>())
+            foreach (ITestHostOrchestratorApplicationLifetime orchestratorLifetime in _serviceProvider.GetServicesInternal<ITestHostOrchestratorApplicationLifetime>())
             {
-                await testApplicationLifecycleCallbacks.BeforeRunAsync(applicationCancellationToken.CancellationToken);
+                await orchestratorLifetime.BeforeRunAsync(applicationCancellationToken.CancellationToken);
             }
 
             exitCode = await testHostOrchestrator.OrchestrateTestHostExecutionAsync();
 
-            foreach (ITestApplicationLifecycleCallbacks testApplicationLifecycleCallbacks in _serviceProvider.GetServicesInternal<ITestApplicationLifecycleCallbacks>())
+            foreach (ITestHostOrchestratorApplicationLifetime orchestratorLifetime in _serviceProvider.GetServicesInternal<ITestHostOrchestratorApplicationLifetime>())
             {
-                await testApplicationLifecycleCallbacks.AfterRunAsync(exitCode, applicationCancellationToken.CancellationToken);
-                await DisposeHelper.DisposeAsync(testApplicationLifecycleCallbacks);
+                await orchestratorLifetime.AfterRunAsync(exitCode, applicationCancellationToken.CancellationToken);
+                await DisposeHelper.DisposeAsync(orchestratorLifetime);
             }
         }
         catch (OperationCanceledException) when (applicationCancellationToken.CancellationToken.IsCancellationRequested)
