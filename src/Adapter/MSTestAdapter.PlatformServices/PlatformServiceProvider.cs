@@ -210,8 +210,12 @@ internal sealed class PlatformServiceProvider : IPlatformServiceProvider
     /// </remarks>
     public ITestContext GetTestContext(ITestMethod testMethod, StringWriter writer, IDictionary<string, object?> properties, IMessageLogger messageLogger, UTF.UnitTestOutcome outcome)
     {
+        // TODO: TestContextImplementation should be passed TestRunCancellationToken.
+        // Then TestContextImplementation is responsible for the registration.
+        // Next, TestContextImplementation should be IDisposable and disposes the registration.
         var testContextImplementation = new TestContextImplementation(testMethod, writer, properties, messageLogger);
-        TestRunCancellationToken?.Register(CancelDelegate, testContextImplementation);
+        CancellationTokenRegistration? registration = TestRunCancellationToken?.Register(CancelDelegate, testContextImplementation);
+        // registration should be disposed along with the test context.
         testContextImplementation.SetOutcome(outcome);
         return testContextImplementation;
     }

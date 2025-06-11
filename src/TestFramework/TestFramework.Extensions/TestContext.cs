@@ -48,6 +48,8 @@ public abstract class TestContext
     /// <summary>
     /// Gets or sets the cancellation token source. This token source is canceled when test times out. Also when explicitly canceled the test will be aborted.
     /// </summary>
+    // TODO: We never dispose this CancellationTokenSource. Should we do?
+    // Also consider disposing when the property is set (i.e, previous value should be disposed).
     public virtual CancellationTokenSource CancellationTokenSource { get; protected internal set; } = new();
 
     /// <summary>
