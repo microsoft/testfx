@@ -42,7 +42,7 @@ internal static class AppDomainUtilities
     {
         if (GetTargetFrameworkVersionFromVersionString(frameworkVersionString).CompareTo(Version45) > 0)
         {
-            PropertyInfo? pInfo = typeof(AppDomainSetup).GetProperty(Constants.TargetFrameworkName);
+            PropertyInfo? pInfo = typeof(AppDomainSetup).GetProperty(EngineConstants.TargetFrameworkName);
             pInfo?.SetValue(setup, frameworkVersionString, null);
         }
     }
@@ -227,9 +227,9 @@ internal static class AppDomainUtilities
     {
         try
         {
-            if (version.Length > Constants.DotNetFrameWorkStringPrefix.Length + 1)
+            if (version.Length > EngineConstants.DotNetFrameWorkStringPrefix.Length + 1)
             {
-                string versionPart = version.Substring(Constants.DotNetFrameWorkStringPrefix.Length + 1);
+                string versionPart = version.Substring(EngineConstants.DotNetFrameWorkStringPrefix.Length + 1);
                 return new Version(versionPart);
             }
         }

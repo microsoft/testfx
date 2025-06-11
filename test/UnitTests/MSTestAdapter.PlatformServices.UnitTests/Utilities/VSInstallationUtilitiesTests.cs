@@ -14,7 +14,7 @@ public class VSInstallationUtilitiesTests : TestContainer
     {
         TestSourceHost isolatedHost = new(null!, null, null);
         List<string> paths = isolatedHost.GetResolutionPaths(Assembly.GetExecutingAssembly().FullName, true);
-        Verify(!paths.Contains(Constants.PublicAssemblies) || paths.Contains(Constants.PrivateAssemblies));
+        Verify(!paths.Contains(EngineConstants.PublicAssemblies) || paths.Contains(EngineConstants.PrivateAssemblies));
     }
 }
 #endif

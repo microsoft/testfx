@@ -227,7 +227,7 @@ internal sealed class DeploymentItemUtility
     /// </summary>
     /// <param name="testCase"> The test Case. </param>
     /// <returns> The <see cref="KeyValuePair{TKey,TValue}"/>. </returns>
-    private static KeyValuePair<string, string>[]? GetDeploymentItems(TestCase testCase) => testCase.GetPropertyValue(Constants.DeploymentItemsProperty) as
+    private static KeyValuePair<string, string>[]? GetDeploymentItems(TestCase testCase) => testCase.GetPropertyValue(EngineConstants.DeploymentItemsProperty) as
             KeyValuePair<string, string>[];
 
     private static KeyValuePair<string, string>[]? ToKeyValuePairs(IEnumerable<DeploymentItem> deploymentItemList)
