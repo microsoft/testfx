@@ -41,7 +41,7 @@ internal sealed class ServerModePerCallOutputDevice : IPlatformOutputDevice, IOu
 
         foreach (ServerLogMessage message in _messages)
         {
-            await LogAsync(message);
+            await LogAsync(message).ConfigureAwait(false);
         }
 
         _messages.Clear();
@@ -56,30 +56,30 @@ internal sealed class ServerModePerCallOutputDevice : IPlatformOutputDevice, IOu
     public string Description => nameof(ServerModePerCallOutputDevice);
 
     public async Task DisplayAfterSessionEndRunAsync()
-        => await LogAsync(LogLevel.Trace, PlatformResources.FinishedTestSession, padding: null);
+        => await LogAsync(LogLevel.Trace, PlatformResources.FinishedTestSession, padding: null).ConfigureAwait(false);
 
     public async Task DisplayAsync(IOutputDeviceDataProducer producer, IOutputDeviceData data)
     {
         switch (data)
         {
             case FormattedTextOutputDeviceData formattedTextOutputDeviceData:
-                await LogAsync(LogLevel.Information, formattedTextOutputDeviceData.Text, formattedTextOutputDeviceData.Padding);
+                await LogAsync(LogLevel.Information, formattedTextOutputDeviceData.Text, formattedTextOutputDeviceData.Padding).ConfigureAwait(false);
                 break;
 
             case TextOutputDeviceData textOutputDeviceData:
-                await LogAsync(LogLevel.Information, textOutputDeviceData.Text, padding: null);
+                await LogAsync(LogLevel.Information, textOutputDeviceData.Text, padding: null).ConfigureAwait(false);
                 break;
 
             case WarningMessageOutputDeviceData warningData:
-                await LogAsync(LogLevel.Warning, warningData.Message, padding: null);
+                await LogAsync(LogLevel.Warning, warningData.Message, padding: null).ConfigureAwait(false);
                 break;
 
             case ErrorMessageOutputDeviceData errorData:
-                await LogAsync(LogLevel.Error, errorData.Message, padding: null);
+                await LogAsync(LogLevel.Error, errorData.Message, padding: null).ConfigureAwait(false);
                 break;
 
             case ExceptionOutputDeviceData exceptionOutputDeviceData:
-                await LogAsync(LogLevel.Error, exceptionOutputDeviceData.Exception.ToString(), padding: null);
+                await LogAsync(LogLevel.Error, exceptionOutputDeviceData.Exception.ToString(), padding: null).ConfigureAwait(false);
                 break;
         }
     }
@@ -88,7 +88,7 @@ internal sealed class ServerModePerCallOutputDevice : IPlatformOutputDevice, IOu
     {
         if (bannerMessage is not null)
         {
-            await LogAsync(LogLevel.Debug, bannerMessage, padding: null);
+            await LogAsync(LogLevel.Debug, bannerMessage, padding: null).ConfigureAwait(false);
         }
     }
 
@@ -96,18 +96,18 @@ internal sealed class ServerModePerCallOutputDevice : IPlatformOutputDevice, IOu
     {
         if (_fileLoggerProvider is { FileLogger.FileName: { } logFileName })
         {
-            await LogAsync(LogLevel.Trace, string.Format(CultureInfo.InvariantCulture, PlatformResources.StartingTestSessionWithLogFilePath, logFileName), padding: null);
+            await LogAsync(LogLevel.Trace, string.Format(CultureInfo.InvariantCulture, PlatformResources.StartingTestSessionWithLogFilePath, logFileName), padding: null).ConfigureAwait(false);
         }
         else
         {
-            await LogAsync(LogLevel.Trace, PlatformResources.StartingTestSession, padding: null);
+            await LogAsync(LogLevel.Trace, PlatformResources.StartingTestSession, padding: null).ConfigureAwait(false);
         }
     }
 
     public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 
     private async Task LogAsync(LogLevel logLevel, string message, int? padding)
-        => await LogAsync(GetServerLogMessage(logLevel, message, padding));
+        => await LogAsync(GetServerLogMessage(logLevel, message, padding)).ConfigureAwait(false);
 
     private async Task LogAsync(ServerLogMessage message)
     {
@@ -117,7 +117,7 @@ internal sealed class ServerModePerCallOutputDevice : IPlatformOutputDevice, IOu
         }
         else
         {
-            await _serverTestHost.PushDataAsync(message);
+            await _serverTestHost.PushDataAsync(message).ConfigureAwait(false);
         }
     }
 
@@ -156,7 +156,7 @@ internal sealed class ServerModePerCallOutputDevice : IPlatformOutputDevice, IOu
         {
             await _policiesService.RegisterOnMaxFailedTestsCallbackAsync(
                 async (maxFailedTests, _) => await DisplayAsync(
-                    this, new TextOutputDeviceData(string.Format(CultureInfo.InvariantCulture, PlatformResources.ReachedMaxFailedTestsMessage, maxFailedTests))));
+                    this, new TextOutputDeviceData(string.Format(CultureInfo.InvariantCulture, PlatformResources.ReachedMaxFailedTestsMessage, maxFailedTests))).ConfigureAwait(false)).ConfigureAwait(false);
         }
     }
 }

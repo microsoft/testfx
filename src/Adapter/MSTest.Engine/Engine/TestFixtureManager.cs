@@ -58,7 +58,7 @@ internal sealed class TestFixtureManager : ITestFixtureManager
 
         if (!fixture.IsValueCreated || !fixture.Value.IsCompleted)
         {
-            await fixture.Value;
+            await fixture.Value.ConfigureAwait(false);
         }
 
         // We can safely cast here because we know that the fixture is of type TFixture and is awaited.
@@ -114,7 +114,7 @@ internal sealed class TestFixtureManager : ITestFixtureManager
             {
                 if (!lazyFixture.IsValueCreated || !lazyFixture.Value.IsCompleted)
                 {
-                    await lazyFixture.Value;
+                    await lazyFixture.Value.ConfigureAwait(false);
                 }
             }
         }
@@ -142,7 +142,7 @@ internal sealed class TestFixtureManager : ITestFixtureManager
             // cleaning the fixture multiple times.
             if (usesCount == 0)
             {
-                await CleanupAndDisposeFixtureAsync(fixtureId);
+                await CleanupAndDisposeFixtureAsync(fixtureId).ConfigureAwait(false);
             }
         }
     }
@@ -167,7 +167,7 @@ internal sealed class TestFixtureManager : ITestFixtureManager
             {
                 fixtureInstancesPerType.Add(
                     typeof(TFixture),
-                    new(async () => await CreateAndInitializeFixtureAsync(asyncFactory, _cancellationToken), LazyThreadSafetyMode.ExecutionAndPublication));
+                    new(async () => await CreateAndInitializeFixtureAsync(asyncFactory, _cancellationToken).ConfigureAwait(false), LazyThreadSafetyMode.ExecutionAndPublication));
             }
         }
         else
@@ -177,14 +177,14 @@ internal sealed class TestFixtureManager : ITestFixtureManager
                 new()
                 {
                     [typeof(TFixture)] = new(
-                        async () => await CreateAndInitializeFixtureAsync(asyncFactory, _cancellationToken),
+                        async () => await CreateAndInitializeFixtureAsync(asyncFactory, _cancellationToken).ConfigureAwait(false),
                         LazyThreadSafetyMode.ExecutionAndPublication),
                 });
         }
 
         static async Task<TFixture> CreateAndInitializeFixtureAsync(Func<Task<TFixture>> asyncFactory, CancellationToken cancellationToken)
         {
-            TFixture fixture = await asyncFactory();
+            TFixture fixture = await asyncFactory().ConfigureAwait(false);
             return fixture;
         }
     }
@@ -207,7 +207,7 @@ internal sealed class TestFixtureManager : ITestFixtureManager
             object fixture = lazyFixture.Value.Result;
 #pragma warning restore VSTHRD103 // Call async methods when in an async method
 
-            await DisposeHelper.DisposeAsync(fixture);
+            await DisposeHelper.DisposeAsync(fixture).ConfigureAwait(false);
         }
     }
 

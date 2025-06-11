@@ -6,10 +6,10 @@ namespace Microsoft.Testing.Platform.Helpers;
 internal static class CountDownEventExtensions
 {
     public static async Task<bool> WaitAsync(this CountdownEvent countdownEvent, CancellationToken cancellationToken)
-        => await countdownEvent.WaitAsync(uint.MaxValue, cancellationToken);
+        => await countdownEvent.WaitAsync(uint.MaxValue, cancellationToken).ConfigureAwait(false);
 
     public static async Task<bool> WaitAsync(this CountdownEvent countdownEvent, TimeSpan timeout, CancellationToken cancellationToken)
-        => await countdownEvent.WaitAsync((uint)timeout.TotalMilliseconds, cancellationToken);
+        => await countdownEvent.WaitAsync((uint)timeout.TotalMilliseconds, cancellationToken).ConfigureAwait(false);
 
     internal static async Task<bool> WaitAsync(this CountdownEvent countdownEvent, uint millisecondsTimeOutInterval, CancellationToken cancellationToken)
     {
@@ -39,7 +39,7 @@ internal static class CountDownEventExtensions
             // Register the cancellation callback
             tokenRegistration = cancellationToken.Register(state => ((TaskCompletionSource<bool>)state!).TrySetCanceled(), tcs);
 
-            return await tcs.Task;
+            return await tcs.Task.ConfigureAwait(false);
         }
         finally
         {
@@ -50,7 +50,7 @@ internal static class CountDownEventExtensions
 #pragma warning disable CA1416 // Validate platform compatibility
             registeredHandle?.Unregister(null);
 #pragma warning restore CA1416
-            await DisposeHelper.DisposeAsync(tokenRegistration);
+            await DisposeHelper.DisposeAsync(tokenRegistration).ConfigureAwait(false);
         }
     }
 }

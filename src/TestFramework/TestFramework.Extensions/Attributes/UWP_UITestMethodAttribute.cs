@@ -34,7 +34,7 @@ public class UITestMethodAttribute : TestMethodAttribute
             {
                 try
                 {
-                    tcs.SetResult(await testMethod.InvokeAsync(null));
+                    tcs.SetResult(await testMethod.InvokeAsync(null).ConfigureAwait(false));
                 }
                 catch (Exception ex)
                 {
@@ -43,7 +43,7 @@ public class UITestMethodAttribute : TestMethodAttribute
             });
 #pragma warning restore VSTHRD101 // Avoid unsupported async delegates
 
-        return [await tcs.Task];
+        return [await tcs.Task.ConfigureAwait(false)];
     }
 }
 #endif

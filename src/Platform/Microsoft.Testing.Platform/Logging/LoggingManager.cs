@@ -23,12 +23,12 @@ internal sealed class LoggingManager : ILoggingManager
         foreach (Func<LogLevel, IServiceProvider, ILoggerProvider> factory in _loggerProviderFullFactories)
         {
             ILoggerProvider serviceInstance = factory(logLevel, serviceProvider);
-            if (serviceInstance is IExtension extension && !await extension.IsEnabledAsync())
+            if (serviceInstance is IExtension extension && !await extension.IsEnabledAsync().ConfigureAwait(false))
             {
                 continue;
             }
 
-            await serviceInstance.TryInitializeAsync();
+            await serviceInstance.TryInitializeAsync().ConfigureAwait(false);
 
             loggerProviders.Add(serviceInstance);
         }

@@ -161,8 +161,8 @@ public class TestMethodInfo : ITestMethod
             listener = new LogMessageListener(MSTestSettings.CurrentSettings.CaptureDebugTraces);
 
             result = IsTimeoutSet
-                ? await ExecuteInternalWithTimeoutAsync(arguments)
-                : await ExecuteInternalAsync(arguments, null);
+                ? await ExecuteInternalWithTimeoutAsync(arguments).ConfigureAwait(false)
+                : await ExecuteInternalAsync(arguments, null).ConfigureAwait(false);
         }
         finally
         {
@@ -420,7 +420,7 @@ public class TestMethodInfo : ITestMethod
                             Task? invokeResult = TestMethod.GetInvokeResultAsync(_classInstance, arguments);
                             if (invokeResult is not null)
                             {
-                                await invokeResult;
+                                await invokeResult.ConfigureAwait(false);
                             }
                         }
                         else
@@ -435,7 +435,7 @@ public class TestMethodInfo : ITestMethod
                                     Task? invokeResult = TestMethod.GetInvokeResultAsync(_classInstance, arguments);
                                     if (invokeResult is not null)
                                     {
-                                        await invokeResult;
+                                        await invokeResult.ConfigureAwait(false);
                                     }
                                 }
                                 catch (Exception e)
@@ -450,7 +450,7 @@ public class TestMethodInfo : ITestMethod
                             });
 #pragma warning restore VSTHRD101 // Avoid unsupported async delegates
 
-                            await tcs.Task;
+                            await tcs.Task.ConfigureAwait(false);
 
                             if (updatedExecutionContext is not null)
                             {
@@ -1067,7 +1067,7 @@ public class TestMethodInfo : ITestMethod
 
                 try
                 {
-                    return await ExecuteInternalAsync(arguments, timeoutTokenSource);
+                    return await ExecuteInternalAsync(arguments, timeoutTokenSource).ConfigureAwait(false);
                 }
                 catch (OperationCanceledException)
                 {
@@ -1115,7 +1115,7 @@ public class TestMethodInfo : ITestMethod
         else
         {
             // Cancel the token source as test has timed out
-            await TestContext.Context.CancellationTokenSource.CancelAsync();
+            await TestContext.Context.CancellationTokenSource.CancelAsync().ConfigureAwait(false);
         }
 
         TestResult timeoutResult = new() { Outcome = UTF.UnitTestOutcome.Timeout, TestFailureException = new TestFailedException(UTFUnitTestOutcome.Timeout, errorMessage) };

@@ -9,3 +9,6 @@ root = false
 #### .NET Coding Conventions ####
 
 dotnet_analyzer_diagnostic.category-StyleCop.CSharp.DocumentationRules.severity = none # Disable StyleCop.CSharp.DocumentationRules
+
+# CA2007: Consider calling ConfigureAwait on the awaited task
+dotnet_diagnostic.CA2007.severity = none

@@ -61,7 +61,7 @@ internal sealed class TrxCompareTool : ITool, IOutputDeviceDataProducer
         List<string> comparedIssues = [];
         await _task.WhenAll(
             _task.Run(() => CollectEntriesAndErrors(baselineFilePaths[0], trxNamespace, baseLineResults, baseLineIssues)),
-            _task.Run(() => CollectEntriesAndErrors(comparedFilePaths[0], trxNamespace, comparedResults, comparedIssues)));
+            _task.Run(() => CollectEntriesAndErrors(comparedFilePaths[0], trxNamespace, comparedResults, comparedIssues))).ConfigureAwait(false);
 
         StringBuilder outputBuilder = new();
         AppendResultsAndIssues("Baseline", baselineFilePaths[0], baseLineResults, baseLineIssues, outputBuilder);
@@ -69,12 +69,12 @@ internal sealed class TrxCompareTool : ITool, IOutputDeviceDataProducer
 
         if (AreMatchingTrxFiles(baseLineResults, comparedResults, outputBuilder))
         {
-            await _outputDisplay.DisplayAsync(this, new TextOutputDeviceData(outputBuilder.ToString()));
+            await _outputDisplay.DisplayAsync(this, new TextOutputDeviceData(outputBuilder.ToString())).ConfigureAwait(false);
             return ExitCodes.Success;
         }
         else
         {
-            await _outputDisplay.DisplayAsync(this, new TextOutputDeviceData(outputBuilder.ToString()));
+            await _outputDisplay.DisplayAsync(this, new TextOutputDeviceData(outputBuilder.ToString())).ConfigureAwait(false);
             return ExitCodes.GenericFailure;
         }
     }

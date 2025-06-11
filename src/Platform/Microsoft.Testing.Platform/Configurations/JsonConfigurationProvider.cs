@@ -30,7 +30,7 @@ internal sealed partial class JsonConfigurationSource
         {
             if (_logger is not null)
             {
-                await _logger.LogInformationAsync(message);
+                await _logger.LogInformationAsync(message).ConfigureAwait(false);
             }
         }
 
@@ -69,7 +69,7 @@ internal sealed partial class JsonConfigurationSource
                 }
             }
 
-            await LogInformationAsync($"Config file '{configFileName}' loaded.");
+            await LogInformationAsync($"Config file '{configFileName}' loaded.").ConfigureAwait(false);
 
             ConfigurationFile = configFileName;
 

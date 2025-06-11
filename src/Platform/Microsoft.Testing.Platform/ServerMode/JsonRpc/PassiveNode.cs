@@ -42,12 +42,12 @@ internal sealed class PassiveNode : IDisposable
     public async Task<bool> ConnectAsync()
     {
         // Create message handler
-        await _logger.LogDebugAsync("Create message handler");
-        _messageHandler = await _messageHandlerFactory.CreateMessageHandlerAsync(_testApplicationCancellationTokenSource.CancellationToken);
+        await _logger.LogDebugAsync("Create message handler").ConfigureAwait(false);
+        _messageHandler = await _messageHandlerFactory.CreateMessageHandlerAsync(_testApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
 
         // Wait the initial message
-        await _logger.LogDebugAsync("Wait the initial message");
-        RpcMessage? message = await _messageHandler.ReadAsync(_testApplicationCancellationTokenSource.CancellationToken);
+        await _logger.LogDebugAsync("Wait the initial message").ConfigureAwait(false);
+        RpcMessage? message = await _messageHandler.ReadAsync(_testApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
         if (message is null)
         {
             return false;
@@ -56,7 +56,7 @@ internal sealed class PassiveNode : IDisposable
         // Log the message
         if (_logger.IsEnabled(LogLevel.Trace))
         {
-            await _logger.LogTraceAsync(message!.ToString());
+            await _logger.LogTraceAsync(message!.ToString()).ConfigureAwait(false);
         }
 
         var requestMessage = (RequestMessage)message;
@@ -73,7 +73,7 @@ internal sealed class PassiveNode : IDisposable
                                 // This means we're a push node
                                 MultiConnectionProvider: true)));
 
-        await SendResponseAsync(requestMessage.Id, responseObject, _testApplicationCancellationTokenSource.CancellationToken);
+        await SendResponseAsync(requestMessage.Id, responseObject, _testApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
         return true;
     }
 
@@ -82,9 +82,9 @@ internal sealed class PassiveNode : IDisposable
         AssertInitialized();
 
         ResponseMessage response = new(reqId, result);
-        using (await _messageMonitor.LockAsync(cancellationToken))
+        using (await _messageMonitor.LockAsync(cancellationToken).ConfigureAwait(false))
         {
-            await _messageHandler.WriteRequestAsync(response, cancellationToken);
+            await _messageHandler.WriteRequestAsync(response, cancellationToken).ConfigureAwait(false);
         }
     }
 
@@ -93,9 +93,9 @@ internal sealed class PassiveNode : IDisposable
         AssertInitialized();
 
         NotificationMessage notification = new(JsonRpcMethods.TestingTestUpdatesAttachments, testsAttachments);
-        using (await _messageMonitor.LockAsync(cancellationToken))
+        using (await _messageMonitor.LockAsync(cancellationToken).ConfigureAwait(false))
         {
-            await _messageHandler.WriteRequestAsync(notification, cancellationToken);
+            await _messageHandler.WriteRequestAsync(notification, cancellationToken).ConfigureAwait(false);
         }
     }
 

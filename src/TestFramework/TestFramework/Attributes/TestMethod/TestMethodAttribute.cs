@@ -69,6 +69,6 @@ public class TestMethodAttribute : Attribute
     /// <remarks>Extensions can override this method to customize running a TestMethod.</remarks>
     internal virtual async Task<TestResult[]> ExecuteAsync(ITestMethod testMethod)
         => UseAsync
-        ? [await testMethod.InvokeAsync(null)]
+        ? [await testMethod.InvokeAsync(null).ConfigureAwait(false)]
         : Execute(testMethod);
 }

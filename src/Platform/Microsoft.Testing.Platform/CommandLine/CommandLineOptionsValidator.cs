@@ -59,13 +59,13 @@ internal static class CommandLineOptionsValidator
             return result5;
         }
 
-        if (await ValidateOptionsArgumentsAsync(commandLineParseResult, providerAndOptionByOptionName) is { IsValid: false } result6)
+        if (await ValidateOptionsArgumentsAsync(commandLineParseResult, providerAndOptionByOptionName).ConfigureAwait(false) is { IsValid: false } result6)
         {
             return result6;
         }
 
         // Last validation step
-        return await ValidateConfigurationAsync(extensionOptionsByProvider.Keys, systemOptionsByProvider.Keys, commandLineOptions);
+        return await ValidateConfigurationAsync(extensionOptionsByProvider.Keys, systemOptionsByProvider.Keys, commandLineOptions).ConfigureAwait(false);
     }
 
     private static ValidationResult ValidateExtensionOptionsDoNotContainReservedPrefix(
@@ -208,7 +208,7 @@ internal static class CommandLineOptionsValidator
         foreach (CommandLineParseOption optionRecord in parseResult.Options)
         {
             (ICommandLineOptionsProvider provider, CommandLineOption option) = providerAndOptionByOptionName[optionRecord.Name];
-            ValidationResult result = await provider.ValidateOptionArgumentsAsync(option, optionRecord.Arguments);
+            ValidationResult result = await provider.ValidateOptionArgumentsAsync(option, optionRecord.Arguments).ConfigureAwait(false);
             if (!result.IsValid)
             {
                 stringBuilder ??= new();
@@ -226,8 +226,8 @@ internal static class CommandLineOptionsValidator
         Dictionary<ICommandLineOptionsProvider, IReadOnlyCollection<CommandLineOption>>.KeyCollection systemProviders,
         ICommandLineOptions commandLineOptions)
     {
-        StringBuilder? stringBuilder = await ValidateConfigurationAsync(systemProviders, commandLineOptions, null);
-        stringBuilder = await ValidateConfigurationAsync(extensionsProviders, commandLineOptions, stringBuilder);
+        StringBuilder? stringBuilder = await ValidateConfigurationAsync(systemProviders, commandLineOptions, null).ConfigureAwait(false);
+        stringBuilder = await ValidateConfigurationAsync(extensionsProviders, commandLineOptions, stringBuilder).ConfigureAwait(false);
 
         return stringBuilder?.Length > 0
             ? ValidationResult.Invalid(stringBuilder.ToTrimmedString())
@@ -241,7 +241,7 @@ internal static class CommandLineOptionsValidator
     {
         foreach (ICommandLineOptionsProvider commandLineOptionsProvider in providers)
         {
-            ValidationResult result = await commandLineOptionsProvider.ValidateCommandLineOptionsAsync(commandLineOptions);
+            ValidationResult result = await commandLineOptionsProvider.ValidateCommandLineOptionsAsync(commandLineOptions).ConfigureAwait(false);
             if (!result.IsValid)
             {
                 stringBuilder ??= new();

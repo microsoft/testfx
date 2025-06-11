@@ -125,7 +125,7 @@ internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, I
     {
         TestAdapterTestSessionFailureErrorMessage = errorMessage;
         _testAdapterTestSessionFailure = true;
-        await _outputService.DisplayAsync(this, new ErrorMessageOutputDeviceData(errorMessage));
+        await _outputService.DisplayAsync(this, new ErrorMessageOutputDeviceData(errorMessage)).ConfigureAwait(false);
     }
 
     public Statistics GetStatistics()

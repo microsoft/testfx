@@ -42,14 +42,14 @@ internal sealed partial class ServerModeManager
 #pragma warning disable CA1416 // Validate platform compatibility
         public async Task<IMessageHandler> CreateMessageHandlerAsync(CancellationToken cancellationToken)
         {
-            await _outputDevice.DisplayAsync(this, new TextOutputDeviceData(string.Format(CultureInfo.InvariantCulture, PlatformResources.ConnectingToClientHost, _host, _port)));
+            await _outputDevice.DisplayAsync(this, new TextOutputDeviceData(string.Format(CultureInfo.InvariantCulture, PlatformResources.ConnectingToClientHost, _host, _port))).ConfigureAwait(false);
 
             TcpClient client = new();
 
 #if NETCOREAPP
-            await client.ConnectAsync(host: _host, port: _port, cancellationToken);
+            await client.ConnectAsync(host: _host, port: _port, cancellationToken).ConfigureAwait(false);
 #else
-            await client.ConnectAsync(host: _host, port: _port).WithCancellationAsync(cancellationToken, observeException: true);
+            await client.ConnectAsync(host: _host, port: _port).WithCancellationAsync(cancellationToken, observeException: true).ConfigureAwait(false);
 #endif
             NetworkStream stream = client.GetStream();
             return new TcpMessageHandler(client, clientToServerStream: stream, serverToClientStream: stream, FormatterUtilities.CreateFormatter());

@@ -20,7 +20,7 @@ internal static class InitializableExtension
     {
         if (target is IAsyncInitializableExtension initializable)
         {
-            await initializable.InitializeAsync();
+            await initializable.InitializeAsync().ConfigureAwait(false);
         }
     }
 }

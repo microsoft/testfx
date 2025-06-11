@@ -53,7 +53,7 @@ internal sealed class FileLoggerProvider(
         }
 
         string fileName = Path.GetFileName(FileLogger.FileName);
-        await DisposeHelper.DisposeAsync(FileLogger);
+        await DisposeHelper.DisposeAsync(FileLogger).ConfigureAwait(false);
 
         // Move the log file to the new directory
         _fileSystem.Move(FileLogger.FileName, Path.Combine(testResultDirectory, fileName));
@@ -76,6 +76,6 @@ internal sealed class FileLoggerProvider(
 
 #if NETCOREAPP
     public async ValueTask DisposeAsync()
-        => await FileLogger.DisposeAsync();
+        => await FileLogger.DisposeAsync().ConfigureAwait(false);
 #endif
 }

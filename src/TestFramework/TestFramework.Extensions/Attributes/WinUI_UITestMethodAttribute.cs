@@ -67,7 +67,7 @@ public class UITestMethodAttribute : TestMethodAttribute
         {
             try
             {
-                return [await testMethod.InvokeAsync(null)];
+                return [await testMethod.InvokeAsync(null).ConfigureAwait(false)];
             }
             catch (Exception e)
             {
@@ -82,7 +82,7 @@ public class UITestMethodAttribute : TestMethodAttribute
         {
             try
             {
-                tcs.SetResult(await testMethod.InvokeAsync(null));
+                tcs.SetResult(await testMethod.InvokeAsync(null).ConfigureAwait(false));
             }
             catch (Exception e)
             {
@@ -94,7 +94,7 @@ public class UITestMethodAttribute : TestMethodAttribute
         }
 #pragma warning restore VSTHRD101 // Avoid unsupported async delegates
 
-        return [await tcs.Task];
+        return [await tcs.Task.ConfigureAwait(false)];
     }
 
     private static Type? GetApplicationType(Assembly assembly)

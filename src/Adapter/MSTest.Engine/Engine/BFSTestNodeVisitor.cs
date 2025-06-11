@@ -78,14 +78,14 @@ internal sealed class BFSTestNodeVisitor
             // If the node is expandable, we expand it (replacing the original node)
             if (TestArgumentsManager.IsExpandableTestNode(currentNode))
             {
-                currentNode = await _testArgumentsManager.ExpandTestNodeAsync(currentNode);
+                currentNode = await _testArgumentsManager.ExpandTestNodeAsync(currentNode).ConfigureAwait(false);
             }
 
             // If the node is not filtered out by the test execution filter, we call the callback with the node.
             if (_testExecutionFilter is not TestNodeUidListFilter listFilter
                 || listFilter.TestNodeUids.Any(uid => currentNode.StableUid.ToPlatformTestNodeUid() == uid))
             {
-                await onIncludedTestNodeAsync(currentNode, parentNodeUid);
+                await onIncludedTestNodeAsync(currentNode, parentNodeUid).ConfigureAwait(false);
             }
 
             foreach (TestNode childNode in currentNode.Tests)

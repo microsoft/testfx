@@ -352,7 +352,7 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
                     pipeServer.RegisterSerializer(new VoidResponseSerializer(), typeof(VoidResponse));
                     pipeServer.RegisterSerializer(new FailedTestInfoRequestSerializer(), typeof(FailedTestInfoRequest));
                     pipeServer.RegisterSerializer(new RunSummaryInfoRequestSerializer(), typeof(RunSummaryInfoRequest));
-                    await pipeServer.WaitConnectionAsync(_waitForConnections.Token);
+                    await pipeServer.WaitConnectionAsync(_waitForConnections.Token).ConfigureAwait(false);
                     _connections.Add(pipeServer);
                     Log.LogMessage(MessageImportance.Low, $"Client connected to '{_pipeNameDescription.Name}'");
                 }

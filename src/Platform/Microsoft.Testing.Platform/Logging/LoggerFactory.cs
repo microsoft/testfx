@@ -69,7 +69,7 @@ internal sealed class LoggerFactory(ILoggerProvider[] loggerProviders, LogLevel 
                 continue;
             }
 
-            await asyncDisposable.DisposeAsync();
+            await asyncDisposable.DisposeAsync().ConfigureAwait(false);
         }
     }
 #endif

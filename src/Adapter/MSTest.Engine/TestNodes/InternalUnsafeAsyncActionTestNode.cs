@@ -11,5 +11,5 @@ public sealed class InternalUnsafeAsyncActionTestNode : TestNode, IAsyncActionTe
     public required Func<ITestExecutionContext, Task> Body { get; init; }
 
     async Task IAsyncActionTestNode.InvokeAsync(ITestExecutionContext testExecutionContext)
-        => await Body(testExecutionContext);
+        => await Body(testExecutionContext).ConfigureAwait(false);
 }

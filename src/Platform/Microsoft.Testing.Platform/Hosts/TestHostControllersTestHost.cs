@@ -81,7 +81,7 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
             string processIdString = currentPID.ToString(CultureInfo.InvariantCulture);
 
             ExecutableInfo executableInfo = testApplicationModuleInfo.GetCurrentExecutableInfo();
-            await _logger.LogDebugAsync($"Test host controller process info: {executableInfo}");
+            await _logger.LogDebugAsync($"Test host controller process info: {executableInfo}").ConfigureAwait(false);
 
             List<string> partialCommandLine =
             [
@@ -92,7 +92,7 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
 
             // Prepare the environment variables used by the test host
             string processCorrelationId = Guid.NewGuid().ToString("N");
-            await _logger.LogDebugAsync($"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_CORRELATIONID}_{currentPID} '{processCorrelationId}'");
+            await _logger.LogDebugAsync($"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_CORRELATIONID}_{currentPID} '{processCorrelationId}'").ConfigureAwait(false);
 
             NamedPipeServer testHostControllerIpc = new(
                 $"MONITORTOHOST_{Guid.NewGuid():N}",
@@ -139,20 +139,20 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
             IPushOnlyProtocol? pushOnlyProtocol = ServiceProvider.GetService<IPushOnlyProtocol>();
             if (pushOnlyProtocol?.IsServerMode == true)
             {
-                dataConsumersBuilder.Add(await pushOnlyProtocol.GetDataConsumerAsync());
+                dataConsumersBuilder.Add(await pushOnlyProtocol.GetDataConsumerAsync().ConfigureAwait(false));
             }
 
             // If we're in server mode jsonrpc we add as last consumer the PassiveNodeDataConsumer for the attachments.
             // Connect the passive node if it's available
             if (_passiveNode is not null)
             {
-                if (await _passiveNode.ConnectAsync())
+                if (await _passiveNode.ConnectAsync().ConfigureAwait(false))
                 {
                     dataConsumersBuilder.Add(new PassiveNodeDataConsumer(_passiveNode));
                 }
                 else
                 {
-                    await _logger.LogWarningAsync("PassiveNode was expected to connect but failed");
+                    await _logger.LogWarningAsync("PassiveNode was expected to connect but failed").ConfigureAwait(false);
                 }
             }
 
@@ -162,7 +162,7 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
                 ServiceProvider.GetTask(),
                 ServiceProvider.GetLoggerFactory(),
                 ServiceProvider.GetEnvironment());
-            await concreteMessageBusService.InitAsync();
+            await concreteMessageBusService.InitAsync().ConfigureAwait(false);
             ((MessageBusProxy)ServiceProvider.GetMessageBus()).SetBuiltMessageBus(concreteMessageBusService);
 
             // Apply the ITestHostEnvironmentVariableProvider
@@ -173,12 +173,12 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
                 {
                     CurrentProvider = systemEnvironmentVariableProvider,
                 };
-                await systemEnvironmentVariableProvider.UpdateAsync(environmentVariables);
+                await systemEnvironmentVariableProvider.UpdateAsync(environmentVariables).ConfigureAwait(false);
 
                 foreach (ITestHostEnvironmentVariableProvider environmentVariableProvider in _testHostsInformation.EnvironmentVariableProviders)
                 {
                     environmentVariables.CurrentProvider = environmentVariableProvider;
-                    await environmentVariableProvider.UpdateAsync(environmentVariables);
+                    await environmentVariableProvider.UpdateAsync(environmentVariables).ConfigureAwait(false);
                 }
 
                 environmentVariables.CurrentProvider = null;
@@ -186,7 +186,7 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
                 List<(IExtension, string)> failedValidations = [];
                 foreach (ITestHostEnvironmentVariableProvider hostEnvironmentVariableProvider in _testHostsInformation.EnvironmentVariableProviders)
                 {
-                    ValidationResult variableResult = await hostEnvironmentVariableProvider.ValidateTestHostEnvironmentVariablesAsync(environmentVariables);
+                    ValidationResult variableResult = await hostEnvironmentVariableProvider.ValidateTestHostEnvironmentVariablesAsync(environmentVariables).ConfigureAwait(false);
                     if (!variableResult.IsValid)
                     {
                         failedValidations.Add((hostEnvironmentVariableProvider, variableResult.ErrorMessage));
@@ -205,8 +205,8 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
                         displayErrorMessageBuilder.AppendLine(CultureInfo.InvariantCulture, $"Provider '{extension.DisplayName}' (UID: {extension.Uid}) failed with error: {errorMessage}");
                     }
 
-                    await outputDevice.DisplayAsync(this, new ErrorMessageOutputDeviceData(displayErrorMessageBuilder.ToString()));
-                    await _logger.LogErrorAsync(logErrorMessageBuilder.ToString());
+                    await outputDevice.DisplayAsync(this, new ErrorMessageOutputDeviceData(displayErrorMessageBuilder.ToString())).ConfigureAwait(false);
+                    await _logger.LogErrorAsync(logErrorMessageBuilder.ToString()).ConfigureAwait(false);
                     return ExitCodes.InvalidPlatformSetup;
                 }
 
@@ -223,7 +223,7 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
             {
                 foreach (ITestHostProcessLifetimeHandler lifetimeHandler in _testHostsInformation.LifetimeHandlers)
                 {
-                    await lifetimeHandler.BeforeTestHostProcessStartAsync(abortRun);
+                    await lifetimeHandler.BeforeTestHostProcessStartAsync(abortRun).ConfigureAwait(false);
                 }
             }
 
@@ -232,9 +232,9 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
 #pragma warning disable CA1416 // Validate platform compatibility
             processStartInfo.EnvironmentVariables.Add($"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_TESTHOSTPROCESSSTARTTIME}_{currentPID}", testHostProcessStartupTime);
 #pragma warning restore CA1416
-            await _logger.LogDebugAsync($"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_TESTHOSTPROCESSSTARTTIME}_{currentPID} '{testHostProcessStartupTime}'");
+            await _logger.LogDebugAsync($"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_TESTHOSTPROCESSSTARTTIME}_{currentPID} '{testHostProcessStartupTime}'").ConfigureAwait(false);
 #pragma warning disable CA1416 // Validate platform compatibility
-            await _logger.LogDebugAsync($"Starting test host process '{processStartInfo.FileName}' with args '{processStartInfo.Arguments}'");
+            await _logger.LogDebugAsync($"Starting test host process '{processStartInfo.FileName}' with args '{processStartInfo.Arguments}'").ConfigureAwait(false);
 #pragma warning restore CA1416
             using IProcess testHostProcess = process.Start(processStartInfo);
 
@@ -252,24 +252,24 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
             testHostProcess.Exited += (_, _) =>
                 _logger.LogDebug($"Test host process exited, PID: '{testHostProcessId}'");
 
-            await _logger.LogDebugAsync($"Started test host process '{testHostProcessId}' HasExited: {testHostProcess.HasExited}");
+            await _logger.LogDebugAsync($"Started test host process '{testHostProcessId}' HasExited: {testHostProcess.HasExited}").ConfigureAwait(false);
 
             if (testHostProcess.HasExited || testHostProcessId is null)
             {
-                await _logger.LogDebugAsync("Test host process exited prematurely");
+                await _logger.LogDebugAsync("Test host process exited prematurely").ConfigureAwait(false);
             }
             else
             {
                 string? seconds = configuration[PlatformConfigurationConstants.PlatformTestHostControllersManagerSingleConnectionNamedPipeServerWaitConnectionTimeoutSeconds];
                 int timeoutSeconds = seconds is null ? TimeoutHelper.DefaultHangTimeoutSeconds : int.Parse(seconds, CultureInfo.InvariantCulture);
-                await _logger.LogDebugAsync($"Setting PlatformTestHostControllersManagerSingleConnectionNamedPipeServerWaitConnectionTimeoutSeconds '{timeoutSeconds}'");
+                await _logger.LogDebugAsync($"Setting PlatformTestHostControllersManagerSingleConnectionNamedPipeServerWaitConnectionTimeoutSeconds '{timeoutSeconds}'").ConfigureAwait(false);
 
                 // Wait for the test host controller to connect
                 using (CancellationTokenSource timeout = new(TimeSpan.FromSeconds(timeoutSeconds)))
                 using (var linkedToken = CancellationTokenSource.CreateLinkedTokenSource(timeout.Token, abortRun))
                 {
-                    await _logger.LogDebugAsync("Wait connection from the test host process");
-                    await testHostControllerIpc.WaitConnectionAsync(linkedToken.Token);
+                    await _logger.LogDebugAsync("Wait connection from the test host process").ConfigureAwait(false);
+                    await testHostControllerIpc.WaitConnectionAsync(linkedToken.Token).ConfigureAwait(false);
                 }
 
                 // Wait for the test host controller to send the PID of the test host process
@@ -280,7 +280,7 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
 #pragma warning restore CA1416
                 }
 
-                await _logger.LogDebugAsync("Fire OnTestHostProcessStartedAsync");
+                await _logger.LogDebugAsync("Fire OnTestHostProcessStartedAsync").ConfigureAwait(false);
 
                 if (_testHostPID is null)
                 {
@@ -295,17 +295,17 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
                     TestHostProcessInformation testHostProcessInformation = new(_testHostPID.Value);
                     foreach (ITestHostProcessLifetimeHandler lifetimeHandler in _testHostsInformation.LifetimeHandlers)
                     {
-                        await lifetimeHandler.OnTestHostProcessStartedAsync(testHostProcessInformation, abortRun);
+                        await lifetimeHandler.OnTestHostProcessStartedAsync(testHostProcessInformation, abortRun).ConfigureAwait(false);
                     }
                 }
 
-                await _logger.LogDebugAsync("Wait for test host process exit");
-                await testHostProcess.WaitForExitAsync();
+                await _logger.LogDebugAsync("Wait for test host process exit").ConfigureAwait(false);
+                await testHostProcess.WaitForExitAsync().ConfigureAwait(false);
             }
 
             if (_testHostsInformation.LifetimeHandlers.Length > 0)
             {
-                await _logger.LogDebugAsync($"Fire OnTestHostProcessExitedAsync testHostGracefullyClosed: {_testHostGracefullyClosed}");
+                await _logger.LogDebugAsync($"Fire OnTestHostProcessExitedAsync testHostGracefullyClosed: {_testHostGracefullyClosed}").ConfigureAwait(false);
                 var messageBusProxy = (MessageBusProxy)ServiceProvider.GetMessageBus();
 
                 if (_testHostPID is not null)
@@ -313,24 +313,24 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
                     TestHostProcessInformation testHostProcessInformation = new(_testHostPID.Value, testHostProcess.ExitCode, _testHostGracefullyClosed);
                     foreach (ITestHostProcessLifetimeHandler lifetimeHandler in _testHostsInformation.LifetimeHandlers)
                     {
-                        await lifetimeHandler.OnTestHostProcessExitedAsync(testHostProcessInformation, abortRun);
+                        await lifetimeHandler.OnTestHostProcessExitedAsync(testHostProcessInformation, abortRun).ConfigureAwait(false);
 
                         // OnTestHostProcess could produce information that needs to be handled by others.
-                        await messageBusProxy.DrainDataAsync();
+                        await messageBusProxy.DrainDataAsync().ConfigureAwait(false);
                     }
                 }
 
                 // We disable after the drain because it's possible that the drain will produce more messages
-                await messageBusProxy.DrainDataAsync();
-                await messageBusProxy.DisableAsync();
+                await messageBusProxy.DrainDataAsync().ConfigureAwait(false);
+                await messageBusProxy.DisableAsync().ConfigureAwait(false);
             }
 
-            await outputDevice.DisplayAfterSessionEndRunAsync();
+            await outputDevice.DisplayAfterSessionEndRunAsync().ConfigureAwait(false);
 
             // We collect info about the extensions before the dispose to avoid possible issue with cleanup.
             if (telemetryInformation.IsEnabled)
             {
-                extensionInformation = await ExtensionInformationCollector.CollectAndSerializeToJsonAsync(ServiceProvider);
+                extensionInformation = await ExtensionInformationCollector.CollectAndSerializeToJsonAsync(ServiceProvider).ConfigureAwait(false);
             }
 
             // If we have a process in the middle between the test host controller and the test host process we need to keep it into account.
@@ -341,15 +341,15 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
 
             if (!_testHostGracefullyClosed && !abortRun.IsCancellationRequested)
             {
-                await outputDevice.DisplayAsync(this, new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, PlatformResources.TestProcessDidNotExitGracefullyErrorMessage, exitCode)));
+                await outputDevice.DisplayAsync(this, new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, PlatformResources.TestProcessDidNotExitGracefullyErrorMessage, exitCode))).ConfigureAwait(false);
             }
 
-            await _logger.LogInformationAsync($"TestHostControllersTestHost ended with exit code '{exitCode}' (real test host exit code '{testHostProcess.ExitCode}')' in '{consoleRunStarted.Elapsed}'");
-            await DisposeHelper.DisposeAsync(testHostControllerIpc);
+            await _logger.LogInformationAsync($"TestHostControllersTestHost ended with exit code '{exitCode}' (real test host exit code '{testHostProcess.ExitCode}')' in '{consoleRunStarted.Elapsed}'").ConfigureAwait(false);
+            await DisposeHelper.DisposeAsync(testHostControllerIpc).ConfigureAwait(false);
         }
         finally
         {
-            await DisposeServicesAsync();
+            await DisposeServicesAsync().ConfigureAwait(false);
         }
 
         if (telemetryInformation.IsEnabled)
@@ -363,7 +363,7 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
                 [TelemetryProperties.HostProperties.ExitCodePropertyName] = exitCode.ToString(CultureInfo.InvariantCulture),
                 [TelemetryProperties.HostProperties.HasExitedGracefullyPropertyName] = _testHostGracefullyClosed.AsTelemetryBool(),
                 [TelemetryProperties.HostProperties.ExtensionsPropertyName] = extensionInformation,
-            });
+            }).ConfigureAwait(false);
         }
 
         return exitCode;
@@ -378,17 +378,17 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
 
         foreach (ITestHostProcessLifetimeHandler service in lifetimeHandlers)
         {
-            await DisposeHelper.DisposeAsync(service);
+            await DisposeHelper.DisposeAsync(service).ConfigureAwait(false);
             alreadyDisposed.Add(service);
         }
 
         foreach (ITestHostEnvironmentVariableProvider service in variableProviders)
         {
-            await DisposeHelper.DisposeAsync(service);
+            await DisposeHelper.DisposeAsync(service).ConfigureAwait(false);
             alreadyDisposed.Add(service);
         }
 
-        await DisposeServiceProviderAsync(ServiceProvider, alreadyDisposed: alreadyDisposed);
+        await DisposeServiceProviderAsync(ServiceProvider, alreadyDisposed: alreadyDisposed).ConfigureAwait(false);
     }
 
     private Task<IResponse> HandleRequestAsync(IRequest request)
