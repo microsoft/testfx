@@ -1085,6 +1085,15 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to &apos;MSTest.TestAdapter&apos; and &apos;MSTest.TestFramework&apos; must have the same version. Found &apos;MSTest.TestAdapter&apos; version &apos;{0}&apos; and &apos;MSTest.TestFramework&apos; version &apos;{1}&apos;..
+        /// </summary>
+        internal static string VersionMismatchBetweenAdapterAndFramework {
+            get {
+                return ResourceManager.GetString("VersionMismatchBetweenAdapterAndFramework", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Wrong number of objects for permutation. Should be greater than zero..
         /// </summary>
         internal static string WrongNumberOfObjects {

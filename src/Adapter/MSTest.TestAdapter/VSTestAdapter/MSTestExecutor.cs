@@ -59,7 +59,7 @@ public class MSTestExecutor : ITestExecutor
         if (adapterVersion is not null && frameworkVersion is not null
             && adapterVersion != frameworkVersion)
         {
-            throw new InvalidOperationException($"MSTest.TestAdapter and MSTest.TestFramework must have the same version. Found MSTest.TestAdapter version '{adapterVersion}' and MSTest.TestFramework version {frameworkVersion}.");
+            throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, Resource.VersionMismatchBetweenAdapterAndFramework, adapterVersion, frameworkVersion));
         }
     }
 

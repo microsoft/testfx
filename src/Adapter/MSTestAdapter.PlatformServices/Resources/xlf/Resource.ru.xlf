@@ -587,6 +587,11 @@ Error: {1}</target>
         <target state="new">(Failed to get the message for an exception of type {0} due to an exception.)</target>
         <note />
       </trans-unit>
+      <trans-unit id="VersionMismatchBetweenAdapterAndFramework">
+        <source>'MSTest.TestAdapter' and 'MSTest.TestFramework' must have the same version. Found 'MSTest.TestAdapter' version '{0}' and 'MSTest.TestFramework' version '{1}'.</source>
+        <target state="new">'MSTest.TestAdapter' and 'MSTest.TestFramework' must have the same version. Found 'MSTest.TestAdapter' version '{0}' and 'MSTest.TestFramework' version '{1}'.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="WrongNumberOfObjects">
         <source>Wrong number of objects for permutation. Should be greater than zero.</source>
         <target state="translated">Неправильное число объектов для перестановки. Оно должно быть больше нуля.</target>
