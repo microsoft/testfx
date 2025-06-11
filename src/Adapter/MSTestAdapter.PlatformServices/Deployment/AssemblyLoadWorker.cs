@@ -130,7 +130,7 @@ internal sealed class AssemblyLoadWorker : MarshalByRefObject
             string attributeName = declaringType.FullName;
             if (string.Equals(
                 attributeName,
-                Constants.TargetFrameworkAttributeFullName,
+                EngineConstants.TargetFrameworkAttributeFullName,
                 StringComparison.OrdinalIgnoreCase))
             {
                 dotNetVersion = data.ConstructorArguments[0].Value.ToString();

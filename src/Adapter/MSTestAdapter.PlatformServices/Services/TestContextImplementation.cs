@@ -20,9 +20,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 /// like GetProperty&lt;string&gt;("TestName") or GetProperty&lt;string&gt;("FullyQualifiedTestClassName").
 /// </summary>
 #if NET6_0_OR_GREATER
-[Obsolete(Constants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
+[Obsolete(FrameworkConstants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
 #else
-[Obsolete(Constants.PublicTypeObsoleteMessage)]
+[Obsolete(FrameworkConstants.PublicTypeObsoleteMessage)]
 #endif
 public class TestContextImplementation : TestContext, ITestContext
 {

@@ -14,9 +14,9 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// For all practical purposes either use AssertFailedException/AssertInconclusiveException.
 /// </remarks>
 #if NET6_0_OR_GREATER
-[Obsolete(Constants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
+[Obsolete(FrameworkConstants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
 #else
-[Obsolete(Constants.PublicTypeObsoleteMessage)]
+[Obsolete(FrameworkConstants.PublicTypeObsoleteMessage)]
 #endif
 [Serializable]
 public class InternalTestFailureException : UnitTestAssertException
