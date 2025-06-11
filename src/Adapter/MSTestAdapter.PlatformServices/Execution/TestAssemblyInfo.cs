@@ -114,13 +114,7 @@ public class TestAssemblyInfo
     /// <param name="testContext"> The test context. </param>
     /// <exception cref="TestFailedException"> Throws a test failed exception if the initialization method throws an exception. </exception>
     public void RunAssemblyInitialize(TestContext testContext)
-        => RunAssemblyInitialize(testContext, out _);
-
-    [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
-    internal void RunAssemblyInitialize(TestContext testContext, out LogMessageListener? logListener)
     {
-        logListener = null;
-
         // No assembly initialize => nothing to do.
         if (AssemblyInitializeMethod == null)
         {
@@ -146,14 +140,11 @@ public class TestAssemblyInfo
                 // Perform a check again.
                 if (!IsAssemblyInitializeExecuted)
                 {
-                    LogMessageListener? logMessageListener = null;
-
                     try
                     {
                         AssemblyInitializationException = FixtureMethodRunner.RunWithTimeoutAndCancellation(
                             () =>
                             {
-                                logMessageListener = new LogMessageListener(MSTestSettings.CurrentSettings.CaptureDebugTraces);
                                 AssemblyInitializeMethod.InvokeAsSynchronousTask(null, testContext);
                                 // **After** we have executed the assembly initialize, we save the current context.
                                 // This context will contain async locals set by the assembly initialize method.
@@ -173,7 +164,6 @@ public class TestAssemblyInfo
                     finally
                     {
                         IsAssemblyInitializeExecuted = true;
-                        logListener = logMessageListener;
                     }
                 }
             }
@@ -280,7 +270,7 @@ public class TestAssemblyInfo
     /// It is a replacement for RunAssemblyCleanup but as we are in a bug-fix version, we do not want to touch
     /// public API and so we introduced this method.
     /// </remarks>
-    internal TestFailedException? ExecuteAssemblyCleanup(TestContext testContext, ref LogMessageListener? logListener)
+    internal TestFailedException? ExecuteAssemblyCleanup(TestContext testContext)
     {
         if (AssemblyCleanupMethod == null)
         {
@@ -289,13 +279,11 @@ public class TestAssemblyInfo
 
         lock (_assemblyInfoExecuteSyncObject)
         {
-            LogMessageListener? logMessageListener = logListener;
             try
             {
                 AssemblyCleanupException = FixtureMethodRunner.RunWithTimeoutAndCancellation(
                      () =>
                      {
-                         logMessageListener ??= new LogMessageListener(MSTestSettings.CurrentSettings.CaptureDebugTraces);
                          if (AssemblyCleanupMethod.GetParameters().Length == 0)
                          {
                              AssemblyCleanupMethod.InvokeAsSynchronousTask(null);
@@ -317,10 +305,6 @@ public class TestAssemblyInfo
             catch (Exception ex)
             {
                 AssemblyCleanupException = ex;
-            }
-            finally
-            {
-                logListener = logMessageListener;
             }
         }
 

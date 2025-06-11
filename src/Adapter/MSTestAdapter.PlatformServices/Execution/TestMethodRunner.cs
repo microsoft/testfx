@@ -63,7 +63,7 @@ internal sealed class TestMethodRunner
     /// Executes a test.
     /// </summary>
     /// <returns>The test results.</returns>
-    internal async Task<TestResult[]> ExecuteAsync(string initializationLogs, string initializationErrorLogs, string initializationTrace, string initializationTestContextMessages)
+    internal async Task<TestResult[]> ExecuteAsync()
     {
         _testContext.Context.TestRunCount++;
         bool isSTATestClass = _testMethodInfo.Parent.ClassAttribute is STATestClassAttribute;
@@ -73,7 +73,7 @@ internal sealed class TestMethodRunner
         if (isSTARequested && isWindowsOS && Thread.CurrentThread.GetApartmentState() != ApartmentState.STA)
         {
             TestResult[]? results = null;
-            Thread entryPointThread = new(() => results = SafeRunTestMethodAsync(initializationLogs, initializationErrorLogs, initializationTrace, initializationTestContextMessages).GetAwaiter().GetResult())
+            Thread entryPointThread = new(() => results = SafeRunTestMethodAsync().GetAwaiter().GetResult())
             {
                 Name = (isSTATestClass, isSTATestMethod) switch
                 {
@@ -105,11 +105,11 @@ internal sealed class TestMethodRunner
                 PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning(Resource.STAIsOnlySupportedOnWindowsWarning);
             }
 
-            return await SafeRunTestMethodAsync(initializationLogs, initializationErrorLogs, initializationTrace, initializationTestContextMessages).ConfigureAwait(false);
+            return await SafeRunTestMethodAsync().ConfigureAwait(false);
         }
 
         // Local functions
-        async Task<TestResult[]> SafeRunTestMethodAsync(string initializationLogs, string initializationErrorLogs, string initializationTrace, string initializationTestContextMessages)
+        async Task<TestResult[]> SafeRunTestMethodAsync()
         {
             TestResult[]? result = null;
 
@@ -139,15 +139,6 @@ internal sealed class TestMethodRunner
                     Duration = result[result.Length - 1].Duration,
                 };
 #pragma warning restore IDE0056 // Use index operator
-            }
-            finally
-            {
-                // Assembly initialize and class initialize logs are pre-pended to the first result.
-                TestResult firstResult = result![0];
-                firstResult.LogOutput = initializationLogs + firstResult.LogOutput;
-                firstResult.LogError = initializationErrorLogs + firstResult.LogError;
-                firstResult.DebugTrace = initializationTrace + firstResult.DebugTrace;
-                firstResult.TestContextMessages = initializationTestContextMessages + firstResult.TestContextMessages;
             }
 
             return result;

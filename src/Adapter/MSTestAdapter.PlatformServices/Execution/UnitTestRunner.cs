@@ -3,7 +3,6 @@
 
 using System.Security;
 
-using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter;
@@ -184,7 +183,7 @@ internal sealed class UnitTestRunner : MarshalByRefObject
                 {
                     testContextForClassInit = PlatformServiceProvider.Instance.GetTestContext(testMethod, writer, properties, messageLogger, testContextForAssemblyInit.Context.CurrentTestOutcome);
 
-                    TestResult classInitializeResult = testMethodInfo.Parent.GetResultOrRunClassInitialize(testContextForClassInit, assemblyInitializeResult.LogOutput!, assemblyInitializeResult.LogError!, assemblyInitializeResult.DebugTrace!, assemblyInitializeResult.TestContextMessages!);
+                    TestResult classInitializeResult = testMethodInfo.Parent.GetResultOrRunClassInitialize(testContextForClassInit);
                     DebugEx.Assert(testMethodInfo.Parent.IsClassInitializeExecuted, "IsClassInitializeExecuted should be true after attempting to run it.");
                     if (classInitializeResult.Outcome != UTF.UnitTestOutcome.Passed)
                     {
@@ -196,16 +195,11 @@ internal sealed class UnitTestRunner : MarshalByRefObject
                         testContextForTestExecution.SetOutcome(testContextForClassInit.Context.CurrentTestOutcome);
                         RetryBaseAttribute? retryAttribute = testMethodInfo.RetryAttribute;
                         var testMethodRunner = new TestMethodRunner(testMethodInfo, testMethod, testContextForTestExecution);
-                        result = await testMethodRunner.ExecuteAsync(classInitializeResult.LogOutput!, classInitializeResult.LogError!, classInitializeResult.DebugTrace!, classInitializeResult.TestContextMessages!).ConfigureAwait(false);
+                        result = await testMethodRunner.ExecuteAsync().ConfigureAwait(false);
                         if (retryAttribute is not null && !RetryBaseAttribute.IsAcceptableResultForRetry(result))
                         {
                             RetryResult retryResult = await retryAttribute.ExecuteAsync(
-                                new RetryContext(
-                                    async () => await testMethodRunner.ExecuteAsync(
-                                        classInitializeResult.LogOutput!,
-                                        classInitializeResult.LogError!,
-                                        classInitializeResult.DebugTrace!,
-                                        classInitializeResult.TestContextMessages!).ConfigureAwait(false), result)).ConfigureAwait(false);
+                                new RetryContext(testMethodRunner.ExecuteAsync, result)).ConfigureAwait(false);
 
                             result = retryResult.TryGetLast() ?? throw ApplicationStateGuard.Unreachable();
                         }
@@ -248,33 +242,11 @@ internal sealed class UnitTestRunner : MarshalByRefObject
 
     private static TestResult RunAssemblyInitializeIfNeeded(TestMethodInfo testMethodInfo, ITestContext testContext)
     {
-        string? initializationLogs = string.Empty;
-        string? initializationErrorLogs = string.Empty;
-        string? initializationTrace = string.Empty;
-        string? initializationTestContextMessages = string.Empty;
         var result = new TestResult { Outcome = UnitTestOutcome.Passed };
 
         try
         {
-            LogMessageListener? logListener = null;
-            try
-            {
-                testMethodInfo.Parent.Parent.RunAssemblyInitialize(testContext.Context, out logListener);
-            }
-            finally
-            {
-                if (logListener is not null)
-                {
-                    ExecutionContextHelpers.RunOnContext(testMethodInfo.Parent.Parent.ExecutionContext, () =>
-                    {
-                        initializationLogs = logListener.GetAndClearStandardOutput();
-                        initializationErrorLogs = logListener.GetAndClearStandardError();
-                        initializationTrace = logListener.GetAndClearDebugTrace();
-                        initializationTestContextMessages = testContext.GetAndClearDiagnosticMessages();
-                        logListener.Dispose();
-                    });
-                }
-            }
+            testMethodInfo.Parent.Parent.RunAssemblyInitialize(testContext.Context);
         }
         catch (TestFailedException ex)
         {
@@ -284,13 +256,6 @@ internal sealed class UnitTestRunner : MarshalByRefObject
         {
             var testFailureException = new TestFailedException(UnitTestOutcome.Error, ex.TryGetMessage(), ex.TryGetStackTraceInformation());
             result = new TestResult { TestFailureException = testFailureException, Outcome = UnitTestOutcome.Error };
-        }
-        finally
-        {
-            result.LogOutput = initializationLogs;
-            result.LogError = initializationErrorLogs;
-            result.DebugTrace = initializationTrace;
-            result.TestContextMessages = initializationTestContextMessages;
         }
 
         return result;
@@ -303,82 +268,37 @@ internal sealed class UnitTestRunner : MarshalByRefObject
             return;
         }
 
-        string? initializationLogs = string.Empty;
-        string? initializationErrorLogs = string.Empty;
-        string? initializationTrace = string.Empty;
-        string? initializationTestContextMessages = string.Empty;
-        try
+        // TODO: We are using the same TestContext here for ClassCleanup and AssemblyCleanup.
+        // They should be different.
+        IEnumerable<TestClassInfo> classInfoCache = typeCache.ClassInfoListWithExecutableCleanupMethods;
+        foreach (TestClassInfo classInfo in classInfoCache)
         {
-            LogMessageListener? logListener = null;
-            // TODO: We are using the same TestContext here for ClassCleanup and AssemblyCleanup.
-            // They should be different.
-            IEnumerable<TestClassInfo> classInfoCache = typeCache.ClassInfoListWithExecutableCleanupMethods;
-            foreach (TestClassInfo classInfo in classInfoCache)
-            {
-                TestFailedException? ex = classInfo.ExecuteClassCleanup(testContext.Context, out logListener);
-                if (logListener is not null)
-                {
-                    ExecutionContextHelpers.RunOnContext(classInfo.ExecutionContext, () =>
-                    {
-                        initializationLogs += logListener.GetAndClearStandardOutput();
-                        initializationErrorLogs += logListener.GetAndClearStandardError();
-                        initializationTrace += logListener.GetAndClearDebugTrace();
-                        initializationTestContextMessages += testContext.GetAndClearDiagnosticMessages();
-                        logListener.Dispose();
-                        logListener = null;
-                    });
-                }
+            TestFailedException? ex = classInfo.ExecuteClassCleanup(testContext.Context);
 
-                if (ex is not null && results.Length > 0)
-                {
-#pragma warning disable IDE0056 // Use index operator
-                    TestResult lastResult = results[results.Length - 1];
-#pragma warning restore IDE0056 // Use index operator
-                    lastResult.Outcome = UTF.UnitTestOutcome.Error;
-                    lastResult.TestFailureException = ex;
-                    return;
-                }
-            }
-
-            IEnumerable<TestAssemblyInfo> assemblyInfoCache = typeCache.AssemblyInfoListWithExecutableCleanupMethods;
-            foreach (TestAssemblyInfo assemblyInfo in assemblyInfoCache)
-            {
-                TestFailedException? ex = assemblyInfo.ExecuteAssemblyCleanup(testContext.Context, ref logListener);
-                if (logListener is not null)
-                {
-                    ExecutionContextHelpers.RunOnContext(assemblyInfo.ExecutionContext, () =>
-                    {
-                        initializationLogs += logListener.GetAndClearStandardOutput();
-                        initializationErrorLogs += logListener.GetAndClearStandardError();
-                        initializationTrace += logListener.GetAndClearDebugTrace();
-                        initializationTestContextMessages += testContext.GetAndClearDiagnosticMessages();
-                        logListener.Dispose();
-                        logListener = null;
-                    });
-                }
-
-                if (ex is not null && results.Length > 0)
-                {
-#pragma warning disable IDE0056 // Use index operator
-                    TestResult lastResult = results[results.Length - 1];
-#pragma warning restore IDE0056 // Use index operator
-                    lastResult.Outcome = UTF.UnitTestOutcome.Error;
-                    lastResult.TestFailureException = ex;
-                    return;
-                }
-            }
-        }
-        finally
-        {
-            if (results.Length > 0)
+            if (ex is not null && results.Length > 0)
             {
 #pragma warning disable IDE0056 // Use index operator
                 TestResult lastResult = results[results.Length - 1];
 #pragma warning restore IDE0056 // Use index operator
-                lastResult.LogOutput += initializationLogs;
-                lastResult.LogError += initializationErrorLogs;
-                lastResult.DebugTrace += initializationTrace;
-                lastResult.TestContextMessages += initializationTestContextMessages;
+                lastResult.Outcome = UTF.UnitTestOutcome.Error;
+                lastResult.TestFailureException = ex;
+                return;
+            }
+        }
+
+        IEnumerable<TestAssemblyInfo> assemblyInfoCache = typeCache.AssemblyInfoListWithExecutableCleanupMethods;
+        foreach (TestAssemblyInfo assemblyInfo in assemblyInfoCache)
+        {
+            TestFailedException? ex = assemblyInfo.ExecuteAssemblyCleanup(testContext.Context);
+
+            if (ex is not null && results.Length > 0)
+            {
+#pragma warning disable IDE0056 // Use index operator
+                TestResult lastResult = results[results.Length - 1];
+#pragma warning restore IDE0056 // Use index operator
+                lastResult.Outcome = UTF.UnitTestOutcome.Error;
+                lastResult.TestFailureException = ex;
+                return;
             }
         }
     }

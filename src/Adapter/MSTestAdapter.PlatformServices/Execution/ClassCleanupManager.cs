@@ -68,10 +68,9 @@ internal sealed class ClassCleanupManager
         using var writer = new ThreadSafeStringWriter(CultureInfo.InvariantCulture, "context");
         TestContext testContext = new TestContextImplementation(null, writer, sourceLevelParameters, logger, testRunCancellationToken: null);
         IEnumerable<TestClassInfo> classInfoCache = typeCache.ClassInfoListWithExecutableCleanupMethods;
-        LogMessageListener? listener = null;
         foreach (TestClassInfo classInfo in classInfoCache)
         {
-            TestFailedException? ex = classInfo.ExecuteClassCleanup(testContext, out listener);
+            TestFailedException? ex = classInfo.ExecuteClassCleanup(testContext);
             if (ex is not null)
             {
                 throw ex;
@@ -81,7 +80,7 @@ internal sealed class ClassCleanupManager
         IEnumerable<TestAssemblyInfo> assemblyInfoCache = typeCache.AssemblyInfoListWithExecutableCleanupMethods;
         foreach (TestAssemblyInfo assemblyInfo in assemblyInfoCache)
         {
-            TestFailedException? ex = assemblyInfo.ExecuteAssemblyCleanup(testContext, ref listener);
+            TestFailedException? ex = assemblyInfo.ExecuteAssemblyCleanup(testContext);
             if (ex is not null)
             {
                 throw ex;
