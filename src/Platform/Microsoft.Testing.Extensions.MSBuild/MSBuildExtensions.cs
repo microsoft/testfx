@@ -26,8 +26,8 @@ public static class MSBuildExtensions
                 serviceProvider.GetCommandLineOptions(),
                 serviceProvider.GetTestApplicationCancellationTokenSource()));
 
-        ((TestApplicationBuilder)builder).TestHostOrchestrator.AddTestApplicationLifecycleCallbacks(
-            serviceProvider => new MSBuildOrchestratorLifecycleCallbacks(
+        ((TestApplicationBuilder)builder).TestHostOrchestrator.AddTestHostOrchestratorApplicationLifetime(
+            serviceProvider => new MSBuildOrchestratorLifetime(
                 serviceProvider.GetConfiguration(),
                 serviceProvider.GetCommandLineOptions(),
                 serviceProvider.GetTestApplicationCancellationTokenSource()));

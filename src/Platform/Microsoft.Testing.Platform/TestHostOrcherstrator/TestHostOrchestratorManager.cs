@@ -1,7 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Resources;
 using Microsoft.Testing.Platform.Services;
 
@@ -9,7 +8,7 @@ namespace Microsoft.Testing.Platform.Extensions.TestHostOrchestrator;
 
 internal sealed class TestHostOrchestratorManager : ITestHostOrchestratorManager
 {
-    private readonly List<Func<IServiceProvider, ITestApplicationLifecycleCallbacks>> _testApplicationLifecycleCallbacksFactories = [];
+    private readonly List<Func<IServiceProvider, ITestHostOrchestratorApplicationLifetime>> _testHostOrchestratorApplicationLifetimeFactories = [];
     private List<Func<IServiceProvider, ITestHostOrchestrator>>? _factories;
 
     public void AddTestHostOrchestrator(Func<IServiceProvider, ITestHostOrchestrator> factory)
@@ -51,23 +50,23 @@ internal sealed class TestHostOrchestratorManager : ITestHostOrchestratorManager
         return new TestHostOrchestratorConfiguration([.. orchestrators]);
     }
 
-    public void AddTestApplicationLifecycleCallbacks(Func<IServiceProvider, ITestApplicationLifecycleCallbacks> testApplicationLifecycleCallbacks)
+    public void AddTestHostOrchestratorApplicationLifetime(Func<IServiceProvider, ITestHostOrchestratorApplicationLifetime> testHostOrchestratorApplicationLifetimeFactory)
     {
-        Guard.NotNull(testApplicationLifecycleCallbacks);
-        _testApplicationLifecycleCallbacksFactories.Add(testApplicationLifecycleCallbacks);
+        Guard.NotNull(testHostOrchestratorApplicationLifetimeFactory);
+        _testHostOrchestratorApplicationLifetimeFactories.Add(testHostOrchestratorApplicationLifetimeFactory);
     }
 
-    internal async Task<ITestApplicationLifecycleCallbacks[]> BuildTestApplicationLifecycleCallbackAsync(ServiceProvider serviceProvider)
+    internal async Task<ITestHostOrchestratorApplicationLifetime[]> BuildTestHostOrchestratorApplicationLifetimesAsync(ServiceProvider serviceProvider)
     {
-        List<ITestApplicationLifecycleCallbacks> testApplicationLifecycleCallbacks = [];
-        foreach (Func<IServiceProvider, ITestApplicationLifecycleCallbacks> testApplicationLifecycleCallbacksFactory in _testApplicationLifecycleCallbacksFactories)
+        List<ITestHostOrchestratorApplicationLifetime> lifetimes = [];
+        foreach (Func<IServiceProvider, ITestHostOrchestratorApplicationLifetime> testHostOrchestratorApplicationLifetimeFactory in _testHostOrchestratorApplicationLifetimeFactories)
         {
-            ITestApplicationLifecycleCallbacks service = testApplicationLifecycleCallbacksFactory(serviceProvider);
+            ITestHostOrchestratorApplicationLifetime service = testHostOrchestratorApplicationLifetimeFactory(serviceProvider);
 
             // Check if we have already extensions of the same type with same id registered
-            if (testApplicationLifecycleCallbacks.Any(x => x.Uid == service.Uid))
+            if (lifetimes.Any(x => x.Uid == service.Uid))
             {
-                ITestApplicationLifecycleCallbacks currentRegisteredExtension = testApplicationLifecycleCallbacks.Single(x => x.Uid == service.Uid);
+                ITestHostOrchestratorApplicationLifetime currentRegisteredExtension = lifetimes.Single(x => x.Uid == service.Uid);
                 throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.ExtensionWithSameUidAlreadyRegisteredErrorMessage, service.Uid, currentRegisteredExtension.GetType()));
             }
 
@@ -77,10 +76,10 @@ internal sealed class TestHostOrchestratorManager : ITestHostOrchestratorManager
                 await service.TryInitializeAsync();
 
                 // Register the extension for usage
-                testApplicationLifecycleCallbacks.Add(service);
+                lifetimes.Add(service);
             }
         }
 
-        return [.. testApplicationLifecycleCallbacks];
+        return [.. lifetimes];
     }
 }

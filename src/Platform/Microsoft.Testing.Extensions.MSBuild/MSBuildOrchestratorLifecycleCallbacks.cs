@@ -4,7 +4,7 @@
 using Microsoft.Testing.Extensions.MSBuild.Serializers;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
-using Microsoft.Testing.Platform.Extensions.TestHost;
+using Microsoft.Testing.Platform.Extensions.TestHostOrchestrator;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.IPC;
 using Microsoft.Testing.Platform.IPC.Models;
@@ -13,13 +13,13 @@ using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Extensions.MSBuild;
 
-internal sealed class MSBuildOrchestratorLifecycleCallbacks : ITestApplicationLifecycleCallbacks
+internal sealed class MSBuildOrchestratorLifetime : ITestHostOrchestratorApplicationLifetime
 {
     private readonly IConfiguration _configuration;
     private readonly ICommandLineOptions _commandLineOptions;
     private readonly ITestApplicationCancellationTokenSource _testApplicationCancellationTokenSource;
 
-    public MSBuildOrchestratorLifecycleCallbacks(
+    public MSBuildOrchestratorLifetime(
         IConfiguration configuration,
         ICommandLineOptions commandLineOptions,
         ITestApplicationCancellationTokenSource testApplicationCancellationTokenSource)
@@ -29,11 +29,11 @@ internal sealed class MSBuildOrchestratorLifecycleCallbacks : ITestApplicationLi
         _testApplicationCancellationTokenSource = testApplicationCancellationTokenSource;
     }
 
-    public string Uid => nameof(MSBuildOrchestratorLifecycleCallbacks);
+    public string Uid => nameof(MSBuildOrchestratorLifetime);
 
     public string Version => AppVersion.DefaultSemVer;
 
-    public string DisplayName => nameof(MSBuildOrchestratorLifecycleCallbacks);
+    public string DisplayName => nameof(MSBuildOrchestratorLifetime);
 
     public string Description => Resources.ExtensionResources.MSBuildExtensionsDescription;
 
