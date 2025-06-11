@@ -192,8 +192,8 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
 
         Assert.AreEqual(ExitCodes.Success, result.ExitCode);
 
-        string[] logFilesFromInvokeTestingPlatformTask = Directory.GetFiles(resultDirectory, "RetryFailedTests_*_*.log");
-        Assert.AreEqual(TargetFrameworks.All.Length, logFilesFromInvokeTestingPlatformTask.Length, SearchOption.AllDirectories);
+        string[] logFilesFromInvokeTestingPlatformTask = Directory.GetFiles(resultDirectory, "RetryFailedTests_*_*.log", SearchOption.AllDirectories);
+        Assert.AreEqual(TargetFrameworks.All.Length, logFilesFromInvokeTestingPlatformTask.Length);
         foreach (string logFile in logFilesFromInvokeTestingPlatformTask)
         {
             string logFileContents = File.ReadAllText(logFile);
