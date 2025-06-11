@@ -10,21 +10,16 @@ See full log [of v3.9.1...v3.9.2](https://github.com/microsoft/testfx/compare/v3
 
 ### Fixed
 
+* Allow framework authors to use TestCase.FullyQualifiedName as the TestNodeUid by @Youssef1313 in [#5658](https://github.com/microsoft/testfx/pull/5658)
+
 ### Artifacts
 
-* MSTest: [3.9.2](https://www.nuget.org/packages/MSTest/3.9.2)
-* MSTest.TestFramework: [3.9.2](https://www.nuget.org/packages/MSTest.TestFramework/3.9.2)
-* MSTest.TestAdapter: [3.9.2](https://www.nuget.org/packages/MSTest.TestAdapter/3.9.2)
-* MSTest.Analyzers: [3.9.2](https://www.nuget.org/packages/MSTest.Analyzers/3.9.2)
-* MSTest.Sdk: [3.9.2](https://www.nuget.org/packages/MSTest.Sdk/3.9.2)
 * Microsoft.Testing.Extensions.CrashDump: [1.7.2](https://www.nuget.org/packages/Microsoft.Testing.Extensions.CrashDump/1.7.2)
 * Microsoft.Testing.Extensions.HangDump: [1.7.2](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HangDump/1.7.2)
 * Microsoft.Testing.Extensions.HotReload: [1.7.2](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HotReload/1.7.2)
 * Microsoft.Testing.Extensions.Retry: [1.7.2](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Retry/1.7.2)
 * Microsoft.Testing.Extensions.TrxReport: [1.7.2](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport/1.7.2)
 * Microsoft.Testing.Extensions.AzureDevOpsReport [1.0.0-alpha.25310.6](https://www.nuget.org/packages/Microsoft.Testing.Extensions.AzureDevOpsReport/1.0.0-alpha.25310.6)
-* MSTest.SourceGeneration: [1.0.0-alpha.25310.6](https://www.nuget.org/packages/MSTest.SourceGeneration/1.0.0-alpha.25310.6)
-* MSTest.Engine: [1.0.0-alpha.25310.6](https://www.nuget.org/packages/MSTest.Engine/1.0.0-alpha.25310.6)
 
 ## <a name="1.7.1" />[1.7.1] - 2025-05-27
 
