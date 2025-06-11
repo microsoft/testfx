@@ -51,7 +51,7 @@ public sealed class PreferTestMethodOverDataTestMethodAnalyzerTests
             [TestClass]
             public class MyTestClass
             {
-                [[|TestMethod|]]
+                [TestMethod]
                 public void MyTestMethod()
                 {
                 }
@@ -83,7 +83,7 @@ public sealed class PreferTestMethodOverDataTestMethodAnalyzerTests
             [TestClass]
             public class MyTestClass
             {
-                [[|TestMethod("Display Name")|]]
+                [TestMethod("Display Name")]
                 public void MyTestMethod()
                 {
                 }
