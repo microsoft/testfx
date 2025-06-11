@@ -40,7 +40,6 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
     private Task? _connectionLoopTask;
     private ModuleInfoRequest? _moduleInfo;
     private string? _outputFileName;
-    private StreamWriter? _outputFileStream;
     private string? _toolCommand;
 
     /// <summary>
@@ -373,15 +372,15 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
         bool returnValue = base.Execute();
         if (_toolCommand is not null)
         {
-            StringBuilder sb = new();
-            sb.AppendLine();
-            sb.AppendLine("=== COMMAND LINE ===");
-            sb.AppendLine(_toolCommand);
-            _output.AppendLine(sb.ToString());
+            _output.AppendLine();
+            _output.AppendLine("=== COMMAND LINE ===");
+            _output.AppendLine(_toolCommand);
         }
 
-        // Persist the output to the file.
-        _outputFileStream?.WriteLine(_output);
+        if (_outputFileName is not null)
+        {
+            _fileSystem.WriteAllText(_outputFileName, _output.ToString());
+        }
 
         _waitForConnections.Cancel();
         Dispose();
@@ -419,10 +418,6 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
                 _fileSystem.CreateDirectory(_outputFileName);
                 _outputFileName = Path.Combine(_outputFileName, $"{Path.GetFileNameWithoutExtension(TargetPath.ItemSpec.Trim())}_{TargetFramework.ItemSpec}_{TestArchitecture.ItemSpec}.log");
                 Log.LogMessage(MessageImportance.Low, $"Invalid command line exit code and empty output file name, creating default one '{_outputFileName}'");
-                _outputFileStream = new StreamWriter(_fileSystem.CreateNew(_outputFileName), Encoding.Unicode)
-                {
-                    AutoFlush = true,
-                };
             }
 
             Log.LogError(null, "run failed", null, TargetPath.ItemSpec.Trim(), 0, 0, 0, 0, Resources.MSBuildResources.TestFailed, _outputFileName, TargetFramework.ItemSpec, TestArchitecture.ItemSpec);
@@ -445,10 +440,6 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
                         _outputFileName = $"{Path.GetFileNameWithoutExtension(TargetPath.ItemSpec.Trim())}_{TargetFramework.ItemSpec}_{TestArchitecture.ItemSpec}.log";
                         _outputFileName = Path.Combine(_moduleInfo.TestResultFolder, _outputFileName);
                         Log.LogMessage(MessageImportance.Low, $"Initializing module info and output file '{_outputFileName}'");
-                        _outputFileStream = new StreamWriter(_fileSystem.CreateNew(_outputFileName), Encoding.Unicode)
-                        {
-                            AutoFlush = true,
-                        };
                     }
                 }
             }
@@ -530,7 +521,6 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
     /// <inheritdoc />
     public void Dispose()
     {
-        _outputFileStream?.Dispose();
         _waitForConnections.Cancel();
         _connectionLoopTask?.Wait();
 
