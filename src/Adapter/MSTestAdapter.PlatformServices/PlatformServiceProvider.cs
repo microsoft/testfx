@@ -15,8 +15,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 /// </summary>
 internal sealed class PlatformServiceProvider : IPlatformServiceProvider
 {
-    private static readonly Action<object?> CancelDelegate = static state => ((TestContextImplementation)state!).Context.CancellationTokenSource.Cancel();
-
     /// <summary>
     /// Initializes a new instance of the <see cref="PlatformServiceProvider"/> class - a singleton.
     /// </summary>
@@ -210,12 +208,7 @@ internal sealed class PlatformServiceProvider : IPlatformServiceProvider
     /// </remarks>
     public ITestContext GetTestContext(ITestMethod testMethod, StringWriter writer, IDictionary<string, object?> properties, IMessageLogger messageLogger, UTF.UnitTestOutcome outcome)
     {
-        // TODO: TestContextImplementation should be passed TestRunCancellationToken.
-        // Then TestContextImplementation is responsible for the registration.
-        // Next, TestContextImplementation should be IDisposable and disposes the registration.
-        var testContextImplementation = new TestContextImplementation(testMethod, writer, properties, messageLogger);
-        CancellationTokenRegistration? registration = TestRunCancellationToken?.Register(CancelDelegate, testContextImplementation);
-        // registration should be disposed along with the test context.
+        var testContextImplementation = new TestContextImplementation(testMethod, writer, properties, messageLogger, TestRunCancellationToken);
         testContextImplementation.SetOutcome(outcome);
         return testContextImplementation;
     }

@@ -6,6 +6,7 @@ using System.Data;
 using System.Data.Common;
 #endif
 
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -24,7 +25,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 #else
 [Obsolete(FrameworkConstants.PublicTypeObsoleteMessage)]
 #endif
-public class TestContextImplementation : TestContext, ITestContext
+public class TestContextImplementation : TestContext, ITestContext, IDisposable
 {
     /// <summary>
     /// List of result files associated with the test.
@@ -42,6 +43,7 @@ public class TestContextImplementation : TestContext, ITestContext
     /// </summary>
     private readonly Dictionary<string, object?> _properties;
     private readonly IMessageLogger? _messageLogger;
+    private readonly CancellationTokenRegistration? _cancellationTokenRegistration;
 
     /// <summary>
     /// Specifies whether the writer is disposed or not.
@@ -65,6 +67,8 @@ public class TestContextImplementation : TestContext, ITestContext
     private DataRow? _dataRow;
 #endif
 
+    private static readonly Action<object?> CancelDelegate = static state => ((TestContextImplementation)state!).Context.CancellationTokenSource.Cancel();
+
     /// <summary>
     /// Initializes a new instance of the <see cref="TestContextImplementation"/> class.
     /// </summary>
@@ -72,9 +76,13 @@ public class TestContextImplementation : TestContext, ITestContext
     /// <param name="stringWriter">The writer where diagnostic messages are written to.</param>
     /// <param name="properties">Properties/configuration passed in.</param>
     /// <param name="messageLogger">The message logger to use.</param>
-    internal TestContextImplementation(ITestMethod? testMethod, StringWriter stringWriter, IDictionary<string, object?> properties, IMessageLogger messageLogger)
+    /// <param name="testRunCancellationToken">The global test run cancellation token.</param>
+    internal TestContextImplementation(ITestMethod? testMethod, StringWriter stringWriter, IDictionary<string, object?> properties, IMessageLogger messageLogger, TestRunCancellationToken? testRunCancellationToken)
         : this(testMethod, stringWriter, properties)
-        => _messageLogger = messageLogger;
+    {
+        _messageLogger = messageLogger;
+        _cancellationTokenRegistration = testRunCancellationToken?.Register(CancelDelegate, this);
+    }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TestContextImplementation"/> class.
@@ -370,4 +378,10 @@ public class TestContextImplementation : TestContext, ITestContext
     public override void DisplayMessage(MessageLevel messageLevel, string message)
         => _messageLogger?.SendMessage(messageLevel.ToTestMessageLevel(), message);
     #endregion
+
+    void IDisposable.Dispose()
+    {
+        _cancellationTokenRegistration?.Dispose();
+        GC.SuppressFinalize(this);
+    }
 }
