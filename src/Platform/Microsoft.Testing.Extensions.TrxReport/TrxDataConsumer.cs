@@ -105,7 +105,8 @@ internal sealed class TrxReportGenerator :
 
     public Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken)
     {
-        if (!_isEnabled || cancellationToken.IsCancellationRequested)
+        cancellationToken.ThrowIfCancellationRequested();
+        if (!_isEnabled)
         {
             return Task.CompletedTask;
         }
@@ -168,7 +169,8 @@ internal sealed class TrxReportGenerator :
 
     public async Task OnTestSessionStartingAsync(SessionUid _, CancellationToken cancellationToken)
     {
-        if (!_isEnabled || cancellationToken.IsCancellationRequested)
+        cancellationToken.ThrowIfCancellationRequested();
+        if (!_isEnabled)
         {
             return;
         }
@@ -211,7 +213,8 @@ TrxReportGeneratorCommandLine.IsTrxReportEnabled: {_commandLineOptionsService.Is
 
     public async Task OnTestSessionFinishingAsync(SessionUid sessionUid, CancellationToken cancellationToken)
     {
-        if (!_isEnabled || cancellationToken.IsCancellationRequested)
+        cancellationToken.ThrowIfCancellationRequested();
+        if (!_isEnabled)
         {
             return;
         }

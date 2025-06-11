@@ -109,10 +109,7 @@ internal sealed class AzureDevOpsReporter :
 
     public async Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken)
     {
-        if (cancellationToken.IsCancellationRequested)
-        {
-            return;
-        }
+        cancellationToken.ThrowIfCancellationRequested();
 
         if (value is not TestNodeUpdateMessage nodeUpdateMessage)
         {

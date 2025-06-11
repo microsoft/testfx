@@ -85,10 +85,7 @@ internal sealed class PerRequestServerDataConsumer(IServiceProvider serviceProvi
 
     private async Task ProcessTestNodeUpdateAsync(TestNodeUpdateMessage update, CancellationToken cancellationToken)
     {
-        if (cancellationToken.IsCancellationRequested)
-        {
-            return;
-        }
+        cancellationToken.ThrowIfCancellationRequested();
 
         try
         {
@@ -146,10 +143,7 @@ internal sealed class PerRequestServerDataConsumer(IServiceProvider serviceProvi
             Guard.NotNull(_task);
             await Task.WhenAny(_task.Delay(TimeSpan.FromMilliseconds(TestNodeUpdateDelayInMs), cancellationToken), _testSessionEnd.Task);
 
-            if (cancellationToken.IsCancellationRequested)
-            {
-                return;
-            }
+            cancellationToken.ThrowIfCancellationRequested();
 
             await SendTestNodeUpdatesIfNecessaryAsync(runId, cancellationToken);
         }
@@ -210,10 +204,7 @@ internal sealed class PerRequestServerDataConsumer(IServiceProvider serviceProvi
 
     public async Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken)
     {
-        if (cancellationToken.IsCancellationRequested)
-        {
-            return;
-        }
+        cancellationToken.ThrowIfCancellationRequested();
 
         switch (value)
         {

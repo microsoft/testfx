@@ -137,12 +137,9 @@ internal sealed class TrxProcessLifetimeHandler :
         return Task.CompletedTask;
     }
 
-    public async Task OnTestHostProcessExitedAsync(ITestHostProcessInformation testHostProcessInformation, CancellationToken cancellation)
+    public async Task OnTestHostProcessExitedAsync(ITestHostProcessInformation testHostProcessInformation, CancellationToken cancellationToken)
     {
-        if (cancellation.IsCancellationRequested)
-        {
-            return;
-        }
+        cancellationToken.ThrowIfCancellationRequested();
 
         Dictionary<IExtension, List<SessionFileArtifact>> artifacts = [];
 
@@ -168,7 +165,7 @@ internal sealed class TrxProcessLifetimeHandler :
                 new TestAdapterInfo(_testAdapterInformationRequest!.TestAdapterId, _testAdapterInformationRequest.TestAdapterVersion),
                 _startTime,
                 testHostProcessInformation.ExitCode,
-                cancellation);
+                cancellationToken);
 
             (string fileName, string? warning) = await trxReportGeneratorEngine.GenerateReportAsync(
                 isTestHostCrashed: true,
@@ -204,7 +201,7 @@ internal sealed class TrxProcessLifetimeHandler :
                new TestAdapterInfo(_testAdapterInformationRequest!.TestAdapterId, _testAdapterInformationRequest.TestAdapterVersion),
                _startTime,
                testHostProcessInformation.ExitCode,
-               cancellation);
+               cancellationToken);
 
             await trxReportGeneratorEngine.AddArtifactsAsync(trxFile, artifacts);
         }

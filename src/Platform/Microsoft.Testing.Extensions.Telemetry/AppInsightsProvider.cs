@@ -118,10 +118,7 @@ internal sealed partial class AppInsightsProvider :
     // Initialize the telemetry client and start ingesting events.
     private async Task IngestLoopAsync()
     {
-        if (_testApplicationCancellationTokenSource.CancellationToken.IsCancellationRequested)
-        {
-            return;
-        }
+        _testApplicationCancellationTokenSource.CancellationToken.ThrowIfCancellationRequested();
 
         try
         {
