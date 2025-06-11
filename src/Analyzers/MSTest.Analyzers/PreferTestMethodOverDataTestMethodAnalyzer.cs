@@ -24,7 +24,7 @@ public sealed class PreferTestMethodOverDataTestMethodAnalyzer : DiagnosticAnaly
         messageFormat: new LocalizableResourceString(nameof(Resources.PreferTestMethodOverDataTestMethodAnalyzerMessageFormat), Resources.ResourceManager, typeof(Resources)),
         description: new LocalizableResourceString(nameof(Resources.PreferTestMethodOverDataTestMethodAnalyzerDescription), Resources.ResourceManager, typeof(Resources)),
         Category.Design,
-        DiagnosticSeverity.Warning,
+        DiagnosticSeverity.Info,
         isEnabledByDefault: true);
 
     /// <inheritdoc />
