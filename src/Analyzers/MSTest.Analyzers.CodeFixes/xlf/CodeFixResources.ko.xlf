@@ -42,11 +42,6 @@
         <target state="translated">서명 수정</target>
         <note />
       </trans-unit>
-      <trans-unit id="ReplaceDataTestMethodWithTestMethodTitle">
-        <source>Replace 'DataTestMethod' with 'TestMethod'</source>
-        <target state="new">Replace 'DataTestMethod' with 'TestMethod'</target>
-        <note />
-      </trans-unit>
       <trans-unit id="ReplaceWithConstructorFix">
         <source>Replace TestInitialize method with constructor</source>
         <target state="translated">TestInitialize 메서드를 생성자로 바꾸기</target>

@@ -42,11 +42,6 @@
         <target state="translated">修复签名</target>
         <note />
       </trans-unit>
-      <trans-unit id="ReplaceDataTestMethodWithTestMethodTitle">
-        <source>Replace 'DataTestMethod' with 'TestMethod'</source>
-        <target state="new">Replace 'DataTestMethod' with 'TestMethod'</target>
-        <note />
-      </trans-unit>
       <trans-unit id="ReplaceWithConstructorFix">
         <source>Replace TestInitialize method with constructor</source>
         <target state="translated">将 TestInitialize 方法替换为构造函数</target>

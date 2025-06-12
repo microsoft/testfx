@@ -42,11 +42,6 @@
         <target state="translated">Correggi firma</target>
         <note />
       </trans-unit>
-      <trans-unit id="ReplaceDataTestMethodWithTestMethodTitle">
-        <source>Replace 'DataTestMethod' with 'TestMethod'</source>
-        <target state="new">Replace 'DataTestMethod' with 'TestMethod'</target>
-        <note />
-      </trans-unit>
       <trans-unit id="ReplaceWithConstructorFix">
         <source>Replace TestInitialize method with constructor</source>
         <target state="translated">Sostituisci il metodo TestInitialize con il costruttore</target>
