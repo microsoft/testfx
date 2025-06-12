@@ -484,4 +484,7 @@ Error: {1}</value>
   <data name="STAIsOnlySupportedOnWindowsWarning" xml:space="preserve">
     <value>Runsettings entry '&lt;ExecutionApartmentState&gt;STA&lt;/ExecutionApartmentState&gt;' is not supported on non-Windows OSes.</value>
   </data>
+  <data name="VersionMismatchBetweenAdapterAndFramework" xml:space="preserve">
+    <value>'MSTest.TestAdapter' and 'MSTest.TestFramework' must have the same version. Found 'MSTest.TestAdapter' version '{0}' and 'MSTest.TestFramework' version '{1}'. Please make sure that the versions of  'MSTest.TestAdapter' and 'MSTest.TestFramework' NuGet packages have the same version.</value>
+  </data>
 </root>

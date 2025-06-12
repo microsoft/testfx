@@ -49,6 +49,20 @@ public class MSTestExecutor : ITestExecutor
     /// </summary>
     public TestExecutionManager TestExecutionManager { get; protected set; }
 
+#pragma warning disable CA2255 // The 'ModuleInitializer' attribute should not be used in libraries
+    [ModuleInitializer]
+#pragma warning restore CA2255 // The 'ModuleInitializer' attribute should not be used in libraries
+    internal static void EnsureAdapterAndFrameworkVersions()
+    {
+        string? adapterVersion = typeof(MSTestExecutor).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
+        string? frameworkVersion = typeof(TestMethodAttribute).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
+        if (adapterVersion is not null && frameworkVersion is not null
+            && adapterVersion != frameworkVersion)
+        {
+            throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, Resource.VersionMismatchBetweenAdapterAndFramework, adapterVersion, frameworkVersion));
+        }
+    }
+
     /// <summary>
     /// Runs the tests.
     /// </summary>
