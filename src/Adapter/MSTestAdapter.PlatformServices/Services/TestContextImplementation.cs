@@ -34,11 +34,9 @@ public class TestContextImplementation : TestContext, ITestContext, IDisposable
     /// </summary>
     private readonly List<string> _testResultFiles;
 
-    /// <summary>
-    /// Writer on which the messages given by the user should be written.
-    /// </summary>
-    private readonly StringWriter _stringWriter;
-    private readonly ThreadSafeStringWriter? _threadSafeStringWriter;
+    // This should be removed. Don't rely on it.
+    // We only keep it for public constructor, but we don't pass it by the adapter.
+    private readonly StringWriter? _stringWriter;
 
     /// <summary>
     /// Properties.
@@ -49,11 +47,7 @@ public class TestContextImplementation : TestContext, ITestContext, IDisposable
 
     private StringBuilder? _stdOutStringBuilder;
     private StringBuilder? _stdErrStringBuilder;
-
-    /// <summary>
-    /// Specifies whether the writer is disposed or not.
-    /// </summary>
-    private bool _stringWriterDisposed;
+    private StringBuilder? _testContextMessageStringBuilder;
 
     private bool _isDisposed;
 
@@ -80,12 +74,11 @@ public class TestContextImplementation : TestContext, ITestContext, IDisposable
     /// Initializes a new instance of the <see cref="TestContextImplementation"/> class.
     /// </summary>
     /// <param name="testMethod">The test method.</param>
-    /// <param name="stringWriter">The writer where diagnostic messages are written to.</param>
     /// <param name="properties">Properties/configuration passed in.</param>
     /// <param name="messageLogger">The message logger to use.</param>
     /// <param name="testRunCancellationToken">The global test run cancellation token.</param>
-    internal TestContextImplementation(ITestMethod? testMethod, StringWriter stringWriter, IDictionary<string, object?> properties, IMessageLogger messageLogger, TestRunCancellationToken? testRunCancellationToken)
-        : this(testMethod, stringWriter, properties)
+    internal TestContextImplementation(ITestMethod? testMethod, IDictionary<string, object?> properties, IMessageLogger messageLogger, TestRunCancellationToken? testRunCancellationToken)
+        : this(testMethod, null!, properties)
     {
         _messageLogger = messageLogger;
         _cancellationTokenRegistration = testRunCancellationToken?.Register(CancelDelegate, this);
@@ -102,14 +95,7 @@ public class TestContextImplementation : TestContext, ITestContext, IDisposable
         // testMethod can be null when running ForceCleanup (done when reaching --maximum-failed-tests.
         DebugEx.Assert(properties != null, "properties is not null");
 
-#if NETFRAMEWORK
-        DebugEx.Assert(stringWriter != null, "StringWriter is not null");
-#endif
-
         _stringWriter = stringWriter;
-
-        // Cannot get this type in constructor directly, because all signatures for all platforms need to be the same.
-        _threadSafeStringWriter = stringWriter as ThreadSafeStringWriter;
         _properties = testMethod is null
             ? new Dictionary<string, object?>(properties)
             : new Dictionary<string, object?>(properties)
@@ -195,20 +181,9 @@ public class TestContextImplementation : TestContext, ITestContext, IDisposable
     /// <param name="message">The formatted string that contains the trace message.</param>
     public override void Write(string? message)
     {
-        if (_stringWriterDisposed)
-        {
-            return;
-        }
-
-        try
-        {
-            string? msg = message?.Replace("\0", "\\0");
-            _stringWriter.Write(msg);
-        }
-        catch (ObjectDisposedException)
-        {
-            _stringWriterDisposed = true;
-        }
+        string? msg = message?.Replace("\0", "\\0");
+        GetTestContextMessagesStringBuilder().Append(msg);
+        _stringWriter?.Write(msg);
     }
 
     /// <summary>
@@ -219,20 +194,9 @@ public class TestContextImplementation : TestContext, ITestContext, IDisposable
     /// <param name="args">Arguments to add to the trace message.</param>
     public override void Write(string format, params object?[] args)
     {
-        if (_stringWriterDisposed)
-        {
-            return;
-        }
-
-        try
-        {
-            string message = string.Format(CultureInfo.CurrentCulture, format.Replace("\0", "\\0"), args);
-            _stringWriter.Write(message);
-        }
-        catch (ObjectDisposedException)
-        {
-            _stringWriterDisposed = true;
-        }
+        string message = string.Format(CultureInfo.CurrentCulture, format.Replace("\0", "\\0"), args);
+        GetTestContextMessagesStringBuilder().Append(message);
+        _stringWriter?.Write(message);
     }
 
     /// <summary>
@@ -242,20 +206,9 @@ public class TestContextImplementation : TestContext, ITestContext, IDisposable
     /// <param name="message">The formatted string that contains the trace message.</param>
     public override void WriteLine(string? message)
     {
-        if (_stringWriterDisposed)
-        {
-            return;
-        }
-
-        try
-        {
-            string? msg = message?.Replace("\0", "\\0");
-            _stringWriter.WriteLine(msg);
-        }
-        catch (ObjectDisposedException)
-        {
-            _stringWriterDisposed = true;
-        }
+        string? msg = message?.Replace("\0", "\\0");
+        GetTestContextMessagesStringBuilder().AppendLine(msg);
+        _stringWriter?.Write(msg);
     }
 
     /// <summary>
@@ -266,20 +219,9 @@ public class TestContextImplementation : TestContext, ITestContext, IDisposable
     /// <param name="args">Arguments to add to the trace message.</param>
     public override void WriteLine(string format, params object?[] args)
     {
-        if (_stringWriterDisposed)
-        {
-            return;
-        }
-
-        try
-        {
-            string message = string.Format(CultureInfo.CurrentCulture, format.Replace("\0", "\\0"), args);
-            _stringWriter.WriteLine(message);
-        }
-        catch (ObjectDisposedException)
-        {
-            _stringWriterDisposed = true;
-        }
+        string message = string.Format(CultureInfo.CurrentCulture, format.Replace("\0", "\\0"), args);
+        GetTestContextMessagesStringBuilder().AppendLine(message);
+        _stringWriter?.Write(message);
     }
 
     /// <summary>
@@ -371,13 +313,16 @@ public class TestContextImplementation : TestContext, ITestContext, IDisposable
     /// </summary>
     /// <returns>The test context messages added so far.</returns>
     public string? GetDiagnosticMessages()
-        => _stringWriter.ToString();
+        => _testContextMessageStringBuilder?.ToString();
 
     /// <summary>
     /// Clears the previous testContext writeline messages.
     /// </summary>
     public void ClearDiagnosticMessages()
-        => _threadSafeStringWriter?.ToStringAndClear();
+    {
+        _testContextMessageStringBuilder?.Clear();
+        (_stringWriter as ThreadSafeStringWriter)?.ToStringAndClear();
+    }
 
     /// <inheritdoc/>
     public void SetDisplayName(string? displayName)
@@ -446,6 +391,12 @@ public class TestContextImplementation : TestContext, ITestContext, IDisposable
     {
         _ = _stdErrStringBuilder ?? Interlocked.CompareExchange(ref _stdErrStringBuilder, new StringBuilder(), null)!;
         return _stdErrStringBuilder;
+    }
+
+    private StringBuilder GetTestContextMessagesStringBuilder()
+    {
+        _ = _testContextMessageStringBuilder ?? Interlocked.CompareExchange(ref _testContextMessageStringBuilder, new StringBuilder(), null)!;
+        return _testContextMessageStringBuilder;
     }
 
     internal string? GetOut()
