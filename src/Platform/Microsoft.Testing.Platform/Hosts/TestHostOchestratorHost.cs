@@ -27,7 +27,18 @@ internal sealed class TestHostOrchestratorHost(TestHostOrchestratorConfiguration
         await logger.LogInformationAsync($"Running test orchestrator '{testHostOrchestrator.Uid}'").ConfigureAwait(false);
         try
         {
+            foreach (ITestHostOrchestratorApplicationLifetime orchestratorLifetime in _serviceProvider.GetServicesInternal<ITestHostOrchestratorApplicationLifetime>())
+            {
+                await orchestratorLifetime.BeforeRunAsync(applicationCancellationToken.CancellationToken).ConfigureAwait(false);
+            }
+
             exitCode = await testHostOrchestrator.OrchestrateTestHostExecutionAsync().ConfigureAwait(false);
+
+            foreach (ITestHostOrchestratorApplicationLifetime orchestratorLifetime in _serviceProvider.GetServicesInternal<ITestHostOrchestratorApplicationLifetime>())
+            {
+                await orchestratorLifetime.AfterRunAsync(exitCode, applicationCancellationToken.CancellationToken).ConfigureAwait(false);
+                await DisposeHelper.DisposeAsync(orchestratorLifetime).ConfigureAwait(false);
+            }
         }
         catch (OperationCanceledException) when (applicationCancellationToken.CancellationToken.IsCancellationRequested)
         {

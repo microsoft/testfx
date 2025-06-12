@@ -8,6 +8,7 @@ namespace Microsoft.Testing.Platform.Extensions.TestHostOrchestrator;
 
 internal sealed class TestHostOrchestratorManager : ITestHostOrchestratorManager
 {
+    private readonly List<Func<IServiceProvider, ITestHostOrchestratorApplicationLifetime>> _testHostOrchestratorApplicationLifetimeFactories = [];
     private List<Func<IServiceProvider, ITestHostOrchestrator>>? _factories;
 
     public void AddTestHostOrchestrator(Func<IServiceProvider, ITestHostOrchestrator> factory)
@@ -47,5 +48,38 @@ internal sealed class TestHostOrchestratorManager : ITestHostOrchestratorManager
         }
 
         return new TestHostOrchestratorConfiguration([.. orchestrators]);
+    }
+
+    public void AddTestHostOrchestratorApplicationLifetime(Func<IServiceProvider, ITestHostOrchestratorApplicationLifetime> testHostOrchestratorApplicationLifetimeFactory)
+    {
+        Guard.NotNull(testHostOrchestratorApplicationLifetimeFactory);
+        _testHostOrchestratorApplicationLifetimeFactories.Add(testHostOrchestratorApplicationLifetimeFactory);
+    }
+
+    internal async Task<ITestHostOrchestratorApplicationLifetime[]> BuildTestHostOrchestratorApplicationLifetimesAsync(ServiceProvider serviceProvider)
+    {
+        List<ITestHostOrchestratorApplicationLifetime> lifetimes = [];
+        foreach (Func<IServiceProvider, ITestHostOrchestratorApplicationLifetime> testHostOrchestratorApplicationLifetimeFactory in _testHostOrchestratorApplicationLifetimeFactories)
+        {
+            ITestHostOrchestratorApplicationLifetime service = testHostOrchestratorApplicationLifetimeFactory(serviceProvider);
+
+            // Check if we have already extensions of the same type with same id registered
+            if (lifetimes.Any(x => x.Uid == service.Uid))
+            {
+                ITestHostOrchestratorApplicationLifetime currentRegisteredExtension = lifetimes.Single(x => x.Uid == service.Uid);
+                throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.ExtensionWithSameUidAlreadyRegisteredErrorMessage, service.Uid, currentRegisteredExtension.GetType()));
+            }
+
+            // We initialize only if enabled
+            if (await service.IsEnabledAsync().ConfigureAwait(false))
+            {
+                await service.TryInitializeAsync().ConfigureAwait(false);
+
+                // Register the extension for usage
+                lifetimes.Add(service);
+            }
+        }
+
+        return [.. lifetimes];
     }
 }

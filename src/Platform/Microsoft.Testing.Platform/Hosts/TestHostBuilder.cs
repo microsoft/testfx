@@ -364,6 +364,12 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
         {
             policiesService.ProcessRole = TestProcessRole.TestHostOrchestrator;
             await proxyOutputDevice.HandleProcessRoleAsync(TestProcessRole.TestHostOrchestrator).ConfigureAwait(false);
+
+            // Build and register the test application lifecycle callbacks.
+            ITestHostOrchestratorApplicationLifetime[] orchestratorLifetimes =
+                await ((TestHostOrchestratorManager)TestHostOrchestratorManager).BuildTestHostOrchestratorApplicationLifetimesAsync(serviceProvider).ConfigureAwait(false);
+            serviceProvider.AddServices(orchestratorLifetimes);
+
             return new TestHostOrchestratorHost(testHostOrchestratorConfiguration, serviceProvider);
         }
 
