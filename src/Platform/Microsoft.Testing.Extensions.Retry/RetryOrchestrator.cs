@@ -182,7 +182,7 @@ internal sealed class RetryOrchestrator : ITestHostOrchestrator, IOutputDeviceDa
 #endif
             }
 
-            await logger.LogDebugAsync($"Starting test host process, attempt {attemptCount}/{userMaxRetryCount}");
+            await logger.LogDebugAsync($"Starting test host process, attempt {attemptCount}/{userMaxRetryCount}").ConfigureAwait(false);
             IProcess testHostProcess = _serviceProvider.GetProcessHandler().Start(processStartInfo)
                 ?? throw new InvalidOperationException(string.Format(CultureInfo.CurrentCulture, ExtensionResources.RetryFailedTestsCannotStartProcessErrorMessage, processStartInfo.FileName));
 
@@ -198,39 +198,39 @@ internal sealed class RetryOrchestrator : ITestHostOrchestrator, IOutputDeviceDa
             using (var linkedToken = CancellationTokenSource.CreateLinkedTokenSource(timeout.Token, _serviceProvider.GetTestApplicationCancellationTokenSource().CancellationToken))
             using (var linkedToken2 = CancellationTokenSource.CreateLinkedTokenSource(linkedToken.Token, processExitedCancellationToken.Token))
             {
-                await logger.LogDebugAsync("Wait connection from the test host process");
+                await logger.LogDebugAsync("Wait connection from the test host process").ConfigureAwait(false);
                 try
                 {
 #if NETCOREAPP
-                    await retryFailedTestsPipeServer.WaitForConnectionAsync(linkedToken2.Token);
+                    await retryFailedTestsPipeServer.WaitForConnectionAsync(linkedToken2.Token).ConfigureAwait(false);
 #else
                     // We don't know why but if the cancellation is called quickly in line 171 for netfx we stuck sometime here, like if
                     // the token we pass to the named pipe is not "correctly" verified inside the pipe implementation self.
                     // We fallback with our custom agnostic cancellation mechanism in that case.
                     // We see it happen only in .NET FX and not in .NET Core so for now we don't do it for core.
-                    await retryFailedTestsPipeServer.WaitForConnectionAsync(linkedToken2.Token).WithCancellationAsync(linkedToken2.Token);
+                    await retryFailedTestsPipeServer.WaitForConnectionAsync(linkedToken2.Token).WithCancellationAsync(linkedToken2.Token).ConfigureAwait(false);
 #endif
                 }
                 catch (OperationCanceledException) when (processExitedCancellationToken.IsCancellationRequested)
                 {
-                    await outputDevice.DisplayAsync(this, new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.TestHostProcessExitedBeforeRetryCouldConnect, testHostProcess.ExitCode)));
+                    await outputDevice.DisplayAsync(this, new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.TestHostProcessExitedBeforeRetryCouldConnect, testHostProcess.ExitCode))).ConfigureAwait(false);
                     return ExitCodes.GenericFailure;
                 }
             }
 
-            await testHostProcess.WaitForExitAsync();
+            await testHostProcess.WaitForExitAsync().ConfigureAwait(false);
 
             exitCodes.Add(testHostProcess.ExitCode);
             if (testHostProcess.ExitCode != ExitCodes.Success)
             {
                 if (testHostProcess.ExitCode != ExitCodes.AtLeastOneTestFailed)
                 {
-                    await outputDevice.DisplayAsync(this, new WarningMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.TestSuiteFailedWithWrongExitCode, testHostProcess.ExitCode)));
+                    await outputDevice.DisplayAsync(this, new WarningMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.TestSuiteFailedWithWrongExitCode, testHostProcess.ExitCode))).ConfigureAwait(false);
                     retryInterrupted = true;
                     break;
                 }
 
-                await outputDevice.DisplayAsync(this, new WarningMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.TestSuiteFailed, retryFailedTestsPipeServer.FailedUID?.Count ?? 0, testHostProcess.ExitCode, attemptCount, userMaxRetryCount + 1)));
+                await outputDevice.DisplayAsync(this, new WarningMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.TestSuiteFailed, retryFailedTestsPipeServer.FailedUID?.Count ?? 0, testHostProcess.ExitCode, attemptCount, userMaxRetryCount + 1))).ConfigureAwait(false);
 
                 // Check thresholds
                 if (attemptCount == 1)
@@ -269,7 +269,7 @@ internal sealed class RetryOrchestrator : ITestHostOrchestrator, IOutputDeviceDa
                                 explanation.AppendLine(string.Format(CultureInfo.InvariantCulture, ExtensionResources.FailureThresholdPolicyMaxCount, maxCount, retryFailedTestsPipeServer.FailedUID!.Count));
                             }
 
-                            await outputDevice.DisplayAsync(this, new ErrorMessageOutputDeviceData(explanation.ToString()));
+                            await outputDevice.DisplayAsync(this, new ErrorMessageOutputDeviceData(explanation.ToString())).ConfigureAwait(false);
                             break;
                         }
                     }
@@ -288,11 +288,11 @@ internal sealed class RetryOrchestrator : ITestHostOrchestrator, IOutputDeviceDa
         {
             if (exitCodes[^1] != ExitCodes.Success)
             {
-                await outputDevice.DisplayAsync(this, new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.TestSuiteFailedInAllAttempts, userMaxRetryCount + 1)));
+                await outputDevice.DisplayAsync(this, new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.TestSuiteFailedInAllAttempts, userMaxRetryCount + 1))).ConfigureAwait(false);
             }
             else
             {
-                await outputDevice.DisplayAsync(this, new FormattedTextOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.TestSuiteCompletedSuccessfully, attemptCount)) { ForegroundColor = new SystemConsoleColor { ConsoleColor = ConsoleColor.DarkGreen } });
+                await outputDevice.DisplayAsync(this, new FormattedTextOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.TestSuiteCompletedSuccessfully, attemptCount)) { ForegroundColor = new SystemConsoleColor { ConsoleColor = ConsoleColor.DarkGreen } }).ConfigureAwait(false);
             }
         }
 
@@ -301,7 +301,7 @@ internal sealed class RetryOrchestrator : ITestHostOrchestrator, IOutputDeviceDa
         string[] filesToMove = Directory.GetFiles(currentTryResultFolder, "*.*", SearchOption.AllDirectories);
         if (filesToMove.Length > 0)
         {
-            await outputDevice.DisplayAsync(this, new TextOutputDeviceData(ExtensionResources.MoveFiles));
+            await outputDevice.DisplayAsync(this, new TextOutputDeviceData(ExtensionResources.MoveFiles)).ConfigureAwait(false);
 
             // Move last attempt assets
             foreach (string file in filesToMove)
@@ -311,7 +311,7 @@ internal sealed class RetryOrchestrator : ITestHostOrchestrator, IOutputDeviceDa
                 // Create the directory if missing
                 Directory.CreateDirectory(Path.GetDirectoryName(finalFileLocation)!);
 
-                await outputDevice.DisplayAsync(this, new TextOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.MovingFileToLocation, file, finalFileLocation)));
+                await outputDevice.DisplayAsync(this, new TextOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.MovingFileToLocation, file, finalFileLocation))).ConfigureAwait(false);
 #if NETCOREAPP
                 File.Move(file, finalFileLocation, overwrite: true);
 #else

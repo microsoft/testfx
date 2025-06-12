@@ -43,7 +43,7 @@ internal sealed class RetryExecutionFilterFactory : ITestExecutionFilterFactory
         else
         {
             ConsoleTestExecutionFilterFactory consoleTestExecutionFilterFactory = new(_commandLineOptions);
-            return await consoleTestExecutionFilterFactory.TryCreateAsync();
+            return await consoleTestExecutionFilterFactory.TryCreateAsync().ConfigureAwait(false);
         }
     }
 }

@@ -108,7 +108,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
             {
                 _terminalTestReporter?.StartCancelling();
                 return Task.CompletedTask;
-            });
+            }).ConfigureAwait(false);
 
         if (_fileLoggerInformation is not null)
         {
@@ -195,7 +195,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
     {
         if (_logger is not null)
         {
-            await _logger.LogDebugAsync(message);
+            await _logger.LogDebugAsync(message).ConfigureAwait(false);
         }
     }
 
@@ -203,7 +203,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
     {
         RoslynDebug.Assert(_terminalTestReporter is not null);
 
-        using (await _asyncMonitor.LockAsync(TimeoutHelper.DefaultHangTimeSpanTimeout))
+        using (await _asyncMonitor.LockAsync(TimeoutHelper.DefaultHangTimeSpanTimeout).ConfigureAwait(false))
         {
             if (!_bannerDisplayed)
             {
@@ -263,7 +263,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
     }
 
     public async Task DisplayBeforeHotReloadSessionStartAsync()
-        => await DisplayBeforeSessionStartAsync();
+        => await DisplayBeforeSessionStartAsync().ConfigureAwait(false);
 
     public async Task DisplayBeforeSessionStartAsync()
     {
@@ -280,12 +280,12 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
         _terminalTestReporter.AssemblyRunStarted(_assemblyName, _targetFramework, _shortArchitecture);
         if (_logger is not null && _logger.IsEnabled(LogLevel.Trace))
         {
-            await _logger.LogTraceAsync("DisplayBeforeSessionStartAsync");
+            await _logger.LogTraceAsync("DisplayBeforeSessionStartAsync").ConfigureAwait(false);
         }
     }
 
     public async Task DisplayAfterHotReloadSessionEndAsync()
-        => await DisplayAfterSessionEndRunInternalAsync();
+        => await DisplayAfterSessionEndRunInternalAsync().ConfigureAwait(false);
 
     public async Task DisplayAfterSessionEndRunAsync()
     {
@@ -301,14 +301,14 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
             return;
         }
 
-        await DisplayAfterSessionEndRunInternalAsync();
+        await DisplayAfterSessionEndRunInternalAsync().ConfigureAwait(false);
     }
 
     private async Task DisplayAfterSessionEndRunInternalAsync()
     {
         RoslynDebug.Assert(_terminalTestReporter is not null);
 
-        using (await _asyncMonitor.LockAsync(TimeoutHelper.DefaultHangTimeSpanTimeout))
+        using (await _asyncMonitor.LockAsync(TimeoutHelper.DefaultHangTimeSpanTimeout).ConfigureAwait(false))
         {
             if (!_firstCallTo_OnSessionStartingAsync)
             {
@@ -347,32 +347,32 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
     {
         RoslynDebug.Assert(_terminalTestReporter is not null);
 
-        using (await _asyncMonitor.LockAsync(TimeoutHelper.DefaultHangTimeSpanTimeout))
+        using (await _asyncMonitor.LockAsync(TimeoutHelper.DefaultHangTimeSpanTimeout).ConfigureAwait(false))
         {
             switch (data)
             {
                 case FormattedTextOutputDeviceData formattedTextData:
-                    await LogDebugAsync(formattedTextData.Text);
+                    await LogDebugAsync(formattedTextData.Text).ConfigureAwait(false);
                     _terminalTestReporter.WriteMessage(formattedTextData.Text, formattedTextData.ForegroundColor as SystemConsoleColor, formattedTextData.Padding);
                     break;
 
                 case TextOutputDeviceData textData:
-                    await LogDebugAsync(textData.Text);
+                    await LogDebugAsync(textData.Text).ConfigureAwait(false);
                     _terminalTestReporter.WriteMessage(textData.Text);
                     break;
 
                 case WarningMessageOutputDeviceData warningData:
-                    await LogDebugAsync(warningData.Message);
+                    await LogDebugAsync(warningData.Message).ConfigureAwait(false);
                     _terminalTestReporter.WriteWarningMessage(_assemblyName, _targetFramework, _shortArchitecture, warningData.Message, null);
                     break;
 
                 case ErrorMessageOutputDeviceData errorData:
-                    await LogDebugAsync(errorData.Message);
+                    await LogDebugAsync(errorData.Message).ConfigureAwait(false);
                     _terminalTestReporter.WriteErrorMessage(_assemblyName, _targetFramework, _shortArchitecture, errorData.Message, null);
                     break;
 
                 case ExceptionOutputDeviceData exceptionOutputDeviceData:
-                    await LogDebugAsync(exceptionOutputDeviceData.Exception.ToString());
+                    await LogDebugAsync(exceptionOutputDeviceData.Exception.ToString()).ConfigureAwait(false);
                     _terminalTestReporter.WriteErrorMessage(_assemblyName, _targetFramework, _shortArchitecture, exceptionOutputDeviceData.Exception);
                     break;
             }
@@ -579,7 +579,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
         {
             await _policiesService.RegisterOnMaxFailedTestsCallbackAsync(
                 async (maxFailedTests, _) => await DisplayAsync(
-                    this, new TextOutputDeviceData(string.Format(CultureInfo.InvariantCulture, PlatformResources.ReachedMaxFailedTestsMessage, maxFailedTests))));
+                    this, new TextOutputDeviceData(string.Format(CultureInfo.InvariantCulture, PlatformResources.ReachedMaxFailedTestsMessage, maxFailedTests))).ConfigureAwait(false)).ConfigureAwait(false);
         }
     }
 }

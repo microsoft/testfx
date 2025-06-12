@@ -603,9 +603,11 @@ internal sealed class Json
         try
         {
             stream.Position = 0;
+#pragma warning disable CA2007 // Consider calling ConfigureAwait on the awaited task
             await using Utf8JsonWriter writer = new(stream);
-            await SerializeAsync(obj, writer);
-            await writer.FlushAsync();
+#pragma warning restore CA2007 // Consider calling ConfigureAwait on the awaited task
+            await SerializeAsync(obj, writer).ConfigureAwait(false);
+            await writer.FlushAsync().ConfigureAwait(false);
             return Encoding.UTF8.GetString(stream.GetBuffer().AsMemory().Span[..(int)stream.Position]);
         }
         finally
@@ -710,7 +712,7 @@ internal sealed class Json
                     foreach ((string property, object? value) in properties)
                     {
                         writer.WritePropertyName(property);
-                        await SerializeAsync(value, writer);
+                        await SerializeAsync(value, writer).ConfigureAwait(false);
                     }
                 }
 
@@ -737,7 +739,7 @@ internal sealed class Json
                 }
                 else
                 {
-                    await SerializeAsync(o, writer);
+                    await SerializeAsync(o, writer).ConfigureAwait(false);
                 }
             }
 

@@ -177,7 +177,7 @@ internal sealed partial class TrxReportEngine
             // NotExecuted is the status for the skipped test.
             resultSummaryOutcome = isTestHostCrashed || _exitCode != ExitCodes.Success ? "Failed" : resultSummaryOutcome is "Passed" or "NotExecuted" ? "Completed" : resultSummaryOutcome;
 
-            await AddResultSummaryAsync(testRun, resultSummaryOutcome, runDeploymentRoot, testHostCrashInfo, _exitCode, isTestHostCrashed);
+            await AddResultSummaryAsync(testRun, resultSummaryOutcome, runDeploymentRoot, testHostCrashInfo, _exitCode, isTestHostCrashed).ConfigureAwait(false);
 
             // will need catch Unauthorized access
             document.Add(testRun);
@@ -203,11 +203,11 @@ internal sealed partial class TrxReportEngine
             // Note that we need to dispose the IFileStream, not the inner stream.
             // IFileStream implementations will be responsible to dispose their inner stream.
             using IFileStream stream = _fileSystem.NewFileStream(finalFileName, isFileNameExplicitlyProvided ? FileMode.Create : FileMode.CreateNew);
-            await document.SaveAsync(stream.Stream, SaveOptions.None, _cancellationToken);
+            await document.SaveAsync(stream.Stream, SaveOptions.None, _cancellationToken).ConfigureAwait(false);
             return isFileNameExplicitlyProvidedAndFileExists
                 ? (finalFileName, string.Format(CultureInfo.InvariantCulture, ExtensionResources.TrxFileExistsAndWillBeOverwritten, finalFileName))
                 : (finalFileName, null);
-        });
+        }).ConfigureAwait(false);
 
     private async Task<(string FileName, string? Warning)> RetryWhenIOExceptionAsync(Func<Task<(string FileName, string? Warning)>> func)
     {
@@ -217,7 +217,7 @@ internal sealed partial class TrxReportEngine
         {
             try
             {
-                return await func();
+                return await func().ConfigureAwait(false);
             }
             catch (IOException)
             {
@@ -254,10 +254,10 @@ internal sealed partial class TrxReportEngine
             resultSummary.Add(collectorDataEntries);
         }
 
-        await AddArtifactsToCollectionAsync(artifacts, collectorDataEntries, runDeploymentRoot);
+        await AddArtifactsToCollectionAsync(artifacts, collectorDataEntries, runDeploymentRoot).ConfigureAwait(false);
 
         using FileStream fs = File.OpenWrite(trxFile.FullName);
-        await document.SaveAsync(fs, SaveOptions.None, _cancellationToken);
+        await document.SaveAsync(fs, SaveOptions.None, _cancellationToken).ConfigureAwait(false);
     }
 
     private async Task AddArtifactsToCollectionAsync(Dictionary<IExtension, List<SessionFileArtifact>> artifacts, XElement collectorDataEntries, string runDeploymentRoot)
@@ -276,7 +276,7 @@ internal sealed partial class TrxReportEngine
 
             foreach (SessionFileArtifact artifact in extensionArtifacts.Value)
             {
-                string href = await CopyArtifactIntoTrxDirectoryAndReturnHrefValueAsync(artifact.FileInfo, runDeploymentRoot);
+                string href = await CopyArtifactIntoTrxDirectoryAndReturnHrefValueAsync(artifact.FileInfo, runDeploymentRoot).ConfigureAwait(false);
                 uriAttachments.Add(new XElement(_namespaceUri + "UriAttachment", new XElement(_namespaceUri + "A", new XAttribute("href", href))));
             }
         }
@@ -344,7 +344,7 @@ internal sealed partial class TrxReportEngine
         var collectorDataEntries = new XElement(_namespaceUri + "CollectorDataEntries");
         resultSummary.Add(collectorDataEntries);
 
-        await AddArtifactsToCollectionAsync(_artifactsByExtension, collectorDataEntries, runDeploymentRoot);
+        await AddArtifactsToCollectionAsync(_artifactsByExtension, collectorDataEntries, runDeploymentRoot).ConfigureAwait(false);
     }
 
     private async Task<string> CopyArtifactIntoTrxDirectoryAndReturnHrefValueAsync(FileInfo artifact, string runDeploymentRoot)
@@ -368,7 +368,7 @@ internal sealed partial class TrxReportEngine
             break;
         }
 
-        await CopyFileAsync(artifact, new FileInfo(destination));
+        await CopyFileAsync(artifact, new FileInfo(destination)).ConfigureAwait(false);
 
         return Path.Combine(_environment.MachineName, Path.GetFileName(destination));
     }
@@ -393,7 +393,7 @@ internal sealed partial class TrxReportEngine
 
         using FileStream fileStream = File.OpenRead(origin.FullName);
         using var destinationStream = new FileStream(destination.FullName, FileMode.Create);
-        await fileStream.CopyToAsync(destinationStream, _cancellationToken);
+        await fileStream.CopyToAsync(destinationStream, _cancellationToken).ConfigureAwait(false);
     }
 
     private static void AddTestLists(XElement testRun, string uncategorizedTestId)
@@ -653,7 +653,7 @@ internal sealed partial class TrxReportEngine
         // LPT1, LPT2, LPT3, LPT4, LPT5, LPT6, LPT7, LPT8, and LPT9.
         // Also avoid these names followed by an extension, for example, NUL.tx7.
         // Windows NT: CLOCK$ is also a reserved device name.
-        ReservedFileNamesRegex.Match(fileName).Success;
+        ReservedFileNamesRegex.IsMatch(fileName);
 
     private static Guid GuidFromString(string data)
     {

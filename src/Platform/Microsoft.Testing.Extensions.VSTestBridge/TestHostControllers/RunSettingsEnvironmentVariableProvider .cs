@@ -45,10 +45,10 @@ internal sealed class RunSettingsEnvironmentVariableProvider : ITestHostEnvironm
 
         using IFileStream fileStream = _fileSystem.NewFileStream(runsettings[0], FileMode.Open, FileAccess.Read);
 #if NETCOREAPP
-        _runSettings = await XDocument.LoadAsync(fileStream.Stream, LoadOptions.None, CancellationToken.None);
+        _runSettings = await XDocument.LoadAsync(fileStream.Stream, LoadOptions.None, CancellationToken.None).ConfigureAwait(false);
 #else
         using StreamReader streamReader = new(fileStream.Stream);
-        _runSettings = XDocument.Parse(await streamReader.ReadToEndAsync());
+        _runSettings = XDocument.Parse(await streamReader.ReadToEndAsync().ConfigureAwait(false));
 #endif
         return _runSettings.Element("RunSettings")?.Element("RunConfiguration")?.Element("EnvironmentVariables") is not null;
     }

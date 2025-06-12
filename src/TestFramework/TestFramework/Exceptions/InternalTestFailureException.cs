@@ -14,9 +14,9 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// For all practical purposes either use AssertFailedException/AssertInconclusiveException.
 /// </remarks>
 #if NET6_0_OR_GREATER
-[Obsolete(Constants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
+[Obsolete(FrameworkConstants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
 #else
-[Obsolete(Constants.PublicTypeObsoleteMessage)]
+[Obsolete(FrameworkConstants.PublicTypeObsoleteMessage)]
 #endif
 [Serializable]
 public class InternalTestFailureException : UnitTestAssertException
@@ -54,7 +54,7 @@ public class InternalTestFailureException : UnitTestAssertException
     /// <param name="info">Serialization info.</param>
     /// <param name="context">Streaming context.</param>
 #if NET8_0_OR_GREATER
-    [Obsolete(DiagnosticId = "SYSLIB0051")]
+    [Obsolete("Legacy serialization support is deprecated since .NET 8", DiagnosticId = "SYSLIB0051")]
 #endif
     [EditorBrowsable(EditorBrowsableState.Never)]
     protected InternalTestFailureException(SerializationInfo info, StreamingContext context)

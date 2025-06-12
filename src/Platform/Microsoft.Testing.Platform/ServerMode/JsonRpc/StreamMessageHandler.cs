@@ -43,7 +43,7 @@ internal class StreamMessageHandler : IMessageHandler, IDisposable
         // [content]\r\n
         while (true)
         {
-            int commandSize = await ReadHeadersAsync(cancellationToken);
+            int commandSize = await ReadHeadersAsync(cancellationToken).ConfigureAwait(false);
 
             // Most probably connection lost
             if (commandSize is -1)
@@ -56,7 +56,7 @@ internal class StreamMessageHandler : IMessageHandler, IDisposable
             try
             {
                 Memory<char> memoryBuffer = new(commandCharsBuffer, 0, commandSize);
-                await _reader.ReadBlockAsync(memoryBuffer, cancellationToken);
+                await _reader.ReadBlockAsync(memoryBuffer, cancellationToken).ConfigureAwait(false);
                 return _formatter.Deserialize<RpcMessage>(memoryBuffer);
             }
             finally
@@ -65,7 +65,7 @@ internal class StreamMessageHandler : IMessageHandler, IDisposable
             }
 #else
             char[] commandChars = new char[commandSize];
-            await _reader.ReadBlockAsync(commandChars, 0, commandSize).WithCancellationAsync(cancellationToken);
+            await _reader.ReadBlockAsync(commandChars, 0, commandSize).WithCancellationAsync(cancellationToken).ConfigureAwait(false);
             return _formatter.Deserialize<RpcMessage>(new string(commandChars, 0, commandSize));
 #endif
         }
@@ -78,11 +78,11 @@ internal class StreamMessageHandler : IMessageHandler, IDisposable
         while (true)
         {
 #if NET7_0_OR_GREATER
-            string? line = await _reader.ReadLineAsync(cancellationToken);
+            string? line = await _reader.ReadLineAsync(cancellationToken).ConfigureAwait(false);
 #elif NET6_0_OR_GREATER
-            string? line = await _reader.ReadLineAsync().WaitAsync(cancellationToken);
+            string? line = await _reader.ReadLineAsync().WaitAsync(cancellationToken).ConfigureAwait(false);
 #else
-            string? line = await _reader.ReadLineAsync().WithCancellationAsync(cancellationToken);
+            string? line = await _reader.ReadLineAsync().WithCancellationAsync(cancellationToken).ConfigureAwait(false);
 #endif
             if (line is null || (line.Length == 0 && contentSize != -1))
             {
@@ -106,12 +106,12 @@ internal class StreamMessageHandler : IMessageHandler, IDisposable
 
     public async Task WriteRequestAsync(RpcMessage message, CancellationToken cancellationToken)
     {
-        string messageStr = await _formatter.SerializeAsync(message);
-        await _writer.WriteLineAsync($"Content-Length: {Encoding.UTF8.GetByteCount(messageStr)}");
-        await _writer.WriteLineAsync("Content-Type: application/testingplatform");
-        await _writer.WriteLineAsync();
-        await _writer.WriteAsync(messageStr);
-        await _writer.FlushAsync(cancellationToken);
+        string messageStr = await _formatter.SerializeAsync(message).ConfigureAwait(false);
+        await _writer.WriteLineAsync($"Content-Length: {Encoding.UTF8.GetByteCount(messageStr)}").ConfigureAwait(false);
+        await _writer.WriteLineAsync("Content-Type: application/testingplatform").ConfigureAwait(false);
+        await _writer.WriteLineAsync().ConfigureAwait(false);
+        await _writer.WriteAsync(messageStr).ConfigureAwait(false);
+        await _writer.FlushAsync(cancellationToken).ConfigureAwait(false);
     }
 
     protected virtual void Dispose(bool disposing)

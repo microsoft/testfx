@@ -33,7 +33,7 @@ internal sealed class HotReloadTestHostTestFrameworkInvoker : TestHostTestFramew
     {
         if (!_isHotReloadEnabled)
         {
-            await base.ExecuteRequestAsync(testFrameworkAdapter, request, messageBus, cancellationToken);
+            await base.ExecuteRequestAsync(testFrameworkAdapter, request, messageBus, cancellationToken).ConfigureAwait(false);
             return;
         }
 
@@ -41,25 +41,25 @@ internal sealed class HotReloadTestHostTestFrameworkInvoker : TestHostTestFramew
         IOutputDevice outputDevice = ServiceProvider.GetOutputDevice();
         var hotReloadHandler = new HotReloadHandler(ServiceProvider.GetConsole(), outputDevice, this);
         TaskCompletionSource<int>? executionCompleted = null;
-        while (await hotReloadHandler.ShouldRunAsync(executionCompleted?.Task, ServiceProvider.GetTestApplicationCancellationTokenSource().CancellationToken))
+        while (await hotReloadHandler.ShouldRunAsync(executionCompleted?.Task, ServiceProvider.GetTestApplicationCancellationTokenSource().CancellationToken).ConfigureAwait(false))
         {
             executionCompleted = new();
             using SemaphoreSlim requestSemaphore = new(1);
             var hotReloadOutputDevice = ServiceProvider.GetPlatformOutputDevice() as IHotReloadPlatformOutputDevice;
             if (hotReloadOutputDevice is not null)
             {
-                await hotReloadOutputDevice.DisplayBeforeHotReloadSessionStartAsync();
+                await hotReloadOutputDevice.DisplayBeforeHotReloadSessionStartAsync().ConfigureAwait(false);
             }
 
 #pragma warning disable TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
-            await testFrameworkAdapter.ExecuteRequestAsync(new(request, messageBus, new SemaphoreSlimRequestCompleteNotifier(requestSemaphore), cancellationToken));
+            await testFrameworkAdapter.ExecuteRequestAsync(new(request, messageBus, new SemaphoreSlimRequestCompleteNotifier(requestSemaphore), cancellationToken)).ConfigureAwait(false);
 #pragma warning restore TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
 
-            await requestSemaphore.WaitAsync(cancellationToken);
-            await ServiceProvider.GetBaseMessageBus().DrainDataAsync();
+            await requestSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
+            await ServiceProvider.GetBaseMessageBus().DrainDataAsync().ConfigureAwait(false);
             if (hotReloadOutputDevice is not null)
             {
-                await hotReloadOutputDevice.DisplayAfterHotReloadSessionEndAsync();
+                await hotReloadOutputDevice.DisplayAfterHotReloadSessionEndAsync().ConfigureAwait(false);
             }
 
             executionCompleted.SetResult(0);

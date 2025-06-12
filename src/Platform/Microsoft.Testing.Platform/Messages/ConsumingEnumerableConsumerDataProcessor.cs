@@ -59,7 +59,7 @@ internal sealed class AsyncConsumerDataProcessor : IDisposable
 
                     try
                     {
-                        await DataConsumer.ConsumeAsync(dataProducer, data, _cancellationToken);
+                        await DataConsumer.ConsumeAsync(dataProducer, data, _cancellationToken).ConfigureAwait(false);
                     }
 
                     // We let the catch below to handle the graceful cancellation of the process
@@ -125,13 +125,13 @@ internal sealed class AsyncConsumerDataProcessor : IDisposable
                 break;
             }
 
-            await _task.Delay(currentDelayTimeMs);
+            await _task.Delay(currentDelayTimeMs).ConfigureAwait(false);
             currentDelayTimeMs = Math.Min(currentDelayTimeMs + minDelayTimeMs, 200);
 
             if (_consumerState.Task.IsFaulted)
             {
                 // Rethrow the exception
-                await _consumerState.Task;
+                await _consumerState.Task.ConfigureAwait(false);
             }
 
             // Wait for the consumer to complete the current enqueued items
@@ -143,7 +143,7 @@ internal sealed class AsyncConsumerDataProcessor : IDisposable
         if (_consumerState.Task.IsFaulted)
         {
             // Rethrow the exception
-            await _consumerState.Task;
+            await _consumerState.Task.ConfigureAwait(false);
         }
 
         return _totalPayloadReceived;
@@ -155,7 +155,7 @@ internal sealed class AsyncConsumerDataProcessor : IDisposable
         _payloads.CompleteAdding();
 
         // Wait for the consumer to complete
-        await _consumeTask;
+        await _consumeTask.ConfigureAwait(false);
     }
 
     public void Dispose()

@@ -10,7 +10,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting.AppContainer;
 /// </summary>
 public class UITestMethodAttribute : TestMethodAttribute
 {
-    private protected override bool UseAsync => true;
+    private protected override bool UseAsync => GetType() == typeof(UITestMethodAttribute);
 
     /// <inheritdoc cref="ExecuteAsync(ITestMethod)" />
     public override TestResult[] Execute(ITestMethod testMethod) => base.Execute(testMethod);
@@ -34,7 +34,7 @@ public class UITestMethodAttribute : TestMethodAttribute
             {
                 try
                 {
-                    tcs.SetResult(await testMethod.InvokeAsync(null));
+                    tcs.SetResult(await testMethod.InvokeAsync(null).ConfigureAwait(false));
                 }
                 catch (Exception ex)
                 {
@@ -43,7 +43,7 @@ public class UITestMethodAttribute : TestMethodAttribute
             });
 #pragma warning restore VSTHRD101 // Avoid unsupported async delegates
 
-        return [await tcs.Task];
+        return [await tcs.Task.ConfigureAwait(false)];
     }
 }
 #endif

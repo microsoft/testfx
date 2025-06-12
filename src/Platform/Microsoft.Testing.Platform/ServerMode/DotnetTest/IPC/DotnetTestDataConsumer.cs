@@ -65,7 +65,7 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
                                     testNodeUpdateMessage.TestNode.DisplayName)
                             ]);
 
-                        await _dotnetTestConnection.SendMessageAsync(discoveredTestMessages);
+                        await _dotnetTestConnection.SendMessageAsync(discoveredTestMessages).ConfigureAwait(false);
                         break;
 
                     case TestStates.Passed:
@@ -86,7 +86,7 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
                             ],
                             []);
 
-                        await _dotnetTestConnection.SendMessageAsync(testResultMessages);
+                        await _dotnetTestConnection.SendMessageAsync(testResultMessages).ConfigureAwait(false);
                         break;
 
                     case TestStates.Failed:
@@ -110,7 +110,7 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
                                    testNodeUpdateMessage.SessionUid.Value)
                             ]);
 
-                        await _dotnetTestConnection.SendMessageAsync(testResultMessages);
+                        await _dotnetTestConnection.SendMessageAsync(testResultMessages).ConfigureAwait(false);
                         break;
                 }
 
@@ -129,7 +129,7 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
                                 testNodeUpdateMessage.SessionUid.Value)
                         ]);
 
-                    await _dotnetTestConnection.SendMessageAsync(testFileArtifactMessages);
+                    await _dotnetTestConnection.SendMessageAsync(testFileArtifactMessages).ConfigureAwait(false);
                 }
 
                 break;
@@ -148,7 +148,7 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
                             sessionFileArtifact.SessionUid.Value)
                     ]);
 
-                await _dotnetTestConnection.SendMessageAsync(fileArtifactMessages);
+                await _dotnetTestConnection.SendMessageAsync(fileArtifactMessages).ConfigureAwait(false);
                 break;
 
             case FileArtifact fileArtifact:
@@ -165,7 +165,7 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
                             string.Empty)
                     ]);
 
-                await _dotnetTestConnection.SendMessageAsync(fileArtifactMessages);
+                await _dotnetTestConnection.SendMessageAsync(fileArtifactMessages).ConfigureAwait(false);
                 break;
         }
     }
@@ -265,7 +265,7 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
             sessionUid.Value,
             ExecutionId);
 
-        await _dotnetTestConnection.SendMessageAsync(sessionStartEvent);
+        await _dotnetTestConnection.SendMessageAsync(sessionStartEvent).ConfigureAwait(false);
     }
 
     public async Task OnTestSessionFinishingAsync(SessionUid sessionUid, CancellationToken cancellationToken)
@@ -277,6 +277,6 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
             sessionUid.Value,
             ExecutionId);
 
-        await _dotnetTestConnection.SendMessageAsync(sessionEndEvent);
+        await _dotnetTestConnection.SendMessageAsync(sessionEndEvent).ConfigureAwait(false);
     }
 }

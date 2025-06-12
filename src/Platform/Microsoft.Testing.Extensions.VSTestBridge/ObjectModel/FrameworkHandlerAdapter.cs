@@ -182,7 +182,7 @@ internal sealed class FrameworkHandlerAdapter : IFrameworkHandle
                 }
 
                 var fileArtifact = new SessionFileArtifact(_session.SessionUid, new(attachment.Uri.LocalPath), attachmentSet.DisplayName, attachment.Description);
-                await _messageBus.PublishAsync(_adapterExtensionBase, fileArtifact);
+                await _messageBus.PublishAsync(_adapterExtensionBase, fileArtifact).ConfigureAwait(false);
             }
         }
     }

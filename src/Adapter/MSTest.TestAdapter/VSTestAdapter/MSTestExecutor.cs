@@ -2,21 +2,23 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 
 /// <summary>
 /// Contains the execution logic for this adapter.
 /// </summary>
-[ExtensionUri(Constants.ExecutorUriString)]
+[ExtensionUri(EngineConstants.ExecutorUriString)]
 #if NET6_0_OR_GREATER
-[Obsolete(Constants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
+[Obsolete(FrameworkConstants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
 #else
-[Obsolete(Constants.PublicTypeObsoleteMessage)]
+[Obsolete(FrameworkConstants.PublicTypeObsoleteMessage)]
 #endif
 public class MSTestExecutor : ITestExecutor
 {
@@ -82,7 +84,7 @@ public class MSTestExecutor : ITestExecutor
             return;
         }
 
-        await RunTestsFromRightContextAsync(frameworkHandle, async testRunToken => await TestExecutionManager.RunTestsAsync(tests, runContext, frameworkHandle, testRunToken));
+        await RunTestsFromRightContextAsync(frameworkHandle, async testRunToken => await TestExecutionManager.RunTestsAsync(tests, runContext, frameworkHandle, testRunToken).ConfigureAwait(false)).ConfigureAwait(false);
     }
 
     internal async Task RunTestsAsync(IEnumerable<string>? sources, IRunContext? runContext, IFrameworkHandle? frameworkHandle, IConfiguration? configuration)
@@ -96,7 +98,7 @@ public class MSTestExecutor : ITestExecutor
         }
 
         sources = PlatformServiceProvider.Instance.TestSource.GetTestSources(sources);
-        await RunTestsFromRightContextAsync(frameworkHandle, async testRunToken => await TestExecutionManager.RunTestsAsync(sources, runContext, frameworkHandle, testRunToken));
+        await RunTestsFromRightContextAsync(frameworkHandle, async testRunToken => await TestExecutionManager.RunTestsAsync(sources, runContext, frameworkHandle, testRunToken).ConfigureAwait(false)).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -126,7 +128,7 @@ public class MSTestExecutor : ITestExecutor
             try
             {
                 var threadTask = Task.Run(entryPointThread.Join, _cancellationToken);
-                await threadTask;
+                await threadTask.ConfigureAwait(false);
             }
             catch (Exception ex)
             {
@@ -142,7 +144,7 @@ public class MSTestExecutor : ITestExecutor
                 frameworkHandle.SendMessage(TestMessageLevel.Warning, Resource.STAIsOnlySupportedOnWindowsWarning);
             }
 
-            await DoRunTestsAsync();
+            await DoRunTestsAsync().ConfigureAwait(false);
         }
 
         // Local functions
@@ -153,7 +155,7 @@ public class MSTestExecutor : ITestExecutor
                 try
                 {
                     _testRunCancellationToken = new TestRunCancellationToken();
-                    await runTestsAction(_testRunCancellationToken);
+                    await runTestsAction(_testRunCancellationToken).ConfigureAwait(false);
                 }
                 finally
                 {

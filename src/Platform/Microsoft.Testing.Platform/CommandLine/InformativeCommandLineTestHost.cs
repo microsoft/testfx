@@ -27,7 +27,7 @@ internal sealed class InformativeCommandLineTestHost(int returnValue, IServicePr
     {
         if (PushOnlyProtocol is not null)
         {
-            await PushOnlyProtocol.DisposeAsync();
+            await PushOnlyProtocol.DisposeAsync().ConfigureAwait(false);
         }
     }
 #endif

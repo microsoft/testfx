@@ -47,16 +47,16 @@ internal sealed class AsyncConsumerDataProcessor : IDisposable
     public async Task PublishAsync(IDataProducer dataProducer, IData data)
     {
         Interlocked.Increment(ref _totalPayloadReceived);
-        await _channel.Writer.WriteAsync((dataProducer, data), _cancellationToken);
+        await _channel.Writer.WriteAsync((dataProducer, data), _cancellationToken).ConfigureAwait(false);
     }
 
     private async Task ConsumeAsync()
     {
         try
         {
-            while (await _channel.Reader.WaitToReadAsync(_cancellationToken))
+            while (await _channel.Reader.WaitToReadAsync(_cancellationToken).ConfigureAwait(false))
             {
-                (IDataProducer dataProducer, IData data) = await _channel.Reader.ReadAsync(_cancellationToken);
+                (IDataProducer dataProducer, IData data) = await _channel.Reader.ReadAsync(_cancellationToken).ConfigureAwait(false);
 
                 try
                 {
@@ -70,7 +70,7 @@ internal sealed class AsyncConsumerDataProcessor : IDisposable
 
                     try
                     {
-                        await DataConsumer.ConsumeAsync(dataProducer, data, _cancellationToken);
+                        await DataConsumer.ConsumeAsync(dataProducer, data, _cancellationToken).ConfigureAwait(false);
                     }
 
                     // We let the catch below to handle the graceful cancellation of the process
@@ -118,7 +118,7 @@ internal sealed class AsyncConsumerDataProcessor : IDisposable
         _channel.Writer.TryComplete();
 
         // Wait for the consumer to complete
-        await _consumeTask;
+        await _consumeTask.ConfigureAwait(false);
     }
 
     public async Task<long> DrainDataAsync()
@@ -136,13 +136,13 @@ internal sealed class AsyncConsumerDataProcessor : IDisposable
                 break;
             }
 
-            await _task.Delay(currentDelayTimeMs);
+            await _task.Delay(currentDelayTimeMs).ConfigureAwait(false);
             currentDelayTimeMs = Math.Min(currentDelayTimeMs + minDelayTimeMs, 200);
 
             if (_consumerState.Task.IsFaulted)
             {
                 // Rethrow the exception
-                await _consumerState.Task;
+                await _consumerState.Task.ConfigureAwait(false);
             }
 
             // Wait for the consumer to complete the current enqueued items
@@ -154,7 +154,7 @@ internal sealed class AsyncConsumerDataProcessor : IDisposable
         if (_consumerState.Task.IsFaulted)
         {
             // Rethrow the exception
-            await _consumerState.Task;
+            await _consumerState.Task.ConfigureAwait(false);
         }
 
         return _totalPayloadReceived;

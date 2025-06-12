@@ -61,7 +61,7 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol,
             _dotnetTestPipeClient = new(arguments[0]);
             _dotnetTestPipeClient.RegisterAllSerializers();
 
-            await _dotnetTestPipeClient.ConnectAsync(_cancellationTokenSource.CancellationToken);
+            await _dotnetTestPipeClient.ConnectAsync(_cancellationTokenSource.CancellationToken).ConfigureAwait(false);
         }
     }
 
@@ -87,7 +87,7 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol,
             }
         }
 
-        await _dotnetTestPipeClient.RequestReplyAsync<CommandLineOptionMessages, VoidResponse>(new CommandLineOptionMessages(_testApplicationModuleInfo.GetCurrentTestApplicationFullPath(), [.. commandLineHelpOptions.OrderBy(option => option.Name)]), _cancellationTokenSource.CancellationToken);
+        await _dotnetTestPipeClient.RequestReplyAsync<CommandLineOptionMessages, VoidResponse>(new CommandLineOptionMessages(_testApplicationModuleInfo.GetCurrentTestApplicationFullPath(), [.. commandLineHelpOptions.OrderBy(option => option.Name)]), _cancellationTokenSource.CancellationToken).ConfigureAwait(false);
     }
 
     public async Task<bool> IsCompatibleProtocolAsync(string hostType)
@@ -108,7 +108,7 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol,
             { HandshakeMessagePropertyNames.InstanceId, InstanceId },
         });
 
-        HandshakeMessage response = await _dotnetTestPipeClient.RequestReplyAsync<HandshakeMessage, HandshakeMessage>(handshakeMessage, _cancellationTokenSource.CancellationToken);
+        HandshakeMessage response = await _dotnetTestPipeClient.RequestReplyAsync<HandshakeMessage, HandshakeMessage>(handshakeMessage, _cancellationTokenSource.CancellationToken).ConfigureAwait(false);
 
         return response.Properties?.TryGetValue(HandshakeMessagePropertyNames.SupportedProtocolVersions, out string? protocolVersion) == true &&
             IsVersionCompatible(protocolVersion, supportedProtocolVersions);
@@ -123,19 +123,19 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol,
         switch (message)
         {
             case DiscoveredTestMessages discoveredTestMessages:
-                await _dotnetTestPipeClient.RequestReplyAsync<DiscoveredTestMessages, VoidResponse>(discoveredTestMessages, _cancellationTokenSource.CancellationToken);
+                await _dotnetTestPipeClient.RequestReplyAsync<DiscoveredTestMessages, VoidResponse>(discoveredTestMessages, _cancellationTokenSource.CancellationToken).ConfigureAwait(false);
                 break;
 
             case TestResultMessages testResultMessages:
-                await _dotnetTestPipeClient.RequestReplyAsync<TestResultMessages, VoidResponse>(testResultMessages, _cancellationTokenSource.CancellationToken);
+                await _dotnetTestPipeClient.RequestReplyAsync<TestResultMessages, VoidResponse>(testResultMessages, _cancellationTokenSource.CancellationToken).ConfigureAwait(false);
                 break;
 
             case FileArtifactMessages fileArtifactMessages:
-                await _dotnetTestPipeClient.RequestReplyAsync<FileArtifactMessages, VoidResponse>(fileArtifactMessages, _cancellationTokenSource.CancellationToken);
+                await _dotnetTestPipeClient.RequestReplyAsync<FileArtifactMessages, VoidResponse>(fileArtifactMessages, _cancellationTokenSource.CancellationToken).ConfigureAwait(false);
                 break;
 
             case TestSessionEvent testSessionEvent:
-                await _dotnetTestPipeClient.RequestReplyAsync<TestSessionEvent, VoidResponse>(testSessionEvent, _cancellationTokenSource.CancellationToken);
+                await _dotnetTestPipeClient.RequestReplyAsync<TestSessionEvent, VoidResponse>(testSessionEvent, _cancellationTokenSource.CancellationToken).ConfigureAwait(false);
                 break;
         }
     }
@@ -149,7 +149,7 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol,
     {
         if (_dotnetTestPipeClient is not null)
         {
-            await _dotnetTestPipeClient.DisposeAsync();
+            await _dotnetTestPipeClient.DisposeAsync().ConfigureAwait(false);
         }
     }
 #endif

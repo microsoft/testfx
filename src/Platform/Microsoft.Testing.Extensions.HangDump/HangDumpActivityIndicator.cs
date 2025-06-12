@@ -90,7 +90,7 @@ internal sealed class HangDumpActivityIndicator : IDataConsumer, ITestSessionLif
     {
         ApplicationStateGuard.Ensure(_namedPipeClient is not null);
 
-        if (!await IsEnabledAsync() || cancellationToken.IsCancellationRequested)
+        if (!await IsEnabledAsync().ConfigureAwait(false) || cancellationToken.IsCancellationRequested)
         {
             return;
         }
@@ -98,20 +98,20 @@ internal sealed class HangDumpActivityIndicator : IDataConsumer, ITestSessionLif
         try
         {
             // Connect to the named pipe server
-            await _logger.LogTraceAsync($"Connecting to the process lifetime handler {_namedPipeClient.PipeName}");
-            await _namedPipeClient.ConnectAsync(cancellationToken).TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout, cancellationToken);
-            await _logger.LogTraceAsync("Connected to the process lifetime handler");
+            await _logger.LogTraceAsync($"Connecting to the process lifetime handler {_namedPipeClient.PipeName}").ConfigureAwait(false);
+            await _namedPipeClient.ConnectAsync(cancellationToken).TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout, cancellationToken).ConfigureAwait(false);
+            await _logger.LogTraceAsync("Connected to the process lifetime handler").ConfigureAwait(false);
             _activityIndicatorMutex = new Mutex(true);
             _mutexName = $"{HangDumpConfiguration.MutexName}_{Guid.NewGuid():N}";
 
             // Keep the custom thread to avoid to waste one from thread pool.
             _signalActivityIndicatorTask = _task.RunLongRunning(SignalActivityIndicatorAsync, "[HangDump] SignalActivityIndicatorAsync", cancellationToken);
-            await _logger.LogTraceAsync($"Wait for mutex '{_mutexName}' creation");
+            await _logger.LogTraceAsync($"Wait for mutex '{_mutexName}' creation").ConfigureAwait(false);
             _mutexCreated.Wait(cancellationToken);
-            await _logger.LogTraceAsync($"Mutex '{_mutexName}' created");
+            await _logger.LogTraceAsync($"Mutex '{_mutexName}' created").ConfigureAwait(false);
             await _namedPipeClient.RequestReplyAsync<ActivityIndicatorMutexNameRequest, VoidResponse>(new ActivityIndicatorMutexNameRequest(_mutexName), cancellationToken)
-                .TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout, cancellationToken);
-            await _logger.LogTraceAsync($"Mutex '{_mutexName}' sent to the process lifetime handler");
+                .TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout, cancellationToken).ConfigureAwait(false);
+            await _logger.LogTraceAsync($"Mutex '{_mutexName}' sent to the process lifetime handler").ConfigureAwait(false);
 
             // Setup the server channel with the testhost controller
             _pipeNameDescription = NamedPipeServer.GetPipeName(Guid.NewGuid().ToString("N"));
@@ -121,13 +121,13 @@ internal sealed class HangDumpActivityIndicator : IDataConsumer, ITestSessionLif
             _singleConnectionNamedPipeServer.RegisterSerializer(new GetInProgressTestsRequestSerializer(), typeof(GetInProgressTestsRequest));
             _singleConnectionNamedPipeServer.RegisterSerializer(new ExitSignalActivityIndicatorTaskRequestSerializer(), typeof(ExitSignalActivityIndicatorTaskRequest));
             _singleConnectionNamedPipeServer.RegisterSerializer(new VoidResponseSerializer(), typeof(VoidResponse));
-            await _logger.LogTraceAsync($"Send consumer pipe name to the test controller '{_pipeNameDescription.Name}'");
+            await _logger.LogTraceAsync($"Send consumer pipe name to the test controller '{_pipeNameDescription.Name}'").ConfigureAwait(false);
             await _namedPipeClient.RequestReplyAsync<ConsumerPipeNameRequest, VoidResponse>(new ConsumerPipeNameRequest(_pipeNameDescription.Name), cancellationToken)
-                .TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout, cancellationToken);
+                .TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout, cancellationToken).ConfigureAwait(false);
 
             // Wait the connection from the testhost controller
-            await _singleConnectionNamedPipeServer.WaitConnectionAsync(cancellationToken).TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout, cancellationToken);
-            await _logger.LogTraceAsync("Test host controller connected");
+            await _singleConnectionNamedPipeServer.WaitConnectionAsync(cancellationToken).TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout, cancellationToken).ConfigureAwait(false);
+            await _logger.LogTraceAsync("Test host controller connected").ConfigureAwait(false);
         }
         catch (OperationCanceledException ex) when (ex.CancellationToken == cancellationToken)
         {
@@ -139,13 +139,13 @@ internal sealed class HangDumpActivityIndicator : IDataConsumer, ITestSessionLif
     {
         if (request is GetInProgressTestsRequest)
         {
-            await _logger.LogDebugAsync($"Received '{nameof(GetInProgressTestsRequest)}'");
+            await _logger.LogDebugAsync($"Received '{nameof(GetInProgressTestsRequest)}'").ConfigureAwait(false);
             return new GetInProgressTestsResponse([.. _testsCurrentExecutionState.Select(x => (x.Value.Name, (int)_clock.UtcNow.Subtract(x.Value.StartTime).TotalSeconds))]);
         }
         else if (request is ExitSignalActivityIndicatorTaskRequest)
         {
-            await _logger.LogDebugAsync($"Received '{nameof(ExitSignalActivityIndicatorTaskRequest)}'");
-            await ExitSignalActivityIndicatorTaskAsync();
+            await _logger.LogDebugAsync($"Received '{nameof(ExitSignalActivityIndicatorTaskRequest)}'").ConfigureAwait(false);
+            await ExitSignalActivityIndicatorTaskAsync().ConfigureAwait(false);
             return VoidResponse.CachedInstance;
         }
         else
@@ -167,7 +167,7 @@ internal sealed class HangDumpActivityIndicator : IDataConsumer, ITestSessionLif
         {
             if (_traceLevelEnabled)
             {
-                await _logger.LogTraceAsync($"New in-progress test '{nodeChangedMessage.TestNode.DisplayName}'");
+                await _logger.LogTraceAsync($"New in-progress test '{nodeChangedMessage.TestNode.DisplayName}'").ConfigureAwait(false);
             }
 
             _testsCurrentExecutionState.TryAdd(nodeChangedMessage.TestNode.Uid, (nodeChangedMessage.TestNode.DisplayName, typeof(InProgressTestNodeStateProperty), _clock.UtcNow));
@@ -177,7 +177,7 @@ internal sealed class HangDumpActivityIndicator : IDataConsumer, ITestSessionLif
             && _testsCurrentExecutionState.TryRemove(nodeChangedMessage.TestNode.Uid, out (string Name, Type Type, DateTimeOffset StartTime) record)
             && _traceLevelEnabled)
         {
-            await _logger.LogTraceAsync($"Test removed from in-progress list '{record.Name}' after '{_clock.UtcNow.Subtract(record.StartTime)}', total in-progress '{_testsCurrentExecutionState.Count}'");
+            await _logger.LogTraceAsync($"Test removed from in-progress list '{record.Name}' after '{_clock.UtcNow.Subtract(record.StartTime)}', total in-progress '{_testsCurrentExecutionState.Count}'").ConfigureAwait(false);
         }
 
         // Optimization, we're interested in test progression and eventually in the discovery progression
@@ -185,7 +185,7 @@ internal sealed class HangDumpActivityIndicator : IDataConsumer, ITestSessionLif
         {
             if (_traceLevelEnabled)
             {
-                await _logger.LogTraceAsync($"Signal for action node {nodeChangedMessage.TestNode.DisplayName} - '{state}'");
+                await _logger.LogTraceAsync($"Signal for action node {nodeChangedMessage.TestNode.DisplayName} - '{state}'").ConfigureAwait(false);
             }
 
             // Signal the activity if it's not set
@@ -234,18 +234,18 @@ internal sealed class HangDumpActivityIndicator : IDataConsumer, ITestSessionLif
         ApplicationStateGuard.Ensure(_namedPipeClient is not null);
         ApplicationStateGuard.Ensure(_activityIndicatorMutex is not null);
 
-        if (!await IsEnabledAsync())
+        if (!await IsEnabledAsync().ConfigureAwait(false))
         {
             return;
         }
 
         await _namedPipeClient.RequestReplyAsync<SessionEndSerializerRequest, VoidResponse>(new SessionEndSerializerRequest(), cancellationToken)
-                .TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout, cancellationToken);
+                .TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout, cancellationToken).ConfigureAwait(false);
 
-        await _logger.LogDebugAsync("Signal for test session end'");
-        await ExitSignalActivityIndicatorTaskAsync();
+        await _logger.LogDebugAsync("Signal for test session end'").ConfigureAwait(false);
+        await ExitSignalActivityIndicatorTaskAsync().ConfigureAwait(false);
 
-        await _logger.LogTraceAsync("Signaled by process for it's exit");
+        await _logger.LogTraceAsync("Signaled by process for it's exit").ConfigureAwait(false);
         _sessionEndCalled = true;
     }
 
@@ -259,20 +259,20 @@ internal sealed class HangDumpActivityIndicator : IDataConsumer, ITestSessionLif
         ApplicationStateGuard.Ensure(_signalActivityIndicatorTask is not null);
         _exitSignalActivityIndicatorAsync = true;
         _signalActivity.Set();
-        await _signalActivityIndicatorTask.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout);
+        await _signalActivityIndicatorTask.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout).ConfigureAwait(false);
     }
 
 #if NETCOREAPP
     public async ValueTask DisposeAsync()
     {
-        await DisposeHelper.DisposeAsync(_namedPipeClient);
+        await DisposeHelper.DisposeAsync(_namedPipeClient).ConfigureAwait(false);
 
         // If the OnTestSessionFinishingAsync is not called means that something unhandled happened
         // and we didn't correctly coordinate the shutdown with the HangDumpProcessLifetimeHandler.
         // If we go do wait for the server we will hang.
         if (_sessionEndCalled)
         {
-            await DisposeHelper.DisposeAsync(_singleConnectionNamedPipeServer);
+            await DisposeHelper.DisposeAsync(_singleConnectionNamedPipeServer).ConfigureAwait(false);
         }
 
         _pipeNameDescription?.Dispose();
