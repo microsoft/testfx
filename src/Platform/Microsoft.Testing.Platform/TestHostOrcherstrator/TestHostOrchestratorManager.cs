@@ -71,9 +71,9 @@ internal sealed class TestHostOrchestratorManager : ITestHostOrchestratorManager
             }
 
             // We initialize only if enabled
-            if (await service.IsEnabledAsync())
+            if (await service.IsEnabledAsync().ConfigureAwait(false))
             {
-                await service.TryInitializeAsync();
+                await service.TryInitializeAsync().ConfigureAwait(false);
 
                 // Register the extension for usage
                 lifetimes.Add(service);
