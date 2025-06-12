@@ -57,13 +57,13 @@ internal sealed class MSBuildOrchestratorLifetime : ITestHostOrchestratorApplica
         pipeClient.RegisterSerializer(new VoidResponseSerializer(), typeof(VoidResponse));
         using var cancellationTokenSource = new CancellationTokenSource(TimeoutHelper.DefaultHangTimeSpanTimeout);
         using var linkedCancellationToken = CancellationTokenSource.CreateLinkedTokenSource(cancellationTokenSource.Token, _testApplicationCancellationTokenSource.CancellationToken);
-        await pipeClient.ConnectAsync(linkedCancellationToken.Token);
+        await pipeClient.ConnectAsync(linkedCancellationToken.Token).ConfigureAwait(false);
         await pipeClient.RequestReplyAsync<ModuleInfoRequest, VoidResponse>(
             new ModuleInfoRequest(
             RuntimeInformation.FrameworkDescription,
             RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant(),
             _configuration.GetTestResultDirectory()),
-            _testApplicationCancellationTokenSource.CancellationToken);
+            _testApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
     }
 
     public Task AfterRunAsync(int exitCode, CancellationToken cancellation) => Task.CompletedTask;
