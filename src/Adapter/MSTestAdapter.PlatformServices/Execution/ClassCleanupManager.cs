@@ -66,7 +66,7 @@ internal sealed class ClassCleanupManager
     internal static void ForceCleanup(TypeCache typeCache, IDictionary<string, object?> sourceLevelParameters, IMessageLogger logger)
     {
         using var writer = new ThreadSafeStringWriter(CultureInfo.InvariantCulture, "context");
-        TestContext testContext = new TestContextImplementation(null, writer, sourceLevelParameters, logger, null);
+        TestContext testContext = new TestContextImplementation(null, writer, sourceLevelParameters, logger, testRunCancellationToken: null);
         IEnumerable<TestClassInfo> classInfoCache = typeCache.ClassInfoListWithExecutableCleanupMethods;
         LogMessageListener? listener = null;
         foreach (TestClassInfo classInfo in classInfoCache)

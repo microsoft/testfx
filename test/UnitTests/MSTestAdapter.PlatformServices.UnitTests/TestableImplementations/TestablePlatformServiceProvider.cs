@@ -71,7 +71,7 @@ internal class TestablePlatformServiceProvider : IPlatformServiceProvider
 
     public ITestContext GetTestContext(ITestMethod testMethod, StringWriter writer, IDictionary<string, object?> properties, IMessageLogger messageLogger, UnitTestOutcome outcome)
     {
-        var testContextImpl = new TestContextImplementation(testMethod, writer, properties, messageLogger, null);
+        var testContextImpl = new TestContextImplementation(testMethod, writer, properties, messageLogger, testRunCancellationToken: null);
         testContextImpl.SetOutcome(outcome);
         return testContextImpl;
     }
