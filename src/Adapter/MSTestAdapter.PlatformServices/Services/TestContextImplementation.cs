@@ -27,6 +27,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 #endif
 public class TestContextImplementation : TestContext, ITestContext, IDisposable
 {
+    private static readonly AsyncLocal<TestContextImplementation?> CurrentTestContextAsyncLocal = new();
+
     /// <summary>
     /// List of result files associated with the test.
     /// </summary>
@@ -44,6 +46,9 @@ public class TestContextImplementation : TestContext, ITestContext, IDisposable
     private readonly Dictionary<string, object?> _properties;
     private readonly IMessageLogger? _messageLogger;
     private readonly CancellationTokenRegistration? _cancellationTokenRegistration;
+
+    private StringBuilder? _stdOutStringBuilder;
+    private StringBuilder? _stdErrStringBuilder;
 
     /// <summary>
     /// Specifies whether the writer is disposed or not.
@@ -117,6 +122,8 @@ public class TestContextImplementation : TestContext, ITestContext, IDisposable
 
         _testResultFiles = [];
     }
+
+    internal static TestContextImplementation? CurrentTestContext => CurrentTestContextAsyncLocal.Value;
 
     #region TestContext impl
 
@@ -404,4 +411,46 @@ public class TestContextImplementation : TestContext, ITestContext, IDisposable
             }
         }
     }
+
+    internal readonly struct ScopedTestContextSetter : IDisposable
+    {
+        internal ScopedTestContextSetter(TestContextImplementation? testContext)
+            => CurrentTestContextAsyncLocal.Value = testContext;
+
+        public void Dispose()
+            => CurrentTestContextAsyncLocal.Value = null;
+    }
+
+    internal static ScopedTestContextSetter SetCurrentTestContext(TestContextImplementation? testContext)
+        => new(testContext);
+
+    internal void WriteConsoleOut(char value)
+        => GetOutStringBuilder().Append(value);
+
+    internal void WriteConsoleOut(string? value)
+        => GetOutStringBuilder().Append(value);
+
+    internal void WriteConsoleErr(char value)
+        => GetErrStringBuilder().Append(value);
+
+    internal void WriteConsoleErr(string? value)
+        => GetErrStringBuilder().Append(value);
+
+    private StringBuilder GetOutStringBuilder()
+    {
+        _ = _stdOutStringBuilder ?? Interlocked.CompareExchange(ref _stdOutStringBuilder, new StringBuilder(), null)!;
+        return _stdOutStringBuilder;
+    }
+
+    private StringBuilder GetErrStringBuilder()
+    {
+        _ = _stdErrStringBuilder ?? Interlocked.CompareExchange(ref _stdErrStringBuilder, new StringBuilder(), null)!;
+        return _stdErrStringBuilder;
+    }
+
+    internal string? GetOut()
+        => _stdOutStringBuilder?.ToString();
+
+    internal string? GetErr()
+        => _stdErrStringBuilder?.ToString();
 }

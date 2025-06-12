@@ -145,7 +145,13 @@ public class TestAssemblyInfo
                         AssemblyInitializationException = FixtureMethodRunner.RunWithTimeoutAndCancellation(
                             () =>
                             {
-                                AssemblyInitializeMethod.InvokeAsSynchronousTask(null, testContext);
+                                // NOTE: It's unclear what the effect is if we reset the current test context before vs after the capture.
+                                // It's safer to reset it before the capture.
+                                using (TestContextImplementation.SetCurrentTestContext(testContext as TestContextImplementation))
+                                {
+                                    AssemblyInitializeMethod.InvokeAsSynchronousTask(null, testContext);
+                                }
+
                                 // **After** we have executed the assembly initialize, we save the current context.
                                 // This context will contain async locals set by the assembly initialize method.
                                 ExecutionContext = ExecutionContext.Capture();
@@ -284,13 +290,18 @@ public class TestAssemblyInfo
                 AssemblyCleanupException = FixtureMethodRunner.RunWithTimeoutAndCancellation(
                      () =>
                      {
-                         if (AssemblyCleanupMethod.GetParameters().Length == 0)
+                         // NOTE: It's unclear what the effect is if we reset the current test context before vs after the capture.
+                         // It's safer to reset it before the capture.
+                         using (TestContextImplementation.SetCurrentTestContext(testContext as TestContextImplementation))
                          {
-                             AssemblyCleanupMethod.InvokeAsSynchronousTask(null);
-                         }
-                         else
-                         {
-                             AssemblyCleanupMethod.InvokeAsSynchronousTask(null, testContext);
+                             if (AssemblyCleanupMethod.GetParameters().Length == 0)
+                             {
+                                 AssemblyCleanupMethod.InvokeAsSynchronousTask(null);
+                             }
+                             else
+                             {
+                                 AssemblyCleanupMethod.InvokeAsSynchronousTask(null, testContext);
+                             }
                          }
 
                          ExecutionContext = ExecutionContext.Capture();

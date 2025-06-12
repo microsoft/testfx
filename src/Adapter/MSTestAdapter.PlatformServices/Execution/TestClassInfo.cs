@@ -355,7 +355,7 @@ public class TestClassInfo
                 TestFailureException = _classInitializeResult.TestFailureException,
             };
 
-    internal TestResult GetResultOrRunClassInitialize(ITestContext testContext)
+    internal TestResult GetResultOrRunClassInitialize(ITestContext testContext, string? initializationLogs, string? initializationErrorLogs, string? initializationTrace, string? initializationTestContextMessages)
     {
         TestResult? clonedInitializeResult = TryGetClonedCachedClassInitializeResult();
 
@@ -467,6 +467,15 @@ public class TestClassInfo
                     Outcome = UTFUnitTestOutcome.Error,
                 };
             }
+            finally
+            {
+                // Assembly initialize and class initialize logs are pre-pended to the first result.
+                var testContextImpl = testContext as TestContextImplementation;
+                result.LogOutput = initializationLogs + testContextImpl?.GetOut();
+                result.LogError = initializationErrorLogs + testContextImpl?.GetErr();
+                result.DebugTrace = initializationTrace; // TODO: DebugTrace
+                result.TestContextMessages = initializationTestContextMessages + testContext.GetAndClearDiagnosticMessages();
+            }
 
             _classInitializeResult = result;
             return result;
@@ -489,7 +498,13 @@ public class TestClassInfo
         TestFailedException? result = FixtureMethodRunner.RunWithTimeoutAndCancellation(
             () =>
             {
-                methodInfo.InvokeAsSynchronousTask(null, testContext);
+                // NOTE: It's unclear what the effect is if we reset the current test context before vs after the capture.
+                // It's safer to reset it before the capture.
+                using (TestContextImplementation.SetCurrentTestContext(testContext as TestContextImplementation))
+                {
+                    methodInfo.InvokeAsSynchronousTask(null, testContext);
+                }
+
                 // **After** we have executed the class initialize, we save the current context.
                 // This context will contain async locals set by the class initialize method.
                 ExecutionContext = ExecutionContext.Capture();
@@ -743,14 +758,31 @@ public class TestClassInfo
         // Local functions
         void DoRun()
         {
-            TestFailedException? ex = ExecuteClassCleanup(testContext.Context);
-            if (ex is not null && results.Length > 0)
+            try
             {
+                TestFailedException? ex = ExecuteClassCleanup(testContext.Context);
+                if (ex is not null && results.Length > 0)
+                {
 #pragma warning disable IDE0056 // Use index operator
-                TestResult lastResult = results[results.Length - 1];
+                    TestResult lastResult = results[results.Length - 1];
 #pragma warning restore IDE0056 // Use index operator
-                lastResult.Outcome = TestTools.UnitTesting.UnitTestOutcome.Error;
-                lastResult.TestFailureException = ex;
+                    lastResult.Outcome = TestTools.UnitTesting.UnitTestOutcome.Error;
+                    lastResult.TestFailureException = ex;
+                }
+            }
+            finally
+            {
+                if (results.Length > 0)
+                {
+#pragma warning disable IDE0056 // Use index operator
+                    TestResult lastResult = results[results.Length - 1];
+#pragma warning restore IDE0056 // Use index operator
+                    var testContextImpl = testContext as TestContextImplementation;
+                    lastResult.LogOutput += testContextImpl?.GetOut();
+                    lastResult.LogError += testContextImpl?.GetErr();
+                    // TODO: DebugTrace
+                    lastResult.TestContextMessages += testContext.GetAndClearDiagnosticMessages();
+                }
             }
         }
     }
@@ -766,13 +798,18 @@ public class TestClassInfo
         TestFailedException? result = FixtureMethodRunner.RunWithTimeoutAndCancellation(
             () =>
             {
-                if (methodInfo.GetParameters().Length == 0)
+                // NOTE: It's unclear what the effect is if we reset the current test context before vs after the capture.
+                // It's safer to reset it before the capture.
+                using (TestContextImplementation.SetCurrentTestContext(testContext as TestContextImplementation))
                 {
-                    methodInfo.InvokeAsSynchronousTask(null);
-                }
-                else
-                {
-                    methodInfo.InvokeAsSynchronousTask(null, testContext);
+                    if (methodInfo.GetParameters().Length == 0)
+                    {
+                        methodInfo.InvokeAsSynchronousTask(null);
+                    }
+                    else
+                    {
+                        methodInfo.InvokeAsSynchronousTask(null, testContext);
+                    }
                 }
 
                 // **After** we have executed the class cleanup, we save the current context.

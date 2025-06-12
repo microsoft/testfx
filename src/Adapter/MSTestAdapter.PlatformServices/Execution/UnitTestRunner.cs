@@ -3,6 +3,7 @@
 
 using System.Security;
 
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter;
@@ -51,6 +52,12 @@ internal sealed class UnitTestRunner : MarshalByRefObject
         // Populate the settings into the domain(Desktop workflow) performing discovery.
         // This would just be resetting the settings to itself in non desktop workflows.
         MSTestSettings.PopulateSettings(settings);
+
+        if (MSTestSettings.CurrentSettings.CaptureDebugTraces)
+        {
+            Console.SetOut(new ConsoleOutCapturer(Console.Out));
+            Console.SetError(new ConsoleErrorCapturer(Console.Error));
+        }
 
         PlatformServiceProvider.Instance.TestRunCancellationToken ??= new TestRunCancellationToken();
 
@@ -183,7 +190,7 @@ internal sealed class UnitTestRunner : MarshalByRefObject
                 {
                     testContextForClassInit = PlatformServiceProvider.Instance.GetTestContext(testMethod, writer, properties, messageLogger, testContextForAssemblyInit.Context.CurrentTestOutcome);
 
-                    TestResult classInitializeResult = testMethodInfo.Parent.GetResultOrRunClassInitialize(testContextForClassInit);
+                    TestResult classInitializeResult = testMethodInfo.Parent.GetResultOrRunClassInitialize(testContextForClassInit, assemblyInitializeResult.LogOutput, assemblyInitializeResult.LogError, assemblyInitializeResult.DebugTrace, assemblyInitializeResult.TestContextMessages);
                     DebugEx.Assert(testMethodInfo.Parent.IsClassInitializeExecuted, "IsClassInitializeExecuted should be true after attempting to run it.");
                     if (classInitializeResult.Outcome != UTF.UnitTestOutcome.Passed)
                     {
@@ -195,11 +202,13 @@ internal sealed class UnitTestRunner : MarshalByRefObject
                         testContextForTestExecution.SetOutcome(testContextForClassInit.Context.CurrentTestOutcome);
                         RetryBaseAttribute? retryAttribute = testMethodInfo.RetryAttribute;
                         var testMethodRunner = new TestMethodRunner(testMethodInfo, testMethod, testContextForTestExecution);
-                        result = await testMethodRunner.ExecuteAsync().ConfigureAwait(false);
+                        result = await testMethodRunner.ExecuteAsync(classInitializeResult.LogOutput, classInitializeResult.LogError, classInitializeResult.DebugTrace, classInitializeResult.TestContextMessages).ConfigureAwait(false);
                         if (retryAttribute is not null && !RetryBaseAttribute.IsAcceptableResultForRetry(result))
                         {
                             RetryResult retryResult = await retryAttribute.ExecuteAsync(
-                                new RetryContext(testMethodRunner.ExecuteAsync, result)).ConfigureAwait(false);
+                                new RetryContext(
+                                    async () => await testMethodRunner.ExecuteAsync(classInitializeResult.LogOutput, classInitializeResult.LogError, classInitializeResult.DebugTrace, classInitializeResult.TestContextMessages).ConfigureAwait(false),
+                                    result)).ConfigureAwait(false);
 
                             result = retryResult.TryGetLast() ?? throw ApplicationStateGuard.Unreachable();
                         }
@@ -257,6 +266,14 @@ internal sealed class UnitTestRunner : MarshalByRefObject
             var testFailureException = new TestFailedException(UnitTestOutcome.Error, ex.TryGetMessage(), ex.TryGetStackTraceInformation());
             result = new TestResult { TestFailureException = testFailureException, Outcome = UnitTestOutcome.Error };
         }
+        finally
+        {
+            var testContextImpl = testContext.Context as TestContextImplementation;
+            result.LogOutput = testContextImpl?.GetOut();
+            result.LogError = testContextImpl?.GetErr();
+            // TODO: DebugTrace
+            result.TestContextMessages = testContext.GetAndClearDiagnosticMessages();
+        }
 
         return result;
     }
@@ -275,14 +292,22 @@ internal sealed class UnitTestRunner : MarshalByRefObject
         {
             TestFailedException? ex = classInfo.ExecuteClassCleanup(testContext.Context);
 
-            if (ex is not null && results.Length > 0)
+            if (results.Length > 0)
             {
 #pragma warning disable IDE0056 // Use index operator
                 TestResult lastResult = results[results.Length - 1];
 #pragma warning restore IDE0056 // Use index operator
-                lastResult.Outcome = UTF.UnitTestOutcome.Error;
-                lastResult.TestFailureException = ex;
-                return;
+                var testContextImpl = testContext as TestContextImplementation;
+                lastResult.LogOutput += testContextImpl?.GetOut();
+                lastResult.LogError += testContextImpl?.GetErr();
+                // TODO: DebugTrace
+                lastResult.TestContextMessages += testContext.GetAndClearDiagnosticMessages();
+                if (ex is not null)
+                {
+                    lastResult.Outcome = UTF.UnitTestOutcome.Error;
+                    lastResult.TestFailureException = ex;
+                    return;
+                }
             }
         }
 
@@ -291,14 +316,22 @@ internal sealed class UnitTestRunner : MarshalByRefObject
         {
             TestFailedException? ex = assemblyInfo.ExecuteAssemblyCleanup(testContext.Context);
 
-            if (ex is not null && results.Length > 0)
+            if (results.Length > 0)
             {
 #pragma warning disable IDE0056 // Use index operator
                 TestResult lastResult = results[results.Length - 1];
 #pragma warning restore IDE0056 // Use index operator
-                lastResult.Outcome = UTF.UnitTestOutcome.Error;
-                lastResult.TestFailureException = ex;
-                return;
+                var testContextImpl = testContext as TestContextImplementation;
+                lastResult.LogOutput += testContextImpl?.GetOut();
+                lastResult.LogError += testContextImpl?.GetErr();
+                // TODO: DebugTrace
+                lastResult.TestContextMessages += testContext.GetAndClearDiagnosticMessages();
+                if (ex is not null)
+                {
+                    lastResult.Outcome = UTF.UnitTestOutcome.Error;
+                    lastResult.TestFailureException = ex;
+                    return;
+                }
             }
         }
     }
