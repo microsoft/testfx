@@ -10,7 +10,7 @@ See full log [of v3.9.1...v3.9.2](https://github.com/microsoft/testfx/compare/v3
 
 ### Fixed
 
-* Allow framework authors to use TestCase.FullyQualifiedName as the TestNodeUid by @Youssef1313 in [#5658](https://github.com/microsoft/testfx/pull/5658)
+* Allow framework authors to use TestCase.FullyQualifiedName as the TestNodeUid by @Youssef1313 in [#5658](https://github.com/microsoft/testfx/pull/5658) - dummy change don't merge
 
 ### Artifacts
 
