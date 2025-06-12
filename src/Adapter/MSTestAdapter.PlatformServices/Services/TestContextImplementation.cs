@@ -50,6 +50,8 @@ public class TestContextImplementation : TestContext, ITestContext, IDisposable
     /// </summary>
     private bool _stringWriterDisposed;
 
+    private bool _isDisposed;
+
     /// <summary>
     /// Unit test outcome.
     /// </summary>
@@ -379,9 +381,28 @@ public class TestContextImplementation : TestContext, ITestContext, IDisposable
         => _messageLogger?.SendMessage(messageLevel.ToTestMessageLevel(), message);
     #endregion
 
-    void IDisposable.Dispose()
+    /// <inheritdoc/>
+    public void Dispose()
     {
-        _cancellationTokenRegistration?.Dispose();
+        Dispose(true);
         GC.SuppressFinalize(this);
     }
+
+    /// <summary>
+    /// The dispose pattern.
+    /// </summary>
+    /// <param name="disposing">Whether to dispose managed state.</param>
+    protected virtual void Dispose(bool disposing)
+    {
+        if (!_isDisposed)
+        {
+            _isDisposed = true;
+
+            if (disposing)
+            {
+                _cancellationTokenRegistration?.Dispose();
+            }
+        }
+    }
+
 }
