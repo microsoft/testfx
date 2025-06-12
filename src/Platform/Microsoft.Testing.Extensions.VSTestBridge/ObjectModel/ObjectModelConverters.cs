@@ -34,6 +34,8 @@ internal static class ObjectModelConverters
         valueType: typeof(string),
         owner: typeof(TestCase));
 
+    private static readonly Uri ExecutorUri = new(Constants.ExecutorUri);
+
     /// <summary>
     /// Converts a VSTest <see cref="TestCase"/> to a Microsoft Testing Platform <see cref="TestNode"/>.
     /// </summary>
@@ -270,7 +272,7 @@ internal static class ObjectModelConverters
             testCase.SetPropertyValue(OriginalExecutorUriProperty, testCase.ExecutorUri);
         }
 
-        testCase.ExecutorUri = new(Constants.ExecutorUri);
+        testCase.ExecutorUri = ExecutorUri;
     }
 
     private static bool TryGetMethodIdentifierProperty(TestCase testCase, [NotNullWhen(true)] out TestMethodIdentifierProperty? methodIdentifierProperty)
