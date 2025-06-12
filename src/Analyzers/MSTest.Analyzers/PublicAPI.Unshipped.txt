@@ -1,1 +1,5 @@
 #nullable enable
+MSTest.Analyzers.PreferTestMethodOverDataTestMethodAnalyzer
+MSTest.Analyzers.PreferTestMethodOverDataTestMethodAnalyzer.PreferTestMethodOverDataTestMethodAnalyzer() -> void
+override MSTest.Analyzers.PreferTestMethodOverDataTestMethodAnalyzer.Initialize(Microsoft.CodeAnalysis.Diagnostics.AnalysisContext! context) -> void
+override MSTest.Analyzers.PreferTestMethodOverDataTestMethodAnalyzer.SupportedDiagnostics.get -> System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.DiagnosticDescriptor!>
