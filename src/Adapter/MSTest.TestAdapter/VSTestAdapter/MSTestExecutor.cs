@@ -154,7 +154,7 @@ public class MSTestExecutor : ITestExecutor
             {
                 try
                 {
-                    _testRunCancellationToken = new TestRunCancellationToken();
+                    _testRunCancellationToken = new TestRunCancellationToken(_cancellationToken);
                     await runTestsAction(_testRunCancellationToken).ConfigureAwait(false);
                 }
                 finally

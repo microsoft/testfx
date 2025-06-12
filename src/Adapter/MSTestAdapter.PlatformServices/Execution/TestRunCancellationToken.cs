@@ -11,13 +11,22 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 #else
 [Obsolete(TestTools.UnitTesting.FrameworkConstants.PublicTypeObsoleteMessage)]
 #endif
+#pragma warning disable CA1001 // Types that own disposable fields should be disposable
 public class TestRunCancellationToken
+#pragma warning restore CA1001 // Types that own disposable fields should be disposable
 {
+    private readonly CancellationTokenSource _cancellationTokenSource = new();
+    private readonly CancellationToken? _originalCancellationToken;
+
     /// <summary>
-    /// Callbacks to be invoked when canceled.
-    /// Needs to be a concurrent collection, see https://github.com/microsoft/testfx/issues/3953.
+    /// Initializes a new instance of the <see cref="TestRunCancellationToken"/> class.
     /// </summary>
-    private readonly ConcurrentBag<(Action<object?>, object?)> _registeredCallbacks = [];
+    public TestRunCancellationToken()
+    {
+    }
+
+    internal TestRunCancellationToken(CancellationToken originalCancellationToken)
+        => _originalCancellationToken = originalCancellationToken;
 
     /// <summary>
     /// Gets a value indicating whether the test run is canceled.
@@ -32,10 +41,7 @@ public class TestRunCancellationToken
 
             if (!previousValue && value)
             {
-                foreach ((Action<object?> callBack, object? state) in _registeredCallbacks)
-                {
-                    callBack.Invoke(state);
-                }
+                _cancellationTokenSource.Cancel();
             }
         }
     }
@@ -49,30 +55,21 @@ public class TestRunCancellationToken
     /// Registers a callback method to be invoked when canceled.
     /// </summary>
     /// <param name="callback">Callback delegate for handling cancellation.</param>
-    public void Register(Action callback) => _registeredCallbacks.Add((_ => callback(), null));
+    public void Register(Action callback) => _cancellationTokenSource.Token.Register(_ => callback(), null);
 
-    internal void Register(Action<object?> callback, object? state) => _registeredCallbacks.Add((callback, state));
+    internal CancellationTokenRegistration Register(Action<object?> callback, object? state) => _cancellationTokenSource.Token.Register(callback, state);
 
     /// <summary>
-    /// Unregister the callback method.
+    /// This method does nothing and is kept for binary compatibility. It should be removed in v4.
+    /// Note that the whole class is marked obsolete and will be made internal in v4.
     /// </summary>
     public void Unregister()
-#if NETCOREAPP || WINDOWS_UWP
-        => _registeredCallbacks.Clear();
-#else
     {
-        while (!_registeredCallbacks.IsEmpty)
-        {
-            _ = _registeredCallbacks.TryTake(out _);
-        }
     }
-#endif
 
     internal void ThrowIfCancellationRequested()
-    {
-        if (Canceled)
-        {
-            throw new OperationCanceledException();
-        }
-    }
+        // If ThrowIfCancellationRequested is called from the main AppDomain where we have the original
+        // cancellation token, we should use that token.
+        // Otherwise, we have no choice other than using the cancellation token from the source created by TestRunCancellationToken.
+        => (_originalCancellationToken ?? _cancellationTokenSource.Token).ThrowIfCancellationRequested();
 }
