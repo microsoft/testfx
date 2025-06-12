@@ -6,9 +6,9 @@ pr:
     - rel/*
   paths:
     exclude:
-      - .github/**
-      - .devcontainer/**
-      - docs/**
+      - .github/*
+      - .devcontainer/*
+      - docs/*
       - .markdownlint.json
       - .markdownlintignore
       - CODE_OF_CONDUCT.md
