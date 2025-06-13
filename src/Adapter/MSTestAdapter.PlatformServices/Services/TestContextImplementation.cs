@@ -376,11 +376,17 @@ public class TestContextImplementation : TestContext, ITestContext, IDisposable
     internal void WriteConsoleOut(string? value)
         => GetOutStringBuilder().Append(value);
 
+    internal void WriteConsoleOut(char[] buffer, int index, int count)
+        => GetOutStringBuilder().Append(buffer, index, count);
+
     internal void WriteConsoleErr(char value)
         => GetErrStringBuilder().Append(value);
 
     internal void WriteConsoleErr(string? value)
         => GetErrStringBuilder().Append(value);
+
+    internal void WriteConsoleErr(char[] buffer, int index, int count)
+        => GetErrStringBuilder().Append(buffer, index, count);
 
     internal void WriteTrace(char value)
         => GetTraceStringBuilder().Append(value);

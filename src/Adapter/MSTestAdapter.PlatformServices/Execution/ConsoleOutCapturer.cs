@@ -37,4 +37,16 @@ internal sealed class ConsoleOutCapturer : TextWriter
             _originalConsoleOut.Write(value);
         }
     }
+
+    public override void Write(char[] buffer, int index, int count)
+    {
+        if (TestContextImplementation.CurrentTestContext is { } testContext)
+        {
+            testContext.WriteConsoleOut(buffer, index, count);
+        }
+        else
+        {
+            _originalConsoleOut.Write(buffer, index, count);
+        }
+    }
 }
