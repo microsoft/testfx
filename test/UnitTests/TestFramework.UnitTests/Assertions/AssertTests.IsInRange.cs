@@ -175,18 +175,123 @@ public partial class AssertTests : TestContainer
         Assert.IsInRange(minValue, maxValue, value, "Test message", null);
     }
 
-    public void IsInRange_WithMinValueGreaterThanMaxValue_StillValidatesAgainstRange()
+    public void IsInRange_WithAllNegativeValuesInRange_DoesNotThrow()
     {
-        // This tests the behavior when minValue > maxValue
-        // The implementation should still work by checking if value is outside both bounds
         // Arrange
-        int minValue = 10;
-        int maxValue = 5;
-        int value = 7; // Between max and min, but outside the "range"
+        int minValue = -10;
+        int maxValue = -5;
+        int value = -7;
+
+        // Act & Assert
+        Assert.IsInRange(minValue, maxValue, value);
+    }
+
+    public void IsInRange_WithAllNegativeValuesBelowRange_ThrowsAssertFailedException()
+    {
+        // Arrange
+        int minValue = -10;
+        int maxValue = -5;
+        int value = -12;
 
         // Act & Assert
         Exception ex = VerifyThrows(() => Assert.IsInRange(minValue, maxValue, value));
-        Verify(ex.Message.Contains("Value '7' is not within the expected range [10, 5]"));
+        Verify(ex.Message.Contains("Value '-12' is not within the expected range [-10, -5]"));
+    }
+
+    public void IsInRange_WithAllNegativeValuesAboveRange_ThrowsAssertFailedException()
+    {
+        // Arrange
+        int minValue = -10;
+        int maxValue = -5;
+        int value = -3;
+
+        // Act & Assert
+        Exception ex = VerifyThrows(() => Assert.IsInRange(minValue, maxValue, value));
+        Verify(ex.Message.Contains("Value '-3' is not within the expected range [-10, -5]"));
+    }
+
+    public void IsInRange_WithRangeSpanningNegativeToPositive_ValueInRange_DoesNotThrow()
+    {
+        // Arrange
+        int minValue = -5;
+        int maxValue = 5;
+        int value = 0;
+
+        // Act & Assert
+        Assert.IsInRange(minValue, maxValue, value);
+    }
+
+    public void IsInRange_WithRangeSpanningNegativeToPositive_NegativeValueInRange_DoesNotThrow()
+    {
+        // Arrange
+        int minValue = -5;
+        int maxValue = 5;
+        int value = -3;
+
+        // Act & Assert
+        Assert.IsInRange(minValue, maxValue, value);
+    }
+
+    public void IsInRange_WithRangeSpanningNegativeToPositive_PositiveValueInRange_DoesNotThrow()
+    {
+        // Arrange
+        int minValue = -5;
+        int maxValue = 5;
+        int value = 3;
+
+        // Act & Assert
+        Assert.IsInRange(minValue, maxValue, value);
+    }
+
+    public void IsInRange_WithRangeSpanningNegativeToPositive_ValueBelowRange_ThrowsAssertFailedException()
+    {
+        // Arrange
+        int minValue = -5;
+        int maxValue = 5;
+        int value = -7;
+
+        // Act & Assert
+        Exception ex = VerifyThrows(() => Assert.IsInRange(minValue, maxValue, value));
+        Verify(ex.Message.Contains("Value '-7' is not within the expected range [-5, 5]"));
+    }
+
+    public void IsInRange_WithRangeSpanningNegativeToPositive_ValueAboveRange_ThrowsAssertFailedException()
+    {
+        // Arrange
+        int minValue = -5;
+        int maxValue = 5;
+        int value = 7;
+
+        // Act & Assert
+        Exception ex = VerifyThrows(() => Assert.IsInRange(minValue, maxValue, value));
+        Verify(ex.Message.Contains("Value '7' is not within the expected range [-5, 5]"));
+    }
+
+    public void IsInRange_WithNegativeDoubleValues_WorksCorrectly()
+    {
+        // Arrange
+        double minValue = -10.5;
+        double maxValue = -2.5;
+        double valueInRange = -5.0;
+        double valueOutOfRange = -1.0;
+
+        // Act & Assert
+        Assert.IsInRange(minValue, maxValue, valueInRange);
+        Exception ex = VerifyThrows(() => Assert.IsInRange(minValue, maxValue, valueOutOfRange));
+        Verify(ex.Message.Contains("Value '-1' is not within the expected range [-10.5, -2.5]"));
+    }
+
+    public void IsInRange_WithMaxValueLessThanMinValue_ThrowsArgumentOutOfRangeException()
+    {
+        // Arrange
+        int minValue = 10;
+        int maxValue = 5;
+        int value = 7;
+
+        // Act & Assert
+        Exception ex = VerifyThrows(() => Assert.IsInRange(minValue, maxValue, value));
+        Verify(ex is ArgumentOutOfRangeException);
+        Verify(ex.Message.Contains("The maximum value must be greater than or equal to the minimum value"));
     }
 
     #endregion // IsInRange Tests

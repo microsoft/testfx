@@ -720,6 +720,11 @@ public sealed partial class Assert
     /// <param name="parameters">The parameters to format the message.</param>
     public static void IsInRange<T>(T minValue, T maxValue, T value, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters) where T : struct, IComparable<T>
     {
+        if (maxValue.CompareTo(minValue) < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(maxValue), "The maximum value must be greater than or equal to the minimum value.");
+        }
+
         if (value.CompareTo(minValue) < 0 || value.CompareTo(maxValue) > 0)
         {
             string userMessage = BuildUserMessage(message, parameters);
