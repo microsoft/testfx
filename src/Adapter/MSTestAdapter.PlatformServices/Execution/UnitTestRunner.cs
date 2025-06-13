@@ -286,7 +286,6 @@ internal sealed class UnitTestRunner : MarshalByRefObject
 
         try
         {
-
             // TODO: We are using the same TestContext here for ClassCleanup and AssemblyCleanup.
             // They should be different.
             IEnumerable<TestClassInfo> classInfoCache = typeCache.ClassInfoListWithExecutableCleanupMethods;
