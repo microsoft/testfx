@@ -473,7 +473,7 @@ public class TestClassInfo
                 var testContextImpl = testContext as TestContextImplementation;
                 result.LogOutput = initializationLogs + testContextImpl?.GetOut();
                 result.LogError = initializationErrorLogs + testContextImpl?.GetErr();
-                result.DebugTrace = initializationTrace; // TODO: DebugTrace
+                result.DebugTrace = initializationTrace + testContextImpl?.GetTrace();
                 result.TestContextMessages = initializationTestContextMessages + testContext.GetAndClearDiagnosticMessages();
             }
 
@@ -780,7 +780,7 @@ public class TestClassInfo
                     var testContextImpl = testContext as TestContextImplementation;
                     lastResult.LogOutput += testContextImpl?.GetOut();
                     lastResult.LogError += testContextImpl?.GetErr();
-                    // TODO: DebugTrace
+                    lastResult.DebugTrace += testContextImpl?.GetTrace();
                     lastResult.TestContextMessages += testContext.GetAndClearDiagnosticMessages();
                 }
             }

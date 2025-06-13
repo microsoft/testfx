@@ -47,6 +47,7 @@ public class TestContextImplementation : TestContext, ITestContext, IDisposable
 
     private StringBuilder? _stdOutStringBuilder;
     private StringBuilder? _stdErrStringBuilder;
+    private StringBuilder? _traceStringBuilder;
     private StringBuilder? _testContextMessageStringBuilder;
 
     private bool _isDisposed;
@@ -381,6 +382,12 @@ public class TestContextImplementation : TestContext, ITestContext, IDisposable
     internal void WriteConsoleErr(string? value)
         => GetErrStringBuilder().Append(value);
 
+    internal void WriteTrace(char value)
+        => GetTraceStringBuilder().Append(value);
+
+    internal void WriteTrace(string? value)
+        => GetTraceStringBuilder().Append(value);
+
     private StringBuilder GetOutStringBuilder()
     {
         _ = _stdOutStringBuilder ?? Interlocked.CompareExchange(ref _stdOutStringBuilder, new StringBuilder(), null)!;
@@ -391,6 +398,12 @@ public class TestContextImplementation : TestContext, ITestContext, IDisposable
     {
         _ = _stdErrStringBuilder ?? Interlocked.CompareExchange(ref _stdErrStringBuilder, new StringBuilder(), null)!;
         return _stdErrStringBuilder;
+    }
+
+    private StringBuilder GetTraceStringBuilder()
+    {
+        _ = _traceStringBuilder ?? Interlocked.CompareExchange(ref _traceStringBuilder, new StringBuilder(), null)!;
+        return _traceStringBuilder;
     }
 
     private StringBuilder GetTestContextMessagesStringBuilder()
@@ -404,4 +417,7 @@ public class TestContextImplementation : TestContext, ITestContext, IDisposable
 
     internal string? GetErr()
         => _stdErrStringBuilder?.ToString();
+
+    internal string? GetTrace()
+        => _traceStringBuilder?.ToString();
 }

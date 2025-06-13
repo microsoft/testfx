@@ -57,6 +57,7 @@ internal sealed class UnitTestRunner : MarshalByRefObject
         {
             Console.SetOut(new ConsoleOutCapturer(Console.Out));
             Console.SetError(new ConsoleErrorCapturer(Console.Error));
+            Trace.Listeners.Add(new TextWriterTraceListener(new TraceTextWriter()));
         }
 
         PlatformServiceProvider.Instance.TestRunCancellationToken ??= new TestRunCancellationToken();
@@ -270,7 +271,7 @@ internal sealed class UnitTestRunner : MarshalByRefObject
             var testContextImpl = testContext.Context as TestContextImplementation;
             result.LogOutput = testContextImpl?.GetOut();
             result.LogError = testContextImpl?.GetErr();
-            // TODO: DebugTrace
+            result.DebugTrace = testContextImpl?.GetTrace();
             result.TestContextMessages = testContext.GetAndClearDiagnosticMessages();
         }
 
@@ -330,7 +331,7 @@ internal sealed class UnitTestRunner : MarshalByRefObject
                 var testContextImpl = testContext as TestContextImplementation;
                 lastResult.LogOutput += testContextImpl?.GetOut();
                 lastResult.LogError += testContextImpl?.GetErr();
-                // TODO: DebugTrace
+                lastResult.DebugTrace += testContextImpl?.GetTrace();
                 lastResult.TestContextMessages += testContext.GetAndClearDiagnosticMessages();
             }
         }
