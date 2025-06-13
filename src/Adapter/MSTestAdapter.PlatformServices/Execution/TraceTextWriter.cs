@@ -13,7 +13,7 @@ internal sealed class TraceTextWriter : TextWriter
     {
         if (TestContextImplementation.CurrentTestContext is { } testContext)
         {
-            testContext.WriteConsoleErr(value);
+            testContext.WriteTrace(value);
         }
     }
 
@@ -21,7 +21,7 @@ internal sealed class TraceTextWriter : TextWriter
     {
         if (TestContextImplementation.CurrentTestContext is { } testContext)
         {
-            testContext.WriteConsoleErr(value);
+            testContext.WriteTrace(value);
         }
     }
 }
