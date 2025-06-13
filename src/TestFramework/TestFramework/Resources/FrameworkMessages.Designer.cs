@@ -414,6 +414,15 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Value &apos;{0}&apos; is not within the expected range [{1}, {2}]. {3}.
+        /// </summary>
+        internal static string IsInRangeFail {
+            get {
+                return ResourceManager.GetString("IsInRangeFail", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0} Expected type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;..
         /// </summary>
         internal static string IsInstanceOfFailMsg {

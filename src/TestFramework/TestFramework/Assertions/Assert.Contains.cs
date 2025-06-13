@@ -695,7 +695,8 @@ public sealed partial class Assert
     /// <param name="minValue">The minimum value of the expected range.</param>
     /// <param name="maxValue">The maximum value of the expected range.</param>
     /// <param name="value">The value to test.</param>
-    public static void IsInRange<T>(T minValue, T maxValue, T value) where T : struct, IComparable<T>
+    public static void IsInRange<T>(T minValue, T maxValue, T value)
+        where T : struct, IComparable<T>
         => IsInRange(minValue, maxValue, value, string.Empty, null);
 
     /// <summary>
@@ -706,7 +707,8 @@ public sealed partial class Assert
     /// <param name="maxValue">The maximum value of the expected range.</param>
     /// <param name="value">The value to test.</param>
     /// <param name="message">The message to display when the assertion fails.</param>
-    public static void IsInRange<T>(T minValue, T maxValue, T value, string? message) where T : struct, IComparable<T>
+    public static void IsInRange<T>(T minValue, T maxValue, T value, string? message)
+        where T : struct, IComparable<T>
         => IsInRange(minValue, maxValue, value, message, null);
 
     /// <summary>
@@ -718,7 +720,8 @@ public sealed partial class Assert
     /// <param name="value">The value to test.</param>
     /// <param name="message">The message format to display when the assertion fails.</param>
     /// <param name="parameters">The parameters to format the message.</param>
-    public static void IsInRange<T>(T minValue, T maxValue, T value, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters) where T : struct, IComparable<T>
+    public static void IsInRange<T>(T minValue, T maxValue, T value, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters)
+        where T : struct, IComparable<T>
     {
         if (maxValue.CompareTo(minValue) < 0)
         {
