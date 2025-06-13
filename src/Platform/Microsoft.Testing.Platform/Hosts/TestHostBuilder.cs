@@ -52,7 +52,7 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
 
     public ITestHostOrchestratorManager TestHostOrchestratorManager { get; } = new TestHostOrchestratorManager();
 
-    public async Task<ITestHost> BuildAsync(
+    public async Task<IHost> BuildAsync(
         ApplicationLoggingState loggingState,
         TestApplicationOptions testApplicationOptions,
         IUnhandledExceptionsHandler unhandledExceptionsHandler,
@@ -244,7 +244,7 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
             await DisplayBannerIfEnabledAsync(loggingState, proxyOutputDevice, testFrameworkCapabilities).ConfigureAwait(false);
             await proxyOutputDevice.DisplayAsync(commandLineHandler, new ErrorMessageOutputDeviceData(commandLineValidationResult.ErrorMessage)).ConfigureAwait(false);
             await commandLineHandler.PrintHelpAsync(proxyOutputDevice).ConfigureAwait(false);
-            return new InformativeCommandLineTestHost(ExitCodes.InvalidCommandLine, serviceProvider);
+            return new InformativeCommandLineHost(ExitCodes.InvalidCommandLine, serviceProvider);
         }
 
         // Register as ICommandLineOptions.
@@ -318,7 +318,7 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
             // Add the platform output device to the service provider.
             serviceProvider.TryAddService(proxyOutputDevice);
 
-            ToolsTestHost toolsTestHost = new(toolsInformation, serviceProvider, commandLineHandler, proxyOutputDevice);
+            ToolsHost toolsTestHost = new(toolsInformation, serviceProvider, commandLineHandler, proxyOutputDevice);
 
             await LogTestHostCreatedAsync(
                 serviceProvider,
@@ -348,14 +348,14 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
                 await commandLineHandler.PrintHelpAsync(proxyOutputDevice, toolsInformation).ConfigureAwait(false);
             }
 
-            return new InformativeCommandLineTestHost(0, serviceProvider);
+            return new InformativeCommandLineHost(0, serviceProvider);
         }
 
         // If --info is invoked we return
         if (commandLineHandler.IsInfoInvoked())
         {
             await commandLineHandler.PrintInfoAsync(proxyOutputDevice, toolsInformation).ConfigureAwait(false);
-            return new InformativeCommandLineTestHost(0, serviceProvider);
+            return new InformativeCommandLineHost(0, serviceProvider);
         }
 
         // ======= TEST HOST ORCHESTRATOR ======== //
@@ -458,7 +458,7 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
                 new(serviceProvider, BuildTestFrameworkAsync, messageHandlerFactory, (TestFrameworkManager)TestFramework, (TestHostManager)TestHost);
 
             // If needed we wrap the host inside the TestHostControlledHost to automatically handle the shutdown of the connected pipe.
-            ITestHost actualTestHost = testControllerConnection is not null
+            IHost actualTestHost = testControllerConnection is not null
                 ? new TestHostControlledHost(testControllerConnection, serverTestHost, testApplicationCancellationTokenSource.CancellationToken)
                 : serverTestHost;
 
@@ -502,7 +502,7 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
                 (TestHostManager)TestHost);
 
             // If needed we wrap the host inside the TestHostControlledHost to automatically handle the shutdown of the connected pipe.
-            ITestHost actualTestHost = testControllerConnection is not null
+            IHost actualTestHost = testControllerConnection is not null
                 ? new TestHostControlledHost(testControllerConnection, consoleHost, testApplicationCancellationTokenSource.CancellationToken)
                 : consoleHost;
 
