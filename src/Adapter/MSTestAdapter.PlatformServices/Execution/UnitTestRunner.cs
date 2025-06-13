@@ -284,37 +284,45 @@ internal sealed class UnitTestRunner : MarshalByRefObject
             return;
         }
 
-        // TODO: We are using the same TestContext here for ClassCleanup and AssemblyCleanup.
-        // They should be different.
-        IEnumerable<TestClassInfo> classInfoCache = typeCache.ClassInfoListWithExecutableCleanupMethods;
-        foreach (TestClassInfo classInfo in classInfoCache)
+        try
         {
-            TestFailedException? ex = classInfo.ExecuteClassCleanup(testContext.Context);
 
-            if (results.Length > 0)
+            // TODO: We are using the same TestContext here for ClassCleanup and AssemblyCleanup.
+            // They should be different.
+            IEnumerable<TestClassInfo> classInfoCache = typeCache.ClassInfoListWithExecutableCleanupMethods;
+            foreach (TestClassInfo classInfo in classInfoCache)
             {
-#pragma warning disable IDE0056 // Use index operator
-                TestResult lastResult = results[results.Length - 1];
-#pragma warning restore IDE0056 // Use index operator
-                var testContextImpl = testContext as TestContextImplementation;
-                lastResult.LogOutput += testContextImpl?.GetOut();
-                lastResult.LogError += testContextImpl?.GetErr();
-                // TODO: DebugTrace
-                lastResult.TestContextMessages += testContext.GetAndClearDiagnosticMessages();
-                if (ex is not null)
+                TestFailedException? ex = classInfo.ExecuteClassCleanup(testContext.Context);
+
+                if (results.Length > 0 && ex is not null)
                 {
+#pragma warning disable IDE0056 // Use index operator
+                    TestResult lastResult = results[results.Length - 1];
+#pragma warning restore IDE0056 // Use index operator
+                    lastResult.Outcome = UTF.UnitTestOutcome.Error;
+                    lastResult.TestFailureException = ex;
+                    return;
+                }
+            }
+
+            IEnumerable<TestAssemblyInfo> assemblyInfoCache = typeCache.AssemblyInfoListWithExecutableCleanupMethods;
+            foreach (TestAssemblyInfo assemblyInfo in assemblyInfoCache)
+            {
+                TestFailedException? ex = assemblyInfo.ExecuteAssemblyCleanup(testContext.Context);
+
+                if (results.Length > 0 && ex is not null)
+                {
+#pragma warning disable IDE0056 // Use index operator
+                    TestResult lastResult = results[results.Length - 1];
+#pragma warning restore IDE0056 // Use index operator
                     lastResult.Outcome = UTF.UnitTestOutcome.Error;
                     lastResult.TestFailureException = ex;
                     return;
                 }
             }
         }
-
-        IEnumerable<TestAssemblyInfo> assemblyInfoCache = typeCache.AssemblyInfoListWithExecutableCleanupMethods;
-        foreach (TestAssemblyInfo assemblyInfo in assemblyInfoCache)
+        finally
         {
-            TestFailedException? ex = assemblyInfo.ExecuteAssemblyCleanup(testContext.Context);
-
             if (results.Length > 0)
             {
 #pragma warning disable IDE0056 // Use index operator
@@ -325,12 +333,6 @@ internal sealed class UnitTestRunner : MarshalByRefObject
                 lastResult.LogError += testContextImpl?.GetErr();
                 // TODO: DebugTrace
                 lastResult.TestContextMessages += testContext.GetAndClearDiagnosticMessages();
-                if (ex is not null)
-                {
-                    lastResult.Outcome = UTF.UnitTestOutcome.Error;
-                    lastResult.TestFailureException = ex;
-                    return;
-                }
             }
         }
     }
