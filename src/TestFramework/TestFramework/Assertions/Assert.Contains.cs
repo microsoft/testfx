@@ -178,7 +178,7 @@ public sealed partial class Assert
     {
         var matchingElements = collection.Where(predicate).ToList();
         int actualCount = matchingElements.Count;
-        
+
         if (actualCount == 1)
         {
             return matchingElements[0];

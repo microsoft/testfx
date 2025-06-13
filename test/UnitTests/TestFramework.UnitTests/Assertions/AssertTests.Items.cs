@@ -141,7 +141,9 @@ public partial class AssertTests
     public void SinglePredicate_WithMessage_WhenOneItemMatches_ShouldPass()
     {
         var collection = new List<string> { "apple", "banana", "cherry" };
-        string result = Assert.ContainsSingle(x => x.StartsWith("b"), collection, "Expected one item starting with 'b'");
+#pragma warning disable CA1865 // Use char overload - not netfx
+        string result = Assert.ContainsSingle(x => x.StartsWith("b", StringComparison.Ordinal), collection, "Expected one item starting with 'b'");
+#pragma warning restore CA1865
         Verify(result == "banana");
     }
 
