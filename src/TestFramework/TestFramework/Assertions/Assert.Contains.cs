@@ -685,4 +685,48 @@ public sealed partial class Assert
     }
 
     #endregion // DoesNotContain
+
+    #region IsInRange
+
+    /// <summary>
+    /// Tests whether the specified value is within the expected range.
+    /// </summary>
+    /// <typeparam name="T">The type of the values to compare.</typeparam>
+    /// <param name="minValue">The minimum value of the expected range.</param>
+    /// <param name="maxValue">The maximum value of the expected range.</param>
+    /// <param name="value">The value to test.</param>
+    public static void IsInRange<T>(T minValue, T maxValue, T value) where T : struct, IComparable<T>
+        => IsInRange(minValue, maxValue, value, string.Empty, null);
+
+    /// <summary>
+    /// Tests whether the specified value is within the expected range.
+    /// </summary>
+    /// <typeparam name="T">The type of the values to compare.</typeparam>
+    /// <param name="minValue">The minimum value of the expected range.</param>
+    /// <param name="maxValue">The maximum value of the expected range.</param>
+    /// <param name="value">The value to test.</param>
+    /// <param name="message">The message to display when the assertion fails.</param>
+    public static void IsInRange<T>(T minValue, T maxValue, T value, string? message) where T : struct, IComparable<T>
+        => IsInRange(minValue, maxValue, value, message, null);
+
+    /// <summary>
+    /// Tests whether the specified value is within the expected range.
+    /// </summary>
+    /// <typeparam name="T">The type of the values to compare.</typeparam>
+    /// <param name="minValue">The minimum value of the expected range.</param>
+    /// <param name="maxValue">The maximum value of the expected range.</param>
+    /// <param name="value">The value to test.</param>
+    /// <param name="message">The message format to display when the assertion fails.</param>
+    /// <param name="parameters">The parameters to format the message.</param>
+    public static void IsInRange<T>(T minValue, T maxValue, T value, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters) where T : struct, IComparable<T>
+    {
+        if (value.CompareTo(minValue) < 0 || value.CompareTo(maxValue) > 0)
+        {
+            string userMessage = BuildUserMessage(message, parameters);
+            string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.IsInRangeFail, value, minValue, maxValue, userMessage);
+            ThrowAssertFailed("IsInRange", finalMessage);
+        }
+    }
+
+    #endregion // IsInRange
 }
