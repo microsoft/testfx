@@ -44,7 +44,7 @@
       </trans-unit>
       <trans-unit id="ReplaceDataTestMethodWithTestMethodTitle">
         <source>Replace 'DataTestMethod' with 'TestMethod'</source>
-        <target state="new">Replace 'DataTestMethod' with 'TestMethod'</target>
+        <target state="translated">將 'DataTestMethod' 取代為 'TestMethod'</target>
         <note />
       </trans-unit>
       <trans-unit id="ReplaceWithConstructorFix">
