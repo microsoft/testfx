@@ -117,9 +117,6 @@ internal interface IPlatformServiceProvider
     /// <param name="testMethod">
     /// The test method.
     /// </param>
-    /// <param name="writer">
-    /// The writer instance for logging.
-    /// </param>
     /// <param name="properties">
     /// The default set of properties the test context needs to be filled with.
     /// </param>
@@ -131,5 +128,5 @@ internal interface IPlatformServiceProvider
     /// <remarks>
     /// This was required for compatibility reasons since the TestContext object that the V1 adapter had for desktop is not .Net Core compliant.
     /// </remarks>
-    ITestContext GetTestContext(ITestMethod testMethod, StringWriter writer, IDictionary<string, object?> properties, IMessageLogger messageLogger, UTF.UnitTestOutcome outcome);
+    ITestContext GetTestContext(ITestMethod testMethod, IDictionary<string, object?> properties, IMessageLogger messageLogger, UTF.UnitTestOutcome outcome);
 }
