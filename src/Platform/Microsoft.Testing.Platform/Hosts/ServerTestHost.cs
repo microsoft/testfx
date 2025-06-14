@@ -21,7 +21,7 @@ using Microsoft.Testing.Platform.TestHost;
 
 namespace Microsoft.Testing.Platform.Hosts;
 
-internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, IDisposable, IOutputDeviceDataProducer
+internal sealed partial class ServerTestHost : CommonHost, IServerTestHost, IDisposable, IOutputDeviceDataProducer
 {
     public const string ProtocolVersion = PlatformVersion.Version;
     private readonly Func<TestFrameworkBuilderData, Task<ITestFramework>> _buildTestFrameworkAsync;

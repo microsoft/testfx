@@ -21,8 +21,7 @@ public sealed class TestApplication : ITestApplication
 #pragma warning restore SA1001 // Commas should be spaced correctly
 #endif
 {
-    private readonly ITestHost _testHost;
-    private static int s_numberOfBuilders;
+    private readonly IHost _host;
     private static UnhandledExceptionHandler? s_unhandledExceptionHandler;
 
     static TestApplication() =>
@@ -30,11 +29,11 @@ public sealed class TestApplication : ITestApplication
         // This is important for the console display system to work properly.
         _ = new SystemConsole();
 
-    internal TestApplication(ITestHost testHost) => _testHost = testHost;
+    internal TestApplication(IHost host) => _host = host;
 
-    internal IServiceProvider ServiceProvider => ((CommonTestHost)_testHost).ServiceProvider;
-
-    internal static int MaxNumberOfBuilders { get; set; } = int.MaxValue;
+    // This cast looks like incorrect assumption.
+    // This property is currently accessed in unit tests only.
+    internal IServiceProvider ServiceProvider => ((CommonHost)_host).ServiceProvider;
 
     /// <summary>
     /// Creates a server mode builder asynchronously.
@@ -208,24 +207,21 @@ public sealed class TestApplication : ITestApplication
         await logger.LogInformationAsync($"{EnvironmentVariableConstants.TESTINGPLATFORM_DEFAULT_HANG_TIMEOUT}: '{environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DEFAULT_HANG_TIMEOUT)}'").ConfigureAwait(false);
     }
 
-    internal static void ReleaseBuilder()
-        => Interlocked.Decrement(ref s_numberOfBuilders);
-
     /// <inheritdoc />
     public void Dispose()
-        => (_testHost as IDisposable)?.Dispose();
+        => (_host as IDisposable)?.Dispose();
 
 #if NETCOREAPP
     /// <inheritdoc />
     public ValueTask DisposeAsync()
-        => _testHost is IAsyncDisposable asyncDisposable
+        => _host is IAsyncDisposable asyncDisposable
             ? asyncDisposable.DisposeAsync()
             : ValueTask.CompletedTask;
 #endif
 
     /// <inheritdoc />
     public async Task<int> RunAsync()
-        => await _testHost.RunAsync().ConfigureAwait(false);
+        => await _host.RunAsync().ConfigureAwait(false);
 
     private static void AttachDebuggerIfNeeded(SystemEnvironment environment, SystemConsole console, SystemProcessHandler systemProcess)
     {
