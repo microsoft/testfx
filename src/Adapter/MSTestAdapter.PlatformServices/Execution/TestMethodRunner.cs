@@ -161,7 +161,7 @@ internal sealed class TestMethodRunner
     internal async Task<TestResult[]> RunTestMethodAsync()
     {
         DebugEx.Assert(_test != null, "Test should not be null.");
-        DebugEx.Assert(_testMethodInfo.TestMethod != null, "Test method should not be null.");
+        DebugEx.Assert(_testMethodInfo.MethodInfo != null, "Test method should not be null.");
 
         List<TestResult> results = [];
         if (_testMethodInfo.Executor == null)
