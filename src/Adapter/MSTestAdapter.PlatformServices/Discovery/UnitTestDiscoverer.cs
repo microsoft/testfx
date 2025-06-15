@@ -85,7 +85,9 @@ internal class UnitTestDiscoverer
         SendTestCases(source, testElements, discoverySink, discoveryContext, logger);
     }
 
+#pragma warning disable IDE0028 // Collection initialization can be simplified - cannot be done for all TFMs. So suppressing.
     private static readonly ConditionalWeakTable<TestCase, object?[]> TestCaseToDataDictionary = new();
+#pragma warning restore IDE0028 // Collection initialization can be simplified
 
     internal static bool TryGetActualData(TestCase testCase, [NotNullWhen(true)] out object?[]? actualData)
         => TestCaseToDataDictionary.TryGetValue(testCase, out actualData);
