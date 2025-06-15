@@ -814,7 +814,7 @@ public class TypeCacheTests : TestContainer
                 testMethod,
                 new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null!, "test"), new Dictionary<string, object?>()));
 
-        Verify(methodInfo == testMethodInfo!.TestMethod);
+        Verify(methodInfo == testMethodInfo!.MethodInfo);
         Verify(testMethodInfo.TimeoutInfo.Timeout == 0);
         Verify(_typeCache.ClassInfoCache.First() == testMethodInfo.Parent);
         Verify(testMethodInfo.Executor is not null);
@@ -834,7 +834,7 @@ public class TypeCacheTests : TestContainer
                 testMethod,
                 new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null!, "test"), new Dictionary<string, object?>()));
 
-        Verify(methodInfo == testMethodInfo!.TestMethod);
+        Verify(methodInfo == testMethodInfo!.MethodInfo);
         Verify(testMethodInfo.TimeoutInfo.Timeout == 10);
         Verify(_typeCache.ClassInfoCache.First() == testMethodInfo.Parent);
         Verify(testMethodInfo.Executor is not null);
@@ -982,7 +982,7 @@ public class TypeCacheTests : TestContainer
                 testMethod,
                 new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null!, "test"), new Dictionary<string, object?>()));
 
-        Verify(methodInfo == testMethodInfo!.TestMethod);
+        Verify(methodInfo == testMethodInfo!.MethodInfo);
         Verify(testMethodInfo.TimeoutInfo.Timeout == 0);
         Verify(_typeCache.ClassInfoCache.First() == testMethodInfo.Parent);
         Verify(testMethodInfo.Executor is not null);
@@ -1115,7 +1115,7 @@ public class TypeCacheTests : TestContainer
                 testMethod,
                 new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null!, "test"), new Dictionary<string, object?>()));
 
-        Verify(methodInfo == testMethodInfo!.TestMethod);
+        Verify(methodInfo == testMethodInfo!.MethodInfo);
         Verify(testMethodInfo.TimeoutInfo.Timeout == 0);
         Verify(_typeCache.ClassInfoCache.First() == testMethodInfo.Parent);
         Verify(testMethodInfo.Executor is not null);
@@ -1132,7 +1132,7 @@ public class TypeCacheTests : TestContainer
                 testMethod,
                 new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null!, "test"), new Dictionary<string, object?>()));
 
-        Verify(methodInfo == testMethodInfo!.TestMethod);
+        Verify(methodInfo == testMethodInfo!.MethodInfo);
         Verify(testMethodInfo.TimeoutInfo.Timeout == 0);
         Verify(_typeCache.ClassInfoCache.First() == testMethodInfo.Parent);
         Verify(testMethodInfo.Executor is not null);
@@ -1155,7 +1155,7 @@ public class TypeCacheTests : TestContainer
 
         // The two MethodInfo instances will have different ReflectedType properties,
         // so cannot be compared directly. Use MethodHandle to verify it's the same.
-        Verify(methodInfo.MethodHandle == testMethodInfo!.TestMethod.MethodHandle);
+        Verify(methodInfo.MethodHandle == testMethodInfo!.MethodInfo.MethodHandle);
         Verify(testMethodInfo.TimeoutInfo.Timeout == 0);
         Verify(_typeCache.ClassInfoCache.First() == testMethodInfo.Parent);
         Verify(testMethodInfo.Executor is not null);
