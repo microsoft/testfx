@@ -85,6 +85,11 @@ internal class UnitTestDiscoverer
         SendTestCases(source, testElements, discoverySink, discoveryContext, logger);
     }
 
+    private static readonly ConditionalWeakTable<TestCase, object[]> TestCaseToDataDictionary = new();
+
+    internal static bool TryGetActualData(TestCase testCase, [NotNullWhen(true)] out object?[]? actualData)
+        => TestCaseToDataDictionary.TryGetValue(testCase, out actualData);
+
     internal void SendTestCases(string source, IEnumerable<UnitTestElement> testElements, ITestCaseDiscoverySink discoverySink, IDiscoveryContext? discoveryContext, IMessageLogger logger)
     {
         bool shouldCollectSourceInformation = MSTestSettings.RunConfigurationSettings.CollectSourceInformation;
@@ -122,6 +127,8 @@ internal class UnitTestDiscoverer
 
                     continue;
                 }
+
+                TestCaseToDataDictionary.Add(testCase, testElement.TestMethod.ActualData);
 
                 if (!hasAnyRunnableTests)
                 {

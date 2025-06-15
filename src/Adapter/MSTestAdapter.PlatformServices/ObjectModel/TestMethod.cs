@@ -147,6 +147,8 @@ public sealed class TestMethod : ITestMethod
     /// </summary>
     internal string?[]? SerializedData { get; set; }
 
+    internal object?[]? ActualData { get; set; }
+
     /// <summary>
     /// Gets or sets the test data source ignore message.
     /// </summary>
