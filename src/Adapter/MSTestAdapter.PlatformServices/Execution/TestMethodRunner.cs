@@ -179,7 +179,7 @@ internal sealed class TestMethodRunner
                 return [TestResult.CreateIgnoredResult(_test.TestDataSourceIgnoreMessage)];
             }
 
-            object?[]? data = DataSerializationHelper.Deserialize(_test.SerializedData);
+            object?[]? data = _test.ActualData ?? DataSerializationHelper.Deserialize(_test.SerializedData);
             TestResult[] testResults = await ExecuteTestWithDataSourceAsync(null, data).ConfigureAwait(false);
             results.AddRange(testResults);
         }
