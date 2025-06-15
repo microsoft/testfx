@@ -85,7 +85,7 @@ internal class UnitTestDiscoverer
         SendTestCases(source, testElements, discoverySink, discoveryContext, logger);
     }
 
-    private static readonly ConditionalWeakTable<TestCase, object[]> TestCaseToDataDictionary = new();
+    private static readonly ConditionalWeakTable<TestCase, object?[]> TestCaseToDataDictionary = new();
 
     internal static bool TryGetActualData(TestCase testCase, [NotNullWhen(true)] out object?[]? actualData)
         => TestCaseToDataDictionary.TryGetValue(testCase, out actualData);
@@ -128,7 +128,10 @@ internal class UnitTestDiscoverer
                     continue;
                 }
 
-                TestCaseToDataDictionary.Add(testCase, testElement.TestMethod.ActualData);
+                if (testElement.TestMethod.ActualData is { } actualData)
+                {
+                    TestCaseToDataDictionary.Add(testCase, actualData);
+                }
 
                 if (!hasAnyRunnableTests)
                 {
