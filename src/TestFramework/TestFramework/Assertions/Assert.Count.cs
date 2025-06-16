@@ -314,6 +314,17 @@ public sealed partial class Assert
     }
 
     [DoesNotReturn]
+    private static void ThrowAssertSingleMatchFailed(string assertionName, int actualCount, string userMessage)
+    {
+        string finalMessage = string.Format(
+            CultureInfo.CurrentCulture,
+            FrameworkMessages.ContainsSingleMatchFailMsg,
+            userMessage,
+            actualCount);
+        ThrowAssertFailed($"Assert.{assertionName}", finalMessage);
+    }
+
+    [DoesNotReturn]
     private static void ThrowAssertIsNotEmptyFailed(string userMessage)
     {
         string finalMessage = string.Format(

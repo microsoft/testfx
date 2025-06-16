@@ -643,7 +643,7 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.ContainsSingle(x => x % 2 == 0, collection);
 
         // Assert
-        action.Should().Throw<AssertFailedException>().WithMessage("*Expected collection of size 1. Actual: 0*");
+        action.Should().Throw<AssertFailedException>().WithMessage("*Expected exactly one item to match the predicate. Actual: 0*");
     }
 
     /// <summary>
@@ -659,7 +659,7 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.ContainsSingle(x => x % 2 == 0, collection);
 
         // Assert
-        action.Should().Throw<AssertFailedException>().WithMessage("*Expected collection of size 1. Actual: 4*");
+        action.Should().Throw<AssertFailedException>().WithMessage("*Expected exactly one item to match the predicate. Actual: 4*");
     }
 
     /// <summary>

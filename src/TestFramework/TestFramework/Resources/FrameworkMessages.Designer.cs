@@ -396,6 +396,15 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Expected exactly one item to match the predicate. Actual: {1}. {0}.
+        /// </summary>
+        internal static string ContainsSingleMatchFailMsg {
+            get {
+                return ResourceManager.GetString("ContainsSingleMatchFailMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Invalid GitHub ticket URL.
         /// </summary>
         internal static string InvalidGitHubUrl {

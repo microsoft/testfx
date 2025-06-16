@@ -185,7 +185,7 @@ public sealed partial class Assert
         }
 
         string userMessage = BuildUserMessage(message, parameters);
-        ThrowAssertCountFailed("ContainsSingle", 1, actualCount, userMessage);
+        ThrowAssertSingleMatchFailed("ContainsSingle", actualCount, userMessage);
 
         // Unreachable code but compiler cannot work it out
         return default;

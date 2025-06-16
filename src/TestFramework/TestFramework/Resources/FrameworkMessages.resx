@@ -296,6 +296,9 @@ Actual: {2}</value>
   <data name="HasCountFailMsg" xml:space="preserve">
     <value>Expected collection of size {1}. Actual: {2}. {0}</value>
   </data>
+  <data name="ContainsSingleMatchFailMsg" xml:space="preserve">
+    <value>Expected exactly one item to match the predicate. Actual: {1}. {0}</value>
+  </data>
   <data name="IsNotEmptyFailMsg" xml:space="preserve">
     <value>Expected collection to contain any item but it is empty. {0}</value>
   </data>

@@ -151,28 +151,28 @@ public partial class AssertTests
     {
         var collection = new List<int> { 1, 3, 5 };
         Exception ex = VerifyThrows(() => Assert.ContainsSingle(x => x % 2 == 0, collection));
-        Verify(ex.Message == "Assert.ContainsSingle failed. Expected collection of size 1. Actual: 0. ");
+        Verify(ex.Message == "Assert.ContainsSingle failed. Expected exactly one item to match the predicate. Actual: 0. ");
     }
 
     public void SinglePredicate_WhenMultipleItemsMatch_ShouldFail()
     {
         var collection = new List<int> { 2, 4, 6 };
         Exception ex = VerifyThrows(() => Assert.ContainsSingle(x => x % 2 == 0, collection));
-        Verify(ex.Message == "Assert.ContainsSingle failed. Expected collection of size 1. Actual: 3. ");
+        Verify(ex.Message == "Assert.ContainsSingle failed. Expected exactly one item to match the predicate. Actual: 3. ");
     }
 
     public void SinglePredicate_MessageArgs_WhenNoItemMatches_ShouldFail()
     {
         var collection = new List<int> { 1, 3, 5 };
         Exception ex = VerifyThrows(() => Assert.ContainsSingle(x => x % 2 == 0, collection, "No even numbers found: {0}", "test"));
-        Verify(ex.Message == "Assert.ContainsSingle failed. Expected collection of size 1. Actual: 0. No even numbers found: test");
+        Verify(ex.Message == "Assert.ContainsSingle failed. Expected exactly one item to match the predicate. Actual: 0. No even numbers found: test");
     }
 
     public void SinglePredicate_MessageArgs_WhenMultipleItemsMatch_ShouldFail()
     {
         var collection = new List<int> { 2, 4, 6 };
         Exception ex = VerifyThrows(() => Assert.ContainsSingle(x => x % 2 == 0, collection, "Too many even numbers: {0}", "test"));
-        Verify(ex.Message == "Assert.ContainsSingle failed. Expected collection of size 1. Actual: 3. Too many even numbers: test");
+        Verify(ex.Message == "Assert.ContainsSingle failed. Expected exactly one item to match the predicate. Actual: 3. Too many even numbers: test");
     }
 
     public void Any_WhenOneItem_ShouldPass()
