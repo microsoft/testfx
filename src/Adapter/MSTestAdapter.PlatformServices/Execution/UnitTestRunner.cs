@@ -212,13 +212,8 @@ internal sealed class UnitTestRunner : MarshalByRefObject
                 }
             }
 
-<<<<<<< dev/ygerges/refactor-cleanup
-            testContextForClassCleanup = PlatformServiceProvider.Instance.GetTestContext(testMethod, writer, properties, messageLogger, testContextForTestExecution.Context.CurrentTestOutcome);
-            testMethodInfo?.Parent.RunClassCleanup(testContextForClassCleanup, _classCleanupManager, testMethodInfo, result);
-=======
             testContextForClassCleanup = PlatformServiceProvider.Instance.GetTestContext(testMethod, properties, messageLogger, testContextForTestExecution.Context.CurrentTestOutcome);
-            testMethodInfo?.Parent.RunClassCleanup(testContextForClassCleanup, _classCleanupManager, testMethodInfo, testMethod, result);
->>>>>>> main
+            testMethodInfo?.Parent.RunClassCleanup(testContextForClassCleanup, _classCleanupManager, testMethodInfo, result);
 
             if (testMethodInfo?.Parent.Parent.IsAssemblyInitializeExecuted == true)
             {
