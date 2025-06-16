@@ -359,15 +359,15 @@ public sealed partial class Assert
     /// <typeparam name="T">
     /// The type of value to test.
     /// </typeparam>
-    /// <param name="actual">
-    /// The value to test. This is the value produced by the code under test.
+    /// <param name="value">
+    /// The value to test.
     /// </param>
     /// <exception cref="AssertFailedException">
-    /// Thrown if <paramref name="actual"/> is not positive.
+    /// Thrown if <paramref name="value"/> is not positive.
     /// </exception>
-    public static void IsPositive<T>(T actual)
+    public static void IsPositive<T>(T value)
         where T : struct, IComparable<T>
-        => IsPositive(actual, string.Empty, null);
+        => IsPositive(value, string.Empty, null);
 
     /// <summary>
     /// Tests whether the specified value is positive and throws an exception
@@ -376,19 +376,19 @@ public sealed partial class Assert
     /// <typeparam name="T">
     /// The type of value to test.
     /// </typeparam>
-    /// <param name="actual">
-    /// The value to test. This is the value produced by the code under test.
+    /// <param name="value">
+    /// The value to test.
     /// </param>
     /// <param name="message">
-    /// The message to include in the exception when <paramref name="actual"/>
+    /// The message to include in the exception when <paramref name="value"/>
     /// is not positive. The message is shown in test results.
     /// </param>
     /// <exception cref="AssertFailedException">
-    /// Thrown if <paramref name="actual"/> is not positive.
+    /// Thrown if <paramref name="value"/> is not positive.
     /// </exception>
-    public static void IsPositive<T>(T actual, string? message)
+    public static void IsPositive<T>(T value, string? message)
         where T : struct, IComparable<T>
-        => IsPositive(actual, message, null);
+        => IsPositive(value, message, null);
 
     /// <summary>
     /// Tests whether the specified value is positive and throws an exception
@@ -397,46 +397,46 @@ public sealed partial class Assert
     /// <typeparam name="T">
     /// The type of value to test.
     /// </typeparam>
-    /// <param name="actual">
-    /// The value to test. This is the value produced by the code under test.
+    /// <param name="value">
+    /// The value to test.
     /// </param>
     /// <param name="message">
-    /// The message to include in the exception when <paramref name="actual"/>
+    /// The message to include in the exception when <paramref name="value"/>
     /// is not positive. The message is shown in test results.
     /// </param>
     /// <param name="parameters">
     /// An array of parameters to use when formatting <paramref name="message"/>.
     /// </param>
     /// <exception cref="AssertFailedException">
-    /// Thrown if <paramref name="actual"/> is not positive.
+    /// Thrown if <paramref name="value"/> is not positive.
     /// </exception>
-    public static void IsPositive<T>(T actual, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters)
+    public static void IsPositive<T>(T value, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters)
         where T : struct, IComparable<T>
     {
         var zero = default(T);
 
         // Handle special case for floating point NaN values
-        if (actual is float floatValue && float.IsNaN(floatValue))
+        if (value is float floatValue && float.IsNaN(floatValue))
         {
             string userMessage = BuildUserMessage(message, parameters);
-            ThrowAssertIsPositiveFailed(actual, userMessage);
+            ThrowAssertIsPositiveFailed(value, userMessage);
             return;
         }
 
-        if (actual is double doubleValue && double.IsNaN(doubleValue))
+        if (value is double doubleValue && double.IsNaN(doubleValue))
         {
             string userMessage = BuildUserMessage(message, parameters);
-            ThrowAssertIsPositiveFailed(actual, userMessage);
+            ThrowAssertIsPositiveFailed(value, userMessage);
             return;
         }
 
-        if (actual.CompareTo(zero) > 0)
+        if (value.CompareTo(zero) > 0)
         {
             return;
         }
 
         string userMessage2 = BuildUserMessage(message, parameters);
-        ThrowAssertIsPositiveFailed(actual, userMessage2);
+        ThrowAssertIsPositiveFailed(value, userMessage2);
     }
 
     #endregion // IsPositive
@@ -450,15 +450,15 @@ public sealed partial class Assert
     /// <typeparam name="T">
     /// The type of value to test.
     /// </typeparam>
-    /// <param name="actual">
-    /// The value to test. This is the value produced by the code under test.
+    /// <param name="value">
+    /// The value to test.
     /// </param>
     /// <exception cref="AssertFailedException">
-    /// Thrown if <paramref name="actual"/> is not negative.
+    /// Thrown if <paramref name="value"/> is not negative.
     /// </exception>
-    public static void IsNegative<T>(T actual)
+    public static void IsNegative<T>(T value)
         where T : struct, IComparable<T>
-        => IsNegative(actual, string.Empty, null);
+        => IsNegative(value, string.Empty, null);
 
     /// <summary>
     /// Tests whether the specified value is negative and throws an exception
@@ -467,19 +467,19 @@ public sealed partial class Assert
     /// <typeparam name="T">
     /// The type of value to test.
     /// </typeparam>
-    /// <param name="actual">
-    /// The value to test. This is the value produced by the code under test.
+    /// <param name="value">
+    /// The value to test.
     /// </param>
     /// <param name="message">
-    /// The message to include in the exception when <paramref name="actual"/>
+    /// The message to include in the exception when <paramref name="value"/>
     /// is not negative. The message is shown in test results.
     /// </param>
     /// <exception cref="AssertFailedException">
-    /// Thrown if <paramref name="actual"/> is not negative.
+    /// Thrown if <paramref name="value"/> is not negative.
     /// </exception>
-    public static void IsNegative<T>(T actual, string? message)
+    public static void IsNegative<T>(T value, string? message)
         where T : struct, IComparable<T>
-        => IsNegative(actual, message, null);
+        => IsNegative(value, message, null);
 
     /// <summary>
     /// Tests whether the specified value is negative and throws an exception
@@ -488,46 +488,46 @@ public sealed partial class Assert
     /// <typeparam name="T">
     /// The type of value to test.
     /// </typeparam>
-    /// <param name="actual">
-    /// The value to test. This is the value produced by the code under test.
+    /// <param name="value">
+    /// The value to test.
     /// </param>
     /// <param name="message">
-    /// The message to include in the exception when <paramref name="actual"/>
+    /// The message to include in the exception when <paramref name="value"/>
     /// is not negative. The message is shown in test results.
     /// </param>
     /// <param name="parameters">
     /// An array of parameters to use when formatting <paramref name="message"/>.
     /// </param>
     /// <exception cref="AssertFailedException">
-    /// Thrown if <paramref name="actual"/> is not negative.
+    /// Thrown if <paramref name="value"/> is not negative.
     /// </exception>
-    public static void IsNegative<T>(T actual, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters)
+    public static void IsNegative<T>(T value, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters)
         where T : struct, IComparable<T>
     {
         var zero = default(T);
 
         // Handle special case for floating point NaN values
-        if (actual is float floatValue && float.IsNaN(floatValue))
+        if (value is float floatValue && float.IsNaN(floatValue))
         {
             string userMessage = BuildUserMessage(message, parameters);
-            ThrowAssertIsNegativeFailed(actual, userMessage);
+            ThrowAssertIsNegativeFailed(value, userMessage);
             return;
         }
 
-        if (actual is double doubleValue && double.IsNaN(doubleValue))
+        if (value is double doubleValue && double.IsNaN(doubleValue))
         {
             string userMessage = BuildUserMessage(message, parameters);
-            ThrowAssertIsNegativeFailed(actual, userMessage);
+            ThrowAssertIsNegativeFailed(value, userMessage);
             return;
         }
 
-        if (actual.CompareTo(zero) < 0)
+        if (value.CompareTo(zero) < 0)
         {
             return;
         }
 
         string userMessage2 = BuildUserMessage(message, parameters);
-        ThrowAssertIsNegativeFailed(actual, userMessage2);
+        ThrowAssertIsNegativeFailed(value, userMessage2);
     }
 
     #endregion // IsNegative
