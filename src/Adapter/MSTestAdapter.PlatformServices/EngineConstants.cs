@@ -149,9 +149,6 @@ internal static class EngineConstants
     private const string ExecutionIdLabel = "ExecutionId";
     private const string ParentExecIdLabel = "ParentExecId";
     private const string InnerResultsCountLabel = "InnerResultsCount";
-    private const string DescriptionLabel = "Description";
-    private const string CssIterationLabel = "CssIteration";
-    private const string CssProjectStructureLabel = "CssProjectStructure";
     private const string WorkItemIdsLabel = "WorkItemIds";
 
     private const string TestRunId = "__Tfs_TestRunId__";
