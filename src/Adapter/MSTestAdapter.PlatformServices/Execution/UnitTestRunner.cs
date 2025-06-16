@@ -26,7 +26,6 @@ internal sealed class UnitTestRunner : MarshalByRefObject
     private readonly ConcurrentDictionary<string, TestAssemblyInfo> _assemblyFixtureTests = new();
     private readonly ConcurrentDictionary<string, TestClassInfo> _classFixtureTests = new();
     private readonly TypeCache _typeCache;
-    private readonly ReflectHelper _reflectHelper;
     private readonly ClassCleanupManager _classCleanupManager;
 
     /// <summary>
@@ -54,8 +53,6 @@ internal sealed class UnitTestRunner : MarshalByRefObject
         MSTestSettings.PopulateSettings(settings);
 
         PlatformServiceProvider.Instance.TestRunCancellationToken ??= new TestRunCancellationToken();
-
-        _reflectHelper = reflectHelper;
         _typeCache = new TypeCache(reflectHelper);
 
         // We can't transport the Enum across AppDomain boundaries because of backwards and forwards compatibility.
@@ -69,7 +66,7 @@ internal sealed class UnitTestRunner : MarshalByRefObject
         _classCleanupManager = new ClassCleanupManager(
             testsToRun,
             MSTestSettings.CurrentSettings.ClassCleanupLifecycle ?? lifecycle,
-            _reflectHelper);
+            reflectHelper);
     }
 
 #pragma warning disable CA1822 // Mark members as static
