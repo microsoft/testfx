@@ -439,17 +439,17 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
       </trans-unit>
       <trans-unit id="PreferTestMethodOverDataTestMethodAnalyzerDescription">
         <source>'DataTestMethodAttribute' is obsolete and provides no additional functionality over 'TestMethodAttribute'. Use 'TestMethodAttribute' for all test methods, including parameterized tests.</source>
-        <target state="new">'DataTestMethodAttribute' is obsolete and provides no additional functionality over 'TestMethodAttribute'. Use 'TestMethodAttribute' for all test methods, including parameterized tests.</target>
+        <target state="translated">Možnost DataTestMethodAttribute je zastaralá a neposkytuje žádné funkce navíc oproti možnosti TestMethodAttribute. Pro všechny testovací metody, včetně parametrizovaných testů, použijte možnost TestMethodAttribute.</target>
         <note />
       </trans-unit>
       <trans-unit id="PreferTestMethodOverDataTestMethodAnalyzerMessageFormat">
         <source>'DataTestMethod' is obsolete. Use 'TestMethod' instead.</source>
-        <target state="new">'DataTestMethod' is obsolete. Use 'TestMethod' instead.</target>
+        <target state="translated">Možnost DataTestMethod je zastaralá. Místo ní použijte možnost TestMethod.</target>
         <note />
       </trans-unit>
       <trans-unit id="PreferTestMethodOverDataTestMethodAnalyzerTitle">
         <source>Prefer 'TestMethod' over 'DataTestMethod'</source>
-        <target state="new">Prefer 'TestMethod' over 'DataTestMethod'</target>
+        <target state="translated">Preferovat TestMethod před DataTestMethod</target>
         <note />
       </trans-unit>
       <trans-unit id="ReviewAlwaysTrueAssertConditionAnalyzerMessageFormat">

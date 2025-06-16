@@ -439,17 +439,17 @@ El tipo que declara estos métodos también debe respetar las reglas siguientes:
       </trans-unit>
       <trans-unit id="PreferTestMethodOverDataTestMethodAnalyzerDescription">
         <source>'DataTestMethodAttribute' is obsolete and provides no additional functionality over 'TestMethodAttribute'. Use 'TestMethodAttribute' for all test methods, including parameterized tests.</source>
-        <target state="new">'DataTestMethodAttribute' is obsolete and provides no additional functionality over 'TestMethodAttribute'. Use 'TestMethodAttribute' for all test methods, including parameterized tests.</target>
+        <target state="translated">"DataTestMethodAttribute" está obsoleto y no proporciona ninguna funcionalidad adicional sobre "TestMethodAttribute". Use "TestMethodAttribute" para todos los métodos de prueba, incluidas las pruebas parametrizadas.</target>
         <note />
       </trans-unit>
       <trans-unit id="PreferTestMethodOverDataTestMethodAnalyzerMessageFormat">
         <source>'DataTestMethod' is obsolete. Use 'TestMethod' instead.</source>
-        <target state="new">'DataTestMethod' is obsolete. Use 'TestMethod' instead.</target>
+        <target state="translated">"DataTestMethod" está obsoleto. Use "TestMethod" en su lugar.</target>
         <note />
       </trans-unit>
       <trans-unit id="PreferTestMethodOverDataTestMethodAnalyzerTitle">
         <source>Prefer 'TestMethod' over 'DataTestMethod'</source>
-        <target state="new">Prefer 'TestMethod' over 'DataTestMethod'</target>
+        <target state="translated">Preferir "TestMethod" a "DataTestMethod"</target>
         <note />
       </trans-unit>
       <trans-unit id="ReviewAlwaysTrueAssertConditionAnalyzerMessageFormat">

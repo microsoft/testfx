@@ -144,6 +144,53 @@ public sealed partial class Assert
         return default;
     }
 
+    /// <summary>
+    /// Tests whether the specified collection contains exactly one element that matches the given predicate.
+    /// </summary>
+    /// <typeparam name="T">The type of the collection items.</typeparam>
+    /// <param name="predicate">A function to test each element for a condition.</param>
+    /// <param name="collection">The collection.</param>
+    /// <returns>The item that matches the predicate.</returns>
+    public static T ContainsSingle<T>(Func<T, bool> predicate, IEnumerable<T> collection)
+        => ContainsSingle(predicate, collection, string.Empty, null);
+
+    /// <summary>
+    /// Tests whether the specified collection contains exactly one element that matches the given predicate.
+    /// </summary>
+    /// <typeparam name="T">The type of the collection items.</typeparam>
+    /// <param name="predicate">A function to test each element for a condition.</param>
+    /// <param name="collection">The collection.</param>
+    /// <param name="message">The message to display when the assertion fails.</param>
+    /// <returns>The item that matches the predicate.</returns>
+    public static T ContainsSingle<T>(Func<T, bool> predicate, IEnumerable<T> collection, string? message)
+        => ContainsSingle(predicate, collection, message, null);
+
+    /// <summary>
+    /// Tests whether the specified collection contains exactly one element that matches the given predicate.
+    /// </summary>
+    /// <typeparam name="T">The type of the collection items.</typeparam>
+    /// <param name="predicate">A function to test each element for a condition.</param>
+    /// <param name="collection">The collection.</param>
+    /// <param name="message">The message format to display when the assertion fails.</param>
+    /// <param name="parameters">The parameters to format the message.</param>
+    /// <returns>The item that matches the predicate.</returns>
+    public static T ContainsSingle<T>(Func<T, bool> predicate, IEnumerable<T> collection, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters)
+    {
+        var matchingElements = collection.Where(predicate).ToList();
+        int actualCount = matchingElements.Count;
+
+        if (actualCount == 1)
+        {
+            return matchingElements[0];
+        }
+
+        string userMessage = BuildUserMessage(message, parameters);
+        ThrowAssertCountFailed("ContainsSingle", 1, actualCount, userMessage);
+
+        // Unreachable code but compiler cannot work it out
+        return default;
+    }
+
     #region Contains
 
     /// <summary>

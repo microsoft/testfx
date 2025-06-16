@@ -4,4 +4,7 @@ Microsoft.VisualStudio.TestTools.UnitTesting.ConditionBaseAttribute.Mode.get -> 
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsInRange<T>(T minValue, T maxValue, T value) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsInRange<T>(T minValue, T maxValue, T value, string? message) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsInRange<T>(T minValue, T maxValue, T value, string? message, params object?[]? parameters) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ContainsSingle<T>(System.Func<T, bool>! predicate, System.Collections.Generic.IEnumerable<T>! collection) -> T
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ContainsSingle<T>(System.Func<T, bool>! predicate, System.Collections.Generic.IEnumerable<T>! collection, string? message) -> T
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ContainsSingle<T>(System.Func<T, bool>! predicate, System.Collections.Generic.IEnumerable<T>! collection, string? message, params object?[]? parameters) -> T
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Throws<TException>(System.Func<object?>! action, ref Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertNonStrictThrowsInterpolatedStringHandler<TException!> message) -> TException!

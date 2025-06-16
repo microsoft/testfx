@@ -4,52 +4,52 @@
     <body>
       <trans-unit id="AssemblyCleanupTimedOut">
         <source>Assembly cleanup method '{0}.{1}' timed out after {2}ms</source>
-        <target state="new">Assembly cleanup method '{0}.{1}' timed out after {2}ms</target>
+        <target state="translated">{2}밀리초 후 어셈블리 정리 메서드 '{0}.{1}'이(가) 시간 초과되었습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="AssemblyCleanupWasCancelled">
         <source>Assembly cleanup method '{0}.{1}' was canceled</source>
-        <target state="new">Assembly cleanup method '{0}.{1}' was canceled</target>
+        <target state="translated">어셈블리 정리 메서드 '{0}.{1}'이(가) 취소되었습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="AssemblyInitializeTimedOut">
         <source>Assembly initialize method '{0}.{1}' timed out after {2}ms</source>
-        <target state="new">Assembly initialize method '{0}.{1}' timed out after {2}ms</target>
+        <target state="translated">{2}밀리초 후 '{0}.{1}' 어셈블리 초기화 메서드의 시간이 초과되었습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="AssemblyInitializeWasCancelled">
         <source>Assembly initialize method '{0}.{1}' was canceled</source>
-        <target state="new">Assembly initialize method '{0}.{1}' was canceled</target>
+        <target state="translated">어셈블리 초기화 메서드 '{0}.{1}'(이)가 취소되었습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="AttachmentSetDisplayName">
         <source>MSTestAdapterV2</source>
-        <target state="new">MSTestAdapterV2</target>
+        <target state="translated">MSTestAdapterV2</target>
         <note />
       </trans-unit>
       <trans-unit id="CannotEnumerateIDataSourceAttribute">
         <source>Exception occurred while enumerating IDataSource attribute on "{0}.{1}": {2}</source>
-        <target state="new">Exception occurred while enumerating IDataSource attribute on "{0}.{1}": {2}</target>
+        <target state="translated">"{0}.{1}"에서 IDataSource 특성을 열거하는 동안 예외가 발생했습니다. {2}</target>
         <note>{0}: TypeName with namespace,
 {1}: Method name,
 {2}: Exception details</note>
       </trans-unit>
       <trans-unit id="CannotExpandIDataSourceAttribute">
         <source>Exception occurred while expanding IDataSource rows from attribute on "{0}.{1}": {2}</source>
-        <target state="new">Exception occurred while expanding IDataSource rows from attribute on "{0}.{1}": {2}</target>
+        <target state="translated">"{0}.{1}"의 특성에서 IDataSource 행을 확장하는 동안 예외가 발생했습니다. {2}</target>
         <note>{0}: TypeName with namespace, 
 {1}: Method name,
 {2}: CannotExpandIDataSourceAttribute_DuplicateDisplayName or CannotExpandIDataSourceAttribute_CannotSerialize</note>
       </trans-unit>
       <trans-unit id="CannotExpandIDataSourceAttribute_CannotSerialize">
         <source>Data on index {0} for "{1}" cannot be serialized. All data provided through "IDataSource" should be serializable. If you need to test non-serializable data sources, please make sure you add "TestDataSourceDiscovery" attribute on your test assembly and set the discovery option to "DuringExecution".</source>
-        <target state="new">Data on index {0} for "{1}" cannot be serialized. All data provided through "IDataSource" should be serializable. If you need to test non-serializable data sources, please make sure you add "TestDataSourceDiscovery" attribute on your test assembly and set the discovery option to "DuringExecution".</target>
+        <target state="translated">"{1}"에 대한 {0} 인덱스의 데이터를 직렬화할 수 없습니다. "IDataSource"를 통해 제공된 모든 데이터를 직렬화할 수 있어야 합니다. 직렬화할 수 없는 데이터 원본을 테스트해야 하는 경우 테스트 어셈블리에 "TestDataSourceDiscovery" 특성을 추가하고 검색 옵션을 "DuringExecution"으로 설정하세요.</target>
         <note>{0}: Zero based index if an element inside of an array,
 {1}: Test name</note>
       </trans-unit>
       <trans-unit id="CannotExpandIDataSourceAttribute_DuplicateDisplayName">
         <source>Display name "{2}" on indexes {0} and {1} are duplicate. Display names should be unique.</source>
-        <target state="new">Display name "{2}" on indexes {0} and {1} are duplicate. Display names should be unique.</target>
+        <target state="translated">{0} 및 {1} 인덱스의 "{2}" 표시 이름이 중복됩니다. 표시 이름은 고유해야 합니다.</target>
         <note>{0}, {1}: Zero based index if an element inside of an array
 {2}: Test display name.</note>
       </trans-unit>
@@ -62,34 +62,34 @@
         <source>Cannot run test method '{0}.{1}': Test data doesn't match method parameters. Either the count or types are different.
 Test expected {2} parameter(s), with types '{3}',
 but received {4} argument(s), with types '{5}'.</source>
-        <target state="new">Cannot run test method '{0}.{1}': Test data doesn't match method parameters. Either the count or types are different.
-Test expected {2} parameter(s), with types '{3}',
-but received {4} argument(s), with types '{5}'.</target>
+        <target state="translated">테스트 메서드 '{0}{1}'을(를) 실행할 수 없음: 테스트 데이터가 메서드 매개 변수와 일치하지 않습니다. 개수 또는 형식이 다릅니다.
+테스트에 {2} 매개 변수로 ‘{3}’ 형식이 필요하지만,
+{4} 인수의 ‘{5}’ 형식을 받았습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="CannotRunTestMethodNoDataError">
         <source>Cannot run test method '{0}.{1}': Method has parameters, but does not define any test source. Use '[DataRow]', '[DynamicData]', or a custom 'ITestDataSource' data source to provide test data.</source>
-        <target state="new">Cannot run test method '{0}.{1}': Method has parameters, but does not define any test source. Use '[DataRow]', '[DynamicData]', or a custom 'ITestDataSource' data source to provide test data.</target>
+        <target state="translated">테스트 메서드 '{0}{1}'을(를) 실행할 수 없음: 메서드에 매개 변수가 있지만 테스트 원본을 정의하지 않습니다. '[DataRow]', '[DynamicData]' 또는 사용자 지정 'ITestDataSource' 데이터 원본을 사용하여 테스트 데이터를 제공합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassCleanupTimedOut">
         <source>Class cleanup method '{0}.{1}' timed out after {2}ms</source>
-        <target state="new">Class cleanup method '{0}.{1}' timed out after {2}ms</target>
+        <target state="translated">{2}밀리초 후 클래스 정리 메서드 '{0}.{1}'이(가) 시간 초과되었습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassCleanupWasCancelled">
         <source>Class cleanup method '{0}.{1}' was canceled</source>
-        <target state="new">Class cleanup method '{0}.{1}' was canceled</target>
+        <target state="translated">클래스 정리 메서드 '{0}.{1}'이(가) 취소되었습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassInitializeTimedOut">
         <source>Class initialize method '{0}.{1}' timed out after {2}ms</source>
-        <target state="new">Class initialize method '{0}.{1}' timed out after {2}ms</target>
+        <target state="translated">{2}밀리초 후 '{0}.{1}' 클래스 초기화 메서드의 시간이 초과되었습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassInitializeWasCancelled">
         <source>Class initialize method '{0}.{1}' was canceled</source>
-        <target state="new">Class initialize method '{0}.{1}' was canceled</target>
+        <target state="translated">'클래스 초기화 메서드 '{0}.{1}'이(가) 취소되었습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="Common_CannotBeNullOrEmpty">
@@ -99,17 +99,17 @@ but received {4} argument(s), with types '{5}'.</target>
       </trans-unit>
       <trans-unit id="CouldNotInspectTypeDuringDiscovery">
         <source>MSTestAdapter failed to discover tests in class '{0}' of assembly '{1}' because {2}.</source>
-        <target state="new">MSTestAdapter failed to discover tests in class '{0}' of assembly '{1}' because {2}.</target>
+        <target state="translated">MSTestAdapter가 {2} 때문에 어셈블리 '{1}'의 클래스 '{0}'에서 테스트를 검색하지 못했습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="DataDrivenResultDisplayName">
         <source>{0} (Data Row {1})</source>
-        <target state="new">{0} (Data Row {1})</target>
+        <target state="translated">{0}(데이터 행 {1})</target>
         <note />
       </trans-unit>
       <trans-unit id="DebugTraceBanner">
         <source>Debug Trace:</source>
-        <target state="new">Debug Trace:</target>
+        <target state="translated">디버그 추적:</target>
         <note />
       </trans-unit>
       <trans-unit id="DeploymentErrorBadDeploymentItem">
@@ -179,79 +179,79 @@ but received {4} argument(s), with types '{5}'.</target>
       </trans-unit>
       <trans-unit id="DiscoveryWarning">
         <source>[MSTest][Discovery][{0}] {1}</source>
-        <target state="new">[MSTest][Discovery][{0}] {1}</target>
+        <target state="translated">[MSTest][검색][{0}] {1}</target>
         <note />
       </trans-unit>
       <trans-unit id="DuplicateConfigurationError">
         <source>Both '.runsettings' and '.testconfig.json' files have been detected. Please select only one of these test configuration files.</source>
-        <target state="new">Both '.runsettings' and '.testconfig.json' files have been detected. Please select only one of these test configuration files.</target>
+        <target state="translated">'.runsettings' 및 '.testconfig.json' 파일이 모두 검색되었습니다. 이러한 테스트 구성 파일 중 하나만 선택하세요.</target>
         <note />
       </trans-unit>
       <trans-unit id="EnumeratorLoadTypeErrorFormat">
         <source>{0}: {1}</source>
-        <target state="new">{0}: {1}</target>
+        <target state="translated">{0}: {1}</target>
         <note />
       </trans-unit>
       <trans-unit id="ExceptionOccuredWhileGettingTheExceptionDescription">
         <source>"{0}": (Failed to get exception description due to an exception of type "{1}".</source>
-        <target state="new">"{0}": (Failed to get exception description due to an exception of type "{1}".</target>
+        <target state="translated">"{0}": ("{1}" 형식의 예외로 인해 예외 설명을 가져오지 못했습니다.</target>
         <note>{0}: Type of the original exception that we're trying to get the description of.
 {1}: Thrown exception</note>
       </trans-unit>
       <trans-unit id="ExceptionsThrown">
         <source>Exceptions thrown:</source>
-        <target state="new">Exceptions thrown:</target>
+        <target state="translated">예외 발생:</target>
         <note>This is usually precedes by TestAssembly_AssemblyDiscoveryFailure message, and preceded by list of exceptions thrown in a test discovery session.</note>
       </trans-unit>
       <trans-unit id="Execution_Test_Cancelled">
         <source>Test '{0}' was canceled</source>
-        <target state="new">Test '{0}' was canceled</target>
+        <target state="translated">테스트 '{0}'이(가) 취소되었습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="Execution_Test_Timeout">
         <source>Test '{0}' timed out after {1}ms</source>
-        <target state="new">Test '{0}' timed out after {1}ms</target>
+        <target state="translated">테스트 '{0}'이(가) {1}밀리초 후에 시간 초과되었습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="FailedToGetCustomAttribute">
         <source>Getting custom attributes for type {0} threw exception (will ignore and use the reflection way): {1}</source>
-        <target state="new">Getting custom attributes for type {0} threw exception (will ignore and use the reflection way): {1}</target>
+        <target state="translated">{0} 형식에 대한 사용자 지정 특성을 가져오는 데 예외가 발생했습니다(무시하고 리플렉션 방법 사용). {1}</target>
         <note>{0}: Attribute full type name.
 {1}: Exception description</note>
       </trans-unit>
       <trans-unit id="GenericParameterCantBeInferred">
         <source>The type of the generic parameter '{0}' could not be inferred.</source>
-        <target state="new">The type of the generic parameter '{0}' could not be inferred.</target>
+        <target state="translated">제네릭 매개 변수 '{0}'의 형식을 유추할 수 없습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="GenericParameterCantBeInferredBecauseNoArguments">
         <source>The generic test method '{0}' doesn't have arguments, so the generic parameter cannot be inferred.</source>
-        <target state="new">The generic test method '{0}' doesn't have arguments, so the generic parameter cannot be inferred.</target>
+        <target state="translated">제네릭 테스트 메서드 '{0}'에 인수가 없으므로 제네릭 매개 변수를 유추할 수 없습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="GenericParameterConflict">
         <source>Found two conflicting types for generic parameter '{0}'. The conflicting types are '{1}' and '{2}'.</source>
-        <target state="new">Found two conflicting types for generic parameter '{0}'. The conflicting types are '{1}' and '{2}'.</target>
+        <target state="translated">제네릭 매개 변수 '{0}'에 대해 충돌하는 두 가지 형식을 찾았습니다. 충돌하는 형식은 '{1}' 및 ''{2}입니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidClassCleanupLifecycleValue">
         <source>Invalid value '{0}' specified for 'ClassCleanupLifecycle'. Supported scopes are {1}.</source>
-        <target state="new">Invalid value '{0}' specified for 'ClassCleanupLifecycle'. Supported scopes are {1}.</target>
+        <target state="translated">'ClassCleanupLifecycle'에 대해 '{0}' 잘못된 값이 지정되었습니다. 지원되는 범위는 {1}입니다.</target>
         <note>'ClassCleanupLifecycle' is a setting name that shouldn't be localized.</note>
       </trans-unit>
       <trans-unit id="InvalidParallelScopeValue">
         <source>Invalid value '{0}' specified for 'Scope'. Supported scopes are {1}.</source>
-        <target state="new">Invalid value '{0}' specified for 'Scope'. Supported scopes are {1}.</target>
+        <target state="translated">'Scope'에 대해 잘못된 값 '{0}'이(가) 지정되었습니다. 지원되는 범위는 {1}입니다.</target>
         <note>'Scope' is a setting name that shouldn't be localized.</note>
       </trans-unit>
       <trans-unit id="InvalidParallelWorkersValue">
         <source>Invalid value '{0}' specified for 'Workers'. The value should be a non-negative integer.</source>
-        <target state="new">Invalid value '{0}' specified for 'Workers'. The value should be a non-negative integer.</target>
+        <target state="translated">'Workers'에 대해 잘못된 값 '{0}'이(가) 지정되었습니다. 이 값은 음수가 아닌 정수여야 합니다.</target>
         <note>`Workers` is a setting name that shouldn't be localized.</note>
       </trans-unit>
       <trans-unit id="InvalidSettingsXmlAttribute">
         <source>Invalid settings '{0}'. Unexpected XmlAttribute: '{1}'.</source>
-        <target state="new">Invalid settings '{0}'. Unexpected XmlAttribute: '{1}'.</target>
+        <target state="translated">'{0}' 설정이 잘못되었습니다. 예기치 않은 XmlAttribute '{1}'이(가) 있습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidSettingsXmlElement">
@@ -261,7 +261,7 @@ but received {4} argument(s), with types '{5}'.</target>
       </trans-unit>
       <trans-unit id="InvalidSettingsXmlElement1">
         <source>Invalid settings '{0}'. Unexpected XmlElement: '{1}'.</source>
-        <target state="new">Invalid settings '{0}'. Unexpected XmlElement: '{1}'.</target>
+        <target state="translated">'{0}' 설정이 잘못되었습니다. 예기치 않은 XmlElement '{1}'이(가) 있습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidValue">
@@ -271,12 +271,12 @@ but received {4} argument(s), with types '{5}'.</target>
       </trans-unit>
       <trans-unit id="InvalidValue1">
         <source>Invalid value '{0}' for runsettings entry '{1}', setting will be ignored.</source>
-        <target state="new">Invalid value '{0}' for runsettings entry '{1}', setting will be ignored.</target>
+        <target state="translated">runsettings 항목 '{1}'에 대해 '{0}' 값이 잘못되었습니다. 설정은 무시됩니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="LegacyScenariosNotSupportedWarning">
         <source>Warning : A testsettings file or a vsmdi file is not supported with the MSTest V2 Adapter.</source>
-        <target state="new">Warning : A testsettings file or a vsmdi file is not supported with the MSTest V2 Adapter.</target>
+        <target state="translated">경고: MSTest V2 어댑터에서는 testsettings 파일 또는 vsmdi 파일이 지원되지 않습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="MissingDeploymentDependency">
@@ -291,67 +291,67 @@ but received {4} argument(s), with types '{5}'.</target>
       </trans-unit>
       <trans-unit id="OlderTFMVersionFound">
         <source>An older version of MSTestV2 package is loaded in assembly, test discovery might fail to discover all data tests if they depend on `.runsettings` file.</source>
-        <target state="new">An older version of MSTestV2 package is loaded in assembly, test discovery might fail to discover all data tests if they depend on `.runsettings` file.</target>
+        <target state="translated">이전 버전 MSTestV2 패키지가 어셈블리에 로드되어 테스트 검색이 '.runsettings' 파일에 종속된 경우 모든 데이터 테스트를 검색하지 못할 수 있습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="STAIsOnlySupportedOnWindowsWarning">
         <source>Runsettings entry '&lt;ExecutionApartmentState&gt;STA&lt;/ExecutionApartmentState&gt;' is not supported on non-Windows OSes.</source>
-        <target state="new">Runsettings entry '&lt;ExecutionApartmentState&gt;STA&lt;/ExecutionApartmentState&gt;' is not supported on non-Windows OSes.</target>
+        <target state="translated">Runsettings 항목 '&lt;ExecutionApartmentState&gt;STA&lt;/ExecutionApartmentState&gt;'는 Windows 이외의 OS에서는 지원되지 않습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="SourcesNotSupported">
         <source>Running tests in any of the provided sources is not supported for the selected platform</source>
-        <target state="new">Running tests in any of the provided sources is not supported for the selected platform</target>
+        <target state="translated">선택된 플랫폼의 경우 제공된 소스에서 테스트를 실행할 수 없습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestAssembly_AssemblyDiscoveryFailure">
         <source>Failed to discover tests from assembly {0}. Reason:{1}</source>
-        <target state="new">Failed to discover tests from assembly {0}. Reason:{1}</target>
+        <target state="translated">어셈블리 {0}에서 테스트를 검색하지 못했습니다. 이유:{1}</target>
         <note />
       </trans-unit>
       <trans-unit id="TestAssembly_FileDoesNotExist">
         <source>File does not exist: {0}</source>
-        <target state="new">File does not exist: {0}</target>
+        <target state="translated">파일이 없습니다. {0}</target>
         <note />
       </trans-unit>
       <trans-unit id="TestCleanupTimedOut">
         <source>Test cleanup method '{0}.{1}' timed out after {2}ms</source>
-        <target state="new">Test cleanup method '{0}.{1}' timed out after {2}ms</target>
+        <target state="translated">{2}밀리초 후 테스트 정리 메서드 '{0}.{1}'이(가) 시간 초과되었습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestCleanupWasCancelled">
         <source>Test cleanup method '{0}.{1}' was canceled</source>
-        <target state="new">Test cleanup method '{0}.{1}' was canceled</target>
+        <target state="translated">테스트 정리 메서드 '{0}.{1}'이(가) 취소되었습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestContextIsNull">
         <source>TestContext cannot be Null.</source>
-        <target state="new">TestContext cannot be Null.</target>
+        <target state="translated">TestContext는 null일 수 없습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestContextMessageBanner">
         <source>TestContext Messages:</source>
-        <target state="new">TestContext Messages:</target>
+        <target state="translated">TestContext 메시지:</target>
         <note />
       </trans-unit>
       <trans-unit id="TestInitializeTimedOut">
         <source>Test initialize method '{0}.{1}' timed out after {2}ms</source>
-        <target state="new">Test initialize method '{0}.{1}' timed out after {2}ms</target>
+        <target state="translated">{2}밀리초 후 '{0}.{1}' 테스트 초기화 메서드의 시간이 초과되었습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestInitializeWasCancelled">
         <source>Test initialize method '{0}.{1}' was canceled</source>
-        <target state="new">Test initialize method '{0}.{1}' was canceled</target>
+        <target state="translated">테스트 초기화 메서드 '{0}.{1}'이(가) 취소되었습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestNotFound">
         <source>Test method {0} was not found.</source>
-        <target state="new">Test method {0} was not found.</target>
+        <target state="translated">{0} 테스트 메서드를 찾을 수 없습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestParallelizationBanner">
         <source>Test Parallelization enabled for {0} (Workers: {1}, Scope: {2})</source>
-        <target state="new">Test Parallelization enabled for {0} (Workers: {1}, Scope: {2})</target>
+        <target state="translated">{0}에 대해 테스트 병렬 처리를 사용합니다(Workers: {1}, Scope: {2}).</target>
         <note>`Workers` is a setting name that shouldn't be localized. 'Scope' is a setting name that shouldn't be localized.</note>
       </trans-unit>
       <trans-unit id="TestRunName">
@@ -362,53 +362,53 @@ but received {4} argument(s), with types '{5}'.</target>
       <trans-unit id="TypeLoadFailed">
         <source>Unable to load types from the test source '{0}'. Some or all of the tests in this source may not be discovered.
 Error: {1}</source>
-        <target state="new">Unable to load types from the test source '{0}'. Some or all of the tests in this source may not be discovered.
-Error: {1}</target>
+        <target state="translated">테스트 소스 '{0}'에서 형식을 로드할 수 없습니다. 이 소스의 일부 또는 모든 테스트를 검색할 수 없습니다.
+오류: {1}</target>
         <note />
       </trans-unit>
       <trans-unit id="UTA_AssemblyCleanupMethodWasUnsuccesful">
         <source>Assembly Cleanup method {0}.{1} failed. Error Message: {2}. StackTrace: {3}</source>
-        <target state="new">Assembly Cleanup method {0}.{1} failed. Error Message: {2}. StackTrace: {3}</target>
+        <target state="translated">어셈블리 정리 메서드 {0}.{1}이(가) 실패했습니다. 오류 메시지: {2}. StackTrace: {3}</target>
         <note />
       </trans-unit>
       <trans-unit id="UTA_AssemblyInitMethodThrows">
         <source>Assembly Initialization method {0}.{1} threw exception. {2}: {3}. Aborting test execution.</source>
-        <target state="new">Assembly Initialization method {0}.{1} threw exception. {2}: {3}. Aborting test execution.</target>
+        <target state="translated">어셈블리 초기화 메서드 {0}.{1}에서 예외를 throw했습니다. {2}: {3}. 테스트 실행을 중단합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="UTA_ClassCleanupMethodWasUnsuccesful">
         <source>Class Cleanup method {0}.{1} failed. Error Message: {2}. Stack Trace: {3}</source>
-        <target state="new">Class Cleanup method {0}.{1} failed. Error Message: {2}. Stack Trace: {3}</target>
+        <target state="translated">클래스 정리 메서드 {0}.{1}이(가) 실패했습니다. 오류 메시지: {2}. 스택 추적: {3}</target>
         <note />
       </trans-unit>
       <trans-unit id="UTA_ClassInitMethodThrows">
         <source>Class Initialization method {0}.{1} threw exception. {2}: {3}.</source>
-        <target state="new">Class Initialization method {0}.{1} threw exception. {2}: {3}.</target>
+        <target state="translated">클래스 초기화 메서드 {0}.{1}에서 예외를 throw했습니다. {2}: {3}</target>
         <note />
       </trans-unit>
       <trans-unit id="UTA_ClassOrAssemblyCleanupMethodHasWrongSignature">
         <source>Method {0}.{1} has wrong signature. The method must be static, public, does not return a value and should not take any parameter. Additionally, if you are using async-await in method then return-type must be 'Task' or 'ValueTask'.</source>
-        <target state="new">Method {0}.{1} has wrong signature. The method must be static, public, does not return a value and should not take any parameter. Additionally, if you are using async-await in method then return-type must be 'Task' or 'ValueTask'.</target>
+        <target state="translated">{0}.{1} 메서드의 서명이 잘못되었습니다. 메서드는 정적이고 공용이어야 하며, 값을 반환하거나 매개 변수를 취하지 않습니다. 또한 메서드에서 비동기 대기를 사용하는 경우 반환 형식은 'Task' 또는 'ValueTask'여야 합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="UTA_ClassOrAssemblyInitializeMethodHasWrongSignature">
         <source>Method {0}.{1} has wrong signature. The method must be static, public, does not return a value and should take a single parameter of type TestContext. Additionally, if you are using async-await in method then return-type must be 'Task' or 'ValueTask'.</source>
-        <target state="new">Method {0}.{1} has wrong signature. The method must be static, public, does not return a value and should take a single parameter of type TestContext. Additionally, if you are using async-await in method then return-type must be 'Task' or 'ValueTask'.</target>
+        <target state="translated">{0}.{1} 메서드의 서명이 잘못되었습니다. 메서드는 static, public이어야 하고, 값을 반환하지 않으며, TestContext 형식의 단일 매개 변수를 사용해야 합니다. 또한 메서드에서 비동기 대기를 사용하는 경우 반환 형식은 'Task' 또는 'ValueTask'여야 합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="UTA_CleanupMethodThrows">
         <source>TestCleanup method {0}.{1} threw exception. {2}.</source>
-        <target state="new">TestCleanup method {0}.{1} threw exception. {2}.</target>
+        <target state="translated">TestCleanup 메서드 {0}.{1}에서 예외가 발생했습니다. {2}.</target>
         <note />
       </trans-unit>
       <trans-unit id="UTA_CleanupMethodThrowsGeneralError">
         <source>Error calling Test Cleanup method for test class {0}: {1}</source>
-        <target state="new">Error calling Test Cleanup method for test class {0}: {1}</target>
+        <target state="translated">테스트 클래스 {0}에 대한 테스트 정리 메서드를 호출하는 오류: {1}</target>
         <note />
       </trans-unit>
       <trans-unit id="UTA_CleanupStackTrace">
         <source>TestCleanup Stack Trace</source>
-        <target state="new">TestCleanup Stack Trace</target>
+        <target state="translated">TestCleanup 스택 추적</target>
         <note />
       </trans-unit>
       <trans-unit id="UTA_DataSourceConfigurationSectionMissing">
@@ -418,7 +418,7 @@ Error: {1}</target>
       </trans-unit>
       <trans-unit id="UTA_EndOfInnerExceptionTrace">
         <source>--- End of inner exception stack trace ---</source>
-        <target state="new">--- End of inner exception stack trace ---</target>
+        <target state="translated">--- 내부 예외 스택 추적의 끝 ---</target>
         <note />
       </trans-unit>
       <trans-unit id="UTA_ErrorDataConnectionFailed">
@@ -428,163 +428,163 @@ Error: {1}</target>
       </trans-unit>
       <trans-unit id="UTA_ErrorInValidTestContextSignature">
         <source>UTA031: class {0} does not have valid TestContext property. TestContext must be of type TestContext, must be non-static, and must be public. For example: public TestContext TestContext.</source>
-        <target state="new">UTA031: class {0} does not have valid TestContext property. TestContext must be of type TestContext, must be non-static, and must be public. For example: public TestContext TestContext.</target>
+        <target state="translated">UTA031: {0} 클래스에 유효한 TestContext 속성이 없습니다. TestContext는 TestContext 유형이어야 하고, 정적이 아니어야 하며, 일반적이어야 합니다. 예: public TestContext TestContext.</target>
         <note />
       </trans-unit>
       <trans-unit id="UTA_ErrorIncorrectTestMethodSignature">
         <source>UTA007: Method {1} defined in class {0} does not have correct signature. Test method marked with the [TestMethod] attribute must be non-static, public, return-type as void  and should not take any parameter. Example: public void Test.Class1.Test(). Additionally, if you are using async-await in test method then return-type must be 'Task' or 'ValueTask'. Example: public async Task Test.Class1.Test2()</source>
-        <target state="new">UTA007: Method {1} defined in class {0} does not have correct signature. Test method marked with the [TestMethod] attribute must be non-static, public, return-type as void  and should not take any parameter. Example: public void Test.Class1.Test(). Additionally, if you are using async-await in test method then return-type must be 'Task' or 'ValueTask'. Example: public async Task Test.Class1.Test2()</target>
+        <target state="translated">UTA007: 클래스 {0}에 정의된 메서드 {1}에 올바른 서명이 없습니다. [TestMethod] 특성으로 표시된 테스트 메서드는 non-static, public, return-type이 void여야 하며 매개 변수를 사용하지 않아야 합니다. 예: public void Test.Class1.Test(). 또한 테스트 메서드에서 비동기 대기를 사용하는 경우 반환 형식은 Task여야 합니다. 예: public async Task Test.Class1.Test2()</target>
         <note />
       </trans-unit>
       <trans-unit id="UTA_ErrorInvalidTimeout">
         <source>UTA054: {0}.{1} has invalid Timeout attribute. The timeout must be an integer value greater than 0.</source>
-        <target state="new">UTA054: {0}.{1} has invalid Timeout attribute. The timeout must be an integer value greater than 0.</target>
+        <target state="translated">UTA054: {0}.{1}에 잘못된 Timeout 특성이 있습니다. 시간 제한 값은 0보다 큰 정수여야 합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="UTA_ErrorMultiAssemblyClean">
         <source>UTA014: {0}: Cannot define more than one method with the AssemblyCleanup attribute inside an assembly.</source>
-        <target state="new">UTA014: {0}: Cannot define more than one method with the AssemblyCleanup attribute inside an assembly.</target>
+        <target state="translated">UTA014: {0}: 어셈블리 내부에서 AssemblyCleanup 특성을 사용하는 메서드를 여러 개 정의할 수 없습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="UTA_ErrorMultiAssemblyInit">
         <source>UTA013: {0}: Cannot define more than one method with the AssemblyInitialize attribute inside an assembly.</source>
-        <target state="new">UTA013: {0}: Cannot define more than one method with the AssemblyInitialize attribute inside an assembly.</target>
+        <target state="translated">UTA013: {0}: 어셈블리 내부에서 AssemblyInitialize 특성을 사용하는 메서드를 여러 개 정의할 수 없습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="UTA_ErrorMultiClassClean">
         <source>UTA026: {0}: Cannot define more than one method with the ClassCleanup attribute inside a class.</source>
-        <target state="new">UTA026: {0}: Cannot define more than one method with the ClassCleanup attribute inside a class.</target>
+        <target state="translated">UTA026: {0}: 클래스 내부에서 ClassCleanup 특성을 사용하는 메서드를 여러 개 정의할 수 없습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="UTA_ErrorMultiClassInit">
         <source>UTA025: {0}: Cannot define more than one method with the ClassInitialize attribute inside a class.</source>
-        <target state="new">UTA025: {0}: Cannot define more than one method with the ClassInitialize attribute inside a class.</target>
+        <target state="translated">UTA025: {0}: 클래스 내부에서 ClassInitialize 특성을 사용하는 메서드를 여러 개 정의할 수 없습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="UTA_ErrorMultiClean">
         <source>UTA024: {0}: Cannot define more than one method with the TestCleanup attribute.</source>
-        <target state="new">UTA024: {0}: Cannot define more than one method with the TestCleanup attribute.</target>
+        <target state="translated">UTA024: {0}: TestCleanup 특성을 사용하는 메서드를 여러 개 정의할 수 없습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="UTA_ErrorMultiInit">
         <source>UTA018: {0}: Cannot define more than one method with the TestInitialize attribute.</source>
-        <target state="new">UTA018: {0}: Cannot define more than one method with the TestInitialize attribute.</target>
+        <target state="translated">UTA018: {0}: TestInitialize 특성을 사용하는 메서드를 여러 개 정의할 수 없습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="UTA_ErrorNonPublicTestClass">
         <source>UTA001: TestClass attribute defined on non-public class {0}</source>
-        <target state="new">UTA001: TestClass attribute defined on non-public class {0}</target>
+        <target state="translated">UTA001: public이 아닌 클래스 {0}에서 TestClass 특성을 정의했습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="UTA_ErrorPredefinedTestProperty">
         <source>UTA023: {0}: Cannot define predefined property {2} on method {1}.</source>
-        <target state="new">UTA023: {0}: Cannot define predefined property {2} on method {1}.</target>
+        <target state="translated">UTA023: {0}: {1} 메서드에서 미리 정의된 속성 {2}을(를) 정의할 수 없습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="UTA_ErrorTestClassIsGenericNonAbstract">
         <source>TestClass attribute defined on generic non-abstract class {0}</source>
-        <target state="new">TestClass attribute defined on generic non-abstract class {0}</target>
+        <target state="translated">일반 비추상 클래스 {0}에 정의된 TestClass 속성</target>
         <note />
       </trans-unit>
       <trans-unit id="UTA_ErrorTestPropertyNullOrEmpty">
         <source>UTA021: {0}: Null or empty custom property defined on method {1}. The custom property must have a valid name.</source>
-        <target state="new">UTA021: {0}: Null or empty custom property defined on method {1}. The custom property must have a valid name.</target>
+        <target state="translated">UTA021: {0}: {1} 메서드에서 Null 또는 빈 사용자 지정 속성을 정의했습니다. 사용자 지정 속성에는 올바른 이름이 지정되어 있어야 합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="UTA_ExecuteThrewException">
         <source>An unhandled exception was thrown by the 'Execute' method. Please report this error to the author of the attribute '{0}'.
 {1}</source>
-        <target state="new">An unhandled exception was thrown by the 'Execute' method. Please report this error to the author of the attribute '{0}'.
+        <target state="translated">'Execute' 메서드에서 처리되지 않은 예외가 발생했습니다. '{0}' 특성의 작성자에게 이 오류를 보고하세요.
 {1}</target>
         <note />
       </trans-unit>
       <trans-unit id="UTA_ExpectedExceptionAttributeConstructionException">
         <source>The ExpectedException attribute defined on test method {0}.{1} threw an exception during construction.
 {2}</source>
-        <target state="new">The ExpectedException attribute defined on test method {0}.{1} threw an exception during construction.
+        <target state="translated">테스트 메서드 {0}.{1}에 정의된 ExpectedException 특성이 생성하는 동안 예외를 throw했습니다.
 {2}</target>
         <note />
       </trans-unit>
       <trans-unit id="UTA_FailedToGetTestMethodException">
         <source>Failed to obtain the exception thrown by test method {0}.{1}.</source>
-        <target state="new">Failed to obtain the exception thrown by test method {0}.{1}.</target>
+        <target state="translated">테스트 메서드 {0}.{1}에서 throw한 예외를 가져오지 못했습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="UTA_InitMethodThrows">
         <source>Initialization method {0}.{1} threw exception. {2}.</source>
-        <target state="new">Initialization method {0}.{1} threw exception. {2}.</target>
+        <target state="translated">초기화 메서드 {0}.{1}에서 예외를 throw했습니다. {2}.</target>
         <note />
       </trans-unit>
       <trans-unit id="UTA_InstanceCreationError">
         <source>Unable to create instance of class {0}. Error: {1}.</source>
-        <target state="new">Unable to create instance of class {0}. Error: {1}.</target>
+        <target state="translated">{0} 클래스의 인스턴스를 만들 수 없습니다. 오류: {1}</target>
         <note />
       </trans-unit>
       <trans-unit id="UTA_MethodDoesNotExists">
         <source>Method {0}.{1} does not exist.</source>
-        <target state="new">Method {0}.{1} does not exist.</target>
+        <target state="translated">{0}.{1} 메서드가 없습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="UTA_MultipleAttributesOnTestMethod">
         <source>The test method '{0}.{1}' has multiple attributes derived from '{2}' defined on it. Only one such attribute is allowed.</source>
-        <target state="new">The test method '{0}.{1}' has multiple attributes derived from '{2}' defined on it. Only one such attribute is allowed.</target>
+        <target state="translated">테스트 메서드 '{0}.{1}'에 {2}에서 파생된 여러 특성이 정의되어 있습니다. 이러한 특성은 하나만 허용됩니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="UTA_NoTestResult">
         <source>Error in executing test. No result returned by extension. If using extension of TestMethodAttribute then please contact vendor.</source>
-        <target state="new">Error in executing test. No result returned by extension. If using extension of TestMethodAttribute then please contact vendor.</target>
+        <target state="translated">테스트를 실행하는 중에 오류가 발생했습니다. 확장에서 결과가 반환되지 않았습니다. TestMethodAttribute 확장을 사용하는 경우 공급업체에 문의하세요.</target>
         <note />
       </trans-unit>
       <trans-unit id="UTA_NoValidConstructor">
         <source>Cannot find a valid constructor for test class '{0}'. Valid constructors are 'public' and either parameterless or with one parameter of type 'TestContext'.</source>
-        <target state="new">Cannot find a valid constructor for test class '{0}'. Valid constructors are 'public' and either parameterless or with one parameter of type 'TestContext'.</target>
+        <target state="translated">테스트 클래스 '{0}'에 대한 유효한 생성자를 찾을 수 없습니다. 유효한 생성자는 'public'이며 매개 변수가 없거나 'TestContext' 유형의 매개 변수가 하나 있습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="UTA_TestContextLoadError">
         <source>Unable to find property {0}.TestContext. Error:{1}.</source>
-        <target state="new">Unable to find property {0}.TestContext. Error:{1}.</target>
+        <target state="translated">{0}.TestContext 속성을 찾을 수 없습니다. 오류: {1}</target>
         <note />
       </trans-unit>
       <trans-unit id="UTA_TestContextSetError">
         <source>Unable to set TestContext property for the class {0}. Error: {1}.</source>
-        <target state="new">Unable to set TestContext property for the class {0}. Error: {1}.</target>
+        <target state="translated">{0} 클래스에 대해 TestContext 속성을 설정할 수 없습니다. 오류: {1}</target>
         <note />
       </trans-unit>
       <trans-unit id="UTA_TestContextTypeMismatchLoadError">
         <source>The {0}.TestContext has incorrect type.</source>
-        <target state="new">The {0}.TestContext has incorrect type.</target>
+        <target state="translated">{0}.TestContext의 형식이 잘못되었습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="UTA_TestInitializeAndCleanupMethodHasWrongSignature">
         <source>Method {0}.{1} has wrong signature. The method must be non-static, public, does not return a value and should not take any parameter. Additionally, if you are using async-await in method then return-type must be 'Task' or 'ValueTask'.</source>
-        <target state="new">Method {0}.{1} has wrong signature. The method must be non-static, public, does not return a value and should not take any parameter. Additionally, if you are using async-await in method then return-type must be 'Task' or 'ValueTask'.</target>
+        <target state="translated">{0}.{1} 메서드의 서명이 잘못되었습니다. 메서드는 정적이 아니고 공용이어야 하며, 값을 반환하거나 매개 변수를 사용할 수 없습니다. 또한 메서드에서 비동기 대기를 사용하는 경우 반환 형식은 'Task' 또는 'ValueTask'여야 합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="UTA_TestMethodThrows">
         <source>Test method {0}.{1} threw exception: 
 {2}</source>
-        <target state="new">Test method {0}.{1} threw exception: 
+        <target state="translated">테스트 메서드 {0}.{1}에서 예외를 throw했습니다. 
 {2}</target>
         <note />
       </trans-unit>
       <trans-unit id="UTA_TypeLoadError">
         <source>Unable to get type {0}. Error: {1}.</source>
-        <target state="new">Unable to get type {0}. Error: {1}.</target>
+        <target state="translated">{0} 형식을 가져올 수 없습니다. 오류: {1}</target>
         <note />
       </trans-unit>
       <trans-unit id="UTA_UserCodeThrewNullValueException">
         <source>The called code threw an exception that was caught, but the exception value was null</source>
-        <target state="new">The called code threw an exception that was caught, but the exception value was null</target>
+        <target state="translated">호출된 코드에서 확인된 예외가 발생했지만 예외 값이 null입니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="UTA_WrongThread">
         <source>{0} For UWP projects, if you are using UI objects in test consider using [UITestMethod] attribute instead of [TestMethod] to execute test in UI thread.</source>
-        <target state="new">{0} For UWP projects, if you are using UI objects in test consider using [UITestMethod] attribute instead of [TestMethod] to execute test in UI thread.</target>
+        <target state="translated">{0} UWP 프로젝트의 경우 테스트에서 UI 개체를 사용 중이면 [TestMethod] 대신 [UITestMethod] 특성을 사용하여 UI 스레드에서 테스트를 실행하세요.</target>
         <note />
       </trans-unit>
       <trans-unit id="UTF_FailedToGetExceptionMessage">
         <source>(Failed to get the message for an exception of type {0} due to an exception.)</source>
-        <target state="new">(Failed to get the message for an exception of type {0} due to an exception.)</target>
+        <target state="translated">(예외로 인해 {0} 형식의 예외에 대한 메시지를 가져오지 못했습니다.)</target>
         <note />
       </trans-unit>
       <trans-unit id="VersionMismatchBetweenAdapterAndFramework">
