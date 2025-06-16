@@ -395,7 +395,7 @@ public sealed partial class Assert
     public static void IsPositive<T>(T actual, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters)
         where T : struct, IComparable<T>
     {
-        var zero = (T)Convert.ChangeType(0, typeof(T));
+        var zero = default(T);
         
         // Handle special case for floating point NaN values
         if (actual is float floatValue && float.IsNaN(floatValue))
@@ -482,7 +482,7 @@ public sealed partial class Assert
     public static void IsNegative<T>(T actual, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters)
         where T : struct, IComparable<T>
     {
-        var zero = (T)Convert.ChangeType(0, typeof(T));
+        var zero = default(T);
         
         // Handle special case for floating point NaN values
         if (actual is float floatValue && float.IsNaN(floatValue))
