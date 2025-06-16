@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -414,7 +414,7 @@ public sealed partial class Assert
         where T : struct, IComparable<T>
     {
         var zero = default(T);
-        
+
         // Handle special case for floating point NaN values
         if (actual is float floatValue && float.IsNaN(floatValue))
         {
@@ -422,14 +422,14 @@ public sealed partial class Assert
             ThrowAssertIsPositiveFailed(actual, userMessage);
             return;
         }
-        
+
         if (actual is double doubleValue && double.IsNaN(doubleValue))
         {
             string userMessage = BuildUserMessage(message, parameters);
             ThrowAssertIsPositiveFailed(actual, userMessage);
             return;
         }
-        
+
         if (actual.CompareTo(zero) > 0)
         {
             return;
@@ -505,7 +505,7 @@ public sealed partial class Assert
         where T : struct, IComparable<T>
     {
         var zero = default(T);
-        
+
         // Handle special case for floating point NaN values
         if (actual is float floatValue && float.IsNaN(floatValue))
         {
@@ -513,14 +513,14 @@ public sealed partial class Assert
             ThrowAssertIsNegativeFailed(actual, userMessage);
             return;
         }
-        
+
         if (actual is double doubleValue && double.IsNaN(doubleValue))
         {
             string userMessage = BuildUserMessage(message, parameters);
             ThrowAssertIsNegativeFailed(actual, userMessage);
             return;
         }
-        
+
         if (actual.CompareTo(zero) < 0)
         {
             return;
