@@ -70,21 +70,6 @@ internal sealed class UnitTestElement
     internal string? AsyncTypeName { get; set; }
 
     /// <summary>
-    /// Gets or sets the Css Iteration for the test method.
-    /// </summary>
-    internal string? CssIteration { get; set; }
-
-    /// <summary>
-    /// Gets or sets the Css Project Structure for the test method.
-    /// </summary>
-    internal string? CssProjectStructure { get; set; }
-
-    /// <summary>
-    /// Gets or sets the Description for the test method.
-    /// </summary>
-    internal string? Description { get; set; }
-
-    /// <summary>
     /// Gets or sets the Work Item Ids for the test method.
     /// </summary>
     internal string[]? WorkItemIds { get; set; }
@@ -151,21 +136,6 @@ internal sealed class UnitTestElement
         if (Traits is { Length: > 0 })
         {
             testCase.Traits.AddRange(Traits);
-        }
-
-        if (!StringEx.IsNullOrEmpty(CssIteration))
-        {
-            testCase.SetPropertyValue(EngineConstants.CssIterationProperty, CssIteration);
-        }
-
-        if (!StringEx.IsNullOrEmpty(CssProjectStructure))
-        {
-            testCase.SetPropertyValue(EngineConstants.CssProjectStructureProperty, CssProjectStructure);
-        }
-
-        if (!StringEx.IsNullOrEmpty(Description))
-        {
-            testCase.SetPropertyValue(EngineConstants.DescriptionProperty, Description);
         }
 
         if (WorkItemIds != null)

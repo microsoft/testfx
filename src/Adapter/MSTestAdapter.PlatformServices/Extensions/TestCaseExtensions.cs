@@ -106,24 +106,6 @@ internal static class TestCaseExtensions
             testElement.Traits = [.. testCase.Traits];
         }
 
-        string? cssIteration = testCase.GetPropertyValue<string>(EngineConstants.CssIterationProperty, null);
-        if (!StringEx.IsNullOrWhiteSpace(cssIteration))
-        {
-            testElement.CssIteration = cssIteration;
-        }
-
-        string? cssProjectStructure = testCase.GetPropertyValue<string>(EngineConstants.CssProjectStructureProperty, null);
-        if (!StringEx.IsNullOrWhiteSpace(cssProjectStructure))
-        {
-            testElement.CssProjectStructure = cssProjectStructure;
-        }
-
-        string? description = testCase.GetPropertyValue<string>(EngineConstants.DescriptionProperty, null);
-        if (!StringEx.IsNullOrWhiteSpace(description))
-        {
-            testElement.Description = description;
-        }
-
         string[]? workItemIds = testCase.GetPropertyValue<string[]>(EngineConstants.WorkItemIdsProperty, null);
         if (workItemIds is { Length: > 0 })
         {
