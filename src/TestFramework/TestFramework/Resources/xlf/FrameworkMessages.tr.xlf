@@ -315,6 +315,36 @@ Gerçekte olan: {2}</target>
       - {1} fully qualified class name like "Microsoft.UI.Xaml.Application"
     </note>
       </trans-unit>
+      <trans-unit id="IsGreaterThanFailMsg">
+        <source>Expected value &lt;{1}&gt; to be greater than actual value &lt;{2}&gt;. {0}</source>
+        <target state="new">Expected value &lt;{1}&gt; to be greater than actual value &lt;{2}&gt;. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="IsGreaterThanOrEqualToFailMsg">
+        <source>Expected value &lt;{1}&gt; to be greater than or equal to actual value &lt;{2}&gt;. {0}</source>
+        <target state="new">Expected value &lt;{1}&gt; to be greater than or equal to actual value &lt;{2}&gt;. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="IsLessThanFailMsg">
+        <source>Expected value &lt;{1}&gt; to be less than actual value &lt;{2}&gt;. {0}</source>
+        <target state="new">Expected value &lt;{1}&gt; to be less than actual value &lt;{2}&gt;. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="IsLessThanOrEqualToFailMsg">
+        <source>Expected value &lt;{1}&gt; to be less than or equal to actual value &lt;{2}&gt;. {0}</source>
+        <target state="new">Expected value &lt;{1}&gt; to be less than or equal to actual value &lt;{2}&gt;. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="IsPositiveFailMsg">
+        <source>Expected value &lt;{1}&gt; to be positive. {0}</source>
+        <target state="new">Expected value &lt;{1}&gt; to be positive. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="IsNegativeFailMsg">
+        <source>Expected value &lt;{1}&gt; to be negative. {0}</source>
+        <target state="new">Expected value &lt;{1}&gt; to be negative. {0}</target>
+        <note></note>
+      </trans-unit>
     </body>
   </file>
 </xliff>
