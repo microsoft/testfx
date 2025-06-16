@@ -41,7 +41,7 @@ public class TestMethodInfo : ITestMethod
         DebugEx.Assert(testMethod != null, "TestMethod should not be null");
         DebugEx.Assert(parent != null, "Parent should not be null");
 
-        TestMethod = testMethod;
+        MethodInfo = testMethod;
         Parent = parent;
         TestContext = testContext;
         ExpectedException = ResolveExpectedException();
@@ -74,12 +74,12 @@ public class TestMethodInfo : ITestMethod
     /// <summary>
     /// Gets the parameter types of the test method.
     /// </summary>
-    public ParameterInfo[] ParameterTypes => TestMethod.GetParameters();
+    public ParameterInfo[] ParameterTypes => MethodInfo.GetParameters();
 
     /// <summary>
     /// Gets the return type of the test method.
     /// </summary>
-    public Type ReturnType => TestMethod.ReturnType;
+    public Type ReturnType => MethodInfo.ReturnType;
 
     /// <summary>
     /// Gets the name of the class declaring the test method.
@@ -89,22 +89,17 @@ public class TestMethodInfo : ITestMethod
     /// <summary>
     /// Gets the name of the test method.
     /// </summary>
-    public string TestMethodName => TestMethod.Name;
+    public string TestMethodName => MethodInfo.Name;
 
     /// <summary>
     /// Gets the methodInfo for test method.
     /// </summary>
-    public MethodInfo MethodInfo => TestMethod;
+    public MethodInfo MethodInfo { get; }
 
     /// <summary>
     /// Gets the arguments with which test method is invoked.
     /// </summary>
     public object?[]? Arguments { get; private set; }
-
-    /// <summary>
-    /// Gets testMethod referred by this object.
-    /// </summary>
-    internal MethodInfo TestMethod { get; }
 
     /// <summary>
     /// Gets the parent class Info object.
@@ -121,7 +116,7 @@ public class TestMethodInfo : ITestMethod
     /// <param name="inherit">Whether or not getting the attributes that are inherited.</param>
     /// <returns>An array of the attributes.</returns>
     public Attribute[]? GetAllAttributes(bool inherit)
-        => [.. ReflectHelper.Instance.GetAttributes<Attribute>(TestMethod, inherit)];
+        => [.. ReflectHelper.Instance.GetAttributes<Attribute>(MethodInfo, inherit)];
 
     /// <summary>
     /// Gets all attributes of the test method.
@@ -131,7 +126,7 @@ public class TestMethodInfo : ITestMethod
     /// <returns>An array of the attributes.</returns>
     public TAttributeType[] GetAttributes<TAttributeType>(bool inherit)
         where TAttributeType : Attribute
-        => [.. ReflectHelper.Instance.GetAttributes<TAttributeType>(TestMethod, inherit)];
+        => [.. ReflectHelper.Instance.GetAttributes<TAttributeType>(MethodInfo, inherit)];
 
     /// <inheritdoc cref="InvokeAsync(object[])" />
     public virtual TestResult Invoke(object?[]? arguments)
@@ -152,14 +147,10 @@ public class TestMethodInfo : ITestMethod
         // check if arguments are set for data driven tests
         arguments ??= Arguments;
 
-        LogMessageListener? listener = null;
         watch.Start();
 
         try
         {
-            ThreadSafeStringWriter.CleanState();
-            listener = new LogMessageListener(MSTestSettings.CurrentSettings.CaptureDebugTraces);
-
             result = IsTimeoutSet
                 ? await ExecuteInternalWithTimeoutAsync(arguments).ConfigureAwait(false)
                 : await ExecuteInternalAsync(arguments, null).ConfigureAwait(false);
@@ -171,16 +162,13 @@ public class TestMethodInfo : ITestMethod
 
             if (result != null)
             {
+                var testContextImpl = TestContext as TestContextImplementation;
+                result.LogOutput = testContextImpl?.GetOut();
+                result.LogError = testContextImpl?.GetErr();
+                result.DebugTrace = testContextImpl?.GetTrace();
+                result.TestContextMessages = TestContext?.GetAndClearDiagnosticMessages();
+                result.ResultFiles = TestContext?.GetResultFiles();
                 result.Duration = watch.Elapsed;
-                if (listener is not null)
-                {
-                    result.DebugTrace = listener.GetAndClearDebugTrace();
-                    result.LogOutput = listener.GetAndClearStandardOutput();
-                    result.LogError = listener.GetAndClearStandardError();
-                    result.TestContextMessages = TestContext?.GetAndClearDiagnosticMessages();
-                    result.ResultFiles = TestContext?.GetResultFiles();
-                    listener.Dispose();
-                }
             }
         }
 
@@ -191,7 +179,7 @@ public class TestMethodInfo : ITestMethod
 
     internal object?[] ResolveArguments(object?[] arguments)
     {
-        ParameterInfo[] parametersInfo = TestMethod.GetParameters();
+        ParameterInfo[] parametersInfo = MethodInfo.GetParameters();
         int requiredParameterCount = 0;
         bool hasParamsValue = false;
         object? paramsValues = null;
@@ -270,8 +258,8 @@ public class TestMethodInfo : ITestMethod
     /// <returns> The timeout value if defined in milliseconds. 0 if not defined. </returns>
     private TimeoutInfo GetTestTimeout()
     {
-        DebugEx.Assert(TestMethod != null, "TestMethod should be non-null");
-        TimeoutAttribute? timeoutAttribute = ReflectHelper.Instance.GetFirstAttributeOrDefault<TimeoutAttribute>(TestMethod, inherit: false);
+        DebugEx.Assert(MethodInfo != null, "TestMethod should be non-null");
+        TimeoutAttribute? timeoutAttribute = ReflectHelper.Instance.GetFirstAttributeOrDefault<TimeoutAttribute>(MethodInfo, inherit: false);
         if (timeoutAttribute is null)
         {
             return TimeoutInfo.FromTestTimeoutSettings();
@@ -279,7 +267,7 @@ public class TestMethodInfo : ITestMethod
 
         if (!timeoutAttribute.HasCorrectTimeout)
         {
-            string message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorInvalidTimeout, TestMethod.DeclaringType!.FullName, TestMethod.Name);
+            string message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorInvalidTimeout, MethodInfo.DeclaringType!.FullName, MethodInfo.Name);
             throw new TypeInspectionException(message);
         }
 
@@ -294,7 +282,7 @@ public class TestMethodInfo : ITestMethod
     {
         // Get the derived TestMethod attribute from reflection.
         // It should be non-null as it was already validated by IsValidTestMethod.
-        TestMethodAttribute testMethodAttribute = ReflectHelper.Instance.GetFirstAttributeOrDefault<TestMethodAttribute>(TestMethod, inherit: false)!;
+        TestMethodAttribute testMethodAttribute = ReflectHelper.Instance.GetFirstAttributeOrDefault<TestMethodAttribute>(MethodInfo, inherit: false)!;
 
         // Get the derived TestMethod attribute from Extended TestClass Attribute
         // If the extended TestClass Attribute doesn't have extended TestMethod attribute then base class returns back the original testMethod Attribute
@@ -314,7 +302,7 @@ public class TestMethodInfo : ITestMethod
 
         try
         {
-            expectedExceptions = ReflectHelper.Instance.GetAttributes<ExpectedExceptionBaseAttribute>(TestMethod, inherit: true);
+            expectedExceptions = ReflectHelper.Instance.GetAttributes<ExpectedExceptionBaseAttribute>(MethodInfo, inherit: true);
         }
         catch (Exception ex)
         {
@@ -324,7 +312,7 @@ public class TestMethodInfo : ITestMethod
                 CultureInfo.CurrentCulture,
                 Resource.UTA_ExpectedExceptionAttributeConstructionException,
                 Parent.ClassType.FullName,
-                TestMethod.Name,
+                MethodInfo.Name,
                 ex.GetFormattedExceptionMessage());
             throw new TypeInspectionException(errorMessage);
         }
@@ -350,7 +338,7 @@ public class TestMethodInfo : ITestMethod
     /// </returns>
     private RetryBaseAttribute? GetRetryAttribute()
     {
-        IEnumerable<RetryBaseAttribute> attributes = ReflectHelper.Instance.GetAttributes<RetryBaseAttribute>(TestMethod, inherit: true);
+        IEnumerable<RetryBaseAttribute> attributes = ReflectHelper.Instance.GetAttributes<RetryBaseAttribute>(MethodInfo, inherit: true);
         using IEnumerator<RetryBaseAttribute> enumerator = attributes.GetEnumerator();
         if (!enumerator.MoveNext())
         {
@@ -376,7 +364,7 @@ public class TestMethodInfo : ITestMethod
             CultureInfo.CurrentCulture,
             Resource.UTA_MultipleAttributesOnTestMethod,
             Parent.ClassType.FullName,
-            TestMethod.Name,
+            MethodInfo.Name,
             attributeName);
         throw new TypeInspectionException(errorMessage);
     }
@@ -390,7 +378,7 @@ public class TestMethodInfo : ITestMethod
     [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
     private async Task<TestResult> ExecuteInternalAsync(object?[]? arguments, CancellationTokenSource? timeoutTokenSource)
     {
-        DebugEx.Assert(TestMethod != null, "UnitTestExecuter.DefaultTestMethodInvoke: testMethod = null.");
+        DebugEx.Assert(MethodInfo != null, "UnitTestExecuter.DefaultTestMethodInvoke: testMethod = null.");
 
         var result = new TestResult();
 
@@ -417,7 +405,7 @@ public class TestMethodInfo : ITestMethod
 
                         if (executionContext is null)
                         {
-                            Task? invokeResult = TestMethod.GetInvokeResultAsync(_classInstance, arguments);
+                            Task? invokeResult = MethodInfo.GetInvokeResultAsync(_classInstance, arguments);
                             if (invokeResult is not null)
                             {
                                 await invokeResult.ConfigureAwait(false);
@@ -432,7 +420,7 @@ public class TestMethodInfo : ITestMethod
                             {
                                 try
                                 {
-                                    Task? invokeResult = TestMethod.GetInvokeResultAsync(_classInstance, arguments);
+                                    Task? invokeResult = MethodInfo.GetInvokeResultAsync(_classInstance, arguments);
                                     if (invokeResult is not null)
                                     {
                                         await invokeResult.ConfigureAwait(false);

@@ -141,6 +141,11 @@ Actual: {2}</source>
         <target state="translated">잘못된 GitHub 티켓 URL</target>
         <note />
       </trans-unit>
+      <trans-unit id="IsInRangeFail">
+        <source>Value '{0}' is not within the expected range [{1}, {2}]. {3}</source>
+        <target state="new">Value '{0}' is not within the expected range [{1}, {2}]. {3}</target>
+        <note />
+      </trans-unit>
       <trans-unit id="IsInstanceOfFailMsg">
         <source>{0} Expected type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;.</source>
         <target state="translated">{0} 예상 형식: &lt;{1}&gt;, 실제 형식: &lt;{2}&gt;.</target>

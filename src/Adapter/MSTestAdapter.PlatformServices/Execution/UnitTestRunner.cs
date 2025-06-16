@@ -52,6 +52,13 @@ internal sealed class UnitTestRunner : MarshalByRefObject
         // This would just be resetting the settings to itself in non desktop workflows.
         MSTestSettings.PopulateSettings(settings);
 
+        if (MSTestSettings.CurrentSettings.CaptureDebugTraces)
+        {
+            Console.SetOut(new ConsoleOutCapturer(Console.Out));
+            Console.SetError(new ConsoleErrorCapturer(Console.Error));
+            Trace.Listeners.Add(new TextWriterTraceListener(new TraceTextWriter()));
+        }
+
         PlatformServiceProvider.Instance.TestRunCancellationToken ??= new TestRunCancellationToken();
         _typeCache = new TypeCache(reflectHelper);
 
@@ -146,9 +153,8 @@ internal sealed class UnitTestRunner : MarshalByRefObject
 
         try
         {
-            using var writer = new ThreadSafeStringWriter(CultureInfo.InvariantCulture, "context");
             var properties = new Dictionary<string, object?>(testContextProperties);
-            testContextForTestExecution = PlatformServiceProvider.Instance.GetTestContext(testMethod, writer, properties, messageLogger, UTF.UnitTestOutcome.InProgress);
+            testContextForTestExecution = PlatformServiceProvider.Instance.GetTestContext(testMethod, properties, messageLogger, UTF.UnitTestOutcome.InProgress);
 
             // Get the testMethod
             TestMethodInfo? testMethodInfo = _typeCache.GetTestMethodInfo(
@@ -168,7 +174,7 @@ internal sealed class UnitTestRunner : MarshalByRefObject
                 _assemblyFixtureTests.TryAdd(testMethod.AssemblyName, testMethodInfo.Parent.Parent);
                 _classFixtureTests.TryAdd(testMethod.AssemblyName + testMethod.FullClassName, testMethodInfo.Parent);
 
-                testContextForAssemblyInit = PlatformServiceProvider.Instance.GetTestContext(testMethod, writer, properties, messageLogger, testContextForTestExecution.Context.CurrentTestOutcome);
+                testContextForAssemblyInit = PlatformServiceProvider.Instance.GetTestContext(testMethod, properties, messageLogger, testContextForTestExecution.Context.CurrentTestOutcome);
 
                 TestResult assemblyInitializeResult = RunAssemblyInitializeIfNeeded(testMethodInfo, testContextForAssemblyInit);
 
@@ -178,9 +184,9 @@ internal sealed class UnitTestRunner : MarshalByRefObject
                 }
                 else
                 {
-                    testContextForClassInit = PlatformServiceProvider.Instance.GetTestContext(testMethod, writer, properties, messageLogger, testContextForAssemblyInit.Context.CurrentTestOutcome);
+                    testContextForClassInit = PlatformServiceProvider.Instance.GetTestContext(testMethod, properties, messageLogger, testContextForAssemblyInit.Context.CurrentTestOutcome);
 
-                    TestResult classInitializeResult = testMethodInfo.Parent.GetResultOrRunClassInitialize(testContextForClassInit, assemblyInitializeResult.LogOutput!, assemblyInitializeResult.LogError!, assemblyInitializeResult.DebugTrace!, assemblyInitializeResult.TestContextMessages!);
+                    TestResult classInitializeResult = testMethodInfo.Parent.GetResultOrRunClassInitialize(testContextForClassInit, assemblyInitializeResult.LogOutput, assemblyInitializeResult.LogError, assemblyInitializeResult.DebugTrace, assemblyInitializeResult.TestContextMessages);
                     DebugEx.Assert(testMethodInfo.Parent.IsClassInitializeExecuted, "IsClassInitializeExecuted should be true after attempting to run it.");
                     if (classInitializeResult.Outcome != UTF.UnitTestOutcome.Passed)
                     {
@@ -192,16 +198,13 @@ internal sealed class UnitTestRunner : MarshalByRefObject
                         testContextForTestExecution.SetOutcome(testContextForClassInit.Context.CurrentTestOutcome);
                         RetryBaseAttribute? retryAttribute = testMethodInfo.RetryAttribute;
                         var testMethodRunner = new TestMethodRunner(testMethodInfo, testMethod, testContextForTestExecution);
-                        result = await testMethodRunner.ExecuteAsync(classInitializeResult.LogOutput!, classInitializeResult.LogError!, classInitializeResult.DebugTrace!, classInitializeResult.TestContextMessages!).ConfigureAwait(false);
+                        result = await testMethodRunner.ExecuteAsync(classInitializeResult.LogOutput, classInitializeResult.LogError, classInitializeResult.DebugTrace, classInitializeResult.TestContextMessages).ConfigureAwait(false);
                         if (retryAttribute is not null && !RetryBaseAttribute.IsAcceptableResultForRetry(result))
                         {
                             RetryResult retryResult = await retryAttribute.ExecuteAsync(
                                 new RetryContext(
-                                    async () => await testMethodRunner.ExecuteAsync(
-                                        classInitializeResult.LogOutput!,
-                                        classInitializeResult.LogError!,
-                                        classInitializeResult.DebugTrace!,
-                                        classInitializeResult.TestContextMessages!).ConfigureAwait(false), result)).ConfigureAwait(false);
+                                    async () => await testMethodRunner.ExecuteAsync(classInitializeResult.LogOutput, classInitializeResult.LogError, classInitializeResult.DebugTrace, classInitializeResult.TestContextMessages).ConfigureAwait(false),
+                                    result)).ConfigureAwait(false);
 
                             result = retryResult.TryGetLast() ?? throw ApplicationStateGuard.Unreachable();
                         }
@@ -209,12 +212,17 @@ internal sealed class UnitTestRunner : MarshalByRefObject
                 }
             }
 
+<<<<<<< dev/ygerges/refactor-cleanup
             testContextForClassCleanup = PlatformServiceProvider.Instance.GetTestContext(testMethod, writer, properties, messageLogger, testContextForTestExecution.Context.CurrentTestOutcome);
             testMethodInfo?.Parent.RunClassCleanup(testContextForClassCleanup, _classCleanupManager, testMethodInfo, result);
+=======
+            testContextForClassCleanup = PlatformServiceProvider.Instance.GetTestContext(testMethod, properties, messageLogger, testContextForTestExecution.Context.CurrentTestOutcome);
+            testMethodInfo?.Parent.RunClassCleanup(testContextForClassCleanup, _classCleanupManager, testMethodInfo, testMethod, result);
+>>>>>>> main
 
             if (testMethodInfo?.Parent.Parent.IsAssemblyInitializeExecuted == true)
             {
-                testContextForAssemblyCleanup = PlatformServiceProvider.Instance.GetTestContext(testMethod, writer, properties, messageLogger, testContextForClassCleanup.Context.CurrentTestOutcome);
+                testContextForAssemblyCleanup = PlatformServiceProvider.Instance.GetTestContext(testMethod, properties, messageLogger, testContextForClassCleanup.Context.CurrentTestOutcome);
                 RunAssemblyCleanupIfNeeded(testContextForAssemblyCleanup, _classCleanupManager, _typeCache, result);
             }
 
@@ -244,33 +252,11 @@ internal sealed class UnitTestRunner : MarshalByRefObject
 
     private static TestResult RunAssemblyInitializeIfNeeded(TestMethodInfo testMethodInfo, ITestContext testContext)
     {
-        string? initializationLogs = string.Empty;
-        string? initializationErrorLogs = string.Empty;
-        string? initializationTrace = string.Empty;
-        string? initializationTestContextMessages = string.Empty;
         var result = new TestResult { Outcome = UnitTestOutcome.Passed };
 
         try
         {
-            LogMessageListener? logListener = null;
-            try
-            {
-                testMethodInfo.Parent.Parent.RunAssemblyInitialize(testContext.Context, out logListener);
-            }
-            finally
-            {
-                if (logListener is not null)
-                {
-                    ExecutionContextHelpers.RunOnContext(testMethodInfo.Parent.Parent.ExecutionContext, () =>
-                    {
-                        initializationLogs = logListener.GetAndClearStandardOutput();
-                        initializationErrorLogs = logListener.GetAndClearStandardError();
-                        initializationTrace = logListener.GetAndClearDebugTrace();
-                        initializationTestContextMessages = testContext.GetAndClearDiagnosticMessages();
-                        logListener.Dispose();
-                    });
-                }
-            }
+            testMethodInfo.Parent.Parent.RunAssemblyInitialize(testContext.Context);
         }
         catch (TestFailedException ex)
         {
@@ -283,10 +269,11 @@ internal sealed class UnitTestRunner : MarshalByRefObject
         }
         finally
         {
-            result.LogOutput = initializationLogs;
-            result.LogError = initializationErrorLogs;
-            result.DebugTrace = initializationTrace;
-            result.TestContextMessages = initializationTestContextMessages;
+            var testContextImpl = testContext.Context as TestContextImplementation;
+            result.LogOutput = testContextImpl?.GetOut();
+            result.LogError = testContextImpl?.GetErr();
+            result.DebugTrace = testContextImpl?.GetTrace();
+            result.TestContextMessages = testContext.GetAndClearDiagnosticMessages();
         }
 
         return result;
@@ -299,33 +286,16 @@ internal sealed class UnitTestRunner : MarshalByRefObject
             return;
         }
 
-        string? initializationLogs = string.Empty;
-        string? initializationErrorLogs = string.Empty;
-        string? initializationTrace = string.Empty;
-        string? initializationTestContextMessages = string.Empty;
         try
         {
-            LogMessageListener? logListener = null;
             // TODO: We are using the same TestContext here for ClassCleanup and AssemblyCleanup.
             // They should be different.
             IEnumerable<TestClassInfo> classInfoCache = typeCache.ClassInfoListWithExecutableCleanupMethods;
             foreach (TestClassInfo classInfo in classInfoCache)
             {
-                TestFailedException? ex = classInfo.ExecuteClassCleanup(testContext.Context, out logListener);
-                if (logListener is not null)
-                {
-                    ExecutionContextHelpers.RunOnContext(classInfo.ExecutionContext, () =>
-                    {
-                        initializationLogs += logListener.GetAndClearStandardOutput();
-                        initializationErrorLogs += logListener.GetAndClearStandardError();
-                        initializationTrace += logListener.GetAndClearDebugTrace();
-                        initializationTestContextMessages += testContext.GetAndClearDiagnosticMessages();
-                        logListener.Dispose();
-                        logListener = null;
-                    });
-                }
+                TestFailedException? ex = classInfo.ExecuteClassCleanup(testContext.Context);
 
-                if (ex is not null && results.Length > 0)
+                if (results.Length > 0 && ex is not null)
                 {
 #pragma warning disable IDE0056 // Use index operator
                     TestResult lastResult = results[results.Length - 1];
@@ -339,21 +309,9 @@ internal sealed class UnitTestRunner : MarshalByRefObject
             IEnumerable<TestAssemblyInfo> assemblyInfoCache = typeCache.AssemblyInfoListWithExecutableCleanupMethods;
             foreach (TestAssemblyInfo assemblyInfo in assemblyInfoCache)
             {
-                TestFailedException? ex = assemblyInfo.ExecuteAssemblyCleanup(testContext.Context, ref logListener);
-                if (logListener is not null)
-                {
-                    ExecutionContextHelpers.RunOnContext(assemblyInfo.ExecutionContext, () =>
-                    {
-                        initializationLogs += logListener.GetAndClearStandardOutput();
-                        initializationErrorLogs += logListener.GetAndClearStandardError();
-                        initializationTrace += logListener.GetAndClearDebugTrace();
-                        initializationTestContextMessages += testContext.GetAndClearDiagnosticMessages();
-                        logListener.Dispose();
-                        logListener = null;
-                    });
-                }
+                TestFailedException? ex = assemblyInfo.ExecuteAssemblyCleanup(testContext.Context);
 
-                if (ex is not null && results.Length > 0)
+                if (results.Length > 0 && ex is not null)
                 {
 #pragma warning disable IDE0056 // Use index operator
                     TestResult lastResult = results[results.Length - 1];
@@ -371,10 +329,11 @@ internal sealed class UnitTestRunner : MarshalByRefObject
 #pragma warning disable IDE0056 // Use index operator
                 TestResult lastResult = results[results.Length - 1];
 #pragma warning restore IDE0056 // Use index operator
-                lastResult.LogOutput += initializationLogs;
-                lastResult.LogError += initializationErrorLogs;
-                lastResult.DebugTrace += initializationTrace;
-                lastResult.TestContextMessages += initializationTestContextMessages;
+                var testContextImpl = testContext as TestContextImplementation;
+                lastResult.LogOutput += testContextImpl?.GetOut();
+                lastResult.LogError += testContextImpl?.GetErr();
+                lastResult.DebugTrace += testContextImpl?.GetTrace();
+                lastResult.TestContextMessages += testContext.GetAndClearDiagnosticMessages();
             }
         }
     }
@@ -424,7 +383,7 @@ internal sealed class UnitTestRunner : MarshalByRefObject
         }
 
         bool shouldIgnoreClass = testMethodInfo.Parent.ClassType.IsIgnored(out string? ignoreMessageOnClass);
-        bool shouldIgnoreMethod = testMethodInfo.TestMethod.IsIgnored(out string? ignoreMessageOnMethod);
+        bool shouldIgnoreMethod = testMethodInfo.MethodInfo.IsIgnored(out string? ignoreMessageOnMethod);
 
         string? ignoreMessage = ignoreMessageOnClass;
         if (StringEx.IsNullOrEmpty(ignoreMessage) && shouldIgnoreMethod)

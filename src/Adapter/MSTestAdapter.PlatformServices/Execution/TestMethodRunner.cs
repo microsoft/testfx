@@ -63,7 +63,7 @@ internal sealed class TestMethodRunner
     /// Executes a test.
     /// </summary>
     /// <returns>The test results.</returns>
-    internal async Task<TestResult[]> ExecuteAsync(string initializationLogs, string initializationErrorLogs, string initializationTrace, string initializationTestContextMessages)
+    internal async Task<TestResult[]> ExecuteAsync(string? initializationLogs, string? initializationErrorLogs, string? initializationTrace, string? initializationTestContextMessages)
     {
         _testContext.Context.TestRunCount++;
         bool isSTATestClass = _testMethodInfo.Parent.ClassAttribute is STATestClassAttribute;
@@ -109,7 +109,7 @@ internal sealed class TestMethodRunner
         }
 
         // Local functions
-        async Task<TestResult[]> SafeRunTestMethodAsync(string initializationLogs, string initializationErrorLogs, string initializationTrace, string initializationTestContextMessages)
+        async Task<TestResult[]> SafeRunTestMethodAsync(string? initializationLogs, string? initializationErrorLogs, string? initializationTrace, string? initializationTestContextMessages)
         {
             TestResult[]? result = null;
 
@@ -161,7 +161,7 @@ internal sealed class TestMethodRunner
     internal async Task<TestResult[]> RunTestMethodAsync()
     {
         DebugEx.Assert(_test != null, "Test should not be null.");
-        DebugEx.Assert(_testMethodInfo.TestMethod != null, "Test method should not be null.");
+        DebugEx.Assert(_testMethodInfo.MethodInfo != null, "Test method should not be null.");
 
         List<TestResult> results = [];
         if (_testMethodInfo.Executor == null)
@@ -469,7 +469,10 @@ internal sealed class TestMethodRunner
                 {
                     try
                     {
-                        tcs.SetResult(await _testMethodInfo.Executor.ExecuteAsync(testMethodInfo).ConfigureAwait(false));
+                        using (TestContextImplementation.SetCurrentTestContext(_testMethodInfo.TestContext as TestContextImplementation))
+                        {
+                            tcs.SetResult(await _testMethodInfo.Executor.ExecuteAsync(testMethodInfo).ConfigureAwait(false));
+                        }
                     }
                     catch (Exception e)
                     {

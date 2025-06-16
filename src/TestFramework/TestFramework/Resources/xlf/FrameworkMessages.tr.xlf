@@ -141,6 +141,11 @@ Gerçekte olan: {2}</target>
         <target state="translated">Geçersiz GitHub anahtar URL'si</target>
         <note />
       </trans-unit>
+      <trans-unit id="IsInRangeFail">
+        <source>Value '{0}' is not within the expected range [{1}, {2}]. {3}</source>
+        <target state="new">Value '{0}' is not within the expected range [{1}, {2}]. {3}</target>
+        <note />
+      </trans-unit>
       <trans-unit id="IsInstanceOfFailMsg">
         <source>{0} Expected type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;.</source>
         <target state="translated">{0} Beklenen tür:&lt;{1}&gt;. Gerçek tür:&lt;{2}&gt;.</target>

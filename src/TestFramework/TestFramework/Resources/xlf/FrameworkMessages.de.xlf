@@ -141,6 +141,11 @@ Tatsächlich: {2}</target>
         <target state="translated">Ungültige GitHub-Ticket-URL.</target>
         <note />
       </trans-unit>
+      <trans-unit id="IsInRangeFail">
+        <source>Value '{0}' is not within the expected range [{1}, {2}]. {3}</source>
+        <target state="new">Value '{0}' is not within the expected range [{1}, {2}]. {3}</target>
+        <note />
+      </trans-unit>
       <trans-unit id="IsInstanceOfFailMsg">
         <source>{0} Expected type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;.</source>
         <target state="translated">{0}Erwarteter Typ:&lt;{1}&gt;. Tatsächlicher Typ:&lt;{2}&gt;.</target>
