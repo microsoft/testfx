@@ -14,6 +14,9 @@ public partial class AssertTests : TestContainer
     public void IsGreaterThanShouldNotThrowWhenActualIsGreater() =>
         Assert.IsGreaterThan(5, 10);
 
+    public void IsGreaterThanShouldWorkWithReferenceTypes() =>
+        Assert.IsGreaterThan("a", "b");
+
     public void IsGreaterThanShouldThrowWhenActualIsNotGreater()
     {
         // Act
@@ -71,6 +74,9 @@ public partial class AssertTests : TestContainer
     public void IsGreaterThanOrEqualToShouldNotThrowWhenActualIsGreater() =>
         Assert.IsGreaterThanOrEqualTo(5, 10);
 
+    public void IsGreaterThanOrEqualToShouldWorkWithReferenceTypes() =>
+        Assert.IsGreaterThanOrEqualTo("a", "b");
+
     public void IsGreaterThanOrEqualToShouldNotThrowWhenBothAreEqual() =>
         Assert.IsGreaterThanOrEqualTo(5, 5);
 
@@ -115,6 +121,9 @@ public partial class AssertTests : TestContainer
 
     public void IsLessThanShouldNotThrowWhenActualIsLess() =>
         Assert.IsLessThan(10, 5);
+
+    public void IsLessThanShouldWorkWithReferenceTypes() =>
+        Assert.IsLessThan("b", "a");
 
     public void IsLessThanShouldThrowWhenActualIsNotLess()
     {
@@ -172,6 +181,9 @@ public partial class AssertTests : TestContainer
 
     public void IsLessThanOrEqualToShouldNotThrowWhenActualIsLess() =>
         Assert.IsLessThanOrEqualTo(10, 5);
+
+    public void IsLessThanOrEqualToShouldWorkWithReferenceTypes() =>
+        Assert.IsLessThanOrEqualTo("b", "a");
 
     public void IsLessThanOrEqualToShouldNotThrowWhenBothAreEqual() =>
         Assert.IsLessThanOrEqualTo(5, 5);

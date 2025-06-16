@@ -29,7 +29,7 @@ public sealed partial class Assert
     /// Thrown if <paramref name="actual"/> is not greater than <paramref name="expected"/>.
     /// </exception>
     public static void IsGreaterThan<T>(T expected, T actual)
-        where T : struct, IComparable<T>
+        where T : IComparable<T>
         => IsGreaterThan(expected, actual, string.Empty, null);
 
     /// <summary>
@@ -54,7 +54,7 @@ public sealed partial class Assert
     /// Thrown if <paramref name="actual"/> is not greater than <paramref name="expected"/>.
     /// </exception>
     public static void IsGreaterThan<T>(T expected, T actual, string? message)
-        where T : struct, IComparable<T>
+        where T : IComparable<T>
         => IsGreaterThan(expected, actual, message, null);
 
     /// <summary>
@@ -82,7 +82,7 @@ public sealed partial class Assert
     /// Thrown if <paramref name="actual"/> is not greater than <paramref name="expected"/>.
     /// </exception>
     public static void IsGreaterThan<T>(T expected, T actual, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters)
-        where T : struct, IComparable<T>
+        where T : IComparable<T>
     {
         if (actual.CompareTo(expected) > 0)
         {
@@ -114,7 +114,7 @@ public sealed partial class Assert
     /// Thrown if <paramref name="actual"/> is not greater than or equal to <paramref name="expected"/>.
     /// </exception>
     public static void IsGreaterThanOrEqualTo<T>(T expected, T actual)
-        where T : struct, IComparable<T>
+        where T : IComparable<T>
         => IsGreaterThanOrEqualTo(expected, actual, string.Empty, null);
 
     /// <summary>
@@ -139,7 +139,7 @@ public sealed partial class Assert
     /// Thrown if <paramref name="actual"/> is not greater than or equal to <paramref name="expected"/>.
     /// </exception>
     public static void IsGreaterThanOrEqualTo<T>(T expected, T actual, string? message)
-        where T : struct, IComparable<T>
+        where T : IComparable<T>
         => IsGreaterThanOrEqualTo(expected, actual, message, null);
 
     /// <summary>
@@ -167,7 +167,7 @@ public sealed partial class Assert
     /// Thrown if <paramref name="actual"/> is not greater than or equal to <paramref name="expected"/>.
     /// </exception>
     public static void IsGreaterThanOrEqualTo<T>(T expected, T actual, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters)
-        where T : struct, IComparable<T>
+        where T : IComparable<T>
     {
         if (actual.CompareTo(expected) >= 0)
         {
@@ -199,7 +199,7 @@ public sealed partial class Assert
     /// Thrown if <paramref name="actual"/> is not less than <paramref name="expected"/>.
     /// </exception>
     public static void IsLessThan<T>(T expected, T actual)
-        where T : struct, IComparable<T>
+        where T : IComparable<T>
         => IsLessThan(expected, actual, string.Empty, null);
 
     /// <summary>
@@ -224,7 +224,7 @@ public sealed partial class Assert
     /// Thrown if <paramref name="actual"/> is not less than <paramref name="expected"/>.
     /// </exception>
     public static void IsLessThan<T>(T expected, T actual, string? message)
-        where T : struct, IComparable<T>
+        where T : IComparable<T>
         => IsLessThan(expected, actual, message, null);
 
     /// <summary>
@@ -252,7 +252,7 @@ public sealed partial class Assert
     /// Thrown if <paramref name="actual"/> is not less than <paramref name="expected"/>.
     /// </exception>
     public static void IsLessThan<T>(T expected, T actual, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters)
-        where T : struct, IComparable<T>
+        where T : IComparable<T>
     {
         if (actual.CompareTo(expected) < 0)
         {
@@ -284,7 +284,7 @@ public sealed partial class Assert
     /// Thrown if <paramref name="actual"/> is not less than or equal to <paramref name="expected"/>.
     /// </exception>
     public static void IsLessThanOrEqualTo<T>(T expected, T actual)
-        where T : struct, IComparable<T>
+        where T : IComparable<T>
         => IsLessThanOrEqualTo(expected, actual, string.Empty, null);
 
     /// <summary>
@@ -309,7 +309,7 @@ public sealed partial class Assert
     /// Thrown if <paramref name="actual"/> is not less than or equal to <paramref name="expected"/>.
     /// </exception>
     public static void IsLessThanOrEqualTo<T>(T expected, T actual, string? message)
-        where T : struct, IComparable<T>
+        where T : IComparable<T>
         => IsLessThanOrEqualTo(expected, actual, message, null);
 
     /// <summary>
@@ -337,7 +337,7 @@ public sealed partial class Assert
     /// Thrown if <paramref name="actual"/> is not less than or equal to <paramref name="expected"/>.
     /// </exception>
     public static void IsLessThanOrEqualTo<T>(T expected, T actual, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters)
-        where T : struct, IComparable<T>
+        where T : IComparable<T>
     {
         if (actual.CompareTo(expected) <= 0)
         {
