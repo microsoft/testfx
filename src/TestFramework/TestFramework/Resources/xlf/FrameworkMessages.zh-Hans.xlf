@@ -141,6 +141,11 @@ Actual: {2}</source>
         <target state="translated">GitHub 票证 URL 无效</target>
         <note />
       </trans-unit>
+      <trans-unit id="IsInRangeFail">
+        <source>Value '{0}' is not within the expected range [{1}, {2}]. {3}</source>
+        <target state="new">Value '{0}' is not within the expected range [{1}, {2}]. {3}</target>
+        <note />
+      </trans-unit>
       <trans-unit id="IsInstanceOfFailMsg">
         <source>{0} Expected type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;.</source>
         <target state="translated">{0} 类型应为: &lt;{1}&gt;。类型实为: &lt;{2}&gt;。</target>
