@@ -147,14 +147,10 @@ public class TestMethodInfo : ITestMethod
         // check if arguments are set for data driven tests
         arguments ??= Arguments;
 
-        LogMessageListener? listener = null;
         watch.Start();
 
         try
         {
-            ThreadSafeStringWriter.CleanState();
-            listener = new LogMessageListener(MSTestSettings.CurrentSettings.CaptureDebugTraces);
-
             result = IsTimeoutSet
                 ? await ExecuteInternalWithTimeoutAsync(arguments).ConfigureAwait(false)
                 : await ExecuteInternalAsync(arguments, null).ConfigureAwait(false);
@@ -166,16 +162,13 @@ public class TestMethodInfo : ITestMethod
 
             if (result != null)
             {
+                var testContextImpl = TestContext as TestContextImplementation;
+                result.LogOutput = testContextImpl?.GetOut();
+                result.LogError = testContextImpl?.GetErr();
+                result.DebugTrace = testContextImpl?.GetTrace();
+                result.TestContextMessages = TestContext?.GetAndClearDiagnosticMessages();
+                result.ResultFiles = TestContext?.GetResultFiles();
                 result.Duration = watch.Elapsed;
-                if (listener is not null)
-                {
-                    result.DebugTrace = listener.GetAndClearDebugTrace();
-                    result.LogOutput = listener.GetAndClearStandardOutput();
-                    result.LogError = listener.GetAndClearStandardError();
-                    result.TestContextMessages = TestContext?.GetAndClearDiagnosticMessages();
-                    result.ResultFiles = TestContext?.GetResultFiles();
-                    listener.Dispose();
-                }
             }
         }
 
