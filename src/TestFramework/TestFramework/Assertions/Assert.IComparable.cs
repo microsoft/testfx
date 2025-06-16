@@ -10,6 +10,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// </summary>
 public sealed partial class Assert
 {
+    #region IsGreaterThan
+
     /// <summary>
     /// Tests whether the first value is greater than the second value and throws an exception
     /// if it is not.
@@ -90,6 +92,10 @@ public sealed partial class Assert
         string userMessage = BuildUserMessage(message, parameters);
         ThrowAssertIsGreaterThanFailed(expected, actual, userMessage);
     }
+
+    #endregion // IsGreaterThan
+
+    #region IsGreaterThanOrEqualTo
 
     /// <summary>
     /// Tests whether the first value is greater than or equal to the second value and throws an exception
@@ -172,6 +178,10 @@ public sealed partial class Assert
         ThrowAssertIsGreaterThanOrEqualToFailed(expected, actual, userMessage);
     }
 
+    #endregion // IsGreaterThanOrEqualTo
+
+    #region IsLessThan
+
     /// <summary>
     /// Tests whether the first value is less than the second value and throws an exception
     /// if it is not.
@@ -253,6 +263,10 @@ public sealed partial class Assert
         ThrowAssertIsLessThanFailed(expected, actual, userMessage);
     }
 
+    #endregion // IsLessThan
+
+    #region IsLessThanOrEqualTo
+
     /// <summary>
     /// Tests whether the first value is less than or equal to the second value and throws an exception
     /// if it is not.
@@ -333,6 +347,10 @@ public sealed partial class Assert
         string userMessage = BuildUserMessage(message, parameters);
         ThrowAssertIsLessThanOrEqualToFailed(expected, actual, userMessage);
     }
+
+    #endregion // IsLessThanOrEqualTo
+
+    #region IsPositive
 
     /// <summary>
     /// Tests whether the specified value is positive and throws an exception
@@ -421,6 +439,10 @@ public sealed partial class Assert
         ThrowAssertIsPositiveFailed(actual, userMessage2);
     }
 
+    #endregion // IsPositive
+
+    #region IsNegative
+
     /// <summary>
     /// Tests whether the specified value is negative and throws an exception
     /// if it is not.
@@ -507,6 +529,8 @@ public sealed partial class Assert
         string userMessage2 = BuildUserMessage(message, parameters);
         ThrowAssertIsNegativeFailed(actual, userMessage2);
     }
+
+    #endregion // IsNegative
 
     [DoesNotReturn]
     private static void ThrowAssertIsGreaterThanFailed<T>(T expected, T actual, string userMessage)

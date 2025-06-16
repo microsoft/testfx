@@ -21,13 +21,13 @@ public partial class AssertTests : TestContainer
     public void IsGreaterThanShouldThrowWithMessage()
     {
         Exception ex = VerifyThrows(() => Assert.IsGreaterThan(5, 10, "A Message"));
-        Verify(ex.Message.Contains("A Message"));
+        Verify(ex.Message == "Expected value <5> to be greater than actual value <10>. A Message");
     }
 
     public void IsGreaterThanShouldThrowWithMessageAndParameters()
     {
         Exception ex = VerifyThrows(() => Assert.IsGreaterThan(5, 10, "A Message {0}", "param"));
-        Verify(ex.Message.Contains("A Message param"));
+        Verify(ex.Message == "Expected value <5> to be greater than actual value <10>. A Message param");
     }
 
     public void IsGreaterThanShouldWorkWithDoubles() =>
@@ -52,13 +52,13 @@ public partial class AssertTests : TestContainer
     public void IsGreaterThanOrEqualToShouldThrowWithMessage()
     {
         Exception ex = VerifyThrows(() => Assert.IsGreaterThanOrEqualTo(5, 10, "A Message"));
-        Verify(ex.Message.Contains("A Message"));
+        Verify(ex.Message == "Expected value <5> to be greater than or equal to actual value <10>. A Message");
     }
 
     public void IsGreaterThanOrEqualToShouldThrowWithMessageAndParameters()
     {
         Exception ex = VerifyThrows(() => Assert.IsGreaterThanOrEqualTo(5, 10, "A Message {0}", "param"));
-        Verify(ex.Message.Contains("A Message param"));
+        Verify(ex.Message == "Expected value <5> to be greater than or equal to actual value <10>. A Message param");
     }
 
     public void IsGreaterThanOrEqualToShouldWorkWithDoubles() =>
@@ -83,13 +83,13 @@ public partial class AssertTests : TestContainer
     public void IsLessThanShouldThrowWithMessage()
     {
         Exception ex = VerifyThrows(() => Assert.IsLessThan(10, 5, "A Message"));
-        Verify(ex.Message.Contains("A Message"));
+        Verify(ex.Message == "Expected value <10> to be less than actual value <5>. A Message");
     }
 
     public void IsLessThanShouldThrowWithMessageAndParameters()
     {
         Exception ex = VerifyThrows(() => Assert.IsLessThan(10, 5, "A Message {0}", "param"));
-        Verify(ex.Message.Contains("A Message param"));
+        Verify(ex.Message == "Expected value <10> to be less than actual value <5>. A Message param");
     }
 
     public void IsLessThanShouldWorkWithDoubles() =>
@@ -114,13 +114,13 @@ public partial class AssertTests : TestContainer
     public void IsLessThanOrEqualToShouldThrowWithMessage()
     {
         Exception ex = VerifyThrows(() => Assert.IsLessThanOrEqualTo(10, 5, "A Message"));
-        Verify(ex.Message.Contains("A Message"));
+        Verify(ex.Message == "Expected value <10> to be less than or equal to actual value <5>. A Message");
     }
 
     public void IsLessThanOrEqualToShouldThrowWithMessageAndParameters()
     {
         Exception ex = VerifyThrows(() => Assert.IsLessThanOrEqualTo(10, 5, "A Message {0}", "param"));
-        Verify(ex.Message.Contains("A Message param"));
+        Verify(ex.Message == "Expected value <10> to be less than or equal to actual value <5>. A Message param");
     }
 
     public void IsLessThanOrEqualToShouldWorkWithDoubles() =>
@@ -151,13 +151,13 @@ public partial class AssertTests : TestContainer
     public void IsPositiveShouldThrowWithMessage()
     {
         Exception ex = VerifyThrows(() => Assert.IsPositive(-5, "A Message"));
-        Verify(ex.Message.Contains("A Message"));
+        Verify(ex.Message == "Expected value <-5> to be positive. A Message");
     }
 
     public void IsPositiveShouldThrowWithMessageAndParameters()
     {
         Exception ex = VerifyThrows(() => Assert.IsPositive(-5, "A Message {0}", "param"));
-        Verify(ex.Message.Contains("A Message param"));
+        Verify(ex.Message == "Expected value <-5> to be positive. A Message param");
     }
 
     public void IsPositiveShouldWorkWithDoubles() =>
@@ -188,13 +188,13 @@ public partial class AssertTests : TestContainer
     public void IsNegativeShouldThrowWithMessage()
     {
         Exception ex = VerifyThrows(() => Assert.IsNegative(5, "A Message"));
-        Verify(ex.Message.Contains("A Message"));
+        Verify(ex.Message == "Expected value <5> to be negative. A Message");
     }
 
     public void IsNegativeShouldThrowWithMessageAndParameters()
     {
         Exception ex = VerifyThrows(() => Assert.IsNegative(5, "A Message {0}", "param"));
-        Verify(ex.Message.Contains("A Message param"));
+        Verify(ex.Message == "Expected value <5> to be negative. A Message param");
     }
 
     public void IsNegativeShouldWorkWithDoubles() =>
