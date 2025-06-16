@@ -6,16 +6,17 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 public sealed partial class Assert
 {
     #region StartsWith
+
     /// <summary>
     /// Tests whether the specified string begins with the specified substring
     /// and throws an exception if the test string does not start with the
     /// substring.
     /// </summary>
-    /// <param name="value">
-    /// The string that is expected to begin with <paramref name="substring"/>.
-    /// </param>
     /// <param name="substring">
     /// The string expected to be a prefix of <paramref name="value"/>.
+    /// </param>
+    /// <param name="value">
+    /// The string that is expected to begin with <paramref name="substring"/>.
     /// </param>
     /// <exception cref="AssertFailedException">
     /// <paramref name="value"/> is null, or <paramref name="substring"/> is null,
@@ -29,11 +30,11 @@ public sealed partial class Assert
     /// and throws an exception if the test string does not start with the
     /// substring.
     /// </summary>
-    /// <param name="value">
-    /// The string that is expected to begin with <paramref name="substring"/>.
-    /// </param>
     /// <param name="substring">
     /// The string expected to be a prefix of <paramref name="value"/>.
+    /// </param>
+    /// <param name="value">
+    /// The string that is expected to begin with <paramref name="substring"/>.
     /// </param>
     /// <param name="message">
     /// The message to include in the exception when <paramref name="value"/>
@@ -52,11 +53,11 @@ public sealed partial class Assert
     /// and throws an exception if the test string does not start with the
     /// substring.
     /// </summary>
-    /// <param name="value">
-    /// The string that is expected to begin with <paramref name="substring"/>.
-    /// </param>
     /// <param name="substring">
     /// The string expected to be a prefix of <paramref name="value"/>.
+    /// </param>
+    /// <param name="value">
+    /// The string that is expected to begin with <paramref name="substring"/>.
     /// </param>
     /// <param name="message">
     /// The message to include in the exception when <paramref name="value"/>
@@ -78,11 +79,11 @@ public sealed partial class Assert
     /// and throws an exception if the test string does not start with the
     /// substring.
     /// </summary>
-    /// <param name="value">
-    /// The string that is expected to begin with <paramref name="substring"/>.
-    /// </param>
     /// <param name="substring">
     /// The string expected to be a prefix of <paramref name="value"/>.
+    /// </param>
+    /// <param name="value">
+    /// The string that is expected to begin with <paramref name="substring"/>.
     /// </param>
     /// <param name="comparisonType">
     /// The comparison method to compare strings <paramref name="comparisonType"/>.
@@ -92,18 +93,18 @@ public sealed partial class Assert
     /// or <paramref name="value"/> does not start with <paramref name="substring"/>.
     /// </exception>
     public static void StartsWith([NotNull] string? substring, [NotNull] string? value, StringComparison comparisonType)
-        => StartsWith(substring, value, comparisonType, string.Empty, Empty);
+        => StartsWith(substring, value, comparisonType, string.Empty, null);
 
     /// <summary>
     /// Tests whether the specified string begins with the specified substring
     /// and throws an exception if the test string does not start with the
     /// substring.
     /// </summary>
-    /// <param name="value">
-    /// The string that is expected to begin with <paramref name="substring"/>.
-    /// </param>
     /// <param name="substring">
     /// The string expected to be a prefix of <paramref name="value"/>.
+    /// </param>
+    /// <param name="value">
+    /// The string that is expected to begin with <paramref name="substring"/>.
     /// </param>
     /// <param name="message">
     /// The message to include in the exception when <paramref name="value"/>
@@ -118,26 +119,26 @@ public sealed partial class Assert
     /// or <paramref name="value"/> does not start with <paramref name="substring"/>.
     /// </exception>
     public static void StartsWith([NotNull] string? substring, [NotNull] string? value, string? message, StringComparison comparisonType)
-        => StartsWith(substring, value, comparisonType, message, Empty);
+        => StartsWith(substring, value, comparisonType, message, null);
 
     /// <summary>
     /// Tests whether the specified string begins with the specified substring
     /// and throws an exception if the test string does not start with the
     /// substring.
     /// </summary>
+    /// <param name="substring">
+    /// The string expected to be a prefix of <paramref name="value"/>.
+    /// </param>
     /// <param name="value">
     /// The string that is expected to begin with <paramref name="substring"/>.
     /// </param>
-    /// <param name="substring">
-    /// The string expected to be a prefix of <paramref name="value"/>.
+    /// <param name="comparisonType">
+    /// The comparison method to compare strings <paramref name="comparisonType"/>.
     /// </param>
     /// <param name="message">
     /// The message to include in the exception when <paramref name="value"/>
     /// does not begin with <paramref name="substring"/>. The message is
     /// shown in test results.
-    /// </param>
-    /// <param name="comparisonType">
-    /// The comparison method to compare strings <paramref name="comparisonType"/>.
     /// </param>
     /// <param name="parameters">
     /// An array of parameters to use when formatting <paramref name="message"/>.
@@ -148,27 +149,29 @@ public sealed partial class Assert
     /// </exception>
     public static void StartsWith([NotNull] string? substring, [NotNull] string? value, StringComparison comparisonType, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters)
     {
-        Assert.CheckParameterNotNull(value, "StringAssert.StartsWith", "value", string.Empty);
-        Assert.CheckParameterNotNull(substring, "StringAssert.StartsWith", "substring", string.Empty);
+        CheckParameterNotNull(value, "Assert.StartsWith", "value", string.Empty);
+        CheckParameterNotNull(substring, "Assert.StartsWith", "substring", string.Empty);
         if (!value.StartsWith(substring, comparisonType))
         {
-            string userMessage = Assert.BuildUserMessage(message, parameters);
+            string userMessage = BuildUserMessage(message, parameters);
             string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.StartsWithFail, value, substring, userMessage);
-            Assert.ThrowAssertFailed("StringAssert.StartsWith", finalMessage);
+            ThrowAssertFailed("Assert.StartsWith", finalMessage);
         }
     }
+
     #endregion // StartsWith
 
     #region DoesNotStartWith
+
     /// <summary>
     /// Tests whether the specified string does not begin with the specified substring
     /// and throws an exception if the test string does start with the substring.
     /// </summary>
-    /// <param name="value">
-    /// The string that is expected to begin with <paramref name="substring"/>.
-    /// </param>
     /// <param name="substring">
     /// The string expected to be a prefix of <paramref name="value"/>.
+    /// </param>
+    /// <param name="value">
+    /// The string that is expected to begin with <paramref name="substring"/>.
     /// </param>
     /// <exception cref="AssertFailedException">
     /// <paramref name="value"/> is null, or <paramref name="substring"/> is null,
@@ -181,11 +184,11 @@ public sealed partial class Assert
     /// Tests whether the specified string does not begin with the specified substring
     /// and throws an exception if the test string does start with the substring.
     /// </summary>
-    /// <param name="value">
-    /// The string that is expected to begin with <paramref name="substring"/>.
-    /// </param>
     /// <param name="substring">
     /// The string expected to be a prefix of <paramref name="value"/>.
+    /// </param>
+    /// <param name="value">
+    /// The string that is expected to begin with <paramref name="substring"/>.
     /// </param>
     /// <param name="message">
     /// The message to include in the exception when <paramref name="value"/>
@@ -203,11 +206,11 @@ public sealed partial class Assert
     /// Tests whether the specified string does not begin with the specified substring
     /// and throws an exception if the test string does start with the substring.
     /// </summary>
-    /// <param name="value">
-    /// The string that is expected to begin with <paramref name="substring"/>.
-    /// </param>
     /// <param name="substring">
     /// The string expected to be a prefix of <paramref name="value"/>.
+    /// </param>
+    /// <param name="value">
+    /// The string that is expected to begin with <paramref name="substring"/>.
     /// </param>
     /// <param name="message">
     /// The message to include in the exception when <paramref name="value"/>
@@ -228,11 +231,11 @@ public sealed partial class Assert
     /// Tests whether the specified string does not begin with the specified substring
     /// and throws an exception if the test string does start with the substring.
     /// </summary>
-    /// <param name="value">
-    /// The string that is expected to begin with <paramref name="substring"/>.
-    /// </param>
     /// <param name="substring">
     /// The string expected to be a prefix of <paramref name="value"/>.
+    /// </param>
+    /// <param name="value">
+    /// The string that is expected to begin with <paramref name="substring"/>.
     /// </param>
     /// <param name="comparisonType">
     /// The comparison method to compare strings <paramref name="comparisonType"/>.
@@ -242,17 +245,17 @@ public sealed partial class Assert
     /// or <paramref name="value"/> does not start with <paramref name="substring"/>.
     /// </exception>
     public static void DoesNotStartWith([NotNull] string? substring, [NotNull] string? value, StringComparison comparisonType)
-        => DoesNotStartWith(substring, value, comparisonType, string.Empty, Empty);
+        => DoesNotStartWith(substring, value, comparisonType, string.Empty, null);
 
     /// <summary>
     /// Tests whether the specified string does not begin with the specified substring
     /// and throws an exception if the test string does start with the substring.
     /// </summary>
-    /// <param name="value">
-    /// The string that is expected to begin with <paramref name="substring"/>.
-    /// </param>
     /// <param name="substring">
     /// The string expected to be a prefix of <paramref name="value"/>.
+    /// </param>
+    /// <param name="value">
+    /// The string that is expected to begin with <paramref name="substring"/>.
     /// </param>
     /// <param name="message">
     /// The message to include in the exception when <paramref name="value"/>
@@ -267,25 +270,25 @@ public sealed partial class Assert
     /// or <paramref name="value"/> does not start with <paramref name="substring"/>.
     /// </exception>
     public static void DoesNotStartWith([NotNull] string? substring, [NotNull] string? value, string? message, StringComparison comparisonType)
-        => DoesNotStartWith(substring, value, comparisonType, message, Empty);
+        => DoesNotStartWith(substring, value, comparisonType, message, null);
 
     /// <summary>
     /// Tests whether the specified string does not begin with the specified substring
     /// and throws an exception if the test string does start with the substring.
     /// </summary>
+    /// <param name="substring">
+    /// The string expected to be a prefix of <paramref name="value"/>.
+    /// </param>
     /// <param name="value">
     /// The string that is expected to begin with <paramref name="substring"/>.
     /// </param>
-    /// <param name="substring">
-    /// The string expected to be a prefix of <paramref name="value"/>.
+    /// <param name="comparisonType">
+    /// The comparison method to compare strings <paramref name="comparisonType"/>.
     /// </param>
     /// <param name="message">
     /// The message to include in the exception when <paramref name="value"/>
     /// does not begin with <paramref name="substring"/>. The message is
     /// shown in test results.
-    /// </param>
-    /// <param name="comparisonType">
-    /// The comparison method to compare strings <paramref name="comparisonType"/>.
     /// </param>
     /// <param name="parameters">
     /// An array of parameters to use when formatting <paramref name="message"/>.
@@ -297,14 +300,15 @@ public sealed partial class Assert
     public static void DoesNotStartWith([NotNull] string? substring, [NotNull] string? value, StringComparison comparisonType,
         [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters)
     {
-        Assert.CheckParameterNotNull(value, "StringAssert.DoesNotStartWith", "value", string.Empty);
-        Assert.CheckParameterNotNull(substring, "StringAssert.DoesNotStartWith", "substring", string.Empty);
+        CheckParameterNotNull(value, "Assert.DoesNotStartWith", "value", string.Empty);
+        CheckParameterNotNull(substring, "Assert.DoesNotStartWith", "substring", string.Empty);
         if (value.StartsWith(substring, comparisonType))
         {
-            string userMessage = Assert.BuildUserMessage(message, parameters);
+            string userMessage = BuildUserMessage(message, parameters);
             string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.DoesNotStartWithFail, value, substring, userMessage);
-            Assert.ThrowAssertFailed("StringAssert.DoesNotStartWith", finalMessage);
+            ThrowAssertFailed("Assert.DoesNotStartWith", finalMessage);
         }
     }
+
     #endregion // DoesNotStartWith
 }
