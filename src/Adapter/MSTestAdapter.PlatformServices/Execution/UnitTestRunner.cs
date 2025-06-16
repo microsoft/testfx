@@ -54,8 +54,8 @@ internal sealed class UnitTestRunner : MarshalByRefObject
 
         if (MSTestSettings.CurrentSettings.CaptureDebugTraces)
         {
-            Console.SetOut(new ConsoleOutCapturer(Console.Out));
-            Console.SetError(new ConsoleErrorCapturer(Console.Error));
+            Console.SetOut(new ConsoleOutRouter(Console.Out));
+            Console.SetError(new ConsoleErrorRouter(Console.Error));
             Trace.Listeners.Add(new TextWriterTraceListener(new TraceTextWriter()));
         }
 
