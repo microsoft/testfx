@@ -589,7 +589,7 @@ Error: {1}</source>
       </trans-unit>
       <trans-unit id="VersionMismatchBetweenAdapterAndFramework">
         <source>'MSTest.TestAdapter' and 'MSTest.TestFramework' must have the same version. Found 'MSTest.TestAdapter' version '{0}' and 'MSTest.TestFramework' version '{1}'. Please make sure that the versions of  'MSTest.TestAdapter' and 'MSTest.TestFramework' NuGet packages have the same version.</source>
-        <target state="new">'MSTest.TestAdapter' and 'MSTest.TestFramework' must have the same version. Found 'MSTest.TestAdapter' version '{0}' and 'MSTest.TestFramework' version '{1}'. Please make sure that the versions of  'MSTest.TestAdapter' and 'MSTest.TestFramework' NuGet packages have the same version.</target>
+        <target state="translated">'MSTest.TestAdapter' 和 'MSTest.TestFramework' 必須使用相同的版本。發現 'MSTest.TestAdapter' 的版本為 '{0}'，而 'MSTest.TestFramework' 的版本為 '{1}'。請確保 'MSTest.TestAdapter' 和 'MSTest.TestFramework' 的 NuGet 套件版本一致。</target>
         <note />
       </trans-unit>
       <trans-unit id="WrongNumberOfObjects">

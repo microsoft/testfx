@@ -589,7 +589,7 @@ Hata: {1}</target>
       </trans-unit>
       <trans-unit id="VersionMismatchBetweenAdapterAndFramework">
         <source>'MSTest.TestAdapter' and 'MSTest.TestFramework' must have the same version. Found 'MSTest.TestAdapter' version '{0}' and 'MSTest.TestFramework' version '{1}'. Please make sure that the versions of  'MSTest.TestAdapter' and 'MSTest.TestFramework' NuGet packages have the same version.</source>
-        <target state="new">'MSTest.TestAdapter' and 'MSTest.TestFramework' must have the same version. Found 'MSTest.TestAdapter' version '{0}' and 'MSTest.TestFramework' version '{1}'. Please make sure that the versions of  'MSTest.TestAdapter' and 'MSTest.TestFramework' NuGet packages have the same version.</target>
+        <target state="translated">'MSTest.TestAdapter' ve 'MSTest.TestFramework' aynı sürüme sahip olmalıdır. 'MSTest.TestAdapter' sürümü '{0}' ve 'MSTest.TestFramework' sürümü '{1}' bulundu. Lütfen 'MSTest.TestAdapter' ve 'MSTest.TestFramework' NuGet paketlerinin aynı sürüme sahip olduğundan emin olun.</target>
         <note />
       </trans-unit>
       <trans-unit id="WrongNumberOfObjects">
