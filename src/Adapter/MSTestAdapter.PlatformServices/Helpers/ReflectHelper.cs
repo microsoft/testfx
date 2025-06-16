@@ -215,32 +215,6 @@ internal class ReflectHelper : MarshalByRefObject
         GetFirstAttributeOrDefault<PriorityAttribute>(priorityAttributeProvider, inherit: true)?.Priority;
 
     /// <summary>
-    /// Gets the class cleanup lifecycle for the class, if set.
-    /// </summary>
-    /// <param name="classInfo">The class to inspect.</param>
-    /// <returns>Returns <see cref="ClassCleanupBehavior"/> if provided, otherwise <c>null</c>.</returns>
-    internal virtual ClassCleanupBehavior? GetClassCleanupBehavior(TestClassInfo classInfo)
-    {
-        // TODO: not discovery related but seems expensive and unnecessary, because we do inheritance lookup, and to put the method into the stack we've already did this lookup before?
-        if (!classInfo.HasExecutableCleanupMethod)
-        {
-            return null;
-        }
-
-        var cleanupBehaviors =
-            new HashSet<ClassCleanupBehavior?>(
-                classInfo.BaseClassCleanupMethods
-                .Select(x => GetFirstAttributeOrDefault<ClassCleanupAttribute>(x, inherit: true)?.CleanupBehavior))
-            {
-                classInfo.ClassCleanupMethod == null ? null : GetFirstAttributeOrDefault<ClassCleanupAttribute>(classInfo.ClassCleanupMethod, inherit: true)?.CleanupBehavior,
-            };
-
-        return cleanupBehaviors.Contains(ClassCleanupBehavior.EndOfClass)
-            ? ClassCleanupBehavior.EndOfClass
-            : cleanupBehaviors.Contains(ClassCleanupBehavior.EndOfAssembly) ? ClassCleanupBehavior.EndOfAssembly : null;
-    }
-
-    /// <summary>
     /// KeyValue pairs that are provided by TestPropertyAttributes of the given test method.
     /// </summary>
     /// <param name="testPropertyProvider">The member to inspect.</param>

@@ -11,15 +11,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 
 internal sealed class ClassCleanupManager
 {
-    private readonly ClassCleanupBehavior? _lifecycleFromMsTest;
-    private readonly ClassCleanupBehavior _lifecycleFromAssembly;
+    private readonly ClassCleanupBehavior _lifecycleFromMsTestOrAssembly;
     private readonly ReflectHelper _reflectHelper;
     private readonly ConcurrentDictionary<string, List<string>> _remainingTestsByClass;
 
     public ClassCleanupManager(
         IEnumerable<UnitTestElement> testsToRun,
-        ClassCleanupBehavior? lifecycleFromMsTest,
-        ClassCleanupBehavior lifecycleFromAssembly,
+        ClassCleanupBehavior lifecycleFromMsTestOrAssembly,
         ReflectHelper reflectHelper)
     {
         IEnumerable<UnitTestElement> runnableTests = testsToRun.Where(t => t.Traits is null || !t.Traits.Any(t => t.Name == EngineConstants.FixturesTestTrait));
@@ -28,8 +26,7 @@ internal sealed class ClassCleanupManager
                 .ToDictionary(
                     g => g.Key,
                     g => new List<string>(g.Select(t => t.TestMethod.UniqueName))));
-        _lifecycleFromMsTest = lifecycleFromMsTest;
-        _lifecycleFromAssembly = lifecycleFromAssembly;
+        _lifecycleFromMsTestOrAssembly = lifecycleFromMsTestOrAssembly;
         _reflectHelper = reflectHelper;
     }
 
@@ -51,9 +48,7 @@ internal sealed class ClassCleanupManager
                 _remainingTestsByClass.TryRemove(testMethodInfo.TestClassName, out _);
                 if (testMethodInfo.Parent.HasExecutableCleanupMethod)
                 {
-                    ClassCleanupBehavior cleanupLifecycle = _reflectHelper.GetClassCleanupBehavior(testMethodInfo.Parent)
-                        ?? _lifecycleFromMsTest
-                        ?? _lifecycleFromAssembly;
+                    ClassCleanupBehavior cleanupLifecycle = GetClassCleanupBehavior(testMethodInfo.Parent);
 
                     shouldRunEndOfClassCleanup = cleanupLifecycle == ClassCleanupBehavior.EndOfClass;
                 }
@@ -61,6 +56,46 @@ internal sealed class ClassCleanupManager
 
             ShouldRunEndOfAssemblyCleanup = _remainingTestsByClass.IsEmpty;
         }
+    }
+
+    /// <summary>
+    /// Gets the class cleanup lifecycle for the class, if set.
+    /// </summary>
+    /// <param name="classInfo">The class to inspect.</param>
+    /// <returns>Returns <see cref="ClassCleanupBehavior"/> if provided, otherwise <c>null</c>.</returns>
+    private ClassCleanupBehavior GetClassCleanupBehavior(TestClassInfo classInfo)
+    {
+        // TODO: not discovery related but seems expensive and unnecessary, because we do inheritance lookup, and to put the method into the stack we've already did this lookup before?
+        DebugEx.Assert(classInfo.HasExecutableCleanupMethod, "'GetClassCleanupBehavior' should only be called if 'HasExecutableCleanupMethod' is true");
+
+        bool hasEndOfAssembly = false;
+        if (classInfo.ClassCleanupMethod is not null)
+        {
+            ClassCleanupBehavior? cleanupBehavior = _reflectHelper.GetFirstAttributeOrDefault<ClassCleanupAttribute>(classInfo.ClassCleanupMethod, inherit: true)?.CleanupBehavior;
+            if (cleanupBehavior == ClassCleanupBehavior.EndOfClass)
+            {
+                return ClassCleanupBehavior.EndOfClass;
+            }
+            else if (cleanupBehavior == ClassCleanupBehavior.EndOfAssembly)
+            {
+                hasEndOfAssembly = true;
+            }
+        }
+
+        foreach (MethodInfo baseClassCleanupMethod in classInfo.BaseClassCleanupMethods)
+        {
+            ClassCleanupBehavior? cleanupBehavior = _reflectHelper.GetFirstAttributeOrDefault<ClassCleanupAttribute>(baseClassCleanupMethod, inherit: true)?.CleanupBehavior;
+            if (cleanupBehavior == ClassCleanupBehavior.EndOfClass)
+            {
+                return ClassCleanupBehavior.EndOfClass;
+            }
+            else if (cleanupBehavior == ClassCleanupBehavior.EndOfAssembly)
+            {
+                hasEndOfAssembly = true;
+            }
+        }
+
+        return hasEndOfAssembly ? ClassCleanupBehavior.EndOfAssembly : _lifecycleFromMsTestOrAssembly;
     }
 
     internal static void ForceCleanup(TypeCache typeCache, IDictionary<string, object?> sourceLevelParameters, IMessageLogger logger)

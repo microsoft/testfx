@@ -68,8 +68,7 @@ internal sealed class UnitTestRunner : MarshalByRefObject
 
         _classCleanupManager = new ClassCleanupManager(
             testsToRun,
-            MSTestSettings.CurrentSettings.ClassCleanupLifecycle,
-            lifecycle,
+            MSTestSettings.CurrentSettings.ClassCleanupLifecycle ?? lifecycle,
             _reflectHelper);
     }
 
