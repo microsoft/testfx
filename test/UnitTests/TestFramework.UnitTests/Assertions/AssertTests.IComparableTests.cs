@@ -11,13 +11,13 @@ public partial class AssertTests : TestContainer
 {
     #region IsGreaterThan tests
 
-    public void IsGreaterThanShouldNotThrowWhenFirstIsGreater() =>
-        Assert.IsGreaterThan(10, 5);
+    public void IsGreaterThanShouldNotThrowWhenActualIsGreater() =>
+        Assert.IsGreaterThan(5, 10);
 
-    public void IsGreaterThanShouldThrowWhenFirstIsNotGreater()
+    public void IsGreaterThanShouldThrowWhenActualIsNotGreater()
     {
         // Act
-        Action action = () => Assert.IsGreaterThan(5, 10);
+        Action action = () => Assert.IsGreaterThan(10, 5);
 
         // Assert
         action.Should().Throw<AssertFailedException>();
@@ -35,30 +35,30 @@ public partial class AssertTests : TestContainer
     public void IsGreaterThanShouldThrowWithMessage()
     {
         // Act
-        Action action = () => Assert.IsGreaterThan(5, 10, "A Message");
+        Action action = () => Assert.IsGreaterThan(10, 5, "A Message");
 
         // Assert
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("Expected value <5> to be greater than actual value <10>. A Message");
+            .WithMessage("Actual value <5> is not greater than expected value <10>. A Message");
     }
 
     public void IsGreaterThanShouldThrowWithMessageAndParameters()
     {
         // Act
-        Action action = () => Assert.IsGreaterThan(5, 10, "A Message {0}", "param");
+        Action action = () => Assert.IsGreaterThan(10, 5, "A Message {0}", "param");
 
         // Assert
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("Expected value <5> to be greater than actual value <10>. A Message param");
+            .WithMessage("Actual value <5> is not greater than expected value <10>. A Message param");
     }
 
     public void IsGreaterThanShouldWorkWithDoubles() =>
-        Assert.IsGreaterThan(5.5, 5.0);
+        Assert.IsGreaterThan(5.0, 5.5);
 
     public void IsGreaterThanShouldThrowWithDoubles()
     {
         // Act
-        Action action = () => Assert.IsGreaterThan(5.0, 5.5);
+        Action action = () => Assert.IsGreaterThan(5.5, 5.0);
 
         // Assert
         action.Should().Throw<AssertFailedException>();
@@ -68,16 +68,16 @@ public partial class AssertTests : TestContainer
 
     #region IsGreaterThanOrEqualTo tests
 
-    public void IsGreaterThanOrEqualToShouldNotThrowWhenFirstIsGreater() =>
-        Assert.IsGreaterThanOrEqualTo(10, 5);
+    public void IsGreaterThanOrEqualToShouldNotThrowWhenActualIsGreater() =>
+        Assert.IsGreaterThanOrEqualTo(5, 10);
 
     public void IsGreaterThanOrEqualToShouldNotThrowWhenBothAreEqual() =>
         Assert.IsGreaterThanOrEqualTo(5, 5);
 
-    public void IsGreaterThanOrEqualToShouldThrowWhenFirstIsLess()
+    public void IsGreaterThanOrEqualToShouldThrowWhenActualIsLess()
     {
         // Act
-        Action action = () => Assert.IsGreaterThanOrEqualTo(5, 10);
+        Action action = () => Assert.IsGreaterThanOrEqualTo(10, 5);
 
         // Assert
         action.Should().Throw<AssertFailedException>();
@@ -86,25 +86,25 @@ public partial class AssertTests : TestContainer
     public void IsGreaterThanOrEqualToShouldThrowWithMessage()
     {
         // Act
-        Action action = () => Assert.IsGreaterThanOrEqualTo(5, 10, "A Message");
+        Action action = () => Assert.IsGreaterThanOrEqualTo(10, 5, "A Message");
 
         // Assert
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("Expected value <5> to be greater than or equal to actual value <10>. A Message");
+            .WithMessage("Actual value <5> is not greater than or equal to expected value <10>. A Message");
     }
 
     public void IsGreaterThanOrEqualToShouldThrowWithMessageAndParameters()
     {
         // Act
-        Action action = () => Assert.IsGreaterThanOrEqualTo(5, 10, "A Message {0}", "param");
+        Action action = () => Assert.IsGreaterThanOrEqualTo(10, 5, "A Message {0}", "param");
 
         // Assert
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("Expected value <5> to be greater than or equal to actual value <10>. A Message param");
+            .WithMessage("Actual value <5> is not greater than or equal to expected value <10>. A Message param");
     }
 
     public void IsGreaterThanOrEqualToShouldWorkWithDoubles() =>
-        Assert.IsGreaterThanOrEqualTo(5.5, 5.0);
+        Assert.IsGreaterThanOrEqualTo(5.0, 5.5);
 
     public void IsGreaterThanOrEqualToShouldWorkWithEqualDoubles() =>
         Assert.IsGreaterThanOrEqualTo(5.5, 5.5);
@@ -113,13 +113,13 @@ public partial class AssertTests : TestContainer
 
     #region IsLessThan tests
 
-    public void IsLessThanShouldNotThrowWhenFirstIsLess() =>
-        Assert.IsLessThan(5, 10);
+    public void IsLessThanShouldNotThrowWhenActualIsLess() =>
+        Assert.IsLessThan(10, 5);
 
-    public void IsLessThanShouldThrowWhenFirstIsNotLess()
+    public void IsLessThanShouldThrowWhenActualIsNotLess()
     {
         // Act
-        Action action = () => Assert.IsLessThan(10, 5);
+        Action action = () => Assert.IsLessThan(5, 10);
 
         // Assert
         action.Should().Throw<AssertFailedException>();
@@ -137,30 +137,30 @@ public partial class AssertTests : TestContainer
     public void IsLessThanShouldThrowWithMessage()
     {
         // Act
-        Action action = () => Assert.IsLessThan(10, 5, "A Message");
+        Action action = () => Assert.IsLessThan(5, 10, "A Message");
 
         // Assert
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("Expected value <10> to be less than actual value <5>. A Message");
+            .WithMessage("Actual value <10> is not less than expected value <5>. A Message");
     }
 
     public void IsLessThanShouldThrowWithMessageAndParameters()
     {
         // Act
-        Action action = () => Assert.IsLessThan(10, 5, "A Message {0}", "param");
+        Action action = () => Assert.IsLessThan(5, 10, "A Message {0}", "param");
 
         // Assert
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("Expected value <10> to be less than actual value <5>. A Message param");
+            .WithMessage("Actual value <10> is not less than expected value <5>. A Message param");
     }
 
     public void IsLessThanShouldWorkWithDoubles() =>
-        Assert.IsLessThan(5.0, 5.5);
+        Assert.IsLessThan(5.5, 5.0);
 
     public void IsLessThanShouldThrowWithDoubles()
     {
         // Act
-        Action action = () => Assert.IsLessThan(5.5, 5.0);
+        Action action = () => Assert.IsLessThan(5.0, 5.5);
 
         // Assert
         action.Should().Throw<AssertFailedException>();
@@ -170,16 +170,16 @@ public partial class AssertTests : TestContainer
 
     #region IsLessThanOrEqualTo tests
 
-    public void IsLessThanOrEqualToShouldNotThrowWhenFirstIsLess() =>
-        Assert.IsLessThanOrEqualTo(5, 10);
+    public void IsLessThanOrEqualToShouldNotThrowWhenActualIsLess() =>
+        Assert.IsLessThanOrEqualTo(10, 5);
 
     public void IsLessThanOrEqualToShouldNotThrowWhenBothAreEqual() =>
         Assert.IsLessThanOrEqualTo(5, 5);
 
-    public void IsLessThanOrEqualToShouldThrowWhenFirstIsGreater()
+    public void IsLessThanOrEqualToShouldThrowWhenActualIsGreater()
     {
         // Act
-        Action action = () => Assert.IsLessThanOrEqualTo(10, 5);
+        Action action = () => Assert.IsLessThanOrEqualTo(5, 10);
 
         // Assert
         action.Should().Throw<AssertFailedException>();
@@ -188,25 +188,25 @@ public partial class AssertTests : TestContainer
     public void IsLessThanOrEqualToShouldThrowWithMessage()
     {
         // Act
-        Action action = () => Assert.IsLessThanOrEqualTo(10, 5, "A Message");
+        Action action = () => Assert.IsLessThanOrEqualTo(5, 10, "A Message");
 
         // Assert
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("Expected value <10> to be less than or equal to actual value <5>. A Message");
+            .WithMessage("Actual value <10> is not less than or equal to expected value <5>. A Message");
     }
 
     public void IsLessThanOrEqualToShouldThrowWithMessageAndParameters()
     {
         // Act
-        Action action = () => Assert.IsLessThanOrEqualTo(10, 5, "A Message {0}", "param");
+        Action action = () => Assert.IsLessThanOrEqualTo(5, 10, "A Message {0}", "param");
 
         // Assert
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("Expected value <10> to be less than or equal to actual value <5>. A Message param");
+            .WithMessage("Actual value <10> is not less than or equal to expected value <5>. A Message param");
     }
 
     public void IsLessThanOrEqualToShouldWorkWithDoubles() =>
-        Assert.IsLessThanOrEqualTo(5.0, 5.5);
+        Assert.IsLessThanOrEqualTo(5.5, 5.0);
 
     public void IsLessThanOrEqualToShouldWorkWithEqualDoubles() =>
         Assert.IsLessThanOrEqualTo(5.5, 5.5);
