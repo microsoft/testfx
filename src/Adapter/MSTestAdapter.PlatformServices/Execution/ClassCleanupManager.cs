@@ -30,7 +30,7 @@ internal sealed class ClassCleanupManager
         _reflectHelper = reflectHelper;
     }
 
-    public bool ShouldRunEndOfAssemblyCleanup { get; private set; }
+    public bool ShouldRunEndOfAssemblyCleanup => _remainingTestCountsByClass.IsEmpty;
 
     public void MarkTestComplete(TestMethodInfo testMethodInfo, out bool shouldRunEndOfClassCleanup)
     {
@@ -55,8 +55,6 @@ internal sealed class ClassCleanupManager
                     shouldRunEndOfClassCleanup = cleanupLifecycle == ClassCleanupBehavior.EndOfClass;
                 }
             }
-
-            ShouldRunEndOfAssemblyCleanup = _remainingTestCountsByClass.IsEmpty;
         }
     }
 

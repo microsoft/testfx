@@ -726,7 +726,7 @@ public class TestClassInfo
         return testFailedException;
     }
 
-    internal void RunClassCleanup(ITestContext testContext, ClassCleanupManager classCleanupManager, TestMethodInfo testMethodInfo, TestMethod testMethod, TestResult[] results)
+    internal void RunClassCleanup(ITestContext testContext, ClassCleanupManager classCleanupManager, TestMethodInfo testMethodInfo, TestResult[] results)
     {
         DebugEx.Assert(testMethodInfo.Parent == this, "Parent of testMethodInfo should be this TestClassInfo.");
 
@@ -736,6 +736,8 @@ public class TestClassInfo
             return;
         }
 
+        // TODO: Looks like 'ClassCleanupMethod is null && BaseClassCleanupMethods.Count == 0' is always false?
+        // shouldRunEndOfClassCleanup should be false if there are no class cleanup methods at all.
         if ((ClassCleanupMethod is null && BaseClassCleanupMethods.Count == 0)
                 || IsClassCleanupExecuted)
         {
