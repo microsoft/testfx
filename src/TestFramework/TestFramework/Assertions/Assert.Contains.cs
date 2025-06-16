@@ -138,7 +138,7 @@ public sealed partial class Assert
         }
 
         string userMessage = BuildUserMessage(message, parameters);
-        ThrowAssertCountFailed("ContainsSingle", 1, actualCount, userMessage);
+        ThrowAssertContainsSingleFailed("ContainsSingle", actualCount, userMessage);
 
         // Unreachable code but compiler cannot work it out
         return default;
@@ -225,7 +225,7 @@ public sealed partial class Assert
         if (!collection.Contains(expected))
         {
             string userMessage = BuildUserMessage(message, parameters);
-            ThrowAssertFailed("Contains", userMessage);
+            ThrowAssertContainsItemFailed("Contains", expected, userMessage);
         }
     }
 
@@ -264,7 +264,7 @@ public sealed partial class Assert
         if (!collection.Contains(expected, comparer))
         {
             string userMessage = BuildUserMessage(message, parameters);
-            ThrowAssertFailed("Contains", userMessage);
+            ThrowAssertContainsItemFailed("Contains", expected, userMessage);
         }
     }
 
@@ -300,7 +300,7 @@ public sealed partial class Assert
         if (!collection.Any(predicate))
         {
             string userMessage = BuildUserMessage(message, parameters);
-            ThrowAssertFailed("Contains", userMessage);
+            ThrowAssertContainsPredicateFailed("Contains", userMessage);
         }
     }
 
@@ -496,7 +496,7 @@ public sealed partial class Assert
         if (collection.Contains(expected))
         {
             string userMessage = BuildUserMessage(message, parameters);
-            ThrowAssertFailed("DoesNotContain", userMessage);
+            ThrowAssertDoesNotContainItemFailed("DoesNotContain", expected, userMessage);
         }
     }
 
@@ -535,7 +535,7 @@ public sealed partial class Assert
         if (collection.Contains(expected, comparer))
         {
             string userMessage = BuildUserMessage(message, parameters);
-            ThrowAssertFailed("DoesNotContain", userMessage);
+            ThrowAssertDoesNotContainItemFailed("DoesNotContain", expected, userMessage);
         }
     }
 
@@ -571,7 +571,7 @@ public sealed partial class Assert
         if (collection.Any(predicate))
         {
             string userMessage = BuildUserMessage(message, parameters);
-            ThrowAssertFailed("DoesNotContain", userMessage);
+            ThrowAssertDoesNotContainPredicateFailed("DoesNotContain", userMessage);
         }
     }
 

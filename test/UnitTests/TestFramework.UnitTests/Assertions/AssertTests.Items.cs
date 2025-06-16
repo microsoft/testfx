@@ -92,25 +92,25 @@ public partial class AssertTests
     public void Single_WhenNoItems_ShouldFail()
     {
         Exception ex = VerifyThrows(() => Assert.ContainsSingle(Array.Empty<int>()));
-        Verify(ex.Message == "Assert.ContainsSingle failed. Expected collection of size 1. Actual: 0. ");
+        Verify(ex.Message == "Assert.ContainsSingle failed. Expected collection to contain exactly one element. Actual: 0. ");
     }
 
     public void Single_WhenMultipleItems_ShouldFail()
     {
         Exception ex = VerifyThrows(() => Assert.ContainsSingle([1, 2, 3]));
-        Verify(ex.Message == "Assert.ContainsSingle failed. Expected collection of size 1. Actual: 3. ");
+        Verify(ex.Message == "Assert.ContainsSingle failed. Expected collection to contain exactly one element. Actual: 3. ");
     }
 
     public void Single_MessageArgs_WhenNoItem_ShouldFail()
     {
         Exception ex = VerifyThrows(() => Assert.ContainsSingle(Array.Empty<float>(), "User-provided message: System.Object type: {0}", new object().GetType()));
-        Verify(ex.Message == "Assert.ContainsSingle failed. Expected collection of size 1. Actual: 0. User-provided message: System.Object type: System.Object");
+        Verify(ex.Message == "Assert.ContainsSingle failed. Expected collection to contain exactly one element. Actual: 0. User-provided message: System.Object type: System.Object");
     }
 
     public void Single_MessageArgs_WhenMultipleItems_ShouldFail()
     {
         Exception ex = VerifyThrows(() => Assert.ContainsSingle([1, 2, 3], "User-provided message: System.Object type: {0}", new object().GetType()));
-        Verify(ex.Message == "Assert.ContainsSingle failed. Expected collection of size 1. Actual: 3. User-provided message: System.Object type: System.Object");
+        Verify(ex.Message == "Assert.ContainsSingle failed. Expected collection to contain exactly one element. Actual: 3. User-provided message: System.Object type: System.Object");
     }
 
     public async Task Single_InterpolatedString_WhenNoItem_ShouldFail()
@@ -118,7 +118,7 @@ public partial class AssertTests
         DummyClassTrackingToStringCalls o = new();
         DateTime dateTime = DateTime.Now;
         Exception ex = await VerifyThrowsAsync(async () => Assert.ContainsSingle(Array.Empty<int>(), $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}"));
-        Verify(ex.Message == $"Assert.ContainsSingle failed. Expected collection of size 1. Actual: 0. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
+        Verify(ex.Message == $"Assert.ContainsSingle failed. Expected collection to contain exactly one element. Actual: 0. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
         Verify(o.WasToStringCalled);
     }
 
@@ -127,7 +127,7 @@ public partial class AssertTests
         DummyClassTrackingToStringCalls o = new();
         DateTime dateTime = DateTime.Now;
         Exception ex = await VerifyThrowsAsync(async () => Assert.ContainsSingle([1, 2, 3], $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}"));
-        Verify(ex.Message == $"Assert.ContainsSingle failed. Expected collection of size 1. Actual: 3. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
+        Verify(ex.Message == $"Assert.ContainsSingle failed. Expected collection to contain exactly one element. Actual: 3. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
         Verify(o.WasToStringCalled);
     }
 

@@ -730,6 +730,70 @@ public partial class AssertTests : TestContainer
         result.Should().BeNull();
     }
 
+    #region New Error Message Tests
+
+    /// <summary>
+    /// Tests that Contains (item) failure shows specific error message.
+    /// </summary>
+    public void Contains_ItemNotFound_ShowsSpecificErrorMessage()
+    {
+        // Arrange
+        var collection = new List<int> { 1, 2, 3 };
+
+        // Act
+        Action action = () => Assert.Contains(5, collection);
+
+        // Assert
+        action.Should().Throw<AssertFailedException>().WithMessage("*Expected collection to contain '5'*");
+    }
+
+    /// <summary>
+    /// Tests that Contains (predicate) failure shows specific error message.
+    /// </summary>
+    public void Contains_PredicateNotMatched_ShowsSpecificErrorMessage()
+    {
+        // Arrange
+        var collection = new List<int> { 1, 3, 5 };
+
+        // Act
+        Action action = () => Assert.Contains(x => x % 2 == 0, collection);
+
+        // Assert
+        action.Should().Throw<AssertFailedException>().WithMessage("*Expected at least one item to match the predicate*");
+    }
+
+    /// <summary>
+    /// Tests that DoesNotContain (item) failure shows specific error message.
+    /// </summary>
+    public void DoesNotContain_ItemFound_ShowsSpecificErrorMessage()
+    {
+        // Arrange
+        var collection = new List<int> { 1, 2, 3 };
+
+        // Act
+        Action action = () => Assert.DoesNotContain(2, collection);
+
+        // Assert
+        action.Should().Throw<AssertFailedException>().WithMessage("*Expected collection to not contain '2'*");
+    }
+
+    /// <summary>
+    /// Tests that DoesNotContain (predicate) failure shows specific error message.
+    /// </summary>
+    public void DoesNotContain_PredicateMatched_ShowsSpecificErrorMessage()
+    {
+        // Arrange
+        var collection = new List<int> { 1, 2, 3 };
+
+        // Act
+        Action action = () => Assert.DoesNotContain(x => x % 2 == 0, collection);
+
+        // Assert
+        action.Should().Throw<AssertFailedException>().WithMessage("*Expected no items to match the predicate*");
+    }
+
+    #endregion
+
     private record Person(string Name, int Age);
 
     #endregion
