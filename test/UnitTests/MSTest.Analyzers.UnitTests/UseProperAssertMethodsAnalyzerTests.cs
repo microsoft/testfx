@@ -1309,4 +1309,260 @@ public sealed class UseProperAssertMethodsAnalyzerTests
 
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
+
+    [TestMethod]
+    public async Task WhenStringAssertContains()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    string value = "Hello World";
+                    string substring = "World";
+                    {|#0:StringAssert.Contains(value, substring)|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    string value = "Hello World";
+                    string substring = "World";
+                    Assert.Contains(substring, value);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            // /0/Test0.cs(11,9): info MSTEST0037: Use 'Assert.Contains' instead of 'StringAssert.Contains'
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("Contains", "StringAssert.Contains"),
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenStringAssertStartsWith()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    string value = "Hello World";
+                    string substring = "Hello";
+                    {|#0:StringAssert.StartsWith(value, substring)|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    string value = "Hello World";
+                    string substring = "Hello";
+                    Assert.StartsWith(substring, value);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            // /0/Test0.cs(11,9): info MSTEST0037: Use 'Assert.StartsWith' instead of 'StringAssert.StartsWith'
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("StartsWith", "StringAssert.StartsWith"),
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenStringAssertEndsWith()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    string value = "Hello World";
+                    string substring = "World";
+                    {|#0:StringAssert.EndsWith(value, substring)|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    string value = "Hello World";
+                    string substring = "World";
+                    Assert.EndsWith(substring, value);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            // /0/Test0.cs(11,9): info MSTEST0037: Use 'Assert.EndsWith' instead of 'StringAssert.EndsWith'
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("EndsWith", "StringAssert.EndsWith"),
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenStringAssertMatches()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Text.RegularExpressions;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    string value = "Hello World";
+                    Regex pattern = new Regex("Hello.*");
+                    {|#0:StringAssert.Matches(value, pattern)|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Text.RegularExpressions;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    string value = "Hello World";
+                    Regex pattern = new Regex("Hello.*");
+                    Assert.Matches(pattern, value);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            // /0/Test0.cs(12,9): info MSTEST0037: Use 'Assert.Matches' instead of 'StringAssert.Matches'
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("Matches", "StringAssert.Matches"),
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenStringAssertDoesNotMatch()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Text.RegularExpressions;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    string value = "Hello World";
+                    Regex pattern = new Regex("Goodbye.*");
+                    {|#0:StringAssert.DoesNotMatch(value, pattern)|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Text.RegularExpressions;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    string value = "Hello World";
+                    Regex pattern = new Regex("Goodbye.*");
+                    Assert.DoesNotMatch(pattern, value);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            // /0/Test0.cs(12,9): info MSTEST0037: Use 'Assert.DoesNotMatch' instead of 'StringAssert.DoesNotMatch'
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("DoesNotMatch", "StringAssert.DoesNotMatch"),
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenStringAssertContainsWithMessage()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    string value = "Hello World";
+                    string substring = "World";
+                    {|#0:StringAssert.Contains(value, substring, "Custom message")|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    string value = "Hello World";
+                    string substring = "World";
+                    Assert.Contains(substring, value, "Custom message");
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            // /0/Test0.cs(11,9): info MSTEST0037: Use 'Assert.Contains' instead of 'StringAssert.Contains'
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("Contains", "StringAssert.Contains"),
+            fixedCode);
+    }
 }

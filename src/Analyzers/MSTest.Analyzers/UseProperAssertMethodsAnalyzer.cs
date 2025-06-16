@@ -120,6 +120,18 @@ internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
     /// </remarks>
     internal const string CodeFixModeRemoveArgument = nameof(CodeFixModeRemoveArgument);
 
+    /// <summary>
+    /// This mode means the codefix operation is as follows:
+    /// <list type="number">
+    /// <item>Find the right assert method name from the properties bag using <see cref="ProperAssertMethodNameKey"/>.</item>
+    /// <item>Replace the class name from StringAssert to Assert.</item>
+    /// <item>Swap the first two arguments in the argument list.</item>
+    /// </list>
+    /// <para>Example: For <c>StringAssert.Contains(value, substring)</c>, it will become <c>Assert.Contains(substring, value)</c>.</para>
+    /// <para>The value for ProperAssertMethodNameKey is "Contains".</para>
+    /// </summary>
+    internal const string CodeFixModeSwapArguments = nameof(CodeFixModeSwapArguments);
+
     private static readonly LocalizableResourceString Title = new(nameof(Resources.UseProperAssertMethodsTitle), Resources.ResourceManager, typeof(Resources));
     private static readonly LocalizableResourceString MessageFormat = new(nameof(Resources.UseProperAssertMethodsMessageFormat), Resources.ResourceManager, typeof(Resources));
 
@@ -147,16 +159,28 @@ internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
                 return;
             }
 
-            context.RegisterOperationAction(context => AnalyzeInvocationOperation(context, assertTypeSymbol), OperationKind.Invocation);
+            context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingStringAssert, out INamedTypeSymbol? stringAssertTypeSymbol);
+
+            context.RegisterOperationAction(context => AnalyzeInvocationOperation(context, assertTypeSymbol, stringAssertTypeSymbol), OperationKind.Invocation);
         });
     }
 
-    private static void AnalyzeInvocationOperation(OperationAnalysisContext context, INamedTypeSymbol assertTypeSymbol)
+    private static void AnalyzeInvocationOperation(OperationAnalysisContext context, INamedTypeSymbol assertTypeSymbol, INamedTypeSymbol? stringAssertTypeSymbol)
     {
         var operation = (IInvocationOperation)context.Operation;
         IMethodSymbol targetMethod = operation.TargetMethod;
-        if (!SymbolEqualityComparer.Default.Equals(targetMethod.ContainingType, assertTypeSymbol))
+        
+        bool isAssert = SymbolEqualityComparer.Default.Equals(targetMethod.ContainingType, assertTypeSymbol);
+        bool isStringAssert = stringAssertTypeSymbol != null && SymbolEqualityComparer.Default.Equals(targetMethod.ContainingType, stringAssertTypeSymbol);
+        
+        if (!isAssert && !isStringAssert)
         {
+            return;
+        }
+
+        if (isStringAssert)
+        {
+            AnalyzeStringAssertInvocation(context, operation);
             return;
         }
 
@@ -456,5 +480,42 @@ internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
     {
         argumentValue = operation.Arguments.FirstOrDefault(arg => arg.Parameter?.Ordinal == ordinal)?.Value?.WalkDownConversion();
         return argumentValue is not null;
+    }
+
+    private static void AnalyzeStringAssertInvocation(OperationAnalysisContext context, IInvocationOperation operation)
+    {
+        IMethodSymbol targetMethod = operation.TargetMethod;
+        
+        // Map StringAssert methods to their equivalent Assert methods
+        string? assertMethodName = targetMethod.Name switch
+        {
+            "Contains" => "Contains",
+            "StartsWith" => "StartsWith", 
+            "EndsWith" => "EndsWith",
+            "Matches" => "Matches",
+            "DoesNotMatch" => "DoesNotMatch",
+            _ => null
+        };
+
+        if (assertMethodName == null)
+        {
+            return;
+        }
+
+        // StringAssert methods all have at least 2 arguments that need to be swapped
+        if (operation.Arguments.Length < 2)
+        {
+            return;
+        }
+
+        var properties = ImmutableDictionary.CreateBuilder<string, string?>();
+        properties.Add(ProperAssertMethodNameKey, assertMethodName);
+        properties.Add(CodeFixModeKey, CodeFixModeSwapArguments);
+
+        context.ReportDiagnostic(context.Operation.CreateDiagnostic(
+            Rule,
+            properties: properties.ToImmutable(),
+            assertMethodName,
+            $"StringAssert.{targetMethod.Name}"));
     }
 }

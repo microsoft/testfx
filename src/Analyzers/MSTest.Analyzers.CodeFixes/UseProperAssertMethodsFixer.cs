@@ -3,6 +3,7 @@
 
 using System.Collections.Immutable;
 using System.Composition;
+using System.Linq;
 
 using Analyzer.Utilities;
 
@@ -77,6 +78,9 @@ public sealed class UseProperAssertMethodsFixer : CodeFixProvider
                 break;
             case UseProperAssertMethodsAnalyzer.CodeFixModeRemoveArgument:
                 createChangedDocument = ct => FixAssertMethodForRemoveArgumentModeAsync(context.Document, diagnostic.AdditionalLocations, root, simpleNameSyntax, properAssertMethodName, diagnostic.Properties.ContainsKey(UseProperAssertMethodsAnalyzer.NeedsNullableBooleanCastKey), ct);
+                break;
+            case UseProperAssertMethodsAnalyzer.CodeFixModeSwapArguments:
+                createChangedDocument = ct => FixAssertMethodForSwapArgumentsModeAsync(context.Document, root, simpleNameSyntax, properAssertMethodName, ct);
                 break;
             default:
                 break;
@@ -199,6 +203,55 @@ public sealed class UseProperAssertMethodsFixer : CodeFixProvider
         }
 
         editor.ReplaceNode(argumentList, newArgumentList);
+
+        return editor.GetChangedDocument();
+    }
+
+    private static async Task<Document> FixAssertMethodForSwapArgumentsModeAsync(
+        Document document,
+        SyntaxNode root,
+        SimpleNameSyntax simpleNameSyntax,
+        string properAssertMethodName,
+        CancellationToken cancellationToken)
+    {
+        // Find the invocation expression that contains the SimpleNameSyntax
+        if (simpleNameSyntax.Ancestors().OfType<InvocationExpressionSyntax>().FirstOrDefault() is not InvocationExpressionSyntax invocationExpr)
+        {
+            return document;
+        }
+
+        DocumentEditor editor = await DocumentEditor.CreateAsync(document, cancellationToken).ConfigureAwait(false);
+
+        // Replace StringAssert with Assert in the member access expression
+        if (invocationExpr.Expression is MemberAccessExpressionSyntax memberAccessExpr)
+        {
+            // Change StringAssert.MethodName to Assert.MethodName
+            var newMemberAccess = memberAccessExpr.WithExpression(SyntaxFactory.IdentifierName("Assert"));
+            editor.ReplaceNode(memberAccessExpr, newMemberAccess);
+        }
+
+        // Swap the first two arguments
+        SeparatedSyntaxList<ArgumentSyntax> arguments = invocationExpr.ArgumentList.Arguments;
+        if (arguments.Count >= 2)
+        {
+            ArgumentSyntax firstArg = arguments[0];
+            ArgumentSyntax secondArg = arguments[1];
+
+            // Create new argument list with swapped first two arguments
+            var newArguments = new List<ArgumentSyntax>(arguments.Count);
+            newArguments.Add(secondArg); // Second argument becomes first
+            newArguments.Add(firstArg);  // First argument becomes second
+            
+            // Add remaining arguments if any
+            for (int i = 2; i < arguments.Count; i++)
+            {
+                newArguments.Add(arguments[i]);
+            }
+
+            ArgumentListSyntax newArgumentList = SyntaxFactory.ArgumentList(SyntaxFactory.SeparatedList(newArguments));
+            InvocationExpressionSyntax newInvocationExpr = invocationExpr.WithArgumentList(newArgumentList);
+            editor.ReplaceNode(invocationExpr, newInvocationExpr);
+        }
 
         return editor.GetChangedDocument();
     }
