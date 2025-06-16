@@ -595,4 +595,142 @@ public partial class AssertTests : TestContainer
     private static bool IsEven(int x) => x % 2 == 0;
 
     #endregion
+
+    #region ContainsSingle with Predicate Tests
+
+    /// <summary>
+    /// Tests the ContainsSingle method with predicate when exactly one element matches.
+    /// </summary>
+    public void ContainsSinglePredicate_NoMessage_OneItemMatches_ReturnsElement()
+    {
+        // Arrange
+        var collection = new List<int> { 1, 2, 3, 4, 5 };
+
+        // Act
+        int result = Assert.ContainsSingle(x => x == 3, collection);
+
+        // Assert
+        result.Should().Be(3);
+    }
+
+    /// <summary>
+    /// Tests the ContainsSingle method with predicate and message when exactly one element matches.
+    /// </summary>
+    public void ContainsSinglePredicate_WithMessage_OneItemMatches_ReturnsElement()
+    {
+        // Arrange
+        var collection = new List<string> { "apple", "banana", "cherry" };
+
+        // Act
+#pragma warning disable CA1865 // Use char overload - not netfx
+        string result = Assert.ContainsSingle(x => x.StartsWith("b", StringComparison.Ordinal), collection, "Expected one item starting with 'b'");
+#pragma warning restore CA1865 // Use char overload
+
+        // Assert
+        result.Should().Be("banana");
+    }
+
+    /// <summary>
+    /// Tests the ContainsSingle method with predicate when no elements match.
+    /// Expects an exception.
+    /// </summary>
+    public void ContainsSinglePredicate_NoItemMatches_ThrowsException()
+    {
+        // Arrange
+        var collection = new List<int> { 1, 3, 5 };
+
+        // Act
+        Action action = () => Assert.ContainsSingle(x => x % 2 == 0, collection);
+
+        // Assert
+        action.Should().Throw<AssertFailedException>().WithMessage("*Expected collection of size 1. Actual: 0*");
+    }
+
+    /// <summary>
+    /// Tests the ContainsSingle method with predicate when multiple elements match.
+    /// Expects an exception.
+    /// </summary>
+    public void ContainsSinglePredicate_MultipleItemsMatch_ThrowsException()
+    {
+        // Arrange
+        var collection = new List<int> { 2, 4, 6, 8 };
+
+        // Act
+        Action action = () => Assert.ContainsSingle(x => x % 2 == 0, collection);
+
+        // Assert
+        action.Should().Throw<AssertFailedException>().WithMessage("*Expected collection of size 1. Actual: 4*");
+    }
+
+    /// <summary>
+    /// Tests the ContainsSingle method with predicate and formatted message when no elements match.
+    /// Expects an exception with the custom message.
+    /// </summary>
+    public void ContainsSinglePredicate_WithMessageAndParams_NoItemMatches_ThrowsException()
+    {
+        // Arrange
+        var collection = new List<int> { 1, 3, 5 };
+
+        // Act
+        Action action = () => Assert.ContainsSingle(x => x % 2 == 0, collection, "No even numbers found in collection with {0} items", collection.Count);
+
+        // Assert
+        action.Should().Throw<AssertFailedException>().WithMessage("*No even numbers found in collection with 3 items*");
+    }
+
+    /// <summary>
+    /// Tests the ContainsSingle method with predicate and formatted message when multiple elements match.
+    /// Expects an exception with the custom message.
+    /// </summary>
+    public void ContainsSinglePredicate_WithMessageAndParams_MultipleItemsMatch_ThrowsException()
+    {
+        // Arrange
+        var collection = new List<int> { 2, 4, 6 };
+
+        // Act
+        Action action = () => Assert.ContainsSingle(x => x % 2 == 0, collection, "Too many even numbers found: {0}", collection.Count);
+
+        // Assert
+        action.Should().Throw<AssertFailedException>().WithMessage("*Too many even numbers found: 3*");
+    }
+
+    /// <summary>
+    /// Tests the ContainsSingle method with predicate using complex objects.
+    /// </summary>
+    public void ContainsSinglePredicate_ComplexObjects_OneItemMatches_ReturnsElement()
+    {
+        // Arrange
+        var items = new List<Person>
+        {
+            new("Alice", 25),
+            new("Bob", 30),
+            new("Charlie", 35),
+        };
+
+        // Act
+        Person result = Assert.ContainsSingle(p => p.Age == 30, items);
+
+        // Assert
+        result.Name.Should().Be("Bob");
+        result.Age.Should().Be(30);
+    }
+
+    /// <summary>
+    /// Tests the ContainsSingle method with predicate using null values.
+    /// </summary>
+    public void ContainsSinglePredicate_WithNullValues_OneItemMatches_ReturnsElement()
+    {
+        // Arrange
+        var collection = new List<string?> { "apple", null, "banana" };
+
+        // Act
+        string? result = Assert.ContainsSingle(x => x == null, collection);
+
+        // Assert
+        result.Should().BeNull();
+    }
+
+    private record Person(string Name, int Age);
+
+    #endregion
 }
