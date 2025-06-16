@@ -147,4 +147,24 @@ public sealed class UseCooperativeCancellationForTimeoutAnalyzerTests
 
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
+
+    [TestMethod]
+    public async Task WhenDataTestMethodWithTimeout_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [DataTestMethod]
+                [{|#0:Timeout(5000)|}]
+                public void MyTestMethod()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code, VerifyCS.Diagnostic().WithLocation(0));
+    }
 }
