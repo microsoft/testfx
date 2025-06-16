@@ -13,7 +13,7 @@ internal sealed class ClassCleanupManager
 {
     private readonly ClassCleanupBehavior _lifecycleFromMsTestOrAssembly;
     private readonly ReflectHelper _reflectHelper;
-    private readonly ConcurrentDictionary<string, List<string>> _remainingTestsByClass;
+    private readonly ConcurrentDictionary<string, int> _remainingTestCountsByClass;
 
     public ClassCleanupManager(
         IEnumerable<UnitTestElement> testsToRun,
@@ -21,31 +21,33 @@ internal sealed class ClassCleanupManager
         ReflectHelper reflectHelper)
     {
         IEnumerable<UnitTestElement> runnableTests = testsToRun.Where(t => t.Traits is null || !t.Traits.Any(t => t.Name == EngineConstants.FixturesTestTrait));
-        _remainingTestsByClass =
+        _remainingTestCountsByClass =
             new(runnableTests.GroupBy(t => t.TestMethod.FullClassName)
                 .ToDictionary(
                     g => g.Key,
-                    g => new List<string>(g.Select(t => t.TestMethod.UniqueName))));
+                    g => g.Count()));
         _lifecycleFromMsTestOrAssembly = lifecycleFromMsTestOrAssembly;
         _reflectHelper = reflectHelper;
     }
 
     public bool ShouldRunEndOfAssemblyCleanup { get; private set; }
 
-    public void MarkTestComplete(TestMethodInfo testMethodInfo, TestMethod testMethod, out bool shouldRunEndOfClassCleanup)
+    public void MarkTestComplete(TestMethodInfo testMethodInfo, out bool shouldRunEndOfClassCleanup)
     {
         shouldRunEndOfClassCleanup = false;
-        if (!_remainingTestsByClass.TryGetValue(testMethodInfo.TestClassName, out List<string>? testsByClass))
-        {
-            return;
-        }
 
-        lock (testsByClass)
+        lock (_remainingTestCountsByClass)
         {
-            testsByClass.Remove(testMethod.UniqueName);
-            if (testsByClass.Count == 0)
+            if (!_remainingTestCountsByClass.TryGetValue(testMethodInfo.TestClassName, out int remainingCount))
             {
-                _remainingTestsByClass.TryRemove(testMethodInfo.TestClassName, out _);
+                return;
+            }
+
+            remainingCount--;
+            _remainingTestCountsByClass[testMethodInfo.TestClassName] = remainingCount;
+            if (remainingCount == 0)
+            {
+                _remainingTestCountsByClass.TryRemove(testMethodInfo.TestClassName, out _);
                 if (testMethodInfo.Parent.HasExecutableCleanupMethod)
                 {
                     ClassCleanupBehavior cleanupLifecycle = GetClassCleanupBehavior(testMethodInfo.Parent);
@@ -54,7 +56,7 @@ internal sealed class ClassCleanupManager
                 }
             }
 
-            ShouldRunEndOfAssemblyCleanup = _remainingTestsByClass.IsEmpty;
+            ShouldRunEndOfAssemblyCleanup = _remainingTestCountsByClass.IsEmpty;
         }
     }
 
