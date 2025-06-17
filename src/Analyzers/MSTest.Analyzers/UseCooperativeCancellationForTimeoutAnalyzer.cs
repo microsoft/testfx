@@ -44,38 +44,32 @@ public sealed class UseCooperativeCancellationForTimeoutAnalyzer : DiagnosticAna
 
         context.RegisterCompilationStartAction(context =>
         {
-            if (context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestMethodAttribute, out INamedTypeSymbol? testMethodAttributeSymbol)
-                && context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTimeoutAttribute, out INamedTypeSymbol? timeoutAttributeSymbol))
+            if (context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTimeoutAttribute, out INamedTypeSymbol? timeoutAttributeSymbol))
             {
                 context.RegisterSymbolAction(
-                    context => AnalyzeSymbol(context, testMethodAttributeSymbol, timeoutAttributeSymbol),
+                    context => AnalyzeSymbol(context, timeoutAttributeSymbol),
                     SymbolKind.Method);
             }
         });
     }
 
-    private static void AnalyzeSymbol(SymbolAnalysisContext context, INamedTypeSymbol testMethodAttributeSymbol, INamedTypeSymbol timeoutAttributeSymbol)
+    private static void AnalyzeSymbol(SymbolAnalysisContext context, INamedTypeSymbol timeoutAttributeSymbol)
     {
         var methodSymbol = (IMethodSymbol)context.Symbol;
 
-        bool hasTestMethodAttribute = false;
         AttributeData? timeoutAttribute = null;
         
         foreach (AttributeData attribute in methodSymbol.GetAttributes())
         {
-            if (attribute.AttributeClass.Inherits(testMethodAttributeSymbol))
-            {
-                hasTestMethodAttribute = true;
-            }
-
             if (SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, timeoutAttributeSymbol))
             {
                 timeoutAttribute = attribute;
+                break;
             }
         }
 
-        // Only analyze timeout attributes on test methods
-        if (!hasTestMethodAttribute || timeoutAttribute == null)
+        // Only analyze methods with timeout attributes
+        if (timeoutAttribute == null)
         {
             return;
         }
