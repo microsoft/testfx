@@ -22,7 +22,7 @@ internal sealed class TypeCache : MarshalByRefObject
     /// <summary>
     /// Predefined test Attribute names.
     /// </summary>
-    private static readonly string[] PredefinedNames = ["TestCategory"];
+    private static readonly string[] PredefinedNames = ["Priority", "TestCategory", "Owner"];
 
     /// <summary>
     /// Helper for reflection API's.
@@ -786,9 +786,22 @@ internal sealed class TypeCache : MarshalByRefObject
 
         foreach (TestPropertyAttribute attribute in attributes)
         {
-            if (!ValidateAndAssignTestProperty(testMethodInfo, testContext, attribute.Name, attribute.Value))
+            // Skip validation for OwnerAttribute and PriorityAttribute - these are allowed even though
+            // their property names are in PredefinedNames
+            if (attribute is OwnerAttribute || attribute is PriorityAttribute)
             {
-                break;
+                // Directly add to test context if not already present
+                if (!testContext.TryGetPropertyValue(attribute.Name, out object? existingValue))
+                {
+                    testContext.AddProperty(attribute.Name, attribute.Value);
+                }
+            }
+            else
+            {
+                if (!ValidateAndAssignTestProperty(testMethodInfo, testContext, attribute.Name, attribute.Value))
+                {
+                    break;
+                }
             }
         }
     }
