@@ -120,6 +120,10 @@
     <InternalsVisibleTo Include="Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="MSTest.VstestConsoleWrapper.IntegrationTests" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="MSTest.IntegrationTests" Key="$(VsPublicKey)" />
+
+    <!-- UseParallelizeAttributeAnalyzerTests need to conditionally include adapter. So it needs typeof(...).Assembly -->
+    <!-- We are making everything in adapter as internal. -->
+    <InternalsVisibleTo Include="MSTest.Analyzers.UnitTests" Key="$(VsPublicKey)" />
   </ItemGroup>
 
   <!-- SDK bottom import -->
