@@ -190,20 +190,23 @@ public class MSTestAdapterSettings
             return false;
         }
 
-        bool disableAppDomain = false;
+        bool disableAppDomain = true;
 
         if (!StringEx.IsNullOrEmpty(settingsXml))
         {
             StringReader stringReader = new(settingsXml);
             var reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
-            disableAppDomain = reader.ReadToFollowing("DisableAppDomain") &&
-                bool.TryParse(reader.ReadInnerXml(), out bool result) && result;
+            if (reader.ReadToFollowing("DisableAppDomain") && bool.TryParse(reader.ReadInnerXml(), out bool result))
+            {
+                disableAppDomain = result;
+            }
         }
 
         string? isAppDomainDisabled = Configuration?["mstest:execution:disableAppDomain"];
-        if (!StringEx.IsNullOrEmpty(isAppDomainDisabled))
+        if (!StringEx.IsNullOrEmpty(isAppDomainDisabled) &&
+            bool.TryParse(isAppDomainDisabled, out bool resultFromConfiguration))
         {
-            disableAppDomain = bool.TryParse(isAppDomainDisabled, out bool result) && result;
+            disableAppDomain = resultFromConfiguration;
         }
 
         return disableAppDomain;
