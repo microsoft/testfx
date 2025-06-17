@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Linq;
-
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 /// <summary>
@@ -100,7 +98,17 @@ public sealed class CIConditionAttribute : ConditionBaseAttribute
 
         foreach (string[] variables in allNotNullVariables)
         {
-            if (variables.All(variable => !string.IsNullOrEmpty(Environment.GetEnvironmentVariable(variable))))
+            bool allVariablesPresent = true;
+            foreach (string variable in variables)
+            {
+                if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable(variable)))
+                {
+                    allVariablesPresent = false;
+                    break;
+                }
+            }
+
+            if (allVariablesPresent)
             {
                 return true;
             }
