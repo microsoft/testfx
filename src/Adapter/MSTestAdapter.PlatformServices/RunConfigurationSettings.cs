@@ -29,16 +29,6 @@ public class RunConfigurationSettings
     public const string SettingsName = "RunConfiguration";
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="RunConfigurationSettings"/> class.
-    /// </summary>
-    public RunConfigurationSettings() => CollectSourceInformation = true;
-
-    /// <summary>
-    /// Gets a value indicating whether source information needs to be collected or not.
-    /// </summary>
-    public bool CollectSourceInformation { get; private set; }
-
-    /// <summary>
     /// Gets a value indicating the requested platform apartment state.
     /// </summary>
     internal ApartmentState? ExecutionApartmentState { get; private set; }
@@ -127,19 +117,6 @@ public class RunConfigurationSettings
                 string elementName = reader.Name.ToUpperInvariant();
                 switch (elementName)
                 {
-                    case "COLLECTSOURCEINFORMATION":
-                        {
-                            if (bool.TryParse(reader.ReadInnerXml(), out bool result))
-                            {
-                                settings.CollectSourceInformation = result;
-                                PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo(
-                                "CollectSourceInformation value found : {0} ",
-                                result);
-                            }
-
-                            break;
-                        }
-
                     case "EXECUTIONTHREADAPARTMENTSTATE":
                         {
                             if (Enum.TryParse(reader.ReadInnerXml(), out PlatformApartmentState platformApartmentState))
@@ -173,17 +150,9 @@ public class RunConfigurationSettings
         // Expected format of the json is: -
         // "mstest" : {
         //  "execution": {
-        //    "collectSourceInformation": true,
         //    "executionApartmentState": "STA"
         //  }
         // }
-        if (bool.TryParse(configuration["mstest:execution:collectSourceInformation"], out bool collectSourceInformation))
-        {
-            settings.CollectSourceInformation = collectSourceInformation;
-            PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo(
-                "CollectSourceInformation value found : {0}", collectSourceInformation);
-        }
-
         string? apartmentStateValue = configuration["mstest:execution:executionApartmentState"];
         if (Enum.TryParse(apartmentStateValue, out PlatformApartmentState platformApartmentState))
         {

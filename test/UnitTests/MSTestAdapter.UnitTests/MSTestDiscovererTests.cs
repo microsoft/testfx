@@ -140,8 +140,6 @@ public class MSTestDiscovererTests : TestContainer
             tsv => tsv.IsAssemblyReferenced(It.IsAny<AssemblyName>(), source)).Returns(true);
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly(source, It.IsAny<bool>()))
             .Returns(Assembly.GetExecutingAssembly());
-        _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.CreateNavigationSession(source))
-            .Returns((object?)null);
         _testablePlatformServiceProvider.MockTestSourceHost.Setup(
             ih => ih.CreateInstanceForType(It.IsAny<Type>(), It.IsAny<object[]>()))
             .Returns(new AssemblyEnumerator());

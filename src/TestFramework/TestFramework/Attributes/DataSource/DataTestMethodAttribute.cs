@@ -19,15 +19,4 @@ public class DataTestMethodAttribute : TestMethodAttribute
     public DataTestMethodAttribute()
     {
     }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="DataTestMethodAttribute"/> class.
-    /// </summary>
-    /// <param name="displayName">
-    /// Display name for the test.
-    /// </param>
-    public DataTestMethodAttribute(string? displayName)
-        : base(displayName)
-    {
-    }
 }
