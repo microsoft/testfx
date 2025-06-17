@@ -4,7 +4,6 @@
 using Microsoft.Testing.Extensions;
 
 [assembly: Parallelize(Scope = ExecutionScope.MethodLevel, Workers = 0)]
-[assembly: ClassCleanupExecution(ClassCleanupBehavior.EndOfClass)]
 
 // DebuggerUtility.AttachVSToCurrentProcess();
 ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);

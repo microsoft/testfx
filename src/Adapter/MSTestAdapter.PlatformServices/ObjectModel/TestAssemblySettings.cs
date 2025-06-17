@@ -26,9 +26,4 @@ internal sealed class TestAssemblySettings
     /// Gets or sets a value indicating whether the assembly can be parallelized.
     /// </summary>
     internal bool CanParallelizeAssembly { get; set; }
-
-    /// <summary>
-    /// Gets or sets the class cleanup lifecycle timing.
-    /// </summary>
-    internal ClassCleanupBehavior ClassCleanupLifecycle { get; set; }
 }

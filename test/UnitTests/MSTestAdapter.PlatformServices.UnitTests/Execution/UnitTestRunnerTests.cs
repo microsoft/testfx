@@ -283,7 +283,7 @@ public sealed class UnitTestRunnerTests : TestContainer
     public async Task RunSingleTestShouldCallAssemblyInitializeAndClassInitializeMethodsInOrder()
     {
         var mockReflectHelper = new Mock<ReflectHelper>();
-        _unitTestRunner = new UnitTestRunner(new MSTestSettings(), [], null, mockReflectHelper.Object);
+        _unitTestRunner = new UnitTestRunner(new MSTestSettings(), [], mockReflectHelper.Object);
 
         Type type = typeof(DummyTestClassWithInitializeMethods);
         MethodInfo methodInfo = type.GetMethod("TestMethod")!;
