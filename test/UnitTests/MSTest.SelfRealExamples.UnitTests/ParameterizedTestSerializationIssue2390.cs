@@ -1,7 +1,6 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if !NETFRAMEWORK // fails because of app domains.
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace MSTest.SelfRealExamples.UnitTests;
@@ -18,8 +17,12 @@ public class ParameterizedTestSerializationIssue2390
     {
         object[] array = (object[])nested;
         object actual = Assert.ContainsSingle(array);
-        Assert.AreEqual(expected.GetType(), ((object[])nested)[0].GetType());
+#if NETFRAMEWORK
+        // Buggy behavior, because of app domains.
+        Assert.AreEqual(typeof(int), actual.GetType());
+#else
+        Assert.AreEqual(expected.GetType(), actual.GetType());
         Assert.AreEqual(expected, actual);
+#endif
     }
 }
-#endif
