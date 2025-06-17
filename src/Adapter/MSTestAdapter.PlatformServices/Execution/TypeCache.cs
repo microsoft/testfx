@@ -800,6 +800,7 @@ internal sealed class TypeCache : MarshalByRefObject
     /// <param name="testContext"> The test context. </param>
     /// <param name="propertyName"> The property name. </param>
     /// <param name="propertyValue"> The property value. </param>
+    /// <param name="isPredefinedAttribute"> If the property originates from a predefined attribute. </param>
     /// <returns> True if its a valid Test Property. </returns>
     private static bool ValidateAndAssignTestProperty(
         TestMethodInfo testMethodInfo,
