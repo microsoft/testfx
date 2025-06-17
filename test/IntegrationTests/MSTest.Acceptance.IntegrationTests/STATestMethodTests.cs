@@ -359,7 +359,7 @@ public class LifeCycleTestClass : IDisposable
         ThreadAssert.AssertApartmentStateIsMTA();
     }
 
-    [ClassCleanup(ClassCleanupBehavior.EndOfClass)$TimeoutAttribute$]
+    [ClassCleanup$TimeoutAttribute$]
     public static void ClassCleanup()
     {
         Console.WriteLine("LifeCycleTestClass.ClassCleanup");
@@ -396,57 +396,6 @@ public class LifeCycleTestClass : IDisposable
 
 public class DerivedSTATestMethodAttribute : STATestMethodAttribute
 {
-}
-
-[TestClass]
-public class TestClassWithClassCleanupEndOfAssembly : IDisposable
-{
-    public TestClassWithClassCleanupEndOfAssembly()
-    {
-        Console.WriteLine("TestClassWithClassCleanupEndOfAssembly.Constructor");
-        ThreadAssert.AssertApartmentStateIsSTA();
-    }
-
-    [ClassInitialize$TimeoutAttribute$]
-    public static void ClassInitialize(TestContext context)
-    {
-        Console.WriteLine("TestClassWithClassCleanupEndOfAssembly.ClassInitialize");
-        ThreadAssert.AssertApartmentStateIsMTA();
-    }
-
-    [ClassCleanup(ClassCleanupBehavior.EndOfAssembly)$TimeoutAttribute$]
-    public static void ClassCleanup()
-    {
-        Console.WriteLine("TestClassWithClassCleanupEndOfAssembly.ClassCleanup");
-        ThreadAssert.AssertApartmentStateIsMTA();
-    }
-
-    [TestInitialize$TimeoutAttribute$]
-    public void TestInitialize()
-    {
-        Console.WriteLine("TestClassWithClassCleanupEndOfAssembly.TestInitialize");
-        ThreadAssert.AssertApartmentStateIsSTA();
-    }
-
-    [TestCleanup$TimeoutAttribute$]
-    public void TestCleanup()
-    {
-        Console.WriteLine("TestClassWithClassCleanupEndOfAssembly.TestCleanup");
-        ThreadAssert.AssertApartmentStateIsSTA();
-    }
-
-    [DerivedSTATestMethod$TimeoutAttribute$]
-    public void TestMethod1()
-    {
-        Console.WriteLine("TestClassWithClassCleanupEndOfAssembly.TestMethod1");
-        ThreadAssert.AssertApartmentStateIsSTA();
-    }
-
-    public void Dispose()
-    {
-        Console.WriteLine("TestClassWithClassCleanupEndOfAssembly.Dispose");
-        ThreadAssert.AssertApartmentStateIsSTA();
-    }
 }
 
 [TestClass]

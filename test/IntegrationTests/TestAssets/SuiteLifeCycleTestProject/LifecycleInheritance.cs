@@ -11,18 +11,8 @@ public class TestClassBaseEndOfClass
     [ClassInitialize(InheritanceBehavior.BeforeEachDerivedClass)]
     public static void BaseClassInit(TestContext testContext) => Console.WriteLine("TestClassBaseEndOfClass: ClassInitialize");
 
-    [ClassCleanup(InheritanceBehavior.BeforeEachDerivedClass, ClassCleanupBehavior.EndOfClass)]
+    [ClassCleanup(InheritanceBehavior.BeforeEachDerivedClass)]
     public static void BaseClassCleanup() => Console.WriteLine("TestClassBaseEndOfClass: ClassCleanup");
-}
-
-[TestClass]
-public class TestClassBaseEndOfAssembly
-{
-    [ClassInitialize(InheritanceBehavior.BeforeEachDerivedClass)]
-    public static void BaseClassInit(TestContext testContext) => Console.WriteLine("TestClassBaseEndOfAssembly: ClassInitialize");
-
-    [ClassCleanup(InheritanceBehavior.BeforeEachDerivedClass, ClassCleanupBehavior.EndOfAssembly)]
-    public static void BaseClassCleanup() => Console.WriteLine("TestClassBaseEndOfAssembly: ClassCleanup");
 }
 
 [TestClass]
@@ -31,27 +21,17 @@ public class TestClassIntermediateEndOfClassBaseEndOfClass : TestClassBaseEndOfC
     [ClassInitialize(InheritanceBehavior.BeforeEachDerivedClass)]
     public static void IntermediateClassInit(TestContext testContext) => Console.WriteLine("TestClassIntermediateEndOfClassBaseEndOfClass: ClassInitialize");
 
-    [ClassCleanup(InheritanceBehavior.BeforeEachDerivedClass, ClassCleanupBehavior.EndOfClass)]
+    [ClassCleanup(InheritanceBehavior.BeforeEachDerivedClass)]
     public static void IntermediateClassCleanup() => Console.WriteLine("TestClassIntermediateEndOfClassBaseEndOfClass: ClassCleanup");
 }
 
 [TestClass]
-public class TestClassIntermediateEndOfClassBaseEndOfAssembly : TestClassBaseEndOfAssembly
-{
-    [ClassInitialize(InheritanceBehavior.BeforeEachDerivedClass)]
-    public static void IntermediateClassInit(TestContext testContext) => Console.WriteLine("TestClassIntermediateEndOfClassBaseEndOfAssembly: ClassInitialize");
-
-    [ClassCleanup(InheritanceBehavior.BeforeEachDerivedClass, ClassCleanupBehavior.EndOfClass)]
-    public static void IntermediateClassCleanup() => Console.WriteLine("TestClassIntermediateEndOfClassBaseEndOfAssembly: ClassCleanup");
-}
-
-[TestClass]
-public class TestClassIntermediateEndOfAssemblyBaseEndOfAssembly : TestClassBaseEndOfAssembly
+public class TestClassIntermediateEndOfAssemblyBaseEndOfAssembly
 {
     [ClassInitialize(InheritanceBehavior.BeforeEachDerivedClass)]
     public static void IntermediateClassInit(TestContext testContext) => Console.WriteLine("TestClassIntermediateEndOfAssemblyBaseEndOfAssembly: ClassInitialize");
 
-    [ClassCleanup(InheritanceBehavior.BeforeEachDerivedClass, ClassCleanupBehavior.EndOfClass)]
+    [ClassCleanup(InheritanceBehavior.BeforeEachDerivedClass)]
     public static void IntermediateClassCleanup() => Console.WriteLine("TestClassIntermediateEndOfAssemblyBaseEndOfAssembly: ClassCleanup");
 }
 
@@ -61,7 +41,7 @@ public class TestClassIntermediateEndOfAssemblyBaseEndOfClass : TestClassBaseEnd
     [ClassInitialize(InheritanceBehavior.BeforeEachDerivedClass)]
     public static void IntermediateClassInit(TestContext testContext) => Console.WriteLine("TestClassIntermediateEndOfAssemblyBaseEndOfClass: ClassInitialize");
 
-    [ClassCleanup(InheritanceBehavior.BeforeEachDerivedClass, ClassCleanupBehavior.EndOfClass)]
+    [ClassCleanup(InheritanceBehavior.BeforeEachDerivedClass)]
     public static void IntermediateClassCleanup() => Console.WriteLine("TestClassIntermediateEndOfAssemblyBaseEndOfClass: ClassCleanup");
 }
 
@@ -73,7 +53,7 @@ public class TestClassDerived_EndOfClass : TestClassBaseEndOfClass
 }
 
 [TestClass]
-public class TestClassDerived_EndOfAssembly : TestClassBaseEndOfAssembly
+public class TestClassDerived_EndOfAssembly
 {
     [TestMethod]
     public void TestMethod() => Console.WriteLine("TestClassDerived_EndOfAssembly: TestMethod");
@@ -85,7 +65,7 @@ public class TestClassDerivedEndOfClass_EndOfClassEndOfClass : TestClassIntermed
     [TestMethod]
     public void TestMethod() => Console.WriteLine("TestClassDerivedEndOfClass_EndOfClassEndOfClass: TestMethod");
 
-    [ClassCleanup(ClassCleanupBehavior.EndOfClass)]
+    [ClassCleanup]
     public static void ClassCleanup() => Console.WriteLine("TestClassDerivedEndOfClass_EndOfClassEndOfClass: ClassCleanup");
 }
 
@@ -97,17 +77,17 @@ public class TestClassDerived_EndOfClassEndOfClass : TestClassIntermediateEndOfC
 }
 
 [TestClass]
-public class TestClassDerivedEndOfClass_EndOfClassEndOfAssembly : TestClassIntermediateEndOfClassBaseEndOfAssembly
+public class TestClassDerivedEndOfClass_EndOfClassEndOfAssembly
 {
     [TestMethod]
     public void TestMethod() => Console.WriteLine("TestClassDerivedEndOfClass_EndOfClassEndOfAssembly: TestMethod");
 
-    [ClassCleanup(ClassCleanupBehavior.EndOfClass)]
+    [ClassCleanup]
     public static void ClassCleanup() => Console.WriteLine("TestClassDerivedEndOfClass_EndOfClassEndOfAssembly: ClassCleanup");
 }
 
 [TestClass]
-public class TestClassDerived_EndOfClassEndOfAssembly : TestClassIntermediateEndOfClassBaseEndOfAssembly
+public class TestClassDerived_EndOfClassEndOfAssembly
 {
     [TestMethod]
     public void TestMethod() => Console.WriteLine("TestClassDerived_EndOfClassEndOfAssembly: TestMethod");
@@ -119,7 +99,7 @@ public class TestClassDerivedEndOfClass_EndOfAssemblyEndOfClass : TestClassInter
     [TestMethod]
     public void TestMethod() => Console.WriteLine("TestClassDerivedEndOfClass_EndOfAssemblyEndOfClass: TestMethod");
 
-    [ClassCleanup(ClassCleanupBehavior.EndOfClass)]
+    [ClassCleanup]
     public static void ClassCleanup() => Console.WriteLine("TestClassDerivedEndOfClass_EndOfAssemblyEndOfClass: ClassCleanup");
 }
 
@@ -136,7 +116,7 @@ public class TestClassDerivedEndOfClass_EndOfAssemblyEndOfAssembly : TestClassIn
     [TestMethod]
     public void TestMethod() => Console.WriteLine("TestClassDerivedEndOfClass_EndOfAssemblyEndOfAssembly: TestMethod");
 
-    [ClassCleanup(ClassCleanupBehavior.EndOfClass)]
+    [ClassCleanup]
     public static void ClassCleanup() => Console.WriteLine("TestClassDerivedEndOfClass_EndOfAssemblyEndOfAssembly: ClassCleanup");
 }
 

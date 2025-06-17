@@ -129,11 +129,6 @@ public class MSTestSettings
     public bool EnableBaseClassTestMethodsFromOtherAssemblies { get; private set; }
 
     /// <summary>
-    /// Gets a value indicating where class cleanup should occur.
-    /// </summary>
-    public ClassCleanupBehavior? ClassCleanupLifecycle { get; private set; }
-
-    /// <summary>
     /// Gets the number of threads/workers to be used for parallelization.
     /// </summary>
     public int? ParallelizationWorkers { get; private set; }
@@ -227,7 +222,6 @@ public class MSTestSettings
         CurrentSettings.AssemblyCleanupTimeout = settings.AssemblyCleanupTimeout;
         CurrentSettings.AssemblyInitializeTimeout = settings.AssemblyInitializeTimeout;
         CurrentSettings.CaptureDebugTraces = settings.CaptureDebugTraces;
-        CurrentSettings.ClassCleanupLifecycle = settings.ClassCleanupLifecycle;
         CurrentSettings.ClassCleanupTimeout = settings.ClassCleanupTimeout;
         CurrentSettings.ClassInitializeTimeout = settings.ClassInitializeTimeout;
         CurrentSettings.ConsiderEmptyDataSourceAsInconclusive = settings.ConsiderEmptyDataSourceAsInconclusive;
@@ -481,21 +475,6 @@ public class MSTestSettings
                             {
                                 logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, value, "EnableBaseClassTestMethodsFromOtherAssemblies"));
                             }
-
-                            break;
-                        }
-
-                    case "CLASSCLEANUPLIFECYCLE":
-                        {
-                            string value = reader.ReadInnerXml();
-                            settings.ClassCleanupLifecycle = TryParseEnum(value, out ClassCleanupBehavior lifecycle)
-                                ? lifecycle
-                                : throw new AdapterSettingsException(
-                                    string.Format(
-                                        CultureInfo.CurrentCulture,
-                                        Resource.InvalidClassCleanupLifecycleValue,
-                                        value,
-                                        string.Join(", ", EnumPolyfill.GetNames<ClassCleanupBehavior>())));
 
                             break;
                         }
@@ -969,20 +948,6 @@ public class MSTestSettings
         ParseIntegerSetting(configuration, "timeout:classCleanup", logger, value => settings.ClassCleanupTimeout = value);
         ParseIntegerSetting(configuration, "timeout:testInitialize", logger, value => settings.TestInitializeTimeout = value);
         ParseIntegerSetting(configuration, "timeout:testCleanup", logger, value => settings.TestCleanupTimeout = value);
-
-        if (configuration["mstest:classCleanupLifecycle"] is string classCleanupLifecycle)
-        {
-            if (!TryParseEnum(classCleanupLifecycle, out ClassCleanupBehavior lifecycle))
-            {
-                throw new AdapterSettingsException(string.Format(
-                    CultureInfo.CurrentCulture,
-                    Resource.InvalidClassCleanupLifecycleValue,
-                    classCleanupLifecycle,
-                    string.Join(", ", EnumPolyfill.GetNames<ClassCleanupBehavior>())));
-            }
-
-            settings.ClassCleanupLifecycle = lifecycle;
-        }
 
         if (configuration["mstest:parallelism:workers"] is string workers)
         {
