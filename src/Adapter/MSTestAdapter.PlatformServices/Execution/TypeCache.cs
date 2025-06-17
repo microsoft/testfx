@@ -786,22 +786,9 @@ internal sealed class TypeCache : MarshalByRefObject
 
         foreach (TestPropertyAttribute attribute in attributes)
         {
-            // Skip validation for OwnerAttribute and PriorityAttribute - these are allowed even though
-            // their property names are in PredefinedNames
-            if (attribute is OwnerAttribute or PriorityAttribute)
+            if (!ValidateAndAssignTestProperty(testMethodInfo, testContext, attribute.Name, attribute.Value, isPredefinedAttribute: attribute is OwnerAttribute or PriorityAttribute))
             {
-                // Directly add to test context if not already present
-                if (!testContext.TryGetPropertyValue(attribute.Name, out object? existingValue))
-                {
-                    testContext.AddProperty(attribute.Name, attribute.Value);
-                }
-            }
-            else
-            {
-                if (!ValidateAndAssignTestProperty(testMethodInfo, testContext, attribute.Name, attribute.Value))
-                {
-                    break;
-                }
+                break;
             }
         }
     }
@@ -818,9 +805,10 @@ internal sealed class TypeCache : MarshalByRefObject
         TestMethodInfo testMethodInfo,
         ITestContext testContext,
         string propertyName,
-        string propertyValue)
+        string propertyValue,
+        bool isPredefinedAttribute)
     {
-        if (PredefinedNames.Any(predefinedProp => predefinedProp == propertyName))
+        if (!isPredefinedAttribute && PredefinedNames.Any(predefinedProp => predefinedProp == propertyName))
         {
             testMethodInfo.NotRunnableReason = string.Format(
                 CultureInfo.CurrentCulture,
