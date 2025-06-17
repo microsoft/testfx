@@ -1,0 +1,24 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.2.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.Testing.Extensions.HtmlReport", "Microsoft.Testing.Extensions.HtmlReport.csproj", "{CA6EF776-84A6-6086-C0CC-D04CC0E489DE}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{CA6EF776-84A6-6086-C0CC-D04CC0E489DE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CA6EF776-84A6-6086-C0CC-D04CC0E489DE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CA6EF776-84A6-6086-C0CC-D04CC0E489DE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CA6EF776-84A6-6086-C0CC-D04CC0E489DE}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {951083C6-1CA0-4CCD-8762-8E043F653C82}
+	EndGlobalSection
+EndGlobal

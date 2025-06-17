@@ -37,6 +37,7 @@
     <PackageVersion Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" Version="$(MicrosoftCodeAnalysisPublicApiAnalyzersVersion)" />
     <PackageVersion Include="Microsoft.VisualStudio.Threading.Analyzers" Version="17.13.61" />
     <PackageVersion Include="StyleCop.Analyzers" Version="1.2.0-beta.556" />
+    <PackageVersion Include="System.Text.Json" Version="9.0.6" />
   </ItemGroup>
   <ItemGroup Label="Product dependencies">
     <PackageVersion Include="Microsoft.ApplicationInsights" Version="2.23.0" />
@@ -74,7 +75,6 @@
     <PackageVersion Include="MSTest.TestFramework" Version="$(MSTestVersion)" />
     <PackageVersion Include="Microsoft.Testing.Platform.MSBuild" Version="$(MicrosoftTestingPlatformVersion)" />
     <PackageVersion Include="Newtonsoft.Json" Version="13.0.3" />
-
     <PackageVersion Include="Polly" Version="8.5.0" />
     <PackageVersion Include="Polly.Contrib.WaitAndRetry" Version="1.1.1" />
     <PackageVersion Include="StreamJsonRpc" Version="2.20.20" />

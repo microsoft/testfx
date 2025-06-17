@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Project>
+  <ItemGroup>
+    <!--
+      !!! IMPORTANT !!!
+      DO NOT CHANGE THE GUID, IT'S A WELL KNOWN EXTENSION POINT AND THIS EXTENSION NEEDS TO BE REGISTERED AT THE END
+      WE HAVE CODE INSIDE THE TASK 'TestingPlatformEntryPoint' TO ENSURE THE ORDER OF THE REGISTRATION BASED ON THIS GUID
+    -->
+    <TestingPlatformBuilderHook Include="B1D95D2B-106A-4578-854D-F06C38553E39" >
+      <DisplayName>Microsoft.Testing.Extensions.HtmlReport</DisplayName>
+      <TypeFullName>Microsoft.Testing.Extensions.HtmlReport.TestingPlatformBuilderHook</TypeFullName>
+    </TestingPlatformBuilderHook>
+  </ItemGroup>
+</Project>

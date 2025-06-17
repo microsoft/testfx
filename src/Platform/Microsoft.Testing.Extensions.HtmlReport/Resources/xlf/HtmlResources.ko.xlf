@@ -1,0 +1,37 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
+  <file datatype="xml" source-language="en" target-language="ko" original="../HtmlResources.resx">
+    <body>
+      <trans-unit id="HtmlReportSeverityRequiresHtml">
+        <source>'--report-html-severity' requires '--report-html' to be enabled</source>
+        <target state="translated">'--report-html-severity'를 사용하려면 '--report-html'를 사용 설정 해야합니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Description">
+        <source>Azure DevOps report generator to write errors to the output in a way that AzureDev Ops understands.</source>
+        <target state="translated">Azure DevOps가 이해할 수 있는 방식으로 출력에 오류를 기록하는 Azure DevOps 보고서 생성기입니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DisplayName">
+        <source>Azure DevOps report generator</source>
+        <target state="translated">Azure DevOps 보고서 생성기</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="InvalidSeverity">
+        <source>Invalid option {0}.</source>
+        <target state="translated">{0} 옵션이 잘못되었습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="OptionDescription">
+        <source>Eanble Azure DevOps report generator to write errors to the output in a way that AzureDev Ops understands.</source>
+        <target state="translated">Azure DevOps 보고서 생성기를 활성화하여 Azure DevOps가 이해할 수 있는 방식으로 출력에 오류를 기록합니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="SeverityOptionDescription">
+        <source>Severity to use for the reported event. Options are: error (default) and warning.</source>
+        <target state="translated">보고된 이벤트에 사용할 심각도입니다. 옵션은 오류(기본값)와 경고, 두 가지입니다.</target>
+        <note>Do not translated 'error' or 'warning' those are literal values.</note>
+      </trans-unit>
+    </body>
+  </file>
+</xliff>
