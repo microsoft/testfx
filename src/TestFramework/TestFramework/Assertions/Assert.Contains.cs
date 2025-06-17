@@ -138,7 +138,7 @@ public sealed partial class Assert
         }
 
         string userMessage = BuildUserMessage(message, parameters);
-        ThrowAssertContainsSingleFailed("ContainsSingle", actualCount, userMessage);
+        ThrowAssertContainsSingleFailed(actualCount, userMessage);
 
         // Unreachable code but compiler cannot work it out
         return default;
@@ -185,7 +185,7 @@ public sealed partial class Assert
         }
 
         string userMessage = BuildUserMessage(message, parameters);
-        ThrowAssertSingleMatchFailed("ContainsSingle", actualCount, userMessage);
+        ThrowAssertSingleMatchFailed(actualCount, userMessage);
 
         // Unreachable code but compiler cannot work it out
         return default;
@@ -225,7 +225,7 @@ public sealed partial class Assert
         if (!collection.Contains(expected))
         {
             string userMessage = BuildUserMessage(message, parameters);
-            ThrowAssertContainsItemFailed("Contains", expected, userMessage);
+            ThrowAssertContainsItemFailed(expected, userMessage);
         }
     }
 
@@ -264,7 +264,7 @@ public sealed partial class Assert
         if (!collection.Contains(expected, comparer))
         {
             string userMessage = BuildUserMessage(message, parameters);
-            ThrowAssertContainsItemFailed("Contains", expected, userMessage);
+            ThrowAssertContainsItemFailed(expected, userMessage);
         }
     }
 
@@ -300,7 +300,7 @@ public sealed partial class Assert
         if (!collection.Any(predicate))
         {
             string userMessage = BuildUserMessage(message, parameters);
-            ThrowAssertContainsPredicateFailed("Contains", userMessage);
+            ThrowAssertContainsPredicateFailed(userMessage);
         }
     }
 
@@ -496,7 +496,7 @@ public sealed partial class Assert
         if (collection.Contains(expected))
         {
             string userMessage = BuildUserMessage(message, parameters);
-            ThrowAssertDoesNotContainItemFailed("DoesNotContain", expected, userMessage);
+            ThrowAssertDoesNotContainItemFailed(expected, userMessage);
         }
     }
 
@@ -535,7 +535,7 @@ public sealed partial class Assert
         if (collection.Contains(expected, comparer))
         {
             string userMessage = BuildUserMessage(message, parameters);
-            ThrowAssertDoesNotContainItemFailed("DoesNotContain", expected, userMessage);
+            ThrowAssertDoesNotContainItemFailed(expected, userMessage);
         }
     }
 
@@ -571,7 +571,7 @@ public sealed partial class Assert
         if (collection.Any(predicate))
         {
             string userMessage = BuildUserMessage(message, parameters);
-            ThrowAssertDoesNotContainPredicateFailed("DoesNotContain", userMessage);
+            ThrowAssertDoesNotContainPredicateFailed(userMessage);
         }
     }
 
@@ -787,4 +787,68 @@ public sealed partial class Assert
     }
 
     #endregion // IsInRange
+
+    [DoesNotReturn]
+    private static void ThrowAssertSingleMatchFailed(int actualCount, string userMessage)
+    {
+        string finalMessage = string.Format(
+            CultureInfo.CurrentCulture,
+            FrameworkMessages.ContainsSingleMatchFailMsg,
+            userMessage,
+            actualCount);
+        ThrowAssertFailed("Assert.ContainsSingle", finalMessage);
+    }
+
+    [DoesNotReturn]
+    private static void ThrowAssertContainsSingleFailed(int actualCount, string userMessage)
+    {
+        string finalMessage = string.Format(
+            CultureInfo.CurrentCulture,
+            FrameworkMessages.ContainsSingleFailMsg,
+            userMessage,
+            actualCount);
+        ThrowAssertFailed("Assert.ContainsSingle", finalMessage);
+    }
+
+    [DoesNotReturn]
+    private static void ThrowAssertContainsItemFailed<T>(T expected, string userMessage)
+    {
+        string finalMessage = string.Format(
+            CultureInfo.CurrentCulture,
+            FrameworkMessages.ContainsItemFailMsg,
+            userMessage,
+            expected);
+        ThrowAssertFailed("Assert.Contains", finalMessage);
+    }
+
+    [DoesNotReturn]
+    private static void ThrowAssertContainsPredicateFailed(string userMessage)
+    {
+        string finalMessage = string.Format(
+            CultureInfo.CurrentCulture,
+            FrameworkMessages.ContainsPredicateFailMsg,
+            userMessage);
+        ThrowAssertFailed("Assert.Contains", finalMessage);
+    }
+
+    [DoesNotReturn]
+    private static void ThrowAssertDoesNotContainItemFailed<T>(T unexpected, string userMessage)
+    {
+        string finalMessage = string.Format(
+            CultureInfo.CurrentCulture,
+            FrameworkMessages.DoesNotContainItemFailMsg,
+            userMessage,
+            unexpected);
+        ThrowAssertFailed("Assert.DoesNotContain", finalMessage);
+    }
+
+    [DoesNotReturn]
+    private static void ThrowAssertDoesNotContainPredicateFailed(string userMessage)
+    {
+        string finalMessage = string.Format(
+            CultureInfo.CurrentCulture,
+            FrameworkMessages.DoesNotContainPredicateFailMsg,
+            userMessage);
+        ThrowAssertFailed("Assert.DoesNotContain", finalMessage);
+    }
 }

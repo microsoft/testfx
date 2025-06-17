@@ -314,76 +314,12 @@ public sealed partial class Assert
     }
 
     [DoesNotReturn]
-    private static void ThrowAssertSingleMatchFailed(string assertionName, int actualCount, string userMessage)
-    {
-        string finalMessage = string.Format(
-            CultureInfo.CurrentCulture,
-            FrameworkMessages.ContainsSingleMatchFailMsg,
-            userMessage,
-            actualCount);
-        ThrowAssertFailed($"Assert.{assertionName}", finalMessage);
-    }
-
-    [DoesNotReturn]
-    private static void ThrowAssertContainsSingleFailed(string assertionName, int actualCount, string userMessage)
-    {
-        string finalMessage = string.Format(
-            CultureInfo.CurrentCulture,
-            FrameworkMessages.ContainsSingleFailMsg,
-            userMessage,
-            actualCount);
-        ThrowAssertFailed($"Assert.{assertionName}", finalMessage);
-    }
-
-    [DoesNotReturn]
-    private static void ThrowAssertContainsItemFailed<T>(string assertionName, T expected, string userMessage)
-    {
-        string finalMessage = string.Format(
-            CultureInfo.CurrentCulture,
-            FrameworkMessages.ContainsItemFailMsg,
-            userMessage,
-            expected);
-        ThrowAssertFailed($"Assert.{assertionName}", finalMessage);
-    }
-
-    [DoesNotReturn]
-    private static void ThrowAssertContainsPredicateFailed(string assertionName, string userMessage)
-    {
-        string finalMessage = string.Format(
-            CultureInfo.CurrentCulture,
-            FrameworkMessages.ContainsPredicateFailMsg,
-            userMessage);
-        ThrowAssertFailed($"Assert.{assertionName}", finalMessage);
-    }
-
-    [DoesNotReturn]
-    private static void ThrowAssertDoesNotContainItemFailed<T>(string assertionName, T unexpected, string userMessage)
-    {
-        string finalMessage = string.Format(
-            CultureInfo.CurrentCulture,
-            FrameworkMessages.DoesNotContainItemFailMsg,
-            userMessage,
-            unexpected);
-        ThrowAssertFailed($"Assert.{assertionName}", finalMessage);
-    }
-
-    [DoesNotReturn]
-    private static void ThrowAssertDoesNotContainPredicateFailed(string assertionName, string userMessage)
-    {
-        string finalMessage = string.Format(
-            CultureInfo.CurrentCulture,
-            FrameworkMessages.DoesNotContainPredicateFailMsg,
-            userMessage);
-        ThrowAssertFailed($"Assert.{assertionName}", finalMessage);
-    }
-
-    [DoesNotReturn]
     private static void ThrowAssertIsNotEmptyFailed(string userMessage)
     {
         string finalMessage = string.Format(
             CultureInfo.CurrentCulture,
             FrameworkMessages.IsNotEmptyFailMsg,
             userMessage);
-        ThrowAssertFailed($"Assert.IsNotEmpty", finalMessage);
+        ThrowAssertFailed("Assert.IsNotEmpty", finalMessage);
     }
 }
