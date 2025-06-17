@@ -28,7 +28,7 @@ public sealed class UseCooperativeCancellationForTimeoutAnalyzer : DiagnosticAna
         Title,
         MessageFormat,
         Description,
-        Category.Usage,
+        Category.Design,
         DiagnosticSeverity.Info,
         isEnabledByDefault: true);
 
