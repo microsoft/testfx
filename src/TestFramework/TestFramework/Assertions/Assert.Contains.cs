@@ -281,10 +281,10 @@ public sealed partial class Assert
     /// Tests whether the specified collection contains the given element.
     /// </summary>
     /// <typeparam name="T">The type of the collection items.</typeparam>
-    /// <param name="collection">The collection.</param>
     /// <param name="predicate">A function to test each element for a condition.</param>
+    /// <param name="collection">The collection.</param>
     /// <param name="message">The message to display when the assertion fails.</param>
-    public static void Contains<T>(IEnumerable<T> collection, Func<T, bool> predicate, string? message)
+    public static void Contains<T>(Func<T, bool> predicate, IEnumerable<T> collection, string? message)
         => Contains(predicate, collection, message, null);
 
     /// <summary>
@@ -456,7 +456,7 @@ public sealed partial class Assert
         {
             string userMessage = BuildUserMessage(message, parameters);
             string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.ContainsFail, value, substring, userMessage);
-            ThrowAssertFailed("StringAssert.Contains", finalMessage);
+            ThrowAssertFailed("Assert.Contains", finalMessage);
         }
     }
 
@@ -576,60 +576,60 @@ public sealed partial class Assert
     }
 
     /// <summary>
-    /// Tests whether the specified string contains the specified substring
-    /// and throws an exception if the substring does not occur within the
+    /// Tests whether the specified string does not contain the specified substring
+    /// and throws an exception if the substring occurs within the
     /// test string.
     /// </summary>
     /// <param name="substring">
-    /// The string expected to occur within <paramref name="value"/>.
+    /// The string expected to not occur within <paramref name="value"/>.
     /// </param>
     /// <param name="value">
-    /// The string that is expected to contain <paramref name="substring"/>.
+    /// The string that is expected to not contain <paramref name="substring"/>.
     /// </param>
     /// <exception cref="AssertFailedException">
     /// <paramref name="value"/> is null, or <paramref name="substring"/> is null,
-    /// or <paramref name="value"/> does not contain <paramref name="substring"/>.
+    /// or <paramref name="value"/> contains <paramref name="substring"/>.
     /// </exception>
     public static void DoesNotContain(string substring, string value)
         => DoesNotContain(substring, value, StringComparison.Ordinal, string.Empty);
 
     /// <summary>
-    /// Tests whether the specified string contains the specified substring
-    /// and throws an exception if the substring does not occur within the
+    /// Tests whether the specified string does not contain the specified substring
+    /// and throws an exception if the substring occurs within the
     /// test string.
     /// </summary>
     /// <param name="substring">
-    /// The string expected to occur within <paramref name="value"/>.
+    /// The string expected to not occur within <paramref name="value"/>.
     /// </param>
     /// <param name="value">
-    /// The string that is expected to contain <paramref name="substring"/>.
+    /// The string that is expected to not contain <paramref name="substring"/>.
     /// </param>
     /// <param name="message">
     /// The message to include in the exception when <paramref name="substring"/>
-    /// is not in <paramref name="value"/>. The message is shown in
+    /// is in <paramref name="value"/>. The message is shown in
     /// test results.
     /// </param>
     /// <exception cref="AssertFailedException">
     /// <paramref name="value"/> is null, or <paramref name="substring"/> is null,
-    /// or <paramref name="value"/> does not contain <paramref name="substring"/>.
+    /// or <paramref name="value"/> contains <paramref name="substring"/>.
     /// </exception>
     public static void DoesNotContain(string substring, string value, string? message)
         => DoesNotContain(substring, value, StringComparison.Ordinal, message);
 
     /// <summary>
-    /// Tests whether the specified string contains the specified substring
-    /// and throws an exception if the substring does not occur within the
+    /// Tests whether the specified string does not contain the specified substring
+    /// and throws an exception if the substring occurs within the
     /// test string.
     /// </summary>
     /// <param name="substring">
-    /// The string expected to occur within <paramref name="value"/>.
+    /// The string expected to not occur within <paramref name="value"/>.
     /// </param>
     /// <param name="value">
-    /// The string that is expected to contain <paramref name="substring"/>.
+    /// The string that is expected to not contain <paramref name="substring"/>.
     /// </param>
     /// <param name="message">
     /// The message to include in the exception when <paramref name="substring"/>
-    /// is not in <paramref name="value"/>. The message is shown in
+    /// is in <paramref name="value"/>. The message is shown in
     /// test results.
     /// </param>
     /// <param name="parameters">
@@ -637,76 +637,76 @@ public sealed partial class Assert
     /// </param>
     /// <exception cref="AssertFailedException">
     /// <paramref name="value"/> is null, or <paramref name="substring"/> is null,
-    /// or <paramref name="value"/> does not contain <paramref name="substring"/>.
+    /// or <paramref name="value"/> contains <paramref name="substring"/>.
     /// </exception>
     public static void DoesNotContain(string substring, string value, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message,
         params object?[]? parameters)
         => DoesNotContain(substring, value, StringComparison.Ordinal, message, parameters);
 
     /// <summary>
-    /// Tests whether the specified string contains the specified substring
-    /// and throws an exception if the substring does not occur within the
+    /// Tests whether the specified string does not contain the specified substring
+    /// and throws an exception if the substring occurs within the
     /// test string.
     /// </summary>
     /// <param name="substring">
-    /// The string expected to occur within <paramref name="value"/>.
+    /// The string expected to not occur within <paramref name="value"/>.
     /// </param>
     /// <param name="value">
-    /// The string that is expected to contain <paramref name="substring"/>.
+    /// The string that is expected to not contain <paramref name="substring"/>.
     /// </param>
     /// <param name="comparisonType">
     /// The comparison method to compare strings <paramref name="comparisonType"/>.
     /// </param>
     /// <exception cref="AssertFailedException">
     /// <paramref name="value"/> is null, or <paramref name="substring"/> is null,
-    /// or <paramref name="value"/> does not contain <paramref name="substring"/>.
+    /// or <paramref name="value"/> contains <paramref name="substring"/>.
     /// </exception>
     public static void DoesNotContain(string substring, string value, StringComparison comparisonType)
         => DoesNotContain(substring, value, comparisonType, string.Empty);
 
     /// <summary>
-    /// Tests whether the specified string contains the specified substring
-    /// and throws an exception if the substring does not occur within the
+    /// Tests whether the specified string does not contain the specified substring
+    /// and throws an exception if the substring occurs within the
     /// test string.
     /// </summary>
     /// <param name="substring">
-    /// The string expected to occur within <paramref name="value"/>.
+    /// The string expected to not occur within <paramref name="value"/>.
     /// </param>
     /// <param name="value">
-    /// The string that is expected to contain <paramref name="substring"/>.
+    /// The string that is expected to not contain <paramref name="substring"/>.
     /// </param>
     /// <param name="comparisonType">
     /// The comparison method to compare strings <paramref name="comparisonType"/>.
     /// </param>
     /// <param name="message">
     /// The message to include in the exception when <paramref name="substring"/>
-    /// is not in <paramref name="value"/>. The message is shown in
+    /// is in <paramref name="value"/>. The message is shown in
     /// test results.
     /// </param>
     /// <exception cref="AssertFailedException">
     /// <paramref name="value"/> is null, or <paramref name="substring"/> is null,
-    /// or <paramref name="value"/> does not contain <paramref name="substring"/>.
+    /// or <paramref name="value"/> contains <paramref name="substring"/>.
     /// </exception>
     public static void DoesNotContain(string substring, string value, StringComparison comparisonType, string? message)
         => DoesNotContain(substring, value, comparisonType, message, null);
 
     /// <summary>
-    /// Tests whether the specified string contains the specified substring
-    /// and throws an exception if the substring does not occur within the
+    /// Tests whether the specified string does not contain the specified substring
+    /// and throws an exception if the substring occurs within the
     /// test string.
     /// </summary>
     /// <param name="substring">
-    /// The string expected to occur within <paramref name="value"/>.
+    /// The string expected to not occur within <paramref name="value"/>.
     /// </param>
     /// <param name="value">
-    /// The string that is expected to contain <paramref name="substring"/>.
+    /// The string that is expected to not contain <paramref name="substring"/>.
     /// </param>
     /// <param name="comparisonType">
     /// The comparison method to compare strings <paramref name="comparisonType"/>.
     /// </param>
     /// <param name="message">
     /// The message to include in the exception when <paramref name="substring"/>
-    /// is not in <paramref name="value"/>. The message is shown in
+    /// is in <paramref name="value"/>. The message is shown in
     /// test results.
     /// </param>
     /// <param name="parameters">
@@ -714,7 +714,7 @@ public sealed partial class Assert
     /// </param>
     /// <exception cref="AssertFailedException">
     /// <paramref name="value"/> is null, or <paramref name="substring"/> is null,
-    /// or <paramref name="value"/> does not contain <paramref name="substring"/>.
+    /// or <paramref name="value"/> contains <paramref name="substring"/>.
     /// </exception>
     public static void DoesNotContain(string substring, string value, StringComparison comparisonType,
         [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters)
@@ -727,7 +727,7 @@ public sealed partial class Assert
         {
             string userMessage = BuildUserMessage(message, parameters);
             string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.DoesNotContainFail, value, substring, userMessage);
-            ThrowAssertFailed("StringAssert.DoesNotContain", finalMessage);
+            ThrowAssertFailed("Assert.DoesNotContain", finalMessage);
         }
     }
 
