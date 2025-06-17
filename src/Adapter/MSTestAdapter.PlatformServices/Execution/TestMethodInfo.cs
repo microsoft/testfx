@@ -128,10 +128,6 @@ public class TestMethodInfo : ITestMethod
         where TAttributeType : Attribute
         => [.. ReflectHelper.Instance.GetAttributes<TAttributeType>(MethodInfo, inherit)];
 
-    /// <inheritdoc cref="InvokeAsync(object[])" />
-    public virtual TestResult Invoke(object?[]? arguments)
-        => InvokeAsync(arguments).GetAwaiter().GetResult();
-
     /// <summary>
     /// Execute test method. Capture failures, handle async and return result.
     /// </summary>

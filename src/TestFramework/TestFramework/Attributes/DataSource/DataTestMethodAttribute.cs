@@ -13,8 +13,6 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 [EditorBrowsable(EditorBrowsableState.Never)]
 public class DataTestMethodAttribute : TestMethodAttribute
 {
-    private protected override bool UseAsync => GetType() == typeof(DataTestMethodAttribute);
-
     /// <summary>
     /// Initializes a new instance of the <see cref="DataTestMethodAttribute"/> class.
     /// </summary>
