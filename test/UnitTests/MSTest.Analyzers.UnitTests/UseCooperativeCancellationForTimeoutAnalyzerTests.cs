@@ -3,7 +3,7 @@
 
 using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
     MSTest.Analyzers.UseCooperativeCancellationForTimeoutAnalyzer,
-    Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider>;
+    MSTest.Analyzers.UseCooperativeCancellationForTimeoutFixer>;
 
 namespace MSTest.Analyzers.Test;
 
@@ -166,5 +166,107 @@ public sealed class UseCooperativeCancellationForTimeoutAnalyzerTests
             """;
 
         await VerifyCS.VerifyAnalyzerAsync(code, VerifyCS.Diagnostic().WithLocation(0));
+    }
+
+    [TestMethod]
+    public async Task WhenTimeoutAttributeWithoutCooperativeCancellation_CodeFixAddsProperty()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                [{|#0:Timeout(5000)|}]
+                public void MyTestMethod()
+                {
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                [Timeout(5000, CooperativeCancellation = true)]
+                public void MyTestMethod()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, VerifyCS.Diagnostic().WithLocation(0), fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenTimeoutAttributeWithCooperativeCancellationFalse_CodeFixChangesToTrue()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                [{|#0:Timeout(5000, CooperativeCancellation = false)|}]
+                public void MyTestMethod()
+                {
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                [Timeout(5000, CooperativeCancellation = true)]
+                public void MyTestMethod()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, VerifyCS.Diagnostic().WithLocation(0), fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenTimeoutAttributeWithTestTimeoutEnum_CodeFixAddsProperty()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                [{|#0:Timeout(TestTimeout.Infinite)|}]
+                public void MyTestMethod()
+                {
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                [Timeout(TestTimeout.Infinite, CooperativeCancellation = true)]
+                public void MyTestMethod()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, VerifyCS.Diagnostic().WithLocation(0), fixedCode);
     }
 }
