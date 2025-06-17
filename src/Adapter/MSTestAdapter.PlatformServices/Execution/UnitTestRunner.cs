@@ -26,7 +26,6 @@ internal sealed class UnitTestRunner : MarshalByRefObject
     private readonly ConcurrentDictionary<string, TestAssemblyInfo> _assemblyFixtureTests = new();
     private readonly ConcurrentDictionary<string, TestClassInfo> _classFixtureTests = new();
     private readonly TypeCache _typeCache;
-    private readonly ReflectHelper _reflectHelper;
     private readonly ClassCleanupManager _classCleanupManager;
 
     /// <summary>
@@ -55,14 +54,12 @@ internal sealed class UnitTestRunner : MarshalByRefObject
 
         if (MSTestSettings.CurrentSettings.CaptureDebugTraces)
         {
-            Console.SetOut(new ConsoleOutCapturer(Console.Out));
-            Console.SetError(new ConsoleErrorCapturer(Console.Error));
+            Console.SetOut(new ConsoleOutRouter(Console.Out));
+            Console.SetError(new ConsoleErrorRouter(Console.Error));
             Trace.Listeners.Add(new TextWriterTraceListener(new TraceTextWriter()));
         }
 
         PlatformServiceProvider.Instance.TestRunCancellationToken ??= new TestRunCancellationToken();
-
-        _reflectHelper = reflectHelper;
         _typeCache = new TypeCache(reflectHelper);
 
         // We can't transport the Enum across AppDomain boundaries because of backwards and forwards compatibility.
@@ -75,9 +72,8 @@ internal sealed class UnitTestRunner : MarshalByRefObject
 
         _classCleanupManager = new ClassCleanupManager(
             testsToRun,
-            MSTestSettings.CurrentSettings.ClassCleanupLifecycle,
-            lifecycle,
-            _reflectHelper);
+            MSTestSettings.CurrentSettings.ClassCleanupLifecycle ?? lifecycle,
+            reflectHelper);
     }
 
 #pragma warning disable CA1822 // Mark members as static
@@ -217,7 +213,7 @@ internal sealed class UnitTestRunner : MarshalByRefObject
             }
 
             testContextForClassCleanup = PlatformServiceProvider.Instance.GetTestContext(testMethod, properties, messageLogger, testContextForTestExecution.Context.CurrentTestOutcome);
-            testMethodInfo?.Parent.RunClassCleanup(testContextForClassCleanup, _classCleanupManager, testMethodInfo, testMethod, result);
+            testMethodInfo?.Parent.RunClassCleanup(testContextForClassCleanup, _classCleanupManager, testMethodInfo, result);
 
             if (testMethodInfo?.Parent.Parent.IsAssemblyInitializeExecuted == true)
             {

@@ -30,7 +30,7 @@ public class ClassCleanupManagerTests : TestContainer
             new(testMethod)
         ];
 
-        var classCleanupManager = new ClassCleanupManager(testsToRun, ClassCleanupBehavior.EndOfClass, ClassCleanupBehavior.EndOfClass, reflectHelper);
+        var classCleanupManager = new ClassCleanupManager(testsToRun, ClassCleanupBehavior.EndOfClass, reflectHelper);
 
         TestClassInfo testClassInfo = new(typeof(FakeTestClass), null!, true, new TestClassAttribute(), null!)
         {
@@ -38,13 +38,13 @@ public class ClassCleanupManagerTests : TestContainer
             ClassCleanupMethod = classCleanupMethodInfo,
         };
         TestMethodInfo testMethodInfo = new(methodInfo, testClassInfo, null!);
-        classCleanupManager.MarkTestComplete(testMethodInfo, testMethod, out bool shouldRunEndOfClassCleanup);
+        classCleanupManager.MarkTestComplete(testMethodInfo, out bool shouldRunEndOfClassCleanup);
 
         // The cleanup should not run here yet, we have 1 remaining test to run.
         Assert.IsFalse(shouldRunEndOfClassCleanup);
         Assert.IsFalse(classCleanupManager.ShouldRunEndOfAssemblyCleanup);
 
-        classCleanupManager.MarkTestComplete(testMethodInfo, testMethod, out shouldRunEndOfClassCleanup);
+        classCleanupManager.MarkTestComplete(testMethodInfo, out shouldRunEndOfClassCleanup);
         // The cleanup should run here.
         Assert.IsTrue(shouldRunEndOfClassCleanup);
         Assert.IsTrue(classCleanupManager.ShouldRunEndOfAssemblyCleanup);

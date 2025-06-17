@@ -5,12 +5,12 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 
-internal sealed class ConsoleErrorCapturer : TextWriter
+internal sealed class ConsoleOutRouter : TextWriter
 {
-    private readonly TextWriter _originalConsoleErr;
+    private readonly TextWriter _originalConsoleOut;
 
-    public ConsoleErrorCapturer(TextWriter originalConsoleErr)
-        => _originalConsoleErr = originalConsoleErr;
+    public ConsoleOutRouter(TextWriter originalConsoleOut)
+        => _originalConsoleOut = originalConsoleOut;
 
     public override Encoding Encoding => Encoding.UTF8;
 
@@ -18,11 +18,11 @@ internal sealed class ConsoleErrorCapturer : TextWriter
     {
         if (TestContextImplementation.CurrentTestContext is { } testContext)
         {
-            testContext.WriteConsoleErr(value);
+            testContext.WriteConsoleOut(value);
         }
         else
         {
-            _originalConsoleErr.Write(value);
+            _originalConsoleOut.Write(value);
         }
     }
 
@@ -30,11 +30,11 @@ internal sealed class ConsoleErrorCapturer : TextWriter
     {
         if (TestContextImplementation.CurrentTestContext is { } testContext)
         {
-            testContext.WriteConsoleErr(value);
+            testContext.WriteConsoleOut(value);
         }
         else
         {
-            _originalConsoleErr.Write(value);
+            _originalConsoleOut.Write(value);
         }
     }
 
@@ -42,11 +42,11 @@ internal sealed class ConsoleErrorCapturer : TextWriter
     {
         if (TestContextImplementation.CurrentTestContext is { } testContext)
         {
-            testContext.WriteConsoleErr(buffer, index, count);
+            testContext.WriteConsoleOut(buffer, index, count);
         }
         else
         {
-            _originalConsoleErr.Write(buffer, index, count);
+            _originalConsoleOut.Write(buffer, index, count);
         }
     }
 }
