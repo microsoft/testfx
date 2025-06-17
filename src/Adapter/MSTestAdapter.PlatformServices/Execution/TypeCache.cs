@@ -22,7 +22,7 @@ internal sealed class TypeCache : MarshalByRefObject
     /// <summary>
     /// Predefined test Attribute names.
     /// </summary>
-    private static readonly string[] PredefinedNames = ["Priority", "TestCategory", "Owner"];
+    private static readonly string[] PredefinedNames = ["TestCategory"];
 
     /// <summary>
     /// Helper for reflection API's.
