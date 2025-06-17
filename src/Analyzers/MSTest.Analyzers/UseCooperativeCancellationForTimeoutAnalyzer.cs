@@ -1,8 +1,7 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Immutable;
-using System.Linq;
 
 using Analyzer.Utilities.Extensions;
 
@@ -58,7 +57,6 @@ public sealed class UseCooperativeCancellationForTimeoutAnalyzer : DiagnosticAna
         var methodSymbol = (IMethodSymbol)context.Symbol;
 
         AttributeData? timeoutAttribute = null;
-        
         foreach (AttributeData attribute in methodSymbol.GetAttributes())
         {
             if (SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, timeoutAttributeSymbol))
@@ -68,28 +66,9 @@ public sealed class UseCooperativeCancellationForTimeoutAnalyzer : DiagnosticAna
             }
         }
 
-        // Only analyze methods with timeout attributes
-        if (timeoutAttribute == null)
-        {
-            return;
-        }
-
-        // Check if CooperativeCancellation property is explicitly set to true
-        bool hasCooperativeCancellationSetToTrue = false;
-        if (timeoutAttribute.NamedArguments.Length > 0)
-        {
-            foreach (var namedArgument in timeoutAttribute.NamedArguments)
-            {
-                if (namedArgument.Key == "CooperativeCancellation" && namedArgument.Value.Value is bool boolValue && boolValue)
-                {
-                    hasCooperativeCancellationSetToTrue = true;
-                    break;
-                }
-            }
-        }
-
         // Report diagnostic if CooperativeCancellation is not explicitly set to true
-        if (!hasCooperativeCancellationSetToTrue)
+        if (timeoutAttribute is not null
+            && !timeoutAttribute.NamedArguments.Any(x => x.Key == "CooperativeCancellation" && x.Value.Value is bool boolValue && boolValue))
         {
             if (timeoutAttribute.ApplicationSyntaxReference?.GetSyntax() is { } syntax)
             {

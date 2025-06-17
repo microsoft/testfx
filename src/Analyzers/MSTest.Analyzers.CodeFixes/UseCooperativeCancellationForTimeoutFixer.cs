@@ -1,10 +1,8 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Composition;
-using System.Linq;
 
 using Analyzer.Utilities;
 
@@ -81,7 +79,7 @@ public sealed class UseCooperativeCancellationForTimeoutFixer : CodeFixProvider
         {
             // Argument list exists, check if CooperativeCancellation is already specified
             bool hasCooperativeCancellation = false;
-            List<AttributeArgumentSyntax> newArguments = new();
+            List<AttributeArgumentSyntax> newArguments = [];
 
             foreach (AttributeArgumentSyntax arg in attributeSyntax.ArgumentList.Arguments)
             {

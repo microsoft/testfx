@@ -6,6 +6,6 @@ override MSTest.Analyzers.PreferTestMethodOverDataTestMethodFixer.GetFixAllProvi
 override MSTest.Analyzers.PreferTestMethodOverDataTestMethodFixer.RegisterCodeFixesAsync(Microsoft.CodeAnalysis.CodeFixes.CodeFixContext context) -> System.Threading.Tasks.Task!
 MSTest.Analyzers.UseCooperativeCancellationForTimeoutFixer
 MSTest.Analyzers.UseCooperativeCancellationForTimeoutFixer.UseCooperativeCancellationForTimeoutFixer() -> void
-override MSTest.Analyzers.UseCooperativeCancellationForTimeoutFixer.FixableDiagnosticIds.get -> System.Collections.Immutable.ImmutableArray<string!>
 override MSTest.Analyzers.UseCooperativeCancellationForTimeoutFixer.GetFixAllProvider() -> Microsoft.CodeAnalysis.CodeFixes.FixAllProvider!
-override MSTest.Analyzers.UseCooperativeCancellationForTimeoutFixer.RegisterCodeFixesAsync(Microsoft.CodeAnalysis.CodeFixes.CodeFixContext context) -> System.Threading.Tasks.Task!
+override sealed MSTest.Analyzers.UseCooperativeCancellationForTimeoutFixer.FixableDiagnosticIds.get -> System.Collections.Immutable.ImmutableArray<string!>
+override sealed MSTest.Analyzers.UseCooperativeCancellationForTimeoutFixer.RegisterCodeFixesAsync(Microsoft.CodeAnalysis.CodeFixes.CodeFixContext context) -> System.Threading.Tasks.Task!
