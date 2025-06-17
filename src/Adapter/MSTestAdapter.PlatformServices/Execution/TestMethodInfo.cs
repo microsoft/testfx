@@ -17,12 +17,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 /// <summary>
 /// Defines the TestMethod Info object.
 /// </summary>
-#if NET6_0_OR_GREATER
-[Obsolete(Microsoft.VisualStudio.TestTools.UnitTesting.FrameworkConstants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
-#else
-[Obsolete(Microsoft.VisualStudio.TestTools.UnitTesting.FrameworkConstants.PublicTypeObsoleteMessage)]
-#endif
-public class TestMethodInfo : ITestMethod
+internal class TestMethodInfo : ITestMethod
 {
     /// <summary>
     /// Specifies the timeout when it is not set in a test case.
@@ -62,7 +57,7 @@ public class TestMethodInfo : ITestMethod
     public bool IsTimeoutSet => TimeoutInfo.Timeout != TimeoutWhenNotSet;
 
     /// <summary>
-    /// Gets the reason why the test is not runnable.
+    /// Gets or sets the reason why the test is not runnable.
     /// </summary>
     public string? NotRunnableReason { get; internal set; }
 
