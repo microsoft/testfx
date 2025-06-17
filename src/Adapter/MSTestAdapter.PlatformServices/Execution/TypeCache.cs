@@ -788,7 +788,7 @@ internal sealed class TypeCache : MarshalByRefObject
         {
             // Skip validation for OwnerAttribute and PriorityAttribute - these are allowed even though
             // their property names are in PredefinedNames
-            if (attribute is OwnerAttribute || attribute is PriorityAttribute)
+            if (attribute is OwnerAttribute or PriorityAttribute)
             {
                 // Directly add to test context if not already present
                 if (!testContext.TryGetPropertyValue(attribute.Name, out object? existingValue))
