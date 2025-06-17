@@ -532,19 +532,6 @@ public partial class TypeEnumeratorTests : TestContainer
         Verify(testElement.DisplayName == "Test method display name.");
     }
 
-    public void GetTestFromMethodShouldSetDisplayNameFromDataTestMethodAttribute()
-    {
-        SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true, isMethodFromSameAssembly: true);
-        TypeEnumerator typeEnumerator = GetTypeEnumeratorInstance(typeof(DummyTestClass), "DummyAssemblyName");
-        MethodInfo methodInfo = typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.MethodWithVoidReturnType))!;
-        methodInfo = new MockedMethodInfoWithExtraAttributes(methodInfo, new DataTestMethodAttribute("Test method display name."));
-
-        MSTest.TestAdapter.ObjectModel.UnitTestElement testElement = typeEnumerator.GetTestFromMethod(methodInfo, true, _warnings);
-
-        Verify(testElement is not null);
-        Verify(testElement.DisplayName == "Test method display name.");
-    }
-
     #endregion
 
     #region private methods

@@ -55,7 +55,7 @@ internal sealed class SerializableInternalType;
 [TestClass]
 internal class DynamicDataTest
 {
-    [DataTestMethod]
+    [TestMethod]
     [DynamicData(nameof(DynamicData))]
     internal void DynamicDataTestMethod(SerializableInternalType serializableInternalType)
     {
