@@ -4,7 +4,24 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
-## <a name="1.7.2" />[3.9.2] - 2025-06-10
+## <a name="1.7.3" />[1.7.3] - 2025-06-17
+
+See full log [of v3.9.1...v3.9.3](https://github.com/microsoft/testfx/compare/v3.9.1...v3.9.3)
+
+### Fixed
+
+* Simpler fix for dotnet test when using retry by @Youssef1313 in [#5731](https://github.com/microsoft/testfx/pull/5684)
+
+### Artifacts
+
+* Microsoft.Testing.Extensions.CrashDump: [1.7.3](https://www.nuget.org/packages/Microsoft.Testing.Extensions.CrashDump/1.7.3)
+* Microsoft.Testing.Extensions.HangDump: [1.7.3](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HangDump/1.7.3)
+* Microsoft.Testing.Extensions.HotReload: [1.7.3](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HotReload/1.7.3)
+* Microsoft.Testing.Extensions.Retry: [1.7.3](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Retry/1.7.3)
+* Microsoft.Testing.Extensions.TrxReport: [1.7.3](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport/1.7.3)
+* Microsoft.Testing.Extensions.AzureDevOpsReport [1.0.0-alpha.25317.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.AzureDevOpsReport/1.0.0-alpha.25317.1)
+
+## <a name="1.7.2" />[1.7.2] - 2025-06-10
 
 See full log [of v3.9.1...v3.9.2](https://github.com/microsoft/testfx/compare/v3.9.1...v3.9.2)
 
