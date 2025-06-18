@@ -7,6 +7,7 @@ static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsGreaterThan<T>(T lo
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsGreaterThanOrEqualTo<T>(T lowerBound, T value) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsGreaterThanOrEqualTo<T>(T lowerBound, T value, string? message) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsGreaterThanOrEqualTo<T>(T lowerBound, T value, string? message, params object?[]? parameters) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Instance.get -> Microsoft.VisualStudio.TestTools.UnitTesting.Assert!
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Contains<T>(System.Func<T, bool>! predicate, System.Collections.Generic.IEnumerable<T>! collection, string? message) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsInRange<T>(T minValue, T maxValue, T value) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsInRange<T>(T minValue, T maxValue, T value, string? message) -> void
@@ -27,4 +28,6 @@ static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsPositive<T>(T value
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsPositive<T>(T value, string? message) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsPositive<T>(T value, string? message, params object?[]? parameters) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Throws<TException>(System.Func<object?>! action, ref Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertNonStrictThrowsInterpolatedStringHandler<TException!> message) -> TException!
+static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.Instance.get -> Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert!
+static Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert.Instance.get -> Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert!
 *REMOVED*static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Contains<T>(System.Collections.Generic.IEnumerable<T>! collection, System.Func<T, bool>! predicate, string? message) -> void

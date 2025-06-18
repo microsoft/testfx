@@ -7,9 +7,9 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.Assertions
 
 public class StringAssertTests : TestContainer
 {
-    public void ThatShouldReturnAnInstanceOfStringAssert() => Verify(StringAssert.That is not null);
+    public void InstanceShouldReturnAnInstanceOfStringAssert() => Verify(StringAssert.Instance is not null);
 
-    public void ThatShouldCacheStringAssertInstance() => Verify(StringAssert.That == StringAssert.That);
+    public void InstanceShouldCacheStringAssertInstance() => Verify(StringAssert.Instance == StringAssert.Instance);
 
     public void StringAssertContains()
     {
