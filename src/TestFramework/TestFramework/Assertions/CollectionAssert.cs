@@ -115,7 +115,7 @@ public sealed class CollectionAssert
 
         foreach (object? current in collection)
         {
-            if (Equals(current, element))
+            if (object.Equals(current, element))
             {
                 return;
             }
@@ -192,7 +192,7 @@ public sealed class CollectionAssert
 
         foreach (object? current in collection)
         {
-            if (Equals(current, element))
+            if (object.Equals(current, element))
             {
                 Assert.ThrowAssertFailed("CollectionAssert.DoesNotContain", Assert.BuildUserMessage(message, parameters));
             }
@@ -707,7 +707,7 @@ public sealed class CollectionAssert
         }
 
         // If the references are the same or both collections are null, they are equivalent.
-        if (ReferenceEquals(expected, actual) || expected == null)
+        if (object.ReferenceEquals(expected, actual) || expected == null)
         {
             return;
         }
@@ -942,7 +942,7 @@ public sealed class CollectionAssert
 
         // If the references are the same or both collections are null, they
         // are equivalent. object.ReferenceEquals will handle case where both are null.
-        if (ReferenceEquals(expected, actual))
+        if (object.ReferenceEquals(expected, actual))
         {
             string userMessage = Assert.BuildUserMessage(message, parameters);
             string finalMessage = string.Format(
@@ -1614,7 +1614,7 @@ public sealed class CollectionAssert
         ref string reason)
     {
         Assert.CheckParameterNotNull(comparer, "Assert.AreCollectionsEqual", "comparer", string.Empty);
-        if (ReferenceEquals(expected, actual))
+        if (object.ReferenceEquals(expected, actual))
         {
             reason = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.BothCollectionsSameReference, string.Empty);
             return true;
@@ -1705,8 +1705,8 @@ public sealed class CollectionAssert
     #region DoNotUse
 
     /// <summary>
-    /// Static equals overloads are used for comparing instances of two types for equality. 
-    /// This method should <b>not</b> be used for comparison of two instances for equality. 
+    /// Static equals overloads are used for comparing instances of two types for equality.
+    /// This method should <b>not</b> be used for comparison of two instances for equality.
     /// Please use CollectionAssert.AreEqual and associated overloads in your unit tests.
     /// </summary>
     /// <param name="objA"> Object A. </param>

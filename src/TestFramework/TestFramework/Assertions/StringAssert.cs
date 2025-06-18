@@ -677,8 +677,8 @@ public sealed class StringAssert
     #region DoNotUse
 
     /// <summary>
-    /// Static equals overloads are used for comparing instances of two types for equality. 
-    /// This method should <b>not</b> be used for comparison of two instances for equality. 
+    /// Static equals overloads are used for comparing instances of two types for equality.
+    /// This method should <b>not</b> be used for comparison of two instances for equality.
     /// Please use StringAssert methods or Assert.AreEqual and associated overloads in your unit tests.
     /// </summary>
     /// <param name="objA"> Object A. </param>
