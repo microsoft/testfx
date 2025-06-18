@@ -1,7 +1,13 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <!--
+      Target framework in this project isn't very meaningful. The assemblies are already built
+      in MSTest.Analyzers and MSTest.CodeFixes, and we don't produce any assemblies via this project.
+      We only need to use NetCurrent to be able to have a package reference to MSTest.GlobalConfigsGenerator.
+      Actual analyzer/codefix assemblies are (and MUST be) netstandard2.0.
+    -->
+    <TargetFramework>$(NetCurrent)</TargetFramework>
     <IncludeBuildOutput>false</IncludeBuildOutput>
     <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
     <GeneratePackageOnBuild Condition=" '$(OS)' == 'Windows_NT' ">true</GeneratePackageOnBuild>
