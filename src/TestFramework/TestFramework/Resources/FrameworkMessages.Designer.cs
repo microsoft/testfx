@@ -396,6 +396,60 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Expected exactly one item to match the predicate. Actual: {1}. {0}.
+        /// </summary>
+        internal static string ContainsSingleMatchFailMsg {
+            get {
+                return ResourceManager.GetString("ContainsSingleMatchFailMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Expected collection to contain exactly one element. Actual: {1}. {0}.
+        /// </summary>
+        internal static string ContainsSingleFailMsg {
+            get {
+                return ResourceManager.GetString("ContainsSingleFailMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Expected collection to contain '{1}'. {0}.
+        /// </summary>
+        internal static string ContainsItemFailMsg {
+            get {
+                return ResourceManager.GetString("ContainsItemFailMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Expected at least one item to match the predicate. {0}.
+        /// </summary>
+        internal static string ContainsPredicateFailMsg {
+            get {
+                return ResourceManager.GetString("ContainsPredicateFailMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Expected collection to not contain '{1}'. {0}.
+        /// </summary>
+        internal static string DoesNotContainItemFailMsg {
+            get {
+                return ResourceManager.GetString("DoesNotContainItemFailMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Expected no items to match the predicate. {0}.
+        /// </summary>
+        internal static string DoesNotContainPredicateFailMsg {
+            get {
+                return ResourceManager.GetString("DoesNotContainPredicateFailMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Invalid GitHub ticket URL.
         /// </summary>
         internal static string InvalidGitHubUrl {
