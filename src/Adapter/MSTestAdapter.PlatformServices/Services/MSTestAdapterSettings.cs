@@ -13,12 +13,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 /// <summary>
 /// The MSTest settings.
 /// </summary>
-#if NET6_0_OR_GREATER
-[Obsolete(TestTools.UnitTesting.FrameworkConstants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
-#else
-[Obsolete(TestTools.UnitTesting.FrameworkConstants.PublicTypeObsoleteMessage)]
-#endif
-public class MSTestAdapterSettings
+internal class MSTestAdapterSettings
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="MSTestAdapterSettings"/> class.

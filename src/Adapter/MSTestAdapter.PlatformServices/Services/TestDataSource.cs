@@ -23,12 +23,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 /// the tests since it can only be found at the test output directory. DO NOT call into this platform service outside of the appdomain context if you do not want to hit
 /// a ReflectionTypeLoadException.
 /// </remarks>
-#if NET6_0_OR_GREATER
-[Obsolete(TestTools.UnitTesting.FrameworkConstants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
-#else
-[Obsolete(TestTools.UnitTesting.FrameworkConstants.PublicTypeObsoleteMessage)]
-#endif
-public class TestDataSource : ITestDataSource
+internal class TestDataSource : ITestDataSource
 {
     /// <summary>
     /// Gets the test data from custom test data source and sets dbconnection in testContext object.

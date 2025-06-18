@@ -3,19 +3,13 @@
 
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 
 /// <summary>
 /// The TestDeployment interface.
 /// </summary>
-#if NET6_0_OR_GREATER
-[Obsolete(FrameworkConstants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
-#else
-[Obsolete(FrameworkConstants.PublicTypeObsoleteMessage)]
-#endif
-public interface ITestDeployment
+internal interface ITestDeployment
 {
     /// <summary>
     /// Deploy deployment items for the specified test cases.
