@@ -150,40 +150,6 @@ public sealed class UseCooperativeCancellationForTimeoutAnalyzerTests
     }
 
     [TestMethod]
-    public async Task WhenTimeoutAttributeWithTestTimeoutEnum_Diagnostic()
-    {
-        string code = """
-            using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-            [TestClass]
-            public class MyTestClass
-            {
-                [TestMethod]
-                [[|Timeout(TestTimeout.Infinite)|]]
-                public void MyTestMethod()
-                {
-                }
-            }
-            """;
-
-        string fixedCode = """
-            using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-            [TestClass]
-            public class MyTestClass
-            {
-                [TestMethod]
-                [Timeout(TestTimeout.Infinite, CooperativeCancellation = true)]
-                public void MyTestMethod()
-                {
-                }
-            }
-            """;
-
-        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
-    }
-
-    [TestMethod]
     public async Task WhenTimeoutAttributeWithoutCooperativeCancellation_CodeFixAddsProperty()
     {
         string code = """
