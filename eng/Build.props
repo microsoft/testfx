@@ -5,7 +5,7 @@
   </PropertyGroup>
 
   <ItemGroup Condition=" '$(ProductsToBuild)' == 'all' ">
-    <ProjectToBuild Include="$(RepoRoot)TestFx.slnx" />
+    <ProjectToBuild Include="$(RepoRoot)NonWindowsTests.slnf" />
   </ItemGroup>
 
   <!-- When building MSTest only on windows OS -->
