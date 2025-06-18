@@ -636,5 +636,59 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
                 return ResourceManager.GetString("WrongExceptionThrown", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Assert.Equals should not be used for Assertions. Please use Assert.AreEqual &amp; overloads instead.
+        /// </summary>
+        internal static string DoNotUseAssertEquals {
+            get {
+                return ResourceManager.GetString("DoNotUseAssertEquals", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Assert.ReferenceEquals should not be used for Assertions. Please use Assert.AreSame &amp; overloads instead.
+        /// </summary>
+        internal static string DoNotUseAssertReferenceEquals {
+            get {
+                return ResourceManager.GetString("DoNotUseAssertReferenceEquals", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to StringAssert.Equals should not be used for Assertions. Please use StringAssert methods or Assert.AreEqual &amp; overloads instead.
+        /// </summary>
+        internal static string DoNotUseStringAssertEquals {
+            get {
+                return ResourceManager.GetString("DoNotUseStringAssertEquals", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to StringAssert.ReferenceEquals should not be used for Assertions. Please use StringAssert methods or Assert.AreSame &amp; overloads instead.
+        /// </summary>
+        internal static string DoNotUseStringAssertReferenceEquals {
+            get {
+                return ResourceManager.GetString("DoNotUseStringAssertReferenceEquals", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to CollectionAssert.Equals should not be used for Assertions. Please use CollectionAssert.AreEqual &amp; overloads instead.
+        /// </summary>
+        internal static string DoNotUseCollectionAssertEquals {
+            get {
+                return ResourceManager.GetString("DoNotUseCollectionAssertEquals", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to CollectionAssert.ReferenceEquals should not be used for Assertions. Please use CollectionAssert methods or Assert.AreSame &amp; overloads instead.
+        /// </summary>
+        internal static string DoNotUseCollectionAssertReferenceEquals {
+            get {
+                return ResourceManager.GetString("DoNotUseCollectionAssertReferenceEquals", resourceCulture);
+            }
+        }
     }
 }

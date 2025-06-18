@@ -1711,11 +1711,15 @@ public sealed class CollectionAssert
     /// </summary>
     /// <param name="objA"> Object A. </param>
     /// <param name="objB"> Object B. </param>
-    /// <returns> Always returns false. </returns>
+    /// <returns> Never returns. </returns>
     [SuppressMessage("Microsoft.Naming", "CA1720:IdentifiersShouldNotContainTypeNames", MessageId = "obj", Justification = "We want to compare 'object A' with 'object B', so it makes sense to have 'obj' in the parameter name")]
     [Obsolete(FrameworkConstants.DoNotUseCollectionAssertEquals)]
+    [DoesNotReturn]
     public static new bool Equals(object? objA, object? objB)
-        => false;
+    {
+        Assert.Fail(FrameworkMessages.DoNotUseCollectionAssertEquals);
+        return false;
+    }
 
     /// <summary>
     /// Static ReferenceEquals overloads are used for comparing instances of two types for reference
@@ -1724,11 +1728,15 @@ public sealed class CollectionAssert
     /// </summary>
     /// <param name="objA"> Object A. </param>
     /// <param name="objB"> Object B. </param>
-    /// <returns> Always returns false. </returns>
+    /// <returns> Never returns. </returns>
     [SuppressMessage("Microsoft.Naming", "CA1720:IdentifiersShouldNotContainTypeNames", MessageId = "obj", Justification = "We want to compare 'object A' with 'object B', so it makes sense to have 'obj' in the parameter name")]
     [Obsolete(FrameworkConstants.DoNotUseCollectionAssertReferenceEquals)]
+    [DoesNotReturn]
     public static new bool ReferenceEquals(object? objA, object? objB)
-        => false;
+    {
+        Assert.Fail(FrameworkMessages.DoNotUseCollectionAssertReferenceEquals);
+        return false;
+    }
 
     #endregion
 }

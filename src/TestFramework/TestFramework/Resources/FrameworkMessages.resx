@@ -320,4 +320,22 @@ Actual: {2}</value>
   <data name="IsNegativeFailMsg" xml:space="preserve">
     <value>Expected value &lt;{1}&gt; to be negative. {0}</value>
   </data>
+  <data name="DoNotUseAssertEquals" xml:space="preserve">
+    <value>Assert.Equals should not be used for Assertions. Please use Assert.AreEqual & overloads instead.</value>
+  </data>
+  <data name="DoNotUseAssertReferenceEquals" xml:space="preserve">
+    <value>Assert.ReferenceEquals should not be used for Assertions. Please use Assert.AreSame & overloads instead.</value>
+  </data>
+  <data name="DoNotUseStringAssertEquals" xml:space="preserve">
+    <value>StringAssert.Equals should not be used for Assertions. Please use StringAssert methods or Assert.AreEqual & overloads instead.</value>
+  </data>
+  <data name="DoNotUseStringAssertReferenceEquals" xml:space="preserve">
+    <value>StringAssert.ReferenceEquals should not be used for Assertions. Please use StringAssert methods or Assert.AreSame & overloads instead.</value>
+  </data>
+  <data name="DoNotUseCollectionAssertEquals" xml:space="preserve">
+    <value>CollectionAssert.Equals should not be used for Assertions. Please use CollectionAssert.AreEqual & overloads instead.</value>
+  </data>
+  <data name="DoNotUseCollectionAssertReferenceEquals" xml:space="preserve">
+    <value>CollectionAssert.ReferenceEquals should not be used for Assertions. Please use CollectionAssert methods or Assert.AreSame & overloads instead.</value>
+  </data>
 </root>

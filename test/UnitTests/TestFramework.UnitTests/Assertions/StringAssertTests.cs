@@ -311,4 +311,25 @@ public class StringAssertTests : TestContainer
     private Regex? GetMatchingPattern() => new("some*");
 
     private Regex? GetNonMatchingPattern() => new("something");
+
+    #region Obsolete methods tests
+    public void ObsoleteEqualsMethodThrowsAssertFailedException()
+    {
+#pragma warning disable CS0618 // Type or member is obsolete
+        Exception ex = VerifyThrows(() => StringAssert.Equals("test", "test"));
+#pragma warning restore CS0618 // Type or member is obsolete
+        Verify(ex is AssertFailedException);
+        Verify(ex.Message.Contains("StringAssert.Equals should not be used for Assertions"));
+    }
+
+    public void ObsoleteReferenceEqualsMethodThrowsAssertFailedException()
+    {
+        var obj = new object();
+#pragma warning disable CS0618 // Type or member is obsolete
+        Exception ex = VerifyThrows(() => StringAssert.ReferenceEquals(obj, obj));
+#pragma warning restore CS0618 // Type or member is obsolete
+        Verify(ex is AssertFailedException);
+        Verify(ex.Message.Contains("StringAssert.ReferenceEquals should not be used for Assertions"));
+    }
+    #endregion
 }

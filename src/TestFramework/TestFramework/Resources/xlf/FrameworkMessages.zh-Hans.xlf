@@ -340,6 +340,36 @@ Actual: {2}</source>
         <target state="new">Expected value &lt;{1}&gt; to be negative. {0}</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="DoNotUseAssertEquals">
+        <source>Assert.Equals should not be used for Assertions. Please use Assert.AreEqual &amp; overloads instead.</source>
+        <target state="new">Assert.Equals should not be used for Assertions. Please use Assert.AreEqual &amp; overloads instead.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DoNotUseAssertReferenceEquals">
+        <source>Assert.ReferenceEquals should not be used for Assertions. Please use Assert.AreSame &amp; overloads instead.</source>
+        <target state="new">Assert.ReferenceEquals should not be used for Assertions. Please use Assert.AreSame &amp; overloads instead.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DoNotUseStringAssertEquals">
+        <source>StringAssert.Equals should not be used for Assertions. Please use StringAssert methods or Assert.AreEqual &amp; overloads instead.</source>
+        <target state="new">StringAssert.Equals should not be used for Assertions. Please use StringAssert methods or Assert.AreEqual &amp; overloads instead.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DoNotUseStringAssertReferenceEquals">
+        <source>StringAssert.ReferenceEquals should not be used for Assertions. Please use StringAssert methods or Assert.AreSame &amp; overloads instead.</source>
+        <target state="new">StringAssert.ReferenceEquals should not be used for Assertions. Please use StringAssert methods or Assert.AreSame &amp; overloads instead.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DoNotUseCollectionAssertEquals">
+        <source>CollectionAssert.Equals should not be used for Assertions. Please use CollectionAssert.AreEqual &amp; overloads instead.</source>
+        <target state="new">CollectionAssert.Equals should not be used for Assertions. Please use CollectionAssert.AreEqual &amp; overloads instead.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DoNotUseCollectionAssertReferenceEquals">
+        <source>CollectionAssert.ReferenceEquals should not be used for Assertions. Please use CollectionAssert methods or Assert.AreSame &amp; overloads instead.</source>
+        <target state="new">CollectionAssert.ReferenceEquals should not be used for Assertions. Please use CollectionAssert methods or Assert.AreSame &amp; overloads instead.</target>
+        <note></note>
+      </trans-unit>
     </body>
   </file>
 </xliff>
