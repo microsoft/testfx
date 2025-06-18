@@ -150,7 +150,7 @@ public sealed partial class Assert
     /// <param name="objB"> Object B. </param>
     /// <returns> Always returns false. </returns>
     [SuppressMessage("Microsoft.Naming", "CA1720:IdentifiersShouldNotContainTypeNames", MessageId = "obj", Justification = "We want to compare 'object A' with 'object B', so it makes sense to have 'obj' in the parameter name")]
-    [Obsolete(FrameworkMessages.DoNotUseAssertEquals)]
+    [Obsolete(FrameworkConstants.DoNotUseAssertEquals)]
     public static new bool Equals(object? objA, object? objB)
         => false;
 
@@ -163,7 +163,7 @@ public sealed partial class Assert
     /// <param name="objB"> Object B. </param>
     /// <returns> Always returns false. </returns>
     [SuppressMessage("Microsoft.Naming", "CA1720:IdentifiersShouldNotContainTypeNames", MessageId = "obj", Justification = "We want to compare 'object A' with 'object B', so it makes sense to have 'obj' in the parameter name")]
-    [Obsolete(FrameworkMessages.DoNotUseAssertReferenceEquals)]
+    [Obsolete(FrameworkConstants.DoNotUseAssertReferenceEquals)]
     public static new bool ReferenceEquals(object? objA, object? objB)
         => false;
 

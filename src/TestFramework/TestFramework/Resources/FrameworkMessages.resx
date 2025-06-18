@@ -197,12 +197,6 @@ Actual: {2}</value>
   <data name="IsNotMatchFail" xml:space="preserve">
     <value>String '{0}' matches pattern '{1}'. {2}.</value>
   </data>
-  <data name="DoNotUseAssertEquals" xml:space="preserve">
-    <value>Assert.Equals should not be used for Assertions. Please use Assert.AreEqual &amp; overloads instead.</value>
-  </data>
-  <data name="DoNotUseAssertReferenceEquals" xml:space="preserve">
-    <value>Assert.ReferenceEquals should not be used for Assertions. Please use Assert.AreSame &amp; overloads instead.</value>
-  </data>
   <data name="PrivateAccessorMemberNotFound" xml:space="preserve">
     <value>
       The member specified ({0}) could not be found. You might need to regenerate your private accessor,

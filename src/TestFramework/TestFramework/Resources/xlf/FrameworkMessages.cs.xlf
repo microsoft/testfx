@@ -171,16 +171,6 @@ Skutečnost: {2}</target>
         <target state="translated">Řetězec '{0}' odpovídá vzoru '{1}'. {2}.</target>
         <note></note>
       </trans-unit>
-      <trans-unit id="DoNotUseAssertEquals">
-        <source>Assert.Equals should not be used for Assertions. Please use Assert.AreEqual &amp; overloads instead.</source>
-        <target state="translated">Assert.Equals by neměla být pro kontrolní výrazy používána. Použijte prosím místo toho Assert.AreEqual a její přetížení.</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="DoNotUseAssertReferenceEquals">
-        <source>Assert.ReferenceEquals should not be used for Assertions. Please use Assert.AreSame &amp; overloads instead.</source>
-        <target state="new">Assert.ReferenceEquals should not be used for Assertions. Please use Assert.AreSame &amp; overloads instead.</target>
-        <note></note>
-      </trans-unit>
       <trans-unit id="PrivateAccessorMemberNotFound">
         <source>
       The member specified ({0}) could not be found. You might need to regenerate your private accessor,

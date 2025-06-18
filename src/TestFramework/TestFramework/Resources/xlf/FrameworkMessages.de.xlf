@@ -171,16 +171,6 @@ Tatsächlich: {2}</target>
         <target state="translated">Die Zeichenfolge "{0}" stimmt mit dem Muster "{1}" überein. {2}.</target>
         <note></note>
       </trans-unit>
-      <trans-unit id="DoNotUseAssertEquals">
-        <source>Assert.Equals should not be used for Assertions. Please use Assert.AreEqual &amp; overloads instead.</source>
-        <target state="translated">Assert.Equals sollte nicht für Assertions verwendet werden. Verwenden Sie stattdessen Assert.AreEqual und Überladungen.</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="DoNotUseAssertReferenceEquals">
-        <source>Assert.ReferenceEquals should not be used for Assertions. Please use Assert.AreSame &amp; overloads instead.</source>
-        <target state="new">Assert.ReferenceEquals should not be used for Assertions. Please use Assert.AreSame &amp; overloads instead.</target>
-        <note></note>
-      </trans-unit>
       <trans-unit id="PrivateAccessorMemberNotFound">
         <source>
       The member specified ({0}) could not be found. You might need to regenerate your private accessor,

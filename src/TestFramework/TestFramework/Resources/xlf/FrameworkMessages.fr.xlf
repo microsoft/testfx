@@ -171,16 +171,6 @@ Réel : {2}</target>
         <target state="translated">La chaîne '{0}' correspond au modèle '{1}'. {2}.</target>
         <note></note>
       </trans-unit>
-      <trans-unit id="DoNotUseAssertEquals">
-        <source>Assert.Equals should not be used for Assertions. Please use Assert.AreEqual &amp; overloads instead.</source>
-        <target state="translated">Assert.Equals ne doit pas être utilisé pour les assertions. Utilisez Assert.AreEqual &amp; overloads à la place.</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="DoNotUseAssertReferenceEquals">
-        <source>Assert.ReferenceEquals should not be used for Assertions. Please use Assert.AreSame &amp; overloads instead.</source>
-        <target state="new">Assert.ReferenceEquals should not be used for Assertions. Please use Assert.AreSame &amp; overloads instead.</target>
-        <note></note>
-      </trans-unit>
       <trans-unit id="PrivateAccessorMemberNotFound">
         <source>
       The member specified ({0}) could not be found. You might need to regenerate your private accessor,
