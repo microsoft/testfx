@@ -1058,7 +1058,6 @@ public class TypeCacheTests : TestContainer
         Verify(expectedMessage == testMethodInfo.NotRunnableReason);
     }
 
-
     public void GetTestMethodInfoShouldReportWarningIfCustomPriorityPropertyIsDefined()
     {
         // Test that [TestProperty("Priority", "value")] is still blocked
