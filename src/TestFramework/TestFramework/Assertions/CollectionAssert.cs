@@ -1685,4 +1685,34 @@ public sealed class CollectionAssert
         int IComparer.Compare(object? x, object? y) => Equals(x, y) ? 0 : -1;
     }
     #endregion
+
+    #region DoNotUse
+
+    /// <summary>
+    /// Static equals overloads are used for comparing instances of two types for equality. 
+    /// This method should <b>not</b> be used for comparison of two instances for equality. 
+    /// Please use CollectionAssert.AreEqual and associated overloads in your unit tests.
+    /// </summary>
+    /// <param name="objA"> Object A. </param>
+    /// <param name="objB"> Object B. </param>
+    /// <returns> Always returns false. </returns>
+    [SuppressMessage("Microsoft.Naming", "CA1720:IdentifiersShouldNotContainTypeNames", MessageId = "obj", Justification = "We want to compare 'object A' with 'object B', so it makes sense to have 'obj' in the parameter name")]
+    [Obsolete(FrameworkConstants.DoNotUseCollectionAssertEquals)]
+    public static new bool Equals(object? objA, object? objB)
+        => false;
+
+    /// <summary>
+    /// Static ReferenceEquals overloads are used for comparing instances of two types for reference
+    /// equality. This method should <b>not</b> be used for comparison of two instances for
+    /// reference equality. Please use CollectionAssert methods or Assert.AreSame and associated overloads in your unit tests.
+    /// </summary>
+    /// <param name="objA"> Object A. </param>
+    /// <param name="objB"> Object B. </param>
+    /// <returns> Always returns false. </returns>
+    [SuppressMessage("Microsoft.Naming", "CA1720:IdentifiersShouldNotContainTypeNames", MessageId = "obj", Justification = "We want to compare 'object A' with 'object B', so it makes sense to have 'obj' in the parameter name")]
+    [Obsolete(FrameworkConstants.DoNotUseCollectionAssertReferenceEquals)]
+    public static new bool ReferenceEquals(object? objA, object? objB)
+        => false;
+
+    #endregion
 }
