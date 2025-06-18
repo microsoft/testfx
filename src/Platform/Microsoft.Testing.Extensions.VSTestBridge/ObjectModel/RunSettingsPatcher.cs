@@ -49,12 +49,6 @@ internal static class RunSettingsPatcher
             runSettingsElement.AddFirst(runConfigurationElement);
         }
 
-        if (runConfigurationElement.Element("DisableAppDomain") is null)
-        {
-            AddPatchingCommentIfNeeded(runConfigurationElement, ref isPatchingCommentAdded);
-            runConfigurationElement.Add(new XElement("DisableAppDomain", false));
-        }
-
         if (runConfigurationElement.Element("DesignMode") is null)
         {
             AddPatchingCommentIfNeeded(runConfigurationElement, ref isPatchingCommentAdded);

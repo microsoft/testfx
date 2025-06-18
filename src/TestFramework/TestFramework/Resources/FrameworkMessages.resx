@@ -305,6 +305,23 @@ Actual: {2}</value>
   <data name="DoesNotContainFail" xml:space="preserve">
     <value>String '{0}' does contain string '{1}'. {2}.</value>
   </data>
+  <data name="IsGreaterThanFailMsg" xml:space="preserve">
+    <value>Actual value &lt;{2}&gt; is not greater than expected value &lt;{1}&gt;. {0}</value>
+  </data>
+  <data name="IsGreaterThanOrEqualToFailMsg" xml:space="preserve">
+    <value>Actual value &lt;{2}&gt; is not greater than or equal to expected value &lt;{1}&gt;. {0}</value>
+  </data>
+  <data name="IsLessThanFailMsg" xml:space="preserve">
+    <value>Actual value &lt;{2}&gt; is not less than expected value &lt;{1}&gt;. {0}</value>
+  </data>
+  <data name="IsLessThanOrEqualToFailMsg" xml:space="preserve">
+    <value>Actual value &lt;{2}&gt; is not less than or equal to expected value &lt;{1}&gt;. {0}</value>
+  </data>
+  <data name="IsPositiveFailMsg" xml:space="preserve">
+    <value>Expected value &lt;{1}&gt; to be positive. {0}</value>
+  </data>
+  <data name="IsNegativeFailMsg" xml:space="preserve">
+    <value>Expected value &lt;{1}&gt; to be negative. {0}</value>
   <data name="DoesNotEndWithFail" xml:space="preserve">
     <value>String '{0}' ends with string '{1}'. {2}</value>
   </data>

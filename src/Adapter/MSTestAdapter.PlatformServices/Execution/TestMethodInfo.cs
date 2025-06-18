@@ -147,14 +147,10 @@ public class TestMethodInfo : ITestMethod
         // check if arguments are set for data driven tests
         arguments ??= Arguments;
 
-        LogMessageListener? listener = null;
         watch.Start();
 
         try
         {
-            ThreadSafeStringWriter.CleanState();
-            listener = new LogMessageListener(MSTestSettings.CurrentSettings.CaptureDebugTraces);
-
             result = IsTimeoutSet
                 ? await ExecuteInternalWithTimeoutAsync(arguments).ConfigureAwait(false)
                 : await ExecuteInternalAsync(arguments, null).ConfigureAwait(false);
@@ -166,16 +162,13 @@ public class TestMethodInfo : ITestMethod
 
             if (result != null)
             {
+                var testContextImpl = TestContext as TestContextImplementation;
+                result.LogOutput = testContextImpl?.GetOut();
+                result.LogError = testContextImpl?.GetErr();
+                result.DebugTrace = testContextImpl?.GetTrace();
+                result.TestContextMessages = TestContext?.GetAndClearDiagnosticMessages();
+                result.ResultFiles = TestContext?.GetResultFiles();
                 result.Duration = watch.Elapsed;
-                if (listener is not null)
-                {
-                    result.DebugTrace = listener.GetAndClearDebugTrace();
-                    result.LogOutput = listener.GetAndClearStandardOutput();
-                    result.LogError = listener.GetAndClearStandardError();
-                    result.TestContextMessages = TestContext?.GetAndClearDiagnosticMessages();
-                    result.ResultFiles = TestContext?.GetResultFiles();
-                    listener.Dispose();
-                }
             }
         }
 
@@ -530,7 +523,7 @@ public class TestMethodInfo : ITestMethod
         // Pulling it out so extension writers can abort custom cleanups if need be. Having this in a finally block
         // does not allow a thread abort exception to be raised within the block but throws one after finally is executed
         // crashing the process. This was blocking writing an extension for Dynamic Timeout in VSO.
-        RunTestCleanupMethod(result, executionContext, timeoutTokenSource);
+        await RunTestCleanupMethodAsync(result, executionContext, timeoutTokenSource).ConfigureAwait(false);
 
         return testRunnerException != null ? throw testRunnerException : result;
     }
@@ -678,13 +671,22 @@ public class TestMethodInfo : ITestMethod
     /// <param name="executionContext">The execution context to run on.</param>
     /// <param name="timeoutTokenSource">The timeout token source.</param>
     [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
-    private void RunTestCleanupMethod(TestResult result, ExecutionContext? executionContext, CancellationTokenSource? timeoutTokenSource)
+    private
+#if NET6_0_OR_GREATER
+        async
+#endif
+        Task
+        RunTestCleanupMethodAsync(TestResult result, ExecutionContext? executionContext, CancellationTokenSource? timeoutTokenSource)
     {
         DebugEx.Assert(result != null, "result != null");
 
         if (_classInstance is null || !_isTestContextSet || _isTestCleanupInvoked)
         {
+#if NET6_0_OR_GREATER
             return;
+#else
+            return Task.CompletedTask;
+#endif
         }
 
         _isTestCleanupInvoked = true;
@@ -721,7 +723,7 @@ public class TestMethodInfo : ITestMethod
                 if (_classInstance is IAsyncDisposable classInstanceAsAsyncDisposable)
                 {
                     // If you implement IAsyncDisposable without calling the DisposeAsync this would result a resource leak.
-                    classInstanceAsAsyncDisposable.DisposeAsync().AsTask().Wait();
+                    await classInstanceAsAsyncDisposable.DisposeAsync().ConfigureAwait(false);
                 }
 #endif
                 if (_classInstance is IDisposable classInstanceAsDisposable)
@@ -738,7 +740,11 @@ public class TestMethodInfo : ITestMethod
         // If testCleanup was successful, then don't do anything
         if (testCleanupException == null)
         {
+#if NET6_0_OR_GREATER
             return;
+#else
+            return Task.CompletedTask;
+#endif
         }
 
         Exception realException = testCleanupException.GetRealException();
@@ -758,6 +764,10 @@ public class TestMethodInfo : ITestMethod
                 realException);
 
         result.TestFailureException = realException;
+
+#if !NET6_0_OR_GREATER
+        return Task.CompletedTask;
+#endif
     }
 
     /// <summary>
@@ -1121,7 +1131,7 @@ public class TestMethodInfo : ITestMethod
 
         // We don't know when the cancellation happened so it's possible that the cleanup wasn't executed, so we need to run it here.
         // The method already checks if the cleanup was already executed.
-        RunTestCleanupMethod(timeoutResult, executionContext, null);
+        await RunTestCleanupMethodAsync(timeoutResult, executionContext, null).ConfigureAwait(false);
         return timeoutResult;
 
         // Local functions
