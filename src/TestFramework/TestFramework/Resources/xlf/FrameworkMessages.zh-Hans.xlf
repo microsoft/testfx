@@ -176,6 +176,11 @@ Actual: {2}</source>
         <target state="translated">Assert.Equals 不应用于断言。请改用 Assert.AreEqual 和重载。</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="DoNotUseAssertReferenceEquals">
+        <source>Assert.ReferenceEquals should not be used for Assertions. Please use Assert.AreSame &amp; overloads instead.</source>
+        <target state="new">Assert.ReferenceEquals should not be used for Assertions. Please use Assert.AreSame &amp; overloads instead.</target>
+        <note></note>
+      </trans-unit>
       <trans-unit id="PrivateAccessorMemberNotFound">
         <source>
       The member specified ({0}) could not be found. You might need to regenerate your private accessor,

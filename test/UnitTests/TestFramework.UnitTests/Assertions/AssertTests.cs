@@ -38,6 +38,25 @@ public partial class AssertTests
     }
     #endregion
 
+    #region Obsolete methods tests
+    public void ObsoleteEqualsMethodReturnsFalse()
+    {
+#pragma warning disable CS0618 // Type or member is obsolete
+        bool result = Assert.Equals("test", "test");
+#pragma warning restore CS0618 // Type or member is obsolete
+        Verify(!result);
+    }
+
+    public void ObsoleteReferenceEqualsMethodReturnsFalse()
+    {
+        var obj = new object();
+#pragma warning disable CS0618 // Type or member is obsolete
+        bool result = Assert.ReferenceEquals(obj, obj);
+#pragma warning restore CS0618 // Type or member is obsolete
+        Verify(!result);
+    }
+    #endregion
+
     private static Task<string> GetHelloStringAsync()
         => Task.FromResult("Hello");
 

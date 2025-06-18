@@ -286,6 +286,15 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Assert.ReferenceEquals should not be used for Assertions. Please use Assert.AreSame &amp; overloads instead..
+        /// </summary>
+        internal static string DoNotUseAssertReferenceEquals {
+            get {
+                return ResourceManager.GetString("DoNotUseAssertReferenceEquals", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Method {0} must match the expected signature: public static {1} {0}({2})..
         /// </summary>
         internal static string DynamicDataDisplayName {

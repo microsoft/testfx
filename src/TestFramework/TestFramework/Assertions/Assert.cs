@@ -144,19 +144,28 @@ public sealed partial class Assert
     /// <summary>
     /// Static equals overloads are used for comparing instances of two types for reference
     /// equality. This method should <b>not</b> be used for comparison of two instances for
-    /// equality. This object will <b>always</b> throw with Assert.Fail. Please use
-    /// Assert.AreEqual and associated overloads in your unit tests.
+    /// equality. Please use Assert.AreEqual and associated overloads in your unit tests.
     /// </summary>
     /// <param name="objA"> Object A. </param>
     /// <param name="objB"> Object B. </param>
-    /// <returns> False, always. </returns>
+    /// <returns> Always returns false. </returns>
     [SuppressMessage("Microsoft.Naming", "CA1720:IdentifiersShouldNotContainTypeNames", MessageId = "obj", Justification = "We want to compare 'object A' with 'object B', so it makes sense to have 'obj' in the parameter name")]
-#pragma warning disable IDE0060 // Remove unused parameter
+    [Obsolete(FrameworkMessages.DoNotUseAssertEquals)]
     public static new bool Equals(object? objA, object? objB)
-#pragma warning restore IDE0060 // Remove unused parameter
-    {
-        Fail(FrameworkMessages.DoNotUseAssertEquals);
-        return false;
-    }
+        => false;
+
+    /// <summary>
+    /// Static ReferenceEquals overloads are used for comparing instances of two types for reference
+    /// equality. This method should <b>not</b> be used for comparison of two instances for
+    /// reference equality. Please use Assert.AreSame and associated overloads in your unit tests.
+    /// </summary>
+    /// <param name="objA"> Object A. </param>
+    /// <param name="objB"> Object B. </param>
+    /// <returns> Always returns false. </returns>
+    [SuppressMessage("Microsoft.Naming", "CA1720:IdentifiersShouldNotContainTypeNames", MessageId = "obj", Justification = "We want to compare 'object A' with 'object B', so it makes sense to have 'obj' in the parameter name")]
+    [Obsolete(FrameworkMessages.DoNotUseAssertReferenceEquals)]
+    public static new bool ReferenceEquals(object? objA, object? objB)
+        => false;
+
     #endregion
 }

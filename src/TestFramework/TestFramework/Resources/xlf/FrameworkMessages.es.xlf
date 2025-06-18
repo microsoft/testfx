@@ -176,6 +176,11 @@ Real: {2}</target>
         <target state="translated">No se debe usar Assert.Equals para aserciones. Use Assert.AreEqual y Overloads en su lugar.</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="DoNotUseAssertReferenceEquals">
+        <source>Assert.ReferenceEquals should not be used for Assertions. Please use Assert.AreSame &amp; overloads instead.</source>
+        <target state="new">Assert.ReferenceEquals should not be used for Assertions. Please use Assert.AreSame &amp; overloads instead.</target>
+        <note></note>
+      </trans-unit>
       <trans-unit id="PrivateAccessorMemberNotFound">
         <source>
       The member specified ({0}) could not be found. You might need to regenerate your private accessor,
