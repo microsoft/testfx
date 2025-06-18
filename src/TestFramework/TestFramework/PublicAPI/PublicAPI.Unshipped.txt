@@ -7,6 +7,7 @@ static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsGreaterThan<T>(T lo
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsGreaterThanOrEqualTo<T>(T lowerBound, T value) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsGreaterThanOrEqualTo<T>(T lowerBound, T value, string? message) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsGreaterThanOrEqualTo<T>(T lowerBound, T value, string? message, params object?[]? parameters) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Instance.get -> Microsoft.VisualStudio.TestTools.UnitTesting.Assert!
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.DoesNotEndWith(string? substring, string? value) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.DoesNotEndWith(string? substring, string? value, string? message) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.DoesNotEndWith(string? substring, string? value, string? message, params object?[]? parameters) -> void
@@ -62,3 +63,5 @@ static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.StartsWith(string? su
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.StartsWith(string? substring, string? value, System.StringComparison comparisonType) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.StartsWith(string? substring, string? value, System.StringComparison comparisonType, string? message, params object?[]? parameters) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Throws<TException>(System.Func<object?>! action, ref Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertNonStrictThrowsInterpolatedStringHandler<TException!> message) -> TException!
+static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.Instance.get -> Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert!
+static Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert.Instance.get -> Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert!
