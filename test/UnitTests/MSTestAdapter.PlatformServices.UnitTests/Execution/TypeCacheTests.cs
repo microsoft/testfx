@@ -1015,6 +1015,30 @@ public class TypeCacheTests : TestContainer
         // Setting up the mock feels unnecessary when the original production implementation can work just fine.
         var typeCache = new TypeCache(new ReflectHelper());
         Type type = typeof(DummyTestClassWithTestMethods);
+        MethodInfo methodInfo = type.GetMethod("TestMethodWithTestCategoryAsCustomProperty")!;
+        var testMethod = new TestMethod(methodInfo.Name, type.FullName!, "A", isAsync: false);
+        var testContext = new TestContextImplementation(
+            testMethod,
+            new ThreadSafeStringWriter(null!, "test"),
+            new Dictionary<string, object?>());
+
+        TestMethodInfo? testMethodInfo = typeCache.GetTestMethodInfo(testMethod, testContext);
+
+        Verify(testMethodInfo is not null);
+        string expectedMessage = string.Format(
+            CultureInfo.InvariantCulture,
+            "UTA023: {0}: Cannot define predefined property {2} on method {1}.",
+            methodInfo.DeclaringType!.FullName!,
+            methodInfo.Name,
+            "TestCategory");
+        Verify(expectedMessage == testMethodInfo.NotRunnableReason);
+    }
+
+    public void GetTestMethodInfoShouldReportWarningIfCustomOwnerPropertyIsDefined()
+    {
+        // Test that [TestProperty("Owner", "value")] is still blocked
+        var typeCache = new TypeCache(new ReflectHelper());
+        Type type = typeof(DummyTestClassWithTestMethods);
         MethodInfo methodInfo = type.GetMethod("TestMethodWithOwnerAsCustomProperty")!;
         var testMethod = new TestMethod(methodInfo.Name, type.FullName!, "A", isAsync: false);
         var testContext = new TestContextImplementation(
@@ -1032,6 +1056,74 @@ public class TypeCacheTests : TestContainer
             methodInfo.Name,
             "Owner");
         Verify(expectedMessage == testMethodInfo.NotRunnableReason);
+    }
+
+    public void GetTestMethodInfoShouldReportWarningIfCustomPriorityPropertyIsDefined()
+    {
+        // Test that [TestProperty("Priority", "value")] is still blocked
+        var typeCache = new TypeCache(new ReflectHelper());
+        Type type = typeof(DummyTestClassWithTestMethods);
+        MethodInfo methodInfo = type.GetMethod("TestMethodWithPriorityAsCustomProperty")!;
+        var testMethod = new TestMethod(methodInfo.Name, type.FullName!, "A", isAsync: false);
+        var testContext = new TestContextImplementation(
+            testMethod,
+            new ThreadSafeStringWriter(null!, "test"),
+            new Dictionary<string, object?>());
+
+        TestMethodInfo? testMethodInfo = typeCache.GetTestMethodInfo(testMethod, testContext);
+
+        Verify(testMethodInfo is not null);
+        string expectedMessage = string.Format(
+            CultureInfo.InvariantCulture,
+            "UTA023: {0}: Cannot define predefined property {2} on method {1}.",
+            methodInfo.DeclaringType!.FullName!,
+            methodInfo.Name,
+            "Priority");
+        Verify(expectedMessage == testMethodInfo.NotRunnableReason);
+    }
+
+    public void GetTestMethodInfoShouldAllowActualOwnerAttribute()
+    {
+        // Test that the actual OwnerAttribute is allowed
+        var typeCache = new TypeCache(new ReflectHelper());
+        Type type = typeof(DummyTestClassWithTestMethods);
+        MethodInfo methodInfo = type.GetMethod("TestMethodWithActualOwnerAttribute")!;
+        var testMethod = new TestMethod(methodInfo.Name, type.FullName!, "A", isAsync: false);
+        var testContext = new TestContextImplementation(
+            testMethod,
+            new ThreadSafeStringWriter(null!, "test"),
+            new Dictionary<string, object?>());
+
+        TestMethodInfo? testMethodInfo = typeCache.GetTestMethodInfo(testMethod, testContext);
+
+        Verify(testMethodInfo is not null);
+        // Owner should be allowed - no NotRunnableReason should be set
+        Verify(string.IsNullOrEmpty(testMethodInfo.NotRunnableReason));
+        // The Owner property should be added to the test context
+        Verify(testContext.TryGetPropertyValue("Owner", out object? ownerValue));
+        Verify(ownerValue?.ToString() == "TestOwner");
+    }
+
+    public void GetTestMethodInfoShouldAllowActualPriorityAttribute()
+    {
+        // Test that the actual PriorityAttribute is allowed
+        var typeCache = new TypeCache(new ReflectHelper());
+        Type type = typeof(DummyTestClassWithTestMethods);
+        MethodInfo methodInfo = type.GetMethod("TestMethodWithActualPriorityAttribute")!;
+        var testMethod = new TestMethod(methodInfo.Name, type.FullName!, "A", isAsync: false);
+        var testContext = new TestContextImplementation(
+            testMethod,
+            new ThreadSafeStringWriter(null!, "test"),
+            new Dictionary<string, object?>());
+
+        TestMethodInfo? testMethodInfo = typeCache.GetTestMethodInfo(testMethod, testContext);
+
+        Verify(testMethodInfo is not null);
+        // Priority should be allowed - no NotRunnableReason should be set
+        Verify(string.IsNullOrEmpty(testMethodInfo.NotRunnableReason));
+        // The Priority property should be added to the test context
+        Verify(testContext.TryGetPropertyValue("Priority", out object? priorityValue));
+        Verify(priorityValue?.ToString() == "1");
     }
 
     public void GetTestMethodInfoShouldReportWarningIfCustomPropertyNameIsEmpty()
@@ -1347,6 +1439,30 @@ public class TypeCacheTests : TestContainer
         [TestMethod]
         [TestProperty("Owner", "You")]
         public void TestMethodWithOwnerAsCustomProperty()
+        {
+        }
+
+        [TestMethod]
+        [TestProperty("TestCategory", "SomeCategory")]
+        public void TestMethodWithTestCategoryAsCustomProperty()
+        {
+        }
+
+        [TestMethod]
+        [Owner("TestOwner")]
+        public void TestMethodWithActualOwnerAttribute()
+        {
+        }
+
+        [TestMethod]
+        [Priority(1)]
+        public void TestMethodWithActualPriorityAttribute()
+        {
+        }
+
+        [TestMethod]
+        [TestProperty("Priority", "2")]
+        public void TestMethodWithPriorityAsCustomProperty()
         {
         }
 

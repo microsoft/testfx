@@ -638,6 +638,60 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Expected value &lt;{1}&gt; to be greater than actual value &lt;{2}&gt;. {0}.
+        /// </summary>
+        internal static string IsGreaterThanFailMsg {
+            get {
+                return ResourceManager.GetString("IsGreaterThanFailMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Expected value &lt;{1}&gt; to be greater than or equal to actual value &lt;{2}&gt;. {0}.
+        /// </summary>
+        internal static string IsGreaterThanOrEqualToFailMsg {
+            get {
+                return ResourceManager.GetString("IsGreaterThanOrEqualToFailMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Expected value &lt;{1}&gt; to be less than actual value &lt;{2}&gt;. {0}.
+        /// </summary>
+        internal static string IsLessThanFailMsg {
+            get {
+                return ResourceManager.GetString("IsLessThanFailMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Expected value &lt;{1}&gt; to be less than or equal to actual value &lt;{2}&gt;. {0}.
+        /// </summary>
+        internal static string IsLessThanOrEqualToFailMsg {
+            get {
+                return ResourceManager.GetString("IsLessThanOrEqualToFailMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Expected value &lt;{1}&gt; to be negative. {0}.
+        /// </summary>
+        internal static string IsNegativeFailMsg {
+            get {
+                return ResourceManager.GetString("IsNegativeFailMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Expected value &lt;{1}&gt; to be positive. {0}.
+        /// </summary>
+        internal static string IsPositiveFailMsg {
+            get {
+                return ResourceManager.GetString("IsPositiveFailMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Expected exception type:&lt;{1}&gt;. Actual exception type:&lt;{2}&gt;. {0}.
         /// </summary>
         internal static string WrongExceptionThrown {

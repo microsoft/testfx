@@ -345,6 +345,36 @@ Rzeczywiste: {2}</target>
       - {1} fully qualified class name like "Microsoft.UI.Xaml.Application"
     </note>
       </trans-unit>
+      <trans-unit id="IsGreaterThanFailMsg">
+        <source>Actual value &lt;{2}&gt; is not greater than expected value &lt;{1}&gt;. {0}</source>
+        <target state="new">Actual value &lt;{2}&gt; is not greater than expected value &lt;{1}&gt;. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="IsGreaterThanOrEqualToFailMsg">
+        <source>Actual value &lt;{2}&gt; is not greater than or equal to expected value &lt;{1}&gt;. {0}</source>
+        <target state="new">Actual value &lt;{2}&gt; is not greater than or equal to expected value &lt;{1}&gt;. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="IsLessThanFailMsg">
+        <source>Actual value &lt;{2}&gt; is not less than expected value &lt;{1}&gt;. {0}</source>
+        <target state="new">Actual value &lt;{2}&gt; is not less than expected value &lt;{1}&gt;. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="IsLessThanOrEqualToFailMsg">
+        <source>Actual value &lt;{2}&gt; is not less than or equal to expected value &lt;{1}&gt;. {0}</source>
+        <target state="new">Actual value &lt;{2}&gt; is not less than or equal to expected value &lt;{1}&gt;. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="IsPositiveFailMsg">
+        <source>Expected value &lt;{1}&gt; to be positive. {0}</source>
+        <target state="new">Expected value &lt;{1}&gt; to be positive. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="IsNegativeFailMsg">
+        <source>Expected value &lt;{1}&gt; to be negative. {0}</source>
+        <target state="new">Expected value &lt;{1}&gt; to be negative. {0}</target>
+        <note></note>
+      </trans-unit>
     </body>
   </file>
 </xliff>
