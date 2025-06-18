@@ -248,5 +248,14 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("UseProperAssertMethodsFix", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Use &apos;CooperativeCancellation = true&apos;.
+        /// </summary>
+        internal static string UseCooperativeCancellationForTimeoutFix {
+            get {
+                return ResourceManager.GetString("UseCooperativeCancellationForTimeoutFix", resourceCulture);
+            }
+        }
     }
 }
