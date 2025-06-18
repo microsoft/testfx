@@ -57,7 +57,7 @@ if ($vs -or $vscode) {
 
     if ($vs) {
         # Launch Visual Studio with the locally defined environment variables
-        & "$PSScriptRoot\..\TestFx.sln"
+        & "$PSScriptRoot\..\TestFx.slnx"
     } else {
         if (Get-Command code -ErrorAction Ignore) {
             & code "$PSScriptRoot\.."
