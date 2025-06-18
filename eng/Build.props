@@ -6,7 +6,7 @@
 
   <!-- When building all products on windows OS -->
   <ItemGroup Condition=" '$(ProductsToBuild)' == 'all' AND '$(OS)' == 'Windows_NT' ">
-    <ProjectToBuild  Include="$(RepoRoot)TestFx.sln" />
+    <ProjectToBuild  Include="$(RepoRoot)TestFx.slnx" />
   </ItemGroup>
 
   <!-- When building all products on non-windows OSes -->
