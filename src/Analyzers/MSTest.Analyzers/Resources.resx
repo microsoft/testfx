@@ -534,6 +534,12 @@ The type declaring these methods should also respect the following rules:
   <data name="UseProperAssertMethodsMessageFormat" xml:space="preserve">
     <value>Use 'Assert.{0}' instead of 'Assert.{1}'</value>
   </data>
+  <data name="StringAssertToAssertTitle" xml:space="preserve">
+    <value>Use 'Assert' instead of 'StringAssert'</value>
+  </data>
+  <data name="StringAssertToAssertMessageFormat" xml:space="preserve">
+    <value>Use 'Assert.{0}' instead of 'StringAssert.{1}'</value>
+  </data>
   <data name="DataRowShouldBeValidMessageFormat_GenericTypeArgumentNotResolved" xml:space="preserve">
     <value>The type of the generic parameter '{0}' could not be inferred.</value>
   </data>
