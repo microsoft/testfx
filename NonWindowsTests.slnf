@@ -1,6 +1,6 @@
 {
   "solution": {
-    "path": "TestFx.sln",
+    "path": "TestFx.slnx",
     "projects": [
       "test/IntegrationTests/Microsoft.Testing.Platform.Acceptance.IntegrationTests/Microsoft.Testing.Platform.Acceptance.IntegrationTests.csproj",
       "test/IntegrationTests/MSTest.Acceptance.IntegrationTests/MSTest.Acceptance.IntegrationTests.csproj",
