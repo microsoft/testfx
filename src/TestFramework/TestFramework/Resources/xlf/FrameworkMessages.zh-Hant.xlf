@@ -84,7 +84,7 @@
       </trans-unit>
       <trans-unit id="ContainsItemFailMsg">
         <source>Expected collection to contain the specified item. {0}</source>
-        <target state="new">Expected collection to contain '{1}'. {0}</target>
+        <target state="new">Expected collection to contain the specified item. {0}</target>
         <note />
       </trans-unit>
       <trans-unit id="ContainsPredicateFailMsg">
@@ -109,7 +109,7 @@
       </trans-unit>
       <trans-unit id="DoesNotContainItemFailMsg">
         <source>Expected collection to not contain the specified item. {0}</source>
-        <target state="new">Expected collection to not contain '{1}'. {0}</target>
+        <target state="new">Expected collection to not contain the specified item. {0}</target>
         <note />
       </trans-unit>
       <trans-unit id="DoesNotContainPredicateFailMsg">
