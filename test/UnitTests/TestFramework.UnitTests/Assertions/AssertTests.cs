@@ -5,10 +5,10 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests;
 
 public partial class AssertTests
 {
-    #region That tests
-    public void ThatShouldReturnAnInstanceOfAssert() => Verify(Assert.That is not null);
+    #region Instance tests
+    public void InstanceShouldReturnAnInstanceOfAssert() => Verify(Assert.Instance is not null);
 
-    public void ThatShouldCacheAssertInstance() => Verify(ReferenceEquals(Assert.That, Assert.That));
+    public void InstanceShouldCacheAssertInstance() => Verify(ReferenceEquals(Assert.Instance, Assert.Instance));
     #endregion
 
     #region ReplaceNullChars tests
