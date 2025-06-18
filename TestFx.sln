@@ -163,6 +163,9 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MSTest.Analyzers.CodeFixes", "src\Analyzers\MSTest.Analyzers.CodeFixes\MSTest.Analyzers.CodeFixes.csproj", "{462B0201-1C26-4951-97C9-722C2A58EF8C}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MSTest.Analyzers.Package", "src\Analyzers\MSTest.Analyzers.Package\MSTest.Analyzers.Package.csproj", "{DC068986-7549-4B75-8EFC-A9958FD5CF88}"
+	ProjectSection(ProjectDependencies) = postProject
+		{A85AA656-6DB6-4A0B-AA80-CBB4058B3DDB} = {A85AA656-6DB6-4A0B-AA80-CBB4058B3DDB}
+	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MSTest.Analyzers.UnitTests", "test\UnitTests\MSTest.Analyzers.UnitTests\MSTest.Analyzers.UnitTests.csproj", "{1FF35C23-C128-4C95-B3F8-67B1B4C51E4D}"
 EndProject
