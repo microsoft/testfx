@@ -118,12 +118,10 @@
         <note></note>
       </trans-unit>
       <trans-unit id="ElementsAtIndexDontMatch">
-        <source>
-          Element at index {0} do not match.
-          Expected: {1}
-          Actual: {2}
-        </source>
-        <target state="translated">
+        <source>Element at index {0} do not match.
+Expected: {1}
+Actual: {2}</source>
+        <target state="needs-review-translation">
           索引 {0} 处的元素不匹配。
           预计值: {1}
           实际值: {2}
@@ -192,29 +190,29 @@
       </trans-unit>
       <trans-unit id="PrivateAccessorMemberNotFound">
         <source>
-          The member specified ({0}) could not be found. You might need to regenerate your private accessor,
-          or the member may be private and defined on a base class. If the latter is true, you need to pass the type
-          that defines the member into PrivateObject's constructor.
-        </source>
-        <target state="translated">
+      The member specified ({0}) could not be found. You might need to regenerate your private accessor,
+      or the member may be private and defined on a base class. If the latter is true, you need to pass the type
+      that defines the member into PrivateObject's constructor.
+    </source>
+        <target state="needs-review-translation">
           未能找到指定的成员({0})。可能需要重新生成专用访问器，
           或者该成员可能是私有成员并且是在基类上定义的。如果属于后一种情况，则需要将定义
           该成员的类型传递到 PrivateObject 的构造函数中。
         </target>
-        <note></note>
+        <note />
       </trans-unit>
       <trans-unit id="PrivateAccessorConstructorNotFound">
         <source>
-          The constructor with the specified signature could not be found. You might need to regenerate your private accessor,
-          or the member may be private and defined on a base class. If the latter is true, you need to pass the type
-          that defines the member into PrivateObject's constructor.
-        </source>
-        <target state="translated">
+      The constructor with the specified signature could not be found. You might need to regenerate your private accessor,
+      or the member may be private and defined on a base class. If the latter is true, you need to pass the type
+      that defines the member into PrivateObject's constructor.
+    </source>
+        <target state="needs-review-translation">
           未能找到具有指定签名的构造函数。可能需要重新生成专用访问器，
           或者该成员可能是私有成员并且是在基类上定义的。如果属于后一种情况，则需要将定义
           该成员的类型传递到 PrivateObject 的构造函数。
         </target>
-        <note></note>
+        <note />
       </trans-unit>
       <trans-unit id="NullParameterToAssert">
         <source>The parameter '{0}' is invalid. The value cannot be null. {1}.</source>
@@ -323,11 +321,11 @@
       </trans-unit>
       <trans-unit id="ArgumentXMustDeriveFromClassY">
         <source>Type '{0}' is not assignable to '{1}'.</source>
-        <target state="translated">类型“{0}”不能分配给“{1}”。</target>
+        <target state="needs-review-translation">类型“{0}”不能分配给“{1}”。</target>
         <note>
-          - {0} argument name like "applicationType"
-          - {1} fully qualified class name like "Microsoft.UI.Xaml.Application"
-        </note>
+      - {0} argument name like "applicationType"
+      - {1} fully qualified class name like "Microsoft.UI.Xaml.Application"
+    </note>
       </trans-unit>
       <trans-unit id="IsGreaterThanFailMsg">
         <source>Actual value &lt;{2}&gt; is not greater than expected value &lt;{1}&gt;. {0}</source>

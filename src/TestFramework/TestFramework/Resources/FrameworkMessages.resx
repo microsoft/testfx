@@ -322,6 +322,7 @@ Actual: {2}</value>
   </data>
   <data name="IsNegativeFailMsg" xml:space="preserve">
     <value>Expected value &lt;{1}&gt; to be negative. {0}</value>
+  </data>
   <data name="DoesNotEndWithFail" xml:space="preserve">
     <value>String '{0}' ends with string '{1}'. {2}</value>
   </data>
