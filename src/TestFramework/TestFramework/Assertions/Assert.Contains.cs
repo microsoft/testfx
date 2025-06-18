@@ -816,8 +816,7 @@ public sealed partial class Assert
         string finalMessage = string.Format(
             CultureInfo.CurrentCulture,
             FrameworkMessages.ContainsItemFailMsg,
-            userMessage,
-            expected);
+            userMessage);
         ThrowAssertFailed("Assert.Contains", finalMessage);
     }
 
@@ -837,8 +836,7 @@ public sealed partial class Assert
         string finalMessage = string.Format(
             CultureInfo.CurrentCulture,
             FrameworkMessages.DoesNotContainItemFailMsg,
-            userMessage,
-            unexpected);
+            userMessage);
         ThrowAssertFailed("Assert.DoesNotContain", finalMessage);
     }
 

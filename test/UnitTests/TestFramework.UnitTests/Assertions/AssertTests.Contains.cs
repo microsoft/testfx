@@ -643,7 +643,7 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.ContainsSingle(x => x % 2 == 0, collection);
 
         // Assert
-        action.Should().Throw<AssertFailedException>().WithMessage("*Expected exactly one item to match the predicate. Actual: 0*");
+        action.Should().Throw<AssertFailedException>().WithMessage("*Expected exactly one item to match the predicate but found 0 item(s)*");
     }
 
     /// <summary>
@@ -659,7 +659,7 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.ContainsSingle(x => x % 2 == 0, collection);
 
         // Assert
-        action.Should().Throw<AssertFailedException>().WithMessage("*Expected exactly one item to match the predicate. Actual: 4*");
+        action.Should().Throw<AssertFailedException>().WithMessage("*Expected exactly one item to match the predicate but found 4 item(s)*");
     }
 
     /// <summary>
@@ -744,7 +744,7 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.Contains(5, collection);
 
         // Assert
-        action.Should().Throw<AssertFailedException>().WithMessage("*Expected collection to contain '5'*");
+        action.Should().Throw<AssertFailedException>().WithMessage("*Expected collection to contain the specified item*");
     }
 
     /// <summary>
@@ -774,7 +774,7 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.DoesNotContain(2, collection);
 
         // Assert
-        action.Should().Throw<AssertFailedException>().WithMessage("*Expected collection to not contain '2'*");
+        action.Should().Throw<AssertFailedException>().WithMessage("*Expected collection to not contain the specified item*");
     }
 
     /// <summary>

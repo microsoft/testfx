@@ -83,8 +83,8 @@
         <note></note>
       </trans-unit>
       <trans-unit id="ContainsItemFailMsg">
-        <source>Expected collection to contain '{1}'. {0}</source>
-        <target state="new">Expected collection to contain '{1}'. {0}</target>
+        <source>Expected collection to contain the specified item. {0}</source>
+        <target state="new">Expected collection to contain the specified item. {0}</target>
         <note />
       </trans-unit>
       <trans-unit id="ContainsPredicateFailMsg">
@@ -93,13 +93,13 @@
         <note />
       </trans-unit>
       <trans-unit id="ContainsSingleFailMsg">
-        <source>Expected collection to contain exactly one element. Actual: {1}. {0}</source>
-        <target state="new">Expected collection to contain exactly one element. Actual: {1}. {0}</target>
+        <source>Expected collection to contain exactly one element but found {1} element(s). {0}</source>
+        <target state="new">Expected collection to contain exactly one element but found {1} element(s). {0}</target>
         <note />
       </trans-unit>
       <trans-unit id="ContainsSingleMatchFailMsg">
-        <source>Expected exactly one item to match the predicate. Actual: {1}. {0}</source>
-        <target state="new">Expected exactly one item to match the predicate. Actual: {1}. {0}</target>
+        <source>Expected exactly one item to match the predicate but found {1} item(s). {0}</source>
+        <target state="new">Expected exactly one item to match the predicate but found {1} item(s). {0}</target>
         <note />
       </trans-unit>
       <trans-unit id="DoesNotContainFail">
@@ -108,8 +108,8 @@
         <note />
       </trans-unit>
       <trans-unit id="DoesNotContainItemFailMsg">
-        <source>Expected collection to not contain '{1}'. {0}</source>
-        <target state="new">Expected collection to not contain '{1}'. {0}</target>
+        <source>Expected collection to not contain the specified item. {0}</source>
+        <target state="new">Expected collection to not contain the specified item. {0}</target>
         <note />
       </trans-unit>
       <trans-unit id="DoesNotContainPredicateFailMsg">
