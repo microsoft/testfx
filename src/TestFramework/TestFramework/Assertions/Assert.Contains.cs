@@ -35,11 +35,11 @@ public sealed partial class Assert
             }
         }
 
-        internal TItem ComputeAssertion(string assertionName)
+        internal TItem ComputeAssertion()
         {
             if (_builder is not null)
             {
-                ThrowAssertCountFailed(assertionName, 1, _actualCount, _builder.ToString());
+                ThrowAssertContainsSingleFailed(_actualCount, _builder.ToString());
             }
 
             return _item!;
@@ -119,7 +119,7 @@ public sealed partial class Assert
 #pragma warning disable IDE0060 // Remove unused parameter
     public static T ContainsSingle<T>(IEnumerable<T> collection, [InterpolatedStringHandlerArgument(nameof(collection))] ref AssertSingleInterpolatedStringHandler<T> message)
 #pragma warning restore IDE0060 // Remove unused parameter
-        => message.ComputeAssertion("ContainsSingle");
+        => message.ComputeAssertion();
 
     /// <summary>
     /// Tests whether the specified collection contains exactly one element.
@@ -225,7 +225,7 @@ public sealed partial class Assert
         if (!collection.Contains(expected))
         {
             string userMessage = BuildUserMessage(message, parameters);
-            ThrowAssertContainsItemFailed(expected, userMessage);
+            ThrowAssertContainsItemFailed(userMessage);
         }
     }
 
@@ -264,7 +264,7 @@ public sealed partial class Assert
         if (!collection.Contains(expected, comparer))
         {
             string userMessage = BuildUserMessage(message, parameters);
-            ThrowAssertContainsItemFailed(expected, userMessage);
+            ThrowAssertContainsItemFailed(userMessage);
         }
     }
 
@@ -496,7 +496,7 @@ public sealed partial class Assert
         if (collection.Contains(expected))
         {
             string userMessage = BuildUserMessage(message, parameters);
-            ThrowAssertDoesNotContainItemFailed(expected, userMessage);
+            ThrowAssertDoesNotContainItemFailed(userMessage);
         }
     }
 
@@ -535,7 +535,7 @@ public sealed partial class Assert
         if (collection.Contains(expected, comparer))
         {
             string userMessage = BuildUserMessage(message, parameters);
-            ThrowAssertDoesNotContainItemFailed(expected, userMessage);
+            ThrowAssertDoesNotContainItemFailed(userMessage);
         }
     }
 
@@ -811,7 +811,7 @@ public sealed partial class Assert
     }
 
     [DoesNotReturn]
-    private static void ThrowAssertContainsItemFailed<T>(T expected, string userMessage)
+    private static void ThrowAssertContainsItemFailed(string userMessage)
     {
         string finalMessage = string.Format(
             CultureInfo.CurrentCulture,
@@ -831,7 +831,7 @@ public sealed partial class Assert
     }
 
     [DoesNotReturn]
-    private static void ThrowAssertDoesNotContainItemFailed<T>(T unexpected, string userMessage)
+    private static void ThrowAssertDoesNotContainItemFailed(string userMessage)
     {
         string finalMessage = string.Format(
             CultureInfo.CurrentCulture,
