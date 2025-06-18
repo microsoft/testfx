@@ -76,7 +76,15 @@ stages:
             filePath: ./eng/install-procdump.ps1
             failOnStderr: true
             showWarnings: true
-
+        - task: PowerShell@2
+          displayName: 'Enable local dumps'
+          inputs:
+            targetType: 'inline'
+            script: |
+              New-Item -Path $(Build.SourcesDirectory)\artifacts\CrashDumps -ItemType Directory -Force
+              Get-ChildItem "HKLM:\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps"
+              New-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps" -Name "DumpFolder" -Value "$(Build.SourcesDirectory)\artifacts\CrashDumps" -PropertyType ExpandString -Force
+              New-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps" -Name "DumpCount" -Value 10 -PropertyType DWord -Force
         - task: PowerShell@2
           displayName: 'Install Access Database Engine'
           inputs:
@@ -137,6 +145,13 @@ stages:
               /bl:$(BUILD.SOURCESDIRECTORY)\artifacts\log\$(_BuildConfig)\CodeCoverage.binlog
             displayName: Upload coverage to codecov.io
             condition: and(succeeded(), eq(variables._BuildConfig, 'Debug'))
+
+          - task: PublishBuildArtifacts@1
+            displayName: 'Publish local dumps'
+            inputs:
+              PathtoPublish: '$(Build.SourcesDirectory)/artifacts/CrashDumps'
+              ArtifactName: TestResults_Windows_$(_BuildConfig)
+            condition: failed()
 
       - job: Linux
         timeoutInMinutes: 90
