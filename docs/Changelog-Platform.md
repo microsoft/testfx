@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
 ## <a name="1.7.3" />[1.7.3] - 2025-06-17
 
-See full log [of v3.9.1...v3.9.3](https://github.com/microsoft/testfx/compare/v3.9.1...v3.9.3)
+See full log [of v3.9.2...v3.9.3](https://github.com/microsoft/testfx/compare/v3.9.2...v3.9.3)
 
 ### Fixed
 
