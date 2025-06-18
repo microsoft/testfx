@@ -118,12 +118,16 @@
         <note></note>
       </trans-unit>
       <trans-unit id="ElementsAtIndexDontMatch">
-        <source>Element at index {0} do not match.
-Expected: {1}
-Actual: {2}</source>
-        <target state="translated">L’élément au {0} d’index ne correspond pas.
-Attendu : {1}
-Réel : {2}</target>
+        <source>
+          Element at index {0} do not match.
+          Expected: {1}
+          Actual: {2}
+        </source>
+        <target state="translated">
+          L’élément au {0} d’index ne correspond pas.
+          Attendu : {1}
+          Réel : {2}
+        </target>
         <note />
       </trans-unit>
       <trans-unit id="ElementTypesAtIndexDontMatch">
@@ -188,28 +192,28 @@ Réel : {2}</target>
       </trans-unit>
       <trans-unit id="PrivateAccessorMemberNotFound">
         <source>
-      The member specified ({0}) could not be found. You might need to regenerate your private accessor,
-      or the member may be private and defined on a base class. If the latter is true, you need to pass the type
-      that defines the member into PrivateObject's constructor.
-    </source>
+          The member specified ({0}) could not be found. You might need to regenerate your private accessor,
+          or the member may be private and defined on a base class. If the latter is true, you need to pass the type
+          that defines the member into PrivateObject's constructor.
+        </source>
         <target state="translated">
-      Le membre spécifié ({0}) est introuvable. Vous devrez peut-être régénérer votre accesseur private,
-      ou le membre est peut-être private et défini sur une classe de base. Si le dernier cas est vrai, vous devez transmettre le type
-      qui définit le membre dans le constructeur de PrivateObject.
-    </target>
+          Le membre spécifié ({0}) est introuvable. Vous devrez peut-être régénérer votre accesseur private,
+          ou le membre est peut-être private et défini sur une classe de base. Si le dernier cas est vrai, vous devez transmettre le type
+          qui définit le membre dans le constructeur de PrivateObject.
+        </target>
         <note></note>
       </trans-unit>
       <trans-unit id="PrivateAccessorConstructorNotFound">
         <source>
-      The constructor with the specified signature could not be found. You might need to regenerate your private accessor,
-      or the member may be private and defined on a base class. If the latter is true, you need to pass the type
-      that defines the member into PrivateObject's constructor.
-    </source>
+          The constructor with the specified signature could not be found. You might need to regenerate your private accessor,
+          or the member may be private and defined on a base class. If the latter is true, you need to pass the type
+          that defines the member into PrivateObject's constructor.
+        </source>
         <target state="translated">
-      Le constructeur doté de la signature spécifiée est introuvable. Vous devrez peut-être régénérer votre accesseur private,
-      ou le membre est peut-être private et défini sur une classe de base. Si le dernier cas est vrai, vous devez transmettre le type
-      qui définit le membre dans le constructeur de PrivateObject.
-    </target>
+          Le constructeur doté de la signature spécifiée est introuvable. Vous devrez peut-être régénérer votre accesseur private,
+          ou le membre est peut-être private et défini sur une classe de base. Si le dernier cas est vrai, vous devez transmettre le type
+          qui définit le membre dans le constructeur de PrivateObject.
+        </target>
         <note></note>
       </trans-unit>
       <trans-unit id="NullParameterToAssert">
@@ -321,9 +325,9 @@ Réel : {2}</target>
         <source>Type '{0}' is not assignable to '{1}'.</source>
         <target state="translated">Impossible d'assigner le type '{0}' à '{1}'.</target>
         <note>
-      - {0} argument name like "applicationType"
-      - {1} fully qualified class name like "Microsoft.UI.Xaml.Application"
-    </note>
+          - {0} argument name like "applicationType"
+          - {1} fully qualified class name like "Microsoft.UI.Xaml.Application"
+        </note>
       </trans-unit>
       <trans-unit id="IsGreaterThanFailMsg">
         <source>Actual value &lt;{2}&gt; is not greater than expected value &lt;{1}&gt;. {0}</source>

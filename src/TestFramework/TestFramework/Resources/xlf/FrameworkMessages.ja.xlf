@@ -118,12 +118,16 @@
         <note></note>
       </trans-unit>
       <trans-unit id="ElementsAtIndexDontMatch">
-        <source>Element at index {0} do not match.
-Expected: {1}
-Actual: {2}</source>
-        <target state="translated">インデックス {0} の要素が一致しません。
-予想: {1}
-実際: {2}</target>
+        <source>
+          Element at index {0} do not match.
+          Expected: {1}
+          Actual: {2}
+        </source>
+        <target state="translated">
+          インデックス {0} の要素が一致しません。
+          予想: {1}
+          実際: {2}
+        </target>
         <note />
       </trans-unit>
       <trans-unit id="ElementTypesAtIndexDontMatch">
@@ -188,28 +192,28 @@ Actual: {2}</source>
       </trans-unit>
       <trans-unit id="PrivateAccessorMemberNotFound">
         <source>
-      The member specified ({0}) could not be found. You might need to regenerate your private accessor,
-      or the member may be private and defined on a base class. If the latter is true, you need to pass the type
-      that defines the member into PrivateObject's constructor.
-    </source>
+          The member specified ({0}) could not be found. You might need to regenerate your private accessor,
+          or the member may be private and defined on a base class. If the latter is true, you need to pass the type
+          that defines the member into PrivateObject's constructor.
+        </source>
         <target state="translated">
-      指定されたメンバー ({0}) が見つかりませんでした。プライベート アクセサーを再生成しなければならないか、
-      またはメンバーがプライベートであり、基底クラスで定義されている可能性があります。後者である場合は、メンバーを
-      定義する型を PrivateObject のコンストラクターに渡す必要があります。
-    </target>
+          指定されたメンバー ({0}) が見つかりませんでした。プライベート アクセサーを再生成しなければならないか、
+          またはメンバーがプライベートであり、基底クラスで定義されている可能性があります。後者である場合は、メンバーを
+          定義する型を PrivateObject のコンストラクターに渡す必要があります。
+        </target>
         <note></note>
       </trans-unit>
       <trans-unit id="PrivateAccessorConstructorNotFound">
         <source>
-      The constructor with the specified signature could not be found. You might need to regenerate your private accessor,
-      or the member may be private and defined on a base class. If the latter is true, you need to pass the type
-      that defines the member into PrivateObject's constructor.
-    </source>
+          The constructor with the specified signature could not be found. You might need to regenerate your private accessor,
+          or the member may be private and defined on a base class. If the latter is true, you need to pass the type
+          that defines the member into PrivateObject's constructor.
+        </source>
         <target state="translated">
-      指定されたシグネチャを使用するコンストラクターが見つかりませんでした。プライベート アクセサーを再生成しなければならないか、
-      またはメンバーがプライベートであり、基底クラスで定義されている可能性があります。後者である場合は、メンバーを
-      定義する型を PrivateObject のコンストラクターに渡す必要があります。
-    </target>
+          指定されたシグネチャを使用するコンストラクターが見つかりませんでした。プライベート アクセサーを再生成しなければならないか、
+          またはメンバーがプライベートであり、基底クラスで定義されている可能性があります。後者である場合は、メンバーを
+          定義する型を PrivateObject のコンストラクターに渡す必要があります。
+        </target>
         <note></note>
       </trans-unit>
       <trans-unit id="NullParameterToAssert">
@@ -321,9 +325,9 @@ Actual: {2}</source>
         <source>Type '{0}' is not assignable to '{1}'.</source>
         <target state="translated">型 '{0}' を '{1}' に割り当てることはできません。</target>
         <note>
-      - {0} argument name like "applicationType"
-      - {1} fully qualified class name like "Microsoft.UI.Xaml.Application"
-    </note>
+          - {0} argument name like "applicationType"
+          - {1} fully qualified class name like "Microsoft.UI.Xaml.Application"
+        </note>
       </trans-unit>
       <trans-unit id="IsGreaterThanFailMsg">
         <source>Actual value &lt;{2}&gt; is not greater than expected value &lt;{1}&gt;. {0}</source>
