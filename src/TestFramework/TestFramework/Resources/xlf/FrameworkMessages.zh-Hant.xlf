@@ -143,7 +143,7 @@ Actual: {2}</source>
       </trans-unit>
       <trans-unit id="IsInRangeFail">
         <source>Value '{0}' is not within the expected range [{1}, {2}]. {3}</source>
-        <target state="new">Value '{0}' is not within the expected range [{1}, {2}]. {3}</target>
+        <target state="translated">值 '{0}' 不在預期的範圍 [{1}, {2}] 內。{3}</target>
         <note />
       </trans-unit>
       <trans-unit id="IsInstanceOfFailMsg">
