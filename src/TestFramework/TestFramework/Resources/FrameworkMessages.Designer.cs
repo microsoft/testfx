@@ -277,6 +277,60 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Assert.Equals should not be used for Assertions. Please use Assert.AreEqual &amp; overloads instead..
+        /// </summary>
+        internal static string DoNotUseAssertEquals {
+            get {
+                return ResourceManager.GetString("DoNotUseAssertEquals", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Assert.ReferenceEquals should not be used for Assertions. Please use Assert.AreSame &amp; overloads instead..
+        /// </summary>
+        internal static string DoNotUseAssertReferenceEquals {
+            get {
+                return ResourceManager.GetString("DoNotUseAssertReferenceEquals", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to CollectionAssert.Equals should not be used for Assertions. Please use CollectionAssert.AreEqual &amp; overloads instead..
+        /// </summary>
+        internal static string DoNotUseCollectionAssertEquals {
+            get {
+                return ResourceManager.GetString("DoNotUseCollectionAssertEquals", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to CollectionAssert.ReferenceEquals should not be used for Assertions. Please use CollectionAssert methods or Assert.AreSame &amp; overloads instead..
+        /// </summary>
+        internal static string DoNotUseCollectionAssertReferenceEquals {
+            get {
+                return ResourceManager.GetString("DoNotUseCollectionAssertReferenceEquals", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to StringAssert.Equals should not be used for Assertions. Please use StringAssert methods or Assert.AreEqual &amp; overloads instead..
+        /// </summary>
+        internal static string DoNotUseStringAssertEquals {
+            get {
+                return ResourceManager.GetString("DoNotUseStringAssertEquals", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to StringAssert.ReferenceEquals should not be used for Assertions. Please use StringAssert methods or Assert.AreSame &amp; overloads instead..
+        /// </summary>
+        internal static string DoNotUseStringAssertReferenceEquals {
+            get {
+                return ResourceManager.GetString("DoNotUseStringAssertReferenceEquals", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Method {0} must match the expected signature: public static {1} {0}({2})..
         /// </summary>
         internal static string DynamicDataDisplayName {
@@ -405,6 +459,24 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Actual value &lt;{2}&gt; is not greater than expected value &lt;{1}&gt;. {0}.
+        /// </summary>
+        internal static string IsGreaterThanFailMsg {
+            get {
+                return ResourceManager.GetString("IsGreaterThanFailMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Actual value &lt;{2}&gt; is not greater than or equal to expected value &lt;{1}&gt;. {0}.
+        /// </summary>
+        internal static string IsGreaterThanOrEqualToFailMsg {
+            get {
+                return ResourceManager.GetString("IsGreaterThanOrEqualToFailMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Value &apos;{0}&apos; is not within the expected range [{1}, {2}]. {3}.
         /// </summary>
         internal static string IsInRangeFail {
@@ -423,11 +495,38 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Actual value &lt;{2}&gt; is not less than expected value &lt;{1}&gt;. {0}.
+        /// </summary>
+        internal static string IsLessThanFailMsg {
+            get {
+                return ResourceManager.GetString("IsLessThanFailMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Actual value &lt;{2}&gt; is not less than or equal to expected value &lt;{1}&gt;. {0}.
+        /// </summary>
+        internal static string IsLessThanOrEqualToFailMsg {
+            get {
+                return ResourceManager.GetString("IsLessThanOrEqualToFailMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to String &apos;{0}&apos; does not match pattern &apos;{1}&apos;. {2}..
         /// </summary>
         internal static string IsMatchFail {
             get {
                 return ResourceManager.GetString("IsMatchFail", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Expected value &lt;{1}&gt; to be negative. {0}.
+        /// </summary>
+        internal static string IsNegativeFailMsg {
+            get {
+                return ResourceManager.GetString("IsNegativeFailMsg", resourceCulture);
             }
         }
         
@@ -455,6 +554,15 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         internal static string IsNotMatchFail {
             get {
                 return ResourceManager.GetString("IsNotMatchFail", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Expected value &lt;{1}&gt; to be positive. {0}.
+        /// </summary>
+        internal static string IsPositiveFailMsg {
+            get {
+                return ResourceManager.GetString("IsPositiveFailMsg", resourceCulture);
             }
         }
         
@@ -575,119 +683,11 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Expected value &lt;{1}&gt; to be greater than actual value &lt;{2}&gt;. {0}.
-        /// </summary>
-        internal static string IsGreaterThanFailMsg {
-            get {
-                return ResourceManager.GetString("IsGreaterThanFailMsg", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Expected value &lt;{1}&gt; to be greater than or equal to actual value &lt;{2}&gt;. {0}.
-        /// </summary>
-        internal static string IsGreaterThanOrEqualToFailMsg {
-            get {
-                return ResourceManager.GetString("IsGreaterThanOrEqualToFailMsg", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Expected value &lt;{1}&gt; to be less than actual value &lt;{2}&gt;. {0}.
-        /// </summary>
-        internal static string IsLessThanFailMsg {
-            get {
-                return ResourceManager.GetString("IsLessThanFailMsg", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Expected value &lt;{1}&gt; to be less than or equal to actual value &lt;{2}&gt;. {0}.
-        /// </summary>
-        internal static string IsLessThanOrEqualToFailMsg {
-            get {
-                return ResourceManager.GetString("IsLessThanOrEqualToFailMsg", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Expected value &lt;{1}&gt; to be negative. {0}.
-        /// </summary>
-        internal static string IsNegativeFailMsg {
-            get {
-                return ResourceManager.GetString("IsNegativeFailMsg", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Expected value &lt;{1}&gt; to be positive. {0}.
-        /// </summary>
-        internal static string IsPositiveFailMsg {
-            get {
-                return ResourceManager.GetString("IsPositiveFailMsg", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Expected exception type:&lt;{1}&gt;. Actual exception type:&lt;{2}&gt;. {0}.
         /// </summary>
         internal static string WrongExceptionThrown {
             get {
                 return ResourceManager.GetString("WrongExceptionThrown", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Assert.Equals should not be used for Assertions. Please use Assert.AreEqual &amp; overloads instead.
-        /// </summary>
-        internal static string DoNotUseAssertEquals {
-            get {
-                return ResourceManager.GetString("DoNotUseAssertEquals", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Assert.ReferenceEquals should not be used for Assertions. Please use Assert.AreSame &amp; overloads instead.
-        /// </summary>
-        internal static string DoNotUseAssertReferenceEquals {
-            get {
-                return ResourceManager.GetString("DoNotUseAssertReferenceEquals", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to StringAssert.Equals should not be used for Assertions. Please use StringAssert methods or Assert.AreEqual &amp; overloads instead.
-        /// </summary>
-        internal static string DoNotUseStringAssertEquals {
-            get {
-                return ResourceManager.GetString("DoNotUseStringAssertEquals", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to StringAssert.ReferenceEquals should not be used for Assertions. Please use StringAssert methods or Assert.AreSame &amp; overloads instead.
-        /// </summary>
-        internal static string DoNotUseStringAssertReferenceEquals {
-            get {
-                return ResourceManager.GetString("DoNotUseStringAssertReferenceEquals", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to CollectionAssert.Equals should not be used for Assertions. Please use CollectionAssert.AreEqual &amp; overloads instead.
-        /// </summary>
-        internal static string DoNotUseCollectionAssertEquals {
-            get {
-                return ResourceManager.GetString("DoNotUseCollectionAssertEquals", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to CollectionAssert.ReferenceEquals should not be used for Assertions. Please use CollectionAssert methods or Assert.AreSame &amp; overloads instead.
-        /// </summary>
-        internal static string DoNotUseCollectionAssertReferenceEquals {
-            get {
-                return ResourceManager.GetString("DoNotUseCollectionAssertReferenceEquals", resourceCulture);
             }
         }
     }

@@ -324,7 +324,7 @@ public class StringAssertTests : TestContainer
 
     public void ObsoleteReferenceEqualsMethodThrowsAssertFailedException()
     {
-        var obj = new object();
+        object obj = new();
 #pragma warning disable CS0618 // Type or member is obsolete
         Exception ex = VerifyThrows(() => StringAssert.ReferenceEquals(obj, obj));
 #pragma warning restore CS0618 // Type or member is obsolete
