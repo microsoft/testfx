@@ -17,12 +17,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 /// Adapter Settings for the run.
 /// </summary>
 [Serializable]
-#if NET6_0_OR_GREATER
-[Obsolete(FrameworkConstants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
-#else
-[Obsolete(FrameworkConstants.PublicTypeObsoleteMessage)]
-#endif
-public class MSTestSettings
+internal sealed class MSTestSettings
 {
     /// <summary>
     /// The settings name.

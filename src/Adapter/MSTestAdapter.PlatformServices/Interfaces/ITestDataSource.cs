@@ -8,7 +8,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Int
 /// <summary>
 /// Interface that provides values from data source when data driven tests are run.
 /// </summary>
-public interface ITestDataSource
+internal interface ITestDataSource
 {
     /// <summary>
     /// Gets the test data from custom test data source and sets dbconnection in testContext object.

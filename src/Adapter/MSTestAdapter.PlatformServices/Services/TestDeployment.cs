@@ -22,12 +22,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 /// <summary>
 /// The test deployment.
 /// </summary>
-#if NET6_0_OR_GREATER
-[Obsolete(TestTools.UnitTesting.FrameworkConstants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
-#else
-[Obsolete(TestTools.UnitTesting.FrameworkConstants.PublicTypeObsoleteMessage)]
-#endif
-public class TestDeployment : ITestDeployment
+internal class TestDeployment : ITestDeployment
 {
 #if !WINDOWS_UWP
     #region Service Utility Variables

@@ -9,12 +9,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Int
 /// This platform service is responsible for any data or operations to validate
 /// the test sources provided to the adapter.
 /// </summary>
-#if NET6_0_OR_GREATER
-[Obsolete(FrameworkConstants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
-#else
-[Obsolete(FrameworkConstants.PublicTypeObsoleteMessage)]
-#endif
-public interface ITestSource
+internal interface ITestSource
 {
     /// <summary>
     /// Gets the set of valid extensions for sources targeting this platform.

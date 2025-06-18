@@ -15,12 +15,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 /// <summary>
 /// Defines TestAssembly Info object.
 /// </summary>
-#if NET6_0_OR_GREATER
-[Obsolete(FrameworkConstants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
-#else
-[Obsolete(FrameworkConstants.PublicTypeObsoleteMessage)]
-#endif
-public class TestAssemblyInfo
+internal sealed class TestAssemblyInfo
 {
     private readonly Lock _assemblyInfoExecuteSyncObject = new();
 
@@ -32,7 +27,7 @@ public class TestAssemblyInfo
         => Assembly = assembly;
 
     /// <summary>
-    /// Gets <c>AssemblyInitialize</c> method for the assembly.
+    /// Gets or sets <c>AssemblyInitialize</c> method for the assembly.
     /// </summary>
     public MethodInfo? AssemblyInitializeMethod
     {
@@ -61,7 +56,7 @@ public class TestAssemblyInfo
     internal TimeoutInfo? AssemblyCleanupMethodTimeoutMilliseconds { get; set; }
 
     /// <summary>
-    /// Gets <c>AssemblyCleanup</c> method for the assembly.
+    /// Gets or sets <c>AssemblyCleanup</c> method for the assembly.
     /// </summary>
     public MethodInfo? AssemblyCleanupMethod
     {
@@ -80,12 +75,12 @@ public class TestAssemblyInfo
     }
 
     /// <summary>
-    /// Gets a value indicating whether <c>AssemblyInitialize</c> has been executed.
+    /// Gets or sets a value indicating whether <c>AssemblyInitialize</c> has been executed.
     /// </summary>
     public bool IsAssemblyInitializeExecuted { get; internal set; }
 
     /// <summary>
-    /// Gets the assembly initialization exception.
+    /// Gets or sets the assembly initialization exception.
     /// </summary>
     public Exception? AssemblyInitializationException { get; internal set; }
 
