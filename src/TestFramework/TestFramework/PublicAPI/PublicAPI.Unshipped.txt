@@ -26,3 +26,4 @@ static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsPositive<T>(T value
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsPositive<T>(T value, string? message) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsPositive<T>(T value, string? message, params object?[]? parameters) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Throws<TException>(System.Func<object?>! action, ref Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertNonStrictThrowsInterpolatedStringHandler<TException!> message) -> TException!
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ReferenceEquals(object? objA, object? objB) -> bool
