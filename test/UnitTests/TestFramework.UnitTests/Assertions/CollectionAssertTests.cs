@@ -561,4 +561,27 @@ public class CollectionAssertTests : TestContainer
 
         public int GetHashCode(string obj) => obj.ToUpperInvariant().GetHashCode();
     }
+
+    #region Obsolete methods tests
+#if DEBUG
+    public void ObsoleteEqualsMethodThrowsAssertFailedException()
+    {
+#pragma warning disable CS0618 // Type or member is obsolete
+        Exception ex = VerifyThrows(() => CollectionAssert.Equals("test", "test"));
+#pragma warning restore CS0618 // Type or member is obsolete
+        Verify(ex is AssertFailedException);
+        Verify(ex.Message.Contains("CollectionAssert.Equals should not be used for Assertions"));
+    }
+
+    public void ObsoleteReferenceEqualsMethodThrowsAssertFailedException()
+    {
+        object obj = new();
+#pragma warning disable CS0618 // Type or member is obsolete
+        Exception ex = VerifyThrows(() => CollectionAssert.ReferenceEquals(obj, obj));
+#pragma warning restore CS0618 // Type or member is obsolete
+        Verify(ex is AssertFailedException);
+        Verify(ex.Message.Contains("CollectionAssert.ReferenceEquals should not be used for Assertions"));
+    }
+#endif
+    #endregion
 }
