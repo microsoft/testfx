@@ -231,7 +231,7 @@ public partial class AssertTests
     {
         Task t = Assert.ThrowsAsync<ArgumentException>(() => throw new Exception());
         Exception ex = VerifyThrows(t.Wait);
-        Assert.IsInstanceOfType(ex.InnerException, out AssertFailedException assertFailedException);
+        AssertFailedException assertFailedException = Assert.IsInstanceOfType<AssertFailedException>(ex.InnerException);
         Assert.AreEqual("Assert.ThrowsAsync failed. Expected exception type:<System.ArgumentException>. Actual exception type:<System.Exception>. ", assertFailedException.Message);
     }
 
@@ -239,7 +239,7 @@ public partial class AssertTests
     {
         Task t = Assert.ThrowsExactlyAsync<ArgumentException>(() => throw new ArgumentNullException());
         Exception ex = VerifyThrows(t.Wait);
-        Assert.IsInstanceOfType(ex.InnerException, out AssertFailedException assertFailedException);
+        AssertFailedException assertFailedException = Assert.IsInstanceOfType<AssertFailedException>(ex.InnerException);
         Assert.AreEqual("Assert.ThrowsExactlyAsync failed. Expected exception type:<System.ArgumentException>. Actual exception type:<System.ArgumentNullException>. ", assertFailedException.Message);
     }
 

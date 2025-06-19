@@ -18,17 +18,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 /// The idea is that Unit Test Adapter creates App Domain for running tests and sets AppBase to tests dir.
 /// Since we don't want to put our assemblies to GAC and they are not in tests dir, we use custom way to resolve them.
 /// </summary>
-#if NETFRAMEWORK
-#if NET6_0_OR_GREATER
-[Obsolete(TestTools.UnitTesting.FrameworkConstants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
-#else
-[Obsolete(TestTools.UnitTesting.FrameworkConstants.PublicTypeObsoleteMessage)]
-#endif
-public
-#else
-internal sealed
-#endif
-class AssemblyResolver :
+internal sealed class AssemblyResolver :
 #if NETFRAMEWORK
         MarshalByRefObject,
 #endif
@@ -200,11 +190,7 @@ class AssemblyResolver :
     /// </summary>
     /// <param name="path"> Path go get subdirectories for. </param>
     /// <param name="searchDirectories"> The search Directories. </param>
-    internal
-#if NET
-    static
-#endif
-    void AddSubdirectories(string path, List<string> searchDirectories)
+    internal static void AddSubdirectories(string path, List<string> searchDirectories)
     {
         DebugEx.Assert(!StringEx.IsNullOrEmpty(path), "'path' cannot be null or empty.");
         DebugEx.Assert(searchDirectories != null, "'searchDirectories' cannot be null.");
@@ -231,12 +217,7 @@ class AssemblyResolver :
     /// <param name="disposing">
     /// The disposing.
     /// </param>
-#if NETFRAMEWORK
-    protected virtual
-#else
-    private
-#endif
-    void Dispose(bool disposing)
+    private void Dispose(bool disposing)
     {
         if (!_disposed)
         {
@@ -262,12 +243,7 @@ class AssemblyResolver :
     /// <param name="path">The path to the directory.</param>
     /// <returns>True if the directory exists.</returns>
     /// <remarks>Only present for unit testing scenarios.</remarks>
-#if NETFRAMEWORK
-    protected virtual
-#else
-    private static
-#endif
-    bool DoesDirectoryExist(string path) => Directory.Exists(path);
+    private static bool DoesDirectoryExist(string path) => Directory.Exists(path);
 
     /// <summary>
     /// Gets the directories from a path.
@@ -275,39 +251,23 @@ class AssemblyResolver :
     /// <param name="path">The path to the directory.</param>
     /// <returns>A list of directories in path.</returns>
     /// <remarks>Only present for unit testing scenarios.</remarks>
-#if NETFRAMEWORK
-    protected virtual
-#else
-    private static
-#endif
-    string[] GetDirectories(string path) => Directory.GetDirectories(path);
+    private static string[] GetDirectories(string path) => Directory.GetDirectories(path);
 
     /// <summary>
     /// Verifies if a file exists.
     /// </summary>
     /// <param name="filePath">The file path.</param>
     /// <returns><c>true</c> if the file exists; <c>false</c> otherwise.</returns>
-#if NETFRAMEWORK
-    protected virtual
-#else
-    private static
-#endif
-    bool DoesFileExist(string filePath) => File.Exists(filePath);
+    private static bool DoesFileExist(string filePath) => File.Exists(filePath);
 
     /// <summary>
     /// Loads an assembly from the given path.
     /// </summary>
     /// <param name="path">The path of the assembly.</param>
     /// <returns>The loaded <see cref="Assembly"/>.</returns>
-#if NETFRAMEWORK
-    protected virtual
-#else
-    private static
-#endif
-
     // This whole class is not used in source generator mode.
 #pragma warning disable IL2026 // Members attributed with RequiresUnreferencedCode may break when trimming
-    Assembly LoadAssemblyFrom(string path) => Assembly.LoadFrom(path);
+    private static Assembly LoadAssemblyFrom(string path) => Assembly.LoadFrom(path);
 #pragma warning restore IL2026 // Members attributed with RequiresUnreferencedCode may break when trimming
 
 #if NETFRAMEWORK
@@ -316,7 +276,7 @@ class AssemblyResolver :
     /// </summary>
     /// <param name="path">The path of the assembly.</param>
     /// <returns>The loaded <see cref="Assembly"/>.</returns>
-    protected virtual Assembly ReflectionOnlyLoadAssemblyFrom(string path) => Assembly.ReflectionOnlyLoadFrom(path);
+    private static Assembly ReflectionOnlyLoadAssemblyFrom(string path) => Assembly.ReflectionOnlyLoadFrom(path);
 #endif
 
     /// <summary>
@@ -326,12 +286,7 @@ class AssemblyResolver :
     /// <param name="name"> The name. </param>
     /// <param name="isReflectionOnly"> Indicates whether this is called under a Reflection Only Load context. </param>
     /// <returns> The <see cref="Assembly"/>. </returns>
-#if NETFRAMEWORK
-    protected virtual
-#else
-    private
-#endif
-    Assembly? SearchAssembly(List<string> searchDirectorypaths, string name, bool isReflectionOnly)
+    private Assembly? SearchAssembly(List<string> searchDirectorypaths, string name, bool isReflectionOnly)
     {
         if (searchDirectorypaths == null || searchDirectorypaths.Count == 0)
         {

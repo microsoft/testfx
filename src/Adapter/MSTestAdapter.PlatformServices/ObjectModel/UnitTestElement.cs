@@ -64,6 +64,10 @@ internal sealed class UnitTestElement
     /// </summary>
     public string? DisplayName { get; set; }
 
+    internal string? CallerFilePath { get; set; }
+
+    internal int CallerLineNumber { get; set; } = -1;
+
     /// <summary>
     /// Gets or sets the compiler generated type name for async test method.
     /// </summary>
@@ -198,6 +202,9 @@ internal sealed class UnitTestElement
                 testCase.SetPropertyValue(EngineConstants.TestDataSourceIgnoreMessageProperty, TestMethod.TestDataSourceIgnoreMessage);
             }
         }
+
+        testCase.LineNumber = CallerLineNumber;
+        testCase.CodeFilePath = CallerFilePath;
 
         SetTestCaseId(testCase, testFullName);
 

@@ -57,7 +57,7 @@ public sealed class UseAsyncSuffixTestMethodSuppressorTests
             [TestClass]
             public class SomeClass
             {
-                [DataTestMethod, DataRow(0)]
+                [TestMethod, DataRow(0)]
                 public async Task [|TestMethod|](int arg) { }
             }
 

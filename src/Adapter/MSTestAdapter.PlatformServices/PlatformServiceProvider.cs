@@ -160,33 +160,6 @@ internal sealed class PlatformServiceProvider : IPlatformServiceProvider
     }
 
     /// <summary>
-    /// Gets an instance to the platform service listener who monitors trace and debug output
-    /// on provided text writer.
-    /// </summary>
-    /// <param name="textWriter">
-    /// The text Writer.
-    /// </param>
-    /// <returns>
-    /// The <see cref="ITraceListener"/>.
-    /// </returns>
-    public ITraceListener GetTraceListener(TextWriter textWriter) => new TraceListenerWrapper(textWriter);
-
-    /// <summary>
-    /// Gets an instance to the platform service trace-listener manager which updates the output/error streams
-    /// with redirected streams and performs operations on the listener provided as argument.
-    /// </summary>
-    /// <param name="outputWriter">
-    /// The redirected output stream writer.
-    /// </param>
-    /// <param name="errorWriter">
-    /// The redirected error stream writer.
-    /// </param>
-    /// <returns>
-    /// The manager for trace listeners.
-    /// </returns>
-    public ITraceListenerManager GetTraceListenerManager(TextWriter outputWriter, TextWriter errorWriter) => new TraceListenerManager(outputWriter, errorWriter);
-
-    /// <summary>
     /// Gets the TestContext object for a platform.
     /// </summary>
     /// <param name="testMethod">

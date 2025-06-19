@@ -6,13 +6,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 /// <summary>
 /// Cancellation token supporting cancellation of a test run.
 /// </summary>
-#if NET6_0_OR_GREATER
-[Obsolete(TestTools.UnitTesting.FrameworkConstants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
-#else
-[Obsolete(TestTools.UnitTesting.FrameworkConstants.PublicTypeObsoleteMessage)]
-#endif
 #pragma warning disable CA1001 // Types that own disposable fields should be disposable
-public class TestRunCancellationToken
+internal sealed class TestRunCancellationToken
 #pragma warning restore CA1001 // Types that own disposable fields should be disposable
 {
     private readonly CancellationTokenSource _cancellationTokenSource = new();

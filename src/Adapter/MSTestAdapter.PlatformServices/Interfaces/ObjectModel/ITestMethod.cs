@@ -10,7 +10,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Int
 /// <summary>
 /// TestMethod structure that is shared between adapter and platform services only.
 /// </summary>
-public interface ITestMethod
+internal interface ITestMethod
 {
     /// <summary>
     /// Gets the name of the test method.
@@ -33,11 +33,6 @@ public interface ITestMethod
     /// Gets the name of the test assembly.
     /// </summary>
     string AssemblyName { get; }
-
-    /// <summary>
-    /// Gets a value indicating whether test method is async.
-    /// </summary>
-    bool IsAsync { get; }
 
     /// <summary>
     /// Gets the fully specified type name metadata format.

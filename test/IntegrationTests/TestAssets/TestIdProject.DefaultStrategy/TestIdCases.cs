@@ -35,7 +35,7 @@ public class TestIdCases
     {
     }
 
-    [DataTestMethod]
+    [TestMethod]
     [DynamicData(nameof(ArraysData))]
     public void DynamicDataArraysTests(int expectedSum, int[] array) => Assert.AreEqual(expectedSum, array.Sum());
 
@@ -49,7 +49,7 @@ public class TestIdCases
         }
     }
 
-    [DataTestMethod]
+    [TestMethod]
     [DynamicData(nameof(TuplesData))]
     public void DynamicDataTuplesTests((int I, string S, bool B) tuple)
     {
@@ -64,7 +64,7 @@ public class TestIdCases
         }
     }
 
-    [DataTestMethod]
+    [TestMethod]
     [DynamicData(nameof(GenericCollectionsData))]
     public void DynamicDataGenericCollectionsTests(List<int> integers, List<string> strings, List<bool> bools)
     {
@@ -81,7 +81,7 @@ public class TestIdCases
         }
     }
 
-    [DataTestMethod]
+    [TestMethod]
     [ArraysDataSource]
     public void TestDataSourceArraysTests(int expectedSum, int[] array) => Assert.AreEqual(expectedSum, array.Sum());
 
@@ -92,7 +92,7 @@ public class TestIdCases
         public string GetDisplayName(MethodInfo methodInfo, object?[]? data) => "Custom name";
     }
 
-    [DataTestMethod]
+    [TestMethod]
     [TuplesDataSource]
     public void TestDataSourceTuplesTests((int I, string S, bool B) tuple)
     {
@@ -105,7 +105,7 @@ public class TestIdCases
         public string GetDisplayName(MethodInfo methodInfo, object?[]? data) => "Custom name";
     }
 
-    [DataTestMethod]
+    [TestMethod]
     [GenericCollectionsDataSource]
     public void TestDataSourceGenericCollectionsTests(List<int> integers, List<string> strings, List<bool> bools)
     {

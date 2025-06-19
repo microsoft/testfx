@@ -48,78 +48,78 @@
 
     <!-- netstandard2.0 -->
     <file src="$RepoRoot$src\TestFramework\TestFramework.Extensions\buildTransitive\others\MSTest.TestFramework.targets" target="buildTransitive\netstandard2.0\" />
-    <file src="netstandard2.0\Microsoft.VisualStudio.TestPlatform.TestFramework.dll" target="lib\netstandard2.0\" />
-    <file src="netstandard2.0\Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="lib\netstandard2.0\" />
-    <file src="netstandard2.0\**\Microsoft.VisualStudio.TestPlatform.TestFramework.resources.dll" target="lib\netstandard2.0\" />
-    <file src="netstandard2.0\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll" target="lib\netstandard2.0\" />
-    <file src="netstandard2.0\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="lib\netstandard2.0\" />
+    <file src="netstandard2.0\MSTest.TestFramework.dll" target="lib\netstandard2.0\" />
+    <file src="netstandard2.0\MSTest.TestFramework.xml" target="lib\netstandard2.0\" />
+    <file src="netstandard2.0\**\MSTest.TestFramework.resources.dll" target="lib\netstandard2.0\" />
+    <file src="netstandard2.0\MSTest.TestFramework.Extensions.dll" target="lib\netstandard2.0\" />
+    <file src="netstandard2.0\MSTest.TestFramework.Extensions.xml" target="lib\netstandard2.0\" />
     <file src="$RepoRoot$src\TestFramework\TestFramework.Extensions\build\netstandard2.0\MSTest.TestFramework.targets" target="build\netstandard2.0\" />
 
     <!-- net462 -->
     <file src="$RepoRoot$src\TestFramework\TestFramework.Extensions\buildTransitive\others\MSTest.TestFramework.targets" target="buildTransitive\net462\" />
-    <file src="net462\Microsoft.VisualStudio.TestPlatform.TestFramework.dll" target="lib\net462\" />
-    <file src="net462\Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="lib\net462\" />
-    <file src="net462\**\Microsoft.VisualStudio.TestPlatform.TestFramework.resources.dll" target="lib\net462\" />
-    <file src="net462\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll" target="lib\net462\" />
-    <file src="net462\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="lib\net462\" />
+    <file src="net462\MSTest.TestFramework.dll" target="lib\net462\" />
+    <file src="net462\MSTest.TestFramework.xml" target="lib\net462\" />
+    <file src="net462\**\MSTest.TestFramework.resources.dll" target="lib\net462\" />
+    <file src="net462\MSTest.TestFramework.Extensions.dll" target="lib\net462\" />
+    <file src="net462\MSTest.TestFramework.Extensions.xml" target="lib\net462\" />
     <file src="$RepoRoot$src\TestFramework\TestFramework.Extensions\build\net462\MSTest.TestFramework.targets" target="build\net462\" />
 
     <!-- uap10.0 -->
     <file src="$RepoRoot$src\TestFramework\TestFramework.Extensions\buildTransitive\others\MSTest.TestFramework.targets" target="buildTransitive\uap10.0\" />
-    <file src="uap10.0.16299\Microsoft.VisualStudio.TestPlatform.TestFramework.dll" target="lib\uap10.0\" />
-    <file src="uap10.0.16299\Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="lib\uap10.0\" />
-    <file src="uap10.0.16299\**\Microsoft.VisualStudio.TestPlatform.TestFramework.resources.dll" target="lib\uap10.0\" />
-    <file src="uap10.0.16299\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll" target="lib\uap10.0\" />
-    <file src="uap10.0.16299\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="lib\uap10.0\" />
+    <file src="uap10.0.16299\MSTest.TestFramework.dll" target="lib\uap10.0\" />
+    <file src="uap10.0.16299\MSTest.TestFramework.xml" target="lib\uap10.0\" />
+    <file src="uap10.0.16299\**\MSTest.TestFramework.resources.dll" target="lib\uap10.0\" />
+    <file src="uap10.0.16299\MSTest.TestFramework.Extensions.dll" target="lib\uap10.0\" />
+    <file src="uap10.0.16299\MSTest.TestFramework.Extensions.xml" target="lib\uap10.0\" />
     <file src="$RepoRoot$src\TestFramework\TestFramework.Extensions\build\uap10.0\MSTest.TestFramework.targets" target="build\uap10.0\" />
 
     <!-- netcoreapp3.1 -->
     <file src="$RepoRoot$src\TestFramework\TestFramework.Extensions\buildTransitive\others\MSTest.TestFramework.targets" target="buildTransitive\netcoreapp3.1\" />
-    <file src="netcoreapp3.1\Microsoft.VisualStudio.TestPlatform.TestFramework.dll" target="lib\netcoreapp3.1\" />
-    <file src="netcoreapp3.1\Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="lib\netcoreapp3.1\" />
-    <file src="netcoreapp3.1\**\Microsoft.VisualStudio.TestPlatform.TestFramework.resources.dll" target="lib\netcoreapp3.1\" />
-    <file src="netcoreapp3.1\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll" target="lib\netcoreapp3.1\" />
-    <file src="netcoreapp3.1\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="lib\netcoreapp3.1\" />
+    <file src="netcoreapp3.1\MSTest.TestFramework.dll" target="lib\netcoreapp3.1\" />
+    <file src="netcoreapp3.1\MSTest.TestFramework.xml" target="lib\netcoreapp3.1\" />
+    <file src="netcoreapp3.1\**\MSTest.TestFramework.resources.dll" target="lib\netcoreapp3.1\" />
+    <file src="netcoreapp3.1\MSTest.TestFramework.Extensions.dll" target="lib\netcoreapp3.1\" />
+    <file src="netcoreapp3.1\MSTest.TestFramework.Extensions.xml" target="lib\netcoreapp3.1\" />
     <file src="$RepoRoot$src\TestFramework\TestFramework.Extensions\build\netcoreapp3.1\MSTest.TestFramework.targets" target="build\netcoreapp3.1\" />
 
     <!-- net6.0 -->
     <file src="$RepoRoot$src\TestFramework\TestFramework.Extensions\buildTransitive\net6.0AndLater\MSTest.TestFramework.targets" target="buildTransitive\net6.0\" />
-    <file src="net6.0\Microsoft.VisualStudio.TestPlatform.TestFramework.dll" target="lib\net6.0\" />
-    <file src="net6.0\Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="lib\net6.0\" />
-    <file src="net6.0\**\Microsoft.VisualStudio.TestPlatform.TestFramework.resources.dll" target="lib\net6.0\" />
-    <file src="net6.0\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll" target="buildTransitive\net6.0\" />
-    <file src="net6.0\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="buildTransitive\net6.0\" />
-    <file src="net6.0-windows10.0.18362.0\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll" target="buildTransitive\net6.0\winui\" />
-    <file src="net6.0-windows10.0.18362.0\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="buildTransitive\net6.0\winui\" />
+    <file src="net6.0\MSTest.TestFramework.dll" target="lib\net6.0\" />
+    <file src="net6.0\MSTest.TestFramework.xml" target="lib\net6.0\" />
+    <file src="net6.0\**\MSTest.TestFramework.resources.dll" target="lib\net6.0\" />
+    <file src="net6.0\MSTest.TestFramework.Extensions.dll" target="buildTransitive\net6.0\" />
+    <file src="net6.0\MSTest.TestFramework.Extensions.xml" target="buildTransitive\net6.0\" />
+    <file src="net6.0-windows10.0.18362.0\MSTest.TestFramework.Extensions.dll" target="buildTransitive\net6.0\winui\" />
+    <file src="net6.0-windows10.0.18362.0\MSTest.TestFramework.Extensions.xml" target="buildTransitive\net6.0\winui\" />
     <file src="$RepoRoot$src\TestFramework\TestFramework.Extensions\build\net6.0\MSTest.TestFramework.targets" target="build\net6.0\" />
 
     <!-- net7.0 -->
     <file src="$RepoRoot$src\TestFramework\TestFramework.Extensions\buildTransitive\net6.0AndLater\MSTest.TestFramework.targets" target="buildTransitive\net7.0\" />
-    <file src="net7.0\Microsoft.VisualStudio.TestPlatform.TestFramework.dll" target="lib\net7.0\" />
-    <file src="net7.0\Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="lib\net7.0\" />
-    <file src="net7.0\**\Microsoft.VisualStudio.TestPlatform.TestFramework.resources.dll" target="lib\net7.0\" />
-    <file src="net7.0\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll" target="buildTransitive\net7.0\" />
-    <file src="net7.0\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="buildTransitive\net7.0\" />
+    <file src="net7.0\MSTest.TestPlatform.TestFramework.dll" target="lib\net7.0\" />
+    <file src="net7.0\MSTest.TestPlatform.TestFramework.xml" target="lib\net7.0\" />
+    <file src="net7.0\**\MSTest.TestFramework.resources.dll" target="lib\net7.0\" />
+    <file src="net7.0\MSTest.TestFramework.Extensions.dll" target="buildTransitive\net7.0\" />
+    <file src="net7.0\MSTest.TestFramework.Extensions.xml" target="buildTransitive\net7.0\" />
     <file src="$RepoRoot$src\TestFramework\TestFramework.Extensions\build\net7.0\MSTest.TestFramework.targets" target="build\net7.0\" />
 
     <!-- net8.0 -->
     <file src="$RepoRoot$src\TestFramework\TestFramework.Extensions\buildTransitive\net6.0AndLater\MSTest.TestFramework.targets" target="buildTransitive\net8.0\" />
-    <file src="net8.0\Microsoft.VisualStudio.TestPlatform.TestFramework.dll" target="lib\net8.0\" />
-    <file src="net8.0\Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="lib\net8.0\" />
-    <file src="net8.0\**\Microsoft.VisualStudio.TestPlatform.TestFramework.resources.dll" target="lib\net8.0\" />
-    <file src="net8.0\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll" target="buildTransitive\net8.0\" />
-    <file src="net8.0\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="buildTransitive\net8.0\" />
+    <file src="net8.0\MSTest.TestFramework.dll" target="lib\net8.0\" />
+    <file src="net8.0\MSTest.TestFramework.xml" target="lib\net8.0\" />
+    <file src="net8.0\**\MSTest.TestFramework.resources.dll" target="lib\net8.0\" />
+    <file src="net8.0\MSTest.TestFramework.Extensions.dll" target="buildTransitive\net8.0\" />
+    <file src="net8.0\MSTest.TestFramework.Extensions.xml" target="buildTransitive\net8.0\" />
     <file src="$RepoRoot$src\TestFramework\TestFramework.Extensions\build\net8.0\MSTest.TestFramework.targets" target="build\net8.0\" />
 
     <!-- net9.0 -->
     <file src="$RepoRoot$src\TestFramework\TestFramework.Extensions\buildTransitive\net6.0AndLater\MSTest.TestFramework.targets" target="buildTransitive\net9.0\" />
-    <file src="net9.0\Microsoft.VisualStudio.TestPlatform.TestFramework.dll" target="lib\net9.0\" />
-    <file src="net9.0\Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="lib\net9.0\" />
-    <file src="net9.0\**\Microsoft.VisualStudio.TestPlatform.TestFramework.resources.dll" target="lib\net9.0\" />
-    <file src="net9.0\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll" target="buildTransitive\net9.0\" />
-    <file src="net9.0\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="buildTransitive\net9.0\" />
-    <file src="net9.0-windows10.0.17763.0\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll" target="buildTransitive\net9.0\uwp" />
-    <file src="net9.0-windows10.0.17763.0\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="buildTransitive\net9.0\uwp" />
+    <file src="net9.0\MSTest.TestFramework.dll" target="lib\net9.0\" />
+    <file src="net9.0\MSTest.TestFramework.xml" target="lib\net9.0\" />
+    <file src="net9.0\**\MSTest.TestFramework.resources.dll" target="lib\net9.0\" />
+    <file src="net9.0\MSTest.TestFramework.Extensions.dll" target="buildTransitive\net9.0\" />
+    <file src="net9.0\MSTest.TestFramework.Extensions.xml" target="buildTransitive\net9.0\" />
+    <file src="net9.0-windows10.0.17763.0\MSTest.TestFramework.Extensions.dll" target="buildTransitive\net9.0\uwp" />
+    <file src="net9.0-windows10.0.17763.0\MSTest.TestFramework.Extensions.xml" target="buildTransitive\net9.0\uwp" />
     <file src="$RepoRoot$src\TestFramework\TestFramework.Extensions\build\net9.0\MSTest.TestFramework.targets" target="build\net9.0\" />
 
     <!-- Source code -->
