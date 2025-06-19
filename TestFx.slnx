@@ -57,7 +57,9 @@
   </Folder>
   <Folder Name="/src/4 - Analyzers/">
     <Project Path="src/Analyzers/MSTest.Analyzers.CodeFixes/MSTest.Analyzers.CodeFixes.csproj" />
-    <Project Path="src/Analyzers/MSTest.Analyzers.Package/MSTest.Analyzers.Package.csproj" />
+    <Project Path="src/Analyzers/MSTest.Analyzers.Package/MSTest.Analyzers.Package.csproj">
+      <BuildDependency Project="src/Analyzers/MSTest.GlobalConfigsGenerator/MSTest.GlobalConfigsGenerator.csproj" />
+    </Project>
     <Project Path="src/Analyzers/MSTest.Analyzers/MSTest.Analyzers.csproj" />
     <Project Path="src/Analyzers/MSTest.GlobalConfigsGenerator/MSTest.GlobalConfigsGenerator.csproj" />
     <Project Path="src/Analyzers/MSTest.Internal.Analyzers/MSTest.Internal.Analyzers.csproj" />
