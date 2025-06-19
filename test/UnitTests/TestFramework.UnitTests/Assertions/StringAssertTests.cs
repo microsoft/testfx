@@ -313,6 +313,7 @@ public class StringAssertTests : TestContainer
     private Regex? GetNonMatchingPattern() => new("something");
 
     #region Obsolete methods tests
+#if DEBUG
     public void ObsoleteEqualsMethodThrowsAssertFailedException()
     {
 #pragma warning disable CS0618 // Type or member is obsolete
@@ -331,5 +332,6 @@ public class StringAssertTests : TestContainer
         Verify(ex is AssertFailedException);
         Verify(ex.Message.Contains("StringAssert.ReferenceEquals should not be used for Assertions"));
     }
+#endif
     #endregion
 }

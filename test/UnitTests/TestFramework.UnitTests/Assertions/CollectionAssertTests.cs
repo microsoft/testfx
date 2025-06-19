@@ -563,6 +563,7 @@ public class CollectionAssertTests : TestContainer
     }
 
     #region Obsolete methods tests
+#if DEBUG
     public void ObsoleteEqualsMethodThrowsAssertFailedException()
     {
 #pragma warning disable CS0618 // Type or member is obsolete
@@ -581,5 +582,6 @@ public class CollectionAssertTests : TestContainer
         Verify(ex is AssertFailedException);
         Verify(ex.Message.Contains("CollectionAssert.ReferenceEquals should not be used for Assertions"));
     }
+#endif
     #endregion
 }

@@ -39,6 +39,7 @@ public partial class AssertTests
     #endregion
 
     #region Obsolete methods tests
+#if DEBUG
     public void ObsoleteEqualsMethodThrowsAssertFailedException()
     {
 #pragma warning disable CS0618 // Type or member is obsolete
@@ -57,6 +58,7 @@ public partial class AssertTests
         Verify(ex is AssertFailedException);
         Verify(ex.Message.Contains("Assert.ReferenceEquals should not be used for Assertions"));
     }
+#endif
     #endregion
 
     private static Task<string> GetHelloStringAsync()
