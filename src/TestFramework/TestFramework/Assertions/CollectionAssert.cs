@@ -1713,7 +1713,7 @@ public sealed class CollectionAssert
     /// <param name="objB"> Object B. </param>
     /// <returns> Never returns. </returns>
     [SuppressMessage("Microsoft.Naming", "CA1720:IdentifiersShouldNotContainTypeNames", MessageId = "obj", Justification = "We want to compare 'object A' with 'object B', so it makes sense to have 'obj' in the parameter name")]
-    [Obsolete(FrameworkConstants.DoNotUseCollectionAssertEquals)]
+    [Obsolete(FrameworkConstants.DoNotUseCollectionAssertEquals, error: true)]
     [DoesNotReturn]
     public static new bool Equals(object? objA, object? objB)
     {
@@ -1730,7 +1730,7 @@ public sealed class CollectionAssert
     /// <param name="objB"> Object B. </param>
     /// <returns> Never returns. </returns>
     [SuppressMessage("Microsoft.Naming", "CA1720:IdentifiersShouldNotContainTypeNames", MessageId = "obj", Justification = "We want to compare 'object A' with 'object B', so it makes sense to have 'obj' in the parameter name")]
-    [Obsolete(FrameworkConstants.DoNotUseCollectionAssertReferenceEquals)]
+    [Obsolete(FrameworkConstants.DoNotUseCollectionAssertReferenceEquals, error: true)]
     [DoesNotReturn]
     public static new bool ReferenceEquals(object? objA, object? objB)
     {
