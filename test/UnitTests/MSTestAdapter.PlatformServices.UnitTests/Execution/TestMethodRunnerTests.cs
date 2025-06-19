@@ -150,16 +150,21 @@ public class TestMethodRunnerTests : TestContainer
             StringComparison.Ordinal));
     }
 
+    private sealed class TestMethodWithFailingAndPassingResultsAttribute : TestMethodAttribute
+    {
+        public override Task<TestResult[]> ExecuteAsync(ITestMethod testMethod)
+        {
+            return Task.FromResult<TestResult[]>(
+            [
+                new TestResult { Outcome = UTF.UnitTestOutcome.Passed },
+                new TestResult { Outcome = UTF.UnitTestOutcome.Failed },
+            ]);
+        }
+    }
+
     public async Task RunTestMethodForMultipleResultsReturnMultipleResults()
     {
-        var testMethodAttributeMock = new Mock<TestMethodAttribute>();
-        testMethodAttributeMock.Setup(_ => _.ExecuteAsync(It.IsAny<ITestMethod>())).Returns(Task.FromResult<TestResult[]>(
-        [
-            new TestResult { Outcome = UTF.UnitTestOutcome.Passed },
-            new TestResult { Outcome = UTF.UnitTestOutcome.Failed },
-        ]));
-
-        var localTestMethodOptions = new TestMethodOptions(TimeoutInfo.FromTimeout(200), _testContextImplementation, testMethodAttributeMock.Object);
+        var localTestMethodOptions = new TestMethodOptions(TimeoutInfo.FromTimeout(200), _testContextImplementation, new TestMethodWithFailingAndPassingResultsAttribute());
 
         var testMethodInfo = new TestableTestMethodInfo(_methodInfo, _testClassInfo, localTestMethodOptions, null!);
         var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation);
