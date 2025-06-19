@@ -277,6 +277,24 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to String &apos;{0}&apos; ends with string &apos;{1}&apos;. {2}.
+        /// </summary>
+        internal static string DoesNotEndWithFail {
+            get {
+                return ResourceManager.GetString("DoesNotEndWithFail", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to String &apos;{0}&apos; starts with string &apos;{1}&apos;. {2}.
+        /// </summary>
+        internal static string DoesNotStartWithFail {
+            get {
+                return ResourceManager.GetString("DoesNotStartWithFail", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Assert.Equals should not be used for Assertions. Please use Assert.AreEqual &amp; overloads instead..
         /// </summary>
         internal static string DoNotUseAssertEquals {
@@ -378,7 +396,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to String &apos;{0}&apos; does not end with string &apos;{1}&apos;. {2}..
+        ///   Looks up a localized string similar to String &apos;{0}&apos; does not end with string &apos;{1}&apos;. {2}.
         /// </summary>
         internal static string EndsWithFail {
             get {
@@ -468,6 +486,24 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Actual value &lt;{2}&gt; is not greater than expected value &lt;{1}&gt;. {0}.
+        /// </summary>
+        internal static string IsGreaterThanFailMsg {
+            get {
+                return ResourceManager.GetString("IsGreaterThanFailMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Actual value &lt;{2}&gt; is not greater than or equal to expected value &lt;{1}&gt;. {0}.
+        /// </summary>
+        internal static string IsGreaterThanOrEqualToFailMsg {
+            get {
+                return ResourceManager.GetString("IsGreaterThanOrEqualToFailMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Value &apos;{0}&apos; is not within the expected range [{1}, {2}]. {3}.
         /// </summary>
         internal static string IsInRangeFail {
@@ -486,11 +522,38 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to String &apos;{0}&apos; does not match pattern &apos;{1}&apos;. {2}..
+        ///   Looks up a localized string similar to Actual value &lt;{2}&gt; is not less than expected value &lt;{1}&gt;. {0}.
+        /// </summary>
+        internal static string IsLessThanFailMsg {
+            get {
+                return ResourceManager.GetString("IsLessThanFailMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Actual value &lt;{2}&gt; is not less than or equal to expected value &lt;{1}&gt;. {0}.
+        /// </summary>
+        internal static string IsLessThanOrEqualToFailMsg {
+            get {
+                return ResourceManager.GetString("IsLessThanOrEqualToFailMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to String &apos;{0}&apos; does not match pattern &apos;{1}&apos;. {2}.
         /// </summary>
         internal static string IsMatchFail {
             get {
                 return ResourceManager.GetString("IsMatchFail", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Expected value &lt;{1}&gt; to be negative. {0}.
+        /// </summary>
+        internal static string IsNegativeFailMsg {
+            get {
+                return ResourceManager.GetString("IsNegativeFailMsg", resourceCulture);
             }
         }
         
@@ -513,11 +576,20 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to String &apos;{0}&apos; matches pattern &apos;{1}&apos;. {2}..
+        ///   Looks up a localized string similar to String &apos;{0}&apos; matches pattern &apos;{1}&apos;. {2}.
         /// </summary>
         internal static string IsNotMatchFail {
             get {
                 return ResourceManager.GetString("IsNotMatchFail", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Expected value &lt;{1}&gt; to be positive. {0}.
+        /// </summary>
+        internal static string IsPositiveFailMsg {
+            get {
+                return ResourceManager.GetString("IsPositiveFailMsg", resourceCulture);
             }
         }
         
@@ -575,7 +647,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to String &apos;{0}&apos; does not start with string &apos;{1}&apos;. {2}..
+        ///   Looks up a localized string similar to String &apos;{0}&apos; does not start with string &apos;{1}&apos;. {2}.
         /// </summary>
         internal static string StartsWithFail {
             get {
@@ -634,60 +706,6 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         internal static string UTF_TestMethodWrongExceptionDerivedAllowed {
             get {
                 return ResourceManager.GetString("UTF_TestMethodWrongExceptionDerivedAllowed", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Expected value &lt;{1}&gt; to be greater than actual value &lt;{2}&gt;. {0}.
-        /// </summary>
-        internal static string IsGreaterThanFailMsg {
-            get {
-                return ResourceManager.GetString("IsGreaterThanFailMsg", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Expected value &lt;{1}&gt; to be greater than or equal to actual value &lt;{2}&gt;. {0}.
-        /// </summary>
-        internal static string IsGreaterThanOrEqualToFailMsg {
-            get {
-                return ResourceManager.GetString("IsGreaterThanOrEqualToFailMsg", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Expected value &lt;{1}&gt; to be less than actual value &lt;{2}&gt;. {0}.
-        /// </summary>
-        internal static string IsLessThanFailMsg {
-            get {
-                return ResourceManager.GetString("IsLessThanFailMsg", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Expected value &lt;{1}&gt; to be less than or equal to actual value &lt;{2}&gt;. {0}.
-        /// </summary>
-        internal static string IsLessThanOrEqualToFailMsg {
-            get {
-                return ResourceManager.GetString("IsLessThanOrEqualToFailMsg", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Expected value &lt;{1}&gt; to be negative. {0}.
-        /// </summary>
-        internal static string IsNegativeFailMsg {
-            get {
-                return ResourceManager.GetString("IsNegativeFailMsg", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Expected value &lt;{1}&gt; to be positive. {0}.
-        /// </summary>
-        internal static string IsPositiveFailMsg {
-            get {
-                return ResourceManager.GetString("IsPositiveFailMsg", resourceCulture);
             }
         }
         

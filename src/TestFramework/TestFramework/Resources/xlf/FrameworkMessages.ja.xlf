@@ -117,6 +117,16 @@
         <target state="new">Expected no items to match the predicate. {0}</target>
         <note />
       </trans-unit>
+      <trans-unit id="DoesNotEndWithFail">
+        <source>String '{0}' ends with string '{1}'. {2}</source>
+        <target state="new">String '{0}' ends with string '{1}'. {2}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DoesNotStartWithFail">
+        <source>String '{0}' starts with string '{1}'. {2}</source>
+        <target state="new">String '{0}' starts with string '{1}'. {2}</target>
+        <note />
+      </trans-unit>
       <trans-unit id="DynamicDataInvalidMethodLayout">
         <source>Dynamic data method '{0}' should be static, parameterless and non-generic.</source>
         <target state="translated">動的データ メソッド '{0}' は、静的、パラメーターなし、および非ジェネリックである必要があります。</target>
@@ -141,9 +151,11 @@
         <source>Element at index {0} do not match.
 Expected: {1}
 Actual: {2}</source>
-        <target state="translated">インデックス {0} の要素が一致しません。
-予想: {1}
-実際: {2}</target>
+        <target state="needs-review-translation">
+          インデックス {0} の要素が一致しません。
+          予想: {1}
+          実際: {2}
+        </target>
         <note />
       </trans-unit>
       <trans-unit id="ElementTypesAtIndexDontMatch">
@@ -152,9 +164,9 @@ Actual: {2}</source>
         <note></note>
       </trans-unit>
       <trans-unit id="EndsWithFail">
-        <source>String '{0}' does not end with string '{1}'. {2}.</source>
-        <target state="translated">文字列 '{0}' は文字列 '{1}' で終わりません。{2}。</target>
-        <note></note>
+        <source>String '{0}' does not end with string '{1}'. {2}</source>
+        <target state="needs-review-translation">文字列 '{0}' は文字列 '{1}' で終わりません。{2}。</target>
+        <note />
       </trans-unit>
       <trans-unit id="AssertionFailed">
         <source>{0} failed. {1}</source>
@@ -182,9 +194,9 @@ Actual: {2}</source>
         <note></note>
       </trans-unit>
       <trans-unit id="IsMatchFail">
-        <source>String '{0}' does not match pattern '{1}'. {2}.</source>
-        <target state="translated">文字列 '{0}' はパターン '{1}' と一致しません。{2}。</target>
-        <note></note>
+        <source>String '{0}' does not match pattern '{1}'. {2}</source>
+        <target state="needs-review-translation">文字列 '{0}' はパターン '{1}' と一致しません。{2}。</target>
+        <note />
       </trans-unit>
       <trans-unit id="IsNotEmptyFailMsg">
         <source>Expected collection to contain any item but it is empty. {0}</source>
@@ -197,9 +209,9 @@ Actual: {2}</source>
         <note></note>
       </trans-unit>
       <trans-unit id="IsNotMatchFail">
-        <source>String '{0}' matches pattern '{1}'. {2}.</source>
-        <target state="translated">文字列 '{0}' はパターン '{1}' と一致します。{2}。</target>
-        <note></note>
+        <source>String '{0}' matches pattern '{1}'. {2}</source>
+        <target state="needs-review-translation">文字列 '{0}' はパターン '{1}' と一致します。{2}。</target>
+        <note />
       </trans-unit>
       <trans-unit id="DoNotUseAssertEquals">
         <source>Assert.Equals should not be used for Assertions. Please use Assert.AreEqual &amp; overloads instead.</source>
@@ -212,12 +224,12 @@ Actual: {2}</source>
       or the member may be private and defined on a base class. If the latter is true, you need to pass the type
       that defines the member into PrivateObject's constructor.
     </source>
-        <target state="translated">
-      指定されたメンバー ({0}) が見つかりませんでした。プライベート アクセサーを再生成しなければならないか、
-      またはメンバーがプライベートであり、基底クラスで定義されている可能性があります。後者である場合は、メンバーを
-      定義する型を PrivateObject のコンストラクターに渡す必要があります。
-    </target>
-        <note></note>
+        <target state="needs-review-translation">
+          指定されたメンバー ({0}) が見つかりませんでした。プライベート アクセサーを再生成しなければならないか、
+          またはメンバーがプライベートであり、基底クラスで定義されている可能性があります。後者である場合は、メンバーを
+          定義する型を PrivateObject のコンストラクターに渡す必要があります。
+        </target>
+        <note />
       </trans-unit>
       <trans-unit id="PrivateAccessorConstructorNotFound">
         <source>
@@ -225,12 +237,12 @@ Actual: {2}</source>
       or the member may be private and defined on a base class. If the latter is true, you need to pass the type
       that defines the member into PrivateObject's constructor.
     </source>
-        <target state="translated">
-      指定されたシグネチャを使用するコンストラクターが見つかりませんでした。プライベート アクセサーを再生成しなければならないか、
-      またはメンバーがプライベートであり、基底クラスで定義されている可能性があります。後者である場合は、メンバーを
-      定義する型を PrivateObject のコンストラクターに渡す必要があります。
-    </target>
-        <note></note>
+        <target state="needs-review-translation">
+          指定されたシグネチャを使用するコンストラクターが見つかりませんでした。プライベート アクセサーを再生成しなければならないか、
+          またはメンバーがプライベートであり、基底クラスで定義されている可能性があります。後者である場合は、メンバーを
+          定義する型を PrivateObject のコンストラクターに渡す必要があります。
+        </target>
+        <note />
       </trans-unit>
       <trans-unit id="NullParameterToAssert">
         <source>The parameter '{0}' is invalid. The value cannot be null. {1}.</source>
@@ -243,9 +255,9 @@ Actual: {2}</source>
         <note></note>
       </trans-unit>
       <trans-unit id="StartsWithFail">
-        <source>String '{0}' does not start with string '{1}'. {2}.</source>
-        <target state="translated">文字列 '{0}' は文字列 '{1}' で始まりません。{2}。</target>
-        <note></note>
+        <source>String '{0}' does not start with string '{1}'. {2}</source>
+        <target state="needs-review-translation">文字列 '{0}' は文字列 '{1}' で始まりません。{2}。</target>
+        <note />
       </trans-unit>
       <trans-unit id="InvalidPropertyType">
         <source>The property {0} has type {1}; expected type {2}.</source>
@@ -339,7 +351,7 @@ Actual: {2}</source>
       </trans-unit>
       <trans-unit id="ArgumentXMustDeriveFromClassY">
         <source>Type '{0}' is not assignable to '{1}'.</source>
-        <target state="translated">型 '{0}' を '{1}' に割り当てることはできません。</target>
+        <target state="needs-review-translation">型 '{0}' を '{1}' に割り当てることはできません。</target>
         <note>
       - {0} argument name like "applicationType"
       - {1} fully qualified class name like "Microsoft.UI.Xaml.Application"
