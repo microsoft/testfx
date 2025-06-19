@@ -82,9 +82,39 @@
         <target state="translated">La chaîne '{0}' ne contient pas la chaîne '{1}'. {2}.</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="ContainsItemFailMsg">
+        <source>Expected collection to contain the specified item. {0}</source>
+        <target state="new">Expected collection to contain the specified item. {0}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ContainsPredicateFailMsg">
+        <source>Expected at least one item to match the predicate. {0}</source>
+        <target state="new">Expected at least one item to match the predicate. {0}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ContainsSingleFailMsg">
+        <source>Expected collection to contain exactly one element but found {1} element(s). {0}</source>
+        <target state="new">Expected collection to contain exactly one element but found {1} element(s). {0}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ContainsSingleMatchFailMsg">
+        <source>Expected exactly one item to match the predicate but found {1} item(s). {0}</source>
+        <target state="new">Expected exactly one item to match the predicate but found {1} item(s). {0}</target>
+        <note />
+      </trans-unit>
       <trans-unit id="DoesNotContainFail">
         <source>String '{0}' does contain string '{1}'. {2}.</source>
         <target state="translated">La chaîne « {0} » contient la chaîne « {1} ». {2}.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DoesNotContainItemFailMsg">
+        <source>Expected collection to not contain the specified item. {0}</source>
+        <target state="new">Expected collection to not contain the specified item. {0}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DoesNotContainPredicateFailMsg">
+        <source>Expected no items to match the predicate. {0}</source>
+        <target state="new">Expected no items to match the predicate. {0}</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataInvalidMethodLayout">
