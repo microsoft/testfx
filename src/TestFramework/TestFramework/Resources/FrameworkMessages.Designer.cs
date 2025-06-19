@@ -277,6 +277,24 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to String &apos;{0}&apos; ends with string &apos;{1}&apos;. {2}.
+        /// </summary>
+        internal static string DoesNotEndWithFail {
+            get {
+                return ResourceManager.GetString("DoesNotEndWithFail", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to String &apos;{0}&apos; starts with string &apos;{1}&apos;. {2}.
+        /// </summary>
+        internal static string DoesNotStartWithFail {
+            get {
+                return ResourceManager.GetString("DoesNotStartWithFail", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Assert.Equals should not be used for Assertions. Please use Assert.AreEqual &amp; overloads instead..
         /// </summary>
         internal static string DoNotUseAssertEquals {
@@ -423,7 +441,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to String &apos;{0}&apos; does not end with string &apos;{1}&apos;. {2}..
+        ///   Looks up a localized string similar to String &apos;{0}&apos; does not end with string &apos;{1}&apos;. {2}.
         /// </summary>
         internal static string EndsWithFail {
             get {
@@ -567,7 +585,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to String &apos;{0}&apos; does not match pattern &apos;{1}&apos;. {2}..
+        ///   Looks up a localized string similar to String &apos;{0}&apos; does not match pattern &apos;{1}&apos;. {2}.
         /// </summary>
         internal static string IsMatchFail {
             get {
@@ -603,7 +621,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to String &apos;{0}&apos; matches pattern &apos;{1}&apos;. {2}..
+        ///   Looks up a localized string similar to String &apos;{0}&apos; matches pattern &apos;{1}&apos;. {2}.
         /// </summary>
         internal static string IsNotMatchFail {
             get {
@@ -674,7 +692,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to String &apos;{0}&apos; does not start with string &apos;{1}&apos;. {2}..
+        ///   Looks up a localized string similar to String &apos;{0}&apos; does not start with string &apos;{1}&apos;. {2}.
         /// </summary>
         internal static string StartsWithFail {
             get {

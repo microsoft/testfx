@@ -117,6 +117,16 @@
         <target state="new">Expected no items to match the predicate. {0}</target>
         <note />
       </trans-unit>
+      <trans-unit id="DoesNotEndWithFail">
+        <source>String '{0}' ends with string '{1}'. {2}</source>
+        <target state="new">String '{0}' ends with string '{1}'. {2}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DoesNotStartWithFail">
+        <source>String '{0}' starts with string '{1}'. {2}</source>
+        <target state="new">String '{0}' starts with string '{1}'. {2}</target>
+        <note />
+      </trans-unit>
       <trans-unit id="DynamicDataInvalidMethodLayout">
         <source>Dynamic data method '{0}' should be static, parameterless and non-generic.</source>
         <target state="translated">La méthode de données dynamiques « {0} » doit être statique, sans paramètre et non générique.</target>
@@ -141,9 +151,11 @@
         <source>Element at index {0} do not match.
 Expected: {1}
 Actual: {2}</source>
-        <target state="translated">L’élément au {0} d’index ne correspond pas.
-Attendu : {1}
-Réel : {2}</target>
+        <target state="needs-review-translation">
+          L’élément au {0} d’index ne correspond pas.
+          Attendu : {1}
+          Réel : {2}
+        </target>
         <note />
       </trans-unit>
       <trans-unit id="ElementTypesAtIndexDontMatch">
@@ -152,9 +164,9 @@ Réel : {2}</target>
         <note></note>
       </trans-unit>
       <trans-unit id="EndsWithFail">
-        <source>String '{0}' does not end with string '{1}'. {2}.</source>
-        <target state="translated">La chaîne '{0}' ne se termine pas par la chaîne '{1}'. {2}.</target>
-        <note></note>
+        <source>String '{0}' does not end with string '{1}'. {2}</source>
+        <target state="needs-review-translation">La chaîne '{0}' ne se termine pas par la chaîne '{1}'. {2}.</target>
+        <note />
       </trans-unit>
       <trans-unit id="AssertionFailed">
         <source>{0} failed. {1}</source>
@@ -173,7 +185,7 @@ Réel : {2}</target>
       </trans-unit>
       <trans-unit id="IsInRangeFail">
         <source>Value '{0}' is not within the expected range [{1}, {2}]. {3}</source>
-        <target state="new">Value '{0}' is not within the expected range [{1}, {2}]. {3}</target>
+        <target state="translated">La valeur « {0} » n'est pas dans la plage attendue [{1}, {2}]. {3}</target>
         <note />
       </trans-unit>
       <trans-unit id="IsInstanceOfFailMsg">
@@ -182,9 +194,9 @@ Réel : {2}</target>
         <note></note>
       </trans-unit>
       <trans-unit id="IsMatchFail">
-        <source>String '{0}' does not match pattern '{1}'. {2}.</source>
-        <target state="translated">La chaîne '{0}' ne correspond pas au modèle '{1}'. {2}.</target>
-        <note></note>
+        <source>String '{0}' does not match pattern '{1}'. {2}</source>
+        <target state="needs-review-translation">La chaîne '{0}' ne correspond pas au modèle '{1}'. {2}.</target>
+        <note />
       </trans-unit>
       <trans-unit id="IsNotEmptyFailMsg">
         <source>Expected collection to contain any item but it is empty. {0}</source>
@@ -197,9 +209,9 @@ Réel : {2}</target>
         <note></note>
       </trans-unit>
       <trans-unit id="IsNotMatchFail">
-        <source>String '{0}' matches pattern '{1}'. {2}.</source>
-        <target state="translated">La chaîne '{0}' correspond au modèle '{1}'. {2}.</target>
-        <note></note>
+        <source>String '{0}' matches pattern '{1}'. {2}</source>
+        <target state="needs-review-translation">La chaîne '{0}' correspond au modèle '{1}'. {2}.</target>
+        <note />
       </trans-unit>
       <trans-unit id="PrivateAccessorMemberNotFound">
         <source>
@@ -207,12 +219,12 @@ Réel : {2}</target>
       or the member may be private and defined on a base class. If the latter is true, you need to pass the type
       that defines the member into PrivateObject's constructor.
     </source>
-        <target state="translated">
-      Le membre spécifié ({0}) est introuvable. Vous devrez peut-être régénérer votre accesseur private,
-      ou le membre est peut-être private et défini sur une classe de base. Si le dernier cas est vrai, vous devez transmettre le type
-      qui définit le membre dans le constructeur de PrivateObject.
-    </target>
-        <note></note>
+        <target state="needs-review-translation">
+          Le membre spécifié ({0}) est introuvable. Vous devrez peut-être régénérer votre accesseur private,
+          ou le membre est peut-être private et défini sur une classe de base. Si le dernier cas est vrai, vous devez transmettre le type
+          qui définit le membre dans le constructeur de PrivateObject.
+        </target>
+        <note />
       </trans-unit>
       <trans-unit id="PrivateAccessorConstructorNotFound">
         <source>
@@ -220,12 +232,12 @@ Réel : {2}</target>
       or the member may be private and defined on a base class. If the latter is true, you need to pass the type
       that defines the member into PrivateObject's constructor.
     </source>
-        <target state="translated">
-      Le constructeur doté de la signature spécifiée est introuvable. Vous devrez peut-être régénérer votre accesseur private,
-      ou le membre est peut-être private et défini sur une classe de base. Si le dernier cas est vrai, vous devez transmettre le type
-      qui définit le membre dans le constructeur de PrivateObject.
-    </target>
-        <note></note>
+        <target state="needs-review-translation">
+          Le constructeur doté de la signature spécifiée est introuvable. Vous devrez peut-être régénérer votre accesseur private,
+          ou le membre est peut-être private et défini sur une classe de base. Si le dernier cas est vrai, vous devez transmettre le type
+          qui définit le membre dans le constructeur de PrivateObject.
+        </target>
+        <note />
       </trans-unit>
       <trans-unit id="NullParameterToAssert">
         <source>The parameter '{0}' is invalid. The value cannot be null. {1}.</source>
@@ -238,9 +250,9 @@ Réel : {2}</target>
         <note></note>
       </trans-unit>
       <trans-unit id="StartsWithFail">
-        <source>String '{0}' does not start with string '{1}'. {2}.</source>
-        <target state="translated">La chaîne '{0}' ne commence pas par la chaîne '{1}'. {2}.</target>
-        <note></note>
+        <source>String '{0}' does not start with string '{1}'. {2}</source>
+        <target state="needs-review-translation">La chaîne '{0}' ne commence pas par la chaîne '{1}'. {2}.</target>
+        <note />
       </trans-unit>
       <trans-unit id="InvalidPropertyType">
         <source>The property {0} has type {1}; expected type {2}.</source>
@@ -334,7 +346,7 @@ Réel : {2}</target>
       </trans-unit>
       <trans-unit id="ArgumentXMustDeriveFromClassY">
         <source>Type '{0}' is not assignable to '{1}'.</source>
-        <target state="translated">Impossible d'assigner le type '{0}' à '{1}'.</target>
+        <target state="needs-review-translation">Impossible d'assigner le type '{0}' à '{1}'.</target>
         <note>
       - {0} argument name like "applicationType"
       - {1} fully qualified class name like "Microsoft.UI.Xaml.Application"
