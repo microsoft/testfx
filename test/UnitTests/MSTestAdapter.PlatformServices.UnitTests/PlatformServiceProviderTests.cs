@@ -68,8 +68,8 @@ public class PlatformServiceProviderTests : TestContainer
         // Assert.
         Verify(testContext.Context.FullyQualifiedTestClassName == "A.C.M");
         Verify(testContext.Context.TestName == "M");
-        Verify(testContext.Context.Properties.ContainsKey(properties.ToArray()[0].Key));
+        Verify(testContext.Context.Properties.ContainsKey(properties.Single().Key));
 
-        Verify(testContext.Context.Properties.Contains(properties.ToArray()[0]!));
+        Verify(testContext.Context.Properties.Contains(properties.Single()));
     }
 }
