@@ -12,7 +12,7 @@ public class STATestMethodAttribute : TestMethodAttribute
     /// <summary>
     /// Initializes a new instance of the <see cref="STATestMethodAttribute"/> class.
     /// </summary>
-    public STATestMethodAttribute([CallerFilePath] string callerFilePath = "", [CallerLineNumber] int? callerLineNumber = null)
+    public STATestMethodAttribute([CallerFilePath] string callerFilePath = "", [CallerLineNumber] int callerLineNumber = -1)
         : base(callerFilePath, callerLineNumber)
     {
     }

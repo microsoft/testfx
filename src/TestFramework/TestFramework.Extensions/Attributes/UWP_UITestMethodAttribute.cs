@@ -13,7 +13,7 @@ public class UITestMethodAttribute : TestMethodAttribute
     /// <summary>
     /// Initializes a new instance of the <see cref="UITestMethodAttribute"/> class.
     /// </summary>
-    public UITestMethodAttribute([CallerFilePath] string callerFilePath = "", [CallerLineNumber] int? callerLineNumber = null)
+    public UITestMethodAttribute([CallerFilePath] string callerFilePath = "", [CallerLineNumber] int callerLineNumber = -1)
         : base(callerFilePath, callerLineNumber)
     {
     }
