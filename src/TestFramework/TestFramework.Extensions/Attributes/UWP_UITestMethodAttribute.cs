@@ -11,6 +11,14 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting.AppContainer;
 public class UITestMethodAttribute : TestMethodAttribute
 {
     /// <summary>
+    /// Initializes a new instance of the <see cref="UITestMethodAttribute"/> class.
+    /// </summary>
+    public UITestMethodAttribute([CallerFilePath] string callerFilePath = "", [CallerLineNumber] int? callerLineNumber = null)
+        : base(callerFilePath, callerLineNumber)
+    {
+    }
+
+    /// <summary>
     /// Executes the test method on the UI Thread.
     /// </summary>
     /// <param name="testMethod">

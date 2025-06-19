@@ -113,65 +113,6 @@ public class FileOperations : IFileOperations
     }
 
     /// <summary>
-    /// Creates a Navigation session for the source file.
-    /// This is used to get file path and line number information for its components.
-    /// </summary>
-    /// <param name="source"> The source file. </param>
-    /// <returns> A Navigation session instance for the current platform. </returns>
-    public object? CreateNavigationSession(string source)
-    {
-#if NETSTANDARD || (NETCOREAPP && !WIN_UI) || WINDOWS_UWP || WIN_UI
-        return DiaSessionOperations.CreateNavigationSession(source);
-#elif NETFRAMEWORK
-        string messageFormatOnException =
-            string.Join("MSTestDiscoverer:DiaSession: Could not create diaSession for source:", source, ". Reason:{0}");
-        return SafeInvoke(() => new DiaSession(source), messageFormatOnException) as DiaSession;
-#endif
-    }
-
-    /// <summary>
-    /// Gets the navigation data for a navigation session.
-    /// </summary>
-    /// <param name="navigationSession"> The navigation session. </param>
-    /// <param name="className"> The class name. </param>
-    /// <param name="methodName"> The method name. </param>
-    /// <param name="minLineNumber"> The min line number. </param>
-    /// <param name="fileName"> The file name. </param>
-    public void GetNavigationData(object? navigationSession, string className, string methodName, out int minLineNumber, out string? fileName)
-    {
-#if NETSTANDARD || (NETCOREAPP && !WIN_UI) || WINDOWS_UWP || WIN_UI
-        DiaSessionOperations.GetNavigationData(navigationSession, className, methodName, out minLineNumber, out fileName);
-#elif NETFRAMEWORK
-        fileName = null;
-        minLineNumber = -1;
-
-        var diaSession = navigationSession as DiaSession;
-        DiaNavigationData? navigationData = diaSession?.GetNavigationData(className, methodName);
-
-        if (navigationData != null)
-        {
-            minLineNumber = navigationData.MinLineNumber;
-            fileName = navigationData.FileName;
-        }
-#endif
-    }
-
-    /// <summary>
-    /// Disposes the navigation session instance.
-    /// </summary>
-    /// <param name="navigationSession"> The navigation session. </param>
-    public void DisposeNavigationSession(object? navigationSession)
-    {
-#if NETSTANDARD || (NETCOREAPP && !WIN_UI) || WINDOWS_UWP || WIN_UI
-        DiaSessionOperations.DisposeNavigationSession(navigationSession);
-#elif NETFRAMEWORK
-        var diaSession = navigationSession as DiaSession;
-        diaSession?.Dispose();
-#endif
-
-    }
-
-    /// <summary>
     /// Gets the full file path of an assembly file.
     /// </summary>
     /// <param name="assemblyFileName"> The file name. </param>

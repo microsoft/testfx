@@ -18,19 +18,8 @@ public class UITestMethodAttribute : TestMethodAttribute
     /// <summary>
     /// Initializes a new instance of the <see cref="UITestMethodAttribute"/> class.
     /// </summary>
-    public UITestMethodAttribute()
-        : base()
-    {
-    }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="UITestMethodAttribute"/> class.
-    /// </summary>
-    /// <param name="displayName">
-    /// Display Name for the test.
-    /// </param>
-    public UITestMethodAttribute(string displayName)
-        : base(displayName)
+    public UITestMethodAttribute([CallerFilePath] string callerFilePath = "", [CallerLineNumber] int? callerLineNumber = null)
+        : base(callerFilePath, callerLineNumber)
     {
     }
 

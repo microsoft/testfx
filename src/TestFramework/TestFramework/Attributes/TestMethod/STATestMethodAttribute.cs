@@ -12,18 +12,8 @@ public class STATestMethodAttribute : TestMethodAttribute
     /// <summary>
     /// Initializes a new instance of the <see cref="STATestMethodAttribute"/> class.
     /// </summary>
-    public STATestMethodAttribute()
-    {
-    }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="STATestMethodAttribute"/> class.
-    /// </summary>
-    /// <param name="displayName">
-    /// Display name for the test.
-    /// </param>
-    public STATestMethodAttribute(string? displayName)
-        : base(displayName)
+    public STATestMethodAttribute([CallerFilePath] string callerFilePath = "", [CallerLineNumber] int? callerLineNumber = null)
+        : base(callerFilePath, callerLineNumber)
     {
     }
 }

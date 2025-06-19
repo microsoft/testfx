@@ -193,6 +193,8 @@ internal class TypeEnumerator
 
         // get DisplayName from TestMethodAttribute (or any inherited attribute)
         testElement.DisplayName = testMethodAttribute?.DisplayName ?? method.Name;
+        testElement.CallerFilePath = testMethodAttribute?.CallerFilePath;
+        testElement.CallerLineNumber = testMethodAttribute?.CallerLineNumber;
 
         return testElement;
     }
