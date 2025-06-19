@@ -16,7 +16,7 @@
     <Nullable>enable</Nullable>
 
     <!-- !!!TEMPORARY!!! Disabling public API temporarily. Re-enable when merging this branch to main!! -->
-    <NoWarn>$(NoWarn);RS0016;RS0017</NoWarn>
+    <NoWarn>$(NoWarn);RS0016;RS0017;RS2003</NoWarn>
   </PropertyGroup>
 
   <!-- The TFMs to build and test against. -->
