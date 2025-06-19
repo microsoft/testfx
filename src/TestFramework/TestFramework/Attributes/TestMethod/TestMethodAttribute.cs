@@ -36,10 +36,10 @@ public class TestMethodAttribute : Attribute
     /// <summary>
     /// Initializes a new instance of the <see cref="TestMethodAttribute"/> class.
     /// </summary>
-    public TestMethodAttribute([CallerFilePath] string callerFilePath = "", [CallerLineNumber] int? callerLineNumber = null)
+    public TestMethodAttribute([CallerFilePath] string callerFilePath = "", [CallerLineNumber] int callerLineNumber = -1)
     {
         CallerFilePath = callerFilePath;
-        CallerLineNumber = callerLineNumber;
+        CallerLineNumber = callerLineNumber <= 0 ? null : callerLineNumber;
     }
 
     /// <summary>
