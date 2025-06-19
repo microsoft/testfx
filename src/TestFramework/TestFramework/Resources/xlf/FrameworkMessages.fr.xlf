@@ -382,7 +382,7 @@ Réel : {2}</target>
       </trans-unit>
       <trans-unit id="DoNotUseAssertEquals">
         <source>Assert.Equals should not be used for Assertions. Please use Assert.AreEqual &amp; overloads instead.</source>
-        <target state="new">Assert.Equals should not be used for Assertions. Please use Assert.AreEqual &amp; overloads instead.</target>
+        <target state="translated">Assert.Equals ne doit pas être utilisé pour les assertions. Utilisez Assert.AreEqual &amp; overloads à la place.</target>
         <note></note>
       </trans-unit>
       <trans-unit id="DoNotUseAssertReferenceEquals">
