@@ -151,11 +151,9 @@
         <source>Element at index {0} do not match.
 Expected: {1}
 Actual: {2}</source>
-        <target state="needs-review-translation">
-          인덱스 {0}에 있는 요소가 일치하지 않습니다.
-          예상: {1}
-          실제: {2}
-        </target>
+        <target state="translated">인덱스 {0}에 있는 요소가 일치하지 않습니다.
+예상: {1}
+실제: {2}</target>
         <note />
       </trans-unit>
       <trans-unit id="ElementTypesAtIndexDontMatch">
@@ -165,7 +163,7 @@ Actual: {2}</source>
       </trans-unit>
       <trans-unit id="EndsWithFail">
         <source>String '{0}' does not end with string '{1}'. {2}</source>
-        <target state="needs-review-translation">'{0}' 문자열이 '{1}' 문자열로 끝나지 않습니다. {2}</target>
+        <target state="new">String '{0}' does not end with string '{1}'. {2}</target>
         <note />
       </trans-unit>
       <trans-unit id="AssertionFailed">
@@ -195,7 +193,7 @@ Actual: {2}</source>
       </trans-unit>
       <trans-unit id="IsMatchFail">
         <source>String '{0}' does not match pattern '{1}'. {2}</source>
-        <target state="needs-review-translation">'{0}' 문자열이 '{1}' 패턴과 일치하지 않습니다. {2}</target>
+        <target state="new">String '{0}' does not match pattern '{1}'. {2}</target>
         <note />
       </trans-unit>
       <trans-unit id="IsNotEmptyFailMsg">
@@ -210,7 +208,7 @@ Actual: {2}</source>
       </trans-unit>
       <trans-unit id="IsNotMatchFail">
         <source>String '{0}' matches pattern '{1}'. {2}</source>
-        <target state="needs-review-translation">'{0}' 문자열이 '{1}' 패턴과 일치합니다. {2}</target>
+        <target state="new">String '{0}' matches pattern '{1}'. {2}</target>
         <note />
       </trans-unit>
       <trans-unit id="DoNotUseAssertEquals">
@@ -224,11 +222,11 @@ Actual: {2}</source>
       or the member may be private and defined on a base class. If the latter is true, you need to pass the type
       that defines the member into PrivateObject's constructor.
     </source>
-        <target state="needs-review-translation">
-          지정한 멤버({0})를 찾을 수 없습니다. 프라이빗 접근자를 다시 생성해야 할 수 있습니다.
-          또는 멤버가 기본 클래스에 정의된 프라이빗 멤버일 수 있습니다. 기본 클래스에 정의된 전용 멤버인 경우에는 이 멤버를 정의하는 형식을
-          PrivateObject의 생성자에 전달해야 합니다.
-        </target>
+        <target state="translated">
+      지정한 멤버({0})를 찾을 수 없습니다. 프라이빗 접근자를 다시 생성해야 할 수 있습니다.
+      또는 멤버가 기본 클래스에 정의된 프라이빗 멤버일 수 있습니다. 기본 클래스에 정의된 전용 멤버인 경우에는 이 멤버를 정의하는 형식을
+      PrivateObject의 생성자에 전달해야 합니다.
+    </target>
         <note />
       </trans-unit>
       <trans-unit id="PrivateAccessorConstructorNotFound">
@@ -237,11 +235,11 @@ Actual: {2}</source>
       or the member may be private and defined on a base class. If the latter is true, you need to pass the type
       that defines the member into PrivateObject's constructor.
     </source>
-        <target state="needs-review-translation">
-          지정한 서명을 가진 생성자를 찾을 수 없습니다. 프라이빗 접근자를 다시 생성해야 할 수 있습니다.
-          또는 멤버가 기본 클래스에 정의된 프라이빗 멤버일 수 있습니다. 기본 클래스에 정의된 전용 멤버인 경우에는 이 멤버를 정의하는 형식을
-          PrivateObject의 생성자에 전달해야 합니다.
-        </target>
+        <target state="translated">
+      지정한 서명을 가진 생성자를 찾을 수 없습니다. 프라이빗 접근자를 다시 생성해야 할 수 있습니다.
+      또는 멤버가 기본 클래스에 정의된 프라이빗 멤버일 수 있습니다. 기본 클래스에 정의된 전용 멤버인 경우에는 이 멤버를 정의하는 형식을
+      PrivateObject의 생성자에 전달해야 합니다.
+    </target>
         <note />
       </trans-unit>
       <trans-unit id="NullParameterToAssert">
@@ -256,7 +254,7 @@ Actual: {2}</source>
       </trans-unit>
       <trans-unit id="StartsWithFail">
         <source>String '{0}' does not start with string '{1}'. {2}</source>
-        <target state="needs-review-translation">'{0}' 문자열이 '{1}' 문자열로 시작되지 않습니다. {2}</target>
+        <target state="new">String '{0}' does not start with string '{1}'. {2}</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidPropertyType">
@@ -351,7 +349,7 @@ Actual: {2}</source>
       </trans-unit>
       <trans-unit id="ArgumentXMustDeriveFromClassY">
         <source>Type '{0}' is not assignable to '{1}'.</source>
-        <target state="needs-review-translation">'{0}' 형식은 '{1}'에 할당할 수 없습니다.</target>
+        <target state="translated">'{0}' 형식은 '{1}'에 할당할 수 없습니다.</target>
         <note>
       - {0} argument name like "applicationType"
       - {1} fully qualified class name like "Microsoft.UI.Xaml.Application"

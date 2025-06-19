@@ -151,11 +151,9 @@
         <source>Element at index {0} do not match.
 Expected: {1}
 Actual: {2}</source>
-        <target state="needs-review-translation">
-          Элемент по индексу {0} не совпадает.
-          Ожидается: {1}
-          Фактическое значение: {2}
-        </target>
+        <target state="translated">Элемент по индексу {0} не совпадает.
+Ожидается: {1}
+Фактическое значение: {2}</target>
         <note />
       </trans-unit>
       <trans-unit id="ElementTypesAtIndexDontMatch">
@@ -165,7 +163,7 @@ Actual: {2}</source>
       </trans-unit>
       <trans-unit id="EndsWithFail">
         <source>String '{0}' does not end with string '{1}'. {2}</source>
-        <target state="needs-review-translation">Строка "{0}" не оканчивается строкой "{1}". {2}.</target>
+        <target state="new">String '{0}' does not end with string '{1}'. {2}</target>
         <note />
       </trans-unit>
       <trans-unit id="AssertionFailed">
@@ -195,7 +193,7 @@ Actual: {2}</source>
       </trans-unit>
       <trans-unit id="IsMatchFail">
         <source>String '{0}' does not match pattern '{1}'. {2}</source>
-        <target state="needs-review-translation">Строка "{0}" не соответствует шаблону "{1}". {2}.</target>
+        <target state="new">String '{0}' does not match pattern '{1}'. {2}</target>
         <note />
       </trans-unit>
       <trans-unit id="IsNotEmptyFailMsg">
@@ -210,7 +208,7 @@ Actual: {2}</source>
       </trans-unit>
       <trans-unit id="IsNotMatchFail">
         <source>String '{0}' matches pattern '{1}'. {2}</source>
-        <target state="needs-review-translation">Строка "{0}" соответствует шаблону "{1}". {2}.</target>
+        <target state="new">String '{0}' matches pattern '{1}'. {2}</target>
         <note />
       </trans-unit>
       <trans-unit id="DoNotUseAssertEquals">
@@ -224,11 +222,11 @@ Actual: {2}</source>
       or the member may be private and defined on a base class. If the latter is true, you need to pass the type
       that defines the member into PrivateObject's constructor.
     </source>
-        <target state="needs-review-translation">
-          Не удается найти указанный член ({0}). Возможно, требуется снова создать закрытый метод доступа
-          либо член является закрытым и определенным на основе базового класса. Если справедливо последнее, то
-          необходимо передать тип, определяющий член, в конструктор для PrivateObject.
-        </target>
+        <target state="translated">
+      Не удается найти указанный член ({0}). Возможно, требуется снова создать закрытый метод доступа
+      либо член является закрытым и определенным на основе базового класса. Если справедливо последнее, то 
+      необходимо передать тип, определяющий член, в конструктор для PrivateObject.
+    </target>
         <note />
       </trans-unit>
       <trans-unit id="PrivateAccessorConstructorNotFound">
@@ -237,11 +235,11 @@ Actual: {2}</source>
       or the member may be private and defined on a base class. If the latter is true, you need to pass the type
       that defines the member into PrivateObject's constructor.
     </source>
-        <target state="needs-review-translation">
-          Не удается найти конструктор с указанной сигнатурой. Возможно, требуется снова создать закрытый
-          метод доступа либо член является закрытым и определенным на основе базового класса. Если
-          справедливо последнее, то необходимо передать тип, определяющий член, в конструктор для PrivateObject.
-        </target>
+        <target state="translated">
+      Не удается найти конструктор с указанной сигнатурой. Возможно, требуется снова создать закрытый 
+      метод доступа либо член является закрытым и определенным на основе базового класса. Если 
+      справедливо последнее, то необходимо передать тип, определяющий член, в конструктор для PrivateObject.
+    </target>
         <note />
       </trans-unit>
       <trans-unit id="NullParameterToAssert">
@@ -256,7 +254,7 @@ Actual: {2}</source>
       </trans-unit>
       <trans-unit id="StartsWithFail">
         <source>String '{0}' does not start with string '{1}'. {2}</source>
-        <target state="needs-review-translation">Строка "{0}" не начинается со строки "{1}". {2}.</target>
+        <target state="new">String '{0}' does not start with string '{1}'. {2}</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidPropertyType">
@@ -351,7 +349,7 @@ Actual: {2}</source>
       </trans-unit>
       <trans-unit id="ArgumentXMustDeriveFromClassY">
         <source>Type '{0}' is not assignable to '{1}'.</source>
-        <target state="needs-review-translation">Тип "{0}" не может быть назначен "{1}".</target>
+        <target state="translated">Тип "{0}" не может быть назначен "{1}".</target>
         <note>
       - {0} argument name like "applicationType"
       - {1} fully qualified class name like "Microsoft.UI.Xaml.Application"
