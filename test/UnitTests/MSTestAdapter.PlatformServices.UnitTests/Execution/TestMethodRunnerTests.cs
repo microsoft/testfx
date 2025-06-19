@@ -153,13 +153,11 @@ public class TestMethodRunnerTests : TestContainer
     private sealed class TestMethodWithFailingAndPassingResultsAttribute : TestMethodAttribute
     {
         public override Task<TestResult[]> ExecuteAsync(ITestMethod testMethod)
-        {
-            return Task.FromResult<TestResult[]>(
+            => Task.FromResult<TestResult[]>(
             [
                 new TestResult { Outcome = UTF.UnitTestOutcome.Passed },
                 new TestResult { Outcome = UTF.UnitTestOutcome.Failed },
             ]);
-        }
     }
 
     public async Task RunTestMethodForMultipleResultsReturnMultipleResults()
