@@ -624,7 +624,6 @@ static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Contains(string! subs
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Contains(string! substring, string! value, System.StringComparison comparisonType, string? message) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Contains(string! substring, string! value, System.StringComparison comparisonType) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Contains(string! substring, string! value) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Contains<T>(System.Collections.Generic.IEnumerable<T>! collection, System.Func<T, bool>! predicate, string? message) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Contains<T>(System.Func<T, bool>! predicate, System.Collections.Generic.IEnumerable<T>! collection, string? message, params object?[]? parameters) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Contains<T>(System.Func<T, bool>! predicate, System.Collections.Generic.IEnumerable<T>! collection) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Contains<T>(T expected, System.Collections.Generic.IEnumerable<T>! collection, string? message, params object?[]? parameters) -> void
