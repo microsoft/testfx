@@ -1003,7 +1003,7 @@ public class TypeCacheTests : TestContainer
             new Dictionary<string, object?>());
 
         typeCache.GetTestMethodInfo(testMethod, testContext);
-        KeyValuePair<string, object> customProperty = ((IDictionary<string, object>)testContext.Properties).FirstOrDefault(p => p.Key.Equals("WhoAmI", StringComparison.Ordinal));
+        KeyValuePair<string, object?> customProperty = testContext.Properties.FirstOrDefault(p => p.Key.Equals("WhoAmI", StringComparison.Ordinal));
 
         Verify((object)customProperty is not null);
         Verify((customProperty.Value as string) == "Me");
@@ -1192,7 +1192,7 @@ public class TypeCacheTests : TestContainer
         Verify(testMethodInfo is not null);
 
         // Verify that the first value gets set.
-        Verify(((IDictionary<string, object>)testContext.Properties).TryGetValue("WhoAmI", out object? value));
+        Verify(testContext.Properties.TryGetValue("WhoAmI", out object? value));
         Verify((value as string) == "Me");
     }
 

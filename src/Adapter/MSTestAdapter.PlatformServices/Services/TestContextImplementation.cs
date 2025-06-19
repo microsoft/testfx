@@ -126,7 +126,7 @@ public class TestContextImplementation : TestContext, ITestContext, IDisposable
 #endif
 
     /// <inheritdoc/>
-    public override IDictionary Properties => _properties;
+    public override IDictionary<string, object?> Properties => _properties;
 
 #if !WINDOWS_UWP && !WIN_UI
     /// <inheritdoc/>
