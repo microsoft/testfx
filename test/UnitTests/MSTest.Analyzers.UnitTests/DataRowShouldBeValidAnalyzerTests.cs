@@ -155,7 +155,7 @@ public sealed class DataRowShouldBeValidAnalyzerTests
             code,
             VerifyCS.Diagnostic(DataRowShouldBeValidAnalyzer.ArgumentTypeMismatchRule)
                 .WithLocation(0)
-                .WithArguments((0, 0)));
+                .WithArguments("o", "object[]", "int"));
     }
 
     [TestMethod]
@@ -490,7 +490,32 @@ public sealed class DataRowShouldBeValidAnalyzerTests
             code,
             VerifyCS.Diagnostic(DataRowShouldBeValidAnalyzer.ArgumentTypeMismatchRule)
                 .WithLocation(0)
-                .WithArguments((2, 2)));
+                .WithArguments("s", "string", "int"));
+    }
+
+    [TestMethod]
+    public async Task WhenDataRowHasDecimalDoubleTypeMismatch_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [{|#0:DataRow("Luxury Car", "Alice Johnson", 1500.00, "https://example.com/luxurycar.jpg", "https://example.com/luxurycar")|}]
+                [TestMethod]
+                public void TestMethod1(string name, string reservedBy, decimal price, string imageUrl, string link)
+                {
+                }
+            }
+            """
+        ;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(DataRowShouldBeValidAnalyzer.ArgumentTypeMismatchRule)
+                .WithLocation(0)
+                .WithArguments("price", "decimal", "double"));
     }
 
     [TestMethod]

@@ -277,8 +277,8 @@ Bu yöntemleri bildiren tipin ayrıca aşağıdaki kurallara uyması gerekir:
         <note />
       </trans-unit>
       <trans-unit id="DataRowShouldBeValidMessageFormat_ArgumentTypeMismatch">
-        <source>DataRow argument type should match method parameter type. Mismatches occur at indices: {0}</source>
-        <target state="translated">DataRow bağımsız değişken türü, yöntem parametresinin türüyle eşleşmelidir. Dizinler sırasında uyuşmazlıklar oluştu: {0}</target>
+        <source>DataRow argument types do not match method parameter types. Parameter '{0}' expects type '{1}', but the provided value has type '{2}'</source>
+        <target state="new">DataRow argument types do not match method parameter types. Parameter '{0}' expects type '{1}', but the provided value has type '{2}'</target>
         <note />
       </trans-unit>
       <trans-unit id="DataRowShouldBeValidMessageFormat_GenericTypeArgumentConflictingTypes">

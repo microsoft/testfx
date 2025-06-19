@@ -277,8 +277,8 @@ The type declaring these methods should also respect the following rules:
         <note />
       </trans-unit>
       <trans-unit id="DataRowShouldBeValidMessageFormat_ArgumentTypeMismatch">
-        <source>DataRow argument type should match method parameter type. Mismatches occur at indices: {0}</source>
-        <target state="translated">DataRow 引数の型は、メソッド パラメーターの型と一致させる必要があります。インデックスで不一致が発生しました: {0}</target>
+        <source>DataRow argument types do not match method parameter types. Parameter '{0}' expects type '{1}', but the provided value has type '{2}'</source>
+        <target state="new">DataRow argument types do not match method parameter types. Parameter '{0}' expects type '{1}', but the provided value has type '{2}'</target>
         <note />
       </trans-unit>
       <trans-unit id="DataRowShouldBeValidMessageFormat_GenericTypeArgumentConflictingTypes">
