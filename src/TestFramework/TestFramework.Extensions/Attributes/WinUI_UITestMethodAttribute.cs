@@ -34,18 +34,12 @@ public class UITestMethodAttribute : TestMethodAttribute
     {
     }
 
-    private protected override bool UseAsync => GetType() == typeof(UITestMethodAttribute);
-
     /// <summary>
     /// Gets or sets the <see cref="UI.Dispatching.DispatcherQueue"/> that should be used to invoke the UITestMethodAttribute.
     /// If none is provided <see cref="UITestMethodAttribute"/> will check for <see cref="WinUITestTargetAttribute" />, if the attribute is defined it will start the App and use its <see cref="UI.Dispatching.DispatcherQueue"/>.
     /// <see cref="UITestMethodAttribute"/> will try to use <c>Microsoft.UI.Xaml.Window.Current.DispatcherQueue</c> for the last resort, but that will only work on UWP.
     /// </summary>
     public static DispatcherQueue? DispatcherQueue { get; set; }
-
-    /// <inheritdoc />
-    public override TestResult[] Execute(ITestMethod testMethod)
-        => base.Execute(testMethod);
 
     /// <summary>
     /// Executes the test method on the UI Thread.
@@ -58,7 +52,7 @@ public class UITestMethodAttribute : TestMethodAttribute
     /// </returns>
     /// Throws <exception cref="NotSupportedException"> when run on an async test method.
     /// </exception>
-    internal override async Task<TestResult[]> ExecuteAsync(ITestMethod testMethod)
+    public override async Task<TestResult[]> ExecuteAsync(ITestMethod testMethod)
     {
         // TODO: Code seems to be assuming DeclaringType is never null, but it can be null.
         // Using 'bang' notation for now to ensure same behavior.

@@ -39,12 +39,12 @@ public class IterativeTestMethodAttribute : TestMethodAttribute
 
     public IterativeTestMethodAttribute(int stabilityThreshold) => _stabilityThreshold = stabilityThreshold;
 
-    public override TestResult[] Execute(ITestMethod testMethod)
+    public override async Task<TestResult[]> ExecuteAsync(ITestMethod testMethod)
     {
         var results = new List<TestResult>();
         for (int count = 0; count < _stabilityThreshold; count++)
         {
-            TestResult[] testResults = base.Execute(testMethod);
+            TestResult[] testResults = await base.ExecuteAsync(testMethod);
             foreach (TestResult testResult in testResults)
             {
                 testResult.DisplayName = $"{testMethod.TestMethodName} - Execution number {count + 1}";

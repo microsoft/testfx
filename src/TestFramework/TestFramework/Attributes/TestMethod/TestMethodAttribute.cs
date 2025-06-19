@@ -46,20 +46,12 @@ public class TestMethodAttribute : Attribute
     /// </summary>
     /// <param name="displayName">Display name for the test.</param>
     public TestMethodAttribute(string? displayName)
-    {
-        DisplayName = displayName;
-        UseAsync = GetType() == typeof(TestMethodAttribute);
-    }
+        => DisplayName = displayName;
 
     /// <summary>
     /// Gets display name for the test.
     /// </summary>
     public string? DisplayName { get; }
-
-    /// <inheritdoc cref="ExecuteAsync(ITestMethod)" />
-    public virtual TestResult[] Execute(ITestMethod testMethod) => [testMethod.Invoke(null)];
-
-    private protected virtual bool UseAsync { get; }
 
     /// <summary>
     /// Executes a test method.
@@ -67,8 +59,6 @@ public class TestMethodAttribute : Attribute
     /// <param name="testMethod">The test method to execute.</param>
     /// <returns>An array of TestResult objects that represent the outcome(s) of the test.</returns>
     /// <remarks>Extensions can override this method to customize running a TestMethod.</remarks>
-    internal virtual async Task<TestResult[]> ExecuteAsync(ITestMethod testMethod)
-        => UseAsync
-        ? [await testMethod.InvokeAsync(null).ConfigureAwait(false)]
-        : Execute(testMethod);
+    public virtual async Task<TestResult[]> ExecuteAsync(ITestMethod testMethod)
+        => [await testMethod.InvokeAsync(null).ConfigureAwait(false)];
 }
