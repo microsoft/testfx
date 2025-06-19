@@ -18,17 +18,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 /// The idea is that Unit Test Adapter creates App Domain for running tests and sets AppBase to tests dir.
 /// Since we don't want to put our assemblies to GAC and they are not in tests dir, we use custom way to resolve them.
 /// </summary>
-#if NETFRAMEWORK
-#if NET6_0_OR_GREATER
-[Obsolete(TestTools.UnitTesting.FrameworkConstants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
-#else
-[Obsolete(TestTools.UnitTesting.FrameworkConstants.PublicTypeObsoleteMessage)]
+#pragma warning disable CA1852 // Seal internal types - This class is inherited in tests on .NET Framework.
+internal
+#if !NETFRAMEWORK
+    sealed
 #endif
-public
-#else
-internal sealed
-#endif
-class AssemblyResolver :
+    class AssemblyResolver :
 #if NETFRAMEWORK
         MarshalByRefObject,
 #endif
@@ -304,7 +299,6 @@ class AssemblyResolver :
 #else
     private static
 #endif
-
     // This whole class is not used in source generator mode.
 #pragma warning disable IL2026 // Members attributed with RequiresUnreferencedCode may break when trimming
     Assembly LoadAssemblyFrom(string path) => Assembly.LoadFrom(path);

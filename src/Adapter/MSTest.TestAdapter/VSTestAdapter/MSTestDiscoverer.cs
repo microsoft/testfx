@@ -16,12 +16,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 [FileExtension(".appx")]
 [FileExtension(".dll")]
 [FileExtension(".exe")]
-#if NET6_0_OR_GREATER
-[Obsolete(TestTools.UnitTesting.FrameworkConstants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
-#else
-[Obsolete(TestTools.UnitTesting.FrameworkConstants.PublicTypeObsoleteMessage)]
-#endif
-public class MSTestDiscoverer : ITestDiscoverer
+internal sealed class MSTestDiscoverer : ITestDiscoverer
 {
     /// <summary>
     /// Discovers the tests available from the provided source. Not supported for .xap source.
