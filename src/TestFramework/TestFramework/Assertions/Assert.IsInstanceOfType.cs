@@ -279,17 +279,11 @@ public sealed partial class Assert
     /// inheritance hierarchy of the object.
     /// </summary>
     /// <typeparam name="T">The expected type of <paramref name="value"/>.</typeparam>
-    public static void IsInstanceOfType<T>([NotNull] object? value)
-        => IsInstanceOfType(value, typeof(T), string.Empty, null);
-
-    /// <summary>
-    /// Tests whether the specified object is an instance of the generic
-    /// type and throws an exception if the generic type is not in the
-    /// inheritance hierarchy of the object.
-    /// </summary>
-    /// <typeparam name="T">The expected type of <paramref name="value"/>.</typeparam>
-    public static void IsInstanceOfType<T>([NotNull] object? value, out T instance)
-        => IsInstanceOfType(value, out instance, string.Empty, null);
+    public static T IsInstanceOfType<T>([NotNull] object? value)
+    {
+        IsInstanceOfType(value, typeof(T), string.Empty, null);
+        return (T)value!;
+    }
 
     /// <summary>
     /// Tests whether the specified object is an instance of the expected
@@ -329,32 +323,20 @@ public sealed partial class Assert
     /// inheritance hierarchy of the object.
     /// </summary>
     /// <typeparam name="T">The expected type of <paramref name="value"/>.</typeparam>
-    public static void IsInstanceOfType<T>([NotNull] object? value, string? message)
-        => IsInstanceOfType(value, typeof(T), message, null);
+    public static T IsInstanceOfType<T>([NotNull] object? value, string? message)
+    {
+        IsInstanceOfType(value, typeof(T), message, null);
+        return (T)value!;
+    }
 
     /// <inheritdoc cref="IsInstanceOfType{T}(object?, string?)" />
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
-    public static void IsInstanceOfType<T>([NotNull] object? value, [InterpolatedStringHandlerArgument(nameof(value))] ref AssertGenericIsInstanceOfTypeInterpolatedStringHandler<T> message)
+    public static T IsInstanceOfType<T>([NotNull] object? value, [InterpolatedStringHandlerArgument(nameof(value))] ref AssertGenericIsInstanceOfTypeInterpolatedStringHandler<T> message)
 #pragma warning restore IDE0060 // Remove unused parameter
-#pragma warning disable CS8777 // Parameter must have a non-null value when exiting. - Not sure how to express the semantics to the compiler, but the implementation guarantees that.
-        => message.ComputeAssertion();
-#pragma warning restore CS8777 // Parameter must have a non-null value when exiting.
-
-    /// <summary>
-    /// Tests whether the specified object is an instance of the generic
-    /// type and throws an exception if the generic type is not in the
-    /// inheritance hierarchy of the object.
-    /// </summary>
-    /// <typeparam name="T">The expected type of <paramref name="value"/>.</typeparam>
-    public static void IsInstanceOfType<T>([NotNull] object? value, out T instance, string? message)
-        => IsInstanceOfType(value, out instance, message, null);
-
-    /// <inheritdoc cref="IsInstanceOfType{T}(object?, out T, string?)" />
-    public static void IsInstanceOfType<T>([NotNull] object? value, out T instance, [InterpolatedStringHandlerArgument(nameof(value))] ref AssertGenericIsInstanceOfTypeInterpolatedStringHandler<T> message)
 #pragma warning disable CS8777 // Parameter must have a non-null value when exiting. - Not sure how to express the semantics to the compiler, but the implementation guarantees that.
     {
         message.ComputeAssertion();
-        instance = (T)value!;
+        return (T)value!;
     }
 #pragma warning restore CS8777 // Parameter must have a non-null value when exiting.
 
@@ -419,20 +401,6 @@ public sealed partial class Assert
     /// <typeparam name="T">The expected type of <paramref name="value"/>.</typeparam>
     public static void IsInstanceOfType<T>([NotNull] object? value, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters)
         => IsInstanceOfType(value, typeof(T), message, parameters);
-
-    /// <summary>
-    /// Tests whether the specified object is an instance of the generic
-    /// type and throws an exception if the generic type is not in the
-    /// inheritance hierarchy of the object.
-    /// </summary>
-    /// <typeparam name="T">The expected type of <paramref name="value"/>.</typeparam>
-    public static void IsInstanceOfType<T>([NotNull] object? value, out T instance, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters)
-    {
-#pragma warning disable CA2263 // Prefer generic overload when type is known
-        IsInstanceOfType(value, typeof(T), message, parameters);
-#pragma warning restore CA2263 // Prefer generic overload when type is known
-        instance = (T)value;
-    }
 
     /// <summary>
     /// Tests whether the specified object is not an instance of the wrong
