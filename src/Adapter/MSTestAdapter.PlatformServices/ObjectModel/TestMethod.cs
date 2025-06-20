@@ -119,9 +119,6 @@ public sealed class TestMethod : ITestMethod
     public string AssemblyName { get; private set; }
 
     /// <inheritdoc />
-    public bool IsAsync => false; // TODO: Remove this property. We can't remove now as it's public and breaking change.
-
-    /// <inheritdoc />
     public string? ManagedTypeName { get; }
 
     /// <inheritdoc />

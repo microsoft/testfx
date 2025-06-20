@@ -91,7 +91,7 @@ public class TestContextImplementation : TestContext, ITestContext, IDisposable
     /// <param name="testMethod">The test method.</param>
     /// <param name="stringWriter">The writer where diagnostic messages are written to.</param>
     /// <param name="properties">Properties/configuration passed in.</param>
-    public TestContextImplementation(ITestMethod? testMethod, StringWriter stringWriter, IDictionary<string, object?> properties)
+    internal TestContextImplementation(ITestMethod? testMethod, StringWriter stringWriter, IDictionary<string, object?> properties)
     {
         // testMethod can be null when running ForceCleanup (done when reaching --maximum-failed-tests.
         DebugEx.Assert(properties != null, "properties is not null");

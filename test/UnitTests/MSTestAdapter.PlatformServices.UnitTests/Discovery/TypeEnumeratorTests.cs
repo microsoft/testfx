@@ -273,7 +273,6 @@ public partial class TypeEnumeratorTests : TestContainer
         Verify(testElement.TestMethod.Name == "MethodWithVoidReturnType");
         Verify(typeof(DummyTestClass).FullName == testElement.TestMethod.FullClassName);
         Verify(testElement.TestMethod.AssemblyName == "DummyAssemblyName");
-        Verify(!testElement.TestMethod.IsAsync);
     }
 
     public void GetTestFromMethodShouldInitializeAsyncTypeNameCorrectly()
