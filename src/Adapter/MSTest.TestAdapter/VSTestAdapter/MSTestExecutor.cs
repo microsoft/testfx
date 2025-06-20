@@ -42,7 +42,7 @@ internal sealed class MSTestExecutor : ITestExecutor
     /// <summary>
     /// Gets the ms test execution manager.
     /// </summary>
-    public TestExecutionManager TestExecutionManager { get; }
+    internal TestExecutionManager TestExecutionManager { get; }
 
 #pragma warning disable CA2255 // The 'ModuleInitializer' attribute should not be used in libraries
     [ModuleInitializer]
