@@ -476,6 +476,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
             try
             {
                 discoveredTest.TestMethod.SerializedData = DataSerializationHelper.Serialize(d);
+                discoveredTest.TestMethod.ActualData = d;
                 discoveredTest.TestMethod.TestDataSourceIgnoreMessage = testDataSourceIgnoreMessage;
                 discoveredTest.TestMethod.DataType = DynamicDataType.ITestDataSource;
             }

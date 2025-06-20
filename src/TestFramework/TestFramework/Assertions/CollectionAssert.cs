@@ -22,10 +22,26 @@ public sealed class CollectionAssert
     /// <remarks>
     /// Users can use this to plug-in custom assertions through C# extension methods.
     /// For instance, the signature of a custom assertion provider could be "public static void AreEqualUnordered(this CollectionAssert customAssert, ICollection expected, ICollection actual)"
+    /// Users could then use a syntax similar to the default assertions which in this case is "CollectionAssert.Instance.AreEqualUnordered(list1, list2);"
+    /// More documentation is at "https://github.com/Microsoft/testfx/docs/README.md".
+    /// </remarks>
+    public static CollectionAssert Instance { get; } = new CollectionAssert();
+
+    /// <summary>
+    /// Gets the singleton instance of the CollectionAssert functionality.
+    /// </summary>
+    /// <remarks>
+    /// Users can use this to plug-in custom assertions through C# extension methods.
+    /// For instance, the signature of a custom assertion provider could be "public static void AreEqualUnordered(this CollectionAssert customAssert, ICollection expected, ICollection actual)"
     /// Users could then use a syntax similar to the default assertions which in this case is "CollectionAssert.That.AreEqualUnordered(list1, list2);"
     /// More documentation is at "https://github.com/Microsoft/testfx/docs/README.md".
     /// </remarks>
-    public static CollectionAssert That { get; } = new CollectionAssert();
+#if NET6_0_OR_GREATER
+    [Obsolete(FrameworkConstants.ThatPropertyObsoleteMessage, DiagnosticId = "MSTESTOBS")]
+#else
+    [Obsolete(FrameworkConstants.ThatPropertyObsoleteMessage)]
+#endif
+    public static CollectionAssert That { get; } = Instance;
 
     #endregion
 
@@ -99,7 +115,7 @@ public sealed class CollectionAssert
 
         foreach (object? current in collection)
         {
-            if (Equals(current, element))
+            if (object.Equals(current, element))
             {
                 return;
             }
@@ -176,7 +192,7 @@ public sealed class CollectionAssert
 
         foreach (object? current in collection)
         {
-            if (Equals(current, element))
+            if (object.Equals(current, element))
             {
                 Assert.ThrowAssertFailed("CollectionAssert.DoesNotContain", Assert.BuildUserMessage(message, parameters));
             }
@@ -691,7 +707,7 @@ public sealed class CollectionAssert
         }
 
         // If the references are the same or both collections are null, they are equivalent.
-        if (ReferenceEquals(expected, actual) || expected == null)
+        if (object.ReferenceEquals(expected, actual) || expected == null)
         {
             return;
         }
@@ -926,7 +942,7 @@ public sealed class CollectionAssert
 
         // If the references are the same or both collections are null, they
         // are equivalent. object.ReferenceEquals will handle case where both are null.
-        if (ReferenceEquals(expected, actual))
+        if (object.ReferenceEquals(expected, actual))
         {
             string userMessage = Assert.BuildUserMessage(message, parameters);
             string finalMessage = string.Format(
@@ -1598,7 +1614,7 @@ public sealed class CollectionAssert
         ref string reason)
     {
         Assert.CheckParameterNotNull(comparer, "Assert.AreCollectionsEqual", "comparer", string.Empty);
-        if (ReferenceEquals(expected, actual))
+        if (object.ReferenceEquals(expected, actual))
         {
             reason = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.BothCollectionsSameReference, string.Empty);
             return true;
@@ -1684,5 +1700,55 @@ public sealed class CollectionAssert
     {
         int IComparer.Compare(object? x, object? y) => Equals(x, y) ? 0 : -1;
     }
+    #endregion
+
+    #region DoNotUse
+
+    /// <summary>
+    /// Static equals overloads are used for comparing instances of two types for equality.
+    /// This method should <b>not</b> be used for comparison of two instances for equality.
+    /// Please use CollectionAssert.AreEqual and associated overloads in your unit tests.
+    /// </summary>
+    /// <param name="objA"> Object A. </param>
+    /// <param name="objB"> Object B. </param>
+    /// <returns> Never returns. </returns>
+    [SuppressMessage("Microsoft.Naming", "CA1720:IdentifiersShouldNotContainTypeNames", MessageId = "obj", Justification = "We want to compare 'object A' with 'object B', so it makes sense to have 'obj' in the parameter name")]
+    [Obsolete(
+        FrameworkConstants.DoNotUseCollectionAssertEquals,
+#if DEBUG
+        error: false)]
+#else
+        error: true)]
+#endif
+    [DoesNotReturn]
+    public static new bool Equals(object? objA, object? objB)
+    {
+        Assert.Fail(FrameworkMessages.DoNotUseCollectionAssertEquals);
+        return false;
+    }
+
+    /// <summary>
+    /// Static ReferenceEquals overloads are used for comparing instances of two types for reference
+    /// equality. This method should <b>not</b> be used for comparison of two instances for
+    /// reference equality. Please use CollectionAssert methods or Assert.AreSame and associated overloads in your unit tests.
+    /// </summary>
+    /// <param name="objA"> Object A. </param>
+    /// <param name="objB"> Object B. </param>
+    /// <returns> Never returns. </returns>
+    [SuppressMessage("Microsoft.Naming", "CA1720:IdentifiersShouldNotContainTypeNames", MessageId = "obj", Justification = "We want to compare 'object A' with 'object B', so it makes sense to have 'obj' in the parameter name")]
+    [Obsolete(
+        FrameworkConstants.DoNotUseCollectionAssertReferenceEquals,
+#if DEBUG
+        error: false)]
+#else
+        error: true)]
+#endif
+    [DoesNotReturn]
+    public static new bool ReferenceEquals(object? objA, object? objB)
+    {
+        Assert.Fail(FrameworkMessages.DoNotUseCollectionAssertReferenceEquals);
+        return false;
+    }
+
     #endregion
 }

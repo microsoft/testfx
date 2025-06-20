@@ -220,7 +220,7 @@ public sealed partial class Assert
     }
 
     private static bool IsAreSameFailing<T>(T? expected, T? actual)
-        => !ReferenceEquals(expected, actual);
+        => !object.ReferenceEquals(expected, actual);
 
     [DoesNotReturn]
     private static void ThrowAssertAreSameFailed<T>(T? expected, T? actual, string userMessage)
@@ -325,7 +325,7 @@ public sealed partial class Assert
     }
 
     private static bool IsAreNotSameFailing<T>(T? notExpected, T? actual)
-        => ReferenceEquals(notExpected, actual);
+        => object.ReferenceEquals(notExpected, actual);
 
     [DoesNotReturn]
     private static void ThrowAssertAreNotSameFailed(string userMessage)

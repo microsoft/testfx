@@ -1,6 +1,6 @@
 {
   "solution": {
-    "path": "TestFx.sln",
+    "path": "TestFx.slnx",
     "projects": [
       "samples\\FxExtensibility\\FxExtensibility.csproj",
       "samples\\Playground\\Playground.csproj",
