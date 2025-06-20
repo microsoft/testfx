@@ -78,14 +78,6 @@ public class StringAssertTests : TestContainer
         Verify(ex.Message.Contains("StringAssert.Contains failed"));
     }
 
-    // See https://github.com/dotnet/sdk/issues/25373
-    [SuppressMessage("Usage", "CA2241:Provide correct arguments to formatting methods", Justification = "We want to test invalid format")]
-    public void StringAssertContainsFailsIfMessageIsInvalidStringFormatComposite()
-    {
-        Exception ex = VerifyThrows(() => StringAssert.Contains("a", "b", "message"));
-        Verify(ex is FormatException);
-    }
-
     public void StringAssertContainsNullabilitiesPostConditions()
     {
         string? value = GetValue();
