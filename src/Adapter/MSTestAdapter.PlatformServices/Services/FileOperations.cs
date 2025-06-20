@@ -15,7 +15,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 /// <summary>
 /// The file operations.
 /// </summary>
-internal class FileOperations : IFileOperations
+internal sealed class FileOperations : IFileOperations
 {
     private readonly ConcurrentDictionary<string, Assembly> _assemblyCache = new();
 

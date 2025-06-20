@@ -13,6 +13,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 /// <summary>
 /// The MSTest settings.
 /// </summary>
+#pragma warning disable CA1852 // Seal internal types - Inherited in test
 internal class MSTestAdapterSettings
 {
     /// <summary>
