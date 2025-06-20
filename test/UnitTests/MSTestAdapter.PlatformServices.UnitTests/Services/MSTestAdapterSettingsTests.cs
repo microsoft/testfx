@@ -371,7 +371,7 @@ public class MSTestAdapterSettingsTests : TestContainer
     #endregion
 }
 
-public class TestableMSTestAdapterSettings : MSTestAdapterSettings
+internal class TestableMSTestAdapterSettings : MSTestAdapterSettings
 {
     public TestableMSTestAdapterSettings()
     {
