@@ -1,6 +1,8 @@
 #nullable enable
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertNonStrictThrowsInterpolatedStringHandler<TException>.AssertNonStrictThrowsInterpolatedStringHandler(int literalLength, int formattedCount, System.Func<object?>! action, out bool shouldAppend) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.ConditionBaseAttribute.Mode.get -> Microsoft.VisualStudio.TestTools.UnitTesting.ConditionMode
+Microsoft.VisualStudio.TestTools.UnitTesting.TestDataRow<T>.TestCategories.get -> System.Collections.Generic.IList<string>?
+Microsoft.VisualStudio.TestTools.UnitTesting.TestDataRow<T>.TestCategories.set -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsInRange<T>(T minValue, T maxValue, T value) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsInRange<T>(T minValue, T maxValue, T value, string? message) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsInRange<T>(T minValue, T maxValue, T value, string? message, params object?[]? parameters) -> void
