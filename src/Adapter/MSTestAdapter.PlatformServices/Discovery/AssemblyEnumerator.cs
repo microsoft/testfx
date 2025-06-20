@@ -439,13 +439,25 @@ internal class AssemblyEnumerator : MarshalByRefObject
         foreach (object?[] dataOrTestDataRow in data)
         {
             object?[] d = dataOrTestDataRow;
-            if (TestDataSourceHelpers.TryHandleITestDataRow(d, methodInfo.GetParameters(), out d, out string? ignoreMessageFromTestDataRow, out string? displayNameFromTestDataRow))
+            if (TestDataSourceHelpers.TryHandleITestDataRow(d, methodInfo.GetParameters(), out d, out string? ignoreMessageFromTestDataRow, out string? displayNameFromTestDataRow, out IList<string>? testCategoriesFromTestDataRow))
             {
                 testDataSourceIgnoreMessage = ignoreMessageFromTestDataRow ?? testDataSourceIgnoreMessage;
             }
 
             UnitTestElement discoveredTest = test.Clone();
             discoveredTest.DisplayName = displayNameFromTestDataRow ?? dataSource.GetDisplayName(methodInfo, d) ?? discoveredTest.DisplayName;
+
+            // Merge test categories from the test data row with the existing categories
+            if (testCategoriesFromTestDataRow is { Count: > 0 })
+            {
+                var existingCategories = discoveredTest.TestCategory ?? [];
+                var mergedCategories = new HashSet<string>(existingCategories);
+                foreach (string category in testCategoriesFromTestDataRow)
+                {
+                    mergedCategories.Add(category);
+                }
+                discoveredTest.TestCategory = [.. mergedCategories];
+            }
 
             // If strategy is DisplayName and we have a duplicate test name don't expand the test, bail out.
 #pragma warning disable CS0618 // Type or member is obsolete
