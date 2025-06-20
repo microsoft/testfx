@@ -18,13 +18,13 @@ public class DataRowTests_OverriddenGetDisplayName
         public override string? GetDisplayName(MethodInfo methodInfo, object?[]? data) => "Overridden DisplayName";
     }
 
-    [TestMethod("SomeCustomDisplayName2")]
+    [TestMethod(DisplayName = "SomeCustomDisplayName2")]
     [TestCategory("OverriddenTestMethodDisplayNameForParameterizedTest")]
     [DataRow("SomeData")]
     public void TestMethod2(string dataRowObject)
        => Assert.IsTrue(true);
 
-    [TestMethod("SomeCustomDisplayName3")]
+    [TestMethod(DisplayName = "SomeCustomDisplayName3")]
     [TestCategory("OverriddenTestMethodDisplayNameForParameterizedTest")]
     [DynamicData(nameof(Data))]
     public void TestMethod3(string dataRowObject)
