@@ -46,7 +46,7 @@ public sealed class AssertionArgsShouldBePassedInCorrectOrderAnalyzerTests
                     [|Assert.AreEqual(s, "", EqualityComparer<string>.Default)|];
                     [|Assert.AreEqual(s, "", "some message")|];
                     [|Assert.AreEqual(s, "", EqualityComparer<string>.Default, "some message")|];
-                    
+
                     [|Assert.AreNotEqual(s, "", EqualityComparer<string>.Default)|];
                     [|Assert.AreNotEqual(s, "", "some message")|];
                     [|Assert.AreNotEqual(s, "", EqualityComparer<string>.Default, "some message")|];
