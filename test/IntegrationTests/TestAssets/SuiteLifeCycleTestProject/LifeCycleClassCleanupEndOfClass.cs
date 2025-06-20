@@ -81,7 +81,7 @@ public sealed class LifeCycleClassCleanupEndOfClass
     }
 #endif
 
-    [ClassCleanup]
+    [ClassCleanup(ClassCleanupBehavior.EndOfClass)]
     public static void ClassCleanup()
     {
         s_testContext.WriteLine("LifeCycleClassCleanupEndOfClass.ClassCleanup was called");

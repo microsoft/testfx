@@ -82,7 +82,7 @@ public class LifeCycleClassCleanupEndOfClassAndBeforeEachDerivedClass
     }
 #endif
 
-    [ClassCleanup(InheritanceBehavior.BeforeEachDerivedClass)]
+    [ClassCleanup(InheritanceBehavior.BeforeEachDerivedClass, ClassCleanupBehavior.EndOfClass)]
     public static void ClassCleanup()
     {
         s_testContext.WriteLine("LifeCycleClassCleanupEndOfClassAndBeforeEachDerivedClass.ClassCleanup was called");
