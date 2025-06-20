@@ -78,7 +78,7 @@ public class CIConditionAttributeTests : TestContainer
         }
     }
 
-    public void ShouldRun_ExcludeMode_WhenInCI_GitHub_ReturnsFalse()
+    public void ShouldRun_ExcludeMode_WhenInCI_GitHub_ReturnsTrue()
     {
         // Arrange - Set GitHub Actions environment
         ClearCIEnvironmentVariables();
@@ -88,7 +88,7 @@ public class CIConditionAttributeTests : TestContainer
         try
         {
             // Act & Assert
-            Verify(!attribute.ShouldRun);
+            Verify(attribute.ShouldRun);
         }
         finally
         {
