@@ -23,7 +23,7 @@ public class SuiteLifeCycleTests : CLITestBase
             testCaseFilter: "FullyQualifiedName~LifecycleInheritance",
             targetFramework: "net462");
 
-        RunEventsHandler.PassedTests.Should().HaveCount(10);
+        RunEventsHandler.PassedTests.Should().HaveCount(3);
 
         Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult testMethod1 = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.EndsWith("TestClassDerived_EndOfClass.TestMethod", StringComparison.Ordinal));
         testMethod1.Messages[0].Text.Should().Be(
@@ -65,7 +65,7 @@ public class SuiteLifeCycleTests : CLITestBase
             [TestAssetName],
             testCaseFilter: "FullyQualifiedName~SuiteLifeCycleTestProject",
             targetFramework: targetFramework);
-        RunEventsHandler.PassedTests.Should().HaveCount(27);  // The inherit class tests are called twice.
+        RunEventsHandler.PassedTests.Should().HaveCount(19);  // The inherit class tests are called twice.
 
         Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult caseClassCleanupEndOfClass = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.Contains("LifeCycleClassCleanupEndOfClass.TestMethod"));
         caseClassCleanupEndOfClass.Outcome.Should().Be(Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome.Passed);
