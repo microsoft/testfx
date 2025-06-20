@@ -38,8 +38,8 @@ public class TestMethodAttribute : Attribute
     /// </summary>
     public TestMethodAttribute([CallerFilePath] string callerFilePath = "", [CallerLineNumber] int callerLineNumber = -1)
     {
-        CallerFilePath = callerFilePath;
-        CallerLineNumber = callerLineNumber <= 0 ? null : callerLineNumber;
+        DeclaringFilePath = callerFilePath;
+        DeclaringLineNumber = callerLineNumber <= 0 ? null : callerLineNumber;
     }
 
     /// <summary>
@@ -50,12 +50,12 @@ public class TestMethodAttribute : Attribute
     /// <summary>
     /// Gets the file path that declares the attribute.
     /// </summary>
-    public string CallerFilePath { get; }
+    public string DeclaringFilePath { get; }
 
     /// <summary>
-    /// Gets the line number within <see cref="CallerFilePath"/> that declares the attribute.
+    /// Gets the line number within <see cref="DeclaringFilePath"/> that declares the attribute.
     /// </summary>
-    public int? CallerLineNumber { get; }
+    public int? DeclaringLineNumber { get; }
 
     /// <summary>
     /// Executes a test method.
