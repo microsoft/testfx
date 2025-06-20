@@ -134,12 +134,6 @@ public class TestClassInfo
     /// </summary>
     public bool IsClassCleanupExecuted { get; internal set; }
 
-    /// <summary>
-    /// Gets a stack of class cleanup methods to be executed.
-    /// </summary>
-    [Obsolete("API will be dropped in v4")]
-    public Stack<MethodInfo> BaseClassCleanupMethodsStack { get; } = new();
-
     internal List<MethodInfo> BaseClassInitMethods { get; } = [];
 
     internal List<MethodInfo> BaseClassCleanupMethods { get; } = [];
@@ -189,12 +183,6 @@ public class TestClassInfo
             return BaseClassCleanupMethods.Count != 0;
         }
     }
-
-    /// <summary>
-    /// Gets a tuples' queue of class initialize/cleanup methods to call for this type.
-    /// </summary>
-    [Obsolete("API will be dropped in v4")]
-    public Queue<Tuple<MethodInfo?, MethodInfo?>> BaseClassInitAndCleanupMethods { get; } = new();
 
     /// <summary>
     /// Gets the test initialize method.
