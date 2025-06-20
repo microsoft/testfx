@@ -35,16 +35,8 @@ public class SuiteLifeCycleTests : CLITestBase
 
             """);
 
-        Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult testMethod2 = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.EndsWith("TestClassDerived_EndOfAssembly.TestMethod", StringComparison.Ordinal));
+        Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult testMethod2 = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.EndsWith("TestClassDerivedEndOfClass_EndOfClassEndOfClass.TestMethod", StringComparison.Ordinal));
         testMethod2.Messages[0].Text.Should().Be(
-            """
-            TestClassBaseEndOfAssembly: ClassInitialize
-            TestClassDerived_EndOfAssembly: TestMethod
-
-            """);
-
-        Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult testMethod3 = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.EndsWith("TestClassDerivedEndOfClass_EndOfClassEndOfClass.TestMethod", StringComparison.Ordinal));
-        testMethod3.Messages[0].Text.Should().Be(
             """
             TestClassBaseEndOfClass: ClassInitialize
             TestClassIntermediateEndOfClassBaseEndOfClass: ClassInitialize
@@ -55,85 +47,14 @@ public class SuiteLifeCycleTests : CLITestBase
 
             """);
 
-        Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult testMethod4 = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.EndsWith("TestClassDerived_EndOfClassEndOfClass.TestMethod", StringComparison.Ordinal));
-        testMethod4.Messages[0].Text.Should().Be(
+        Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult testMethod3 = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.EndsWith("TestClassDerived_EndOfClassEndOfClass.TestMethod", StringComparison.Ordinal));
+        testMethod3.Messages[0].Text.Should().Be(
             """
             TestClassBaseEndOfClass: ClassInitialize
             TestClassIntermediateEndOfClassBaseEndOfClass: ClassInitialize
             TestClassDerived_EndOfClassEndOfClass: TestMethod
             TestClassIntermediateEndOfClassBaseEndOfClass: ClassCleanup
             TestClassBaseEndOfClass: ClassCleanup
-
-            """);
-
-        Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult testMethod5 = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.EndsWith("TestClassDerivedEndOfClass_EndOfClassEndOfAssembly.TestMethod", StringComparison.Ordinal));
-        testMethod5.Messages[0].Text.Should().Be(
-            """
-            TestClassBaseEndOfAssembly: ClassInitialize
-            TestClassIntermediateEndOfClassBaseEndOfAssembly: ClassInitialize
-            TestClassDerivedEndOfClass_EndOfClassEndOfAssembly: TestMethod
-            TestClassDerivedEndOfClass_EndOfClassEndOfAssembly: ClassCleanup
-            TestClassIntermediateEndOfClassBaseEndOfAssembly: ClassCleanup
-            TestClassBaseEndOfAssembly: ClassCleanup
-
-            """);
-
-        Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult testMethod6 = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.EndsWith("TestClassDerived_EndOfClassEndOfAssembly.TestMethod", StringComparison.Ordinal));
-        testMethod6.Messages[0].Text.Should().Be(
-            """
-            TestClassBaseEndOfAssembly: ClassInitialize
-            TestClassIntermediateEndOfClassBaseEndOfAssembly: ClassInitialize
-            TestClassDerived_EndOfClassEndOfAssembly: TestMethod
-            TestClassIntermediateEndOfClassBaseEndOfAssembly: ClassCleanup
-            TestClassBaseEndOfAssembly: ClassCleanup
-
-            """);
-
-        Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult testMethod7 = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.EndsWith("TestClassDerivedEndOfClass_EndOfAssemblyEndOfClass.TestMethod", StringComparison.Ordinal));
-        testMethod7.Messages[0].Text.Should().Be(
-            """
-            TestClassBaseEndOfClass: ClassInitialize
-            TestClassIntermediateEndOfAssemblyBaseEndOfClass: ClassInitialize
-            TestClassDerivedEndOfClass_EndOfAssemblyEndOfClass: TestMethod
-            TestClassDerivedEndOfClass_EndOfAssemblyEndOfClass: ClassCleanup
-            TestClassIntermediateEndOfAssemblyBaseEndOfClass: ClassCleanup
-            TestClassBaseEndOfClass: ClassCleanup
-
-            """);
-
-        Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult testMethod8 = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.EndsWith("TestClassDerived_EndOfAssemblyEndOfClass.TestMethod", StringComparison.Ordinal));
-        testMethod8.Messages[0].Text.Should().Be(
-            """
-            TestClassBaseEndOfClass: ClassInitialize
-            TestClassIntermediateEndOfAssemblyBaseEndOfClass: ClassInitialize
-            TestClassDerived_EndOfAssemblyEndOfClass: TestMethod
-            TestClassIntermediateEndOfAssemblyBaseEndOfClass: ClassCleanup
-            TestClassBaseEndOfClass: ClassCleanup
-
-            """);
-
-        Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult testMethod9 = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.EndsWith("TestClassDerivedEndOfClass_EndOfAssemblyEndOfAssembly.TestMethod", StringComparison.Ordinal));
-        testMethod9.Messages[0].Text.Should().Be(
-            """
-            TestClassBaseEndOfAssembly: ClassInitialize
-            TestClassIntermediateEndOfAssemblyBaseEndOfAssembly: ClassInitialize
-            TestClassDerivedEndOfClass_EndOfAssemblyEndOfAssembly: TestMethod
-            TestClassDerivedEndOfClass_EndOfAssemblyEndOfAssembly: ClassCleanup
-            TestClassIntermediateEndOfAssemblyBaseEndOfAssembly: ClassCleanup
-            TestClassBaseEndOfAssembly: ClassCleanup
-
-            """);
-
-        Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult testMethod10 = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.EndsWith("TestClassDerived_EndOfAssemblyEndOfAssembly.TestMethod", StringComparison.Ordinal));
-        testMethod10.Messages[0].Text.Should().Be(
-            """
-            TestClassBaseEndOfAssembly: ClassInitialize
-            TestClassIntermediateEndOfAssemblyBaseEndOfAssembly: ClassInitialize
-            TestClassDerived_EndOfAssemblyEndOfAssembly: TestMethod
-            TestClassIntermediateEndOfAssemblyBaseEndOfAssembly: ClassCleanup
-            TestClassBaseEndOfAssembly: ClassCleanup
-            TestClassBaseEndOfAssembly: ClassCleanup
-            Console: AssemblyCleanup was called
 
             """);
     }
