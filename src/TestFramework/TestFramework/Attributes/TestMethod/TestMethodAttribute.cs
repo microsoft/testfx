@@ -36,22 +36,26 @@ public class TestMethodAttribute : Attribute
     /// <summary>
     /// Initializes a new instance of the <see cref="TestMethodAttribute"/> class.
     /// </summary>
-    public TestMethodAttribute()
-    : this(null)
+    public TestMethodAttribute([CallerFilePath] string callerFilePath = "", [CallerLineNumber] int callerLineNumber = -1)
     {
+        DeclaringFilePath = callerFilePath;
+        DeclaringLineNumber = callerLineNumber <= 0 ? null : callerLineNumber;
     }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="TestMethodAttribute"/> class.
-    /// </summary>
-    /// <param name="displayName">Display name for the test.</param>
-    public TestMethodAttribute(string? displayName)
-        => DisplayName = displayName;
 
     /// <summary>
     /// Gets display name for the test.
     /// </summary>
-    public string? DisplayName { get; }
+    public string? DisplayName { get; init; }
+
+    /// <summary>
+    /// Gets the file path that declares the attribute.
+    /// </summary>
+    public string DeclaringFilePath { get; }
+
+    /// <summary>
+    /// Gets the line number within <see cref="DeclaringFilePath"/> that declares the attribute.
+    /// </summary>
+    public int? DeclaringLineNumber { get; }
 
     /// <summary>
     /// Executes a test method.
