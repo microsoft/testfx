@@ -10,7 +10,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 /// </summary>
 [Serializable]
 [DebuggerDisplay("{DisplayName} ({Outcome})")]
-internal class UnitTestResult
+internal sealed class UnitTestResult
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="UnitTestResult"/> class.

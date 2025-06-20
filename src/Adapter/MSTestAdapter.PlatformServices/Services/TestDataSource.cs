@@ -23,7 +23,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 /// the tests since it can only be found at the test output directory. DO NOT call into this platform service outside of the appdomain context if you do not want to hit
 /// a ReflectionTypeLoadException.
 /// </remarks>
-internal class TestDataSource : ITestDataSource
+internal sealed class TestDataSource : ITestDataSource
 {
     /// <summary>
     /// Gets the test data from custom test data source and sets dbconnection in testContext object.

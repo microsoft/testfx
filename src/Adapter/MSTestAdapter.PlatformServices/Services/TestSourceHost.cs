@@ -21,7 +21,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 /// <summary>
 /// A host that loads the test source. This can be in isolation for desktop using an AppDomain or just loading the source in the current context.
 /// </summary>
-internal class TestSourceHost : ITestSourceHost
+internal sealed class TestSourceHost : ITestSourceHost
 {
 #if !WINDOWS_UWP
 #pragma warning disable IDE0052 // Remove unread private members
@@ -346,7 +346,7 @@ internal class TestSourceHost : ITestSourceHost
             : Path.GetDirectoryName(typeof(TestSourceHost).Assembly.Location);
     }
 
-    internal virtual string GetTargetFrameworkVersionString(string sourceFileName)
+    internal string GetTargetFrameworkVersionString(string sourceFileName)
         => AppDomainUtilities.GetTargetFrameworkVersionString(sourceFileName);
 
     private static string? GetConfigFileForTestSource(string sourceFileName)
@@ -366,7 +366,7 @@ internal class TestSourceHost : ITestSourceHost
     /// <returns>
     /// A list of path.
     /// </returns>
-    internal virtual List<string> GetResolutionPaths(string sourceFileName, bool isPortableMode)
+    internal List<string> GetResolutionPaths(string sourceFileName, bool isPortableMode)
     {
         List<string> resolutionPaths =
         [

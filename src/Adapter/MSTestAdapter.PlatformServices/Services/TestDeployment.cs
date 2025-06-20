@@ -22,7 +22,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 /// <summary>
 /// The test deployment.
 /// </summary>
-internal class TestDeployment : ITestDeployment
+internal sealed class TestDeployment : ITestDeployment
 {
 #if !WINDOWS_UWP
     #region Service Utility Variables

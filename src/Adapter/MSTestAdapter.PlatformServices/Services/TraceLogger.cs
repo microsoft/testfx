@@ -9,7 +9,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 /// <summary>
 /// A service to log any trace messages from the adapter that would be shown in *.TpTrace files.
 /// </summary>
-internal class AdapterTraceLogger : IAdapterTraceLogger
+internal sealed class AdapterTraceLogger : IAdapterTraceLogger
 {
     /// <summary>
     /// Log an error in a given format.

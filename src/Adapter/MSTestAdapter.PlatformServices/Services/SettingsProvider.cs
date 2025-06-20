@@ -8,7 +8,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 /// <summary>
 /// Class to read settings from the runsettings xml for the desktop.
 /// </summary>
-internal class MSTestSettingsProvider : ISettingsProvider
+internal sealed class MSTestSettingsProvider : ISettingsProvider
 {
 #if !WINDOWS_UWP
     /// <summary>
