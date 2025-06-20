@@ -46,17 +46,12 @@ public sealed class AssertionArgsShouldBePassedInCorrectOrderAnalyzerTests
                     [|Assert.AreEqual(s, "", EqualityComparer<string>.Default)|];
                     [|Assert.AreEqual(s, "", "some message")|];
                     [|Assert.AreEqual(s, "", EqualityComparer<string>.Default, "some message")|];
-                    [|Assert.AreEqual(s, "", "some message", 1, "input")|];
-                    [|Assert.AreEqual(s, "", EqualityComparer<string>.Default, "some message", 1, "input")|];
-
+                    
                     [|Assert.AreNotEqual(s, "", EqualityComparer<string>.Default)|];
                     [|Assert.AreNotEqual(s, "", "some message")|];
                     [|Assert.AreNotEqual(s, "", EqualityComparer<string>.Default, "some message")|];
-                    [|Assert.AreNotEqual(s, "", "some message", 1, "input")|];
-                    [|Assert.AreNotEqual(s, "", EqualityComparer<string>.Default, "some message", 1, "input")|];
 
                     [|Assert.AreSame(s, "", "some message")|];
-                    [|Assert.AreSame(s, "", "some message", 1, "input")|];
                 }
 
                 [TestMethod]
@@ -118,17 +113,12 @@ public sealed class AssertionArgsShouldBePassedInCorrectOrderAnalyzerTests
                     Assert.AreEqual("", s, EqualityComparer<string>.Default);
                     Assert.AreEqual("", s, "some message");
                     Assert.AreEqual("", s, EqualityComparer<string>.Default, "some message");
-                    Assert.AreEqual("", s, "some message", 1, "input");
-                    Assert.AreEqual("", s, EqualityComparer<string>.Default, "some message", 1, "input");
 
                     Assert.AreNotEqual("", s, EqualityComparer<string>.Default);
                     Assert.AreNotEqual("", s, "some message");
                     Assert.AreNotEqual("", s, EqualityComparer<string>.Default, "some message");
-                    Assert.AreNotEqual("", s, "some message", 1, "input");
-                    Assert.AreNotEqual("", s, EqualityComparer<string>.Default, "some message", 1, "input");
 
                     Assert.AreSame("", s, "some message");
-                    Assert.AreSame("", s, "some message", 1, "input");
                 }
 
                 [TestMethod]

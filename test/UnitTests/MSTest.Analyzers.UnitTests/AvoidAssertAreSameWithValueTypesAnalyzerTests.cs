@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
@@ -26,30 +26,25 @@ public sealed class AvoidAssertAreSameWithValueTypesAnalyzerTests
                     // Both are value types
                     [|Assert.AreSame(0, 0)|];
                     [|Assert.AreSame(0, 0, "Message")|];
-                    [|Assert.AreSame(0, 0, "Message {0}", "Arg")|];
                     [|Assert.AreSame(message: "Message", expected: 0, actual: 0)|];
 
                     [|Assert.AreSame<object>(0, 0)|];
                     [|Assert.AreSame<object>(0, 0, "Message")|];
-                    [|Assert.AreSame<object>(0, 0, "Message {0}", "Arg")|];
                     [|Assert.AreSame<object>(message: "Message", expected: 0, actual: 0)|];
 
                     // Expected is value type. This is always-failing assert.
                     [|Assert.AreSame<object>("0", 0)|];
                     [|Assert.AreSame<object>("0", 0, "Message")|];
-                    [|Assert.AreSame<object>("0", 0, "Message {0}", "Arg")|];
                     [|Assert.AreSame<object>(message: "Message", expected: "0", actual: 0)|];
 
                     // Actual is value type. This is always-failing assert.
                     [|Assert.AreSame<object>(0, "0")|];
                     [|Assert.AreSame<object>(0, "0", "Message")|];
-                    [|Assert.AreSame<object>(0, "0", "Message {0}", "Arg")|];
                     [|Assert.AreSame<object>(message: "Message", expected: 0, actual: "0")|];
 
                     // Both are reference types. No diagnostic.
                     Assert.AreSame("0", "0");
                     Assert.AreSame("0", "0", "Message");
-                    Assert.AreSame("0", "0", "Message {0}", "Arg");
                     Assert.AreSame(message: "Message", expected: "0", actual: "0");
                 }
             }
@@ -68,30 +63,25 @@ public sealed class AvoidAssertAreSameWithValueTypesAnalyzerTests
                     // Both are value types
                     Assert.AreEqual(0, 0);
                     Assert.AreEqual(0, 0, "Message");
-                    Assert.AreEqual(0, 0, "Message {0}", "Arg");
                     Assert.AreEqual(message: "Message", expected: 0, actual: 0);
 
                     Assert.AreEqual<object>(0, 0);
                     Assert.AreEqual<object>(0, 0, "Message");
-                    Assert.AreEqual<object>(0, 0, "Message {0}", "Arg");
                     Assert.AreEqual<object>(message: "Message", expected: 0, actual: 0);
 
                     // Expected is value type. This is always-failing assert.
                     Assert.AreEqual<object>("0", 0);
                     Assert.AreEqual<object>("0", 0, "Message");
-                    Assert.AreEqual<object>("0", 0, "Message {0}", "Arg");
                     Assert.AreEqual<object>(message: "Message", expected: "0", actual: 0);
 
                     // Actual is value type. This is always-failing assert.
                     Assert.AreEqual<object>(0, "0");
                     Assert.AreEqual<object>(0, "0", "Message");
-                    Assert.AreEqual<object>(0, "0", "Message {0}", "Arg");
                     Assert.AreEqual<object>(message: "Message", expected: 0, actual: "0");
 
                     // Both are reference types. No diagnostic.
                     Assert.AreSame("0", "0");
                     Assert.AreSame("0", "0", "Message");
-                    Assert.AreSame("0", "0", "Message {0}", "Arg");
                     Assert.AreSame(message: "Message", expected: "0", actual: "0");
                 }
             }
@@ -116,30 +106,25 @@ public sealed class AvoidAssertAreSameWithValueTypesAnalyzerTests
                     // Both are value types
                     [|Assert.AreNotSame(0, 1)|];
                     [|Assert.AreNotSame(0, 1, "Message")|];
-                    [|Assert.AreNotSame(0, 1, "Message {0}", "Arg")|];
                     [|Assert.AreNotSame(message: "Message", notExpected: 0, actual: 1)|];
 
                     [|Assert.AreNotSame<object>(0, 1)|];
                     [|Assert.AreNotSame<object>(0, 1, "Message")|];
-                    [|Assert.AreNotSame<object>(0, 1, "Message {0}", "Arg")|];
                     [|Assert.AreNotSame<object>(message: "Message", notExpected: 0, actual: 1)|];
 
                     // Expected is value type. This is always-failing assert.
                     [|Assert.AreNotSame<object>("0", 1)|];
                     [|Assert.AreNotSame<object>("0", 1, "Message")|];
-                    [|Assert.AreNotSame<object>("0", 1, "Message {0}", "Arg")|];
                     [|Assert.AreNotSame<object>(message: "Message", notExpected: "0", actual: 1)|];
 
                     // Actual is value type. This is always-failing assert.
                     [|Assert.AreNotSame<object>(0, "1")|];
                     [|Assert.AreNotSame<object>(0, "1", "Message")|];
-                    [|Assert.AreNotSame<object>(0, "1", "Message {0}", "Arg")|];
                     [|Assert.AreNotSame<object>(message: "Message", notExpected: 0, actual: "1")|];
 
                     // Both are reference types. No diagnostic.
                     Assert.AreNotSame("0", "1");
                     Assert.AreNotSame("0", "1", "Message");
-                    Assert.AreNotSame("0", "1", "Message {0}", "Arg");
                     Assert.AreNotSame(message: "Message", notExpected: "0", actual: "1");
                 }
             }
@@ -158,30 +143,25 @@ public sealed class AvoidAssertAreSameWithValueTypesAnalyzerTests
                     // Both are value types
                     Assert.AreNotEqual(0, 1);
                     Assert.AreNotEqual(0, 1, "Message");
-                    Assert.AreNotEqual(0, 1, "Message {0}", "Arg");
                     Assert.AreNotEqual(message: "Message", notExpected: 0, actual: 1);
 
                     Assert.AreNotEqual<object>(0, 1);
                     Assert.AreNotEqual<object>(0, 1, "Message");
-                    Assert.AreNotEqual<object>(0, 1, "Message {0}", "Arg");
                     Assert.AreNotEqual<object>(message: "Message", notExpected: 0, actual: 1);
 
                     // Expected is value type. This is always-failing assert.
                     Assert.AreNotEqual<object>("0", 1);
                     Assert.AreNotEqual<object>("0", 1, "Message");
-                    Assert.AreNotEqual<object>("0", 1, "Message {0}", "Arg");
                     Assert.AreNotEqual<object>(message: "Message", notExpected: "0", actual: 1);
 
                     // Actual is value type. This is always-failing assert.
                     Assert.AreNotEqual<object>(0, "1");
                     Assert.AreNotEqual<object>(0, "1", "Message");
-                    Assert.AreNotEqual<object>(0, "1", "Message {0}", "Arg");
                     Assert.AreNotEqual<object>(message: "Message", notExpected: 0, actual: "1");
 
                     // Both are reference types. No diagnostic.
                     Assert.AreNotSame("0", "1");
                     Assert.AreNotSame("0", "1", "Message");
-                    Assert.AreNotSame("0", "1", "Message {0}", "Arg");
                     Assert.AreNotSame(message: "Message", notExpected: "0", actual: "1");
                 }
             }
