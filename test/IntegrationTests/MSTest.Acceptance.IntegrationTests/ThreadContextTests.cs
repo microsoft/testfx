@@ -444,7 +444,7 @@ public class BaseClassWithInheritance
         CultureInfo.CurrentCulture = new CultureInfo(ExpectedCultures.BaseClassInitCulture);
     }
 
-    [ClassCleanup(InheritanceBehavior.BeforeEachDerivedClass, ClassCleanupBehavior.EndOfClass)]
+    [ClassCleanup(InheritanceBehavior.BeforeEachDerivedClass)]
     public static void BaseClassCleanup()
     {
         switch (_testContext.ManagedMethod)
@@ -491,7 +491,7 @@ public class IntermediateClassWithInheritanceBaseClassWithInheritance : BaseClas
         CultureInfo.CurrentCulture = new CultureInfo(ExpectedCultures.IntermediateClassInitCulture);
     }
 
-    [ClassCleanup(InheritanceBehavior.BeforeEachDerivedClass, ClassCleanupBehavior.EndOfClass)]
+    [ClassCleanup(InheritanceBehavior.BeforeEachDerivedClass)]
     public static void IntermediateClassCleanup()
     {
         Assert.AreEqual(ExpectedCultures.IntermediateClassInitCulture, CultureInfo.CurrentCulture.Name);
@@ -508,7 +508,7 @@ public class IntermediateClassWithInheritanceBaseClassWithoutInheritance : BaseC
         CultureInfo.CurrentCulture = new CultureInfo(ExpectedCultures.IntermediateClassInitCulture);
     }
 
-    [ClassCleanup(InheritanceBehavior.BeforeEachDerivedClass, ClassCleanupBehavior.EndOfClass)]
+    [ClassCleanup(InheritanceBehavior.BeforeEachDerivedClass)]
     public static void IntermediateClassCleanup()
     {
         Assert.AreEqual(ExpectedCultures.IntermediateClassInitCulture, CultureInfo.CurrentCulture.Name);

@@ -195,16 +195,6 @@ internal class ReflectHelper : MarshalByRefObject
             .Length != 0;
 
     /// <summary>
-    /// Gets the class cleanup lifecycle set on an assembly.
-    /// </summary>
-    /// <param name="assembly"> The test assembly. </param>
-    /// <returns> The class cleanup lifecycle attribute if set. null otherwise. </returns>
-    internal static ClassCleanupExecutionAttribute? GetClassCleanupAttribute(Assembly assembly)
-        => PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributes(assembly, typeof(ClassCleanupExecutionAttribute))
-            .OfType<ClassCleanupExecutionAttribute>()
-            .FirstOrDefault();
-
-    /// <summary>
     /// Priority if any set for test method. Will return priority if attribute is applied to TestMethod
     /// else null.
     /// </summary>

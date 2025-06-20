@@ -311,7 +311,7 @@ internal class TestExecutionManager
         // Create an instance of a type defined in adapter so that adapter gets loaded in the child app domain
         var testRunner = (UnitTestRunner)isolationHost.CreateInstanceForType(
             typeof(UnitTestRunner),
-            [MSTestSettings.CurrentSettings, unitTestElements, (int)sourceSettings.ClassCleanupLifecycle])!;
+            [MSTestSettings.CurrentSettings, unitTestElements])!;
 
         // Ensures that the cancellation token gets through AppDomain boundary.
         _testRunCancellationToken?.Register(static state => ((UnitTestRunner)state!).Cancel(), testRunner);

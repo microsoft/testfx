@@ -30,7 +30,7 @@ public class ClassCleanupManagerTests : TestContainer
             new(testMethod)
         ];
 
-        var classCleanupManager = new ClassCleanupManager(testsToRun, ClassCleanupBehavior.EndOfClass, reflectHelper);
+        var classCleanupManager = new ClassCleanupManager(testsToRun);
 
         TestClassInfo testClassInfo = new(typeof(FakeTestClass), null!, true, new TestClassAttribute(), null!)
         {
