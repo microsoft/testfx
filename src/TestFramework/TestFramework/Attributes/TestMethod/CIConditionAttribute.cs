@@ -27,7 +27,7 @@ public sealed class CIConditionAttribute : ConditionBaseAttribute
     /// <summary>
     /// Gets a value indicating whether the test method or test class should run.
     /// </summary>
-    public override bool ShouldRun => IsCIEnvironment();
+    public override bool ShouldRun => Mode == ConditionMode.Include ? IsCIEnvironment() : !IsCIEnvironment();
 
     /// <summary>
     /// Gets the ignore message (in case <see cref="ShouldRun"/> returns <see langword="false"/>).
