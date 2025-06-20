@@ -74,7 +74,7 @@ public class StringAssertTests : TestContainer
     // See https://github.com/dotnet/sdk/issues/25373
     public void StringAssertContainsDoesNotThrowFormatExceptionWithArguments()
     {
-        Exception ex = VerifyThrows(() => StringAssert.Contains("{", "x", "message {0}", "arg"));
+        Exception ex = VerifyThrows(() => StringAssert.Contains("{", "x", "message"));
         Verify(ex.Message.Contains("StringAssert.Contains failed"));
     }
 
@@ -82,7 +82,7 @@ public class StringAssertTests : TestContainer
     [SuppressMessage("Usage", "CA2241:Provide correct arguments to formatting methods", Justification = "We want to test invalid format")]
     public void StringAssertContainsFailsIfMessageIsInvalidStringFormatComposite()
     {
-        Exception ex = VerifyThrows(() => StringAssert.Contains("a", "b", "message {{0}", "arg"));
+        Exception ex = VerifyThrows(() => StringAssert.Contains("a", "b", "message"));
         Verify(ex is FormatException);
     }
 
@@ -117,25 +117,7 @@ public class StringAssertTests : TestContainer
     {
         string? value = GetValue();
         string? substring = GetMatchingStartsWithString();
-        StringAssert.Contains(value, substring, "message", StringComparison.OrdinalIgnoreCase);
-        value.ToString(); // no warning
-        substring.ToString(); // no warning
-    }
-
-    public void StringAssertContainsMessageParametersNullabilitiesPostConditions()
-    {
-        string? value = GetValue();
-        string? substring = GetMatchingStartsWithString();
-        StringAssert.Contains(value, substring, "message format {0} {1}", 1, 2);
-        value.ToString(); // no warning
-        substring.ToString(); // no warning
-    }
-
-    public void StringAssertContainsMessageStringComparisonParametersNullabilitiesPostConditions()
-    {
-        string? value = GetValue();
-        string? substring = GetMatchingStartsWithString();
-        StringAssert.Contains(value, substring, "message format {0} {1}", StringComparison.OrdinalIgnoreCase, 1, 2);
+        StringAssert.Contains(value, substring, StringComparison.OrdinalIgnoreCase, "message");
         value.ToString(); // no warning
         substring.ToString(); // no warning
     }
@@ -171,25 +153,7 @@ public class StringAssertTests : TestContainer
     {
         string? value = GetValue();
         string? substring = GetMatchingStartsWithString();
-        StringAssert.StartsWith(value, substring, "message", StringComparison.OrdinalIgnoreCase);
-        value.ToString(); // no warning
-        substring.ToString(); // no warning
-    }
-
-    public void StringAssertStartsWithMessageParametersNullabilitiesPostConditions()
-    {
-        string? value = GetValue();
-        string? substring = GetMatchingStartsWithString();
-        StringAssert.StartsWith(value, substring, "message format {0} {1}", 1, 2);
-        value.ToString(); // no warning
-        substring.ToString(); // no warning
-    }
-
-    public void StringAssertStartsWithMessageStringComparisonParametersNullabilitiesPostConditions()
-    {
-        string? value = GetValue();
-        string? substring = GetMatchingStartsWithString();
-        StringAssert.StartsWith(value, substring, "message format {0} {1}", StringComparison.OrdinalIgnoreCase, 1, 2);
+        StringAssert.StartsWith(value, substring, StringComparison.OrdinalIgnoreCase, "message");
         value.ToString(); // no warning
         substring.ToString(); // no warning
     }
@@ -225,25 +189,7 @@ public class StringAssertTests : TestContainer
     {
         string? value = GetValue();
         string? substring = GetMatchingEndsWithString();
-        StringAssert.EndsWith(value, substring, "message", StringComparison.OrdinalIgnoreCase);
-        value.ToString(); // no warning
-        substring.ToString(); // no warning
-    }
-
-    public void StringAssertEndsWithMessageParametersNullabilitiesPostConditions()
-    {
-        string? value = GetValue();
-        string? substring = GetMatchingEndsWithString();
-        StringAssert.EndsWith(value, substring, "message format {0} {1}", 1, 2);
-        value.ToString(); // no warning
-        substring.ToString(); // no warning
-    }
-
-    public void StringAssertEndsWithMessageStringComparisonParametersNullabilitiesPostConditions()
-    {
-        string? value = GetValue();
-        string? substring = GetMatchingEndsWithString();
-        StringAssert.EndsWith(value, substring, "message format {0} {1}", StringComparison.OrdinalIgnoreCase, 1, 2);
+        StringAssert.EndsWith(value, substring, StringComparison.OrdinalIgnoreCase, "message");
         value.ToString(); // no warning
         substring.ToString(); // no warning
     }
@@ -266,15 +212,6 @@ public class StringAssertTests : TestContainer
         pattern.ToString(); // no warning
     }
 
-    public void StringAssertMatchesMessageParametersNullabilitiesPostConditions()
-    {
-        string? value = GetValue();
-        Regex? pattern = GetMatchingPattern();
-        StringAssert.Matches(value, pattern, "message format {0} {1}", 1, 2);
-        value.ToString(); // no warning
-        pattern.ToString(); // no warning
-    }
-
     public void StringAssertDoesNotMatchNullabilitiesPostConditions()
     {
         string? value = GetValue();
@@ -289,15 +226,6 @@ public class StringAssertTests : TestContainer
         string? value = GetValue();
         Regex? pattern = GetNonMatchingPattern();
         StringAssert.DoesNotMatch(value, pattern, "message");
-        value.ToString(); // no warning
-        pattern.ToString(); // no warning
-    }
-
-    public void StringAssertDoesNotMatchMessageParametersNullabilitiesPostConditions()
-    {
-        string? value = GetValue();
-        Regex? pattern = GetNonMatchingPattern();
-        StringAssert.DoesNotMatch(value, pattern, "message format {0} {1}", 1, 2);
         value.ToString(); // no warning
         pattern.ToString(); // no warning
     }

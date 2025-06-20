@@ -1233,6 +1233,28 @@ public sealed partial class Assert
         }
     }
 
+    /// <summary>
+    /// Tests whether the specified doubles are unequal and throws an exception
+    /// if they are equal.
+    /// </summary>
+    /// <param name="notExpected">
+    /// The first double to compare. This is the double the test expects not to
+    /// match <paramref name="actual"/>.
+    /// </param>
+    /// <param name="actual">
+    /// The second double to compare. This is the double produced by the code under test.
+    /// </param>
+    /// <param name="delta">
+    /// The required accuracy. An exception will be thrown only if
+    /// <paramref name="actual"/> is different than <paramref name="notExpected"/>
+    /// by at most <paramref name="delta"/>.
+    /// </param>
+    /// <exception cref="AssertFailedException">
+    /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
+    /// </exception>
+    public static void AreNotEqual(double notExpected, double actual, double delta)
+        => AreNotEqual(notExpected, actual, delta, string.Empty);
+
     /// <inheritdoc cref="AreNotEqual(double, double, double, string?)" />
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
     public static void AreNotEqual(double notExpected, double actual, double delta, [InterpolatedStringHandlerArgument(nameof(notExpected), nameof(actual), nameof(delta))] ref AssertNonGenericAreNotEqualInterpolatedStringHandler message)
