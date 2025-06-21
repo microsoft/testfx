@@ -6,12 +6,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 /// <summary>
 /// Outcome of a test.
 /// </summary>
-#if NET6_0_OR_GREATER
-[Obsolete(TestTools.UnitTesting.FrameworkConstants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
-#else
-[Obsolete(TestTools.UnitTesting.FrameworkConstants.PublicTypeObsoleteMessage)]
-#endif
-public enum UnitTestOutcome : int
+internal enum UnitTestOutcome : int
 {
     /// <summary>
     /// There was a system error while we were trying to execute a test.

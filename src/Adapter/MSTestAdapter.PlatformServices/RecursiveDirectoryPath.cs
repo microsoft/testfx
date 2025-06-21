@@ -19,13 +19,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 /// For each directory we need to have two info 1) path 2) includeSubDirectories.
 /// </summary>
 [Serializable]
-#if NET6_0_OR_GREATER
-[Obsolete(TestTools.UnitTesting.FrameworkConstants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
-#else
-[Obsolete(TestTools.UnitTesting.FrameworkConstants.PublicTypeObsoleteMessage)]
-#endif
 [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1603:DocumentationMustContainValidXml", Justification = "Reviewed. Suppression is ok here.")]
-public class RecursiveDirectoryPath : MarshalByRefObject
+internal sealed class RecursiveDirectoryPath : MarshalByRefObject
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="RecursiveDirectoryPath"/> class.
