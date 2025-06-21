@@ -95,8 +95,8 @@
 
     <!-- net7.0 -->
     <file src="$RepoRoot$src\TestFramework\TestFramework.Extensions\buildTransitive\net6.0AndLater\MSTest.TestFramework.targets" target="buildTransitive\net7.0\" />
-    <file src="net7.0\MSTest.TestPlatform.TestFramework.dll" target="lib\net7.0\" />
-    <file src="net7.0\MSTest.TestPlatform.TestFramework.xml" target="lib\net7.0\" />
+    <file src="net7.0\MSTest.TestFramework.dll" target="lib\net7.0\" />
+    <file src="net7.0\MSTest.TestFramework.xml" target="lib\net7.0\" />
     <file src="net7.0\**\MSTest.TestFramework.resources.dll" target="lib\net7.0\" />
     <file src="net7.0\MSTest.TestFramework.Extensions.dll" target="buildTransitive\net7.0\" />
     <file src="net7.0\MSTest.TestFramework.Extensions.xml" target="buildTransitive\net7.0\" />
