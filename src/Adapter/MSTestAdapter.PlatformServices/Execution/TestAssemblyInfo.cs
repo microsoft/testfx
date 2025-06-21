@@ -205,66 +205,6 @@ internal sealed class TestAssemblyInfo
     }
 
     /// <summary>
-    /// Run assembly cleanup methods.
-    /// </summary>
-    /// <returns>
-    /// Any exception that can be thrown as part of a assembly cleanup as warning messages.
-    /// </returns>
-    [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
-    public string? RunAssemblyCleanup()
-    {
-        if (AssemblyCleanupMethod == null)
-        {
-            return null;
-        }
-
-        lock (_assemblyInfoExecuteSyncObject)
-        {
-            try
-            {
-                AssemblyCleanupException = FixtureMethodRunner.RunWithTimeoutAndCancellation(
-                     () =>
-                     {
-                         AssemblyCleanupMethod.InvokeAsSynchronousTask(null);
-                         ExecutionContext = ExecutionContext.Capture();
-                     },
-                     new CancellationTokenSource(),
-                     AssemblyCleanupMethodTimeoutMilliseconds,
-                     AssemblyCleanupMethod,
-                     ExecutionContext,
-                     Resource.AssemblyCleanupWasCancelled,
-                     Resource.AssemblyCleanupTimedOut);
-            }
-            catch (Exception ex)
-            {
-                AssemblyCleanupException = ex;
-            }
-        }
-
-        // If assemblyCleanup was successful, then don't do anything
-        if (AssemblyCleanupException is null)
-        {
-            return null;
-        }
-
-        Exception realException = AssemblyCleanupException.GetRealException();
-
-        // special case AssertFailedException to trim off part of the stack trace
-        string errorMessage = realException is AssertFailedException or AssertInconclusiveException
-            ? realException.Message
-            : realException.GetFormattedExceptionMessage();
-
-        DebugEx.Assert(AssemblyCleanupMethod.DeclaringType?.Name is not null, "AssemblyCleanupMethod.DeclaringType.Name is null");
-        return string.Format(
-            CultureInfo.CurrentCulture,
-            Resource.UTA_AssemblyCleanupMethodWasUnsuccesful,
-            AssemblyCleanupMethod.DeclaringType.Name,
-            AssemblyCleanupMethod.Name,
-            errorMessage,
-            realException.GetStackTraceInformation()?.ErrorStackTrace);
-    }
-
-    /// <summary>
     /// Calls the assembly cleanup method in a thread-safe.
     /// </summary>
     /// <remarks>
