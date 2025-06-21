@@ -31,10 +31,6 @@ internal class TestablePlatformServiceProvider : IPlatformServiceProvider
 
     public Mock<ITestDataSource> MockTestDataSource { get; } = new();
 
-    public Mock<ITraceListener> MockTraceListener { get; } = new();
-
-    public Mock<ITraceListenerManager> MockTraceListenerManager { get; } = new();
-
     public Mock<IThreadOperations> MockThreadOperations { get; } = new();
 
     public Mock<IReflectionOperations2> MockReflectionOperations { get; set; } = null!;
@@ -77,11 +73,6 @@ internal class TestablePlatformServiceProvider : IPlatformServiceProvider
     }
 
     public ITestSourceHost CreateTestSourceHost(string source, TestPlatform.ObjectModel.Adapter.IRunSettings? runSettings, TestPlatform.ObjectModel.Adapter.IFrameworkHandle? frameworkHandle) => MockTestSourceHost.Object;
-
-    public ITraceListener GetTraceListener(TextWriter textWriter) => MockTraceListener.Object;
-
-    [SuppressMessage("Naming", "CA1725:Parameter names should match base declaration", Justification = "Part of the public API")]
-    public ITraceListenerManager GetTraceListenerManager(TextWriter standardOutputWriter, TextWriter standardErrorWriter) => MockTraceListenerManager.Object;
 
     public void SetupMockReflectionOperations() => MockReflectionOperations = new Mock<IReflectionOperations2>();
 }

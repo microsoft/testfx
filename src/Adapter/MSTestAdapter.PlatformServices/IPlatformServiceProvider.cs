@@ -85,33 +85,6 @@ internal interface IPlatformServiceProvider
         TestPlatform.ObjectModel.Adapter.IFrameworkHandle? frameworkHandle);
 
     /// <summary>
-    /// Gets an instance to the platform service listener who monitors trace and debug output
-    /// on provided text writer.
-    /// </summary>
-    /// <param name="textWriter">
-    /// The text Writer.
-    /// </param>
-    /// <returns>
-    /// The <see cref="ITraceListener"/>.
-    /// </returns>
-    ITraceListener GetTraceListener(TextWriter textWriter);
-
-    /// <summary>
-    /// Gets an instance to the platform service trace-listener manager which updates the output/error streams
-    /// with redirected streams and performs operations on the listener provided as argument.
-    /// </summary>
-    /// <param name="outputWriter">
-    /// The redirected output stream writer.
-    /// </param>
-    /// <param name="errorWriter">
-    /// The redirected error stream writer.
-    /// </param>
-    /// <returns>
-    /// The manager for trace listeners.
-    /// </returns>
-    ITraceListenerManager GetTraceListenerManager(TextWriter outputWriter, TextWriter errorWriter);
-
-    /// <summary>
     /// Gets the TestContext object for a platform.
     /// </summary>
     /// <param name="testMethod">
