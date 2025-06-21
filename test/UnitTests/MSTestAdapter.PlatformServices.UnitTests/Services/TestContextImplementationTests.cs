@@ -210,7 +210,7 @@ public class TestContextImplementationTests : TestContainer
         _testContextImplementation = new TestContextImplementation(_testMethod.Object, _properties);
         _testContextImplementation.Write("2 Testing write \n\r");
         _testContextImplementation.Write("3 Testing write\n\r");
-        Verify(_testContextImplementation.GetDiagnosticMessages() == "2 Testing write 3 Testing write");
+        Verify(_testContextImplementation.GetDiagnosticMessages() == "2 Testing write \n\r3 Testing write\n\r");
     }
 
     public void WriteLineShouldWriteToStringWriter()
