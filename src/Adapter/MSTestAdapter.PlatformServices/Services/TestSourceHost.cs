@@ -367,7 +367,7 @@ internal class TestSourceHost : ITestSourceHost
     /// <returns>
     /// A list of path.
     /// </returns>
-    internal List<string> GetResolutionPaths(string sourceFileName, bool isPortableMode)
+    internal virtual List<string> GetResolutionPaths(string sourceFileName, bool isPortableMode)
     {
         List<string> resolutionPaths =
         [
