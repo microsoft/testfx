@@ -46,7 +46,7 @@ internal sealed class MSTestSettings
     /// </summary>
     public MSTestSettings()
     {
-        CaptureDebugTraces = true;
+        CaptureDebugTraces = false;
         MapInconclusiveToFailed = false;
         MapNotRunnableToFailed = true;
         TreatDiscoveryWarningsAsErrors = false;
