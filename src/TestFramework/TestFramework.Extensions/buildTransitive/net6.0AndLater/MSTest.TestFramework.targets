@@ -13,8 +13,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Reference Include="Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions">
-      <HintPath>$(_TestFrameworkExtensionsRoot)Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll</HintPath>
+    <Reference Include="MSTest.TestFramework.Extensions">
+      <HintPath>$(_TestFrameworkExtensionsRoot)MSTest.TestFramework.Extensions.dll</HintPath>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Visible>False</Visible>
     </Reference>

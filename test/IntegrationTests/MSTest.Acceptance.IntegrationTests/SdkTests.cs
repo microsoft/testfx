@@ -325,6 +325,7 @@ namespace MSTestSdkTest
 
     [TestMethod]
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [Ignore("Microsoft.Playwright.MSTest needs to be recompiled against MSTest v4")]
     public async Task EnablePlaywrightProperty_WhenUsingRunner_AllowsToRunPlaywrightTests(string tfm)
     {
         var testHost = TestHost.LocateFrom(AssetFixture.PlaywrightProjectPath, TestAssetFixture.PlaywrightProjectName, tfm);
@@ -350,6 +351,7 @@ namespace MSTestSdkTest
 
     [TestMethod]
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [Ignore("Microsoft.Playwright.MSTest needs to be recompiled against MSTest v4")]
     public async Task EnablePlaywrightProperty_WhenUsingVSTest_AllowsToRunPlaywrightTests(string tfm)
     {
         var testHost = TestHost.LocateFrom(AssetFixture.PlaywrightProjectPath, TestAssetFixture.PlaywrightProjectName, tfm);
@@ -431,11 +433,11 @@ namespace MSTestSdkTest
         SL.Item[] references = [.. cscTask.FindChildrenRecursive<SL.Parameter>(p => p.Name == "References").Single().Children.OfType<SL.Item>()];
 
         // Ensure that MSTest.Framework is referenced
-        Assert.IsTrue(references.Any(r => r.Text.EndsWith("Microsoft.VisualStudio.TestPlatform.TestFramework.dll", StringComparison.OrdinalIgnoreCase)));
-        Assert.IsTrue(references.Any(r => r.Text.EndsWith("Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll", StringComparison.OrdinalIgnoreCase)));
+        Assert.IsTrue(references.Any(r => r.Text.EndsWith("MSTest.TestFramework.dll", StringComparison.OrdinalIgnoreCase)));
+        Assert.IsTrue(references.Any(r => r.Text.EndsWith("MSTest.TestFramework.Extensions.dll", StringComparison.OrdinalIgnoreCase)));
 
         // No adapter, no extensions, no vstest sdk
-        Assert.IsFalse(references.Any(r => r.Text.EndsWith("Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.dll", StringComparison.OrdinalIgnoreCase)));
+        Assert.IsFalse(references.Any(r => r.Text.EndsWith("MSTest.TestAdapter.dll", StringComparison.OrdinalIgnoreCase)));
         Assert.IsFalse(references.Any(r => r.Text.Contains("Microsoft.Testing.Extensions.", StringComparison.OrdinalIgnoreCase)));
 
         // It's not an executable

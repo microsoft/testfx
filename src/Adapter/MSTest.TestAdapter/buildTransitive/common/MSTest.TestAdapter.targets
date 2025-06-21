@@ -25,13 +25,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <TestAdapterContent Include="$(MSBuildThisFileDirectory)Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.dll" Condition=" '$(EnableMSTestRunner)' != 'true' ">
-      <Link>Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.dll</Link>
+    <TestAdapterContent Include="$(MSBuildThisFileDirectory)MSTest.TestAdapter.dll" Condition=" '$(EnableMSTestRunner)' != 'true' ">
+      <Link>MSTest.TestAdapter.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Visible>False</Visible>
     </TestAdapterContent>
-    <TestAdapterContent Include="$(_TestAdapterPlatformServicesRoot)Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll">
-      <Link>Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll</Link>
+    <TestAdapterContent Include="$(_TestAdapterPlatformServicesRoot)MSTestAdapter.PlatformServices.dll">
+      <Link>MSTestAdapter.PlatformServices.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Visible>False</Visible>
     </TestAdapterContent>
@@ -56,8 +56,8 @@
     <!-- https://github.com/dotnet/msbuild/issues/9698#issuecomment-1945763467 -->
     <When Condition=" '$(EnableMSTestRunner)' == 'true' ">
       <ItemGroup>
-        <Reference Include="Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter">
-          <HintPath>$(_TestAdapterPlatformServicesRoot)Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.dll</HintPath>
+        <Reference Include="MSTest.TestAdapter">
+          <HintPath>$(_TestAdapterPlatformServicesRoot)MSTest.TestAdapter.dll</HintPath>
         </Reference>
       </ItemGroup>
     </When>
