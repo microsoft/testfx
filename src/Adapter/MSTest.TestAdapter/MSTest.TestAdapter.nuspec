@@ -135,7 +135,8 @@
 
     <!-- Localization -->
     <!-- All TFMs share the same resx, copy only TestAdapter TestAdapter.PlatformServices, do NOT copy TestFramework and other dependency resource dlls. -->
-    <file src="net462\**\*Adapter*.resources.dll" target="\buildTransitive\_localization\" />
+    <file src="net462\**\MSTest.TestAdapter.resources.dll" target="\buildTransitive\_localization\" />
+    <file src="net462\**\MSTestAdapter.PlatformServices.resources.dll" target="\buildTransitive\_localization\" />
 
     <!-- Source code -->
     <file src="$srcroot$\**\*.cs" target="src" />
