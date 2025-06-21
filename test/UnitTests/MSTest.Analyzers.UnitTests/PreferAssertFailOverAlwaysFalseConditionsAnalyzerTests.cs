@@ -346,44 +346,6 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests
     }
 
     [TestMethod]
-    public async Task WhenAssertIsTrueIsPassedFalse_WithMessageAndArgsAsParams_Diagnostic()
-    {
-        string code = """
-            using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-            [TestClass]
-            public class MyTestClass
-            {
-                [TestMethod]
-                public void TestMethod()
-                {
-                    [|Assert.IsTrue(false, "message", "1")|];
-                    [|Assert.IsTrue(false, "message", "1", "2")|];
-                    [|Assert.IsTrue(false, "message", new object[] { "1", "2" })|];
-                    [|Assert.IsTrue(message: "message", parameters: new object[] { "1", "2" }, condition: false)|];
-                }
-            }
-            """;
-        string fixedCode = """
-            using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-            [TestClass]
-            public class MyTestClass
-            {
-                [TestMethod]
-                public void TestMethod()
-                {
-                    Assert.Fail("message", "1");
-                    Assert.Fail("message", "1", "2");
-                    Assert.Fail("message", new object[] { "1", "2" });
-                    Assert.Fail(message: "message", parameters: new object[] { "1", "2" });
-                }
-            }
-            """;
-        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
-    }
-
-    [TestMethod]
     public async Task WhenAssertIsTrueIsPassedFalse_WithMessageFirst_Diagnostic()
     {
         string code = """

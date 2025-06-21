@@ -201,34 +201,6 @@ public partial class AssertTests
         _ = obj.ToString(); // no warning about possible null
     }
 
-    public void IsInstanceOfType_WhenNonNullNullableValueAndCompositeMessage_LearnNonNull()
-    {
-        object? obj = GetObj();
-        Assert.IsInstanceOfType(obj, typeof(object), "my message with {0}", "arg");
-        _ = obj.ToString(); // no warning about possible null
-    }
-
-    public void IsInstanceOfType_WhenNonNullNullableTypeAndCompositeMessage_LearnNonNull()
-    {
-        Type? objType = GetObjType();
-        Assert.IsInstanceOfType(new object(), objType, "my message with {0}", "arg");
-        _ = objType.ToString(); // no warning about possible null
-    }
-
-    public void IsInstanceOfTypeGeneric_WhenNonNullNullableValueAndCompositeMessage_LearnNonNull()
-    {
-        object? obj = GetObj();
-        Assert.IsInstanceOfType<object>(obj, "my message with {0}", "arg");
-        _ = obj.ToString(); // no warning about possible null
-    }
-
-    public void IsInstanceOfTypeGenericWithOutParameter_WhenNonNullNullableValueAndCompositeMessage_LearnNonNull()
-    {
-        object? obj = GetObj();
-        Assert.IsInstanceOfType<object>(obj, "my message with {0}", "arg");
-        _ = obj.ToString(); // no warning about possible null
-    }
-
     public void IsNotInstanceOfType_WhenNonNullNullableType_LearnNonNull()
     {
         Type? intType = GetIntType();
@@ -240,13 +212,6 @@ public partial class AssertTests
     {
         Type? intType = GetIntType();
         Assert.IsNotInstanceOfType(new object(), intType, "my message");
-        _ = intType.ToString(); // no warning about possible null
-    }
-
-    public void IsNotInstanceOfType_WhenNonNullNullableTypeAndCompositeMessage_LearnNonNull()
-    {
-        Type? intType = GetIntType();
-        Assert.IsNotInstanceOfType(new object(), intType, "my message with {0}", "arg");
         _ = intType.ToString(); // no warning about possible null
     }
 

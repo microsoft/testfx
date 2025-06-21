@@ -79,20 +79,13 @@ public sealed partial class Assert
     /// <param name="format">
     /// A composite format string.
     /// </param>
-    /// <param name="parameters">
-    /// An object array that contains zero or more objects to format.
-    /// </param>
     /// <returns>
     /// The formatted string based on format and parameters.
     /// </returns>
-    internal static string BuildUserMessage(string? format, params object?[]? parameters)
+    internal static string BuildUserMessage(string? format)
         => format is null
-            ? ReplaceNulls(format)
-            : format.Length == 0
-                ? string.Empty
-                : parameters == null || parameters.Length == 0
-                    ? ReplaceNulls(format)
-                    : string.Format(CultureInfo.CurrentCulture, ReplaceNulls(format), parameters);
+            ? FrameworkMessages.Common_NullInMessages.ToString()
+            : ReplaceNullChars(format);
 
     /// <summary>
     /// Checks the parameter for valid conditions.
@@ -109,15 +102,11 @@ public sealed partial class Assert
     /// <param name="message">
     /// message for the invalid parameter exception.
     /// </param>
-    /// <param name="parameters">
-    /// The parameters.
-    /// </param>
-    internal static void CheckParameterNotNull([NotNull] object? param, string assertionName, string parameterName,
-        [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters)
+    internal static void CheckParameterNotNull([NotNull] object? param, string assertionName, string parameterName, string? message)
     {
         if (param == null)
         {
-            string userMessage = BuildUserMessage(message, parameters);
+            string userMessage = BuildUserMessage(message);
             string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.NullParameterToAssert, parameterName, userMessage);
             ThrowAssertFailed(assertionName, finalMessage);
         }

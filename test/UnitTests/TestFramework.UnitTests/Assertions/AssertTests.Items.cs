@@ -25,12 +25,6 @@ public partial class AssertTests
         Verify(ex.Message == "Assert.HasCount failed. Expected collection of size 3. Actual: 1. ");
     }
 
-    public void Count_MessageArgs_WhenCountIsNotSame_ShouldFail()
-    {
-        Exception ex = VerifyThrows(() => Assert.HasCount(1, Array.Empty<float>(), "User-provided message: System.Object type: {0}", new object().GetType()));
-        Verify(ex.Message == "Assert.HasCount failed. Expected collection of size 1. Actual: 0. User-provided message: System.Object type: System.Object");
-    }
-
     public async Task Count_InterpolatedString_WhenCountIsNotSame_ShouldFail()
     {
         DummyClassTrackingToStringCalls o = new();
@@ -55,13 +49,6 @@ public partial class AssertTests
         var collection = new List<int> { 1 };
         Exception ex = VerifyThrows(() => Assert.IsEmpty(collection));
         Verify(ex.Message == "Assert.IsEmpty failed. Expected collection of size 0. Actual: 1. ");
-    }
-
-    public void NotAny_MessageArgs_WhenNotEmpty_ShouldFail()
-    {
-        var collection = new List<int> { 1 };
-        Exception ex = VerifyThrows(() => Assert.IsEmpty(collection, "User-provided message: System.Object type: {0}", new object().GetType()));
-        Verify(ex.Message == "Assert.IsEmpty failed. Expected collection of size 0. Actual: 1. User-provided message: System.Object type: System.Object");
     }
 
     public async Task NotAny_InterpolatedString_WhenNotEmpty_ShouldFail()
@@ -99,18 +86,6 @@ public partial class AssertTests
     {
         Exception ex = VerifyThrows(() => Assert.ContainsSingle([1, 2, 3]));
         Verify(ex.Message == "Assert.ContainsSingle failed. Expected collection to contain exactly one element but found 3 element(s). ");
-    }
-
-    public void Single_MessageArgs_WhenNoItem_ShouldFail()
-    {
-        Exception ex = VerifyThrows(() => Assert.ContainsSingle(Array.Empty<float>(), "User-provided message: System.Object type: {0}", new object().GetType()));
-        Verify(ex.Message == "Assert.ContainsSingle failed. Expected collection to contain exactly one element but found 0 element(s). User-provided message: System.Object type: System.Object");
-    }
-
-    public void Single_MessageArgs_WhenMultipleItems_ShouldFail()
-    {
-        Exception ex = VerifyThrows(() => Assert.ContainsSingle([1, 2, 3], "User-provided message: System.Object type: {0}", new object().GetType()));
-        Verify(ex.Message == "Assert.ContainsSingle failed. Expected collection to contain exactly one element but found 3 element(s). User-provided message: System.Object type: System.Object");
     }
 
     public async Task Single_InterpolatedString_WhenNoItem_ShouldFail()
@@ -161,20 +136,6 @@ public partial class AssertTests
         Verify(ex.Message == "Assert.ContainsSingle failed. Expected exactly one item to match the predicate but found 3 item(s). ");
     }
 
-    public void SinglePredicate_MessageArgs_WhenNoItemMatches_ShouldFail()
-    {
-        var collection = new List<int> { 1, 3, 5 };
-        Exception ex = VerifyThrows(() => Assert.ContainsSingle(x => x % 2 == 0, collection, "No even numbers found: {0}", "test"));
-        Verify(ex.Message == "Assert.ContainsSingle failed. Expected exactly one item to match the predicate but found 0 item(s). No even numbers found: test");
-    }
-
-    public void SinglePredicate_MessageArgs_WhenMultipleItemsMatch_ShouldFail()
-    {
-        var collection = new List<int> { 2, 4, 6 };
-        Exception ex = VerifyThrows(() => Assert.ContainsSingle(x => x % 2 == 0, collection, "Too many even numbers: {0}", "test"));
-        Verify(ex.Message == "Assert.ContainsSingle failed. Expected exactly one item to match the predicate but found 3 item(s). Too many even numbers: test");
-    }
-
     public void Any_WhenOneItem_ShouldPass()
     {
         var collection = new List<int> { 1 };
@@ -205,12 +166,6 @@ public partial class AssertTests
     {
         Exception ex = VerifyThrows(() => Assert.IsNotEmpty(Array.Empty<int>()));
         Verify(ex.Message == "Assert.IsNotEmpty failed. Expected collection to contain any item but it is empty. ");
-    }
-
-    public void Any_MessageArgs_WhenNoItem_ShouldFail()
-    {
-        Exception ex = VerifyThrows(() => Assert.IsNotEmpty(Array.Empty<float>(), "User-provided message: System.Object type: {0}", new object().GetType()));
-        Verify(ex.Message == "Assert.IsNotEmpty failed. Expected collection to contain any item but it is empty. User-provided message: System.Object type: System.Object");
     }
 
     public async Task Any_InterpolatedString_WhenNoItem_ShouldFail()

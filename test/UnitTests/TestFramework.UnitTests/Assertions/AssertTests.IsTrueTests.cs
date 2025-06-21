@@ -98,35 +98,6 @@ public partial class AssertTests
     public void IsFalseBooleanInterpolatedStringMessageShouldNotFailWithFalse()
         => Assert.IsFalse(false, $"User-provided message. Input: {false}");
 
-    public void IsFalseNullableBooleanMessageArgsShouldFailWithNull()
-    {
-        bool? nullBool = null;
-        Exception ex = VerifyThrows(() => Assert.IsFalse(nullBool, "User-provided message. Input: {0}", nullBool));
-        Verify(ex.Message == "Assert.IsFalse failed. User-provided message. Input: ");
-    }
-
-    public void IsFalseNullableBooleanMessageArgsShouldFailWithTrue()
-    {
-        bool? nullBool = true;
-        Exception ex = VerifyThrows(() => Assert.IsFalse(nullBool, "User-provided message. Input: {0}", nullBool));
-        Verify(ex.Message == "Assert.IsFalse failed. User-provided message. Input: True");
-    }
-
-    public void IsFalseNullableBooleanMessageArgsShouldNotFailWithFalse()
-    {
-        bool? nullBool = false;
-        Assert.IsFalse(nullBool, "User-provided message. Input: {0}", nullBool);
-    }
-
-    public void IsFalseBooleanMessageArgsShouldFailWithTrue()
-    {
-        Exception ex = VerifyThrows(() => Assert.IsFalse(true, "User-provided message. Input: {0}", true));
-        Verify(ex.Message == "Assert.IsFalse failed. User-provided message. Input: True");
-    }
-
-    public void IsFalseBooleanMessageArgsShouldNotFailWithFalse()
-        => Assert.IsFalse(false, "User-provided message. Input: {0}", false);
-
     public void IsTrueNullableBooleanShouldFailWithNull()
     {
         bool? nullBool = null;
@@ -219,33 +190,4 @@ public partial class AssertTests
 
     public void IsTrueBooleanInterpolatedStringMessageShouldNotFailWithTrue()
         => Assert.IsTrue(true, $"User-provided message. Input: {true}");
-
-    public void IsTrueNullableBooleanMessageArgsShouldFailWithNull()
-    {
-        bool? nullBool = null;
-        Exception ex = VerifyThrows(() => Assert.IsTrue(nullBool, "User-provided message. Input: {0}", nullBool));
-        Verify(ex.Message == "Assert.IsTrue failed. User-provided message. Input: ");
-    }
-
-    public void IsTrueNullableBooleanMessageArgsShouldFailWithFalse()
-    {
-        bool? nullBool = false;
-        Exception ex = VerifyThrows(() => Assert.IsTrue(nullBool, "User-provided message. Input: {0}", nullBool));
-        Verify(ex.Message == "Assert.IsTrue failed. User-provided message. Input: False");
-    }
-
-    public void IsTrueNullableBooleanMessageArgsShouldNotFailWithTrue()
-    {
-        bool? nullBool = true;
-        Assert.IsTrue(nullBool, "User-provided message. Input: {0}", nullBool);
-    }
-
-    public void IsTrueBooleanMessageArgsShouldFailWithFalse()
-    {
-        Exception ex = VerifyThrows(() => Assert.IsTrue(false, "User-provided message. Input: {0}", false));
-        Verify(ex.Message == "Assert.IsTrue failed. User-provided message. Input: False");
-    }
-
-    public void IsTrueBooleanMessageArgsShouldNotFailWithTrue()
-        => Assert.IsTrue(true, "User-provided message. Input: {0}", true);
 }
