@@ -29,14 +29,6 @@ public class CollectionAssertTests : TestContainer
         _ = collection.Count; // no warning
     }
 
-    public void CollectionAssertContainsMessageParametersNullabilityPostConditions()
-    {
-        ICollection? collection = GetCollection();
-        object? element = GetMatchingElement();
-        CollectionAssert.Contains(collection, element, "message format {0} {1}", 1, 2);
-        _ = collection.Count; // no warning
-    }
-
     public void CollectionAssertDoesNotContainNullabilityPostConditions()
     {
         ICollection? collection = GetCollection();
@@ -50,14 +42,6 @@ public class CollectionAssertTests : TestContainer
         ICollection? collection = GetCollection();
         object? element = GetNotMatchingElement();
         CollectionAssert.DoesNotContain(collection, element, "message");
-        _ = collection.Count; // no warning
-    }
-
-    public void CollectionAssertDoesNotContainMessageParametersNullabilityPostConditions()
-    {
-        ICollection? collection = GetCollection();
-        object? element = GetNotMatchingElement();
-        CollectionAssert.DoesNotContain(collection, element, "message format {0} {1}", 1, 2);
         _ = collection.Count; // no warning
     }
 
@@ -75,13 +59,6 @@ public class CollectionAssertTests : TestContainer
         _ = collection.Count; // no warning
     }
 
-    public void CollectionAssertAllItemsAreNotNullMessageParametersNullabilityPostConditions()
-    {
-        ICollection? collection = GetCollection();
-        CollectionAssert.AllItemsAreNotNull(collection, "message format {0} {1}", 1, 2);
-        _ = collection.Count; // no warning
-    }
-
     public void CollectionAssertAllItemsAreUniqueNullabilityPostConditions()
     {
         ICollection? collection = GetCollection();
@@ -93,13 +70,6 @@ public class CollectionAssertTests : TestContainer
     {
         ICollection? collection = GetCollection();
         CollectionAssert.AllItemsAreUnique(collection, "message");
-        _ = collection.Count; // no warning
-    }
-
-    public void CollectionAssertAllItemsAreUniqueMessageParametersNullabilityPostConditions()
-    {
-        ICollection? collection = GetCollection();
-        CollectionAssert.AllItemsAreUnique(collection, "message format {0} {1}", 1, 2);
         _ = collection.Count; // no warning
     }
 
@@ -117,15 +87,6 @@ public class CollectionAssertTests : TestContainer
         ICollection? collection = GetCollection();
         ICollection? superset = GetMatchingSuperSet();
         CollectionAssert.IsSubsetOf(collection, superset, "message");
-        _ = collection.Count; // no warning
-        _ = superset.Count; // no warning
-    }
-
-    public void CollectionAssertIsSubsetOfMessageParametersNullabilityPostConditions()
-    {
-        ICollection? collection = GetCollection();
-        ICollection? superset = GetMatchingSuperSet();
-        CollectionAssert.IsSubsetOf(collection, superset, "message format {0} {1}", 1, 2);
         _ = collection.Count; // no warning
         _ = superset.Count; // no warning
     }
@@ -148,15 +109,6 @@ public class CollectionAssertTests : TestContainer
         _ = superset.Count; // no warning
     }
 
-    public void CollectionAssertIsNotSubsetOfMessageParametersNullabilityPostConditions()
-    {
-        ICollection? collection = GetCollection();
-        ICollection? superset = GetNotMatchingSuperSet();
-        CollectionAssert.IsNotSubsetOf(collection, superset, "message format {0} {1}", 1, 2);
-        _ = collection.Count; // no warning
-        _ = superset.Count; // no warning
-    }
-
     public void CollectionAssertAllItemsAreInstancesOfTypeNullabilityPostConditions()
     {
         ICollection? collection = GetCollection();
@@ -171,15 +123,6 @@ public class CollectionAssertTests : TestContainer
         ICollection? collection = GetCollection();
         Type? type = GetStringType();
         CollectionAssert.AllItemsAreInstancesOfType(collection, type, "message");
-        _ = collection.Count; // no warning
-        type.ToString(); // no warning
-    }
-
-    public void CollectionAssertAllItemsAreInstancesOfTypeMessageParametersNullabilityPostConditions()
-    {
-        ICollection? collection = GetCollection();
-        Type? type = GetStringType();
-        CollectionAssert.AllItemsAreInstancesOfType(collection, type, "message format {0} {1}", 1, 2);
         _ = collection.Count; // no warning
         type.ToString(); // no warning
     }
@@ -220,15 +163,6 @@ public class CollectionAssertTests : TestContainer
         ICollection? collection2 = GetCollection();
         IComparer? comparer = GetComparer();
         CollectionAssert.AreEqual(collection1, collection2, comparer, "message");
-        comparer.ToString(); // no warning
-    }
-
-    public void CollectionAssertAreEqualComparerMessageParametersNullabilityPostConditions()
-    {
-        ICollection? collection1 = GetCollection();
-        ICollection? collection2 = GetCollection();
-        IComparer? comparer = GetComparer();
-        CollectionAssert.AreEqual(collection1, collection2, comparer, "message format {0} {1}", 1, 2);
         comparer.ToString(); // no warning
     }
 
@@ -344,15 +278,6 @@ public class CollectionAssertTests : TestContainer
         comparer.ToString(); // no warning
     }
 
-    public void CollectionAssertAreNotEqualComparerMessageParametersNullabilityPostConditions()
-    {
-        ICollection? collection1 = GetCollection();
-        ICollection? collection2 = GetMatchingSuperSet();
-        IComparer? comparer = GetComparer();
-        CollectionAssert.AreNotEqual(collection1, collection2, comparer, "message format {0} {1}", 1, 2);
-        comparer.ToString(); // no warning
-    }
-
     public void CollectionAssertAreEquivalent_SameItemsWithDifferentOrder_DoesNotThrow()
     {
         ICollection? collection1 = GetMatchingSuperSet();
@@ -377,14 +302,6 @@ public class CollectionAssertTests : TestContainer
         Verify(ex.Message.Contains("message"));
     }
 
-    public void CollectionAssertAreEquivalent_FailWhenNotEquivalent_WithMessageAndParams()
-    {
-        ICollection? collection1 = GetCollection();
-        ICollection? collection2 = GetMatchingSuperSet();
-        Exception ex = VerifyThrows(() => CollectionAssert.AreEquivalent(collection1, collection2, "message format {0} {1}", 1, 2));
-        Verify(ex.Message.Contains("message"));
-    }
-
     public void CollectionAssertAreEquivalent_WithInsensitiveCaseComparer_DoesNotThrow()
     {
         ICollection? collection1 = GetMatchingSuperSet();
@@ -397,14 +314,6 @@ public class CollectionAssertTests : TestContainer
         ICollection? collection1 = GetCollection();
         ICollection? collection2 = GetLettersCaseMismatchingSuperSet();
         Exception ex = VerifyThrows(() => CollectionAssert.AreEquivalent(collection1?.Cast<string>(), collection2?.Cast<string>(), new CaseInsensitiveEqualityComparer(), "message"));
-        Verify(ex.Message.Contains("message"));
-    }
-
-    public void CollectionAssertAreEquivalent_FailsWithInsensitiveCaseComparer_WithMessageAndParams()
-    {
-        ICollection? collection1 = GetCollection();
-        ICollection? collection2 = GetLettersCaseMismatchingSuperSet();
-        Exception ex = VerifyThrows(() => CollectionAssert.AreEquivalent(collection1?.Cast<string>(), collection2?.Cast<string>(), new CaseInsensitiveEqualityComparer(), "message format {0} {1}", 1, 2));
         Verify(ex.Message.Contains("message"));
     }
 
@@ -423,14 +332,6 @@ public class CollectionAssertTests : TestContainer
         Verify(ex.Message.Contains("message"));
     }
 
-    public void CollectionAssertAreNotEquivalent_FailWhenNotEquivalent_WithMessageAndParams()
-    {
-        ICollection? collection1 = GetReversedMatchingSuperSet();
-        ICollection? collection2 = GetMatchingSuperSet();
-        Exception ex = VerifyThrows(() => CollectionAssert.AreNotEquivalent(collection1, collection2, "message format {0} {1}", 1, 2));
-        Verify(ex.Message.Contains("message"));
-    }
-
     public void CollectionAssertAreNotEquivalent_WithInsensitiveCaseComparer_DoesNotThrow()
     {
         ICollection? collection1 = GetCollection();
@@ -446,17 +347,9 @@ public class CollectionAssertTests : TestContainer
         Verify(ex.Message.Contains("message"));
     }
 
-    public void CollectionAssertAreNotEquivalent_FailsWithInsensitiveCaseComparer_WithMessageAndParams()
-    {
-        ICollection? collection1 = GetMatchingSuperSet();
-        ICollection? collection2 = GetLettersCaseMismatchingSuperSet();
-        Exception ex = VerifyThrows(() => CollectionAssert.AreNotEquivalent(collection1?.Cast<string>(), collection2?.Cast<string>(), new CaseInsensitiveNotEqualityComparer(), "message format {0} {1}", 1, 2));
-        Verify(ex.Message.Contains("message"));
-    }
-
     public void CollectionAssertAreNotEquivalent_FailsWithTwoNullsAndComparer_WithMessageAndParams()
     {
-        Exception ex = VerifyThrows(() => CollectionAssert.AreNotEquivalent(null, null, new CaseInsensitiveNotEqualityComparer(), "message format {0} {1}", 1, 2));
+        Exception ex = VerifyThrows(() => CollectionAssert.AreNotEquivalent(null, null, new CaseInsensitiveNotEqualityComparer(), "message format"));
         Verify(ex.Message.Contains("message"));
     }
 

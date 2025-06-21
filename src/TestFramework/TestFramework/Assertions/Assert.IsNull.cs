@@ -141,24 +141,7 @@ public sealed partial class Assert
     /// Thrown if <paramref name="value"/> is not null.
     /// </exception>
     public static void IsNull(object? value)
-        => IsNull(value, string.Empty, null);
-
-    /// <summary>
-    /// Tests whether the specified object is null and throws an exception
-    /// if it is not.
-    /// </summary>
-    /// <param name="value">
-    /// The object the test expects to be null.
-    /// </param>
-    /// <param name="message">
-    /// The message to include in the exception when <paramref name="value"/>
-    /// is not null. The message is shown in test results.
-    /// </param>
-    /// <exception cref="AssertFailedException">
-    /// Thrown if <paramref name="value"/> is not null.
-    /// </exception>
-    public static void IsNull(object? value, string? message)
-        => IsNull(value, message, null);
+        => IsNull(value, string.Empty);
 
     /// <inheritdoc cref="IsNull(object?, string?)" />
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
@@ -177,17 +160,14 @@ public sealed partial class Assert
     /// The message to include in the exception when <paramref name="value"/>
     /// is not null. The message is shown in test results.
     /// </param>
-    /// <param name="parameters">
-    /// An array of parameters to use when formatting <paramref name="message"/>.
-    /// </param>
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="value"/> is not null.
     /// </exception>
-    public static void IsNull(object? value, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters)
+    public static void IsNull(object? value, string? message)
     {
         if (IsNullFailing(value))
         {
-            ThrowAssertIsNullFailed(BuildUserMessage(message, parameters));
+            ThrowAssertIsNullFailed(BuildUserMessage(message));
         }
     }
 
@@ -207,24 +187,7 @@ public sealed partial class Assert
     /// Thrown if <paramref name="value"/> is null.
     /// </exception>
     public static void IsNotNull([NotNull] object? value)
-        => IsNotNull(value, string.Empty, null);
-
-    /// <summary>
-    /// Tests whether the specified object is non-null and throws an exception
-    /// if it is null.
-    /// </summary>
-    /// <param name="value">
-    /// The object the test expects not to be null.
-    /// </param>
-    /// <param name="message">
-    /// The message to include in the exception when <paramref name="value"/>
-    /// is null. The message is shown in test results.
-    /// </param>
-    /// <exception cref="AssertFailedException">
-    /// Thrown if <paramref name="value"/> is null.
-    /// </exception>
-    public static void IsNotNull([NotNull] object? value, string? message)
-        => IsNotNull(value, message, null);
+        => IsNotNull(value, string.Empty);
 
     /// <inheritdoc cref="IsNull(object?, string?)" />
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
@@ -245,17 +208,14 @@ public sealed partial class Assert
     /// The message to include in the exception when <paramref name="value"/>
     /// is null. The message is shown in test results.
     /// </param>
-    /// <param name="parameters">
-    /// An array of parameters to use when formatting <paramref name="message"/>.
-    /// </param>
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="value"/> is null.
     /// </exception>
-    public static void IsNotNull([NotNull] object? value, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters)
+    public static void IsNotNull([NotNull] object? value, string? message)
     {
         if (IsNotNullFailing(value))
         {
-            ThrowAssertIsNotNullFailed(BuildUserMessage(message, parameters));
+            ThrowAssertIsNotNullFailed(BuildUserMessage(message));
         }
     }
 

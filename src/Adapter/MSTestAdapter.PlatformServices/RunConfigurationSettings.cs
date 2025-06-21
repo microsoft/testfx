@@ -16,12 +16,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 /// <summary>
 /// The run configuration settings.
 /// </summary>
-#if NET6_0_OR_GREATER
-[Obsolete(FrameworkConstants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
-#else
-[Obsolete(FrameworkConstants.PublicTypeObsoleteMessage)]
-#endif
-public class RunConfigurationSettings
+internal sealed class RunConfigurationSettings
 {
     /// <summary>
     /// The settings name.

@@ -45,16 +45,6 @@ public partial class AssertTests : TestContainer
             .WithMessage("Assert.IsGreaterThan failed. Actual value <5> is not greater than expected value <10>. A Message");
     }
 
-    public void IsGreaterThanShouldThrowWithMessageAndParameters()
-    {
-        // Act
-        Action action = () => Assert.IsGreaterThan(10, 5, "A Message {0}", "param");
-
-        // Assert
-        action.Should().Throw<AssertFailedException>()
-            .WithMessage("Assert.IsGreaterThan failed. Actual value <5> is not greater than expected value <10>. A Message param");
-    }
-
     public void IsGreaterThanShouldWorkWithDoubles() =>
         Assert.IsGreaterThan(5.0, 5.5);
 
@@ -97,16 +87,6 @@ public partial class AssertTests : TestContainer
         // Assert
         action.Should().Throw<AssertFailedException>()
             .WithMessage("Assert.IsGreaterThanOrEqualTo failed. Actual value <5> is not greater than or equal to expected value <10>. A Message");
-    }
-
-    public void IsGreaterThanOrEqualToShouldThrowWithMessageAndParameters()
-    {
-        // Act
-        Action action = () => Assert.IsGreaterThanOrEqualTo(10, 5, "A Message {0}", "param");
-
-        // Assert
-        action.Should().Throw<AssertFailedException>()
-            .WithMessage("Assert.IsGreaterThanOrEqualTo failed. Actual value <5> is not greater than or equal to expected value <10>. A Message param");
     }
 
     public void IsGreaterThanOrEqualToShouldWorkWithDoubles() =>
@@ -153,16 +133,6 @@ public partial class AssertTests : TestContainer
             .WithMessage("Assert.IsLessThan failed. Actual value <10> is not less than expected value <5>. A Message");
     }
 
-    public void IsLessThanShouldThrowWithMessageAndParameters()
-    {
-        // Act
-        Action action = () => Assert.IsLessThan(5, 10, "A Message {0}", "param");
-
-        // Assert
-        action.Should().Throw<AssertFailedException>()
-            .WithMessage("Assert.IsLessThan failed. Actual value <10> is not less than expected value <5>. A Message param");
-    }
-
     public void IsLessThanShouldWorkWithDoubles() =>
         Assert.IsLessThan(5.5, 5.0);
 
@@ -205,16 +175,6 @@ public partial class AssertTests : TestContainer
         // Assert
         action.Should().Throw<AssertFailedException>()
             .WithMessage("Assert.IsLessThanOrEqualTo failed. Actual value <10> is not less than or equal to expected value <5>. A Message");
-    }
-
-    public void IsLessThanOrEqualToShouldThrowWithMessageAndParameters()
-    {
-        // Act
-        Action action = () => Assert.IsLessThanOrEqualTo(5, 10, "A Message {0}", "param");
-
-        // Assert
-        action.Should().Throw<AssertFailedException>()
-            .WithMessage("Assert.IsLessThanOrEqualTo failed. Actual value <10> is not less than or equal to expected value <5>. A Message param");
     }
 
     public void IsLessThanOrEqualToShouldWorkWithDoubles() =>
@@ -274,16 +234,6 @@ public partial class AssertTests : TestContainer
         // Assert
         action.Should().Throw<AssertFailedException>()
             .WithMessage("Assert.IsPositive failed. Expected value <-5> to be positive. A Message");
-    }
-
-    public void IsPositiveShouldThrowWithMessageAndParameters()
-    {
-        // Act
-        Action action = () => Assert.IsPositive(-5, "A Message {0}", "param");
-
-        // Assert
-        action.Should().Throw<AssertFailedException>()
-            .WithMessage("Assert.IsPositive failed. Expected value <-5> to be positive. A Message param");
     }
 
     public void IsPositiveShouldWorkWithDoubles() =>
@@ -349,16 +299,6 @@ public partial class AssertTests : TestContainer
         // Assert
         action.Should().Throw<AssertFailedException>()
             .WithMessage("Assert.IsNegative failed. Expected value <5> to be negative. A Message");
-    }
-
-    public void IsNegativeShouldThrowWithMessageAndParameters()
-    {
-        // Act
-        Action action = () => Assert.IsNegative(5, "A Message {0}", "param");
-
-        // Assert
-        action.Should().Throw<AssertFailedException>()
-            .WithMessage("Assert.IsNegative failed. Expected value <5> to be negative. A Message param");
     }
 
     public void IsNegativeShouldWorkWithDoubles() =>

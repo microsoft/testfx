@@ -16,12 +16,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 /// <summary>
 /// Defines the TestClassInfo object.
 /// </summary>
-#if NET6_0_OR_GREATER
-[Obsolete(FrameworkConstants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
-#else
-[Obsolete(FrameworkConstants.PublicTypeObsoleteMessage)]
-#endif
-public class TestClassInfo
+internal sealed class TestClassInfo
 {
     /// <summary>
     /// Test context property name.
@@ -83,7 +78,7 @@ public class TestClassInfo
     public TestAssemblyInfo Parent { get; }
 
     /// <summary>
-    /// Gets the class initialize method.
+    /// Gets or sets the class initialize method.
     /// </summary>
     public MethodInfo? ClassInitializeMethod
     {
@@ -125,12 +120,12 @@ public class TestClassInfo
     internal Dictionary<MethodInfo, TimeoutInfo> TestCleanupMethodTimeoutMilliseconds { get; } = [];
 
     /// <summary>
-    /// Gets a value indicating whether class initialize has executed.
+    /// Gets or sets a value indicating whether class initialize has executed.
     /// </summary>
     public bool IsClassInitializeExecuted { get; internal set; }
 
     /// <summary>
-    /// Gets a value indicating whether class cleanup has executed.
+    /// Gets or sets a value indicating whether class cleanup has executed.
     /// </summary>
     public bool IsClassCleanupExecuted { get; internal set; }
 
@@ -139,17 +134,17 @@ public class TestClassInfo
     internal List<MethodInfo> BaseClassCleanupMethods { get; } = [];
 
     /// <summary>
-    /// Gets the exception thrown during <see cref="ClassInitializeAttribute"/> method invocation.
+    /// Gets or sets the exception thrown during <see cref="ClassInitializeAttribute"/> method invocation.
     /// </summary>
     public Exception? ClassInitializationException { get; internal set; }
 
     /// <summary>
-    /// Gets the exception thrown during <see cref="ClassCleanupAttribute"/> method invocation.
+    /// Gets or sets the exception thrown during <see cref="ClassCleanupAttribute"/> method invocation.
     /// </summary>
     public Exception? ClassCleanupException { get; internal set; }
 
     /// <summary>
-    /// Gets the class cleanup method.
+    /// Gets or sets the class cleanup method.
     /// </summary>
     public MethodInfo? ClassCleanupMethod
     {
@@ -185,7 +180,7 @@ public class TestClassInfo
     }
 
     /// <summary>
-    /// Gets the test initialize method.
+    /// Gets or sets the test initialize method.
     /// </summary>
     public MethodInfo? TestInitializeMethod
     {
@@ -203,7 +198,7 @@ public class TestClassInfo
     }
 
     /// <summary>
-    /// Gets the test cleanup method.
+    /// Gets or sets the test cleanup method.
     /// </summary>
     public MethodInfo? TestCleanupMethod
     {

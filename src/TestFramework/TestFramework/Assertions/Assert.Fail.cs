@@ -18,7 +18,7 @@ public sealed partial class Assert
     /// </exception>
     [DoesNotReturn]
     public static void Fail()
-        => Fail(string.Empty, null);
+        => Fail(string.Empty);
 
     /// <summary>
     /// Throws an AssertFailedException.
@@ -32,22 +32,5 @@ public sealed partial class Assert
     /// </exception>
     [DoesNotReturn]
     public static void Fail(string? message)
-        => Fail(message, null);
-
-    /// <summary>
-    /// Throws an AssertFailedException.
-    /// </summary>
-    /// <param name="message">
-    /// The message to include in the exception. The message is shown in
-    /// test results.
-    /// </param>
-    /// <param name="parameters">
-    /// An array of parameters to use when formatting <paramref name="message"/>.
-    /// </param>
-    /// <exception cref="AssertFailedException">
-    /// Always thrown.
-    /// </exception>
-    [DoesNotReturn]
-    public static void Fail([StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters)
-        => ThrowAssertFailed("Assert.Fail", BuildUserMessage(message, parameters));
+        => ThrowAssertFailed("Assert.Fail", BuildUserMessage(message));
 }

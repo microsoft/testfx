@@ -45,18 +45,6 @@ public partial class AssertTests
         Verify(o.WasToStringCalled);
     }
 
-    public void AreSame_MessageArgs_PassSameObject_ShouldPass()
-    {
-        object o = new();
-        Assert.AreSame(o, o, "User-provided message: {0}", new object().GetType());
-    }
-
-    public void AreSame_MessageArgs_PassDifferentObject_ShouldFail()
-    {
-        Exception ex = VerifyThrows(() => Assert.AreSame(new object(), new object(), "User-provided message: System.Object type: {0}", new object().GetType()));
-        Verify(ex.Message == "Assert.AreSame failed. User-provided message: System.Object type: System.Object");
-    }
-
     public void AreNotSame_PassDifferentObject_ShouldPass()
         => Assert.AreNotSame(new object(), new object());
 
@@ -75,12 +63,6 @@ public partial class AssertTests
     public void AreSame_InterpolatedString_BothAreValueTypes_ShouldFailWithSpecializedMessage()
     {
         Exception ex = VerifyThrows(() => Assert.AreSame(1, 1, $"User-provided message {new object().GetType()}"));
-        Verify(ex.Message == "Assert.AreSame failed. Do not pass value types to AreSame(). Values converted to Object will never be the same. Consider using AreEqual(). User-provided message System.Object");
-    }
-
-    public void AreSame_MessageArgs_BothAreValueTypes_ShouldFailWithSpecializedMessage()
-    {
-        Exception ex = VerifyThrows(() => Assert.AreSame(1, 1, "User-provided message {0}", new object().GetType()));
         Verify(ex.Message == "Assert.AreSame failed. Do not pass value types to AreSame(). Values converted to Object will never be the same. Consider using AreEqual(). User-provided message System.Object");
     }
 
@@ -115,15 +97,5 @@ public partial class AssertTests
         Exception ex = await VerifyThrowsAsync(async () => Assert.AreNotSame(o, o, $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}"));
         Verify(ex.Message == $"Assert.AreNotSame failed. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
         Verify(o.WasToStringCalled);
-    }
-
-    public void AreNotSame_MessageArgs_PassDifferentObject_ShouldPass()
-        => Assert.AreNotSame(new object(), new object(), "User-provided message: {0}", new object().GetType());
-
-    public void AreNotSame_MessageArgs_PassSameObject_ShouldFail()
-    {
-        object o = new();
-        Exception ex = VerifyThrows(() => Assert.AreNotSame(o, o, "User-provided message: System.Object type: {0}", new object().GetType()));
-        Verify(ex.Message == "Assert.AreNotSame failed. User-provided message: System.Object type: System.Object");
     }
 }
