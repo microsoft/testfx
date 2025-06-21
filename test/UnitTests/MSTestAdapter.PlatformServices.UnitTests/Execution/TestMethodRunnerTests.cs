@@ -39,7 +39,7 @@ public class TestMethodRunnerTests : TestContainer
         _testMethodAttribute = new TestMethodAttribute();
 
         _testMethod = new TestMethod("dummyTestName", "dummyClassName", "dummyAssemblyName", false);
-        _testContextImplementation = new TestContextImplementation(_testMethod, new ThreadSafeStringWriter(null!, "test"), new Dictionary<string, object?>());
+        _testContextImplementation = new TestContextImplementation(_testMethod, new Dictionary<string, object?>());
         _testClassInfo = GetTestClassInfo<DummyTestClass>();
 
         _testMethodOptions = new TestMethodOptions(TimeoutInfo.FromTimeout(200), _testContextImplementation, _testMethodAttribute);
@@ -105,30 +105,25 @@ public class TestMethodRunnerTests : TestContainer
         var testMethodInfo = new TestableTestMethodInfo(_methodInfo, _testClassInfo, _testMethodOptions, () => new TestResult { Outcome = UTF.UnitTestOutcome.Passed });
         var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation);
 
-        StringWriter writer = new(new StringBuilder("DummyTrace"));
-        _testablePlatformServiceProvider.MockTraceListener.Setup(tl => tl.GetWriter()).Returns(writer);
-
         TestResult[] results = await testMethodRunner.ExecuteAsync(string.Empty, string.Empty, string.Empty, string.Empty);
         Verify(results[0].DebugTrace == string.Empty);
     }
 
     public async Task ExecuteShouldNotFillInDebugAndTraceLogsFromRunningTestMethod()
     {
-        StringWriter writer = new(new StringBuilder());
         var testMethodInfo = new TestableTestMethodInfo(
             _methodInfo,
             _testClassInfo,
             _testMethodOptions,
             () =>
             {
-                writer.Write("InTestMethod");
+                _testContextImplementation.Write("InTestMethod");
                 return new TestResult
                 {
                     Outcome = UTF.UnitTestOutcome.Passed,
                 };
             });
         var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation);
-        _testablePlatformServiceProvider.MockTraceListener.Setup(tl => tl.GetWriter()).Returns(writer);
 
         TestResult[] results = await testMethodRunner.ExecuteAsync(string.Empty, string.Empty, string.Empty, string.Empty);
 
