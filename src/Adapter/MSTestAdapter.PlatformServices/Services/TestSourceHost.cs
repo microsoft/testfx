@@ -21,7 +21,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 /// <summary>
 /// A host that loads the test source. This can be in isolation for desktop using an AppDomain or just loading the source in the current context.
 /// </summary>
-internal sealed class TestSourceHost : ITestSourceHost
+#pragma warning disable CA1852 // Seal internal types - needs to be non-sealed because it's mocked in tests.
+internal class TestSourceHost : ITestSourceHost
 {
 #if !WINDOWS_UWP
 #pragma warning disable IDE0052 // Remove unread private members
