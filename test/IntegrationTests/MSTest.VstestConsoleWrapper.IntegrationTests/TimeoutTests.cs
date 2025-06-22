@@ -13,7 +13,7 @@ public class TimeoutTests : CLITestBase
 
     public void ValidateTimeoutTests_net462() => ValidateTimeoutTests("net462");
 
-    public void ValidateTimeoutTests_netcoreapp31() => ValidateTimeoutTests("netcoreapp3.1");
+    public void ValidateTimeoutTests_netcoreapp31() => ValidateTimeoutTests("net8.0");
 
     private void ValidateTimeoutTests(string targetFramework)
     {

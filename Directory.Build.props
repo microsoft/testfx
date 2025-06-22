@@ -24,10 +24,10 @@
     <!-- The windows SDK version of UWP, Modern UWP and WinUI could be aligned -->
     <UwpMinimum>uap10.0.16299</UwpMinimum>
     <ModernUwpMinimum>net9.0-windows10.0.17763.0</ModernUwpMinimum>
-    <WinUiMinimum>net6.0-windows10.0.18362.0</WinUiMinimum>
+    <WinUiMinimum>net8.0-windows10.0.18362.0</WinUiMinimum>
 
-    <MicrosoftTestingTargetFrameworks>net6.0;net7.0;net8.0;net9.0</MicrosoftTestingTargetFrameworks>
-    <SupportedNetFrameworks>netcoreapp3.1;net6.0;net7.0;net8.0;net9.0</SupportedNetFrameworks>
+    <MicrosoftTestingTargetFrameworks>net8.0;net9.0</MicrosoftTestingTargetFrameworks>
+    <SupportedNetFrameworks>net8.0;net9.0</SupportedNetFrameworks>
   </PropertyGroup>
 
   <!-- Build config -->
