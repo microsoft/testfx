@@ -310,7 +310,7 @@ public class TestAssemblyInfoTests : TestContainer
     }
 
     private static TestContextImplementation GetTestContext()
-        => null!; // TODO
+        => new TestContextImplementation(null, new Dictionary<string, object?>());
 
     #endregion
 
