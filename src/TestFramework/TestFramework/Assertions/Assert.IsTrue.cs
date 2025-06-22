@@ -10,6 +10,9 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// unit tests. If the condition being tested is not met, an exception
 /// is thrown.
 /// </summary>
+
+#pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
+
 public sealed partial class Assert
 {
     [InterpolatedStringHandler]
@@ -43,9 +46,7 @@ public sealed partial class Assert
 #if NETCOREAPP3_1_OR_GREATER
         public void AppendFormatted(ReadOnlySpan<char> value) => _builder!.Append(value);
 
-#pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
         public void AppendFormatted(ReadOnlySpan<char> value, int alignment = 0, string? format = null) => AppendFormatted(value.ToString(), alignment, format);
-#pragma warning restore RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
 #endif
 
         // NOTE: All the overloads involving format and/or alignment are not super efficient.
@@ -62,12 +63,10 @@ public sealed partial class Assert
         public void AppendFormatted(string? value) => _builder!.Append(value);
 
 #pragma warning disable RS0026 // Do not add multiple public overloads with optional parameters
-#pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
         public void AppendFormatted(string? value, int alignment = 0, string? format = null) => _builder!.AppendFormat(null, $"{{0,{alignment}:{format}}}", value);
 
         public void AppendFormatted(object? value, int alignment = 0, string? format = null) => _builder!.AppendFormat(null, $"{{0,{alignment}:{format}}}", value);
 #pragma warning restore RS0026 // Do not add multiple public overloads with optional parameters
-#pragma warning restore RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
     }
 
     [InterpolatedStringHandler]
@@ -100,9 +99,7 @@ public sealed partial class Assert
 #if NETCOREAPP3_1_OR_GREATER
         public void AppendFormatted(ReadOnlySpan<char> value) => _builder!.Append(value);
 
-#pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
         public void AppendFormatted(ReadOnlySpan<char> value, int alignment = 0, string? format = null) => AppendFormatted(value.ToString(), alignment, format);
-#pragma warning restore RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
 #endif
 
         // NOTE: All the overloads involving format and/or alignment are not super efficient.
@@ -119,40 +116,12 @@ public sealed partial class Assert
         public void AppendFormatted(string? value) => _builder!.Append(value);
 
 #pragma warning disable RS0026 // Do not add multiple public overloads with optional parameters
-#pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
         public void AppendFormatted(string? value, int alignment = 0, string? format = null) => _builder!.AppendFormat(null, $"{{0,{alignment}:{format}}}", value);
 
         public void AppendFormatted(object? value, int alignment = 0, string? format = null) => _builder!.AppendFormat(null, $"{{0,{alignment}:{format}}}", value);
 #pragma warning restore RS0026 // Do not add multiple public overloads with optional parameters
-#pragma warning restore RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
     }
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
-
-    /// <summary>
-    /// Tests whether the specified condition is true and throws an exception
-    /// if the condition is false.
-    /// </summary>
-    /// <param name="condition">
-    /// The condition the test expects to be true.
-    /// </param>
-    /// <exception cref="AssertFailedException">
-    /// Thrown if <paramref name="condition"/> is false.
-    /// </exception>
-    public static void IsTrue([DoesNotReturnIf(false)] bool condition)
-        => IsTrue(condition, string.Empty);
-
-    /// <summary>
-    /// Tests whether the specified condition is true and throws an exception
-    /// if the condition is false.
-    /// </summary>
-    /// <param name="condition">
-    /// The condition the test expects to be true.
-    /// </param>
-    /// <exception cref="AssertFailedException">
-    /// Thrown if <paramref name="condition"/> is false.
-    /// </exception>
-    public static void IsTrue([DoesNotReturnIf(false)] bool? condition)
-        => IsTrue(condition, string.Empty);
 
     /// <inheritdoc cref="IsTrue(bool, string?)"/>
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
@@ -180,7 +149,7 @@ public sealed partial class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="condition"/> is false.
     /// </exception>
-    public static void IsTrue([DoesNotReturnIf(false)] bool condition, string? message)
+    public static void IsTrue([DoesNotReturnIf(false)] bool condition, [CallerArgumentExpression(nameof(condition))] string message = "")
     {
         if (IsTrueFailing(condition))
         {
@@ -202,7 +171,7 @@ public sealed partial class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="condition"/> is false.
     /// </exception>
-    public static void IsTrue([DoesNotReturnIf(false)] bool? condition, string? message)
+    public static void IsTrue([DoesNotReturnIf(false)] bool? condition, [CallerArgumentExpression(nameof(condition))] string message = "")
     {
         if (IsTrueFailing(condition))
         {
@@ -218,32 +187,6 @@ public sealed partial class Assert
 
     private static void ThrowAssertIsTrueFailed(string message)
         => ThrowAssertFailed("Assert.IsTrue", message);
-
-    /// <summary>
-    /// Tests whether the specified condition is false and throws an exception
-    /// if the condition is true.
-    /// </summary>
-    /// <param name="condition">
-    /// The condition the test expects to be false.
-    /// </param>
-    /// <exception cref="AssertFailedException">
-    /// Thrown if <paramref name="condition"/> is true.
-    /// </exception>
-    public static void IsFalse([DoesNotReturnIf(true)] bool condition)
-        => IsFalse(condition, string.Empty);
-
-    /// <summary>
-    /// Tests whether the specified condition is false and throws an exception
-    /// if the condition is true.
-    /// </summary>
-    /// <param name="condition">
-    /// The condition the test expects to be false.
-    /// </param>
-    /// <exception cref="AssertFailedException">
-    /// Thrown if <paramref name="condition"/> is true.
-    /// </exception>
-    public static void IsFalse([DoesNotReturnIf(true)] bool? condition)
-        => IsFalse(condition, string.Empty);
 
     /// <inheritdoc cref="IsFalse(bool, string?)" />
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
@@ -271,7 +214,7 @@ public sealed partial class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="condition"/> is true.
     /// </exception>
-    public static void IsFalse([DoesNotReturnIf(true)] bool condition, string? message)
+    public static void IsFalse([DoesNotReturnIf(true)] bool condition, [CallerArgumentExpression(nameof(condition))] string message = "")
     {
         if (IsFalseFailing(condition))
         {
@@ -293,7 +236,7 @@ public sealed partial class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="condition"/> is true.
     /// </exception>
-    public static void IsFalse([DoesNotReturnIf(true)] bool? condition, string? message)
+    public static void IsFalse([DoesNotReturnIf(true)] bool? condition, [CallerArgumentExpression(nameof(condition))] string message = "")
     {
         if (IsFalseFailing(condition))
         {

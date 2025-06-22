@@ -10,6 +10,9 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// unit tests. If the condition being tested is not met, an exception
 /// is thrown.
 /// </summary>
+
+#pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
+
 public sealed partial class Assert
 {
     [InterpolatedStringHandler]
@@ -43,9 +46,7 @@ public sealed partial class Assert
 #if NETCOREAPP3_1_OR_GREATER
         public void AppendFormatted(ReadOnlySpan<char> value) => _builder!.Append(value);
 
-#pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
         public void AppendFormatted(ReadOnlySpan<char> value, int alignment = 0, string? format = null) => AppendFormatted(value.ToString(), alignment, format);
-#pragma warning restore RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
 #endif
 
         // NOTE: All the overloads involving format and/or alignment are not super efficient.
@@ -62,12 +63,10 @@ public sealed partial class Assert
         public void AppendFormatted(string? value) => _builder!.Append(value);
 
 #pragma warning disable RS0026 // Do not add multiple public overloads with optional parameters
-#pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
         public void AppendFormatted(string? value, int alignment = 0, string? format = null) => _builder!.AppendFormat(null, $"{{0,{alignment}:{format}}}", value);
 
         public void AppendFormatted(object? value, int alignment = 0, string? format = null) => _builder!.AppendFormat(null, $"{{0,{alignment}:{format}}}", value);
 #pragma warning restore RS0026 // Do not add multiple public overloads with optional parameters
-#pragma warning restore RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
     }
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 
@@ -102,9 +101,7 @@ public sealed partial class Assert
 #if NETCOREAPP3_1_OR_GREATER
         public void AppendFormatted(ReadOnlySpan<char> value) => _builder!.Append(value);
 
-#pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
         public void AppendFormatted(ReadOnlySpan<char> value, int alignment = 0, string? format = null) => AppendFormatted(value.ToString(), alignment, format);
-#pragma warning restore RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
 #endif
 
         // NOTE: All the overloads involving format and/or alignment are not super efficient.
@@ -121,27 +118,12 @@ public sealed partial class Assert
         public void AppendFormatted(string? value) => _builder!.Append(value);
 
 #pragma warning disable RS0026 // Do not add multiple public overloads with optional parameters
-#pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
         public void AppendFormatted(string? value, int alignment = 0, string? format = null) => _builder!.AppendFormat(null, $"{{0,{alignment}:{format}}}", value);
 
         public void AppendFormatted(object? value, int alignment = 0, string? format = null) => _builder!.AppendFormat(null, $"{{0,{alignment}:{format}}}", value);
 #pragma warning restore RS0026 // Do not add multiple public overloads with optional parameters
-#pragma warning restore RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
     }
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
-
-    /// <summary>
-    /// Tests whether the specified object is null and throws an exception
-    /// if it is not.
-    /// </summary>
-    /// <param name="value">
-    /// The object the test expects to be null.
-    /// </param>
-    /// <exception cref="AssertFailedException">
-    /// Thrown if <paramref name="value"/> is not null.
-    /// </exception>
-    public static void IsNull(object? value)
-        => IsNull(value, string.Empty);
 
     /// <inheritdoc cref="IsNull(object?, string?)" />
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
@@ -163,7 +145,7 @@ public sealed partial class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="value"/> is not null.
     /// </exception>
-    public static void IsNull(object? value, string? message)
+    public static void IsNull(object? value, [CallerArgumentExpression(nameof(value))] string message = "")
     {
         if (IsNullFailing(value))
         {
@@ -175,19 +157,6 @@ public sealed partial class Assert
 
     private static void ThrowAssertIsNullFailed(string message)
         => ThrowAssertFailed("Assert.IsNull", message);
-
-    /// <summary>
-    /// Tests whether the specified object is non-null and throws an exception
-    /// if it is null.
-    /// </summary>
-    /// <param name="value">
-    /// The object the test expects not to be null.
-    /// </param>
-    /// <exception cref="AssertFailedException">
-    /// Thrown if <paramref name="value"/> is null.
-    /// </exception>
-    public static void IsNotNull([NotNull] object? value)
-        => IsNotNull(value, string.Empty);
 
     /// <inheritdoc cref="IsNull(object?, string?)" />
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
@@ -211,7 +180,7 @@ public sealed partial class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="value"/> is null.
     /// </exception>
-    public static void IsNotNull([NotNull] object? value, string? message)
+    public static void IsNotNull([NotNull] object? value, [CallerArgumentExpression(nameof(value))] string message = "")
     {
         if (IsNotNullFailing(value))
         {
