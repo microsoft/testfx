@@ -247,10 +247,10 @@ public partial class AssertTests : TestContainer
         var instanceOfB = new B { Id = "SomeId" };
 
         // This call works because B implements IEquatable<A>
-        Assert.AreEqual(instanceOfA, instanceOfB);
+        Assert.AreEqual<object>(instanceOfA, instanceOfB);
 
         // This one doesn't work
-        VerifyThrows(() => Assert.AreEqual(instanceOfB, instanceOfA));
+        VerifyThrows(() => Assert.AreEqual<object>(instanceOfB, instanceOfA));
     }
 
 #pragma warning disable IDE0004
