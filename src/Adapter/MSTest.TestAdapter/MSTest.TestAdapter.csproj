@@ -13,6 +13,15 @@
     <!-- Enable AOT analyzer warnings to make sure we don't call APIs that would fail when we use source generator mode together with NativeAOT. -->
     <IsAotCompatible Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net7.0'))">$(EnableIotAnalyzers)</IsAotCompatible>
   </PropertyGroup>
+  
+  <PropertyGroup Condition=" '$(TargetFramework)' == '$(WinUiMinimum)' ">
+    <TargetPlatformVersion>10.0.18362.0</TargetPlatformVersion>
+    <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
+    <SupportedOSPlatformVersion>$(TargetPlatformMinVersion)</SupportedOSPlatformVersion>
+    <RuntimeIdentifiers>win-x86;win-x64;win-arm64</RuntimeIdentifiers>
+    <DefineConstants>$(DefineConstants);WIN_UI</DefineConstants>
+  </PropertyGroup>
+  
 
   <PropertyGroup>
     <IsPackable>true</IsPackable>
