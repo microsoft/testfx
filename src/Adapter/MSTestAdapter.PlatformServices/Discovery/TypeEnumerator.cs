@@ -20,7 +20,6 @@ internal class TypeEnumerator
     private readonly string _assemblyFilePath;
     private readonly TypeValidator _typeValidator;
     private readonly TestMethodValidator _testMethodValidator;
-    private readonly TestIdGenerationStrategy _testIdGenerationStrategy;
     private readonly ReflectHelper _reflectHelper;
 
     /// <summary>
@@ -31,15 +30,13 @@ internal class TypeEnumerator
     /// <param name="reflectHelper"> An instance to reflection helper for type information. </param>
     /// <param name="typeValidator"> The validator for test classes. </param>
     /// <param name="testMethodValidator"> The validator for test methods. </param>
-    /// <param name="testIdGenerationStrategy"><see cref="TestIdGenerationStrategy"/> to use when generating TestId.</param>
-    internal TypeEnumerator(Type type, string assemblyFilePath, ReflectHelper reflectHelper, TypeValidator typeValidator, TestMethodValidator testMethodValidator, TestIdGenerationStrategy testIdGenerationStrategy)
+    internal TypeEnumerator(Type type, string assemblyFilePath, ReflectHelper reflectHelper, TypeValidator typeValidator, TestMethodValidator testMethodValidator)
     {
         _type = type;
         _assemblyFilePath = assemblyFilePath;
         _reflectHelper = reflectHelper;
         _typeValidator = typeValidator;
         _testMethodValidator = testMethodValidator;
-        _testIdGenerationStrategy = testIdGenerationStrategy;
     }
 
     /// <summary>
@@ -130,7 +127,7 @@ internal class TypeEnumerator
 
         ManagedNameHelper.GetManagedName(method, out string managedType, out string managedMethod, out string?[]? hierarchyValues);
         hierarchyValues[HierarchyConstants.Levels.ContainerIndex] = null; // This one will be set by test windows to current test project name.
-        var testMethod = new TestMethod(managedType, managedMethod, hierarchyValues, method.Name, _type.FullName!, _assemblyFilePath, null, _testIdGenerationStrategy);
+        var testMethod = new TestMethod(managedType, managedMethod, hierarchyValues, method.Name, _type.FullName!, _assemblyFilePath, null);
 
         if (!string.Equals(method.DeclaringType!.FullName, _type.FullName, StringComparison.Ordinal))
         {

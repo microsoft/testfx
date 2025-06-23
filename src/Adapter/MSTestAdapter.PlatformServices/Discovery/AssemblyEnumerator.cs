@@ -76,12 +76,6 @@ internal class AssemblyEnumerator : MarshalByRefObject
 
         Type[] types = GetTypes(assembly, assemblyFileName, warnings);
         bool discoverInternals = ReflectHelper.GetDiscoverInternalsAttribute(assembly) != null;
-        TestIdGenerationStrategy testIdGenerationStrategy = ReflectHelper.GetTestIdGenerationStrategy(assembly);
-
-        // Set the test ID generation strategy for DataRowAttribute and DynamicDataAttribute so we can improve display name without
-        // causing a breaking change.
-        DataRowAttribute.TestIdGenerationStrategy = testIdGenerationStrategy;
-        DynamicDataAttribute.TestIdGenerationStrategy = testIdGenerationStrategy;
 
         TestDataSourceUnfoldingStrategy dataSourcesUnfoldingStrategy = ReflectHelper.GetTestDataSourceOptions(assembly)?.UnfoldingStrategy switch
         {
@@ -90,16 +84,9 @@ internal class AssemblyEnumerator : MarshalByRefObject
             // When strategy is set, let's use it
             { } value => value,
             // When the attribute is not set, let's look at the legacy attribute
-#pragma warning disable CS0612 // Type or member is obsolete
-#pragma warning disable CS0618 // Type or member is obsolete
-            null => (ReflectHelper.GetTestDataSourceDiscoveryOption(assembly), testIdGenerationStrategy) switch
-#pragma warning restore CS0612 // Type or member is obsolete
+            null => ReflectHelper.GetTestDataSourceDiscoveryOption(assembly) switch
             {
-                (TestDataSourceDiscoveryOption.DuringExecution, _) => TestDataSourceUnfoldingStrategy.Fold,
-                // When using legacy strategy, there is no point in trying to "read" data during discovery
-                // as the ID generator will ignore it.
-                (null, TestIdGenerationStrategy.Legacy) => TestDataSourceUnfoldingStrategy.Fold,
-#pragma warning restore CS0618 // Type or member is obsolete
+                TestDataSourceDiscoveryOption.DuringExecution => TestDataSourceUnfoldingStrategy.Fold,
                 _ => TestDataSourceUnfoldingStrategy.Unfold,
             },
         };
@@ -112,7 +99,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
             }
 
             List<UnitTestElement> testsInType = DiscoverTestsInType(assemblyFileName, type, warnings, discoverInternals,
-                dataSourcesUnfoldingStrategy, testIdGenerationStrategy, fixturesTests);
+                dataSourcesUnfoldingStrategy, fixturesTests);
             tests.AddRange(testsInType);
         }
 
@@ -195,14 +182,13 @@ internal class AssemblyEnumerator : MarshalByRefObject
     /// <param name="assemblyFileName">The reflected assembly name.</param>
     /// <param name="discoverInternals">True to discover test classes which are declared internal in
     /// addition to test classes which are declared public.</param>
-    /// <param name="testIdGenerationStrategy"><see cref="TestIdGenerationStrategy"/> to use when generating TestId.</param>
     /// <returns>a TypeEnumerator instance.</returns>
-    internal virtual TypeEnumerator GetTypeEnumerator(Type type, string assemblyFileName, bool discoverInternals, TestIdGenerationStrategy testIdGenerationStrategy)
+    internal virtual TypeEnumerator GetTypeEnumerator(Type type, string assemblyFileName, bool discoverInternals)
     {
         var typeValidator = new TypeValidator(ReflectHelper, discoverInternals);
         var testMethodValidator = new TestMethodValidator(ReflectHelper, discoverInternals);
 
-        return new TypeEnumerator(type, assemblyFileName, ReflectHelper, typeValidator, testMethodValidator, testIdGenerationStrategy);
+        return new TypeEnumerator(type, assemblyFileName, ReflectHelper, typeValidator, testMethodValidator);
     }
 
     private List<UnitTestElement> DiscoverTestsInType(
@@ -211,7 +197,6 @@ internal class AssemblyEnumerator : MarshalByRefObject
         List<string> warningMessages,
         bool discoverInternals,
         TestDataSourceUnfoldingStrategy dataSourcesUnfoldingStrategy,
-        TestIdGenerationStrategy testIdGenerationStrategy,
         HashSet<string> fixturesTests)
     {
         string? typeFullName = null;
@@ -220,7 +205,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
         try
         {
             typeFullName = type.FullName;
-            TypeEnumerator testTypeEnumerator = GetTypeEnumerator(type, assemblyFileName, discoverInternals, testIdGenerationStrategy);
+            TypeEnumerator testTypeEnumerator = GetTypeEnumerator(type, assemblyFileName, discoverInternals);
             List<UnitTestElement>? unitTestCases = testTypeEnumerator.Enumerate(warningMessages);
 
             if (unitTestCases != null)
@@ -327,7 +312,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
 
         static UnitTestElement GetFixtureTest(string classFullName, string assemblyLocation, string fixtureType, string methodName, string[] hierarchy)
         {
-            var method = new TestMethod(classFullName, methodName, hierarchy, methodName, classFullName, assemblyLocation, null, TestIdGenerationStrategy.FullyQualified);
+            var method = new TestMethod(classFullName, methodName, hierarchy, methodName, classFullName, assemblyLocation, null);
             return new UnitTestElement(method)
             {
                 DisplayName = $"[{fixtureType}] {methodName}",
@@ -446,20 +431,6 @@ internal class AssemblyEnumerator : MarshalByRefObject
 
             UnitTestElement discoveredTest = test.Clone();
             discoveredTest.DisplayName = displayNameFromTestDataRow ?? dataSource.GetDisplayName(methodInfo, d) ?? discoveredTest.DisplayName;
-
-            // If strategy is DisplayName and we have a duplicate test name don't expand the test, bail out.
-#pragma warning disable CS0618 // Type or member is obsolete
-            if (test.TestMethod.TestIdGenerationStrategy == TestIdGenerationStrategy.DisplayName
-                && testDisplayNameFirstSeen.TryGetValue(discoveredTest.DisplayName!, out int firstIndexSeen))
-            {
-                string warning = string.Format(CultureInfo.CurrentCulture, Resource.CannotExpandIDataSourceAttribute_DuplicateDisplayName, firstIndexSeen, index, discoveredTest.DisplayName);
-                warning = string.Format(CultureInfo.CurrentCulture, Resource.CannotExpandIDataSourceAttribute, test.TestMethod.ManagedTypeName, test.TestMethod.ManagedMethodName, warning);
-                PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning($"DynamicDataEnumerator: {warning}");
-
-                // Duplicated display name so bail out. Caller will handle adding the original test.
-                return false;
-            }
-#pragma warning restore CS0618 // Type or member is obsolete
 
             try
             {

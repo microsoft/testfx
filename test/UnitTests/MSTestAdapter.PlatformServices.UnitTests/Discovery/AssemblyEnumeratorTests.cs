@@ -416,12 +416,6 @@ public class AssemblyEnumeratorTests : TestContainer
                 true))
             .Returns(Array.Empty<Attribute>());
 
-        mockAssembly
-            .Setup(a => a.GetCustomAttributes(
-                typeof(TestIdGenerationStrategyAttribute),
-                true))
-            .Returns(Array.Empty<Attribute>());
-
         return mockAssembly;
     }
 
@@ -444,13 +438,12 @@ internal sealed class TestableAssemblyEnumerator : AssemblyEnumerator
             "DummyAssembly",
             reflectHelper.Object,
             typeValidator.Object,
-            testMethodValidator.Object,
-            TestIdGenerationStrategy.FullyQualified);
+            testMethodValidator.Object);
     }
 
     internal Mock<TypeEnumerator> MockTypeEnumerator { get; set; }
 
-    internal override TypeEnumerator GetTypeEnumerator(Type type, string assemblyFileName, bool discoverInternals, TestIdGenerationStrategy testIdGenerationStrategy)
+    internal override TypeEnumerator GetTypeEnumerator(Type type, string assemblyFileName, bool discoverInternals)
         => MockTypeEnumerator.Object;
 }
 
