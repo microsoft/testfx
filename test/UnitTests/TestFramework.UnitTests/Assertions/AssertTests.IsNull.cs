@@ -13,7 +13,7 @@ public partial class AssertTests : TestContainer
     public void IsNull_PassNonNull_ShouldFail()
     {
         Exception ex = VerifyThrows(() => Assert.IsNull(new object()));
-        Verify(ex.Message == "Assert.IsNull failed. ");
+        Verify(ex.Message == "Assert.IsNull failed. new object()");
     }
 
     public void IsNull_StringMessage_PassNull_ShouldPass()
@@ -67,7 +67,7 @@ public partial class AssertTests : TestContainer
     public void IsNotNull_PassNull_ShouldFail()
     {
         Exception ex = VerifyThrows(() => Assert.IsNotNull(null));
-        Verify(ex.Message == "Assert.IsNotNull failed. ");
+        Verify(ex.Message == "Assert.IsNotNull failed. null");
     }
 
     public void IsNotNull_StringMessage_PassNonNull_ShouldFail()

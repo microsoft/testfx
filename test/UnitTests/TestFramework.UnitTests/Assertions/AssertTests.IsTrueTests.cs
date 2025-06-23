@@ -9,14 +9,14 @@ public partial class AssertTests
     {
         bool? nullBool = null;
         Exception ex = VerifyThrows(() => Assert.IsFalse(nullBool));
-        Verify(ex.Message == "Assert.IsFalse failed. ");
+        Verify(ex.Message == "Assert.IsFalse failed. nullBool");
     }
 
     public void IsFalseNullableBooleanShouldFailWithTrue()
     {
         bool? nullBool = true;
         Exception ex = VerifyThrows(() => Assert.IsFalse(nullBool));
-        Verify(ex.Message == "Assert.IsFalse failed. ");
+        Verify(ex.Message == "Assert.IsFalse failed. nullBool");
     }
 
     public void IsFalseNullableBooleanShouldNotFailWithFalse()
@@ -28,7 +28,7 @@ public partial class AssertTests
     public void IsFalseBooleanShouldFailWithTrue()
     {
         Exception ex = VerifyThrows(() => Assert.IsFalse(true));
-        Verify(ex.Message == "Assert.IsFalse failed. ");
+        Verify(ex.Message == "Assert.IsFalse failed. true");
     }
 
     public void IsFalseBooleanShouldNotFailWithFalse()
@@ -102,14 +102,14 @@ public partial class AssertTests
     {
         bool? nullBool = null;
         Exception ex = VerifyThrows(() => Assert.IsTrue(nullBool));
-        Verify(ex.Message == "Assert.IsTrue failed. ");
+        Verify(ex.Message == "Assert.IsTrue failed. nullBool");
     }
 
     public void IsTrueNullableBooleanShouldFailWithFalse()
     {
         bool? nullBool = false;
         Exception ex = VerifyThrows(() => Assert.IsTrue(nullBool));
-        Verify(ex.Message == "Assert.IsTrue failed. ");
+        Verify(ex.Message == "Assert.IsTrue failed. nullBool");
     }
 
     public void IsTrueNullableBooleanShouldNotFailWithTrue()
@@ -121,7 +121,7 @@ public partial class AssertTests
     public void IsTrueBooleanShouldFailWithFalse()
     {
         Exception ex = VerifyThrows(() => Assert.IsTrue(false));
-        Verify(ex.Message == "Assert.IsTrue failed. ");
+        Verify(ex.Message == "Assert.IsTrue failed. false");
     }
 
     public void IsTrueBooleanShouldNotFailWithTrue()
