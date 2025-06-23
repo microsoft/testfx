@@ -303,11 +303,11 @@ public class ParameterizedTestSerializationIssue2390
 #file AppDomainEnabled.runsettings
 <?xml version="1.0" encoding="utf-8" ?>
 <RunSettings>
-    <MSTest>
+    <RunConfiguration>
         <!-- Currently, the default is already false, but we want to ensure the
              test runs with AppDomain enabled even if we changed the default -->
         <DisableAppDomain>false</DisableAppDomain>
-    </MSTest>
+    </RunConfiguration>
 </RunSettings>
 
 #file UnitTest1.cs
