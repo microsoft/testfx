@@ -22,7 +22,8 @@ public sealed class TestClassShouldBeValidAnalyzer : DiagnosticAnalyzer
     private static readonly LocalizableResourceString Description = new(nameof(Resources.TestClassShouldBeValidDescription), Resources.ResourceManager, typeof(Resources));
     private static readonly LocalizableResourceString MessageFormat = new(nameof(Resources.TestClassShouldBeValidMessageFormat), Resources.ResourceManager, typeof(Resources));
 
-    internal static readonly DiagnosticDescriptor TestClassShouldBeValidRule = DiagnosticDescriptorHelper.Create(
+    /// <inheritdoc cref="Resources.TestClassShouldBeValidTitle" />
+    public static readonly DiagnosticDescriptor TestClassShouldBeValidRule = DiagnosticDescriptorHelper.Create(
         DiagnosticIds.TestClassShouldBeValidRuleId,
         Title,
         MessageFormat,

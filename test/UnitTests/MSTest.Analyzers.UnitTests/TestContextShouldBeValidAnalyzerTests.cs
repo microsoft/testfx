@@ -35,7 +35,7 @@ public sealed class TestContextShouldBeValidAnalyzerTests
             [TestClass]
             public class MyTestClass
             {
-                {{accessibility}} TestContext {|#0:{{fieldName}}|};
+                {{accessibility}} TestContext [|{{fieldName}}|];
             }
             """;
         string fixedCode =
@@ -50,7 +50,6 @@ public sealed class TestContextShouldBeValidAnalyzerTests
             """;
         await VerifyCS.VerifyCodeFixAsync(
             code,
-            VerifyCS.Diagnostic(TestContextShouldBeValidAnalyzer.TestContextShouldBeValidRule).WithLocation(0),
             fixedCode);
     }
 
@@ -128,7 +127,7 @@ public sealed class TestContextShouldBeValidAnalyzerTests
             [TestClass]
             public class MyTestClass
             {
-                {{accessibility}} TestContext {|#0:{{propertyName}}|} { get; set; }
+                {{accessibility}} TestContext [|{{propertyName}}|] { get; set; }
             }
             """;
         string fixedCode =
@@ -143,8 +142,6 @@ public sealed class TestContextShouldBeValidAnalyzerTests
             """;
         await VerifyCS.VerifyCodeFixAsync(
             code,
-            VerifyCS.Diagnostic(TestContextShouldBeValidAnalyzer.TestContextShouldBeValidRule)
-                .WithLocation(0),
             fixedCode);
     }
 
@@ -208,7 +205,7 @@ public sealed class TestContextShouldBeValidAnalyzerTests
             [TestClass]
             public class MyTestClass
             {
-                private TestContext {|#0:TestContext|} { get; set; }
+                private TestContext [|TestContext|] { get; set; }
             }
             """;
         string fixedCode = """
@@ -225,8 +222,6 @@ public sealed class TestContextShouldBeValidAnalyzerTests
 
         await VerifyCS.VerifyCodeFixAsync(
             code,
-            VerifyCS.Diagnostic(TestContextShouldBeValidAnalyzer.TestContextShouldBeValidRule)
-                .WithLocation(0),
             fixedCode);
     }
 
@@ -316,7 +311,7 @@ public sealed class TestContextShouldBeValidAnalyzerTests
             [TestClass]
             public class MyTestClass
             {
-                public static TestContext {|#0:TestContext|} { get; set; }
+                public static TestContext [|TestContext|] { get; set; }
             }
             """;
         string fixedCode =
@@ -332,8 +327,6 @@ public sealed class TestContextShouldBeValidAnalyzerTests
 
         await VerifyCS.VerifyCodeFixAsync(
             code,
-            VerifyCS.Diagnostic(TestContextShouldBeValidAnalyzer.TestContextShouldBeValidRule)
-                .WithLocation(0),
             fixedCode);
     }
 
@@ -347,7 +340,7 @@ public sealed class TestContextShouldBeValidAnalyzerTests
             [TestClass]
             public class MyTestClass
             {
-                public TestContext {|#0:TestContext|} { get; }
+                public TestContext [|TestContext|] { get; }
             }
             """;
         string fixedCode =
@@ -363,8 +356,6 @@ public sealed class TestContextShouldBeValidAnalyzerTests
 
         await VerifyCS.VerifyCodeFixAsync(
             code,
-            VerifyCS.Diagnostic(TestContextShouldBeValidAnalyzer.TestContextShouldBeValidRule)
-                .WithLocation(0),
             fixedCode);
     }
 
@@ -378,7 +369,7 @@ public sealed class TestContextShouldBeValidAnalyzerTests
             [TestClass]
             public class MyTestClass
             {
-                public TestContext {|#0:testContext|} { get; set; }
+                public TestContext [|testContext|] { get; set; }
             }
             """;
         string fixedCode =
@@ -394,8 +385,6 @@ public sealed class TestContextShouldBeValidAnalyzerTests
 
         await VerifyCS.VerifyCodeFixAsync(
             code,
-            VerifyCS.Diagnostic(TestContextShouldBeValidAnalyzer.TestContextShouldBeValidRule)
-                .WithLocation(0),
             fixedCode);
     }
 
