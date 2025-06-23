@@ -280,10 +280,10 @@ public class ReflectHelperTests : TestContainer
             _mockReflectionOperations.Setup(r => r.GetCustomAttributes(It.IsAny<MemberInfo>()))
                 .Returns<ICustomAttributeProvider, bool>(GetCustomAttributesNotCached);
             _mockReflectionOperations.Setup(r => r.GetCustomAttributes(It.IsAny<Assembly>(), It.IsAny<Type>()))
-                .Returns<ICustomAttributeProvider, Type>((assembly, _) => GetCustomAttributesNotCached(assembly, false));
+                .Returns<ICustomAttributeProvider, Type>(GetCustomAttributesNotCached);
         }
 
-        public object[] GetCustomAttributesNotCached(ICustomAttributeProvider attributeProvider, bool inherit)
+        public object[] GetCustomAttributesNotCached(ICustomAttributeProvider attributeProvider)
         {
             var foundAttributes = new List<Attribute>();
             foreach ((Type Type, Attribute Attribute, MemberTypes MemberType) attributeData in _data)
