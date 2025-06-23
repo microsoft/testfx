@@ -15,13 +15,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 /// <summary>
 /// TestMethod contains information about a unit test method that needs to be executed.
 /// </summary>
-#if NET6_0_OR_GREATER
-[Obsolete(FrameworkConstants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
-#else
-[Obsolete(FrameworkConstants.PublicTypeObsoleteMessage)]
-#endif
 [Serializable]
-public sealed class TestMethod : ITestMethod
+internal sealed class TestMethod : ITestMethod
 {
     /// <summary>
     /// Number of elements in <see cref="Hierarchy"/>.
@@ -117,9 +112,6 @@ public sealed class TestMethod : ITestMethod
 
     /// <inheritdoc />
     public string AssemblyName { get; private set; }
-
-    /// <inheritdoc />
-    public bool IsAsync => false; // TODO: Remove this property. We can't remove now as it's public and breaking change.
 
     /// <inheritdoc />
     public string? ManagedTypeName { get; }

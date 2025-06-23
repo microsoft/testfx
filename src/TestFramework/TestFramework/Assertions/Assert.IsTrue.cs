@@ -139,7 +139,7 @@ public sealed partial class Assert
     /// Thrown if <paramref name="condition"/> is false.
     /// </exception>
     public static void IsTrue([DoesNotReturnIf(false)] bool condition)
-        => IsTrue(condition, string.Empty, null);
+        => IsTrue(condition, string.Empty);
 
     /// <summary>
     /// Tests whether the specified condition is true and throws an exception
@@ -152,47 +152,13 @@ public sealed partial class Assert
     /// Thrown if <paramref name="condition"/> is false.
     /// </exception>
     public static void IsTrue([DoesNotReturnIf(false)] bool? condition)
-        => IsTrue(condition, string.Empty, null);
-
-    /// <summary>
-    /// Tests whether the specified condition is true and throws an exception
-    /// if the condition is false.
-    /// </summary>
-    /// <param name="condition">
-    /// The condition the test expects to be true.
-    /// </param>
-    /// <param name="message">
-    /// The message to include in the exception when <paramref name="condition"/>
-    /// is false. The message is shown in test results.
-    /// </param>
-    /// <exception cref="AssertFailedException">
-    /// Thrown if <paramref name="condition"/> is false.
-    /// </exception>
-    public static void IsTrue([DoesNotReturnIf(false)] bool condition, string? message)
-        => IsTrue(condition, message, null);
+        => IsTrue(condition, string.Empty);
 
     /// <inheritdoc cref="IsTrue(bool, string?)"/>
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
     public static void IsTrue([DoesNotReturnIf(false)] bool condition, [InterpolatedStringHandlerArgument(nameof(condition))] ref AssertIsTrueInterpolatedStringHandler message)
 #pragma warning restore IDE0060 // Remove unused parameter
         => message.ComputeAssertion();
-
-    /// <summary>
-    /// Tests whether the specified condition is true and throws an exception
-    /// if the condition is false.
-    /// </summary>
-    /// <param name="condition">
-    /// The condition the test expects to be true.
-    /// </param>
-    /// <param name="message">
-    /// The message to include in the exception when <paramref name="condition"/>
-    /// is false. The message is shown in test results.
-    /// </param>
-    /// <exception cref="AssertFailedException">
-    /// Thrown if <paramref name="condition"/> is false.
-    /// </exception>
-    public static void IsTrue([DoesNotReturnIf(false)] bool? condition, string? message)
-        => IsTrue(condition, message, null);
 
     /// <inheritdoc cref="IsTrue(bool?, string?)"/>
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
@@ -211,18 +177,14 @@ public sealed partial class Assert
     /// The message to include in the exception when <paramref name="condition"/>
     /// is false. The message is shown in test results.
     /// </param>
-    /// <param name="parameters">
-    /// An array of parameters to use when formatting <paramref name="message"/>.
-    /// </param>
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="condition"/> is false.
     /// </exception>
-    public static void IsTrue([DoesNotReturnIf(false)] bool condition, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message,
-        params object?[]? parameters)
+    public static void IsTrue([DoesNotReturnIf(false)] bool condition, string? message)
     {
         if (IsTrueFailing(condition))
         {
-            ThrowAssertIsTrueFailed(BuildUserMessage(message, parameters));
+            ThrowAssertIsTrueFailed(BuildUserMessage(message));
         }
     }
 
@@ -237,18 +199,14 @@ public sealed partial class Assert
     /// The message to include in the exception when <paramref name="condition"/>
     /// is false. The message is shown in test results.
     /// </param>
-    /// <param name="parameters">
-    /// An array of parameters to use when formatting <paramref name="message"/>.
-    /// </param>
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="condition"/> is false.
     /// </exception>
-    public static void IsTrue([DoesNotReturnIf(false)] bool? condition, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message,
-        params object?[]? parameters)
+    public static void IsTrue([DoesNotReturnIf(false)] bool? condition, string? message)
     {
         if (IsTrueFailing(condition))
         {
-            ThrowAssertIsTrueFailed(BuildUserMessage(message, parameters));
+            ThrowAssertIsTrueFailed(BuildUserMessage(message));
         }
     }
 
@@ -272,7 +230,7 @@ public sealed partial class Assert
     /// Thrown if <paramref name="condition"/> is true.
     /// </exception>
     public static void IsFalse([DoesNotReturnIf(true)] bool condition)
-        => IsFalse(condition, string.Empty, null);
+        => IsFalse(condition, string.Empty);
 
     /// <summary>
     /// Tests whether the specified condition is false and throws an exception
@@ -285,47 +243,13 @@ public sealed partial class Assert
     /// Thrown if <paramref name="condition"/> is true.
     /// </exception>
     public static void IsFalse([DoesNotReturnIf(true)] bool? condition)
-        => IsFalse(condition, string.Empty, null);
-
-    /// <summary>
-    /// Tests whether the specified condition is false and throws an exception
-    /// if the condition is true.
-    /// </summary>
-    /// <param name="condition">
-    /// The condition the test expects to be false.
-    /// </param>
-    /// <param name="message">
-    /// The message to include in the exception when <paramref name="condition"/>
-    /// is true. The message is shown in test results.
-    /// </param>
-    /// <exception cref="AssertFailedException">
-    /// Thrown if <paramref name="condition"/> is true.
-    /// </exception>
-    public static void IsFalse([DoesNotReturnIf(true)] bool condition, string? message)
-        => IsFalse(condition, message, null);
+        => IsFalse(condition, string.Empty);
 
     /// <inheritdoc cref="IsFalse(bool, string?)" />
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
     public static void IsFalse([DoesNotReturnIf(true)] bool condition, [InterpolatedStringHandlerArgument(nameof(condition))] ref AssertIsFalseInterpolatedStringHandler message)
 #pragma warning restore IDE0060 // Remove unused parameter
         => message.ComputeAssertion();
-
-    /// <summary>
-    /// Tests whether the specified condition is false and throws an exception
-    /// if the condition is true.
-    /// </summary>
-    /// <param name="condition">
-    /// The condition the test expects to be false.
-    /// </param>
-    /// <param name="message">
-    /// The message to include in the exception when <paramref name="condition"/>
-    /// is true. The message is shown in test results.
-    /// </param>
-    /// <exception cref="AssertFailedException">
-    /// Thrown if <paramref name="condition"/> is true.
-    /// </exception>
-    public static void IsFalse([DoesNotReturnIf(true)] bool? condition, string? message)
-        => IsFalse(condition, message, null);
 
     /// <inheritdoc cref="IsFalse(bool, string?)" />
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
@@ -344,18 +268,14 @@ public sealed partial class Assert
     /// The message to include in the exception when <paramref name="condition"/>
     /// is true. The message is shown in test results.
     /// </param>
-    /// <param name="parameters">
-    /// An array of parameters to use when formatting <paramref name="message"/>.
-    /// </param>
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="condition"/> is true.
     /// </exception>
-    public static void IsFalse([DoesNotReturnIf(true)] bool condition, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message,
-        params object?[]? parameters)
+    public static void IsFalse([DoesNotReturnIf(true)] bool condition, string? message)
     {
         if (IsFalseFailing(condition))
         {
-            ThrowAssertIsFalseFailed(BuildUserMessage(message, parameters));
+            ThrowAssertIsFalseFailed(BuildUserMessage(message));
         }
     }
 
@@ -370,18 +290,14 @@ public sealed partial class Assert
     /// The message to include in the exception when <paramref name="condition"/>
     /// is true. The message is shown in test results.
     /// </param>
-    /// <param name="parameters">
-    /// An array of parameters to use when formatting <paramref name="message"/>.
-    /// </param>
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="condition"/> is true.
     /// </exception>
-    public static void IsFalse([DoesNotReturnIf(true)] bool? condition, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message,
-        params object?[]? parameters)
+    public static void IsFalse([DoesNotReturnIf(true)] bool? condition, string? message)
     {
         if (IsFalseFailing(condition))
         {
-            ThrowAssertIsFalseFailed(BuildUserMessage(message, parameters));
+            ThrowAssertIsFalseFailed(BuildUserMessage(message));
         }
     }
 

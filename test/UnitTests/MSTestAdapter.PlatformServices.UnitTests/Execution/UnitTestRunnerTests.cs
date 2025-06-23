@@ -31,7 +31,7 @@ public sealed class UnitTestRunnerTests : TestContainer
         _mockMessageLogger = new Mock<IMessageLogger>();
         PlatformServiceProvider.Instance = _testablePlatformServiceProvider;
 
-        _unitTestRunner = new UnitTestRunner(GetSettingsWithDebugTrace(false)!, [], null);
+        _unitTestRunner = new UnitTestRunner(GetSettingsWithDebugTrace(false)!, []);
     }
 
     protected override void Dispose(bool disposing)
@@ -65,7 +65,7 @@ public sealed class UnitTestRunnerTests : TestContainer
             });
 
         MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsName, _mockMessageLogger.Object)!;
-        var assemblyEnumerator = new UnitTestRunner(adapterSettings, [], null);
+        var assemblyEnumerator = new UnitTestRunner(adapterSettings, []);
 
         Verify(MSTestSettings.CurrentSettings.ForcedLegacyMode);
         Verify(MSTestSettings.CurrentSettings.TestSettingsFile == "DummyPath\\TestSettings1.testsettings");
@@ -283,7 +283,7 @@ public sealed class UnitTestRunnerTests : TestContainer
     public async Task RunSingleTestShouldCallAssemblyInitializeAndClassInitializeMethodsInOrder()
     {
         var mockReflectHelper = new Mock<ReflectHelper>();
-        _unitTestRunner = new UnitTestRunner(new MSTestSettings(), [], null, mockReflectHelper.Object);
+        _unitTestRunner = new UnitTestRunner(new MSTestSettings(), [], mockReflectHelper.Object);
 
         Type type = typeof(DummyTestClassWithInitializeMethods);
         MethodInfo methodInfo = type.GetMethod("TestMethod")!;

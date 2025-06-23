@@ -9,23 +9,11 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 [AttributeUsage(AttributeTargets.Method)]
 public class STATestMethodAttribute : TestMethodAttribute
 {
-    private protected override bool UseAsync => GetType() == typeof(STATestMethodAttribute);
-
     /// <summary>
     /// Initializes a new instance of the <see cref="STATestMethodAttribute"/> class.
     /// </summary>
-    public STATestMethodAttribute()
-    {
-    }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="STATestMethodAttribute"/> class.
-    /// </summary>
-    /// <param name="displayName">
-    /// Display name for the test.
-    /// </param>
-    public STATestMethodAttribute(string? displayName)
-        : base(displayName)
+    public STATestMethodAttribute([CallerFilePath] string callerFilePath = "", [CallerLineNumber] int callerLineNumber = -1)
+        : base(callerFilePath, callerLineNumber)
     {
     }
 }

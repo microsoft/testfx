@@ -64,25 +64,14 @@ internal sealed class UnitTestElement
     /// </summary>
     public string? DisplayName { get; set; }
 
+    internal string? DeclaringFilePath { get; set; }
+
+    internal int? DeclaringLineNumber { get; set; }
+
     /// <summary>
     /// Gets or sets the compiler generated type name for async test method.
     /// </summary>
     internal string? AsyncTypeName { get; set; }
-
-    /// <summary>
-    /// Gets or sets the Css Iteration for the test method.
-    /// </summary>
-    internal string? CssIteration { get; set; }
-
-    /// <summary>
-    /// Gets or sets the Css Project Structure for the test method.
-    /// </summary>
-    internal string? CssProjectStructure { get; set; }
-
-    /// <summary>
-    /// Gets or sets the Description for the test method.
-    /// </summary>
-    internal string? Description { get; set; }
 
     /// <summary>
     /// Gets or sets the Work Item Ids for the test method.
@@ -153,21 +142,6 @@ internal sealed class UnitTestElement
             testCase.Traits.AddRange(Traits);
         }
 
-        if (!StringEx.IsNullOrEmpty(CssIteration))
-        {
-            testCase.SetPropertyValue(EngineConstants.CssIterationProperty, CssIteration);
-        }
-
-        if (!StringEx.IsNullOrEmpty(CssProjectStructure))
-        {
-            testCase.SetPropertyValue(EngineConstants.CssProjectStructureProperty, CssProjectStructure);
-        }
-
-        if (!StringEx.IsNullOrEmpty(Description))
-        {
-            testCase.SetPropertyValue(EngineConstants.DescriptionProperty, Description);
-        }
-
         if (WorkItemIds != null)
         {
             testCase.SetPropertyValue(EngineConstants.WorkItemIdsProperty, WorkItemIds);
@@ -198,6 +172,9 @@ internal sealed class UnitTestElement
                 testCase.SetPropertyValue(EngineConstants.TestDataSourceIgnoreMessageProperty, TestMethod.TestDataSourceIgnoreMessage);
             }
         }
+
+        testCase.LineNumber = DeclaringLineNumber ?? -1;
+        testCase.CodeFilePath = DeclaringFilePath;
 
         SetTestCaseId(testCase, testFullName);
 

@@ -13,12 +13,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 /// <summary>
 /// The MSTest settings.
 /// </summary>
-#if NET6_0_OR_GREATER
-[Obsolete(TestTools.UnitTesting.FrameworkConstants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
-#else
-[Obsolete(TestTools.UnitTesting.FrameworkConstants.PublicTypeObsoleteMessage)]
-#endif
-public class MSTestAdapterSettings
+#pragma warning disable CA1852 // Seal internal types - Inherited in test
+internal class MSTestAdapterSettings
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="MSTestAdapterSettings"/> class.
@@ -190,20 +186,26 @@ public class MSTestAdapterSettings
             return false;
         }
 
-        bool disableAppDomain = false;
+        bool disableAppDomain = true;
 
         if (!StringEx.IsNullOrEmpty(settingsXml))
         {
             StringReader stringReader = new(settingsXml);
             var reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
-            disableAppDomain = reader.ReadToFollowing("DisableAppDomain") &&
-                bool.TryParse(reader.ReadInnerXml(), out bool result) && result;
+            var xmlDoc = new XmlDocument() { XmlResolver = null };
+            xmlDoc.Load(reader);
+
+            if (bool.TryParse(xmlDoc["RunSettings"]?["RunConfiguration"]?["DisableAppDomain"]?.InnerText, out bool result))
+            {
+                disableAppDomain = result;
+            }
         }
 
         string? isAppDomainDisabled = Configuration?["mstest:execution:disableAppDomain"];
-        if (!StringEx.IsNullOrEmpty(isAppDomainDisabled))
+        if (!StringEx.IsNullOrEmpty(isAppDomainDisabled) &&
+            bool.TryParse(isAppDomainDisabled, out bool resultFromConfiguration))
         {
-            disableAppDomain = bool.TryParse(isAppDomainDisabled, out bool result) && result;
+            disableAppDomain = resultFromConfiguration;
         }
 
         return disableAppDomain;

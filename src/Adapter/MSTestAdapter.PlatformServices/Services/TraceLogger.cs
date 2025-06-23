@@ -9,12 +9,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 /// <summary>
 /// A service to log any trace messages from the adapter that would be shown in *.TpTrace files.
 /// </summary>
-#if NET6_0_OR_GREATER
-[Obsolete(TestTools.UnitTesting.FrameworkConstants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
-#else
-[Obsolete(TestTools.UnitTesting.FrameworkConstants.PublicTypeObsoleteMessage)]
-#endif
-public class AdapterTraceLogger : IAdapterTraceLogger
+internal sealed class AdapterTraceLogger : IAdapterTraceLogger
 {
     /// <summary>
     /// Log an error in a given format.

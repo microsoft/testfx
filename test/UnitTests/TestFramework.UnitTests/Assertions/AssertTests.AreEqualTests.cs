@@ -246,11 +246,13 @@ public partial class AssertTests : TestContainer
         var instanceOfA = new A { Id = "SomeId" };
         var instanceOfB = new B { Id = "SomeId" };
 
-        // This call works because B implements IEquatable<A>
-        Assert.AreEqual(instanceOfA, instanceOfB);
+        // This call works because we call the Equals override of "expected".
+        // The Equals override of 'B' will return true.
+        Assert.AreEqual<object>(instanceOfB, instanceOfA);
 
-        // This one doesn't work
-        VerifyThrows(() => Assert.AreEqual(instanceOfB, instanceOfA));
+        // This one doesn't work, because we call the Equals override of "expected".
+        // The Equals override of 'A' will return false.
+        VerifyThrows(() => Assert.AreEqual<object>(instanceOfA, instanceOfB));
     }
 
 #pragma warning disable IDE0004

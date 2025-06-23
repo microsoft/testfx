@@ -5,7 +5,6 @@
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.AppContainer;
 #endif
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 #if NETFRAMEWORK
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
 #endif
@@ -16,12 +15,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 /// This platform service is responsible for any data or operations to validate
 /// the test sources provided to the adapter.
 /// </summary>
-#if NET6_0_OR_GREATER
-[Obsolete(FrameworkConstants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
-#else
-[Obsolete(FrameworkConstants.PublicTypeObsoleteMessage)]
-#endif
-public class TestSource : ITestSource
+internal sealed class TestSource : ITestSource
 {
 #if WINDOWS_UWP || WIN_UI
     private const string SystemAssembliesPrefix = "system.";
@@ -44,8 +38,8 @@ public class TestSource : ITestSource
     // Well known platform assemblies.
     private static readonly HashSet<string> PlatformAssemblies =
         [
-        "MICROSOFT.VISUALSTUDIO.TESTPLATFORM.TESTFRAMEWORK.DLL",
-        "MICROSOFT.VISUALSTUDIO.TESTPLATFORM.TESTFRAMEWORK.EXTENSIONS.CORE.DLL",
+        "MSTEST.TESTFRAMEWORK.DLL",
+        "MSTEST.TESTFRAMEWORK.EXTENSIONS.CORE.DLL",
         "MICROSOFT.VISUALSTUDIO.TESTPLATFORM.CORE.DLL",
         "MICROSOFT.VISUALSTUDIO.TESTPLATFORM.COMMON.DLL",
         "MICROSOFT.VISUALSTUDIO.TESTPLATFORM.TESTEXECUTOR.CORE.DLL",

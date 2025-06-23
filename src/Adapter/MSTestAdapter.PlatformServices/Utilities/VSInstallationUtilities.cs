@@ -10,12 +10,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
 /// <summary>
 /// Utilities to get Visual Studio installation paths.
 /// </summary>
-#if NET6_0_OR_GREATER
-[Obsolete(TestTools.UnitTesting.FrameworkConstants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
-#else
-[Obsolete(TestTools.UnitTesting.FrameworkConstants.PublicTypeObsoleteMessage)]
-#endif
-public static class VSInstallationUtilities
+internal static class VSInstallationUtilities
 {
     /// <summary>
     /// Public assemblies directory name.

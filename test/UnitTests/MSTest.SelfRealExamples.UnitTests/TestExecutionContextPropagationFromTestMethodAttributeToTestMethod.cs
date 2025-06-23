@@ -21,10 +21,10 @@ public sealed class TestExecutionContextPropagationFromTestMethodAttributeToTest
 
     private sealed class MyTestMethodAttribute : TestMethodAttribute
     {
-        public override TestResult[] Execute(ITestMethod testMethod)
+        public override async Task<TestResult[]> ExecuteAsync(ITestMethod testMethod)
         {
             State.Value = "In Execute";
-            return base.Execute(testMethod);
+            return await base.ExecuteAsync(testMethod);
         }
     }
 }

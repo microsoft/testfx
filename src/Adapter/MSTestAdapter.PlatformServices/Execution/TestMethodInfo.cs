@@ -17,12 +17,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 /// <summary>
 /// Defines the TestMethod Info object.
 /// </summary>
-#if NET6_0_OR_GREATER
-[Obsolete(Microsoft.VisualStudio.TestTools.UnitTesting.FrameworkConstants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
-#else
-[Obsolete(Microsoft.VisualStudio.TestTools.UnitTesting.FrameworkConstants.PublicTypeObsoleteMessage)]
-#endif
-public class TestMethodInfo : ITestMethod
+#pragma warning disable CA1852 // Seal internal types - This class is inherited in tests.
+internal class TestMethodInfo : ITestMethod
 {
     /// <summary>
     /// Specifies the timeout when it is not set in a test case.
@@ -62,7 +58,7 @@ public class TestMethodInfo : ITestMethod
     public bool IsTimeoutSet => TimeoutInfo.Timeout != TimeoutWhenNotSet;
 
     /// <summary>
-    /// Gets the reason why the test is not runnable.
+    /// Gets or sets the reason why the test is not runnable.
     /// </summary>
     public string? NotRunnableReason { get; internal set; }
 
@@ -127,10 +123,6 @@ public class TestMethodInfo : ITestMethod
     public TAttributeType[] GetAttributes<TAttributeType>(bool inherit)
         where TAttributeType : Attribute
         => [.. ReflectHelper.Instance.GetAttributes<TAttributeType>(MethodInfo, inherit)];
-
-    /// <inheritdoc cref="InvokeAsync(object[])" />
-    public virtual TestResult Invoke(object?[]? arguments)
-        => InvokeAsync(arguments).GetAwaiter().GetResult();
 
     /// <summary>
     /// Execute test method. Capture failures, handle async and return result.

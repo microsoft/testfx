@@ -18,14 +18,6 @@ public sealed class TimeoutAttribute : Attribute
     public TimeoutAttribute(int timeout) => Timeout = timeout;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="TimeoutAttribute"/> class with a preset timeout.
-    /// </summary>
-    /// <param name="timeout">
-    /// The timeout.
-    /// </param>
-    public TimeoutAttribute(TestTimeout timeout) => Timeout = (int)timeout;
-
-    /// <summary>
     /// Gets the timeout in milliseconds.
     /// </summary>
     public int Timeout { get; }

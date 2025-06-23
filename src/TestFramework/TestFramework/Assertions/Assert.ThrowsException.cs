@@ -164,9 +164,6 @@ public sealed partial class Assert
     /// <param name="message">
     /// The message to include in the exception when <paramref name="action"/> does not throws exception of type <typeparamref name="TException"/>.
     /// </param>
-    /// <param name="messageArgs">
-    /// An array of parameters to use when formatting <paramref name="message"/>.
-    /// </param>
     /// <typeparam name="TException">
     /// The type of exception expected to be thrown.
     /// </typeparam>
@@ -176,16 +173,18 @@ public sealed partial class Assert
     /// <returns>
     /// The exception that was thrown.
     /// </returns>
-    public static TException Throws<TException>(Action action, string message = "", params object[] messageArgs)
-        where TException : Exception
-        => ThrowsException<TException>(action, isStrictType: false, message, parameters: messageArgs);
-
-    /// <inheritdoc cref="Throws{TException}(Action, string, object[])"/>
 #pragma warning disable RS0026 // Do not add multiple public overloads with optional parameters
-    public static TException Throws<TException>(Func<object?> action, string message = "", params object[] messageArgs)
+    public static TException Throws<TException>(Action action, string message = "")
 #pragma warning restore RS0026 // Do not add multiple public overloads with optional parameters
         where TException : Exception
-        => ThrowsException<TException>(() => _ = action(), isStrictType: false, message, parameters: messageArgs);
+        => ThrowsException<TException>(action, isStrictType: false, message);
+
+    /// <inheritdoc cref="Throws{TException}(Action, string)"/>
+#pragma warning disable RS0026 // Do not add multiple public overloads with optional parameters
+    public static TException Throws<TException>(Func<object?> action, string message = "")
+#pragma warning restore RS0026 // Do not add multiple public overloads with optional parameters
+        where TException : Exception
+        => ThrowsException<TException>(() => _ = action(), isStrictType: false, message);
 
     /// <summary>
     /// Asserts that the delegate <paramref name="action"/> throws an exception of type <typeparamref name="TException"/>
@@ -216,14 +215,14 @@ public sealed partial class Assert
         where TException : Exception
         => ThrowsException<TException>(() => _ = action(), isStrictType: false, messageBuilder);
 
-    /// <inheritdoc cref="Throws{TException}(Action, string, object[])" />
+    /// <inheritdoc cref="Throws{TException}(Action, string)" />
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
     public static TException Throws<TException>(Action action, [InterpolatedStringHandlerArgument(nameof(action))] ref AssertNonStrictThrowsInterpolatedStringHandler<TException> message)
 #pragma warning restore IDE0060 // Remove unused parameter
         where TException : Exception
         => message.ComputeAssertion();
 
-    /// <inheritdoc cref="Throws{TException}(Action, string, object[])" />
+    /// <inheritdoc cref="Throws{TException}(Action, string)" />
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
     public static TException Throws<TException>(Func<object?> action, [InterpolatedStringHandlerArgument(nameof(action))] ref AssertNonStrictThrowsInterpolatedStringHandler<TException> message)
 #pragma warning restore IDE0060 // Remove unused parameter
@@ -241,9 +240,6 @@ public sealed partial class Assert
     /// <param name="message">
     /// The message to include in the exception when <paramref name="action"/> does not throws exception of type <typeparamref name="TException"/>.
     /// </param>
-    /// <param name="messageArgs">
-    /// An array of parameters to use when formatting <paramref name="message"/>.
-    /// </param>
     /// <typeparam name="TException">
     /// The type of exception expected to be thrown.
     /// </typeparam>
@@ -253,16 +249,18 @@ public sealed partial class Assert
     /// <returns>
     /// The exception that was thrown.
     /// </returns>
-    public static TException ThrowsExactly<TException>(Action action, string message = "", params object[] messageArgs)
-        where TException : Exception
-        => ThrowsException<TException>(action, isStrictType: true, message, parameters: messageArgs);
-
-    /// <inheritdoc cref="ThrowsExactly{TException}(Action, string, object[])" />
 #pragma warning disable RS0026 // Do not add multiple public overloads with optional parameters
-    public static TException ThrowsExactly<TException>(Func<object?> action, string message = "", params object[] messageArgs)
+    public static TException ThrowsExactly<TException>(Action action, string message = "")
 #pragma warning restore RS0026 // Do not add multiple public overloads with optional parameters
         where TException : Exception
-        => ThrowsException<TException>(() => _ = action(), isStrictType: true, message, parameters: messageArgs);
+        => ThrowsException<TException>(action, isStrictType: true, message);
+
+    /// <inheritdoc cref="ThrowsExactly{TException}(Action, string)" />
+#pragma warning disable RS0026 // Do not add multiple public overloads with optional parameters
+    public static TException ThrowsExactly<TException>(Func<object?> action, string message = "")
+#pragma warning restore RS0026 // Do not add multiple public overloads with optional parameters
+        where TException : Exception
+        => ThrowsException<TException>(() => _ = action(), isStrictType: true, message);
 
     /// <summary>
     /// Asserts that the delegate <paramref name="action"/> throws an exception of type <typeparamref name="TException"/>
@@ -293,7 +291,7 @@ public sealed partial class Assert
     where TException : Exception
         => ThrowsException<TException>(() => _ = action(), isStrictType: true, messageBuilder);
 
-    /// <inheritdoc cref="ThrowsExactly{TException}(Action, string, object[])" />
+    /// <inheritdoc cref="ThrowsExactly{TException}(Action, string)" />
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
     public static TException ThrowsExactly<TException>(Action action, [InterpolatedStringHandlerArgument(nameof(action))] ref AssertThrowsExactlyInterpolatedStringHandler<TException> message)
 #pragma warning restore IDE0060 // Remove unused parameter
@@ -320,7 +318,58 @@ public sealed partial class Assert
     [EditorBrowsable(EditorBrowsableState.Never)]
     public static T ThrowsException<T>(Action action)
         where T : Exception
-        => ThrowsException<T>(action, string.Empty, null);
+        => ThrowsException<T>(action, string.Empty);
+
+    /// <summary>
+    /// Tests whether the code specified by delegate <paramref name="action"/> throws exact given exception
+    /// of type <typeparamref name="T"/> (and not of derived type) and throws <c>AssertFailedException</c>
+    /// if code does not throws exception or throws exception of type other than <typeparamref name="T"/>.
+    /// </summary>
+    /// <param name="action">
+    /// Delegate to code to be tested and which is expected to throw exception.
+    /// </param>
+    /// <typeparam name="T">
+    /// Type of exception expected to be thrown.
+    /// </typeparam>
+    /// <exception cref="AssertFailedException">
+    /// Thrown if <paramref name="action"/> does not throws exception of type <typeparamref name="T"/>.
+    /// </exception>
+    /// <returns>
+    /// The exception that was thrown.
+    /// </returns>
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    public static T ThrowsException<T>(Func<object?> action)
+        where T : Exception
+        => ThrowsException<T>(action, string.Empty);
+
+    /// <summary>
+    /// Tests whether the code specified by delegate <paramref name="action"/> throws exact given exception
+    /// of type <typeparamref name="T"/> (and not of derived type) and throws <c>AssertFailedException</c>
+    /// if code does not throws exception or throws exception of type other than <typeparamref name="T"/>.
+    /// </summary>
+    /// <param name="action">
+    /// Delegate to code to be tested and which is expected to throw exception.
+    /// </param>
+    /// <param name="message">
+    /// The message to include in the exception when <paramref name="action"/>
+    /// does not throws exception of type <typeparamref name="T"/>.
+    /// </param>
+    /// <typeparam name="T">
+    /// Type of exception expected to be thrown.
+    /// </typeparam>
+    /// <exception cref="AssertFailedException">
+    /// Thrown if <paramref name="action"/> does not throw exception of type <typeparamref name="T"/>.
+    /// </exception>
+    /// <returns>
+    /// The exception that was thrown.
+    /// </returns>
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    public static T ThrowsException<T>(Func<object?> action, string message)
+        where T : Exception
+#pragma warning disable IDE0053 // Use expression body for lambda expression
+        // Despite the discard, using lambda makes the action considered as Func and so recursing on the same method
+        => ThrowsException<T>(() => { _ = action(); }, message);
+#pragma warning restore IDE0053 // Use expression body for lambda expression
 
     /// <summary>
     /// Tests whether the code specified by delegate <paramref name="action"/> throws exact given exception
@@ -346,118 +395,9 @@ public sealed partial class Assert
     [EditorBrowsable(EditorBrowsableState.Never)]
     public static T ThrowsException<T>(Action action, string message)
         where T : Exception
-        => ThrowsException<T>(action, message, null);
+        => ThrowsException<T>(action, isStrictType: true, message);
 
-    /// <summary>
-    /// Tests whether the code specified by delegate <paramref name="action"/> throws exact given exception
-    /// of type <typeparamref name="T"/> (and not of derived type) and throws <c>AssertFailedException</c>
-    /// if code does not throws exception or throws exception of type other than <typeparamref name="T"/>.
-    /// </summary>
-    /// <param name="action">
-    /// Delegate to code to be tested and which is expected to throw exception.
-    /// </param>
-    /// <typeparam name="T">
-    /// Type of exception expected to be thrown.
-    /// </typeparam>
-    /// <exception cref="AssertFailedException">
-    /// Thrown if <paramref name="action"/> does not throws exception of type <typeparamref name="T"/>.
-    /// </exception>
-    /// <returns>
-    /// The exception that was thrown.
-    /// </returns>
-    [EditorBrowsable(EditorBrowsableState.Never)]
-    public static T ThrowsException<T>(Func<object?> action)
-        where T : Exception
-        => ThrowsException<T>(action, string.Empty, null);
-
-    /// <summary>
-    /// Tests whether the code specified by delegate <paramref name="action"/> throws exact given exception
-    /// of type <typeparamref name="T"/> (and not of derived type) and throws <c>AssertFailedException</c>
-    /// if code does not throws exception or throws exception of type other than <typeparamref name="T"/>.
-    /// </summary>
-    /// <param name="action">
-    /// Delegate to code to be tested and which is expected to throw exception.
-    /// </param>
-    /// <param name="message">
-    /// The message to include in the exception when <paramref name="action"/>
-    /// does not throws exception of type <typeparamref name="T"/>.
-    /// </param>
-    /// <typeparam name="T">
-    /// Type of exception expected to be thrown.
-    /// </typeparam>
-    /// <exception cref="AssertFailedException">
-    /// Thrown if <paramref name="action"/> does not throws exception of type <typeparamref name="T"/>.
-    /// </exception>
-    /// <returns>
-    /// The exception that was thrown.
-    /// </returns>
-    [EditorBrowsable(EditorBrowsableState.Never)]
-    public static T ThrowsException<T>(Func<object?> action, string message)
-        where T : Exception
-        => ThrowsException<T>(action, message, null);
-
-    /// <summary>
-    /// Tests whether the code specified by delegate <paramref name="action"/> throws exact given exception
-    /// of type <typeparamref name="T"/> (and not of derived type) and throws <c>AssertFailedException</c>
-    /// if code does not throws exception or throws exception of type other than <typeparamref name="T"/>.
-    /// </summary>
-    /// <param name="action">
-    /// Delegate to code to be tested and which is expected to throw exception.
-    /// </param>
-    /// <param name="message">
-    /// The message to include in the exception when <paramref name="action"/>
-    /// does not throws exception of type <typeparamref name="T"/>.
-    /// </param>
-    /// <param name="parameters">
-    /// An array of parameters to use when formatting <paramref name="message"/>.
-    /// </param>
-    /// <typeparam name="T">
-    /// Type of exception expected to be thrown.
-    /// </typeparam>
-    /// <exception cref="AssertFailedException">
-    /// Thrown if <paramref name="action"/> does not throw exception of type <typeparamref name="T"/>.
-    /// </exception>
-    /// <returns>
-    /// The exception that was thrown.
-    /// </returns>
-    [EditorBrowsable(EditorBrowsableState.Never)]
-    public static T ThrowsException<T>(Func<object?> action, string message, params object?[]? parameters)
-        where T : Exception
-#pragma warning disable IDE0053 // Use expression body for lambda expression
-        // Despite the discard, using lambda makes the action considered as Func and so recursing on the same method
-        => ThrowsException<T>(() => { _ = action(); }, message, parameters);
-#pragma warning restore IDE0053 // Use expression body for lambda expression
-
-    /// <summary>
-    /// Tests whether the code specified by delegate <paramref name="action"/> throws exact given exception
-    /// of type <typeparamref name="T"/> (and not of derived type) and throws <c>AssertFailedException</c>
-    /// if code does not throws exception or throws exception of type other than <typeparamref name="T"/>.
-    /// </summary>
-    /// <param name="action">
-    /// Delegate to code to be tested and which is expected to throw exception.
-    /// </param>
-    /// <param name="message">
-    /// The message to include in the exception when <paramref name="action"/>
-    /// does not throws exception of type <typeparamref name="T"/>.
-    /// </param>
-    /// <param name="parameters">
-    /// An array of parameters to use when formatting <paramref name="message"/>.
-    /// </param>
-    /// <typeparam name="T">
-    /// Type of exception expected to be thrown.
-    /// </typeparam>
-    /// <exception cref="AssertFailedException">
-    /// Thrown if <paramref name="action"/> does not throws exception of type <typeparamref name="T"/>.
-    /// </exception>
-    /// <returns>
-    /// The exception that was thrown.
-    /// </returns>
-    [EditorBrowsable(EditorBrowsableState.Never)]
-    public static T ThrowsException<T>(Action action, string message, params object?[]? parameters)
-        where T : Exception
-        => ThrowsException<T>(action, isStrictType: true, message, parameters: parameters);
-
-    private static TException ThrowsException<TException>(Action action, bool isStrictType, string message, [CallerMemberName] string assertMethodName = "", params object?[]? parameters)
+    private static TException ThrowsException<TException>(Action action, bool isStrictType, string message, [CallerMemberName] string assertMethodName = "")
         where TException : Exception
     {
         Guard.NotNull(action);
@@ -466,7 +406,7 @@ public sealed partial class Assert
         ThrowsExceptionState state = IsThrowsFailing<TException>(action, isStrictType, assertMethodName);
         if (state.FailAction is not null)
         {
-            state.FailAction(BuildUserMessage(message, parameters));
+            state.FailAction(BuildUserMessage(message));
         }
         else
         {
@@ -508,9 +448,6 @@ public sealed partial class Assert
     /// <param name="message">
     /// The message to include in the exception when <paramref name="action"/> does not throws exception of type <typeparamref name="TException"/>.
     /// </param>
-    /// <param name="messageArgs">
-    /// An array of parameters to use when formatting <paramref name="message"/>.
-    /// </param>
     /// <typeparam name="TException">
     /// The type of exception expected to be thrown.
     /// </typeparam>
@@ -520,9 +457,11 @@ public sealed partial class Assert
     /// <returns>
     /// The exception that was thrown.
     /// </returns>
-    public static Task<TException> ThrowsAsync<TException>(Func<Task> action, string message = "", params object[] messageArgs)
+#pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
+    public static Task<TException> ThrowsAsync<TException>(Func<Task> action, string message = "")
+#pragma warning restore RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
         where TException : Exception
-        => ThrowsExceptionAsync<TException>(action, isStrictType: false, message, parameters: messageArgs);
+        => ThrowsExceptionAsync<TException>(action, isStrictType: false, message);
 
     /// <summary>
     /// Asserts that the delegate <paramref name="action"/> throws an exception of type <typeparamref name="TException"/>
@@ -535,9 +474,6 @@ public sealed partial class Assert
     /// <param name="message">
     /// The message to include in the exception when <paramref name="action"/> does not throws exception of type <typeparamref name="TException"/>.
     /// </param>
-    /// <param name="messageArgs">
-    /// An array of parameters to use when formatting <paramref name="message"/>.
-    /// </param>
     /// <typeparam name="TException">
     /// The type of exception expected to be thrown.
     /// </typeparam>
@@ -547,9 +483,11 @@ public sealed partial class Assert
     /// <returns>
     /// The exception that was thrown.
     /// </returns>
-    public static Task<TException> ThrowsExactlyAsync<TException>(Func<Task> action, string message = "", params object[] messageArgs)
+#pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
+    public static Task<TException> ThrowsExactlyAsync<TException>(Func<Task> action, string message = "")
+#pragma warning restore RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
         where TException : Exception
-        => ThrowsExceptionAsync<TException>(action, isStrictType: true, message, parameters: messageArgs);
+        => ThrowsExceptionAsync<TException>(action, isStrictType: true, message);
 
     /// <summary>
     /// Asserts that the delegate <paramref name="action"/> throws an exception of type <typeparamref name="TException"/>
@@ -619,7 +557,7 @@ public sealed partial class Assert
     [EditorBrowsable(EditorBrowsableState.Never)]
     public static async Task<T> ThrowsExceptionAsync<T>(Func<Task> action)
         where T : Exception
-        => await ThrowsExceptionAsync<T>(action, string.Empty, null)
+        => await ThrowsExceptionAsync<T>(action, string.Empty)
             .ConfigureAwait(false);
 
     /// <summary>
@@ -642,36 +580,10 @@ public sealed partial class Assert
     [EditorBrowsable(EditorBrowsableState.Never)]
     public static async Task<T> ThrowsExceptionAsync<T>(Func<Task> action, string message)
         where T : Exception
-        => await ThrowsExceptionAsync<T>(action, message, null)
+        => await ThrowsExceptionAsync<T>(action, true, message)
             .ConfigureAwait(false);
 
-    /// <summary>
-    /// Tests whether the code specified by delegate <paramref name="action"/> throws exact given exception
-    /// of type <typeparamref name="T"/> (and not of derived type) and throws <c>AssertFailedException</c>
-    /// if code does not throws exception or throws exception of type other than <typeparamref name="T"/>.
-    /// </summary>
-    /// <param name="action">Delegate to code to be tested and which is expected to throw exception.</param>
-    /// <param name="message">
-    /// The message to include in the exception when <paramref name="action"/>
-    /// does not throws exception of type <typeparamref name="T"/>.
-    /// </param>
-    /// <param name="parameters">
-    /// An array of parameters to use when formatting <paramref name="message"/>.
-    /// </param>
-    /// <typeparam name="T">Type of exception expected to be thrown.</typeparam>
-    /// <exception cref="AssertFailedException">
-    /// Thrown if <paramref name="action"/> does not throws exception of type <typeparamref name="T"/>.
-    /// </exception>
-    /// <returns>
-    /// The <see cref="Task"/> executing the delegate.
-    /// </returns>
-    [EditorBrowsable(EditorBrowsableState.Never)]
-    public static async Task<T> ThrowsExceptionAsync<T>(Func<Task> action, string message, params object?[]? parameters)
-        where T : Exception
-        => await ThrowsExceptionAsync<T>(action, true, message, parameters: parameters)
-            .ConfigureAwait(false);
-
-    private static async Task<TException> ThrowsExceptionAsync<TException>(Func<Task> action, bool isStrictType, string message, [CallerMemberName] string assertMethodName = "", params object?[]? parameters)
+    private static async Task<TException> ThrowsExceptionAsync<TException>(Func<Task> action, bool isStrictType, string message, [CallerMemberName] string assertMethodName = "")
         where TException : Exception
     {
         Guard.NotNull(action);
@@ -680,7 +592,7 @@ public sealed partial class Assert
         ThrowsExceptionState state = await IsThrowsAsyncFailingAsync<TException>(action, isStrictType, assertMethodName).ConfigureAwait(false);
         if (state.FailAction is not null)
         {
-            state.FailAction(BuildUserMessage(message, parameters));
+            state.FailAction(BuildUserMessage(message));
         }
         else
         {

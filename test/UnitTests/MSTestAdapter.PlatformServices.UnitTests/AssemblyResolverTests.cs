@@ -185,7 +185,7 @@ public class AssemblyResolverTests : TestContainer
     }
 }
 
-public class TestableAssemblyResolver : AssemblyResolver
+internal class TestableAssemblyResolver : AssemblyResolver
 {
     public TestableAssemblyResolver(IList<string> directories)
         : base(directories)

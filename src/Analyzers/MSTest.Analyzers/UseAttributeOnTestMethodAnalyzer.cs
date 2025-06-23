@@ -66,18 +66,6 @@ public sealed class UseAttributeOnTestMethodAnalyzer : DiagnosticAnalyzer
         DiagnosticSeverity.Warning,
         isEnabledByDefault: true);
 
-    private const string DescriptionAttributeShortName = "Description";
-    internal static readonly DiagnosticDescriptor DescriptionRule = DiagnosticDescriptorHelper.Create(
-        DiagnosticIds.UseAttributeOnTestMethodRuleId,
-        title: new LocalizableResourceString(
-            nameof(Resources.UseAttributeOnTestMethodAnalyzerTitle), Resources.ResourceManager, typeof(Resources), DescriptionAttributeShortName),
-        messageFormat: new LocalizableResourceString(
-            nameof(Resources.UseAttributeOnTestMethodAnalyzerMessageFormat), Resources.ResourceManager, typeof(Resources), DescriptionAttributeShortName),
-        description: null,
-        Category.Usage,
-        DiagnosticSeverity.Warning,
-        isEnabledByDefault: true);
-
     private const string ExpectedExceptionAttributeShortName = "ExpectedException";
     internal static readonly DiagnosticDescriptor ExpectedExceptionRule = DiagnosticDescriptorHelper.Create(
         DiagnosticIds.UseAttributeOnTestMethodRuleId,
@@ -85,30 +73,6 @@ public sealed class UseAttributeOnTestMethodAnalyzer : DiagnosticAnalyzer
             nameof(Resources.UseAttributeOnTestMethodAnalyzerTitle), Resources.ResourceManager, typeof(Resources), ExpectedExceptionAttributeShortName),
         messageFormat: new LocalizableResourceString(
             nameof(Resources.UseAttributeOnTestMethodAnalyzerMessageFormat), Resources.ResourceManager, typeof(Resources), ExpectedExceptionAttributeShortName),
-        description: null,
-        Category.Usage,
-        DiagnosticSeverity.Warning,
-        isEnabledByDefault: true);
-
-    private const string CssIterationAttributeShortName = "CssIteration";
-    internal static readonly DiagnosticDescriptor CssIterationRule = DiagnosticDescriptorHelper.Create(
-        DiagnosticIds.UseAttributeOnTestMethodRuleId,
-        title: new LocalizableResourceString(
-            nameof(Resources.UseAttributeOnTestMethodAnalyzerTitle), Resources.ResourceManager, typeof(Resources), CssIterationAttributeShortName),
-        messageFormat: new LocalizableResourceString(
-            nameof(Resources.UseAttributeOnTestMethodAnalyzerMessageFormat), Resources.ResourceManager, typeof(Resources), CssIterationAttributeShortName),
-        description: null,
-        Category.Usage,
-        DiagnosticSeverity.Warning,
-        isEnabledByDefault: true);
-
-    private const string CssProjectStructureAttributeShortName = "CssProjectStructure";
-    internal static readonly DiagnosticDescriptor CssProjectStructureRule = DiagnosticDescriptorHelper.Create(
-        DiagnosticIds.UseAttributeOnTestMethodRuleId,
-        title: new LocalizableResourceString(
-            nameof(Resources.UseAttributeOnTestMethodAnalyzerTitle), Resources.ResourceManager, typeof(Resources), CssProjectStructureAttributeShortName),
-        messageFormat: new LocalizableResourceString(
-            nameof(Resources.UseAttributeOnTestMethodAnalyzerMessageFormat), Resources.ResourceManager, typeof(Resources), CssProjectStructureAttributeShortName),
         description: null,
         Category.Usage,
         DiagnosticSeverity.Warning,
@@ -135,10 +99,7 @@ public sealed class UseAttributeOnTestMethodAnalyzer : DiagnosticAnalyzer
         (WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingPriorityAttribute, PriorityRule),
         (WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestPropertyAttribute, TestPropertyRule),
         (WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingWorkItemAttribute, WorkItemRule),
-        (WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingDescriptionAttribute, DescriptionRule),
         (WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingExpectedExceptionBaseAttribute, ExpectedExceptionRule),
-        (WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingCssIterationAttribute, CssIterationRule),
-        (WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingCssProjectStructureAttribute, CssProjectStructureRule),
         (WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingConditionBaseAttribute, ConditionBaseRule),
     ];
 
@@ -149,10 +110,7 @@ public sealed class UseAttributeOnTestMethodAnalyzer : DiagnosticAnalyzer
             PriorityRule,
             TestPropertyRule,
             WorkItemRule,
-            DescriptionRule,
-            ExpectedExceptionRule,
-            CssIterationRule,
-            CssProjectStructureRule);
+            ExpectedExceptionRule);
 
     /// <inheritdoc />
     public override void Initialize(AnalysisContext context)

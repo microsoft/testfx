@@ -31,26 +31,6 @@ public sealed class DataRowShouldBeValidAnalyzerTests
     }
 
     [TestMethod]
-    public async Task WhenDataRowIsCorrectlyDefinedWithOneArgumentAndWithDataTestMethodAttribute_NoDiagnostic()
-    {
-        string code = """
-            using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-            [TestClass]
-            public class MyTestClass
-            {
-                [DataRow(1)]
-                [DataTestMethod]
-                public void TestMethod1(int a)
-                {
-                }
-            }
-            """;
-
-        await VerifyCS.VerifyAnalyzerAsync(code);
-    }
-
-    [TestMethod]
     public async Task WhenDataRowIsCorrectlyDefinedWithOneArgumentAndWithDerivedTestMethodAttribute_NoDiagnostic()
     {
         string code = """
@@ -540,7 +520,7 @@ public sealed class DataRowShouldBeValidAnalyzerTests
             [TestClass]
             public class MyTestClass
             {
-                [DataTestMethod]
+                [TestMethod]
                 [DataRow(
                     "123",
                     new string[] { "something" },

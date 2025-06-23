@@ -15,12 +15,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 /// Contains the execution logic for this adapter.
 /// </summary>
 [ExtensionUri(EngineConstants.ExecutorUriString)]
-#if NET6_0_OR_GREATER
-[Obsolete(FrameworkConstants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
-#else
-[Obsolete(FrameworkConstants.PublicTypeObsoleteMessage)]
-#endif
-public class MSTestExecutor : ITestExecutor
+internal sealed class MSTestExecutor : ITestExecutor
 {
     private readonly CancellationToken _cancellationToken;
 
@@ -45,9 +40,9 @@ public class MSTestExecutor : ITestExecutor
     }
 
     /// <summary>
-    /// Gets or sets the ms test execution manager.
+    /// Gets the ms test execution manager.
     /// </summary>
-    public TestExecutionManager TestExecutionManager { get; protected set; }
+    internal TestExecutionManager TestExecutionManager { get; }
 
 #pragma warning disable CA2255 // The 'ModuleInitializer' attribute should not be used in libraries
     [ModuleInitializer]

@@ -41,12 +41,6 @@ public sealed class UseNewerAssertThrowsAnalyzerTests
                     [|Assert.ThrowsExceptionAsync<Exception>(message: "Message", action: () => Task.CompletedTask)|];
                     [|Assert.ThrowsExceptionAsync<Exception>(action: () => Task.CompletedTask, "Message")|];
                     [|Assert.ThrowsExceptionAsync<Exception>(() => Task.CompletedTask, message: "Message")|];
-
-                    // action, message, and parameters overload
-                    [|Assert.ThrowsException<Exception>(() => Console.WriteLine(), "Message", "A", "B", "C")|];
-                    [|Assert.ThrowsException<Exception>(() => Console.WriteLine(), "Message", parameters: new object[] { "A", "B", "C" })|];
-                    [|Assert.ThrowsExceptionAsync<Exception>(() => Task.CompletedTask, "Message", "A", "B", "C")|];
-                    [|Assert.ThrowsExceptionAsync<Exception>(() => Task.CompletedTask, "Message", parameters: new object[] { "A", "B", "C" })|];
                 }
             }
             """;
@@ -79,12 +73,6 @@ public sealed class UseNewerAssertThrowsAnalyzerTests
                     Assert.ThrowsExactlyAsync<Exception>(message: "Message", action: () => Task.CompletedTask);
                     Assert.ThrowsExactlyAsync<Exception>(action: () => Task.CompletedTask, "Message");
                     Assert.ThrowsExactlyAsync<Exception>(() => Task.CompletedTask, message: "Message");
-
-                    // action, message, and parameters overload
-                    Assert.ThrowsExactly<Exception>(() => Console.WriteLine(), "Message", "A", "B", "C");
-                    Assert.ThrowsExactly<Exception>(() => Console.WriteLine(), "Message", messageArgs: new object[] { "A", "B", "C" });
-                    Assert.ThrowsExactlyAsync<Exception>(() => Task.CompletedTask, "Message", "A", "B", "C");
-                    Assert.ThrowsExactlyAsync<Exception>(() => Task.CompletedTask, "Message", messageArgs: new object[] { "A", "B", "C" });
                 }
             }
             """;

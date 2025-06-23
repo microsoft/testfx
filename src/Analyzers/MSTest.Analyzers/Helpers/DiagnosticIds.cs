@@ -38,7 +38,7 @@ internal static class DiagnosticIds
     public const string DoNotUseSystemDescriptionAttributeRuleId = "MSTEST0031";
     public const string ReviewAlwaysTrueAssertConditionAnalyzerRuleId = "MSTEST0032";
     public const string NonNullableReferenceNotInitializedSuppressorRuleId = "MSTEST0033";
-    public const string UseClassCleanupBehaviorEndOfClassRuleId = "MSTEST0034";
+    // public const string UseClassCleanupBehaviorEndOfClassRuleId = "MSTEST0034"; - // Don't remove this commented out line, and don't reuse this ID.
     public const string UseDeploymentItemWithTestMethodOrTestClassRuleId = "MSTEST0035";
     public const string DoNotUseShadowingRuleId = "MSTEST0036";
     public const string UseProperAssertMethodsRuleId = "MSTEST0037";
@@ -48,6 +48,6 @@ internal static class DiagnosticIds
     public const string UseConditionBaseWithTestClassRuleId = "MSTEST0041";
     public const string DuplicateDataRowRuleId = "MSTEST0042";
     public const string UseRetryWithTestMethodRuleId = "MSTEST0043";
-    public const string PreferTestMethodOverDataTestMethodRuleId = "MSTEST0044";
+    // public const string PreferTestMethodOverDataTestMethodRuleId = "MSTEST0044"; - // Don't remove this commented out line, and don't reuse this ID.
     public const string UseCooperativeCancellationForTimeoutRuleId = "MSTEST0045";
 }
