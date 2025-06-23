@@ -138,16 +138,10 @@ public class UnitTestElementTests : TestContainer
 
     public void ToTestCaseShouldSetPropertiesIfPresent()
     {
-        _unitTestElement.CssIteration = "12";
-        _unitTestElement.CssProjectStructure = "ProjectStructure";
-        _unitTestElement.Description = "I am a dummy test";
         _unitTestElement.WorkItemIds = ["2312", "22332"];
 
         var testCase = _unitTestElement.ToTestCase();
 
-        Verify((testCase.GetPropertyValue(EngineConstants.CssIterationProperty) as string) == "12");
-        Verify((testCase.GetPropertyValue(EngineConstants.CssProjectStructureProperty) as string) == "ProjectStructure");
-        Verify((testCase.GetPropertyValue(EngineConstants.DescriptionProperty) as string) == "I am a dummy test");
         Verify(new string[] { "2312", "22332" }.SequenceEqual((string[])testCase.GetPropertyValue(EngineConstants.WorkItemIdsProperty)!));
     }
 

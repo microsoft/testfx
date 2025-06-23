@@ -166,18 +166,6 @@ internal class TypeEnumerator
             {
                 testMethodAttribute = tma;
             }
-            else if (attributes[i] is CssIterationAttribute cssIteration)
-            {
-                testElement.CssIteration = cssIteration.CssIteration;
-            }
-            else if (attributes[i] is CssProjectStructureAttribute cssProjectStructure)
-            {
-                testElement.CssProjectStructure = cssProjectStructure.CssProjectStructure;
-            }
-            else if (attributes[i] is DescriptionAttribute descriptionAttribute)
-            {
-                testElement.Description = descriptionAttribute.Description;
-            }
         }
 
         IEnumerable<WorkItemAttribute> workItemAttributes = attributes.OfType<WorkItemAttribute>();

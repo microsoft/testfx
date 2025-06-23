@@ -18,11 +18,8 @@ public sealed class UseAttributeOnTestMethodAnalyzerTests
         (UseAttributeOnTestMethodAnalyzer.PriorityRule, "Priority(1)"),
         (UseAttributeOnTestMethodAnalyzer.TestPropertyRule, """TestProperty("name", "value")"""),
         (UseAttributeOnTestMethodAnalyzer.WorkItemRule, "WorkItem(100)"),
-        (UseAttributeOnTestMethodAnalyzer.DescriptionRule, """Description("description")"""),
         (UseAttributeOnTestMethodAnalyzer.ExpectedExceptionRule, "ExpectedException(null)"),
         (UseAttributeOnTestMethodAnalyzer.ExpectedExceptionRule, "MyExpectedException"),
-        (UseAttributeOnTestMethodAnalyzer.CssIterationRule, "CssIteration(null)"),
-        (UseAttributeOnTestMethodAnalyzer.CssProjectStructureRule, "CssProjectStructure(null)")
     ];
 
     private const string MyExpectedExceptionAttributeDeclaration = """
