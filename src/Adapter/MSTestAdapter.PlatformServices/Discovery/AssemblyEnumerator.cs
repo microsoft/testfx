@@ -450,7 +450,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
             // Merge test categories from the test data row with the existing categories
             if (testCategoriesFromTestDataRow is { Count: > 0 })
             {
-                var existingCategories = discoveredTest.TestCategory ?? [];
+                string[] existingCategories = discoveredTest.TestCategory ?? [];
                 var mergedCategories = new HashSet<string>(existingCategories);
                 foreach (string category in testCategoriesFromTestDataRow)
                 {
