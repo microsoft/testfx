@@ -44,7 +44,7 @@ namespace MSTest.Analyzers;
 /// </list>
 /// </remarks>
 [DiagnosticAnalyzer(LanguageNames.CSharp, LanguageNames.VisualBasic)]
-internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
+public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
 {
     private enum NullCheckStatus
     {

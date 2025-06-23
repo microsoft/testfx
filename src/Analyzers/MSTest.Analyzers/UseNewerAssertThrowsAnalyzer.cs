@@ -17,7 +17,7 @@ namespace MSTest.Analyzers;
 /// MSTEST0039: Use newer 'Assert.Throws' methods.
 /// </summary>
 [DiagnosticAnalyzer(LanguageNames.CSharp, LanguageNames.VisualBasic)]
-internal sealed class UseNewerAssertThrowsAnalyzer : DiagnosticAnalyzer
+public sealed class UseNewerAssertThrowsAnalyzer : DiagnosticAnalyzer
 {
     private static readonly LocalizableResourceString Title = new(nameof(Resources.UseNewerAssertThrowsTitle), Resources.ResourceManager, typeof(Resources));
     private static readonly LocalizableResourceString MessageFormat = new(nameof(Resources.UseNewerAssertThrowsMessageFormat), Resources.ResourceManager, typeof(Resources));
