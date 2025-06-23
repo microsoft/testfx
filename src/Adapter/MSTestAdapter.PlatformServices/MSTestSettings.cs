@@ -238,15 +238,6 @@ internal sealed class MSTestSettings
         CurrentSettings.TreatDiscoveryWarningsAsErrors = settings.TreatDiscoveryWarningsAsErrors;
     }
 
-    /// <summary>
-    /// Populate adapter settings from the context.
-    /// </summary>
-    /// <param name="context">
-    /// The discovery context that contains the runsettings.
-    /// </param>
-    [Obsolete("this function will be removed in v4.0.0")]
-    public static void PopulateSettings(IDiscoveryContext? context) => PopulateSettings(context, null, null);
-
 #if !WINDOWS_UWP
     private static bool IsRunSettingsFileHasMSTestSettings(string? runSettingsXml)
     => IsRunSettingsFileHasSettingName(runSettingsXml, SettingsName) || IsRunSettingsFileHasSettingName(runSettingsXml, SettingsNameAlias);
