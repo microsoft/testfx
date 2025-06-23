@@ -35,7 +35,7 @@ public sealed class DataSourceTests : AcceptanceTestBase<NopAssetFixture>
 <?xml version="1.0" encoding="utf-8"?>
 <configuration>
   <configSections>
-    <section name="microsoft.visualstudio.testtools" type="Microsoft.VisualStudio.TestTools.UnitTesting.TestConfigurationSection, Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions"/>
+    <section name="microsoft.visualstudio.testtools" type="Microsoft.VisualStudio.TestTools.UnitTesting.TestConfigurationSection, MSTest.TestFramework.Extensions"/>
   </configSections>
   <connectionStrings>
     <add name="ConnString" connectionString="TestData.csv" providerName="Microsoft.VisualStudio.TestTools.DataSource.CSV"/>
