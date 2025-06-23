@@ -15,7 +15,7 @@ public class ReflectionUtilityTests : TestContainer
     {
         MethodInfo methodInfo = typeof(DummyBaseTestClass).GetMethod("DummyVTestMethod1")!;
 
-        IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributes(methodInfo, false);
+        IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributes(methodInfo);
 
         Verify(attributes is not null);
         Verify(attributes.Count == 2);
@@ -28,7 +28,7 @@ public class ReflectionUtilityTests : TestContainer
     {
         MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("DummyVTestMethod1")!;
 
-        IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributes(methodInfo, false);
+        IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributes(methodInfo);
 
         Verify(attributes is not null);
         Verify(attributes.Count == 2);
@@ -41,7 +41,7 @@ public class ReflectionUtilityTests : TestContainer
     {
         MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("DummyVTestMethod1")!;
 
-        IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributes(methodInfo, true);
+        IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributes(methodInfo);
 
         Verify(attributes is not null);
         Verify(attributes.Count == 3);
@@ -55,7 +55,7 @@ public class ReflectionUtilityTests : TestContainer
     {
         Type type = typeof(DummyBaseTestClass);
 
-        IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributes(type, false);
+        IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributes(type);
 
         Verify(attributes is not null);
         Verify(attributes.Count == 1);
@@ -68,7 +68,7 @@ public class ReflectionUtilityTests : TestContainer
     {
         Type type = typeof(DummyTestClass);
 
-        IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributes(type, false);
+        IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributes(type);
 
         Verify(attributes is not null);
         Verify(attributes.Count == 1);
@@ -81,7 +81,7 @@ public class ReflectionUtilityTests : TestContainer
     {
         Type method = typeof(DummyTestClass);
 
-        IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributes(method, true);
+        IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributes(method);
 
         Verify(attributes is not null);
         Verify(attributes.Count == 2);
@@ -94,7 +94,7 @@ public class ReflectionUtilityTests : TestContainer
     {
         MethodInfo methodInfo = typeof(DummyBaseTestClass).GetMethod("DummyVTestMethod1")!;
 
-        IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributes(methodInfo, typeof(DummyAAttribute), false);
+        IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributesCore(methodInfo, typeof(DummyAAttribute));
 
         Verify(attributes is not null);
         Verify(attributes.Count == 1);
@@ -107,7 +107,7 @@ public class ReflectionUtilityTests : TestContainer
     {
         MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("DummyVTestMethod1")!;
 
-        IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributes(methodInfo, typeof(DummyAAttribute), false);
+        IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributesCore(methodInfo, typeof(DummyAAttribute));
 
         Verify(attributes is not null);
         Verify(attributes.Count == 1);
@@ -120,7 +120,7 @@ public class ReflectionUtilityTests : TestContainer
     {
         MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("DummyVTestMethod1")!;
 
-        IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributes(methodInfo, typeof(DummyAAttribute), true);
+        IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributesCore(methodInfo, typeof(DummyAAttribute));
 
         Verify(attributes is not null);
         Verify(attributes.Count == 2);
@@ -133,7 +133,7 @@ public class ReflectionUtilityTests : TestContainer
     {
         Type type = typeof(DummyBaseTestClass);
 
-        IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributes(type, typeof(DummyAAttribute), false);
+        IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributesCore(type, typeof(DummyAAttribute));
 
         Verify(attributes is not null);
         Verify(attributes.Count == 1);
@@ -146,7 +146,7 @@ public class ReflectionUtilityTests : TestContainer
     {
         Type type = typeof(DummyTestClass);
 
-        IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributes(type, typeof(DummyAAttribute), false);
+        IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributesCore(type, typeof(DummyAAttribute));
 
         Verify(attributes is not null);
         Verify(attributes.Count == 1);
@@ -159,7 +159,7 @@ public class ReflectionUtilityTests : TestContainer
     {
         Type method = typeof(DummyTestClass);
 
-        IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributes(method, typeof(DummyAAttribute), true);
+        IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributesCore(method, typeof(DummyAAttribute));
 
         Verify(attributes is not null);
         Verify(attributes.Count == 2);

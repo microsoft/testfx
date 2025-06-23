@@ -30,7 +30,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// </list>
 /// </remarks>
 #pragma warning restore CS1574 // XML comment has cref attribute that could not be resolved// XML comment has cref attribute that could not be resolved
-[AttributeUsage(AttributeTargets.Method)]
+[AttributeUsage(AttributeTargets.Method, Inherited = false)]
 public class TestMethodAttribute : Attribute
 {
     /// <summary>

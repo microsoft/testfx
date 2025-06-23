@@ -59,24 +59,18 @@ public interface ITestMethod
     /// <summary>
     /// Get all attributes of the test method.
     /// </summary>
-    /// <param name="inherit">
-    /// Whether attribute defined in parent class is valid.
-    /// </param>
     /// <returns>
     /// All attributes.
     /// </returns>
-    Attribute[]? GetAllAttributes(bool inherit);
+    Attribute[]? GetAllAttributes();
 
     /// <summary>
     /// Get attribute of specific type.
     /// </summary>
     /// <typeparam name="TAttributeType"> System.Attribute type. </typeparam>
-    /// <param name="inherit">
-    /// Whether attribute defined in parent class is valid.
-    /// </param>
     /// <returns>
     /// The attributes of the specified type.
     /// </returns>
-    TAttributeType[] GetAttributes<TAttributeType>(bool inherit)
+    TAttributeType[] GetAttributes<TAttributeType>()
         where TAttributeType : Attribute;
 }

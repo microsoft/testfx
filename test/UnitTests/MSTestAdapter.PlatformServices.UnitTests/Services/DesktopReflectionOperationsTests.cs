@@ -20,7 +20,7 @@ public class DesktopReflectionOperationsTests : TestContainer
     {
         MethodInfo methodInfo = typeof(ReflectionUtilityTests.DummyBaseTestClass).GetMethod("DummyVTestMethod1");
 
-        object[] attributes = _reflectionOperations.GetCustomAttributes(methodInfo, false);
+        object[] attributes = _reflectionOperations.GetCustomAttributes(methodInfo);
 
         Verify(attributes is not null);
         Verify(attributes.Length == 2);
@@ -33,7 +33,7 @@ public class DesktopReflectionOperationsTests : TestContainer
     {
         Type type = typeof(ReflectionUtilityTests.DummyBaseTestClass);
 
-        object[] attributes = _reflectionOperations.GetCustomAttributes(type, false);
+        object[] attributes = _reflectionOperations.GetCustomAttributes(type);
 
         Verify(attributes is not null);
         Verify(attributes.Length == 1);
