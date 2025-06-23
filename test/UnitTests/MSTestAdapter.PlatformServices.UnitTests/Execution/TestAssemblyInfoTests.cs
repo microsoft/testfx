@@ -267,7 +267,7 @@ public class TestAssemblyInfoTests : TestContainer
         string? actualErrorMessage = _testAssemblyInfo.ExecuteAssemblyCleanup(GetTestContext())?.Message;
         Verify(
             actualErrorMessage!.StartsWith(
-                "Assert.Fail failed. Test Failure..", StringComparison.Ordinal),
+                "Assembly Cleanup method DummyTestClass.AssemblyCleanupMethod failed. Error Message: Assert.Fail failed. Test Failure..", StringComparison.Ordinal),
             $"Value: {actualErrorMessage}");
     }
 
@@ -279,7 +279,7 @@ public class TestAssemblyInfoTests : TestContainer
         string? actualErrorMessage = _testAssemblyInfo.ExecuteAssemblyCleanup(GetTestContext())?.Message;
         Verify(
             actualErrorMessage!.StartsWith(
-                "Assert.Inconclusive failed. Test Inconclusive..", StringComparison.Ordinal),
+                "Assembly Cleanup method DummyTestClass.AssemblyCleanupMethod failed. Error Message: Assert.Inconclusive failed. Test Inconclusive..", StringComparison.Ordinal),
             $"Value: {actualErrorMessage}");
     }
 
@@ -291,7 +291,7 @@ public class TestAssemblyInfoTests : TestContainer
         string? actualErrorMessage = _testAssemblyInfo.ExecuteAssemblyCleanup(GetTestContext())?.Message;
         Verify(
             actualErrorMessage!.StartsWith(
-                "System.ArgumentException: Argument Exception.", StringComparison.Ordinal),
+                "Assembly Cleanup method DummyTestClass.AssemblyCleanupMethod failed. Error Message: System.ArgumentException: Argument Exception.", StringComparison.Ordinal),
             $"Value: {actualErrorMessage}");
     }
 
@@ -305,7 +305,7 @@ public class TestAssemblyInfoTests : TestContainer
 
         string actualErrorMessage = _testAssemblyInfo.ExecuteAssemblyCleanup(GetTestContext())!.Message;
 
-        Verify(actualErrorMessage.StartsWith("System.InvalidOperationException: I fail.. StackTrace:", StringComparison.Ordinal));
+        Verify(actualErrorMessage.StartsWith("Assembly Cleanup method DummyTestClass.AssemblyCleanupMethod failed. Error Message: System.InvalidOperationException: I fail.. StackTrace:", StringComparison.Ordinal));
         Verify(actualErrorMessage.Contains("at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestAssemblyInfoTests.FailingStaticHelper..cctor()"));
     }
 
