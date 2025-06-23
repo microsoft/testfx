@@ -66,92 +66,47 @@ internal sealed class TestMethodRunner
     internal async Task<TestResult[]> ExecuteAsync(string? initializationLogs, string? initializationErrorLogs, string? initializationTrace, string? initializationTestContextMessages)
     {
         _testContext.Context.TestRunCount++;
-        bool isSTATestClass = _testMethodInfo.Parent.ClassAttribute is STATestClassAttribute;
-        bool isSTATestMethod = _testMethodInfo.Executor is STATestMethodAttribute;
-        bool isSTARequested = isSTATestClass || isSTATestMethod;
-        bool isWindowsOS = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
-        if (isSTARequested && isWindowsOS && Thread.CurrentThread.GetApartmentState() != ApartmentState.STA)
+
+        TestResult[]? result = null;
+
+        try
         {
-            TestResult[]? results = null;
-            Thread entryPointThread = new(() => results = SafeRunTestMethodAsync(initializationLogs, initializationErrorLogs, initializationTrace, initializationTestContextMessages).GetAwaiter().GetResult())
-            {
-                Name = (isSTATestClass, isSTATestMethod) switch
-                {
-                    (true, _) => "MSTest STATestClass",
-                    (_, true) => "MSTest STATestMethod",
-                    _ => throw ApplicationStateGuard.Unreachable(),
-                },
-            };
-
-            entryPointThread.SetApartmentState(ApartmentState.STA);
-            entryPointThread.Start();
-
-            try
-            {
-                entryPointThread.Join();
-            }
-            catch (Exception ex)
-            {
-                PlatformServiceProvider.Instance.AdapterTraceLogger.LogError(ex.ToString());
-            }
-
-            return results ?? [];
+            result = await RunTestMethodAsync().ConfigureAwait(false);
         }
-        else
+        catch (TestFailedException ex)
         {
-            // If the requested apartment state is STA and the OS is not Windows, then warn the user.
-            if (!isWindowsOS && isSTARequested)
-            {
-                PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning(Resource.STAIsOnlySupportedOnWindowsWarning);
-            }
-
-            return await SafeRunTestMethodAsync(initializationLogs, initializationErrorLogs, initializationTrace, initializationTestContextMessages).ConfigureAwait(false);
+            result = [new TestResult { TestFailureException = ex }];
         }
-
-        // Local functions
-        async Task<TestResult[]> SafeRunTestMethodAsync(string? initializationLogs, string? initializationErrorLogs, string? initializationTrace, string? initializationTestContextMessages)
+        catch (Exception ex)
         {
-            TestResult[]? result = null;
-
-            try
+            if (result == null || result.Length == 0)
             {
-                result = await RunTestMethodAsync().ConfigureAwait(false);
+                result = [new TestResult { Outcome = UTF.UnitTestOutcome.Error }];
             }
-            catch (TestFailedException ex)
-            {
-                result = [new TestResult { TestFailureException = ex }];
-            }
-            catch (Exception ex)
-            {
-                if (result == null || result.Length == 0)
-                {
-                    result = [new TestResult { Outcome = UTF.UnitTestOutcome.Error }];
-                }
 
 #pragma warning disable IDE0056 // Use index operator
-                result[result.Length - 1] = new TestResult
-                {
-                    TestFailureException = new TestFailedException(UTF.UnitTestOutcome.Error, ex.TryGetMessage(), ex.TryGetStackTraceInformation()),
-                    LogOutput = result[result.Length - 1].LogOutput,
-                    LogError = result[result.Length - 1].LogError,
-                    DebugTrace = result[result.Length - 1].DebugTrace,
-                    TestContextMessages = result[result.Length - 1].TestContextMessages,
-                    Duration = result[result.Length - 1].Duration,
-                };
-#pragma warning restore IDE0056 // Use index operator
-            }
-            finally
+            result[result.Length - 1] = new TestResult
             {
-                // Assembly initialize and class initialize logs are pre-pended to the first result.
-                TestResult firstResult = result![0];
-                firstResult.LogOutput = initializationLogs + firstResult.LogOutput;
-                firstResult.LogError = initializationErrorLogs + firstResult.LogError;
-                firstResult.DebugTrace = initializationTrace + firstResult.DebugTrace;
-                firstResult.TestContextMessages = initializationTestContextMessages + firstResult.TestContextMessages;
-            }
-
-            return result;
+                TestFailureException = new TestFailedException(UTF.UnitTestOutcome.Error, ex.TryGetMessage(), ex.TryGetStackTraceInformation()),
+                LogOutput = result[result.Length - 1].LogOutput,
+                LogError = result[result.Length - 1].LogError,
+                DebugTrace = result[result.Length - 1].DebugTrace,
+                TestContextMessages = result[result.Length - 1].TestContextMessages,
+                Duration = result[result.Length - 1].Duration,
+            };
+#pragma warning restore IDE0056 // Use index operator
         }
+        finally
+        {
+            // Assembly initialize and class initialize logs are pre-pended to the first result.
+            TestResult firstResult = result![0];
+            firstResult.LogOutput = initializationLogs + firstResult.LogOutput;
+            firstResult.LogError = initializationErrorLogs + firstResult.LogError;
+            firstResult.DebugTrace = initializationTrace + firstResult.DebugTrace;
+            firstResult.TestContextMessages = initializationTestContextMessages + firstResult.TestContextMessages;
+        }
+
+        return result;
     }
 
     /// <summary>
