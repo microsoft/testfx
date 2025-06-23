@@ -44,7 +44,7 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzer : Diagnost
         MessageFormat,
         null,
         Category.Design,
-        DiagnosticSeverity.Info,
+        DiagnosticSeverity.Warning,
         isEnabledByDefault: true);
 
     /// <inheritdoc />
