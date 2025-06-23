@@ -51,7 +51,7 @@ public class MSTestDiscovererTests : TestContainer
     {
         DefaultExecutorUriAttribute attribute = typeof(MSTestDiscoverer).GetCustomAttributes<DefaultExecutorUriAttribute>().First();
         Verify(attribute is not null);
-        Verify(attribute.ExecutorUri == "executor://MSTestAdapter/v2");
+        Verify(attribute.ExecutorUri == "executor://MSTestAdapter/v4");
     }
 
     public void MSTestDiscovererHasXapAsFileExtension()

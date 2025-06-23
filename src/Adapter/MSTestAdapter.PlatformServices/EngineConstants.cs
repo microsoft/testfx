@@ -181,7 +181,7 @@ internal static class EngineConstants
     /// <summary>
     /// Uri of the MSTest executor.
     /// </summary>
-    internal const string ExecutorUriString = "executor://MSTestAdapter/v2";
+    internal const string ExecutorUriString = "executor://MSTestAdapter/v4";
 
     /// <summary>
     /// The executor uri for this adapter.
