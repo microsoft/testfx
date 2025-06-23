@@ -71,6 +71,18 @@ public sealed partial class Assert
             ? FrameworkMessages.Common_NullInMessages.ToString()
             : ReplaceNullChars(format);
 
+    private static string BuildUserMessage(string? format, string callerArgExpression)
+    {
+        string userMessage = BuildUserMessage(format);
+        if (string.IsNullOrEmpty(callerArgExpression))
+        {
+            return userMessage;
+        }
+
+        // TODO: Localize
+        return $"{userMessage}, expression: {callerArgExpression}";
+    }
+
     /// <summary>
     /// Checks the parameter for valid conditions.
     /// </summary>

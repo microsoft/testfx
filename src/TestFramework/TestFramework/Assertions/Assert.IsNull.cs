@@ -125,7 +125,7 @@ public sealed partial class Assert
     }
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 
-    /// <inheritdoc cref="IsNull(object?, string?)" />
+    /// <inheritdoc cref="IsNull(object?, string, string)" />
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
     public static void IsNull(object? value, [InterpolatedStringHandlerArgument(nameof(value))] ref AssertIsNullInterpolatedStringHandler message)
 #pragma warning restore IDE0060 // Remove unused parameter
@@ -142,14 +142,17 @@ public sealed partial class Assert
     /// The message to include in the exception when <paramref name="value"/>
     /// is not null. The message is shown in test results.
     /// </param>
+    /// <param name="valueExpression">
+    /// The syntactic expression of value as given by the compiler via caller argument expression.
+    /// </param>
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="value"/> is not null.
     /// </exception>
-    public static void IsNull(object? value, [CallerArgumentExpression(nameof(value))] string message = "")
+    public static void IsNull(object? value, string message = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
     {
         if (IsNullFailing(value))
         {
-            ThrowAssertIsNullFailed(BuildUserMessage(message));
+            ThrowAssertIsNullFailed(BuildUserMessage(message, valueExpression));
         }
     }
 
@@ -158,7 +161,7 @@ public sealed partial class Assert
     private static void ThrowAssertIsNullFailed(string message)
         => ThrowAssertFailed("Assert.IsNull", message);
 
-    /// <inheritdoc cref="IsNull(object?, string?)" />
+    /// <inheritdoc cref="IsNull(object?, string, string)" />
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
     public static void IsNotNull([NotNull] object? value, [InterpolatedStringHandlerArgument(nameof(value))] ref AssertIsNotNullInterpolatedStringHandler message)
 #pragma warning restore IDE0060 // Remove unused parameter
@@ -177,14 +180,17 @@ public sealed partial class Assert
     /// The message to include in the exception when <paramref name="value"/>
     /// is null. The message is shown in test results.
     /// </param>
+    /// <param name="valueExpression">
+    /// The syntactic expression of value as given by the compiler via caller argument expression.
+    /// </param>
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="value"/> is null.
     /// </exception>
-    public static void IsNotNull([NotNull] object? value, [CallerArgumentExpression(nameof(value))] string message = "")
+    public static void IsNotNull([NotNull] object? value, string message = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
     {
         if (IsNotNullFailing(value))
         {
-            ThrowAssertIsNotNullFailed(BuildUserMessage(message));
+            ThrowAssertIsNotNullFailed(BuildUserMessage(message, valueExpression));
         }
     }
 
