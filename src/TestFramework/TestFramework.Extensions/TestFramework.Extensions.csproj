@@ -7,7 +7,6 @@
   <PropertyGroup>
     <TargetFrameworks Condition=" '$(OS)' == 'Windows_NT' ">netstandard2.0;$(NetFrameworkMinimum);$(SupportedNetFrameworks);$(UwpMinimum);$(ModernUwpMinimum);$(WinUiMinimum)</TargetFrameworks>
     <TargetFrameworks Condition=" '$(OS)' != 'Windows_NT' ">$(SupportedNetFrameworks);netstandard2.0</TargetFrameworks>
-    <UseAssemblyVersion14>true</UseAssemblyVersion14>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -34,7 +33,7 @@
 
   <PropertyGroup>
     <RootNamespace>Microsoft.VisualStudio.TestTools.UnitTesting</RootNamespace>
-    <AssemblyName>Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions</AssemblyName>
+    <AssemblyName>MSTest.TestFramework.Extensions</AssemblyName>
     <DefineConstants>TRACE</DefineConstants>
   </PropertyGroup>
 
@@ -90,8 +89,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <InternalsVisibleTo Include="Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter" Key="$(VsPublicKey)" />
-    <InternalsVisibleTo Include="Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices" Key="$(VsPublicKey)" />
+    <InternalsVisibleTo Include="MSTest.TestAdapter" Key="$(VsPublicKey)" />
+    <InternalsVisibleTo Include="MSTestAdapter.PlatformServices" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="MSTestAdapter.PlatformServices.UnitTests" Key="$(VsPublicKey)" />
   </ItemGroup>
 

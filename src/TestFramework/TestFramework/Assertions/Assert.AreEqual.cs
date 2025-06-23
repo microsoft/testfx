@@ -44,17 +44,6 @@ public sealed partial class Assert
             }
         }
 
-        public AssertAreEqualInterpolatedStringHandler(int literalLength, int formattedCount, IEquatable<TArgument>? expected, IEquatable<TArgument>? actual, out bool shouldAppend)
-        {
-            shouldAppend = AreEqualFailing(expected, actual);
-            if (shouldAppend)
-            {
-                _builder = new StringBuilder(literalLength + formattedCount);
-                _expected = expected;
-                _actual = actual;
-            }
-        }
-
         internal void ComputeAssertion()
         {
             if (_builder is not null)
@@ -434,7 +423,29 @@ public sealed partial class Assert
     public static void AreEqual<T>(T? expected, T? actual, string? message)
         => AreEqual(expected, actual, null, message);
 
-    /// <inheritdoc cref="AreEqual{T}(IEquatable{T}?, IEquatable{T}?, string?)" />
+    /// <summary>
+    /// Tests whether the specified values are equal and throws an exception
+    /// if the two values are not equal.
+    /// The equality is computed using the default <see cref="EqualityComparer{T}"/>.
+    /// </summary>
+    /// <typeparam name="T">
+    /// The type of values to compare.
+    /// </typeparam>
+    /// <param name="expected">
+    /// The first value to compare. This is the value the tests expects.
+    /// </param>
+    /// <param name="actual">
+    /// The second value to compare. This is the value produced by the code under test.
+    /// </param>
+    /// <param name="message">
+    /// The message to include in the exception when <paramref name="actual"/>
+    /// is not equal to <paramref name="expected"/>. The message is shown in
+    /// test results.
+    /// </param>
+    /// <exception cref="AssertFailedException">
+    /// Thrown if <paramref name="expected"/> is not equal to
+    /// <paramref name="actual"/>.
+    /// </exception>
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
     public static void AreEqual<T>(T? expected, T? actual, [InterpolatedStringHandlerArgument(nameof(expected), nameof(actual))] ref AssertAreEqualInterpolatedStringHandler<T> message)
 #pragma warning restore IDE0060 // Remove unused parameter
@@ -484,74 +495,11 @@ public sealed partial class Assert
         ThrowAssertAreEqualFailed(expected, actual, userMessage);
     }
 
-    /// <summary>
-    /// Tests whether the specified values are equal and throws an exception
-    /// if the two values are not equal.
-    /// The equality is computed using the default <see cref="EqualityComparer{T}"/>.
-    /// </summary>
-    /// <typeparam name="T">
-    /// The type of values to compare.
-    /// </typeparam>
-    /// <param name="expected">
-    /// The first value to compare. This is the value the tests expects.
-    /// </param>
-    /// <param name="actual">
-    /// The second value to compare. This is the value produced by the code under test.
-    /// </param>
-    /// <exception cref="AssertFailedException">
-    /// Thrown if <paramref name="expected"/> is not equal to <paramref name="actual"/>.
-    /// </exception>
-    public static void AreEqual<T>(IEquatable<T>? expected, IEquatable<T>? actual)
-        => AreEqual(expected, actual, string.Empty);
-
-    /// <inheritdoc cref="AreEqual{T}(IEquatable{T}?, IEquatable{T}?, string?)"/>
-#pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
-    public static void AreEqual<T>(IEquatable<T>? expected, IEquatable<T>? actual, [InterpolatedStringHandlerArgument(nameof(expected), nameof(actual))] ref AssertAreEqualInterpolatedStringHandler<T> message)
-#pragma warning restore IDE0060 // Remove unused parameter
-        => message.ComputeAssertion();
-
-    /// <summary>
-    /// Tests whether the specified values are equal and throws an exception
-    /// if the two values are not equal.
-    /// The equality is computed using the default <see cref="EqualityComparer{T}"/>.
-    /// </summary>
-    /// <typeparam name="T">
-    /// The type of values to compare.
-    /// </typeparam>
-    /// <param name="expected">
-    /// The first value to compare. This is the value the tests expects.
-    /// </param>
-    /// <param name="actual">
-    /// The second value to compare. This is the value produced by the code under test.
-    /// </param>
-    /// <param name="message">
-    /// The message to include in the exception when <paramref name="actual"/>
-    /// is not equal to <paramref name="expected"/>. The message is shown in
-    /// test results.
-    /// </param>
-    /// <exception cref="AssertFailedException">
-    /// Thrown if <paramref name="expected"/> is not equal to
-    /// <paramref name="actual"/>.
-    /// </exception>
-    public static void AreEqual<T>(IEquatable<T>? expected, IEquatable<T>? actual, string? message)
-    {
-        if (!AreEqualFailing(expected, actual))
-        {
-            return;
-        }
-
-        string userMessage = BuildUserMessage(message);
-        ThrowAssertAreEqualFailed(expected, actual, userMessage);
-    }
-
     private static bool AreEqualFailing<T>(T? expected, T? actual)
         => AreEqualFailing(expected, actual, null);
 
     private static bool AreEqualFailing<T>(T? expected, T? actual, IEqualityComparer<T>? comparer)
         => !(comparer ?? EqualityComparer<T>.Default).Equals(expected!, actual!);
-
-    private static bool AreEqualFailing<T>(IEquatable<T>? expected, IEquatable<T>? actual)
-        => (actual is not null || expected is not null) && actual?.Equals(expected) != true;
 
     private static bool AreEqualFailing(string? expected, string? actual, bool ignoreCase, CultureInfo culture)
         => CompareInternal(expected, actual, ignoreCase, culture) != 0;

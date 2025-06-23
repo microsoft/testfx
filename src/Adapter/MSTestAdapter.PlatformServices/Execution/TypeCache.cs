@@ -507,20 +507,6 @@ internal sealed class TypeCache : MarshalByRefObject
         if (cleanupMethod is not null)
         {
             classInfo.BaseClassCleanupMethods.Add(cleanupMethod);
-
-#pragma warning disable CS0618 // Type or member is obsolete
-            classInfo.BaseClassCleanupMethodsStack.Push(cleanupMethod);
-#pragma warning restore CS0618 // Type or member is obsolete
-        }
-
-        if (initMethod is not null || cleanupMethod is not null)
-        {
-#pragma warning disable CS0618 // Type or member is obsolete - kept in case someone is using it
-            classInfo.BaseClassInitAndCleanupMethods.Enqueue(
-                new Tuple<MethodInfo?, MethodInfo?>(
-                    initMethod,
-                    initAndCleanupMethods.LastOrDefault()));
-#pragma warning restore CS0618 // Type or member is obsolete
         }
 
         initAndCleanupMethods = new MethodInfo[2];

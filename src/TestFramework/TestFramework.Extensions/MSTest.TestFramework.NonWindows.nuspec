@@ -26,29 +26,29 @@
 
     <!-- netstandard2.0 -->
     <file src="$RepoRoot$src\TestFramework\TestFramework.Extensions\buildTransitive\others\MSTest.TestFramework.targets" target="buildTransitive\netstandard2.0\" />
-    <file src="netstandard2.0/Microsoft.VisualStudio.TestPlatform.TestFramework.dll" target="lib/netstandard2.0/" />
-    <file src="netstandard2.0/Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="lib/netstandard2.0/" />
-    <file src="netstandard2.0/**/Microsoft.VisualStudio.TestPlatform.TestFramework.resources.dll" target="lib/netstandard2.0/" />
-    <file src="netstandard2.0/Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll" target="lib/netstandard2.0/" />
-    <file src="netstandard2.0/Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="lib/netstandard2.0/" />
+    <file src="netstandard2.0/MSTest.TestFramework.dll" target="lib/netstandard2.0/" />
+    <file src="netstandard2.0/MSTest.TestFramework.xml" target="lib/netstandard2.0/" />
+    <file src="netstandard2.0/**/MSTest.TestFramework.resources.dll" target="lib/netstandard2.0/" />
+    <file src="netstandard2.0/MSTest.TestFramework.Extensions.dll" target="lib/netstandard2.0/" />
+    <file src="netstandard2.0/MSTest.TestFramework.Extensions.xml" target="lib/netstandard2.0/" />
     <file src="$RepoRoot$src\TestFramework\TestFramework.Extensions\build\netstandard2.0\MSTest.TestFramework.targets" target="build\netstandard2.0\" />
 
     <!-- net8.0 -->
     <file src="$RepoRoot$src\TestFramework\TestFramework.Extensions\buildTransitive\net8.0AndLater\MSTest.TestFramework.targets" target="buildTransitive\net8.0\" />
-    <file src="net8.0/Microsoft.VisualStudio.TestPlatform.TestFramework.dll" target="lib/net8.0/" />
-    <file src="net8.0/Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="lib/net8.0/" />
-    <file src="net8.0/**/Microsoft.VisualStudio.TestPlatform.TestFramework.resources.dll" target="lib/net8.0/" />
-    <file src="net8.0/Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll" target="buildTransitive/net8.0/" />
-    <file src="net8.0/Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="buildTransitive/net8.0/" />
+    <file src="net8.0/MSTest.TestFramework.dll" target="lib/net8.0/" />
+    <file src="net8.0/MSTest.TestFramework.xml" target="lib/net8.0/" />
+    <file src="net8.0/**/MSTest.TestFramework.resources.dll" target="lib/net8.0/" />
+    <file src="net8.0/MSTest.TestFramework.Extensions.dll" target="buildTransitive/net8.0/" />
+    <file src="net8.0/MSTest.TestFramework.Extensions.xml" target="buildTransitive/net8.0/" />
     <file src="$RepoRoot$src\TestFramework\TestFramework.Extensions\build\net8.0\MSTest.TestFramework.targets" target="build\net8.0\" />
 
     <!-- net9.0 -->
     <file src="$RepoRoot$src\TestFramework\TestFramework.Extensions\buildTransitive\net8.0AndLater\MSTest.TestFramework.targets" target="buildTransitive\net9.0\" />
-    <file src="net9.0/Microsoft.VisualStudio.TestPlatform.TestFramework.dll" target="lib/net9.0/" />
-    <file src="net9.0/Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="lib/net9.0/" />
-    <file src="net9.0/**/Microsoft.VisualStudio.TestPlatform.TestFramework.resources.dll" target="lib/net9.0/" />
-    <file src="net9.0/Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll" target="buildTransitive/net9.0/" />
-    <file src="net9.0/Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="buildTransitive/net9.0/" />
+    <file src="net9.0/MSTest.TestFramework.dll" target="lib/net9.0/" />
+    <file src="net9.0/MSTest.TestFramework.xml" target="lib/net9.0/" />
+    <file src="net9.0/**/MSTest.TestFramework.resources.dll" target="lib/net9.0/" />
+    <file src="net9.0/MSTest.TestFramework.Extensions.dll" target="buildTransitive/net9.0/" />
+    <file src="net9.0/MSTest.TestFramework.Extensions.xml" target="buildTransitive/net9.0/" />
     <file src="$RepoRoot$src\TestFramework\TestFramework.Extensions\build\net9.0\MSTest.TestFramework.targets" target="build\net9.0\" />
 
     <!-- Source code -->
