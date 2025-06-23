@@ -192,12 +192,6 @@ internal sealed class TestDeployment : ITestDeployment
         properties[TestContext.ResultsDirectoryLabel] = RunDirectories?.InDirectory ?? applicationBaseDirectory;
         properties[TestContext.TestRunResultsDirectoryLabel] = RunDirectories?.InMachineNameDirectory ?? applicationBaseDirectory;
         properties[TestContext.TestResultsDirectoryLabel] = RunDirectories?.InDirectory ?? applicationBaseDirectory;
-#pragma warning disable CS0618 // Type or member is obsolete
-        properties[TestContext.TestDirLabel] = RunDirectories?.RootDeploymentDirectory ?? applicationBaseDirectory;
-        properties[TestContext.TestDeploymentDirLabel] = RunDirectories?.OutDirectory ?? applicationBaseDirectory;
-        properties[TestContext.TestLogsDirLabel] = RunDirectories?.InMachineNameDirectory ?? applicationBaseDirectory;
-#pragma warning restore CS0618 // Type or member is obsolete
-
         return properties;
     }
 
