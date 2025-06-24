@@ -100,6 +100,9 @@ public abstract class TestContext
     #endregion
 #endif
 
+    /// <summary>
+    /// Gets the Fully-qualified name of the class containing the test method currently being executed.
+    /// </summary>
     public virtual string FullyQualifiedTestClassName => GetProperty<string>(FullyQualifiedTestClassNameLabel)
         ?? throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, FrameworkMessages.InvalidAccessToTestContextProperty, nameof(FullyQualifiedTestClassName)));
 
