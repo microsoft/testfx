@@ -447,10 +447,9 @@ public class BaseClassWithInheritance
     {
         if (_managedMethod is not null)
         {
-            throw new InvalidOperationException($"Was expected to be running tests sequentially but '{_managedMethod}' is still running when we received '{testContext.ManagedMethod}'");
+            throw new InvalidOperationException($"Was expected to be running tests sequentially but '{_managedMethod}' is still running.");
         }
 
-        _managedMethod = testContext.ManagedMethod;
         CultureInfo.CurrentCulture = new CultureInfo(ExpectedCultures.BaseClassInitCulture);
     }
 
