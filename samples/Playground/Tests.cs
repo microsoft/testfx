@@ -3,7 +3,6 @@
 
 #pragma warning disable VSTHRD200 // Use "Async" suffix for async methods
 
-
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 [assembly: Parallelize(Scope = ExecutionScope.MethodLevel, Workers = 0)]
@@ -13,20 +12,9 @@ namespace Playground;
 [TestClass]
 public class TestClass
 {
-    private sealed class MyDynamicAttribute : Attribute, ITestDataSource
-    {
-        public IEnumerable<object?[]> GetData(MethodInfo methodInfo)
-        {
-            yield return [1, 2];
-            yield return [3, 4];
-        }
-
-        public string? GetDisplayName(MethodInfo methodInfo, object?[]? data) => null;
-    }
-
     [TestMethod]
-    [MyDynamic]
-    public void Test1(int a, int b)
+    [DynamicData(nameof(Data))]
+    public void Test3(int a, int b)
     {
     }
 
