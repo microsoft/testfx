@@ -109,20 +109,18 @@ internal class TestMethodInfo : ITestMethod
     /// <summary>
     /// Gets all attributes of the test method.
     /// </summary>
-    /// <param name="inherit">Whether or not getting the attributes that are inherited.</param>
     /// <returns>An array of the attributes.</returns>
-    public Attribute[]? GetAllAttributes(bool inherit)
-        => [.. ReflectHelper.Instance.GetAttributes<Attribute>(MethodInfo, inherit)];
+    public Attribute[]? GetAllAttributes()
+        => [.. ReflectHelper.Instance.GetAttributes<Attribute>(MethodInfo)];
 
     /// <summary>
     /// Gets all attributes of the test method.
     /// </summary>
     /// <typeparam name="TAttributeType">The type of the attributes.</typeparam>
-    /// <param name="inherit">Whether or not getting the attributes that are inherited.</param>
     /// <returns>An array of the attributes.</returns>
-    public TAttributeType[] GetAttributes<TAttributeType>(bool inherit)
+    public TAttributeType[] GetAttributes<TAttributeType>()
         where TAttributeType : Attribute
-        => [.. ReflectHelper.Instance.GetAttributes<TAttributeType>(MethodInfo, inherit)];
+        => [.. ReflectHelper.Instance.GetAttributes<TAttributeType>(MethodInfo)];
 
     /// <summary>
     /// Execute test method. Capture failures, handle async and return result.
@@ -251,7 +249,7 @@ internal class TestMethodInfo : ITestMethod
     private TimeoutInfo GetTestTimeout()
     {
         DebugEx.Assert(MethodInfo != null, "TestMethod should be non-null");
-        TimeoutAttribute? timeoutAttribute = ReflectHelper.Instance.GetFirstAttributeOrDefault<TimeoutAttribute>(MethodInfo, inherit: false);
+        TimeoutAttribute? timeoutAttribute = ReflectHelper.Instance.GetFirstAttributeOrDefault<TimeoutAttribute>(MethodInfo);
         if (timeoutAttribute is null)
         {
             return TimeoutInfo.FromTestTimeoutSettings();
@@ -274,7 +272,7 @@ internal class TestMethodInfo : ITestMethod
     {
         // Get the derived TestMethod attribute from reflection.
         // It should be non-null as it was already validated by IsValidTestMethod.
-        TestMethodAttribute testMethodAttribute = ReflectHelper.Instance.GetFirstAttributeOrDefault<TestMethodAttribute>(MethodInfo, inherit: false)!;
+        TestMethodAttribute testMethodAttribute = ReflectHelper.Instance.GetFirstAttributeOrDefault<TestMethodAttribute>(MethodInfo)!;
 
         // Get the derived TestMethod attribute from Extended TestClass Attribute
         // If the extended TestClass Attribute doesn't have extended TestMethod attribute then base class returns back the original testMethod Attribute
@@ -294,7 +292,7 @@ internal class TestMethodInfo : ITestMethod
 
         try
         {
-            expectedExceptions = ReflectHelper.Instance.GetAttributes<ExpectedExceptionBaseAttribute>(MethodInfo, inherit: true);
+            expectedExceptions = ReflectHelper.Instance.GetAttributes<ExpectedExceptionBaseAttribute>(MethodInfo);
         }
         catch (Exception ex)
         {
@@ -330,7 +328,7 @@ internal class TestMethodInfo : ITestMethod
     /// </returns>
     private RetryBaseAttribute? GetRetryAttribute()
     {
-        IEnumerable<RetryBaseAttribute> attributes = ReflectHelper.Instance.GetAttributes<RetryBaseAttribute>(MethodInfo, inherit: true);
+        IEnumerable<RetryBaseAttribute> attributes = ReflectHelper.Instance.GetAttributes<RetryBaseAttribute>(MethodInfo);
         using IEnumerator<RetryBaseAttribute> enumerator = attributes.GetEnumerator();
         if (!enumerator.MoveNext())
         {

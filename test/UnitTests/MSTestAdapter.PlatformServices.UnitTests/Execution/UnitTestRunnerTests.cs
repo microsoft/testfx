@@ -292,7 +292,7 @@ public sealed class UnitTestRunnerTests : TestContainer
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("A", It.IsAny<bool>()))
             .Returns(Assembly.GetExecutingAssembly());
         mockReflectHelper.Setup(
-            rh => rh.IsAttributeDefined<AssemblyInitializeAttribute>(type.GetMethod("AssemblyInitialize")!, It.IsAny<bool>()))
+            rh => rh.IsAttributeDefined<AssemblyInitializeAttribute>(type.GetMethod("AssemblyInitialize")!))
             .Returns(true);
 
         int validator = 1;

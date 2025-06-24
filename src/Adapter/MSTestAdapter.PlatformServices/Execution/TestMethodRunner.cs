@@ -233,7 +233,7 @@ internal sealed class TestMethodRunner
 
     private async Task<bool> TryExecuteDataSourceBasedTestsAsync(List<TestResult> results)
     {
-        DataSourceAttribute[] dataSourceAttribute = _testMethodInfo.GetAttributes<DataSourceAttribute>(false);
+        DataSourceAttribute[] dataSourceAttribute = _testMethodInfo.GetAttributes<DataSourceAttribute>();
         if (dataSourceAttribute is { Length: 1 })
         {
             await ExecuteTestFromDataSourceAttributeAsync(results).ConfigureAwait(false);
@@ -245,7 +245,7 @@ internal sealed class TestMethodRunner
 
     private async Task<bool> TryExecuteFoldedDataDrivenTestsAsync(List<TestResult> results)
     {
-        IEnumerable<UTF.ITestDataSource>? testDataSources = _testMethodInfo.GetAttributes<Attribute>(false)?.OfType<UTF.ITestDataSource>();
+        IEnumerable<UTF.ITestDataSource>? testDataSources = _testMethodInfo.GetAttributes<Attribute>()?.OfType<UTF.ITestDataSource>();
         if (testDataSources?.Any() != true)
         {
             return false;
