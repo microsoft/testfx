@@ -393,7 +393,7 @@ public class UnitTest1
     <OutputType>Exe</OutputType>
     <EnableMSTestRunner>true</EnableMSTestRunner>
     <TargetFrameworks>$TargetFrameworks$</TargetFrameworks>
-    <LangVersion>latest</LangVersion>
+    <LangVersion>preview</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -430,7 +430,7 @@ public class ExpectedCultures
 
 public class BaseClassWithInheritance
 {
-    private protected static string? _managedMethod;
+    private protected static string _managedMethod;
 
     public TestContext TestContext
     {
