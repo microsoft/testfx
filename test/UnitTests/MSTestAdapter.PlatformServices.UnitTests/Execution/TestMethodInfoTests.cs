@@ -1405,7 +1405,7 @@ public class TestMethodInfoTests : TestContainer
             new TestClassAttribute(),
             new TestAssemblyInfo(typeof(DummyTestClassForExpectedException).Assembly));
 
-        TypeInspectionException ex = UTF.Assert.ThrowsException<TypeInspectionException>(() => new TestMethodInfo(testMethodInfo, classInfo, _testContextImplementation)
+        TypeInspectionException ex = UTF.Assert.ThrowsExactly<TypeInspectionException>(() => new TestMethodInfo(testMethodInfo, classInfo, _testContextImplementation)
         {
             TimeoutInfo = TimeoutInfo.FromTimeout(3600 * 1000),
             Executor = _testMethodAttribute,
@@ -1423,7 +1423,7 @@ public class TestMethodInfoTests : TestContainer
             new TestClassAttribute(),
             new TestAssemblyInfo(typeof(DummyTestClassForExpectedException).Assembly));
 
-        TypeInspectionException ex = UTF.Assert.ThrowsException<TypeInspectionException>(() => new TestMethodInfo(testMethodInfo, classInfo, _testContextImplementation)
+        TypeInspectionException ex = UTF.Assert.ThrowsExactly<TypeInspectionException>(() => new TestMethodInfo(testMethodInfo, classInfo, _testContextImplementation)
         {
             TimeoutInfo = TimeoutInfo.FromTimeout(3600 * 1000),
             Executor = _testMethodAttribute,
