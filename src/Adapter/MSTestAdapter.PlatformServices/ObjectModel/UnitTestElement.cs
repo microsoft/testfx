@@ -188,8 +188,6 @@ internal sealed class UnitTestElement
     {
         var idProvider = new TestIdProvider();
 
-        idProvider.AppendString(EngineConstants.ExecutorUriString);
-
         // Below comment is copied over from Test Platform.
         // If source is a file name then just use the filename for the identifier since the file might have moved between
         // discovery and execution (in appx mode for example). This is not elegant because the Source contents should be
