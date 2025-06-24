@@ -166,6 +166,7 @@ internal sealed class UnitTestElement
 
             testCase.SetPropertyValue(EngineConstants.TestDynamicDataTypeProperty, (int)TestMethod.DataType);
             testCase.SetPropertyValue(EngineConstants.TestDynamicDataProperty, data);
+            testCase.SetPropertyValue(EngineConstants.TestCaseIndexProperty, TestMethod.TestCaseIndex);
             // VSTest serialization doesn't handle null so instead don't set the property so that it's deserialized as null
             if (TestMethod.TestDataSourceIgnoreMessage is not null)
             {
@@ -176,7 +177,7 @@ internal sealed class UnitTestElement
         testCase.LineNumber = DeclaringLineNumber ?? -1;
         testCase.CodeFilePath = DeclaringFilePath;
 
-        SetTestCaseId(testCase, testFullName);
+        SetTestCaseId(testCase, $"{TestMethod.ManagedTypeName}.{TestMethod.ManagedMethodName}");
 
         return testCase;
     }
@@ -210,13 +211,9 @@ internal sealed class UnitTestElement
 
         idProvider.AppendString(fileNameOrFilePath);
         idProvider.AppendString(testFullName);
-
         if (TestMethod.SerializedData != null)
         {
-            foreach (string? item in TestMethod.SerializedData)
-            {
-                idProvider.AppendString(item ?? "null");
-            }
+            idProvider.AppendString($"#{TestMethod.TestCaseIndex.ToString(CultureInfo.InvariantCulture)}#");
         }
 
         return idProvider.GetId();

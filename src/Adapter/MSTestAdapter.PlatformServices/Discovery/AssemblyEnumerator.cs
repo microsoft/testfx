@@ -417,7 +417,6 @@ internal class AssemblyEnumerator : MarshalByRefObject
             return true;
         }
 
-        var testDisplayNameFirstSeen = new Dictionary<string, int>();
         var discoveredTests = new List<UnitTestElement>();
         int index = 0;
 
@@ -436,6 +435,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
             {
                 discoveredTest.TestMethod.SerializedData = DataSerializationHelper.Serialize(d);
                 discoveredTest.TestMethod.ActualData = d;
+                discoveredTest.TestMethod.TestCaseIndex = index;
                 discoveredTest.TestMethod.TestDataSourceIgnoreMessage = testDataSourceIgnoreMessage;
                 discoveredTest.TestMethod.DataType = DynamicDataType.ITestDataSource;
             }
@@ -452,7 +452,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
             }
 
             discoveredTests.Add(discoveredTest);
-            testDisplayNameFirstSeen[discoveredTest.DisplayName!] = index++;
+            index++;
         }
 
         tests.AddRange(discoveredTests);

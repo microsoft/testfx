@@ -83,6 +83,7 @@ internal static class TestCaseExtensions
 
             testMethod.DataType = dataType;
             testMethod.SerializedData = data;
+            testMethod.TestCaseIndex = testCase.GetPropertyValue<int>(EngineConstants.TestCaseIndexProperty, 0);
             if (UnitTestDiscoverer.TryGetActualData(testCase, out object?[]? actualData))
             {
                 testMethod.ActualData = actualData;
