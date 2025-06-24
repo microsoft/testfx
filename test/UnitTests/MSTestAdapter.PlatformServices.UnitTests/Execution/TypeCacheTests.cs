@@ -1356,33 +1356,6 @@ public class TypeCacheTests : TestContainer
 
     #endregion
 
-    #region ResolveExpectedExceptionHelper tests
-
-    public void ResolveExpectedExceptionHelperShouldThrowIfMultipleExpectedExceptionAttributesArePresent()
-    {
-        Type type = typeof(DummyTestClassWithTestMethods);
-        MethodInfo methodInfo = type.GetMethod("TestMethodWithMultipleExpectedException")!;
-        var testMethod = new TestMethod(methodInfo.Name, type.FullName!, "A", isAsync: false);
-
-        _mockReflectHelper.Setup(rh => rh.IsAttributeDefined<ExpectedExceptionAttribute>(methodInfo))
-            .Returns(true);
-
-        try
-        {
-            TestMethodInfo? testMethodInfo = _typeCache.GetTestMethodInfo(
-                testMethod,
-                new TestContextImplementation(testMethod, new Dictionary<string, object?>()));
-        }
-        catch (Exception ex)
-        {
-            string message = "The test method 'Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TypeCacheTests+DummyTestClassWithTestMethods.TestMethodWithMultipleExpectedException' "
-                + "has multiple attributes derived from 'ExpectedExceptionBaseAttribute' defined on it. Only one such attribute is allowed.";
-            Verify(ex.Message == message);
-        }
-    }
-
-    #endregion
-
     private void SetupMocks() => _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly(It.IsAny<string>(), It.IsAny<bool>()))
             .Returns(Assembly.GetExecutingAssembly());
 
@@ -1473,19 +1446,6 @@ public class TypeCacheTests : TestContainer
         [TestProperty("WhoAmI", "Me")]
         [TestProperty("WhoAmI", "Me2")]
         public void TestMethodWithDuplicateCustomPropertyNames()
-        {
-        }
-
-        [TestMethod]
-        [ExpectedException(typeof(DivideByZeroException))]
-        public void TestMethodWithExpectedException()
-        {
-        }
-
-        [TestMethod]
-        [ExpectedException(typeof(DivideByZeroException))]
-        [CustomExpectedException(typeof(ArgumentNullException), "Custom Exception")]
-        public void TestMethodWithMultipleExpectedException()
         {
         }
     }
