@@ -56,7 +56,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Condition=" '$(TargetFramework)' == '$(WinUiMinimum)' " Include="Microsoft.WindowsAppSDK" Version="$(MicrosoftWindowsAppSDKVersion)" />
+    <PackageReference Condition=" '$(TargetFramework)' == '$(WinUiMinimum)' " Include="Microsoft.WindowsAppSDK" />
 
     <!-- This dependency is used only in adapter, but we have to add it to test framework. -->
     <!-- See comment in MSTest.TestAdapter.nuspec for info. -->

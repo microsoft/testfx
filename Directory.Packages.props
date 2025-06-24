@@ -53,7 +53,7 @@
     <PackageVersion Include="Microsoft.TestPlatform.ObjectModel" Version="$(MicrosoftNETTestSdkVersion)" />
     <PackageVersion Include="Microsoft.TestPlatform.TranslationLayer" Version="$(MicrosoftNETTestSdkVersion)" />
     <PackageVersion Include="Microsoft.Win32.Registry" Version="5.0.0" />
-    <PackageVersion Include="Microsoft.WindowsAppSDK" Version="1.0.0" />
+    <PackageVersion Include="Microsoft.WindowsAppSDK" Version="1.4.231219000" />
     <PackageVersion Include="Polyfill" Version="7.32.0" />
     <PackageVersion Include="System.Threading.Tasks.Extensions" Version="$(SystemThreadingTasksExtensionsVersion)" />
   </ItemGroup>
