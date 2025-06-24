@@ -65,7 +65,7 @@ internal class TestablePlatformServiceProvider : IPlatformServiceProvider
 
     public bool IsGracefulStopRequested { get; set; }
 
-    public ITestContext GetTestContext(ITestMethod testMethod, IDictionary<string, object?> properties, IMessageLogger messageLogger, UnitTestOutcome outcome)
+    public ITestContext GetTestContext(ITestMethod? testMethod, IDictionary<string, object?> properties, IMessageLogger messageLogger, UnitTestOutcome outcome)
     {
         var testContextImpl = new TestContextImplementation(testMethod, properties, messageLogger, testRunCancellationToken: null);
         testContextImpl.SetOutcome(outcome);

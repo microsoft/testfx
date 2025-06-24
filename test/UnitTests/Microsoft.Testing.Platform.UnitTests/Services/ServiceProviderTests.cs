@@ -89,11 +89,11 @@ public sealed class ServiceProviderTests
 
     [TestMethod]
     public void AddService_TestFramework_ShouldFail()
-        => Assert.ThrowsException<ArgumentException>(() => _serviceProvider.AddService(new TestFramework()));
+        => Assert.ThrowsExactly<ArgumentException>(() => _serviceProvider.AddService(new TestFramework()));
 
     [TestMethod]
     public void TryAddService_TestFramework_ShouldFail()
-        => Assert.ThrowsException<ArgumentException>(() => _serviceProvider.TryAddService(new TestFramework()));
+        => Assert.ThrowsExactly<ArgumentException>(() => _serviceProvider.TryAddService(new TestFramework()));
 
     [TestMethod]
     public void AddService_TestFramework_ShouldNotFail()
@@ -114,7 +114,7 @@ public sealed class ServiceProviderTests
     {
         TestHostProcessLifetimeHandler instance = new();
         _serviceProvider.AddService(instance);
-        _ = Assert.ThrowsException<InvalidOperationException>(() => _serviceProvider.AddService(instance));
+        _ = Assert.ThrowsExactly<InvalidOperationException>(() => _serviceProvider.AddService(instance));
     }
 
     [TestMethod]
@@ -130,7 +130,7 @@ public sealed class ServiceProviderTests
     {
         TestHostProcessLifetimeHandler instance = new();
         _serviceProvider.AddServices([instance]);
-        _ = Assert.ThrowsException<InvalidOperationException>(() => _serviceProvider.AddServices([instance]));
+        _ = Assert.ThrowsExactly<InvalidOperationException>(() => _serviceProvider.AddServices([instance]));
     }
 
     [TestMethod]

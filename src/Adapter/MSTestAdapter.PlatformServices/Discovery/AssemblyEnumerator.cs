@@ -410,7 +410,8 @@ internal class AssemblyEnumerator : MarshalByRefObject
             // Make the test not data driven, because it had no data.
             discoveredTest.TestMethod.DataType = DynamicDataType.None;
             discoveredTest.TestMethod.TestDataSourceIgnoreMessage = testDataSourceIgnoreMessage;
-            discoveredTest.DisplayName = dataSource.GetDisplayName(methodInfo, null) ?? discoveredTest.DisplayName;
+            discoveredTest.DisplayName = dataSource.GetDisplayName(methodInfo, null)
+                ?? discoveredTest.DisplayName;
 
             tests.Add(discoveredTest);
 
@@ -430,7 +431,10 @@ internal class AssemblyEnumerator : MarshalByRefObject
             }
 
             UnitTestElement discoveredTest = test.Clone();
-            discoveredTest.DisplayName = displayNameFromTestDataRow ?? dataSource.GetDisplayName(methodInfo, d) ?? discoveredTest.DisplayName;
+            discoveredTest.DisplayName = displayNameFromTestDataRow
+                ?? dataSource.GetDisplayName(methodInfo, d)
+                ?? TestDataSourceUtilities.ComputeDefaultDisplayName(methodInfo, d)
+                ?? discoveredTest.DisplayName;
 
             try
             {

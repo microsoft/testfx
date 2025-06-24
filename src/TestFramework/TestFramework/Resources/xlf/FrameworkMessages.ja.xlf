@@ -176,6 +176,11 @@ Actual: {2}</source>
         <target state="translated">サイズ {1} のコレクションが必要です。実際: {2}。{0}</target>
         <note />
       </trans-unit>
+      <trans-unit id="InvalidAccessToTestContextProperty">
+        <source>The property 'TestContext.{0}' is related to current test is not available during assembly or class fixtures.</source>
+        <target state="new">The property 'TestContext.{0}' is related to current test is not available during assembly or class fixtures.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="InvalidGitHubUrl">
         <source>Invalid GitHub ticket URL</source>
         <target state="translated">GitHub チケット URL が無効です</target>

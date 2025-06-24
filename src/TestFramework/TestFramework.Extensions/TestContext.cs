@@ -100,25 +100,26 @@ public abstract class TestContext
     #endregion
 #endif
 
-    /// <summary>
-    /// Gets the Fully-qualified name of the class containing the test method currently being executed.
-    /// </summary>
-    public virtual string? FullyQualifiedTestClassName => GetProperty<string>(FullyQualifiedTestClassNameLabel);
+    public virtual string FullyQualifiedTestClassName => GetProperty<string>(FullyQualifiedTestClassNameLabel)
+        ?? throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, FrameworkMessages.InvalidAccessToTestContextProperty, nameof(FullyQualifiedTestClassName)));
 
     /// <summary>
     /// Gets the fully specified type name metadata format.
     /// </summary>
-    public virtual string? ManagedType => GetProperty<string>(ManagedTypeLabel);
+    public virtual string ManagedType => GetProperty<string>(ManagedTypeLabel)
+        ?? throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, FrameworkMessages.InvalidAccessToTestContextProperty, nameof(ManagedType)));
 
     /// <summary>
     /// Gets the fully specified method name metadata format.
     /// </summary>
-    public virtual string? ManagedMethod => GetProperty<string>(ManagedMethodLabel);
+    public virtual string ManagedMethod => GetProperty<string>(ManagedMethodLabel)
+        ?? throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, FrameworkMessages.InvalidAccessToTestContextProperty, nameof(ManagedMethod)));
 
     /// <summary>
     /// Gets the name of the test method currently being executed.
     /// </summary>
-    public virtual string? TestName => GetProperty<string>(TestNameLabel);
+    public virtual string TestName => GetProperty<string>(TestNameLabel)
+        ?? throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, FrameworkMessages.InvalidAccessToTestContextProperty, nameof(TestName)));
 
     /// <summary>
     /// Gets the current test outcome.

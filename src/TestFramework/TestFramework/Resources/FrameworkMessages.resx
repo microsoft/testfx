@@ -362,4 +362,7 @@ Actual: {2}</value>
   <data name="DoNotUseCollectionAssertReferenceEquals" xml:space="preserve">
     <value>CollectionAssert.ReferenceEquals should not be used for Assertions. Please use CollectionAssert methods or Assert.AreSame &amp; overloads instead.</value>
   </data>
+  <data name="InvalidAccessToTestContextProperty" xml:space="preserve">
+    <value>The property 'TestContext.{0}' is related to current test is not available during assembly or class fixtures.</value>
+  </data>
 </root>
