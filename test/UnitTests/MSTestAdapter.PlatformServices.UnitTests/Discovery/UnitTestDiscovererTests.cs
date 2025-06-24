@@ -143,7 +143,7 @@ public class UnitTestDiscovererTests : TestContainer
     public void SendTestCasesShouldNotSendAnyTestCasesIfThereAreNoTestElements()
     {
         // There is a null check for testElements in the code flow before this function call. So not adding a unit test for that.
-        _unitTestDiscoverer.SendTestCases(Source, new List<UnitTestElement> { }, _mockTestCaseDiscoverySink.Object, _mockDiscoveryContext.Object, _mockMessageLogger.Object);
+        _unitTestDiscoverer.SendTestCases(new List<UnitTestElement> { }, _mockTestCaseDiscoverySink.Object, _mockDiscoveryContext.Object, _mockMessageLogger.Object);
 
         // Assert.
         _mockTestCaseDiscoverySink.Verify(ds => ds.SendTestCase(It.IsAny<TestCase>()), Times.Never);
@@ -155,7 +155,7 @@ public class UnitTestDiscovererTests : TestContainer
         var test2 = new UnitTestElement(new TestMethod("M2", "C", "A", false));
         var testElements = new List<UnitTestElement> { test1, test2 };
 
-        _unitTestDiscoverer.SendTestCases(Source, testElements, _mockTestCaseDiscoverySink.Object, _mockDiscoveryContext.Object, _mockMessageLogger.Object);
+        _unitTestDiscoverer.SendTestCases(testElements, _mockTestCaseDiscoverySink.Object, _mockDiscoveryContext.Object, _mockMessageLogger.Object);
 
         // Assert.
         _mockTestCaseDiscoverySink.Verify(ds => ds.SendTestCase(It.Is<TestCase>(tc => tc.FullyQualifiedName == "C.M1")), Times.Once);
@@ -174,7 +174,7 @@ public class UnitTestDiscovererTests : TestContainer
         var testElements = new List<UnitTestElement> { test1, test2 };
 
         // Action
-        _unitTestDiscoverer.SendTestCases(Source, testElements, _mockTestCaseDiscoverySink.Object, discoveryContext, _mockMessageLogger.Object);
+        _unitTestDiscoverer.SendTestCases(testElements, _mockTestCaseDiscoverySink.Object, discoveryContext, _mockMessageLogger.Object);
 
         // Assert.
         _mockTestCaseDiscoverySink.Verify(ds => ds.SendTestCase(It.Is<TestCase>(tc => tc.FullyQualifiedName == "C.M1")), Times.Once);
@@ -193,7 +193,7 @@ public class UnitTestDiscovererTests : TestContainer
         var testElements = new List<UnitTestElement> { test1, test2 };
 
         // Action
-        _unitTestDiscoverer.SendTestCases(Source, testElements, _mockTestCaseDiscoverySink.Object, discoveryContext, _mockMessageLogger.Object);
+        _unitTestDiscoverer.SendTestCases(testElements, _mockTestCaseDiscoverySink.Object, discoveryContext, _mockMessageLogger.Object);
 
         // Assert.
         _mockTestCaseDiscoverySink.Verify(ds => ds.SendTestCase(It.Is<TestCase>(tc => tc.FullyQualifiedName == "C.M1")), Times.Once);
@@ -212,7 +212,7 @@ public class UnitTestDiscovererTests : TestContainer
         var testElements = new List<UnitTestElement> { test1, test2 };
 
         // Action
-        _unitTestDiscoverer.SendTestCases(Source, testElements, _mockTestCaseDiscoverySink.Object, discoveryContext, _mockMessageLogger.Object);
+        _unitTestDiscoverer.SendTestCases(testElements, _mockTestCaseDiscoverySink.Object, discoveryContext, _mockMessageLogger.Object);
 
         // Assert.
         _mockTestCaseDiscoverySink.Verify(ds => ds.SendTestCase(It.Is<TestCase>(tc => tc.FullyQualifiedName == "C.M1")), Times.Once);
@@ -231,7 +231,7 @@ public class UnitTestDiscovererTests : TestContainer
         var testElements = new List<UnitTestElement> { test1, test2 };
 
         // Action
-        _unitTestDiscoverer.SendTestCases(Source, testElements, _mockTestCaseDiscoverySink.Object, discoveryContext, _mockMessageLogger.Object);
+        _unitTestDiscoverer.SendTestCases(testElements, _mockTestCaseDiscoverySink.Object, discoveryContext, _mockMessageLogger.Object);
 
         // Assert.
         _mockTestCaseDiscoverySink.Verify(ds => ds.SendTestCase(It.Is<TestCase>(tc => tc.FullyQualifiedName == "C.M1")), Times.Never);

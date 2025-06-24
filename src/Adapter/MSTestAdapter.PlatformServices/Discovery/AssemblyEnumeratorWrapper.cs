@@ -25,7 +25,7 @@ internal sealed class AssemblyEnumeratorWrapper
     /// <param name="runSettings"> The run Settings. </param>
     /// <param name="warnings"> Contains warnings if any, that need to be passed back to the caller. </param>
     /// <returns> A collection of test elements. </returns>
-    internal ICollection<UnitTestElement>? GetTests(string? assemblyFileName, IRunSettings? runSettings, out List<string> warnings)
+    internal static ICollection<UnitTestElement>? GetTests(string? assemblyFileName, IRunSettings? runSettings, out List<string> warnings)
     {
         warnings = [];
 
@@ -36,66 +36,21 @@ internal sealed class AssemblyEnumeratorWrapper
 
         string fullFilePath = PlatformServiceProvider.Instance.FileOperations.GetFullFilePath(assemblyFileName);
 
-        try
+        if (!PlatformServiceProvider.Instance.FileOperations.DoesFileExist(fullFilePath))
         {
-            if (!PlatformServiceProvider.Instance.FileOperations.DoesFileExist(fullFilePath))
-            {
-                string message = string.Format(CultureInfo.CurrentCulture, Resource.TestAssembly_FileDoesNotExist, fullFilePath);
-                throw new FileNotFoundException(message);
-            }
-
-            if (!PlatformServiceProvider.Instance.TestSource.IsAssemblyReferenced(UnitTestFrameworkAssemblyName, fullFilePath))
-            {
-                return null;
-            }
-
-            // Load the assembly in isolation if required.
-            AssemblyEnumerationResult result = GetTestsInIsolation(fullFilePath, runSettings);
-            warnings.AddRange(result.Warnings);
-            return result.TestElements;
+            string message = string.Format(CultureInfo.CurrentCulture, Resource.TestAssembly_FileDoesNotExist, fullFilePath);
+            throw new FileNotFoundException(message);
         }
-        catch (FileNotFoundException ex)
-        {
-            string message = string.Format(CultureInfo.CurrentCulture, Resource.TestAssembly_AssemblyDiscoveryFailure, fullFilePath, ex.Message);
-            PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning($"{nameof(AssemblyEnumeratorWrapper)}.{nameof(this.GetTests)}: {Resource.TestAssembly_AssemblyDiscoveryFailure}", fullFilePath, ex);
-            warnings.Add(message);
 
+        if (!PlatformServiceProvider.Instance.TestSource.IsAssemblyReferenced(UnitTestFrameworkAssemblyName, fullFilePath))
+        {
             return null;
         }
-        catch (ReflectionTypeLoadException ex)
-        {
-            string message = string.Format(CultureInfo.CurrentCulture, Resource.TestAssembly_AssemblyDiscoveryFailure, fullFilePath, ex.Message);
-            PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning($"{nameof(AssemblyEnumeratorWrapper)}.{nameof(this.GetTests)}: {Resource.TestAssembly_AssemblyDiscoveryFailure}", fullFilePath, ex);
-            PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning(Resource.ExceptionsThrown);
-            warnings.Add(message);
 
-            if (ex.LoaderExceptions != null)
-            {
-                foreach (Exception? loaderEx in ex.LoaderExceptions)
-                {
-                    PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning("{0}", loaderEx);
-                }
-            }
-
-            return null;
-        }
-        catch (BadImageFormatException)
-        {
-            // Ignore BadImageFormatException when loading native dll in managed adapter.
-            return null;
-        }
-        catch (Exception ex)
-        {
-            // Catch all exceptions, if discoverer fails to load the dll then let caller continue with other sources.
-            // Discover test doesn't work if there is a managed C++ project in solution
-            // Assembly.Load() fails to load the managed cpp executable, with FileLoadException. It can load the dll
-            // successfully though. This is known CLR issue.
-            PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning($"{nameof(AssemblyEnumeratorWrapper)}.{nameof(this.GetTests)}: {Resource.TestAssembly_AssemblyDiscoveryFailure}", fullFilePath, ex);
-            string message = ex is FileNotFoundException fileNotFoundEx ? fileNotFoundEx.Message : string.Format(CultureInfo.CurrentCulture, Resource.TestAssembly_AssemblyDiscoveryFailure, fullFilePath, ex.Message);
-
-            warnings.Add(message);
-            return null;
-        }
+        // Load the assembly in isolation if required.
+        AssemblyEnumerationResult result = GetTestsInIsolation(fullFilePath, runSettings);
+        warnings.AddRange(result.Warnings);
+        return result.TestElements;
     }
 
     private static AssemblyEnumerationResult GetTestsInIsolation(string fullFilePath, IRunSettings? runSettings)

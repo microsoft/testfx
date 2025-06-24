@@ -74,7 +74,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
 
         Assembly assembly = PlatformServiceProvider.Instance.FileOperations.LoadAssembly(assemblyFileName, isReflectionOnly: false);
 
-        Type[] types = GetTypes(assembly, assemblyFileName, warnings);
+        Type[] types = GetTypes(assembly);
         bool discoverInternals = ReflectHelper.GetDiscoverInternalsAttribute(assembly) != null;
 
         TestDataSourceUnfoldingStrategy dataSourcesUnfoldingStrategy = ReflectHelper.GetTestDataSourceOptions(assembly)?.UnfoldingStrategy switch
@@ -110,70 +110,9 @@ internal class AssemblyEnumerator : MarshalByRefObject
     /// Gets the types defined in an assembly.
     /// </summary>
     /// <param name="assembly">The reflected assembly.</param>
-    /// <param name="assemblyFileName">The file name of the assembly.</param>
-    /// <param name="warningMessages">Contains warnings if any, that need to be passed back to the caller.</param>
     /// <returns>Gets the types defined in the provided assembly.</returns>
-    internal static Type[] GetTypes(Assembly assembly, string assemblyFileName, ICollection<string>? warningMessages)
-    {
-        try
-        {
-            return PlatformServiceProvider.Instance.ReflectionOperations.GetDefinedTypes(assembly);
-        }
-        catch (ReflectionTypeLoadException ex)
-        {
-            PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning($"MSTestExecutor.TryGetTests: {Resource.TestAssembly_AssemblyDiscoveryFailure}", assemblyFileName, ex);
-            PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning(Resource.ExceptionsThrown);
-
-            if (ex.LoaderExceptions != null)
-            {
-                // If not able to load all type, log a warning and continue with loaded types.
-                string message = string.Format(CultureInfo.CurrentCulture, Resource.TypeLoadFailed, assemblyFileName, GetLoadExceptionDetails(ex));
-
-                warningMessages?.Add(message);
-
-                foreach (Exception? loaderEx in ex.LoaderExceptions)
-                {
-                    PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning("{0}", loaderEx);
-                }
-            }
-
-            return ex.Types!;
-        }
-    }
-
-    /// <summary>
-    /// Formats load exception as multi-line string, each line contains load error message.
-    /// </summary>
-    /// <param name="ex">The exception.</param>
-    /// <returns>Returns loader exceptions as a multi-line string.</returns>
-    internal static string GetLoadExceptionDetails(ReflectionTypeLoadException ex)
-    {
-        DebugEx.Assert(ex != null, "exception should not be null.");
-
-        var map = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase); // Exception -> null.
-        var errorDetails = new StringBuilder();
-
-        if (ex.LoaderExceptions?.Length > 0)
-        {
-            // Loader exceptions can contain duplicates, leave only unique exceptions.
-            foreach (Exception? loaderException in ex.LoaderExceptions)
-            {
-                DebugEx.Assert(loaderException != null, "loader exception should not be null.");
-                string line = string.Format(CultureInfo.CurrentCulture, Resource.EnumeratorLoadTypeErrorFormat, loaderException.GetType(), loaderException.Message);
-                if (!map.ContainsKey(line))
-                {
-                    map.Add(line, null);
-                    errorDetails.AppendLine(line);
-                }
-            }
-        }
-        else
-        {
-            errorDetails.AppendLine(ex.Message);
-        }
-
-        return errorDetails.ToString();
-    }
+    internal static Type[] GetTypes(Assembly assembly)
+        => PlatformServiceProvider.Instance.ReflectionOperations.GetDefinedTypes(assembly);
 
     /// <summary>
     /// Returns an instance of the <see cref="TypeEnumerator"/> class.
