@@ -177,7 +177,7 @@ internal sealed class UnitTestElement
         testCase.LineNumber = DeclaringLineNumber ?? -1;
         testCase.CodeFilePath = DeclaringFilePath;
 
-        SetTestCaseId(testCase, $"{TestMethod.ManagedTypeName}.{TestMethod.ManagedMethodName}");
+        SetTestCaseId(testCase, testFullName);
 
         return testCase;
     }
