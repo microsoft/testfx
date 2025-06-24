@@ -48,19 +48,6 @@ public class ReflectionUtilityTests : TestContainer
         GetAttributeValuePairs(attributes).Should().Equal(expectedAttributes);
     }
 
-    public void GetCustomAttributesShouldReturnAllAttributesIgnoringBaseInheritance()
-    {
-        MethodInfo methodInfo = _testAsset.GetType("TestProjectForDiscovery.AttributeTestClass").GetMethod("DummyVTestMethod1")!;
-
-        IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributes(methodInfo);
-
-        attributes.Should().NotBeNull();
-        attributes.Should().HaveCount(2);
-
-        string[] expectedAttributes = ["TestCategory : derived", "Owner : derived"];
-        GetAttributeValuePairs(attributes).Should().Equal(expectedAttributes);
-    }
-
     public void GetCustomAttributesShouldReturnAllAttributesWithBaseInheritance()
     {
         MethodInfo methodInfo = _testAsset.GetType("TestProjectForDiscovery.AttributeTestClass").GetMethod("DummyVTestMethod1")!;
@@ -88,24 +75,11 @@ public class ReflectionUtilityTests : TestContainer
         GetAttributeValuePairs(attributes).Should().Equal(expectedAttributes);
     }
 
-    public void GetCustomAttributesOnTypeShouldReturnAllAttributesIgnoringBaseInheritance()
+    public void GetCustomAttributesOnTypeShouldReturnAllAttributesWithBaseInheritance()
     {
         Type type = _testAsset.GetType("TestProjectForDiscovery.AttributeTestClass");
 
         IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributes(type);
-
-        attributes.Should().NotBeNull();
-        attributes.Should().HaveCount(1);
-
-        string[] expectedAttributes = ["TestCategory : a"];
-        GetAttributeValuePairs(attributes).Should().Equal(expectedAttributes);
-    }
-
-    public void GetCustomAttributesOnTypeShouldReturnAllAttributesWithBaseInheritance()
-    {
-        Type method = _testAsset.GetType("TestProjectForDiscovery.AttributeTestClass");
-
-        IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributes(method);
 
         attributes.Should().NotBeNull();
         attributes.Should().HaveCount(2);
@@ -124,19 +98,6 @@ public class ReflectionUtilityTests : TestContainer
         attributes.Should().HaveCount(1);
 
         string[] expectedAttributes = ["TestCategory : base"];
-        GetAttributeValuePairs(attributes).Should().Equal(expectedAttributes);
-    }
-
-    public void GetSpecificCustomAttributesShouldReturnAllAttributesIgnoringBaseInheritance()
-    {
-        MethodInfo methodInfo = _testAsset.GetType("TestProjectForDiscovery.AttributeTestClass").GetMethod("DummyVTestMethod1")!;
-
-        IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributesCore(methodInfo, typeof(TestCategoryAttribute));
-
-        attributes.Should().NotBeNull();
-        attributes.Should().HaveCount(1);
-
-        string[] expectedAttributes = ["TestCategory : derived"];
         GetAttributeValuePairs(attributes).Should().Equal(expectedAttributes);
     }
 
@@ -206,24 +167,11 @@ public class ReflectionUtilityTests : TestContainer
         GetAttributeValuePairs(attributes).Should().Equal(expectedAttributes);
     }
 
-    public void GetSpecificCustomAttributesOnTypeShouldReturnAllAttributesIgnoringBaseInheritance()
+    public void GetSpecificCustomAttributesOnTypeShouldReturnAllAttributesWithBaseInheritance()
     {
         Type type = _testAsset.GetType("TestProjectForDiscovery.AttributeTestClass");
 
         IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributesCore(type, typeof(TestCategoryAttribute));
-
-        attributes.Should().NotBeNull();
-        attributes.Should().HaveCount(1);
-
-        string[] expectedAttributes = ["TestCategory : a"];
-        GetAttributeValuePairs(attributes).Should().Equal(expectedAttributes);
-    }
-
-    public void GetSpecificCustomAttributesOnTypeShouldReturnAllAttributesWithBaseInheritance()
-    {
-        Type method = _testAsset.GetType("TestProjectForDiscovery.AttributeTestClass");
-
-        IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributesCore(method, typeof(TestCategoryAttribute));
 
         attributes.Should().NotBeNull();
         attributes.Should().HaveCount(2);
