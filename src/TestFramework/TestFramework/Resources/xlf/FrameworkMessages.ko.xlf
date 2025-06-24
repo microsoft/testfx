@@ -176,6 +176,11 @@ Actual: {2}</source>
         <target state="translated">{1} 크기 컬렉션이 필요합니다. 실제: {2}. {0}</target>
         <note />
       </trans-unit>
+      <trans-unit id="InvalidAccessToTestContextProperty">
+        <source>The property 'TestContext.{0}' is related to current test is not available during assembly or class fixtures.</source>
+        <target state="new">The property 'TestContext.{0}' is related to current test is not available during assembly or class fixtures.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="InvalidGitHubUrl">
         <source>Invalid GitHub ticket URL</source>
         <target state="translated">잘못된 GitHub 티켓 URL</target>
