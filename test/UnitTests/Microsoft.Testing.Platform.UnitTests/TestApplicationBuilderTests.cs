@@ -32,7 +32,7 @@ public sealed class TestApplicationBuilderTests
         TestHostManager testHostManager = new();
         testHostManager.AddTestApplicationLifecycleCallbacks(_ => new ApplicationLifecycleCallbacks("duplicatedId"));
         testHostManager.AddTestApplicationLifecycleCallbacks(_ => new ApplicationLifecycleCallbacks("duplicatedId"));
-        InvalidOperationException invalidOperationException = await Assert.ThrowsExceptionAsync<InvalidOperationException>(() => testHostManager.BuildTestApplicationLifecycleCallbackAsync(_serviceProvider));
+        InvalidOperationException invalidOperationException = await Assert.ThrowsExactlyAsync<InvalidOperationException>(() => testHostManager.BuildTestApplicationLifecycleCallbackAsync(_serviceProvider));
         Assert.IsTrue(invalidOperationException.Message.Contains("duplicatedId") && invalidOperationException.Message.Contains(typeof(ApplicationLifecycleCallbacks).ToString()));
     }
 
@@ -42,7 +42,7 @@ public sealed class TestApplicationBuilderTests
         TestHostManager testHostManager = new();
         testHostManager.AddDataConsumer(_ => new Consumer("duplicatedId"));
         testHostManager.AddDataConsumer(_ => new Consumer("duplicatedId"));
-        InvalidOperationException invalidOperationException = await Assert.ThrowsExceptionAsync<InvalidOperationException>(() => testHostManager.BuildDataConsumersAsync(_serviceProvider, []));
+        InvalidOperationException invalidOperationException = await Assert.ThrowsExactlyAsync<InvalidOperationException>(() => testHostManager.BuildDataConsumersAsync(_serviceProvider, []));
         Assert.IsTrue(invalidOperationException.Message.Contains("duplicatedId") && invalidOperationException.Message.Contains(typeof(Consumer).ToString()));
     }
 
@@ -53,7 +53,7 @@ public sealed class TestApplicationBuilderTests
         CompositeExtensionFactory<Consumer> compositeExtensionFactory = new(() => new Consumer("duplicatedId"));
         testHostManager.AddDataConsumer(_ => new Consumer("duplicatedId"));
         testHostManager.AddDataConsumer(compositeExtensionFactory);
-        InvalidOperationException invalidOperationException = await Assert.ThrowsExceptionAsync<InvalidOperationException>(() => testHostManager.BuildDataConsumersAsync(_serviceProvider, []));
+        InvalidOperationException invalidOperationException = await Assert.ThrowsExactlyAsync<InvalidOperationException>(() => testHostManager.BuildDataConsumersAsync(_serviceProvider, []));
         Assert.IsTrue(invalidOperationException.Message.Contains("duplicatedId") && invalidOperationException.Message.Contains(typeof(Consumer).ToString()));
     }
 
@@ -63,7 +63,7 @@ public sealed class TestApplicationBuilderTests
         TestHostManager testHostManager = new();
         testHostManager.AddTestSessionLifetimeHandle(_ => new TestSessionLifetimeHandler("duplicatedId"));
         testHostManager.AddTestSessionLifetimeHandle(_ => new TestSessionLifetimeHandler("duplicatedId"));
-        InvalidOperationException invalidOperationException = await Assert.ThrowsExceptionAsync<InvalidOperationException>(() => testHostManager.BuildTestSessionLifetimeHandleAsync(_serviceProvider, []));
+        InvalidOperationException invalidOperationException = await Assert.ThrowsExactlyAsync<InvalidOperationException>(() => testHostManager.BuildTestSessionLifetimeHandleAsync(_serviceProvider, []));
         Assert.IsTrue(invalidOperationException.Message.Contains("duplicatedId") && invalidOperationException.Message.Contains(typeof(TestSessionLifetimeHandler).ToString()));
     }
 
@@ -74,7 +74,7 @@ public sealed class TestApplicationBuilderTests
         CompositeExtensionFactory<TestSessionLifetimeHandler> compositeExtensionFactory = new(() => new TestSessionLifetimeHandler("duplicatedId"));
         testHostManager.AddTestSessionLifetimeHandle(_ => new TestSessionLifetimeHandler("duplicatedId"));
         testHostManager.AddTestSessionLifetimeHandle(compositeExtensionFactory);
-        InvalidOperationException invalidOperationException = await Assert.ThrowsExceptionAsync<InvalidOperationException>(() => testHostManager.BuildTestSessionLifetimeHandleAsync(_serviceProvider, []));
+        InvalidOperationException invalidOperationException = await Assert.ThrowsExactlyAsync<InvalidOperationException>(() => testHostManager.BuildTestSessionLifetimeHandleAsync(_serviceProvider, []));
         Assert.IsTrue(invalidOperationException.Message.Contains("duplicatedId") && invalidOperationException.Message.Contains(typeof(TestSessionLifetimeHandler).ToString()));
     }
 
@@ -105,7 +105,7 @@ public sealed class TestApplicationBuilderTests
         TestHostControllersManager testHostControllerManager = new();
         testHostControllerManager.AddEnvironmentVariableProvider(_ => new TestHostEnvironmentVariableProvider("duplicatedId"));
         testHostControllerManager.AddEnvironmentVariableProvider(_ => new TestHostEnvironmentVariableProvider("duplicatedId"));
-        InvalidOperationException invalidOperationException = await Assert.ThrowsExceptionAsync<InvalidOperationException>(() => testHostControllerManager.BuildAsync(_serviceProvider));
+        InvalidOperationException invalidOperationException = await Assert.ThrowsExactlyAsync<InvalidOperationException>(() => testHostControllerManager.BuildAsync(_serviceProvider));
         Assert.IsTrue(invalidOperationException.Message.Contains("duplicatedId") && invalidOperationException.Message.Contains(typeof(TestHostEnvironmentVariableProvider).ToString()));
     }
 
@@ -116,7 +116,7 @@ public sealed class TestApplicationBuilderTests
         CompositeExtensionFactory<TestHostEnvironmentVariableProvider> compositeExtensionFactory = new(() => new TestHostEnvironmentVariableProvider("duplicatedId"));
         testHostControllerManager.AddEnvironmentVariableProvider(_ => new TestHostEnvironmentVariableProvider("duplicatedId"));
         testHostControllerManager.AddEnvironmentVariableProvider(compositeExtensionFactory);
-        InvalidOperationException invalidOperationException = await Assert.ThrowsExceptionAsync<InvalidOperationException>(() => testHostControllerManager.BuildAsync(_serviceProvider));
+        InvalidOperationException invalidOperationException = await Assert.ThrowsExactlyAsync<InvalidOperationException>(() => testHostControllerManager.BuildAsync(_serviceProvider));
         Assert.IsTrue(invalidOperationException.Message.Contains("duplicatedId") && invalidOperationException.Message.Contains(typeof(TestHostEnvironmentVariableProvider).ToString()));
     }
 
@@ -126,7 +126,7 @@ public sealed class TestApplicationBuilderTests
         TestHostControllersManager testHostControllerManager = new();
         testHostControllerManager.AddProcessLifetimeHandler(_ => new TestHostProcessLifetimeHandler("duplicatedId"));
         testHostControllerManager.AddProcessLifetimeHandler(_ => new TestHostProcessLifetimeHandler("duplicatedId"));
-        InvalidOperationException invalidOperationException = await Assert.ThrowsExceptionAsync<InvalidOperationException>(() => testHostControllerManager.BuildAsync(_serviceProvider));
+        InvalidOperationException invalidOperationException = await Assert.ThrowsExactlyAsync<InvalidOperationException>(() => testHostControllerManager.BuildAsync(_serviceProvider));
         Assert.IsTrue(invalidOperationException.Message.Contains("duplicatedId") && invalidOperationException.Message.Contains(typeof(TestHostProcessLifetimeHandler).ToString()));
     }
 
@@ -137,7 +137,7 @@ public sealed class TestApplicationBuilderTests
         CompositeExtensionFactory<TestHostProcessLifetimeHandler> compositeExtensionFactory = new(() => new TestHostProcessLifetimeHandler("duplicatedId"));
         testHostControllerManager.AddProcessLifetimeHandler(_ => new TestHostProcessLifetimeHandler("duplicatedId"));
         testHostControllerManager.AddProcessLifetimeHandler(compositeExtensionFactory);
-        InvalidOperationException invalidOperationException = await Assert.ThrowsExceptionAsync<InvalidOperationException>(() => testHostControllerManager.BuildAsync(_serviceProvider));
+        InvalidOperationException invalidOperationException = await Assert.ThrowsExactlyAsync<InvalidOperationException>(() => testHostControllerManager.BuildAsync(_serviceProvider));
         Assert.IsTrue(invalidOperationException.Message.Contains("duplicatedId") && invalidOperationException.Message.Contains(typeof(TestHostProcessLifetimeHandler).ToString()));
     }
 
@@ -171,7 +171,7 @@ public sealed class TestApplicationBuilderTests
             withParameter
             ? new CompositeExtensionFactory<InvalidComposition>(sp => new InvalidComposition(sp))
             : new CompositeExtensionFactory<InvalidComposition>(() => new InvalidComposition());
-        InvalidOperationException invalidOperationException = Assert.ThrowsException<InvalidOperationException>(() => ((ICompositeExtensionFactory)compositeExtensionFactory).GetInstance());
+        InvalidOperationException invalidOperationException = Assert.ThrowsExactly<InvalidOperationException>(() => ((ICompositeExtensionFactory)compositeExtensionFactory).GetInstance());
         Assert.AreEqual(CompositeExtensionFactory<InvalidComposition>.ValidateCompositionErrorMessage, invalidOperationException.Message);
     }
 
