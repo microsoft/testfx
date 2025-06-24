@@ -382,6 +382,7 @@ internal sealed class TestMethodRunner
         displayName = testDataSource != null
             ? displayNameFromTestDataRow
                 ?? testDataSource.GetDisplayName(new ReflectionTestMethodInfo(_testMethodInfo.MethodInfo, _test.DisplayName), data)
+                ?? TestDataSourceUtilities.ComputeDefaultDisplayName(new ReflectionTestMethodInfo(_testMethodInfo.MethodInfo, _test.DisplayName), data)
                 ?? displayName
             : displayNameFromTestDataRow ?? displayName;
 
