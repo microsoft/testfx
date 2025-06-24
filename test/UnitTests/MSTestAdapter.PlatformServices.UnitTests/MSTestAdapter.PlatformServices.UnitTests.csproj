@@ -13,6 +13,7 @@
   <!-- Properties specific to WinUI -->
   <PropertyGroup Condition=" '$(TargetFramework)' == '$(WinUiMinimum)' ">
     <DefineConstants>$(DefineConstants);WIN_UI</DefineConstants>
+    <RuntimeIdentifiers>win-x86;win-x64;win-arm64</RuntimeIdentifiers>
   </PropertyGroup>
 
   <!-- Keep the property DebugType as some tests rely on specific pdb type -->
