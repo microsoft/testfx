@@ -8,7 +8,6 @@ Rule ID | Category | Severity | Notes
 MSTEST0044 | Design | Warning | PreferTestMethodOverDataTestMethodAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0044)
 MSTEST0045 | Usage | Info | UseCooperativeCancellationForTimeoutAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0045)
 
-
 ### Changed Rules
 
 Rule ID | New Category | New Severity | Old Category | Old Severity | Notes

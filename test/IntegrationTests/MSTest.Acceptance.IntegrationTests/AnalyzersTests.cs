@@ -136,11 +136,11 @@ public class UnitTest1
     }
 
     [TestMethod]
-    [DataRow("None", new string[0], new[] { "MSTEST0003", "MSTEST0004", "MSTEST0014", "MSTEST0017", "MSTEST0021" })]
-    [DataRow("", new[] { "warning MSTEST0003", "warning MSTEST0014" }, new[] { "MSTEST0004", "MSTEST0017", "MSTEST0021" })]
-    [DataRow("Default", new[] { "warning MSTEST0003", "warning MSTEST0014" }, new[] { "MSTEST0004", "MSTEST0017", "MSTEST0021" })]
-    [DataRow("Recommended", new[] { "error MSTEST0003", "warning MSTEST0014", "warning MSTEST0017" }, new[] { "MSTEST0004", "MSTEST0021" })]
-    [DataRow("All", new[] { "error MSTEST0003", "warning MSTEST0004", "warning MSTEST0014", "warning MSTEST0017" }, new[] { "MSTEST0021" })]
+    [DataRow("None", new string[0], new[] { "MSTEST0003", "MSTEST0004", "MSTEST0014", "MSTEST0026", "MSTEST0021" })]
+    [DataRow("", new[] { "warning MSTEST0003", "warning MSTEST0014" }, new[] { "MSTEST0004", "MSTEST0026", "MSTEST0021" })]
+    [DataRow("Default", new[] { "warning MSTEST0003", "warning MSTEST0014" }, new[] { "MSTEST0004", "MSTEST0026", "MSTEST0021" })]
+    [DataRow("Recommended", new[] { "error MSTEST0003", "warning MSTEST0014", "warning MSTEST0026" }, new[] { "MSTEST0004", "MSTEST0021" })]
+    [DataRow("All", new[] { "error MSTEST0003", "warning MSTEST0004", "warning MSTEST0014", "warning MSTEST0026" }, new[] { "MSTEST0021" })]
     public async Task VerifyMSTestAnalysisModeForDifferentAnalyzers(string analysisMode, string[] contains, string[] doesNotContain)
     {
         string code = """
