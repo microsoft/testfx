@@ -346,9 +346,9 @@ public class MSTestAdapterSettingsTests : TestContainer
         string settingsXml =
             """
         <RunSettings>
-            <MSTest>
+            <RunConfiguration>
                 <DisableAppDomain>false</DisableAppDomain>
-            </MSTest>
+            </RunConfiguration>
         </RunSettings>
         """;
 

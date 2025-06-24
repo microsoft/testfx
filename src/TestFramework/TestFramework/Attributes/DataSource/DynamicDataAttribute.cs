@@ -99,8 +99,6 @@ public sealed class DynamicDataAttribute : Attribute, ITestDataSource, ITestData
     public DynamicDataAttribute(string dynamicDataSourceName, Type dynamicDataDeclaringType)
         : this(dynamicDataSourceName) => _dynamicDataDeclaringType = dynamicDataDeclaringType;
 
-    internal static TestIdGenerationStrategy TestIdGenerationStrategy { get; set; }
-
     /// <summary>
     /// Gets or sets the name of method used to customize the display name in test results.
     /// </summary>
@@ -128,7 +126,7 @@ public sealed class DynamicDataAttribute : Attribute, ITestDataSource, ITestData
     {
         if (DynamicDataDisplayName == null)
         {
-            return TestDataSourceUtilities.ComputeDefaultDisplayName(methodInfo, data, TestIdGenerationStrategy);
+            return TestDataSourceUtilities.ComputeDefaultDisplayName(methodInfo, data);
         }
 
         Type? dynamicDisplayNameDeclaringType = DynamicDataDisplayNameDeclaringType ?? methodInfo.DeclaringType;

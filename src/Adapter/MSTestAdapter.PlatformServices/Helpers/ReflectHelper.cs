@@ -139,15 +139,6 @@ internal class ReflectHelper : MarshalByRefObject
             .FirstOrDefault();
 
     /// <summary>
-    /// Gets the test id generation strategy set on an assembly.
-    /// </summary>
-    /// <param name="assembly"> The test assembly. </param>
-    internal static TestIdGenerationStrategy GetTestIdGenerationStrategy(Assembly assembly)
-        => PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributes(assembly, typeof(TestIdGenerationStrategyAttribute))
-            .OfType<TestIdGenerationStrategyAttribute>()
-            .FirstOrDefault()?.Strategy ?? TestIdGenerationStrategy.FullyQualified;
-
-    /// <summary>
     /// Gets discover internals assembly level attribute.
     /// </summary>
     /// <param name="assembly"> The test assembly. </param>

@@ -5,7 +5,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting.Internal;
 
 internal static class TestDataSourceUtilities
 {
-    public static string? ComputeDefaultDisplayName(MethodInfo methodInfo, object?[]? data, TestIdGenerationStrategy testIdGenerationStrategy)
+    public static string? ComputeDefaultDisplayName(MethodInfo methodInfo, object?[]? data)
     {
         if (data is null)
         {
@@ -21,7 +21,7 @@ internal static class TestDataSourceUtilities
             ? [data.AsEnumerable()]
             : data.AsEnumerable();
 
-        string methodDisplayName = testIdGenerationStrategy == TestIdGenerationStrategy.FullyQualified && methodInfo is ReflectionTestMethodInfo reflectionTestMethodInfo
+        string methodDisplayName = methodInfo is ReflectionTestMethodInfo reflectionTestMethodInfo
             ? reflectionTestMethodInfo.DisplayName
             : methodInfo.Name;
 
@@ -29,24 +29,16 @@ internal static class TestDataSourceUtilities
             CultureInfo.CurrentCulture,
             FrameworkMessages.DataDrivenResultDisplayName,
             methodDisplayName,
-            string.Join(",", displayData.Select(x => GetHumanizedArguments(x, testIdGenerationStrategy))));
+            string.Join(",", displayData.Select(GetHumanizedArguments)));
     }
 
     /// <summary>
     /// Recursively resolve collections of objects to a proper string representation.
     /// </summary>
     /// <param name="data">The method arguments.</param>
-    /// <param name="testIdGenerationStrategy">The strategy for creating the test ID.</param>
     /// <returns>The humanized representation of the data.</returns>
-    private static string? GetHumanizedArguments(object? data, TestIdGenerationStrategy testIdGenerationStrategy)
+    private static string? GetHumanizedArguments(object? data)
     {
-        // To avoid breaking changes, we will return the string representation of the arguments if the testIdGenerationStrategy
-        // is not set to FullyQualified. This is the logic that was present in the previous implementation.
-        if (testIdGenerationStrategy != TestIdGenerationStrategy.FullyQualified)
-        {
-            return data?.ToString();
-        }
-
         if (data is null)
         {
             return "null";
@@ -64,7 +56,7 @@ internal static class TestDataSourceUtilities
 
         // We need to box the object here so that we can support value types
         IEnumerable<object> boxedObjectEnumerable = ((IEnumerable)data).Cast<object>();
-        IEnumerable<string?> elementStrings = boxedObjectEnumerable.Select(x => GetHumanizedArguments(x, testIdGenerationStrategy));
+        IEnumerable<string?> elementStrings = boxedObjectEnumerable.Select(GetHumanizedArguments);
         return $"[{string.Join(",", elementStrings)}]";
     }
 }

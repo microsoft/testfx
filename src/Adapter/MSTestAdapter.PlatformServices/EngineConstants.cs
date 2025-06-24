@@ -72,13 +72,7 @@ internal static class EngineConstants
     internal const string TestRunParametersName = "TestRunParameters";
 
     #region Test Property registration
-    internal static readonly TestProperty DescriptionProperty = TestProperty.Register("Description", DescriptionLabel, typeof(string), TestPropertyAttributes.Hidden, typeof(TestCase));
-
     internal static readonly TestProperty WorkItemIdsProperty = TestProperty.Register("WorkItemIds", WorkItemIdsLabel, typeof(string[]), TestPropertyAttributes.Hidden, typeof(TestCase));
-
-    internal static readonly TestProperty CssIterationProperty = TestProperty.Register("CssIteration", CssIterationLabel, typeof(string), TestPropertyAttributes.Hidden, typeof(TestCase));
-
-    internal static readonly TestProperty CssProjectStructureProperty = TestProperty.Register("CssProjectStructure", CssProjectStructureLabel, typeof(string), TestPropertyAttributes.Hidden, typeof(TestCase));
 
     internal static readonly TestProperty TestClassNameProperty = TestProperty.Register("MSTestDiscoverer.TestClassName", TestClassNameLabel, typeof(string), TestPropertyAttributes.Hidden, typeof(TestCase));
 
@@ -134,8 +128,6 @@ internal static class EngineConstants
 
     internal static readonly TestProperty TestDynamicDataProperty = TestProperty.Register("MSTest.DynamicData", "DynamicData", typeof(string[]), TestPropertyAttributes.Hidden, typeof(TestCase));
 
-    internal static readonly TestProperty TestIdGenerationStrategyProperty = TestProperty.Register("MSTest.TestIdGenerationStrategy", "TestIdGenerationStrategy", typeof(int), TestPropertyAttributes.Hidden, typeof(TestCase));
-
     internal static readonly TestProperty TestDataSourceIgnoreMessageProperty = TestProperty.Register("MSTest.TestDataSourceIgnoreMessageProperty", "TestDataSourceIgnoreMessageProperty", typeof(string), TestPropertyAttributes.Hidden, typeof(TestCase));
     #endregion
 
@@ -155,9 +147,6 @@ internal static class EngineConstants
     private const string ExecutionIdLabel = "ExecutionId";
     private const string ParentExecIdLabel = "ParentExecId";
     private const string InnerResultsCountLabel = "InnerResultsCount";
-    private const string DescriptionLabel = "Description";
-    private const string CssIterationLabel = "CssIteration";
-    private const string CssProjectStructureLabel = "CssProjectStructure";
     private const string WorkItemIdsLabel = "WorkItemIds";
 
     private const string TestRunId = "__Tfs_TestRunId__";

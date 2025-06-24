@@ -192,7 +192,10 @@ internal class MSTestAdapterSettings
         {
             StringReader stringReader = new(settingsXml);
             var reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
-            if (reader.ReadToFollowing("DisableAppDomain") && bool.TryParse(reader.ReadInnerXml(), out bool result))
+            var xmlDoc = new XmlDocument() { XmlResolver = null };
+            xmlDoc.Load(reader);
+
+            if (bool.TryParse(xmlDoc["RunSettings"]?["RunConfiguration"]?["DisableAppDomain"]?.InnerText, out bool result))
             {
                 disableAppDomain = result;
             }

@@ -72,13 +72,10 @@ internal static class TestCaseExtensions
     {
         string? testClassName = testCase.GetPropertyValue(EngineConstants.TestClassNameProperty) as string;
         string name = testCase.GetTestName(testClassName);
-        var testIdGenerationStrategy = (TestIdGenerationStrategy)testCase.GetPropertyValue(
-            EngineConstants.TestIdGenerationStrategyProperty,
-            (int)TestIdGenerationStrategy.FullyQualified);
 
         TestMethod testMethod = testCase.ContainsManagedMethodAndType()
-            ? new(testCase.GetManagedType(), testCase.GetManagedMethod(), testCase.GetHierarchy()!, name, testClassName!, source, testCase.DisplayName, testIdGenerationStrategy)
-            : new(name, testClassName!, source, testCase.DisplayName, testIdGenerationStrategy);
+            ? new(testCase.GetManagedType(), testCase.GetManagedMethod(), testCase.GetHierarchy()!, name, testClassName!, source, testCase.DisplayName)
+            : new(name, testClassName!, source, testCase.DisplayName);
         var dataType = (DynamicDataType)testCase.GetPropertyValue(EngineConstants.TestDynamicDataTypeProperty, (int)DynamicDataType.None);
         if (dataType != DynamicDataType.None)
         {
@@ -109,24 +106,6 @@ internal static class TestCaseExtensions
         if (testCase.Traits.Any())
         {
             testElement.Traits = [.. testCase.Traits];
-        }
-
-        string? cssIteration = testCase.GetPropertyValue<string>(EngineConstants.CssIterationProperty, null);
-        if (!StringEx.IsNullOrWhiteSpace(cssIteration))
-        {
-            testElement.CssIteration = cssIteration;
-        }
-
-        string? cssProjectStructure = testCase.GetPropertyValue<string>(EngineConstants.CssProjectStructureProperty, null);
-        if (!StringEx.IsNullOrWhiteSpace(cssProjectStructure))
-        {
-            testElement.CssProjectStructure = cssProjectStructure;
-        }
-
-        string? description = testCase.GetPropertyValue<string>(EngineConstants.DescriptionProperty, null);
-        if (!StringEx.IsNullOrWhiteSpace(description))
-        {
-            testElement.Description = description;
         }
 
         string[]? workItemIds = testCase.GetPropertyValue<string[]>(EngineConstants.WorkItemIdsProperty, null);

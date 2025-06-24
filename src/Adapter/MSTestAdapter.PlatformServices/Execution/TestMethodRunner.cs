@@ -170,7 +170,6 @@ internal sealed class TestMethodRunner
         }
 
         bool isDataDriven = false;
-        var parentStopwatch = Stopwatch.StartNew();
         if (_test.DataType == DynamicDataType.ITestDataSource)
         {
             if (_test.TestDataSourceIgnoreMessage is not null)
@@ -214,25 +213,7 @@ internal sealed class TestMethodRunner
         // In case of data driven, set parent info in results.
         if (isDataDriven)
         {
-            // In legacy scenario
-#pragma warning disable CS0618 // Type or member is obsolete
-            if (_test.TestIdGenerationStrategy == TestIdGenerationStrategy.Legacy)
-#pragma warning restore CS0618 // Type or member is obsolete
-            {
-                parentStopwatch.Stop();
-                var parentResult = new TestResult
-                {
-                    Outcome = aggregateOutcome,
-                    Duration = parentStopwatch.Elapsed,
-                    ExecutionId = Guid.NewGuid(),
-                };
-
-                results = UpdateResultsWithParentInfo(results, parentResult);
-            }
-            else
-            {
-                results = UpdateResultsWithParentInfo(results);
-            }
+            results = UpdateResultsWithParentInfo(results);
         }
 
         // Set a result in case no result is present.
@@ -544,38 +525,6 @@ internal sealed class TestMethodRunner
         {
             result.ExecutionId = Guid.NewGuid();
             result.ParentExecId = Guid.NewGuid();
-
-            updatedResults.Add(result);
-        }
-
-        return updatedResults;
-    }
-
-    /// <summary>
-    /// Updates given results with parent info if results are greater than 1.
-    /// Add parent results as first result in updated result.
-    /// </summary>
-    /// <param name="results">Results.</param>
-    /// <param name="parentResult">Parent results.</param>
-    /// <returns>Updated results which contains parent result as first result. All other results contains parent result info.</returns>
-    private static List<TestResult> UpdateResultsWithParentInfo(
-        List<TestResult> results,
-        TestResult parentResult)
-    {
-        // Return results in case there are no results.
-        if (results.Count == 0)
-        {
-            return results;
-        }
-
-        // UpdatedResults contain parent result at first position and remaining results has parent info updated.
-        List<TestResult> updatedResults = [parentResult];
-
-        foreach (TestResult result in results)
-        {
-            result.ExecutionId = Guid.NewGuid();
-            result.ParentExecId = parentResult.ExecutionId;
-            parentResult.InnerResultsCount++;
 
             updatedResults.Add(result);
         }
