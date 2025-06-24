@@ -36,7 +36,7 @@ public class TestDiscoveryWarningsTests : AcceptanceTestBase<TestDiscoveryWarnin
         TestHostResult testHostResult = await testHost.ExecuteAsync("--list-tests");
 
         testHostResult.AssertExitCodeIsNot(ExitCodes.Success);
-        testHostResult.AssertOutputContains("Could not load file or assembly 'TestDiscoveryWarningsBaseClass, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null'. The system cannot find the file specified.");
+        testHostResult.AssertStandardErrorContains("Could not load file or assembly 'TestDiscoveryWarningsBaseClass, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null'. The system cannot find the file specified.");
     }
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
