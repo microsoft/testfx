@@ -60,8 +60,8 @@
     <file src="net8.0\Microsoft.TestPlatform.AdapterUtilities.dll" target="buildTransitive\net8.0\" />
     <file src="$RepoRoot$src\Adapter\MSTest.TestAdapter\build\net8.0\MSTest.TestAdapter.props" target="build\net8.0\" />
     <file src="$RepoRoot$src\Adapter\MSTest.TestAdapter\build\net8.0\MSTest.TestAdapter.targets" target="build\net8.0\" />
-    <file src="$ArtifactsBinDir$MSTestAdapter.PlatformServices\$Configuration$\net8.0-windows10.0.18362.0\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll" target="buildTransitive\net8.0\winui\" />
-    <file src="net8.0-windows10.0.18362.0\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.dll" target="buildTransitive\net8.0\winui" />
+    <file src="$ArtifactsBinDir$MSTestAdapter.PlatformServices\$Configuration$\net8.0-windows10.0.18362.0\MSTestAdapter.PlatformServices.dll" target="buildTransitive\net8.0\winui\" />
+    <file src="net8.0-windows10.0.18362.0\MSTest.TestAdapter.dll" target="buildTransitive\net8.0\winui" />
 
     <!-- net9.0 -->
     <file src="net9.0\buildTransitive\common\MSTest.TestAdapter.props" target="buildTransitive\net9.0\MSTest.TestAdapter.props" />
