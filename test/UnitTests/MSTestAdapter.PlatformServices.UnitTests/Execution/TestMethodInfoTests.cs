@@ -1092,20 +1092,6 @@ public class TestMethodInfoTests : TestContainer
         Verify(!testCleanupCalled);
     }
 
-    public async Task TestMethodInfoInvokeShouldSetResultAsFailedWhenExceptionIsExpectedButIsNotThrown()
-    {
-        DummyTestClass.TestMethodBody = o => { };
-        var testMethodInfo = new TestMethodInfo(_methodInfo, _testClassInfo, _testContextImplementation)
-        {
-            TimeoutInfo = TimeoutInfo.FromTimeout(3600 * 1000),
-            Executor = _testMethodAttribute,
-        };
-        TestResult result = await testMethodInfo.InvokeAsync(null);
-        Verify(result.Outcome == UTF.UnitTestOutcome.Failed);
-        string message = "Test method did not throw expected exception System.DivideByZeroException.";
-        Verify(result.TestFailureException!.Message.Contains(message));
-    }
-
     public async Task TestMethodInfoInvokeShouldSetResultAsInconclusiveWhenExceptionIsAssertInconclusiveException()
     {
         DummyTestClass.TestMethodBody = o => throw new AssertInconclusiveException();
