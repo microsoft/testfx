@@ -14,3 +14,4 @@ MSTEST0045 | Usage | Info | UseCooperativeCancellationForTimeoutAnalyzer, [Docum
 Rule ID | New Category | New Severity | Old Category | Old Severity | Notes
 --------|--------------|--------------|--------------|--------------|-------
 MSTEST0006 | Design | Warning | Design | Info | AvoidExpectedExceptionAttributeAnalyzer
+MSTEST0039 | Usage | Warning | Usage | Info | UseNewerAssertThrowsAnalyzer
