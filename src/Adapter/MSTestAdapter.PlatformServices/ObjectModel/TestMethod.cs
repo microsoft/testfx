@@ -8,7 +8,6 @@ using Microsoft.TestPlatform.AdapterUtilities;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using ITestMethod = Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ObjectModel.ITestMethod;
-using TestIdGenerationStrategy = Microsoft.VisualStudio.TestTools.UnitTesting.TestIdGenerationStrategy;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 
@@ -35,19 +34,17 @@ internal sealed class TestMethod : ITestMethod
 #pragma warning disable IDE0060 // Remove unused parameter - Public API :/
     public TestMethod(string name, string fullClassName, string assemblyName, bool isAsync)
 #pragma warning restore IDE0060 // Remove unused parameter
-        : this(null, null, null, name, fullClassName, assemblyName, null, TestIdGenerationStrategy.FullyQualified)
+        : this(null, null, null, name, fullClassName, assemblyName, null)
     {
     }
 
-    internal TestMethod(string name, string fullClassName, string assemblyName, string? displayName,
-        TestIdGenerationStrategy testIdGenerationStrategy)
-        : this(null, null, null, name, fullClassName, assemblyName, displayName, testIdGenerationStrategy)
+    internal TestMethod(string name, string fullClassName, string assemblyName, string? displayName)
+        : this(null, null, null, name, fullClassName, assemblyName, displayName)
     {
     }
 
     internal TestMethod(string? managedTypeName, string? managedMethodName, string?[]? hierarchyValues, string name,
-        string fullClassName, string assemblyName, string? displayName,
-        TestIdGenerationStrategy testIdGenerationStrategy)
+        string fullClassName, string assemblyName, string? displayName)
     {
         Guard.NotNullOrWhiteSpace(assemblyName);
 
@@ -68,7 +65,6 @@ internal sealed class TestMethod : ITestMethod
         _hierarchy = new ReadOnlyCollection<string?>(hierarchyValues);
         ManagedTypeName = managedTypeName;
         ManagedMethodName = managedMethodName;
-        TestIdGenerationStrategy = testIdGenerationStrategy;
     }
 
     /// <inheritdoc />
@@ -125,9 +121,6 @@ internal sealed class TestMethod : ITestMethod
 
     /// <inheritdoc />
     public IReadOnlyCollection<string?> Hierarchy => _hierarchy;
-
-    /// <inheritdoc />
-    public TestIdGenerationStrategy TestIdGenerationStrategy { get; }
 
     /// <summary>
     /// Gets or sets type of dynamic data if any.
