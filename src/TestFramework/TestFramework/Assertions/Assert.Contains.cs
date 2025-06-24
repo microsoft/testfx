@@ -152,18 +152,7 @@ public sealed partial class Assert
     /// <param name="collection">The collection.</param>
     /// <returns>The item that matches the predicate.</returns>
     public static T ContainsSingle<T>(Func<T, bool> predicate, IEnumerable<T> collection)
-        => ContainsSingle(predicate, collection, string.Empty, null);
-
-    /// <summary>
-    /// Tests whether the specified collection contains exactly one element that matches the given predicate.
-    /// </summary>
-    /// <typeparam name="T">The type of the collection items.</typeparam>
-    /// <param name="predicate">A function to test each element for a condition.</param>
-    /// <param name="collection">The collection.</param>
-    /// <param name="message">The message to display when the assertion fails.</param>
-    /// <returns>The item that matches the predicate.</returns>
-    public static T ContainsSingle<T>(Func<T, bool> predicate, IEnumerable<T> collection, string? message)
-        => ContainsSingle(predicate, collection, message, null);
+        => ContainsSingle(predicate, collection, string.Empty);
 
     /// <summary>
     /// Tests whether the specified collection contains exactly one element that matches the given predicate.
@@ -172,9 +161,8 @@ public sealed partial class Assert
     /// <param name="predicate">A function to test each element for a condition.</param>
     /// <param name="collection">The collection.</param>
     /// <param name="message">The message format to display when the assertion fails.</param>
-    /// <param name="parameters">The parameters to format the message.</param>
     /// <returns>The item that matches the predicate.</returns>
-    public static T ContainsSingle<T>(Func<T, bool> predicate, IEnumerable<T> collection, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters)
+    public static T ContainsSingle<T>(Func<T, bool> predicate, IEnumerable<T> collection, string? message)
     {
         var matchingElements = collection.Where(predicate).ToList();
         int actualCount = matchingElements.Count;
@@ -184,7 +172,7 @@ public sealed partial class Assert
             return matchingElements[0];
         }
 
-        string userMessage = BuildUserMessage(message, parameters);
+        string userMessage = BuildUserMessage(message);
         ThrowAssertSingleMatchFailed(actualCount, userMessage);
 
         // Unreachable code but compiler cannot work it out
@@ -745,20 +733,7 @@ public sealed partial class Assert
     /// <param name="value">The value to test.</param>
     public static void IsInRange<T>(T minValue, T maxValue, T value)
         where T : struct, IComparable<T>
-        => IsInRange(minValue, maxValue, value, string.Empty, null);
-
-    /// <summary>
-    /// Tests whether the specified value is within the expected range (inclusive).
-    /// The range includes both the minimum and maximum values.
-    /// </summary>
-    /// <typeparam name="T">The type of the values to compare.</typeparam>
-    /// <param name="minValue">The minimum value of the expected range (inclusive).</param>
-    /// <param name="maxValue">The maximum value of the expected range (inclusive).</param>
-    /// <param name="value">The value to test.</param>
-    /// <param name="message">The message to display when the assertion fails.</param>
-    public static void IsInRange<T>(T minValue, T maxValue, T value, string? message)
-        where T : struct, IComparable<T>
-        => IsInRange(minValue, maxValue, value, message, null);
+        => IsInRange(minValue, maxValue, value, string.Empty);
 
     /// <summary>
     /// Tests whether the specified value is within the expected range (inclusive).
@@ -769,8 +744,7 @@ public sealed partial class Assert
     /// <param name="maxValue">The maximum value of the expected range (inclusive).</param>
     /// <param name="value">The value to test.</param>
     /// <param name="message">The message format to display when the assertion fails.</param>
-    /// <param name="parameters">The parameters to format the message.</param>
-    public static void IsInRange<T>(T minValue, T maxValue, T value, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters)
+    public static void IsInRange<T>(T minValue, T maxValue, T value, string? message)
         where T : struct, IComparable<T>
     {
         if (maxValue.CompareTo(minValue) <= 0)
@@ -780,7 +754,7 @@ public sealed partial class Assert
 
         if (value.CompareTo(minValue) < 0 || value.CompareTo(maxValue) > 0)
         {
-            string userMessage = BuildUserMessage(message, parameters);
+            string userMessage = BuildUserMessage(message);
             string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.IsInRangeFail, value, minValue, maxValue, userMessage);
             ThrowAssertFailed("IsInRange", finalMessage);
         }
