@@ -176,6 +176,11 @@ Skutečnost: {2}</target>
         <target state="translated">Očekávala se kolekce {1} velikosti. Skutečnost: {2} {0}</target>
         <note />
       </trans-unit>
+      <trans-unit id="InvalidAccessToTestContextProperty">
+        <source>The property 'TestContext.{0}' is related to current test is not available during assembly or class fixtures.</source>
+        <target state="new">The property 'TestContext.{0}' is related to current test is not available during assembly or class fixtures.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="InvalidGitHubUrl">
         <source>Invalid GitHub ticket URL</source>
         <target state="translated">Neplatná adresa URL lístku GitHubu</target>
