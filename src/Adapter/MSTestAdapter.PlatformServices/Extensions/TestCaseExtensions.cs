@@ -101,7 +101,7 @@ internal static class TestCaseExtensions
         {
             TestCategory = testCase.GetPropertyValue(EngineConstants.TestCategoryProperty) as string[],
             Priority = testCase.GetPropertyValue(EngineConstants.PriorityProperty) as int?,
-            UnfoldingStrategy = testCase.GetPropertyValue(EngineConstants.UnfoldingStrategy, (int)TestDataSourceUnfoldingStrategy.Auto),
+            UnfoldingStrategy = (TestDataSourceUnfoldingStrategy)testCase.GetPropertyValue(EngineConstants.UnfoldingStrategy, (int)TestDataSourceUnfoldingStrategy.Auto),
             DisplayName = testCase.DisplayName,
         };
 

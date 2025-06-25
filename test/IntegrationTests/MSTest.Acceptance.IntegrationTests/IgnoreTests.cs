@@ -233,32 +233,32 @@ public class TestClassWithDataSourcesUsingIgnoreMessage
     public TestClassWithDataSourcesUsingIgnoreMessage(TestContext testContext)
         => _testContext = testContext;
 
-    [TestMethod] // 1 skipped, 2 pass
-    [DataRow(0, UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Fold)]
-    [DataRow(1, UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Fold, IgnoreMessage = "This data row is ignored")]
-    [DataRow(2, UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Fold)]
+    [TestMethod(UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Fold)] // 1 skipped, 2 pass
+    [DataRow(0)]
+    [DataRow(1, IgnoreMessage = "This data row is ignored")]
+    [DataRow(2)]
     public void TestMethod1(int i)
     {
     }
 
-    [TestMethod] // 1 skipped (folded), 3 pass
-    [DynamicData("Data1", UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Fold)]
-    [DynamicData("Data2", UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Fold, IgnoreMessage = "This source is ignored")]
+    [TestMethod(UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Fold)] // 1 skipped (folded), 3 pass
+    [DynamicData("Data1")]
+    [DynamicData("Data2", IgnoreMessage = "This source is ignored")]
     public void TestMethod2(int i)
     {
     }
 
-    [TestMethod] // 1 skipped, 2 pass
-    [DataRow(0, UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Unfold)]
-    [DataRow(1, UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Unfold, IgnoreMessage = "This data row is ignored")]
-    [DataRow(2, UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Unfold)]
+    [TestMethod, UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Uold] // 1 skipped, 2 pass
+    [DataRow(0)]
+    [DataRow(1, IgnoreMessage = "This data row is ignored")]
+    [DataRow(2)]
     public void TestMethod3(int i)
     {
     }
 
-    [TestMethod] // 3 skipped (unfolded), 3 pass
-    [DynamicData("Data1", UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Unfold)]
-    [DynamicData("Data2", UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Unfold, IgnoreMessage = "This source is ignored")]
+    [TestMethod(UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Unfold)] // 3 skipped (unfolded), 3 pass
+    [DynamicData("Data1)]
+    [DynamicData("Data2, IgnoreMessage = "This source is ignored")]
     public void TestMethod4(int i)
     {
     }
