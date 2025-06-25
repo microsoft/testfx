@@ -88,7 +88,7 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
         // testMethod can be null when running ForceCleanup (done when reaching --maximum-failed-tests.
         DebugEx.Assert(properties != null, "properties is not null");
 
-        _properties = [];
+        _properties = new Dictionary<string, object?>(properties);
         testClassFullName ??= testMethod?.FullClassName;
         if (testClassFullName is not null)
         {
