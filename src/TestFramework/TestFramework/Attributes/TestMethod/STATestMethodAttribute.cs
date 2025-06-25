@@ -19,7 +19,7 @@ public class STATestMethodAttribute : TestMethodAttribute
     {
     }
 
-    internal STATestMethodAttribute(TestMethodAttribute? testMethodAttribute, string callerFilePath, int callerLineNumber)
+    public STATestMethodAttribute(TestMethodAttribute? testMethodAttribute, string callerFilePath, int callerLineNumber)
         : base(callerFilePath, callerLineNumber)
         => _testMethodAttribute = testMethodAttribute;
 
