@@ -331,8 +331,10 @@ public class TestMethodInfoTests : TestContainer
 
         Verify(exception is not null);
         Verify(exception.StackTraceInformation is not null);
+        // NOTE: On net8.0 and later, the first frame is System.Reflection.MethodBaseInvoker.ThrowTargetParameterCountException()
+        // So, we do a consistent Contains check to check that the stack trace is there.
         Verify(
-            exception.StackTraceInformation.ErrorStackTrace.StartsWith(
+            exception.StackTraceInformation.ErrorStackTrace.Contains(
             "   at System.Reflection.RuntimeConstructorInfo.Invoke(BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)", StringComparison.Ordinal));
     }
 

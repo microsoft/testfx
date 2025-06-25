@@ -15,7 +15,7 @@
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(UseWinUI)' == 'true' ">
-    <_TestAdapterPlatformServicesRoot>$(MSBuildThisFileDirectory)../net6.0/winui/</_TestAdapterPlatformServicesRoot>
+    <_TestAdapterPlatformServicesRoot>$(MSBuildThisFileDirectory)../net8.0/winui/</_TestAdapterPlatformServicesRoot>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(UseUwpTools)' == 'true' ">
     <_TestAdapterPlatformServicesRoot>$(MSBuildThisFileDirectory)../net9.0/uwp/</_TestAdapterPlatformServicesRoot>

@@ -22,7 +22,8 @@ public sealed class DataRowShouldBeValidAnalyzer : DiagnosticAnalyzer
     private static readonly LocalizableResourceString Description = new(nameof(Resources.DataRowShouldBeValidDescription), Resources.ResourceManager, typeof(Resources));
     private static readonly LocalizableResourceString MessageFormat = new(nameof(Resources.DataRowShouldBeValidMessageFormat_OnTestMethod), Resources.ResourceManager, typeof(Resources));
 
-    internal static readonly DiagnosticDescriptor DataRowOnTestMethodRule = DiagnosticDescriptorHelper.Create(
+    /// <inheritdoc cref="Resources.DataRowShouldBeValidTitle" />
+    public static readonly DiagnosticDescriptor DataRowOnTestMethodRule = DiagnosticDescriptorHelper.Create(
         DiagnosticIds.DataRowShouldBeValidRuleId,
         Title,
         MessageFormat,
@@ -31,16 +32,20 @@ public sealed class DataRowShouldBeValidAnalyzer : DiagnosticAnalyzer
         DiagnosticSeverity.Warning,
         isEnabledByDefault: true);
 
-    internal static readonly DiagnosticDescriptor ArgumentCountMismatchRule = DataRowOnTestMethodRule
+    /// <inheritdoc cref="Resources.DataRowShouldBeValidMessageFormat_ArgumentCountMismatch" />
+    public static readonly DiagnosticDescriptor ArgumentCountMismatchRule = DataRowOnTestMethodRule
         .WithMessage(new(nameof(Resources.DataRowShouldBeValidMessageFormat_ArgumentCountMismatch), Resources.ResourceManager, typeof(Resources)));
 
-    internal static readonly DiagnosticDescriptor ArgumentTypeMismatchRule = DataRowOnTestMethodRule
+    /// <inheritdoc cref="Resources.DataRowShouldBeValidMessageFormat_ArgumentTypeMismatch" />
+    public static readonly DiagnosticDescriptor ArgumentTypeMismatchRule = DataRowOnTestMethodRule
         .WithMessage(new(nameof(Resources.DataRowShouldBeValidMessageFormat_ArgumentTypeMismatch), Resources.ResourceManager, typeof(Resources)));
 
-    internal static readonly DiagnosticDescriptor GenericTypeArgumentNotResolvedRule = DataRowOnTestMethodRule
+    /// <inheritdoc cref="Resources.DataRowShouldBeValidMessageFormat_GenericTypeArgumentNotResolved" />
+    public static readonly DiagnosticDescriptor GenericTypeArgumentNotResolvedRule = DataRowOnTestMethodRule
         .WithMessage(new(nameof(Resources.DataRowShouldBeValidMessageFormat_GenericTypeArgumentNotResolved), Resources.ResourceManager, typeof(Resources)));
 
-    internal static readonly DiagnosticDescriptor GenericTypeArgumentConflictingTypesRule = DataRowOnTestMethodRule
+    /// <inheritdoc cref="Resources.DataRowShouldBeValidMessageFormat_GenericTypeArgumentConflictingTypes" />
+    public static readonly DiagnosticDescriptor GenericTypeArgumentConflictingTypesRule = DataRowOnTestMethodRule
         .WithMessage(new(nameof(Resources.DataRowShouldBeValidMessageFormat_GenericTypeArgumentConflictingTypes), Resources.ResourceManager, typeof(Resources)));
 
     /// <inheritdoc />

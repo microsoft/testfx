@@ -1,7 +1,7 @@
 <Project>
 
   <PropertyGroup Condition=" '$(UseWinUI)' == 'true' ">
-    <_TestFrameworkExtensionsRoot>$(MSBuildThisFileDirectory)../net6.0/winui/</_TestFrameworkExtensionsRoot>
+    <_TestFrameworkExtensionsRoot>$(MSBuildThisFileDirectory)../net8.0/winui/</_TestFrameworkExtensionsRoot>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(UseUwpTools)' == 'true' ">
