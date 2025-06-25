@@ -10,6 +10,6 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 public class STATestClassAttribute : TestClassAttribute
 {
     /// <inheritdoc />
-    public override TestMethodAttribute? GetTestMethodAttribute(TestMethodAttribute? testMethodAttribute)
-        => new STATestMethodAttribute(testMethodAttribute, testMethodAttribute?.DeclaringFilePath ?? string.Empty, testMethodAttribute?.DeclaringLineNumber ?? -1);
+    public override TestMethodAttribute? GetTestMethodAttribute(TestMethodAttribute testMethodAttribute)
+        => new STATestMethodAttribute(testMethodAttribute);
 }

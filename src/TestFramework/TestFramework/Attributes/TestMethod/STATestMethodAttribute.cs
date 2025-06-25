@@ -19,8 +19,14 @@ public class STATestMethodAttribute : TestMethodAttribute
     {
     }
 
-    public STATestMethodAttribute(TestMethodAttribute? testMethodAttribute, string callerFilePath, int callerLineNumber)
-        : base(callerFilePath, callerLineNumber)
+    /// <summary>
+    /// Initializes a new instance of the <see cref="STATestMethodAttribute"/> class.
+    /// This constructor is intended to be called by <see cref="STATestClassAttribute"/> (or derived) to wrap an existing test method attribute.
+    /// It can also be called by a derived <see cref="STATestMethodAttribute"/> which will be called by a derived <see cref="STATestClassAttribute"/>.
+    /// </summary>
+    /// <param name="testMethodAttribute">The wrapped test method.</param>
+    public STATestMethodAttribute(TestMethodAttribute testMethodAttribute)
+        : base(testMethodAttribute.DeclaringFilePath, testMethodAttribute.DeclaringLineNumber ?? -1)
         => _testMethodAttribute = testMethodAttribute;
 
     /// <summary>
