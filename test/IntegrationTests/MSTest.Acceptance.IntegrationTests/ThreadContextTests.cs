@@ -642,7 +642,7 @@ public class BaseClassWithTestInitCleanup
     [TestCleanup]
     public void BaseTestCleanup()
     {
-        switch (TestContext.ManagedMethod)
+        switch (TestContext.TestName)
         {
             case "DerivedClassIntermediateClassWithTestInitCleanupBaseClassWithTestInitCleanupTestMethod":
             case "DerivedClassIntermediateClassWithTestInitCleanupBaseClassWithTestInitCleanupTestMethod2":
@@ -655,7 +655,7 @@ public class BaseClassWithTestInitCleanup
                 break;
 
             default:
-                throw new NotSupportedException($"Unsupported method name '{TestContext.ManagedMethod}'");
+                throw new NotSupportedException($"Unsupported method name '{TestContext.TestName}'");
         }
     }
 }
