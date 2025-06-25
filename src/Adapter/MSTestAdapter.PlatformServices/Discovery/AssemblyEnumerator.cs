@@ -235,8 +235,9 @@ internal class AssemblyEnumerator : MarshalByRefObject
             // If we fail to discover type from a class, then don't abort the discovery
             // Move to the next type.
             string message = string.Format(CultureInfo.CurrentCulture, Resource.CouldNotInspectTypeDuringDiscovery, typeFullName, assemblyFileName, exception.Message);
-            PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo($"AssemblyEnumerator: {message}");
+            PlatformServiceProvider.Instance.AdapterTraceLogger.LogError($"AssemblyEnumerator: {message}");
             warningMessages.Add(message);
+            throw;
         }
 
         return tests;
