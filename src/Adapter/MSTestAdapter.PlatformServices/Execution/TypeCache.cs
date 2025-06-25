@@ -385,7 +385,7 @@ internal sealed class TypeCache : MarshalByRefObject
             {
                 var assemblyInfo = new TestAssemblyInfo(assembly);
 
-                Type[] types = AssemblyEnumerator.GetTypes(assembly, assembly.FullName!, null);
+                Type[] types = AssemblyEnumerator.GetTypes(assembly);
 
                 foreach (Type t in types)
                 {

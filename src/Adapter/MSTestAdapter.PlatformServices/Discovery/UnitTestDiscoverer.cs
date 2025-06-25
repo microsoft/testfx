@@ -13,15 +13,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 [SuppressMessage("Performance", "CA1852: Seal internal types", Justification = "Overrides required for testability")]
 internal class UnitTestDiscoverer
 {
-    private readonly AssemblyEnumeratorWrapper _assemblyEnumeratorWrapper;
+    private readonly TestMethodFilter _testMethodFilter;
 
     internal UnitTestDiscoverer()
-    {
-        _assemblyEnumeratorWrapper = new AssemblyEnumeratorWrapper();
-        _testMethodFilter = new TestMethodFilter();
-    }
-
-    private readonly TestMethodFilter _testMethodFilter;
+        => _testMethodFilter = new TestMethodFilter();
 
     /// <summary>
     /// Discovers the tests available from the provided sources.
@@ -55,7 +50,7 @@ internal class UnitTestDiscoverer
         ITestCaseDiscoverySink discoverySink,
         IDiscoveryContext? discoveryContext)
     {
-        ICollection<UnitTestElement>? testElements = _assemblyEnumeratorWrapper.GetTests(source, discoveryContext?.RunSettings, out List<string> warnings);
+        ICollection<UnitTestElement>? testElements = AssemblyEnumeratorWrapper.GetTests(source, discoveryContext?.RunSettings, out List<string> warnings);
 
         bool treatDiscoveryWarningsAsErrors = MSTestSettings.CurrentSettings.TreatDiscoveryWarningsAsErrors;
 
@@ -81,7 +76,7 @@ internal class UnitTestDiscoverer
             testElements.Count,
             source);
 
-        SendTestCases(source, testElements, discoverySink, discoveryContext, logger);
+        SendTestCases(testElements, discoverySink, discoveryContext, logger);
     }
 
 #pragma warning disable IDE0028 // Collection initialization can be simplified - cannot be done for all TFMs. So suppressing.
@@ -91,7 +86,7 @@ internal class UnitTestDiscoverer
     internal static bool TryGetActualData(TestCase testCase, [NotNullWhen(true)] out object?[]? actualData)
         => TestCaseToDataDictionary.TryGetValue(testCase, out actualData);
 
-    internal void SendTestCases(string source, IEnumerable<UnitTestElement> testElements, ITestCaseDiscoverySink discoverySink, IDiscoveryContext? discoveryContext, IMessageLogger logger)
+    internal void SendTestCases(IEnumerable<UnitTestElement> testElements, ITestCaseDiscoverySink discoverySink, IDiscoveryContext? discoveryContext, IMessageLogger logger)
     {
         bool hasAnyRunnableTests = false;
         var fixtureTests = new List<TestCase>();
