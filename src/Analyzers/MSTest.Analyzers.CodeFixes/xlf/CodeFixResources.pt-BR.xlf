@@ -99,7 +99,7 @@
       </trans-unit>
       <trans-unit id="UseCooperativeCancellationForTimeoutFix">
         <source>Use 'CooperativeCancellation = true'</source>
-        <target state="new">Use 'CooperativeCancellation = true'</target>
+        <target state="translated">Usar “CooperativoCancellation = true”</target>
         <note />
       </trans-unit>
       <trans-unit id="UseNewerAssertThrows">
