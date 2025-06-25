@@ -16,12 +16,8 @@ public class AssemblyEnumeratorWrapperTests : TestContainer
 {
     private readonly TestablePlatformServiceProvider _testablePlatformServiceProvider;
 
-    private List<string> _warnings;
-
     public AssemblyEnumeratorWrapperTests()
     {
-        _warnings = [];
-
         _testablePlatformServiceProvider = new TestablePlatformServiceProvider();
         PlatformServiceProvider.Instance = _testablePlatformServiceProvider;
     }
@@ -35,11 +31,11 @@ public class AssemblyEnumeratorWrapperTests : TestContainer
         }
     }
 
-    public void GetTestsShouldReturnNullIfAssemblyNameIsNull() => Verify(AssemblyEnumeratorWrapper.GetTests(null, null, out _warnings) is null);
+    public void GetTestsShouldReturnNullIfAssemblyNameIsNull() => Verify(AssemblyEnumeratorWrapper.GetTests(null, null, out _) is null);
 
-    public void GetTestsShouldReturnNullIfAssemblyNameIsEmpty() => Verify(AssemblyEnumeratorWrapper.GetTests(string.Empty, null, out _warnings) is null);
+    public void GetTestsShouldReturnNullIfAssemblyNameIsEmpty() => Verify(AssemblyEnumeratorWrapper.GetTests(string.Empty, null, out _) is null);
 
-    public void GetTestsShouldReturnNullIfSourceFileDoesNotExistInContext()
+    public void GetTestsShoulThrowIfSourceFileDoesNotExistInContext()
     {
         string assemblyName = "DummyAssembly.dll";
 
@@ -49,20 +45,8 @@ public class AssemblyEnumeratorWrapperTests : TestContainer
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.DoesFileExist(assemblyName))
             .Returns(false);
 
-        Verify(AssemblyEnumeratorWrapper.GetTests(assemblyName, null, out _warnings) is null);
-
-        // Also validate that we give a warning when this happens.
-        Verify(_warnings is not null);
-        string innerMessage = string.Format(
-            CultureInfo.CurrentCulture,
-            Resource.TestAssembly_FileDoesNotExist,
-            assemblyName);
-        string message = string.Format(
-            CultureInfo.CurrentCulture,
-            Resource.TestAssembly_AssemblyDiscoveryFailure,
-            assemblyName,
-            innerMessage);
-        Verify(_warnings.ToList().Contains(message));
+        FileNotFoundException exception = VerifyThrows<FileNotFoundException>(() => AssemblyEnumeratorWrapper.GetTests(assemblyName, null, out _));
+        Verify(exception.Message == string.Format(CultureInfo.CurrentCulture, Resource.TestAssembly_FileDoesNotExist, assemblyName));
     }
 
     public void GetTestsShouldReturnNullIfSourceDoesNotReferenceUnitTestFrameworkAssembly()
@@ -82,7 +66,7 @@ public class AssemblyEnumeratorWrapperTests : TestContainer
         // Setup mocks.
         SetupMocks(assemblyName, doesFileExist: true, isAssemblyReferenced: true);
 
-        ICollection<MSTest.TestAdapter.ObjectModel.UnitTestElement>? tests = AssemblyEnumeratorWrapper.GetTests(assemblyName, null, out _warnings);
+        ICollection<MSTest.TestAdapter.ObjectModel.UnitTestElement>? tests = AssemblyEnumeratorWrapper.GetTests(assemblyName, null, out _);
 
         Verify(tests is not null);
 
@@ -97,7 +81,7 @@ public class AssemblyEnumeratorWrapperTests : TestContainer
         // Setup mocks.
         SetupMocks(assemblyName, doesFileExist: true, isAssemblyReferenced: true);
 
-        AssemblyEnumeratorWrapper.GetTests(assemblyName, null, out _warnings);
+        AssemblyEnumeratorWrapper.GetTests(assemblyName, null, out _);
 
         _testablePlatformServiceProvider.MockTestSourceHost.Verify(ih => ih.CreateInstanceForType(typeof(AssemblyEnumerator), It.IsAny<object[]>()), Times.Once);
     }
@@ -117,10 +101,10 @@ public class AssemblyEnumeratorWrapperTests : TestContainer
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.DoesFileExist(assemblyName))
             .Returns(true);
 
-        Verify(AssemblyEnumeratorWrapper.GetTests(assemblyName, null, out _warnings) is null);
+        Verify(AssemblyEnumeratorWrapper.GetTests(assemblyName, null, out _) is null);
     }
 
-    public void GetTestsShouldReturnNullIfSourceFileLoadThrowsABadImageFormatException()
+    public void GetTestsShouldThrowIfSourceFileLoadThrowsABadImageFormatException()
     {
         string assemblyName = "DummyAssembly.dll";
         string fullFilePath = Path.Combine(@"C:\temp", assemblyName);
@@ -133,7 +117,7 @@ public class AssemblyEnumeratorWrapperTests : TestContainer
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly(assemblyName, It.IsAny<bool>()))
             .Throws(new BadImageFormatException());
 
-        Verify(AssemblyEnumeratorWrapper.GetTests(assemblyName, null, out _warnings) is null);
+        VerifyThrows<BadImageFormatException>(() => AssemblyEnumeratorWrapper.GetTests(assemblyName, null, out _));
     }
 
     #endregion
