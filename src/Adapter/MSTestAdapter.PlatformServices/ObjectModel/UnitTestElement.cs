@@ -213,7 +213,7 @@ internal sealed class UnitTestElement
         idProvider.AppendString(testFullName);
         if (TestMethod.SerializedData != null)
         {
-            idProvider.AppendString($"#{TestMethod.TestCaseIndex.ToString(CultureInfo.InvariantCulture)}#");
+            idProvider.AppendString($"[{TestMethod.TestCaseIndex.ToString(CultureInfo.InvariantCulture)}]");
         }
 
         return idProvider.GetId();
