@@ -1025,7 +1025,7 @@ public class MSTestSettingsTests : TestContainer
         Verify(!adapterSettings.MapInconclusiveToFailed);
         Verify(adapterSettings.MapNotRunnableToFailed);
         Verify(adapterSettings.EnableBaseClassTestMethodsFromOtherAssemblies);
-        Verify(!adapterSettings.TreatDiscoveryWarningsAsErrors);
+        Verify(adapterSettings.TreatDiscoveryWarningsAsErrors);
     }
 
     public void PopulateSettingsShouldInitializeDefaultSettingsWhenRunSettingsIsNull()
@@ -1037,7 +1037,7 @@ public class MSTestSettingsTests : TestContainer
         Verify(!adapterSettings.MapInconclusiveToFailed);
         Verify(adapterSettings.MapNotRunnableToFailed);
         Verify(adapterSettings.EnableBaseClassTestMethodsFromOtherAssemblies);
-        Verify(!adapterSettings.TreatDiscoveryWarningsAsErrors);
+        Verify(adapterSettings.TreatDiscoveryWarningsAsErrors);
     }
 
     public void PopulateSettingsShouldInitializeDefaultSettingsWhenRunSettingsXmlIsEmpty()
@@ -1050,7 +1050,7 @@ public class MSTestSettingsTests : TestContainer
         Verify(!adapterSettings.MapInconclusiveToFailed);
         Verify(adapterSettings.MapNotRunnableToFailed);
         Verify(adapterSettings.EnableBaseClassTestMethodsFromOtherAssemblies);
-        Verify(!adapterSettings.TreatDiscoveryWarningsAsErrors);
+        Verify(adapterSettings.TreatDiscoveryWarningsAsErrors);
     }
 
     public void PopulateSettingsShouldInitializeSettingsToDefaultIfNotSpecified()
