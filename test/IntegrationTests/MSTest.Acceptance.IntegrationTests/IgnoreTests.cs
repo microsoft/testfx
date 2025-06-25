@@ -257,8 +257,8 @@ public class TestClassWithDataSourcesUsingIgnoreMessage
     }
 
     [TestMethod(UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Unfold)] // 3 skipped (unfolded), 3 pass
-    [DynamicData("Data1)]
-    [DynamicData("Data2, IgnoreMessage = "This source is ignored")]
+    [DynamicData("Data1")]
+    [DynamicData("Data2", IgnoreMessage = "This source is ignored")]
     public void TestMethod4(int i)
     {
     }
