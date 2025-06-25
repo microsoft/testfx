@@ -74,20 +74,6 @@ public sealed class UseAttributeOnTestMethodAnalyzer : DiagnosticAnalyzer
         DiagnosticSeverity.Info,
         isEnabledByDefault: true);
 
-    private const string ExpectedExceptionAttributeShortName = "ExpectedException";
-
-    /// <inheritdoc cref="Resources.UseAttributeOnTestMethodAnalyzerTitle" />
-    public static readonly DiagnosticDescriptor ExpectedExceptionRule = DiagnosticDescriptorHelper.Create(
-        DiagnosticIds.UseAttributeOnTestMethodRuleId,
-        title: new LocalizableResourceString(
-            nameof(Resources.UseAttributeOnTestMethodAnalyzerTitle), Resources.ResourceManager, typeof(Resources), ExpectedExceptionAttributeShortName),
-        messageFormat: new LocalizableResourceString(
-            nameof(Resources.UseAttributeOnTestMethodAnalyzerMessageFormat), Resources.ResourceManager, typeof(Resources), ExpectedExceptionAttributeShortName),
-        description: null,
-        Category.Usage,
-        DiagnosticSeverity.Info,
-        isEnabledByDefault: true);
-
     private const string ConditionBaseAttributeShortName = "ConditionBaseAttribute";
 
     /// <inheritdoc cref="Resources.UseAttributeOnTestMethodAnalyzerTitle" />
@@ -111,7 +97,6 @@ public sealed class UseAttributeOnTestMethodAnalyzer : DiagnosticAnalyzer
         (WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingPriorityAttribute, PriorityRule),
         (WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestPropertyAttribute, TestPropertyRule),
         (WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingWorkItemAttribute, WorkItemRule),
-        (WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingExpectedExceptionBaseAttribute, ExpectedExceptionRule),
         (WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingConditionBaseAttribute, ConditionBaseRule),
     ];
 
@@ -121,8 +106,7 @@ public sealed class UseAttributeOnTestMethodAnalyzer : DiagnosticAnalyzer
             OwnerRule,
             PriorityRule,
             TestPropertyRule,
-            WorkItemRule,
-            ExpectedExceptionRule);
+            WorkItemRule);
 
     /// <inheritdoc />
     public override void Initialize(AnalysisContext context)

@@ -333,7 +333,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
         // We don't have a special method to filter attributes that are not derived from Attribute, so we take all
         // attributes and filter them. We don't have to care if there is one, because this method is only entered when
         // there is at least one (we determine this in TypeEnumerator.GetTestFromMethod.
-        IEnumerable<ITestDataSource> testDataSources = ReflectHelper.Instance.GetAttributes<Attribute>(testMethodInfo.MethodInfo, inherit: false).OfType<ITestDataSource>();
+        IEnumerable<ITestDataSource> testDataSources = ReflectHelper.Instance.GetAttributes<Attribute>(testMethodInfo.MethodInfo).OfType<ITestDataSource>();
 
         // We need to use a temporary list to avoid adding tests to the main list if we fail to expand any data source.
         List<UnitTestElement> tempListOfTests = [];
@@ -410,7 +410,8 @@ internal class AssemblyEnumerator : MarshalByRefObject
             // Make the test not data driven, because it had no data.
             discoveredTest.TestMethod.DataType = DynamicDataType.None;
             discoveredTest.TestMethod.TestDataSourceIgnoreMessage = testDataSourceIgnoreMessage;
-            discoveredTest.DisplayName = dataSource.GetDisplayName(methodInfo, null) ?? discoveredTest.DisplayName;
+            discoveredTest.DisplayName = dataSource.GetDisplayName(methodInfo, null)
+                ?? discoveredTest.DisplayName;
 
             tests.Add(discoveredTest);
 
@@ -430,7 +431,10 @@ internal class AssemblyEnumerator : MarshalByRefObject
             }
 
             UnitTestElement discoveredTest = test.Clone();
-            discoveredTest.DisplayName = displayNameFromTestDataRow ?? dataSource.GetDisplayName(methodInfo, d) ?? discoveredTest.DisplayName;
+            discoveredTest.DisplayName = displayNameFromTestDataRow
+                ?? dataSource.GetDisplayName(methodInfo, d)
+                ?? TestDataSourceUtilities.ComputeDefaultDisplayName(methodInfo, d)
+                ?? discoveredTest.DisplayName;
 
             try
             {

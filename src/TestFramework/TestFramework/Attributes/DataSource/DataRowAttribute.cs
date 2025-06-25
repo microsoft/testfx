@@ -8,7 +8,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// <summary>
 /// Attribute to define in-line data for a test method.
 /// </summary>
-[AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
+[AttributeUsage(AttributeTargets.Method, AllowMultiple = true, Inherited = false)]
 public class DataRowAttribute : Attribute, ITestDataSource, ITestDataSourceUnfoldingCapability, ITestDataSourceIgnoreCapability
 {
     /// <summary>

@@ -31,7 +31,7 @@ public enum DynamicDataSourceType
 /// <summary>
 /// Attribute to define dynamic data for a test method.
 /// </summary>
-[AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
+[AttributeUsage(AttributeTargets.Method, AllowMultiple = true, Inherited = false)]
 public sealed class DynamicDataAttribute : Attribute, ITestDataSource, ITestDataSourceEmptyDataSourceExceptionInfo, ITestDataSourceUnfoldingCapability, ITestDataSourceIgnoreCapability
 {
     private readonly string _dynamicDataSourceName;

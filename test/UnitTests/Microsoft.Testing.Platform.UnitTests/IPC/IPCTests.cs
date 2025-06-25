@@ -185,7 +185,7 @@ public sealed class IPCTests
                 _testContext.CancellationTokenSource.Token));
         }
 
-        IOException exception = Assert.ThrowsException<IOException>(() =>
+        IOException exception = Assert.ThrowsExactly<IOException>(() =>
              new NamedPipeServer(
                 pipeNameDescription,
                 async _ => await Task.FromResult(VoidResponse.CachedInstance),

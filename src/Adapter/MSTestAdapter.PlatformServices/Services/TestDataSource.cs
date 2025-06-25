@@ -50,7 +50,7 @@ internal sealed class TestDataSource : ITestDataSource
         // Connect to data source.
         TestDataConnectionFactory factory = new();
 
-        GetConnectionProperties(testMethodInfo.GetAttributes<DataSourceAttribute>(false)[0], out string providerNameInvariant, out string? connectionString, out string? tableName, out DataAccessMethod dataAccessMethod);
+        GetConnectionProperties(testMethodInfo.GetAttributes<DataSourceAttribute>()[0], out string providerNameInvariant, out string? connectionString, out string? tableName, out DataAccessMethod dataAccessMethod);
 
         try
         {

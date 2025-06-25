@@ -40,7 +40,6 @@ internal class TestMethodInfo : ITestMethod
         MethodInfo = testMethod;
         Parent = parent;
         TestContext = testContext;
-        ExpectedException = ResolveExpectedException();
         RetryAttribute = GetRetryAttribute();
         TimeoutInfo = GetTestTimeout();
         Executor = GetTestMethodAttribute();
@@ -102,27 +101,23 @@ internal class TestMethodInfo : ITestMethod
     /// </summary>
     internal TestClassInfo Parent { get; }
 
-    internal ExpectedExceptionBaseAttribute? ExpectedException { get; set; /*set for testing only*/ }
-
     internal RetryBaseAttribute? RetryAttribute { get; }
 
     /// <summary>
     /// Gets all attributes of the test method.
     /// </summary>
-    /// <param name="inherit">Whether or not getting the attributes that are inherited.</param>
     /// <returns>An array of the attributes.</returns>
-    public Attribute[]? GetAllAttributes(bool inherit)
-        => [.. ReflectHelper.Instance.GetAttributes<Attribute>(MethodInfo, inherit)];
+    public Attribute[]? GetAllAttributes()
+        => [.. ReflectHelper.Instance.GetAttributes<Attribute>(MethodInfo)];
 
     /// <summary>
     /// Gets all attributes of the test method.
     /// </summary>
     /// <typeparam name="TAttributeType">The type of the attributes.</typeparam>
-    /// <param name="inherit">Whether or not getting the attributes that are inherited.</param>
     /// <returns>An array of the attributes.</returns>
-    public TAttributeType[] GetAttributes<TAttributeType>(bool inherit)
+    public TAttributeType[] GetAttributes<TAttributeType>()
         where TAttributeType : Attribute
-        => [.. ReflectHelper.Instance.GetAttributes<TAttributeType>(MethodInfo, inherit)];
+        => [.. ReflectHelper.Instance.GetAttributes<TAttributeType>(MethodInfo)];
 
     /// <summary>
     /// Execute test method. Capture failures, handle async and return result.
@@ -251,7 +246,7 @@ internal class TestMethodInfo : ITestMethod
     private TimeoutInfo GetTestTimeout()
     {
         DebugEx.Assert(MethodInfo != null, "TestMethod should be non-null");
-        TimeoutAttribute? timeoutAttribute = ReflectHelper.Instance.GetFirstAttributeOrDefault<TimeoutAttribute>(MethodInfo, inherit: false);
+        TimeoutAttribute? timeoutAttribute = ReflectHelper.Instance.GetFirstAttributeOrDefault<TimeoutAttribute>(MethodInfo);
         if (timeoutAttribute is null)
         {
             return TimeoutInfo.FromTestTimeoutSettings();
@@ -274,51 +269,11 @@ internal class TestMethodInfo : ITestMethod
     {
         // Get the derived TestMethod attribute from reflection.
         // It should be non-null as it was already validated by IsValidTestMethod.
-        TestMethodAttribute testMethodAttribute = ReflectHelper.Instance.GetFirstAttributeOrDefault<TestMethodAttribute>(MethodInfo, inherit: false)!;
+        TestMethodAttribute testMethodAttribute = ReflectHelper.Instance.GetFirstAttributeOrDefault<TestMethodAttribute>(MethodInfo)!;
 
         // Get the derived TestMethod attribute from Extended TestClass Attribute
         // If the extended TestClass Attribute doesn't have extended TestMethod attribute then base class returns back the original testMethod Attribute
         return Parent.ClassAttribute.GetTestMethodAttribute(testMethodAttribute) ?? testMethodAttribute;
-    }
-
-    /// <summary>
-    /// Resolves the expected exception attribute. The function will try to
-    /// get all the expected exception attributes defined for a testMethod.
-    /// </summary>
-    /// <returns>
-    /// The expected exception attribute found for this test. Null if not found.
-    /// </returns>
-    private ExpectedExceptionBaseAttribute? ResolveExpectedException()
-    {
-        IEnumerable<ExpectedExceptionBaseAttribute> expectedExceptions;
-
-        try
-        {
-            expectedExceptions = ReflectHelper.Instance.GetAttributes<ExpectedExceptionBaseAttribute>(MethodInfo, inherit: true);
-        }
-        catch (Exception ex)
-        {
-            // If construction of the attribute throws an exception, indicate that there was an
-            // error when trying to run the test
-            string errorMessage = string.Format(
-                CultureInfo.CurrentCulture,
-                Resource.UTA_ExpectedExceptionAttributeConstructionException,
-                Parent.ClassType.FullName,
-                MethodInfo.Name,
-                ex.GetFormattedExceptionMessage());
-            throw new TypeInspectionException(errorMessage);
-        }
-
-        // Verify that there is only one attribute (multiple attributes derived from
-        // ExpectedExceptionBaseAttribute are not allowed on a test method)
-        // This is needed EVEN IF the attribute doesn't allow multiple.
-        // See https://github.com/microsoft/testfx/issues/4331
-        if (expectedExceptions.Count() > 1)
-        {
-            ThrowMultipleAttributesException(nameof(ExpectedExceptionBaseAttribute));
-        }
-
-        return expectedExceptions.FirstOrDefault();
     }
 
     /// <summary>
@@ -330,7 +285,7 @@ internal class TestMethodInfo : ITestMethod
     /// </returns>
     private RetryBaseAttribute? GetRetryAttribute()
     {
-        IEnumerable<RetryBaseAttribute> attributes = ReflectHelper.Instance.GetAttributes<RetryBaseAttribute>(MethodInfo, inherit: true);
+        IEnumerable<RetryBaseAttribute> attributes = ReflectHelper.Instance.GetAttributes<RetryBaseAttribute>(MethodInfo);
         using IEnumerator<RetryBaseAttribute> enumerator = attributes.GetEnumerator();
         if (!enumerator.MoveNext())
         {
@@ -376,8 +331,6 @@ internal class TestMethodInfo : ITestMethod
 
         // TODO remove dry violation with TestMethodRunner
         _classInstance = CreateTestClassInstance(result);
-        bool isExceptionThrown = false;
-        bool hasTestInitializePassed = false;
         Exception? testRunnerException = null;
         _isTestCleanupInvoked = false;
         ExecutionContext? executionContext = null;
@@ -393,8 +346,6 @@ internal class TestMethodInfo : ITestMethod
 
                     if (RunTestInitializeMethod(_classInstance, result, ref executionContext, timeoutTokenSource))
                     {
-                        hasTestInitializePassed = true;
-
                         if (executionContext is null)
                         {
                             Task? invokeResult = MethodInfo.GetInvokeResultAsync(_classInstance, arguments);
@@ -444,15 +395,9 @@ internal class TestMethodInfo : ITestMethod
             }
             catch (Exception ex)
             {
-                isExceptionThrown = true;
                 Exception realException = GetRealException(ex);
 
-                if (IsExpectedException(realException, result))
-                {
-                    // Expected Exception was thrown, so Pass the test
-                    result.Outcome = UTF.UnitTestOutcome.Passed;
-                }
-                else if (realException.IsOperationCanceledExceptionFromToken(TestContext!.Context.CancellationTokenSource.Token))
+                if (realException.IsOperationCanceledExceptionFromToken(TestContext!.Context.CancellationTokenSource.Token))
                 {
                     result.Outcome = UTF.UnitTestOutcome.Timeout;
                     result.TestFailureException = new TestFailedException(
@@ -482,18 +427,6 @@ internal class TestMethodInfo : ITestMethod
                         : UTF.UnitTestOutcome.Failed;
                 }
             }
-
-            // if we get here, the test method did not throw the exception
-            // if the user specified that the test was going to throw an exception, and
-            // it did not, we should fail the test
-            // We only perform this check if the test initialize passes and the test method is actually run.
-            if (hasTestInitializePassed && !isExceptionThrown && ExpectedException is { } expectedException)
-            {
-                result.TestFailureException = new TestFailedException(
-                    UTFUnitTestOutcome.Failed,
-                    expectedException.NoExceptionMessage);
-                result.Outcome = UTF.UnitTestOutcome.Failed;
-            }
         }
         catch (Exception exception)
         {
@@ -518,53 +451,6 @@ internal class TestMethodInfo : ITestMethod
         await RunTestCleanupMethodAsync(result, executionContext, timeoutTokenSource).ConfigureAwait(false);
 
         return testRunnerException != null ? throw testRunnerException : result;
-    }
-
-    [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
-    private bool IsExpectedException(Exception ex, TestResult result)
-    {
-        // if the user specified an expected exception, we need to check if this
-        // exception was thrown. If it was thrown, we should pass the test. In
-        // case a different exception was thrown, the test is seen as failure
-        if (ExpectedException == null)
-        {
-            return false;
-        }
-
-        Exception exceptionFromVerify;
-        try
-        {
-            // If the expected exception attribute's Verify method returns, then it
-            // considers this exception as expected, so the test passed
-            ExpectedException.Verify(ex);
-            return true;
-        }
-        catch (Exception verifyEx)
-        {
-            bool isTargetInvocationError = verifyEx is TargetInvocationException;
-            if (isTargetInvocationError && verifyEx.InnerException != null)
-            {
-                exceptionFromVerify = verifyEx.InnerException;
-            }
-            else
-            {
-                // Verify threw an exception, so the expected exception attribute does not
-                // consider this exception to be expected. Include the exception message in
-                // the test result.
-                exceptionFromVerify = verifyEx;
-            }
-        }
-
-        // See if the verification exception (thrown by the expected exception
-        // attribute's Verify method) is an AssertInconclusiveException. If so, set
-        // the test outcome to Inconclusive.
-        result.TestFailureException = new TestFailedException(
-            exceptionFromVerify is AssertInconclusiveException
-                ? UTFUnitTestOutcome.Inconclusive
-                : UTFUnitTestOutcome.Failed,
-            exceptionFromVerify.TryGetMessage(),
-            ex.TryGetStackTraceInformation());
-        return false;
     }
 
     private static Exception GetRealException(Exception ex)
