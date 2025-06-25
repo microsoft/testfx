@@ -578,8 +578,8 @@ public class TestExecutionManagerTests : TestContainer
                         : originalReflectionOperation.GetCustomAttributes(asm, type));
 
             testablePlatformService.MockReflectionOperations.Setup(
-                ro => ro.GetCustomAttributes(It.IsAny<MemberInfo>(), It.IsAny<bool>())).
-                Returns((MemberInfo memberInfo, bool inherit) => originalReflectionOperation.GetCustomAttributes(memberInfo, inherit));
+                ro => ro.GetCustomAttributes(It.IsAny<MemberInfo>())).
+                Returns((MemberInfo memberInfo) => originalReflectionOperation.GetCustomAttributes(memberInfo));
 
             testablePlatformService.MockReflectionOperations.Setup(ro => ro.GetType(It.IsAny<Assembly>(), It.IsAny<string>()))
                 .Returns((Assembly asm, string m) => originalReflectionOperation.GetType(asm, m));
@@ -637,8 +637,8 @@ public class TestExecutionManagerTests : TestContainer
                         : originalReflectionOperation.GetCustomAttributes(asm, type));
 
             testablePlatformService.MockReflectionOperations.Setup(
-                ro => ro.GetCustomAttributes(It.IsAny<MemberInfo>(), It.IsAny<bool>())).
-                Returns((MemberInfo memberInfo, bool inherit) => originalReflectionOperation.GetCustomAttributes(memberInfo, inherit));
+                ro => ro.GetCustomAttributes(It.IsAny<MemberInfo>())).
+                Returns((MemberInfo memberInfo) => originalReflectionOperation.GetCustomAttributes(memberInfo));
 
             testablePlatformService.MockReflectionOperations.Setup(ro => ro.GetType(It.IsAny<Assembly>(), It.IsAny<string>()))
                 .Returns((Assembly asm, string m) => originalReflectionOperation.GetType(asm, m));
@@ -738,8 +738,8 @@ public class TestExecutionManagerTests : TestContainer
                         : originalReflectionOperation.GetCustomAttributes(asm, type));
 
             testablePlatformService.MockReflectionOperations.Setup(
-                ro => ro.GetCustomAttributes(It.IsAny<MemberInfo>(), It.IsAny<bool>())).
-                Returns((MemberInfo memberInfo, bool inherit) => originalReflectionOperation.GetCustomAttributes(memberInfo, inherit));
+                ro => ro.GetCustomAttributes(It.IsAny<MemberInfo>())).
+                Returns((MemberInfo memberInfo) => originalReflectionOperation.GetCustomAttributes(memberInfo));
 
             testablePlatformService.MockReflectionOperations.Setup(
                 ro => ro.GetType(It.IsAny<Assembly>(), It.IsAny<string>())).

@@ -216,7 +216,7 @@ public class TestMethodRunnerTests : TestContainer
         var attributes = new Attribute[] { dataSourceAttribute };
 
         // Setup mocks
-        _testablePlatformServiceProvider.MockReflectionOperations.Setup(rf => rf.GetCustomAttributes(_methodInfo, It.IsAny<bool>())).Returns(attributes);
+        _testablePlatformServiceProvider.MockReflectionOperations.Setup(rf => rf.GetCustomAttributes(_methodInfo)).Returns(attributes);
 
         var testMethodInfo = new TestableTestMethodInfo(_methodInfo, _testClassInfo, _testMethodOptions, () => new TestResult { Outcome = UTF.UnitTestOutcome.Passed });
         _testablePlatformServiceProvider.MockTestDataSource.Setup(tds => tds.GetData(testMethodInfo, _testContextImplementation)).Returns([1, 2, 3]);
@@ -250,7 +250,7 @@ public class TestMethodRunnerTests : TestContainer
         var attributes = new Attribute[] { dataRowAttribute };
 
         // Setup mocks
-        _testablePlatformServiceProvider.MockReflectionOperations.Setup(ro => ro.GetCustomAttributes(_methodInfo, It.IsAny<Type>(), It.IsAny<bool>())).Returns(attributes);
+        _testablePlatformServiceProvider.MockReflectionOperations.Setup(ro => ro.GetCustomAttributes(_methodInfo, It.IsAny<Type>())).Returns(attributes);
 
         TestResult[] results = await testMethodRunner.RunTestMethodAsync();
         Verify(results[0].Outcome == UTF.UnitTestOutcome.Inconclusive);
@@ -262,7 +262,7 @@ public class TestMethodRunnerTests : TestContainer
         object[] attributes = methodInfo.GetCustomAttributes(inherit: false);
 
         // Setup mocks
-        _testablePlatformServiceProvider.MockReflectionOperations.Setup(rf => rf.GetCustomAttributes(methodInfo, It.IsAny<bool>())).Returns(attributes);
+        _testablePlatformServiceProvider.MockReflectionOperations.Setup(rf => rf.GetCustomAttributes(methodInfo)).Returns(attributes);
 
         var testMethodInfo = new TestableTestMethodInfo(methodInfo, _testClassInfo, _testMethodOptions, () => new TestResult());
         var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation);
@@ -289,7 +289,7 @@ public class TestMethodRunnerTests : TestContainer
         var attributes = new Attribute[] { dataSourceAttribute, dataRowAttribute };
 
         // Setup mocks
-        _testablePlatformServiceProvider.MockReflectionOperations.Setup(rf => rf.GetCustomAttributes(_methodInfo, It.IsAny<bool>())).Returns(attributes);
+        _testablePlatformServiceProvider.MockReflectionOperations.Setup(rf => rf.GetCustomAttributes(_methodInfo)).Returns(attributes);
 
         var testMethodInfo = new TestableTestMethodInfo(_methodInfo, _testClassInfo, _testMethodOptions, () => new TestResult());
         var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation);
@@ -318,7 +318,7 @@ public class TestMethodRunnerTests : TestContainer
         var attributes = new Attribute[] { dataRowAttribute };
 
         // Setup mocks
-        _testablePlatformServiceProvider.MockReflectionOperations.Setup(ro => ro.GetCustomAttributes(_methodInfo, It.IsAny<bool>())).Returns(attributes);
+        _testablePlatformServiceProvider.MockReflectionOperations.Setup(ro => ro.GetCustomAttributes(_methodInfo)).Returns(attributes);
 
         var testMethodInfo = new TestableTestMethodInfo(_methodInfo, _testClassInfo, _testMethodOptions, () => testResult);
         var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation);
@@ -342,7 +342,7 @@ public class TestMethodRunnerTests : TestContainer
         var attributes = new Attribute[] { dataRowAttribute };
 
         // Setup mocks
-        _testablePlatformServiceProvider.MockReflectionOperations.Setup(rf => rf.GetCustomAttributes(_methodInfo, It.IsAny<bool>())).Returns(attributes);
+        _testablePlatformServiceProvider.MockReflectionOperations.Setup(rf => rf.GetCustomAttributes(_methodInfo)).Returns(attributes);
 
         var testMethodInfo = new TestableTestMethodInfo(_methodInfo, _testClassInfo, _testMethodOptions, () => testResult);
         var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation);
@@ -368,7 +368,7 @@ public class TestMethodRunnerTests : TestContainer
         var attributes = new Attribute[] { dataRowAttribute1, dataRowAttribute2 };
 
         // Setup mocks
-        _testablePlatformServiceProvider.MockReflectionOperations.Setup(rf => rf.GetCustomAttributes(_methodInfo, It.IsAny<bool>())).Returns(attributes);
+        _testablePlatformServiceProvider.MockReflectionOperations.Setup(rf => rf.GetCustomAttributes(_methodInfo)).Returns(attributes);
 
         var testMethodInfo = new TestableTestMethodInfo(_methodInfo, _testClassInfo, _testMethodOptions, () => testResult);
         var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation);

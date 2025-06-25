@@ -6,7 +6,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// <summary>
 /// Timeout attribute; used to specify the timeout of a unit test.
 /// </summary>
-[AttributeUsage(AttributeTargets.Method)]
+[AttributeUsage(AttributeTargets.Method, Inherited = false)]
 public sealed class TimeoutAttribute : Attribute
 {
     /// <summary>

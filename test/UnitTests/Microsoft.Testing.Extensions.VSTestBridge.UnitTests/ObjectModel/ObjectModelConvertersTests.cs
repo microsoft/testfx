@@ -142,7 +142,7 @@ public sealed class ObjectModelConvertersTests
     {
         TestResult testResult = new(new TestCase("test", new("executor://uri", UriKind.Absolute), "source.cs"));
 
-        string errorMessage = Assert.ThrowsException<InvalidOperationException>(() => testResult.ToTestNode(isTrxEnabled: true, useFullyQualifiedNameAsUid: false, null, new ConsoleCommandLineOptions(), ClientInfo)).Message;
+        string errorMessage = Assert.ThrowsExactly<InvalidOperationException>(() => testResult.ToTestNode(isTrxEnabled: true, useFullyQualifiedNameAsUid: false, null, new ConsoleCommandLineOptions(), ClientInfo)).Message;
 
         Assert.IsTrue(errorMessage.Contains("Unable to parse fully qualified type name from test case: "));
     }

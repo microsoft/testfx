@@ -34,13 +34,6 @@ internal sealed class TestAssemblySettingsProvider : MarshalByRefObject
         // Load the source.
         Assembly testAssembly = PlatformServiceProvider.Instance.FileOperations.LoadAssembly(source, isReflectionOnly: false);
 
-        TestIdGenerationStrategy testIdGenerationStrategy = ReflectHelper.GetTestIdGenerationStrategy(testAssembly);
-
-        // Set the test ID generation strategy for DataRowAttribute and DynamicDataAttribute so we can improve display name without
-        // causing a breaking change.
-        DataRowAttribute.TestIdGenerationStrategy = testIdGenerationStrategy;
-        DynamicDataAttribute.TestIdGenerationStrategy = testIdGenerationStrategy;
-
         ParallelizeAttribute? parallelizeAttribute = ReflectHelper.GetParallelizeAttribute(testAssembly);
 
         if (parallelizeAttribute != null)

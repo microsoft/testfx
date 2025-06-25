@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-
 #pragma warning disable CA1716 // Do not use reserved keywords
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ObjectModel;
 #pragma warning restore CA1716 // Do not use reserved keywords
@@ -49,11 +47,6 @@ internal interface ITestMethod
     ///     <c>MethodName`2(ParamTypeA,ParamTypeB,...)</c>.
     /// </example>
     string? ManagedMethodName { get; }
-
-    /// <summary>
-    /// Gets the <see cref="TestIdGenerationStrategy"/> used to generate <c>TestCase.Id</c>.
-    /// </summary>
-    TestIdGenerationStrategy TestIdGenerationStrategy { get; }
 
     /// <summary>
     /// Gets a value indicating whether both <see cref="ManagedTypeName"/> and <see cref="ManagedMethodName"/> are not null or whitespace.

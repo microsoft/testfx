@@ -8,7 +8,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// <summary>
 /// Attribute to define in-line data for a test method.
 /// </summary>
-[AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
+[AttributeUsage(AttributeTargets.Method, AllowMultiple = true, Inherited = false)]
 public class DataRowAttribute : Attribute, ITestDataSource, ITestDataSourceUnfoldingCapability, ITestDataSourceIgnoreCapability
 {
     /// <summary>
@@ -42,11 +42,6 @@ public class DataRowAttribute : Attribute, ITestDataSource, ITestDataSourceUnfol
     public DataRowAttribute(params object?[]? data) => Data = data ?? [null];
 
     /// <summary>
-    /// Gets the test id generation strategy.
-    /// </summary>
-    protected internal static TestIdGenerationStrategy TestIdGenerationStrategy { get; internal set; }
-
-    /// <summary>
     /// Gets data for calling test method.
     /// </summary>
     public object?[] Data { get; }
@@ -71,5 +66,5 @@ public class DataRowAttribute : Attribute, ITestDataSource, ITestDataSourceUnfol
     public virtual string? GetDisplayName(MethodInfo methodInfo, object?[]? data)
         => !string.IsNullOrWhiteSpace(DisplayName)
             ? DisplayName
-            : TestDataSourceUtilities.ComputeDefaultDisplayName(methodInfo, data, TestIdGenerationStrategy);
+            : TestDataSourceUtilities.ComputeDefaultDisplayName(methodInfo, data);
 }

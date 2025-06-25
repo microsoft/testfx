@@ -10,7 +10,7 @@ internal static class DiagnosticIds
     public const string TestMethodShouldBeValidRuleId = "MSTEST0003";
     public const string PublicTypeShouldBeTestClassRuleId = "MSTEST0004";
     public const string TestContextShouldBeValidRuleId = "MSTEST0005";
-    public const string AvoidExpectedExceptionAttributeRuleId = "MSTEST0006";
+    // public const string AvoidExpectedExceptionAttributeRuleId = "MSTEST0006"; - // Don't remove this commented out line, and don't reuse this ID.
     public const string UseAttributeOnTestMethodRuleId = "MSTEST0007";
     public const string TestInitializeShouldBeValidRuleId = "MSTEST0008";
     public const string TestCleanupShouldBeValidRuleId = "MSTEST0009";
