@@ -142,7 +142,7 @@ public class TypeCacheTests : TestContainer
                 new TestContextImplementation(testMethod, new Dictionary<string, object?>()));
 
         TypeInspectionException exception = VerifyThrows<TypeInspectionException>(Action);
-        Verify(exception.Message.StartsWith(string.Format(CultureInfo.InvariantCulture, "Unable to find property {0}.TestContext. Error:{1}.", className, "Ambiguous match found"), StringComparison.Ordinal));
+        Verify(exception.Message.StartsWith($"Unable to find property {className}.TestContext. Error:Ambiguous match found", StringComparison.Ordinal));
     }
 
     public void GetTestMethodInfoShouldSetTestContextIfPresent()
