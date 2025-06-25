@@ -195,18 +195,21 @@ public class UnitTestElementTests : TestContainer
                 new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", null)
                 {
                     SerializedData = ["System.Int32[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089", "[]"],
+                    TestCaseIndex = 0,
                 })
             .ToTestCase(),
             new UnitTestElement(
                 new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", null)
                 {
                     SerializedData = ["System.Int32[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089", "[1]"],
+                    TestCaseIndex = 1,
                 })
             .ToTestCase(),
             new UnitTestElement(
                 new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", null)
                 {
                     SerializedData = ["System.Int32[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089", "[1,1]"],
+                    TestCaseIndex = 2,
                 })
             .ToTestCase()
         ];
