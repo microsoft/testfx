@@ -136,11 +136,11 @@ public class UnitTest1
     }
 
     [TestMethod]
-    [DataRow("None", new string[0], new[] { "MSTEST0003", "MSTEST0004", "MSTEST0014", "MSTEST0026", "MSTEST0021" })]
-    [DataRow("", new[] { "warning MSTEST0003", "warning MSTEST0014" }, new[] { "MSTEST0004", "MSTEST0026", "MSTEST0021" })]
-    [DataRow("Default", new[] { "warning MSTEST0003", "warning MSTEST0014" }, new[] { "MSTEST0004", "MSTEST0026", "MSTEST0021" })]
-    [DataRow("Recommended", new[] { "error MSTEST0003", "warning MSTEST0014", "warning MSTEST0026" }, new[] { "MSTEST0004", "MSTEST0021" })]
-    [DataRow("All", new[] { "error MSTEST0003", "warning MSTEST0004", "warning MSTEST0014", "warning MSTEST0026" }, new[] { "MSTEST0021" })]
+    [DataRow("None", new string[0], new[] { "MSTEST0003", "MSTEST0004", "MSTEST0014", "MSTEST0016", "MSTEST0021" })]
+    [DataRow("", new[] { "warning MSTEST0003", "warning MSTEST0014" }, new[] { "MSTEST0004", "MSTEST0016", "MSTEST0021" })]
+    [DataRow("Default", new[] { "warning MSTEST0003", "warning MSTEST0014" }, new[] { "MSTEST0004", "MSTEST0016", "MSTEST0021" })]
+    [DataRow("Recommended", new[] { "error MSTEST0003", "warning MSTEST0014", "warning MSTEST0016" }, new[] { "MSTEST0004", "MSTEST0021" })]
+    [DataRow("All", new[] { "error MSTEST0003", "warning MSTEST0004", "warning MSTEST0014", "warning MSTEST0016" }, new[] { "MSTEST0021" })]
     public async Task VerifyMSTestAnalysisModeForDifferentAnalyzers(string analysisMode, string[] contains, string[] doesNotContain)
     {
         string code = """
@@ -177,7 +177,6 @@ public class UnitTest1
     [DataRow(0)]
     public void TestMethod2(int x)
     {
-        Assert.AreEqual(x, 0);
     }
 }
 
@@ -192,6 +191,11 @@ public class UnitTest3
     public void MyTestCleanup()
     {
     }
+}
+
+[TestClass]
+public sealed MyEmptyTestClass // generates MSTEST0016
+{
 }
 
 [TestClass]
@@ -210,7 +214,7 @@ public class UnitTest4
         // MSTEST0003 is TestMethodShouldBeValidAnalyzer, which is escalated to error in Recommended and All.
         // MSTEST0004 is PublicTypeShouldBeTestClassAnalyzer. Info and not enabled by default.
         // MSTEST0014 is DataRowShouldBeValidAnalyzer. Warn and enabled by default.
-        // MSTEST0017 is AssertionArgsShouldBePassedInCorrectOrder. Info and enabled by default.
+        // MSTEST0016 is TestClassShouldHaveTestMethodAnalyzer. Info and enabled by default.
         // MSTEST0021 is PreferDisposeOverTestCleanupAnalyzer, which is disabled even in All mode.
         using TestAsset testAsset = await TestAsset.GenerateAssetAsync(nameof(VerifyMSTestAnalysisModeForDifferentAnalyzers), code);
         await AssertAnalysisModeAsync(analysisMode, contains, doesNotContain, testAsset.TargetAssetPath);
