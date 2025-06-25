@@ -73,7 +73,7 @@ public class UnitTestDiscovererTests : TestContainer
         _unitTestDiscoverer.DiscoverTests(sources, _mockMessageLogger.Object, _mockTestCaseDiscoverySink.Object, _mockDiscoveryContext.Object);
 
         // Assert.
-        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, It.IsAny<string>()), Times.Exactly(2));
+        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Error, It.IsAny<string>()), Times.Exactly(2));
     }
 
     public void DiscoverTestsInSourceShouldSendBackAllWarnings()
