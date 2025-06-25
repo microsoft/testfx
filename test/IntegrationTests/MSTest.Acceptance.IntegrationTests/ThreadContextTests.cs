@@ -472,7 +472,7 @@ public class BaseClassWithInheritance
                 throw new NotSupportedException($"Unsupported method name '{_testName}'");
         }
 
-        _managedMethod = null;
+        _testName = null;
     }
 }
 
