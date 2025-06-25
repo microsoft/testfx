@@ -48,6 +48,11 @@ public class TestMethodAttribute : Attribute
     public string? DisplayName { get; init; }
 
     /// <summary>
+    /// Gets the strategy for unfolding parameterized tests.
+    /// </summary>
+    public TestDataSourceUnfoldingStrategy UnfoldingStrategy { get; init; } = TestDataSourceUnfoldingStrategy.Auto;
+
+    /// <summary>
     /// Gets the file path that declares the attribute.
     /// </summary>
     public string DeclaringFilePath { get; }

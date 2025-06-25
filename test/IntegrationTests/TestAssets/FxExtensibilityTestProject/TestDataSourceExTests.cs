@@ -52,10 +52,8 @@ public class CustomEmptyTestDataSourceAttribute : Attribute, ITestDataSource
 }
 
 [AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
-public class CustomDisableExpansionTestDataSourceAttribute : Attribute, ITestDataSource, ITestDataSourceUnfoldingCapability
+public class CustomDisableExpansionTestDataSourceAttribute : Attribute, ITestDataSource
 {
-    public TestDataSourceUnfoldingStrategy UnfoldingStrategy => TestDataSourceUnfoldingStrategy.Fold;
-
     public IEnumerable<object[]> GetData(MethodInfo methodInfo) => [[1, 2, 3], [4, 5, 6]];
 
     public string? GetDisplayName(MethodInfo methodInfo, object?[]? data)

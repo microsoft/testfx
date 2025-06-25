@@ -34,6 +34,8 @@ internal sealed class UnitTestElement
     /// </summary>
     public TestMethod TestMethod { get; private set; }
 
+    public TestDataSourceUnfoldingStrategy UnfoldingStrategy { get; set; } = TestDataSourceUnfoldingStrategy.Auto;
+
     /// <summary>
     /// Gets or sets the test categories for test method.
     /// </summary>
@@ -157,6 +159,11 @@ internal sealed class UnitTestElement
         if (DoNotParallelize)
         {
             testCase.SetPropertyValue(EngineConstants.DoNotParallelizeProperty, DoNotParallelize);
+        }
+
+        if (UnfoldingStrategy != TestDataSourceUnfoldingStrategy.Auto)
+        {
+            testCase.SetPropertyValue(EngineConstants.UnfoldingStrategy, (int)UnfoldingStrategy);
         }
 
         // Store resolved data if any

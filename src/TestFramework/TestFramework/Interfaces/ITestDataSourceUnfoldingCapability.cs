@@ -4,19 +4,6 @@
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 /// <summary>
-/// Specifies the capability of a test data source to define how parameterized tests should be executed, either as
-/// individual test cases for each data row or as a single test case. This affects the test results and the UI
-/// representation of the tests.
-/// </summary>
-public interface ITestDataSourceUnfoldingCapability
-{
-    /// <summary>
-    /// Gets the strategy for unfolding parameterized tests.
-    /// </summary>
-    TestDataSourceUnfoldingStrategy UnfoldingStrategy { get; }
-}
-
-/// <summary>
 /// Specifies how parameterized tests should be executed, either as individual test cases for each data row or as a
 /// single test case. This affects the test results and the UI representation of the tests.
 /// </summary>
