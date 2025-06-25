@@ -430,7 +430,7 @@ public class ExpectedCultures
 
 public class BaseClassWithInheritance
 {
-    private protected static string _managedMethod;
+    private protected static string _testName;
 
     public TestContext TestContext
     {
@@ -438,16 +438,16 @@ public class BaseClassWithInheritance
         set
         {
             field = value;
-            _managedMethod ??= value.ManagedMethod;
+            _testName ??= value.TestName;
         }
     }
 
     [ClassInitialize(InheritanceBehavior.BeforeEachDerivedClass)]
     public static void BaseClassInitialize(TestContext testContext)
     {
-        if (_managedMethod is not null)
+        if (_testName is not null)
         {
-            throw new InvalidOperationException($"Was expected to be running tests sequentially but '{_managedMethod}' is still running.");
+            throw new InvalidOperationException($"Was expected to be running tests sequentially but '{_testName}' is still running.");
         }
 
         CultureInfo.CurrentCulture = new CultureInfo(ExpectedCultures.BaseClassInitCulture);
@@ -456,7 +456,7 @@ public class BaseClassWithInheritance
     [ClassCleanup(InheritanceBehavior.BeforeEachDerivedClass)]
     public static void BaseClassCleanup()
     {
-        switch (_managedMethod)
+        switch (_testName)
         {
             case "DerivedClassIntermediateClassWithoutInheritanceBaseClassWithInheritanceTestMethod":
             case "DerivedClassIntermediateClassWithoutInheritanceBaseClassWithInheritanceTestMethod2":
@@ -469,7 +469,7 @@ public class BaseClassWithInheritance
                 break;
 
             default:
-                throw new NotSupportedException($"Unsupported method name '{_managedMethod}'");
+                throw new NotSupportedException($"Unsupported method name '{_testName}'");
         }
 
         _managedMethod = null;
