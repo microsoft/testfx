@@ -25,26 +25,6 @@ public sealed partial class Assert
     /// <param name="value">
     /// The value to compare. This is the value produced by the code under test.
     /// </param>
-    /// <exception cref="AssertFailedException">
-    /// Thrown if <paramref name="value"/> is not greater than <paramref name="lowerBound"/>.
-    /// </exception>
-    public static void IsGreaterThan<T>(T lowerBound, T value)
-        where T : IComparable<T>
-        => IsGreaterThan(lowerBound, value, string.Empty);
-
-    /// <summary>
-    /// Tests whether the value is greater than the lower bound and throws an exception
-    /// if it is not.
-    /// </summary>
-    /// <typeparam name="T">
-    /// The type of values to compare.
-    /// </typeparam>
-    /// <param name="lowerBound">
-    /// The lower bound value that the value should exceed.
-    /// </param>
-    /// <param name="value">
-    /// The value to compare. This is the value produced by the code under test.
-    /// </param>
     /// <param name="message">
     /// The message to include in the exception when <paramref name="value"/>
     /// is not greater than <paramref name="lowerBound"/>. The message is shown in
@@ -53,7 +33,7 @@ public sealed partial class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="value"/> is not greater than <paramref name="lowerBound"/>.
     /// </exception>
-    public static void IsGreaterThan<T>(T lowerBound, T value, string? message)
+    public static void IsGreaterThan<T>(T lowerBound, T value, string message = "")
         where T : IComparable<T>
     {
         if (value.CompareTo(lowerBound) > 0)
@@ -82,26 +62,6 @@ public sealed partial class Assert
     /// <param name="value">
     /// The value to compare. This is the value produced by the code under test.
     /// </param>
-    /// <exception cref="AssertFailedException">
-    /// Thrown if <paramref name="value"/> is not greater than or equal to <paramref name="lowerBound"/>.
-    /// </exception>
-    public static void IsGreaterThanOrEqualTo<T>(T lowerBound, T value)
-        where T : IComparable<T>
-        => IsGreaterThanOrEqualTo(lowerBound, value, string.Empty);
-
-    /// <summary>
-    /// Tests whether the value is greater than or equal to the lower bound and throws an exception
-    /// if it is not.
-    /// </summary>
-    /// <typeparam name="T">
-    /// The type of values to compare.
-    /// </typeparam>
-    /// <param name="lowerBound">
-    /// The lower bound value that the value should meet or exceed.
-    /// </param>
-    /// <param name="value">
-    /// The value to compare. This is the value produced by the code under test.
-    /// </param>
     /// <param name="message">
     /// The message to include in the exception when <paramref name="value"/>
     /// is not greater than or equal to <paramref name="lowerBound"/>. The message is shown in
@@ -110,7 +70,7 @@ public sealed partial class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="value"/> is not greater than or equal to <paramref name="lowerBound"/>.
     /// </exception>
-    public static void IsGreaterThanOrEqualTo<T>(T lowerBound, T value, string? message)
+    public static void IsGreaterThanOrEqualTo<T>(T lowerBound, T value, string message = "")
         where T : IComparable<T>
     {
         if (value.CompareTo(lowerBound) >= 0)
@@ -139,26 +99,6 @@ public sealed partial class Assert
     /// <param name="value">
     /// The value to compare. This is the value produced by the code under test.
     /// </param>
-    /// <exception cref="AssertFailedException">
-    /// Thrown if <paramref name="value"/> is not less than <paramref name="upperBound"/>.
-    /// </exception>
-    public static void IsLessThan<T>(T upperBound, T value)
-        where T : IComparable<T>
-        => IsLessThan(upperBound, value, string.Empty);
-
-    /// <summary>
-    /// Tests whether the value is less than the upper bound and throws an exception
-    /// if it is not.
-    /// </summary>
-    /// <typeparam name="T">
-    /// The type of values to compare.
-    /// </typeparam>
-    /// <param name="upperBound">
-    /// The upper bound value that the value should be less than.
-    /// </param>
-    /// <param name="value">
-    /// The value to compare. This is the value produced by the code under test.
-    /// </param>
     /// <param name="message">
     /// The message to include in the exception when <paramref name="value"/>
     /// is not less than <paramref name="upperBound"/>. The message is shown in
@@ -167,7 +107,7 @@ public sealed partial class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="value"/> is not less than <paramref name="upperBound"/>.
     /// </exception>
-    public static void IsLessThan<T>(T upperBound, T value, string? message)
+    public static void IsLessThan<T>(T upperBound, T value, string message = "")
         where T : IComparable<T>
     {
         if (value.CompareTo(upperBound) < 0)
@@ -196,26 +136,6 @@ public sealed partial class Assert
     /// <param name="value">
     /// The value to compare. This is the value produced by the code under test.
     /// </param>
-    /// <exception cref="AssertFailedException">
-    /// Thrown if <paramref name="value"/> is not less than or equal to <paramref name="upperBound"/>.
-    /// </exception>
-    public static void IsLessThanOrEqualTo<T>(T upperBound, T value)
-        where T : IComparable<T>
-        => IsLessThanOrEqualTo(upperBound, value, string.Empty);
-
-    /// <summary>
-    /// Tests whether the value is less than or equal to the upper bound and throws an exception
-    /// if it is not.
-    /// </summary>
-    /// <typeparam name="T">
-    /// The type of values to compare.
-    /// </typeparam>
-    /// <param name="upperBound">
-    /// The upper bound value that the value should not exceed.
-    /// </param>
-    /// <param name="value">
-    /// The value to compare. This is the value produced by the code under test.
-    /// </param>
     /// <param name="message">
     /// The message to include in the exception when <paramref name="value"/>
     /// is not less than or equal to <paramref name="upperBound"/>. The message is shown in
@@ -224,7 +144,7 @@ public sealed partial class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="value"/> is not less than or equal to <paramref name="upperBound"/>.
     /// </exception>
-    public static void IsLessThanOrEqualTo<T>(T upperBound, T value, string? message)
+    public static void IsLessThanOrEqualTo<T>(T upperBound, T value, string message = "")
         where T : IComparable<T>
     {
         if (value.CompareTo(upperBound) <= 0)
@@ -250,23 +170,6 @@ public sealed partial class Assert
     /// <param name="value">
     /// The value to test.
     /// </param>
-    /// <exception cref="AssertFailedException">
-    /// Thrown if <paramref name="value"/> is not positive.
-    /// </exception>
-    public static void IsPositive<T>(T value)
-        where T : struct, IComparable<T>
-        => IsPositive(value, string.Empty);
-
-    /// <summary>
-    /// Tests whether the specified value is positive and throws an exception
-    /// if it is not.
-    /// </summary>
-    /// <typeparam name="T">
-    /// The type of value to test.
-    /// </typeparam>
-    /// <param name="value">
-    /// The value to test.
-    /// </param>
     /// <param name="message">
     /// The message to include in the exception when <paramref name="value"/>
     /// is not positive. The message is shown in test results.
@@ -274,7 +177,7 @@ public sealed partial class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="value"/> is not positive.
     /// </exception>
-    public static void IsPositive<T>(T value, string? message)
+    public static void IsPositive<T>(T value, string message = "")
         where T : struct, IComparable<T>
     {
         var zero = default(T);
@@ -317,23 +220,6 @@ public sealed partial class Assert
     /// <param name="value">
     /// The value to test.
     /// </param>
-    /// <exception cref="AssertFailedException">
-    /// Thrown if <paramref name="value"/> is not negative.
-    /// </exception>
-    public static void IsNegative<T>(T value)
-        where T : struct, IComparable<T>
-        => IsNegative(value, string.Empty);
-
-    /// <summary>
-    /// Tests whether the specified value is negative and throws an exception
-    /// if it is not.
-    /// </summary>
-    /// <typeparam name="T">
-    /// The type of value to test.
-    /// </typeparam>
-    /// <param name="value">
-    /// The value to test.
-    /// </param>
     /// <param name="message">
     /// The message to include in the exception when <paramref name="value"/>
     /// is not negative. The message is shown in test results.
@@ -341,7 +227,7 @@ public sealed partial class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="value"/> is not negative.
     /// </exception>
-    public static void IsNegative<T>(T value, string? message)
+    public static void IsNegative<T>(T value, string message = "")
         where T : struct, IComparable<T>
     {
         var zero = default(T);
