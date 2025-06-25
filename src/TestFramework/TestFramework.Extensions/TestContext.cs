@@ -103,12 +103,6 @@ public abstract class TestContext
     /// <summary>
     /// Gets the Fully-qualified name of the class containing the test method currently being executed.
     /// </summary>
-    /// <remarks>
-    /// This property can be useful in attributes derived from ExpectedExceptionBaseAttribute.
-    /// Those attributes have access to the test context, and provide messages that are included
-    /// in the test results. Users can benefit from messages that include the fully-qualified
-    /// class name in addition to the name of the test method currently being executed.
-    /// </remarks>
     public virtual string FullyQualifiedTestClassName => GetProperty<string>(FullyQualifiedTestClassNameLabel)
         ?? throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, FrameworkMessages.InvalidAccessToTestContextProperty, nameof(FullyQualifiedTestClassName)));
 
