@@ -101,7 +101,8 @@ public class AssemblyEnumeratorWrapperTests : TestContainer
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.DoesFileExist(assemblyName))
             .Returns(true);
 
-        Verify(AssemblyEnumeratorWrapper.GetTests(assemblyName, null, out _) is null);
+        Exception fileNotFoundException = Assert.Throws<FileNotFoundException>(() => AssemblyEnumeratorWrapper.GetTests(assemblyName, null, out _));
+        Verify(fileNotFoundException.Message == string.Format(CultureInfo.CurrentCulture, Resource.TestAssembly_FileDoesNotExist, fullFilePath));
     }
 
     public void GetTestsShouldThrowIfSourceFileLoadThrowsABadImageFormatException()
@@ -114,9 +115,10 @@ public class AssemblyEnumeratorWrapperTests : TestContainer
             .Returns(fullFilePath);
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.DoesFileExist(fullFilePath))
             .Returns(true);
-        _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly(assemblyName, It.IsAny<bool>()))
+        _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly(fullFilePath, It.IsAny<bool>()))
             .Throws(new BadImageFormatException());
-
+        _testablePlatformServiceProvider.MockTestSourceValidator.Setup(x => x.IsAssemblyReferenced(It.IsAny<AssemblyName>(), It.IsAny<string>())).Returns(true);
+        _testablePlatformServiceProvider.MockTestSourceHost.Setup(x => x.CreateInstanceForType(typeof(AssemblyEnumerator), It.IsAny<object?[]?>())).Returns(new AssemblyEnumerator(MSTestSettings.CurrentSettings));
         VerifyThrows<BadImageFormatException>(() => AssemblyEnumeratorWrapper.GetTests(assemblyName, null, out _));
     }
 

@@ -4,6 +4,7 @@
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
@@ -57,7 +58,7 @@ public class UnitTestDiscovererTests : TestContainer
         }
     }
 
-    public void DiscoverTestsShouldDiscoverForAllSources()
+    public void DiscoverTestsShouldThrowOnFileNotFound()
     {
         string[] sources = ["DummyAssembly1.dll", "DummyAssembly2.dll"];
 
@@ -70,13 +71,11 @@ public class UnitTestDiscovererTests : TestContainer
                 .Returns(false);
         }
 
-        _unitTestDiscoverer.DiscoverTests(sources, _mockMessageLogger.Object, _mockTestCaseDiscoverySink.Object, _mockDiscoveryContext.Object);
-
-        // Assert.
-        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, It.IsAny<string>()), Times.Exactly(2));
+        Exception ex = VerifyThrows<FileNotFoundException>(() => _unitTestDiscoverer.DiscoverTests(sources, _mockMessageLogger.Object, _mockTestCaseDiscoverySink.Object, _mockDiscoveryContext.Object));
+        Verify(ex.Message == string.Format(CultureInfo.CurrentCulture, Resource.TestAssembly_FileDoesNotExist, sources[0]));
     }
 
-    public void DiscoverTestsInSourceShouldSendBackAllWarnings()
+    public void DiscoverTestsInSourceShouldThrowOnFileNotFound()
     {
         // Setup mocks.
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.GetFullFilePath(Source))
@@ -84,39 +83,8 @@ public class UnitTestDiscovererTests : TestContainer
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.DoesFileExist(Source))
             .Returns(false);
 
-        _unitTestDiscoverer.DiscoverTestsInSource(Source, _mockMessageLogger.Object, _mockTestCaseDiscoverySink.Object, _mockDiscoveryContext.Object);
-
-        // Assert.
-        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, It.IsAny<string>()), Times.Once);
-    }
-
-    public void DiscoverTestsInSourceShouldSendBackHandleTreatAsError()
-    {
-        // Setup mocks.
-        _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.GetFullFilePath(Source))
-            .Returns(Source);
-        _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.DoesFileExist(Source))
-            .Returns(false);
-
-        string settingsXml =
-            """
-            <?xml version="1.0" encoding="utf-8"?>
-            <RunSettings>
-              <MSTestV2>
-                <TreatDiscoveryWarningsAsErrors>True</TreatDiscoveryWarningsAsErrors>
-              </MSTestV2>
-            </RunSettings>
-            """;
-
-        _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(settingsXml);
-
-        // Act
-        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object, null);
-
-        _unitTestDiscoverer.DiscoverTestsInSource(Source, _mockMessageLogger.Object, _mockTestCaseDiscoverySink.Object, _mockDiscoveryContext.Object);
-
-        // Assert.
-        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Error, It.IsAny<string>()), Times.Once);
+        Exception ex = VerifyThrows<FileNotFoundException>(() => _unitTestDiscoverer.DiscoverTestsInSource(Source, _mockMessageLogger.Object, _mockTestCaseDiscoverySink.Object, _mockDiscoveryContext.Object));
+        Verify(ex.Message == string.Format(CultureInfo.CurrentCulture, Resource.TestAssembly_FileDoesNotExist, Source));
     }
 
     public void DiscoverTestsInSourceShouldSendBackTestCasesDiscovered()
