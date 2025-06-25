@@ -5,6 +5,8 @@ using System.ComponentModel;
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
+#pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
+
 /// <summary>
 /// A collection of helper classes to test various conditions within
 /// unit tests. If the condition being tested is not met, an exception
