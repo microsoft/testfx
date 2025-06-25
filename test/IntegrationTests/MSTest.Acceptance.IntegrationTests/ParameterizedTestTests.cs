@@ -341,37 +341,37 @@ public class TestClass
 public class TestDataRowTests
 {
     [TestMethod(UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Fold)]
-    [DynamicData(nameof(TestDataRowSingleParameterFoldedData)]
+    [DynamicData(nameof(TestDataRowSingleParameterFoldedData))]
     public void TestDataRowSingleParameterFolded(string _)
     {
     }
 
     [TestMethod(UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Unfold)]
-    [DynamicData(nameof(TestDataRowSingleParameterUnfoldedData)]
+    [DynamicData(nameof(TestDataRowSingleParameterUnfoldedData))]
     public void TestDataRowSingleParameterUnfolded(string _)
     {
     }
 
     [TestMethod(UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Fold)]
-    [DynamicData(nameof(TestDataRowTwoParametersFoldedData)]
+    [DynamicData(nameof(TestDataRowTwoParametersFoldedData))]
     public void TestDataRowTwoParametersFolded(string _1, string _2)
     {
     }
 
     [TestMethod(UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Unfold)]
-    [DynamicData(nameof(TestDataRowTwoParametersUnfoldedData)]
+    [DynamicData(nameof(TestDataRowTwoParametersUnfoldedData))]
     public void TestDataRowTwoParametersUnfolded(string _1, string _2)
     {
     }
 
     [TestMethod(UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Fold)]
-    [DynamicData(nameof(TestDataRowParameterIsTupleFoldedData)]
+    [DynamicData(nameof(TestDataRowParameterIsTupleFoldedData))]
     public void TestDataRowParameterIsTupleFolded((string, string) tuple)
     {
     }
 
     [TestMethod(UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Unfold)]
-    [DynamicData(nameof(TestDataRowParameterIsTupleUnfoldedData)]
+    [DynamicData(nameof(TestDataRowParameterIsTupleUnfoldedData))]
     public void TestDataRowParameterIsTupleUnfolded((string, string) tuple)
     {
     }
