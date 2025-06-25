@@ -194,7 +194,7 @@ public class UnitTest3
 }
 
 [TestClass]
-public sealed MyEmptyTestClass // generates MSTEST0016
+public sealed class MyEmptyTestClass // generates MSTEST0016
 {
 }
 
