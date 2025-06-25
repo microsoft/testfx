@@ -341,10 +341,11 @@ internal class AssemblyEnumerator : MarshalByRefObject
         try
         {
             bool isDataDriven = false;
+            int globalTestCaseIndex = 0;
             foreach (ITestDataSource dataSource in testDataSources)
             {
                 isDataDriven = true;
-                if (!TryUnfoldITestDataSource(dataSource, dataSourcesUnfoldingStrategy, test, new(testMethodInfo.MethodInfo, test.DisplayName), tempListOfTests))
+                if (!TryUnfoldITestDataSource(dataSource, dataSourcesUnfoldingStrategy, test, new(testMethodInfo.MethodInfo, test.DisplayName), tempListOfTests, ref globalTestCaseIndex))
                 {
                     // TODO: Improve multi-source design!
                     // Ideally we would want to consider each data source separately but when one source cannot be expanded,
@@ -374,7 +375,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
         }
     }
 
-    private static bool TryUnfoldITestDataSource(ITestDataSource dataSource, TestDataSourceUnfoldingStrategy dataSourcesUnfoldingStrategy, UnitTestElement test, ReflectionTestMethodInfo methodInfo, List<UnitTestElement> tests)
+    private static bool TryUnfoldITestDataSource(ITestDataSource dataSource, TestDataSourceUnfoldingStrategy dataSourcesUnfoldingStrategy, UnitTestElement test, ReflectionTestMethodInfo methodInfo, List<UnitTestElement> tests, ref int globalTestCaseIndex)
     {
         var unfoldingCapability = dataSource as ITestDataSourceUnfoldingCapability;
 
@@ -418,7 +419,6 @@ internal class AssemblyEnumerator : MarshalByRefObject
         }
 
         var discoveredTests = new List<UnitTestElement>();
-        int index = 0;
 
         foreach (object?[] dataOrTestDataRow in data)
         {
@@ -435,7 +435,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
             {
                 discoveredTest.TestMethod.SerializedData = DataSerializationHelper.Serialize(d);
                 discoveredTest.TestMethod.ActualData = d;
-                discoveredTest.TestMethod.TestCaseIndex = index;
+                discoveredTest.TestMethod.TestCaseIndex = globalTestCaseIndex;
                 discoveredTest.TestMethod.TestDataSourceIgnoreMessage = testDataSourceIgnoreMessage;
                 discoveredTest.TestMethod.DataType = DynamicDataType.ITestDataSource;
             }
@@ -452,7 +452,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
             }
 
             discoveredTests.Add(discoveredTest);
-            index++;
+            globalTestCaseIndex++;
         }
 
         tests.AddRange(discoveredTests);
