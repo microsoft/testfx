@@ -441,7 +441,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
             }
             catch (SerializationException ex)
             {
-                string warning = string.Format(CultureInfo.CurrentCulture, Resource.CannotExpandIDataSourceAttribute_CannotSerialize, index, discoveredTest.DisplayName);
+                string warning = string.Format(CultureInfo.CurrentCulture, Resource.CannotExpandIDataSourceAttribute_CannotSerialize, globalTestCaseIndex, discoveredTest.DisplayName);
                 warning += Environment.NewLine;
                 warning += ex.ToString();
                 warning = string.Format(CultureInfo.CurrentCulture, Resource.CannotExpandIDataSourceAttribute, test.TestMethod.ManagedTypeName, test.TestMethod.ManagedMethodName, warning);
