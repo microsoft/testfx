@@ -49,7 +49,7 @@ internal sealed class MSTestSettings
         CaptureDebugTraces = true;
         MapInconclusiveToFailed = false;
         MapNotRunnableToFailed = true;
-        TreatDiscoveryWarningsAsErrors = false;
+        TreatDiscoveryWarningsAsErrors = true;
         EnableBaseClassTestMethodsFromOtherAssemblies = true;
         ForcedLegacyMode = false;
         TestSettingsFile = null;
@@ -403,7 +403,7 @@ internal sealed class MSTestSettings
         //     <CaptureTraceOutput>true</CaptureTraceOutput>
         //     <MapInconclusiveToFailed>false</MapInconclusiveToFailed>
         //     <MapNotRunnableToFailed>false</MapNotRunnableToFailed>
-        //     <TreatDiscoveryWarningsAsErrors>false</TreatDiscoveryWarningsAsErrors>
+        //     <TreatDiscoveryWarningsAsErrors>true</TreatDiscoveryWarningsAsErrors>
         //     <EnableBaseClassTestMethodsFromOtherAssemblies>false</EnableBaseClassTestMethodsFromOtherAssemblies>
         //     <TestTimeout>5000</TestTimeout>
         //     <TreatClassAndAssemblyCleanupWarningsAsErrors>false</TreatClassAndAssemblyCleanupWarningsAsErrors>
