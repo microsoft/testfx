@@ -112,7 +112,31 @@ internal class AssemblyEnumerator : MarshalByRefObject
     /// <param name="assembly">The reflected assembly.</param>
     /// <returns>Gets the types defined in the provided assembly.</returns>
     internal static Type[] GetTypes(Assembly assembly)
-        => PlatformServiceProvider.Instance.ReflectionOperations.GetDefinedTypes(assembly);
+    {
+        try
+        {
+            return PlatformServiceProvider.Instance.ReflectionOperations.GetDefinedTypes(assembly);
+        }
+        catch (ReflectionTypeLoadException ex)
+        {
+            if (ex.LoaderExceptions != null)
+            {
+                if (ex.LoaderExceptions.Length == 1 && ex.LoaderExceptions[0] is { } singleLoaderException)
+                {
+                    // This exception might be more clear than the ReflectionTypeLoadException, so we throw it.
+                    throw singleLoaderException;
+                }
+
+                // If we have multiple loader exceptions, we log them all as errors, and then throw the original exception.
+                foreach (Exception? loaderEx in ex.LoaderExceptions)
+                {
+                    PlatformServiceProvider.Instance.AdapterTraceLogger.LogError("{0}", loaderEx);
+                }
+            }
+
+            throw;
+        }
+    }
 
     /// <summary>
     /// Returns an instance of the <see cref="TypeEnumerator"/> class.

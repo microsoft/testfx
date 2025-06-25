@@ -47,10 +47,32 @@ internal sealed class AssemblyEnumeratorWrapper
             return null;
         }
 
-        // Load the assembly in isolation if required.
-        AssemblyEnumerationResult result = GetTestsInIsolation(fullFilePath, runSettings);
-        warnings.AddRange(result.Warnings);
-        return result.TestElements;
+        try
+        {
+            // Load the assembly in isolation if required.
+            AssemblyEnumerationResult result = GetTestsInIsolation(fullFilePath, runSettings);
+            warnings.AddRange(result.Warnings);
+            return result.TestElements;
+        }
+        catch (ReflectionTypeLoadException ex)
+        {
+            if (ex.LoaderExceptions != null)
+            {
+                if (ex.LoaderExceptions.Length == 1 && ex.LoaderExceptions[0] is { } singleLoaderException)
+                {
+                    // This exception might be more clear than the ReflectionTypeLoadException, so we throw it.
+                    throw singleLoaderException;
+                }
+
+                // If we have multiple loader exceptions, we log them all as errors, and then throw the original exception.
+                foreach (Exception? loaderEx in ex.LoaderExceptions)
+                {
+                    PlatformServiceProvider.Instance.AdapterTraceLogger.LogError("{0}", loaderEx);
+                }
+            }
+
+            throw;
+        }
     }
 
     private static AssemblyEnumerationResult GetTestsInIsolation(string fullFilePath, IRunSettings? runSettings)
