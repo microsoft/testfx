@@ -333,7 +333,7 @@ public class TestMethodInfoTests : TestContainer
         Verify(exception.StackTraceInformation is not null);
         Verify(
             exception.StackTraceInformation.ErrorStackTrace.StartsWith(
-            "   at System.Reflection.RuntimeConstructorInfo.Invoke(BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)", StringComparison.Ordinal));
+            "   at System.Reflection.MethodBaseInvoker.ThrowTargetParameterCountException()", StringComparison.Ordinal));
     }
 
     public async Task TestMethodInfoInvokeShouldSetResultFilesIfTestContextHasAttachments()
