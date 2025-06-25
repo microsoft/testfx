@@ -5,6 +5,8 @@ using System.ComponentModel;
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
+#pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
+
 /// <summary>
 /// A collection of helper classes to test various conditions within
 /// unit tests. If the condition being tested is not met, an exception
@@ -55,10 +57,8 @@ public sealed partial class Assert
         public void AppendFormatted(ReadOnlySpan<char> value)
             => _builder!.Append(value);
 
-#pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
         public void AppendFormatted(ReadOnlySpan<char> value, int alignment = 0, string? format = null)
             => AppendFormatted(value.ToString(), alignment, format);
-#pragma warning restore RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
 #endif
 
         // NOTE: All the overloads involving format and/or alignment are not super efficient.
@@ -79,14 +79,12 @@ public sealed partial class Assert
             => _builder!.Append(value);
 
 #pragma warning disable RS0026 // Do not add multiple public overloads with optional parameters
-#pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
         public void AppendFormatted(string? value, int alignment = 0, string? format = null)
             => _builder!.AppendFormat(null, $"{{0,{alignment}:{format}}}", value);
 
         public void AppendFormatted(object? value, int alignment = 0, string? format = null)
             => _builder!.AppendFormat(null, $"{{0,{alignment}:{format}}}", value);
 #pragma warning restore RS0026 // Do not add multiple public overloads with optional parameters
-#pragma warning restore RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
     }
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 
@@ -150,19 +148,9 @@ public sealed partial class Assert
     /// <typeparam name="T">The type of the collection items.</typeparam>
     /// <param name="predicate">A function to test each element for a condition.</param>
     /// <param name="collection">The collection.</param>
-    /// <returns>The item that matches the predicate.</returns>
-    public static T ContainsSingle<T>(Func<T, bool> predicate, IEnumerable<T> collection)
-        => ContainsSingle(predicate, collection, string.Empty);
-
-    /// <summary>
-    /// Tests whether the specified collection contains exactly one element that matches the given predicate.
-    /// </summary>
-    /// <typeparam name="T">The type of the collection items.</typeparam>
-    /// <param name="predicate">A function to test each element for a condition.</param>
-    /// <param name="collection">The collection.</param>
     /// <param name="message">The message format to display when the assertion fails.</param>
     /// <returns>The item that matches the predicate.</returns>
-    public static T ContainsSingle<T>(Func<T, bool> predicate, IEnumerable<T> collection, string? message)
+    public static T ContainsSingle<T>(Func<T, bool> predicate, IEnumerable<T> collection, string message = "")
     {
         var matchingElements = collection.Where(predicate).ToList();
         int actualCount = matchingElements.Count;
@@ -731,20 +719,8 @@ public sealed partial class Assert
     /// <param name="minValue">The minimum value of the expected range (inclusive).</param>
     /// <param name="maxValue">The maximum value of the expected range (inclusive).</param>
     /// <param name="value">The value to test.</param>
-    public static void IsInRange<T>(T minValue, T maxValue, T value)
-        where T : struct, IComparable<T>
-        => IsInRange(minValue, maxValue, value, string.Empty);
-
-    /// <summary>
-    /// Tests whether the specified value is within the expected range (inclusive).
-    /// The range includes both the minimum and maximum values.
-    /// </summary>
-    /// <typeparam name="T">The type of the values to compare.</typeparam>
-    /// <param name="minValue">The minimum value of the expected range (inclusive).</param>
-    /// <param name="maxValue">The maximum value of the expected range (inclusive).</param>
-    /// <param name="value">The value to test.</param>
     /// <param name="message">The message format to display when the assertion fails.</param>
-    public static void IsInRange<T>(T minValue, T maxValue, T value, string? message)
+    public static void IsInRange<T>(T minValue, T maxValue, T value, string message = "")
         where T : struct, IComparable<T>
     {
         if (maxValue.CompareTo(minValue) <= 0)
