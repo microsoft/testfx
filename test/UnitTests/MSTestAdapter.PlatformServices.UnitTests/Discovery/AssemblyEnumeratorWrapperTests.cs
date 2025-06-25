@@ -56,7 +56,7 @@ public class AssemblyEnumeratorWrapperTests : TestContainer
         // Setup mocks.
         SetupMocks(assemblyName, doesFileExist: true, isAssemblyReferenced: false);
 
-        Verify(AssemblyEnumeratorWrapper.GetTests(assemblyName, null, out _warnings) is null);
+        Verify(AssemblyEnumeratorWrapper.GetTests(assemblyName, null, out _) is null);
     }
 
     public void GetTestsShouldReturnTestElements()
