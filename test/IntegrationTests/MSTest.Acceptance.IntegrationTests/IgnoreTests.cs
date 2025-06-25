@@ -248,7 +248,7 @@ public class TestClassWithDataSourcesUsingIgnoreMessage
     {
     }
 
-    [TestMethod, UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Uold] // 1 skipped, 2 pass
+    [TestMethod(UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Ufold)] // 1 skipped, 2 pass
     [DataRow(0)]
     [DataRow(1, IgnoreMessage = "This data row is ignored")]
     [DataRow(2)]
