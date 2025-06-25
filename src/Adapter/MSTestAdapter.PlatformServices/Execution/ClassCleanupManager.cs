@@ -50,10 +50,10 @@ internal sealed class ClassCleanupManager
 
     internal static void ForceCleanup(TypeCache typeCache, IDictionary<string, object?> sourceLevelParameters, IMessageLogger logger)
     {
-        TestContext testContext = new TestContextImplementation(null, sourceLevelParameters, logger, testRunCancellationToken: null);
         IEnumerable<TestClassInfo> classInfoCache = typeCache.ClassInfoListWithExecutableCleanupMethods;
         foreach (TestClassInfo classInfo in classInfoCache)
         {
+            TestContext testContext = new TestContextImplementation(null, classInfo, sourceLevelParameters, logger, testRunCancellationToken: null);
             TestFailedException? ex = classInfo.ExecuteClassCleanup(testContext);
             if (ex is not null)
             {
@@ -64,6 +64,7 @@ internal sealed class ClassCleanupManager
         IEnumerable<TestAssemblyInfo> assemblyInfoCache = typeCache.AssemblyInfoListWithExecutableCleanupMethods;
         foreach (TestAssemblyInfo assemblyInfo in assemblyInfoCache)
         {
+            TestContext testContext = new TestContextImplementation(null, null, sourceLevelParameters, logger, testRunCancellationToken: null);
             TestFailedException? ex = assemblyInfo.ExecuteAssemblyCleanup(testContext);
             if (ex is not null)
             {

@@ -66,11 +66,12 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
     /// Initializes a new instance of the <see cref="TestContextImplementation"/> class.
     /// </summary>
     /// <param name="testMethod">The test method.</param>
+    /// <param name="testClassFullName">The test class full name.</param>
     /// <param name="properties">Properties/configuration passed in.</param>
     /// <param name="messageLogger">The message logger to use.</param>
     /// <param name="testRunCancellationToken">The global test run cancellation token.</param>
-    internal TestContextImplementation(ITestMethod? testMethod, IDictionary<string, object?> properties, IMessageLogger messageLogger, TestRunCancellationToken? testRunCancellationToken)
-        : this(testMethod, properties)
+    internal TestContextImplementation(ITestMethod? testMethod, string? testClassFullName, IDictionary<string, object?> properties, IMessageLogger messageLogger, TestRunCancellationToken? testRunCancellationToken)
+        : this(testMethod, testClassFullName, properties)
     {
         _messageLogger = messageLogger;
         _cancellationTokenRegistration = testRunCancellationToken?.Register(CancelDelegate, this);
@@ -80,21 +81,24 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
     /// Initializes a new instance of the <see cref="TestContextImplementation"/> class.
     /// </summary>
     /// <param name="testMethod">The test method.</param>
+    /// <param name="testClassFullName">The test class full name.</param>
     /// <param name="properties">Properties/configuration passed in.</param>
-    internal TestContextImplementation(ITestMethod? testMethod, IDictionary<string, object?> properties)
+    internal TestContextImplementation(ITestMethod? testMethod, string? testClassFullName, IDictionary<string, object?> properties)
     {
         // testMethod can be null when running ForceCleanup (done when reaching --maximum-failed-tests.
         DebugEx.Assert(properties != null, "properties is not null");
 
-        _properties = testMethod is null
-            ? new Dictionary<string, object?>(properties)
-            : new Dictionary<string, object?>(properties)
-            {
-                [FullyQualifiedTestClassNameLabel] = testMethod.FullClassName,
-                [ManagedTypeLabel] = testMethod.ManagedTypeName,
-                [ManagedMethodLabel] = testMethod.ManagedMethodName,
-                [TestNameLabel] = testMethod.Name,
-            };
+        _properties = [];
+        testClassFullName ??= testMethod?.FullClassName;
+        if (testClassFullName is not null)
+        {
+            _properties.Add(FullyQualifiedTestClassNameLabel, testClassFullName);
+        }
+
+        if (testMethod is not null)
+        {
+            _properties.Add(TestNameLabel, testMethod.Name);
+        }
 
         _testResultFiles = [];
     }
@@ -116,37 +120,6 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
 
     /// <inheritdoc/>
     public override IDictionary<string, object?> Properties => _properties;
-
-#if !WINDOWS_UWP && !WIN_UI
-    /// <inheritdoc/>
-    public override string? TestRunDirectory => base.TestRunDirectory;
-
-    /// <inheritdoc/>
-    public override string? DeploymentDirectory => base.DeploymentDirectory;
-
-    /// <inheritdoc/>
-    public override string? ResultsDirectory => base.ResultsDirectory;
-
-    /// <inheritdoc/>
-    public override string? TestRunResultsDirectory => base.TestRunResultsDirectory;
-
-    /// <inheritdoc/>
-    public override string? TestResultsDirectory => base.TestResultsDirectory;
-
-    /// <inheritdoc/>
-    public override string FullyQualifiedTestClassName => base.FullyQualifiedTestClassName!;
-
-#if NETFRAMEWORK
-    /// <inheritdoc/>
-    public override string ManagedType => base.ManagedType!;
-
-    /// <inheritdoc/>
-    public override string ManagedMethod => base.ManagedMethod!;
-#endif
-
-    /// <inheritdoc/>
-    public override string TestName => base.TestName!;
-#endif
 
     /// <summary>
     /// Gets the inner test context object.

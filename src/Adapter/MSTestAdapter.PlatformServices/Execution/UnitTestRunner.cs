@@ -141,7 +141,7 @@ internal sealed class UnitTestRunner : MarshalByRefObject
         try
         {
             var properties = new Dictionary<string, object?>(testContextProperties);
-            testContextForTestExecution = PlatformServiceProvider.Instance.GetTestContext(testMethod, properties, messageLogger, UTF.UnitTestOutcome.InProgress);
+            testContextForTestExecution = PlatformServiceProvider.Instance.GetTestContext(testMethod, null, properties, messageLogger, UTF.UnitTestOutcome.InProgress);
 
             // Get the testMethod
             TestMethodInfo? testMethodInfo = _typeCache.GetTestMethodInfo(
@@ -161,7 +161,7 @@ internal sealed class UnitTestRunner : MarshalByRefObject
                 _assemblyFixtureTests.TryAdd(testMethod.AssemblyName, testMethodInfo.Parent.Parent);
                 _classFixtureTests.TryAdd(testMethod.AssemblyName + testMethod.FullClassName, testMethodInfo.Parent);
 
-                testContextForAssemblyInit = PlatformServiceProvider.Instance.GetTestContext(testMethod: null, properties, messageLogger, testContextForTestExecution.Context.CurrentTestOutcome);
+                testContextForAssemblyInit = PlatformServiceProvider.Instance.GetTestContext(testMethod: null, null, properties, messageLogger, testContextForTestExecution.Context.CurrentTestOutcome);
 
                 TestResult assemblyInitializeResult = RunAssemblyInitializeIfNeeded(testMethodInfo, testContextForAssemblyInit);
 
@@ -171,7 +171,7 @@ internal sealed class UnitTestRunner : MarshalByRefObject
                 }
                 else
                 {
-                    testContextForClassInit = PlatformServiceProvider.Instance.GetTestContext(testMethod: null, properties, messageLogger, testContextForAssemblyInit.Context.CurrentTestOutcome);
+                    testContextForClassInit = PlatformServiceProvider.Instance.GetTestContext(testMethod: null, testMethod.FullClassName, properties, messageLogger, testContextForAssemblyInit.Context.CurrentTestOutcome);
 
                     TestResult classInitializeResult = testMethodInfo.Parent.GetResultOrRunClassInitialize(testContextForClassInit, assemblyInitializeResult.LogOutput, assemblyInitializeResult.LogError, assemblyInitializeResult.DebugTrace, assemblyInitializeResult.TestContextMessages);
                     DebugEx.Assert(testMethodInfo.Parent.IsClassInitializeExecuted, "IsClassInitializeExecuted should be true after attempting to run it.");
@@ -199,12 +199,12 @@ internal sealed class UnitTestRunner : MarshalByRefObject
                 }
             }
 
-            testContextForClassCleanup = PlatformServiceProvider.Instance.GetTestContext(testMethod: null, properties, messageLogger, testContextForTestExecution.Context.CurrentTestOutcome);
+            testContextForClassCleanup = PlatformServiceProvider.Instance.GetTestContext(testMethod: null, testMethod.FullClassName, properties, messageLogger, testContextForTestExecution.Context.CurrentTestOutcome);
             testMethodInfo?.Parent.RunClassCleanup(testContextForClassCleanup, _classCleanupManager, testMethodInfo, result);
 
             if (testMethodInfo?.Parent.Parent.IsAssemblyInitializeExecuted == true)
             {
-                testContextForAssemblyCleanup = PlatformServiceProvider.Instance.GetTestContext(testMethod: null, properties, messageLogger, testContextForClassCleanup.Context.CurrentTestOutcome);
+                testContextForAssemblyCleanup = PlatformServiceProvider.Instance.GetTestContext(testMethod: null, null, properties, messageLogger, testContextForClassCleanup.Context.CurrentTestOutcome);
                 RunAssemblyCleanupIfNeeded(testContextForAssemblyCleanup, _classCleanupManager, _typeCache, result);
             }
 
