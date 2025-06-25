@@ -57,10 +57,8 @@ public sealed partial class Assert
         public void AppendFormatted(ReadOnlySpan<char> value)
             => _builder!.Append(value);
 
-#pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
         public void AppendFormatted(ReadOnlySpan<char> value, int alignment = 0, string? format = null)
             => AppendFormatted(value.ToString(), alignment, format);
-#pragma warning restore RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
 #endif
 
         // NOTE: All the overloads involving format and/or alignment are not super efficient.
@@ -81,14 +79,12 @@ public sealed partial class Assert
             => _builder!.Append(value);
 
 #pragma warning disable RS0026 // Do not add multiple public overloads with optional parameters
-#pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
         public void AppendFormatted(string? value, int alignment = 0, string? format = null)
             => _builder!.AppendFormat(null, $"{{0,{alignment}:{format}}}", value);
 
         public void AppendFormatted(object? value, int alignment = 0, string? format = null)
             => _builder!.AppendFormat(null, $"{{0,{alignment}:{format}}}", value);
 #pragma warning restore RS0026 // Do not add multiple public overloads with optional parameters
-#pragma warning restore RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
     }
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 
