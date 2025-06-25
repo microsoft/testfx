@@ -50,4 +50,3 @@ public class CustomEmptyTestDataSourceAttribute : Attribute, ITestDataSource
     public string? GetDisplayName(MethodInfo methodInfo, object?[]? data)
         => data != null ? string.Format(CultureInfo.CurrentCulture, "{0} ({1})", methodInfo.Name, string.Join(",", data)) : null;
 }
-
