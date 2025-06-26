@@ -999,6 +999,7 @@ public class TypeCacheTests : TestContainer
         var testMethod = new TestMethod(methodInfo.Name, type.FullName!, "A", isAsync: false);
         var testContext = new TestContextImplementation(
             testMethod,
+            null,
             new Dictionary<string, object?>());
 
         typeCache.GetTestMethodInfo(testMethod, testContext);
@@ -1018,6 +1019,7 @@ public class TypeCacheTests : TestContainer
         var testMethod = new TestMethod(methodInfo.Name, type.FullName!, "A", isAsync: false);
         var testContext = new TestContextImplementation(
             testMethod,
+            null,
             new Dictionary<string, object?>());
 
         TestMethodInfo? testMethodInfo = typeCache.GetTestMethodInfo(testMethod, testContext);
@@ -1041,6 +1043,7 @@ public class TypeCacheTests : TestContainer
         var testMethod = new TestMethod(methodInfo.Name, type.FullName!, "A", isAsync: false);
         var testContext = new TestContextImplementation(
             testMethod,
+            null,
             new Dictionary<string, object?>());
 
         TestMethodInfo? testMethodInfo = typeCache.GetTestMethodInfo(testMethod, testContext);
@@ -1064,6 +1067,7 @@ public class TypeCacheTests : TestContainer
         var testMethod = new TestMethod(methodInfo.Name, type.FullName!, "A", isAsync: false);
         var testContext = new TestContextImplementation(
             testMethod,
+            null,
             new Dictionary<string, object?>());
 
         TestMethodInfo? testMethodInfo = typeCache.GetTestMethodInfo(testMethod, testContext);
@@ -1087,6 +1091,7 @@ public class TypeCacheTests : TestContainer
         var testMethod = new TestMethod(methodInfo.Name, type.FullName!, "A", isAsync: false);
         var testContext = new TestContextImplementation(
             testMethod,
+            null,
             new Dictionary<string, object?>());
 
         TestMethodInfo? testMethodInfo = typeCache.GetTestMethodInfo(testMethod, testContext);
@@ -1108,6 +1113,7 @@ public class TypeCacheTests : TestContainer
         var testMethod = new TestMethod(methodInfo.Name, type.FullName!, "A", isAsync: false);
         var testContext = new TestContextImplementation(
             testMethod,
+            null,
             new Dictionary<string, object?>());
 
         TestMethodInfo? testMethodInfo = typeCache.GetTestMethodInfo(testMethod, testContext);
@@ -1130,6 +1136,7 @@ public class TypeCacheTests : TestContainer
         var testMethod = new TestMethod(methodInfo.Name, type.FullName!, "A", isAsync: false);
         var testContext = new TestContextImplementation(
             testMethod,
+            null,
             new Dictionary<string, object?>());
 
         TestMethodInfo? testMethodInfo = typeCache.GetTestMethodInfo(testMethod, testContext);
@@ -1153,6 +1160,7 @@ public class TypeCacheTests : TestContainer
         var testMethod = new TestMethod(methodInfo.Name, type.FullName!, "A", isAsync: false);
         var testContext = new TestContextImplementation(
             testMethod,
+            null,
             new Dictionary<string, object?>());
 
         TestMethodInfo? testMethodInfo = typeCache.GetTestMethodInfo(testMethod, testContext);
@@ -1176,6 +1184,7 @@ public class TypeCacheTests : TestContainer
         var testMethod = new TestMethod(methodInfo.Name, type.FullName!, "A", isAsync: false);
         var testContext = new TestContextImplementation(
             testMethod,
+            null,
             new Dictionary<string, object?>());
 
         TestMethodInfo? testMethodInfo = typeCache.GetTestMethodInfo(testMethod, testContext);
