@@ -158,10 +158,5 @@ internal sealed class TestMethod : ITestMethod
     /// </summary>
     internal string DisplayName { get; }
 
-    internal string UniqueName
-        => HasManagedMethodAndTypeProperties
-        ? $"{ManagedTypeName}.{ManagedMethodName}->{string.Join(", ", SerializedData ?? [])}"
-        : $"{FullClassName}.{Name}->{string.Join(", ", SerializedData ?? [])}";
-
     internal TestMethod Clone() => (TestMethod)MemberwiseClone();
 }
