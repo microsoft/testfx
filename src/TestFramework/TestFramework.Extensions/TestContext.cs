@@ -14,8 +14,6 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 public abstract class TestContext
 {
     internal static readonly string FullyQualifiedTestClassNameLabel = nameof(FullyQualifiedTestClassName);
-    internal static readonly string ManagedTypeLabel = nameof(ManagedType);
-    internal static readonly string ManagedMethodLabel = nameof(ManagedMethod);
     internal static readonly string TestNameLabel = nameof(TestName);
 #if WINDOWS_UWP || WIN_UI
     internal static readonly string TestRunDirectoryLabel = "TestRunDirectory";
@@ -105,18 +103,6 @@ public abstract class TestContext
     /// </summary>
     public virtual string FullyQualifiedTestClassName => GetProperty<string>(FullyQualifiedTestClassNameLabel)
         ?? throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, FrameworkMessages.InvalidAccessToTestContextProperty, nameof(FullyQualifiedTestClassName)));
-
-    /// <summary>
-    /// Gets the fully specified type name metadata format.
-    /// </summary>
-    public virtual string ManagedType => GetProperty<string>(ManagedTypeLabel)
-        ?? throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, FrameworkMessages.InvalidAccessToTestContextProperty, nameof(ManagedType)));
-
-    /// <summary>
-    /// Gets the fully specified method name metadata format.
-    /// </summary>
-    public virtual string ManagedMethod => GetProperty<string>(ManagedMethodLabel)
-        ?? throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, FrameworkMessages.InvalidAccessToTestContextProperty, nameof(ManagedMethod)));
 
     /// <summary>
     /// Gets the name of the test method currently being executed.
