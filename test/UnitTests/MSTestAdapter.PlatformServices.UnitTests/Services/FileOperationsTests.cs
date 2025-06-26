@@ -37,7 +37,7 @@ public class FileOperationsTests : TestContainer
         _fileOperations.LoadAssembly(filePath, false);
     }
 
-#if !WIN_UI
+#if !WIN_UI && !NETFRAMEWORK
     public void DoesFileExistReturnsTrueForAllFiles()
     {
         Verify(_fileOperations.DoesFileExist(null!));
