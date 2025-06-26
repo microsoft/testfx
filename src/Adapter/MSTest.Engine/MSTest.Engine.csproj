@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>$(MicrosoftTestingTargetFrameworks)</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;$(MicrosoftTestingTargetFrameworks)</TargetFrameworks>
     <RootNamespace>Microsoft.Testing.Framework</RootNamespace>
     <!-- Cancel default license (closed-source) and set license as packaged license file -->
     <PackageLicenseExpressionInternal></PackageLicenseExpressionInternal>
