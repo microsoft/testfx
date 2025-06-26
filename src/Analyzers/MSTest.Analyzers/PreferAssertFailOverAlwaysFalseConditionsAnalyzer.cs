@@ -89,40 +89,40 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzer : Diagnost
     private static bool IsAlwaysFalse(IInvocationOperation operation)
         => operation.TargetMethod.Name switch
         {
-            "IsTrue" => GetConditionArgument(operation) is { Value.ConstantValue: { HasValue: true, Value: false } },
-            "IsFalse" => GetConditionArgument(operation) is { Value.ConstantValue: { HasValue: true, Value: true } },
+            "IsTrue" => GetConditionArgument(operation) is { ConstantValue: { HasValue: true, Value: false } },
+            "IsFalse" => GetConditionArgument(operation) is { ConstantValue: { HasValue: true, Value: true } },
             "AreEqual" => GetEqualityStatus(operation, ExpectedParameterName) == EqualityStatus.NotEqual,
             "AreNotEqual" => GetEqualityStatus(operation, NotExpectedParameterName) == EqualityStatus.Equal,
-            "IsNotNull" => GetValueArgument(operation) is { Value.ConstantValue: { HasValue: true, Value: null } },
+            "IsNotNull" => GetValueArgument(operation) is { ConstantValue: { HasValue: true, Value: null } },
             "IsNull" => GetValueArgument(operation) is { } valueArgumentOperation && IsNotNullableType(valueArgumentOperation),
             _ => false,
         };
 
-    private static bool IsNotNullableType(IArgumentOperation valueArgumentOperation)
+    private static bool IsNotNullableType(IOperation valueArgumentOperation)
     {
-        ITypeSymbol? valueArgType = valueArgumentOperation.Value.GetReferencedMemberOrLocalOrParameter().GetReferencedMemberOrLocalOrParameter();
+        ITypeSymbol? valueArgType = valueArgumentOperation.GetReferencedMemberOrLocalOrParameter().GetReferencedMemberOrLocalOrParameter();
         return valueArgType is not null
             && valueArgType.NullableAnnotation == NullableAnnotation.NotAnnotated
             && valueArgType.OriginalDefinition.SpecialType != SpecialType.System_Nullable_T;
     }
 
-    private static IArgumentOperation? GetArgumentWithName(IInvocationOperation operation, string name)
-        => operation.Arguments.FirstOrDefault(arg => arg.Parameter?.Name == name);
+    private static IOperation? GetArgumentWithName(IInvocationOperation operation, string name)
+        => operation.Arguments.FirstOrDefault(arg => arg.Parameter?.Name == name)?.Value.WalkDownConversion();
 
-    private static IArgumentOperation? GetConditionArgument(IInvocationOperation operation)
+    private static IOperation? GetConditionArgument(IInvocationOperation operation)
         => GetArgumentWithName(operation, ConditionParameterName);
 
-    private static IArgumentOperation? GetValueArgument(IInvocationOperation operation)
+    private static IOperation? GetValueArgument(IInvocationOperation operation)
         => GetArgumentWithName(operation, ValueParameterName);
 
     private static EqualityStatus GetEqualityStatus(IInvocationOperation operation, string expectedOrNotExpectedParameterName)
     {
         if (GetArgumentWithName(operation, expectedOrNotExpectedParameterName) is { } expectedOrNotExpectedArgument &&
             GetArgumentWithName(operation, ActualParameterName) is { } actualArgument &&
-            expectedOrNotExpectedArgument.Value.ConstantValue.HasValue &&
-            actualArgument.Value.ConstantValue.HasValue)
+            expectedOrNotExpectedArgument.ConstantValue.HasValue &&
+            actualArgument.ConstantValue.HasValue)
         {
-            return Equals(expectedOrNotExpectedArgument.Value.ConstantValue.Value, actualArgument.Value.ConstantValue.Value) ? EqualityStatus.Equal : EqualityStatus.NotEqual;
+            return Equals(expectedOrNotExpectedArgument.ConstantValue.Value, actualArgument.ConstantValue.Value) ? EqualityStatus.Equal : EqualityStatus.NotEqual;
         }
 
         // We are not sure about the equality status
