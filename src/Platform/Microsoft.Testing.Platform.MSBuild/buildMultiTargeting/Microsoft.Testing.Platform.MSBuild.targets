@@ -245,10 +245,6 @@
         * Test: We plug ourself to the available VSTest target for multitfm and we go directly to our target for single tfm
   -->
 
-  <!-- Import task -->
-  <UsingTask TaskName="Microsoft.Testing.Platform.MSBuild.InvokeTestingPlatformTask"
-         AssemblyFile="$(MicrosoftTestingPlatformMSBuildTaskFolder)Microsoft.Testing.Platform.MSBuild.dll"/>
-
   <PropertyGroup>
     <!-- Disable custom -t:Test target -->
     <TestingPlatformDisableCustomTestTarget Condition=" '$(TestingPlatformDisableCustomTestTarget)' == '' ">False</TestingPlatformDisableCustomTestTarget>
@@ -311,54 +307,9 @@
   </Target>
 
   <!-- Invoke the tool task -->
-  <PropertyGroup>
-    <!--
-      The architecture below is used for log name, but it does not impact the architecture of the exe we will start.
-      We are basically trying to guess what we've just built and what architecture it has.
-    -->
-    <_TestArchitecture>$(PlatformTarget)</_TestArchitecture>
-    <!--
-      DefaultAppHostRuntimeIdentifier will tell us what is the architecture of the apphost
-      SDK runtime will build when not overridden. This takes TargetFramework into account so it is more accurate. This value depends on the actual architecture of the SDK, e.g. win-x64, or win-arm64.
-    -->
-    <_TestArchitecture Condition="('$(_TestArchitecture)' == '' or '$(_TestArchitecture)' == 'AnyCpu') and '$(DefaultAppHostRuntimeIdentifier)' != ''">$([System.Text.RegularExpressions.Regex]::Replace($(DefaultAppHostRuntimeIdentifier), '.*-', ''))</_TestArchitecture>
-    <!--
-    NETCoreSdkRuntimeIdentifier is used by DefaultAppHostRuntimeIdentifier to figure out the architecture, and is defined also for .NET Framework.
-    -->
-    <_TestArchitecture Condition="('$(_TestArchitecture)' == '' or '$(_TestArchitecture)' == 'AnyCpu') and '$(NETCoreSdkRuntimeIdentifier)' != ''">$([System.Text.RegularExpressions.Regex]::Replace($(NETCoreSdkRuntimeIdentifier), '.*-', ''))</_TestArchitecture>
-    <!-- If everyting else fails, fallback to x64. -->
-    <_TestArchitecture Condition="'$(_TestArchitecture)' == '' or '$(_TestArchitecture)' == 'AnyCpu'">x64</_TestArchitecture>
-    <TestingPlatformShowTestsFailure Condition=" '$(TestingPlatformShowTestsFailure)' == '' ">False</TestingPlatformShowTestsFailure>
-    <TestingPlatformCaptureOutput Condition=" '$(TestingPlatformCaptureOutput)' == '' " >true</TestingPlatformCaptureOutput>
-  </PropertyGroup>
   <Target Name="InvokeTestingPlatform" >
-    <!--
-      This target name is hardcoded in TerminalLogger to mean start of test workload.
-      This let's terminal logger know that it should show `Testing` in the output,
-      and not the additional internal details, such as target names.
-    -->
-    <!-- Passing UseAppHost, IsExecutable, TargetDir, AssemblyName, and _NativeExecutableExtensions is mostly workaround -->
-    <!-- until we implement https://github.com/microsoft/testfx/issues/5091 properly -->
-    <!-- For now, we construct the correct "RunCommand" via these properties for a specific scenario that's known to be broken -->
-    <CallTarget Targets="_TestRunStart" />
-    <InvokeTestingPlatformTask TargetPath="$(TargetPath)"
-                               UseAppHost="$(UseAppHost)"
-                               IsExecutable="$(_IsExecutable)"
-                               TargetDir="$(TargetDir)"
-                               AssemblyName="$(AssemblyName)"
-                               NativeExecutableExtension="$(_NativeExecutableExtension)"
-                               TargetFrameworkIdentifier="$(TargetFrameworkIdentifier)"
-                               TargetFramework="$(TargetFramework)"
-                               TestArchitecture="$(_TestArchitecture)"
-                               ProjectFullPath="$(MSBuildProjectFullPath)"
-                               TestingPlatformShowTestsFailure="$(TestingPlatformShowTestsFailure)"
-                               TestingPlatformCommandLineArguments="$(TestingPlatformCommandLineArguments)"
-                               VSTestCLIRunSettings="$(VSTestCLIRunSettings)"
-                               TestingPlatformCaptureOutput="$(TestingPlatformCaptureOutput)"
-                               DotnetHostPath="$(DOTNET_HOST_PATH)" />
+    <Error Text="Using dotnet test with Microsoft.Testing.Platform now requires using the new dotnet test experience for MTP. For more information, see https://learn.microsoft.com/dotnet/core/testing/unit-testing-with-dotnet-test" />
   </Target>
-
-  <Target Name="_TestRunStart" />
 
   <Target Name="_SetTestingPlatformDefaultsForContainerBuild" BeforeTargets="ComputeContainerConfig"
     Condition="'$(IsPublishable)' == 'true' AND '$(EnableSdkContainerSupport)' == 'true' AND !$(RuntimeIdentifier.StartsWith('win'))">

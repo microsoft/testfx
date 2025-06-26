@@ -12,13 +12,11 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Build.Framework" PrivateAssets="All" />
     <PackageReference Include="Microsoft.Build.Utilities.Core" PrivateAssets="All" />
-    <PackageReference Include="Microsoft.Win32.Registry" PrivateAssets="All" Condition="'$(TargetFrameworkIdentifier)' != '.NETCoreApp'" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="$(RepoRoot)\src\Platform\Microsoft.Testing.Platform\Microsoft.Testing.Platform.csproj" CopyToBuildOutput="true" />
     <!-- Deps only so we can include it in the lib of the NuGet package -->
-    <ProjectReference Include="$(RepoRoot)\src\Platform\Microsoft.Testing.Extensions.MSBuild\Microsoft.Testing.Extensions.MSBuild.csproj" PrivateAssets="All" />
   </ItemGroup>
 
   <!-- NuGet properties -->
@@ -54,13 +52,6 @@ This package provides MSBuild integration of the platform, its extensions and co
   <ItemGroup>
     <AdditionalFiles Include="PublicAPI.Shipped.txt" />
     <AdditionalFiles Include="PublicAPI.Unshipped.txt" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Include="..\Microsoft.Testing.Extensions.MSBuild\MSBuildConstants.cs" Link="MSBuildConstants.cs" />
-    <Compile Include="..\Microsoft.Testing.Extensions.MSBuild\Serializers\FailedTestInfoRequestSerializer.cs" Link="Serializers/FailedTestInfoRequestSerializer.cs" />
-    <Compile Include="..\Microsoft.Testing.Extensions.MSBuild\Serializers\ModuleInfoRequestSerializer.cs" Link="Serializers/ModuleInfoRequestSerializer.cs" />
-    <Compile Include="..\Microsoft.Testing.Extensions.MSBuild\Serializers\RunSummaryRequestSerializer.cs" Link="Serializers/RunSummaryRequestSerializer.cs" />
   </ItemGroup>
 
   <ItemGroup>
