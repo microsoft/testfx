@@ -144,7 +144,7 @@ public partial class AssertTests : TestContainer
         int value = 3;
 
         // Act & Assert
-        Assert.IsInRange(minValue, maxValue, value, null);
+        Assert.IsInRange(minValue, maxValue, value, null!);
     }
 
     public void IsInRange_WithEmptyMessage_DoesNotThrow()
