@@ -180,6 +180,7 @@ internal class TypeEnumerator
         testElement.DisplayName = testMethodAttribute?.DisplayName ?? method.Name;
         testElement.DeclaringFilePath = testMethodAttribute?.DeclaringFilePath;
         testElement.DeclaringLineNumber = testMethodAttribute?.DeclaringLineNumber;
+        testElement.UnfoldingStrategy = testMethodAttribute?.UnfoldingStrategy ?? TestDataSourceUnfoldingStrategy.Auto;
 
         return testElement;
     }

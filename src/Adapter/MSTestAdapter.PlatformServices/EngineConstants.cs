@@ -131,6 +131,9 @@ internal static class EngineConstants
     internal static readonly TestProperty TestDynamicDataProperty = TestProperty.Register("MSTest.DynamicData", "DynamicData", typeof(string[]), TestPropertyAttributes.Hidden, typeof(TestCase));
 
     internal static readonly TestProperty TestDataSourceIgnoreMessageProperty = TestProperty.Register("MSTest.TestDataSourceIgnoreMessageProperty", "TestDataSourceIgnoreMessageProperty", typeof(string), TestPropertyAttributes.Hidden, typeof(TestCase));
+
+    internal static readonly TestProperty UnfoldingStrategy = TestProperty.Register("MSTestDiscoverer.UnfoldingStrategy", "UnfoldingStrategy", typeof(int), TestPropertyAttributes.Hidden, typeof(TestCase));
+
     #endregion
 
     #region Private Constants

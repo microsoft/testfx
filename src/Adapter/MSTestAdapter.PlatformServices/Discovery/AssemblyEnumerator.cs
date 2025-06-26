@@ -330,6 +330,19 @@ internal class AssemblyEnumerator : MarshalByRefObject
             return false;
         }
 
+        // If the global strategy is to fold and local uses Auto then return false
+        if (dataSourcesUnfoldingStrategy == TestDataSourceUnfoldingStrategy.Fold
+            && test.UnfoldingStrategy == TestDataSourceUnfoldingStrategy.Auto)
+        {
+            return false;
+        }
+
+        // If the data source specifies the unfolding strategy as fold then return false
+        if (test.UnfoldingStrategy == TestDataSourceUnfoldingStrategy.Fold)
+        {
+            return false;
+        }
+
         // We don't have a special method to filter attributes that are not derived from Attribute, so we take all
         // attributes and filter them. We don't have to care if there is one, because this method is only entered when
         // there is at least one (we determine this in TypeEnumerator.GetTestFromMethod.
@@ -345,7 +358,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
             foreach (ITestDataSource dataSource in testDataSources)
             {
                 isDataDriven = true;
-                if (!TryUnfoldITestDataSource(dataSource, dataSourcesUnfoldingStrategy, test, new(testMethodInfo.MethodInfo, test.DisplayName), tempListOfTests, ref globalTestCaseIndex))
+                if (!TryUnfoldITestDataSource(dataSource, test, new(testMethodInfo.MethodInfo, test.DisplayName), tempListOfTests, ref globalTestCaseIndex))
                 {
                     // TODO: Improve multi-source design!
                     // Ideally we would want to consider each data source separately but when one source cannot be expanded,
@@ -375,23 +388,8 @@ internal class AssemblyEnumerator : MarshalByRefObject
         }
     }
 
-    private static bool TryUnfoldITestDataSource(ITestDataSource dataSource, TestDataSourceUnfoldingStrategy dataSourcesUnfoldingStrategy, UnitTestElement test, ReflectionTestMethodInfo methodInfo, List<UnitTestElement> tests, ref int globalTestCaseIndex)
+    private static bool TryUnfoldITestDataSource(ITestDataSource dataSource, UnitTestElement test, ReflectionTestMethodInfo methodInfo, List<UnitTestElement> tests, ref int globalTestCaseIndex)
     {
-        var unfoldingCapability = dataSource as ITestDataSourceUnfoldingCapability;
-
-        // If the global strategy is to fold and local has no strategy or uses Auto then return false
-        if (dataSourcesUnfoldingStrategy == TestDataSourceUnfoldingStrategy.Fold
-            && (unfoldingCapability is null || unfoldingCapability.UnfoldingStrategy == TestDataSourceUnfoldingStrategy.Auto))
-        {
-            return false;
-        }
-
-        // If the data source specifies the unfolding strategy as fold then return false
-        if (unfoldingCapability?.UnfoldingStrategy == TestDataSourceUnfoldingStrategy.Fold)
-        {
-            return false;
-        }
-
         // Otherwise, unfold the data source and verify it can be serialized.
         IEnumerable<object?[]>? data;
 
