@@ -66,7 +66,6 @@ This package provides MSBuild integration of the platform, its extensions and co
       <MSBuildAssetsBuild Include="build/**" />
       <MSBuildTaskLib Include="$(TargetDir)$(TargetName).dll" />
       <MSBuildTaskLib Include="$(MSBuildTaskLib);$(TargetDir)Microsoft.Testing.Platform.dll" />
-      <MSBuildLib Include="$(TargetDir)Microsoft.Testing.Extensions.MSBuild.dll" />
       <!-- We ship with embedded symbols -->
       <!--<MSBuildTaskLib Include="$(TargetDir)$(TargetName).pdb" />-->
     </ItemGroup>
@@ -79,9 +78,6 @@ This package provides MSBuild integration of the platform, its extensions and co
 
     <Message Text="MSBuildAssetsBuild tests: @(MSBuildAssetsBuild->'$(ArtifactsDir)tests/nugetPackageFolder/build/$(TargetFramework)/%(RecursiveDir)%(Filename)%(Extension)')" Importance="low" />
     <Copy SourceFiles="@(MSBuildAssetsBuild)" DestinationFiles="@(MSBuildAssetsBuild->'$(ArtifactsDir)tests/nugetPackageFolder/$(AssemblyName)/build/$(TargetFramework)/%(RecursiveDir)%(Filename)%(Extension)')" />
-
-    <Message Text="MSBuildLib tests: @(MSBuildLib->'$(ArtifactsDir)tests/nugetPackageFolder/lib/$(TargetFramework)/%(RecursiveDir)%(Filename)%(Extension)')" Importance="low" />
-    <Copy SourceFiles="@(MSBuildLib)" DestinationFiles="@(MSBuildLib->'$(ArtifactsDir)tests/nugetPackageFolder/$(AssemblyName)/lib/$(TargetFramework)/%(RecursiveDir)%(Filename)%(Extension)')" />
 
     <Message Text="MSBuildTaskLib to _MSBuildTasks: @(MSBuildTaskLib->'$(ArtifactsDir)tests/nugetPackageFolder/$(AssemblyName)/_MSBuildTasks/netstandard2.0/%(RecursiveDir)%(Filename)%(Extension)')" Importance="low" />
     <Copy SourceFiles="@(MSBuildTaskLib)" DestinationFiles="@(MSBuildTaskLib->'$(ArtifactsDir)tests/nugetPackageFolder/$(AssemblyName)/_MSBuildTasks/netstandard2.0/%(RecursiveDir)%(Filename)%(Extension)')" Condition=" '$(TargetFramework)' == 'netstandard2.0' " />
