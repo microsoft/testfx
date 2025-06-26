@@ -82,11 +82,11 @@ public sealed partial class Assert
         if (string.IsNullOrEmpty(userMessage))
         {
             // TODO: localize
-            return $"'{parameterName}' expression: {callerArgExpression}.";
+            return $"'{parameterName}' expression: '{callerArgExpression}'.";
         }
 
         // TODO: Localize
-        return $"'{parameterName}' expression: {callerArgExpression}. {userMessage}";
+        return $"'{parameterName}' expression: '{callerArgExpression}'. {userMessage}";
     }
 
     private static string BuildUserMessageForConditionExpression(string? format, string conditionExpression)

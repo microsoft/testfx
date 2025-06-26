@@ -36,7 +36,7 @@ public sealed partial class Assert
         {
             if (_builder is not null)
             {
-                _builder.Insert(0, $"'condition' expression: {conditionExpression}. ");
+                _builder.Insert(0, $"'condition' expression: '{conditionExpression}'. ");
                 ThrowAssertIsTrueFailed(_builder.ToString());
             }
         }
@@ -88,7 +88,7 @@ public sealed partial class Assert
         {
             if (_builder is not null)
             {
-                _builder.Insert(0, $"'condition' expression: {conditionExpression}. ");
+                _builder.Insert(0, $"'condition' expression: '{conditionExpression}'. ");
                 ThrowAssertIsFalseFailed(_builder.ToString());
             }
         }
