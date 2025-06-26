@@ -301,7 +301,7 @@ public class DeploymentUtilityTests : TestContainer
             Times.Once);
     }
 
-#if NET462
+#if NETFRAMEWORK
     public void DeployShouldDeployPdbWithSourceIfPdbFileIsPresentInSourceDirectory()
     {
         TestCase testCase = GetTestCaseAndTestRunDirectories(DefaultDeploymentItemPath, DefaultDeploymentItemOutputDirectory, out TestRunDirectories testRunDirectories);

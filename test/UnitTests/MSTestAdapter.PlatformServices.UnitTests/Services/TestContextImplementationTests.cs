@@ -1,7 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if NET462
+#if NETFRAMEWORK
 using System.Data;
 using System.Data.Common;
 #endif
@@ -272,7 +272,7 @@ public class TestContextImplementationTests : TestContainer
         Verify(_testContextImplementation.GetDiagnosticMessages() == string.Empty);
     }
 
-#if NET462
+#if NETFRAMEWORK
     public void SetDataRowShouldSetDataRowObjectForCurrentRun()
     {
         _testContextImplementation = new TestContextImplementation(_testMethod.Object, _properties);
