@@ -112,7 +112,7 @@ public class DynamicDataTests : CLITestBase
         ImmutableArray<TestResult> testResults = await RunTestsAsync(testCases);
 
         // Assert
-        Verify(testCases.Length == 6);
+        Verify(testCases.Length == 4);
 
         VerifyE2E.TestsPassed(
             testResults,
