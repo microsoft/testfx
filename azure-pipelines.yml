@@ -42,7 +42,7 @@ stages:
   - template: /eng/common/templates/jobs/jobs.yml
     parameters:
       enableMicrobuild: true
-      enablePublishBuildArtifacts: true
+      enablePublishBuildArtifacts: false
       enablePublishTestResults: true
       testResultsFormat: 'vstest'
       enablePublishBuildAssets: true
