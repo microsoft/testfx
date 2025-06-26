@@ -11,6 +11,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// is thrown.
 /// </summary>
 
+#pragma warning disable RS0026 // Do not add multiple public overloads with optional parameters
 #pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
 
 public sealed partial class Assert
@@ -31,10 +32,11 @@ public sealed partial class Assert
             }
         }
 
-        internal void ComputeAssertion()
+        internal void ComputeAssertion(string valueExpression)
         {
             if (_builder is not null)
             {
+                _builder.Insert(0, $"'value' expression: {valueExpression}. ");
                 ThrowAssertIsNullFailed(_builder.ToString());
             }
         }
@@ -62,11 +64,9 @@ public sealed partial class Assert
 
         public void AppendFormatted(string? value) => _builder!.Append(value);
 
-#pragma warning disable RS0026 // Do not add multiple public overloads with optional parameters
         public void AppendFormatted(string? value, int alignment = 0, string? format = null) => _builder!.AppendFormat(null, $"{{0,{alignment}:{format}}}", value);
 
         public void AppendFormatted(object? value, int alignment = 0, string? format = null) => _builder!.AppendFormat(null, $"{{0,{alignment}:{format}}}", value);
-#pragma warning restore RS0026 // Do not add multiple public overloads with optional parameters
     }
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 
@@ -86,10 +86,11 @@ public sealed partial class Assert
             }
         }
 
-        internal void ComputeAssertion()
+        internal void ComputeAssertion(string valueExpression)
         {
             if (_builder is not null)
             {
+                _builder.Insert(0, $"'value' expression: {valueExpression}. ");
                 ThrowAssertIsNotNullFailed(_builder.ToString());
             }
         }
@@ -117,19 +118,17 @@ public sealed partial class Assert
 
         public void AppendFormatted(string? value) => _builder!.Append(value);
 
-#pragma warning disable RS0026 // Do not add multiple public overloads with optional parameters
         public void AppendFormatted(string? value, int alignment = 0, string? format = null) => _builder!.AppendFormat(null, $"{{0,{alignment}:{format}}}", value);
 
         public void AppendFormatted(object? value, int alignment = 0, string? format = null) => _builder!.AppendFormat(null, $"{{0,{alignment}:{format}}}", value);
-#pragma warning restore RS0026 // Do not add multiple public overloads with optional parameters
     }
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 
     /// <inheritdoc cref="IsNull(object?, string, string)" />
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
-    public static void IsNull(object? value, [InterpolatedStringHandlerArgument(nameof(value))] ref AssertIsNullInterpolatedStringHandler message)
+    public static void IsNull(object? value, [InterpolatedStringHandlerArgument(nameof(value))] ref AssertIsNullInterpolatedStringHandler message, [CallerArgumentExpression(nameof(value))] string valueExpression = "")
 #pragma warning restore IDE0060 // Remove unused parameter
-        => message.ComputeAssertion();
+        => message.ComputeAssertion(valueExpression);
 
     /// <summary>
     /// Tests whether the specified object is null and throws an exception
@@ -144,6 +143,7 @@ public sealed partial class Assert
     /// </param>
     /// <param name="valueExpression">
     /// The syntactic expression of value as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
     /// </param>
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="value"/> is not null.
@@ -152,7 +152,7 @@ public sealed partial class Assert
     {
         if (IsNullFailing(value))
         {
-            ThrowAssertIsNullFailed(BuildUserMessage(message, valueExpression));
+            ThrowAssertIsNullFailed(BuildUserMessageForValueExpression(message, valueExpression));
         }
     }
 
@@ -163,10 +163,10 @@ public sealed partial class Assert
 
     /// <inheritdoc cref="IsNull(object?, string, string)" />
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
-    public static void IsNotNull([NotNull] object? value, [InterpolatedStringHandlerArgument(nameof(value))] ref AssertIsNotNullInterpolatedStringHandler message)
+    public static void IsNotNull([NotNull] object? value, [InterpolatedStringHandlerArgument(nameof(value))] ref AssertIsNotNullInterpolatedStringHandler message, [CallerArgumentExpression(nameof(value))] string valueExpression = "")
 #pragma warning restore IDE0060 // Remove unused parameter
 #pragma warning disable CS8777 // Parameter must have a non-null value when exiting. - Not sure how to express the semantics to the compiler, but the implementation guarantees that.
-        => message.ComputeAssertion();
+        => message.ComputeAssertion(valueExpression);
 #pragma warning restore CS8777 // Parameter must have a non-null value when exiting.
 
     /// <summary>
@@ -182,6 +182,7 @@ public sealed partial class Assert
     /// </param>
     /// <param name="valueExpression">
     /// The syntactic expression of value as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
     /// </param>
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="value"/> is null.
@@ -190,7 +191,7 @@ public sealed partial class Assert
     {
         if (IsNotNullFailing(value))
         {
-            ThrowAssertIsNotNullFailed(BuildUserMessage(message, valueExpression));
+            ThrowAssertIsNotNullFailed(BuildUserMessageForValueExpression(message, valueExpression));
         }
     }
 
