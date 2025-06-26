@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>$(MicrosoftTestingTargetFrameworks);netstandard2.0</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0</TargetFrameworks>
     <DefineConstants>PLATFORM_MSBUILD</DefineConstants>
     <NoWarn>$(NoWarn);NU5100</NoWarn>
   </PropertyGroup>
@@ -12,19 +12,16 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Build.Framework" PrivateAssets="All" />
     <PackageReference Include="Microsoft.Build.Utilities.Core" PrivateAssets="All" />
-    <PackageReference Include="Microsoft.Win32.Registry" PrivateAssets="All" Condition="'$(TargetFrameworkIdentifier)' != '.NETCoreApp'" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="$(RepoRoot)\src\Platform\Microsoft.Testing.Platform\Microsoft.Testing.Platform.csproj" CopyToBuildOutput="true" />
     <!-- Deps only so we can include it in the lib of the NuGet package -->
-    <ProjectReference Include="$(RepoRoot)\src\Platform\Microsoft.Testing.Extensions.MSBuild\Microsoft.Testing.Extensions.MSBuild.csproj" PrivateAssets="All" />
   </ItemGroup>
 
   <!-- NuGet properties -->
   <PropertyGroup>
     <BuildOutputTargetFolder>_MSBuildTasks</BuildOutputTargetFolder>
-    <IncludeBuildOutput Condition="'$(TargetFramework)' != '' and '$(TargetFramework)' != 'netstandard2.0'">false</IncludeBuildOutput>
     <PackageDescription>
       <![CDATA[Microsoft Testing is a set of platform, framework and protocol intended to make it possible to run any test on any target or device.
 
@@ -35,17 +32,16 @@ This package provides MSBuild integration of the platform, its extensions and co
   <!-- Default to including all *.props and *.targets files from the project directory into the NuGet package root -->
   <ItemGroup>
     <None Include="**/*.props;**/*.targets" Pack="true" PackagePath="%(RecursiveDir)%(Filename)%(Extension)" />
+    <None Include="_._" Pack="true" PackagePath="lib/netstandard2.0" />
   </ItemGroup>
 
-  <!-- Microsoft.Testing.Extensions.MSBuild should appear in both the build output folder (_MSBuildTasks) and the lib/<tfm> folder. -->
   <PropertyGroup>
-    <TargetsForTfmSpecificBuildOutput Condition="'$(TargetFramework)' == 'netstandard2.0'">$(TargetsForTfmSpecificBuildOutput);IncludeProjectReferenceDlls</TargetsForTfmSpecificBuildOutput>
+    <TargetsForTfmSpecificBuildOutput>$(TargetsForTfmSpecificBuildOutput);IncludeProjectReferenceDlls</TargetsForTfmSpecificBuildOutput>
     <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);IncludeProjectReferenceDlls</TargetsForTfmSpecificContentInPackage>
   </PropertyGroup>
 
   <Target Name="IncludeProjectReferenceDlls" DependsOnTargets="BuildOnlySettings;ResolveReferences">
     <ItemGroup>
-      <TfmSpecificPackageFile Include="@(ReferenceCopyLocalPaths-&gt;WithMetadataValue('ReferenceSourceTarget', 'ProjectReference')-&gt;WithMetadataValue('PrivateAssets', 'All'))" PackagePath="lib\$(TargetFramework)\%(ReferenceCopyLocalPaths.DestinationSubDirectory)" />
       <BuildOutputInPackage Include="@(ReferenceCopyLocalPaths-&gt;WithMetadataValue('ReferenceSourceTarget', 'ProjectReference')-&gt;WithMetadataValue('CopyToBuildOutput', 'true'))" TargetPath="%(ReferenceCopyLocalPaths.DestinationSubDirectory)" />
       <BuildOutputInPackage Include="@(RuntimeTargetsCopyLocalItems-&gt;HasMetadata('NuGetPackageId'))" TargetPath="%(RuntimeCopyLocalPaths.DestinationSubPath)" />
     </ItemGroup>
@@ -54,13 +50,6 @@ This package provides MSBuild integration of the platform, its extensions and co
   <ItemGroup>
     <AdditionalFiles Include="PublicAPI.Shipped.txt" />
     <AdditionalFiles Include="PublicAPI.Unshipped.txt" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Include="..\Microsoft.Testing.Extensions.MSBuild\MSBuildConstants.cs" Link="MSBuildConstants.cs" />
-    <Compile Include="..\Microsoft.Testing.Extensions.MSBuild\Serializers\FailedTestInfoRequestSerializer.cs" Link="Serializers/FailedTestInfoRequestSerializer.cs" />
-    <Compile Include="..\Microsoft.Testing.Extensions.MSBuild\Serializers\ModuleInfoRequestSerializer.cs" Link="Serializers/ModuleInfoRequestSerializer.cs" />
-    <Compile Include="..\Microsoft.Testing.Extensions.MSBuild\Serializers\RunSummaryRequestSerializer.cs" Link="Serializers/RunSummaryRequestSerializer.cs" />
   </ItemGroup>
 
   <ItemGroup>
@@ -75,7 +64,6 @@ This package provides MSBuild integration of the platform, its extensions and co
       <MSBuildAssetsBuild Include="build/**" />
       <MSBuildTaskLib Include="$(TargetDir)$(TargetName).dll" />
       <MSBuildTaskLib Include="$(MSBuildTaskLib);$(TargetDir)Microsoft.Testing.Platform.dll" />
-      <MSBuildLib Include="$(TargetDir)Microsoft.Testing.Extensions.MSBuild.dll" />
       <!-- We ship with embedded symbols -->
       <!--<MSBuildTaskLib Include="$(TargetDir)$(TargetName).pdb" />-->
     </ItemGroup>
@@ -88,9 +76,6 @@ This package provides MSBuild integration of the platform, its extensions and co
 
     <Message Text="MSBuildAssetsBuild tests: @(MSBuildAssetsBuild->'$(ArtifactsDir)tests/nugetPackageFolder/build/$(TargetFramework)/%(RecursiveDir)%(Filename)%(Extension)')" Importance="low" />
     <Copy SourceFiles="@(MSBuildAssetsBuild)" DestinationFiles="@(MSBuildAssetsBuild->'$(ArtifactsDir)tests/nugetPackageFolder/$(AssemblyName)/build/$(TargetFramework)/%(RecursiveDir)%(Filename)%(Extension)')" />
-
-    <Message Text="MSBuildLib tests: @(MSBuildLib->'$(ArtifactsDir)tests/nugetPackageFolder/lib/$(TargetFramework)/%(RecursiveDir)%(Filename)%(Extension)')" Importance="low" />
-    <Copy SourceFiles="@(MSBuildLib)" DestinationFiles="@(MSBuildLib->'$(ArtifactsDir)tests/nugetPackageFolder/$(AssemblyName)/lib/$(TargetFramework)/%(RecursiveDir)%(Filename)%(Extension)')" />
 
     <Message Text="MSBuildTaskLib to _MSBuildTasks: @(MSBuildTaskLib->'$(ArtifactsDir)tests/nugetPackageFolder/$(AssemblyName)/_MSBuildTasks/netstandard2.0/%(RecursiveDir)%(Filename)%(Extension)')" Importance="low" />
     <Copy SourceFiles="@(MSBuildTaskLib)" DestinationFiles="@(MSBuildTaskLib->'$(ArtifactsDir)tests/nugetPackageFolder/$(AssemblyName)/_MSBuildTasks/netstandard2.0/%(RecursiveDir)%(Filename)%(Extension)')" Condition=" '$(TargetFramework)' == 'netstandard2.0' " />

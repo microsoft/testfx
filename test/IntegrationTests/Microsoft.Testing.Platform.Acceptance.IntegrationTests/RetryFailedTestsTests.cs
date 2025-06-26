@@ -178,31 +178,6 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
             }, 3, TimeSpan.FromSeconds(5));
     }
 
-    [TestMethod]
-    public async Task RetryFailedTests_PassingFromFirstTime_UsingOldDotnetTest_MoveFiles_Succeeds()
-    {
-        string resultDirectory = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"));
-
-        DotnetMuxerResult result = await DotnetCli.RunAsync(
-            $"test \"{AssetFixture.TargetAssetPath}\" -- --retry-failed-tests 1 --results-directory \"{resultDirectory}\"",
-            AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
-            workingDirectory: AssetFixture.TargetAssetPath);
-
-        Assert.AreEqual(ExitCodes.Success, result.ExitCode);
-
-        // File names are on the form: RetryFailedTests_tfm_architecture.log
-        string[] logFilesFromInvokeTestingPlatformTask = Directory.GetFiles(resultDirectory, "RetryFailedTests_*_*.log");
-        Assert.AreEqual(TargetFrameworks.All.Length, logFilesFromInvokeTestingPlatformTask.Length);
-        foreach (string logFile in logFilesFromInvokeTestingPlatformTask)
-        {
-            string logFileContents = File.ReadAllText(logFile);
-            Assert.Contains("Test run summary: Passed!", logFileContents);
-            Assert.Contains("total: 3", logFileContents);
-            Assert.Contains("succeeded: 3", logFileContents);
-            Assert.Contains("Tests suite completed successfully in 1 attempts", logFileContents);
-        }
-    }
-
     public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
     {
         public string TargetAssetPath => GetAssetPath(AssetName);
