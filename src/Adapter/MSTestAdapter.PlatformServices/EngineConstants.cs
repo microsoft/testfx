@@ -124,6 +124,8 @@ internal static class EngineConstants
 
     internal static readonly TestProperty TfsTeamProjectProperty = TestProperty.Register(TfsTeamProject, TfsTeamProject, typeof(string), TestPropertyAttributes.Hidden, typeof(TestCase));
 
+    internal static readonly TestProperty ParameterTypesProperty = TestProperty.Register("MSTest.ParameterTypes", "ParameterTypes", typeof(string), TestPropertyAttributes.Hidden, typeof(TestCase));
+
     internal static readonly TestProperty TestDynamicDataTypeProperty = TestProperty.Register("MSTest.DynamicDataType", "DynamicDataType", typeof(int), TestPropertyAttributes.Hidden, typeof(TestCase));
 
     internal static readonly TestProperty TestCaseIndexProperty = TestProperty.Register("MSTest.TestCaseIndex", "TestCaseIndex", typeof(int), TestPropertyAttributes.Hidden, typeof(TestCase));

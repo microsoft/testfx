@@ -115,6 +115,11 @@ internal sealed class UnitTestElement
             testCase.SetPropertyValue(EngineConstants.TestClassNameProperty, TestMethod.FullClassName);
         }
 
+        if (TestMethod.ParameterTypes is not null)
+        {
+            testCase.SetPropertyValue(EngineConstants.ParameterTypesProperty, TestMethod.ParameterTypes);
+        }
+
         IReadOnlyCollection<string?> hierarchy = TestMethod.Hierarchy;
         if (hierarchy is { Count: > 0 })
         {
@@ -218,6 +223,11 @@ internal sealed class UnitTestElement
 
         idProvider.AppendString(fileNameOrFilePath);
         idProvider.AppendString(testFullName);
+        if (TestMethod.ParameterTypes is not null)
+        {
+            idProvider.AppendString($"({TestMethod.ParameterTypes})");
+        }
+
         if (TestMethod.SerializedData != null)
         {
             idProvider.AppendString($"[{TestMethod.TestCaseIndex.ToString(CultureInfo.InvariantCulture)}]");
