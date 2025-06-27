@@ -448,7 +448,7 @@ The type declaring these methods should also respect the following rules:
     <value>Type contaning '[TestMethod]' should be marked with '[TestClass]', otherwise the test method will be silently ignored.</value>
   </data>
   <data name="TypeContainingTestMethodShouldBeATestClassMessageFormat" xml:space="preserve">
-    <value>Class '{0}' contains test methods and should be marked with '[TestClass]'</value>
+    <value>Type '{0}' contains test methods and should be marked with '[TestClass]'</value>
   </data>
   <data name="DoNotUseSystemDescriptionAttributeTitle" xml:space="preserve">
     <value>'System.ComponentModel.DescriptionAttribute' has no effect on test methods</value>
