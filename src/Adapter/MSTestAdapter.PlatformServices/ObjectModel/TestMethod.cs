@@ -4,7 +4,6 @@
 using System.Collections.ObjectModel;
 
 using Microsoft.TestPlatform.AdapterUtilities;
-
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using ITestMethod = Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ObjectModel.ITestMethod;
@@ -34,23 +33,25 @@ internal sealed class TestMethod : ITestMethod
 #pragma warning disable IDE0060 // Remove unused parameter - Public API :/
     public TestMethod(string name, string fullClassName, string assemblyName, bool isAsync)
 #pragma warning restore IDE0060 // Remove unused parameter
-        : this(null, null, null, name, fullClassName, assemblyName, null)
+        : this(null, null, null, name, fullClassName, assemblyName, null, null)
     {
     }
 
     internal TestMethod(string name, string fullClassName, string assemblyName, string? displayName)
-        : this(null, null, null, name, fullClassName, assemblyName, displayName)
+        : this(null, null, null, name, fullClassName, assemblyName, displayName, null)
     {
     }
 
     internal TestMethod(string? managedTypeName, string? managedMethodName, string?[]? hierarchyValues, string name,
-        string fullClassName, string assemblyName, string? displayName)
+        string fullClassName, string assemblyName, string? displayName, string? parameterTypes)
     {
         Guard.NotNullOrWhiteSpace(assemblyName);
 
         Name = name;
         DisplayName = displayName ?? name;
         FullClassName = fullClassName;
+        ParameterTypes = parameterTypes;
+
         AssemblyName = assemblyName;
 
         if (hierarchyValues is null)
@@ -72,6 +73,8 @@ internal sealed class TestMethod : ITestMethod
 
     /// <inheritdoc />
     public string FullClassName { get; }
+
+    public string? ParameterTypes { get; }
 
     /// <summary>
     /// Gets or sets the declaring assembly full name. This will be used while getting navigation data.
