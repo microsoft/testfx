@@ -28,7 +28,7 @@ public class TestSourceTests : TestContainer
 
     public void IsAssemblyReferencedShouldReturnTrueForAllSourceOrAssemblyNames()
     {
-#if !NET462
+#if !NETFRAMEWORK
 #pragma warning disable IDE0022 // Use expression body for method
         Verify(_testSource.IsAssemblyReferenced(new AssemblyName("ReferenceAssembly"), "SourceAssembly"));
 #pragma warning restore IDE0022 // Use expression body for method

@@ -21,8 +21,8 @@ function Confirm-NugetPackages {
     $expectedNumOfFiles = @{
         "MSTest.Sdk"                                  = 15
         "MSTest.TestFramework"                        = 105
-        "MSTest.TestAdapter"                          = 59
-        "MSTest"                                      = 11
+        "MSTest.TestAdapter"                          = 52
+        "MSTest"                                      = 10
         "MSTest.Analyzers"                            = 56
     }
 
