@@ -365,4 +365,7 @@ Actual: {2}</value>
   <data name="InvalidAccessToTestContextProperty" xml:space="preserve">
     <value>The property 'TestContext.{0}' is related to current test is not available during assembly or class fixtures.</value>
   </data>
+  <data name="CallerArgumentExpressionSingleParameterMessage" xml:space="preserve">
+    <value>'{0}' expression: '{1}'.</value>
+  </data>
 </root>

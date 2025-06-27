@@ -79,14 +79,13 @@ public sealed partial class Assert
             return userMessage;
         }
 
+        string callerArgMessagePart = string.Format(CultureInfo.InvariantCulture, FrameworkMessages.CallerArgumentExpressionSingleParameterMessage, parameterName, callerArgExpression);
         if (string.IsNullOrEmpty(userMessage))
         {
-            // TODO: localize
-            return $"'{parameterName}' expression: '{callerArgExpression}'.";
+            return callerArgMessagePart;
         }
 
-        // TODO: Localize
-        return $"'{parameterName}' expression: '{callerArgExpression}'. {userMessage}";
+        return $"{callerArgMessagePart} {userMessage}";
     }
 
     private static string BuildUserMessageForConditionExpression(string? format, string conditionExpression)

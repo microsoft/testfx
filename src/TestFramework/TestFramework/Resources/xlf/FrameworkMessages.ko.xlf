@@ -72,6 +72,11 @@
         <target state="translated">두 컬렉션에 같은 요소가 포함되어 있습니다. {0}</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="CallerArgumentExpressionSingleParameterMessage">
+        <source>'{0}' expression: '{1}'.</source>
+        <target state="new">'{0}' expression: '{1}'.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="CollectionEqualReason">
         <source>{0}. {1}</source>
         <target state="translated">{0}. {1}</target>

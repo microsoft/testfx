@@ -36,7 +36,7 @@ public sealed partial class Assert
         {
             if (_builder is not null)
             {
-                _builder.Insert(0, $"'value' expression: '{valueExpression}'. ");
+                _builder.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionSingleParameterMessage, "value", valueExpression) + " ");
                 ThrowAssertIsNullFailed(_builder.ToString());
             }
         }
@@ -90,7 +90,7 @@ public sealed partial class Assert
         {
             if (_builder is not null)
             {
-                _builder.Insert(0, $"'value' expression: '{valueExpression}'. ");
+                _builder.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionSingleParameterMessage, "value", valueExpression) + " ");
                 ThrowAssertIsNotNullFailed(_builder.ToString());
             }
         }
