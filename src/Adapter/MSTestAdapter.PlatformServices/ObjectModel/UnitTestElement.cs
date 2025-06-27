@@ -227,6 +227,7 @@ internal sealed class UnitTestElement
         {
             idProvider.AppendString($"({TestMethod.ParameterTypes})");
         }
+
         if (TestMethod.SerializedData != null)
         {
             idProvider.AppendString($"[{TestMethod.TestCaseIndex.ToString(CultureInfo.InvariantCulture)}]");
