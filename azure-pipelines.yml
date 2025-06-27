@@ -4,6 +4,7 @@ pr:
     include:
     - main
     - rel/*
+    - dev/v4
   paths:
     exclude:
       - .github/*
