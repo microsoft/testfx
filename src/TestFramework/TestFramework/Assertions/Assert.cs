@@ -80,12 +80,9 @@ public sealed partial class Assert
         }
 
         string callerArgMessagePart = string.Format(CultureInfo.InvariantCulture, FrameworkMessages.CallerArgumentExpressionSingleParameterMessage, parameterName, callerArgExpression);
-        if (string.IsNullOrEmpty(userMessage))
-        {
-            return callerArgMessagePart;
-        }
-
-        return $"{callerArgMessagePart} {userMessage}";
+        return string.IsNullOrEmpty(userMessage)
+            ? callerArgMessagePart
+            : $"{callerArgMessagePart} {userMessage}";
     }
 
     private static string BuildUserMessageForConditionExpression(string? format, string conditionExpression)
