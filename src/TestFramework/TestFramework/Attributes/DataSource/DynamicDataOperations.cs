@@ -7,45 +7,45 @@ internal static class DynamicDataOperations
 {
     private const BindingFlags DeclaredOnlyLookup = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly;
 
-    public static IEnumerable<object[]> GetData(Type? _dynamicDataDeclaringType, DynamicDataSourceType _dynamicDataSourceType, string _dynamicDataSourceName, MethodInfo methodInfo)
+    public static IEnumerable<object[]> GetData(Type? dynamicDataDeclaringType, DynamicDataSourceType dynamicDataSourceType, string dynamicDataSourceName, object?[] dynamicDataSourceArguments, MethodInfo methodInfo)
     {
         // Check if the declaring type of test data is passed in. If not, default to test method's class type.
-        _dynamicDataDeclaringType ??= methodInfo.DeclaringType;
-        DebugEx.Assert(_dynamicDataDeclaringType is not null, "Declaring type of test data cannot be null.");
+        dynamicDataDeclaringType ??= methodInfo.DeclaringType;
+        DebugEx.Assert(dynamicDataDeclaringType is not null, "Declaring type of test data cannot be null.");
 
         object? obj = null;
 
-        switch (_dynamicDataSourceType)
+        switch (dynamicDataSourceType)
         {
             case DynamicDataSourceType.AutoDetect:
 #pragma warning disable IDE0045 // Convert to conditional expression - it becomes less readable.
-                if (GetPropertyConsideringInheritance(_dynamicDataDeclaringType, _dynamicDataSourceName) is { } dynamicDataPropertyInfo)
+                if (GetPropertyConsideringInheritance(dynamicDataDeclaringType, dynamicDataSourceName) is { } dynamicDataPropertyInfo)
                 {
                     obj = GetDataFromProperty(dynamicDataPropertyInfo);
                 }
-                else if (GetMethodConsideringInheritance(_dynamicDataDeclaringType, _dynamicDataSourceName) is { } dynamicDataMethodInfo)
+                else if (GetMethodConsideringInheritance(dynamicDataDeclaringType, dynamicDataSourceName) is { } dynamicDataMethodInfo)
                 {
-                    obj = GetDataFromMethod(dynamicDataMethodInfo);
+                    obj = GetDataFromMethod(dynamicDataMethodInfo, dynamicDataSourceArguments);
                 }
                 else
                 {
-                    throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, FrameworkMessages.DynamicDataSourceShouldExistAndBeValid, _dynamicDataSourceName, _dynamicDataDeclaringType.FullName));
+                    throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, FrameworkMessages.DynamicDataSourceShouldExistAndBeValid, dynamicDataSourceName, dynamicDataDeclaringType.FullName));
                 }
 #pragma warning restore IDE0045 // Convert to conditional expression
 
                 break;
             case DynamicDataSourceType.Property:
-                PropertyInfo property = GetPropertyConsideringInheritance(_dynamicDataDeclaringType, _dynamicDataSourceName)
-                    ?? throw new ArgumentNullException($"{DynamicDataSourceType.Property} {_dynamicDataSourceName}");
+                PropertyInfo property = GetPropertyConsideringInheritance(dynamicDataDeclaringType, dynamicDataSourceName)
+                    ?? throw new ArgumentNullException($"{DynamicDataSourceType.Property} {dynamicDataSourceName}");
 
                 obj = GetDataFromProperty(property);
                 break;
 
             case DynamicDataSourceType.Method:
-                MethodInfo method = GetMethodConsideringInheritance(_dynamicDataDeclaringType, _dynamicDataSourceName)
-                    ?? throw new ArgumentNullException($"{DynamicDataSourceType.Method} {_dynamicDataSourceName}");
+                MethodInfo method = GetMethodConsideringInheritance(dynamicDataDeclaringType, dynamicDataSourceName)
+                    ?? throw new ArgumentNullException($"{DynamicDataSourceType.Method} {dynamicDataSourceName}");
 
-                obj = GetDataFromMethod(method);
+                obj = GetDataFromMethod(method, dynamicDataSourceArguments);
                 break;
         }
 
@@ -55,8 +55,8 @@ internal static class DynamicDataOperations
                 string.Format(
                     CultureInfo.InvariantCulture,
                     FrameworkMessages.DynamicDataValueNull,
-                    _dynamicDataSourceName,
-                    _dynamicDataDeclaringType.FullName));
+                    dynamicDataSourceName,
+                    dynamicDataDeclaringType.FullName));
         }
 
         if (!TryGetData(obj, out IEnumerable<object[]>? data))
@@ -65,19 +65,17 @@ internal static class DynamicDataOperations
                 string.Format(
                     CultureInfo.InvariantCulture,
                     FrameworkMessages.DynamicDataIEnumerableNull,
-                    _dynamicDataSourceName,
-                    _dynamicDataDeclaringType.FullName));
+                    dynamicDataSourceName,
+                    dynamicDataDeclaringType.FullName));
         }
 
         // Data is valid, return it.
         return data;
     }
 
-    private static object? GetDataFromMethod(MethodInfo method)
+    private static object? GetDataFromMethod(MethodInfo method, object?[] arguments)
     {
-        if (!method.IsStatic
-            || method.ContainsGenericParameters
-            || method.GetParameters().Length > 0)
+        if (!method.IsStatic || method.ContainsGenericParameters)
         {
             throw new NotSupportedException(
                 string.Format(
@@ -86,8 +84,8 @@ internal static class DynamicDataOperations
                     method.DeclaringType?.FullName is { } typeFullName ? $"{typeFullName}.{method.Name}" : method.Name));
         }
 
-        // Note: the method is static and takes no parameters.
-        return method.Invoke(null, null);
+        // Note: the method is static.
+        return method.Invoke(null, arguments.Length == 0 ? null : arguments);
     }
 
     private static object? GetDataFromProperty(PropertyInfo property)
