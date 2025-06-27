@@ -32,7 +32,9 @@ public sealed class ServiceProviderTests
         Assert.IsNull(_serviceProvider.GetService<IDataConsumer>());
 
         _serviceProvider.AddService(new TestApplicationLifecycleCallbacks());
+#pragma warning disable CS0618 // Type or member is obsolete
         Assert.IsNull(_serviceProvider.GetService<ITestApplicationLifecycleCallbacks>());
+#pragma warning restore CS0618 // Type or member is obsolete
         Assert.IsNull(_serviceProvider.GetService<ITestHostApplicationLifetime>());
     }
 
@@ -52,7 +54,9 @@ public sealed class ServiceProviderTests
         Assert.IsNotNull(_serviceProvider.GetServiceInternal<IDataConsumer>());
 
         _serviceProvider.AddService(new TestApplicationLifecycleCallbacks());
+#pragma warning disable CS0618 // Type or member is obsolete
         Assert.IsNotNull(_serviceProvider.GetServiceInternal<ITestApplicationLifecycleCallbacks>());
+#pragma warning restore CS0618 // Type or member is obsolete
         Assert.IsNotNull(_serviceProvider.GetServiceInternal<ITestHostApplicationLifetime>());
     }
 
