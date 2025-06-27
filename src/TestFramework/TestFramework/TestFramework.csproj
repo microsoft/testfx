@@ -7,7 +7,7 @@
   <PropertyGroup>
     <RootNamespace>Microsoft.VisualStudio.TestTools.UnitTesting</RootNamespace>
     <AssemblyName>MSTest.TestFramework</AssemblyName>
-    <DefineConstants>TRACE</DefineConstants>
+    <DefineConstants>$(DefineConstants);TRACE</DefineConstants>
 
     <!-- TestFramework.Extensions.csproj is what we actually package as "MSTest.TestFramework". -->
     <!-- Without changing PackageId here, NuGet will view this as a circular reference -->

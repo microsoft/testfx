@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>$(MicrosoftTestingTargetFrameworks);netstandard2.0</TargetFrameworks>
-    <DefineConstants>PLATFORM_MSBUILD</DefineConstants>
+    <DefineConstants>$(DefineConstants);PLATFORM_MSBUILD</DefineConstants>
     <NoWarn>$(NoWarn);NU5100</NoWarn>
   </PropertyGroup>
 

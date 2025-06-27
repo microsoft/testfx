@@ -39,7 +39,7 @@
 
   <PropertyGroup>
     <RootNamespace>Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter</RootNamespace>
-    <DefineConstants>TRACE</DefineConstants>
+    <DefineConstants>$(DefineConstants);TRACE</DefineConstants>
     <!-- Force NuGet package dependencies to be copied to the output directory so we can embed AdapterUtilities in our NuGet. -->
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
   </PropertyGroup>
