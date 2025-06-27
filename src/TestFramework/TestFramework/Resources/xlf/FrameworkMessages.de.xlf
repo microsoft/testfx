@@ -72,6 +72,11 @@
         <target state="translated">Beide Sammlungen enthalten dieselben Elemente. {0}</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="CallerArgumentExpressionSingleParameterMessage">
+        <source>'{0}' expression: '{1}'.</source>
+        <target state="new">'{0}' expression: '{1}'.</target>
+        <note>Example: "'value' expression: 'new object()'", where 'value' is the parameter name of an assertion method, and 'new object()' is the expression the user passed to the assert method.</note>
+      </trans-unit>
       <trans-unit id="CollectionEqualReason">
         <source>{0}. {1}</source>
         <target state="translated">{0}. {1}</target>

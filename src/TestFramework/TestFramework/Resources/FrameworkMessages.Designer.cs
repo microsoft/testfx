@@ -223,6 +223,15 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to &apos;{0}&apos; expression: &apos;{1}&apos;..
+        /// </summary>
+        internal static string CallerArgumentExpressionSingleParameterMessage {
+            get {
+                return ResourceManager.GetString("CallerArgumentExpressionSingleParameterMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0}. {1}.
         /// </summary>
         internal static string CollectionEqualReason {
