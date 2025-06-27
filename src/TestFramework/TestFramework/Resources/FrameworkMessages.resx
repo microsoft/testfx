@@ -367,5 +367,6 @@ Actual: {2}</value>
   </data>
   <data name="CallerArgumentExpressionSingleParameterMessage" xml:space="preserve">
     <value>'{0}' expression: '{1}'.</value>
+    <comment>Example: "'value' expression: 'new object()'", where 'value' is the parameter name of an assertion method, and 'new object()' is the expression the user passed to the assert method.</comment>
   </data>
 </root>
