@@ -36,7 +36,7 @@ public sealed class DynamicDataAttribute : Attribute, ITestDataSource, ITestData
 {
     private readonly string _dynamicDataSourceName;
     private readonly DynamicDataSourceType _dynamicDataSourceType;
-
+    private readonly object?[] _dynamicDataSourceArguments = [];
     private readonly Type? _dynamicDataDeclaringType;
 
     /// <summary>
@@ -65,6 +65,22 @@ public sealed class DynamicDataAttribute : Attribute, ITestDataSource, ITestData
     {
         _dynamicDataSourceName = dynamicDataSourceName;
         _dynamicDataSourceType = DynamicDataSourceType.AutoDetect;
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="DynamicDataAttribute"/> class.
+    /// </summary>
+    /// <param name="dynamicDataSourceName">
+    /// The name of method or property having test data.
+    /// </param>
+    /// <param name="dynamicDataSourceArguments">
+    /// Arguments to be passed to method referred to by <paramref name="dynamicDataSourceName"/>.
+    /// </param>
+    public DynamicDataAttribute(string dynamicDataSourceName, params object?[] dynamicDataSourceArguments)
+    {
+        _dynamicDataSourceName = dynamicDataSourceName;
+        _dynamicDataSourceType = DynamicDataSourceType.AutoDetect;
+        _dynamicDataSourceArguments = dynamicDataSourceArguments;
     }
 
     /// <summary>
@@ -99,6 +115,27 @@ public sealed class DynamicDataAttribute : Attribute, ITestDataSource, ITestData
     public DynamicDataAttribute(string dynamicDataSourceName, Type dynamicDataDeclaringType)
         : this(dynamicDataSourceName) => _dynamicDataDeclaringType = dynamicDataDeclaringType;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="DynamicDataAttribute"/> class when the test data is present in a class different
+    /// from test method's class.
+    /// </summary>
+    /// <param name="dynamicDataSourceName">
+    /// The name of method or property having test data.
+    /// </param>
+    /// <param name="dynamicDataDeclaringType">
+    /// The declaring type of property or method having data. Useful in cases when declaring type is present in a class different from
+    /// test method's class. If null, declaring type defaults to test method's class type.
+    /// </param>
+    /// <param name="dynamicDataSourceArguments">
+    /// Arguments to be passed to method referred to by <paramref name="dynamicDataSourceName"/>.
+    /// </param>
+    public DynamicDataAttribute(string dynamicDataSourceName, Type dynamicDataDeclaringType, params object?[] dynamicDataSourceArguments)
+        : this(dynamicDataSourceName)
+    {
+        _dynamicDataDeclaringType = dynamicDataDeclaringType;
+        _dynamicDataSourceArguments = dynamicDataSourceArguments;
+    }
+
     internal static TestIdGenerationStrategy TestIdGenerationStrategy { get; set; }
 
     /// <summary>
@@ -121,7 +158,7 @@ public sealed class DynamicDataAttribute : Attribute, ITestDataSource, ITestData
 
     /// <inheritdoc />
     public IEnumerable<object[]> GetData(MethodInfo methodInfo)
-        => DynamicDataOperations.GetData(_dynamicDataDeclaringType, _dynamicDataSourceType, _dynamicDataSourceName, methodInfo);
+        => DynamicDataOperations.GetData(_dynamicDataDeclaringType, _dynamicDataSourceType, _dynamicDataSourceName, _dynamicDataSourceArguments, methodInfo);
 
     /// <inheritdoc />
     public string? GetDisplayName(MethodInfo methodInfo, object?[]? data)
