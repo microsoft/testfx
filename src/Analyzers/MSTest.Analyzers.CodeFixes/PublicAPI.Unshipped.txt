@@ -1,6 +1,11 @@
 #nullable enable
+MSTest.Analyzers.CodeFixes.StringAssertToAssertFixer
+MSTest.Analyzers.CodeFixes.StringAssertToAssertFixer.StringAssertToAssertFixer() -> void
 MSTest.Analyzers.PreferTestMethodOverDataTestMethodFixer
 MSTest.Analyzers.PreferTestMethodOverDataTestMethodFixer.PreferTestMethodOverDataTestMethodFixer() -> void
+override MSTest.Analyzers.CodeFixes.StringAssertToAssertFixer.FixableDiagnosticIds.get -> System.Collections.Immutable.ImmutableArray<string!>
+override MSTest.Analyzers.CodeFixes.StringAssertToAssertFixer.RegisterCodeFixesAsync(Microsoft.CodeAnalysis.CodeFixes.CodeFixContext context) -> System.Threading.Tasks.Task!
 override MSTest.Analyzers.PreferTestMethodOverDataTestMethodFixer.FixableDiagnosticIds.get -> System.Collections.Immutable.ImmutableArray<string!>
 override MSTest.Analyzers.PreferTestMethodOverDataTestMethodFixer.GetFixAllProvider() -> Microsoft.CodeAnalysis.CodeFixes.FixAllProvider!
 override MSTest.Analyzers.PreferTestMethodOverDataTestMethodFixer.RegisterCodeFixesAsync(Microsoft.CodeAnalysis.CodeFixes.CodeFixContext context) -> System.Threading.Tasks.Task!
+override sealed MSTest.Analyzers.CodeFixes.StringAssertToAssertFixer.GetFixAllProvider() -> Microsoft.CodeAnalysis.CodeFixes.FixAllProvider!

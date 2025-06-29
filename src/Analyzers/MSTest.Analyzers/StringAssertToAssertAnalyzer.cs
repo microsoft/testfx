@@ -1,9 +1,8 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Immutable;
 
-using Analyzer.Utilities;
 using Analyzer.Utilities.Extensions;
 
 using Microsoft.CodeAnalysis;
@@ -104,7 +103,7 @@ internal sealed class StringAssertToAssertAnalyzer : DiagnosticAnalyzer
             "EndsWith" => "EndsWith",
             "Matches" => "Matches",
             "DoesNotMatch" => "DoesNotMatch",
-            _ => null
+            _ => null,
         };
 
         if (assertMethodName == null)
@@ -118,7 +117,7 @@ internal sealed class StringAssertToAssertAnalyzer : DiagnosticAnalyzer
             return;
         }
 
-        var properties = ImmutableDictionary.CreateBuilder<string, string?>();
+        ImmutableDictionary<string, string?>.Builder properties = ImmutableDictionary.CreateBuilder<string, string?>();
         properties.Add(ProperAssertMethodNameKey, assertMethodName);
 
         context.ReportDiagnostic(context.Operation.CreateDiagnostic(

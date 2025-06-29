@@ -72,6 +72,11 @@
         <target state="translated">Oluşturucuyu TestInitialize yöntemiyle değiştir</target>
         <note />
       </trans-unit>
+      <trans-unit id="StringAssertToAssertTitle">
+        <source>Use 'Assert.{0}' instead of 'StringAssert'</source>
+        <target state="new">Use 'Assert.{0}' instead of 'StringAssert'</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TestClassShouldBeValidFix">
         <source>Fix test class signature</source>
         <target state="translated">Test sınıfı imzasını düzeltme</target>
