@@ -102,6 +102,11 @@
         <target state="translated">'[TestMethod]' の追加</target>
         <note />
       </trans-unit>
+      <trans-unit id="UseCooperativeCancellationForTimeoutFix">
+        <source>Use 'CooperativeCancellation = true'</source>
+        <target state="translated">'CooperativeCancellation = true' を使用する</target>
+        <note />
+      </trans-unit>
       <trans-unit id="UseNewerAssertThrows">
         <source>Use '{0}'</source>
         <target state="translated">'{0}' を使用する</target>

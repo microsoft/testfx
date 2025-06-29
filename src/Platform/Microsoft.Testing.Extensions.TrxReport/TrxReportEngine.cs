@@ -555,6 +555,66 @@ internal sealed partial class TrxReportEngine
 
             unitTest.Add(new XElement("Execution", new XAttribute("id", executionId)));
 
+            XElement? properties = null;
+            XElement? owners = null;
+            foreach (TestMetadataProperty property in testNode.Properties.OfType<TestMetadataProperty>())
+            {
+                switch (property.Key)
+                {
+                    case "Owner":
+                        owners ??= new XElement("Owners", new XElement("Owner", new XAttribute("name", property.Value)));
+                        break;
+
+                    case "Priority":
+                        if (int.TryParse(property.Value, out _))
+                        {
+                            unitTest.SetAttributeValue("priority", property.Value);
+                        }
+
+                        break;
+
+                    default:
+                        // NOTE: VSTest doesn't produce Properties as of writing this.
+                        // It was historically fixed, but the fix wasn't correct and the fix was reverted and never revisited to be properly fixed.
+                        // Revert PR: https://github.com/microsoft/vstest/pull/15080
+                        // The original implementation (buggy) was setting "Key" and "Value" as attributes on "Property" element.
+                        // However, Visual Studio will validate the TRX file against vstst.xsd file in
+                        //  C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Xml\Schemas\vstst.xsd
+                        // In xsd, "Properties" element is defined as:
+                        // <xs:element name="Properties" minOccurs="0">
+                        //   <xs:complexType>
+                        //     <xs:sequence>
+                        //       <xs:element name="Property" minOccurs="0" maxOccurs="unbounded">
+                        //         <xs:complexType>
+                        //           <xs:sequence>
+                        //             <xs:element name="Key" />
+                        //             <xs:element name="Value" />
+                        //           </xs:sequence>
+                        //         </xs:complexType>
+                        //       </xs:element>
+                        //     </xs:sequence>
+                        //   </xs:complexType>
+                        // </xs:element>
+                        // So, Key and Value are **elements**, not attributes.
+                        // In MTP, we do the right thing and follow the XSD definition.
+                        properties ??= new XElement("Properties");
+                        properties.Add(new XElement(
+                            "Property",
+                            new XElement("Key", property.Key), new XElement("Value", property.Value)));
+                        break;
+                }
+            }
+
+            if (owners is not null)
+            {
+                unitTest.Add(owners);
+            }
+
+            if (properties is not null)
+            {
+                unitTest.Add(properties);
+            }
+
             var testMethod = new XElement(
                 "TestMethod",
                 new XAttribute("codeBase", testAppModule),

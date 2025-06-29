@@ -35,7 +35,11 @@ charset = utf-8
 indent_size = 2
 
 # Xml files
-[*.{xml}]
+[*.xml]
+indent_size = 2
+
+# Xlf files
+[*.xlf]
 indent_size = 2
 
 # YAML files

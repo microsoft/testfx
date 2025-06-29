@@ -290,7 +290,7 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
                 if (_testHostsInformation.LifetimeHandlers.Length > 0)
                 {
                     // We don't block the host during the 'OnTestHostProcessStartedAsync' by-design, if 'ITestHostProcessLifetimeHandler' extensions needs
-                    // to block the execution of the test host should add an in-process extension like an 'ITestApplicationLifecycleCallbacks' and
+                    // to block the execution of the test host should add an in-process extension like an 'ITestHostApplicationLifetime' and
                     // wait for a connection/signal to return.
                     TestHostProcessInformation testHostProcessInformation = new(_testHostPID.Value);
                     foreach (ITestHostProcessLifetimeHandler lifetimeHandler in _testHostsInformation.LifetimeHandlers)

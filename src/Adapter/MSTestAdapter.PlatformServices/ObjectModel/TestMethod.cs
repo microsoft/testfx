@@ -147,6 +147,12 @@ public sealed class TestMethod : ITestMethod
     /// </summary>
     internal string?[]? SerializedData { get; set; }
 
+    // This holds user types that may not be serializable.
+    // If app domains are enabled, we have no choice other than losing the original data.
+    // In that case, we fallback to deserializing the SerializedData.
+    [field: NonSerialized]
+    internal object?[]? ActualData { get; set; }
+
     /// <summary>
     /// Gets or sets the test data source ignore message.
     /// </summary>
@@ -164,11 +170,6 @@ public sealed class TestMethod : ITestMethod
     /// Gets the display name set during discovery.
     /// </summary>
     internal string DisplayName { get; }
-
-    internal string UniqueName
-        => HasManagedMethodAndTypeProperties
-        ? $"{ManagedTypeName}.{ManagedMethodName}->{string.Join(", ", SerializedData ?? [])}"
-        : $"{FullClassName}.{Name}->{string.Join(", ", SerializedData ?? [])}";
 
     internal TestMethod Clone() => (TestMethod)MemberwiseClone();
 }

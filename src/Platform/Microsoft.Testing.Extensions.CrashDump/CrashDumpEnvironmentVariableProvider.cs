@@ -132,11 +132,10 @@ internal sealed class CrashDumpEnvironmentVariableProvider : ITestHostEnvironmen
 
     public Task<ValidationResult> ValidateTestHostEnvironmentVariablesAsync(IReadOnlyEnvironmentVariables environmentVariables)
     {
-        StringBuilder errors = new();
-
 #if !NETCOREAPP
         return ValidationResult.InvalidTask(CrashDumpResources.CrashDumpNotSupportedInNonNetCoreErrorMessage);
 #else
+        StringBuilder errors = new();
         foreach (string prefix in _prefixes)
         {
             if (!environmentVariables.TryGetVariable($"{prefix}{EnableMiniDumpVariable}", out OwnedEnvironmentVariable? enableMiniDump)
