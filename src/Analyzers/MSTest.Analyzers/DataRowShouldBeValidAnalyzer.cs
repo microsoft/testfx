@@ -184,7 +184,7 @@ public sealed class DataRowShouldBeValidAnalyzer : DiagnosticAnalyzer
         AnalyzeGenericMethod(context, dataRowSyntax, methodSymbol, constructorArguments);
 
         // Check constructor argument types match method parameter types.
-        List<(int ConstructorArgumentIndex, int MethodParameterIndex)> typeMismatchIndices = [];
+        List<(string ParameterName, string ExpectedType, string ActualType)> typeMismatches = [];
         for (int currentArgumentIndex = 0; currentArgumentIndex < constructorArguments.Length; currentArgumentIndex++)
         {
             // Null is considered as default for non-nullable types.
@@ -205,16 +205,24 @@ public sealed class DataRowShouldBeValidAnalyzer : DiagnosticAnalyzer
 
             if (argumentType is not null && !argumentType.IsAssignableTo(paramType, context.Compilation))
             {
-                typeMismatchIndices.Add((currentArgumentIndex, Math.Min(currentArgumentIndex, methodSymbol.Parameters.Length - 1)));
+                int parameterIndex = Math.Min(currentArgumentIndex, methodSymbol.Parameters.Length - 1);
+                string parameterName = methodSymbol.Parameters[parameterIndex].Name;
+                string expectedType = paramType.ToDisplayString();
+                string actualType = argumentType.ToDisplayString();
+                typeMismatches.Add((parameterName, expectedType, actualType));
             }
         }
 
         // Report diagnostics if there's any type mismatch.
-        if (typeMismatchIndices.Count > 0)
+        if (typeMismatches.Count > 0)
         {
+            // Report the first mismatch with descriptive information
+            var firstMismatch = typeMismatches[0];
             context.ReportDiagnostic(dataRowSyntax.CreateDiagnostic(
                 ArgumentTypeMismatchRule,
-                string.Join(", ", typeMismatchIndices)));
+                firstMismatch.ParameterName,
+                firstMismatch.ExpectedType,
+                firstMismatch.ActualType));
         }
     }
 
