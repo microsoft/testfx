@@ -518,8 +518,7 @@ internal sealed partial class TrxReportEngine
                 output.Add(errorInfoElement);
             }
 
-            // add collectorDataEntries details
-            if (output.HasElements && outcome != "NotExecuted")
+            if (output.HasElements)
             {
                 unitTestResult.Add(output);
             }
