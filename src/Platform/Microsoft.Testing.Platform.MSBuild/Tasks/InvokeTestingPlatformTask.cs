@@ -207,7 +207,7 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
             }
 
             Log.LogMessage(MessageImportance.Low, $"Current process architecture '{_currentProcessArchitecture}'. Requested test architecture '{TestArchitecture.ItemSpec}'");
-            PlatformArchitecture targetArchitecture = EnumPolyfill.Parse<PlatformArchitecture>(TestArchitecture.ItemSpec, ignoreCase: true);
+            PlatformArchitecture targetArchitecture = Enum.Parse<PlatformArchitecture>(TestArchitecture.ItemSpec, ignoreCase: true);
             StringBuilder resolutionLog = new();
             DotnetMuxerLocator dotnetMuxerLocator = new(log => resolutionLog.AppendLine(log));
             if (dotnetMuxerLocator.TryGetDotnetPathByArchitecture(targetArchitecture, out string? dotnetPath))
@@ -241,7 +241,7 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
     }
 
     private bool IsCurrentProcessArchitectureCompatible() =>
-        _currentProcessArchitecture == EnumPolyfill.Parse<Architecture>(TestArchitecture.ItemSpec, ignoreCase: true);
+        _currentProcessArchitecture == Enum.Parse<Architecture>(TestArchitecture.ItemSpec, ignoreCase: true);
 
     private string? TryGetRunCommand()
     {

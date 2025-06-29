@@ -495,7 +495,7 @@ public class MSTestSettings
                                         CultureInfo.CurrentCulture,
                                         Resource.InvalidClassCleanupLifecycleValue,
                                         value,
-                                        string.Join(", ", EnumPolyfill.GetNames<ClassCleanupBehavior>())));
+                                        string.Join(", ", Enum.GetNames<ClassCleanupBehavior>())));
 
                             break;
                         }
@@ -822,7 +822,7 @@ public class MSTestSettings
                                         CultureInfo.CurrentCulture,
                                         Resource.InvalidParallelScopeValue,
                                         value,
-                                        string.Join(", ", EnumPolyfill.GetNames<ExecutionScope>())));
+                                        string.Join(", ", Enum.GetNames<ExecutionScope>())));
 
                             break;
                         }
@@ -849,7 +849,7 @@ public class MSTestSettings
     private static bool TryParseEnum<T>(string value, out T result)
         where T : struct, Enum
         => Enum.TryParse(value, true, out result)
-        && EnumPolyfill.IsDefined(result);
+        && Enum.IsDefined(result);
 
     private static void SetGlobalSettings(
         [StringSyntax(StringSyntaxAttribute.Xml, nameof(runsettingsXml))] string runsettingsXml,
@@ -978,7 +978,7 @@ public class MSTestSettings
                     CultureInfo.CurrentCulture,
                     Resource.InvalidClassCleanupLifecycleValue,
                     classCleanupLifecycle,
-                    string.Join(", ", EnumPolyfill.GetNames<ClassCleanupBehavior>())));
+                    string.Join(", ", Enum.GetNames<ClassCleanupBehavior>())));
             }
 
             settings.ClassCleanupLifecycle = lifecycle;
@@ -1011,7 +1011,7 @@ public class MSTestSettings
                     CultureInfo.CurrentCulture,
                     Resource.InvalidParallelScopeValue,
                     value,
-                    string.Join(", ", EnumPolyfill.GetNames<ExecutionScope>())));
+                    string.Join(", ", Enum.GetNames<ExecutionScope>())));
             }
 
             settings.ParallelizationScope = scope;
