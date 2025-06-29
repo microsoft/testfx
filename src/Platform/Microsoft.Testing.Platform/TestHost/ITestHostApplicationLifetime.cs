@@ -6,6 +6,7 @@ namespace Microsoft.Testing.Platform.Extensions.TestHost;
 /// <summary>
 /// Represents the interface for test application lifecycle callbacks.
 /// </summary>
+[Obsolete("Use ITestHostApplicationLifetime instead. This interface will be removed in v2.")]
 public interface ITestApplicationLifecycleCallbacks : ITestHostExtension
 {
     /// <summary>
@@ -22,4 +23,14 @@ public interface ITestApplicationLifecycleCallbacks : ITestHostExtension
     /// <param name="cancellation">The cancellation token.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
     Task AfterRunAsync(int exitCode, CancellationToken cancellation);
+}
+
+/// <summary>
+/// Represents the interface for test application lifecycle callbacks.
+/// </summary>
+#pragma warning disable CS0618 // Type or member is obsolete
+public interface ITestHostApplicationLifetime : ITestHostExtension, ITestApplicationLifecycleCallbacks
+#pragma warning restore CS0618 // Type or member is obsolete
+{
+    // In v2, move BeforeRunAsync and AfterRunAsync to ITestHostApplicationLifetime directly
 }

@@ -441,8 +441,10 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
             systemEnvironment).ConfigureAwait(false);
 
         // Build and register the test application lifecycle callbacks.
+#pragma warning disable CS0618 // Type or member is obsolete
         ITestApplicationLifecycleCallbacks[] testApplicationLifecycleCallback =
             await ((TestHostManager)TestHost).BuildTestApplicationLifecycleCallbackAsync(serviceProvider).ConfigureAwait(false);
+#pragma warning restore CS0618 // Type or member is obsolete
         serviceProvider.AddServices(testApplicationLifecycleCallback);
 
         // ServerMode and Console mode uses different host
