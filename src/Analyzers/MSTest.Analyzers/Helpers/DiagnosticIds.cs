@@ -50,4 +50,5 @@ internal static class DiagnosticIds
     public const string UseRetryWithTestMethodRuleId = "MSTEST0043";
     public const string PreferTestMethodOverDataTestMethodRuleId = "MSTEST0044";
     public const string UseCooperativeCancellationForTimeoutRuleId = "MSTEST0045";
+    public const string StringAssertToAssertRuleId = "MSTEST0046";
 }

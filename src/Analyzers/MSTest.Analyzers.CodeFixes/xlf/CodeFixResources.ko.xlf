@@ -72,6 +72,11 @@
         <target state="translated">생성자를 TestInitialize 메서드로 바꾸기</target>
         <note />
       </trans-unit>
+      <trans-unit id="StringAssertToAssertTitle">
+        <source>Use 'Assert.{0}' instead of 'StringAssert'</source>
+        <target state="new">Use 'Assert.{0}' instead of 'StringAssert'</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TestClassShouldBeValidFix">
         <source>Fix test class signature</source>
         <target state="translated">테스트 클래스 서명 수정</target>

@@ -532,6 +532,16 @@ The type declaring these methods should also respect the following rules:
         <target state="translated">公用類型應為測試類別</target>
         <note />
       </trans-unit>
+      <trans-unit id="StringAssertToAssertMessageFormat">
+        <source>Use 'Assert.{0}' instead of 'StringAssert.{1}'</source>
+        <target state="new">Use 'Assert.{0}' instead of 'StringAssert.{1}'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="StringAssertToAssertTitle">
+        <source>Use 'Assert' instead of 'StringAssert'</source>
+        <target state="new">Use 'Assert' instead of 'StringAssert'</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TestClassShouldBeValidMessageFormat">
         <source>Test class '{0}' should be valid</source>
         <target state="translated">測試類別 '{0}' 應為有效</target>
