@@ -30,8 +30,8 @@ public sealed class TestApplicationBuilderTests
     public async Task TestApplicationLifecycleCallbacks_DuplicatedId_ShouldFail()
     {
         TestHostManager testHostManager = new();
-        testHostManager.AddTestApplicationLifecycleCallbacks(_ => new ApplicationLifecycleCallbacks("duplicatedId"));
-        testHostManager.AddTestApplicationLifecycleCallbacks(_ => new ApplicationLifecycleCallbacks("duplicatedId"));
+        testHostManager.AddTestHostApplicationLifetime(_ => new ApplicationLifecycleCallbacks("duplicatedId"));
+        testHostManager.AddTestHostApplicationLifetime(_ => new ApplicationLifecycleCallbacks("duplicatedId"));
         InvalidOperationException invalidOperationException = await Assert.ThrowsExceptionAsync<InvalidOperationException>(() => testHostManager.BuildTestApplicationLifecycleCallbackAsync(_serviceProvider));
         Assert.IsTrue(invalidOperationException.Message.Contains("duplicatedId") && invalidOperationException.Message.Contains(typeof(ApplicationLifecycleCallbacks).ToString()));
     }
@@ -345,7 +345,7 @@ public sealed class TestApplicationBuilderTests
         public Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken) => throw new NotImplementedException();
     }
 
-    private sealed class ApplicationLifecycleCallbacks : ITestApplicationLifecycleCallbacks
+    private sealed class ApplicationLifecycleCallbacks : ITestHostApplicationLifetime
     {
         public ApplicationLifecycleCallbacks(string id) => Uid = id;
 
