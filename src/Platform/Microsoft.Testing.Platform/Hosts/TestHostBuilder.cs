@@ -329,7 +329,7 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
             return toolsTestHost;
         }
 
-        var pushOnlyProtocol = new DotnetTestConnection(commandLineHandler, processHandler, environment, _testApplicationModuleInfo, testApplicationCancellationTokenSource);
+        var pushOnlyProtocol = new DotnetTestConnection(commandLineHandler, environment, _testApplicationModuleInfo, testApplicationCancellationTokenSource);
         await pushOnlyProtocol.AfterCommonServiceSetupAsync().ConfigureAwait(false);
         if (pushOnlyProtocol.IsServerMode)
         {
@@ -388,7 +388,7 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
                 passiveNode = new PassiveNode(
                     messageHandlerFactory,
                     testApplicationCancellationTokenSource,
-                    processHandler,
+                    systemEnvironment,
                     systemMonitorAsyncFactory,
                     loggerFactory.CreateLogger<PassiveNode>());
             }
@@ -433,7 +433,6 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
         // If we're under test controllers and currently we're inside the started test host we connect to the out of process
         // test controller manager.
         NamedPipeClient? testControllerConnection = await ConnectToTestHostProcessMonitorIfAvailableAsync(
-            processHandler,
             testApplicationCancellationTokenSource,
             loggerFactory.CreateLogger(nameof(ConnectToTestHostProcessMonitorIfAvailableAsync)),
             testHostControllerInfo,
@@ -522,7 +521,6 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
     }
 
     private static async Task<NamedPipeClient?> ConnectToTestHostProcessMonitorIfAvailableAsync(
-        IProcessHandler processHandler,
         CTRLPlusCCancellationTokenSource testApplicationCancellationTokenSource,
         ILogger logger,
         TestHostControllerInfo testHostControllerInfo,
@@ -556,9 +554,8 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
         await logger.LogDebugAsync($"Connected to named pipe '{pipeName}'").ConfigureAwait(false);
 
         // Send the PID
-        using IProcess currentProcess = processHandler.GetCurrentProcess();
         await client.RequestReplyAsync<TestHostProcessPIDRequest, VoidResponse>(
-            new TestHostProcessPIDRequest(currentProcess.Id),
+            new TestHostProcessPIDRequest(environment.ProcessId),
             testApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
         return client;
     }
