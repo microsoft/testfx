@@ -756,7 +756,7 @@ El tipo que declara estos métodos también debe respetar las reglas siguientes:
       </trans-unit>
       <trans-unit id="TypeContainingTestMethodShouldBeATestClassMessageFormat">
         <source>Type '{0}' contains test methods and should be marked with '[TestClass]'</source>
-        <target state="new">La clase '{0}' contiene métodos de prueba y debe marcarse con '[TestClass]'</target>
+        <target state="translated">El tipo '{0}' contiene métodos de prueba y debe marcarse con '[TestClass]'</target>
         <note />
       </trans-unit>
       <trans-unit id="TypeContainingTestMethodShouldBeATestClassTitle">

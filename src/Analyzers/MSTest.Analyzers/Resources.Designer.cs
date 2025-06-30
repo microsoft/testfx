@@ -1043,7 +1043,7 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Type contaning &apos;[TestMethod]&apos; should be marked with &apos;[TestClass]&apos;, otherwise the test method will be silently ignored..
+        ///   Looks up a localized string similar to Type containing &apos;[TestMethod]&apos; should be marked with &apos;[TestClass]&apos;, otherwise the test method will be silently ignored..
         /// </summary>
         internal static string TypeContainingTestMethodShouldBeATestClassDescription {
             get {

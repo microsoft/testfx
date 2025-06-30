@@ -768,7 +768,7 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="TypeContainingTestMethodShouldBeATestClassMessageFormat">
         <source>Type '{0}' contains test methods and should be marked with '[TestClass]'</source>
-        <target state="new">Класс "{0}" тестовые методы. У этого класса должна быть пометка "[TestClass]".</target>
+        <target state="translated">Тип "{0}" тестовые методы. У этого класса должна быть пометка "[TestClass]".</target>
         <note />
       </trans-unit>
       <trans-unit id="TypeContainingTestMethodShouldBeATestClassTitle">
