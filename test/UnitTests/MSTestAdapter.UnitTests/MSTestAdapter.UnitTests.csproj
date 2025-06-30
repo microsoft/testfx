@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <NetStandardNetFrameworkHolder>net48</NetStandardNetFrameworkHolder>
-    <TargetFrameworks>net6.0;net462;$(NetStandardNetFrameworkHolder);netcoreapp3.1</TargetFrameworks>
+    <TargetFrameworks>net6.0;net7.0;net462;$(NetStandardNetFrameworkHolder);netcoreapp3.1</TargetFrameworks>
     <TargetFrameworks Condition=" '$(OS)' == 'Windows_NT' ">$(TargetFrameworks);$(WinUiMinimum)</TargetFrameworks>
     <IsNetCoreApp Condition=" '$(TargetFramework)' == 'netcoreapp3.1' OR '$(TargetFramework)' == 'net6.0' OR '$(TargetFramework)' == '$(WinUiMinimum)' ">true</IsNetCoreApp>
     <RootNamespace>Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests</RootNamespace>
@@ -19,6 +19,10 @@
 
   <ItemGroup Condition=" '$(TargetFramework)' == '$(NetStandardNetFrameworkHolder)' ">
     <ProjectReference Include="$(RepoRoot)src\TestFramework\TestFramework.Extensions\TestFramework.Extensions.csproj" SetTargetFramework="TargetFramework=netstandard2.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\MSTestAdapter.PlatformServices.UnitTests\TestableImplementations\TestablePlatformServiceProvider.cs" Link="TestablePlatformServiceProvider.cs" />
   </ItemGroup>
 
   <ItemGroup>

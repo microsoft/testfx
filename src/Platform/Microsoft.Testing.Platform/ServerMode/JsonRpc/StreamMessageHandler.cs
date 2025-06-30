@@ -11,8 +11,6 @@ namespace Microsoft.Testing.Platform.ServerMode;
 
 internal class StreamMessageHandler : IMessageHandler, IDisposable
 {
-    private readonly Stream _clientToServerStream;
-    private readonly Stream _serverToClientStream;
     private readonly StreamReader _reader;
     private readonly StreamWriter _writer;
     private readonly IMessageFormatter _formatter;
@@ -23,10 +21,8 @@ internal class StreamMessageHandler : IMessageHandler, IDisposable
         Stream serverToClientStream,
         IMessageFormatter formatter)
     {
-        _clientToServerStream = clientToServerStream;
-        _serverToClientStream = serverToClientStream;
-        _reader = new StreamReader(_clientToServerStream);
-        _writer = new StreamWriter(_serverToClientStream)
+        _reader = new StreamReader(clientToServerStream);
+        _writer = new StreamWriter(serverToClientStream)
         {
             // We need to force the NewLine because in Windows and nix different char sequence are used
             // https://learn.microsoft.com/dotnet/api/system.io.textwriter.newline?view=net-7.0
@@ -47,8 +43,7 @@ internal class StreamMessageHandler : IMessageHandler, IDisposable
         // [content]\r\n
         while (true)
         {
-            // Content type is not mandatory, and we don't use it.
-            (int commandSize, string _) = await ReadHeadersAsync(cancellationToken);
+            int commandSize = await ReadHeadersAsync(cancellationToken).ConfigureAwait(false);
 
             // Most probably connection lost
             if (commandSize is -1)
@@ -61,7 +56,7 @@ internal class StreamMessageHandler : IMessageHandler, IDisposable
             try
             {
                 Memory<char> memoryBuffer = new(commandCharsBuffer, 0, commandSize);
-                await _reader.ReadBlockAsync(memoryBuffer, cancellationToken);
+                await _reader.ReadBlockAsync(memoryBuffer, cancellationToken).ConfigureAwait(false);
                 return _formatter.Deserialize<RpcMessage>(memoryBuffer);
             }
             finally
@@ -70,62 +65,53 @@ internal class StreamMessageHandler : IMessageHandler, IDisposable
             }
 #else
             char[] commandChars = new char[commandSize];
-            await _reader.ReadBlockAsync(commandChars, 0, commandSize).WithCancellationAsync(cancellationToken);
+            await _reader.ReadBlockAsync(commandChars, 0, commandSize).WithCancellationAsync(cancellationToken).ConfigureAwait(false);
             return _formatter.Deserialize<RpcMessage>(new string(commandChars, 0, commandSize));
 #endif
         }
     }
 
-    private async Task<(int ContentSize, string ContentType)> ReadHeadersAsync(CancellationToken cancellationToken)
+    private async Task<int> ReadHeadersAsync(CancellationToken cancellationToken)
     {
         int contentSize = -1;
-        string contentType = string.Empty;
 
         while (true)
         {
 #if NET7_0_OR_GREATER
-            string? line = await _reader.ReadLineAsync(cancellationToken);
+            string? line = await _reader.ReadLineAsync(cancellationToken).ConfigureAwait(false);
 #elif NET6_0_OR_GREATER
-            string? line = await _reader.ReadLineAsync().WaitAsync(cancellationToken);
+            string? line = await _reader.ReadLineAsync().WaitAsync(cancellationToken).ConfigureAwait(false);
 #else
-            string? line = await _reader.ReadLineAsync().WithCancellationAsync(cancellationToken);
+            string? line = await _reader.ReadLineAsync().WithCancellationAsync(cancellationToken).ConfigureAwait(false);
 #endif
             if (line is null || (line.Length == 0 && contentSize != -1))
             {
                 break;
             }
 
-            string contentSizeStr = "Content-Length:";
-            string contentTypeStr = "Content-Type:";
-            if (line.StartsWith(contentSizeStr, StringComparison.OrdinalIgnoreCase))
+            const string ContentLengthHeaderName = "Content-Length:";
+            // Content type is not mandatory, and we don't use it.
+            if (line.StartsWith(ContentLengthHeaderName, StringComparison.OrdinalIgnoreCase))
             {
 #if NETCOREAPP
-                _ = int.TryParse(line.AsSpan()[contentSizeStr.Length..].Trim(), out contentSize);
+                _ = int.TryParse(line.AsSpan()[ContentLengthHeaderName.Length..].Trim(), out contentSize);
 #else
-                _ = int.TryParse(line[contentSizeStr.Length..].Trim(), out contentSize);
-#endif
-            }
-            else if (line.StartsWith(contentTypeStr, StringComparison.OrdinalIgnoreCase))
-            {
-#if NETCOREAPP
-                contentType = new(line.AsSpan()[contentTypeStr.Length..].Trim());
-#else
-                contentType = line[contentTypeStr.Length..].Trim();
+                _ = int.TryParse(line[ContentLengthHeaderName.Length..].Trim(), out contentSize);
 #endif
             }
         }
 
-        return (contentSize, contentType);
+        return contentSize;
     }
 
     public async Task WriteRequestAsync(RpcMessage message, CancellationToken cancellationToken)
     {
-        string messageStr = await _formatter.SerializeAsync(message);
-        await _writer.WriteLineAsync($"Content-Length: {Encoding.UTF8.GetByteCount(messageStr)}");
-        await _writer.WriteLineAsync("Content-Type: application/testingplatform");
-        await _writer.WriteLineAsync();
-        await _writer.WriteAsync(messageStr);
-        await _writer.FlushAsync(cancellationToken);
+        string messageStr = await _formatter.SerializeAsync(message).ConfigureAwait(false);
+        await _writer.WriteLineAsync($"Content-Length: {Encoding.UTF8.GetByteCount(messageStr)}").ConfigureAwait(false);
+        await _writer.WriteLineAsync("Content-Type: application/testingplatform").ConfigureAwait(false);
+        await _writer.WriteLineAsync().ConfigureAwait(false);
+        await _writer.WriteAsync(messageStr).ConfigureAwait(false);
+        await _writer.FlushAsync(cancellationToken).ConfigureAwait(false);
     }
 
     protected virtual void Dispose(bool disposing)

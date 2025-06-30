@@ -29,12 +29,12 @@ internal sealed class BFSTestNodeVisitor
         _testArgumentsManager = testArgumentsManager;
     }
 
-    internal KeyValuePair<TestNodeUid, List<TestNode>>[] DuplicatedNodes { get; private set; } = Array.Empty<KeyValuePair<TestNodeUid, List<TestNode>>>();
+    internal KeyValuePair<TestNodeUid, List<TestNode>>[] DuplicatedNodes { get; private set; } = [];
 
     public async Task VisitAsync(Func<TestNode, TestNodeUid?, Task> onIncludedTestNodeAsync)
     {
         // This is case sensitive, and culture insensitive, to keep UIDs unique, and comparable between different system.
-        Dictionary<TestNodeUid, List<TestNode>> testNodesByUid = new();
+        Dictionary<TestNodeUid, List<TestNode>> testNodesByUid = [];
         Queue<(TestNode CurrentNode, TestNodeUid? ParentNodeUid, StringBuilder NodeFullPath)> queue = new();
         foreach (TestNode node in _rootTestNodes)
         {
@@ -47,7 +47,7 @@ internal sealed class BFSTestNodeVisitor
 
             if (!testNodesByUid.TryGetValue(currentNode.StableUid, out List<TestNode>? testNodes))
             {
-                testNodes = new();
+                testNodes = [];
                 testNodesByUid.Add(currentNode.StableUid, testNodes);
             }
 
@@ -78,14 +78,14 @@ internal sealed class BFSTestNodeVisitor
             // If the node is expandable, we expand it (replacing the original node)
             if (TestArgumentsManager.IsExpandableTestNode(currentNode))
             {
-                currentNode = await _testArgumentsManager.ExpandTestNodeAsync(currentNode);
+                currentNode = await _testArgumentsManager.ExpandTestNodeAsync(currentNode).ConfigureAwait(false);
             }
 
             // If the node is not filtered out by the test execution filter, we call the callback with the node.
             if (_testExecutionFilter is not TestNodeUidListFilter listFilter
                 || listFilter.TestNodeUids.Any(uid => currentNode.StableUid.ToPlatformTestNodeUid() == uid))
             {
-                await onIncludedTestNodeAsync(currentNode, parentNodeUid);
+                await onIncludedTestNodeAsync(currentNode, parentNodeUid).ConfigureAwait(false);
             }
 
             foreach (TestNode childNode in currentNode.Tests)
@@ -94,7 +94,7 @@ internal sealed class BFSTestNodeVisitor
             }
         }
 
-        DuplicatedNodes = testNodesByUid.Where(x => x.Value.Count > 1).ToArray();
+        DuplicatedNodes = [.. testNodesByUid.Where(x => x.Value.Count > 1)];
     }
 
     private static PropertyBag CreatePropertyBagForFilter(IProperty[] properties)

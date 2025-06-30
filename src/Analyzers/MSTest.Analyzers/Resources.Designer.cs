@@ -709,6 +709,33 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to &apos;DataTestMethodAttribute&apos; is obsolete and provides no additional functionality over &apos;TestMethodAttribute&apos;. Use &apos;TestMethodAttribute&apos; for all test methods, including parameterized tests..
+        /// </summary>
+        internal static string PreferTestMethodOverDataTestMethodAnalyzerDescription {
+            get {
+                return ResourceManager.GetString("PreferTestMethodOverDataTestMethodAnalyzerDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &apos;DataTestMethod&apos; is obsolete. Use &apos;TestMethod&apos; instead..
+        /// </summary>
+        internal static string PreferTestMethodOverDataTestMethodAnalyzerMessageFormat {
+            get {
+                return ResourceManager.GetString("PreferTestMethodOverDataTestMethodAnalyzerMessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Prefer &apos;TestMethod&apos; over &apos;DataTestMethod&apos;.
+        /// </summary>
+        internal static string PreferTestMethodOverDataTestMethodAnalyzerTitle {
+            get {
+                return ResourceManager.GetString("PreferTestMethodOverDataTestMethodAnalyzerTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Public methods should be test methods (marked with `[TestMethod]`)..
         /// </summary>
         internal static string PublicMethodShouldBeTestMethodAnalyzerDescription {
@@ -1210,6 +1237,33 @@ namespace MSTest.Analyzers {
         internal static string UseRetryWithTestMethodTitle {
             get {
                 return ResourceManager.GetString("UseRetryWithTestMethodTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Using '[Timeout]' without explicitly setting 'CooperativeCancellation = true' is discouraged. In a future version, cooperative cancellation will become the default behavior. Set 'CooperativeCancellation = true' to opt into the recommended behavior and avoid breaking changes..
+        /// </summary>
+        internal static string UseCooperativeCancellationForTimeoutDescription {
+            get {
+                return ResourceManager.GetString("UseCooperativeCancellationForTimeoutDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Use 'CooperativeCancellation = true' with '[Timeout]' to enable cooperative cancellation behavior.
+        /// </summary>
+        internal static string UseCooperativeCancellationForTimeoutMessageFormat {
+            get {
+                return ResourceManager.GetString("UseCooperativeCancellationForTimeoutMessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Use 'CooperativeCancellation = true' with '[Timeout]'.
+        /// </summary>
+        internal static string UseCooperativeCancellationForTimeoutTitle {
+            get {
+                return ResourceManager.GetString("UseCooperativeCancellationForTimeoutTitle", resourceCulture);
             }
         }
     }

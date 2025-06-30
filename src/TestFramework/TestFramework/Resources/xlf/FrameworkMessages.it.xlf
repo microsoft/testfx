@@ -82,9 +82,49 @@
         <target state="translated">La stringa '{0}' non contiene la stringa '{1}'. {2}.</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="ContainsItemFailMsg">
+        <source>Expected collection to contain the specified item. {0}</source>
+        <target state="new">Expected collection to contain the specified item. {0}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ContainsPredicateFailMsg">
+        <source>Expected at least one item to match the predicate. {0}</source>
+        <target state="new">Expected at least one item to match the predicate. {0}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ContainsSingleFailMsg">
+        <source>Expected collection to contain exactly one element but found {1} element(s). {0}</source>
+        <target state="new">Expected collection to contain exactly one element but found {1} element(s). {0}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ContainsSingleMatchFailMsg">
+        <source>Expected exactly one item to match the predicate but found {1} item(s). {0}</source>
+        <target state="new">Expected exactly one item to match the predicate but found {1} item(s). {0}</target>
+        <note />
+      </trans-unit>
       <trans-unit id="DoesNotContainFail">
         <source>String '{0}' does contain string '{1}'. {2}.</source>
         <target state="translated">La stringa '{0}' contiene la stringa '{1}'. {2}.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DoesNotContainItemFailMsg">
+        <source>Expected collection to not contain the specified item. {0}</source>
+        <target state="new">Expected collection to not contain the specified item. {0}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DoesNotContainPredicateFailMsg">
+        <source>Expected no items to match the predicate. {0}</source>
+        <target state="new">Expected no items to match the predicate. {0}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DoesNotEndWithFail">
+        <source>String '{0}' ends with string '{1}'. {2}</source>
+        <target state="new">String '{0}' ends with string '{1}'. {2}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DoesNotStartWithFail">
+        <source>String '{0}' starts with string '{1}'. {2}</source>
+        <target state="new">String '{0}' starts with string '{1}'. {2}</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataInvalidMethodLayout">
@@ -122,9 +162,9 @@ Effettivo: {2}</target>
         <note></note>
       </trans-unit>
       <trans-unit id="EndsWithFail">
-        <source>String '{0}' does not end with string '{1}'. {2}.</source>
-        <target state="translated">La stringa '{0}' non termina con la stringa '{1}'. {2}.</target>
-        <note></note>
+        <source>String '{0}' does not end with string '{1}'. {2}</source>
+        <target state="new">String '{0}' does not end with string '{1}'. {2}</target>
+        <note />
       </trans-unit>
       <trans-unit id="AssertionFailed">
         <source>{0} failed. {1}</source>
@@ -141,15 +181,20 @@ Effettivo: {2}</target>
         <target state="translated">L'URL del ticket GitHub non è valido</target>
         <note />
       </trans-unit>
+      <trans-unit id="IsInRangeFail">
+        <source>Value '{0}' is not within the expected range [{1}, {2}]. {3}</source>
+        <target state="translated">Il valore '{0}' non è compreso nell'intervallo previsto [{1}, {2}]. {3}</target>
+        <note />
+      </trans-unit>
       <trans-unit id="IsInstanceOfFailMsg">
         <source>{0} Expected type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;.</source>
         <target state="translated">{0} Tipo previsto:&lt;{1}&gt;. Tipo effettivo:&lt;{2}&gt;.</target>
         <note></note>
       </trans-unit>
       <trans-unit id="IsMatchFail">
-        <source>String '{0}' does not match pattern '{1}'. {2}.</source>
-        <target state="translated">La stringa '{0}' non corrisponde al criterio '{1}'. {2}.</target>
-        <note></note>
+        <source>String '{0}' does not match pattern '{1}'. {2}</source>
+        <target state="new">String '{0}' does not match pattern '{1}'. {2}</target>
+        <note />
       </trans-unit>
       <trans-unit id="IsNotEmptyFailMsg">
         <source>Expected collection to contain any item but it is empty. {0}</source>
@@ -162,14 +207,9 @@ Effettivo: {2}</target>
         <note></note>
       </trans-unit>
       <trans-unit id="IsNotMatchFail">
-        <source>String '{0}' matches pattern '{1}'. {2}.</source>
-        <target state="translated">La stringa '{0}' corrisponde al criterio '{1}'. {2}.</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="DoNotUseAssertEquals">
-        <source>Assert.Equals should not be used for Assertions. Please use Assert.AreEqual &amp; overloads instead.</source>
-        <target state="translated">Non è possibile usare Assert.Equals per le asserzioni. Usare Assert.AreEqual e gli overload.</target>
-        <note></note>
+        <source>String '{0}' matches pattern '{1}'. {2}</source>
+        <target state="new">String '{0}' matches pattern '{1}'. {2}</target>
+        <note />
       </trans-unit>
       <trans-unit id="PrivateAccessorMemberNotFound">
         <source>
@@ -182,7 +222,7 @@ Effettivo: {2}</target>
       oppure il membro potrebbe essere privato e definito per una classe base. In quest'ultimo caso, è necessario passare il tipo
       che definisce il membro nel costruttore di PrivateObject.
     </target>
-        <note></note>
+        <note />
       </trans-unit>
       <trans-unit id="PrivateAccessorConstructorNotFound">
         <source>
@@ -195,7 +235,7 @@ Effettivo: {2}</target>
       oppure il membro potrebbe essere privato e definito per una classe base. In quest'ultimo caso, è necessario passare il tipo
       che definisce il membro nel costruttore di PrivateObject.
     </target>
-        <note></note>
+        <note />
       </trans-unit>
       <trans-unit id="NullParameterToAssert">
         <source>The parameter '{0}' is invalid. The value cannot be null. {1}.</source>
@@ -208,9 +248,9 @@ Effettivo: {2}</target>
         <note></note>
       </trans-unit>
       <trans-unit id="StartsWithFail">
-        <source>String '{0}' does not start with string '{1}'. {2}.</source>
-        <target state="translated">La stringa '{0}' non inizia con la stringa '{1}'. {2}.</target>
-        <note></note>
+        <source>String '{0}' does not start with string '{1}'. {2}</source>
+        <target state="new">String '{0}' does not start with string '{1}'. {2}</target>
+        <note />
       </trans-unit>
       <trans-unit id="InvalidPropertyType">
         <source>The property {0} has type {1}; expected type {2}.</source>
@@ -309,6 +349,66 @@ Effettivo: {2}</target>
       - {0} argument name like "applicationType"
       - {1} fully qualified class name like "Microsoft.UI.Xaml.Application"
     </note>
+      </trans-unit>
+      <trans-unit id="IsGreaterThanFailMsg">
+        <source>Actual value &lt;{2}&gt; is not greater than expected value &lt;{1}&gt;. {0}</source>
+        <target state="new">Actual value &lt;{2}&gt; is not greater than expected value &lt;{1}&gt;. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="IsGreaterThanOrEqualToFailMsg">
+        <source>Actual value &lt;{2}&gt; is not greater than or equal to expected value &lt;{1}&gt;. {0}</source>
+        <target state="new">Actual value &lt;{2}&gt; is not greater than or equal to expected value &lt;{1}&gt;. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="IsLessThanFailMsg">
+        <source>Actual value &lt;{2}&gt; is not less than expected value &lt;{1}&gt;. {0}</source>
+        <target state="new">Actual value &lt;{2}&gt; is not less than expected value &lt;{1}&gt;. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="IsLessThanOrEqualToFailMsg">
+        <source>Actual value &lt;{2}&gt; is not less than or equal to expected value &lt;{1}&gt;. {0}</source>
+        <target state="new">Actual value &lt;{2}&gt; is not less than or equal to expected value &lt;{1}&gt;. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="IsPositiveFailMsg">
+        <source>Expected value &lt;{1}&gt; to be positive. {0}</source>
+        <target state="new">Expected value &lt;{1}&gt; to be positive. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="IsNegativeFailMsg">
+        <source>Expected value &lt;{1}&gt; to be negative. {0}</source>
+        <target state="new">Expected value &lt;{1}&gt; to be negative. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DoNotUseAssertEquals">
+        <source>Assert.Equals should not be used for Assertions. Please use Assert.AreEqual &amp; overloads instead.</source>
+        <target state="translated">Non è possibile usare Assert.Equals per le asserzioni. Usare Assert.AreEqual e gli overload.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DoNotUseAssertReferenceEquals">
+        <source>Assert.ReferenceEquals should not be used for Assertions. Please use Assert.AreSame &amp; overloads instead.</source>
+        <target state="new">Assert.ReferenceEquals should not be used for Assertions. Please use Assert.AreSame &amp; overloads instead.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DoNotUseStringAssertEquals">
+        <source>StringAssert.Equals should not be used for Assertions. Please use StringAssert methods or Assert.AreEqual &amp; overloads instead.</source>
+        <target state="new">StringAssert.Equals should not be used for Assertions. Please use StringAssert methods or Assert.AreEqual &amp; overloads instead.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DoNotUseStringAssertReferenceEquals">
+        <source>StringAssert.ReferenceEquals should not be used for Assertions. Please use StringAssert methods or Assert.AreSame &amp; overloads instead.</source>
+        <target state="new">StringAssert.ReferenceEquals should not be used for Assertions. Please use StringAssert methods or Assert.AreSame &amp; overloads instead.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DoNotUseCollectionAssertEquals">
+        <source>CollectionAssert.Equals should not be used for Assertions. Please use CollectionAssert.AreEqual &amp; overloads instead.</source>
+        <target state="new">CollectionAssert.Equals should not be used for Assertions. Please use CollectionAssert.AreEqual &amp; overloads instead.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DoNotUseCollectionAssertReferenceEquals">
+        <source>CollectionAssert.ReferenceEquals should not be used for Assertions. Please use CollectionAssert methods or Assert.AreSame &amp; overloads instead.</source>
+        <target state="new">CollectionAssert.ReferenceEquals should not be used for Assertions. Please use CollectionAssert methods or Assert.AreSame &amp; overloads instead.</target>
+        <note></note>
       </trans-unit>
     </body>
   </file>

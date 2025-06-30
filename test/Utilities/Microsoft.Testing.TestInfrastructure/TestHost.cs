@@ -51,7 +51,7 @@ public sealed class TestHost
                 throw new InvalidOperationException($"Command should not start with module name '{_testHostModuleName}'.");
             }
 
-            environmentVariables ??= new Dictionary<string, string?>();
+            environmentVariables ??= [];
 
             if (disableTelemetry)
             {
@@ -87,8 +87,10 @@ public sealed class TestHost
                 .ExecuteAsync(async () =>
                 {
                     CommandLine commandLine = new();
+                    // Disable ANSI rendering so tests have easier time parsing the output.
+                    // Disable progress so tests don't mix progress with overall progress, and with test process output.
                     int exitCode = await commandLine.RunAsyncAndReturnExitCodeAsync(
-                        $"{FullName} {finalArguments}",
+                        $"{FullName} --no-ansi --no-progress {finalArguments}",
                         environmentVariables: environmentVariables,
                         workingDirectory: null,
                         cleanDefaultEnvironmentVariableIfCustomAreProvided: true,

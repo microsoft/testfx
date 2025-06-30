@@ -92,7 +92,7 @@ internal sealed class PerRequestServerDataConsumer(IServiceProvider serviceProvi
 
         try
         {
-            await _nodeAggregatorSemaphore.WaitAsync(cancellationToken);
+            await _nodeAggregatorSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
             try
             {
                 // Note: If there's no changes to aggregate kick off a background task,
@@ -108,7 +108,7 @@ internal sealed class PerRequestServerDataConsumer(IServiceProvider serviceProvi
                         // Observe possible exceptions
                         try
                         {
-                            await _idleUpdateTask.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout, cancellationToken);
+                            await _idleUpdateTask.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout, cancellationToken).ConfigureAwait(false);
                         }
                         catch (OperationCanceledException)
                         {
@@ -144,14 +144,14 @@ internal sealed class PerRequestServerDataConsumer(IServiceProvider serviceProvi
 
             // When batch timer expire or we're at the end of the session we can unblock the message drain
             Guard.NotNull(_task);
-            await Task.WhenAny(_task.Delay(TimeSpan.FromMilliseconds(TestNodeUpdateDelayInMs), cancellationToken), _testSessionEnd.Task);
+            await Task.WhenAny(_task.Delay(TimeSpan.FromMilliseconds(TestNodeUpdateDelayInMs), cancellationToken), _testSessionEnd.Task).ConfigureAwait(false);
 
             if (cancellationToken.IsCancellationRequested)
             {
                 return;
             }
 
-            await SendTestNodeUpdatesIfNecessaryAsync(runId, cancellationToken);
+            await SendTestNodeUpdatesIfNecessaryAsync(runId, cancellationToken).ConfigureAwait(false);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
@@ -165,11 +165,11 @@ internal sealed class PerRequestServerDataConsumer(IServiceProvider serviceProvi
         //       and the Task completes, all of the pending updates have been sent.
         //       We synchronize the aggregator access with a separate lock, so that sending
         //       the update message will not block the producers.
-        await _nodeUpdateSemaphore.WaitAsync(cancellationToken);
+        await _nodeUpdateSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
             TestNodeStateChangedEventArgs? change = null;
-            await _nodeAggregatorSemaphore.WaitAsync(cancellationToken);
+            await _nodeAggregatorSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
             try
             {
                 if (_nodeUpdatesAggregator.HasChanges)
@@ -185,7 +185,7 @@ internal sealed class PerRequestServerDataConsumer(IServiceProvider serviceProvi
 
             if (change is not null)
             {
-                await _serverTestHost.SendTestUpdateAsync(change);
+                await _serverTestHost.SendTestUpdateAsync(change).ConfigureAwait(false);
             }
         }
         finally
@@ -200,7 +200,7 @@ internal sealed class PerRequestServerDataConsumer(IServiceProvider serviceProvi
         {
             // We signal the test session end so we can complete the flush.
             _testSessionEnd.SetResult(true);
-            await GetIdleUpdateTaskAsync().TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout, cancellationToken);
+            await GetIdleUpdateTaskAsync().TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout, cancellationToken).ConfigureAwait(false);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
@@ -218,7 +218,7 @@ internal sealed class PerRequestServerDataConsumer(IServiceProvider serviceProvi
         switch (value)
         {
             case TestNodeUpdateMessage update:
-                await ProcessTestNodeUpdateAsync(update, cancellationToken);
+                await ProcessTestNodeUpdateAsync(update, cancellationToken).ConfigureAwait(false);
                 PopulateTestNodeStatistics(update);
                 break;
 

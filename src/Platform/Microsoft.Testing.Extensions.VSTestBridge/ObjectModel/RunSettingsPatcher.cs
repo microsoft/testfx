@@ -49,12 +49,6 @@ internal static class RunSettingsPatcher
             runSettingsElement.AddFirst(runConfigurationElement);
         }
 
-        if (runConfigurationElement.Element("DisableAppDomain") is null)
-        {
-            AddPatchingCommentIfNeeded(runConfigurationElement, ref isPatchingCommentAdded);
-            runConfigurationElement.Add(new XElement("DisableAppDomain", false));
-        }
-
         if (runConfigurationElement.Element("DesignMode") is null)
         {
             AddPatchingCommentIfNeeded(runConfigurationElement, ref isPatchingCommentAdded);
@@ -107,7 +101,7 @@ internal static class RunSettingsPatcher
             runSettingsElement.Add(testRunParametersElement);
         }
 
-        XElement[] testRunParametersNodes = testRunParametersElement.Nodes().OfType<XElement>().ToArray();
+        XElement[] testRunParametersNodes = [.. testRunParametersElement.Nodes().OfType<XElement>()];
         foreach (string testRunParameter in testRunParameters)
         {
             string[] parts = testRunParameter.Split(TestRunParameterSeparator, 2);

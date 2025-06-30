@@ -1,4 +1,10 @@
-<Project>
+<Project InitialTargets="NETStandardCompatError_MSTest_TestAdapter">
+
+    <Target Name="NETStandardCompatError_MSTest_TestAdapter"
+            Condition="'$(SuppressTfmSupportBuildWarnings)' == ''">
+        <Warning Condition="'$(TargetFrameworkIdentifier)' == '.NETStandard'"
+                 Text="MSTest.TestAdapter does not support the target framework '$(TargetFramework)' and has not been tested with it. Test libraries (projects that don't directly run tests) should not reference MSTest.TestAdapter or the MSTest metapackage. Instead, reference only MSTest.TestFramework. To suppress this warning and proceed at your own risk, add &lt;SuppressTfmSupportBuildWarnings&gt;true&lt;/SuppressTfmSupportBuildWarnings&gt; to your project file." />
+    </Target>
 
   <!-- Handle the coexistence between testing platform and Microsoft.NET.Test.Sdk  -->
   <PropertyGroup>

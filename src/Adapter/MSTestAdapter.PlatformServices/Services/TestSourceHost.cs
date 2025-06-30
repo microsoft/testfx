@@ -22,9 +22,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 /// A host that loads the test source. This can be in isolation for desktop using an AppDomain or just loading the source in the current context.
 /// </summary>
 #if NET6_0_OR_GREATER
-[Obsolete(Constants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
+[Obsolete(TestTools.UnitTesting.FrameworkConstants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
 #else
-[Obsolete(Constants.PublicTypeObsoleteMessage)]
+[Obsolete(TestTools.UnitTesting.FrameworkConstants.PublicTypeObsoleteMessage)]
 #endif
 public class TestSourceHost : ITestSourceHost
 {
@@ -346,7 +346,7 @@ public class TestSourceHost : ITestSourceHost
         //    UWP platform service assembly at the test source location and since CLR starts looking for assemblies from the app base location,
         //    there would be a mismatch of platform service assemblies during discovery.
         DebugEx.Assert(_targetFrameworkVersion is not null, "Target framework version is null.");
-        return _targetFrameworkVersion.Contains(Constants.DotNetFrameWorkStringPrefix)
+        return _targetFrameworkVersion.Contains(EngineConstants.DotNetFrameWorkStringPrefix)
             ? Path.GetDirectoryName(_sourceFileName) ?? Path.GetDirectoryName(typeof(TestSourceHost).Assembly.Location)
             : Path.GetDirectoryName(typeof(TestSourceHost).Assembly.Location);
     }

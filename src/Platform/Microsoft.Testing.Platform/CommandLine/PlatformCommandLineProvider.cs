@@ -111,7 +111,7 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
         {
             string arg = arguments[0];
             int size = arg.Length;
-            if ((char.ToLowerInvariant(arg[size - 1]) != 'h' && char.ToLowerInvariant(arg[size - 1]) != 'm' && char.ToLowerInvariant(arg[size - 1]) != 's') || !float.TryParse(arg[..(size - 1)], out float _))
+            if ((char.ToLowerInvariant(arg[size - 1]) != 'h' && char.ToLowerInvariant(arg[size - 1]) != 'm' && char.ToLowerInvariant(arg[size - 1]) != 's') || !float.TryParse(arg[..(size - 1)], NumberStyles.Float, CultureInfo.InvariantCulture, out float _))
             {
                 return ValidationResult.InvalidTask(PlatformResources.PlatformCommandLineTimeoutArgumentErrorMessage);
             }
@@ -143,7 +143,7 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
     public static int GetMinimumExpectedTests(ICommandLineOptions commandLineOptions)
     {
         bool hasMinimumExpectedTestsOptionKey = commandLineOptions.TryGetOptionArgumentList(MinimumExpectedTestsOptionKey, out string[]? minimumExpectedTests);
-        if (!hasMinimumExpectedTestsOptionKey || !IsMinimumExpectedTestsOptionValidAsync(MinimumExpectedTests, minimumExpectedTests ?? Array.Empty<string>()).Result.IsValid)
+        if (!hasMinimumExpectedTestsOptionKey || !IsMinimumExpectedTestsOptionValidAsync(MinimumExpectedTests, minimumExpectedTests ?? []).Result.IsValid)
         {
             return 0;
         }

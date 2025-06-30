@@ -212,7 +212,7 @@ internal sealed class DeploymentItemUtility
             return deploymentItemList1;
         }
 
-        IList<DeploymentItem> result = new List<DeploymentItem>(deploymentItemList1);
+        IList<DeploymentItem> result = [.. deploymentItemList1];
 
         foreach (DeploymentItem item in deploymentItemList2)
         {
@@ -227,7 +227,7 @@ internal sealed class DeploymentItemUtility
     /// </summary>
     /// <param name="testCase"> The test Case. </param>
     /// <returns> The <see cref="KeyValuePair{TKey,TValue}"/>. </returns>
-    private static KeyValuePair<string, string>[]? GetDeploymentItems(TestCase testCase) => testCase.GetPropertyValue(Constants.DeploymentItemsProperty) as
+    private static KeyValuePair<string, string>[]? GetDeploymentItems(TestCase testCase) => testCase.GetPropertyValue(EngineConstants.DeploymentItemsProperty) as
             KeyValuePair<string, string>[];
 
     private static KeyValuePair<string, string>[]? ToKeyValuePairs(IEnumerable<DeploymentItem> deploymentItemList)
@@ -247,7 +247,7 @@ internal sealed class DeploymentItemUtility
             }
         }
 
-        return result.ToArray();
+        return [.. result];
     }
 
     private static IList<DeploymentItem>? FromKeyValuePairs(KeyValuePair<string, string>[] deploymentItemsData)
@@ -257,7 +257,7 @@ internal sealed class DeploymentItemUtility
             return null;
         }
 
-        IList<DeploymentItem> result = new List<DeploymentItem>();
+        IList<DeploymentItem> result = [];
 
         foreach ((string? key, string? value) in deploymentItemsData)
         {

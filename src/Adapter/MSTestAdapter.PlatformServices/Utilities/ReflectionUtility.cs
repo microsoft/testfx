@@ -126,7 +126,7 @@ internal class ReflectionUtility
     {
         if (!assembly.ReflectionOnly)
         {
-            return assembly.GetCustomAttributes(type).ToList();
+            return [.. assembly.GetCustomAttributes(type)];
         }
 
         List<CustomAttributeData> customAttributes = [.. CustomAttributeData.GetCustomAttributes(assembly)];
@@ -195,8 +195,8 @@ internal class ReflectionUtility
                 constructorArguments.Add(list.ToArray(parameterType.GetElementType()));
             }
 
-            ConstructorInfo constructor = attributeType.GetConstructor(constructorParameters.ToArray());
-            attribute = constructor.Invoke(constructorArguments.ToArray());
+            ConstructorInfo constructor = attributeType.GetConstructor([.. constructorParameters]);
+            attribute = constructor.Invoke([.. constructorArguments]);
 
             foreach (CustomAttributeNamedArgument namedArgument in attributeData.NamedArguments)
             {

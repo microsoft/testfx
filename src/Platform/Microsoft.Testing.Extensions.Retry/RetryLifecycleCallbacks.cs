@@ -16,7 +16,7 @@ using Polyfills;
 
 namespace Microsoft.Testing.Extensions.Policy;
 
-internal sealed class RetryLifecycleCallbacks : ITestApplicationLifecycleCallbacks,
+internal sealed class RetryLifecycleCallbacks : ITestHostApplicationLifetime,
 #if NETCOREAPP
     IAsyncDisposable
 #else
@@ -63,9 +63,9 @@ internal sealed class RetryLifecycleCallbacks : ITestApplicationLifecycleCallbac
         Client.RegisterSerializer(new GetListOfFailedTestsRequestSerializer(), typeof(GetListOfFailedTestsRequest));
         Client.RegisterSerializer(new GetListOfFailedTestsResponseSerializer(), typeof(GetListOfFailedTestsResponse));
         Client.RegisterSerializer(new TotalTestsRunRequestSerializer(), typeof(TotalTestsRunRequest));
-        await Client.ConnectAsync(cancellationToken);
+        await Client.ConnectAsync(cancellationToken).ConfigureAwait(false);
 
-        GetListOfFailedTestsResponse result = await Client.RequestReplyAsync<GetListOfFailedTestsRequest, GetListOfFailedTestsResponse>(new GetListOfFailedTestsRequest(), cancellationToken);
+        GetListOfFailedTestsResponse result = await Client.RequestReplyAsync<GetListOfFailedTestsRequest, GetListOfFailedTestsResponse>(new GetListOfFailedTestsRequest(), cancellationToken).ConfigureAwait(false);
         FailedTestsIDToRetry = result.FailedTestIds;
     }
 
@@ -80,7 +80,7 @@ internal sealed class RetryLifecycleCallbacks : ITestApplicationLifecycleCallbac
     {
         if (Client is not null)
         {
-            await Client.DisposeAsync();
+            await Client.DisposeAsync().ConfigureAwait(false);
         }
     }
 #else

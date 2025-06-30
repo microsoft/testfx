@@ -16,7 +16,9 @@ internal sealed class TestHostManager : ITestHostManager
     private readonly List<object> _factoryOrdering = [];
 
     // Exposed extension points
+#pragma warning disable CS0618 // Type or member is obsolete
     private readonly List<Func<IServiceProvider, ITestApplicationLifecycleCallbacks>> _testApplicationLifecycleCallbacksFactories = [];
+#pragma warning restore CS0618 // Type or member is obsolete
     private readonly List<Func<IServiceProvider, IDataConsumer>> _dataConsumerFactories = [];
     private readonly List<Func<IServiceProvider, ITestSessionLifetimeHandler>> _testSessionLifetimeHandlerFactories = [];
     private readonly List<ICompositeExtensionFactory> _dataConsumersCompositeServiceFactories = [];
@@ -47,9 +49,9 @@ internal sealed class TestHostManager : ITestHostManager
         ITestFrameworkInvoker testAdapterInvoke = _testFrameworkInvokerFactory(serviceProvider);
 
         // We initialize only if enabled
-        if (await testAdapterInvoke.IsEnabledAsync())
+        if (await testAdapterInvoke.IsEnabledAsync().ConfigureAwait(false))
         {
-            await testAdapterInvoke.TryInitializeAsync();
+            await testAdapterInvoke.TryInitializeAsync().ConfigureAwait(false);
 
             return ActionResult.Ok(testAdapterInvoke);
         }
@@ -78,9 +80,9 @@ internal sealed class TestHostManager : ITestHostManager
         ITestExecutionFilterFactory testExecutionFilterFactory = _testExecutionFilterFactory(serviceProvider);
 
         // We initialize only if enabled
-        if (await testExecutionFilterFactory.IsEnabledAsync())
+        if (await testExecutionFilterFactory.IsEnabledAsync().ConfigureAwait(false))
         {
-            await testExecutionFilterFactory.TryInitializeAsync();
+            await testExecutionFilterFactory.TryInitializeAsync().ConfigureAwait(false);
 
             return ActionResult.Ok(testExecutionFilterFactory);
         }
@@ -88,12 +90,22 @@ internal sealed class TestHostManager : ITestHostManager
         return ActionResult.Fail<ITestExecutionFilterFactory>();
     }
 
+    [Obsolete]
     public void AddTestApplicationLifecycleCallbacks(Func<IServiceProvider, ITestApplicationLifecycleCallbacks> testApplicationLifecycleCallbacks)
     {
         Guard.NotNull(testApplicationLifecycleCallbacks);
         _testApplicationLifecycleCallbacksFactories.Add(testApplicationLifecycleCallbacks);
     }
 
+    public void AddTestHostApplicationLifetime(Func<IServiceProvider, ITestHostApplicationLifetime> testHostApplicationLifetime)
+    {
+        Guard.NotNull(testHostApplicationLifetime);
+#pragma warning disable CS0612 // Type or member is obsolete
+        _testApplicationLifecycleCallbacksFactories.Add(testHostApplicationLifetime);
+#pragma warning restore CS0612 // Type or member is obsolete
+    }
+
+#pragma warning disable CS0618 // Type or member is obsolete
     internal async Task<ITestApplicationLifecycleCallbacks[]> BuildTestApplicationLifecycleCallbackAsync(ServiceProvider serviceProvider)
     {
         List<ITestApplicationLifecycleCallbacks> testApplicationLifecycleCallbacks = [];
@@ -109,17 +121,18 @@ internal sealed class TestHostManager : ITestHostManager
             }
 
             // We initialize only if enabled
-            if (await service.IsEnabledAsync())
+            if (await service.IsEnabledAsync().ConfigureAwait(false))
             {
-                await service.TryInitializeAsync();
+                await service.TryInitializeAsync().ConfigureAwait(false);
 
                 // Register the extension for usage
                 testApplicationLifecycleCallbacks.Add(service);
             }
         }
 
-        return testApplicationLifecycleCallbacks.ToArray();
+        return [.. testApplicationLifecycleCallbacks];
     }
+#pragma warning restore CS0618 // Type or member is obsolete
 
     public void AddDataConsumer(Func<IServiceProvider, IDataConsumer> dataConsumerFactory)
     {
@@ -156,9 +169,9 @@ internal sealed class TestHostManager : ITestHostManager
             }
 
             // We initialize only if enabled
-            if (await service.IsEnabledAsync())
+            if (await service.IsEnabledAsync().ConfigureAwait(false))
             {
-                await service.TryInitializeAsync();
+                await service.TryInitializeAsync().ConfigureAwait(false);
 
                 // Register the extension for usage
                 dataConsumers.Add((service, _factoryOrdering.IndexOf(dataConsumerFactory)));
@@ -186,9 +199,9 @@ internal sealed class TestHostManager : ITestHostManager
                 }
 
                 // We initialize only if enabled
-                if (await instance.IsEnabledAsync())
+                if (await instance.IsEnabledAsync().ConfigureAwait(false))
                 {
-                    await instance.TryInitializeAsync();
+                    await instance.TryInitializeAsync().ConfigureAwait(false);
                 }
 
                 // Add to the list of shared singletons
@@ -199,7 +212,7 @@ internal sealed class TestHostManager : ITestHostManager
             var extension = (IExtension)compositeFactoryInstance.GetInstance();
 
             // We register the extension only if enabled
-            if (await extension.IsEnabledAsync())
+            if (await extension.IsEnabledAsync().ConfigureAwait(false))
             {
                 if (extension is IDataConsumer consumer)
                 {
@@ -212,7 +225,7 @@ internal sealed class TestHostManager : ITestHostManager
             }
         }
 
-        return dataConsumers.ToArray();
+        return [.. dataConsumers];
     }
 
     public void AddTestSessionLifetimeHandle(Func<IServiceProvider, ITestSessionLifetimeHandler> testSessionLifetimeHandleFactory)
@@ -250,9 +263,9 @@ internal sealed class TestHostManager : ITestHostManager
             }
 
             // We initialize only if enabled
-            if (await service.IsEnabledAsync())
+            if (await service.IsEnabledAsync().ConfigureAwait(false))
             {
-                await service.TryInitializeAsync();
+                await service.TryInitializeAsync().ConfigureAwait(false);
 
                 // Register the extension for usage
                 testSessionLifetimeHandlers.Add((service, _factoryOrdering.IndexOf(testSessionLifetimeHandlerFactory)));
@@ -280,9 +293,9 @@ internal sealed class TestHostManager : ITestHostManager
                 }
 
                 // We initialize only if enabled
-                if (await instance.IsEnabledAsync())
+                if (await instance.IsEnabledAsync().ConfigureAwait(false))
                 {
-                    await instance.TryInitializeAsync();
+                    await instance.TryInitializeAsync().ConfigureAwait(false);
                 }
 
                 // Add to the list of shared singletons
@@ -293,7 +306,7 @@ internal sealed class TestHostManager : ITestHostManager
             var extension = (IExtension)compositeFactoryInstance.GetInstance();
 
             // We register the extension only if enabled
-            if (await extension.IsEnabledAsync())
+            if (await extension.IsEnabledAsync().ConfigureAwait(false))
             {
                 if (extension is ITestSessionLifetimeHandler testSessionLifetimeHandler)
                 {
@@ -307,6 +320,6 @@ internal sealed class TestHostManager : ITestHostManager
             }
         }
 
-        return testSessionLifetimeHandlers.ToArray();
+        return [.. testSessionLifetimeHandlers];
     }
 }

@@ -74,8 +74,8 @@ internal sealed class AbortForMaxFailedTestsExtension : IDataConsumer
             // If already triggered, don't do it again.
             !_policiesService.IsMaxFailedTestsTriggered)
         {
-            await _capability.StopTestExecutionAsync(_testApplicationCancellationTokenSource.CancellationToken);
-            await _policiesService.ExecuteMaxFailedTestsCallbacksAsync(_maxFailedTests.Value, _testApplicationCancellationTokenSource.CancellationToken);
+            await _capability.StopTestExecutionAsync(_testApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
+            await _policiesService.ExecuteMaxFailedTestsCallbacksAsync(_maxFailedTests.Value, _testApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
         }
     }
 }

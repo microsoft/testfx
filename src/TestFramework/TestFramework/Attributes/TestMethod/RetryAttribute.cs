@@ -15,10 +15,12 @@ public sealed class RetryAttribute : RetryBaseAttribute
     /// <param name="maxRetryAttempts">The maximum number of retry attempts. This must be greater than or equal to 1.</param>
     public RetryAttribute(int maxRetryAttempts)
     {
+#pragma warning disable CA1512 // Use ArgumentOutOfRangeException throw helper
         if (maxRetryAttempts < 1)
         {
             throw new ArgumentOutOfRangeException(nameof(maxRetryAttempts));
         }
+#pragma warning disable CA1512 // Use ArgumentOutOfRangeException throw helper
 
         MaxRetryAttempts = maxRetryAttempts;
     }
@@ -71,13 +73,13 @@ public sealed class RetryAttribute : RetryBaseAttribute
         for (int i = 0; i < MaxRetryAttempts; i++)
         {
             // The caller already executed the test once. So we need to do the delay here.
-            await Task.Delay(currentDelay);
+            await Task.Delay(currentDelay).ConfigureAwait(false);
             if (BackoffType == DelayBackoffType.Exponential)
             {
                 currentDelay *= 2;
             }
 
-            TestResult[] testResults = await retryContext.ExecuteTaskGetter();
+            TestResult[] testResults = await retryContext.ExecuteTaskGetter().ConfigureAwait(false);
             result.AddResult(testResults);
             if (IsAcceptableResultForRetry(testResults))
             {

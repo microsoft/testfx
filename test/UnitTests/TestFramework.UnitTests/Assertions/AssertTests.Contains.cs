@@ -19,14 +19,13 @@ public partial class AssertTests : TestContainer
     /// </summary>
     /// <typeparam name="T">The type parameter.</typeparam>
     /// <param name="handler">The handler instance.</param>
-    /// <param name="assertionName">The assertion name.</param>
     /// <returns>The exception message thrown by ComputeAssertion.</returns>
-    private static string GetComputeAssertionExceptionMessage<T>(Assert.AssertSingleInterpolatedStringHandler<T> handler, string assertionName)
+    private static string GetComputeAssertionExceptionMessage<T>(Assert.AssertSingleInterpolatedStringHandler<T> handler)
     {
         try
         {
             // This call is expected to throw when _builder is not null.
-            _ = handler.ComputeAssertion(assertionName);
+            _ = handler.ComputeAssertion();
         }
         catch (Exception ex)
         {
@@ -52,7 +51,7 @@ public partial class AssertTests : TestContainer
         shouldAppend.Should().BeFalse();
 
         // Act
-        int result = handler.ComputeAssertion("ContainsSingle");
+        int result = handler.ComputeAssertion();
 
         // Assert
         result.Should().Be(singleItem);
@@ -69,7 +68,7 @@ public partial class AssertTests : TestContainer
         shouldAppend.Should().BeTrue();
 
         // Act
-        string exMsg = GetComputeAssertionExceptionMessage(handler, "ContainsSingle");
+        string exMsg = GetComputeAssertionExceptionMessage(handler);
 
         // Assert: verify that the exception message contains expected parts.
         exMsg.Should().Contain("ContainsSingle");
@@ -93,7 +92,7 @@ public partial class AssertTests : TestContainer
         handler.AppendLiteral(literal);
 
         // Act
-        string exMsg = GetComputeAssertionExceptionMessage(handler, "ContainsSingle");
+        string exMsg = GetComputeAssertionExceptionMessage(handler);
 
         // Assert: the exception message should contain the literal appended.
         exMsg.Should().Contain(literal);
@@ -112,7 +111,7 @@ public partial class AssertTests : TestContainer
         handler.AppendFormatted(value);
 
         // Act
-        string exMsg = GetComputeAssertionExceptionMessage(handler, "ContainsSingle");
+        string exMsg = GetComputeAssertionExceptionMessage(handler);
 
         // Assert
         exMsg.Should().Contain(value);
@@ -132,7 +131,7 @@ public partial class AssertTests : TestContainer
         handler.AppendFormatted(value, format);
 
         // Act
-        string exMsg = GetComputeAssertionExceptionMessage(handler, "ContainsSingle");
+        string exMsg = GetComputeAssertionExceptionMessage(handler);
 
         // Assert: Check if the value was formatted accordingly ("00123")
         exMsg.Should().Contain("00123");
@@ -152,7 +151,7 @@ public partial class AssertTests : TestContainer
         handler.AppendFormatted(value, alignment);
 
         // Act
-        string exMsg = GetComputeAssertionExceptionMessage(handler, "ContainsSingle");
+        string exMsg = GetComputeAssertionExceptionMessage(handler);
 
         // Assert: alignment is applied via StringBuilder.AppendFormat so result should contain formatted spacing.
         exMsg.Should().Contain("3.14");
@@ -173,7 +172,7 @@ public partial class AssertTests : TestContainer
         handler.AppendFormatted(value, alignment, format);
 
         // Act
-        string exMsg = GetComputeAssertionExceptionMessage(handler, "ContainsSingle");
+        string exMsg = GetComputeAssertionExceptionMessage(handler);
 
         // Assert: formatted year "2023" should appear.
         exMsg.Should().Contain("2023");
@@ -192,7 +191,7 @@ public partial class AssertTests : TestContainer
         handler.AppendFormatted(value);
 
         // Act
-        string exMsg = GetComputeAssertionExceptionMessage(handler, "ContainsSingle");
+        string exMsg = GetComputeAssertionExceptionMessage(handler);
 
         // Assert
         exMsg.Should().Contain(value);
@@ -213,7 +212,7 @@ public partial class AssertTests : TestContainer
         handler.AppendFormatted(value, alignment, format);
 
         // Act
-        string exMsg = GetComputeAssertionExceptionMessage(handler, "ContainsSingle");
+        string exMsg = GetComputeAssertionExceptionMessage(handler);
 
         // Assert
         exMsg.Should().Contain(value);
@@ -234,7 +233,7 @@ public partial class AssertTests : TestContainer
         handler.AppendFormatted(value, alignment, format);
 
         // Act
-        string exMsg = GetComputeAssertionExceptionMessage(handler, "ContainsSingle");
+        string exMsg = GetComputeAssertionExceptionMessage(handler);
 
         // Assert: Formatted value should appear (e.g. "099").
         exMsg.Should().Contain("099");
@@ -254,7 +253,7 @@ public partial class AssertTests : TestContainer
         handler.AppendFormatted(spanValue);
 
         // Act
-        string exMsg = GetComputeAssertionExceptionMessage(handler, "ContainsSingle");
+        string exMsg = GetComputeAssertionExceptionMessage(handler);
 
         // Assert
         exMsg.Should().Contain("SpanText");
@@ -309,7 +308,7 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.ContainsSingle(collection, ref handler);
 
         // Assert
-        action.Should().Throw<AssertFailedException>().WithMessage("*1*");
+        action.Should().Throw<AssertFailedException>().WithMessage("Assert.ContainsSingle failed. Expected collection to contain exactly one element but found 3 element(s). ");
     }
 
     /// <summary>
@@ -593,6 +592,208 @@ public partial class AssertTests : TestContainer
     }
 
     private static bool IsEven(int x) => x % 2 == 0;
+
+    #endregion
+
+    #region ContainsSingle with Predicate Tests
+
+    /// <summary>
+    /// Tests the ContainsSingle method with predicate when exactly one element matches.
+    /// </summary>
+    public void ContainsSinglePredicate_NoMessage_OneItemMatches_ReturnsElement()
+    {
+        // Arrange
+        var collection = new List<int> { 1, 2, 3, 4, 5 };
+
+        // Act
+        int result = Assert.ContainsSingle(x => x == 3, collection);
+
+        // Assert
+        result.Should().Be(3);
+    }
+
+    /// <summary>
+    /// Tests the ContainsSingle method with predicate and message when exactly one element matches.
+    /// </summary>
+    public void ContainsSinglePredicate_WithMessage_OneItemMatches_ReturnsElement()
+    {
+        // Arrange
+        var collection = new List<string> { "apple", "banana", "cherry" };
+
+        // Act
+#pragma warning disable CA1865 // Use char overload - not netfx
+        string result = Assert.ContainsSingle(x => x.StartsWith("b", StringComparison.Ordinal), collection, "Expected one item starting with 'b'");
+#pragma warning restore CA1865 // Use char overload
+
+        // Assert
+        result.Should().Be("banana");
+    }
+
+    /// <summary>
+    /// Tests the ContainsSingle method with predicate when no elements match.
+    /// Expects an exception.
+    /// </summary>
+    public void ContainsSinglePredicate_NoItemMatches_ThrowsException()
+    {
+        // Arrange
+        var collection = new List<int> { 1, 3, 5 };
+
+        // Act
+        Action action = () => Assert.ContainsSingle(x => x % 2 == 0, collection);
+
+        // Assert
+        action.Should().Throw<AssertFailedException>().WithMessage("*Expected exactly one item to match the predicate but found 0 item(s)*");
+    }
+
+    /// <summary>
+    /// Tests the ContainsSingle method with predicate when multiple elements match.
+    /// Expects an exception.
+    /// </summary>
+    public void ContainsSinglePredicate_MultipleItemsMatch_ThrowsException()
+    {
+        // Arrange
+        var collection = new List<int> { 2, 4, 6, 8 };
+
+        // Act
+        Action action = () => Assert.ContainsSingle(x => x % 2 == 0, collection);
+
+        // Assert
+        action.Should().Throw<AssertFailedException>().WithMessage("*Expected exactly one item to match the predicate but found 4 item(s)*");
+    }
+
+    /// <summary>
+    /// Tests the ContainsSingle method with predicate and formatted message when no elements match.
+    /// Expects an exception with the custom message.
+    /// </summary>
+    public void ContainsSinglePredicate_WithMessage_NoItemMatches_ThrowsException()
+    {
+        // Arrange
+        var collection = new List<int> { 1, 3, 5 };
+
+        // Act
+        Action action = () => Assert.ContainsSingle(x => x % 2 == 0, collection, $"No even numbers found in collection with {collection.Count} items");
+
+        // Assert
+        action.Should().Throw<AssertFailedException>().WithMessage("*No even numbers found in collection with 3 items*");
+    }
+
+    /// <summary>
+    /// Tests the ContainsSingle method with predicate and formatted message when multiple elements match.
+    /// Expects an exception with the custom message.
+    /// </summary>
+    public void ContainsSinglePredicate_WithMessage_MultipleItemsMatch_ThrowsException()
+    {
+        // Arrange
+        var collection = new List<int> { 2, 4, 6 };
+
+        // Act
+        Action action = () => Assert.ContainsSingle(x => x % 2 == 0, collection, $"Too many even numbers found: {collection.Count}");
+
+        // Assert
+        action.Should().Throw<AssertFailedException>().WithMessage("*Too many even numbers found: 3*");
+    }
+
+    /// <summary>
+    /// Tests the ContainsSingle method with predicate using complex objects.
+    /// </summary>
+    public void ContainsSinglePredicate_ComplexObjects_OneItemMatches_ReturnsElement()
+    {
+        // Arrange
+        var items = new List<Person>
+        {
+            new("Alice", 25),
+            new("Bob", 30),
+            new("Charlie", 35),
+        };
+
+        // Act
+        Person result = Assert.ContainsSingle(p => p.Age == 30, items);
+
+        // Assert
+        result.Name.Should().Be("Bob");
+        result.Age.Should().Be(30);
+    }
+
+    /// <summary>
+    /// Tests the ContainsSingle method with predicate using null values.
+    /// </summary>
+    public void ContainsSinglePredicate_WithNullValues_OneItemMatches_ReturnsElement()
+    {
+        // Arrange
+        var collection = new List<string?> { "apple", null, "banana" };
+
+        // Act
+        string? result = Assert.ContainsSingle(x => x == null, collection);
+
+        // Assert
+        result.Should().BeNull();
+    }
+
+    #region New Error Message Tests
+
+    /// <summary>
+    /// Tests that Contains (item) failure shows specific error message.
+    /// </summary>
+    public void Contains_ItemNotFound_ShowsSpecificErrorMessage()
+    {
+        // Arrange
+        var collection = new List<int> { 1, 2, 3 };
+
+        // Act
+        Action action = () => Assert.Contains(5, collection);
+
+        // Assert
+        action.Should().Throw<AssertFailedException>().WithMessage("*Expected collection to contain the specified item*");
+    }
+
+    /// <summary>
+    /// Tests that Contains (predicate) failure shows specific error message.
+    /// </summary>
+    public void Contains_PredicateNotMatched_ShowsSpecificErrorMessage()
+    {
+        // Arrange
+        var collection = new List<int> { 1, 3, 5 };
+
+        // Act
+        Action action = () => Assert.Contains(x => x % 2 == 0, collection);
+
+        // Assert
+        action.Should().Throw<AssertFailedException>().WithMessage("*Expected at least one item to match the predicate*");
+    }
+
+    /// <summary>
+    /// Tests that DoesNotContain (item) failure shows specific error message.
+    /// </summary>
+    public void DoesNotContain_ItemFound_ShowsSpecificErrorMessage()
+    {
+        // Arrange
+        var collection = new List<int> { 1, 2, 3 };
+
+        // Act
+        Action action = () => Assert.DoesNotContain(2, collection);
+
+        // Assert
+        action.Should().Throw<AssertFailedException>().WithMessage("*Expected collection to not contain the specified item*");
+    }
+
+    /// <summary>
+    /// Tests that DoesNotContain (predicate) failure shows specific error message.
+    /// </summary>
+    public void DoesNotContain_PredicateMatched_ShowsSpecificErrorMessage()
+    {
+        // Arrange
+        var collection = new List<int> { 1, 2, 3 };
+
+        // Act
+        Action action = () => Assert.DoesNotContain(x => x % 2 == 0, collection);
+
+        // Assert
+        action.Should().Throw<AssertFailedException>().WithMessage("*Expected no items to match the predicate*");
+    }
+
+    #endregion
+
+    private record Person(string Name, int Age);
 
     #endregion
 }

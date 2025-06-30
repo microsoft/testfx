@@ -19,7 +19,7 @@ internal sealed class StopPoliciesService : IStopPoliciesService
 
 #pragma warning disable VSTHRD101 // Avoid unsupported async delegates
         // Note: If cancellation already requested, Register will still invoke the callback.
-        testApplicationCancellationTokenSource.CancellationToken.Register(async () => await ExecuteAbortCallbacksAsync());
+        testApplicationCancellationTokenSource.CancellationToken.Register(async () => await ExecuteAbortCallbacksAsync().ConfigureAwait(false));
 #pragma warning restore VSTHRD101 // Avoid unsupported async delegates
     }
 
@@ -31,7 +31,7 @@ internal sealed class StopPoliciesService : IStopPoliciesService
 
     private static void RegisterCallback<T>(ref BlockingCollection<T>? callbacks, T callback)
 #pragma warning disable CA1416 // Validate platform compatibility
-        => (callbacks ??= new()).Add(callback);
+        => (callbacks ??= []).Add(callback);
 #pragma warning restore CA1416
 
     public async Task ExecuteMaxFailedTestsCallbacksAsync(int maxFailedTests, CancellationToken cancellationToken)
@@ -47,7 +47,7 @@ internal sealed class StopPoliciesService : IStopPoliciesService
         {
             // For now, we are fine if the callback crashed us. It shouldn't happen for our
             // current usage anyway and the APIs around this are all internal for now.
-            await callback.Invoke(maxFailedTests, cancellationToken);
+            await callback.Invoke(maxFailedTests, cancellationToken).ConfigureAwait(false);
         }
     }
 
@@ -64,7 +64,7 @@ internal sealed class StopPoliciesService : IStopPoliciesService
         {
             // For now, we are fine if the callback crashed us. It shouldn't happen for our
             // current usage anyway and the APIs around this are all internal for now.
-            await callback.Invoke();
+            await callback.Invoke().ConfigureAwait(false);
         }
     }
 
@@ -77,7 +77,7 @@ internal sealed class StopPoliciesService : IStopPoliciesService
 
         if (IsMaxFailedTestsTriggered)
         {
-            await callback(_lastMaxFailedTests, _testApplicationCancellationTokenSource.CancellationToken);
+            await callback(_lastMaxFailedTests, _testApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
         }
 
         RegisterCallback(ref _maxFailedTestsCallbacks, callback);
@@ -87,7 +87,7 @@ internal sealed class StopPoliciesService : IStopPoliciesService
     {
         if (IsAbortTriggered)
         {
-            await callback();
+            await callback().ConfigureAwait(false);
         }
 
         RegisterCallback(ref _abortCallbacks, callback);

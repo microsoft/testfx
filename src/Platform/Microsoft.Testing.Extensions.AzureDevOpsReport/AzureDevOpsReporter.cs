@@ -23,7 +23,7 @@ internal sealed class AzureDevOpsReporter :
 
     private readonly IOutputDevice _outputDisplay;
     private readonly ILogger _logger;
-    private static readonly char[] NewlineCharacters = new char[] { '\r', '\n' };
+    private static readonly char[] NewlineCharacters = ['\r', '\n'];
     private readonly ICommandLineOptions _commandLine;
     private readonly IEnvironment _environment;
     private readonly IFileSystem _fileSystem;
@@ -124,16 +124,16 @@ internal sealed class AzureDevOpsReporter :
         switch (nodeState)
         {
             case FailedTestNodeStateProperty failed:
-                await WriteExceptionAsync(failed.Explanation, failed.Exception);
+                await WriteExceptionAsync(failed.Explanation, failed.Exception).ConfigureAwait(false);
                 break;
             case ErrorTestNodeStateProperty error:
-                await WriteExceptionAsync(error.Explanation, error.Exception);
+                await WriteExceptionAsync(error.Explanation, error.Exception).ConfigureAwait(false);
                 break;
             case CancelledTestNodeStateProperty cancelled:
-                await WriteExceptionAsync(cancelled.Explanation, cancelled.Exception);
+                await WriteExceptionAsync(cancelled.Explanation, cancelled.Exception).ConfigureAwait(false);
                 break;
             case TimeoutTestNodeStateProperty timeout:
-                await WriteExceptionAsync(timeout.Explanation, timeout.Exception);
+                await WriteExceptionAsync(timeout.Explanation, timeout.Exception).ConfigureAwait(false);
                 break;
         }
     }
@@ -161,7 +161,7 @@ internal sealed class AzureDevOpsReporter :
             _logger.LogTrace($"Showing failure message '{line}'.");
         }
 
-        await _outputDisplay.DisplayAsync(this, new FormattedTextOutputDeviceData(line));
+        await _outputDisplay.DisplayAsync(this, new FormattedTextOutputDeviceData(line)).ConfigureAwait(false);
     }
 
     internal static /* for testing */ string? GetErrorText(string? explanation, Exception? exception, string severity, IFileSystem fileSystem, ILogger logger)

@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 
@@ -32,7 +33,7 @@ public class MSTestExecutorTests : TestContainer
 
         var extensionUriString = (ExtensionUriAttribute)testExecutor.GetType().GetCustomAttributes(typeof(ExtensionUriAttribute), false).Single();
 
-        Verify(extensionUriString.ExtensionUri == MSTest.TestAdapter.Constants.ExecutorUriString);
+        Verify(extensionUriString.ExtensionUri == EngineConstants.ExecutorUriString);
     }
 
     public async Task RunTestsShouldNotExecuteTestsIfTestSettingsIsGiven()

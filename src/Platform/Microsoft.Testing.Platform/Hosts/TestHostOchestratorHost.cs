@@ -24,10 +24,21 @@ internal sealed class TestHostOrchestratorHost(TestHostOrchestratorConfiguration
         ITestHostOrchestrator testHostOrchestrator = _testHostOrchestratorConfiguration.TestHostOrchestrators[0];
         ITestApplicationCancellationTokenSource applicationCancellationToken = _serviceProvider.GetTestApplicationCancellationTokenSource();
         int exitCode;
-        await logger.LogInformationAsync($"Running test orchestrator '{testHostOrchestrator.Uid}'");
+        await logger.LogInformationAsync($"Running test orchestrator '{testHostOrchestrator.Uid}'").ConfigureAwait(false);
         try
         {
-            exitCode = await testHostOrchestrator.OrchestrateTestHostExecutionAsync();
+            foreach (ITestHostOrchestratorApplicationLifetime orchestratorLifetime in _serviceProvider.GetServicesInternal<ITestHostOrchestratorApplicationLifetime>())
+            {
+                await orchestratorLifetime.BeforeRunAsync(applicationCancellationToken.CancellationToken).ConfigureAwait(false);
+            }
+
+            exitCode = await testHostOrchestrator.OrchestrateTestHostExecutionAsync().ConfigureAwait(false);
+
+            foreach (ITestHostOrchestratorApplicationLifetime orchestratorLifetime in _serviceProvider.GetServicesInternal<ITestHostOrchestratorApplicationLifetime>())
+            {
+                await orchestratorLifetime.AfterRunAsync(exitCode, applicationCancellationToken.CancellationToken).ConfigureAwait(false);
+                await DisposeHelper.DisposeAsync(orchestratorLifetime).ConfigureAwait(false);
+            }
         }
         catch (OperationCanceledException) when (applicationCancellationToken.CancellationToken.IsCancellationRequested)
         {

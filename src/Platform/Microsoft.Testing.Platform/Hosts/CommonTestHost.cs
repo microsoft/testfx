@@ -31,7 +31,7 @@ internal abstract class CommonTestHost(ServiceProvider serviceProvider) : ITestH
         {
             if (PushOnlyProtocol is null || PushOnlyProtocol?.IsServerMode == false)
             {
-                exitCode = await RunTestAppAsync(testApplicationCancellationToken);
+                exitCode = await RunTestAppAsync(testApplicationCancellationToken).ConfigureAwait(false);
 
                 if (testApplicationCancellationToken.IsCancellationRequested)
                 {
@@ -46,17 +46,17 @@ internal abstract class CommonTestHost(ServiceProvider serviceProvider) : ITestH
                 RoslynDebug.Assert(PushOnlyProtocol is not null);
 
                 ITestApplicationModuleInfo testApplicationModuleInfo = serviceProvider.GetTestApplicationModuleInfo();
-                bool isValidProtocol = await PushOnlyProtocol.IsCompatibleProtocolAsync(GetHostType());
+                bool isValidProtocol = await PushOnlyProtocol.IsCompatibleProtocolAsync(GetHostType()).ConfigureAwait(false);
 
                 exitCode = isValidProtocol
-                    ? await RunTestAppAsync(testApplicationCancellationToken)
+                    ? await RunTestAppAsync(testApplicationCancellationToken).ConfigureAwait(false)
                     : ExitCodes.IncompatibleProtocolVersion;
             }
             finally
             {
                 if (PushOnlyProtocol is not null)
                 {
-                    await PushOnlyProtocol.OnExitAsync();
+                    await PushOnlyProtocol.OnExitAsync().ConfigureAwait(false);
                 }
             }
         }
@@ -66,9 +66,9 @@ internal abstract class CommonTestHost(ServiceProvider serviceProvider) : ITestH
         }
         finally
         {
-            await DisposeServiceProviderAsync(ServiceProvider, isProcessShutdown: true);
-            await DisposeHelper.DisposeAsync(ServiceProvider.GetService<FileLoggerProvider>());
-            await DisposeHelper.DisposeAsync(PushOnlyProtocol);
+            await DisposeServiceProviderAsync(ServiceProvider, isProcessShutdown: true).ConfigureAwait(false);
+            await DisposeHelper.DisposeAsync(ServiceProvider.GetService<FileLoggerProvider>()).ConfigureAwait(false);
+            await DisposeHelper.DisposeAsync(PushOnlyProtocol).ConfigureAwait(false);
 
             // This is intentional that we are not disposing the CTS.
             // An unobserved task exception could be raised after the dispose, and we want to use OutputDevice there
@@ -101,21 +101,25 @@ internal abstract class CommonTestHost(ServiceProvider serviceProvider) : ITestH
         if (RunTestApplicationLifeCycleCallbacks)
         {
             // Get the test application lifecycle callbacks to be able to call the before run
+#pragma warning disable CS0618 // Type or member is obsolete
             foreach (ITestApplicationLifecycleCallbacks testApplicationLifecycleCallbacks in ServiceProvider.GetServicesInternal<ITestApplicationLifecycleCallbacks>())
             {
-                await testApplicationLifecycleCallbacks.BeforeRunAsync(testApplicationCancellationToken);
+                await testApplicationLifecycleCallbacks.BeforeRunAsync(testApplicationCancellationToken).ConfigureAwait(false);
             }
+#pragma warning restore CS0618 // Type or member is obsolete
         }
 
-        int exitCode = await InternalRunAsync();
+        int exitCode = await InternalRunAsync().ConfigureAwait(false);
 
         if (RunTestApplicationLifeCycleCallbacks)
         {
+#pragma warning disable CS0618 // Type or member is obsolete
             foreach (ITestApplicationLifecycleCallbacks testApplicationLifecycleCallbacks in ServiceProvider.GetServicesInternal<ITestApplicationLifecycleCallbacks>())
             {
-                await testApplicationLifecycleCallbacks.AfterRunAsync(exitCode, testApplicationCancellationToken);
-                await DisposeHelper.DisposeAsync(testApplicationLifecycleCallbacks);
+                await testApplicationLifecycleCallbacks.AfterRunAsync(exitCode, testApplicationCancellationToken).ConfigureAwait(false);
+                await DisposeHelper.DisposeAsync(testApplicationLifecycleCallbacks).ConfigureAwait(false);
             }
+#pragma warning restore CS0618 // Type or member is obsolete
         }
 
         return exitCode;
@@ -128,13 +132,13 @@ internal abstract class CommonTestHost(ServiceProvider serviceProvider) : ITestH
     {
         CancellationToken testSessionCancellationToken = serviceProvider.GetTestSessionContext().CancellationToken;
 
-        await DisplayBeforeSessionStartAsync(outputDevice, testSessionInfo, testSessionCancellationToken);
+        await DisplayBeforeSessionStartAsync(outputDevice, testSessionInfo, testSessionCancellationToken).ConfigureAwait(false);
 
         try
         {
-            await NotifyTestSessionStartAsync(testSessionInfo.SessionId, baseMessageBus, serviceProvider, testSessionCancellationToken);
-            await serviceProvider.GetTestAdapterInvoker().ExecuteAsync(testFramework, client, testSessionCancellationToken);
-            await NotifyTestSessionEndAsync(testSessionInfo.SessionId, baseMessageBus, serviceProvider, testSessionCancellationToken);
+            await NotifyTestSessionStartAsync(testSessionInfo.SessionId, baseMessageBus, serviceProvider, testSessionCancellationToken).ConfigureAwait(false);
+            await serviceProvider.GetTestAdapterInvoker().ExecuteAsync(testFramework, client, testSessionCancellationToken).ConfigureAwait(false);
+            await NotifyTestSessionEndAsync(testSessionInfo.SessionId, baseMessageBus, serviceProvider, testSessionCancellationToken).ConfigureAwait(false);
         }
         catch (OperationCanceledException) when (testSessionCancellationToken.IsCancellationRequested)
         {
@@ -143,33 +147,33 @@ internal abstract class CommonTestHost(ServiceProvider serviceProvider) : ITestH
 
         // We keep the display after session out of the OperationCanceledException catch because we want to notify the IPlatformOutputDevice
         // also in case of cancellation. Most likely it needs to notify users that the session was canceled.
-        await DisplayAfterSessionEndRunAsync(outputDevice, testSessionInfo, testSessionCancellationToken);
+        await DisplayAfterSessionEndRunAsync(outputDevice, testSessionInfo, testSessionCancellationToken).ConfigureAwait(false);
     }
 
     private static async Task DisplayBeforeSessionStartAsync(ProxyOutputDevice outputDevice, ITestSessionContext sessionInfo, CancellationToken cancellationToken)
     {
         // Display before session start
-        await outputDevice.DisplayBeforeSessionStartAsync();
+        await outputDevice.DisplayBeforeSessionStartAsync().ConfigureAwait(false);
 
         if (outputDevice.OriginalOutputDevice is ITestSessionLifetimeHandler testSessionLifetimeHandler)
         {
             await testSessionLifetimeHandler.OnTestSessionStartingAsync(
                 sessionInfo.SessionId,
-                cancellationToken);
+                cancellationToken).ConfigureAwait(false);
         }
     }
 
     private static async Task DisplayAfterSessionEndRunAsync(ProxyOutputDevice outputDevice, ITestSessionContext sessionInfo, CancellationToken cancellationToken)
     {
         // Display after session end
-        await outputDevice.DisplayAfterSessionEndRunAsync();
+        await outputDevice.DisplayAfterSessionEndRunAsync().ConfigureAwait(false);
 
         // We want to ensure that the output service is the last one to run
         if (outputDevice.OriginalOutputDevice is ITestSessionLifetimeHandler testSessionLifetimeHandlerFinishing)
         {
             await testSessionLifetimeHandlerFinishing.OnTestSessionFinishingAsync(
                 sessionInfo.SessionId,
-                cancellationToken);
+                cancellationToken).ConfigureAwait(false);
         }
     }
 
@@ -183,17 +187,17 @@ internal abstract class CommonTestHost(ServiceProvider serviceProvider) : ITestH
 
         foreach (ITestSessionLifetimeHandler testSessionLifetimeHandler in testSessionLifetimeHandlersContainer.TestSessionLifetimeHandlers)
         {
-            await testSessionLifetimeHandler.OnTestSessionStartingAsync(sessionUid, cancellationToken);
+            await testSessionLifetimeHandler.OnTestSessionStartingAsync(sessionUid, cancellationToken).ConfigureAwait(false);
         }
 
         // Drain messages generated by the session start notification before to start test execution.
-        await baseMessageBus.DrainDataAsync();
+        await baseMessageBus.DrainDataAsync().ConfigureAwait(false);
     }
 
     private static async Task NotifyTestSessionEndAsync(SessionUid sessionUid, BaseMessageBus baseMessageBus, ServiceProvider serviceProvider, CancellationToken cancellationToken)
     {
         // Drain messages generated by the test session execution before to process the session end notification.
-        await baseMessageBus.DrainDataAsync();
+        await baseMessageBus.DrainDataAsync().ConfigureAwait(false);
 
         TestSessionLifetimeHandlersContainer? testSessionLifetimeHandlersContainer = serviceProvider.GetService<TestSessionLifetimeHandlersContainer>();
         if (testSessionLifetimeHandlersContainer is null)
@@ -203,15 +207,15 @@ internal abstract class CommonTestHost(ServiceProvider serviceProvider) : ITestH
 
         foreach (ITestSessionLifetimeHandler testSessionLifetimeHandler in serviceProvider.GetRequiredService<TestSessionLifetimeHandlersContainer>().TestSessionLifetimeHandlers)
         {
-            await testSessionLifetimeHandler.OnTestSessionFinishingAsync(sessionUid, cancellationToken);
+            await testSessionLifetimeHandler.OnTestSessionFinishingAsync(sessionUid, cancellationToken).ConfigureAwait(false);
 
             // OnTestSessionFinishingAsync could produce information that needs to be handled by others.
-            await baseMessageBus.DrainDataAsync();
+            await baseMessageBus.DrainDataAsync().ConfigureAwait(false);
         }
 
         // We disable after the drain because it's possible that the drain will produce more messages
-        await baseMessageBus.DrainDataAsync();
-        await baseMessageBus.DisableAsync();
+        await baseMessageBus.DrainDataAsync().ConfigureAwait(false);
+        await baseMessageBus.DisableAsync().ConfigureAwait(false);
     }
 
     protected static async Task DisposeServiceProviderAsync(ServiceProvider serviceProvider, Func<object, bool>? filter = null, List<object>? alreadyDisposed = null, bool isProcessShutdown = false)
@@ -239,17 +243,20 @@ internal abstract class CommonTestHost(ServiceProvider serviceProvider) : ITestH
             }
 
             // We need to ensure that we won't dispose special services till the shutdown
+#pragma warning disable CS0618 // Type or member is obsolete
             if (!isProcessShutdown &&
                 service is ITelemetryCollector or
                  ITestApplicationLifecycleCallbacks or
+                 ITestHostApplicationLifetime or
                  IPushOnlyProtocol)
             {
                 continue;
             }
+#pragma warning restore CS0618 // Type or member is obsolete
 
             if (!alreadyDisposed.Contains(service))
             {
-                await DisposeHelper.DisposeAsync(service);
+                await DisposeHelper.DisposeAsync(service).ConfigureAwait(false);
                 alreadyDisposed.Add(service);
             }
 
@@ -264,7 +271,7 @@ internal abstract class CommonTestHost(ServiceProvider serviceProvider) : ITestH
 
                     if (!alreadyDisposed.Contains(dataConsumer))
                     {
-                        await DisposeHelper.DisposeAsync(dataConsumer);
+                        await DisposeHelper.DisposeAsync(dataConsumer).ConfigureAwait(false);
                         alreadyDisposed.Add(service);
                     }
                 }

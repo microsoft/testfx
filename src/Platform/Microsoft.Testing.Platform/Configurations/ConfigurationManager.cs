@@ -27,15 +27,15 @@ internal sealed class ConfigurationManager(IFileSystem fileSystem, ITestApplicat
         foreach (Func<IConfigurationSource> configurationSource in _configurationSources)
         {
             IConfigurationSource serviceInstance = configurationSource();
-            if (!await serviceInstance.IsEnabledAsync())
+            if (!await serviceInstance.IsEnabledAsync().ConfigureAwait(false))
             {
                 continue;
             }
 
-            await serviceInstance.TryInitializeAsync();
+            await serviceInstance.TryInitializeAsync().ConfigureAwait(false);
 
-            IConfigurationProvider configurationProvider = await serviceInstance.BuildAsync(commandLineParseResult);
-            await configurationProvider.LoadAsync();
+            IConfigurationProvider configurationProvider = await serviceInstance.BuildAsync(commandLineParseResult).ConfigureAwait(false);
+            await configurationProvider.LoadAsync().ConfigureAwait(false);
             if (configurationProvider is JsonConfigurationProvider configuration)
             {
                 defaultJsonConfiguration = configuration;
@@ -52,12 +52,12 @@ internal sealed class ConfigurationManager(IFileSystem fileSystem, ITestApplicat
             {
                 using IFileStream configFileStream = _fileSystem.NewFileStream(defaultJsonConfiguration.ConfigurationFile, FileMode.Open, FileAccess.Read);
                 StreamReader streamReader = new(configFileStream.Stream);
-                await logger.LogTraceAsync($"Configuration file ('{defaultJsonConfiguration.ConfigurationFile}') content:\n{await streamReader.ReadToEndAsync()}");
+                await logger.LogTraceAsync($"Configuration file ('{defaultJsonConfiguration.ConfigurationFile}') content:\n{await streamReader.ReadToEndAsync().ConfigureAwait(false)}").ConfigureAwait(false);
             }
         }
 
         return defaultJsonConfiguration is null
             ? throw new InvalidOperationException(PlatformResources.ConfigurationManagerCannotFindDefaultJsonConfigurationErrorMessage)
-            : new AggregatedConfiguration(configurationProviders.OrderBy(x => x.Order).Select(x => x.ConfigurationProvider).ToArray(), _testApplicationModuleInfo, _fileSystem, commandLineParseResult);
+            : new AggregatedConfiguration([.. configurationProviders.OrderBy(x => x.Order).Select(x => x.ConfigurationProvider)], _testApplicationModuleInfo, _fileSystem, commandLineParseResult);
     }
 }

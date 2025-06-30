@@ -262,11 +262,9 @@ public sealed class TreeNodeFilter : ITestExecutionFilter
             Stack<OperatorKind> operatorStack,
             OperatorKind currentOp)
         {
-            OperatorKind topStackOperator;
-
             while (operatorStack.Count != 0 && operatorStack.Peek() > currentOp)
             {
-                topStackOperator = operatorStack.Pop();
+                OperatorKind topStackOperator = operatorStack.Pop();
                 ProcessStackOperator(topStackOperator, expressionStack, operatorStack);
                 break;
             }
@@ -550,7 +548,7 @@ public sealed class TreeNodeFilter : ITestExecutionFilter
         => propertyExpr switch
         {
             PropertyExpression { PropertyName: var propExpr, Value: var valueExpr }
-                => properties.AsEnumerable().Any(prop => prop is KeyValuePairStringProperty kvpProperty && propExpr.Regex.IsMatch(kvpProperty.Key) && valueExpr.Regex.IsMatch(kvpProperty.Value)),
+                => properties.AsEnumerable().Any(prop => IsMatchingProperty(prop, propExpr, valueExpr)),
             OperatorExpression { Op: FilterOperator.Or, SubExpressions: var subExprs }
                 => subExprs.Any(expr => MatchProperties(expr, properties)),
             OperatorExpression { Op: FilterOperator.And, SubExpressions: var subExprs }
@@ -558,5 +556,15 @@ public sealed class TreeNodeFilter : ITestExecutionFilter
             OperatorExpression { Op: FilterOperator.Not, SubExpressions: var subExprs }
                 => !MatchProperties(subExprs.Single(), properties),
             _ => throw ApplicationStateGuard.Unreachable(),
+        };
+
+    private static bool IsMatchingProperty(IProperty prop, ValueExpression propExpr, ValueExpression valueExpr) =>
+        prop switch
+        {
+#pragma warning disable CS0618 // Type or member is obsolete
+            KeyValuePairStringProperty kvpProperty => propExpr.Regex.IsMatch(kvpProperty.Key) && valueExpr.Regex.IsMatch(kvpProperty.Value),
+#pragma warning restore CS0618 // Type or member is obsolete
+            TestMetadataProperty testMetadataProperty => propExpr.Regex.IsMatch(testMetadataProperty.Key) && valueExpr.Regex.IsMatch(testMetadataProperty.Value),
+            _ => false,
         };
 }

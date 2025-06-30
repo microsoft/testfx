@@ -21,8 +21,8 @@ internal static class LogTestHelpers
 
     public static IEnumerable<(LogLevel DefaultLevel, LogLevel CurrentLevel)> GetLogLevelCombinations()
     {
-        List<(LogLevel, LogLevel)> logLevelCombinations = new();
-        LogLevel[] logLevels = GetLogLevels().ToArray();
+        List<(LogLevel, LogLevel)> logLevelCombinations = [];
+        LogLevel[] logLevels = [.. GetLogLevels()];
 
         for (int i = 0; i < logLevels.Length; i++)
         {

@@ -13,7 +13,7 @@ using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Extensions.MSBuild;
 
-internal sealed class MSBuildTestApplicationLifecycleCallbacks : ITestApplicationLifecycleCallbacks, IDisposable
+internal sealed class MSBuildTestApplicationLifecycleCallbacks : ITestHostApplicationLifetime, IDisposable
 {
     private readonly IConfiguration _configuration;
     private readonly ICommandLineOptions _commandLineOptions;
@@ -61,13 +61,13 @@ internal sealed class MSBuildTestApplicationLifecycleCallbacks : ITestApplicatio
         PipeClient.RegisterSerializer(new RunSummaryInfoRequestSerializer(), typeof(RunSummaryInfoRequest));
         using var cancellationTokenSource = new CancellationTokenSource(TimeoutHelper.DefaultHangTimeSpanTimeout);
         using var linkedCancellationToken = CancellationTokenSource.CreateLinkedTokenSource(cancellationTokenSource.Token, _testApplicationCancellationTokenSource.CancellationToken);
-        await PipeClient.ConnectAsync(linkedCancellationToken.Token);
+        await PipeClient.ConnectAsync(linkedCancellationToken.Token).ConfigureAwait(false);
         await PipeClient.RequestReplyAsync<ModuleInfoRequest, VoidResponse>(
             new ModuleInfoRequest(
             RuntimeInformation.FrameworkDescription,
             RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant(),
             _configuration.GetTestResultDirectory()),
-            _testApplicationCancellationTokenSource.CancellationToken);
+            _testApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
     }
 
     public void Dispose()

@@ -42,6 +42,11 @@
         <target state="translated">서명 수정</target>
         <note />
       </trans-unit>
+      <trans-unit id="ReplaceDataTestMethodWithTestMethodTitle">
+        <source>Replace 'DataTestMethod' with 'TestMethod'</source>
+        <target state="translated">'DataTestMethod'를 'TestMethod'로 바꾸기</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ReplaceWithConstructorFix">
         <source>Replace TestInitialize method with constructor</source>
         <target state="translated">TestInitialize 메서드를 생성자로 바꾸기</target>
@@ -90,6 +95,11 @@
       <trans-unit id="UseAttributeOnTestMethodFix">
         <source>Add '[TestMethod]'</source>
         <target state="translated">'[TestMethod]' 추가</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseCooperativeCancellationForTimeoutFix">
+        <source>Use 'CooperativeCancellation = true'</source>
+        <target state="new">Use 'CooperativeCancellation = true'</target>
         <note />
       </trans-unit>
       <trans-unit id="UseNewerAssertThrows">

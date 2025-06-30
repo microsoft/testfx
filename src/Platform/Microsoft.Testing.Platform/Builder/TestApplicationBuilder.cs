@@ -11,7 +11,6 @@ using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Hosts;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Resources;
-using Microsoft.Testing.Platform.ServerMode;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.Telemetry;
 using Microsoft.Testing.Platform.TestHost;
@@ -53,8 +52,6 @@ internal sealed class TestApplicationBuilder : ITestApplicationBuilder
 
     public ICommandLineManager CommandLine => _testHostBuilder.CommandLine;
 
-    internal IServerModeManager ServerMode => _testHostBuilder.ServerMode;
-
     internal ITestHostOrchestratorManager TestHostOrchestrator => _testHostBuilder.TestHostOrchestratorManager;
 
     [Obsolete("Remove in v2. Avoid breaking change with the rename of the property. See https://github.com/microsoft/testfx/issues/5015", error: true)]
@@ -75,9 +72,9 @@ internal sealed class TestApplicationBuilder : ITestApplicationBuilder
 
     public ITestApplicationBuilder RegisterTestFramework(
         Func<IServiceProvider, ITestFrameworkCapabilities> capabilitiesFactory,
-        Func<ITestFrameworkCapabilities, IServiceProvider, ITestFramework> adapterFactory)
+        Func<ITestFrameworkCapabilities, IServiceProvider, ITestFramework> frameworkFactory)
     {
-        Guard.NotNull(adapterFactory);
+        Guard.NotNull(frameworkFactory);
         Guard.NotNull(capabilitiesFactory);
 
         if (_testFrameworkFactory is not null)
@@ -85,7 +82,7 @@ internal sealed class TestApplicationBuilder : ITestApplicationBuilder
             throw new InvalidOperationException(PlatformResources.TestApplicationBuilderFrameworkAdapterFactoryAlreadyRegisteredErrorMessage);
         }
 
-        _testFrameworkFactory = adapterFactory;
+        _testFrameworkFactory = frameworkFactory;
 
         if (_testFrameworkCapabilitiesFactory is not null)
         {
@@ -112,7 +109,7 @@ internal sealed class TestApplicationBuilder : ITestApplicationBuilder
             throw new InvalidOperationException(PlatformResources.TestApplicationBuilderApplicationAlreadyRegistered);
         }
 
-        _testHost = await _testHostBuilder.BuildAsync(_loggingState, _testApplicationOptions, _unhandledExceptionsHandler, _createBuilderStart);
+        _testHost = await _testHostBuilder.BuildAsync(_loggingState, _testApplicationOptions, _unhandledExceptionsHandler, _createBuilderStart).ConfigureAwait(false);
 
         return new TestApplication(_testHost);
     }

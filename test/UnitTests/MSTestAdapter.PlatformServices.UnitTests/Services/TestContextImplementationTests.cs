@@ -398,7 +398,7 @@ public class TestContextImplementationTests : TestContainer
         messageLoggerMock
             .Setup(l => l.SendMessage(It.IsAny<TestMessageLevel>(), It.IsAny<string>()));
 
-        _testContextImplementation = new TestContextImplementation(_testMethod.Object, new ThreadSafeStringWriter(null!, "test"), _properties, messageLoggerMock.Object);
+        _testContextImplementation = new TestContextImplementation(_testMethod.Object, _properties, messageLoggerMock.Object, testRunCancellationToken: null);
         _testContextImplementation.DisplayMessage(MessageLevel.Informational, "InfoMessage");
         _testContextImplementation.DisplayMessage(MessageLevel.Warning, "WarningMessage");
         _testContextImplementation.DisplayMessage(MessageLevel.Error, "ErrorMessage");

@@ -99,9 +99,9 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
             }
 
             // We initialize only if enabled
-            if (await envVarProvider.IsEnabledAsync())
+            if (await envVarProvider.IsEnabledAsync().ConfigureAwait(false))
             {
-                await envVarProvider.TryInitializeAsync();
+                await envVarProvider.TryInitializeAsync().ConfigureAwait(false);
 
                 // Register the extension for usage
                 environmentVariableProviders.Add((envVarProvider, _factoryOrdering.IndexOf(environmentVariableProviderFactory)));
@@ -113,7 +113,7 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
         {
             // Get the singleton
             var extension = (IExtension)compositeServiceFactory.GetInstance(serviceProvider);
-            bool isEnabledAsync = await extension.IsEnabledAsync();
+            bool isEnabledAsync = await extension.IsEnabledAsync().ConfigureAwait(false);
 
             // Check if we have already built the singleton for this composite factory
             if (!_alreadyBuiltServices.Contains(compositeServiceFactory))
@@ -128,7 +128,7 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
                 // We initialize only if enabled
                 if (isEnabledAsync)
                 {
-                    await extension.TryInitializeAsync();
+                    await extension.TryInitializeAsync().ConfigureAwait(false);
                 }
 
                 // Add to the list of shared singletons
@@ -164,9 +164,9 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
             }
 
             // We initialize only if enabled
-            if (await lifetimeHandler.IsEnabledAsync())
+            if (await lifetimeHandler.IsEnabledAsync().ConfigureAwait(false))
             {
-                await lifetimeHandler.TryInitializeAsync();
+                await lifetimeHandler.TryInitializeAsync().ConfigureAwait(false);
 
                 // Register the extension for usage
                 lifetimeHandlers.Add((lifetimeHandler, _factoryOrdering.IndexOf(lifetimeHandlerFactory)));
@@ -178,7 +178,7 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
         {
             // Get the singleton
             var extension = (IExtension)compositeServiceFactory.GetInstance(serviceProvider);
-            bool isEnabledAsync = await extension.IsEnabledAsync();
+            bool isEnabledAsync = await extension.IsEnabledAsync().ConfigureAwait(false);
 
             // Check if we have already built the singleton for this composite factory
             if (!_alreadyBuiltServices.Contains(compositeServiceFactory))
@@ -192,7 +192,7 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
                 // We initialize only if enabled
                 if (isEnabledAsync)
                 {
-                    await extension.TryInitializeAsync();
+                    await extension.TryInitializeAsync().ConfigureAwait(false);
                 }
 
                 // Add to the list of shared singletons
@@ -228,9 +228,9 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
             }
 
             // We initialize only if enabled
-            if (await service.IsEnabledAsync())
+            if (await service.IsEnabledAsync().ConfigureAwait(false))
             {
-                await service.TryInitializeAsync();
+                await service.TryInitializeAsync().ConfigureAwait(false);
 
                 // Register the extension for usage
                 dataConsumers.Add((service, _factoryOrdering.IndexOf(dataConsumerFactory)));
@@ -258,9 +258,9 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
                 }
 
                 // We initialize only if enabled
-                if (await instance.IsEnabledAsync())
+                if (await instance.IsEnabledAsync().ConfigureAwait(false))
                 {
-                    await instance.TryInitializeAsync();
+                    await instance.TryInitializeAsync().ConfigureAwait(false);
                 }
 
                 // Add to the list of shared singletons
@@ -271,7 +271,7 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
             var extension = (IExtension)compositeFactoryInstance.GetInstance();
 
             // We register the extension only if enabled
-            if (await extension.IsEnabledAsync())
+            if (await extension.IsEnabledAsync().ConfigureAwait(false))
             {
                 if (extension is IDataConsumer consumer)
                 {
@@ -286,9 +286,9 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
 
         bool requireProcessRestart = environmentVariableProviders.Count > 0 || lifetimeHandlers.Count > 0 || dataConsumers.Count > 0;
         return new TestHostControllerConfiguration(
-            environmentVariableProviders.OrderBy(x => x.RegistrationOrder).Select(x => x.TestHostEnvironmentVariableProvider).ToArray(),
-            lifetimeHandlers.OrderBy(x => x.RegistrationOrder).Select(x => x.TestHostProcessLifetimeHandler).ToArray(),
-            dataConsumers.OrderBy(x => x.RegistrationOrder).Select(x => x.Consumer).ToArray(),
+            [.. environmentVariableProviders.OrderBy(x => x.RegistrationOrder).Select(x => x.TestHostEnvironmentVariableProvider)],
+            [.. lifetimeHandlers.OrderBy(x => x.RegistrationOrder).Select(x => x.TestHostProcessLifetimeHandler)],
+            [.. dataConsumers.OrderBy(x => x.RegistrationOrder).Select(x => x.Consumer)],
             requireProcessRestart);
     }
 }

@@ -25,7 +25,7 @@ public class ExitOnProcessExitTests : AcceptanceTestBase<ExitOnProcessExitTests.
             Thread.Sleep(500);
 
             // Look for the pid file created by the test host.
-            string[] pidFile = Directory.GetFiles(Path.GetDirectoryName(testHost.FullName)!, "PID").ToArray();
+            string[] pidFile = [.. Directory.GetFiles(Path.GetDirectoryName(testHost.FullName)!, "PID")];
             if (pidFile.Length > 0)
             {
                 string pid = File.ReadAllText(pidFile[0]);
@@ -37,7 +37,7 @@ public class ExitOnProcessExitTests : AcceptanceTestBase<ExitOnProcessExitTests.
                 }
             }
 
-            if (startTime.Elapsed.TotalSeconds > 55)
+            if (startTime.Elapsed.TotalSeconds > 60)
             {
                 throw new Exception("Process PID not found in 60 seconds");
             }
@@ -48,7 +48,8 @@ public class ExitOnProcessExitTests : AcceptanceTestBase<ExitOnProcessExitTests.
         startTime = Stopwatch.StartNew();
         while (!process.HasExited)
         {
-            if (startTime.Elapsed.TotalSeconds > 55)
+            Thread.Sleep(1000);
+            if (startTime.Elapsed.TotalSeconds > 60)
             {
                 throw new Exception("Process did not exit in 60 seconds");
             }
@@ -83,7 +84,7 @@ using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
 
-if (args.Length == 0)
+if (!args.Contains("--exit-on-process-exit"))
 {
     int currentPid = Process.GetCurrentProcess().Id;
     var currentEntryPoint = Path.Combine(Path.GetDirectoryName(Assembly.GetEntryAssembly()!.Location)!, Path.GetFileNameWithoutExtension(Assembly.GetEntryAssembly()!.Location)
@@ -93,7 +94,7 @@ if (args.Length == 0)
     Environment.SetEnvironmentVariable("WaitTestHost", mutexName);
     ProcessStartInfo processStartInfo = new();
     processStartInfo.FileName = currentEntryPoint;
-    processStartInfo.Arguments = $"--exit-on-process-exit {currentPid}";
+    processStartInfo.Arguments = $"--exit-on-process-exit {currentPid} --no-progress --no-ansi";
     processStartInfo.UseShellExecute = false;
     var process = Process.Start(processStartInfo);
     while (!Mutex.TryOpenExisting(mutexName, out Mutex? _))

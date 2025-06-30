@@ -158,9 +158,7 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
 
                 testHostResult.AssertExitCodeIs(ExitCodes.TestHostProcessExitedNonGracefully);
 
-                string[] entries = Directory.GetFiles(resultDirectory, "*.*", SearchOption.AllDirectories)
-                    .Where(x => !x.Contains("Retries", StringComparison.OrdinalIgnoreCase))
-                    .ToArray();
+                string[] entries = [.. Directory.GetFiles(resultDirectory, "*.*", SearchOption.AllDirectories).Where(x => !x.Contains("Retries", StringComparison.OrdinalIgnoreCase))];
 
                 // 1 trx file
                 Assert.AreEqual(1, entries.Count(x => x.EndsWith("trx", StringComparison.OrdinalIgnoreCase)));
@@ -178,6 +176,31 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
                     Assert.Fail($"Expected 1 or 2 dump files, but found {dumpFilesCount}");
                 }
             }, 3, TimeSpan.FromSeconds(5));
+    }
+
+    [TestMethod]
+    public async Task RetryFailedTests_PassingFromFirstTime_UsingOldDotnetTest_MoveFiles_Succeeds()
+    {
+        string resultDirectory = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"));
+
+        DotnetMuxerResult result = await DotnetCli.RunAsync(
+            $"test \"{AssetFixture.TargetAssetPath}\" -- --retry-failed-tests 1 --results-directory \"{resultDirectory}\"",
+            AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
+            workingDirectory: AssetFixture.TargetAssetPath);
+
+        Assert.AreEqual(ExitCodes.Success, result.ExitCode);
+
+        // File names are on the form: RetryFailedTests_tfm_architecture.log
+        string[] logFilesFromInvokeTestingPlatformTask = Directory.GetFiles(resultDirectory, "RetryFailedTests_*_*.log");
+        Assert.AreEqual(TargetFrameworks.All.Length, logFilesFromInvokeTestingPlatformTask.Length);
+        foreach (string logFile in logFilesFromInvokeTestingPlatformTask)
+        {
+            string logFileContents = File.ReadAllText(logFile);
+            Assert.Contains("Test run summary: Passed!", logFileContents);
+            Assert.Contains("total: 3", logFileContents);
+            Assert.Contains("succeeded: 3", logFileContents);
+            Assert.Contains("Tests suite completed successfully in 1 attempts", logFileContents);
+        }
     }
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
@@ -202,13 +225,21 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
         <OutputType>Exe</OutputType>
         <UseAppHost>true</UseAppHost>
         <LangVersion>preview</LangVersion>
+        <GenerateTestingPlatformEntryPoint>false</GenerateTestingPlatformEntryPoint>
+        <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
+        <TestingPlatformCaptureOutput>false</TestingPlatformCaptureOutput>
     </PropertyGroup>
     <ItemGroup>
         <PackageReference Include="Microsoft.Testing.Extensions.CrashDump" Version="$MicrosoftTestingPlatformVersion$" />
         <PackageReference Include="Microsoft.Testing.Extensions.Retry" Version="$MicrosoftTestingPlatformVersion$" />
         <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="$MicrosoftTestingPlatformVersion$" />
+        <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Version="$MicrosoftTestingPlatformVersion$" />
     </ItemGroup>
 </Project>
+
+#file dotnet.config
+[dotnet.test.runner]
+name= "VSTest"
 
 #file Program.cs
 using Microsoft.Testing.Extensions;
@@ -217,6 +248,7 @@ using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
+using Microsoft.Testing.Platform.MSBuild;
 using Microsoft.Testing.Platform.Services;
 
 public class Program
@@ -230,6 +262,7 @@ public class Program
         builder.AddCrashDumpProvider();
         builder.AddTrxReportProvider();
         builder.AddRetryProvider();
+        builder.AddMSBuild();
         using ITestApplication app = await builder.BuildAsync();
         return await app.RunAsync();
     }
@@ -270,7 +303,7 @@ public class DummyTestFramework : ITestFramework, IDataProducer
         string resultDir = Environment.GetEnvironmentVariable("RESULTDIR")!; 
         bool crash = Environment.GetEnvironmentVariable("CRASH") == "1";
 
-        if (await TestMethod1(fail, resultDir, crash))
+        if (TestMethod1(fail, resultDir, crash))
         {
             await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid,
                 new TestNode() { Uid = "1", DisplayName = "TestMethod1", Properties = new(PassedTestNodeStateProperty.CachedInstance) }));
@@ -281,7 +314,7 @@ public class DummyTestFramework : ITestFramework, IDataProducer
                 new TestNode() { Uid = "1", DisplayName = "TestMethod1", Properties = new(new FailedTestNodeStateProperty()) }));
         }
 
-        if (await TestMethod2(fail, resultDir))
+        if (TestMethod2(fail, resultDir))
         {
             await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid,
                 new TestNode() { Uid = "2", DisplayName = "TestMethod2", Properties = new(PassedTestNodeStateProperty.CachedInstance) }));
@@ -292,7 +325,7 @@ public class DummyTestFramework : ITestFramework, IDataProducer
                 new TestNode() { Uid = "2", DisplayName = "TestMethod2", Properties = new(new FailedTestNodeStateProperty()) }));
         }
 
-        if (await TestMethod3(fail, resultDir))
+        if (TestMethod3(fail, resultDir))
         {
             await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid,
                 new TestNode() { Uid = "3", DisplayName = "TestMethod3", Properties = new(PassedTestNodeStateProperty.CachedInstance) }));
@@ -306,7 +339,7 @@ public class DummyTestFramework : ITestFramework, IDataProducer
         context.Complete();
     }
 
-    private async Task<bool> TestMethod1(bool fail, string resultDir, bool crash)
+    private bool TestMethod1(bool fail, string resultDir, bool crash)
     {
         if (crash)
         {
@@ -330,7 +363,7 @@ public class DummyTestFramework : ITestFramework, IDataProducer
         return assert;        
     }
 
-    private async Task<bool> TestMethod2(bool fail, string resultDir)
+    private bool TestMethod2(bool fail, string resultDir)
     {
         bool envVar = Environment.GetEnvironmentVariable("METHOD2") is null;
         System.Console.WriteLine("envVar " + envVar);
@@ -350,7 +383,7 @@ public class DummyTestFramework : ITestFramework, IDataProducer
         return assert;
     }
 
-    private async Task<bool> TestMethod3(bool fail, string resultDir)
+    private bool TestMethod3(bool fail, string resultDir)
     {
         bool envVar = Environment.GetEnvironmentVariable("METHOD3") is null;
 

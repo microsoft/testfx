@@ -16,13 +16,13 @@ internal static class DisposeHelper
 
         if (obj is IAsyncCleanableExtension async)
         {
-            await async.CleanupAsync();
+            await async.CleanupAsync().ConfigureAwait(false);
         }
 
 #if NETCOREAPP
         if (obj is IAsyncDisposable dcAsyncDisposable)
         {
-            await dcAsyncDisposable.DisposeAsync();
+            await dcAsyncDisposable.DisposeAsync().ConfigureAwait(false);
         }
         else
         {

@@ -140,7 +140,7 @@ internal sealed class FrameworkHandlerAdapter : IFrameworkHandle
         _frameworkHandle?.RecordResult(testResult);
 
         // Publish node state change to Microsoft Testing Platform
-        var testNode = testResult.ToTestNode(_isTrxEnabled, _namedFeatureCapability, _commandLineOptions, _clientInfo);
+        var testNode = testResult.ToTestNode(_isTrxEnabled, _adapterExtensionBase.UseFullyQualifiedNameAsTestNodeUid, _namedFeatureCapability, _commandLineOptions, _clientInfo);
 
         var testNodeChange = new TestNodeUpdateMessage(_session.SessionUid, testNode);
         _messageBus.PublishAsync(_adapterExtensionBase, testNodeChange).Await();
@@ -159,7 +159,7 @@ internal sealed class FrameworkHandlerAdapter : IFrameworkHandle
         _frameworkHandle?.RecordStart(testCase);
 
         // Publish node state change to Microsoft Testing Platform
-        var testNode = testCase.ToTestNode(_isTrxEnabled, _namedFeatureCapability, _commandLineOptions, _clientInfo);
+        var testNode = testCase.ToTestNode(_isTrxEnabled, _adapterExtensionBase.UseFullyQualifiedNameAsTestNodeUid, _namedFeatureCapability, _commandLineOptions, _clientInfo);
         testNode.Properties.Add(InProgressTestNodeStateProperty.CachedInstance);
         var testNodeChange = new TestNodeUpdateMessage(_session.SessionUid, testNode);
 
@@ -182,7 +182,7 @@ internal sealed class FrameworkHandlerAdapter : IFrameworkHandle
                 }
 
                 var fileArtifact = new SessionFileArtifact(_session.SessionUid, new(attachment.Uri.LocalPath), attachmentSet.DisplayName, attachment.Description);
-                await _messageBus.PublishAsync(_adapterExtensionBase, fileArtifact);
+                await _messageBus.PublishAsync(_adapterExtensionBase, fileArtifact).ConfigureAwait(false);
             }
         }
     }

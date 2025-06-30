@@ -42,6 +42,11 @@
         <target state="translated">修正簽章</target>
         <note />
       </trans-unit>
+      <trans-unit id="ReplaceDataTestMethodWithTestMethodTitle">
+        <source>Replace 'DataTestMethod' with 'TestMethod'</source>
+        <target state="translated">將 'DataTestMethod' 取代為 'TestMethod'</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ReplaceWithConstructorFix">
         <source>Replace TestInitialize method with constructor</source>
         <target state="translated">以建構函式取代 TestInitialize 方法</target>
@@ -90,6 +95,11 @@
       <trans-unit id="UseAttributeOnTestMethodFix">
         <source>Add '[TestMethod]'</source>
         <target state="translated">新增 '[TestMethod]'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseCooperativeCancellationForTimeoutFix">
+        <source>Use 'CooperativeCancellation = true'</source>
+        <target state="translated">使用 'CooperativeCancellation = true'</target>
         <note />
       </trans-unit>
       <trans-unit id="UseNewerAssertThrows">

@@ -38,8 +38,7 @@ internal sealed class TestFrameworkEngine : IDataProducer
         _configuration = new(configuration);
     }
 
-    public Type[] DataTypesProduced { get; }
-        = new Type[1] { typeof(TestNodeUpdateMessage) };
+    public Type[] DataTypesProduced { get; } = [typeof(TestNodeUpdateMessage)];
 
     public string Uid => _extension.Uid;
 
@@ -49,20 +48,20 @@ internal sealed class TestFrameworkEngine : IDataProducer
 
     public string Description => _extension.Description;
 
-    public async Task<bool> IsEnabledAsync() => await _extension.IsEnabledAsync();
+    public async Task<bool> IsEnabledAsync() => await _extension.IsEnabledAsync().ConfigureAwait(false);
 
     public async Task<Result> ExecuteRequestAsync(TestExecutionRequest testExecutionRequest, IMessageBus messageBus, CancellationToken cancellationToken)
         => testExecutionRequest switch
         {
-            DiscoverTestExecutionRequest discoveryRequest => await ExecuteTestNodeDiscoveryAsync(discoveryRequest, messageBus, cancellationToken),
-            RunTestExecutionRequest runRequest => await ExecuteTestNodeRunAsync(runRequest, messageBus, cancellationToken),
+            DiscoverTestExecutionRequest discoveryRequest => await ExecuteTestNodeDiscoveryAsync(discoveryRequest, messageBus, cancellationToken).ConfigureAwait(false),
+            RunTestExecutionRequest runRequest => await ExecuteTestNodeRunAsync(runRequest, messageBus, cancellationToken).ConfigureAwait(false),
             _ => Result.Fail($"Unexpected request type: '{testExecutionRequest.GetType().FullName}'"),
         };
 
     private async Task<Result> ExecuteTestNodeRunAsync(RunTestExecutionRequest request, IMessageBus messageBus,
         CancellationToken cancellationToken)
     {
-        List<TestNode> allRootTestNodes = new();
+        List<TestNode> allRootTestNodes = [];
         TestFixtureManager fixtureManager = new(cancellationToken);
         TestArgumentsManager argumentsManager = new();
         TestSessionContext testSessionContext = new(_configuration, fixtureManager, argumentsManager, request.Session.SessionUid,
@@ -72,7 +71,7 @@ internal sealed class TestFrameworkEngine : IDataProducer
         {
             foreach (ITestNodesBuilder testNodeBuilder in _testNodesBuilders)
             {
-                TestNode[] testNodes = await testNodeBuilder.BuildAsync(testSessionContext);
+                TestNode[] testNodes = await testNodeBuilder.BuildAsync(testSessionContext).ConfigureAwait(false);
                 allRootTestNodes.AddRange(testNodes);
             }
 
@@ -96,11 +95,11 @@ internal sealed class TestFrameworkEngine : IDataProducer
                     .OfType<FrameworkEngineMetadataProperty>()
                     .SingleOrDefault()
                     .UsedFixtureIds
-                    ?? Array.Empty<string>();
+                    ?? [];
                 fixtureManager.RegisterFixtureUsage(testNode, fixtureIds);
 
                 return Task.CompletedTask;
-            });
+            }).ConfigureAwait(false);
 
             if (testNodesVisitor.DuplicatedNodes.Length > 0)
             {
@@ -120,13 +119,13 @@ internal sealed class TestFrameworkEngine : IDataProducer
             testNodeRunner.StartTests();
 
             // Finally, we want to wait for all tests to complete.
-            return await testNodeRunner.WaitAllTestsAsync(cancellationToken);
+            return await testNodeRunner.WaitAllTestsAsync(cancellationToken).ConfigureAwait(false);
         }
         finally
         {
             foreach (ITestNodesBuilder testNodeBuilder in _testNodesBuilders)
             {
-                await DisposeHelper.DisposeAsync(testNodeBuilder);
+                await DisposeHelper.DisposeAsync(testNodeBuilder).ConfigureAwait(false);
             }
         }
 
@@ -142,7 +141,7 @@ internal sealed class TestFrameworkEngine : IDataProducer
     private async Task<Result> ExecuteTestNodeDiscoveryAsync(DiscoverTestExecutionRequest request, IMessageBus messageBus,
         CancellationToken cancellationToken)
     {
-        List<TestNode> allRootTestNodes = new();
+        List<TestNode> allRootTestNodes = [];
         TestFixtureManager fixtureManager = new(cancellationToken);
         TestArgumentsManager argumentsManager = new();
         TestSessionContext testSessionContext = new(_configuration, fixtureManager, argumentsManager, request.Session.SessionUid,
@@ -152,7 +151,7 @@ internal sealed class TestFrameworkEngine : IDataProducer
         {
             foreach (ITestNodesBuilder testNodeBuilder in _testNodesBuilders)
             {
-                TestNode[] testNodes = await testNodeBuilder.BuildAsync(testSessionContext);
+                TestNode[] testNodes = await testNodeBuilder.BuildAsync(testSessionContext).ConfigureAwait(false);
                 allRootTestNodes.AddRange(testNodes);
             }
 
@@ -172,8 +171,8 @@ internal sealed class TestFrameworkEngine : IDataProducer
                 }
 
                 await messageBus.PublishAsync(this, new TestNodeUpdateMessage(request.Session.SessionUid, progressNode,
-                    parentTestNodeUid?.ToPlatformTestNodeUid()));
-            });
+                    parentTestNodeUid?.ToPlatformTestNodeUid())).ConfigureAwait(false);
+            }).ConfigureAwait(false);
 
             if (testNodesVisitor.DuplicatedNodes.Length > 0)
             {
@@ -192,7 +191,7 @@ internal sealed class TestFrameworkEngine : IDataProducer
         {
             foreach (ITestNodesBuilder testNodeBuilder in _testNodesBuilders)
             {
-                await DisposeHelper.DisposeAsync(testNodeBuilder);
+                await DisposeHelper.DisposeAsync(testNodeBuilder).ConfigureAwait(false);
             }
         }
 
