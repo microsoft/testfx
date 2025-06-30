@@ -321,7 +321,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
         {
             ParameterInfo[] args = methodInfo.GetParameters();
             return args.Length > 0
-                ? $"{methodInfo.Name}({string.Join(",", args.Select(a => a.ParameterType.FullName))})"
+                ? $"{methodInfo.Name}({string.Join(',', args.Select(a => a.ParameterType.FullName))})"
                 : methodInfo.Name;
         }
 
