@@ -251,7 +251,7 @@ The type declaring these methods should also respect the following rules:
     <value>DataRow argument count should match method parameter count (constructor arguments: {0}, method parameters: {1})</value>
   </data>
   <data name="DataRowShouldBeValidMessageFormat_ArgumentTypeMismatch" xml:space="preserve">
-    <value>DataRow argument types do not match method parameter types. Parameter '{0}' expects type '{1}', but the provided value has type '{2}'</value>
+    <value>DataRow argument types do not match method parameter types. {0}</value>
   </data>
   <data name="DataRowShouldBeValidMessageFormat_OnTestMethod" xml:space="preserve">
     <value>DataRow should only be set on a test method</value>
