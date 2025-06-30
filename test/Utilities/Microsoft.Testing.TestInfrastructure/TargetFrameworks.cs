@@ -31,5 +31,5 @@ public static class TargetFrameworks
         All.Select(tfm => new object[] { tfm });
 
     public static string ToMSBuildTargetFrameworks(this string[] targetFrameworksEntries)
-        => string.Join(";", targetFrameworksEntries);
+        => string.Join(';', targetFrameworksEntries);
 }

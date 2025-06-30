@@ -60,7 +60,7 @@ public sealed class CommandLine : IDisposable
         if (!commandLine.StartsWith('"'))
         {
             string[] tokens = commandLine.Split(' ');
-            return (tokens[0], string.Join(" ", tokens.Skip(1)));
+            return (tokens[0], string.Join(' ', tokens.Skip(1)));
         }
 
         int endQuote = commandLine.IndexOf('"', 1);

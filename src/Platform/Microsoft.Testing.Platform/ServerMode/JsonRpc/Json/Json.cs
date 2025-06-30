@@ -154,7 +154,7 @@ internal sealed class Json
                         : $"{testMethodIdentifierProperty.Namespace}.{testMethodIdentifierProperty.TypeName}"));
 
                     properties.Add(("location.method", testMethodIdentifierProperty.ParameterTypeFullNames.Length > 0
-                        ? $"{testMethodIdentifierProperty.MethodName}({string.Join(",", testMethodIdentifierProperty.ParameterTypeFullNames)})"
+                        ? $"{testMethodIdentifierProperty.MethodName}({string.Join(',', testMethodIdentifierProperty.ParameterTypeFullNames)})"
                         : testMethodIdentifierProperty.MethodName));
 
                     properties.Add(("location.method-arity", testMethodIdentifierProperty.MethodArity));
