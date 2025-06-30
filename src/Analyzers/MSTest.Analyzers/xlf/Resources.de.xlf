@@ -282,6 +282,11 @@ Der Typ, der diese Methoden deklariert, sollte auch die folgenden Regeln beachte
         <target state="new">DataRow argument types do not match method parameter types. {0}</target>
         <note />
       </trans-unit>
+      <trans-unit id="DataRowShouldBeValidMessageFormat_ParameterMismatch">
+        <source>Parameter '{0}' expects type '{1}', but the provided value has type '{2}'</source>
+        <target state="new">Parameter '{0}' expects type '{1}', but the provided value has type '{2}'</target>
+        <note />
+      </trans-unit>
       <trans-unit id="DataRowShouldBeValidMessageFormat_GenericTypeArgumentConflictingTypes">
         <source>Found two conflicting types for generic parameter '{0}'. The conflicting types are '{1}' and '{2}'.</source>
         <target state="translated">Es wurden zwei in Konflikt stehende Typen für den generischen Parameter '{0}' gefunden. Die in Konflikt stehenden Typen sind '{1}' und '{2}'.</target>

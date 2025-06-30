@@ -221,12 +221,12 @@ public sealed class DataRowShouldBeValidAnalyzer : DiagnosticAnalyzer
             if (typeMismatches.Count == 1)
             {
                 (string parameterName, string expectedType, string actualType) = typeMismatches[0];
-                mismatchMessage = $"Parameter '{parameterName}' expects type '{expectedType}', but the provided value has type '{actualType}'";
+                mismatchMessage = string.Format(Resources.DataRowShouldBeValidMessageFormat_ParameterMismatch, parameterName, expectedType, actualType);
             }
             else
             {
                 IEnumerable<string> mismatchDescriptions = typeMismatches.Select(m =>
-                    $"Parameter '{m.ParameterName}' expects type '{m.ExpectedType}', but the provided value has type '{m.ActualType}'");
+                    string.Format(Resources.DataRowShouldBeValidMessageFormat_ParameterMismatch, m.ParameterName, m.ExpectedType, m.ActualType));
                 mismatchMessage = string.Join("; ", mismatchDescriptions);
             }
 

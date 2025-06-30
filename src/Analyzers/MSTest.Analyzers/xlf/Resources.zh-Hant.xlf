@@ -281,6 +281,11 @@ The type declaring these methods should also respect the following rules:
         <target state="new">DataRow argument types do not match method parameter types. {0}</target>
         <note />
       </trans-unit>
+      <trans-unit id="DataRowShouldBeValidMessageFormat_ParameterMismatch">
+        <source>Parameter '{0}' expects type '{1}', but the provided value has type '{2}'</source>
+        <target state="new">Parameter '{0}' expects type '{1}', but the provided value has type '{2}'</target>
+        <note />
+      </trans-unit>
       <trans-unit id="DataRowShouldBeValidMessageFormat_GenericTypeArgumentConflictingTypes">
         <source>Found two conflicting types for generic parameter '{0}'. The conflicting types are '{1}' and '{2}'.</source>
         <target state="translated">發現兩個衝突的泛型參數類型 '{0}'。衝突的類型 '{1}' 且 '{2}'。</target>

@@ -253,6 +253,9 @@ The type declaring these methods should also respect the following rules:
   <data name="DataRowShouldBeValidMessageFormat_ArgumentTypeMismatch" xml:space="preserve">
     <value>DataRow argument types do not match method parameter types. {0}</value>
   </data>
+  <data name="DataRowShouldBeValidMessageFormat_ParameterMismatch" xml:space="preserve">
+    <value>Parameter '{0}' expects type '{1}', but the provided value has type '{2}'</value>
+  </data>
   <data name="DataRowShouldBeValidMessageFormat_OnTestMethod" xml:space="preserve">
     <value>DataRow should only be set on a test method</value>
   </data>
