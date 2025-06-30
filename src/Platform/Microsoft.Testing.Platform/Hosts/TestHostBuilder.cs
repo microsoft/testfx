@@ -134,7 +134,6 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
         // Current test platform is picky on unhandled exception, we will tear down the process in that case.
         // This mode can be too aggressive especially compared to the old framework, so we allow the user to disable it if their suite
         // relies on unhandled exception.
-        IEnvironment environment = serviceProvider.GetEnvironment();
 
         // Check the config file, by default is not specified the policy is false.
         _ = bool.TryParse(configuration[PlatformConfigurationConstants.PlatformExitProcessOnUnhandledException]!, out bool isFileConfiguredToFailFast);
