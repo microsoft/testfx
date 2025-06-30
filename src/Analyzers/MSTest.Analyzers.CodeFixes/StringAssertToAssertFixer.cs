@@ -18,7 +18,7 @@ namespace MSTest.Analyzers.CodeFixes;
 /// <summary>
 /// Code fixer for <see cref="StringAssertToAssertAnalyzer"/>.
 /// </summary>
-[ExportCodeFixProvider(LanguageNames.CSharp, LanguageNames.VisualBasic, Name = nameof(StringAssertToAssertFixer))]
+[ExportCodeFixProvider(LanguageNames.CSharp, Name = nameof(StringAssertToAssertFixer))]
 [Shared]
 public sealed class StringAssertToAssertFixer : CodeFixProvider
 {
