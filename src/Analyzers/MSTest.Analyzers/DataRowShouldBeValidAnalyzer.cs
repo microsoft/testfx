@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Immutable;
-using System.Linq;
 
 using Analyzer.Utilities.Extensions;
 
@@ -221,12 +220,12 @@ public sealed class DataRowShouldBeValidAnalyzer : DiagnosticAnalyzer
             string mismatchMessage;
             if (typeMismatches.Count == 1)
             {
-                var mismatch = typeMismatches[0];
-                mismatchMessage = $"Parameter '{mismatch.ParameterName}' expects type '{mismatch.ExpectedType}', but the provided value has type '{mismatch.ActualType}'";
+                (string parameterName, string expectedType, string actualType) = typeMismatches[0];
+                mismatchMessage = $"Parameter '{parameterName}' expects type '{expectedType}', but the provided value has type '{actualType}'";
             }
             else
             {
-                var mismatchDescriptions = typeMismatches.Select(m => 
+                IEnumerable<string> mismatchDescriptions = typeMismatches.Select(m =>
                     $"Parameter '{m.ParameterName}' expects type '{m.ExpectedType}', but the provided value has type '{m.ActualType}'");
                 mismatchMessage = string.Join("; ", mismatchDescriptions);
             }
