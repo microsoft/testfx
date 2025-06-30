@@ -750,8 +750,8 @@ Le type doit être une classe
         <note />
       </trans-unit>
       <trans-unit id="TypeContainingTestMethodShouldBeATestClassDescription">
-        <source>Type contaning '[TestMethod]' should be marked with '[TestClass]', otherwise the test method will be silently ignored.</source>
-        <target state="translated">Le type contenant « [TestMethod] » doit être marqué avec « [TestClass] », sans quoi la méthode de test sera ignorée silencieusement.</target>
+        <source>Type containing '[TestMethod]' should be marked with '[TestClass]', otherwise the test method will be silently ignored.</source>
+        <target state="needs-review-translation">Le type contenant « [TestMethod] » doit être marqué avec « [TestClass] », sans quoi la méthode de test sera ignorée silencieusement.</target>
         <note />
       </trans-unit>
       <trans-unit id="TypeContainingTestMethodShouldBeATestClassMessageFormat">

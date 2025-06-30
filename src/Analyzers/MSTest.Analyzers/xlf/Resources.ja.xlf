@@ -750,8 +750,8 @@ The type declaring these methods should also respect the following rules:
         <note />
       </trans-unit>
       <trans-unit id="TypeContainingTestMethodShouldBeATestClassDescription">
-        <source>Type contaning '[TestMethod]' should be marked with '[TestClass]', otherwise the test method will be silently ignored.</source>
-        <target state="translated">連続する型 '[TestMethod]' は '[TestClass]' でマークする必要があります。それ以外の場合、テスト メソッドは暗黙的に無視されます。</target>
+        <source>Type containing '[TestMethod]' should be marked with '[TestClass]', otherwise the test method will be silently ignored.</source>
+        <target state="needs-review-translation">連続する型 '[TestMethod]' は '[TestClass]' でマークする必要があります。それ以外の場合、テスト メソッドは暗黙的に無視されます。</target>
         <note />
       </trans-unit>
       <trans-unit id="TypeContainingTestMethodShouldBeATestClassMessageFormat">

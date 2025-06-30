@@ -752,8 +752,8 @@ Bu yöntemleri bildiren tipin ayrıca aşağıdaki kurallara uyması gerekir:
         <note />
       </trans-unit>
       <trans-unit id="TypeContainingTestMethodShouldBeATestClassDescription">
-        <source>Type contaning '[TestMethod]' should be marked with '[TestClass]', otherwise the test method will be silently ignored.</source>
-        <target state="translated">'[TestMethod]' içeren tür '[TestClass]' ile işaretlenmeli, aksi takdirde test yöntemi sessizce yoksayılır.</target>
+        <source>Type containing '[TestMethod]' should be marked with '[TestClass]', otherwise the test method will be silently ignored.</source>
+        <target state="needs-review-translation">'[TestMethod]' içeren tür '[TestClass]' ile işaretlenmeli, aksi takdirde test yöntemi sessizce yoksayılır.</target>
         <note />
       </trans-unit>
       <trans-unit id="TypeContainingTestMethodShouldBeATestClassMessageFormat">

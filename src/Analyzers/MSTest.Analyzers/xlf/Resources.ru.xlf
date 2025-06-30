@@ -762,8 +762,8 @@ The type declaring these methods should also respect the following rules:
         <note />
       </trans-unit>
       <trans-unit id="TypeContainingTestMethodShouldBeATestClassDescription">
-        <source>Type contaning '[TestMethod]' should be marked with '[TestClass]', otherwise the test method will be silently ignored.</source>
-        <target state="translated">У типа, содержащего "[TestMethod]", должна быть пометка "[TestClass]", иначе метод тестирования будет проигнорирован без уведомления пользователя.</target>
+        <source>Type containing '[TestMethod]' should be marked with '[TestClass]', otherwise the test method will be silently ignored.</source>
+        <target state="needs-review-translation">У типа, содержащего "[TestMethod]", должна быть пометка "[TestClass]", иначе метод тестирования будет проигнорирован без уведомления пользователя.</target>
         <note />
       </trans-unit>
       <trans-unit id="TypeContainingTestMethodShouldBeATestClassMessageFormat">

@@ -750,8 +750,8 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
         <note />
       </trans-unit>
       <trans-unit id="TypeContainingTestMethodShouldBeATestClassDescription">
-        <source>Type contaning '[TestMethod]' should be marked with '[TestClass]', otherwise the test method will be silently ignored.</source>
-        <target state="translated">Typ obsahující [TestMethod] by měl mít označení [TestClass], jinak bude testovací metoda bez jakéhokoli upozornění ignorována.</target>
+        <source>Type containing '[TestMethod]' should be marked with '[TestClass]', otherwise the test method will be silently ignored.</source>
+        <target state="needs-review-translation">Typ obsahující [TestMethod] by měl mít označení [TestClass], jinak bude testovací metoda bez jakéhokoli upozornění ignorována.</target>
         <note />
       </trans-unit>
       <trans-unit id="TypeContainingTestMethodShouldBeATestClassMessageFormat">

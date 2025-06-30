@@ -750,8 +750,8 @@ Typ deklarujący te metody powinien również przestrzegać następujących regu
         <note />
       </trans-unit>
       <trans-unit id="TypeContainingTestMethodShouldBeATestClassDescription">
-        <source>Type contaning '[TestMethod]' should be marked with '[TestClass]', otherwise the test method will be silently ignored.</source>
-        <target state="translated">Typ zwierający metodę „[TestMethod]” powinien być oznaczony klasa „[TestClass]”. W przeciwnym razie metoda testowa zostanie zignorowana w trybie dyskretnym.</target>
+        <source>Type containing '[TestMethod]' should be marked with '[TestClass]', otherwise the test method will be silently ignored.</source>
+        <target state="needs-review-translation">Typ zwierający metodę „[TestMethod]” powinien być oznaczony klasa „[TestClass]”. W przeciwnym razie metoda testowa zostanie zignorowana w trybie dyskretnym.</target>
         <note />
       </trans-unit>
       <trans-unit id="TypeContainingTestMethodShouldBeATestClassMessageFormat">
