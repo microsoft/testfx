@@ -206,11 +206,11 @@ internal sealed partial class TerminalTestReporter : IDisposable
         }
         else if (anyTestFailed)
         {
-            terminal.Append(string.Format(CultureInfo.CurrentCulture, "{0}!", PlatformResources.Failed));
+            terminal.Append($"{PlatformResources.Failed}!");
         }
         else
         {
-            terminal.Append(string.Format(CultureInfo.CurrentCulture, "{0}!", PlatformResources.Passed));
+            terminal.Append($"{PlatformResources.Passed}!");
         }
 
         if (!_options.ShowAssembly && _assemblies.Count == 1)
