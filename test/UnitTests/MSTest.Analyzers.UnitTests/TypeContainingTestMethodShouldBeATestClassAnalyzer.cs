@@ -310,7 +310,7 @@ public sealed class TypeContainingTestMethodShouldBeATestClassAnalyzerTests
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
-            public struct TestStruct
+            public class TestStruct
             {
                 [TestMethod]
                 public void TestMethod1()
