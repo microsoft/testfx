@@ -75,6 +75,12 @@ public sealed class StringAssertToAssertFixer : CodeFixProvider
             return document;
         }
 
+        // Check if the invocation expression has a member access expression
+        if (invocationExpr.Expression is not MemberAccessExpressionSyntax memberAccessExpr)
+        {
+            return document;
+        }
+
         SeparatedSyntaxList<ArgumentSyntax> arguments = invocationExpr.ArgumentList.Arguments;
         if (arguments.Count < 2)
         {
@@ -104,13 +110,10 @@ public sealed class StringAssertToAssertFixer : CodeFixProvider
         InvocationExpressionSyntax newInvocationExpr = invocationExpr.WithArgumentList(newArgumentList);
 
         // Replace StringAssert with Assert in the member access expression
-        if (invocationExpr.Expression is MemberAccessExpressionSyntax memberAccessExpr)
-        {
-            // Change StringAssert.MethodName to Assert.ProperMethodName
-            MemberAccessExpressionSyntax newMemberAccess = memberAccessExpr.WithExpression(SyntaxFactory.IdentifierName("Assert"))
-                .WithName(SyntaxFactory.IdentifierName(properAssertMethodName));
-            newInvocationExpr = newInvocationExpr.WithExpression(newMemberAccess);
-        }
+        // Change StringAssert.MethodName to Assert.ProperMethodName
+        MemberAccessExpressionSyntax newMemberAccess = memberAccessExpr.WithExpression(SyntaxFactory.IdentifierName("Assert"))
+            .WithName(SyntaxFactory.IdentifierName(properAssertMethodName));
+        newInvocationExpr = newInvocationExpr.WithExpression(newMemberAccess);
 
         editor.ReplaceNode(invocationExpr, newInvocationExpr);
         return editor.GetChangedDocument();
