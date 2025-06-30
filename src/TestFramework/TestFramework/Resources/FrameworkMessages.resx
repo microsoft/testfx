@@ -180,7 +180,7 @@ Actual: {2}</value>
     <value>Element at index {1} is not of expected type. Expected type:&lt;{2}&gt;. Actual type:&lt;{3}&gt;.{0}</value>
   </data>
   <data name="EndsWithFail" xml:space="preserve">
-    <value>String '{0}' does not end with string '{1}'. {2}.</value>
+    <value>String '{0}' does not end with string '{1}'. {2}</value>
   </data>
   <data name="AssertionFailed" xml:space="preserve">
     <value>{0} failed. {1}</value>
@@ -189,16 +189,13 @@ Actual: {2}</value>
     <value>{0} Expected type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;.</value>
   </data>
   <data name="IsMatchFail" xml:space="preserve">
-    <value>String '{0}' does not match pattern '{1}'. {2}.</value>
+    <value>String '{0}' does not match pattern '{1}'. {2}</value>
   </data>
   <data name="IsNotInstanceOfFailMsg" xml:space="preserve">
     <value>Wrong Type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;. {0}</value>
   </data>
   <data name="IsNotMatchFail" xml:space="preserve">
-    <value>String '{0}' matches pattern '{1}'. {2}.</value>
-  </data>
-  <data name="DoNotUseAssertEquals" xml:space="preserve">
-    <value>Assert.Equals should not be used for Assertions. Please use Assert.AreEqual &amp; overloads instead.</value>
+    <value>String '{0}' matches pattern '{1}'. {2}</value>
   </data>
   <data name="PrivateAccessorMemberNotFound" xml:space="preserve">
     <value>
@@ -221,7 +218,7 @@ Actual: {2}</value>
     <value>Different number of elements.</value>
   </data>
   <data name="StartsWithFail" xml:space="preserve">
-    <value>String '{0}' does not start with string '{1}'. {2}.</value>
+    <value>String '{0}' does not start with string '{1}'. {2}</value>
   </data>
   <data name="InvalidPropertyType" xml:space="preserve">
     <value>The property {0} has type {1}; expected type {2}.</value>
@@ -296,6 +293,24 @@ Actual: {2}</value>
   <data name="HasCountFailMsg" xml:space="preserve">
     <value>Expected collection of size {1}. Actual: {2}. {0}</value>
   </data>
+  <data name="ContainsSingleMatchFailMsg" xml:space="preserve">
+    <value>Expected exactly one item to match the predicate but found {1} item(s). {0}</value>
+  </data>
+  <data name="ContainsSingleFailMsg" xml:space="preserve">
+    <value>Expected collection to contain exactly one element but found {1} element(s). {0}</value>
+  </data>
+  <data name="ContainsItemFailMsg" xml:space="preserve">
+    <value>Expected collection to contain the specified item. {0}</value>
+  </data>
+  <data name="ContainsPredicateFailMsg" xml:space="preserve">
+    <value>Expected at least one item to match the predicate. {0}</value>
+  </data>
+  <data name="DoesNotContainItemFailMsg" xml:space="preserve">
+    <value>Expected collection to not contain the specified item. {0}</value>
+  </data>
+  <data name="DoesNotContainPredicateFailMsg" xml:space="preserve">
+    <value>Expected no items to match the predicate. {0}</value>
+  </data>
   <data name="IsNotEmptyFailMsg" xml:space="preserve">
     <value>Expected collection to contain any item but it is empty. {0}</value>
   </data>
@@ -322,5 +337,29 @@ Actual: {2}</value>
   </data>
   <data name="IsNegativeFailMsg" xml:space="preserve">
     <value>Expected value &lt;{1}&gt; to be negative. {0}</value>
+  </data>
+  <data name="DoesNotEndWithFail" xml:space="preserve">
+    <value>String '{0}' ends with string '{1}'. {2}</value>
+  </data>
+  <data name="DoesNotStartWithFail" xml:space="preserve">
+    <value>String '{0}' starts with string '{1}'. {2}</value>
+  </data>
+  <data name="DoNotUseAssertEquals" xml:space="preserve">
+    <value>Assert.Equals should not be used for Assertions. Please use Assert.AreEqual &amp; overloads instead.</value>
+  </data>
+  <data name="DoNotUseAssertReferenceEquals" xml:space="preserve">
+    <value>Assert.ReferenceEquals should not be used for Assertions. Please use Assert.AreSame &amp; overloads instead.</value>
+  </data>
+  <data name="DoNotUseStringAssertEquals" xml:space="preserve">
+    <value>StringAssert.Equals should not be used for Assertions. Please use StringAssert methods or Assert.AreEqual &amp; overloads instead.</value>
+  </data>
+  <data name="DoNotUseStringAssertReferenceEquals" xml:space="preserve">
+    <value>StringAssert.ReferenceEquals should not be used for Assertions. Please use StringAssert methods or Assert.AreSame &amp; overloads instead.</value>
+  </data>
+  <data name="DoNotUseCollectionAssertEquals" xml:space="preserve">
+    <value>CollectionAssert.Equals should not be used for Assertions. Please use CollectionAssert.AreEqual &amp; overloads instead.</value>
+  </data>
+  <data name="DoNotUseCollectionAssertReferenceEquals" xml:space="preserve">
+    <value>CollectionAssert.ReferenceEquals should not be used for Assertions. Please use CollectionAssert methods or Assert.AreSame &amp; overloads instead.</value>
   </data>
 </root>

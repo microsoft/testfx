@@ -76,9 +76,8 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
         IConfiguration configuration = ServiceProvider.GetConfiguration();
         try
         {
-            using IProcess currentProcess = process.GetCurrentProcess();
-            int currentPID = currentProcess.Id;
-            string processIdString = currentPID.ToString(CultureInfo.InvariantCulture);
+            int currentPid = environment.ProcessId;
+            string processIdString = currentPid.ToString(CultureInfo.InvariantCulture);
 
             ExecutableInfo executableInfo = testApplicationModuleInfo.GetCurrentExecutableInfo();
             await _logger.LogDebugAsync($"Test host controller process info: {executableInfo}").ConfigureAwait(false);
@@ -92,7 +91,7 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
 
             // Prepare the environment variables used by the test host
             string processCorrelationId = Guid.NewGuid().ToString("N");
-            await _logger.LogDebugAsync($"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_CORRELATIONID}_{currentPID} '{processCorrelationId}'").ConfigureAwait(false);
+            await _logger.LogDebugAsync($"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_CORRELATIONID}_{currentPid} '{processCorrelationId}'").ConfigureAwait(false);
 
             NamedPipeServer testHostControllerIpc = new(
                 $"MONITORTOHOST_{Guid.NewGuid():N}",
@@ -115,10 +114,10 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
             {
                 EnvironmentVariables =
                 {
-                    { $"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_CORRELATIONID}_{currentPID}", processCorrelationId },
-                    { $"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_PARENTPID}_{currentPID}", processIdString },
-                    { $"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_SKIPEXTENSION}_{currentPID}", "1" },
-                    { $"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_PIPENAME}_{currentPID}", testHostControllerIpc.PipeName.Name },
+                    { $"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_CORRELATIONID}_{currentPid}", processCorrelationId },
+                    { $"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_PARENTPID}_{currentPid}", processIdString },
+                    { $"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_SKIPEXTENSION}_{currentPid}", "1" },
+                    { $"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_PIPENAME}_{currentPid}", testHostControllerIpc.PipeName.Name },
                 },
 #if !NETCOREAPP
                 UseShellExecute = false,
@@ -230,9 +229,9 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
             // Launch the test host process
             string testHostProcessStartupTime = _clock.UtcNow.ToString("HH:mm:ss.fff", CultureInfo.InvariantCulture);
 #pragma warning disable CA1416 // Validate platform compatibility
-            processStartInfo.EnvironmentVariables.Add($"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_TESTHOSTPROCESSSTARTTIME}_{currentPID}", testHostProcessStartupTime);
+            processStartInfo.EnvironmentVariables.Add($"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_TESTHOSTPROCESSSTARTTIME}_{currentPid}", testHostProcessStartupTime);
 #pragma warning restore CA1416
-            await _logger.LogDebugAsync($"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_TESTHOSTPROCESSSTARTTIME}_{currentPID} '{testHostProcessStartupTime}'").ConfigureAwait(false);
+            await _logger.LogDebugAsync($"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_TESTHOSTPROCESSSTARTTIME}_{currentPid} '{testHostProcessStartupTime}'").ConfigureAwait(false);
 #pragma warning disable CA1416 // Validate platform compatibility
             await _logger.LogDebugAsync($"Starting test host process '{processStartInfo.FileName}' with args '{processStartInfo.Arguments}'").ConfigureAwait(false);
 #pragma warning restore CA1416
@@ -290,7 +289,7 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
                 if (_testHostsInformation.LifetimeHandlers.Length > 0)
                 {
                     // We don't block the host during the 'OnTestHostProcessStartedAsync' by-design, if 'ITestHostProcessLifetimeHandler' extensions needs
-                    // to block the execution of the test host should add an in-process extension like an 'ITestApplicationLifecycleCallbacks' and
+                    // to block the execution of the test host should add an in-process extension like an 'ITestHostApplicationLifetime' and
                     // wait for a connection/signal to return.
                     TestHostProcessInformation testHostProcessInformation = new(_testHostPID.Value);
                     foreach (ITestHostProcessLifetimeHandler lifetimeHandler in _testHostsInformation.LifetimeHandlers)

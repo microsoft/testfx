@@ -82,9 +82,49 @@
         <target state="translated">Строка "{0}" не содержит строку "{1}". {2}.</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="ContainsItemFailMsg">
+        <source>Expected collection to contain the specified item. {0}</source>
+        <target state="translated">Ожидалось, что коллекция будет содержать указанный элемент. {0}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ContainsPredicateFailMsg">
+        <source>Expected at least one item to match the predicate. {0}</source>
+        <target state="translated">Ожидался по крайней мере один элемент, соответствующий предикату. {0}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ContainsSingleFailMsg">
+        <source>Expected collection to contain exactly one element but found {1} element(s). {0}</source>
+        <target state="translated">Ожидалось, что коллекция будет содержать ровно один элемент, но найдено элементов: {1}. {0}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ContainsSingleMatchFailMsg">
+        <source>Expected exactly one item to match the predicate but found {1} item(s). {0}</source>
+        <target state="translated">Ожидался ровно один элемент, соответствующий предикату, но найдено элементов: {1}. {0}</target>
+        <note />
+      </trans-unit>
       <trans-unit id="DoesNotContainFail">
         <source>String '{0}' does contain string '{1}'. {2}.</source>
         <target state="translated">Строка "{0}" не содержит строку "{1}". {2}.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DoesNotContainItemFailMsg">
+        <source>Expected collection to not contain the specified item. {0}</source>
+        <target state="translated">Ожидалось, что коллекция не будет содержать указанный элемент. {0}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DoesNotContainPredicateFailMsg">
+        <source>Expected no items to match the predicate. {0}</source>
+        <target state="translated">Ожидалось, что ни один элемент не будет соответствовать предикату. {0}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DoesNotEndWithFail">
+        <source>String '{0}' ends with string '{1}'. {2}</source>
+        <target state="translated">Строка "{0}" заканчивается строкой "{1}". {2}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DoesNotStartWithFail">
+        <source>String '{0}' starts with string '{1}'. {2}</source>
+        <target state="translated">Строка "{0}" начинается со строки "{1}". {2}</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataInvalidMethodLayout">
@@ -122,9 +162,9 @@ Actual: {2}</source>
         <note></note>
       </trans-unit>
       <trans-unit id="EndsWithFail">
-        <source>String '{0}' does not end with string '{1}'. {2}.</source>
-        <target state="translated">Строка "{0}" не оканчивается строкой "{1}". {2}.</target>
-        <note></note>
+        <source>String '{0}' does not end with string '{1}'. {2}</source>
+        <target state="translated">Строка "{0}" не заканчивается строкой "{1}". {2}</target>
+        <note />
       </trans-unit>
       <trans-unit id="AssertionFailed">
         <source>{0} failed. {1}</source>
@@ -152,9 +192,9 @@ Actual: {2}</source>
         <note></note>
       </trans-unit>
       <trans-unit id="IsMatchFail">
-        <source>String '{0}' does not match pattern '{1}'. {2}.</source>
-        <target state="translated">Строка "{0}" не соответствует шаблону "{1}". {2}.</target>
-        <note></note>
+        <source>String '{0}' does not match pattern '{1}'. {2}</source>
+        <target state="translated">Строка "{0}" не соответствует шаблону "{1}". {2}</target>
+        <note />
       </trans-unit>
       <trans-unit id="IsNotEmptyFailMsg">
         <source>Expected collection to contain any item but it is empty. {0}</source>
@@ -167,14 +207,9 @@ Actual: {2}</source>
         <note></note>
       </trans-unit>
       <trans-unit id="IsNotMatchFail">
-        <source>String '{0}' matches pattern '{1}'. {2}.</source>
-        <target state="translated">Строка "{0}" соответствует шаблону "{1}". {2}.</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="DoNotUseAssertEquals">
-        <source>Assert.Equals should not be used for Assertions. Please use Assert.AreEqual &amp; overloads instead.</source>
-        <target state="translated">Нельзя использовать Assert.Equals для Assertions. Вместо этого используйте Assert.AreEqual и перегрузки.</target>
-        <note></note>
+        <source>String '{0}' matches pattern '{1}'. {2}</source>
+        <target state="translated">Строка "{0}" соответствует шаблону "{1}". {2}</target>
+        <note />
       </trans-unit>
       <trans-unit id="PrivateAccessorMemberNotFound">
         <source>
@@ -187,7 +222,7 @@ Actual: {2}</source>
       либо член является закрытым и определенным на основе базового класса. Если справедливо последнее, то 
       необходимо передать тип, определяющий член, в конструктор для PrivateObject.
     </target>
-        <note></note>
+        <note />
       </trans-unit>
       <trans-unit id="PrivateAccessorConstructorNotFound">
         <source>
@@ -200,7 +235,7 @@ Actual: {2}</source>
       метод доступа либо член является закрытым и определенным на основе базового класса. Если 
       справедливо последнее, то необходимо передать тип, определяющий член, в конструктор для PrivateObject.
     </target>
-        <note></note>
+        <note />
       </trans-unit>
       <trans-unit id="NullParameterToAssert">
         <source>The parameter '{0}' is invalid. The value cannot be null. {1}.</source>
@@ -213,9 +248,9 @@ Actual: {2}</source>
         <note></note>
       </trans-unit>
       <trans-unit id="StartsWithFail">
-        <source>String '{0}' does not start with string '{1}'. {2}.</source>
-        <target state="translated">Строка "{0}" не начинается со строки "{1}". {2}.</target>
-        <note></note>
+        <source>String '{0}' does not start with string '{1}'. {2}</source>
+        <target state="translated">Строка "{0}" не начинается со строки "{1}". {2}</target>
+        <note />
       </trans-unit>
       <trans-unit id="InvalidPropertyType">
         <source>The property {0} has type {1}; expected type {2}.</source>
@@ -317,32 +352,62 @@ Actual: {2}</source>
       </trans-unit>
       <trans-unit id="IsGreaterThanFailMsg">
         <source>Actual value &lt;{2}&gt; is not greater than expected value &lt;{1}&gt;. {0}</source>
-        <target state="new">Actual value &lt;{2}&gt; is not greater than expected value &lt;{1}&gt;. {0}</target>
+        <target state="translated">Действительное значение &lt;{2}&gt; не больше ожидаемого значения &lt;{1}&gt;. {0}</target>
         <note></note>
       </trans-unit>
       <trans-unit id="IsGreaterThanOrEqualToFailMsg">
         <source>Actual value &lt;{2}&gt; is not greater than or equal to expected value &lt;{1}&gt;. {0}</source>
-        <target state="new">Actual value &lt;{2}&gt; is not greater than or equal to expected value &lt;{1}&gt;. {0}</target>
+        <target state="translated">Действительное значение &lt;{2}&gt; не больше или не равно ожидаемому значению &lt;{1}&gt;. {0}</target>
         <note></note>
       </trans-unit>
       <trans-unit id="IsLessThanFailMsg">
         <source>Actual value &lt;{2}&gt; is not less than expected value &lt;{1}&gt;. {0}</source>
-        <target state="new">Actual value &lt;{2}&gt; is not less than expected value &lt;{1}&gt;. {0}</target>
+        <target state="translated">Действительное значение &lt;{2}&gt; не меньше ожидаемого значения &lt;{1}&gt;. {0}</target>
         <note></note>
       </trans-unit>
       <trans-unit id="IsLessThanOrEqualToFailMsg">
         <source>Actual value &lt;{2}&gt; is not less than or equal to expected value &lt;{1}&gt;. {0}</source>
-        <target state="new">Actual value &lt;{2}&gt; is not less than or equal to expected value &lt;{1}&gt;. {0}</target>
+        <target state="translated">Действительное значение &lt;{2}&gt; не меньше или не равно ожидаемому значению &lt;{1}&gt;. {0}</target>
         <note></note>
       </trans-unit>
       <trans-unit id="IsPositiveFailMsg">
         <source>Expected value &lt;{1}&gt; to be positive. {0}</source>
-        <target state="new">Expected value &lt;{1}&gt; to be positive. {0}</target>
+        <target state="translated">Ожидалось, что значение &lt;{1}&gt; будет положительным. {0}</target>
         <note></note>
       </trans-unit>
       <trans-unit id="IsNegativeFailMsg">
         <source>Expected value &lt;{1}&gt; to be negative. {0}</source>
-        <target state="new">Expected value &lt;{1}&gt; to be negative. {0}</target>
+        <target state="translated">Ожидалось, что значение &lt;{1}&gt; будет отрицательным. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DoNotUseAssertEquals">
+        <source>Assert.Equals should not be used for Assertions. Please use Assert.AreEqual &amp; overloads instead.</source>
+        <target state="translated">Нельзя использовать Assert.Equals для Assertions. Вместо этого используйте Assert.AreEqual и перегрузки.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DoNotUseAssertReferenceEquals">
+        <source>Assert.ReferenceEquals should not be used for Assertions. Please use Assert.AreSame &amp; overloads instead.</source>
+        <target state="translated">Нельзя использовать Assert.ReferenceEquals для Assertions. Вместо этого используйте Assert.AreSame и перегрузки.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DoNotUseStringAssertEquals">
+        <source>StringAssert.Equals should not be used for Assertions. Please use StringAssert methods or Assert.AreEqual &amp; overloads instead.</source>
+        <target state="translated">Нельзя использовать StringAssert.Equals для Assertions. Вместо этого используйте методы StringAssert или Assert.AreEqual и перегрузки.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DoNotUseStringAssertReferenceEquals">
+        <source>StringAssert.ReferenceEquals should not be used for Assertions. Please use StringAssert methods or Assert.AreSame &amp; overloads instead.</source>
+        <target state="translated">Нельзя использовать StringAssert.ReferenceEquals для Assertions. Вместо этого используйте методы StringAssert или Assert.AreSame и перегрузки.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DoNotUseCollectionAssertEquals">
+        <source>CollectionAssert.Equals should not be used for Assertions. Please use CollectionAssert.AreEqual &amp; overloads instead.</source>
+        <target state="translated">Нельзя использовать CollectionAssert.Equals для Assertions. Вместо этого используйте CollectionAssert.AreEqual и перегрузки.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DoNotUseCollectionAssertReferenceEquals">
+        <source>CollectionAssert.ReferenceEquals should not be used for Assertions. Please use CollectionAssert methods or Assert.AreSame &amp; overloads instead.</source>
+        <target state="translated">Нельзя использовать CollectionAssert.ReferenceEquals для Assertions. Вместо этого используйте методы CollectionAssert или Assert.AreSame и перегрузки.</target>
         <note></note>
       </trans-unit>
     </body>

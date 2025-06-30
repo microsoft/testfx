@@ -13,7 +13,7 @@ using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Extensions.MSBuild;
 
-internal sealed class MSBuildTestApplicationLifecycleCallbacks : ITestApplicationLifecycleCallbacks, IDisposable
+internal sealed class MSBuildTestApplicationLifecycleCallbacks : ITestHostApplicationLifetime, IDisposable
 {
     private readonly IConfiguration _configuration;
     private readonly ICommandLineOptions _commandLineOptions;

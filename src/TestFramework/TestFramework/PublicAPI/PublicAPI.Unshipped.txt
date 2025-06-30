@@ -1,31 +1,34 @@
 #nullable enable
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertNonStrictThrowsInterpolatedStringHandler<TException>.AssertNonStrictThrowsInterpolatedStringHandler(int literalLength, int formattedCount, System.Func<object?>! action, out bool shouldAppend) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.ConditionBaseAttribute.Mode.get -> Microsoft.VisualStudio.TestTools.UnitTesting.ConditionMode
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsGreaterThan<T>(T lowerBound, T value) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsGreaterThan<T>(T lowerBound, T value, string? message) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsGreaterThan<T>(T lowerBound, T value, string? message, params object?[]? parameters) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsGreaterThanOrEqualTo<T>(T lowerBound, T value) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsGreaterThanOrEqualTo<T>(T lowerBound, T value, string? message) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsGreaterThanOrEqualTo<T>(T lowerBound, T value, string? message, params object?[]? parameters) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ContainsSingle<T>(System.Func<T, bool>! predicate, System.Collections.Generic.IEnumerable<T>! collection, string! message = "") -> T
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.DoesNotEndWith(string? substring, string? value, string! message = "") -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.DoesNotEndWith(string? substring, string? value, System.StringComparison comparisonType, string! message = "") -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.DoesNotMatchRegex(string? pattern, string? value, string! message = "") -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.DoesNotMatchRegex(System.Text.RegularExpressions.Regex? pattern, string? value, string! message = "") -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.DoesNotStartWith(string? substring, string? value, string! message = "") -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.DoesNotStartWith(string? substring, string? value, System.StringComparison comparisonType, string! message = "") -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.EndsWith(string? substring, string? value, string! message = "") -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.EndsWith(string? substring, string? value, System.StringComparison comparisonType, string! message = "") -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsGreaterThan<T>(T lowerBound, T value, string! message = "") -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsGreaterThanOrEqualTo<T>(T lowerBound, T value, string! message = "") -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Instance.get -> Microsoft.VisualStudio.TestTools.UnitTesting.Assert!
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsInRange<T>(T minValue, T maxValue, T value) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsInRange<T>(T minValue, T maxValue, T value, string? message) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsInRange<T>(T minValue, T maxValue, T value, string? message, params object?[]? parameters) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ContainsSingle<T>(System.Func<T, bool>! predicate, System.Collections.Generic.IEnumerable<T>! collection) -> T
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ContainsSingle<T>(System.Func<T, bool>! predicate, System.Collections.Generic.IEnumerable<T>! collection, string? message) -> T
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ContainsSingle<T>(System.Func<T, bool>! predicate, System.Collections.Generic.IEnumerable<T>! collection, string? message, params object?[]? parameters) -> T
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsLessThan<T>(T upperBound, T value) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsLessThan<T>(T upperBound, T value, string? message) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsLessThan<T>(T upperBound, T value, string? message, params object?[]? parameters) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsLessThanOrEqualTo<T>(T upperBound, T value) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsLessThanOrEqualTo<T>(T upperBound, T value, string? message) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsLessThanOrEqualTo<T>(T upperBound, T value, string? message, params object?[]? parameters) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsNegative<T>(T value) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsNegative<T>(T value, string? message) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsNegative<T>(T value, string? message, params object?[]? parameters) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsPositive<T>(T value) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsPositive<T>(T value, string? message) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsPositive<T>(T value, string? message, params object?[]? parameters) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Contains<T>(System.Func<T, bool>! predicate, System.Collections.Generic.IEnumerable<T>! collection, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsInRange<T>(T minValue, T maxValue, T value, string! message = "") -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsLessThan<T>(T upperBound, T value, string! message = "") -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsLessThanOrEqualTo<T>(T upperBound, T value, string! message = "") -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsNegative<T>(T value, string! message = "") -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsPositive<T>(T value, string! message = "") -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.MatchesRegex(string? pattern, string? value, string! message = "") -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.MatchesRegex(System.Text.RegularExpressions.Regex? pattern, string? value, string! message = "") -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.StartsWith(string? substring, string? value, string! message = "") -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.StartsWith(string? substring, string? value, System.StringComparison comparisonType, string! message = "") -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Throws<TException>(System.Func<object?>! action, ref Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertNonStrictThrowsInterpolatedStringHandler<TException!> message) -> TException!
 static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.Instance.get -> Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert!
 static Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert.Instance.get -> Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert!
+*REMOVED*static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Contains<T>(System.Collections.Generic.IEnumerable<T>! collection, System.Func<T, bool>! predicate, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ReferenceEquals(object? objA, object? objB) -> bool
+static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.Equals(object? objA, object? objB) -> bool
+static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.ReferenceEquals(object? objA, object? objB) -> bool
+static Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert.Equals(object? objA, object? objB) -> bool
+static Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert.ReferenceEquals(object? objA, object? objB) -> bool

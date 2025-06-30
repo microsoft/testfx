@@ -36,7 +36,7 @@
   <PropertyGroup>
     <RootNamespace>Microsoft.VisualStudio.TestTools.UnitTesting</RootNamespace>
     <AssemblyName>Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions</AssemblyName>
-    <DefineConstants>TRACE</DefineConstants>
+    <DefineConstants>$(DefineConstants);TRACE</DefineConstants>
   </PropertyGroup>
 
   <!-- WinUI specific properties -->

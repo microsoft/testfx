@@ -4,6 +4,7 @@ pr:
     include:
     - main
     - rel/*
+    - dev/v4
   paths:
     exclude:
       - .github/*
@@ -96,10 +97,18 @@ stages:
         - script: eng\common\CIBuild.cmd
             -configuration $(_BuildConfig)
             -prepareMachine
+            /p:Publish=false
             /p:Test=false
             /p:FastAcceptanceTest=true
           name: Build
           displayName: Build
+
+        - task: PublishBuildArtifacts@1
+          displayName: 'Publish NuGet packages'
+          inputs:
+            PathtoPublish: '$(Build.SourcesDirectory)/artifacts/packages/$(_BuildConfig)/Shipping'
+            ArtifactName: '$(Agent.Os)_$(Agent.JobName)_Attempt$(System.JobAttempt)'
+          condition: always()
 
         - ${{ if eq(parameters.SkipTests, False) }}:
 
@@ -169,9 +178,17 @@ stages:
             -configuration $(_BuildConfig)
             -prepareMachine
             /p:Test=false
+            /p:Publish=false
             /p:NonWindowsBuild=true
             /p:FastAcceptanceTest=true
           displayName: Build
+
+        - task: PublishBuildArtifacts@1
+          displayName: 'Publish NuGet packages'
+          inputs:
+            PathtoPublish: '$(Build.SourcesDirectory)/artifacts/packages/$(_BuildConfig)/Shipping'
+            ArtifactName: '$(Agent.Os)_$(Agent.JobName)_Attempt$(System.JobAttempt)'
+          condition: always()
 
         - ${{ if eq(parameters.SkipTests, False) }}:
           # Because the build step is using -ci flag, restore is done in a local .packages directory.
@@ -226,9 +243,17 @@ stages:
             -configuration $(_BuildConfig)
             -prepareMachine
             /p:Test=false
+            /p:Publish=false
             /p:NonWindowsBuild=true
             /p:FastAcceptanceTest=true
           displayName: Build
+
+        - task: PublishBuildArtifacts@1
+          displayName: 'Publish NuGet packages'
+          inputs:
+            PathtoPublish: '$(Build.SourcesDirectory)/artifacts/packages/$(_BuildConfig)/Shipping'
+            ArtifactName: '$(Agent.Os)_$(Agent.JobName)_Attempt$(System.JobAttempt)'
+          condition: always()
 
         - ${{ if eq(parameters.SkipTests, False) }}:
           # Because the build step is using -ci flag, restore is done in a local .packages directory.
