@@ -20,7 +20,6 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol,
     IDisposable
 {
     private readonly CommandLineHandler _commandLineHandler;
-    private readonly IProcessHandler _processHandler;
     private readonly IEnvironment _environment;
     private readonly ITestApplicationModuleInfo _testApplicationModuleInfo;
     private readonly ITestApplicationCancellationTokenSource _cancellationTokenSource;
@@ -29,10 +28,9 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol,
 
     public static string InstanceId { get; } = Guid.NewGuid().ToString("N");
 
-    public DotnetTestConnection(CommandLineHandler commandLineHandler, IProcessHandler processHandler, IEnvironment environment, ITestApplicationModuleInfo testApplicationModuleInfo, ITestApplicationCancellationTokenSource cancellationTokenSource)
+    public DotnetTestConnection(CommandLineHandler commandLineHandler, IEnvironment environment, ITestApplicationModuleInfo testApplicationModuleInfo, ITestApplicationCancellationTokenSource cancellationTokenSource)
     {
         _commandLineHandler = commandLineHandler;
-        _processHandler = processHandler;
         _environment = environment;
         _testApplicationModuleInfo = testApplicationModuleInfo;
         _cancellationTokenSource = cancellationTokenSource;
@@ -97,7 +95,7 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol,
         string supportedProtocolVersions = ProtocolConstants.Version;
         HandshakeMessage handshakeMessage = new(new Dictionary<byte, string>
         {
-            { HandshakeMessagePropertyNames.PID, _processHandler.GetCurrentProcess().Id.ToString(CultureInfo.InvariantCulture) },
+            { HandshakeMessagePropertyNames.PID, _environment.ProcessId.ToString(CultureInfo.InvariantCulture) },
             { HandshakeMessagePropertyNames.Architecture, RuntimeInformation.ProcessArchitecture.ToString() },
             { HandshakeMessagePropertyNames.Framework, RuntimeInformation.FrameworkDescription },
             { HandshakeMessagePropertyNames.OS, RuntimeInformation.OSDescription },
