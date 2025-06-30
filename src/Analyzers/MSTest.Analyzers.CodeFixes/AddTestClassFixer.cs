@@ -140,32 +140,22 @@ public sealed class AddTestClassFixer : CodeFixProvider
         AttributeSyntax testClassAttribute = SyntaxFactory.Attribute(SyntaxFactory.ParseName("TestClass"));
         AttributeListSyntax attributeList = SyntaxFactory.AttributeList(SyntaxFactory.SingletonSeparatedList(testClassAttribute));
 
-        // Convert record struct to record class by removing the 'struct' keyword and optionally adding 'class' keyword
-        SyntaxTokenList newModifiers = SyntaxFactory.TokenList(
-            recordStructDeclaration.Modifiers
-                .Where(modifier => !modifier.IsKind(SyntaxKind.StructKeyword)));
-
-        // Optionally add 'class' keyword if it's not already implicit
-        bool hasClassKeyword = newModifiers.Any(SyntaxKind.ClassKeyword);
-        if (!hasClassKeyword)
+        // Convert record struct to record class by replacing the 'struct' keyword with 'class' keyword
+        SyntaxTokenList newModifiers = SyntaxFactory.TokenList();
+        
+        foreach (var modifier in recordStructDeclaration.Modifiers)
         {
-            // For explicit record class syntax, add the 'class' keyword after other modifiers
-            // Find the position after access modifiers but before 'record'
-            int recordIndex = -1;
-            for (int i = 0; i < newModifiers.Count; i++)
+            if (modifier.IsKind(SyntaxKind.StructKeyword))
             {
-                if (newModifiers[i].IsKind(SyntaxKind.RecordKeyword))
-                {
-                    recordIndex = i;
-                    break;
-                }
-            }
-
-            if (recordIndex >= 0)
-            {
+                // Replace 'struct' with 'class'
                 SyntaxToken classToken = SyntaxFactory.Token(SyntaxKind.ClassKeyword)
-                    .WithTrailingTrivia(SyntaxFactory.Space);
-                newModifiers = newModifiers.Insert(recordIndex + 1, classToken);
+                    .WithLeadingTrivia(modifier.LeadingTrivia)
+                    .WithTrailingTrivia(modifier.TrailingTrivia);
+                newModifiers = newModifiers.Add(classToken);
+            }
+            else
+            {
+                newModifiers = newModifiers.Add(modifier);
             }
         }
 

@@ -431,4 +431,35 @@ public sealed class TypeContainingTestMethodShouldBeATestClassAnalyzerTests
 
         await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
+
+    [TestMethod]
+    public async Task WhenReadonlyRecordStructWithTestMethod_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public readonly record struct [|TestRecordStruct|]
+            {
+                [TestMethod]
+                public void TestMethod1()
+                {
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public readonly record class TestRecordStruct
+            {
+                [TestMethod]
+                public void TestMethod1()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
 }
