@@ -70,14 +70,26 @@ public static class TestResultExtensions
 
         if (!StringEx.IsNullOrEmpty(frameworkTestResult.DebugTrace))
         {
-            string debugTraceMessagesInStdOut = string.Format(CultureInfo.CurrentCulture, "{2}{2}{0}{2}{1}", Resource.DebugTraceBanner, frameworkTestResult.DebugTrace, Environment.NewLine);
+            string debugTraceMessagesInStdOut =
+                $"""
+
+
+                 {Resource.DebugTraceBanner}
+                 {frameworkTestResult.DebugTrace}
+                 """;
             VSTestTestResultMessage debugTraceMessage = new(VSTestTestResultMessage.StandardOutCategory, debugTraceMessagesInStdOut);
             testResult.Messages.Add(debugTraceMessage);
         }
 
         if (!StringEx.IsNullOrEmpty(frameworkTestResult.TestContextMessages))
         {
-            string testContextMessagesInStdOut = string.Format(CultureInfo.InvariantCulture, "{2}{2}{0}{2}{1}", Resource.TestContextMessageBanner, frameworkTestResult.TestContextMessages, Environment.NewLine);
+            string testContextMessagesInStdOut =
+                $"""
+
+
+                 {Resource.TestContextMessageBanner}
+                 {frameworkTestResult.TestContextMessages}
+                 """;
             VSTestTestResultMessage testContextMessage = new(VSTestTestResultMessage.StandardOutCategory, testContextMessagesInStdOut);
             testResult.Messages.Add(testContextMessage);
         }
