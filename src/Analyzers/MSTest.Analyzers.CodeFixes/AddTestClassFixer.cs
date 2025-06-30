@@ -3,6 +3,7 @@
 
 using System.Collections.Immutable;
 using System.Composition;
+using System.Linq;
 
 using Analyzer.Utilities;
 
@@ -52,7 +53,7 @@ public sealed class AddTestClassFixer : CodeFixProvider
         // Find the type declaration identified by the diagnostic.
         TypeDeclarationSyntax declaration = syntaxToken.Parent.AncestorsAndSelf().OfType<TypeDeclarationSyntax>().First();
 
-        // For structs, we need to change them to classes since [TestClass] cannot be applied to structs
+        // For structs and record structs, we need to change them to classes/record classes since [TestClass] cannot be applied to structs
         if (declaration is StructDeclarationSyntax)
         {
             context.RegisterCodeFix(
@@ -62,9 +63,18 @@ public sealed class AddTestClassFixer : CodeFixProvider
                     equivalenceKey: $"{nameof(AddTestClassFixer)}_ChangeStructToClass_{diagnostic.Id}"),
                 diagnostic);
         }
+        else if (declaration is RecordDeclarationSyntax recordDeclaration && IsRecordStruct(recordDeclaration))
+        {
+            context.RegisterCodeFix(
+                CodeAction.Create(
+                    title: CodeFixResources.ChangeStructToClassAndAddTestClassFix,
+                    createChangedDocument: c => ChangeRecordStructToRecordClassAndAddTestClassAttributeAsync(context.Document, recordDeclaration, c),
+                    equivalenceKey: $"{nameof(AddTestClassFixer)}_ChangeRecordStructToClass_{diagnostic.Id}"),
+                diagnostic);
+        }
         else
         {
-            // For classes, just add the [TestClass] attribute
+            // For classes and record classes, just add the [TestClass] attribute
             context.RegisterCodeFix(
                 CodeAction.Create(
                     title: CodeFixResources.AddTestClassFix,
@@ -110,6 +120,60 @@ public sealed class AddTestClassFixer : CodeFixProvider
             .WithTrailingTrivia(structDeclaration.GetTrailingTrivia());
 
         editor.ReplaceNode(structDeclaration, classDeclaration);
+
+        SyntaxNode newRoot = editor.GetChangedRoot();
+        return document.WithSyntaxRoot(newRoot);
+    }
+
+    private static bool IsRecordStruct(RecordDeclarationSyntax recordDeclaration)
+    {
+        // Check if the record has the 'struct' keyword
+        return recordDeclaration.Modifiers.Any(SyntaxKind.StructKeyword);
+    }
+
+    private static async Task<Document> ChangeRecordStructToRecordClassAndAddTestClassAttributeAsync(Document document, RecordDeclarationSyntax recordStructDeclaration, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        DocumentEditor editor = await DocumentEditor.CreateAsync(document, cancellationToken).ConfigureAwait(false);
+
+        // Create the [TestClass] attribute
+        AttributeSyntax testClassAttribute = SyntaxFactory.Attribute(SyntaxFactory.ParseName("TestClass"));
+        AttributeListSyntax attributeList = SyntaxFactory.AttributeList(SyntaxFactory.SingletonSeparatedList(testClassAttribute));
+
+        // Convert record struct to record class by removing the 'struct' keyword and optionally adding 'class' keyword
+        SyntaxTokenList newModifiers = SyntaxFactory.TokenList(
+            recordStructDeclaration.Modifiers
+                .Where(modifier => !modifier.IsKind(SyntaxKind.StructKeyword)));
+
+        // Optionally add 'class' keyword if it's not already implicit
+        bool hasClassKeyword = newModifiers.Any(SyntaxKind.ClassKeyword);
+        if (!hasClassKeyword)
+        {
+            // For explicit record class syntax, add the 'class' keyword after other modifiers
+            // Find the position after access modifiers but before 'record'
+            int recordIndex = -1;
+            for (int i = 0; i < newModifiers.Count; i++)
+            {
+                if (newModifiers[i].IsKind(SyntaxKind.RecordKeyword))
+                {
+                    recordIndex = i;
+                    break;
+                }
+            }
+
+            if (recordIndex >= 0)
+            {
+                SyntaxToken classToken = SyntaxFactory.Token(SyntaxKind.ClassKeyword)
+                    .WithTrailingTrivia(SyntaxFactory.Space);
+                newModifiers = newModifiers.Insert(recordIndex + 1, classToken);
+            }
+        }
+
+        RecordDeclarationSyntax recordClassDeclaration = recordStructDeclaration
+            .WithModifiers(newModifiers)
+            .WithAttributeLists(recordStructDeclaration.AttributeLists.Add(attributeList));
+
+        editor.ReplaceNode(recordStructDeclaration, recordClassDeclaration);
 
         SyntaxNode newRoot = editor.GetChangedRoot();
         return document.WithSyntaxRoot(newRoot);
