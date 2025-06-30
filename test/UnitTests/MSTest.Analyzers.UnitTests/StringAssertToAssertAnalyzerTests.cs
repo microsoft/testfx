@@ -168,7 +168,7 @@ public sealed class StringAssertToAssertAnalyzerTests
                 {
                     string value = "Hello World";
                     Regex pattern = new Regex("Hello.*");
-                    Assert.Matches(pattern, value);
+                    Assert.MatchesRegex(pattern, value);
                 }
             }
             """;
@@ -176,7 +176,7 @@ public sealed class StringAssertToAssertAnalyzerTests
         await VerifyCS.VerifyCodeFixAsync(
             code,
             // /0/Test0.cs(12,9): info MSTEST0045: Use 'Assert.Matches' instead of 'StringAssert.Matches'
-            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("Matches", "StringAssert.Matches"),
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("MatchesRegex", "StringAssert.Matches"),
             fixedCode);
     }
 
@@ -212,7 +212,7 @@ public sealed class StringAssertToAssertAnalyzerTests
                 {
                     string value = "Hello World";
                     Regex pattern = new Regex("Goodbye.*");
-                    Assert.DoesNotMatch(pattern, value);
+                    Assert.DoesNotMatchRegex(pattern, value);
                 }
             }
             """;
@@ -220,7 +220,7 @@ public sealed class StringAssertToAssertAnalyzerTests
         await VerifyCS.VerifyCodeFixAsync(
             code,
             // /0/Test0.cs(12,9): info MSTEST0045: Use 'Assert.DoesNotMatch' instead of 'StringAssert.DoesNotMatch'
-            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("DoesNotMatch", "StringAssert.DoesNotMatch"),
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("DoesNotMatchRegex", "StringAssert.DoesNotMatch"),
             fixedCode);
     }
 
@@ -280,7 +280,6 @@ public sealed class StringAssertToAssertAnalyzerTests
                 {
                     string value = "Hello World";
                     Assert.AreEqual("expected", value);
-                    StringAssert.AreEqualIgnoringCase("expected", value);
                 }
             }
             """;

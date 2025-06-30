@@ -9,7 +9,10 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
     private const string AssetName = "MSBuildTests";
 
     public static string? FormatBuildMatrixEntry(MethodInfo method, object?[]? data)
-        => $"{data![0]},{(Equals(TargetFrameworks.All.ToMSBuildTargetFrameworks(), data[1]) ? "multitfm" : data[1])},{data[2]},{((bool)data[3]! ? "Succeeded" : "Failed")}";
+    {
+        (string buildCommand, string targetFramework, BuildConfiguration buildConfiguration, bool testSucceeded) = ((string, string, BuildConfiguration, bool))data![0]!;
+        return $"{buildCommand},{(Equals(TargetFrameworks.All.ToMSBuildTargetFrameworks(), targetFramework) ? "multitfm" : targetFramework)},{buildConfiguration},{(testSucceeded ? "Succeeded" : "Failed")}";
+    }
 
     internal static IEnumerable<(string BuildCommand, string TargetFramework, BuildConfiguration BuildConfiguration, bool TestSucceeded)> GetBuildMatrix()
     {
@@ -50,7 +53,7 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
             AssetName,
             SourceCode
             .PatchCodeWithReplace("$PlatformTarget$", "<PlatformTarget>x64</PlatformTarget>")
-            .PatchCodeWithReplace("$TargetFrameworks$", isMultiTfm ? $"<TargetFrameworks>{tfm}</TargetFrameworks>" : $"<TargetFramework>{tfm}</TargetFramework>")
+            .PatchCodeWithReplace("$TargetFrameworks$", isMultiTfm ? $"<TargetFrameworks>{tfm}</TargetFrameworks>" : $"<targetFramework>{tfm}</targetFramework>")
             .PatchCodeWithReplace("$AssertValue$", testSucceeded.ToString().ToLowerInvariant())
             .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
         string testResultFolder = Path.Combine(testAsset.TargetAssetPath, Guid.NewGuid().ToString("N"));
@@ -78,7 +81,7 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
             AssetName,
             SourceCode
             .PatchCodeWithReplace("$PlatformTarget$", "<PlatformTarget>x64</PlatformTarget>")
-            .PatchCodeWithReplace("$TargetFrameworks$", isMultiTfm ? $"<TargetFrameworks>{tfm}</TargetFrameworks>" : $"<TargetFramework>{tfm}</TargetFramework>")
+            .PatchCodeWithReplace("$TargetFrameworks$", isMultiTfm ? $"<TargetFrameworks>{tfm}</TargetFrameworks>" : $"<targetFramework>{tfm}</targetFramework>")
             .PatchCodeWithReplace("$AssertValue$", testSucceeded.ToString().ToLowerInvariant())
             .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
         string testResultFolder = Path.Combine(testAsset.TargetAssetPath, Guid.NewGuid().ToString("N"));
@@ -107,7 +110,7 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
             AssetName,
             SourceCode
             .PatchCodeWithReplace("$PlatformTarget$", string.Empty)
-            .PatchCodeWithReplace("$TargetFrameworks$", $"<TargetFramework>{TargetFrameworks.NetCurrent}</TargetFramework>")
+            .PatchCodeWithReplace("$TargetFrameworks$", $"<targetFramework>{TargetFrameworks.NetCurrent}</targetFramework>")
             .PatchCodeWithReplace("$AssertValue$", bool.TrueString.ToLowerInvariant())
             .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
 
@@ -175,7 +178,7 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
             AssetName,
             SourceCode
             .PatchCodeWithReplace("$PlatformTarget$", string.Empty)
-            .PatchCodeWithReplace("$TargetFrameworks$", $"<TargetFramework>{TargetFrameworks.NetCurrent}</TargetFramework>")
+            .PatchCodeWithReplace("$TargetFrameworks$", $"<targetFramework>{TargetFrameworks.NetCurrent}</targetFramework>")
             .PatchCodeWithReplace("$AssertValue$", bool.TrueString.ToLowerInvariant())
             .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
         DotnetMuxerResult result = await DotnetCli.RunAsync(
@@ -281,7 +284,7 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
             AssetName,
             SourceCode
             .PatchCodeWithReplace("$PlatformTarget$", "<PlatformTarget>x64</PlatformTarget>")
-            .PatchCodeWithReplace("$TargetFrameworks$", $"<TargetFramework>{tfm}</TargetFramework>")
+            .PatchCodeWithReplace("$TargetFrameworks$", $"<targetFramework>{tfm}</targetFramework>")
             .PatchCodeWithReplace("$AssertValue$", testSucceeded.ToString().ToLowerInvariant())
             .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
         DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"{testCommand} -p:TestingPlatformShowTestsFailure=True -p:TestingPlatformCaptureOutput=False -p:Configuration={compilationMode} -p:nodeReuse=false {testAsset.TargetAssetPath}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, workingDirectory: testAsset.TargetAssetPath, failIfReturnValueIsNotZero: false);
@@ -298,7 +301,7 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
             AssetName,
             SourceCode
             .PatchCodeWithReplace("$PlatformTarget$", "<PlatformTarget>x64</PlatformTarget>")
-            .PatchCodeWithReplace("$TargetFrameworks$", $"<TargetFramework>{TargetFrameworks.NetCurrent}</TargetFramework>")
+            .PatchCodeWithReplace("$TargetFrameworks$", $"<targetFramework>{TargetFrameworks.NetCurrent}</targetFramework>")
             .PatchCodeWithReplace("$AssertValue$", "true")
             .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
         DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"build {testAsset.TargetAssetPath} -p:TestingPlatformDisableCustomTestTarget=true -p:ImportUserDefinedTestTarget=true -t:\"Build;Test\"", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, failIfReturnValueIsNotZero: false);

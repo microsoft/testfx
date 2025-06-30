@@ -57,7 +57,7 @@ public sealed class StringAssertToAssertFixer : CodeFixProvider
         string title = string.Format(CultureInfo.InvariantCulture, CodeFixResources.StringAssertToAssertTitle, properAssertMethodName);
         var action = CodeAction.Create(
             title: title,
-            createChangedDocument: ct => FixStringAssertAsync(context.Document, simpleNameSyntax, ct),
+            createChangedDocument: ct => FixStringAssertAsync(context.Document, simpleNameSyntax, properAssertMethodName, ct),
             equivalenceKey: title);
 
         context.RegisterCodeFix(action, diagnostic);
@@ -66,6 +66,7 @@ public sealed class StringAssertToAssertFixer : CodeFixProvider
     private static async Task<Document> FixStringAssertAsync(
         Document document,
         SimpleNameSyntax simpleNameSyntax,
+        string properAssertMethodName,
         CancellationToken cancellationToken)
     {
         // Find the invocation expression that contains the SimpleNameSyntax
@@ -74,41 +75,44 @@ public sealed class StringAssertToAssertFixer : CodeFixProvider
             return document;
         }
 
+        SeparatedSyntaxList<ArgumentSyntax> arguments = invocationExpr.ArgumentList.Arguments;
+        if (arguments.Count < 2)
+        {
+            return document;
+        }
+
         DocumentEditor editor = await DocumentEditor.CreateAsync(document, cancellationToken).ConfigureAwait(false);
+
+        // Swap the first two arguments
+        ArgumentSyntax firstArg = arguments[0];
+        ArgumentSyntax secondArg = arguments[1];
+
+        // Create new argument list with swapped first two arguments
+        var newArguments = new List<ArgumentSyntax>(arguments.Count)
+        {
+            secondArg, // Second argument becomes first
+            firstArg,  // First argument becomes second
+        };
+
+        // Add remaining arguments if any
+        for (int i = 2; i < arguments.Count; i++)
+        {
+            newArguments.Add(arguments[i]);
+        }
+
+        ArgumentListSyntax newArgumentList = SyntaxFactory.ArgumentList(SyntaxFactory.SeparatedList(newArguments));
+        InvocationExpressionSyntax newInvocationExpr = invocationExpr.WithArgumentList(newArgumentList);
 
         // Replace StringAssert with Assert in the member access expression
         if (invocationExpr.Expression is MemberAccessExpressionSyntax memberAccessExpr)
         {
-            // Change StringAssert.MethodName to Assert.MethodName
-            MemberAccessExpressionSyntax newMemberAccess = memberAccessExpr.WithExpression(SyntaxFactory.IdentifierName("Assert"));
-            editor.ReplaceNode(memberAccessExpr, newMemberAccess);
+            // Change StringAssert.MethodName to Assert.ProperMethodName
+            MemberAccessExpressionSyntax newMemberAccess = memberAccessExpr.WithExpression(SyntaxFactory.IdentifierName("Assert"))
+                .WithName(SyntaxFactory.IdentifierName(properAssertMethodName));
+            newInvocationExpr = newInvocationExpr.WithExpression(newMemberAccess);
         }
 
-        // Swap the first two arguments
-        SeparatedSyntaxList<ArgumentSyntax> arguments = invocationExpr.ArgumentList.Arguments;
-        if (arguments.Count >= 2)
-        {
-            ArgumentSyntax firstArg = arguments[0];
-            ArgumentSyntax secondArg = arguments[1];
-
-            // Create new argument list with swapped first two arguments
-            var newArguments = new List<ArgumentSyntax>(arguments.Count)
-            {
-                secondArg, // Second argument becomes first
-                firstArg,  // First argument becomes second
-            };
-
-            // Add remaining arguments if any
-            for (int i = 2; i < arguments.Count; i++)
-            {
-                newArguments.Add(arguments[i]);
-            }
-
-            ArgumentListSyntax newArgumentList = SyntaxFactory.ArgumentList(SyntaxFactory.SeparatedList(newArguments));
-            InvocationExpressionSyntax newInvocationExpr = invocationExpr.WithArgumentList(newArgumentList);
-            editor.ReplaceNode(invocationExpr, newInvocationExpr);
-        }
-
+        editor.ReplaceNode(invocationExpr, newInvocationExpr);
         return editor.GetChangedDocument();
     }
 }

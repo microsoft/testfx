@@ -101,8 +101,8 @@ internal sealed class StringAssertToAssertAnalyzer : DiagnosticAnalyzer
             "Contains" => "Contains",
             "StartsWith" => "StartsWith",
             "EndsWith" => "EndsWith",
-            "Matches" => "Matches",
-            "DoesNotMatch" => "DoesNotMatch",
+            "Matches" => "MatchesRegex",
+            "DoesNotMatch" => "DoesNotMatchRegex",
             _ => null,
         };
 
