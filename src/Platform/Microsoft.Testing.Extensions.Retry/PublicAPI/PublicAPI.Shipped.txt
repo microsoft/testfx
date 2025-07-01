@@ -1,5 +1,5 @@
 #nullable enable
 Microsoft.Testing.Extensions.Retry.TestingPlatformBuilderHook
 Microsoft.Testing.Extensions.RetryExtensions
-static Microsoft.Testing.Extensions.Retry.TestingPlatformBuilderHook.AddExtensions(Microsoft.Testing.Platform.Builder.ITestApplicationBuilder! testApplicationBuilder, string![]! _) -> void
+static Microsoft.Testing.Extensions.Retry.TestingPlatformBuilderHook.AddExtensions(Microsoft.Testing.Platform.Builder.ITestApplicationBuilder! testApplicationBuilder) -> void
 static Microsoft.Testing.Extensions.RetryExtensions.AddRetryProvider(this Microsoft.Testing.Platform.Builder.ITestApplicationBuilder! builder) -> void

@@ -90,7 +90,7 @@ namespace MyNamespaceRoot.Level1.Level2;
 
 public static class DummyTestFrameworkRegistration
 {
-    public static void AddExtensions(ITestApplicationBuilder testApplicationBuilder, string[] args)
+    public static void AddExtensions(ITestApplicationBuilder testApplicationBuilder)
     {
         testApplicationBuilder.RegisterTestFramework(_ => new Capabilities(), (_, __) => new DummyTestFramework());
     }

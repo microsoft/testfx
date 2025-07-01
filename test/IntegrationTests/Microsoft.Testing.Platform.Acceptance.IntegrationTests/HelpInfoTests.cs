@@ -668,7 +668,7 @@ public class Program
         builder.RegisterTestFramework(
             sp => new TestFrameworkCapabilities(),
             (_,__) => new DummyTestFramework());
-        builder.AddSelfRegisteredExtensions(args);
+        builder.AddSelfRegisteredExtensions();
         using ITestApplication app = await builder.BuildAsync();
         return await app.RunAsync();
     }
