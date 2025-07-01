@@ -342,14 +342,14 @@ public class UnitTest1
     public async Task TestMethod2()
     {
         AssertCorrectThreadApartmentState();
-        await Task.CompletedTask;
+        await Task.Yield();
     }
 
     [TestMethod]
     public Task TestMethod3()
     {
         AssertCorrectThreadApartmentState();
-        return Task.CompletedTask;
+        return Task.Yield();
     }
 
 #if NET
