@@ -16,9 +16,8 @@ public static class TestingPlatformBuilderHook
     /// Adds MSTest support to the Testing Platform Builder.
     /// </summary>
     /// <param name="testApplicationBuilder">The test application builder on which registering MSTest.</param>
-    /// <param name="arguments">The test application cli arguments.</param>
 #pragma warning disable IDE0060 // Remove unused parameter
-    public static void AddExtensions(ITestApplicationBuilder testApplicationBuilder, string[] arguments)
+    public static void AddExtensions(ITestApplicationBuilder testApplicationBuilder)
         => testApplicationBuilder.AddMSTest(() => [Assembly.GetEntryAssembly()!]);
 }
 #endif

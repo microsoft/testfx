@@ -80,7 +80,7 @@ Expected item spec:
     </TestingPlatformBuilderHook>
 </ItemGroup>
 Expected method signature
-static Contoso.BuilderHook.AddExtensions(Microsoft.Testing.Platform.Builder.TestApplicationBuilder builder, string[] args)
+static Contoso.BuilderHook.AddExtensions(Microsoft.Testing.Platform.Builder.TestApplicationBuilder builder)
 """;
 
     private readonly IFileSystem _fileSystem;
@@ -179,7 +179,7 @@ static Contoso.BuilderHook.AddExtensions(Microsoft.Testing.Platform.Builder.Test
                 _ => throw ApplicationStateGuard.Unreachable(),
             };
 
-            builder.Append(CultureInfo.InvariantCulture, $"{global}{taskItems[i].GetMetadata(TypeFullNameMetadataName)}.AddExtensions(builder, args){(language == CSharpLanguageSymbol ? ";" : string.Empty)}");
+            builder.Append(CultureInfo.InvariantCulture, $"{global}{taskItems[i].GetMetadata(TypeFullNameMetadataName)}.AddExtensions(builder){(language == CSharpLanguageSymbol ? ";" : string.Empty)}");
             if (i < taskItems.Length - 1)
             {
                 builder.AppendLine();
@@ -211,7 +211,7 @@ static Contoso.BuilderHook.AddExtensions(Microsoft.Testing.Platform.Builder.Test
 [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
 internal static class SelfRegisteredExtensions
 {
-    public static void AddSelfRegisteredExtensions(this global::Microsoft.Testing.Platform.Builder.ITestApplicationBuilder builder, string[] args)
+    public static void AddSelfRegisteredExtensions(this global::Microsoft.Testing.Platform.Builder.ITestApplicationBuilder builder)
     {
         {{extensionsFragments}}
     }
@@ -229,7 +229,7 @@ namespace {{rootNamespace}}
     [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
     internal static class SelfRegisteredExtensions
     {
-        public static void AddSelfRegisteredExtensions(this global::Microsoft.Testing.Platform.Builder.ITestApplicationBuilder builder, string[] args)
+        public static void AddSelfRegisteredExtensions(this global::Microsoft.Testing.Platform.Builder.ITestApplicationBuilder builder)
         {
             {{extensionsFragments}}
         }
@@ -252,7 +252,7 @@ namespace {{rootNamespace}}
 <System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage>
 Friend Module SelfRegisteredExtensions
     <System.Runtime.CompilerServices.Extension>
-    Public Sub AddSelfRegisteredExtensions(ByVal builder As Global.Microsoft.Testing.Platform.Builder.ITestApplicationBuilder, ByVal args As Global.System.String())
+    Public Sub AddSelfRegisteredExtensions(ByVal builder As Global.Microsoft.Testing.Platform.Builder.ITestApplicationBuilder)
         {{extensionsFragments}}
     End Sub
 End Module
@@ -277,7 +277,7 @@ open System.Runtime.CompilerServices
 type SelfRegisteredExtensions() =
 
     [<Extension>]
-    static member AddSelfRegisteredExtensions (builder: Microsoft.Testing.Platform.Builder.ITestApplicationBuilder, args: string[]) =
+    static member AddSelfRegisteredExtensions (builder: Microsoft.Testing.Platform.Builder.ITestApplicationBuilder) =
         {{(extensionsFragments.Length > 0 ? extensionsFragments : "()")}}
 """
                 : $$"""
@@ -296,7 +296,7 @@ open System.Runtime.CompilerServices
 type SelfRegisteredExtensions() =
 
     [<Extension>]
-    static member AddSelfRegisteredExtensions (builder: Microsoft.Testing.Platform.Builder.ITestApplicationBuilder, args: string[]) =
+    static member AddSelfRegisteredExtensions (builder: Microsoft.Testing.Platform.Builder.ITestApplicationBuilder) =
         {{(extensionsFragments.Length > 0 ? extensionsFragments : "()")}}
 """;
         }

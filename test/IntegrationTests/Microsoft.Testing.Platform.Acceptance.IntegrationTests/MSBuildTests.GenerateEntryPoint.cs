@@ -48,7 +48,7 @@ namespace MSBuildTests
         public static async global::System.Threading.Tasks.Task<int> Main(string[] args)
         {
             global::Microsoft.Testing.Platform.Builder.ITestApplicationBuilder builder = await global::Microsoft.Testing.Platform.Builder.TestApplication.CreateBuilderAsync(args);
-            SelfRegisteredExtensions.AddSelfRegisteredExtensions(builder, args);
+            SelfRegisteredExtensions.AddSelfRegisteredExtensions(builder);
             using (global::Microsoft.Testing.Platform.Builder.ITestApplication app = await builder.BuildAsync())
             {
                 return await app.RunAsync();
@@ -77,7 +77,7 @@ Module MicrosoftTestingPlatformEntryPoint
 
     Public Async Function MainAsync(args As String()) As Global.System.Threading.Tasks.Task(Of Integer)
         Dim builder = Await Global.Microsoft.Testing.Platform.Builder.TestApplication.CreateBuilderAsync(args)
-        SelfRegisteredExtensions.AddSelfRegisteredExtensions(builder, args)
+        SelfRegisteredExtensions.AddSelfRegisteredExtensions(builder)
         Using testApplication = Await builder.BuildAsync()
             Return Await testApplication.RunAsync()
         End Using
@@ -105,7 +105,7 @@ module MicrosoftTestingPlatformEntryPoint =
     let main args =
         task {
             let! builder = Microsoft.Testing.Platform.Builder.TestApplication.CreateBuilderAsync args
-            SelfRegisteredExtensions.AddSelfRegisteredExtensions(builder, args)
+            SelfRegisteredExtensions.AddSelfRegisteredExtensions(builder)
             use! app = builder.BuildAsync()
             return! app.RunAsync()
         }
@@ -194,7 +194,7 @@ namespace MyNamespaceRoot.Level1.Level2;
 
 public static class DummyTestFrameworkRegistration
 {
-    public static void AddExtensions(ITestApplicationBuilder testApplicationBuilder, string[] args)
+    public static void AddExtensions(ITestApplicationBuilder testApplicationBuilder)
     {
         testApplicationBuilder.RegisterTestFramework(_ => new Capabilities(), (_, __) => new DummyTestFramework());
     }
@@ -202,7 +202,7 @@ public static class DummyTestFrameworkRegistration
 
 public static class DummyTestFrameworkRegistration2
 {
-    public static void AddExtensions(ITestApplicationBuilder testApplicationBuilder, string[] args)
+    public static void AddExtensions(ITestApplicationBuilder testApplicationBuilder)
     {
 
     }

@@ -112,7 +112,7 @@ internal sealed class MicrosoftTestingPlatformEntryPoint
     public static async global::System.Threading.Tasks.Task<int> Main(string[] args)
     {
         global::Microsoft.Testing.Platform.Builder.ITestApplicationBuilder builder = await global::Microsoft.Testing.Platform.Builder.TestApplication.CreateBuilderAsync(args);
-        SelfRegisteredExtensions.AddSelfRegisteredExtensions(builder, args);
+        SelfRegisteredExtensions.AddSelfRegisteredExtensions(builder);
         using (global::Microsoft.Testing.Platform.Builder.ITestApplication app = await builder.BuildAsync())
         {
             return await app.RunAsync();
@@ -135,7 +135,7 @@ namespace {{rootNamespace}}
         public static async global::System.Threading.Tasks.Task<int> Main(string[] args)
         {
             global::Microsoft.Testing.Platform.Builder.ITestApplicationBuilder builder = await global::Microsoft.Testing.Platform.Builder.TestApplication.CreateBuilderAsync(args);
-            SelfRegisteredExtensions.AddSelfRegisteredExtensions(builder, args);
+            SelfRegisteredExtensions.AddSelfRegisteredExtensions(builder);
             using (global::Microsoft.Testing.Platform.Builder.ITestApplication app = await builder.BuildAsync())
             {
                 return await app.RunAsync();
@@ -166,7 +166,7 @@ Module MicrosoftTestingPlatformEntryPoint
 
     Public Async Function MainAsync(args As String()) As Global.System.Threading.Tasks.Task(Of Integer)
         Dim builder = Await Global.Microsoft.Testing.Platform.Builder.TestApplication.CreateBuilderAsync(args)
-        SelfRegisteredExtensions.AddSelfRegisteredExtensions(builder, args)
+        SelfRegisteredExtensions.AddSelfRegisteredExtensions(builder)
         Using testApplication = Await builder.BuildAsync()
             Return Await testApplication.RunAsync()
         End Using
@@ -192,7 +192,7 @@ module MicrosoftTestingPlatformEntryPoint =
     let main args =
         task {
             let! builder = Microsoft.Testing.Platform.Builder.TestApplication.CreateBuilderAsync args
-            Microsoft.TestingPlatform.Extensions.SelfRegisteredExtensions.AddSelfRegisteredExtensions(builder, args)
+            Microsoft.TestingPlatform.Extensions.SelfRegisteredExtensions.AddSelfRegisteredExtensions(builder)
             use! app = builder.BuildAsync()
             return! app.RunAsync()
         }
@@ -215,7 +215,7 @@ module MicrosoftTestingPlatformEntryPoint =
     let main args =
         task {
             let! builder = Microsoft.Testing.Platform.Builder.TestApplication.CreateBuilderAsync args
-            SelfRegisteredExtensions.AddSelfRegisteredExtensions(builder, args)
+            SelfRegisteredExtensions.AddSelfRegisteredExtensions(builder)
             use! app = builder.BuildAsync()
             return! app.RunAsync()
         }
