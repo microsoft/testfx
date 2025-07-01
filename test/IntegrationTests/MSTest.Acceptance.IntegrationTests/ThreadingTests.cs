@@ -349,7 +349,7 @@ public class UnitTest1
     public Task TestMethod3()
     {
         AssertCorrectThreadApartmentState();
-        return Task.Yield();
+        return Task.CompletedTask;
     }
 
 #if NET
