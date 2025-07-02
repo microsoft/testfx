@@ -180,7 +180,7 @@ internal sealed class TestMethodRunner
             }
 
             object?[]? data = _test.ActualData ?? DataSerializationHelper.Deserialize(_test.SerializedData);
-            TestResult[] testResults = await ExecuteTestWithDataSourceAsync(null, data).ConfigureAwait(false);
+            TestResult[] testResults = await ExecuteTestWithDataSourceAsync(null, data, actualDataAlreadyHandledDuringDiscovery: true).ConfigureAwait(false);
             results.AddRange(testResults);
         }
         else if (await TryExecuteDataSourceBasedTestsAsync(results).ConfigureAwait(false))
@@ -303,7 +303,7 @@ internal sealed class TestMethodRunner
             {
                 try
                 {
-                    TestResult[] testResults = await ExecuteTestWithDataSourceAsync(testDataSource, data).ConfigureAwait(false);
+                    TestResult[] testResults = await ExecuteTestWithDataSourceAsync(testDataSource, data, actualDataAlreadyHandledDuringDiscovery: false).ConfigureAwait(false);
 
                     results.AddRange(testResults);
                 }
@@ -364,7 +364,7 @@ internal sealed class TestMethodRunner
         }
     }
 
-    private async Task<TestResult[]> ExecuteTestWithDataSourceAsync(UTF.ITestDataSource? testDataSource, object?[]? data)
+    private async Task<TestResult[]> ExecuteTestWithDataSourceAsync(UTF.ITestDataSource? testDataSource, object?[]? data, bool actualDataAlreadyHandledDuringDiscovery)
     {
         string? displayName = StringEx.IsNullOrWhiteSpace(_test.DisplayName)
             ? _test.Name
@@ -372,12 +372,12 @@ internal sealed class TestMethodRunner
 
         string? displayNameFromTestDataRow = null;
         string? ignoreFromTestDataRow = null;
-        if (data is not null &&
+        if (!actualDataAlreadyHandledDuringDiscovery && data is not null &&
             TestDataSourceHelpers.TryHandleITestDataRow(data, _testMethodInfo.ParameterTypes, out data, out ignoreFromTestDataRow, out displayNameFromTestDataRow))
         {
             // Handled already.
         }
-        else if (TestDataSourceHelpers.IsDataConsideredSingleArgumentValue(data, _testMethodInfo.ParameterTypes))
+        else if (!actualDataAlreadyHandledDuringDiscovery && TestDataSourceHelpers.IsDataConsideredSingleArgumentValue(data, _testMethodInfo.ParameterTypes))
         {
             // SPECIAL CASE:
             // This condition is a duplicate of the condition in InvokeAsSynchronousTask.
@@ -393,16 +393,14 @@ internal sealed class TestMethodRunner
             // Note that normally, the array in this code path represents the arguments of the test method.
             // However, InvokeAsSynchronousTask uses the above check to mean "the whole array is the single argument to the test method"
         }
-        else if (data?.Length == 1 && TestDataSourceHelpers.TryHandleTupleDataSource(data[0], _testMethodInfo.ParameterTypes, out object?[] tupleExpandedToArray))
+        else if (!actualDataAlreadyHandledDuringDiscovery && data?.Length == 1 && TestDataSourceHelpers.TryHandleTupleDataSource(data[0], _testMethodInfo.ParameterTypes, out object?[] tupleExpandedToArray))
         {
             data = tupleExpandedToArray;
         }
 
-        displayName = testDataSource != null
-            ? displayNameFromTestDataRow
-                ?? testDataSource.GetDisplayName(new ReflectionTestMethodInfo(_testMethodInfo.MethodInfo, _test.DisplayName), data)
-                ?? displayName
-            : displayNameFromTestDataRow ?? displayName;
+        displayName = displayNameFromTestDataRow
+            ?? testDataSource?.GetDisplayName(new ReflectionTestMethodInfo(_testMethodInfo.MethodInfo, _test.DisplayName), data)
+            ?? displayName;
 
         var stopwatch = Stopwatch.StartNew();
         _testMethodInfo.SetArguments(data);
