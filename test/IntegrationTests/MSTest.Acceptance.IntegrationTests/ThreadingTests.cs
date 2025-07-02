@@ -350,9 +350,13 @@ public class UnitTest1
     [TestMethod]
     public Task TestMethod3()
     {
-        // TestMethod2 finished on a thread pool thread.
-        // However, here in this method we should still start on STA thread.
-        Assert.IsFalse(Thread.CurrentThread.IsThreadPoolThread);
+        if (Environment.GetEnvironmentVariable("MSTEST_THREAD_STATE_IS_STA") == "1")
+        {
+            // TestMethod2 finished on a thread pool thread.
+            // However, here in this method we should still start on STA thread.
+            Assert.IsFalse(Thread.CurrentThread.IsThreadPoolThread);
+        }
+
         AssertCorrectThreadApartmentState();
         return Task.CompletedTask;
     }
