@@ -121,6 +121,7 @@ stages:
             env:
               DOTNET_ROOT: $(Build.SourcesDirectory)/.dotnet
               NUGET_PACKAGES: $(Build.SourcesDirectory)/.packages
+              DOTNET_CLI_CONTEXT_VERBOSE: 1
 
           # This step is only helpful for diagnosing some issues with vstest/test host that would not appear
           # through the console or trx
@@ -200,6 +201,7 @@ stages:
             env:
               DOTNET_ROOT: $(Build.SourcesDirectory)/.dotnet
               NUGET_PACKAGES: $(Build.SourcesDirectory)/.packages
+              DOTNET_CLI_CONTEXT_VERBOSE: 1
 
           # This step is only helpful for diagnosing some issues with vstest/test host that would not appear
           # through the console or trx
@@ -265,6 +267,7 @@ stages:
             env:
               DOTNET_ROOT: $(Build.SourcesDirectory)/.dotnet
               NUGET_PACKAGES: $(Build.SourcesDirectory)/.packages
+              DOTNET_CLI_CONTEXT_VERBOSE: 1
 
           # This step is only helpful for diagnosing some issues with vstest/test host that would not appear
           # through the console or trx
