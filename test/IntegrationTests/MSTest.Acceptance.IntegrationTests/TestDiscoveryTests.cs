@@ -72,6 +72,7 @@ public class TestDiscoveryTests : AcceptanceTestBase<TestDiscoveryTests.TestAsse
 #file UnitTest1.cs
 
 using System;
+using System.Collections.Generic;
 using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
