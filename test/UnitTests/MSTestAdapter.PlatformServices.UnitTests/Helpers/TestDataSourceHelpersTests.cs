@@ -19,7 +19,7 @@ public class TestDataSourceHelpersTests : TestContainer
             IgnoreMessage = "ignore_message",
             DisplayName = "display_name"
         };
-        var dataArray = new object?[] { testData };
+        object?[] dataArray = new object?[] { testData };
         var parameters = new ParameterInfo[0]; // No method parameters for this test
 
         // Act
@@ -35,7 +35,7 @@ public class TestDataSourceHelpersTests : TestContainer
         Verify(result == true);
         Verify(extractedData != null);
         Verify(extractedData.Length == 1);
-        Verify(extractedData[0] == "test_value");
+        Verify((string)extractedData[0] == "test_value");
         Verify(ignoreMessage == "ignore_message");
         Verify(displayName == "display_name");
         Verify(testCategories != null);
@@ -112,7 +112,7 @@ public class TestDataSourceHelpersTests : TestContainer
         Verify(result == true);
         Verify(extractedData != null);
         Verify(extractedData.Length == 1);
-        Verify(extractedData[0] == "test_value");
+        Verify((string)extractedData[0] == "test_value");
         Verify(ignoreMessage == "ignore_message");
         Verify(displayName == "display_name");
     }
