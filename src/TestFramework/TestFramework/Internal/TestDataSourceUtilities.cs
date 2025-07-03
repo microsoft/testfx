@@ -30,7 +30,6 @@ internal static class TestDataSourceUtilities
             FrameworkMessages.DataDrivenResultDisplayName,
             methodDisplayName,
             string.Join(',', displayData.Select(GetHumanizedArguments)));
-
     }
 
     /// <summary>
