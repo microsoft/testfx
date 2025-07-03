@@ -4,6 +4,8 @@
 using System.Collections.Immutable;
 using System.Composition;
 
+using Analyzer.Utilities;
+
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeFixes;
@@ -34,21 +36,16 @@ public sealed class StringAssertToAssertFixer : CodeFixProvider
     /// <inheritdoc />
     public override async Task RegisterCodeFixesAsync(CodeFixContext context)
     {
-        SyntaxNode? root = await context.Document.GetSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false);
+        SyntaxNode? root = await context.Document.GetRequiredSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false);
 
-        Diagnostic diagnostic = context.Diagnostics.First();
+        Diagnostic diagnostic = context.Diagnostics[0];
         if (!diagnostic.Properties.TryGetValue(StringAssertToAssertAnalyzer.ProperAssertMethodNameKey, out string? properAssertMethodName)
             || properAssertMethodName == null)
         {
             return;
         }
 
-        SimpleNameSyntax? simpleNameSyntax = root?.FindNode(diagnostic.Location.SourceSpan, getInnermostNodeForTie: true)
-            .DescendantNodesAndSelf()
-            .OfType<SimpleNameSyntax>()
-            .FirstOrDefault();
-
-        if (simpleNameSyntax is null)
+        if (root.FindNode(diagnostic.Location.SourceSpan, getInnermostNodeForTie: true) is not InvocationExpressionSyntax invocationExpressionSyntax)
         {
             return;
         }
@@ -57,7 +54,7 @@ public sealed class StringAssertToAssertFixer : CodeFixProvider
         string title = string.Format(CultureInfo.InvariantCulture, CodeFixResources.StringAssertToAssertTitle, properAssertMethodName);
         var action = CodeAction.Create(
             title: title,
-            createChangedDocument: ct => FixStringAssertAsync(context.Document, simpleNameSyntax, properAssertMethodName, ct),
+            createChangedDocument: ct => FixStringAssertAsync(context.Document, invocationExpressionSyntax, properAssertMethodName, ct),
             equivalenceKey: title);
 
         context.RegisterCodeFix(action, diagnostic);
@@ -65,16 +62,10 @@ public sealed class StringAssertToAssertFixer : CodeFixProvider
 
     private static async Task<Document> FixStringAssertAsync(
         Document document,
-        SimpleNameSyntax simpleNameSyntax,
+        InvocationExpressionSyntax invocationExpr,
         string properAssertMethodName,
         CancellationToken cancellationToken)
     {
-        // Find the invocation expression that contains the SimpleNameSyntax
-        if (simpleNameSyntax.Ancestors().OfType<InvocationExpressionSyntax>().FirstOrDefault() is not InvocationExpressionSyntax invocationExpr)
-        {
-            return document;
-        }
-
         // Check if the invocation expression has a member access expression
         if (invocationExpr.Expression is not MemberAccessExpressionSyntax memberAccessExpr)
         {
@@ -89,22 +80,9 @@ public sealed class StringAssertToAssertFixer : CodeFixProvider
 
         DocumentEditor editor = await DocumentEditor.CreateAsync(document, cancellationToken).ConfigureAwait(false);
 
-        // Swap the first two arguments
-        ArgumentSyntax firstArg = arguments[0];
-        ArgumentSyntax secondArg = arguments[1];
-
         // Create new argument list with swapped first two arguments
-        var newArguments = new List<ArgumentSyntax>(arguments.Count)
-        {
-            secondArg, // Second argument becomes first
-            firstArg,  // First argument becomes second
-        };
-
-        // Add remaining arguments if any
-        for (int i = 2; i < arguments.Count; i++)
-        {
-            newArguments.Add(arguments[i]);
-        }
+        ArgumentSyntax[] newArguments = [.. arguments];
+        (newArguments[0], newArguments[1]) = (newArguments[1], newArguments[0]);
 
         ArgumentListSyntax newArgumentList = SyntaxFactory.ArgumentList(SyntaxFactory.SeparatedList(newArguments));
         InvocationExpressionSyntax newInvocationExpr = invocationExpr.WithArgumentList(newArgumentList);

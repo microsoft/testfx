@@ -117,13 +117,12 @@ internal sealed class StringAssertToAssertAnalyzer : DiagnosticAnalyzer
             return;
         }
 
-        ImmutableDictionary<string, string?>.Builder properties = ImmutableDictionary.CreateBuilder<string, string?>();
-        properties.Add(ProperAssertMethodNameKey, assertMethodName);
+        ImmutableDictionary<string, string?> properties = ImmutableDictionary<string, string?>.Empty.Add(ProperAssertMethodNameKey, assertMethodName);
 
         context.ReportDiagnostic(context.Operation.CreateDiagnostic(
             Rule,
-            properties: properties.ToImmutable(),
+            properties: properties,
             assertMethodName,
-            $"StringAssert.{targetMethod.Name}"));
+            targetMethod.Name));
     }
 }
