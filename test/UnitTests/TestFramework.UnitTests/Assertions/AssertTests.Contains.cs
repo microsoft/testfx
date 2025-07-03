@@ -665,13 +665,13 @@ public partial class AssertTests : TestContainer
     /// Tests the ContainsSingle method with predicate and formatted message when no elements match.
     /// Expects an exception with the custom message.
     /// </summary>
-    public void ContainsSinglePredicate_WithMessageAndParams_NoItemMatches_ThrowsException()
+    public void ContainsSinglePredicate_WithMessage_NoItemMatches_ThrowsException()
     {
         // Arrange
         var collection = new List<int> { 1, 3, 5 };
 
         // Act
-        Action action = () => Assert.ContainsSingle(x => x % 2 == 0, collection, "No even numbers found in collection with {0} items", collection.Count);
+        Action action = () => Assert.ContainsSingle(x => x % 2 == 0, collection, $"No even numbers found in collection with {collection.Count} items");
 
         // Assert
         action.Should().Throw<AssertFailedException>().WithMessage("*No even numbers found in collection with 3 items*");
@@ -681,13 +681,13 @@ public partial class AssertTests : TestContainer
     /// Tests the ContainsSingle method with predicate and formatted message when multiple elements match.
     /// Expects an exception with the custom message.
     /// </summary>
-    public void ContainsSinglePredicate_WithMessageAndParams_MultipleItemsMatch_ThrowsException()
+    public void ContainsSinglePredicate_WithMessage_MultipleItemsMatch_ThrowsException()
     {
         // Arrange
         var collection = new List<int> { 2, 4, 6 };
 
         // Act
-        Action action = () => Assert.ContainsSingle(x => x % 2 == 0, collection, "Too many even numbers found: {0}", collection.Count);
+        Action action = () => Assert.ContainsSingle(x => x % 2 == 0, collection, $"Too many even numbers found: {collection.Count}");
 
         // Assert
         action.Should().Throw<AssertFailedException>().WithMessage("*Too many even numbers found: 3*");

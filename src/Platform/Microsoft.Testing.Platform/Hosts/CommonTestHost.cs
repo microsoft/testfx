@@ -101,21 +101,25 @@ internal abstract class CommonTestHost(ServiceProvider serviceProvider) : ITestH
         if (RunTestApplicationLifeCycleCallbacks)
         {
             // Get the test application lifecycle callbacks to be able to call the before run
+#pragma warning disable CS0618 // Type or member is obsolete
             foreach (ITestApplicationLifecycleCallbacks testApplicationLifecycleCallbacks in ServiceProvider.GetServicesInternal<ITestApplicationLifecycleCallbacks>())
             {
                 await testApplicationLifecycleCallbacks.BeforeRunAsync(testApplicationCancellationToken).ConfigureAwait(false);
             }
+#pragma warning restore CS0618 // Type or member is obsolete
         }
 
         int exitCode = await InternalRunAsync().ConfigureAwait(false);
 
         if (RunTestApplicationLifeCycleCallbacks)
         {
+#pragma warning disable CS0618 // Type or member is obsolete
             foreach (ITestApplicationLifecycleCallbacks testApplicationLifecycleCallbacks in ServiceProvider.GetServicesInternal<ITestApplicationLifecycleCallbacks>())
             {
                 await testApplicationLifecycleCallbacks.AfterRunAsync(exitCode, testApplicationCancellationToken).ConfigureAwait(false);
                 await DisposeHelper.DisposeAsync(testApplicationLifecycleCallbacks).ConfigureAwait(false);
             }
+#pragma warning restore CS0618 // Type or member is obsolete
         }
 
         return exitCode;
@@ -239,13 +243,16 @@ internal abstract class CommonTestHost(ServiceProvider serviceProvider) : ITestH
             }
 
             // We need to ensure that we won't dispose special services till the shutdown
+#pragma warning disable CS0618 // Type or member is obsolete
             if (!isProcessShutdown &&
                 service is ITelemetryCollector or
                  ITestApplicationLifecycleCallbacks or
+                 ITestHostApplicationLifetime or
                  IPushOnlyProtocol)
             {
                 continue;
             }
+#pragma warning restore CS0618 // Type or member is obsolete
 
             if (!alreadyDisposed.Contains(service))
             {

@@ -39,7 +39,7 @@ public class CustomTestDataSourceAttribute : Attribute, ITestDataSource
     public IEnumerable<object[]> GetData(MethodInfo methodInfo) => [[1, 2, 3], [4, 5, 6]];
 
     public string? GetDisplayName(MethodInfo methodInfo, object?[]? data)
-        => data != null ? string.Format(CultureInfo.CurrentCulture, "{0} ({1})", methodInfo.Name, string.Join(",", data)) : null;
+        => data != null ? $"{methodInfo.Name} ({string.Join(",", data)})" : null;
 }
 
 [AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
@@ -48,7 +48,7 @@ public class CustomEmptyTestDataSourceAttribute : Attribute, ITestDataSource
     public IEnumerable<object[]> GetData(MethodInfo methodInfo) => [];
 
     public string? GetDisplayName(MethodInfo methodInfo, object?[]? data)
-        => data != null ? string.Format(CultureInfo.CurrentCulture, "{0} ({1})", methodInfo.Name, string.Join(",", data)) : null;
+        => data != null ? $"{methodInfo.Name} ({string.Join(",", data)})" : null;
 }
 
 [AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
@@ -59,5 +59,5 @@ public class CustomDisableExpansionTestDataSourceAttribute : Attribute, ITestDat
     public IEnumerable<object[]> GetData(MethodInfo methodInfo) => [[1, 2, 3], [4, 5, 6]];
 
     public string? GetDisplayName(MethodInfo methodInfo, object?[]? data)
-        => data != null ? string.Format(CultureInfo.CurrentCulture, "{0} ({1})", methodInfo.Name, string.Join(",", data)) : null;
+        => data != null ? $"{methodInfo.Name} ({string.Join(",", data)})" : null;
 }

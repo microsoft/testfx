@@ -31,6 +31,8 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
     private const string TESTINGPLATFORM_CONSOLEOUTPUTDEVICE_SKIP_BANNER = nameof(TESTINGPLATFORM_CONSOLEOUTPUTDEVICE_SKIP_BANNER);
 #pragma warning restore SA1310 // Field names should not contain underscore
 
+    private const char Dash = '-';
+
     private readonly IConsole _console;
     private readonly ITestHostControllerInfo _testHostControllerInfo;
     private readonly IAsyncMonitor _asyncMonitor;
@@ -51,7 +53,6 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
     // The targeted framework, .NET 8 when application specifies <TargetFramework>net8.0</TargetFramework>
     private readonly string? _targetFramework;
     private readonly string _assemblyName;
-    private readonly char[] _dash = ['-'];
 
     private TerminalTestReporter? _terminalTestReporter;
     private bool _firstCallTo_OnSessionStartingAsync = true;
@@ -87,7 +88,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
 #else
             // RID has the operating system, we want to see that in the banner, but not next to every dll.
             _longArchitecture = RuntimeInformation.RuntimeIdentifier;
-            _shortArchitecture = GetShortArchitecture(RuntimeInformation.RuntimeIdentifier);
+            _shortArchitecture = TerminalOutputDevice.GetShortArchitecture(RuntimeInformation.RuntimeIdentifier);
 #endif
             _runtimeFramework = TargetFrameworkParser.GetShortTargetFramework(RuntimeInformation.FrameworkDescription);
             _targetFramework = TargetFrameworkParser.GetShortTargetFramework(Assembly.GetEntryAssembly()?.GetCustomAttribute<TargetFrameworkAttribute>()?.FrameworkDisplayName) ?? _runtimeFramework;
@@ -164,9 +165,9 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
         });
     }
 
-    private string GetShortArchitecture(string runtimeIdentifier)
-        => runtimeIdentifier.Contains('-')
-            ? runtimeIdentifier.Split(_dash, 2)[1]
+    private static string GetShortArchitecture(string runtimeIdentifier)
+        => runtimeIdentifier.Contains(Dash)
+            ? runtimeIdentifier.Split(Dash, 2)[1]
             : runtimeIdentifier;
 
     public Type[] DataTypesConsumed { get; } =
