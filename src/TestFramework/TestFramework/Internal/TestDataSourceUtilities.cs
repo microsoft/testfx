@@ -29,7 +29,8 @@ internal static class TestDataSourceUtilities
             CultureInfo.CurrentCulture,
             FrameworkMessages.DataDrivenResultDisplayName,
             methodDisplayName,
-            string.Join(",", displayData.Select(GetHumanizedArguments)));
+            string.Join(',', displayData.Select(GetHumanizedArguments)));
+
     }
 
     /// <summary>
@@ -56,7 +57,12 @@ internal static class TestDataSourceUtilities
 
         // We need to box the object here so that we can support value types
         IEnumerable<object> boxedObjectEnumerable = ((IEnumerable)data).Cast<object>();
+<<<<<<< HEAD
         IEnumerable<string?> elementStrings = boxedObjectEnumerable.Select(GetHumanizedArguments);
         return $"[{string.Join(",", elementStrings)}]";
+=======
+        IEnumerable<string?> elementStrings = boxedObjectEnumerable.Select(x => GetHumanizedArguments(x, testIdGenerationStrategy));
+        return $"[{string.Join(',', elementStrings)}]";
+>>>>>>> main
     }
 }

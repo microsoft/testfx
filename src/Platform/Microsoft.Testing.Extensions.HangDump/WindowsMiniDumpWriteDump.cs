@@ -9,7 +9,7 @@ internal static class MiniDumpWriteDump
 {
     public static void CollectDumpUsingMiniDumpWriteDump(int pid, string outputFile, MiniDumpTypeOption type)
     {
-        var process = Process.GetProcessById(pid);
+        using var process = Process.GetProcessById(pid);
 
         // Open the file for writing
         using var stream = new FileStream(outputFile, FileMode.Create, FileAccess.ReadWrite, FileShare.None);

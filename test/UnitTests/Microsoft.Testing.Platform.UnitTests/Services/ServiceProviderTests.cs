@@ -32,7 +32,10 @@ public sealed class ServiceProviderTests
         Assert.IsNull(_serviceProvider.GetService<IDataConsumer>());
 
         _serviceProvider.AddService(new TestApplicationLifecycleCallbacks());
+#pragma warning disable CS0618 // Type or member is obsolete
         Assert.IsNull(_serviceProvider.GetService<ITestApplicationLifecycleCallbacks>());
+#pragma warning restore CS0618 // Type or member is obsolete
+        Assert.IsNull(_serviceProvider.GetService<ITestHostApplicationLifetime>());
     }
 
     [TestMethod]
@@ -51,7 +54,10 @@ public sealed class ServiceProviderTests
         Assert.IsNotNull(_serviceProvider.GetServiceInternal<IDataConsumer>());
 
         _serviceProvider.AddService(new TestApplicationLifecycleCallbacks());
+#pragma warning disable CS0618 // Type or member is obsolete
         Assert.IsNotNull(_serviceProvider.GetServiceInternal<ITestApplicationLifecycleCallbacks>());
+#pragma warning restore CS0618 // Type or member is obsolete
+        Assert.IsNotNull(_serviceProvider.GetServiceInternal<ITestHostApplicationLifetime>());
     }
 
     [TestMethod]
@@ -155,7 +161,10 @@ public sealed class ServiceProviderTests
         _serviceProvider.AddService(new TestApplicationLifecycleCallbacks());
         _serviceProvider.AddService(new TestApplicationLifecycleCallbacks());
 
+#pragma warning disable CS0618 // Type or member is obsolete
         Assert.AreEqual(2, _serviceProvider.GetServicesInternal<ITestApplicationLifecycleCallbacks>().Count());
+#pragma warning restore CS0618 // Type or member is obsolete
+        Assert.AreEqual(2, _serviceProvider.GetServicesInternal<ITestHostApplicationLifetime>().Count());
     }
 
     [TestMethod]
@@ -164,7 +173,10 @@ public sealed class ServiceProviderTests
         _serviceProvider.AddService(new TestApplicationLifecycleCallbacks());
         _serviceProvider.AddService(new TestApplicationLifecycleCallbacks());
 
+#pragma warning disable CS0618 // Type or member is obsolete
         Assert.AreEqual(0, _serviceProvider.GetServicesInternal(typeof(ITestApplicationLifecycleCallbacks), stopAtFirst: false, skipInternalOnlyExtensions: true).Count());
+#pragma warning restore CS0618 // Type or member is obsolete
+        Assert.AreEqual(0, _serviceProvider.GetServicesInternal(typeof(ITestHostApplicationLifetime), stopAtFirst: false, skipInternalOnlyExtensions: true).Count());
     }
 
     [TestMethod]
@@ -173,7 +185,10 @@ public sealed class ServiceProviderTests
         _serviceProvider.AddService(new TestApplicationLifecycleCallbacks());
         _serviceProvider.AddService(new TestApplicationLifecycleCallbacks());
 
+#pragma warning disable CS0618 // Type or member is obsolete
         Assert.AreEqual(2, _serviceProvider.GetServicesInternal(typeof(ITestApplicationLifecycleCallbacks), stopAtFirst: false, skipInternalOnlyExtensions: false).Count());
+#pragma warning restore CS0618 // Type or member is obsolete
+        Assert.AreEqual(2, _serviceProvider.GetServicesInternal(typeof(ITestHostApplicationLifetime), stopAtFirst: false, skipInternalOnlyExtensions: false).Count());
     }
 
     [TestMethod]
@@ -182,7 +197,10 @@ public sealed class ServiceProviderTests
         _serviceProvider.AddService(new TestApplicationLifecycleCallbacks());
         _serviceProvider.AddService(new TestApplicationLifecycleCallbacks());
 
+#pragma warning disable CS0618 // Type or member is obsolete
         Assert.AreEqual(1, _serviceProvider.GetServicesInternal(typeof(ITestApplicationLifecycleCallbacks), stopAtFirst: true, skipInternalOnlyExtensions: false).Count());
+#pragma warning restore CS0618 // Type or member is obsolete
+        Assert.AreEqual(1, _serviceProvider.GetServicesInternal(typeof(ITestHostApplicationLifetime), stopAtFirst: true, skipInternalOnlyExtensions: false).Count());
     }
 
     [TestMethod]
@@ -191,7 +209,10 @@ public sealed class ServiceProviderTests
         _serviceProvider.AddService(new TestApplicationLifecycleCallbacks());
         _serviceProvider.AddService(new TestApplicationLifecycleCallbacks());
 
+#pragma warning disable CS0618 // Type or member is obsolete
         Assert.IsNotNull(_serviceProvider.GetServiceInternal(typeof(ITestApplicationLifecycleCallbacks), skipInternalOnlyExtensions: false));
+#pragma warning restore CS0618 // Type or member is obsolete
+        Assert.IsNotNull(_serviceProvider.GetServiceInternal(typeof(ITestHostApplicationLifetime), skipInternalOnlyExtensions: false));
     }
 
     [TestMethod]
@@ -200,7 +221,10 @@ public sealed class ServiceProviderTests
         _serviceProvider.AddService(new TestApplicationLifecycleCallbacks());
         _serviceProvider.AddService(new TestApplicationLifecycleCallbacks());
 
+#pragma warning disable CS0618 // Type or member is obsolete
         Assert.IsNull(_serviceProvider.GetServiceInternal(typeof(ITestApplicationLifecycleCallbacks), skipInternalOnlyExtensions: true));
+#pragma warning restore CS0618 // Type or member is obsolete
+        Assert.IsNull(_serviceProvider.GetServiceInternal(typeof(ITestHostApplicationLifetime), skipInternalOnlyExtensions: true));
     }
 
     private sealed class TestFramework : ITestFramework
@@ -294,7 +318,7 @@ public sealed class ServiceProviderTests
         public Task<bool> IsEnabledAsync() => throw new NotImplementedException();
     }
 
-    private sealed class TestApplicationLifecycleCallbacks : ITestApplicationLifecycleCallbacks
+    private sealed class TestApplicationLifecycleCallbacks : ITestHostApplicationLifetime
     {
         public string Uid => throw new NotImplementedException();
 

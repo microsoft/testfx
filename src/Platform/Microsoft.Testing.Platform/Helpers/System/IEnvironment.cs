@@ -11,6 +11,8 @@ internal interface IEnvironment
 
     string NewLine { get; }
 
+    int ProcessId { get; }
+
     string OsVersion { get; }
 
 #if NETCOREAPP

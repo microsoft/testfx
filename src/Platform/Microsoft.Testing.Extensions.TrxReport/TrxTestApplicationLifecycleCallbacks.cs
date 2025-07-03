@@ -12,7 +12,7 @@ using Microsoft.Testing.Platform.IPC.Serializers;
 
 namespace Microsoft.Testing.Extensions.TrxReport.Abstractions;
 
-internal sealed class TrxTestApplicationLifecycleCallbacks : ITestApplicationLifecycleCallbacks, IDisposable
+internal sealed class TrxTestApplicationLifecycleCallbacks : ITestHostApplicationLifetime, IDisposable
 {
     private readonly bool _isEnabled;
     private readonly IEnvironment _environment;

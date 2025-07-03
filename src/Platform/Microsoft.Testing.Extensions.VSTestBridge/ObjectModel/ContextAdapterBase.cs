@@ -61,14 +61,9 @@ internal abstract class ContextAdapterBase
             string validPropertiesString = supportedProperties == null
                 ? string.Empty
                 : string.Join(", ", supportedProperties);
-            string errorMessage = string.Format(
-                CultureInfo.CurrentCulture,
-                "No tests matched the filter because it contains one or more properties that are not valid ({0}). Specify filter expression containing valid properties ({1}).",
-                string.Join(", ", invalidProperties),
-                validPropertiesString);
 
             // For unsupported property don’t throw exception, just log the message. Later it is going to handle properly with TestCaseFilterExpression.MatchTestCase().
-            EqtTrace.Info(errorMessage);
+            EqtTrace.Info($"No tests matched the filter because it contains one or more properties that are not valid ({string.Join(", ", invalidProperties)}). Specify filter expression containing valid properties ({validPropertiesString}).");
         }
 
         return adapterSpecificTestCaseFilter;
