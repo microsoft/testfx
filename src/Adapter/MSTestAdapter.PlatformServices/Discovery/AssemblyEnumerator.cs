@@ -471,14 +471,9 @@ internal class AssemblyEnumerator : MarshalByRefObject
             // Merge test categories from the test data row with the existing categories
             if (testCategoriesFromTestDataRow is { Count: > 0 })
             {
-                string[] existingCategories = discoveredTest.TestCategory ?? [];
-                var mergedCategories = new HashSet<string>(existingCategories);
-                foreach (string category in testCategoriesFromTestDataRow)
-                {
-                    mergedCategories.Add(category);
-                }
-
-                discoveredTest.TestCategory = [.. mergedCategories];
+                discoveredTest.TestCategory = discoveredTest.TestCategory is { Length: > 0 }
+                    ? [.. testCategoriesFromTestDataRow, .. discoveredTest.TestCategory]
+                    : [.. testCategoriesFromTestDataRow];
             }
 
             // If strategy is DisplayName and we have a duplicate test name don't expand the test, bail out.
