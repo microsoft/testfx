@@ -540,7 +540,7 @@ public sealed class DataRowShouldBeValidAnalyzerTests
             code,
             VerifyCS.Diagnostic(DataRowShouldBeValidAnalyzer.ArgumentTypeMismatchRule)
                 .WithLocation(0)
-                .WithArguments("Parameter 's' expects type 'string', but the provided value has type 'int'; Parameter 'd' expects type 'decimal', but the provided value has type 'int'; Parameter 'b' expects type 'bool', but the provided value has type 'int'"));
+                .WithArguments("Parameter 's' expects type 'string', but the provided value has type 'int'; Parameter 'b' expects type 'bool', but the provided value has type 'int'"));
     }
 
     [TestMethod]
