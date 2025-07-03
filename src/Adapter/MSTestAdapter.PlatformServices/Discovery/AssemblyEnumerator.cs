@@ -440,7 +440,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
         {
             object?[] d = dataOrTestDataRow;
             ParameterInfo[] parameters = methodInfo.GetParameters();
-            if (TestDataSourceHelpers.TryHandleITestDataRow(d, parameters, out d, out string? ignoreMessageFromTestDataRow, out string? displayNameFromTestDataRow, , out IList<string>? testCategoriesFromTestDataRow))
+            if (TestDataSourceHelpers.TryHandleITestDataRow(d, parameters, out d, out string? ignoreMessageFromTestDataRow, out string? displayNameFromTestDataRow, out IList<string>? testCategoriesFromTestDataRow))
             {
                 testDataSourceIgnoreMessage = ignoreMessageFromTestDataRow ?? testDataSourceIgnoreMessage;
             }
@@ -477,6 +477,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
                 {
                     mergedCategories.Add(category);
                 }
+
                 discoveredTest.TestCategory = [.. mergedCategories];
             }
 
