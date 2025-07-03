@@ -1275,5 +1275,23 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("UseCooperativeCancellationForTimeoutTitle", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Use 'Assert.{0}' instead of 'StringAssert.{1}'.
+        /// </summary>
+        internal static string StringAssertToAssertMessageFormat {
+            get {
+                return ResourceManager.GetString("StringAssertToAssertMessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Use 'Assert' instead of 'StringAssert'.
+        /// </summary>
+        internal static string StringAssertToAssertTitle {
+            get {
+                return ResourceManager.GetString("StringAssertToAssertTitle", resourceCulture);
+            }
+        }
     }
 }

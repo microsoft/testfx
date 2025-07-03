@@ -537,6 +537,16 @@ El tipo que declara estos métodos también debe respetar las reglas siguientes:
         <target state="translated">Los tipos públicos deben ser clases de prueba</target>
         <note />
       </trans-unit>
+      <trans-unit id="StringAssertToAssertMessageFormat">
+        <source>Use 'Assert.{0}' instead of 'StringAssert.{1}'</source>
+        <target state="new">Use 'Assert.{0}' instead of 'StringAssert.{1}'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="StringAssertToAssertTitle">
+        <source>Use 'Assert' instead of 'StringAssert'</source>
+        <target state="new">Use 'Assert' instead of 'StringAssert'</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TestClassShouldBeValidMessageFormat">
         <source>Test class '{0}' should be valid</source>
         <target state="translated">La clase de prueba '{0}' debe ser válida</target>

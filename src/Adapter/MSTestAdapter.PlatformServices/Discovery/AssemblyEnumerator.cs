@@ -321,7 +321,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
         {
             ParameterInfo[] args = methodInfo.GetParameters();
             return args.Length > 0
-                ? $"{methodInfo.Name}({string.Join(",", args.Select(a => a.ParameterType.FullName))})"
+                ? $"{methodInfo.Name}({string.Join(',', args.Select(a => a.ParameterType.FullName))})"
                 : methodInfo.Name;
         }
 
@@ -439,9 +439,30 @@ internal class AssemblyEnumerator : MarshalByRefObject
         foreach (object?[] dataOrTestDataRow in data)
         {
             object?[] d = dataOrTestDataRow;
-            if (TestDataSourceHelpers.TryHandleITestDataRow(d, methodInfo.GetParameters(), out d, out string? ignoreMessageFromTestDataRow, out string? displayNameFromTestDataRow))
+            ParameterInfo[] parameters = methodInfo.GetParameters();
+            if (TestDataSourceHelpers.TryHandleITestDataRow(d, parameters, out d, out string? ignoreMessageFromTestDataRow, out string? displayNameFromTestDataRow))
             {
                 testDataSourceIgnoreMessage = ignoreMessageFromTestDataRow ?? testDataSourceIgnoreMessage;
+            }
+            else if (TestDataSourceHelpers.IsDataConsideredSingleArgumentValue(d, parameters))
+            {
+                // SPECIAL CASE:
+                // This condition is a duplicate of the condition in InvokeAsSynchronousTask.
+                //
+                // The known scenario we know of that shows importance of that check is if we have DynamicData using this member
+                //
+                // public static IEnumerable<object[]> GetData()
+                // {
+                //     yield return new object[] { ("Hello", "World") };
+                // }
+                //
+                // If the test method has a single parameter which is 'object[]', then we should pass the tuple array as is.
+                // Note that normally, the array in this code path represents the arguments of the test method.
+                // However, InvokeAsSynchronousTask uses the above check to mean "the whole array is the single argument to the test method"
+            }
+            else if (d?.Length == 1 && TestDataSourceHelpers.TryHandleTupleDataSource(d[0], parameters, out object?[] tupleExpandedToArray))
+            {
+                d = tupleExpandedToArray;
             }
 
             UnitTestElement discoveredTest = test.Clone();

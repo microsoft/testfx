@@ -93,7 +93,7 @@ public sealed class TestApplication : ITestApplication
         {
             ILogger logger = loggingState.FileLoggerProvider.CreateLogger(typeof(TestApplication).ToString());
             s_unhandledExceptionHandler.SetLogger(logger);
-            await LogInformationAsync(logger, testApplicationModuleInfo, testHostControllerInfo, systemProcess, systemEnvironment, createBuilderEntryTime, loggingState.IsSynchronousWrite, loggingState.LogLevel, args).ConfigureAwait(false);
+            await LogInformationAsync(logger, testApplicationModuleInfo, testHostControllerInfo, systemEnvironment, createBuilderEntryTime, loggingState.IsSynchronousWrite, loggingState.LogLevel, args).ConfigureAwait(false);
         }
 
         // All checks are fine, create the TestApplication.
@@ -104,7 +104,6 @@ public sealed class TestApplication : ITestApplication
         ILogger logger,
         CurrentTestApplicationModuleInfo testApplicationModuleInfo,
         TestHostControllerInfo testHostControllerInfo,
-        SystemProcessHandler processHandler,
         SystemEnvironment environment,
         string createBuilderEntryTime,
         bool syncWrite,
@@ -235,7 +234,7 @@ public sealed class TestApplication : ITestApplication
 
         if (environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER) == "1")
         {
-            IProcess currentProcess = systemProcess.GetCurrentProcess();
+            using IProcess currentProcess = systemProcess.GetCurrentProcess();
             console.WriteLine($"Waiting for debugger to attach... Process Id: {environment.ProcessId}, Name: {currentProcess.Name}");
 
             while (!Debugger.IsAttached)

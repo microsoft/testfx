@@ -104,7 +104,7 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
 #if NET8_0_OR_GREATER
             IEnumerable<string> arguments = partialCommandLine;
 #else
-            string arguments = string.Join(" ", partialCommandLine);
+            string arguments = string.Join(' ', partialCommandLine);
 #endif
 
 #pragma warning disable CA1416 // Validate platform compatibility
