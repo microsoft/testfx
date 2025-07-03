@@ -47,7 +47,7 @@ public static class TrxReportExtensions
                 serviceProvider.GetService<TrxTestApplicationLifecycleCallbacks>(),
                 serviceProvider.GetLoggerFactory().CreateLogger<TrxReportGenerator>()));
 
-        builder.TestHost.AddTestApplicationLifecycleCallbacks(serviceProvider =>
+        builder.TestHost.AddTestHostApplicationLifetime(serviceProvider =>
             new TrxTestApplicationLifecycleCallbacks(
                 serviceProvider.GetCommandLineOptions(),
                 serviceProvider.GetEnvironment()));

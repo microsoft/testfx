@@ -16,7 +16,7 @@ using Polyfills;
 
 namespace Microsoft.Testing.Extensions.Policy;
 
-internal sealed class RetryLifecycleCallbacks : ITestApplicationLifecycleCallbacks,
+internal sealed class RetryLifecycleCallbacks : ITestHostApplicationLifetime,
 #if NETCOREAPP
     IAsyncDisposable
 #else

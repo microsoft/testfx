@@ -166,7 +166,7 @@ public class UnitTestElementTests : TestContainer
     public void ToTestCase_WhenStrategyIsData_DoesNotUseDefaultTestCaseId()
     {
 #pragma warning disable CA2263 // Prefer generic overload when type is known
-        foreach (DynamicDataType dataType in EnumPolyfill.GetValues<DynamicDataType>())
+        foreach (DynamicDataType dataType in Enum.GetValues<DynamicDataType>())
         {
             var testCase = new UnitTestElement(new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", null) { DataType = dataType }).ToTestCase();
             var expectedTestCase = new TestCase(testCase.FullyQualifiedName, testCase.ExecutorUri, testCase.Source);

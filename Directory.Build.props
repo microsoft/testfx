@@ -71,6 +71,7 @@
   <!-- Polyfill config -->
   <PropertyGroup>
     <PolyGuard>true</PolyGuard>
+    <PolyStringInterpolation>true</PolyStringInterpolation>
   </PropertyGroup>
 
   <ItemGroup>
