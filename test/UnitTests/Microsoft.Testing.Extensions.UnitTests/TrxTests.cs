@@ -545,7 +545,7 @@ stdout trx message</StdOut>
       <TestMethod codeBase=""TestAppPath"" adapterTypeName=""executor:///"" name=""TestMethod"" />
     </UnitTest>
  ";
-        Assert.IsTrue(Regex.IsMatch(trxContent, trxContentsPattern));
+        Assert.IsTrue(Regex.IsMatch(trxContent, trxContentsPattern), trxContent);
     }
 
     private static void AssertTrxOutcome(XDocument xml, string expectedOutcome)
