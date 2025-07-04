@@ -40,6 +40,12 @@ public sealed class TestDataRow<T> : ITestDataRow
     [DataMember]
     public string? DisplayName { get; set; }
 
+    /// <summary>
+    /// Gets or sets the test categories for the test case.
+    /// </summary>
+    [DataMember]
+    public IList<string>? TestCategories { get; set; }
+
     /// <inheritdoc cref="Value"/>
     object? ITestDataRow.Value => Value;
 }
