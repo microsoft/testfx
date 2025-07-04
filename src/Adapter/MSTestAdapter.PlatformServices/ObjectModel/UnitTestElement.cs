@@ -1,7 +1,11 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.TestPlatform.AdapterUtilities;
+#if NETCOREAPP
+using System.Buffers;
+#endif
+using System.Security.Cryptography;
+
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
@@ -197,10 +201,33 @@ internal sealed class UnitTestElement
     private void SetTestCaseId(TestCase testCase, string testFullName)
         => testCase.Id = GenerateSerializedDataStrategyTestId(testFullName);
 
+    private static Guid GuidFromString(string data)
+    {
+#if NETCOREAPP
+        int byteCount = Encoding.Unicode.GetByteCount(data);
+        Span<byte> hash = stackalloc byte[32];
+        byte[] dataBytes = ArrayPool<byte>.Shared.Rent(byteCount);
+        try
+        {
+            Encoding.Unicode.GetBytes(data, dataBytes);
+            SHA256.HashData(dataBytes.AsSpan()[..byteCount], hash);
+            return new Guid(hash[..16]);
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(dataBytes);
+        }
+#else
+        var sha256 = SHA256.Create();
+        byte[] hash = sha256.ComputeHash(Encoding.Unicode.GetBytes(data));
+        byte[] bytes = new byte[16];
+        Array.Copy(hash, bytes, 16);
+        return new Guid(bytes);
+#endif
+    }
+
     private Guid GenerateSerializedDataStrategyTestId(string testFullName)
     {
-        var idProvider = new TestIdProvider();
-
         // Below comment is copied over from Test Platform.
         // If source is a file name then just use the filename for the identifier since the file might have moved between
         // discovery and execution (in appx mode for example). This is not elegant because the Source contents should be
@@ -221,19 +248,25 @@ internal sealed class UnitTestElement
             // In case path contains invalid characters.
         }
 
-        idProvider.AppendString(fileNameOrFilePath);
-        idProvider.AppendString(testFullName);
+        // TODO: Pool?
+        StringBuilder builder = new();
+        builder.Append(fileNameOrFilePath);
+        builder.Append(testFullName);
         if (TestMethod.ParameterTypes is not null)
         {
-            idProvider.AppendString($"({TestMethod.ParameterTypes})");
+            builder.Append('(');
+            builder.Append(TestMethod.ParameterTypes);
+            builder.Append(')');
         }
 
         if (TestMethod.SerializedData != null)
         {
-            idProvider.AppendString($"[{TestMethod.TestCaseIndex.ToString(CultureInfo.InvariantCulture)}]");
+            builder.Append('[');
+            builder.Append(TestMethod.TestCaseIndex.ToString(CultureInfo.InvariantCulture));
+            builder.Append(']');
         }
 
-        return idProvider.GetId();
+        return GuidFromString(builder.ToString());
     }
 
     private string GetDisplayName() => StringEx.IsNullOrWhiteSpace(DisplayName) ? TestMethod.Name : DisplayName;

@@ -527,7 +527,7 @@ stdout trx message</StdOut>
         AssertTrxOutcome(xml, "Completed");
         string trxContent = xml.ToString();
         string trxContentsPattern = @"
-    <UnitTest name=""TestMethod"" storage=""testapppath"" id=""b1e0b10f-442a-7875-e431-96fc1c27316b"" priority=""5"">
+    <UnitTest name=""TestMethod"" storage=""testapppath"" id=""eaf49958-7df6-876c-f786-9026367c1ae6"" priority=""5"">
       <Execution id="".+?"" />
       <Owners>
         <Owner name=""ValueOfOwner"" />
@@ -545,7 +545,7 @@ stdout trx message</StdOut>
       <TestMethod codeBase=""TestAppPath"" adapterTypeName=""executor:///"" name=""TestMethod"" />
     </UnitTest>
  ";
-        Assert.IsTrue(Regex.IsMatch(trxContent, trxContentsPattern));
+        Assert.IsTrue(Regex.IsMatch(trxContent, trxContentsPattern), trxContent);
     }
 
     private static void AssertTrxOutcome(XDocument xml, string expectedOutcome)
