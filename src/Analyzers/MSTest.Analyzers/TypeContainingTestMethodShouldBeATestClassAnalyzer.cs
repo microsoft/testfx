@@ -56,7 +56,7 @@ public sealed class TypeContainingTestMethodShouldBeATestClassAnalyzer : Diagnos
     private static void AnalyzeSymbol(SymbolAnalysisContext context, INamedTypeSymbol testClassAttributeSymbol, INamedTypeSymbol testMethodAttributeSymbol)
     {
         var namedTypeSymbol = (INamedTypeSymbol)context.Symbol;
-        if (namedTypeSymbol.TypeKind != TypeKind.Class
+        if ((namedTypeSymbol.TypeKind != TypeKind.Class && namedTypeSymbol.TypeKind != TypeKind.Struct)
             || namedTypeSymbol.IsAbstract)
         {
             return;

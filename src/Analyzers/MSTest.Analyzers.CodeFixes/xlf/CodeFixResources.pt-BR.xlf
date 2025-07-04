@@ -27,6 +27,11 @@
         <target state="translated">Alterar a acessibilidade do método para 'privado'</target>
         <note />
       </trans-unit>
+      <trans-unit id="ChangeStructToClassAndAddTestClassFix">
+        <source>Change to 'class' and add '[TestClass]'</source>
+        <target state="new">Change to 'class' and add '[TestClass]'</target>
+        <note />
+      </trans-unit>
       <trans-unit id="FixAssertionArgsOrder">
         <source>Fix actual/expected arguments order</source>
         <target state="translated">Corrigir ordem de argumentos real/esperada</target>
