@@ -68,7 +68,7 @@ public sealed class PreferConstructorOverTestInitializeFixer : CodeFixProvider
         {
             ConstructorDeclarationSyntax? existingConstructor = containingClass.Members
                  .OfType<ConstructorDeclarationSyntax>()
-                 .FirstOrDefault();
+                 .FirstOrDefault(c => !c.Modifiers.Any(SyntaxKind.StaticKeyword));
 
             // Move the body of the TestInitialize method
             BlockSyntax? testInitializeBody = testInitializeMethod.Body;
