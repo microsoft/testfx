@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using TestFramework.ForTestingMSTest;
@@ -9,7 +9,7 @@ public class TestDataRowTests : TestContainer
 {
     public void TestDataRowShouldInitializeWithValue()
     {
-        var value = "test_value";
+        string value = "test_value";
         var testDataRow = new TestDataRow<string>(value);
 
         Verify(testDataRow.Value == value);
@@ -20,7 +20,7 @@ public class TestDataRowTests : TestContainer
 
     public void TestDataRowShouldAllowSettingTestCategories()
     {
-        var value = "test_value";
+        string value = "test_value";
         var testDataRow = new TestDataRow<string>(value);
         var testCategories = new List<string> { "Category1", "Category2" };
 
@@ -34,7 +34,7 @@ public class TestDataRowTests : TestContainer
 
     public void TestDataRowShouldImplementITestDataRowForTestCategories()
     {
-        var value = "test_value";
+        string value = "test_value";
         var testDataRow = new TestDataRow<string>(value);
         var testCategories = new List<string> { "Integration", "Unit" };
         testDataRow.TestCategories = testCategories;
@@ -49,20 +49,21 @@ public class TestDataRowTests : TestContainer
 
     public void TestDataRowShouldAllowNullTestCategories()
     {
-        var value = "test_value";
-        var testDataRow = new TestDataRow<string>(value);
-
-        testDataRow.TestCategories = null;
+        string value = "test_value";
+        var testDataRow = new TestDataRow<string>(value)
+        {
+            TestCategories = null,
+        };
 
         Verify(testDataRow.TestCategories == null);
-        
+
         ITestDataRow dataRow = testDataRow;
         Verify(dataRow.TestCategories == null);
     }
 
     public void TestDataRowShouldAllowEmptyTestCategories()
     {
-        var value = "test_value";
+        string value = "test_value";
         var testDataRow = new TestDataRow<string>(value);
         var emptyCategories = new List<string>();
 
@@ -70,7 +71,7 @@ public class TestDataRowTests : TestContainer
 
         Verify(testDataRow.TestCategories == emptyCategories);
         Verify(testDataRow.TestCategories.Count == 0);
-        
+
         ITestDataRow dataRow = testDataRow;
         Verify(dataRow.TestCategories != null);
         Verify(dataRow.TestCategories.Count == 0);

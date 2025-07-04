@@ -1,8 +1,7 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using TestFramework.ForTestingMSTest;
 
@@ -15,27 +14,27 @@ public class TestDataSourceHelpersTests : TestContainer
         // Arrange
         var testData = new TestDataRow<string>("test_value")
         {
-            TestCategories = new List<string> { "Category1", "Category2" },
+            TestCategories = ["Category1", "Category2"],
             IgnoreMessage = "ignore_message",
-            DisplayName = "display_name"
+            DisplayName = "display_name",
         };
-        object?[] dataArray = new object?[] { testData };
-        var parameters = new ParameterInfo[0]; // No method parameters for this test
+        object?[] dataArray = [testData];
+        ParameterInfo[] parameters = []; // No method parameters for this test
 
         // Act
         bool result = TestDataSourceHelpers.TryHandleITestDataRow(
-            dataArray, 
-            parameters, 
-            out object?[] extractedData, 
-            out string? ignoreMessage, 
-            out string? displayName, 
+            dataArray,
+            parameters,
+            out object?[] extractedData,
+            out string? ignoreMessage,
+            out string? displayName,
             out IList<string>? testCategories);
 
         // Assert
-        Verify(result == true);
+        Verify(result);
         Verify(extractedData != null);
         Verify(extractedData.Length == 1);
-        Verify((string)extractedData[0] == "test_value");
+        Verify((string?)extractedData[0] == "test_value");
         Verify(ignoreMessage == "ignore_message");
         Verify(displayName == "display_name");
         Verify(testCategories != null);
@@ -48,40 +47,40 @@ public class TestDataSourceHelpersTests : TestContainer
     {
         // Arrange
         var testData = new TestDataRow<string>("test_value");
-        var dataArray = new object?[] { testData };
-        var parameters = new ParameterInfo[0];
+        object?[] dataArray = [testData];
+        ParameterInfo[] parameters = [];
 
         // Act
         bool result = TestDataSourceHelpers.TryHandleITestDataRow(
-            dataArray, 
-            parameters, 
-            out object?[] extractedData, 
-            out string? ignoreMessage, 
-            out string? displayName, 
+            dataArray,
+            parameters,
+            out _,
+            out _,
+            out _,
             out IList<string>? testCategories);
 
         // Assert
-        Verify(result == true);
+        Verify(result);
         Verify(testCategories == null);
     }
 
     public void TryHandleITestDataRow_WithNonTestDataRow_ShouldReturnFalseAndNullCategories()
     {
         // Arrange
-        var dataArray = new object?[] { "regular_string" };
-        var parameters = new ParameterInfo[0];
+        object?[] dataArray = ["regular_string"];
+        ParameterInfo[] parameters = [];
 
         // Act
         bool result = TestDataSourceHelpers.TryHandleITestDataRow(
-            dataArray, 
-            parameters, 
-            out object?[] extractedData, 
-            out string? ignoreMessage, 
-            out string? displayName, 
+            dataArray,
+            parameters,
+            out object?[] extractedData,
+            out string? ignoreMessage,
+            out string? displayName,
             out IList<string>? testCategories);
 
         // Assert
-        Verify(result == false);
+        Verify(!result);
         Verify(extractedData == dataArray);
         Verify(ignoreMessage == null);
         Verify(displayName == null);
@@ -93,26 +92,26 @@ public class TestDataSourceHelpersTests : TestContainer
         // Arrange
         var testData = new TestDataRow<string>("test_value")
         {
-            TestCategories = new List<string> { "Category1", "Category2" },
+            TestCategories = ["Category1", "Category2"],
             IgnoreMessage = "ignore_message",
-            DisplayName = "display_name"
+            DisplayName = "display_name",
         };
-        var dataArray = new object?[] { testData };
-        var parameters = new ParameterInfo[0];
+        object?[] dataArray = [testData];
+        ParameterInfo[] parameters = [];
 
         // Act
         bool result = TestDataSourceHelpers.TryHandleITestDataRow(
-            dataArray, 
-            parameters, 
-            out object?[] extractedData, 
-            out string? ignoreMessage, 
+            dataArray,
+            parameters,
+            out object?[] extractedData,
+            out string? ignoreMessage,
             out string? displayName);
 
         // Assert - should work without TestCategories parameter
-        Verify(result == true);
+        Verify(result);
         Verify(extractedData != null);
         Verify(extractedData.Length == 1);
-        Verify((string)extractedData[0] == "test_value");
+        Verify((string?)extractedData[0] == "test_value");
         Verify(ignoreMessage == "ignore_message");
         Verify(displayName == "display_name");
     }
