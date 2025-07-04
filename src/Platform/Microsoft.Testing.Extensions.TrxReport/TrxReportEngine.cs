@@ -428,7 +428,14 @@ internal sealed partial class TrxReportEngine
         {
             TestNode testNode = nodeMessage.TestNode;
 
-            string id = GuidFromString($"{testNode.Uid.Value} {testNode.DisplayName}").ToString();
+            // If already a guid (it's the case for at least MSTest), use that guid directly.
+            // Otherwise, convert the string to a guid.
+            if (!Guid.TryParse(testNode.Uid.Value, out Guid guid))
+            {
+                guid = GuidFromString(testNode.Uid.Value);
+            }
+
+            string id = guid.ToString();
             string displayName = RemoveInvalidXmlChar(testNode.DisplayName)!;
             string executionId = Guid.NewGuid().ToString();
 
