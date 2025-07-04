@@ -527,7 +527,7 @@ stdout trx message</StdOut>
         AssertTrxOutcome(xml, "Completed");
         string trxContent = xml.ToString();
         string trxContentsPattern = @"
-    <UnitTest name=""TestMethod"" storage=""testapppath"" id=""59992374-3255-493d-bb45-b618ee00973a"" priority=""5"">
+    <UnitTest name=""TestMethod"" storage=""testapppath"" id=""eaf49958-7df6-876c-f786-9026367c1ae6"" priority=""5"">
       <Execution id="".+?"" />
       <Owners>
         <Owner name=""ValueOfOwner"" />
