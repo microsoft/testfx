@@ -47,7 +47,7 @@ namespace MSTest.Analyzers;
 /// </list>
 /// </remarks>
 [DiagnosticAnalyzer(LanguageNames.CSharp, LanguageNames.VisualBasic)]
-internal sealed class StringAssertToAssertAnalyzer : DiagnosticAnalyzer
+public sealed class StringAssertToAssertAnalyzer : DiagnosticAnalyzer
 {
     /// <summary>
     /// Key to retrieve the proper assert method name from the properties bag.
