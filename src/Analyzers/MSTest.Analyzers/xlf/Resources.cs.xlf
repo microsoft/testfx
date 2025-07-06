@@ -532,6 +532,16 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
         <target state="translated">Veřejné typy by měly být testovací třídy.</target>
         <note />
       </trans-unit>
+      <trans-unit id="StringAssertToAssertMessageFormat">
+        <source>Use 'Assert.{0}' instead of 'StringAssert.{1}'</source>
+        <target state="new">Use 'Assert.{0}' instead of 'StringAssert.{1}'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="StringAssertToAssertTitle">
+        <source>Use 'Assert' instead of 'StringAssert'</source>
+        <target state="new">Use 'Assert' instead of 'StringAssert'</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TestClassShouldBeValidMessageFormat">
         <source>Test class '{0}' should be valid</source>
         <target state="translated">Testovací třída {0} by měla být platná.</target>
