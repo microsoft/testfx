@@ -184,6 +184,7 @@ public sealed class DynamicDataShouldBeValidAnalyzer : DiagnosticAnalyzer
     {
         string? memberName = null;
         int dataSourceType = DynamicDataSourceTypeAutoDetect;
+        int argumentsCount = 0;
         INamedTypeSymbol declaringType = methodSymbol.ContainingType;
         foreach (TypedConstant argument in attributeData.ConstructorArguments)
         {
@@ -206,6 +207,10 @@ public sealed class DynamicDataShouldBeValidAnalyzer : DiagnosticAnalyzer
                 argument.Value is INamedTypeSymbol type)
             {
                 declaringType = type;
+            }
+            else if (argument.Kind == TypedConstantKind.Array)
+            {
+                argumentsCount = argument.Values.Length;
             }
         }
 
@@ -265,7 +270,7 @@ public sealed class DynamicDataShouldBeValidAnalyzer : DiagnosticAnalyzer
 
         if (member.Kind == SymbolKind.Method
             && member is IMethodSymbol method
-            && (method.IsGenericMethod || method.Parameters.Length != 0))
+            && (method.IsGenericMethod || method.Parameters.Length != argumentsCount))
         {
             context.ReportDiagnostic(attributeSyntax.CreateDiagnostic(DataMemberSignatureRule, declaringType.Name, memberName));
             return;
