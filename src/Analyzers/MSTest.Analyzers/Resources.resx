@@ -609,4 +609,13 @@ The type declaring these methods should also respect the following rules:
   <data name="UseCooperativeCancellationForTimeoutDescription" xml:space="preserve">
     <value>Using '[Timeout]' without explicitly setting 'CooperativeCancellation = true' is discouraged. In a future version, cooperative cancellation will become the default behavior. Set 'CooperativeCancellation = true' to opt into the recommended behavior and avoid breaking changes.</value>
   </data>
+  <data name="FlowTestContextCancellationTokenTitle" xml:space="preserve">
+    <value>Flow TestContext.CancellationToken to async operations</value>
+  </data>
+  <data name="FlowTestContextCancellationTokenMessageFormat" xml:space="preserve">
+    <value>Consider using the overload that accepts a CancellationToken and pass 'TestContext.CancellationTokenSource.Token'</value>
+  </data>
+  <data name="FlowTestContextCancellationTokenDescription" xml:space="preserve">
+    <value>When calling async methods that have overloads accepting a CancellationToken parameter, prefer using the overload with TestContext.CancellationTokenSource.Token to enable cooperative cancellation and respect test timeouts.</value>
+  </data>
 </root>

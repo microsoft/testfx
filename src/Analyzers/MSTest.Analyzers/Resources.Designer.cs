@@ -1284,5 +1284,32 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("StringAssertToAssertTitle", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to When calling async methods that have overloads accepting a CancellationToken parameter, prefer using the overload with TestContext.CancellationTokenSource.Token to enable cooperative cancellation and respect test timeouts.
+        /// </summary>
+        internal static string FlowTestContextCancellationTokenDescription {
+            get {
+                return ResourceManager.GetString("FlowTestContextCancellationTokenDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Consider using the overload that accepts a CancellationToken and pass 'TestContext.CancellationTokenSource.Token'.
+        /// </summary>
+        internal static string FlowTestContextCancellationTokenMessageFormat {
+            get {
+                return ResourceManager.GetString("FlowTestContextCancellationTokenMessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Flow TestContext.CancellationToken to async operations.
+        /// </summary>
+        internal static string FlowTestContextCancellationTokenTitle {
+            get {
+                return ResourceManager.GetString("FlowTestContextCancellationTokenTitle", resourceCulture);
+            }
+        }
     }
 }
