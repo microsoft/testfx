@@ -44,11 +44,10 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
             testHostResult.AssertOutputContains("Failed! -");
             testHostResult.AssertOutputContains("Passed! -");
 
-            string trxPath1 = Regex.Match(testHostResult.StandardOutput, "- (.+?)\\.trx").Groups[1].Value;
-            string trxPath2 = Regex.Match(testHostResult.StandardOutput, "Moving file '.+?' to '(.+?)'").Groups[1].Value;
-            Assert.AreNotEqual(trxPath1, trxPath2);
-            string trxContents1 = File.ReadAllText(trxPath1);
-            string trxContents2 = File.ReadAllText(trxPath2);
+            string[] trxFiles = Directory.GetFiles(resultDirectory, "*.trx", SearchOption.AllDirectories);
+            Assert.AreEqual(2, trxFiles.Length);
+            string trxContents1 = File.ReadAllText(trxFiles[0]);
+            string trxContents2 = File.ReadAllText(trxFiles[1]);
             Assert.AreNotEqual(trxContents1, trxContents2);
             string id1 = Regex.Match(trxContents1, "<TestRun id=\"(.+?)\"").Groups[1].Value;
             string id2 = Regex.Match(trxContents2, "<TestRun id=\"(.+?)\"").Groups[1].Value;
