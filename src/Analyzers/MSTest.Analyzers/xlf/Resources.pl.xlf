@@ -277,8 +277,13 @@ Typ deklarujący te metody powinien również przestrzegać następujących regu
         <note />
       </trans-unit>
       <trans-unit id="DataRowShouldBeValidMessageFormat_ArgumentTypeMismatch">
-        <source>DataRow argument type should match method parameter type. Mismatches occur at indices: {0}</source>
-        <target state="translated">Typ argumentu DataRow powinien być zgodny z typem parametru metody. W indeksach występują niezgodności: {0}</target>
+        <source>DataRow argument types do not match method parameter types. {0}</source>
+        <target state="new">DataRow argument types do not match method parameter types. {0}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DataRowShouldBeValidMessageFormat_ParameterMismatch">
+        <source>Parameter '{0}' expects type '{1}', but the provided value has type '{2}'</source>
+        <target state="new">Parameter '{0}' expects type '{1}', but the provided value has type '{2}'</target>
         <note />
       </trans-unit>
       <trans-unit id="DataRowShouldBeValidMessageFormat_GenericTypeArgumentConflictingTypes">
