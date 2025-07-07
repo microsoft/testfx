@@ -1641,4 +1641,28 @@ public sealed class DynamicDataShouldBeValidAnalyzerTests
             
             """,
             VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.MemberTypeRule).WithLocation(0).WithArguments("MyTestClass", "GetData"));
+
+    [TestMethod]
+    public async Task WhenDataWithArgument_NoDiagnostic()
+        => await VerifyCS.VerifyAnalyzerAsync(
+            """            
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                [DynamicData(nameof(GetData), 4)]
+                public void TestMethod(int a)
+                    => Assert.IsInRange(4, 6, a);
+
+                public static IEnumerable<int> GetData(int i)
+                {
+                    yield return i++;
+                    yield return i++;
+                    yield return i++;
+                }
+            }
+            
+            """);
 }

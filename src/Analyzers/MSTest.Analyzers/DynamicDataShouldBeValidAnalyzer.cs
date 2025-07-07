@@ -202,7 +202,8 @@ public sealed class DynamicDataShouldBeValidAnalyzer : DiagnosticAnalyzer
             {
                 dataSourceType = dataType;
             }
-            else if (argument.Value is INamedTypeSymbol type)
+            else if (argument.Kind != TypedConstantKind.Array &&
+                argument.Value is INamedTypeSymbol type)
             {
                 declaringType = type;
             }
