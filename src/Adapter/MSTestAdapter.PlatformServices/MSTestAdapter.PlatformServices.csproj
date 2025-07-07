@@ -77,6 +77,10 @@
     <Using Include="Polyfills" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.TrxReport\Hashing\**" Link="Hashing\%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
+
   <!-- SDK bottom import -->
   <Import Project="Sdk.targets" Sdk="MSBuild.Sdk.Extras" Condition=" '$(OS)' == 'Windows_NT' " />
   <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" Condition=" '$(OS)' != 'Windows_NT' " />
