@@ -9,7 +9,7 @@ using System.Runtime.Intrinsics.Arm;
 using System.Runtime.Intrinsics.X86;
 #endif
 
-using Microsoft.Testing.Platform;
+#pragma warning disable RS0030 // Do not use banned APIs - Debug is okay here. RoslynDebug isn't yet available in PlatformServices which links this file.
 
 namespace System.IO.Hashing;
 
@@ -121,48 +121,48 @@ internal static unsafe class XxHashShared
         byte* secret = stackalloc byte[SecretLengthBytes];
         DeriveSecretFromSeed(secret, 0);
 
-        RoslynDebug.Assert(DefaultSecret.Length == SecretLengthBytes);
+        Debug.Assert(DefaultSecret.Length == SecretLengthBytes);
         for (int i = 0; i < DefaultSecret.Length; i++)
         {
-            RoslynDebug.Assert(DefaultSecret[i] == secret[i]);
+            Debug.Assert(DefaultSecret[i] == secret[i]);
         }
 
         // Validate some relationships.
-        RoslynDebug.Assert(InternalBufferLengthBytes % StripeLengthBytes == 0);
+        Debug.Assert(InternalBufferLengthBytes % StripeLengthBytes == 0);
 
         ReadOnlySpan<ulong> defaultSecretUInt64 = MemoryMarshal.Cast<byte, ulong>(DefaultSecret);
-        RoslynDebug.Assert(ReadLE64(defaultSecretUInt64[0]) == DefaultSecretUInt64_0);
-        RoslynDebug.Assert(ReadLE64(defaultSecretUInt64[1]) == DefaultSecretUInt64_1);
-        RoslynDebug.Assert(ReadLE64(defaultSecretUInt64[2]) == DefaultSecretUInt64_2);
-        RoslynDebug.Assert(ReadLE64(defaultSecretUInt64[3]) == DefaultSecretUInt64_3);
-        RoslynDebug.Assert(ReadLE64(defaultSecretUInt64[4]) == DefaultSecretUInt64_4);
-        RoslynDebug.Assert(ReadLE64(defaultSecretUInt64[5]) == DefaultSecretUInt64_5);
-        RoslynDebug.Assert(ReadLE64(defaultSecretUInt64[6]) == DefaultSecretUInt64_6);
-        RoslynDebug.Assert(ReadLE64(defaultSecretUInt64[7]) == DefaultSecretUInt64_7);
-        RoslynDebug.Assert(ReadLE64(defaultSecretUInt64[8]) == DefaultSecretUInt64_8);
-        RoslynDebug.Assert(ReadLE64(defaultSecretUInt64[9]) == DefaultSecretUInt64_9);
-        RoslynDebug.Assert(ReadLE64(defaultSecretUInt64[10]) == DefaultSecretUInt64_10);
-        RoslynDebug.Assert(ReadLE64(defaultSecretUInt64[11]) == DefaultSecretUInt64_11);
-        RoslynDebug.Assert(ReadLE64(defaultSecretUInt64[12]) == DefaultSecretUInt64_12);
-        RoslynDebug.Assert(ReadLE64(defaultSecretUInt64[13]) == DefaultSecretUInt64_13);
-        RoslynDebug.Assert(ReadLE64(defaultSecretUInt64[14]) == DefaultSecretUInt64_14);
-        RoslynDebug.Assert(ReadLE64(defaultSecretUInt64[15]) == DefaultSecretUInt64_15);
+        Debug.Assert(ReadLE64(defaultSecretUInt64[0]) == DefaultSecretUInt64_0);
+        Debug.Assert(ReadLE64(defaultSecretUInt64[1]) == DefaultSecretUInt64_1);
+        Debug.Assert(ReadLE64(defaultSecretUInt64[2]) == DefaultSecretUInt64_2);
+        Debug.Assert(ReadLE64(defaultSecretUInt64[3]) == DefaultSecretUInt64_3);
+        Debug.Assert(ReadLE64(defaultSecretUInt64[4]) == DefaultSecretUInt64_4);
+        Debug.Assert(ReadLE64(defaultSecretUInt64[5]) == DefaultSecretUInt64_5);
+        Debug.Assert(ReadLE64(defaultSecretUInt64[6]) == DefaultSecretUInt64_6);
+        Debug.Assert(ReadLE64(defaultSecretUInt64[7]) == DefaultSecretUInt64_7);
+        Debug.Assert(ReadLE64(defaultSecretUInt64[8]) == DefaultSecretUInt64_8);
+        Debug.Assert(ReadLE64(defaultSecretUInt64[9]) == DefaultSecretUInt64_9);
+        Debug.Assert(ReadLE64(defaultSecretUInt64[10]) == DefaultSecretUInt64_10);
+        Debug.Assert(ReadLE64(defaultSecretUInt64[11]) == DefaultSecretUInt64_11);
+        Debug.Assert(ReadLE64(defaultSecretUInt64[12]) == DefaultSecretUInt64_12);
+        Debug.Assert(ReadLE64(defaultSecretUInt64[13]) == DefaultSecretUInt64_13);
+        Debug.Assert(ReadLE64(defaultSecretUInt64[14]) == DefaultSecretUInt64_14);
+        Debug.Assert(ReadLE64(defaultSecretUInt64[15]) == DefaultSecretUInt64_15);
 
         ReadOnlySpan<ulong> defaultSecret3UInt64 = MemoryMarshal.Cast<byte, ulong>(DefaultSecret.Slice(3));
-        RoslynDebug.Assert(ReadLE64(defaultSecret3UInt64[0]) == DefaultSecret3UInt64_0);
-        RoslynDebug.Assert(ReadLE64(defaultSecret3UInt64[1]) == DefaultSecret3UInt64_1);
-        RoslynDebug.Assert(ReadLE64(defaultSecret3UInt64[2]) == DefaultSecret3UInt64_2);
-        RoslynDebug.Assert(ReadLE64(defaultSecret3UInt64[3]) == DefaultSecret3UInt64_3);
-        RoslynDebug.Assert(ReadLE64(defaultSecret3UInt64[4]) == DefaultSecret3UInt64_4);
-        RoslynDebug.Assert(ReadLE64(defaultSecret3UInt64[5]) == DefaultSecret3UInt64_5);
-        RoslynDebug.Assert(ReadLE64(defaultSecret3UInt64[6]) == DefaultSecret3UInt64_6);
-        RoslynDebug.Assert(ReadLE64(defaultSecret3UInt64[7]) == DefaultSecret3UInt64_7);
-        RoslynDebug.Assert(ReadLE64(defaultSecret3UInt64[8]) == DefaultSecret3UInt64_8);
-        RoslynDebug.Assert(ReadLE64(defaultSecret3UInt64[9]) == DefaultSecret3UInt64_9);
-        RoslynDebug.Assert(ReadLE64(defaultSecret3UInt64[10]) == DefaultSecret3UInt64_10);
-        RoslynDebug.Assert(ReadLE64(defaultSecret3UInt64[11]) == DefaultSecret3UInt64_11);
-        RoslynDebug.Assert(ReadLE64(defaultSecret3UInt64[12]) == DefaultSecret3UInt64_12);
-        RoslynDebug.Assert(ReadLE64(defaultSecret3UInt64[13]) == DefaultSecret3UInt64_13);
+        Debug.Assert(ReadLE64(defaultSecret3UInt64[0]) == DefaultSecret3UInt64_0);
+        Debug.Assert(ReadLE64(defaultSecret3UInt64[1]) == DefaultSecret3UInt64_1);
+        Debug.Assert(ReadLE64(defaultSecret3UInt64[2]) == DefaultSecret3UInt64_2);
+        Debug.Assert(ReadLE64(defaultSecret3UInt64[3]) == DefaultSecret3UInt64_3);
+        Debug.Assert(ReadLE64(defaultSecret3UInt64[4]) == DefaultSecret3UInt64_4);
+        Debug.Assert(ReadLE64(defaultSecret3UInt64[5]) == DefaultSecret3UInt64_5);
+        Debug.Assert(ReadLE64(defaultSecret3UInt64[6]) == DefaultSecret3UInt64_6);
+        Debug.Assert(ReadLE64(defaultSecret3UInt64[7]) == DefaultSecret3UInt64_7);
+        Debug.Assert(ReadLE64(defaultSecret3UInt64[8]) == DefaultSecret3UInt64_8);
+        Debug.Assert(ReadLE64(defaultSecret3UInt64[9]) == DefaultSecret3UInt64_9);
+        Debug.Assert(ReadLE64(defaultSecret3UInt64[10]) == DefaultSecret3UInt64_10);
+        Debug.Assert(ReadLE64(defaultSecret3UInt64[11]) == DefaultSecret3UInt64_11);
+        Debug.Assert(ReadLE64(defaultSecret3UInt64[12]) == DefaultSecret3UInt64_12);
+        Debug.Assert(ReadLE64(defaultSecret3UInt64[13]) == DefaultSecret3UInt64_13);
 
         static ulong ReadLE64(ulong data) => BitConverter.IsLittleEndian ? data : BinaryPrimitives.ReverseEndianness(data);
     }
@@ -219,7 +219,7 @@ internal static unsafe class XxHashShared
 
     public static void HashInternalLoop(ulong* accumulators, byte* source, uint length, byte* secret)
     {
-        RoslynDebug.Assert(length > 240);
+        Debug.Assert(length > 240);
 
         const int StripesPerBlock = (SecretLengthBytes - StripeLengthBytes) / SecretConsumeRateBytes;
         const int BlockLen = StripeLengthBytes * StripesPerBlock;
@@ -235,8 +235,8 @@ internal static unsafe class XxHashShared
 
     public static void ConsumeStripes(ulong* accumulators, ref ulong stripesSoFar, ulong stripesPerBlock, byte* source, ulong stripes, byte* secret)
     {
-        RoslynDebug.Assert(stripes <= stripesPerBlock); // can handle max 1 scramble per invocation
-        RoslynDebug.Assert(stripesSoFar < stripesPerBlock);
+        Debug.Assert(stripes <= stripesPerBlock); // can handle max 1 scramble per invocation
+        Debug.Assert(stripesSoFar < stripesPerBlock);
 
         ulong stripesToEndOfBlock = stripesPerBlock - stripesSoFar;
         if (stripesToEndOfBlock <= stripes)
@@ -285,7 +285,7 @@ internal static unsafe class XxHashShared
 
     public static void DigestLong(ref State state, ulong* accumulators, byte* secret)
     {
-        RoslynDebug.Assert(state.BufferedCount > 0);
+        Debug.Assert(state.BufferedCount > 0);
 
         fixed (byte* buffer = state.Buffer)
         {
@@ -707,7 +707,7 @@ internal static unsafe class XxHashShared
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ulong XorShift(ulong value, int shift)
     {
-        RoslynDebug.Assert(shift is >= 0 and < 64);
+        Debug.Assert(shift is >= 0 and < 64);
         return value ^ (value >> shift);
     }
 

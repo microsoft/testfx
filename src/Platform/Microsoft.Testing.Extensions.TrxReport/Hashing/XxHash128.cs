@@ -5,9 +5,9 @@
 using System.Buffers.Binary;
 using System.Numerics;
 
-using Microsoft.Testing.Platform;
-
 using static System.IO.Hashing.XxHashShared;
+
+#pragma warning disable RS0030 // Do not use banned APIs - Debug is okay here. RoslynDebug isn't yet available in PlatformServices which links this file.
 
 namespace System.IO.Hashing;
 
@@ -221,7 +221,7 @@ public sealed unsafe class XxHash128
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static Hash128 HashLength1To3(byte* source, uint length, ulong seed)
     {
-        RoslynDebug.Assert(length is >= 1 and <= 3);
+        Debug.Assert(length is >= 1 and <= 3);
 
         // When source.Length == 1, c1 == source[0], c2 == source[0], c3 == source[0]
         // When source.Length == 2, c1 == source[0], c2 == source[1], c3 == source[1]
@@ -246,7 +246,7 @@ public sealed unsafe class XxHash128
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static Hash128 HashLength4To8(byte* source, uint length, ulong seed)
     {
-        RoslynDebug.Assert(length is >= 4 and <= 8);
+        Debug.Assert(length is >= 4 and <= 8);
 
         seed ^= (ulong)BinaryPrimitives.ReverseEndianness((uint)seed) << 32;
 
@@ -272,7 +272,7 @@ public sealed unsafe class XxHash128
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static Hash128 HashLength9To16(byte* source, uint length, ulong seed)
     {
-        RoslynDebug.Assert(length is >= 9 and <= 16);
+        Debug.Assert(length is >= 9 and <= 16);
         ulong bitflipl = (DefaultSecretUInt64_4 ^ DefaultSecretUInt64_5) - seed;
         ulong bitfliph = (DefaultSecretUInt64_6 ^ DefaultSecretUInt64_7) + seed;
         ulong inputLo = ReadUInt64LE(source);
@@ -298,7 +298,7 @@ public sealed unsafe class XxHash128
 
     private static Hash128 HashLength17To128(byte* source, uint length, ulong seed)
     {
-        RoslynDebug.Assert(length is >= 17 and <= 128);
+        Debug.Assert(length is >= 17 and <= 128);
 
         ulong accLow = length * Prime64_1;
         ulong accHigh = 0;
@@ -324,7 +324,7 @@ public sealed unsafe class XxHash128
 
     private static Hash128 HashLength129To240(byte* source, uint length, ulong seed)
     {
-        RoslynDebug.Assert(length is >= 129 and <= 240);
+        Debug.Assert(length is >= 129 and <= 240);
 
         ulong accLow = length * Prime64_1;
         ulong accHigh = 0;
@@ -358,7 +358,7 @@ public sealed unsafe class XxHash128
 
     private static Hash128 HashLengthOver240(byte* source, uint length, ulong seed)
     {
-        RoslynDebug.Assert(length > 240);
+        Debug.Assert(length > 240);
 
 #if NET
         fixed (byte* defaultSecret = &MemoryMarshal.GetReference(DefaultSecret))
