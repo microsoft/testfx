@@ -85,23 +85,61 @@ public sealed class FlowTestContextCancellationTokenAnalyzer : DiagnosticAnalyze
             return;
         }
 
-        // Look for an overload that accepts CancellationToken
-        IMethodSymbol? overloadWithCancellationToken = FindOverloadWithCancellationToken(method, cancellationTokenSymbol);
-        if (overloadWithCancellationToken is null)
+        // Look for an overload that accepts CancellationToken for common async patterns
+        if (HasOverloadWithCancellationToken(method, cancellationTokenSymbol))
         {
-            return;
-        }
-
-        // Check if TestContext is available in the current scope
-        if (!IsTestContextAvailable(context.ContainingSymbol, testContextSymbol))
-        {
-            // Still report the diagnostic even if TestContext is not available, as mentioned in the issue
             context.ReportDiagnostic(invocationOperation.Syntax.CreateDiagnostic(FlowTestContextCancellationTokenRule));
-            return;
+        }
+    }
+
+    private static bool HasOverloadWithCancellationToken(IMethodSymbol method, INamedTypeSymbol cancellationTokenSymbol)
+    {
+        // Check for common patterns that we know have CancellationToken overloads
+        if (IsCommonAsyncMethod(method))
+        {
+            return true;
         }
 
-        // Report the diagnostic
-        context.ReportDiagnostic(invocationOperation.Syntax.CreateDiagnostic(FlowTestContextCancellationTokenRule));
+        // Look for overloads of the same method that accept CancellationToken
+        INamedTypeSymbol containingType = method.ContainingType;
+        
+        foreach (ISymbol member in containingType.GetMembers(method.Name))
+        {
+            if (member is IMethodSymbol candidateMethod &&
+                candidateMethod.MethodKind == method.MethodKind &&
+                candidateMethod.IsStatic == method.IsStatic &&
+                candidateMethod != method)
+            {
+                // Check if this method has the same parameters plus a CancellationToken
+                if (IsCompatibleOverloadWithCancellationToken(method, candidateMethod, cancellationTokenSymbol))
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private static bool IsCommonAsyncMethod(IMethodSymbol method)
+    {
+        // Common async methods that typically have CancellationToken overloads
+        string typeName = method.ContainingType.ToDisplayString();
+        string methodName = method.Name;
+
+        return (typeName, methodName) switch
+        {
+            ("System.Threading.Tasks.Task", "Delay") => true,
+            ("System.Threading.Tasks.Task", "Run") => true,
+            ("System.Threading.Tasks.Task", "FromResult") => false, // This one doesn't have CT overload typically
+            ("System.Net.Http.HttpClient", _) when methodName.EndsWith("Async") => true,
+            ("System.IO.Stream", _) when methodName.EndsWith("Async") => true,
+            ("System.IO.File", _) when methodName.EndsWith("Async") => true,
+            ("System.Data.Common.DbCommand", "ExecuteReaderAsync") => true,
+            ("System.Data.Common.DbCommand", "ExecuteNonQueryAsync") => true,
+            ("System.Data.Common.DbCommand", "ExecuteScalarAsync") => true,
+            _ => false
+        };
     }
 
     private static bool HasProblematicCancellationTokenArgument(IInvocationOperation invocationOperation, INamedTypeSymbol cancellationTokenSymbol)
@@ -188,29 +226,6 @@ public sealed class FlowTestContextCancellationTokenAnalyzer : DiagnosticAnalyze
         return false;
     }
 
-    private static IMethodSymbol? FindOverloadWithCancellationToken(IMethodSymbol method, INamedTypeSymbol cancellationTokenSymbol)
-    {
-        // Look for overloads of the same method that accept CancellationToken
-        INamedTypeSymbol containingType = method.ContainingType;
-        
-        foreach (ISymbol member in containingType.GetMembers(method.Name))
-        {
-            if (member is IMethodSymbol candidateMethod &&
-                candidateMethod.MethodKind == method.MethodKind &&
-                candidateMethod.IsStatic == method.IsStatic &&
-                candidateMethod != method)
-            {
-                // Check if this method has the same parameters plus a CancellationToken
-                if (IsCompatibleOverloadWithCancellationToken(method, candidateMethod, cancellationTokenSymbol))
-                {
-                    return candidateMethod;
-                }
-            }
-        }
-
-        return null;
-    }
-
     private static bool IsCompatibleOverloadWithCancellationToken(IMethodSymbol originalMethod, IMethodSymbol candidateMethod, INamedTypeSymbol cancellationTokenSymbol)
     {
         // Check if the candidate method has all the same parameters as the original method plus a CancellationToken
@@ -235,12 +250,5 @@ public sealed class FlowTestContextCancellationTokenAnalyzer : DiagnosticAnalyze
         // Check if the last parameter is CancellationToken
         IParameterSymbol lastParam = candidateParams[candidateParams.Length - 1];
         return SymbolEqualityComparer.Default.Equals(lastParam.Type, cancellationTokenSymbol);
-    }
-
-    private static bool IsTestContextAvailable(ISymbol containingSymbol, INamedTypeSymbol testContextSymbol)
-    {
-        // For now, we'll return true as mentioned in the issue comments that we should report even if TestContext is not available
-        // In a real implementation, we would check if there's a TestContext property or field accessible in the current scope
-        return true;
     }
 }

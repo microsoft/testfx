@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.Testing.Framework;
-
 using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
     MSTest.Analyzers.FlowTestContextCancellationTokenAnalyzer,
     MSTest.Analyzers.FlowTestContextCancellationTokenFixer>;
@@ -86,6 +84,7 @@ public sealed class FlowTestContextCancellationTokenAnalyzerTests
     {
         string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System;
             using System.Threading;
             using System.Threading.Tasks;
 
