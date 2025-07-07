@@ -40,28 +40,22 @@ public sealed unsafe class XxHash128
     private XxHash128(State state)
         => _state = state;
 
-#pragma warning disable RS0030 // Do not use banned APIs
     /// <summary>Computes the XXH128 hash of the provided <paramref name="source"/> data.</summary>
     /// <param name="source">The data to hash.</param>
     /// <returns>The XXH128 128-bit hash code of the provided data.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> is null.</exception>
-#pragma warning restore RS0030 // Do not use banned APIs
     public static byte[] Hash(byte[] source) => Hash(source, seed: 0);
 
-#pragma warning disable RS0030 // Do not use banned APIs
     /// <summary>Computes the XXH128 hash of the provided data using the provided seed.</summary>
     /// <param name="source">The data to hash.</param>
     /// <param name="seed">The seed value for this hash computation.</param>
     /// <returns>The XXH128 128-bit hash code of the provided data.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> is null.</exception>
-#pragma warning restore RS0030 // Do not use banned APIs
     public static byte[] Hash(byte[] source, long seed)
     {
         if (source is null)
         {
-#pragma warning disable RS0030 // Do not use banned APIs
             throw new ArgumentNullException(nameof(source));
-#pragma warning restore RS0030 // Do not use banned APIs
         }
 
         byte[] result = new byte[HashLengthInBytes];
@@ -221,7 +215,7 @@ public sealed unsafe class XxHash128
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static Hash128 HashLength1To3(byte* source, uint length, ulong seed)
     {
-        Debug.Assert(length is >= 1 and <= 3);
+        Debug.Assert(length is >= 1 and <= 3, "Length was expected to be between 1 and 3.");
 
         // When source.Length == 1, c1 == source[0], c2 == source[0], c3 == source[0]
         // When source.Length == 2, c1 == source[0], c2 == source[1], c3 == source[1]
@@ -246,7 +240,7 @@ public sealed unsafe class XxHash128
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static Hash128 HashLength4To8(byte* source, uint length, ulong seed)
     {
-        Debug.Assert(length is >= 4 and <= 8);
+        Debug.Assert(length is >= 4 and <= 8, "Length was expected to be between 4 and 8.");
 
         seed ^= (ulong)BinaryPrimitives.ReverseEndianness((uint)seed) << 32;
 
@@ -272,7 +266,7 @@ public sealed unsafe class XxHash128
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static Hash128 HashLength9To16(byte* source, uint length, ulong seed)
     {
-        Debug.Assert(length is >= 9 and <= 16);
+        Debug.Assert(length is >= 9 and <= 16, "Length was expected to be between 9 and 16.");
         ulong bitflipl = (DefaultSecretUInt64_4 ^ DefaultSecretUInt64_5) - seed;
         ulong bitfliph = (DefaultSecretUInt64_6 ^ DefaultSecretUInt64_7) + seed;
         ulong inputLo = ReadUInt64LE(source);
@@ -298,7 +292,7 @@ public sealed unsafe class XxHash128
 
     private static Hash128 HashLength17To128(byte* source, uint length, ulong seed)
     {
-        Debug.Assert(length is >= 17 and <= 128);
+        Debug.Assert(length is >= 17 and <= 128, "Length was expected to be between 17 and 128.");
 
         ulong accLow = length * Prime64_1;
         ulong accHigh = 0;
@@ -324,7 +318,7 @@ public sealed unsafe class XxHash128
 
     private static Hash128 HashLength129To240(byte* source, uint length, ulong seed)
     {
-        Debug.Assert(length is >= 129 and <= 240);
+        Debug.Assert(length is >= 129 and <= 240, "Length was expected to be between 129 and 240.");
 
         ulong accLow = length * Prime64_1;
         ulong accHigh = 0;
@@ -358,7 +352,7 @@ public sealed unsafe class XxHash128
 
     private static Hash128 HashLengthOver240(byte* source, uint length, ulong seed)
     {
-        Debug.Assert(length > 240);
+        Debug.Assert(length > 240, "Length was expected to be greater than 240.");
 
 #if NET
         fixed (byte* defaultSecret = &MemoryMarshal.GetReference(DefaultSecret))
