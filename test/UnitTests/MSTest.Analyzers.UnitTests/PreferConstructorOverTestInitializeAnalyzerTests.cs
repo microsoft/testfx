@@ -295,4 +295,58 @@ public sealed class PreferConstructorOverTestInitializeAnalyzerTests
 
         await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
+
+    [TestMethod]
+    public async Task WhenTestClassHasFieldsAndMethods_ConstructorPlacedAfterFields()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public sealed class Test1
+            {
+                private object _instanceVariable;
+
+                [TestInitialize]
+                public void [|Initialize|]()
+                {
+                    _instanceVariable = new object();
+                }
+
+                [TestMethod]
+                public void TestMethod1()
+                {
+                }
+
+                private void SomePrivateMethod()
+                {
+                }
+            }
+            """;
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public sealed class Test1
+            {
+                private object _instanceVariable;
+
+                public Test1()
+                {
+                    _instanceVariable = new object();
+                }
+
+                [TestMethod]
+                public void TestMethod1()
+                {
+                }
+
+                private void SomePrivateMethod()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
 }
