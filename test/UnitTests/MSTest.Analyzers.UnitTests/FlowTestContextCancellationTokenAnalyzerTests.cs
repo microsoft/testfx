@@ -11,7 +11,7 @@ namespace MSTest.Analyzers.Test;
 public sealed class FlowTestContextCancellationTokenAnalyzerTests
 {
     [TestMethod]
-    public async Task WhenMethodCallHasOverloadWithCancellationToken_Diagnostic()
+    public async Task WhenTaskDelayWithoutCancellationToken_Diagnostic()
     {
         string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -288,5 +288,32 @@ public sealed class FlowTestContextCancellationTokenAnalyzerTests
         await VerifyCS.VerifyCodeFixAsync(code,
             VerifyCS.Diagnostic().WithLocation(0),
             fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenHttpClientMethodWithoutCancellationToken_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Net.Http;
+            using System.Threading;
+            using System.Threading.Tasks;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                public TestContext TestContext { get; set; }
+
+                [TestMethod]
+                public async Task MyTestMethod()
+                {
+                    using var client = new HttpClient();
+                    {|#0:var response = await client.GetAsync("https://example.com")|};
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code,
+            VerifyCS.Diagnostic().WithLocation(0));
     }
 }
