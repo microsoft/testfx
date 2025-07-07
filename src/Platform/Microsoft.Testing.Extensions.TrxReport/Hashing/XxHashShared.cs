@@ -121,48 +121,48 @@ internal static unsafe class XxHashShared
         byte* secret = stackalloc byte[SecretLengthBytes];
         DeriveSecretFromSeed(secret, 0);
 
-        Debug.Assert(DefaultSecret.Length == SecretLengthBytes);
+        Debug.Assert(DefaultSecret.Length == SecretLengthBytes, "DefaultSecret.Length was expected to be equal to SecretLengthBytes");
         for (int i = 0; i < DefaultSecret.Length; i++)
         {
-            Debug.Assert(DefaultSecret[i] == secret[i]);
+            Debug.Assert(DefaultSecret[i] == secret[i], "DefaultSecret was expected to be equal to secret.");
         }
 
         // Validate some relationships.
-        Debug.Assert(InternalBufferLengthBytes % StripeLengthBytes == 0);
+        Debug.Assert(InternalBufferLengthBytes % StripeLengthBytes == 0, "InternalBufferLengthBytes % StripeLengthBytes was expected to be zero.");
 
         ReadOnlySpan<ulong> defaultSecretUInt64 = MemoryMarshal.Cast<byte, ulong>(DefaultSecret);
-        Debug.Assert(ReadLE64(defaultSecretUInt64[0]) == DefaultSecretUInt64_0);
-        Debug.Assert(ReadLE64(defaultSecretUInt64[1]) == DefaultSecretUInt64_1);
-        Debug.Assert(ReadLE64(defaultSecretUInt64[2]) == DefaultSecretUInt64_2);
-        Debug.Assert(ReadLE64(defaultSecretUInt64[3]) == DefaultSecretUInt64_3);
-        Debug.Assert(ReadLE64(defaultSecretUInt64[4]) == DefaultSecretUInt64_4);
-        Debug.Assert(ReadLE64(defaultSecretUInt64[5]) == DefaultSecretUInt64_5);
-        Debug.Assert(ReadLE64(defaultSecretUInt64[6]) == DefaultSecretUInt64_6);
-        Debug.Assert(ReadLE64(defaultSecretUInt64[7]) == DefaultSecretUInt64_7);
-        Debug.Assert(ReadLE64(defaultSecretUInt64[8]) == DefaultSecretUInt64_8);
-        Debug.Assert(ReadLE64(defaultSecretUInt64[9]) == DefaultSecretUInt64_9);
-        Debug.Assert(ReadLE64(defaultSecretUInt64[10]) == DefaultSecretUInt64_10);
-        Debug.Assert(ReadLE64(defaultSecretUInt64[11]) == DefaultSecretUInt64_11);
-        Debug.Assert(ReadLE64(defaultSecretUInt64[12]) == DefaultSecretUInt64_12);
-        Debug.Assert(ReadLE64(defaultSecretUInt64[13]) == DefaultSecretUInt64_13);
-        Debug.Assert(ReadLE64(defaultSecretUInt64[14]) == DefaultSecretUInt64_14);
-        Debug.Assert(ReadLE64(defaultSecretUInt64[15]) == DefaultSecretUInt64_15);
+        Debug.Assert(ReadLE64(defaultSecretUInt64[0]) == DefaultSecretUInt64_0, "defaultSecretUInt64[0] was expected to be equals to DefaultSecretUInt64_0");
+        Debug.Assert(ReadLE64(defaultSecretUInt64[1]) == DefaultSecretUInt64_1, "defaultSecretUInt64[1] was expected to be equals to DefaultSecretUInt64_1");
+        Debug.Assert(ReadLE64(defaultSecretUInt64[2]) == DefaultSecretUInt64_2, "defaultSecretUInt64[2] was expected to be equals to DefaultSecretUInt64_2");
+        Debug.Assert(ReadLE64(defaultSecretUInt64[3]) == DefaultSecretUInt64_3, "defaultSecretUInt64[3] was expected to be equals to DefaultSecretUInt64_3");
+        Debug.Assert(ReadLE64(defaultSecretUInt64[4]) == DefaultSecretUInt64_4, "defaultSecretUInt64[4] was expected to be equals to DefaultSecretUInt64_4");
+        Debug.Assert(ReadLE64(defaultSecretUInt64[5]) == DefaultSecretUInt64_5, "defaultSecretUInt64[5] was expected to be equals to DefaultSecretUInt64_5");
+        Debug.Assert(ReadLE64(defaultSecretUInt64[6]) == DefaultSecretUInt64_6, "defaultSecretUInt64[6] was expected to be equals to DefaultSecretUInt64_6");
+        Debug.Assert(ReadLE64(defaultSecretUInt64[7]) == DefaultSecretUInt64_7, "defaultSecretUInt64[7] was expected to be equals to DefaultSecretUInt64_7");
+        Debug.Assert(ReadLE64(defaultSecretUInt64[8]) == DefaultSecretUInt64_8, "defaultSecretUInt64[8] was expected to be equals to DefaultSecretUInt64_8");
+        Debug.Assert(ReadLE64(defaultSecretUInt64[9]) == DefaultSecretUInt64_9, "defaultSecretUInt64[9] was expected to be equals to DefaultSecretUInt64_9");
+        Debug.Assert(ReadLE64(defaultSecretUInt64[10]) == DefaultSecretUInt64_10, "defaultSecretUInt64[10] was expected to be equals to DefaultSecretUInt64_10");
+        Debug.Assert(ReadLE64(defaultSecretUInt64[11]) == DefaultSecretUInt64_11, "defaultSecretUInt64[11] was expected to be equals to DefaultSecretUInt64_11");
+        Debug.Assert(ReadLE64(defaultSecretUInt64[12]) == DefaultSecretUInt64_12, "defaultSecretUInt64[12] was expected to be equals to DefaultSecretUInt64_12");
+        Debug.Assert(ReadLE64(defaultSecretUInt64[13]) == DefaultSecretUInt64_13, "defaultSecretUInt64[13] was expected to be equals to DefaultSecretUInt64_13");
+        Debug.Assert(ReadLE64(defaultSecretUInt64[14]) == DefaultSecretUInt64_14, "defaultSecretUInt64[14] was expected to be equals to DefaultSecretUInt64_14");
+        Debug.Assert(ReadLE64(defaultSecretUInt64[15]) == DefaultSecretUInt64_15, "defaultSecretUInt64[15] was expected to be equals to DefaultSecretUInt64_15");
 
         ReadOnlySpan<ulong> defaultSecret3UInt64 = MemoryMarshal.Cast<byte, ulong>(DefaultSecret.Slice(3));
-        Debug.Assert(ReadLE64(defaultSecret3UInt64[0]) == DefaultSecret3UInt64_0);
-        Debug.Assert(ReadLE64(defaultSecret3UInt64[1]) == DefaultSecret3UInt64_1);
-        Debug.Assert(ReadLE64(defaultSecret3UInt64[2]) == DefaultSecret3UInt64_2);
-        Debug.Assert(ReadLE64(defaultSecret3UInt64[3]) == DefaultSecret3UInt64_3);
-        Debug.Assert(ReadLE64(defaultSecret3UInt64[4]) == DefaultSecret3UInt64_4);
-        Debug.Assert(ReadLE64(defaultSecret3UInt64[5]) == DefaultSecret3UInt64_5);
-        Debug.Assert(ReadLE64(defaultSecret3UInt64[6]) == DefaultSecret3UInt64_6);
-        Debug.Assert(ReadLE64(defaultSecret3UInt64[7]) == DefaultSecret3UInt64_7);
-        Debug.Assert(ReadLE64(defaultSecret3UInt64[8]) == DefaultSecret3UInt64_8);
-        Debug.Assert(ReadLE64(defaultSecret3UInt64[9]) == DefaultSecret3UInt64_9);
-        Debug.Assert(ReadLE64(defaultSecret3UInt64[10]) == DefaultSecret3UInt64_10);
-        Debug.Assert(ReadLE64(defaultSecret3UInt64[11]) == DefaultSecret3UInt64_11);
-        Debug.Assert(ReadLE64(defaultSecret3UInt64[12]) == DefaultSecret3UInt64_12);
-        Debug.Assert(ReadLE64(defaultSecret3UInt64[13]) == DefaultSecret3UInt64_13);
+        Debug.Assert(ReadLE64(defaultSecret3UInt64[0]) == DefaultSecret3UInt64_0, "defaultSecret3UInt64[0] was expected to be equals to DefaultSecret3UInt64_0");
+        Debug.Assert(ReadLE64(defaultSecret3UInt64[1]) == DefaultSecret3UInt64_1, "defaultSecret3UInt64[1] was expected to be equals to DefaultSecret3UInt64_1");
+        Debug.Assert(ReadLE64(defaultSecret3UInt64[2]) == DefaultSecret3UInt64_2, "defaultSecret3UInt64[2] was expected to be equals to DefaultSecret3UInt64_2");
+        Debug.Assert(ReadLE64(defaultSecret3UInt64[3]) == DefaultSecret3UInt64_3, "defaultSecret3UInt64[3] was expected to be equals to DefaultSecret3UInt64_3");
+        Debug.Assert(ReadLE64(defaultSecret3UInt64[4]) == DefaultSecret3UInt64_4, "defaultSecret3UInt64[4] was expected to be equals to DefaultSecret3UInt64_4");
+        Debug.Assert(ReadLE64(defaultSecret3UInt64[5]) == DefaultSecret3UInt64_5, "defaultSecret3UInt64[5] was expected to be equals to DefaultSecret3UInt64_5");
+        Debug.Assert(ReadLE64(defaultSecret3UInt64[6]) == DefaultSecret3UInt64_6, "defaultSecret3UInt64[6] was expected to be equals to DefaultSecret3UInt64_6");
+        Debug.Assert(ReadLE64(defaultSecret3UInt64[7]) == DefaultSecret3UInt64_7, "defaultSecret3UInt64[7] was expected to be equals to DefaultSecret3UInt64_7");
+        Debug.Assert(ReadLE64(defaultSecret3UInt64[8]) == DefaultSecret3UInt64_8, "defaultSecret3UInt64[8] was expected to be equals to DefaultSecret3UInt64_8");
+        Debug.Assert(ReadLE64(defaultSecret3UInt64[9]) == DefaultSecret3UInt64_9, "defaultSecret3UInt64[9] was expected to be equals to DefaultSecret3UInt64_9");
+        Debug.Assert(ReadLE64(defaultSecret3UInt64[10]) == DefaultSecret3UInt64_10, "defaultSecret3UInt64[10] was expected to be equals to DefaultSecret3UInt64_10");
+        Debug.Assert(ReadLE64(defaultSecret3UInt64[11]) == DefaultSecret3UInt64_11, "defaultSecret3UInt64[11] was expected to be equals to DefaultSecret3UInt64_11");
+        Debug.Assert(ReadLE64(defaultSecret3UInt64[12]) == DefaultSecret3UInt64_12, "defaultSecret3UInt64[12] was expected to be equals to DefaultSecret3UInt64_12");
+        Debug.Assert(ReadLE64(defaultSecret3UInt64[13]) == DefaultSecret3UInt64_13, "defaultSecret3UInt64[13] was expected to be equals to DefaultSecret3UInt64_13");
 
         static ulong ReadLE64(ulong data) => BitConverter.IsLittleEndian ? data : BinaryPrimitives.ReverseEndianness(data);
     }
@@ -219,7 +219,7 @@ internal static unsafe class XxHashShared
 
     public static void HashInternalLoop(ulong* accumulators, byte* source, uint length, byte* secret)
     {
-        Debug.Assert(length > 240);
+        Debug.Assert(length > 240, "Length was expected to be greater than 240.");
 
         const int StripesPerBlock = (SecretLengthBytes - StripeLengthBytes) / SecretConsumeRateBytes;
         const int BlockLen = StripeLengthBytes * StripesPerBlock;
@@ -235,8 +235,8 @@ internal static unsafe class XxHashShared
 
     public static void ConsumeStripes(ulong* accumulators, ref ulong stripesSoFar, ulong stripesPerBlock, byte* source, ulong stripes, byte* secret)
     {
-        Debug.Assert(stripes <= stripesPerBlock); // can handle max 1 scramble per invocation
-        Debug.Assert(stripesSoFar < stripesPerBlock);
+        Debug.Assert(stripes <= stripesPerBlock, "stripes was expected to less than or equals stripesPerBlock"); // can handle max 1 scramble per invocation
+        Debug.Assert(stripesSoFar < stripesPerBlock, "stripesSoFar was expected to be less than stripesPerBlock");
 
         ulong stripesToEndOfBlock = stripesPerBlock - stripesSoFar;
         if (stripesToEndOfBlock <= stripes)
@@ -285,7 +285,7 @@ internal static unsafe class XxHashShared
 
     public static void DigestLong(ref State state, ulong* accumulators, byte* secret)
     {
-        Debug.Assert(state.BufferedCount > 0);
+        Debug.Assert(state.BufferedCount > 0, "BufferedCount was expected to be greater than zero.");
 
         fixed (byte* buffer = state.Buffer)
         {
@@ -707,7 +707,7 @@ internal static unsafe class XxHashShared
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ulong XorShift(ulong value, int shift)
     {
-        Debug.Assert(shift is >= 0 and < 64);
+        Debug.Assert(shift is >= 0 and < 64, "shift was expected to be between 0 and 63.");
         return value ^ (value >> shift);
     }
 
