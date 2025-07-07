@@ -780,6 +780,11 @@ internal sealed partial class TerminalTestReporter : IDisposable
             terminal.AppendLine(PlatformResources.CancellingTestSession);
             terminal.AppendLine();
         });
+        
+        // Ensure the cancellation message is flushed to the output stream before the process can terminate.
+        // This prevents race conditions in CI environments where the process might exit before the message
+        // is visible in the captured output.
+        Console.Out.Flush();
     }
 
     internal void WriteErrorMessage(string assembly, string? targetFramework, string? architecture, string text, int? padding)
