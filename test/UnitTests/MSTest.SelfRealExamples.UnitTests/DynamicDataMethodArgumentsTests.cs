@@ -15,10 +15,8 @@ public class DynamicDataMethodArgumentsTests
 
     [TestMethod]
     [DynamicData(nameof(GetData2), [new int[] { 4, 5, 6 }])]
-    public void TestMethod4(int x)
-    {
-        Assert.IsTrue(x is 5 or 7 or 9);
-    }
+    public void TestMethod2(int x)
+        => Assert.IsTrue(x is 5 or 7 or 9);
 
     public static IEnumerable<int> GetData1(int i)
     {
