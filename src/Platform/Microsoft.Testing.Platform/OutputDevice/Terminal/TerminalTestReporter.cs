@@ -3,6 +3,7 @@
 
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Resources;
+using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 
@@ -40,6 +41,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
     private readonly List<TestRunArtifact> _artifacts = [];
 
     private readonly TerminalTestReporterOptions _options;
+    private readonly IStopPoliciesService? _stopPoliciesService;
 
     private readonly TestProgressStateAwareTerminal _terminalWithProgress;
 
@@ -60,9 +62,10 @@ internal sealed partial class TerminalTestReporter : IDisposable
     /// <summary>
     /// Initializes a new instance of the <see cref="TerminalTestReporter"/> class with custom terminal and manual refresh for testing.
     /// </summary>
-    public TerminalTestReporter(IConsole console, TerminalTestReporterOptions options)
+    public TerminalTestReporter(IConsole console, TerminalTestReporterOptions options, IStopPoliciesService? stopPoliciesService = null)
     {
         _options = options;
+        _stopPoliciesService = stopPoliciesService;
 
         Func<bool?> showProgress = _options.ShowProgress;
         TestProgressStateAwareTerminal terminalWithProgress;
@@ -186,13 +189,14 @@ internal sealed partial class TerminalTestReporter : IDisposable
         bool notEnoughTests = totalTests < _options.MinimumExpectedTests;
         bool allTestsWereSkipped = totalTests == 0 || totalTests == totalSkippedTests;
         bool anyTestFailed = totalFailedTests > 0;
-        bool runFailed = anyTestFailed || notEnoughTests || allTestsWereSkipped || _wasCancelled;
+        bool wasAborted = _wasCancelled || _stopPoliciesService?.IsAbortTriggered is true;
+        bool runFailed = anyTestFailed || notEnoughTests || allTestsWereSkipped || wasAborted;
         terminal.SetColor(runFailed ? TerminalColor.DarkRed : TerminalColor.DarkGreen);
 
         terminal.Append(PlatformResources.TestRunSummary);
         terminal.Append(' ');
 
-        if (_wasCancelled)
+        if (wasAborted)
         {
             terminal.Append(PlatformResources.Aborted);
         }
@@ -895,7 +899,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
         var assemblies = _assemblies.Select(asm => asm.Value).OrderBy(a => a.Assembly).Where(a => a is not null).ToList();
 
         int totalTests = _assemblies.Values.Sum(a => a.TotalTests);
-        bool runFailed = _wasCancelled;
+        bool runFailed = _wasCancelled || _stopPoliciesService?.IsAbortTriggered is true;
 
         foreach (TestProgressState assembly in assemblies)
         {
@@ -941,7 +945,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
         terminal.ResetColor();
         terminal.AppendLine();
 
-        if (_wasCancelled)
+        if (_wasCancelled || _stopPoliciesService?.IsAbortTriggered is true)
         {
             terminal.Append(PlatformResources.Aborted);
             terminal.AppendLine();
