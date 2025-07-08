@@ -16,7 +16,7 @@ public class TestCategoriesFromTestDataRowTests
         Assert.IsTrue(number > 0);
     }
 
-    public static IEnumerable<object[]> GetTestDataWithCategories()
+    public static IEnumerable<ITestDataRow> GetTestDataWithCategories()
     {
         // Test data row with categories
         yield return new TestDataRow<(string, int)>(("value1", 1))
@@ -37,9 +37,20 @@ public class TestCategoriesFromTestDataRowTests
         {
             DisplayName = "Test with no additional categories"
         };
-        
+    }
+
+    public static IEnumerable<object[]> GetRegularTestData()
+    {
         // Regular data row (not TestDataRow) - should work as before
         yield return new object[] { "value4", 4 };
+    }
+
+    [TestMethod]
+    [DynamicData(nameof(GetRegularTestData), DynamicDataSourceType.Method)]
+    public void TestMethodWithRegularData(string value, int number)
+    {
+        Assert.IsTrue(!string.IsNullOrEmpty(value));
+        Assert.IsTrue(number > 0);
     }
 
     [TestCategory("MethodLevel")]
