@@ -46,7 +46,7 @@ public class TestCategoriesFromTestDataRowTests
     }
 
     [TestMethod]
-    [DynamicData(nameof(GetRegularTestData), DynamicDataSourceType.Method)]
+    [DynamicData(nameof(GetRegularTestData))]
     public void TestMethodWithRegularData(string value, int number)
     {
         Assert.IsTrue(!string.IsNullOrEmpty(value));
@@ -61,7 +61,7 @@ public class TestCategoriesFromTestDataRowTests
         Assert.IsTrue(!string.IsNullOrEmpty(value));
     }
 
-    public static IEnumerable<object[]> GetTestDataWithCategoriesForMethodWithCategory()
+    public static IEnumerable<ITestDataRow> GetTestDataWithCategoriesForMethodWithCategory()
     {
         // This should have both "MethodLevel" and "DataLevel" categories
         yield return new TestDataRow<string>("test")
