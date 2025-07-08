@@ -1647,6 +1647,7 @@ public sealed class DynamicDataShouldBeValidAnalyzerTests
         => await VerifyCS.VerifyAnalyzerAsync(
             """            
             using System;
+            using System.Collections.Generic;
             using Microsoft.VisualStudio.TestTools.UnitTesting;
             [TestClass]
             public class MyTestClass
