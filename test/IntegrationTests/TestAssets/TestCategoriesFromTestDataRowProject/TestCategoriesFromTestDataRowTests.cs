@@ -9,7 +9,7 @@ namespace TestCategoriesFromTestDataRowProject;
 public class TestCategoriesFromTestDataRowTests
 {
     [TestMethod]
-    [DynamicData(nameof(GetTestDataWithCategories), DynamicDataSourceType.Method)]
+    [DynamicData(nameof(GetTestDataWithCategories))]
     public void TestMethodWithDynamicDataCategories(string value, int number)
     {
         Assert.IsTrue(!string.IsNullOrEmpty(value));
@@ -55,7 +55,7 @@ public class TestCategoriesFromTestDataRowTests
 
     [TestCategory("MethodLevel")]
     [TestMethod]
-    [DynamicData(nameof(GetTestDataWithCategoriesForMethodWithCategory), DynamicDataSourceType.Method)]
+    [DynamicData(nameof(GetTestDataWithCategoriesForMethodWithCategory))]
     public void TestMethodWithMethodLevelCategoriesAndDataCategories(string value)
     {
         Assert.IsTrue(!string.IsNullOrEmpty(value));
