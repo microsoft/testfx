@@ -61,7 +61,7 @@ public class TestCategoriesFromTestDataRowTests
         Assert.IsTrue(!string.IsNullOrEmpty(value));
     }
 
-    public static IEnumerable<ITestDataRow> GetTestDataWithCategoriesForMethodWithCategory()
+    public static IEnumerable<TestDataRow<string>> GetTestDataWithCategoriesForMethodWithCategory()
     {
         // This should have both "MethodLevel" and "DataLevel" categories
         yield return new TestDataRow<string>("test")
