@@ -678,7 +678,7 @@ internal sealed partial class TrxReportEngine
 
         // We use custom format string to make sure that runs are sorted in the same way on all intl machines.
         // This is both for directory names and for Data Warehouse.
-        date.ToString("yyyy-MM-dd HH:mm:ss.fff", DateTimeFormatInfo.InvariantInfo);
+        date.ToString("yyyy-MM-dd HH:mm:ss.fffffff", DateTimeFormatInfo.InvariantInfo);
 
     private static string ReplaceInvalidFileNameChars(string fileName)
     {

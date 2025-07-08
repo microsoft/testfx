@@ -251,4 +251,48 @@ public sealed class PreferConstructorOverTestInitializeAnalyzerTests
 
         await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
+
+    [TestMethod]
+    public async Task WhenTestClassHasStaticCtorAndTestInitialize_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                private object _instanceVariable;
+
+                static MyTestClass()
+                {
+                }
+
+                [TestInitialize]
+                public void [|MyTestInit|]()
+                {
+                    _instanceVariable = new object();
+                }
+            }
+            """;
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                private object _instanceVariable;
+
+                static MyTestClass()
+                {
+                }
+
+                public MyTestClass()
+                {
+                    _instanceVariable = new object();
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
 }
