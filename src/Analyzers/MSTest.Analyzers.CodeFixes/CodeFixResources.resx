@@ -180,4 +180,10 @@
   <data name="ReplaceDataTestMethodWithTestMethodTitle" xml:space="preserve">
     <value>Replace 'DataTestMethod' with 'TestMethod'</value>
   </data>
+  <data name="UseCooperativeCancellationForTimeoutFix" xml:space="preserve">
+    <value>Use 'CooperativeCancellation = true'</value>
+  </data>
+  <data name="StringAssertToAssertTitle" xml:space="preserve">
+    <value>Use 'Assert.{0}' instead of 'StringAssert'</value>
+  </data>
 </root>

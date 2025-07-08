@@ -88,17 +88,16 @@ public partial class AssertTests : TestContainer
             .And.Contain(customMessage);
     }
 
-    public void IsInRange_WithMessageAndParameters_FormatsMessage()
+    public void IsInRange_WithMessage_FormatsMessage()
     {
         // Arrange
         int minValue = 1;
         int maxValue = 5;
         int value = 10;
-        string messageFormat = "Test with parameter: {0}";
-        string parameter = "TestValue";
+        string message = "Test with parameter: TestValue";
 
         // Act
-        Action action = () => Assert.IsInRange(minValue, maxValue, value, messageFormat, parameter);
+        Action action = () => Assert.IsInRange(minValue, maxValue, value, message);
 
         // Assert
         action.Should().ThrowExactly<AssertFailedException>()
@@ -162,7 +161,7 @@ public partial class AssertTests : TestContainer
         int value = 3;
 
         // Act & Assert
-        Assert.IsInRange(minValue, maxValue, value, null);
+        Assert.IsInRange(minValue, maxValue, value, null!);
     }
 
     public void IsInRange_WithEmptyMessage_DoesNotThrow()
@@ -176,7 +175,7 @@ public partial class AssertTests : TestContainer
         Assert.IsInRange(minValue, maxValue, value, string.Empty);
     }
 
-    public void IsInRange_WithNullParameters_DoesNotThrow()
+    public void IsInRange_WithMessage_DoesNotThrow()
     {
         // Arrange
         int minValue = 1;
@@ -184,7 +183,7 @@ public partial class AssertTests : TestContainer
         int value = 3;
 
         // Act & Assert
-        Assert.IsInRange(minValue, maxValue, value, "Test message", null);
+        Assert.IsInRange(minValue, maxValue, value, "Test message");
     }
 
     public void IsInRange_WithAllNegativeValuesInRange_DoesNotThrow()

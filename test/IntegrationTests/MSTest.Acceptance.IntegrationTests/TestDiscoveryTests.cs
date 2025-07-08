@@ -23,6 +23,8 @@ public class TestDiscoveryTests : AcceptanceTestBase<TestDiscoveryTests.TestAsse
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
         testHostResult.AssertOutputContains("Test1");
         testHostResult.AssertOutputContains("Test2");
+        testHostResult.AssertOutputContains("Display name: 1, one");
+        testHostResult.AssertOutputContains("Display name: 2, two");
     }
 
     [TestMethod]
@@ -70,6 +72,8 @@ public class TestDiscoveryTests : AcceptanceTestBase<TestDiscoveryTests.TestAsse
 #file UnitTest1.cs
 
 using System;
+using System.Collections.Generic;
+using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -81,6 +85,23 @@ public class TestClass
 
     [TestMethod]
     public void Test2() {}
+
+    [DynamicData(nameof(GetData), DynamicDataDisplayName = nameof(GetDisplayName))]
+    [TestMethod]
+    public void TestWithData(int _1, string _2)
+    {
+    }
+
+    public static IEnumerable<(int, string)> GetData()
+    {
+        yield return (1, "one");
+        yield return (2, "two");
+    }
+
+    public static string GetDisplayName(MethodInfo methodInfo, object[] data)
+    {
+        return $"Display name: {data[0]}, {data[1]}";
+    }
 }
 """;
     }

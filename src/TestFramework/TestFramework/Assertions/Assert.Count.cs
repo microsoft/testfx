@@ -320,6 +320,6 @@ public sealed partial class Assert
             CultureInfo.CurrentCulture,
             FrameworkMessages.IsNotEmptyFailMsg,
             userMessage);
-        ThrowAssertFailed($"Assert.IsNotEmpty", finalMessage);
+        ThrowAssertFailed("Assert.IsNotEmpty", finalMessage);
     }
 }

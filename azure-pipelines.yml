@@ -4,6 +4,7 @@ pr:
     include:
     - main
     - rel/*
+    - dev/v4
   paths:
     exclude:
       - .github/*
@@ -76,7 +77,15 @@ stages:
             filePath: ./eng/install-procdump.ps1
             failOnStderr: true
             showWarnings: true
-
+        - task: PowerShell@2
+          displayName: 'Enable local dumps'
+          inputs:
+            targetType: 'inline'
+            script: |
+              New-Item -Path $(Build.SourcesDirectory)\artifacts\CrashDumps -ItemType Directory -Force
+              Get-ChildItem "HKLM:\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps"
+              New-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps" -Name "DumpFolder" -Value "$(Build.SourcesDirectory)\artifacts\CrashDumps" -PropertyType ExpandString -Force
+              New-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps" -Name "DumpCount" -Value 10 -PropertyType DWord -Force
         - task: PowerShell@2
           displayName: 'Install Access Database Engine'
           inputs:
@@ -88,10 +97,18 @@ stages:
         - script: eng\common\CIBuild.cmd
             -configuration $(_BuildConfig)
             -prepareMachine
+            /p:Publish=false
             /p:Test=false
             /p:FastAcceptanceTest=true
           name: Build
           displayName: Build
+
+        - task: PublishBuildArtifacts@1
+          displayName: 'Publish NuGet packages'
+          inputs:
+            PathtoPublish: '$(Build.SourcesDirectory)/artifacts/packages/$(_BuildConfig)/Shipping'
+            ArtifactName: '$(Agent.Os)_$(Agent.JobName)_Attempt$(System.JobAttempt)'
+          condition: always()
 
         - ${{ if eq(parameters.SkipTests, False) }}:
 
@@ -104,6 +121,7 @@ stages:
             env:
               DOTNET_ROOT: $(Build.SourcesDirectory)/.dotnet
               NUGET_PACKAGES: $(Build.SourcesDirectory)/.packages
+              DOTNET_CLI_CONTEXT_VERBOSE: 1
 
           # This step is only helpful for diagnosing some issues with vstest/test host that would not appear
           # through the console or trx
@@ -138,6 +156,13 @@ stages:
             displayName: Upload coverage to codecov.io
             condition: and(succeeded(), eq(variables._BuildConfig, 'Debug'))
 
+          - task: PublishBuildArtifacts@1
+            displayName: 'Publish local dumps'
+            inputs:
+              PathtoPublish: '$(Build.SourcesDirectory)/artifacts/CrashDumps'
+              ArtifactName: TestResults_Windows_$(_BuildConfig)
+            condition: failed()
+
       - job: Linux
         timeoutInMinutes: 90
         pool:
@@ -154,9 +179,17 @@ stages:
             -configuration $(_BuildConfig)
             -prepareMachine
             /p:Test=false
+            /p:Publish=false
             /p:NonWindowsBuild=true
             /p:FastAcceptanceTest=true
           displayName: Build
+
+        - task: PublishBuildArtifacts@1
+          displayName: 'Publish NuGet packages'
+          inputs:
+            PathtoPublish: '$(Build.SourcesDirectory)/artifacts/packages/$(_BuildConfig)/Shipping'
+            ArtifactName: '$(Agent.Os)_$(Agent.JobName)_Attempt$(System.JobAttempt)'
+          condition: always()
 
         - ${{ if eq(parameters.SkipTests, False) }}:
           # Because the build step is using -ci flag, restore is done in a local .packages directory.
@@ -168,6 +201,7 @@ stages:
             env:
               DOTNET_ROOT: $(Build.SourcesDirectory)/.dotnet
               NUGET_PACKAGES: $(Build.SourcesDirectory)/.packages
+              DOTNET_CLI_CONTEXT_VERBOSE: 1
 
           # This step is only helpful for diagnosing some issues with vstest/test host that would not appear
           # through the console or trx
@@ -211,9 +245,17 @@ stages:
             -configuration $(_BuildConfig)
             -prepareMachine
             /p:Test=false
+            /p:Publish=false
             /p:NonWindowsBuild=true
             /p:FastAcceptanceTest=true
           displayName: Build
+
+        - task: PublishBuildArtifacts@1
+          displayName: 'Publish NuGet packages'
+          inputs:
+            PathtoPublish: '$(Build.SourcesDirectory)/artifacts/packages/$(_BuildConfig)/Shipping'
+            ArtifactName: '$(Agent.Os)_$(Agent.JobName)_Attempt$(System.JobAttempt)'
+          condition: always()
 
         - ${{ if eq(parameters.SkipTests, False) }}:
           # Because the build step is using -ci flag, restore is done in a local .packages directory.
@@ -225,6 +267,7 @@ stages:
             env:
               DOTNET_ROOT: $(Build.SourcesDirectory)/.dotnet
               NUGET_PACKAGES: $(Build.SourcesDirectory)/.packages
+              DOTNET_CLI_CONTEXT_VERBOSE: 1
 
           # This step is only helpful for diagnosing some issues with vstest/test host that would not appear
           # through the console or trx

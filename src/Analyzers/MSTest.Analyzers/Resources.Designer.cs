@@ -355,11 +355,20 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to DataRow argument type should match method parameter type. Mismatches occur at indices: {0}.
+        ///   Looks up a localized string similar to DataRow argument types do not match method parameter types. {0}.
         /// </summary>
         internal static string DataRowShouldBeValidMessageFormat_ArgumentTypeMismatch {
             get {
                 return ResourceManager.GetString("DataRowShouldBeValidMessageFormat_ArgumentTypeMismatch", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Parameter '{0}' expects type '{1}', but the provided value has type '{2}'.
+        /// </summary>
+        internal static string DataRowShouldBeValidMessageFormat_ParameterMismatch {
+            get {
+                return ResourceManager.GetString("DataRowShouldBeValidMessageFormat_ParameterMismatch", resourceCulture);
             }
         }
         
@@ -1237,6 +1246,51 @@ namespace MSTest.Analyzers {
         internal static string UseRetryWithTestMethodTitle {
             get {
                 return ResourceManager.GetString("UseRetryWithTestMethodTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Using '[Timeout]' without explicitly setting 'CooperativeCancellation = true' is discouraged. In a future version, cooperative cancellation will become the default behavior. Set 'CooperativeCancellation = true' to opt into the recommended behavior and avoid breaking changes..
+        /// </summary>
+        internal static string UseCooperativeCancellationForTimeoutDescription {
+            get {
+                return ResourceManager.GetString("UseCooperativeCancellationForTimeoutDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Use 'CooperativeCancellation = true' with '[Timeout]' to enable cooperative cancellation behavior.
+        /// </summary>
+        internal static string UseCooperativeCancellationForTimeoutMessageFormat {
+            get {
+                return ResourceManager.GetString("UseCooperativeCancellationForTimeoutMessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Use 'CooperativeCancellation = true' with '[Timeout]'.
+        /// </summary>
+        internal static string UseCooperativeCancellationForTimeoutTitle {
+            get {
+                return ResourceManager.GetString("UseCooperativeCancellationForTimeoutTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Use 'Assert.{0}' instead of 'StringAssert.{1}'.
+        /// </summary>
+        internal static string StringAssertToAssertMessageFormat {
+            get {
+                return ResourceManager.GetString("StringAssertToAssertMessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Use 'Assert' instead of 'StringAssert'.
+        /// </summary>
+        internal static string StringAssertToAssertTitle {
+            get {
+                return ResourceManager.GetString("StringAssertToAssertTitle", resourceCulture);
             }
         }
     }

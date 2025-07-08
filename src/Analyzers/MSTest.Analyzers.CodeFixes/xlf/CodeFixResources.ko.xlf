@@ -72,6 +72,11 @@
         <target state="translated">생성자를 TestInitialize 메서드로 바꾸기</target>
         <note />
       </trans-unit>
+      <trans-unit id="StringAssertToAssertTitle">
+        <source>Use 'Assert.{0}' instead of 'StringAssert'</source>
+        <target state="new">Use 'Assert.{0}' instead of 'StringAssert'</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TestClassShouldBeValidFix">
         <source>Fix test class signature</source>
         <target state="translated">테스트 클래스 서명 수정</target>
@@ -95,6 +100,11 @@
       <trans-unit id="UseAttributeOnTestMethodFix">
         <source>Add '[TestMethod]'</source>
         <target state="translated">'[TestMethod]' 추가</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseCooperativeCancellationForTimeoutFix">
+        <source>Use 'CooperativeCancellation = true'</source>
+        <target state="translated">'CooperativeCancellation = true'를 사용하세요.</target>
         <note />
       </trans-unit>
       <trans-unit id="UseNewerAssertThrows">
