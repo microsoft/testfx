@@ -43,9 +43,9 @@
     <MSTestEnginePreReleaseVersionLabel>alpha</MSTestEnginePreReleaseVersionLabel>
 
     <!--
-      This is a early preview package, keep 1.0.0-alpha or similar suffix even in official builds.
+      This is a early preview package, keep 2.0.0-alpha or similar suffix even in official builds.
     -->
-    <MSTestEngineVersionPrefix>1.0.0</MSTestEngineVersionPrefix>
+    <MSTestEngineVersionPrefix>2.0.0</MSTestEngineVersionPrefix>
   </PropertyGroup>
 
   <!-- Pack config -->
