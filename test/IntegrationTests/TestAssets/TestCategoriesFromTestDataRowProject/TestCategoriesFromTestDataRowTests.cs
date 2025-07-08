@@ -16,7 +16,7 @@ public class TestCategoriesFromTestDataRowTests
         Assert.IsTrue(number > 0);
     }
 
-    public static IEnumerable<ITestDataRow> GetTestDataWithCategories()
+    public static IEnumerable<TestDataRow<(string, int)>> GetTestDataWithCategories()
     {
         // Test data row with categories
         yield return new TestDataRow<(string, int)>(("value1", 1))
