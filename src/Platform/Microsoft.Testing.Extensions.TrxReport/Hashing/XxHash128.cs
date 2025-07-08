@@ -9,7 +9,7 @@ using static System.IO.Hashing.XxHashShared;
 
 #pragma warning disable RS0030 // Do not use banned APIs - Debug is okay here. RoslynDebug isn't yet available in PlatformServices which links this file.
 
-namespace System.IO.Hashing;
+namespace TestFx.Hashing;
 
 /// <summary>Provides an implementation of the XXH128 hash algorithm for generating a 128-bit hash.</summary>
 /// <remarks>
@@ -19,7 +19,7 @@ namespace System.IO.Hashing;
 #if NET
 [SkipLocalsInit]
 #endif
-public sealed unsafe class XxHash128
+internal sealed unsafe class XxHash128
 {
     /// <summary>XXH128 produces 16-byte hashes.</summary>
     private const int HashLengthInBytes = 16;

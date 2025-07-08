@@ -13,7 +13,7 @@ using System.Runtime.Intrinsics.X86;
 
 namespace System.IO.Hashing;
 
-/// <summary>Shared implementation of the XXH3 hash algorithm for 64-bit in XxHash3 and <see cref="XxHash128"/> version.</summary>
+/// <summary>Shared implementation of the XXH3 hash algorithm for 64-bit in XxHash3 and <see cref="TestFx.Hashing.XxHash128"/> version.</summary>
 #if NET
 [SkipLocalsInit]
 #endif
@@ -736,16 +736,15 @@ internal static unsafe class XxHashShared
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static T ReadUnaligned<T>(void* source)
+        where T : unmanaged
 #if NET
         => Unsafe.ReadUnaligned<T>(source);
 #else
-        // ldarg.0
-        // unaligned. 0x1
-        // ldobj !!T
-        // ret
-#pragma warning disable CS8500 // This takes the address of, gets the size of, or declares a pointer to a managed type
-        => *(T*)source;
-#pragma warning restore CS8500 // This takes the address of, gets the size of, or declares a pointer to a managed type
+    {
+        T t;
+        Buffer.MemoryCopy(source, &t, sizeof(T), sizeof(T));
+        return t;
+    }
 #endif
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

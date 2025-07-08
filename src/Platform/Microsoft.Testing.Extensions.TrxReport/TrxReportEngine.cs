@@ -721,7 +721,7 @@ internal sealed partial class TrxReportEngine
 
     private static Guid GuidFromString(string data)
     {
-        byte[] hash = XxHash128.Hash(Encoding.Unicode.GetBytes(data));
+        byte[] hash = TestFx.Hashing.XxHash128.Hash(Encoding.Unicode.GetBytes(data));
         return new Guid(hash);
     }
 
