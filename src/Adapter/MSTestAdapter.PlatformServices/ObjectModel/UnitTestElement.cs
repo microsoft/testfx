@@ -198,7 +198,7 @@ internal sealed class UnitTestElement
     private void SetTestCaseId(TestCase testCase, string testFullName)
         => testCase.Id = GenerateSerializedDataStrategyTestId(testFullName);
 
-    private static Guid GuidFromString(string data)
+    internal static Guid GuidFromString(string data)
     {
         byte[] hash = XxHash128.Hash(Encoding.Unicode.GetBytes(data));
         return new Guid(hash);

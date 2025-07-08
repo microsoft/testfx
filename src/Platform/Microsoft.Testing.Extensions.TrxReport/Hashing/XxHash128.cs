@@ -175,7 +175,11 @@ public sealed unsafe class XxHash128
         Unsafe.WriteUnaligned(ref dest0, high);
         Unsafe.WriteUnaligned(ref Unsafe.AddByteOffset(ref dest0, new IntPtr(sizeof(ulong))), low);
 #else
-        // TODO:
+        fixed (byte* dest0 = destination)
+        {
+            *(ulong*)(void*)dest0 = high;
+            *((ulong*)(void*)dest0 + 1) = low;
+        }
 #endif
     }
 
