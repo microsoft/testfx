@@ -277,8 +277,13 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
         <note />
       </trans-unit>
       <trans-unit id="DataRowShouldBeValidMessageFormat_ArgumentTypeMismatch">
-        <source>DataRow argument type should match method parameter type. Mismatches occur at indices: {0}</source>
-        <target state="translated">Typ argumentu DataRow by měl odpovídat typu parametru metody. V indexech dochází k neshodě: {0}</target>
+        <source>DataRow argument types do not match method parameter types. {0}</source>
+        <target state="new">DataRow argument types do not match method parameter types. {0}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DataRowShouldBeValidMessageFormat_ParameterMismatch">
+        <source>Parameter '{0}' expects type '{1}', but the provided value has type '{2}'</source>
+        <target state="new">Parameter '{0}' expects type '{1}', but the provided value has type '{2}'</target>
         <note />
       </trans-unit>
       <trans-unit id="DataRowShouldBeValidMessageFormat_GenericTypeArgumentConflictingTypes">
@@ -532,6 +537,16 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
         <target state="translated">Veřejné typy by měly být testovací třídy.</target>
         <note />
       </trans-unit>
+      <trans-unit id="StringAssertToAssertMessageFormat">
+        <source>Use 'Assert.{0}' instead of 'StringAssert.{1}'</source>
+        <target state="new">Use 'Assert.{0}' instead of 'StringAssert.{1}'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="StringAssertToAssertTitle">
+        <source>Use 'Assert' instead of 'StringAssert'</source>
+        <target state="new">Use 'Assert' instead of 'StringAssert'</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TestClassShouldBeValidMessageFormat">
         <source>Test class '{0}' should be valid</source>
         <target state="translated">Testovací třída {0} by měla být platná.</target>
@@ -781,17 +796,17 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
       </trans-unit>
       <trans-unit id="UseCooperativeCancellationForTimeoutDescription">
         <source>Using '[Timeout]' without explicitly setting 'CooperativeCancellation = true' is discouraged. In a future version, cooperative cancellation will become the default behavior. Set 'CooperativeCancellation = true' to opt into the recommended behavior and avoid breaking changes.</source>
-        <target state="new">Using '[Timeout]' without explicitly setting 'CooperativeCancellation = true' is discouraged. In a future version, cooperative cancellation will become the default behavior. Set 'CooperativeCancellation = true' to opt into the recommended behavior and avoid breaking changes.</target>
+        <target state="translated">Použití „[Timeout]“ bez explicitního nastavení „CooperativeCancellation = true“ se nedoporučuje. V budoucí verzi se kooperativní zrušení stane výchozím chováním. Nastavte „CooperativeCancellation = true“, abyste zapnuli doporučené chování a vyhnuli se změnám, které by mohly způsobit problémy.</target>
         <note />
       </trans-unit>
       <trans-unit id="UseCooperativeCancellationForTimeoutMessageFormat">
         <source>Use 'CooperativeCancellation = true' with '[Timeout]' to enable cooperative cancellation behavior</source>
-        <target state="new">Use 'CooperativeCancellation = true' with '[Timeout]' to enable cooperative cancellation behavior</target>
+        <target state="translated">Použijte „CooperativeCancellation = true“ s „[Timeout]“, abyste povolili chování kooperativního zrušení</target>
         <note />
       </trans-unit>
       <trans-unit id="UseCooperativeCancellationForTimeoutTitle">
         <source>Use 'CooperativeCancellation = true' with '[Timeout]'</source>
-        <target state="new">Use 'CooperativeCancellation = true' with '[Timeout]'</target>
+        <target state="translated">Použijte „CooperativeCancellation = true“ s „[Timeout]“</target>
         <note />
       </trans-unit>
       <trans-unit id="UseDeploymentItemWithTestMethodOrTestClassMessageFormat">
