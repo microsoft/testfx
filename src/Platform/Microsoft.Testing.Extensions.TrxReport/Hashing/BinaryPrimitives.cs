@@ -4,8 +4,11 @@
 #if !NET
 using System.Numerics;
 
+using Microsoft.CodeAnalysis;
+
 namespace System.Buffers.Binary;
 
+[Embedded]
 internal static class BinaryPrimitives
 {
     /// <summary>

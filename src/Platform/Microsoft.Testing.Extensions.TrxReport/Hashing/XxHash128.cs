@@ -100,6 +100,21 @@ internal sealed unsafe class XxHash128
         return false;
     }
 
+#if NET
+    /// <summary>Computes the XXH128 hash of the provided data.</summary>
+    /// <param name="source">The data to hash.</param>
+    /// <param name="seed">The seed value for this hash computation. The default is zero.</param>
+    /// <returns>The computed XXH128 hash.</returns>
+    public static UInt128 HashToUInt128(ReadOnlySpan<byte> source, long seed = 0)
+    {
+        fixed (byte* sourcePtr = &MemoryMarshal.GetReference(source))
+        {
+            Hash128 hash = HashToHash128(sourcePtr, (uint)source.Length, seed);
+            return new UInt128(hash.High64, hash.Low64);
+        }
+    }
+#endif
+
     private static Hash128 HashToHash128(byte[] source, long seed = 0)
     {
         uint length = (uint)source.Length;
@@ -130,6 +145,9 @@ internal sealed unsafe class XxHash128
 
         return HashLengthOver240(sourcePtr, length, (ulong)seed);
     }
+
+    public void Reset()
+        => XxHashShared.Reset(ref _state);
 
     /// <summary>Appends the contents of <paramref name="source"/> to the data already processed for the current hash computation.</summary>
     /// <param name="source">The data to process.</param>
@@ -177,6 +195,16 @@ internal sealed unsafe class XxHash128
 
         return current;
     }
+
+#if NET
+    /// <summary>Gets the current computed hash value without modifying accumulated state.</summary>
+    /// <returns>The hash value for the data already provided.</returns>
+    public UInt128 GetCurrentHashAsUInt128()
+    {
+        Hash128 current = GetCurrentHashAsHash128();
+        return new UInt128(current.High64, current.Low64);
+    }
+#endif
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static void WriteBigEndian128(in Hash128 hash, byte[] destination)
