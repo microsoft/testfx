@@ -62,7 +62,6 @@
     </Project>
     <Project Path="src/Analyzers/MSTest.Analyzers/MSTest.Analyzers.csproj" />
     <Project Path="src/Analyzers/MSTest.GlobalConfigsGenerator/MSTest.GlobalConfigsGenerator.csproj" />
-    <Project Path="src/Analyzers/MSTest.Internal.Analyzers/MSTest.Internal.Analyzers.csproj" />
     <Project Path="src/Analyzers/MSTest.SourceGeneration/MSTest.SourceGeneration.csproj" />
   </Folder>
   <Folder Name="/src/5 - Package/" Id="87d92690-a0c0-3299-b302-eb18ebf7ffb3">
