@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -16,26 +16,26 @@ public class TestCategoriesFromTestDataRowTests
         Assert.IsTrue(number > 0);
     }
 
-    public static IEnumerable<TestDataRow<(string, int)>> GetTestDataWithCategories()
+    public static IEnumerable<TestDataRow<(string Value, int Number)>> GetTestDataWithCategories()
     {
         // Test data row with categories
         yield return new TestDataRow<(string, int)>(("value1", 1))
         {
-            TestCategories = new List<string> { "Integration", "Slow" },
-            DisplayName = "Test with Integration and Slow categories"
+            TestCategories = ["Integration", "Slow"],
+            DisplayName = "Test with Integration and Slow categories",
         };
 
         // Test data row with different categories
         yield return new TestDataRow<(string, int)>(("value2", 2))
         {
-            TestCategories = new List<string> { "Unit", "Fast" },
-            DisplayName = "Test with Unit and Fast categories"
+            TestCategories = ["Unit", "Fast"],
+            DisplayName = "Test with Unit and Fast categories",
         };
 
         // Test data row with no categories (should inherit from method level)
         yield return new TestDataRow<(string, int)>(("value3", 3))
         {
-            DisplayName = "Test with no additional categories"
+            DisplayName = "Test with no additional categories",
         };
     }
 
@@ -57,17 +57,15 @@ public class TestCategoriesFromTestDataRowTests
     [TestMethod]
     [DynamicData(nameof(GetTestDataWithCategoriesForMethodWithCategory))]
     public void TestMethodWithMethodLevelCategoriesAndDataCategories(string value)
-    {
-        Assert.IsTrue(!string.IsNullOrEmpty(value));
-    }
+        => Assert.IsTrue(!string.IsNullOrEmpty(value));
 
     public static IEnumerable<TestDataRow<string>> GetTestDataWithCategoriesForMethodWithCategory()
     {
         // This should have both "MethodLevel" and "DataLevel" categories
         yield return new TestDataRow<string>("test")
         {
-            TestCategories = new List<string> { "DataLevel" },
-            DisplayName = "Test with method and data categories"
+            TestCategories = ["DataLevel"],
+            DisplayName = "Test with method and data categories",
         };
     }
 }
