@@ -749,17 +749,11 @@ internal static unsafe class XxHashShared
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static void WriteUnaligned<T>(void* destination, T value)
+        where T : unmanaged
 #if NET
         => Unsafe.WriteUnaligned<T>(destination, value);
 #else
-    // ldarg .0
-    // ldarg .1
-    // unaligned. 0x01
-    // stobj !!T
-    // ret
-#pragma warning disable CS8500 // This takes the address of, gets the size of, or declares a pointer to a managed type
-    => *(T*)destination = value;
-#pragma warning restore CS8500 // This takes the address of, gets the size of, or declares a pointer to a managed type
+        => Buffer.MemoryCopy(&value, destination, sizeof(T), sizeof(T));
 #endif
 
     [StructLayout(LayoutKind.Auto)]
