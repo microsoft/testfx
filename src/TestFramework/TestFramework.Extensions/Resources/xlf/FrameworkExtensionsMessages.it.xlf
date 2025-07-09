@@ -12,7 +12,7 @@
       </trans-unit>
       <trans-unit id="AsyncUITestMethodWithNoDispatcherQueue">
         <source>UITestMethodAttribute.DispatcherQueue should not be null. To use UITestMethodAttribute within a WinUI Desktop App, remember to set the static UITestMethodAttribute.DispatcherQueue during the test initialization.</source>
-        <target state="translated">UITestMethodAttribute.DispatcherQueue non deve essere Null. Per usare UITestMethodAttribute all'interno di un'app desktop WinUI, ricordarsi di impostare il parametro statico uiTestMethodAttribute.DispatcherQueue durante l'inizializzazione del test.</target>
+        <target state="new">UITestMethodAttribute.DispatcherQueue should not be null. To use UITestMethodAttribute within a WinUI Desktop App, remember to set the static UITestMethodAttribute.DispatcherQueue during the test initialization.</target>
         <note></note>
       </trans-unit>
     </body>
