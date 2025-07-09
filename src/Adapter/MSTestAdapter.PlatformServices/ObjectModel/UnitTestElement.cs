@@ -15,6 +15,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 [DebuggerDisplay("{GetDisplayName()} ({TestMethod.ManagedTypeName})")]
 internal sealed class UnitTestElement
 {
+    private static readonly byte[] OpenParen = [40, 0]; // Encoding.Unicode.GetBytes("(");
+    private static readonly byte[] CloseParen = [41, 0]; // Encoding.Unicode.GetBytes(")");
+    private static readonly byte[] OpenBracket = [91, 0]; // Encoding.Unicode.GetBytes("[");
+    private static readonly byte[] CloseBracket = [93, 0]; // Encoding.Unicode.GetBytes("]");
+
     /// <summary>
     /// Initializes a new instance of the <see cref="UnitTestElement"/> class.
     /// </summary>
@@ -224,25 +229,24 @@ internal sealed class UnitTestElement
             // In case path contains invalid characters.
         }
 
-        // TODO: Pool?
-        StringBuilder builder = new();
-        builder.Append(fileNameOrFilePath);
-        builder.Append(testFullName);
+        var hash = new TestFx.Hashing.XxHash128();
+        hash.Append(Encoding.Unicode.GetBytes(fileNameOrFilePath));
+        hash.Append(Encoding.Unicode.GetBytes(testFullName));
         if (TestMethod.ParameterTypes is not null)
         {
-            builder.Append('(');
-            builder.Append(TestMethod.ParameterTypes);
-            builder.Append(')');
+            hash.Append(OpenParen);
+            hash.Append(Encoding.Unicode.GetBytes(TestMethod.ParameterTypes));
+            hash.Append(CloseParen);
         }
 
         if (TestMethod.SerializedData != null)
         {
-            builder.Append('[');
-            builder.Append(TestMethod.TestCaseIndex.ToString(CultureInfo.InvariantCulture));
-            builder.Append(']');
+            hash.Append(OpenBracket);
+            hash.Append(Encoding.Unicode.GetBytes(TestMethod.TestCaseIndex.ToString(CultureInfo.InvariantCulture)));
+            hash.Append(CloseBracket);
         }
 
-        return GuidFromString(builder.ToString());
+        return new Guid(hash.GetCurrentHash());
     }
 
     private string GetDisplayName() => StringEx.IsNullOrWhiteSpace(DisplayName) ? TestMethod.Name : DisplayName;

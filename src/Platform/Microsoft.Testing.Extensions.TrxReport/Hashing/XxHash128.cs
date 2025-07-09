@@ -3,6 +3,7 @@
 
 // Based on the XXH128 implementation from https://github.com/Cyan4973/xxHash.
 using System.Buffers.Binary;
+using System.IO.Hashing;
 using System.Numerics;
 
 using static System.IO.Hashing.XxHashShared;
@@ -128,6 +129,24 @@ internal sealed unsafe class XxHash128
 #pragma warning restore IDE0046 // Convert to conditional expression
 
         return HashLengthOver240(sourcePtr, length, (ulong)seed);
+    }
+
+    /// <summary>Appends the contents of <paramref name="source"/> to the data already processed for the current hash computation.</summary>
+    /// <param name="source">The data to process.</param>
+    public void Append(byte[] source)
+        => XxHashShared.Append(ref _state, source);
+
+    public byte[] GetCurrentHash()
+    {
+        byte[] ret = new byte[HashLengthInBytes];
+        GetCurrentHashCore(ret);
+        return ret;
+    }
+
+    private void GetCurrentHashCore(byte[] destination)
+    {
+        Hash128 current = GetCurrentHashAsHash128();
+        WriteBigEndian128(current, destination);
     }
 
     private Hash128 GetCurrentHashAsHash128()
