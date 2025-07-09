@@ -12,6 +12,7 @@
   <PropertyGroup>
     <RootNamespace>Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices</RootNamespace>
     <DefineConstants>$(DefineConstants);TRACE</DefineConstants>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <!-- Properties specific to UWP -->
@@ -75,6 +76,10 @@
 
   <ItemGroup>
     <Using Include="Polyfills" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.TrxReport\Hashing\**" Link="Hashing\%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
 
   <!-- SDK bottom import -->

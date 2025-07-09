@@ -1,11 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if NETCOREAPP
-using System.Buffers;
-#endif
-using System.Security.Cryptography;
-
 using Microsoft.Testing.Extensions.TestReports.Resources;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
@@ -428,7 +423,14 @@ internal sealed partial class TrxReportEngine
         {
             TestNode testNode = nodeMessage.TestNode;
 
-            string id = GuidFromString($"{testNode.Uid.Value} {testNode.DisplayName}").ToString();
+            // If already a guid (it's the case for at least MSTest), use that guid directly.
+            // Otherwise, convert the string to a guid.
+            if (!Guid.TryParse(testNode.Uid.Value, out Guid guid))
+            {
+                guid = GuidFromString(testNode.Uid.Value);
+            }
+
+            string id = guid.ToString();
             string displayName = RemoveInvalidXmlChar(testNode.DisplayName)!;
             string executionId = Guid.NewGuid().ToString();
 
@@ -716,27 +718,8 @@ internal sealed partial class TrxReportEngine
 
     private static Guid GuidFromString(string data)
     {
-#if NETCOREAPP
-        int byteCount = Encoding.Unicode.GetByteCount(data);
-        Span<byte> hash = stackalloc byte[32];
-        byte[] dataBytes = ArrayPool<byte>.Shared.Rent(byteCount);
-        try
-        {
-            Encoding.Unicode.GetBytes(data, dataBytes);
-            SHA256.HashData(dataBytes.AsSpan()[..byteCount], hash);
-            return new Guid(hash[..16]);
-        }
-        finally
-        {
-            ArrayPool<byte>.Shared.Return(dataBytes);
-        }
-#else
-        var sha256 = SHA256.Create();
-        byte[] hash = sha256.ComputeHash(Encoding.Unicode.GetBytes(data));
-        byte[] bytes = new byte[16];
-        Array.Copy(hash, bytes, 16);
-        return new Guid(bytes);
-#endif
+        byte[] hash = TestFx.Hashing.XxHash128.Hash(Encoding.Unicode.GetBytes(data));
+        return new Guid(hash);
     }
 
 #if NET7_0_OR_GREATER
