@@ -324,7 +324,8 @@ internal static unsafe class XxHashShared
                 Debug.Assert(sourceIndex < source.Length, "Expected sourceIndex to be less than source.Length");
                 Debug.Assert(source.Length - sourceIndex <= InternalBufferLengthBytes, "Expected remaining.Length to be less than or equals InternalBufferLengthBytes");
                 Debug.Assert(state.BufferedCount == 0, "Expected BufferedCount to be zero.");
-                Buffer.MemoryCopy(sourcePtr + sourceIndex, buffer, source.Length - sourceIndex, source.Length);
+                Buffer.MemoryCopy(sourcePtr + sourceIndex, buffer, source.Length - sourceIndex, source.Length - sourceIndex);
+                state.BufferedCount = (uint)(source.Length - sourceIndex);
 #endif
             }
 #pragma warning restore SA1519 // Braces should not be omitted from multi-line child statement
@@ -434,6 +435,7 @@ internal static unsafe class XxHashShared
                 new ReadOnlySpan<byte>(buffer, (int)state.BufferedCount).CopyTo(new Span<byte>(lastStripe + catchupSize, (int)state.BufferedCount));
 #else
                 Buffer.MemoryCopy(buffer + InternalBufferLengthBytes - catchupSize, lastStripe, StripeLengthBytes, catchupSize);
+                Buffer.MemoryCopy(buffer, lastStripe + catchupSize, (int)state.BufferedCount, (int)state.BufferedCount);
 #endif
                 accumulateData = lastStripe;
             }
