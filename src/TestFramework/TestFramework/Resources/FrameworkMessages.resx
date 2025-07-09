@@ -256,12 +256,6 @@ Actual: {2}</value>
   <data name="DataDrivenResultDisplayName" xml:space="preserve">
     <value>{0} ({1})</value>
   </data>
-  <data name="AsyncUITestMethodNotSupported" xml:space="preserve">
-    <value>async TestMethod with UITestMethodAttribute are not supported. Either remove async or use TestMethodAttribute.</value>
-  </data>
-  <data name="AsyncUITestMethodWithNoDispatcherQueue" xml:space="preserve">
-    <value>UITestMethodAttribute.DispatcherQueue should not be null. To use UITestMethodAttribute within a WinUI Desktop App, remember to set the static UITestMethodAttribute.DispatcherQueue during the test initialization.</value>
-  </data>
   <data name="DynamicDataIEnumerableNull" xml:space="preserve">
     <value>Property or method {0} on {1} return type is not assignable to 'IEnumerable'.</value>
   </data>
@@ -273,13 +267,6 @@ Actual: {2}</value>
   </data>
   <data name="DynamicDataIEnumerableEmpty" xml:space="preserve">
     <value>Property or method {0} on {1} returns empty IEnumerable&lt;object[]&gt;.</value>
-  </data>
-  <data name="ArgumentXMustDeriveFromClassY" xml:space="preserve">
-    <value>Type '{0}' is not assignable to '{1}'.</value>
-    <comment>
-      - {0} argument name like "applicationType"
-      - {1} fully qualified class name like "Microsoft.UI.Xaml.Application"
-    </comment>
   </data>
   <data name="DynamicDataInvalidMethodLayout" xml:space="preserve">
     <value>Dynamic data method '{0}' should be static, parameterless and non-generic.</value>

@@ -96,6 +96,20 @@
     <InternalsVisibleTo Include="MSTestAdapter.PlatformServices.UnitTests" Key="$(VsPublicKey)" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Update="Resources\FrameworkExtensionsMessages.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>FrameworkExtensionsMessages.resx</DependentUpon>
+    </Compile>
+    <EmbeddedResource Update="Resources\FrameworkExtensionsMessages.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>FrameworkExtensionsMessages.Designer.cs</LastGenOutput>
+      <CustomToolNamespace>Microsoft.VisualStudio.TestTools.UnitTesting</CustomToolNamespace>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+  </ItemGroup>
+
   <!-- SDK bottom import -->
   <Import Project="Sdk.targets" Sdk="MSBuild.Sdk.Extras" Condition=" '$(OS)' == 'Windows_NT' " />
   <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" Condition=" '$(OS)' != 'Windows_NT' " />
