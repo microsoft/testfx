@@ -17,14 +17,5 @@ internal sealed class SystemFileSystem : IFileSystem
 
     public string ReadAllText(string path) => File.ReadAllText(path);
 
-#if NETCOREAPP
     public Task<string> ReadAllTextAsync(string path) => File.ReadAllTextAsync(path);
-#else
-    public async Task<string> ReadAllTextAsync(string path)
-    {
-        using FileStream stream = new(path, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, FileOptions.Asynchronous | FileOptions.SequentialScan);
-        using StreamReader reader = new(stream);
-        return await reader.ReadToEndAsync().ConfigureAwait(false);
-    }
-#endif
 }
