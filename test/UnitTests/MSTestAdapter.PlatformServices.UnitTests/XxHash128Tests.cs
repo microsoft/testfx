@@ -135,7 +135,8 @@ public class XxHash128Tests : TestContainer
                     Verify(new UInt128(test.HashHigh, test.HashLow) == hash.GetCurrentHashAsUInt128());
 #endif
                     Array.Clear(destination, 0, destination.Length);
-                    // TestFx-specific: We don't have GetHashAndReset. So, we just reset.
+                    // TestFx-specific: We don't have GetHashAndReset. So, we just call GetCurrentHash followed by Reset.
+                    destination = hash.GetCurrentHash();
                     hash.Reset();
                     // Verify(hash.GetHashAndReset(destination) == 16);
                     Verify(expectedHash128 == ReadHashBigEndian(destination));
