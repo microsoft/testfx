@@ -3,7 +3,6 @@
 
 using System.Collections.Immutable;
 using System.Composition;
-using System.Linq;
 
 using Analyzer.Utilities;
 
@@ -63,7 +62,8 @@ public sealed class AddTestClassFixer : CodeFixProvider
                     equivalenceKey: $"{nameof(AddTestClassFixer)}_ChangeStructToClass_{diagnostic.Id}"),
                 diagnostic);
         }
-        else if (declaration is RecordDeclarationSyntax recordDeclaration && IsRecordStruct(recordDeclaration))
+        else if (declaration is RecordDeclarationSyntax recordDeclaration
+            && recordDeclaration.ClassOrStructKeyword.IsKind(SyntaxKind.StructKeyword))
         {
             context.RegisterCodeFix(
                 CodeAction.Create(
@@ -125,12 +125,6 @@ public sealed class AddTestClassFixer : CodeFixProvider
         return document.WithSyntaxRoot(newRoot);
     }
 
-    private static bool IsRecordStruct(RecordDeclarationSyntax recordDeclaration)
-    {
-        // Check if the record has the 'struct' keyword
-        return recordDeclaration.Modifiers.Any(SyntaxKind.StructKeyword);
-    }
-
     private static async Task<Document> ChangeRecordStructToRecordClassAndAddTestClassAttributeAsync(Document document, RecordDeclarationSyntax recordStructDeclaration, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -140,28 +134,27 @@ public sealed class AddTestClassFixer : CodeFixProvider
         AttributeSyntax testClassAttribute = SyntaxFactory.Attribute(SyntaxFactory.ParseName("TestClass"));
         AttributeListSyntax attributeList = SyntaxFactory.AttributeList(SyntaxFactory.SingletonSeparatedList(testClassAttribute));
 
-        // Convert record struct to record class by replacing the 'struct' keyword with 'class' keyword
-        SyntaxTokenList newModifiers = SyntaxFactory.TokenList();
-        
-        foreach (var modifier in recordStructDeclaration.Modifiers)
-        {
-            if (modifier.IsKind(SyntaxKind.StructKeyword))
-            {
-                // Replace 'struct' with 'class'
-                SyntaxToken classToken = SyntaxFactory.Token(SyntaxKind.ClassKeyword)
-                    .WithLeadingTrivia(modifier.LeadingTrivia)
-                    .WithTrailingTrivia(modifier.TrailingTrivia);
-                newModifiers = newModifiers.Add(classToken);
-            }
-            else
-            {
-                newModifiers = newModifiers.Add(modifier);
-            }
-        }
+        // Filter out readonly modifier since it's not valid for record classes
+        SyntaxTokenList filteredModifiers = SyntaxFactory.TokenList(
+            recordStructDeclaration.Modifiers.Where(modifier => !modifier.IsKind(SyntaxKind.ReadOnlyKeyword)));
 
-        RecordDeclarationSyntax recordClassDeclaration = recordStructDeclaration
-            .WithModifiers(newModifiers)
-            .WithAttributeLists(recordStructDeclaration.AttributeLists.Add(attributeList));
+        // Convert record struct to record class by creating a new RecordDeclarationSyntax
+        // We need to create a new record declaration instead of just changing the keyword
+        RecordDeclarationSyntax recordClassDeclaration = SyntaxFactory.RecordDeclaration(
+                recordStructDeclaration.Keyword,
+                recordStructDeclaration.Identifier)
+            .WithModifiers(filteredModifiers)
+            .WithTypeParameterList(recordStructDeclaration.TypeParameterList)
+            .WithParameterList(recordStructDeclaration.ParameterList)
+            .WithBaseList(recordStructDeclaration.BaseList)
+            .WithConstraintClauses(recordStructDeclaration.ConstraintClauses)
+            .WithOpenBraceToken(recordStructDeclaration.OpenBraceToken)
+            .WithMembers(recordStructDeclaration.Members)
+            .WithCloseBraceToken(recordStructDeclaration.CloseBraceToken)
+            .WithSemicolonToken(recordStructDeclaration.SemicolonToken)
+            .WithAttributeLists(recordStructDeclaration.AttributeLists.Add(attributeList))
+            .WithLeadingTrivia(recordStructDeclaration.GetLeadingTrivia())
+            .WithTrailingTrivia(recordStructDeclaration.GetTrailingTrivia());
 
         editor.ReplaceNode(recordStructDeclaration, recordClassDeclaration);
 

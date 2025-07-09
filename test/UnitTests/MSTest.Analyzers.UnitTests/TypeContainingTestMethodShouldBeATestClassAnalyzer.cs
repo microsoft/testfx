@@ -358,7 +358,7 @@ public sealed class TypeContainingTestMethodShouldBeATestClassAnalyzerTests
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
-            public record class TestRecordStruct
+            public record TestRecordStruct
             {
                 [TestMethod]
                 public void TestMethod1()
@@ -451,7 +451,7 @@ public sealed class TypeContainingTestMethodShouldBeATestClassAnalyzerTests
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
-            public readonly record class TestRecordStruct
+            public record TestRecordStruct
             {
                 [TestMethod]
                 public void TestMethod1()
