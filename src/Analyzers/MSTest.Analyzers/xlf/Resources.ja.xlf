@@ -278,12 +278,12 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="DataRowShouldBeValidMessageFormat_ArgumentTypeMismatch">
         <source>DataRow argument types do not match method parameter types. {0}</source>
-        <target state="new">DataRow argument types do not match method parameter types. {0}</target>
+        <target state="translated">DataRow 引数の型がメソッド パラメーターの型と一致しません。 {0}</target>
         <note />
       </trans-unit>
       <trans-unit id="DataRowShouldBeValidMessageFormat_ParameterMismatch">
         <source>Parameter '{0}' expects type '{1}', but the provided value has type '{2}'</source>
-        <target state="new">Parameter '{0}' expects type '{1}', but the provided value has type '{2}'</target>
+        <target state="translated">パラメーター '{0}' の型は '{1}' が想定されていますが、指定された値の型は '{2}' です</target>
         <note />
       </trans-unit>
       <trans-unit id="DataRowShouldBeValidMessageFormat_GenericTypeArgumentConflictingTypes">
@@ -539,12 +539,12 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="StringAssertToAssertMessageFormat">
         <source>Use 'Assert.{0}' instead of 'StringAssert.{1}'</source>
-        <target state="new">Use 'Assert.{0}' instead of 'StringAssert.{1}'</target>
+        <target state="translated">'StringAssert.{1}' の代わりに 'Assert.{0}' を使用します</target>
         <note />
       </trans-unit>
       <trans-unit id="StringAssertToAssertTitle">
         <source>Use 'Assert' instead of 'StringAssert'</source>
-        <target state="new">Use 'Assert' instead of 'StringAssert'</target>
+        <target state="translated">'StringAssert' の代わりに 'Assert' を使用</target>
         <note />
       </trans-unit>
       <trans-unit id="TestClassShouldBeValidMessageFormat">
