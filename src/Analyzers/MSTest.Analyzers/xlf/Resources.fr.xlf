@@ -278,12 +278,12 @@ Le type doit être une classe
       </trans-unit>
       <trans-unit id="DataRowShouldBeValidMessageFormat_ArgumentTypeMismatch">
         <source>DataRow argument types do not match method parameter types. {0}</source>
-        <target state="new">DataRow argument types do not match method parameter types. {0}</target>
+        <target state="translated">Les types d’argument DataRow ne correspondent pas aux types de paramètre de la méthode. {0}</target>
         <note />
       </trans-unit>
       <trans-unit id="DataRowShouldBeValidMessageFormat_ParameterMismatch">
         <source>Parameter '{0}' expects type '{1}', but the provided value has type '{2}'</source>
-        <target state="new">Parameter '{0}' expects type '{1}', but the provided value has type '{2}'</target>
+        <target state="translated">Le paramètre « {0} » attend un type « {1} », mais la valeur fournie a un type « {2} »</target>
         <note />
       </trans-unit>
       <trans-unit id="DataRowShouldBeValidMessageFormat_GenericTypeArgumentConflictingTypes">
@@ -539,12 +539,12 @@ Le type doit être une classe
       </trans-unit>
       <trans-unit id="StringAssertToAssertMessageFormat">
         <source>Use 'Assert.{0}' instead of 'StringAssert.{1}'</source>
-        <target state="new">Use 'Assert.{0}' instead of 'StringAssert.{1}'</target>
+        <target state="translated">Utilisez « Assert.{0} » au lieu de « StringAssert.{1} »</target>
         <note />
       </trans-unit>
       <trans-unit id="StringAssertToAssertTitle">
         <source>Use 'Assert' instead of 'StringAssert'</source>
-        <target state="new">Use 'Assert' instead of 'StringAssert'</target>
+        <target state="translated">Utilisez « Assert » au lieu de « StringAssert »</target>
         <note />
       </trans-unit>
       <trans-unit id="TestClassShouldBeValidMessageFormat">
