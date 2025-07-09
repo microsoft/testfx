@@ -24,15 +24,10 @@ internal sealed class SystemProcess : IProcess, IDisposable
 
     public int ExitCode => _process.ExitCode;
 
-#if NETCOREAPP
     public IMainModule? MainModule
         => _process.MainModule is null
             ? null
             : (IMainModule)new SystemMainModule(_process.MainModule);
-#else
-    public IMainModule MainModule
-        => new SystemMainModule(_process.MainModule);
-#endif
 
     private void OnProcessExited(object? sender, EventArgs e)
         => Exited?.Invoke(sender, e);
