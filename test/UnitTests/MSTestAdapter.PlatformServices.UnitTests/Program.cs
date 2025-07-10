@@ -5,6 +5,8 @@ using Microsoft.Testing.Extensions;
 
 using TestFramework.ForTestingMSTest;
 
+AppContext.SetSwitch("Switch.System.Diagnostics.IgnorePortablePDBsInStackTraces", false);
+
 ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
 
 #if ENABLE_CODECOVERAGE
