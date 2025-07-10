@@ -428,10 +428,6 @@ public class TestSourceHost : ITestSourceHost
     {
         // Check if user specified any adapter settings
         MSTestAdapterSettings adapterSettings = MSTestSettingsProvider.Settings;
-        if (adapterSettings == null)
-        {
-            return false;
-        }
 
         try
         {
