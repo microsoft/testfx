@@ -207,7 +207,7 @@ internal sealed class UnitTestElement
         return new Guid(hash);
     }
 
-    private Guid GenerateSerializedDataStrategyTestId(string testFullName)
+    private unsafe Guid GenerateSerializedDataStrategyTestId(string testFullName)
     {
         // Below comment is copied over from Test Platform.
         // If source is a file name then just use the filename for the identifier since the file might have moved between
@@ -246,7 +246,21 @@ internal sealed class UnitTestElement
             hash.Append(CloseBracket);
         }
 
-        return new Guid(hash.GetCurrentHash());
+        byte[] hashBytes = hash.GetCurrentHash();
+
+        // https://www.rfc-editor.org/rfc/rfc9562.html#name-uuid-version-8
+        var guid = new Guid(hashBytes);
+        // We get the address of the 6th byte (_c in Guid) which stores the version.
+        // The 4 most significant bits of the value (interpreted as **short**, which is relevant for endianness) are the version.
+        // So we set those 4 MSBs to be 0001.
+        short* addressOfC = (short*)((byte*)Unsafe.AsPointer(ref guid) + 6);
+        *addressOfC = (short)((*addressOfC & 0b0000_1111_1111_1111) | 0b0001_0000_0000_0000);
+
+#if NET9_0_OR_GREATER
+        // Version property is only available on .NET 9 and later.
+        Debug.Assert(guid.Version == 1, "Expected Guid version to be 1");
+#endif
+        return guid;
     }
 
     private string GetDisplayName() => StringEx.IsNullOrWhiteSpace(DisplayName) ? TestMethod.Name : DisplayName;
