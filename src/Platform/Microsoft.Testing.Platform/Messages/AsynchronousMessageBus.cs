@@ -165,10 +165,7 @@ internal sealed class AsynchronousMessageBus : BaseMessageBus, IMessageBus, IDis
             {
                 foreach (AsyncConsumerDataProcessor asyncMultiProducerMultiConsumerDataProcessor in dataProcessors)
                 {
-                    if (!consumerToDrain.TryGetValue(asyncMultiProducerMultiConsumerDataProcessor, out long _))
-                    {
-                        consumerToDrain.Add(asyncMultiProducerMultiConsumerDataProcessor, 0);
-                    }
+                    consumerToDrain.TryAdd(asyncMultiProducerMultiConsumerDataProcessor, 0);
 
                     long totalPayloadReceived = await asyncMultiProducerMultiConsumerDataProcessor.DrainDataAsync().ConfigureAwait(false);
                     if (consumerToDrain[asyncMultiProducerMultiConsumerDataProcessor] != totalPayloadReceived)
