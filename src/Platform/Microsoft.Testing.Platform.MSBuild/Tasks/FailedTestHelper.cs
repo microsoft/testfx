@@ -71,17 +71,17 @@ internal static class FailedTestHelper
             string nameAndPlace = place == null
                 ? $"{failedTestInfoRequest.DisplayName} ({failedTestInfoRequest.Duration})"
                     : $"{failedTestInfoRequest.DisplayName} ({failedTestInfoRequest.Duration}): {place}";
-            string? singleLineError = JoinSingleLineAndShorten(nameAndPlace, failedTestInfoRequest.ErrorMessage);
 
-            message = singleLineError!;
+            message = JoinSingleLineAndShorten(nameAndPlace, failedTestInfoRequest.ErrorMessage);
         }
     }
 
-    private static string? JoinSingleLineAndShorten(string first, string? second)
+    private static string JoinSingleLineAndShorten(string first, string? second)
         => second == null
             ? SingleLineAndShorten(first)
             : SingleLineAndShorten(first) + " " + SingleLineAndShorten(second);
 
+    [return: NotNullIfNotNull(nameof(text))]
     private static string? SingleLineAndShorten(string? text)
         => text == null ? null : (text.Length <= 1000 ? text : text[..1000]).Replace('\r', ' ').Replace('\n', ' ');
 }
