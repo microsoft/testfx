@@ -1,4 +1,9 @@
 #nullable enable
+MSTest.Analyzers.FlowTestContextCancellationTokenFixer
+MSTest.Analyzers.FlowTestContextCancellationTokenFixer.FlowTestContextCancellationTokenFixer() -> void
+override MSTest.Analyzers.FlowTestContextCancellationTokenFixer.GetFixAllProvider() -> Microsoft.CodeAnalysis.CodeFixes.FixAllProvider!
+override sealed MSTest.Analyzers.FlowTestContextCancellationTokenFixer.FixableDiagnosticIds.get -> System.Collections.Immutable.ImmutableArray<string!>
+override sealed MSTest.Analyzers.FlowTestContextCancellationTokenFixer.RegisterCodeFixesAsync(Microsoft.CodeAnalysis.CodeFixes.CodeFixContext context) -> System.Threading.Tasks.Task!
 MSTest.Analyzers.CodeFixes.StringAssertToAssertFixer
 MSTest.Analyzers.CodeFixes.StringAssertToAssertFixer.StringAssertToAssertFixer() -> void
 MSTest.Analyzers.PreferTestMethodOverDataTestMethodFixer
