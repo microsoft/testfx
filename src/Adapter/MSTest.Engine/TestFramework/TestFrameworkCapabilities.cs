@@ -39,7 +39,7 @@ internal sealed class TestFrameworkCapabilitiesSet :
 
     public bool IsTrxReportCapabilitySupported { get; }
 
-    bool ITestNodesTreeFilterTestFrameworkCapability.IsSupported { get; } = true;
+    bool ITestNodesTreeFilterTestFrameworkCapability.IsSupported => true;
 
     bool ITrxReportCapability.IsSupported => IsTrxReportCapabilitySupported;
 
