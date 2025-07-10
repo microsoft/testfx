@@ -117,22 +117,30 @@ public sealed partial class Assert
 
                 case MethodCallExpression callExpr:
                     {
-                        // For array indexing, add the indexed expression to details
+                        // For array/dictionary indexing, add the indexed expression to details
                         if (callExpr.Method.Name == "get_Item" && callExpr.Object != null && callExpr.Arguments.Count == 1)
                         {
-                            string indexExpr = CleanExpressionText(callExpr.ToString());
-                            if (seen.Add(indexExpr))
+                            // Create a proper indexer display like dict["key"] instead of dict.get_Item("key")
+                            string objectExpr = CleanExpressionText(callExpr.Object.ToString());
+                            string indexExpr = CleanExpressionText(callExpr.Arguments[0].ToString());
+                            string indexerDisplay = $"{objectExpr}[{indexExpr}]";
+
+                            if (seen.Add(indexerDisplay))
                             {
                                 try
                                 {
                                     object? value = Expression.Lambda(callExpr).Compile().DynamicInvoke();
-                                    details.Add(new(indexExpr, FormatValue(value)));
+                                    details.Add(new(indexerDisplay, FormatValue(value)));
                                 }
                                 catch
                                 {
-                                    details.Add(new(indexExpr, "<Failed to evaluate>"));
+                                    details.Add(new(indexerDisplay, "<Failed to evaluate>"));
                                 }
                             }
+
+                            // For indexer access, don't traverse into the arguments or object
+                            // This prevents adding the full collection to details
+                            break;
                         }
 
                         foreach (Expression? arg in callExpr.Arguments)
