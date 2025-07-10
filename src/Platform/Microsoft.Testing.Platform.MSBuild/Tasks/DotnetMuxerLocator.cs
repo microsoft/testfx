@@ -407,21 +407,17 @@ internal sealed class DotnetMuxerLocator
             // skip magicBytes by moving forward 4 bytes
             headerReader.Position += 4;
 
-            byte[] cpuInfoBytes = new byte[4];
-#pragma warning disable CA2022 // Avoid inexact read with 'Stream.Read'
-            headerReader.Read(cpuInfoBytes, 0, cpuInfoBytes.Length);
-#pragma warning restore CA2022 // Avoid inexact read with 'Stream.Read'
+            var cpuInfoBytes = new byte[4];
+            headerReader.ReadExactly(cpuInfoBytes, 0, cpuInfoBytes.Length);
 
-            uint cpuInfo = BitConverter.ToUInt32(cpuInfoBytes, 0);
-            PlatformArchitecture? architecture = (MacOsCpuType)cpuInfo switch
+            var cpuType = (MacOsCpuType)BitConverter.ToUInt32(cpuInfoBytes, 0);
+            return cpuType switch
             {
                 MacOsCpuType.Arm64Magic or MacOsCpuType.Arm64Cigam => PlatformArchitecture.ARM64,
                 MacOsCpuType.X64Magic or MacOsCpuType.X64Cigam => PlatformArchitecture.X64,
                 MacOsCpuType.X86Magic or MacOsCpuType.X86Cigam => PlatformArchitecture.X86,
                 _ => null,
             };
-
-            return architecture;
         }
         catch (Exception ex)
         {
