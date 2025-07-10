@@ -253,7 +253,7 @@ internal sealed class UnitTestElement
         // We get the address of the 6th byte (_c in Guid) which stores the version.
         // The 4 most significant bits of the value (interpreted as **short**, which is relevant for endianness) are the version.
         // So we set those 4 MSBs to be 0001.
-        short* addressOfC = (short*)((byte*)Unsafe.AsPointer(ref guid) + 6);
+        short* addressOfC = (short*)((byte*)&guid + 6);
         *addressOfC = (short)((*addressOfC & 0b0000_1111_1111_1111) | 0b0001_0000_0000_0000);
 
 #if NET9_0_OR_GREATER
