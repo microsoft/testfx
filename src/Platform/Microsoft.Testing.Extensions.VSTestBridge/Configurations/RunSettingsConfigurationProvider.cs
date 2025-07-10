@@ -60,9 +60,9 @@ internal sealed class RunSettingsConfigurationProvider(IFileSystem fileSystem) :
     /// <inheritdoc />
     public async Task<IConfigurationProvider> BuildAsync(CommandLineParseResult commandLineParseResult)
     {
-        if (commandLineParseResult.TryGetOptionArgumentList(RunSettingsCommandLineOptionsProvider.RunSettingsOptionName, out string[]? runSettingsFilePath))
+        if (commandLineParseResult.TryGetOptionArgument(RunSettingsCommandLineOptionsProvider.RunSettingsOptionName, out string? runSettingsFilePath))
         {
-            if (_fileSystem.Exists(runSettingsFilePath[0]))
+            if (_fileSystem.Exists(runSettingsFilePath))
             {
                 _runSettingsFileContent = await _fileSystem.ReadAllTextAsync(runSettingsFilePath[0]).ConfigureAwait(false);
             }

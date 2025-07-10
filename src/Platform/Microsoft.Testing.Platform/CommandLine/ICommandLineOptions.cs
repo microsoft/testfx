@@ -28,7 +28,7 @@ internal static class CommandLineOptionsExtensions
 {
     public static bool TryGetOptionArgument(this ICommandLineOptions options, string optionName, [NotNullWhen(true)] out string? argument)
     {
-        if (!options.TryGetOptionArgumentList(optionName, out var arguments) ||
+        if (!options.TryGetOptionArgumentList(optionName, out string[]? arguments) ||
             arguments.Length == 0)
         {
             argument = null;

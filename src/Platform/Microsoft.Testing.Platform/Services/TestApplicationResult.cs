@@ -104,7 +104,7 @@ internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, I
         string? exitCodeToIgnore = _environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_EXITCODE_IGNORE);
         if (RoslynString.IsNullOrEmpty(exitCodeToIgnore))
         {
-            if (_commandLineOptions.TryGetOptionArgument(PlatformCommandLineProvider.IgnoreExitCodeOptionKey, out string? commandLineExitCode) && commandLineExitCodes.Length > 0)
+            if (_commandLineOptions.TryGetOptionArgument(PlatformCommandLineProvider.IgnoreExitCodeOptionKey, out string? commandLineExitCode))
             {
                 exitCodeToIgnore = commandLineExitCode;
             }
