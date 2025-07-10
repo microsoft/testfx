@@ -312,11 +312,6 @@ Actual: {2}</source>
         <target state="translated">{0} ({1})</target>
         <note></note>
       </trans-unit>
-      <trans-unit id="AsyncUITestMethodNotSupported">
-        <source>async TestMethod with UITestMethodAttribute are not supported. Either remove async or use TestMethodAttribute.</source>
-        <target state="translated">UITestMethodAttribute が指定された非同期の TestMethod はサポートされていません。非同期を削除するか、TestMethodAttribute を使用してください。</target>
-        <note></note>
-      </trans-unit>
       <trans-unit id="DynamicDataIEnumerableNull">
         <source>Property or method {0} on {1} return type is not assignable to 'IEnumerable'.</source>
         <target state="translated">{1} 戻り値の型のプロパティまたはメソッド {0} は、'IEnumerable' に割り当てできません。</target>
@@ -336,19 +331,6 @@ Actual: {2}</source>
         <source>Property or method {0} on {1} returns empty IEnumerable&lt;object[]&gt;.</source>
         <target state="translated">{1} 上のプロパティまたはメソッド {0} は空の IEnumerable&lt;object[]&gt; を返します。</target>
         <note></note>
-      </trans-unit>
-      <trans-unit id="AsyncUITestMethodWithNoDispatcherQueue">
-        <source>UITestMethodAttribute.DispatcherQueue should not be null. To use UITestMethodAttribute within a WinUI Desktop App, remember to set the static UITestMethodAttribute.DispatcherQueue during the test initialization.</source>
-        <target state="translated">UITestMethodAttribute.DispatcherQueue を null にすることはできません。WinUI デスクトップ アプリ内で UITestMethodAttribute を使用するには、テストの初期化中に静的な UITestMethodAttribute.DispatcherQueue を設定してください。</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="ArgumentXMustDeriveFromClassY">
-        <source>Type '{0}' is not assignable to '{1}'.</source>
-        <target state="translated">型 '{0}' を '{1}' に割り当てることはできません。</target>
-        <note>
-      - {0} argument name like "applicationType"
-      - {1} fully qualified class name like "Microsoft.UI.Xaml.Application"
-    </note>
       </trans-unit>
       <trans-unit id="IsGreaterThanFailMsg">
         <source>Actual value &lt;{2}&gt; is not greater than expected value &lt;{1}&gt;. {0}</source>
