@@ -407,7 +407,7 @@ internal sealed class DotnetMuxerLocator
             // skip magicBytes by moving forward 4 bytes
             headerReader.Position += 4;
 
-            var cpuInfoBytes = new byte[4];
+            byte[] cpuInfoBytes = new byte[4];
             headerReader.ReadExactly(cpuInfoBytes, 0, cpuInfoBytes.Length);
 
             var cpuType = (MacOsCpuType)BitConverter.ToUInt32(cpuInfoBytes, 0);
