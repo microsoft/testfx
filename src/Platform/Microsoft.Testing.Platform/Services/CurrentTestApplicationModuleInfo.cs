@@ -95,7 +95,9 @@ internal sealed class CurrentTestApplicationModuleInfo(IEnvironment environment,
 #else
     {
         using IProcess currentProcess = process.GetCurrentProcess();
-        return currentProcess.MainModule?.FileName;
+        string processPath = currentProcess.MainModule?.FileName;
+        ApplicationStateGuard.Ensure(processPath is not null || !throwOnNull);
+        return processPath;
     }
 #endif
 
