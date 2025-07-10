@@ -30,7 +30,7 @@ public sealed partial class Assert
 
         var sb = new StringBuilder();
         string expressionText = conditionExpression
-            ?? "() => " + CleanExpressionText(condition.Body.ToString());
+            ?? $"() => {CleanExpressionText(condition.Body.ToString())}";
         sb.AppendLine($"Assert.That({expressionText}) failed.");
         if (!string.IsNullOrWhiteSpace(message))
         {
@@ -48,7 +48,7 @@ public sealed partial class Assert
 
     private static string ExtractDetails(Expression expr)
     {
-        var sb = new StringBuilder();
+        var details = new List<KeyValuePair<string, string>>();
         var seen = new HashSet<string>();
         var stack = new Stack<Expression>();
         stack.Push(expr);
@@ -101,11 +101,11 @@ public sealed partial class Assert
                         }
                         catch
                         {
-                            sb.AppendLine($"  {CleanExpressionText(memberExpr.ToString())} = <Failed to evaluate>");
+                            details.Add(new(CleanExpressionText(memberExpr.ToString()), "<Failed to evaluate>"));
                             continue;
                         }
 
-                        sb.AppendLine($"  {CleanExpressionText(memberExpr.ToString())} = {FormatValue(value)}");
+                        details.Add(new(CleanExpressionText(memberExpr.ToString()), FormatValue(value)));
                         break;
                     }
 
@@ -126,11 +126,11 @@ public sealed partial class Assert
                                 try
                                 {
                                     object? value = Expression.Lambda(callExpr).Compile().DynamicInvoke();
-                                    sb.AppendLine($"  {indexExpr} = {FormatValue(value)}");
+                                    details.Add(new(indexExpr, FormatValue(value)));
                                 }
                                 catch
                                 {
-                                    sb.AppendLine($"  {indexExpr} = <Failed to evaluate>");
+                                    details.Add(new(indexExpr, "<Failed to evaluate>"));
                                 }
                             }
                         }
@@ -167,13 +167,22 @@ public sealed partial class Assert
                             // Skip string literals (quoted strings), numeric literals, boolean literals, etc.
                             if (!IsLiteralConstant(constStr))
                             {
-                                sb.AppendLine($"  {CleanExpressionText(constStr)} = {FormatValue(constantExpr.Value)}");
+                                details.Add(new(CleanExpressionText(constStr), FormatValue(constantExpr.Value)));
                             }
                         }
 
                         break;
                     }
             }
+        }
+
+        // Sort details alphabetically by variable name for consistent ordering
+        details.Sort((a, b) => string.Compare(a.Key, b.Key, StringComparison.Ordinal));
+
+        var sb = new StringBuilder();
+        foreach ((string name, string value) in details)
+        {
+            sb.AppendLine($"  {name} = {value}");
         }
 
         return sb.ToString();
@@ -301,8 +310,8 @@ public sealed partial class Assert
 
             // Clean excessive consecutive parentheses in a single pass
             input = CleanExcessiveParentheses(input);
-
-        } while (input != previous); // Repeat until no more changes
+        }
+        while (input != previous); // Repeat until no more changes
 
         return input;
     }

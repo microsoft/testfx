@@ -82,8 +82,8 @@ public partial class AssertTests : TestContainer
                 Assert.That(() => a && b) failed.
                 Message: Both should be true
                 Details:
-                  b = False
                   a = True
+                  b = False
                 """);
     }
 
@@ -96,7 +96,7 @@ public partial class AssertTests : TestContainer
         action.Should().Throw<AssertFailedException>()
             .WithMessage(
                 """
-                Assert.That(() => nested.Any(arr => arr > 3) failed.
+                Assert.That(() => nested.Any(arr => arr.Length > 3)) failed.
                 Message: Check nested arrays
                 Details:
                   nested = [[1, 2], [3]]
