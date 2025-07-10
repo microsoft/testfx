@@ -178,7 +178,7 @@ public class UnitTestElementTests : TestContainer
             Verify(expectedTestCase.Id != testCase.Id);
             Verify(expectedId == testCase.Id);
             Verify(Guid.TryParse(dataType == DynamicDataType.None ? "acd77ae5-d290-158e-2240-056ef4253f19" : "10fb34b8-d5d2-16a1-0620-918822cdc63a", out Guid expectedId2));
-            Verify(expectedId == expectedId2); // A = 10, B = 11, C = 12, D = 13.  1101
+            Verify(expectedId == expectedId2);
         }
 #pragma warning restore CA2263 // Prefer generic overload when type is known
 
