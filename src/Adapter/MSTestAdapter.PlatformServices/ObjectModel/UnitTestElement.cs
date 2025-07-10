@@ -201,12 +201,6 @@ internal sealed class UnitTestElement
     private void SetTestCaseId(TestCase testCase, string testFullName)
         => testCase.Id = GenerateSerializedDataStrategyTestId(testFullName);
 
-    internal static Guid GuidFromString(string data)
-    {
-        byte[] hash = TestFx.Hashing.XxHash128.Hash(Encoding.Unicode.GetBytes(data));
-        return new Guid(hash);
-    }
-
     private unsafe Guid GenerateSerializedDataStrategyTestId(string testFullName)
     {
         // Below comment is copied over from Test Platform.

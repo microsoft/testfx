@@ -174,13 +174,22 @@ public class UnitTestElementTests : TestContainer
                 SerializedData = dataType == DynamicDataType.None ? null : [],
             }).ToTestCase();
             var expectedTestCase = new TestCase(testCase.FullyQualifiedName, testCase.ExecutorUri, testCase.Source);
-            Guid expectedId = UnitTestElement.GuidFromString("MyAssemblyMyProduct.MyNamespace.MyClass.MyMethod" + (dataType == DynamicDataType.None ? string.Empty : "[0]"));
+            Guid expectedId = GuidFromString("MyAssemblyMyProduct.MyNamespace.MyClass.MyMethod" + (dataType == DynamicDataType.None ? string.Empty : "[0]"));
             Verify(expectedTestCase.Id != testCase.Id);
             Verify(expectedId == testCase.Id);
-            Verify(Guid.TryParse(dataType == DynamicDataType.None ? "acd77ae5-d290-058e-2240-056ef4253f19" : "10fb34b8-d5d2-06a1-0620-918822cdc63a", out Guid expectedId2));
-            Verify(expectedId == expectedId2);
+            Verify(Guid.TryParse(dataType == DynamicDataType.None ? "acd77ae5-d290-158e-2240-056ef4253f19" : "10fb34b8-d5d2-16a1-0620-918822cdc63a", out Guid expectedId2));
+            Verify(expectedId == expectedId2); // A = 10, B = 11, C = 12, D = 13.  1101
         }
 #pragma warning restore CA2263 // Prefer generic overload when type is known
+
+        unsafe static Guid GuidFromString(string data)
+        {
+            byte[] hash = TestFx.Hashing.XxHash128.Hash(Encoding.Unicode.GetBytes(data));
+            var guid = new Guid(hash);
+            short* addressOfC = (short*)((byte*)&guid + 6);
+            *addressOfC = (short)((*addressOfC & 0b0000_1111_1111_1111) | 0b0001_0000_0000_0000);
+            return guid;
+        }
     }
 
     public void ToTestCase_WhenStrategyIsFullyQualifiedTest_ExamplesOfTestCaseIdUniqueness()
