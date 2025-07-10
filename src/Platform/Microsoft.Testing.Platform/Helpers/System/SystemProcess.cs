@@ -43,13 +43,8 @@ internal sealed class SystemProcess : IProcess, IDisposable
     public Task WaitForExitAsync()
         => _process.WaitForExitAsync();
 
-#if NETCOREAPP
     public void Kill()
         => _process.Kill(true);
-#else
-    public void Kill()
-        => _process.Kill();
-#endif
 
     public void Dispose() => _process.Dispose();
 #pragma warning restore CA1416
