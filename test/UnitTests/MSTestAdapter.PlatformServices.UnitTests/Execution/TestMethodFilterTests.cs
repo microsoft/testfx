@@ -225,7 +225,7 @@ public class TestMethodFilterTests : TestContainer
 
     private sealed class TestableTestCaseFilterExpression : ITestCaseFilterExpression
     {
-        public string TestCaseFilterValue { get; } = null!;
+        public string TestCaseFilterValue => null!;
 
         public bool MatchTestCase(TestCase testCase, Func<string, object?> propertyValueProvider) => throw new NotImplementedException();
     }

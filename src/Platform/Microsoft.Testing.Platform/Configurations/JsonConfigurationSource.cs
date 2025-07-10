@@ -15,18 +15,18 @@ internal sealed partial class JsonConfigurationSource(ITestApplicationModuleInfo
     private readonly FileLoggerProvider? _fileLoggerProvider = fileLoggerProvider;
 
     /// <inheritdoc />
-    public string Uid { get; } = nameof(JsonConfigurationSource);
+    public string Uid => nameof(JsonConfigurationSource);
 
     /// <inheritdoc />
-    public string Version { get; } = AppVersion.DefaultSemVer;
-
-    /// <inheritdoc />
-    // Can be empty string because it's not used in the UI
-    public string DisplayName { get; } = string.Empty;
+    public string Version => AppVersion.DefaultSemVer;
 
     /// <inheritdoc />
     // Can be empty string because it's not used in the UI
-    public string Description { get; } = string.Empty;
+    public string DisplayName => string.Empty;
+
+    /// <inheritdoc />
+    // Can be empty string because it's not used in the UI
+    public string Description => string.Empty;
 
     public int Order => 3;
 

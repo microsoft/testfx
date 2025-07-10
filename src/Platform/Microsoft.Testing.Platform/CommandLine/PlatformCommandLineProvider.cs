@@ -70,10 +70,10 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
     ];
 
     /// <inheritdoc />
-    public string Uid { get; } = nameof(PlatformCommandLineProvider);
+    public string Uid => nameof(PlatformCommandLineProvider);
 
     /// <inheritdoc />
-    public string Version { get; } = AppVersion.DefaultSemVer;
+    public string Version => AppVersion.DefaultSemVer;
 
     /// <inheritdoc />
     public string DisplayName { get; } = PlatformResources.PlatformCommandLineProviderDisplayName;

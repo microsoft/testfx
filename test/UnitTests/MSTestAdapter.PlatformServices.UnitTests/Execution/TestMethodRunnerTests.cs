@@ -532,7 +532,7 @@ public class TestMethodRunnerTests : TestContainer
 
     public class DummyTestClassWithTestContextWithoutSetter
     {
-        public TestContext TestContext { get; } = null!;
+        public TestContext TestContext => null!;
     }
 
     public class DummyTestClassEmptyDataSource
