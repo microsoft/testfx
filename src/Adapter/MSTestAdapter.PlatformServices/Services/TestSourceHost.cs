@@ -217,19 +217,14 @@ internal class TestSourceHost : ITestSourceHost
     public void Dispose()
     {
 #if NETFRAMEWORK || (NET && !WINDOWS_UWP)
-        if (_parentDomainAssemblyResolver != null)
-        {
-            _parentDomainAssemblyResolver.Dispose();
-            _parentDomainAssemblyResolver = null;
-        }
+        _parentDomainAssemblyResolver?.Dispose();
+        _parentDomainAssemblyResolver = null;
+
 #endif
 
 #if NETFRAMEWORK
-        if (_childDomainAssemblyResolver != null)
-        {
-            _childDomainAssemblyResolver.Dispose();
-            _childDomainAssemblyResolver = null;
-        }
+        _childDomainAssemblyResolver?.Dispose();
+        _childDomainAssemblyResolver = null;
 
         if (AppDomain != null)
         {
@@ -424,10 +419,6 @@ internal class TestSourceHost : ITestSourceHost
     {
         // Check if user specified any adapter settings
         MSTestAdapterSettings adapterSettings = MSTestSettingsProvider.Settings;
-        if (adapterSettings == null)
-        {
-            return false;
-        }
 
         try
         {

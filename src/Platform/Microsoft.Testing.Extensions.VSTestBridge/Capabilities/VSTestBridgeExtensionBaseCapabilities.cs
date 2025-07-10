@@ -18,7 +18,7 @@ public sealed class VSTestBridgeExtensionBaseCapabilities : ITrxReportCapability
     private const string VSTestProviderSupport = "vstestProvider";
 
     /// <inheritdoc />
-    bool ITrxReportCapability.IsSupported { get; } = true;
+    bool ITrxReportCapability.IsSupported => true;
 
     /// <summary>
     /// Gets a value indicating whether a flag indicating whether the trx report capability is enabled.

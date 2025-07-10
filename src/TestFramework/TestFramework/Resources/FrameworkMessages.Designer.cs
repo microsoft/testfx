@@ -151,38 +151,11 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Type &apos;{0}&apos; is not assignable to &apos;{1}&apos;..
-        /// </summary>
-        internal static string ArgumentXMustDeriveFromClassY {
-            get {
-                return ResourceManager.GetString("ArgumentXMustDeriveFromClassY", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to {0} failed. {1}.
         /// </summary>
         internal static string AssertionFailed {
             get {
                 return ResourceManager.GetString("AssertionFailed", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to async TestMethod with UITestMethodAttribute are not supported. Either remove async or use TestMethodAttribute..
-        /// </summary>
-        internal static string AsyncUITestMethodNotSupported {
-            get {
-                return ResourceManager.GetString("AsyncUITestMethodNotSupported", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to UITestMethodAttribute.DispatcherQueue should not be null. To use UITestMethodAttribute within a WinUI Desktop App, remember to set the static UITestMethodAttribute.DispatcherQueue during the test initialization..
-        /// </summary>
-        internal static string AsyncUITestMethodWithNoDispatcherQueue {
-            get {
-                return ResourceManager.GetString("AsyncUITestMethodWithNoDispatcherQueue", resourceCulture);
             }
         }
         
