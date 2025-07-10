@@ -403,14 +403,15 @@ internal sealed class DotnetMuxerLocator
         try
         {
             using var headerReader = new FileStream(path, FileMode.Open, FileAccess.Read);
-            byte[] magicBytes = new byte[4];
+
+            // skip magicBytes by moving forward 4 bytes
+            headerReader.Position += 4;
+
             byte[] cpuInfoBytes = new byte[4];
 #pragma warning disable CA2022 // Avoid inexact read with 'Stream.Read'
-            headerReader.Read(magicBytes, 0, magicBytes.Length);
             headerReader.Read(cpuInfoBytes, 0, cpuInfoBytes.Length);
 #pragma warning restore CA2022 // Avoid inexact read with 'Stream.Read'
 
-            uint magic = BitConverter.ToUInt32(magicBytes, 0);
             uint cpuInfo = BitConverter.ToUInt32(cpuInfoBytes, 0);
             PlatformArchitecture? architecture = (MacOsCpuType)cpuInfo switch
             {
