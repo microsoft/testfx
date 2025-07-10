@@ -33,17 +33,17 @@ internal sealed class RunSettingsEnvironmentVariableProvider : ITestHostEnvironm
 
     public async Task<bool> IsEnabledAsync()
     {
-        if (!_commandLineOptions.TryGetOptionArgumentList(RunSettingsCommandLineOptionsProvider.RunSettingsOptionName, out string[]? runsettings))
+        if (!_commandLineOptions.TryGetOptionArgument(RunSettingsCommandLineOptionsProvider.RunSettingsOptionName, out string? runsettings))
         {
             return false;
         }
 
-        if (!_fileSystem.Exists(runsettings[0]))
+        if (!_fileSystem.Exists(runsettings))
         {
             return false;
         }
 
-        using IFileStream fileStream = _fileSystem.NewFileStream(runsettings[0], FileMode.Open, FileAccess.Read);
+        using IFileStream fileStream = _fileSystem.NewFileStream(runsettings, FileMode.Open, FileAccess.Read);
 #if NETCOREAPP
         _runSettings = await XDocument.LoadAsync(fileStream.Stream, LoadOptions.None, CancellationToken.None).ConfigureAwait(false);
 #else

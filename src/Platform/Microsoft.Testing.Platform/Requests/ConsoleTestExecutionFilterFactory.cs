@@ -22,7 +22,7 @@ internal sealed class ConsoleTestExecutionFilterFactory(ICommandLineOptions comm
     public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 
     public Task<(bool Success, ITestExecutionFilter? TestExecutionFilter)> TryCreateAsync() =>
-        _commandLineService.TryGetOptionArgumentList(TreeNodeFilterCommandLineOptionsProvider.TreenodeFilter, out string[]? filter)
-            ? Task.FromResult((true, (ITestExecutionFilter?)new TreeNodeFilter(filter[0])))
+        _commandLineService.TryGetOptionArgument(TreeNodeFilterCommandLineOptionsProvider.TreenodeFilter, out string? filter)
+            ? Task.FromResult((true, (ITestExecutionFilter?)new TreeNodeFilter(filter)))
             : Task.FromResult((true, (ITestExecutionFilter?)new NopFilter()));
 }
