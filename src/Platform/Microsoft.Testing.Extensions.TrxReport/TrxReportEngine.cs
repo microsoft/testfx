@@ -143,7 +143,12 @@ internal sealed partial class TrxReportEngine
             // create the xml doc
             var document = new XDocument(new XDeclaration("1.0", "UTF-8", null));
             var testRun = new XElement(_namespaceUri + "TestRun");
-            testRun.SetAttributeValue("id", Guid.NewGuid());
+            if (!Guid.TryParse(_environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_TRX_TESTRUN_ID), out Guid testRunId))
+            {
+                testRunId = Guid.NewGuid();
+            }
+
+            testRun.SetAttributeValue("id", testRunId);
             string testRunName = $"{_environment.GetEnvironmentVariable("UserName")}@{_environment.MachineName} {FormatDateTimeForRunName(_clock.UtcNow)}";
             testRun.SetAttributeValue("name", testRunName);
 

@@ -322,11 +322,6 @@ Actual: {2}</source>
         <target state="translated">{0} ({1})</target>
         <note></note>
       </trans-unit>
-      <trans-unit id="AsyncUITestMethodNotSupported">
-        <source>async TestMethod with UITestMethodAttribute are not supported. Either remove async or use TestMethodAttribute.</source>
-        <target state="translated">不支援有 UITestMethodAttribute 的 async TestMethod。請移除 async 或使用 TestMethodAttribute。</target>
-        <note></note>
-      </trans-unit>
       <trans-unit id="DynamicDataIEnumerableNull">
         <source>Property or method {0} on {1} return type is not assignable to 'IEnumerable'.</source>
         <target state="translated">{1} 傳回類型上的屬性或方法 {0} 無法指派給 'IEnumerable'。</target>
@@ -346,19 +341,6 @@ Actual: {2}</source>
         <source>Property or method {0} on {1} returns empty IEnumerable&lt;object[]&gt;.</source>
         <target state="translated">{1} 上的屬性或方法 {0} 傳回空的 IEnumerable&lt;object[]&gt;。</target>
         <note></note>
-      </trans-unit>
-      <trans-unit id="AsyncUITestMethodWithNoDispatcherQueue">
-        <source>UITestMethodAttribute.DispatcherQueue should not be null. To use UITestMethodAttribute within a WinUI Desktop App, remember to set the static UITestMethodAttribute.DispatcherQueue during the test initialization.</source>
-        <target state="translated">UITestMethodAttribute.DispatcherQueue 不應為 Null。若要在 WinUI 傳統型應用程式內使用 UITestMethodAttribute，請記得在測試初始化期間設定靜態 UITestMethodAttribute.DispatcherQueue。</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="ArgumentXMustDeriveFromClassY">
-        <source>Type '{0}' is not assignable to '{1}'.</source>
-        <target state="translated">無法將類型 '{0}' {0} 指派給 '{1}。</target>
-        <note>
-      - {0} argument name like "applicationType"
-      - {1} fully qualified class name like "Microsoft.UI.Xaml.Application"
-    </note>
       </trans-unit>
       <trans-unit id="IsGreaterThanFailMsg">
         <source>Actual value &lt;{2}&gt; is not greater than expected value &lt;{1}&gt;. {0}</source>

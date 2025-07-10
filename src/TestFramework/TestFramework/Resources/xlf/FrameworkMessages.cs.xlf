@@ -322,11 +322,6 @@ Skutečnost: {2}</target>
         <target state="translated">{0} ({1})</target>
         <note></note>
       </trans-unit>
-      <trans-unit id="AsyncUITestMethodNotSupported">
-        <source>async TestMethod with UITestMethodAttribute are not supported. Either remove async or use TestMethodAttribute.</source>
-        <target state="translated">async TestMethod s atributem UITestMethodAttribute se nepodporují. Buď odeberte async, nebo použijte TestMethodAttribute.</target>
-        <note></note>
-      </trans-unit>
       <trans-unit id="DynamicDataIEnumerableNull">
         <source>Property or method {0} on {1} return type is not assignable to 'IEnumerable'.</source>
         <target state="translated">Vlastnost nebo metoda {0} na návratovém typu {1} se nedá přiřadit k „IEnumerable“.</target>
@@ -346,19 +341,6 @@ Skutečnost: {2}</target>
         <source>Property or method {0} on {1} returns empty IEnumerable&lt;object[]&gt;.</source>
         <target state="translated">Vlastnost nebo metoda {0} ve třídě {1} vrací prázdné IEnumerable&lt;object[]&gt;.</target>
         <note></note>
-      </trans-unit>
-      <trans-unit id="AsyncUITestMethodWithNoDispatcherQueue">
-        <source>UITestMethodAttribute.DispatcherQueue should not be null. To use UITestMethodAttribute within a WinUI Desktop App, remember to set the static UITestMethodAttribute.DispatcherQueue during the test initialization.</source>
-        <target state="translated">UITestMethodAttribute.DispatcherQueue nesmí mít hodnotu null. Pokud chcete použít UITestMethodAttribute v desktopové aplikaci WinUI, nezapomeňte během inicializace testu nastavit statický UITestMethodAttribute.DispatcherQueue.</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="ArgumentXMustDeriveFromClassY">
-        <source>Type '{0}' is not assignable to '{1}'.</source>
-        <target state="translated">Typ „{0}“ nelze přiřadit k „{1}“.</target>
-        <note>
-      - {0} argument name like "applicationType"
-      - {1} fully qualified class name like "Microsoft.UI.Xaml.Application"
-    </note>
       </trans-unit>
       <trans-unit id="IsGreaterThanFailMsg">
         <source>Actual value &lt;{2}&gt; is not greater than expected value &lt;{1}&gt;. {0}</source>
