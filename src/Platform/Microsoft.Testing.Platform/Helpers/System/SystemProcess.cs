@@ -27,7 +27,7 @@ internal sealed class SystemProcess : IProcess, IDisposable
     public IMainModule? MainModule
         => _process.MainModule is null
             ? null
-            : (IMainModule)new SystemMainModule(_process.MainModule);
+            : new SystemMainModule(_process.MainModule);
 
     private void OnProcessExited(object? sender, EventArgs e)
         => Exited?.Invoke(sender, e);
