@@ -16,7 +16,7 @@ public partial class AssertTests : TestContainer
         act.Should().Throw<AssertFailedException>()
             .WithMessage(
                 """
-                Assert.That(False) failed.
+                Assert.That(() => False) failed.
                 Message: Boolean condition failed
                 """);
     }
@@ -30,7 +30,7 @@ public partial class AssertTests : TestContainer
         act.Should().Throw<AssertFailedException>()
             .WithMessage(
                 """
-                Assert.That(x > 10) failed.
+                Assert.That(() => x > 10) failed.
                 Message: x should be greater than 10
                 Details:
                   x = 5
@@ -46,7 +46,7 @@ public partial class AssertTests : TestContainer
         act.Should().Throw<AssertFailedException>()
             .WithMessage(
                 """
-                Assert.That(s == "world") failed.
+                Assert.That(() => s == "world") failed.
                 Message: String equality failed
                 Details:
                   s = "hello"
@@ -62,7 +62,7 @@ public partial class AssertTests : TestContainer
         act.Should().Throw<AssertFailedException>()
             .WithMessage(
                 """
-                Assert.That(s != null) failed.
+                Assert.That(() => s != null) failed.
                 Message: String should not be null
                 Details:
                   s = null
@@ -79,7 +79,7 @@ public partial class AssertTests : TestContainer
         act.Should().Throw<AssertFailedException>()
             .WithMessage(
                 """
-                Assert.That(a && b) failed.
+                Assert.That(() => a && b) failed.
                 Message: Both should be true
                 Details:
                   b = False
@@ -96,7 +96,7 @@ public partial class AssertTests : TestContainer
         action.Should().Throw<AssertFailedException>()
             .WithMessage(
                 """
-                Assert.That(nested.Any(arr => arr > 3) failed.
+                Assert.That(() => nested.Any(arr => arr > 3) failed.
                 Message: Check nested arrays
                 Details:
                   nested = [[1, 2], [3]]
@@ -112,7 +112,7 @@ public partial class AssertTests : TestContainer
         act.Should().Throw<AssertFailedException>()
             .WithMessage(
                 """
-            Assert.That(person.Age > 30) failed.
+            Assert.That(() => person.Age > 30) failed.
             Message: Age should be greater than 30
             Details:
               person.Age = 25
@@ -128,7 +128,7 @@ public partial class AssertTests : TestContainer
         act.Should().Throw<AssertFailedException>()
             .WithMessage(
                 """
-            Assert.That(text.StartsWith("world")) failed.
+            Assert.That(() => text.StartsWith("world")) failed.
             Message: Text should start with 'world'
             Details:
               text = "hello"
@@ -144,7 +144,7 @@ public partial class AssertTests : TestContainer
         act.Should().Throw<AssertFailedException>()
             .WithMessage(
                 """
-            Assert.That(user.Profile.IsActive) failed.
+            Assert.That(() => user.Profile.IsActive) failed.
             Message: User profile should be active
             Details:
               user.Profile.IsActive = False
@@ -160,7 +160,7 @@ public partial class AssertTests : TestContainer
         act.Should().Throw<AssertFailedException>()
             .WithMessage(
                 """
-            Assert.That(numbers[1] == 5) failed.
+            Assert.That(() => numbers[1] == 5) failed.
             Message: Second element should be 5
             Details:
               numbers[1] = 2
@@ -176,7 +176,7 @@ public partial class AssertTests : TestContainer
         act.Should().Throw<AssertFailedException>()
             .WithMessage(
                 """
-            Assert.That(nullableValue.HasValue) failed.
+            Assert.That(() => nullableValue.HasValue) failed.
             Message: Nullable should have value
             Details:
               nullableValue.HasValue = False
@@ -193,7 +193,7 @@ public partial class AssertTests : TestContainer
         act.Should().Throw<AssertFailedException>()
             .WithMessage(
                 """
-            Assert.That(condition1 || condition2) failed.
+            Assert.That(() => condition1 || condition2) failed.
             Message: At least one should be true
             Details:
               condition1 = False
@@ -212,7 +212,7 @@ public partial class AssertTests : TestContainer
         act.Should().Throw<AssertFailedException>()
             .WithMessage(
                 """
-            Assert.That((x + y) * 2 > z * 3) failed.
+            Assert.That(() => (x + y) * 2 > z * 3) failed.
             Message: Complex calculation should be greater
             Details:
               x = 5
@@ -230,7 +230,7 @@ public partial class AssertTests : TestContainer
         act.Should().Throw<AssertFailedException>()
             .WithMessage(
                 """
-            Assert.That(numbers.All(n => n > 5)) failed.
+            Assert.That(() => numbers.All(n => n > 5)) failed.
             Message: All numbers should be greater than 5
             Details:
               numbers = [1, 2, 3, 4]
@@ -246,7 +246,7 @@ public partial class AssertTests : TestContainer
         act.Should().Throw<AssertFailedException>()
             .WithMessage(
                 """
-            Assert.That(obj is int) failed.
+            Assert.That(() => obj is int) failed.
             Message: Object should be an integer
             Details:
               obj = "string"
@@ -262,7 +262,7 @@ public partial class AssertTests : TestContainer
         act.Should().Throw<AssertFailedException>()
             .WithMessage(
                 """
-            Assert.That(value != "test") failed.
+            Assert.That(() => value != "test") failed.
             Message: Value should not be 'test'
             Details:
               value = "test"
@@ -280,7 +280,7 @@ public partial class AssertTests : TestContainer
         act.Should().Throw<AssertFailedException>()
             .WithMessage(
                 """
-            Assert.That(current >= min && current <= max) failed.
+            Assert.That(() => current >= min && current <= max) failed.
             Message: Value should be within range
             Details:
               current = 25
@@ -298,7 +298,7 @@ public partial class AssertTests : TestContainer
         act.Should().Throw<AssertFailedException>()
             .WithMessage(
                 """
-            Assert.That(dict["key1"] > 15) failed.
+            Assert.That(() => dict["key1"] > 15) failed.
             Message: Dictionary value should be greater than 15
             Details:
               dict["key1"] = 10
@@ -314,7 +314,7 @@ public partial class AssertTests : TestContainer
         act.Should().Throw<AssertFailedException>()
             .WithMessage(
                 """
-            Assert.That(text.Substring(6).StartsWith("Universe")) failed.
+            Assert.That(() => text.Substring(6).StartsWith("Universe")) failed.
             Message: Substring should start with 'Universe'
             Details:
               text = "Hello World"
@@ -328,7 +328,7 @@ public partial class AssertTests : TestContainer
         act.Should().Throw<AssertFailedException>()
             .WithMessage(
                 """
-            Assert.That(DateTime.Now.Year < 2000) failed.
+            Assert.That(() => DateTime.Now.Year < 2000) failed.
             Message: Current year should be before 2000
             Details:
               DateTime.Now.Year = 2025
@@ -344,7 +344,7 @@ public partial class AssertTests : TestContainer
         act.Should().Throw<AssertFailedException>()
             .WithMessage(
                 """
-            Assert.That(list.Contains("d")) failed.
+            Assert.That(() => list.Contains("d")) failed.
             Message: List should contain 'd'
             Details:
               list = ["a", "b", "c"]
@@ -362,7 +362,7 @@ public partial class AssertTests : TestContainer
         act.Should().Throw<AssertFailedException>()
             .WithMessage(
                 """
-            Assert.That((flag ? value1 : value2) > 15) failed.
+            Assert.That(() => (flag ? value1 : value2) > 15) failed.
             Message: Conditional result should be greater than 15
             Details:
               flag = True
@@ -380,7 +380,7 @@ public partial class AssertTests : TestContainer
         act.Should().Throw<AssertFailedException>()
             .WithMessage(
                 """
-                Assert.That(numbers.Length > 10) failed.
+                Assert.That(() => numbers.Length > 10) failed.
                 Message: Array should have more than 10 elements
                 Details:
                   numbers.Length = 5

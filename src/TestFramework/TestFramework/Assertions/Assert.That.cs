@@ -13,9 +13,10 @@ public sealed partial class Assert
     /// </summary>
     /// <param name="condition">An expression representing the condition to evaluate. Cannot be <see langword="null"/>.</param>
     /// <param name="message">An optional message to include in the exception if the assertion fails.</param>
+    /// <param name="conditionExpression">The source code of the condition expression. This parameter is automatically populated by the compiler.</param>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="condition"/> is <see langword="null"/>.</exception>
     /// <exception cref="AssertFailedException">Thrown if the evaluated condition is <see langword="false"/>.</exception>
-    public static void That(Expression<Func<bool>> condition, string? message = null)
+    public static void That(Expression<Func<bool>> condition, string? message = null, [CallerArgumentExpression(nameof(condition))] string? conditionExpression = null)
     {
         if (condition == null)
         {
@@ -28,7 +29,8 @@ public sealed partial class Assert
         }
 
         var sb = new StringBuilder();
-        string expressionText = CleanExpressionText(condition.Body.ToString());
+        string expressionText = conditionExpression
+            ?? "() => " + CleanExpressionText(condition.Body.ToString());
         sb.AppendLine($"Assert.That({expressionText}) failed.");
         if (!string.IsNullOrWhiteSpace(message))
         {
@@ -273,65 +275,104 @@ public sealed partial class Assert
         // Fix property comparisons: "obj.prop > num" becomes "obj.prop > num" (normalize spacing)
         cleaned = FixPropertyComparisonRegex().Replace(cleaned, "$1.$2 > $3");
 
-        // Remove unnecessary outer parentheses - check if the entire expression is wrapped in a single pair
-        cleaned = RemoveUnnecessaryOuterParentheses(cleaned);
-
-        // Clean up excessive parentheses - remove any triple or more consecutive opening/closing parens
-        cleaned = ExcessiveParenthesesRegex().Replace(cleaned, m =>
-        {
-            char parenChar = m.Value[0];
-            // Keep at most 2 consecutive parentheses
-            return new string(parenChar, Math.Min(m.Length, 2));
-        });
+        // Remove unnecessary outer parentheses and excessive consecutive parentheses
+        cleaned = CleanParentheses(cleaned);
 
         return cleaned;
     }
 
-    private static string RemoveUnnecessaryOuterParentheses(string input)
+    private static string CleanParentheses(string input)
     {
         if (string.IsNullOrEmpty(input))
         {
             return input;
         }
 
-        // Trim whitespace first
         input = input.Trim();
+        string previous;
 
-        // Check if the entire expression is wrapped in parentheses
-        if (input.Length >= 2 && input.StartsWith('(') && input.EndsWith(')'))
+        // Keep removing outer parentheses and cleaning excessive ones until no more changes occur
+        do
         {
-            // Check if these are the outermost parentheses by ensuring they are balanced
-            int parenCount = 0;
-            bool isOuterParen = true;
+            previous = input;
 
-            for (int i = 0; i < input.Length; i++)
+            // Remove outer parentheses if they wrap the entire expression
+            input = RemoveOuterParentheses(input);
+
+            // Clean excessive consecutive parentheses in a single pass
+            input = CleanExcessiveParentheses(input);
+
+        } while (input != previous); // Repeat until no more changes
+
+        return input;
+    }
+
+    private static string RemoveOuterParentheses(string input)
+    {
+        if (input.Length < 2 || !input.StartsWith('(') || !input.EndsWith(')'))
+        {
+            return input;
+        }
+
+        // Check if the first and last parentheses are truly the outermost pair
+        int parenCount = 0;
+        for (int i = 0; i < input.Length; i++)
+        {
+            if (input[i] == '(')
             {
-                if (input[i] == '(')
-                {
-                    parenCount++;
-                }
-                else if (input[i] == ')')
-                {
-                    parenCount--;
-                    // If we reach 0 before the end, the first paren is not the outermost
-                    if (parenCount == 0 && i < input.Length - 1)
-                    {
-                        isOuterParen = false;
-                        break;
-                    }
-                }
+                parenCount++;
             }
-
-            // If the first and last parentheses are indeed the outermost pair, remove them
-            if (isOuterParen && parenCount == 0)
+            else if (input[i] == ')')
             {
-                string inner = input.Substring(1, input.Length - 2).Trim();
-                // Recursively check for more unnecessary outer parentheses
-                return RemoveUnnecessaryOuterParentheses(inner);
+                parenCount--;
+                // If we reach 0 before the end, the first paren is not the outermost
+                if (parenCount == 0 && i < input.Length - 1)
+                {
+                    return input;
+                }
             }
         }
 
-        return input;
+        // If we get here and parenCount is 0, the outer parens can be removed
+        return parenCount == 0 ? input.Substring(1, input.Length - 2).Trim() : input;
+    }
+
+    private static string CleanExcessiveParentheses(string input)
+    {
+        if (string.IsNullOrEmpty(input))
+        {
+            return input;
+        }
+
+        var result = new StringBuilder(input.Length);
+        int i = 0;
+
+        while (i < input.Length)
+        {
+            char currentChar = input[i];
+
+            if (currentChar is '(' or ')')
+            {
+                // Count consecutive identical parentheses
+                int count = 1;
+                while (i + count < input.Length && input[i + count] == currentChar)
+                {
+                    count++;
+                }
+
+                // Keep at most 2 consecutive parentheses
+                int keepCount = Math.Min(count, 2);
+                result.Append(new string(currentChar, keepCount));
+                i += count;
+            }
+            else
+            {
+                result.Append(currentChar);
+                i++;
+            }
+        }
+
+        return result.ToString();
     }
 
     private static string RemoveCompilerGeneratedWrappers(string input)
@@ -341,83 +382,58 @@ public sealed partial class Assert
 
         while (i < input.Length)
         {
-            // Check for value( wrapper
-            if (i <= input.Length - 6 && input.Substring(i, 6) == "value(")
+            if (TryRemoveWrapper(input, ref i, "value(", content => content, result) ||
+                TryRemoveWrapper(input, ref i, "ArrayLength(", content => content + ".Length", result))
             {
-                i += 6; // Skip "value("
-                int parenCount = 1;
-                int start = i;
-
-                while (i < input.Length && parenCount > 0)
-                {
-                    if (input[i] == '(')
-                    {
-                        parenCount++;
-                    }
-                    else if (input[i] == ')')
-                    {
-                        parenCount--;
-                    }
-
-                    i++;
-                }
-
-                if (parenCount == 0)
-                {
-                    // Extract content between parentheses
-                    string content = input.Substring(start, i - start - 1);
-                    result.Append(content);
-                }
-                else
-                {
-                    // Malformed, just append as is
-                    result.Append("value(");
-                    i = start;
-                }
+                continue;
             }
 
-            // Check for ArrayLength( wrapper
-            else if (i <= input.Length - 12 && input.Substring(i, 12) == "ArrayLength(")
-            {
-                i += 12; // Skip "ArrayLength("
-                int parenCount = 1;
-                int start = i;
-
-                while (i < input.Length && parenCount > 0)
-                {
-                    if (input[i] == '(')
-                    {
-                        parenCount++;
-                    }
-                    else if (input[i] == ')')
-                    {
-                        parenCount--;
-                    }
-
-                    i++;
-                }
-
-                if (parenCount == 0)
-                {
-                    // Extract content between parentheses and add .Length
-                    string content = input.Substring(start, i - start - 1);
-                    result.Append(content).Append(".Length");
-                }
-                else
-                {
-                    // Malformed, just append as is
-                    result.Append("ArrayLength(");
-                    i = start;
-                }
-            }
-            else
-            {
-                result.Append(input[i]);
-                i++;
-            }
+            result.Append(input[i]);
+            i++;
         }
 
         return result.ToString();
+    }
+
+    private static bool TryRemoveWrapper(string input, ref int index, string pattern,
+        Func<string, string> transform, StringBuilder result)
+    {
+        if (index > input.Length - pattern.Length ||
+            !string.Equals(input.Substring(index, pattern.Length), pattern, StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        int start = index + pattern.Length;
+        int parenCount = 1;
+        int i = start;
+
+        // Find matching closing parenthesis
+        while (i < input.Length && parenCount > 0)
+        {
+            if (input[i] == '(')
+            {
+                parenCount++;
+            }
+            else if (input[i] == ')')
+            {
+                parenCount--;
+            }
+
+            i++;
+        }
+
+        if (parenCount == 0)
+        {
+            // Extract content and apply transformation
+            string content = input.Substring(start, i - start - 1);
+            result.Append(transform(content));
+            index = i;
+            return true;
+        }
+
+        // Malformed, don't consume the pattern
+        return false;
     }
 
 #if NET
@@ -432,9 +448,6 @@ public sealed partial class Assert
 
     [GeneratedRegex(@"(\w+)\.(\w+)\s*>\s*(\d+)")]
     private static partial Regex FixPropertyComparisonRegex();
-
-    [GeneratedRegex(@"[\(\)]{3,}")]
-    private static partial Regex ExcessiveParenthesesRegex();
 #else
     private static Regex CompilerGeneratedDisplayClassRegex()
         => new(@"[A-Za-z0-9_\.]+\+<>c__DisplayClass\d+_\d+\.(\w+(?:\.\w+)*(?:\[[^\]]+\])?)", RegexOptions.Compiled);
@@ -447,8 +460,5 @@ public sealed partial class Assert
 
     private static Regex FixPropertyComparisonRegex()
         => new(@"(\w+)\.(\w+)\s*>\s*(\d+)", RegexOptions.Compiled);
-
-    private static Regex ExcessiveParenthesesRegex()
-        => new(@"[\(\)]{3,}", RegexOptions.Compiled);
 #endif
 }
