@@ -84,22 +84,22 @@
       </trans-unit>
       <trans-unit id="ContainsItemFailMsg">
         <source>Expected collection to contain the specified item. {0}</source>
-        <target state="new">Expected collection to contain the specified item. {0}</target>
+        <target state="translated">Oczekiwano, że kolekcja będzie zawierać określony element. {0}</target>
         <note />
       </trans-unit>
       <trans-unit id="ContainsPredicateFailMsg">
         <source>Expected at least one item to match the predicate. {0}</source>
-        <target state="new">Expected at least one item to match the predicate. {0}</target>
+        <target state="translated">Oczekiwano co najmniej jednego elementu zgodnego z predykatem. {0}</target>
         <note />
       </trans-unit>
       <trans-unit id="ContainsSingleFailMsg">
         <source>Expected collection to contain exactly one element but found {1} element(s). {0}</source>
-        <target state="new">Expected collection to contain exactly one element but found {1} element(s). {0}</target>
+        <target state="translated">Oczekiwano, że kolekcja będzie zawierać dokładnie jeden element, ale znaleziono {1} elementów. {0}</target>
         <note />
       </trans-unit>
       <trans-unit id="ContainsSingleMatchFailMsg">
         <source>Expected exactly one item to match the predicate but found {1} item(s). {0}</source>
-        <target state="new">Expected exactly one item to match the predicate but found {1} item(s). {0}</target>
+        <target state="translated">Oczekiwano dokładnie jednego elementu zgodnego z predykatem, ale znaleziono {1} elementów. {0}</target>
         <note />
       </trans-unit>
       <trans-unit id="DoesNotContainFail">
@@ -109,22 +109,22 @@
       </trans-unit>
       <trans-unit id="DoesNotContainItemFailMsg">
         <source>Expected collection to not contain the specified item. {0}</source>
-        <target state="new">Expected collection to not contain the specified item. {0}</target>
+        <target state="translated">Oczekiwano, że kolekcja nie będzie zawierać określonego elementu. {0}</target>
         <note />
       </trans-unit>
       <trans-unit id="DoesNotContainPredicateFailMsg">
         <source>Expected no items to match the predicate. {0}</source>
-        <target state="new">Expected no items to match the predicate. {0}</target>
+        <target state="translated">Nie oczekiwano elementów zgodnych z predykatem. {0}</target>
         <note />
       </trans-unit>
       <trans-unit id="DoesNotEndWithFail">
         <source>String '{0}' ends with string '{1}'. {2}</source>
-        <target state="new">String '{0}' ends with string '{1}'. {2}</target>
+        <target state="translated">Ciąg „{0}” kończy się ciągiem „{1}”. {2}</target>
         <note />
       </trans-unit>
       <trans-unit id="DoesNotStartWithFail">
         <source>String '{0}' starts with string '{1}'. {2}</source>
-        <target state="new">String '{0}' starts with string '{1}'. {2}</target>
+        <target state="translated">Ciąg „{0}” rozpoczyna się od ciągu „{1}”. {2}</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataInvalidMethodLayout">
@@ -163,7 +163,7 @@ Rzeczywiste: {2}</target>
       </trans-unit>
       <trans-unit id="EndsWithFail">
         <source>String '{0}' does not end with string '{1}'. {2}</source>
-        <target state="new">String '{0}' does not end with string '{1}'. {2}</target>
+        <target state="translated">Ciąg „{0}” nie kończy się ciągiem „{1}”. {2}</target>
         <note />
       </trans-unit>
       <trans-unit id="AssertionFailed">
@@ -193,7 +193,7 @@ Rzeczywiste: {2}</target>
       </trans-unit>
       <trans-unit id="IsMatchFail">
         <source>String '{0}' does not match pattern '{1}'. {2}</source>
-        <target state="new">String '{0}' does not match pattern '{1}'. {2}</target>
+        <target state="translated">Ciąg „{0}” nie jest zgodny ze wzorcem „{1}”. {2}</target>
         <note />
       </trans-unit>
       <trans-unit id="IsNotEmptyFailMsg">
@@ -208,7 +208,7 @@ Rzeczywiste: {2}</target>
       </trans-unit>
       <trans-unit id="IsNotMatchFail">
         <source>String '{0}' matches pattern '{1}'. {2}</source>
-        <target state="new">String '{0}' matches pattern '{1}'. {2}</target>
+        <target state="translated">Ciąg „{0}” jest zgodny ze wzorcem „{1}”. {2}</target>
         <note />
       </trans-unit>
       <trans-unit id="PrivateAccessorMemberNotFound">
@@ -249,7 +249,7 @@ Rzeczywiste: {2}</target>
       </trans-unit>
       <trans-unit id="StartsWithFail">
         <source>String '{0}' does not start with string '{1}'. {2}</source>
-        <target state="new">String '{0}' does not start with string '{1}'. {2}</target>
+        <target state="translated">Ciąg „{0}” nie rozpoczyna się od ciągu „{1}”. {2}</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidPropertyType">
@@ -312,11 +312,6 @@ Rzeczywiste: {2}</target>
         <target state="translated">{0} ({1})</target>
         <note></note>
       </trans-unit>
-      <trans-unit id="AsyncUITestMethodNotSupported">
-        <source>async TestMethod with UITestMethodAttribute are not supported. Either remove async or use TestMethodAttribute.</source>
-        <target state="translated">asynchroniczna metoda TestMethod z elementem UITestMethodAttribute nie są obsługiwane. Usuń element asynchroniczny lub użyj elementu TestMethodAttribute.</target>
-        <note></note>
-      </trans-unit>
       <trans-unit id="DynamicDataIEnumerableNull">
         <source>Property or method {0} on {1} return type is not assignable to 'IEnumerable'.</source>
         <target state="translated">Właściwości lub metody {0} dla zwracanego typu {1} nie można przypisać do elementu „IEnumerable”.</target>
@@ -337,47 +332,34 @@ Rzeczywiste: {2}</target>
         <target state="translated">Właściwość lub metoda {0} w elemencie {1} zwraca pusty interfejs IEnumerable&lt;object[]&gt;.</target>
         <note></note>
       </trans-unit>
-      <trans-unit id="AsyncUITestMethodWithNoDispatcherQueue">
-        <source>UITestMethodAttribute.DispatcherQueue should not be null. To use UITestMethodAttribute within a WinUI Desktop App, remember to set the static UITestMethodAttribute.DispatcherQueue during the test initialization.</source>
-        <target state="translated">Element UITestMethodAttribute.DispatcherQueue nie powinien mieć wartości null. Aby użyć atrybutu UITestMethodAttribute w aplikacji klasycznej WinUI, pamiętaj o ustawieniu statycznego atrybutu UITestMethodAttribute.DispatcherQueue podczas inicjowania testu.</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="ArgumentXMustDeriveFromClassY">
-        <source>Type '{0}' is not assignable to '{1}'.</source>
-        <target state="translated">Typu „{0}” nie można przypisać do typu „{1}”.</target>
-        <note>
-      - {0} argument name like "applicationType"
-      - {1} fully qualified class name like "Microsoft.UI.Xaml.Application"
-    </note>
-      </trans-unit>
       <trans-unit id="IsGreaterThanFailMsg">
         <source>Actual value &lt;{2}&gt; is not greater than expected value &lt;{1}&gt;. {0}</source>
-        <target state="new">Actual value &lt;{2}&gt; is not greater than expected value &lt;{1}&gt;. {0}</target>
+        <target state="translated">Wartość rzeczywista &lt;{2}&gt; nie jest większa niż oczekiwana wartość &lt;{1}&gt;. {0}</target>
         <note></note>
       </trans-unit>
       <trans-unit id="IsGreaterThanOrEqualToFailMsg">
         <source>Actual value &lt;{2}&gt; is not greater than or equal to expected value &lt;{1}&gt;. {0}</source>
-        <target state="new">Actual value &lt;{2}&gt; is not greater than or equal to expected value &lt;{1}&gt;. {0}</target>
+        <target state="translated">Wartość rzeczywista &lt;{2}&gt; nie jest większa lub równa oczekiwanej wartości &lt;{1}&gt;. {0}</target>
         <note></note>
       </trans-unit>
       <trans-unit id="IsLessThanFailMsg">
         <source>Actual value &lt;{2}&gt; is not less than expected value &lt;{1}&gt;. {0}</source>
-        <target state="new">Actual value &lt;{2}&gt; is not less than expected value &lt;{1}&gt;. {0}</target>
+        <target state="translated">Wartość rzeczywista &lt;{2}&gt; nie jest mniejsza niż oczekiwana wartość &lt;{1}&gt;. {0}</target>
         <note></note>
       </trans-unit>
       <trans-unit id="IsLessThanOrEqualToFailMsg">
         <source>Actual value &lt;{2}&gt; is not less than or equal to expected value &lt;{1}&gt;. {0}</source>
-        <target state="new">Actual value &lt;{2}&gt; is not less than or equal to expected value &lt;{1}&gt;. {0}</target>
+        <target state="translated">Wartość rzeczywista &lt;{2}&gt; nie jest mniejsza lub równa oczekiwanej wartości &lt;{1}&gt;. {0}</target>
         <note></note>
       </trans-unit>
       <trans-unit id="IsPositiveFailMsg">
         <source>Expected value &lt;{1}&gt; to be positive. {0}</source>
-        <target state="new">Expected value &lt;{1}&gt; to be positive. {0}</target>
+        <target state="translated">Oczekiwana wartość &lt;{1}&gt; powinna być dodatnia. {0}</target>
         <note></note>
       </trans-unit>
       <trans-unit id="IsNegativeFailMsg">
         <source>Expected value &lt;{1}&gt; to be negative. {0}</source>
-        <target state="new">Expected value &lt;{1}&gt; to be negative. {0}</target>
+        <target state="translated">Oczekiwana wartość &lt;{1}&gt; powinna być negatywna. {0}</target>
         <note></note>
       </trans-unit>
       <trans-unit id="DoNotUseAssertEquals">
@@ -387,27 +369,27 @@ Rzeczywiste: {2}</target>
       </trans-unit>
       <trans-unit id="DoNotUseAssertReferenceEquals">
         <source>Assert.ReferenceEquals should not be used for Assertions. Please use Assert.AreSame &amp; overloads instead.</source>
-        <target state="new">Assert.ReferenceEquals should not be used for Assertions. Please use Assert.AreSame &amp; overloads instead.</target>
+        <target state="translated">Element Assert.ReferenceEquals nie powinien być używany dla asercji. Zamiast tego użyj metody Assert.AreSame i przeciążeń.</target>
         <note></note>
       </trans-unit>
       <trans-unit id="DoNotUseStringAssertEquals">
         <source>StringAssert.Equals should not be used for Assertions. Please use StringAssert methods or Assert.AreEqual &amp; overloads instead.</source>
-        <target state="new">StringAssert.Equals should not be used for Assertions. Please use StringAssert methods or Assert.AreEqual &amp; overloads instead.</target>
+        <target state="translated">Element StringAssert.Equals nie powinien być używany dla asercji. Zamiast tego użyj metod StringAssert lub Assert.AreEqual i przeciążeń.</target>
         <note></note>
       </trans-unit>
       <trans-unit id="DoNotUseStringAssertReferenceEquals">
         <source>StringAssert.ReferenceEquals should not be used for Assertions. Please use StringAssert methods or Assert.AreSame &amp; overloads instead.</source>
-        <target state="new">StringAssert.ReferenceEquals should not be used for Assertions. Please use StringAssert methods or Assert.AreSame &amp; overloads instead.</target>
+        <target state="translated">Element StringAssert.ReferenceEquals nie powinien być używany dla asercji. Zamiast tego użyj metod StringAssert lub Assert.AreSame i obciążeń.</target>
         <note></note>
       </trans-unit>
       <trans-unit id="DoNotUseCollectionAssertEquals">
         <source>CollectionAssert.Equals should not be used for Assertions. Please use CollectionAssert.AreEqual &amp; overloads instead.</source>
-        <target state="new">CollectionAssert.Equals should not be used for Assertions. Please use CollectionAssert.AreEqual &amp; overloads instead.</target>
+        <target state="translated">Element CollectionAssert.Equals nie powinien być używany dla asercji. Zamiast tego użyj metody CollectionAssert.AreEqual i przeciążeń.</target>
         <note></note>
       </trans-unit>
       <trans-unit id="DoNotUseCollectionAssertReferenceEquals">
         <source>CollectionAssert.ReferenceEquals should not be used for Assertions. Please use CollectionAssert methods or Assert.AreSame &amp; overloads instead.</source>
-        <target state="new">CollectionAssert.ReferenceEquals should not be used for Assertions. Please use CollectionAssert methods or Assert.AreSame &amp; overloads instead.</target>
+        <target state="translated">Element Assert.ReferenceEquals nie powinien być używany dla asercji. Zamiast tego użyj metod CollectionAssert lub Assert.AreSame oraz ich przeciążeń.</target>
         <note></note>
       </trans-unit>
     </body>

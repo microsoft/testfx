@@ -84,22 +84,22 @@
       </trans-unit>
       <trans-unit id="ContainsItemFailMsg">
         <source>Expected collection to contain the specified item. {0}</source>
-        <target state="new">Expected collection to contain the specified item. {0}</target>
+        <target state="translated">預期集合包含指定的項目。{0}</target>
         <note />
       </trans-unit>
       <trans-unit id="ContainsPredicateFailMsg">
         <source>Expected at least one item to match the predicate. {0}</source>
-        <target state="new">Expected at least one item to match the predicate. {0}</target>
+        <target state="translated">必須至少有一個項目符合述詞。{0}</target>
         <note />
       </trans-unit>
       <trans-unit id="ContainsSingleFailMsg">
         <source>Expected collection to contain exactly one element but found {1} element(s). {0}</source>
-        <target state="new">Expected collection to contain exactly one element but found {1} element(s). {0}</target>
+        <target state="translated">預期集合應僅包含一個元素，但發現 {1} 個元素。{0}</target>
         <note />
       </trans-unit>
       <trans-unit id="ContainsSingleMatchFailMsg">
         <source>Expected exactly one item to match the predicate but found {1} item(s). {0}</source>
-        <target state="new">Expected exactly one item to match the predicate but found {1} item(s). {0}</target>
+        <target state="translated">預期只有一個項目符合述詞，但找到 {1} 個項目。{0}</target>
         <note />
       </trans-unit>
       <trans-unit id="DoesNotContainFail">
@@ -109,22 +109,22 @@
       </trans-unit>
       <trans-unit id="DoesNotContainItemFailMsg">
         <source>Expected collection to not contain the specified item. {0}</source>
-        <target state="new">Expected collection to not contain the specified item. {0}</target>
+        <target state="translated">預期集合不包含指定的項目。{0}</target>
         <note />
       </trans-unit>
       <trans-unit id="DoesNotContainPredicateFailMsg">
         <source>Expected no items to match the predicate. {0}</source>
-        <target state="new">Expected no items to match the predicate. {0}</target>
+        <target state="translated">預期沒有任何項目符合述詞。{0}</target>
         <note />
       </trans-unit>
       <trans-unit id="DoesNotEndWithFail">
         <source>String '{0}' ends with string '{1}'. {2}</source>
-        <target state="new">String '{0}' ends with string '{1}'. {2}</target>
+        <target state="translated">字串 '{0}' 以字串 '{1}' 結尾。{2}</target>
         <note />
       </trans-unit>
       <trans-unit id="DoesNotStartWithFail">
         <source>String '{0}' starts with string '{1}'. {2}</source>
-        <target state="new">String '{0}' starts with string '{1}'. {2}</target>
+        <target state="translated">字串 '{0}' 以字串 '{1}' 開頭。{2}</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataInvalidMethodLayout">
@@ -163,7 +163,7 @@ Actual: {2}</source>
       </trans-unit>
       <trans-unit id="EndsWithFail">
         <source>String '{0}' does not end with string '{1}'. {2}</source>
-        <target state="new">String '{0}' does not end with string '{1}'. {2}</target>
+        <target state="translated">字串 '{0}' 不是以字串 '{1}' 結尾。{2}</target>
         <note />
       </trans-unit>
       <trans-unit id="AssertionFailed">
@@ -193,7 +193,7 @@ Actual: {2}</source>
       </trans-unit>
       <trans-unit id="IsMatchFail">
         <source>String '{0}' does not match pattern '{1}'. {2}</source>
-        <target state="new">String '{0}' does not match pattern '{1}'. {2}</target>
+        <target state="translated">字串 '{0}' 與模式 '{1}' 不符。{2}</target>
         <note />
       </trans-unit>
       <trans-unit id="IsNotEmptyFailMsg">
@@ -208,7 +208,7 @@ Actual: {2}</source>
       </trans-unit>
       <trans-unit id="IsNotMatchFail">
         <source>String '{0}' matches pattern '{1}'. {2}</source>
-        <target state="new">String '{0}' matches pattern '{1}'. {2}</target>
+        <target state="translated">字串 '{0}' 與模式 '{1}' 相符。{2}</target>
         <note />
       </trans-unit>
       <trans-unit id="PrivateAccessorMemberNotFound">
@@ -249,7 +249,7 @@ Actual: {2}</source>
       </trans-unit>
       <trans-unit id="StartsWithFail">
         <source>String '{0}' does not start with string '{1}'. {2}</source>
-        <target state="new">String '{0}' does not start with string '{1}'. {2}</target>
+        <target state="translated">字串 '{0}' 不是以字串 '{1}' 開頭。{2}</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidPropertyType">
@@ -312,11 +312,6 @@ Actual: {2}</source>
         <target state="translated">{0} ({1})</target>
         <note></note>
       </trans-unit>
-      <trans-unit id="AsyncUITestMethodNotSupported">
-        <source>async TestMethod with UITestMethodAttribute are not supported. Either remove async or use TestMethodAttribute.</source>
-        <target state="translated">不支援有 UITestMethodAttribute 的 async TestMethod。請移除 async 或使用 TestMethodAttribute。</target>
-        <note></note>
-      </trans-unit>
       <trans-unit id="DynamicDataIEnumerableNull">
         <source>Property or method {0} on {1} return type is not assignable to 'IEnumerable'.</source>
         <target state="translated">{1} 傳回類型上的屬性或方法 {0} 無法指派給 'IEnumerable'。</target>
@@ -337,47 +332,34 @@ Actual: {2}</source>
         <target state="translated">{1} 上的屬性或方法 {0} 傳回空的 IEnumerable&lt;object[]&gt;。</target>
         <note></note>
       </trans-unit>
-      <trans-unit id="AsyncUITestMethodWithNoDispatcherQueue">
-        <source>UITestMethodAttribute.DispatcherQueue should not be null. To use UITestMethodAttribute within a WinUI Desktop App, remember to set the static UITestMethodAttribute.DispatcherQueue during the test initialization.</source>
-        <target state="translated">UITestMethodAttribute.DispatcherQueue 不應為 Null。若要在 WinUI 傳統型應用程式內使用 UITestMethodAttribute，請記得在測試初始化期間設定靜態 UITestMethodAttribute.DispatcherQueue。</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="ArgumentXMustDeriveFromClassY">
-        <source>Type '{0}' is not assignable to '{1}'.</source>
-        <target state="translated">無法將類型 '{0}' {0} 指派給 '{1}。</target>
-        <note>
-      - {0} argument name like "applicationType"
-      - {1} fully qualified class name like "Microsoft.UI.Xaml.Application"
-    </note>
-      </trans-unit>
       <trans-unit id="IsGreaterThanFailMsg">
         <source>Actual value &lt;{2}&gt; is not greater than expected value &lt;{1}&gt;. {0}</source>
-        <target state="new">Actual value &lt;{2}&gt; is not greater than expected value &lt;{1}&gt;. {0}</target>
+        <target state="translated">實際值 &lt;{2}&gt; 不大於預期值 &lt;{1}&gt;。{0}</target>
         <note></note>
       </trans-unit>
       <trans-unit id="IsGreaterThanOrEqualToFailMsg">
         <source>Actual value &lt;{2}&gt; is not greater than or equal to expected value &lt;{1}&gt;. {0}</source>
-        <target state="new">Actual value &lt;{2}&gt; is not greater than or equal to expected value &lt;{1}&gt;. {0}</target>
+        <target state="translated">實際值 &lt;{2}&gt; 不大於或等於預期值 &lt;{1}&gt;。{0}</target>
         <note></note>
       </trans-unit>
       <trans-unit id="IsLessThanFailMsg">
         <source>Actual value &lt;{2}&gt; is not less than expected value &lt;{1}&gt;. {0}</source>
-        <target state="new">Actual value &lt;{2}&gt; is not less than expected value &lt;{1}&gt;. {0}</target>
+        <target state="translated">實際值 &lt;{2}&gt; 不小於預期值 &lt;{1}&gt;。{0}</target>
         <note></note>
       </trans-unit>
       <trans-unit id="IsLessThanOrEqualToFailMsg">
         <source>Actual value &lt;{2}&gt; is not less than or equal to expected value &lt;{1}&gt;. {0}</source>
-        <target state="new">Actual value &lt;{2}&gt; is not less than or equal to expected value &lt;{1}&gt;. {0}</target>
+        <target state="translated">實際值 &lt;{2}&gt; 不小於或等於預期值 &lt;{1}&gt;。{0}</target>
         <note></note>
       </trans-unit>
       <trans-unit id="IsPositiveFailMsg">
         <source>Expected value &lt;{1}&gt; to be positive. {0}</source>
-        <target state="new">Expected value &lt;{1}&gt; to be positive. {0}</target>
+        <target state="translated">預期值 &lt;{1}&gt; 為正數。{0}</target>
         <note></note>
       </trans-unit>
       <trans-unit id="IsNegativeFailMsg">
         <source>Expected value &lt;{1}&gt; to be negative. {0}</source>
-        <target state="new">Expected value &lt;{1}&gt; to be negative. {0}</target>
+        <target state="translated">預期值 &lt;{1}&gt; 為負數。{0}</target>
         <note></note>
       </trans-unit>
       <trans-unit id="DoNotUseAssertEquals">
@@ -387,27 +369,27 @@ Actual: {2}</source>
       </trans-unit>
       <trans-unit id="DoNotUseAssertReferenceEquals">
         <source>Assert.ReferenceEquals should not be used for Assertions. Please use Assert.AreSame &amp; overloads instead.</source>
-        <target state="new">Assert.ReferenceEquals should not be used for Assertions. Please use Assert.AreSame &amp; overloads instead.</target>
+        <target state="translated">Assert.ReferenceEquals 不應使用於判斷提示。請改用 Assert.AreSame 及多載。</target>
         <note></note>
       </trans-unit>
       <trans-unit id="DoNotUseStringAssertEquals">
         <source>StringAssert.Equals should not be used for Assertions. Please use StringAssert methods or Assert.AreEqual &amp; overloads instead.</source>
-        <target state="new">StringAssert.Equals should not be used for Assertions. Please use StringAssert methods or Assert.AreEqual &amp; overloads instead.</target>
+        <target state="translated">StringAssert.Equals 不應使用於判斷提示。請改用 StringAssert 方法或 Assert.AreEqual 及其多載。</target>
         <note></note>
       </trans-unit>
       <trans-unit id="DoNotUseStringAssertReferenceEquals">
         <source>StringAssert.ReferenceEquals should not be used for Assertions. Please use StringAssert methods or Assert.AreSame &amp; overloads instead.</source>
-        <target state="new">StringAssert.ReferenceEquals should not be used for Assertions. Please use StringAssert methods or Assert.AreSame &amp; overloads instead.</target>
+        <target state="translated">StringAssert.ReferenceEquals 不應使用於判斷提示。請改用 StringAssert 方法或 Assert.AreSame 及其多載。</target>
         <note></note>
       </trans-unit>
       <trans-unit id="DoNotUseCollectionAssertEquals">
         <source>CollectionAssert.Equals should not be used for Assertions. Please use CollectionAssert.AreEqual &amp; overloads instead.</source>
-        <target state="new">CollectionAssert.Equals should not be used for Assertions. Please use CollectionAssert.AreEqual &amp; overloads instead.</target>
+        <target state="translated">CollectionAssert.Equals 不應使用於判斷提示。請改用 CollectionAssert.AreEqual 及多載。</target>
         <note></note>
       </trans-unit>
       <trans-unit id="DoNotUseCollectionAssertReferenceEquals">
         <source>CollectionAssert.ReferenceEquals should not be used for Assertions. Please use CollectionAssert methods or Assert.AreSame &amp; overloads instead.</source>
-        <target state="new">CollectionAssert.ReferenceEquals should not be used for Assertions. Please use CollectionAssert methods or Assert.AreSame &amp; overloads instead.</target>
+        <target state="translated">CollectionAssert.ReferenceEquals 不應使用於判斷提示。請改用 CollectionAssert 方法或 Assert.AreSame 及其多載。</target>
         <note></note>
       </trans-unit>
     </body>

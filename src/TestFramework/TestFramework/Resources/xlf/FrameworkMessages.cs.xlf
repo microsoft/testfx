@@ -84,22 +84,22 @@
       </trans-unit>
       <trans-unit id="ContainsItemFailMsg">
         <source>Expected collection to contain the specified item. {0}</source>
-        <target state="new">Expected collection to contain the specified item. {0}</target>
+        <target state="translated">Očekávala se kolekce, která bude obsahovat zadanou položku. {0}</target>
         <note />
       </trans-unit>
       <trans-unit id="ContainsPredicateFailMsg">
         <source>Expected at least one item to match the predicate. {0}</source>
-        <target state="new">Expected at least one item to match the predicate. {0}</target>
+        <target state="translated">Očekávala se alespoň jedna položka odpovídající predikátu. {0}</target>
         <note />
       </trans-unit>
       <trans-unit id="ContainsSingleFailMsg">
         <source>Expected collection to contain exactly one element but found {1} element(s). {0}</source>
-        <target state="new">Expected collection to contain exactly one element but found {1} element(s). {0}</target>
+        <target state="translated">Očekávalo se, že kolekce bude obsahovat přesně jeden prvek, ale našlo se tolik elementů: {1}. {0}</target>
         <note />
       </trans-unit>
       <trans-unit id="ContainsSingleMatchFailMsg">
         <source>Expected exactly one item to match the predicate but found {1} item(s). {0}</source>
-        <target state="new">Expected exactly one item to match the predicate but found {1} item(s). {0}</target>
+        <target state="translated">Očekávala se přesně jedna položka odpovídající predikátu, ale našlo se tolik položek: {1}. {0}</target>
         <note />
       </trans-unit>
       <trans-unit id="DoesNotContainFail">
@@ -109,22 +109,22 @@
       </trans-unit>
       <trans-unit id="DoesNotContainItemFailMsg">
         <source>Expected collection to not contain the specified item. {0}</source>
-        <target state="new">Expected collection to not contain the specified item. {0}</target>
+        <target state="translated">Očekávalo se, že kolekce nebude obsahovat zadanou položku. {0}</target>
         <note />
       </trans-unit>
       <trans-unit id="DoesNotContainPredicateFailMsg">
         <source>Expected no items to match the predicate. {0}</source>
-        <target state="new">Expected no items to match the predicate. {0}</target>
+        <target state="translated">Očekávaly se žádné položky, které by odpovídaly predikátu. {0}</target>
         <note />
       </trans-unit>
       <trans-unit id="DoesNotEndWithFail">
         <source>String '{0}' ends with string '{1}'. {2}</source>
-        <target state="new">String '{0}' ends with string '{1}'. {2}</target>
+        <target state="translated">Řetězec „{0}“ končí řetězcem „{1}“. {2}</target>
         <note />
       </trans-unit>
       <trans-unit id="DoesNotStartWithFail">
         <source>String '{0}' starts with string '{1}'. {2}</source>
-        <target state="new">String '{0}' starts with string '{1}'. {2}</target>
+        <target state="translated">Řetězec „{0}“ začíná řetězcem „{1}“. {2}</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataInvalidMethodLayout">
@@ -163,7 +163,7 @@ Skutečnost: {2}</target>
       </trans-unit>
       <trans-unit id="EndsWithFail">
         <source>String '{0}' does not end with string '{1}'. {2}</source>
-        <target state="new">String '{0}' does not end with string '{1}'. {2}</target>
+        <target state="translated">Řetězec „{0}“ nekončí řetězcem „{1}“. {2}</target>
         <note />
       </trans-unit>
       <trans-unit id="AssertionFailed">
@@ -193,7 +193,7 @@ Skutečnost: {2}</target>
       </trans-unit>
       <trans-unit id="IsMatchFail">
         <source>String '{0}' does not match pattern '{1}'. {2}</source>
-        <target state="new">String '{0}' does not match pattern '{1}'. {2}</target>
+        <target state="translated">Řetězec „{0}“ neodpovídá vzoru „{1}“. {2}</target>
         <note />
       </trans-unit>
       <trans-unit id="IsNotEmptyFailMsg">
@@ -208,7 +208,7 @@ Skutečnost: {2}</target>
       </trans-unit>
       <trans-unit id="IsNotMatchFail">
         <source>String '{0}' matches pattern '{1}'. {2}</source>
-        <target state="new">String '{0}' matches pattern '{1}'. {2}</target>
+        <target state="translated">Řetězec „{0}“ odpovídá vzoru „{1}“. {2}</target>
         <note />
       </trans-unit>
       <trans-unit id="PrivateAccessorMemberNotFound">
@@ -249,7 +249,7 @@ Skutečnost: {2}</target>
       </trans-unit>
       <trans-unit id="StartsWithFail">
         <source>String '{0}' does not start with string '{1}'. {2}</source>
-        <target state="new">String '{0}' does not start with string '{1}'. {2}</target>
+        <target state="translated">Řetězec „{0}“ nezačíná řetězcem „{1}“. {2}</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidPropertyType">
@@ -312,11 +312,6 @@ Skutečnost: {2}</target>
         <target state="translated">{0} ({1})</target>
         <note></note>
       </trans-unit>
-      <trans-unit id="AsyncUITestMethodNotSupported">
-        <source>async TestMethod with UITestMethodAttribute are not supported. Either remove async or use TestMethodAttribute.</source>
-        <target state="translated">async TestMethod s atributem UITestMethodAttribute se nepodporují. Buď odeberte async, nebo použijte TestMethodAttribute.</target>
-        <note></note>
-      </trans-unit>
       <trans-unit id="DynamicDataIEnumerableNull">
         <source>Property or method {0} on {1} return type is not assignable to 'IEnumerable'.</source>
         <target state="translated">Vlastnost nebo metoda {0} na návratovém typu {1} se nedá přiřadit k „IEnumerable“.</target>
@@ -337,47 +332,34 @@ Skutečnost: {2}</target>
         <target state="translated">Vlastnost nebo metoda {0} ve třídě {1} vrací prázdné IEnumerable&lt;object[]&gt;.</target>
         <note></note>
       </trans-unit>
-      <trans-unit id="AsyncUITestMethodWithNoDispatcherQueue">
-        <source>UITestMethodAttribute.DispatcherQueue should not be null. To use UITestMethodAttribute within a WinUI Desktop App, remember to set the static UITestMethodAttribute.DispatcherQueue during the test initialization.</source>
-        <target state="translated">UITestMethodAttribute.DispatcherQueue nesmí mít hodnotu null. Pokud chcete použít UITestMethodAttribute v desktopové aplikaci WinUI, nezapomeňte během inicializace testu nastavit statický UITestMethodAttribute.DispatcherQueue.</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="ArgumentXMustDeriveFromClassY">
-        <source>Type '{0}' is not assignable to '{1}'.</source>
-        <target state="translated">Typ „{0}“ nelze přiřadit k „{1}“.</target>
-        <note>
-      - {0} argument name like "applicationType"
-      - {1} fully qualified class name like "Microsoft.UI.Xaml.Application"
-    </note>
-      </trans-unit>
       <trans-unit id="IsGreaterThanFailMsg">
         <source>Actual value &lt;{2}&gt; is not greater than expected value &lt;{1}&gt;. {0}</source>
-        <target state="new">Actual value &lt;{2}&gt; is not greater than expected value &lt;{1}&gt;. {0}</target>
+        <target state="translated">Skutečná hodnota &lt;{2}&gt; není větší než očekávaná hodnota &lt;{1}&gt;. {0}</target>
         <note></note>
       </trans-unit>
       <trans-unit id="IsGreaterThanOrEqualToFailMsg">
         <source>Actual value &lt;{2}&gt; is not greater than or equal to expected value &lt;{1}&gt;. {0}</source>
-        <target state="new">Actual value &lt;{2}&gt; is not greater than or equal to expected value &lt;{1}&gt;. {0}</target>
+        <target state="translated">Skutečná hodnota &lt;{2}&gt; není větší nebo rovna očekávané hodnotě &lt;{1}&gt;. {0}</target>
         <note></note>
       </trans-unit>
       <trans-unit id="IsLessThanFailMsg">
         <source>Actual value &lt;{2}&gt; is not less than expected value &lt;{1}&gt;. {0}</source>
-        <target state="new">Actual value &lt;{2}&gt; is not less than expected value &lt;{1}&gt;. {0}</target>
+        <target state="translated">Skutečná hodnota &lt;{2}&gt; není menší než očekávaná hodnota &lt;{1}&gt;. {0}</target>
         <note></note>
       </trans-unit>
       <trans-unit id="IsLessThanOrEqualToFailMsg">
         <source>Actual value &lt;{2}&gt; is not less than or equal to expected value &lt;{1}&gt;. {0}</source>
-        <target state="new">Actual value &lt;{2}&gt; is not less than or equal to expected value &lt;{1}&gt;. {0}</target>
+        <target state="translated">Skutečná hodnota &lt;{2}&gt; není menší nebo rovna očekávané hodnotě &lt;{1}&gt;. {0}</target>
         <note></note>
       </trans-unit>
       <trans-unit id="IsPositiveFailMsg">
         <source>Expected value &lt;{1}&gt; to be positive. {0}</source>
-        <target state="new">Expected value &lt;{1}&gt; to be positive. {0}</target>
+        <target state="translated">Očekávaná hodnota &lt;{1}&gt; má být kladná. {0}</target>
         <note></note>
       </trans-unit>
       <trans-unit id="IsNegativeFailMsg">
         <source>Expected value &lt;{1}&gt; to be negative. {0}</source>
-        <target state="new">Expected value &lt;{1}&gt; to be negative. {0}</target>
+        <target state="translated">Očekávaná hodnota &lt;{1}&gt; má být záporná. {0}</target>
         <note></note>
       </trans-unit>
       <trans-unit id="DoNotUseAssertEquals">
@@ -387,27 +369,27 @@ Skutečnost: {2}</target>
       </trans-unit>
       <trans-unit id="DoNotUseAssertReferenceEquals">
         <source>Assert.ReferenceEquals should not be used for Assertions. Please use Assert.AreSame &amp; overloads instead.</source>
-        <target state="new">Assert.ReferenceEquals should not be used for Assertions. Please use Assert.AreSame &amp; overloads instead.</target>
+        <target state="translated">Assert.ReferenceEquals se nemá používat pro kontrolní výrazy. Použijte prosím místo toho Assert.AreEqual &amp; overloads.</target>
         <note></note>
       </trans-unit>
       <trans-unit id="DoNotUseStringAssertEquals">
         <source>StringAssert.Equals should not be used for Assertions. Please use StringAssert methods or Assert.AreEqual &amp; overloads instead.</source>
-        <target state="new">StringAssert.Equals should not be used for Assertions. Please use StringAssert methods or Assert.AreEqual &amp; overloads instead.</target>
+        <target state="translated">StringAssert.Equals se nemá používat pro kontrolní výrazy. Místo toho použijte metody StringAssert nebo Assert.AreEqual &amp; overloads.</target>
         <note></note>
       </trans-unit>
       <trans-unit id="DoNotUseStringAssertReferenceEquals">
         <source>StringAssert.ReferenceEquals should not be used for Assertions. Please use StringAssert methods or Assert.AreSame &amp; overloads instead.</source>
-        <target state="new">StringAssert.ReferenceEquals should not be used for Assertions. Please use StringAssert methods or Assert.AreSame &amp; overloads instead.</target>
+        <target state="translated">StringAssert.ReferenceEquals se nemá používat pro kontrolní výrazy. Místo toho použijte metody StringAssert nebo Assert.AreSame &amp; overloads.</target>
         <note></note>
       </trans-unit>
       <trans-unit id="DoNotUseCollectionAssertEquals">
         <source>CollectionAssert.Equals should not be used for Assertions. Please use CollectionAssert.AreEqual &amp; overloads instead.</source>
-        <target state="new">CollectionAssert.Equals should not be used for Assertions. Please use CollectionAssert.AreEqual &amp; overloads instead.</target>
+        <target state="translated">CollectionAssert.Equals se nemá používat pro kontrolní výrazy. Místo toho použijte CollectionAssert.AreEqual &amp; overloads.</target>
         <note></note>
       </trans-unit>
       <trans-unit id="DoNotUseCollectionAssertReferenceEquals">
         <source>CollectionAssert.ReferenceEquals should not be used for Assertions. Please use CollectionAssert methods or Assert.AreSame &amp; overloads instead.</source>
-        <target state="new">CollectionAssert.ReferenceEquals should not be used for Assertions. Please use CollectionAssert methods or Assert.AreSame &amp; overloads instead.</target>
+        <target state="translated">CollectionAssert.ReferenceEquals se nemá používat pro kontrolní výrazy. Místo toho použijte metody CollectionAssert nebo Assert.AreSame &amp; overloads.</target>
         <note></note>
       </trans-unit>
     </body>
