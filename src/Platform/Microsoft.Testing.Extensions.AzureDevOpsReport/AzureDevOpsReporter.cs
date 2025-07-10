@@ -51,10 +51,10 @@ internal sealed class AzureDevOpsReporter :
     public Type[] DataTypesProduced { get; } = [typeof(SessionFileArtifact)];
 
     /// <inheritdoc />
-    public string Uid { get; } = nameof(AzureDevOpsReporter);
+    public string Uid => nameof(AzureDevOpsReporter);
 
     /// <inheritdoc />
-    public string Version { get; } = AppVersion.DefaultSemVer;
+    public string Version => AppVersion.DefaultSemVer;
 
     /// <inheritdoc />
     public string DisplayName { get; } = AzureDevOpsResources.DisplayName;

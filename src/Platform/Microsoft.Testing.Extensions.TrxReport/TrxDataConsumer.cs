@@ -89,10 +89,10 @@ internal sealed class TrxReportGenerator :
     public Type[] DataTypesProduced { get; } = [typeof(SessionFileArtifact)];
 
     /// <inheritdoc />
-    public string Uid { get; } = nameof(TrxReportGenerator);
+    public string Uid => nameof(TrxReportGenerator);
 
     /// <inheritdoc />
-    public string Version { get; } = AppVersion.DefaultSemVer;
+    public string Version => AppVersion.DefaultSemVer;
 
     /// <inheritdoc />
     public string DisplayName { get; } = ExtensionResources.TrxReportGeneratorDisplayName;

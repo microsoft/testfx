@@ -41,13 +41,13 @@ internal sealed class AbortForMaxFailedTestsExtension : IDataConsumer
     public Type[] DataTypesConsumed { get; } = [typeof(TestNodeUpdateMessage)];
 
     /// <inheritdoc />
-    public string Uid { get; } = nameof(AbortForMaxFailedTestsExtension);
+    public string Uid => nameof(AbortForMaxFailedTestsExtension);
 
     /// <inheritdoc />
-    public string Version { get; } = AppVersion.DefaultSemVer;
+    public string Version => AppVersion.DefaultSemVer;
 
     /// <inheritdoc />
-    public string DisplayName { get; } = nameof(AbortForMaxFailedTestsExtension);
+    public string DisplayName => nameof(AbortForMaxFailedTestsExtension);
 
     /// <inheritdoc />
     public string Description { get; } = PlatformResources.AbortForMaxFailedTestsDescription;

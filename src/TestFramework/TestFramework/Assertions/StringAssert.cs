@@ -41,7 +41,7 @@ public sealed class StringAssert
 #else
     [Obsolete(FrameworkConstants.ThatPropertyObsoleteMessage)]
 #endif
-    public static StringAssert That { get; } = Instance;
+    public static StringAssert That => Instance;
 
     #endregion
 
