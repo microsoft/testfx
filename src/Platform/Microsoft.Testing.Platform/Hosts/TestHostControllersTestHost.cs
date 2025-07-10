@@ -22,7 +22,7 @@ using Microsoft.Testing.Platform.TestHostControllers;
 
 namespace Microsoft.Testing.Platform.Hosts;
 
-internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, IDisposable, IOutputDeviceDataProducer
+internal sealed class TestHostControllersTestHost : CommonHost, IHost, IDisposable, IOutputDeviceDataProducer
 {
     private readonly TestHostControllerConfiguration _testHostsInformation;
     private readonly PassiveNode? _passiveNode;
