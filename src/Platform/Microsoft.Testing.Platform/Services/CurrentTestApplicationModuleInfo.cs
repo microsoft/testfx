@@ -85,19 +85,17 @@ internal sealed class CurrentTestApplicationModuleInfo(IEnvironment environment,
         => GetProcessPath(_environment, _process, throwOnNull: true)!;
 
     private static string? GetProcessPath(IEnvironment environment, IProcessHandler process, bool throwOnNull = false)
-#if NETCOREAPP
     {
+#if NETCOREAPP
         string? processPath = environment.ProcessPath;
-        ApplicationStateGuard.Ensure(processPath is not null || !throwOnNull);
+#else
+        using IProcess currentProcess = process.GetCurrentProcess();
+        string? processPath = currentProcess.MainModule?.FileName;
+#endif
 
+        ApplicationStateGuard.Ensure(processPath is not null || !throwOnNull);
         return processPath;
     }
-#else
-    {
-        using IProcess currentProcess = process.GetCurrentProcess();
-        return currentProcess.MainModule.FileName;
-    }
-#endif
 
     public ExecutableInfo GetCurrentExecutableInfo()
     {
