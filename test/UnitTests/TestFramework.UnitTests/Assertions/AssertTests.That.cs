@@ -560,7 +560,7 @@ public partial class AssertTests : TestContainer
             .WithMessage("""
                 Assert.That(() => new[] { x, y, z }.Length == 5) failed.
                 Details:
-                  new[] { x, y, z }.Length = 3
+                  new [] {x, y, z}.Length = 3
                   x = 10
                   y = 20
                   z = 30
@@ -581,7 +581,7 @@ public partial class AssertTests : TestContainer
                 Details:
                   baseValue = 3
                   multiplier = 5
-                  new[] { baseValue * multiplier, baseValue + multiplier }.Length = 2
+                  new [] {(baseValue * multiplier), (baseValue + multiplier)}.Length = 2
                 """);
     }
 

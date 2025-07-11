@@ -98,6 +98,12 @@ public sealed partial class Assert
                 string arrayName = GetCleanMemberName(unaryExpr.Operand);
                 string lengthDisplayName = $"{arrayName}.Length";
                 TryAddExpressionValue(unaryExpr, lengthDisplayName, details);
+
+                if (unaryExpr.Operand is not MemberExpression)
+                {
+                    ExtractVariablesFromExpression(unaryExpr.Operand, details);
+                }
+
                 break;
 
             case UnaryExpression unaryExpr:
@@ -428,26 +434,6 @@ public sealed partial class Assert
         // Updated pattern to handle cases with and without parentheses around the display class
         cleaned = CompilerGeneratedDisplayClassRegex().Replace(cleaned, "$1");
 
-        // Convert expression types to their C# equivalents
-        cleaned = cleaned.Replace(" AndAlso ", " && ");
-        cleaned = cleaned.Replace(" OrElse ", " || ");
-        cleaned = cleaned.Replace(" Equal ", " == ");
-        cleaned = cleaned.Replace(" NotEqual ", " != ");
-        cleaned = cleaned.Replace(" GreaterThan ", " > ");
-        cleaned = cleaned.Replace(" LessThan ", " < ");
-        cleaned = cleaned.Replace(" GreaterThanOrEqual ", " >= ");
-        cleaned = cleaned.Replace(" LessThanOrEqual ", " <= ");
-
-        // Convert conditional expressions: "IIF(condition, trueValue, falseValue)" to "(condition ? trueValue : falseValue)"
-        // Don't add extra parentheses since the expression is likely already wrapped
-        cleaned = ConditionalExpressionRegex().Replace(cleaned, "$1 ? $2 : $3");
-
-        // Fix lambda expressions: "param => ( body" becomes "param => body"
-        cleaned = FixLambdaExpressionRegex().Replace(cleaned, "$1 => $2");
-
-        // Fix property comparisons: "obj.prop > num" becomes "obj.prop > num" (normalize spacing)
-        cleaned = FixPropertyComparisonRegex().Replace(cleaned, "$1.$2 > $3");
-
         // Remove unnecessary outer parentheses and excessive consecutive parentheses
         cleaned = CleanParentheses(cleaned);
 
@@ -609,32 +595,6 @@ public sealed partial class Assert
         return false;
     }
 
-#if NET
-    [GeneratedRegex(@"[A-Za-z0-9_\.]+\+<>c__DisplayClass\d+_\d+\.(\w+(?:\.\w+)*(?:\[[^\]]+\])?)")]
-    private static partial Regex CompilerGeneratedDisplayClassRegex();
-
-    [GeneratedRegex(@"IIF\(([^,]+),\s*([^,]+),\s*([^)]+)\)")]
-    private static partial Regex ConditionalExpressionRegex();
-
-    [GeneratedRegex(@"(\w+)\s*=>\s*\(\s*(\w+)")]
-    private static partial Regex FixLambdaExpressionRegex();
-
-    [GeneratedRegex(@"(\w+)\.(\w+)\s*>\s*(\d+)")]
-    private static partial Regex FixPropertyComparisonRegex();
-#else
-    private static Regex CompilerGeneratedDisplayClassRegex()
-        => new(@"[A-Za-z0-9_\.]+\+<>c__DisplayClass\d+_\d+\.(\w+(?:\.\w+)*(?:\[[^\]]+\])?)", RegexOptions.Compiled);
-
-    private static Regex ConditionalExpressionRegex()
-        => new(@"IIF\(([^,]+),\s*([^,]+),\s*([^)]+)\)", RegexOptions.Compiled);
-
-    private static Regex FixLambdaExpressionRegex()
-        => new(@"(\w+)\s*=>\s*\(\s*(\w+)", RegexOptions.Compiled);
-
-    private static Regex FixPropertyComparisonRegex()
-        => new(@"(\w+)\.(\w+)\s*>\s*(\d+)", RegexOptions.Compiled);
-#endif
-
     private static bool TryAddExpressionValue(Expression expr, string displayName, Dictionary<string, object?> details)
     {
         if (details.ContainsKey(displayName))
@@ -654,4 +614,12 @@ public sealed partial class Assert
 
         return true;
     }
+
+#if NET
+    [GeneratedRegex(@"[A-Za-z0-9_\.]+\+<>c__DisplayClass\d+_\d+\.(\w+(?:\.\w+)*(?:\[[^\]]+\])?)")]
+    private static partial Regex CompilerGeneratedDisplayClassRegex();
+#else
+    private static Regex CompilerGeneratedDisplayClassRegex()
+        => new(@"[A-Za-z0-9_\.]+\+<>c__DisplayClass\d+_\d+\.(\w+(?:\.\w+)*(?:\[[^\]]+\])?)", RegexOptions.Compiled);
+#endif
 }
