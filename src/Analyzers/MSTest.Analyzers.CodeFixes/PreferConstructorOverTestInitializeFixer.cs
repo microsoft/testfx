@@ -101,7 +101,7 @@ public sealed class PreferConstructorOverTestInitializeFixer : CodeFixProvider
                 // Find appropriate position for the constructor
                 // Place after last field or static constructor, but before any instance methods
                 SyntaxNode? insertAfterNode = null;
-                var members = containingClass.Members;
+                SyntaxList<MemberDeclarationSyntax> members = containingClass.Members;
 
                 for (int i = 0; i < members.Count; i++)
                 {
