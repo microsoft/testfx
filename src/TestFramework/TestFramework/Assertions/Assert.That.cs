@@ -123,11 +123,6 @@ public sealed partial class Assert
                 ExtractVariablesFromExpression(conditionalExpr.IfFalse, details, suppressIntermediateValues);
                 break;
 
-            case ConstantExpression constantExpr when constantExpr.Value is not null:
-                // Only include constants that represent captured variables (usually in display classes)
-                HandleConstantExpression(constantExpr, details);
-                break;
-
             case InvocationExpression invocationExpr:
                 ExtractVariablesFromExpression(invocationExpr.Expression, details, suppressIntermediateValues);
                 foreach (Expression argument in invocationExpr.Arguments)
@@ -274,29 +269,6 @@ public sealed partial class Assert
         }
     }
 
-    private static void HandleConstantExpression(ConstantExpression constantExpr, Dictionary<string, object?> details)
-    {
-        string constantStr = constantExpr.ToString();
-
-        // Skip display class constants and literal values
-        if (constantStr.Contains("DisplayClass") || IsLiteralConstant(constantStr))
-        {
-            return;
-        }
-
-        // Skip Func and Action delegates
-        if (IsFuncOrActionType(constantExpr.Value?.GetType()))
-        {
-            return;
-        }
-
-        string cleanName = CleanExpressionText(constantStr);
-        if (!details.ContainsKey(cleanName))
-        {
-            details[cleanName] = constantExpr.Value;
-        }
-    }
-
     private static bool IsFuncOrActionType(Type? type)
     {
         if (type is null)
@@ -336,47 +308,6 @@ public sealed partial class Assert
         {
             return CleanExpressionText(indexArg.ToString());
         }
-    }
-
-    private static bool IsLiteralConstant(string constantString)
-    {
-        if (string.IsNullOrEmpty(constantString))
-        {
-            return true;
-        }
-
-        // Check for quoted strings
-        if (constantString.StartsWith('\"') && constantString.EndsWith('\"'))
-        {
-            return true;
-        }
-
-        // Check for numeric literals (int, float, double, decimal)
-        if (constantString.All(c => char.IsDigit(c) || c == '.' || c == '-' || c == 'f' || c == 'd' || c == 'm'))
-        {
-            return true;
-        }
-
-        // Check for boolean literals
-        if (constantString is "True" or "False")
-        {
-            return true;
-        }
-
-        // Check for null literal
-        if (constantString == "null")
-        {
-            return true;
-        }
-
-        // Check for character literals
-        if (constantString.StartsWith('\'') && constantString.EndsWith('\'') && constantString.Length >= 2)
-        {
-            return true;
-        }
-
-        // If it doesn't match any of the above, it's likely a variable reference or complex expression
-        return false;
     }
 
     private static string FormatValue(object? value)
