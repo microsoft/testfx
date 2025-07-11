@@ -42,9 +42,7 @@ internal sealed class AsynchronousMessageBus : BaseMessageBus, IMessageBus, IDis
     public override IDataConsumer[] DataConsumerServices
         => _dataConsumers;
 
-    public override async Task InitAsync() => await BuildConsumerProducersAsync().ConfigureAwait(false);
-
-    private async Task BuildConsumerProducersAsync()
+    public override async Task InitAsync()
     {
         foreach (IDataConsumer consumer in _dataConsumers)
         {

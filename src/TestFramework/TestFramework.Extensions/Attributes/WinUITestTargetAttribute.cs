@@ -23,7 +23,7 @@ public class WinUITestTargetAttribute : Attribute
 
         if (!typeof(UI.Xaml.Application).IsAssignableFrom(applicationType))
         {
-            throw new ArgumentException(string.Format(CultureInfo.InvariantCulture, FrameworkMessages.ArgumentXMustDeriveFromClassY, nameof(applicationType), "Microsoft.UI.Xaml.Application"), nameof(applicationType));
+            throw new ArgumentException(string.Format(CultureInfo.InvariantCulture, FrameworkExtensionsMessages.ArgumentXMustDeriveFromClassY, nameof(applicationType), "Microsoft.UI.Xaml.Application"), nameof(applicationType));
         }
 
         ApplicationType = applicationType;

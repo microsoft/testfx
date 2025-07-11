@@ -103,16 +103,16 @@ internal sealed partial class BrowserOutputDevice : IPlatformOutputDevice,
     ];
 
     /// <inheritdoc />
-    public string Uid { get; } = nameof(BrowserOutputDevice);
+    public string Uid => nameof(BrowserOutputDevice);
 
     /// <inheritdoc />
-    public string Version { get; } = AppVersion.DefaultSemVer;
+    public string Version => AppVersion.DefaultSemVer;
 
     /// <inheritdoc />
-    public string DisplayName { get; } = "Test Platform Browser Console Service";
+    public string DisplayName => "Test Platform Browser Console Service";
 
     /// <inheritdoc />
-    public string Description { get; } = "Test Platform default browser console service";
+    public string Description => "Test Platform default browser console service";
 
     /// <inheritdoc />
     public Task<bool> IsEnabledAsync() => Task.FromResult(true);

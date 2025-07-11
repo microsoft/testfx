@@ -41,7 +41,7 @@ public sealed class CollectionAssert
 #else
     [Obsolete(FrameworkConstants.ThatPropertyObsoleteMessage)]
 #endif
-    public static CollectionAssert That { get; } = Instance;
+    public static CollectionAssert That => Instance;
 
     #endregion
 
