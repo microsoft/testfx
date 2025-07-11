@@ -68,7 +68,7 @@ public sealed partial class Assert
         return sb.ToString();
     }
 
-    private static void ExtractVariablesFromExpression(Expression? expr, Dictionary<string, object?> details)
+    private static void ExtractVariablesFromExpression(Expression? expr, Dictionary<string, object?> details, bool suppressIntermediateValues = false)
     {
         if (expr is null)
         {
@@ -83,13 +83,13 @@ public sealed partial class Assert
                 break;
 
             case BinaryExpression binaryExpr:
-                ExtractVariablesFromExpression(binaryExpr.Left, details);
-                ExtractVariablesFromExpression(binaryExpr.Right, details);
+                ExtractVariablesFromExpression(binaryExpr.Left, details, suppressIntermediateValues);
+                ExtractVariablesFromExpression(binaryExpr.Right, details, suppressIntermediateValues);
                 break;
 
             case TypeBinaryExpression typeBinaryExpr:
                 // Extract variables from the expression being tested (e.g., 'obj' in 'obj is int')
-                ExtractVariablesFromExpression(typeBinaryExpr.Expression, details);
+                ExtractVariablesFromExpression(typeBinaryExpr.Expression, details, suppressIntermediateValues);
                 break;
 
             // Special handling for ArrayLength expressions
@@ -100,13 +100,13 @@ public sealed partial class Assert
 
                 if (unaryExpr.Operand is not MemberExpression)
                 {
-                    ExtractVariablesFromExpression(unaryExpr.Operand, details);
+                    ExtractVariablesFromExpression(unaryExpr.Operand, details, suppressIntermediateValues);
                 }
 
                 break;
 
             case UnaryExpression unaryExpr:
-                ExtractVariablesFromExpression(unaryExpr.Operand, details);
+                ExtractVariablesFromExpression(unaryExpr.Operand, details, suppressIntermediateValues);
                 break;
 
             case MemberExpression memberExpr:
@@ -114,13 +114,13 @@ public sealed partial class Assert
                 break;
 
             case MethodCallExpression callExpr:
-                HandleMethodCallExpression(callExpr, details);
+                HandleMethodCallExpression(callExpr, details, suppressIntermediateValues);
                 break;
 
             case ConditionalExpression conditionalExpr:
-                ExtractVariablesFromExpression(conditionalExpr.Test, details);
-                ExtractVariablesFromExpression(conditionalExpr.IfTrue, details);
-                ExtractVariablesFromExpression(conditionalExpr.IfFalse, details);
+                ExtractVariablesFromExpression(conditionalExpr.Test, details, suppressIntermediateValues);
+                ExtractVariablesFromExpression(conditionalExpr.IfTrue, details, suppressIntermediateValues);
+                ExtractVariablesFromExpression(conditionalExpr.IfFalse, details, suppressIntermediateValues);
                 break;
 
             case ConstantExpression constantExpr when constantExpr.Value is not null:
@@ -129,10 +129,10 @@ public sealed partial class Assert
                 break;
 
             case InvocationExpression invocationExpr:
-                ExtractVariablesFromExpression(invocationExpr.Expression, details);
+                ExtractVariablesFromExpression(invocationExpr.Expression, details, suppressIntermediateValues);
                 foreach (Expression argument in invocationExpr.Arguments)
                 {
-                    ExtractVariablesFromExpression(argument, details);
+                    ExtractVariablesFromExpression(argument, details, suppressIntermediateValues);
                 }
 
                 break;
@@ -140,21 +140,26 @@ public sealed partial class Assert
             case NewExpression newExpr:
                 foreach (Expression argument in newExpr.Arguments)
                 {
-                    ExtractVariablesFromExpression(argument, details);
+                    ExtractVariablesFromExpression(argument, details, suppressIntermediateValues);
                 }
 
-                // Display the new object value
-                string newExprDisplay = GetCleanMemberName(newExpr);
-                TryAddExpressionValue(newExpr, newExprDisplay, details);
+                // Don't display the new object value if we're suppressing intermediate values
+                // (which happens when it's part of a member access chain)
+                if (!suppressIntermediateValues)
+                {
+                    string newExprDisplay = GetCleanMemberName(newExpr);
+                    TryAddExpressionValue(newExpr, newExprDisplay, details);
+                }
+
                 break;
 
             case ListInitExpression listInitExpr:
-                ExtractVariablesFromExpression(listInitExpr.NewExpression, details);
+                ExtractVariablesFromExpression(listInitExpr.NewExpression, details, suppressIntermediateValues: true);
                 foreach (ElementInit initializer in listInitExpr.Initializers)
                 {
                     foreach (Expression argument in initializer.Arguments)
                     {
-                        ExtractVariablesFromExpression(argument, details);
+                        ExtractVariablesFromExpression(argument, details, suppressIntermediateValues);
                     }
                 }
 
@@ -163,7 +168,7 @@ public sealed partial class Assert
             case NewArrayExpression newArrayExpr:
                 foreach (Expression expression in newArrayExpr.Expressions)
                 {
-                    ExtractVariablesFromExpression(expression, details);
+                    ExtractVariablesFromExpression(expression, details, suppressIntermediateValues);
                 }
 
                 break;
@@ -221,11 +226,11 @@ public sealed partial class Assert
         // Only extract variables from the object being accessed if it's not a member expression or indexer (which would show the full collection)
         if (memberExpr.Expression is not null and not MemberExpression)
         {
-            ExtractVariablesFromExpression(memberExpr.Expression, details);
+            ExtractVariablesFromExpression(memberExpr.Expression, details, suppressIntermediateValues: true);
         }
     }
 
-    private static void HandleMethodCallExpression(MethodCallExpression callExpr, Dictionary<string, object?> details)
+    private static void HandleMethodCallExpression(MethodCallExpression callExpr, Dictionary<string, object?> details, bool suppressIntermediateValues = false)
     {
         // Special handling for indexers (get_Item calls)
         if (callExpr.Method.Name == "get_Item" && callExpr.Object is not null && callExpr.Arguments.Count == 1)
@@ -236,7 +241,7 @@ public sealed partial class Assert
             TryAddExpressionValue(callExpr, indexerDisplay, details);
 
             // Extract variables from the index argument but not from the object.
-            ExtractVariablesFromExpression(callExpr.Arguments[0], details);
+            ExtractVariablesFromExpression(callExpr.Arguments[0], details, suppressIntermediateValues);
         }
         else if (callExpr.Method.Name == "Get" && callExpr.Object is not null && callExpr.Arguments.Count > 0)
         {
@@ -248,7 +253,7 @@ public sealed partial class Assert
             // Extract variables from the index arguments but not from the object
             foreach (Expression argument in callExpr.Arguments)
             {
-                ExtractVariablesFromExpression(argument, details);
+                ExtractVariablesFromExpression(argument, details, suppressIntermediateValues);
             }
         }
         else
@@ -260,7 +265,7 @@ public sealed partial class Assert
                 {
                     // For boolean-returning methods, extract details from the object being called
                     // This captures the last non-boolean method call in a chain
-                    ExtractVariablesFromExpression(callExpr.Object, details);
+                    ExtractVariablesFromExpression(callExpr.Object, details, suppressIntermediateValues);
                 }
             }
             else
@@ -275,7 +280,7 @@ public sealed partial class Assert
             // Always extract variables from the arguments
             foreach (Expression argument in callExpr.Arguments)
             {
-                ExtractVariablesFromExpression(argument, details);
+                ExtractVariablesFromExpression(argument, details, suppressIntermediateValues);
             }
         }
     }
@@ -338,12 +343,7 @@ public sealed partial class Assert
         }
 
         // Check for Func types
-        if (type.IsGenericType && type.GetGenericTypeDefinition().Name.StartsWith("Func`", StringComparison.Ordinal))
-        {
-            return true;
-        }
-
-        return false;
+        return type.IsGenericType && type.GetGenericTypeDefinition().Name.StartsWith("Func`", StringComparison.Ordinal);
     }
 
     private static string GetCleanMemberName(Expression? expr)
