@@ -28,7 +28,7 @@ internal sealed class TrxCompareTool : ITool, IOutputDeviceDataProducer
     }
 
     /// <inheritdoc />
-    public string Name { get; } = ToolName;
+    public string Name => ToolName;
 
     /// <inheritdoc />
     public string Uid => _extension.Uid;

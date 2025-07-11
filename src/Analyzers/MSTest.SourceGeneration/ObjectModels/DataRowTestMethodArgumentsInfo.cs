@@ -14,7 +14,7 @@ internal sealed class DataRowTestMethodArgumentsInfo : ITestMethodArgumentsInfo
     private readonly ImmutableArray<ImmutableArray<string>> _argumentsRows;
     private readonly TestMethodParametersInfo _parametersInfo;
 
-    public bool IsTestArgumentsEntryReturnType { get; } = true;
+    public bool IsTestArgumentsEntryReturnType => true;
 
     public string? GeneratorMethodFullName { get; }
 
