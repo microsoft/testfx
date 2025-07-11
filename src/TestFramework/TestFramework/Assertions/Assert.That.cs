@@ -264,6 +264,31 @@ public sealed partial class Assert
             // Extract variables from the index argument but not from the object.
             ExtractVariablesFromExpression(callExpr.Arguments[0], details);
         }
+        else if (callExpr.Method.Name == "Get" && callExpr.Object is not null && callExpr.Arguments.Count > 0)
+        {
+            string objectName = GetCleanMemberName(callExpr.Object);
+            string indexDisplay = string.Join(", ", callExpr.Arguments.Select(GetIndexArgumentDisplay));
+            string indexerDisplay = $"{objectName}[{indexDisplay}]";
+
+            if (!details.ContainsKey(indexerDisplay))
+            {
+                try
+                {
+                    object? value = Expression.Lambda(callExpr).Compile().DynamicInvoke();
+                    details[indexerDisplay] = value;
+                }
+                catch
+                {
+                    details[indexerDisplay] = "<Failed to evaluate>";
+                }
+            }
+
+            // Extract variables from the index arguments but not from the object
+            foreach (Expression argument in callExpr.Arguments)
+            {
+                ExtractVariablesFromExpression(argument, details);
+            }
+        }
         else
         {
             // Check if the method returns a boolean

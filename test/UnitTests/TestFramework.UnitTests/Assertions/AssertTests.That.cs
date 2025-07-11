@@ -608,7 +608,12 @@ public partial class AssertTests : TestContainer
     public void That_IndexExpression_WithMultipleIndices_ExtractsVariablesCorrectly()
     {
         // Arrange
-        int[,] matrix = new int[3, 3] { { 1, 2, 3 }, { 4, 5, 6 }, { 7, 8, 9 } };
+        int[,] matrix = new int[3, 3]
+        {
+            { 1, 2, 3 },
+            { 4, 5, 6 },
+            { 7, 8, 9 },
+        };
         int row = 1;
         int col = 2;
         int expectedValue = 10;
@@ -629,7 +634,7 @@ public partial class AssertTests : TestContainer
     public void That_IndexExpression_WithComplexIndexArguments_ExtractsVariablesCorrectly()
     {
         // Arrange
-        int[] array = new[] { 10, 20, 30, 40, 50 };
+        int[] array = [10, 20, 30, 40, 50];
         int offset = 2;
         int start = 1;
 
