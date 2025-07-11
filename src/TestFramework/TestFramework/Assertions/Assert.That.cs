@@ -433,6 +433,9 @@ public sealed partial class Assert
         // Handle anonymous types - remove the compiler-generated type wrapper
         cleaned = RemoveAnonymousTypeWrappers(cleaned);
 
+        // Handle list initialization expressions - convert from Add method calls to collection initializer syntax
+        cleaned = CleanListInitializers(cleaned);
+
         // Handle compiler-generated display classes more comprehensively
         // Updated pattern to handle cases with and without parentheses around the display class
         cleaned = CompilerGeneratedDisplayClassRegex().Replace(cleaned, "$1");
@@ -501,6 +504,78 @@ public sealed partial class Assert
 
         return result.ToString();
     }
+
+    private static string CleanListInitializers(string input)
+    {
+        if (string.IsNullOrEmpty(input))
+        {
+            return input;
+        }
+
+        // Pattern to match: new List`1() {Void Add(Type)(arg1), Void Add(Type)(arg2), ...}
+        // We want to convert this to: new List<Type> { arg1, arg2, ... }
+        string listInitPattern = @"new\s+(List|IList|ICollection|IEnumerable)`1\(\)\s*\{([^}]+)\}";
+
+        return Regex.Replace(input, listInitPattern, match =>
+        {
+            string collectionType = match.Groups[1].Value;
+            string initContent = match.Groups[2].Value;
+
+            // Extract the generic type parameter and arguments from the Add method calls
+            string addMethodPattern = @"Void\s+Add\([^)]+\)\(([^)]+)\)";
+            MatchCollection addMatches = Regex.Matches(initContent, addMethodPattern);
+
+            if (addMatches.Count == 0)
+            {
+                return match.Value; // Return original if no Add methods found
+            }
+
+            // Extract type from the first Add method call
+            string firstAddPattern = @"Void\s+Add\(([^)]+)\)";
+            Match typeMatch = Regex.Match(initContent, firstAddPattern);
+            string genericType = "object"; // default fallback
+
+            if (typeMatch.Success)
+            {
+                string rawType = typeMatch.Groups[1].Value;
+                // Clean up type names like "Int32" to "int", "String" to "string", etc.
+                genericType = CleanTypeName(rawType);
+            }
+
+            // Extract all arguments from Add method calls
+            var arguments = new List<string>();
+            foreach (Match addMatch in addMatches)
+            {
+                string argument = addMatch.Groups[1].Value;
+                arguments.Add(argument);
+            }
+
+            // Construct the cleaned collection initializer
+            string argumentsList = string.Join(", ", arguments);
+            return $"new {collectionType}<{genericType}> {{ {argumentsList} }}";
+        }, RegexOptions.IgnoreCase);
+    }
+
+    private static string CleanTypeName(string typeName)
+        => typeName switch
+        {
+            "Int32" => "int",
+            "Int64" => "long",
+            "Int16" => "short",
+            "Byte" => "byte",
+            "SByte" => "sbyte",
+            "UInt32" => "uint",
+            "UInt64" => "ulong",
+            "UInt16" => "ushort",
+            "Single" => "float",
+            "Double" => "double",
+            "Decimal" => "decimal",
+            "Boolean" => "bool",
+            "String" => "string",
+            "Char" => "char",
+            "Object" => "object",
+            _ => typeName,
+        };
 
     private static string CleanParentheses(string input)
     {
