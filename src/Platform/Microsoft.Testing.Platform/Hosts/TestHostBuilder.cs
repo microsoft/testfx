@@ -191,8 +191,8 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
         var policiesService = new StopPoliciesService(testApplicationCancellationTokenSource);
         serviceProvider.AddService(policiesService);
 
-        bool hasServerFlag = commandLineHandler.TryGetOptionArgumentList(PlatformCommandLineProvider.ServerOptionKey, out string[]? protocolName);
-        bool isJsonRpcProtocol = protocolName is null || protocolName.Length == 0 || protocolName[0].Equals(PlatformCommandLineProvider.JsonRpcProtocolName, StringComparison.OrdinalIgnoreCase);
+        bool hasServerFlag = commandLineHandler.TryGetOptionArgument(PlatformCommandLineProvider.ServerOptionKey, out string? protocolName);
+        bool isJsonRpcProtocol = protocolName is null || protocolName.Equals(PlatformCommandLineProvider.JsonRpcProtocolName, StringComparison.OrdinalIgnoreCase);
 
         ProxyOutputDevice proxyOutputDevice = await _outputDisplay.BuildAsync(serviceProvider, hasServerFlag && isJsonRpcProtocol).ConfigureAwait(false);
 
@@ -250,9 +250,8 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
         serviceProvider.TryAddService(commandLineHandler);
 
         // setting the timeout
-        if (commandLineOptions.IsOptionSet(PlatformCommandLineProvider.TimeoutOptionKey) && commandLineOptions.TryGetOptionArgumentList(PlatformCommandLineProvider.TimeoutOptionKey, out string[]? args))
+        if (commandLineOptions.IsOptionSet(PlatformCommandLineProvider.TimeoutOptionKey) && commandLineOptions.TryGetOptionArgument(PlatformCommandLineProvider.TimeoutOptionKey, out string? arg))
         {
-            string arg = args[0];
             int size = arg.Length;
             if (!float.TryParse(arg[..(size - 1)], NumberStyles.Float, CultureInfo.InvariantCulture, out float value))
             {

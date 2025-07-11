@@ -23,11 +23,9 @@ internal abstract class ContextAdapterBase
         string? filterFromCommandLineOption = null;
         if (commandLineOptions.TryGetOptionArgumentList(
             TestCaseFilterCommandLineOptionsProvider.TestCaseFilterOptionName,
-            out string[]? filterExpressions)
-            && filterExpressions is not null
-            && filterExpressions.Length == 1)
+            out string? filterExpression))
         {
-            filterFromCommandLineOption = filterExpressions[0];
+            filterFromCommandLineOption = filterExpression;
         }
 
         HandleFilter(filter, filterFromRunsettings, filterFromCommandLineOption);
