@@ -136,6 +136,21 @@ public sealed partial class Assert
                     ExtractVariablesFromExpression(argument, details);
                 }
 
+                // Display the new object value
+                string newExprDisplay = GetCleanMemberName(newExpr);
+                if (!details.ContainsKey(newExprDisplay))
+                {
+                    try
+                    {
+                        object? value = Expression.Lambda(newExpr).Compile().DynamicInvoke();
+                        details[newExprDisplay] = value;
+                    }
+                    catch
+                    {
+                        details[newExprDisplay] = "<Failed to evaluate>";
+                    }
+                }
+
                 break;
 
             case ListInitExpression listInitExpr:
