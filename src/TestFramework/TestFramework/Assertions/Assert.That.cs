@@ -512,48 +512,143 @@ public sealed partial class Assert
             return input;
         }
 
-        // Pattern to match: new List`1() {Void Add(Type)(arg1), Void Add(Type)(arg2), ...}
-        // We want to convert this to: new List<Type> { arg1, arg2, ... }
-        string listInitPattern = @"new\s+(List|IList|ICollection|IEnumerable)`1\(\)\s*\{([^}]+)\}";
+        // Look for list initialization patterns with proper brace matching
+        var result = new StringBuilder();
+        int i = 0;
 
-        return Regex.Replace(input, listInitPattern, match =>
+        while (i < input.Length)
         {
-            string collectionType = match.Groups[1].Value;
-            string initContent = match.Groups[2].Value;
-
-            // Extract the generic type parameter and arguments from the Add method calls
-            string addMethodPattern = @"Void\s+Add\([^)]+\)\(([^)]+)\)";
-            MatchCollection addMatches = Regex.Matches(initContent, addMethodPattern);
-
-            if (addMatches.Count == 0)
+            // Look for "new List`1() {" or similar collection types
+            if (TryMatchListInitPattern(input, i, out string collectionType, out int patternEnd))
             {
-                return match.Value; // Return original if no Add methods found
+                // Find the matching closing brace for the initializer
+                int braceStart = patternEnd;
+                int braceCount = 1;
+                int braceEnd = braceStart + 1;
+
+                while (braceEnd < input.Length && braceCount > 0)
+                {
+                    if (input[braceEnd] == '{')
+                    {
+                        braceCount++;
+                    }
+                    else if (input[braceEnd] == '}')
+                    {
+                        braceCount--;
+                    }
+
+                    braceEnd++;
+                }
+
+                if (braceCount == 0)
+                {
+                    // Extract the content between braces
+                    string initContent = input.Substring(braceStart + 1, braceEnd - braceStart - 2);
+
+                    // Extract the generic type parameter and arguments from the Add method calls
+                    string addMethodPattern = @"Void\s+Add\([^)]+\)\(([^)]+)\)";
+                    MatchCollection addMatches = Regex.Matches(initContent, addMethodPattern);
+
+                    if (addMatches.Count > 0)
+                    {
+                        // Extract type from the first Add method call
+                        string firstAddPattern = @"Void\s+Add\(([^)]+)\)";
+                        Match typeMatch = Regex.Match(initContent, firstAddPattern);
+                        string genericType = "object"; // default fallback
+
+                        if (typeMatch.Success)
+                        {
+                            string rawType = typeMatch.Groups[1].Value;
+                            // Clean up type names like "Int32" to "int", "String" to "string", etc.
+                            genericType = CleanTypeName(rawType);
+                        }
+
+                        // Extract all arguments from Add method calls
+                        var arguments = new List<string>();
+                        foreach (Match addMatch in addMatches)
+                        {
+                            string argument = addMatch.Groups[1].Value;
+                            arguments.Add(argument);
+                        }
+
+                        // Construct the cleaned collection initializer
+                        string argumentsList = string.Join(", ", arguments);
+                        result.Append($"new {collectionType}<{genericType}> {{ {argumentsList} }}");
+                        i = braceEnd;
+                        continue;
+                    }
+                }
             }
 
-            // Extract type from the first Add method call
-            string firstAddPattern = @"Void\s+Add\(([^)]+)\)";
-            Match typeMatch = Regex.Match(initContent, firstAddPattern);
-            string genericType = "object"; // default fallback
+            result.Append(input[i]);
+            i++;
+        }
 
-            if (typeMatch.Success)
+        return result.ToString();
+    }
+
+    private static bool TryMatchListInitPattern(string input, int startIndex, out string collectionType, out int patternEnd)
+    {
+        collectionType = string.Empty;
+        patternEnd = startIndex;
+
+        // Check for "new " at the start
+        if (startIndex + 4 >= input.Length || !input.Substring(startIndex, 4).Equals("new ", StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        int pos = startIndex + 4;
+
+        // Skip whitespace
+        while (pos < input.Length && char.IsWhiteSpace(input[pos]))
+        {
+            pos++;
+        }
+
+        // Check for collection type names
+        string[] collectionTypes = ["List", "IList", "ICollection", "IEnumerable"];
+        string matchedType = string.Empty;
+
+        foreach (string type in collectionTypes)
+        {
+            if (pos + type.Length < input.Length &&
+                input.Substring(pos, type.Length).Equals(type, StringComparison.Ordinal))
             {
-                string rawType = typeMatch.Groups[1].Value;
-                // Clean up type names like "Int32" to "int", "String" to "string", etc.
-                genericType = CleanTypeName(rawType);
+                matchedType = type;
+                pos += type.Length;
+                break;
             }
+        }
 
-            // Extract all arguments from Add method calls
-            var arguments = new List<string>();
-            foreach (Match addMatch in addMatches)
-            {
-                string argument = addMatch.Groups[1].Value;
-                arguments.Add(argument);
-            }
+        if (string.IsNullOrEmpty(matchedType))
+        {
+            return false;
+        }
 
-            // Construct the cleaned collection initializer
-            string argumentsList = string.Join(", ", arguments);
-            return $"new {collectionType}<{genericType}> {{ {argumentsList} }}";
-        }, RegexOptions.IgnoreCase);
+        // Check for "`1()" pattern
+        if (pos + 4 >= input.Length || !input.Substring(pos, 4).Equals("`1()", StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        pos += 4;
+
+        // Skip whitespace
+        while (pos < input.Length && char.IsWhiteSpace(input[pos]))
+        {
+            pos++;
+        }
+
+        // Check for opening brace
+        if (pos >= input.Length || input[pos] != '{')
+        {
+            return false;
+        }
+
+        collectionType = matchedType;
+        patternEnd = pos;
+        return true;
     }
 
     private static string CleanTypeName(string typeName)
