@@ -667,6 +667,24 @@ public sealed partial class Assert
             "String" => "string",
             "Char" => "char",
             "Object" => "object",
+
+            // Handle System. prefixed type names
+            "System.Int32" => "int",
+            "System.Int64" => "long",
+            "System.Int16" => "short",
+            "System.Byte" => "byte",
+            "System.SByte" => "sbyte",
+            "System.UInt32" => "uint",
+            "System.UInt64" => "ulong",
+            "System.UInt16" => "ushort",
+            "System.Single" => "float",
+            "System.Double" => "double",
+            "System.Decimal" => "decimal",
+            "System.Boolean" => "bool",
+            "System.String" => "string",
+            "System.Char" => "char",
+            "System.Object" => "object",
+
             _ => typeName,
         };
 
