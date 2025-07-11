@@ -16,25 +16,8 @@ namespace Microsoft.Testing.Extensions.VSTestBridge.Requests;
 /// <summary>
 /// VSTest specific implementation of Microsoft Testing Platform <see cref="ITestExecutionRequestFactory"/>.
 /// </summary>
-public sealed class VSTestDiscoverTestExecutionRequestFactory : ITestExecutionRequestFactory
+internal static class VSTestDiscoverTestExecutionRequestFactory
 {
-    [Obsolete]
-    private VSTestDiscoverTestExecutionRequestFactory()
-    {
-    }
-
-    /// <summary>
-    /// Creates a new instance of <see cref="VSTestDiscoverTestExecutionRequest"/> with the given parameters.
-    /// </summary>
-    /// <param name="session">The test session context.</param>
-    /// <returns>An instance of <see cref="TestExecutionRequest"/>.</returns>
-    // This class is never instantiated.
-    // It's not possible to reach this method.
-    // The class should probably be static and not needing to implement the interface.
-    [Obsolete]
-    Task<TestExecutionRequest> ITestExecutionRequestFactory.CreateRequestAsync(Platform.TestHost.TestSessionContext session)
-        => throw ApplicationStateGuard.Unreachable();
-
     /// <summary>
     /// Creates a new instance of <see cref="VSTestDiscoverTestExecutionRequest"/> with the given parameters.
     /// </summary>
