@@ -22,12 +22,12 @@ public sealed class TestContextPropertyUsageAnalyzerTests
                 [AssemblyInitialize]
                 public static void AssemblyInit(TestContext testContext)
                 {
-                    _ = testContext.{|#0:TestData|};
-                    _ = testContext.{|#1:TestDisplayName|};
-                    _ = testContext.{|#2:TestName|};
-                    _ = testContext.{|#3:ManagedMethod|};
-                    _ = testContext.{|#4:FullyQualifiedTestClassName|};
-                    _ = testContext.{|#5:ManagedType|};
+                    _ = testContext.[|TestData|];
+                    _ = testContext.[|TestDisplayName|];
+                    _ = testContext.[|TestName|];
+                    _ = testContext.[|ManagedMethod|];
+                    _ = testContext.[|FullyQualifiedTestClassName|];
+                    _ = testContext.[|ManagedType|];
                 }
             }
             """;
@@ -48,12 +48,12 @@ public sealed class TestContextPropertyUsageAnalyzerTests
                 public static void AssemblyCleanup()
                 {
                     TestContext testContext = GetTestContext();
-                    _ = testContext.{|#0:TestData|};
-                    _ = testContext.{|#1:TestDisplayName|};
-                    _ = testContext.{|#2:TestName|};
-                    _ = testContext.{|#3:ManagedMethod|};
-                    _ = testContext.{|#4:FullyQualifiedTestClassName|};
-                    _ = testContext.{|#5:ManagedType|};
+                    _ = testContext.[|TestData|];
+                    _ = testContext.[|TestDisplayName|];
+                    _ = testContext.[|TestName|];
+                    _ = testContext.[|ManagedMethod|];
+                    _ = testContext.[|FullyQualifiedTestClassName|];
+                    _ = testContext.[|ManagedType|];
                 }
 
                 private static TestContext GetTestContext() => null;
@@ -75,10 +75,10 @@ public sealed class TestContextPropertyUsageAnalyzerTests
                 [ClassInitialize]
                 public static void ClassInit(TestContext testContext)
                 {
-                    _ = testContext.{|#0:TestData|};
-                    _ = testContext.{|#1:TestDisplayName|};
-                    _ = testContext.{|#2:TestName|};
-                    _ = testContext.{|#3:ManagedMethod|};
+                    _ = testContext.[|TestData|];
+                    _ = testContext.[|TestDisplayName|];
+                    _ = testContext.[|TestName|];
+                    _ = testContext.[|ManagedMethod|];
                     // These should NOT trigger diagnostics in class initialize
                     _ = testContext.FullyQualifiedTestClassName;
                     _ = testContext.ManagedType;
@@ -102,10 +102,10 @@ public sealed class TestContextPropertyUsageAnalyzerTests
                 public static void ClassCleanup()
                 {
                     TestContext testContext = GetTestContext();
-                    _ = testContext.{|#0:TestData|};
-                    _ = testContext.{|#1:TestDisplayName|};
-                    _ = testContext.{|#2:TestName|};
-                    _ = testContext.{|#3:ManagedMethod|};
+                    _ = testContext.[|TestData|];
+                    _ = testContext.[|TestDisplayName|];
+                    _ = testContext.[|TestName|];
+                    _ = testContext.[|ManagedMethod|];
                     // These should NOT trigger diagnostics in class cleanup
                     _ = testContext.FullyQualifiedTestClassName;
                     _ = testContext.ManagedType;
@@ -214,8 +214,8 @@ public sealed class TestContextPropertyUsageAnalyzerTests
                 [AssemblyInitialize]
                 public static void AssemblyInit(TestContext testContext)
                 {
-                    _ = testContext.{|#0:DataRow|};
-                    _ = testContext.{|#1:DataConnection|};
+                    _ = testContext.[|DataRow|];
+                    _ = testContext.[|DataConnection|];
                 }
             }
             """;
