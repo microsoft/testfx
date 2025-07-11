@@ -177,8 +177,8 @@ internal sealed class TrxCompareTool : ITool, IOutputDeviceDataProducer
 
     private static async Task CollectEntriesAndErrorsAsync(string trxFile, XNamespace ns, List<(string TestName, string Outcome, string Storage)> results, List<string> issues)
     {
-        using var stream = File.OpenRead(trxFile);
-        var trxTestRun = await XElement.LoadAsync(stream, LoadOptions.None, CancellationToken.None).ConfigureAwait(false);
+        using FileStream stream = File.OpenRead(trxFile);
+        XElement trxTestRun = await XElement.LoadAsync(stream, LoadOptions.None, CancellationToken.None).ConfigureAwait(false);
         int testResultIndex = 0;
         foreach (XElement testResult in trxTestRun.Elements(ns + "Results").Elements(ns + "UnitTestResult"))
         {
