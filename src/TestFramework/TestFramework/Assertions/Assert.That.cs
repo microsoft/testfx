@@ -172,10 +172,6 @@ public sealed partial class Assert
                 }
 
                 break;
-
-            case IndexExpression indexExpr:
-                HandleIndexExpression(indexExpr, details);
-                break;
         }
     }
 
@@ -188,13 +184,6 @@ public sealed partial class Assert
 
         // Extract variables from the index argument
         ExtractVariablesFromExpression(arrayIndexExpr.Right, details);
-
-        // Only extract variables from the array if it's a parameter expression,
-        // not when it's a member expression (which would show the full array)
-        if (arrayIndexExpr.Left is ParameterExpression)
-        {
-            ExtractVariablesFromExpression(arrayIndexExpr.Left, details);
-        }
     }
 
     private static void AddMemberExpressionToDetails(MemberExpression memberExpr, Dictionary<string, object?> details)
@@ -282,26 +271,6 @@ public sealed partial class Assert
             {
                 ExtractVariablesFromExpression(argument, details, suppressIntermediateValues);
             }
-        }
-    }
-
-    private static void HandleIndexExpression(IndexExpression indexExpr, Dictionary<string, object?> details)
-    {
-        string objectName = GetCleanMemberName(indexExpr.Object);
-        string indexDisplay = string.Join(", ", indexExpr.Arguments.Select(GetIndexArgumentDisplay));
-        string indexerDisplay = $"{objectName}[{indexDisplay}]";
-        TryAddExpressionValue(indexExpr, indexerDisplay, details);
-
-        // Only extract variables from the object if it's a parameter expression,
-        // not when it's a member expression (which would show the full collection)
-        if (indexExpr.Object is ParameterExpression)
-        {
-            ExtractVariablesFromExpression(indexExpr.Object, details);
-        }
-
-        foreach (Expression indexArg in indexExpr.Arguments)
-        {
-            ExtractVariablesFromExpression(indexArg, details);
         }
     }
 
@@ -789,8 +758,8 @@ public sealed partial class Assert
 
         while (i < input.Length)
         {
-            if (TryRemoveWrapper(input, ref i, "value(", content => content, result) ||
-                TryRemoveWrapper(input, ref i, "ArrayLength(", content => content + ".Length", result))
+            if (TryRemoveWrapper(input, ref i, "value(", RemoveCompilerGeneratedWrappers, result) ||
+                TryRemoveWrapper(input, ref i, "ArrayLength(", content => RemoveCompilerGeneratedWrappers(content) + ".Length", result))
             {
                 continue;
             }

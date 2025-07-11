@@ -648,4 +648,54 @@ public partial class AssertTests : TestContainer
                   start = 1
                 """);
     }
+
+    public void That_NonGenericCollection_FormatsCorrectly()
+    {
+        // Arrange - Using ArrayList as a non-generic IEnumerable collection
+        var nonGenericCollection = new ArrayList { 1, "hello", true, 42.5 };
+
+        // Act & Assert
+        Action action = () => Assert.That(() => nonGenericCollection.Count == 10, "Collection should have 10 items");
+        action.Should().Throw<AssertFailedException>()
+            .WithMessage("""
+                Assert.That(() => nonGenericCollection.Count == 10) failed.
+                Message: Collection should have 10 items
+                Details:
+                  nonGenericCollection.Count = 4
+                """);
+    }
+
+    public void That_NonGenericCollectionInComparison_FormatsCorrectly()
+    {
+        // Arrange - Using ArrayList in a comparison to trigger FormatValue on line 421
+        var arrayList = new ArrayList { 1, 2, 3 };
+        int[] expectedItems = [1, 2, 3, 4];
+
+        // Act & Assert
+        Action action = () => Assert.That(() => arrayList.Count == expectedItems.Length, "Collections should have same count");
+        action.Should().Throw<AssertFailedException>()
+            .WithMessage("""
+                Assert.That(() => arrayList.Count == expectedItems.Length) failed.
+                Message: Collections should have same count
+                Details:
+                  arrayList.Count = 3
+                  expectedItems.Length = 4
+                """);
+    }
+
+    public void That_ArrayIndexWithParameterExpression_ExtractsArrayVariable()
+    {
+        // Arrange
+        int[] arrayParam = [10, 20, 30];
+
+        // Act & Assert
+        Action action = () => Assert.That(() => arrayParam[arrayParam.Length - 2] == 999);
+        action.Should().Throw<AssertFailedException>()
+            .WithMessage("""
+            Assert.That(() => arrayParam[arrayParam.Length - 2] == 999) failed.
+            Details:
+              arrayParam.Length = 3
+              arrayParam[arrayParam.Length - 2] = 20
+            """);
+    }
 }
