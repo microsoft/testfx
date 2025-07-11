@@ -186,6 +186,15 @@ internal class TestExecutionManager
         foreach (var group in testsBySource)
         {
             _testRunCancellationToken?.ThrowIfCancellationRequested();
+
+#if NETFRAMEWORK
+            if (AppDomain.CurrentDomain.Id == 1 &&
+                AppDomain.CurrentDomain.FriendlyName.StartsWith("testhost.net", StringComparison.Ordinal) &&
+                AppDomain.CurrentDomain.FriendlyName.EndsWith(".exe", StringComparison.Ordinal))
+            {
+                AppDomain.CurrentDomain.SetupInformation.ApplicationBase = Path.GetDirectoryName(group.Source);
+            }
+#endif
             await ExecuteTestsInSourceAsync(group.Tests, runContext, frameworkHandle, group.Source, isDeploymentDone).ConfigureAwait(false);
         }
     }
