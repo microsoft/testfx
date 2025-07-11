@@ -1293,5 +1293,32 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("StringAssertToAssertTitle", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to TestContext property cannot be accessed in this context.
+        /// </summary>
+        internal static string TestContextPropertyUsageTitle {
+            get {
+                return ResourceManager.GetString("TestContextPropertyUsageTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to TestContext property '{0}' cannot be accessed in '{1}' method.
+        /// </summary>
+        internal static string TestContextPropertyUsageMessageFormat {
+            get {
+                return ResourceManager.GetString("TestContextPropertyUsageMessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Some TestContext properties are only available during test execution and cannot be accessed in assembly initialize, class initialize, class cleanup, or assembly cleanup methods.
+        /// </summary>
+        internal static string TestContextPropertyUsageDescription {
+            get {
+                return ResourceManager.GetString("TestContextPropertyUsageDescription", resourceCulture);
+            }
+        }
     }
 }
