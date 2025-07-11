@@ -385,14 +385,14 @@ public sealed class PreferConstructorOverTestInitializeAnalyzerTests
             {
                 private object _instanceVariable;
 
-                public Test1()
-                {
-                    _instanceVariable = new object();
-                }
-
                 [TestMethod]
                 public void TestMethod1()
                 {
+                }
+
+                public Test1()
+                {
+                    _instanceVariable = new object();
                 }
 
                 private void SomePrivateMethod()

@@ -98,37 +98,8 @@ public sealed class PreferConstructorOverTestInitializeFixer : CodeFixProvider
                     .WithModifiers(SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PublicKeyword)))
                     .WithBody(testInitializeBody);
 
-                // Find appropriate position for the constructor
-                // Place after last field or static constructor, but before any instance methods
-                SyntaxNode? insertAfterNode = null;
-                SyntaxList<MemberDeclarationSyntax> members = containingClass.Members;
-
-                for (int i = 0; i < members.Count; i++)
-                {
-                    MemberDeclarationSyntax member = members[i];
-                    if (member is FieldDeclarationSyntax ||
-                        (member is ConstructorDeclarationSyntax ctor && ctor.Modifiers.Any(SyntaxKind.StaticKeyword)))
-                    {
-                        insertAfterNode = member;
-                    }
-                    else if (member == testInitializeMethod)
-                    {
-                        // If we reach the TestInitialize method and haven't found a good position,
-                        // place the constructor at the same position as the TestInitialize method
-                        break;
-                    }
-                }
-
-                if (insertAfterNode != null)
-                {
-                    // Insert after the last field or static constructor
-                    editor.InsertAfter(insertAfterNode, constructor);
-                }
-                else
-                {
-                    // No appropriate position found, insert before the TestInitialize method
-                    editor.InsertBefore(testInitializeMethod, constructor);
-                }
+                // Insert the constructor at the position of the existing TestInitialize method
+                editor.InsertBefore(testInitializeMethod, constructor);
             }
 
             // Remove the TestInitialize method
