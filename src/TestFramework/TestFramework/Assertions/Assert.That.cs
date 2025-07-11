@@ -284,13 +284,14 @@ public sealed partial class Assert
         else
         {
             // Check if the method returns a boolean
-            bool methodReturnsBoolean = callExpr.Method.ReturnType == typeof(bool);
-
-            if (methodReturnsBoolean && callExpr.Object is not null)
+            if (callExpr.Method.ReturnType == typeof(bool))
             {
-                // For boolean-returning methods, extract details from the object being called
-                // This captures the last non-boolean method call in a chain
-                ExtractVariablesFromExpression(callExpr.Object, details);
+                if (callExpr.Object is not null)
+                {
+                    // For boolean-returning methods, extract details from the object being called
+                    // This captures the last non-boolean method call in a chain
+                    ExtractVariablesFromExpression(callExpr.Object, details);
+                }
             }
             else
             {
