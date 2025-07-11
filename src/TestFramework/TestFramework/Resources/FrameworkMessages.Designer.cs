@@ -19,7 +19,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "18.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class FrameworkMessages {
@@ -156,6 +156,33 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         internal static string AssertionFailed {
             get {
                 return ResourceManager.GetString("AssertionFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Details:.
+        /// </summary>
+        internal static string AssertThatDetailsPrefix {
+            get {
+                return ResourceManager.GetString("AssertThatDetailsPrefix", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Assert.That({0}) failed..
+        /// </summary>
+        internal static string AssertThatFailedFormat {
+            get {
+                return ResourceManager.GetString("AssertThatFailedFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Message: {0}.
+        /// </summary>
+        internal static string AssertThatMessageFormat {
+            get {
+                return ResourceManager.GetString("AssertThatMessageFormat", resourceCulture);
             }
         }
         

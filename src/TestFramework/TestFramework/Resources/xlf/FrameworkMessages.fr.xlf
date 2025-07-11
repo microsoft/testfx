@@ -52,6 +52,21 @@
         <target state="translated">Ne passez pas de types valeur à AreSame(). Les valeurs converties en Object ne seront plus jamais les mêmes. Si possible, utilisez AreEqual(). {0}</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="AssertThatDetailsPrefix">
+        <source>Details:</source>
+        <target state="new">Details:</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AssertThatFailedFormat">
+        <source>Assert.That({0}) failed.</source>
+        <target state="new">Assert.That({0}) failed.</target>
+        <note>{0} is the user code expression</note>
+      </trans-unit>
+      <trans-unit id="AssertThatMessageFormat">
+        <source>Message: {0}</source>
+        <target state="new">Message: {0}</target>
+        <note>{0} user provided message</note>
+      </trans-unit>
       <trans-unit id="BothCollectionsEmpty">
         <source>Both collections are empty. {0}</source>
         <target state="translated">Les deux collections sont vides. {0}</target>

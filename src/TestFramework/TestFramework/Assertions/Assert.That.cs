@@ -31,16 +31,17 @@ public sealed partial class Assert
         var sb = new StringBuilder();
         string expressionText = conditionExpression
             ?? $"() => {CleanExpressionText(condition.Body.ToString())}";
-        sb.AppendLine($"Assert.That({expressionText}) failed.");
+        sb.AppendLine(string.Format(CultureInfo.InvariantCulture, FrameworkMessages.AssertThatFailedFormat, expressionText));
         if (!string.IsNullOrWhiteSpace(message))
         {
-            sb.AppendLine($"Message: {message}");
+            sb.AppendLine(string.Format(CultureInfo.InvariantCulture, FrameworkMessages.AssertThatMessageFormat, message));
         }
 
         string details = ExtractDetails(condition.Body);
         if (!string.IsNullOrWhiteSpace(details))
         {
-            sb.AppendLine("Details:\n" + details);
+            sb.AppendLine(FrameworkMessages.AssertThatDetailsPrefix);
+            sb.AppendLine(details);
         }
 
         throw new AssertFailedException(sb.ToString().TrimEnd());
@@ -62,7 +63,11 @@ public sealed partial class Assert
         var sb = new StringBuilder();
         foreach ((string name, object? value) in sortedDetails)
         {
+#if NET
+            sb.AppendLine(CultureInfo.InvariantCulture, $"  {name} = {FormatValue(value)}");
+#else
             sb.AppendLine($"  {name} = {FormatValue(value)}");
+#endif
         }
 
         return sb.ToString();
@@ -390,7 +395,11 @@ public sealed partial class Assert
                 {
                     // Extract the content inside the parentheses and wrap with anonymous type notation
                     string content = input.Substring(constructorStart + 1, constructorEnd - constructorStart - 2);
+#if NET
+                    result.Append(CultureInfo.InvariantCulture, $"new {{ {content} }}");
+#else
                     result.Append($"new {{ {content} }}");
+#endif
                     i = constructorEnd;
                     continue;
                 }
@@ -471,7 +480,11 @@ public sealed partial class Assert
 
                         // Construct the cleaned collection initializer
                         string argumentsList = string.Join(", ", arguments);
+#if NET
+                        result.Append(CultureInfo.InvariantCulture, $"new {collectionType}<{genericType}> {{ {argumentsList} }}");
+#else
                         result.Append($"new {collectionType}<{genericType}> {{ {argumentsList} }}");
+#endif
                         i = braceEnd;
                         continue;
                     }
