@@ -78,8 +78,17 @@ public sealed partial class Assert
         switch (expr)
         {
             case BinaryExpression binaryExpr:
-                ExtractVariablesFromExpression(binaryExpr.Left, details);
-                ExtractVariablesFromExpression(binaryExpr.Right, details);
+                // Special handling for array indexing (myArray[index])
+                if (binaryExpr.NodeType == ExpressionType.ArrayIndex)
+                {
+                    HandleArrayIndexExpression(binaryExpr, details);
+                }
+                else
+                {
+                    ExtractVariablesFromExpression(binaryExpr.Left, details);
+                    ExtractVariablesFromExpression(binaryExpr.Right, details);
+                }
+
                 break;
 
             case TypeBinaryExpression typeBinaryExpr:
@@ -167,6 +176,36 @@ public sealed partial class Assert
             case IndexExpression indexExpr:
                 HandleIndexExpression(indexExpr, details);
                 break;
+        }
+    }
+
+    private static void HandleArrayIndexExpression(BinaryExpression arrayIndexExpr, Dictionary<string, object?> details)
+    {
+        string arrayName = GetCleanMemberName(arrayIndexExpr.Left);
+        string indexValue = GetIndexArgumentDisplay(arrayIndexExpr.Right);
+        string indexerDisplay = $"{arrayName}[{indexValue}]";
+
+        if (!details.ContainsKey(indexerDisplay))
+        {
+            try
+            {
+                object? value = Expression.Lambda(arrayIndexExpr).Compile().DynamicInvoke();
+                details[indexerDisplay] = value;
+            }
+            catch
+            {
+                details[indexerDisplay] = "<Failed to evaluate>";
+            }
+        }
+
+        // Extract variables from the index argument
+        ExtractVariablesFromExpression(arrayIndexExpr.Right, details);
+
+        // Only extract variables from the array if it's a parameter expression,
+        // not when it's a member expression (which would show the full array)
+        if (arrayIndexExpr.Left is ParameterExpression)
+        {
+            ExtractVariablesFromExpression(arrayIndexExpr.Left, details);
         }
     }
 
