@@ -95,7 +95,9 @@ public sealed partial class Assert
 
             // Special handling for ArrayLength expressions
             case UnaryExpression unaryExpr when unaryExpr.NodeType == ExpressionType.ArrayLength:
-                HandleArrayLengthExpression(unaryExpr, details);
+                string arrayName = GetCleanMemberName(unaryExpr.Operand);
+                string lengthDisplayName = $"{arrayName}.Length";
+                TryAddExpressionValue(unaryExpr, lengthDisplayName, details);
                 break;
 
             case UnaryExpression unaryExpr:
@@ -138,19 +140,7 @@ public sealed partial class Assert
 
                 // Display the new object value
                 string newExprDisplay = GetCleanMemberName(newExpr);
-                if (!details.ContainsKey(newExprDisplay))
-                {
-                    try
-                    {
-                        object? value = Expression.Lambda(newExpr).Compile().DynamicInvoke();
-                        details[newExprDisplay] = value;
-                    }
-                    catch
-                    {
-                        details[newExprDisplay] = "<Failed to evaluate>";
-                    }
-                }
-
+                TryAddExpressionValue(newExpr, newExprDisplay, details);
                 break;
 
             case ListInitExpression listInitExpr:
@@ -184,19 +174,7 @@ public sealed partial class Assert
         string arrayName = GetCleanMemberName(arrayIndexExpr.Left);
         string indexValue = GetIndexArgumentDisplay(arrayIndexExpr.Right);
         string indexerDisplay = $"{arrayName}[{indexValue}]";
-
-        if (!details.ContainsKey(indexerDisplay))
-        {
-            try
-            {
-                object? value = Expression.Lambda(arrayIndexExpr).Compile().DynamicInvoke();
-                details[indexerDisplay] = value;
-            }
-            catch
-            {
-                details[indexerDisplay] = "<Failed to evaluate>";
-            }
-        }
+        TryAddExpressionValue(arrayIndexExpr, indexerDisplay, details);
 
         // Extract variables from the index argument
         ExtractVariablesFromExpression(arrayIndexExpr.Right, details);
@@ -206,25 +184,6 @@ public sealed partial class Assert
         if (arrayIndexExpr.Left is ParameterExpression)
         {
             ExtractVariablesFromExpression(arrayIndexExpr.Left, details);
-        }
-    }
-
-    private static void HandleArrayLengthExpression(UnaryExpression arrayLengthExpr, Dictionary<string, object?> details)
-    {
-        string arrayName = GetCleanMemberName(arrayLengthExpr.Operand);
-        string lengthDisplayName = $"{arrayName}.Length";
-
-        if (!details.ContainsKey(lengthDisplayName))
-        {
-            try
-            {
-                object? value = Expression.Lambda(arrayLengthExpr).Compile().DynamicInvoke();
-                details[lengthDisplayName] = value;
-            }
-            catch
-            {
-                details[lengthDisplayName] = "<Failed to evaluate>";
-            }
         }
     }
 
@@ -270,19 +229,7 @@ public sealed partial class Assert
             string objectName = GetCleanMemberName(callExpr.Object);
             string indexValue = GetIndexArgumentDisplay(callExpr.Arguments[0]);
             string indexerDisplay = $"{objectName}[{indexValue}]";
-
-            if (!details.ContainsKey(indexerDisplay))
-            {
-                try
-                {
-                    object? value = Expression.Lambda(callExpr).Compile().DynamicInvoke();
-                    details[indexerDisplay] = value;
-                }
-                catch
-                {
-                    details[indexerDisplay] = "<Failed to evaluate>";
-                }
-            }
+            TryAddExpressionValue(callExpr, indexerDisplay, details);
 
             // Extract variables from the index argument but not from the object.
             ExtractVariablesFromExpression(callExpr.Arguments[0], details);
@@ -292,19 +239,7 @@ public sealed partial class Assert
             string objectName = GetCleanMemberName(callExpr.Object);
             string indexDisplay = string.Join(", ", callExpr.Arguments.Select(GetIndexArgumentDisplay));
             string indexerDisplay = $"{objectName}[{indexDisplay}]";
-
-            if (!details.ContainsKey(indexerDisplay))
-            {
-                try
-                {
-                    object? value = Expression.Lambda(callExpr).Compile().DynamicInvoke();
-                    details[indexerDisplay] = value;
-                }
-                catch
-                {
-                    details[indexerDisplay] = "<Failed to evaluate>";
-                }
-            }
+            TryAddExpressionValue(callExpr, indexerDisplay, details);
 
             // Extract variables from the index arguments but not from the object
             foreach (Expression argument in callExpr.Arguments)
@@ -328,19 +263,7 @@ public sealed partial class Assert
             {
                 // For non-boolean methods, capture the method call itself
                 string methodCallDisplay = GetCleanMemberName(callExpr);
-
-                if (!details.ContainsKey(methodCallDisplay))
-                {
-                    try
-                    {
-                        object? value = Expression.Lambda(callExpr).Compile().DynamicInvoke();
-                        details[methodCallDisplay] = value;
-                    }
-                    catch
-                    {
-                        details[methodCallDisplay] = "<Failed to evaluate>";
-                    }
-                }
+                TryAddExpressionValue(callExpr, methodCallDisplay, details);
 
                 // Don't extract from the object to avoid duplication
             }
@@ -358,19 +281,7 @@ public sealed partial class Assert
         string objectName = GetCleanMemberName(indexExpr.Object);
         string indexDisplay = string.Join(", ", indexExpr.Arguments.Select(GetIndexArgumentDisplay));
         string indexerDisplay = $"{objectName}[{indexDisplay}]";
-
-        if (!details.ContainsKey(indexerDisplay))
-        {
-            try
-            {
-                object? value = Expression.Lambda(indexExpr).Compile().DynamicInvoke();
-                details[indexerDisplay] = value;
-            }
-            catch
-            {
-                details[indexerDisplay] = "<Failed to evaluate>";
-            }
-        }
+        TryAddExpressionValue(indexExpr, indexerDisplay, details);
 
         // Only extract variables from the object if it's a parameter expression,
         // not when it's a member expression (which would show the full collection)
@@ -723,4 +634,24 @@ public sealed partial class Assert
     private static Regex FixPropertyComparisonRegex()
         => new(@"(\w+)\.(\w+)\s*>\s*(\d+)", RegexOptions.Compiled);
 #endif
+
+    private static bool TryAddExpressionValue(Expression expr, string displayName, Dictionary<string, object?> details)
+    {
+        if (details.ContainsKey(displayName))
+        {
+            return false;
+        }
+
+        try
+        {
+            object? value = Expression.Lambda(expr).Compile().DynamicInvoke();
+            details[displayName] = value;
+        }
+        catch
+        {
+            details[displayName] = "<Failed to evaluate>";
+        }
+
+        return true;
+    }
 }
