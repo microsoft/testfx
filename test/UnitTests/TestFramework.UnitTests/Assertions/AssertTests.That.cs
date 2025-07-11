@@ -9,6 +9,21 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests;
 
 public partial class AssertTests : TestContainer
 {
+    public void That_WithNullExpression_Throws()
+    {
+        Action act = () => Assert.That(null!);
+
+        act.Should().Throw<ArgumentNullException>()
+            .WithParameterName("condition");
+    }
+
+    public void That_HappyPath_DoesNotThrow()
+    {
+        Action act = () => Assert.That(() => true);
+
+        act.Should().NotThrow<AssertFailedException>();
+    }
+
     public void That_BooleanCondition_FailsAsExpected()
     {
         Action act = () => Assert.That(() => false, "Boolean condition failed");
@@ -384,6 +399,249 @@ public partial class AssertTests : TestContainer
                 Message: Array should have more than 10 elements
                 Details:
                   numbers.Length = 5
+                """);
+    }
+
+    public void That_UnaryExpression_ExtractsVariablesCorrectly()
+    {
+        // Arrange
+        int value = 5;
+
+        // Act & Assert
+        Action action = () => Assert.That(() => !Convert.ToBoolean(value));
+        action.Should().Throw<AssertFailedException>()
+            .WithMessage("""
+                Assert.That(() => !Convert.ToBoolean(value)) failed.
+                Details:
+                  Convert.ToBoolean(value) = True
+                  value = 5
+                """);
+    }
+
+    public void That_UnaryExpression_WithNegation_ExtractsVariablesCorrectly()
+    {
+        // Arrange
+        bool flag = true;
+
+        // Act & Assert
+        Action action = () => Assert.That(() => !flag);
+        action.Should().Throw<AssertFailedException>()
+            .WithMessage("""
+                Assert.That(() => !flag) failed.
+                Details:
+                  flag = True
+                """);
+    }
+
+    public void That_InvocationExpression_ExtractsVariablesCorrectly()
+    {
+        // Arrange
+        Func<int, bool> predicate = x => x > 10;
+        int testValue = 5;
+
+        // Act & Assert
+        Action action = () => Assert.That(() => predicate(testValue));
+        action.Should().Throw<AssertFailedException>()
+            .WithMessage("""
+                Assert.That(() => predicate(testValue)) failed.
+                Details:
+                  testValue = 5
+                """);
+    }
+
+    public void That_InvocationExpression_WithComplexArguments_ExtractsVariablesCorrectly()
+    {
+        // Arrange
+        Func<string, int, bool> complexFunc = (s, i) => s.Length == i;
+        string text = "hello";
+        int expectedLength = 3;
+
+        // Act & Assert
+        Action action = () => Assert.That(() => complexFunc(text, expectedLength));
+        action.Should().Throw<AssertFailedException>()
+            .WithMessage("""
+                Assert.That(() => complexFunc(text, expectedLength)) failed.
+                Details:
+                  expectedLength = 3
+                  text = "hello"
+                """);
+    }
+
+    public void That_NewExpression_ExtractsVariablesCorrectly()
+    {
+        // Arrange
+        int year = 2023;
+        int month = 12;
+        int day = 25;
+
+        // Act & Assert
+        Action action = () => Assert.That(() => new DateTime(year, month, day) == DateTime.MinValue);
+        action.Should().Throw<AssertFailedException>()
+            .WithMessage("""
+                Assert.That(() => new DateTime(year, month, day) == DateTime.MinValue) failed.
+                Details:
+                  DateTime.MinValue = 1/1/0001 12:00:00 AM
+                  day = 25
+                  month = 12
+                  new DateTime(year, month, day) = 12/25/2023 12:00:00 AM
+                  year = 2023
+                """);
+    }
+
+    public void That_NewExpression_WithComplexArguments_ExtractsVariablesCorrectly()
+    {
+        // Arrange
+        string firstName = "John";
+        string lastName = "Doe";
+
+        // Act & Assert
+        Action action = () => Assert.That(() => new { Name = firstName + " " + lastName }.Name == "Jane Doe");
+        action.Should().Throw<AssertFailedException>()
+            .WithMessage("""
+                Assert.That(() => new { Name = firstName + " " + lastName }.Name == "Jane Doe") failed.
+                Details:
+                  firstName = "John"
+                  lastName = "Doe"
+                  new { Name = firstName + " " + lastName }.Name = "John Doe"
+                """);
+    }
+
+    public void That_ListInitExpression_ExtractsVariablesCorrectly()
+    {
+        // Arrange
+        int first = 1;
+        int second = 2;
+        int third = 3;
+
+        // Act & Assert
+        Action action = () => Assert.That(() => new List<int> { first, second, third }.Count == 5);
+        action.Should().Throw<AssertFailedException>()
+            .WithMessage("""
+                Assert.That(() => new List<int> { first, second, third }.Count == 5) failed.
+                Details:
+                  first = 1
+                  new List<int> { first, second, third }.Count = 3
+                  second = 2
+                  third = 3
+                """);
+    }
+
+    public void That_ListInitExpression_WithComplexElements_ExtractsVariablesCorrectly()
+    {
+        // Arrange
+        string name1 = "Alice";
+        string name2 = "Bob";
+        int age1 = 25;
+        int age2 = 30;
+
+        // Act & Assert
+        Action action = () => Assert.That(() => new List<object> { new { Name = name1, Age = age1 }, new { Name = name2, Age = age2 } }.Count == 1);
+        action.Should().Throw<AssertFailedException>()
+            .WithMessage("""
+                Assert.That(() => new List<object> { new { Name = name1, Age = age1 }, new { Name = name2, Age = age2 } }.Count == 1) failed.
+                Details:
+                  age1 = 25
+                  age2 = 30
+                  name1 = "Alice"
+                  name2 = "Bob"
+                  new List<object> { new { Name = name1, Age = age1 }, new { Name = name2, Age = age2 } }.Count = 2
+                """);
+    }
+
+    public void That_NewArrayExpression_ExtractsVariablesCorrectly()
+    {
+        // Arrange
+        int x = 10;
+        int y = 20;
+        int z = 30;
+
+        // Act & Assert
+        Action action = () => Assert.That(() => new[] { x, y, z }.Length == 5);
+        action.Should().Throw<AssertFailedException>()
+            .WithMessage("""
+                Assert.That(() => new[] { x, y, z }.Length == 5) failed.
+                Details:
+                  new[] { x, y, z }.Length = 3
+                  x = 10
+                  y = 20
+                  z = 30
+                """);
+    }
+
+    public void That_NewArrayExpression_WithExpressions_ExtractsVariablesCorrectly()
+    {
+        // Arrange
+        int multiplier = 5;
+        int baseValue = 3;
+
+        // Act & Assert
+        Action action = () => Assert.That(() => new[] { baseValue * multiplier, baseValue + multiplier }.Length == 1);
+        action.Should().Throw<AssertFailedException>()
+            .WithMessage("""
+                Assert.That(() => new[] { baseValue * multiplier, baseValue + multiplier }.Length == 1) failed.
+                Details:
+                  baseValue = 3
+                  multiplier = 5
+                  new[] { baseValue * multiplier, baseValue + multiplier }.Length = 2
+                """);
+    }
+
+    public void That_IndexExpression_ExtractsVariablesCorrectly()
+    {
+        // Arrange
+        var dict = new Dictionary<string, int> { ["key1"] = 100, ["key2"] = 200 };
+        string key = "key1";
+        int expectedValue = 150;
+
+        // Act & Assert
+        Action action = () => Assert.That(() => dict[key] == expectedValue);
+        action.Should().Throw<AssertFailedException>()
+            .WithMessage("""
+                Assert.That(() => dict[key] == expectedValue) failed.
+                Details:
+                  dict[key] = 100
+                  expectedValue = 150
+                  key = "key1"
+                """);
+    }
+
+    public void That_IndexExpression_WithMultipleIndices_ExtractsVariablesCorrectly()
+    {
+        // Arrange
+        int[,] matrix = new int[3, 3] { { 1, 2, 3 }, { 4, 5, 6 }, { 7, 8, 9 } };
+        int row = 1;
+        int col = 2;
+        int expectedValue = 10;
+
+        // Act & Assert
+        Action action = () => Assert.That(() => matrix[row, col] == expectedValue);
+        action.Should().Throw<AssertFailedException>()
+            .WithMessage("""
+                Assert.That(() => matrix[row, col] == expectedValue) failed.
+                Details:
+                  col = 2
+                  expectedValue = 10
+                  matrix[row, col] = 6
+                  row = 1
+                """);
+    }
+
+    public void That_IndexExpression_WithComplexIndexArguments_ExtractsVariablesCorrectly()
+    {
+        // Arrange
+        int[] array = new[] { 10, 20, 30, 40, 50 };
+        int offset = 2;
+        int start = 1;
+
+        // Act & Assert
+        Action action = () => Assert.That(() => array[start + offset] == 100);
+        action.Should().Throw<AssertFailedException>()
+            .WithMessage("""
+                Assert.That(() => array[start + offset] == 100) failed.
+                Details:
+                  array[start + offset] = 40
+                  offset = 2
+                  start = 1
                 """);
     }
 }
