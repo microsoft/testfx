@@ -1,7 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
 using System.Linq.Expressions;
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -219,9 +218,8 @@ public sealed partial class Assert
             details[displayName] = "<Failed to evaluate>";
         }
 
-        // Only extract variables from the object being accessed if it's a parameter or variable reference,
-        // not when it's a member expression or indexer (which would show the full collection)
-        if (memberExpr.Expression is not null and ParameterExpression)
+        // Only extract variables from the object being accessed if it's not a member expression or indexer (which would show the full collection)
+        if (memberExpr.Expression is not null and not MemberExpression)
         {
             ExtractVariablesFromExpression(memberExpr.Expression, details);
         }
