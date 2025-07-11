@@ -376,4 +376,4 @@ public record StandardErrorProperty(string StandardError) : IProperty;
 /// <param name="Description">The description.</param>
 public record FileArtifactProperty(FileInfo FileInfo, string DisplayName, string? Description = null) : IProperty;
 
-internal sealed record SerializableKeyValuePairStringProperty(string Key, string Value);
+internal sealed record SerializableKeyValuePairStringProperty(string Key, string Value) : IProperty;
