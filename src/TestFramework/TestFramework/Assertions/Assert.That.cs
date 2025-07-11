@@ -49,7 +49,7 @@ public sealed partial class Assert
     private static string ExtractDetails(Expression expr)
     {
         var details = new Dictionary<string, object?>();
-        ExtractVariablesFromExpression(expr, details, isRoot: true);
+        ExtractVariablesFromExpression(expr, details);
 
         if (details.Count == 0)
         {
@@ -68,7 +68,7 @@ public sealed partial class Assert
         return sb.ToString();
     }
 
-    private static void ExtractVariablesFromExpression(Expression? expr, Dictionary<string, object?> details, bool isRoot = false)
+    private static void ExtractVariablesFromExpression(Expression? expr, Dictionary<string, object?> details)
     {
         if (expr is null)
         {
@@ -114,7 +114,7 @@ public sealed partial class Assert
                 break;
 
             case MethodCallExpression callExpr:
-                HandleMethodCallExpression(callExpr, details, isRoot);
+                HandleMethodCallExpression(callExpr, details);
                 break;
 
             case ConditionalExpression conditionalExpr:
@@ -255,7 +255,7 @@ public sealed partial class Assert
         }
     }
 
-    private static void HandleMethodCallExpression(MethodCallExpression callExpr, Dictionary<string, object?> details, bool isRoot = false)
+    private static void HandleMethodCallExpression(MethodCallExpression callExpr, Dictionary<string, object?> details)
     {
         // Special handling for indexers (get_Item calls)
         if (callExpr.Method.Name == "get_Item" && callExpr.Object is not null && callExpr.Arguments.Count == 1)
@@ -283,20 +283,20 @@ public sealed partial class Assert
         }
         else
         {
-            // For method calls at root level that return bool (direct boolean checks),
-            // show the object before the method call
-            if (isRoot && callExpr.Method.ReturnType == typeof(bool))
+            // Check if the method returns a boolean
+            bool methodReturnsBoolean = callExpr.Method.ReturnType == typeof(bool);
+
+            if (methodReturnsBoolean && callExpr.Object is not null)
             {
-                if (callExpr.Object is not null)
-                {
-                    ExtractVariablesFromExpression(callExpr.Object, details);
-                }
+                // For boolean-returning methods, extract details from the object being called
+                // This captures the last non-boolean method call in a chain
+                ExtractVariablesFromExpression(callExpr.Object, details);
             }
             else
             {
-                // For method calls that are part of an expression,
-                // show the method call result
+                // For non-boolean methods, capture the method call itself
                 string methodCallDisplay = GetCleanMemberName(callExpr);
+
                 if (!details.ContainsKey(methodCallDisplay))
                 {
                     try
@@ -310,13 +310,10 @@ public sealed partial class Assert
                     }
                 }
 
-                // Don't extract variables from chained method calls
-                if (callExpr.Object is not null and not MethodCallExpression)
-                {
-                    ExtractVariablesFromExpression(callExpr.Object, details);
-                }
+                // Don't extract from the object to avoid duplication
             }
 
+            // Always extract variables from the arguments
             foreach (Expression argument in callExpr.Arguments)
             {
                 ExtractVariablesFromExpression(argument, details);
