@@ -48,152 +48,280 @@ public sealed partial class Assert
 
     private static string ExtractDetails(Expression expr)
     {
-        var details = new List<KeyValuePair<string, string>>();
-        var seen = new HashSet<string>();
-        var stack = new Stack<Expression>();
-        stack.Push(expr);
+        var details = new Dictionary<string, object?>();
+        ExtractVariablesFromExpression(expr, details, isRoot: true);
 
-        while (stack.Count > 0)
+        if (details.Count == 0)
         {
-            Expression current = stack.Pop();
-
-            switch (current)
-            {
-                case BinaryExpression binaryExpr:
-                    if (binaryExpr.NodeType == ExpressionType.AndAlso)
-                    {
-                        if (!EvaluateBoolean(binaryExpr.Left))
-                        {
-                            stack.Push(binaryExpr.Left);
-                            continue; // short-circuit: right side not evaluated
-                        }
-
-                        stack.Push(binaryExpr.Left);
-                        stack.Push(binaryExpr.Right);
-                        continue;
-                    }
-
-                    if (binaryExpr.NodeType == ExpressionType.OrElse)
-                    {
-                        if (EvaluateBoolean(binaryExpr.Left))
-                        {
-                            stack.Push(binaryExpr.Left);
-                            continue; // short-circuit: right side not evaluated
-                        }
-
-                        stack.Push(binaryExpr.Left);
-                        stack.Push(binaryExpr.Right);
-                        continue;
-                    }
-
-                    stack.Push(binaryExpr.Left);
-                    stack.Push(binaryExpr.Right);
-                    continue;
-
-                case MemberExpression memberExpr when !seen.Contains(memberExpr.ToString()):
-                    {
-                        seen.Add(memberExpr.ToString());
-
-                        object? value;
-                        try
-                        {
-                            value = Expression.Lambda(memberExpr).Compile().DynamicInvoke();
-                        }
-                        catch
-                        {
-                            details.Add(new(CleanExpressionText(memberExpr.ToString()), "<Failed to evaluate>"));
-                            continue;
-                        }
-
-                        details.Add(new(CleanExpressionText(memberExpr.ToString()), FormatValue(value)));
-                        break;
-                    }
-
-                case UnaryExpression unaryExpr:
-                    {
-                        stack.Push(unaryExpr.Operand);
-                        break;
-                    }
-
-                case MethodCallExpression callExpr:
-                    {
-                        // For array/dictionary indexing, add the indexed expression to details
-                        if (callExpr.Method.Name == "get_Item" && callExpr.Object != null && callExpr.Arguments.Count == 1)
-                        {
-                            // Create a proper indexer display like dict["key"] instead of dict.get_Item("key")
-                            string objectExpr = CleanExpressionText(callExpr.Object.ToString());
-                            string indexExpr = CleanExpressionText(callExpr.Arguments[0].ToString());
-                            string indexerDisplay = $"{objectExpr}[{indexExpr}]";
-
-                            if (seen.Add(indexerDisplay))
-                            {
-                                try
-                                {
-                                    object? value = Expression.Lambda(callExpr).Compile().DynamicInvoke();
-                                    details.Add(new(indexerDisplay, FormatValue(value)));
-                                }
-                                catch
-                                {
-                                    details.Add(new(indexerDisplay, "<Failed to evaluate>"));
-                                }
-                            }
-
-                            // For indexer access, don't traverse into the arguments or object
-                            // This prevents adding the full collection to details
-                            break;
-                        }
-
-                        foreach (Expression? arg in callExpr.Arguments)
-                        {
-                            stack.Push(arg);
-                        }
-
-                        if (callExpr.Object != null)
-                        {
-                            stack.Push(callExpr.Object);
-                        }
-
-                        break;
-                    }
-
-                case ConditionalExpression conditionalExpr:
-                    {
-                        stack.Push(conditionalExpr.Test);
-                        stack.Push(conditionalExpr.IfTrue);
-                        stack.Push(conditionalExpr.IfFalse);
-                        break;
-                    }
-
-                case ConstantExpression constantExpr when constantExpr.Value != null:
-                    {
-                        // Skip constants that are part of display classes
-                        string constStr = constantExpr.ToString();
-                        if (!constStr.Contains("DisplayClass") && !seen.Contains(constStr))
-                        {
-                            seen.Add(constStr);
-                            // Only include if it's a variable reference from a display class, not a literal value
-                            // Skip string literals (quoted strings), numeric literals, boolean literals, etc.
-                            if (!IsLiteralConstant(constStr))
-                            {
-                                details.Add(new(CleanExpressionText(constStr), FormatValue(constantExpr.Value)));
-                            }
-                        }
-
-                        break;
-                    }
-            }
+            return string.Empty;
         }
 
         // Sort details alphabetically by variable name for consistent ordering
-        details.Sort((a, b) => string.Compare(a.Key, b.Key, StringComparison.Ordinal));
+        IOrderedEnumerable<KeyValuePair<string, object?>> sortedDetails = details.OrderBy(kvp => kvp.Key, StringComparer.Ordinal);
 
         var sb = new StringBuilder();
-        foreach ((string name, string value) in details)
+        foreach ((string name, object? value) in sortedDetails)
         {
-            sb.AppendLine($"  {name} = {value}");
+            sb.AppendLine($"  {name} = {FormatValue(value)}");
         }
 
         return sb.ToString();
+    }
+
+    private static void ExtractVariablesFromExpression(Expression? expr, Dictionary<string, object?> details, bool isRoot = false)
+    {
+        if (expr is null)
+        {
+            return;
+        }
+
+        switch (expr)
+        {
+            case BinaryExpression binaryExpr:
+                ExtractVariablesFromExpression(binaryExpr.Left, details);
+                ExtractVariablesFromExpression(binaryExpr.Right, details);
+                break;
+
+            case UnaryExpression unaryExpr:
+                ExtractVariablesFromExpression(unaryExpr.Operand, details);
+                break;
+
+            case MemberExpression memberExpr:
+                AddMemberExpressionToDetails(memberExpr, details);
+                break;
+
+            case MethodCallExpression callExpr:
+                HandleMethodCallExpression(callExpr, details, isRoot);
+                break;
+
+            case ConditionalExpression conditionalExpr:
+                ExtractVariablesFromExpression(conditionalExpr.Test, details);
+                ExtractVariablesFromExpression(conditionalExpr.IfTrue, details);
+                ExtractVariablesFromExpression(conditionalExpr.IfFalse, details);
+                break;
+
+            case ConstantExpression constantExpr when constantExpr.Value is not null:
+                // Only include constants that represent captured variables (usually in display classes)
+                HandleConstantExpression(constantExpr, details);
+                break;
+
+            case ParameterExpression:
+                // Parameters are typically lambda parameters, not variables to display
+                break;
+
+            case LambdaExpression lambdaExpr:
+                ExtractVariablesFromExpression(lambdaExpr.Body, details);
+                break;
+
+            case InvocationExpression invocationExpr:
+                ExtractVariablesFromExpression(invocationExpr.Expression, details);
+                foreach (Expression argument in invocationExpr.Arguments)
+                {
+                    ExtractVariablesFromExpression(argument, details);
+                }
+
+                break;
+
+            case NewExpression newExpr:
+                foreach (Expression argument in newExpr.Arguments)
+                {
+                    ExtractVariablesFromExpression(argument, details);
+                }
+
+                break;
+
+            case ListInitExpression listInitExpr:
+                ExtractVariablesFromExpression(listInitExpr.NewExpression, details);
+                foreach (ElementInit initializer in listInitExpr.Initializers)
+                {
+                    foreach (Expression argument in initializer.Arguments)
+                    {
+                        ExtractVariablesFromExpression(argument, details);
+                    }
+                }
+
+                break;
+
+            case NewArrayExpression newArrayExpr:
+                foreach (Expression expression in newArrayExpr.Expressions)
+                {
+                    ExtractVariablesFromExpression(expression, details);
+                }
+
+                break;
+
+            case IndexExpression indexExpr:
+                HandleIndexExpression(indexExpr, details);
+                break;
+        }
+    }
+
+    private static void AddMemberExpressionToDetails(MemberExpression memberExpr, Dictionary<string, object?> details)
+    {
+        string displayName = GetCleanMemberName(memberExpr);
+
+        if (details.ContainsKey(displayName))
+        {
+            return;
+        }
+
+        try
+        {
+            object? value = Expression.Lambda(memberExpr).Compile().DynamicInvoke();
+            details[displayName] = value;
+        }
+        catch
+        {
+            details[displayName] = "<Failed to evaluate>";
+        }
+
+        // Only extract variables from the object being accessed if it's a parameter or variable reference,
+        // not when it's a member expression or indexer (which would show the full collection)
+        if (memberExpr.Expression is not null and ParameterExpression)
+        {
+            ExtractVariablesFromExpression(memberExpr.Expression, details);
+        }
+    }
+
+    private static void HandleMethodCallExpression(MethodCallExpression callExpr, Dictionary<string, object?> details, bool isRoot = false)
+    {
+        // Special handling for indexers (get_Item calls)
+        if (callExpr.Method.Name == "get_Item" && callExpr.Object is not null && callExpr.Arguments.Count == 1)
+        {
+            string objectName = GetCleanMemberName(callExpr.Object);
+            string indexValue = GetIndexArgumentDisplay(callExpr.Arguments[0]);
+            string indexerDisplay = $"{objectName}[{indexValue}]";
+
+            if (!details.ContainsKey(indexerDisplay))
+            {
+                try
+                {
+                    object? value = Expression.Lambda(callExpr).Compile().DynamicInvoke();
+                    details[indexerDisplay] = value;
+                }
+                catch
+                {
+                    details[indexerDisplay] = "<Failed to evaluate>";
+                }
+            }
+
+            // Extract variables from the object and index argument
+            ExtractVariablesFromExpression(callExpr.Object, details);
+            ExtractVariablesFromExpression(callExpr.Arguments[0], details);
+        }
+        else
+        {
+            // For method calls at root level that return bool (direct boolean checks),
+            // show the object before the method call
+            if (isRoot && callExpr.Method.ReturnType == typeof(bool))
+            {
+                if (callExpr.Object is not null)
+                {
+                    ExtractVariablesFromExpression(callExpr.Object, details);
+                }
+            }
+            else
+            {
+                // For method calls that are part of an expression,
+                // show the method call result
+                string methodCallDisplay = GetCleanMemberName(callExpr);
+                if (!details.ContainsKey(methodCallDisplay))
+                {
+                    try
+                    {
+                        object? value = Expression.Lambda(callExpr).Compile().DynamicInvoke();
+                        details[methodCallDisplay] = value;
+                    }
+                    catch
+                    {
+                        details[methodCallDisplay] = "<Failed to evaluate>";
+                    }
+                }
+
+                // Don't extract variables from chained method calls
+                if (callExpr.Object is not null and not MethodCallExpression)
+                {
+                    ExtractVariablesFromExpression(callExpr.Object, details);
+                }
+            }
+
+            foreach (Expression argument in callExpr.Arguments)
+            {
+                ExtractVariablesFromExpression(argument, details);
+            }
+        }
+    }
+
+    private static void HandleIndexExpression(IndexExpression indexExpr, Dictionary<string, object?> details)
+    {
+        string objectName = GetCleanMemberName(indexExpr.Object);
+        string indexDisplay = string.Join(", ", indexExpr.Arguments.Select(GetIndexArgumentDisplay));
+        string indexerDisplay = $"{objectName}[{indexDisplay}]";
+
+        if (!details.ContainsKey(indexerDisplay))
+        {
+            try
+            {
+                object? value = Expression.Lambda(indexExpr).Compile().DynamicInvoke();
+                details[indexerDisplay] = value;
+            }
+            catch
+            {
+                details[indexerDisplay] = "<Failed to evaluate>";
+            }
+        }
+
+        // Only extract variables from the object if it's a parameter expression,
+        // not when it's a member expression (which would show the full collection)
+        if (indexExpr.Object is ParameterExpression)
+        {
+            ExtractVariablesFromExpression(indexExpr.Object, details);
+        }
+
+        foreach (Expression indexArg in indexExpr.Arguments)
+        {
+            ExtractVariablesFromExpression(indexArg, details);
+        }
+    }
+
+    private static void HandleConstantExpression(ConstantExpression constantExpr, Dictionary<string, object?> details)
+    {
+        string constantStr = constantExpr.ToString();
+
+        // Skip display class constants and literal values
+        if (constantStr.Contains("DisplayClass") || IsLiteralConstant(constantStr))
+        {
+            return;
+        }
+
+        string cleanName = CleanExpressionText(constantStr);
+        if (!details.ContainsKey(cleanName))
+        {
+            details[cleanName] = constantExpr.Value;
+        }
+    }
+
+    private static string GetCleanMemberName(Expression? expr)
+        => expr is null
+            ? "<null>"
+            : CleanExpressionText(expr.ToString());
+
+    private static string GetIndexArgumentDisplay(Expression indexArg)
+    {
+        try
+        {
+            if (indexArg is ConstantExpression constExpr)
+            {
+                return FormatValue(constExpr.Value);
+            }
+
+            // For complex index expressions, just use the expression string
+            return CleanExpressionText(indexArg.ToString());
+        }
+        catch
+        {
+            return CleanExpressionText(indexArg.ToString());
+        }
     }
 
     private static bool IsLiteralConstant(string constantString)
@@ -235,19 +363,6 @@ public sealed partial class Assert
 
         // If it doesn't match any of the above, it's likely a variable reference or complex expression
         return false;
-    }
-
-    private static bool EvaluateBoolean(Expression expr)
-    {
-        try
-        {
-            bool val = Expression.Lambda<Func<bool>>(expr).Compile()();
-            return val;
-        }
-        catch
-        {
-            return false;
-        }
     }
 
     private static string FormatValue(object? value)
