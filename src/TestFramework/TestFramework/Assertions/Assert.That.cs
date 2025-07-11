@@ -77,18 +77,14 @@ public sealed partial class Assert
 
         switch (expr)
         {
-            case BinaryExpression binaryExpr:
-                // Special handling for array indexing (myArray[index])
-                if (binaryExpr.NodeType == ExpressionType.ArrayIndex)
-                {
-                    HandleArrayIndexExpression(binaryExpr, details);
-                }
-                else
-                {
-                    ExtractVariablesFromExpression(binaryExpr.Left, details);
-                    ExtractVariablesFromExpression(binaryExpr.Right, details);
-                }
+            // Special handling for array indexing (myArray[index])
+            case BinaryExpression binaryExpr when binaryExpr.NodeType == ExpressionType.ArrayIndex:
+                HandleArrayIndexExpression(binaryExpr, details);
+                break;
 
+            case BinaryExpression binaryExpr:
+                ExtractVariablesFromExpression(binaryExpr.Left, details);
+                ExtractVariablesFromExpression(binaryExpr.Right, details);
                 break;
 
             case TypeBinaryExpression typeBinaryExpr:
@@ -96,17 +92,13 @@ public sealed partial class Assert
                 ExtractVariablesFromExpression(typeBinaryExpr.Expression, details);
                 break;
 
-            case UnaryExpression unaryExpr:
-                // Special handling for ArrayLength expressions
-                if (unaryExpr.NodeType == ExpressionType.ArrayLength)
-                {
-                    HandleArrayLengthExpression(unaryExpr, details);
-                }
-                else
-                {
-                    ExtractVariablesFromExpression(unaryExpr.Operand, details);
-                }
+            // Special handling for ArrayLength expressions
+            case UnaryExpression unaryExpr when unaryExpr.NodeType == ExpressionType.ArrayLength:
+                HandleArrayLengthExpression(unaryExpr, details);
+                break;
 
+            case UnaryExpression unaryExpr:
+                ExtractVariablesFromExpression(unaryExpr.Operand, details);
                 break;
 
             case MemberExpression memberExpr:
@@ -126,14 +118,6 @@ public sealed partial class Assert
             case ConstantExpression constantExpr when constantExpr.Value is not null:
                 // Only include constants that represent captured variables (usually in display classes)
                 HandleConstantExpression(constantExpr, details);
-                break;
-
-            case ParameterExpression:
-                // Parameters are typically lambda parameters, not variables to display
-                break;
-
-            case LambdaExpression lambdaExpr:
-                ExtractVariablesFromExpression(lambdaExpr.Body, details);
                 break;
 
             case InvocationExpression invocationExpr:
@@ -277,8 +261,7 @@ public sealed partial class Assert
                 }
             }
 
-            // Extract variables from the object and index argument
-            ExtractVariablesFromExpression(callExpr.Object, details);
+            // Extract variables from the index argument but not from the object.
             ExtractVariablesFromExpression(callExpr.Arguments[0], details);
         }
         else
