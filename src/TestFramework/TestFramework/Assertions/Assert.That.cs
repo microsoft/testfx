@@ -82,6 +82,11 @@ public sealed partial class Assert
                 ExtractVariablesFromExpression(binaryExpr.Right, details);
                 break;
 
+            case TypeBinaryExpression typeBinaryExpr:
+                // Extract variables from the expression being tested (e.g., 'obj' in 'obj is int')
+                ExtractVariablesFromExpression(typeBinaryExpr.Expression, details);
+                break;
+
             case UnaryExpression unaryExpr:
                 // Special handling for ArrayLength expressions
                 if (unaryExpr.NodeType == ExpressionType.ArrayLength)

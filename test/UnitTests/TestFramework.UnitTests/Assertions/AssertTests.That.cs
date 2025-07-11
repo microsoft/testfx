@@ -239,7 +239,7 @@ public partial class AssertTests : TestContainer
 
     public void That_TypeComparison_FailsAsExpected()
     {
-        object obj = "string";
+        object obj = "hello";
 
         Action act = () => Assert.That(() => obj is int, "Object should be an integer");
 
@@ -249,7 +249,7 @@ public partial class AssertTests : TestContainer
             Assert.That(() => obj is int) failed.
             Message: Object should be an integer
             Details:
-              obj = "string"
+              obj = "hello"
             """);
     }
 
