@@ -173,9 +173,8 @@ internal class AssemblyEnumerator : MarshalByRefObject
             {
                 DebugEx.Assert(loaderException != null, "loader exception should not be null.");
                 string line = string.Format(CultureInfo.CurrentCulture, Resource.EnumeratorLoadTypeErrorFormat, loaderException.GetType(), loaderException.Message);
-                if (!map.ContainsKey(line))
+                if (map.TryAdd(line, null))
                 {
-                    map.Add(line, null);
                     errorDetails.AppendLine(line);
                 }
             }
