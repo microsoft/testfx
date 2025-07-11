@@ -105,8 +105,8 @@ public sealed class PreferConstructorOverTestInitializeFixer : CodeFixProvider
 
                 for (int i = 0; i < members.Count; i++)
                 {
-                    var member = members[i];
-                    if (member is FieldDeclarationSyntax || 
+                    MemberDeclarationSyntax member = members[i];
+                    if (member is FieldDeclarationSyntax ||
                         (member is ConstructorDeclarationSyntax ctor && ctor.Modifiers.Any(SyntaxKind.StaticKeyword)))
                     {
                         insertAfterNode = member;
