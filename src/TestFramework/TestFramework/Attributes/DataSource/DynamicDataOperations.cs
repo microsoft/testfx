@@ -80,7 +80,20 @@ internal static class DynamicDataOperations
             throw new NotSupportedException(
                 string.Format(
                     CultureInfo.InvariantCulture,
-                    FrameworkMessages.DynamicDataInvalidPropertyLayout,
+                    FrameworkMessages.DynamicDataInvalidMethodLayout,
+                    method.DeclaringType?.FullName is { } typeFullName ? $"{typeFullName}.{method.Name}" : method.Name));
+        }
+
+        ParameterInfo[] methodParameters = method.GetParameters();
+        ParameterInfo? lastParameter = methodParameters.Length > 0 ? methodParameters[methodParameters.Length - 1] : null;
+        if (lastParameter is not null &&
+            (lastParameter.GetCustomAttribute<ParamArrayAttribute>() is not null ||
+                lastParameter.GetCustomAttribute<ParamCollectionAttribute>() is not null))
+        {
+            throw new NotSupportedException(
+                string.Format(
+                    CultureInfo.InvariantCulture,
+                    FrameworkMessages.DynamicDataInvalidMethodLayout,
                     method.DeclaringType?.FullName is { } typeFullName ? $"{typeFullName}.{method.Name}" : method.Name));
         }
 
