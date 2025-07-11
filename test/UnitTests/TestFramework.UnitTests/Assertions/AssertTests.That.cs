@@ -317,7 +317,7 @@ public partial class AssertTests : TestContainer
             Assert.That(() => text.Substring(6).StartsWith("Universe")) failed.
             Message: Substring should start with 'Universe'
             Details:
-              text = "Hello World"
+              text.Substring(6) = "World"
             """);
     }
 
