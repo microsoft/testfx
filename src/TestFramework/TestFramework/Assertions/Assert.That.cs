@@ -83,7 +83,16 @@ public sealed partial class Assert
                 break;
 
             case UnaryExpression unaryExpr:
-                ExtractVariablesFromExpression(unaryExpr.Operand, details);
+                // Special handling for ArrayLength expressions
+                if (unaryExpr.NodeType == ExpressionType.ArrayLength)
+                {
+                    HandleArrayLengthExpression(unaryExpr, details);
+                }
+                else
+                {
+                    ExtractVariablesFromExpression(unaryExpr.Operand, details);
+                }
+
                 break;
 
             case MemberExpression memberExpr:
@@ -153,6 +162,25 @@ public sealed partial class Assert
             case IndexExpression indexExpr:
                 HandleIndexExpression(indexExpr, details);
                 break;
+        }
+    }
+
+    private static void HandleArrayLengthExpression(UnaryExpression arrayLengthExpr, Dictionary<string, object?> details)
+    {
+        string arrayName = GetCleanMemberName(arrayLengthExpr.Operand);
+        string lengthDisplayName = $"{arrayName}.Length";
+
+        if (!details.ContainsKey(lengthDisplayName))
+        {
+            try
+            {
+                object? value = Expression.Lambda(arrayLengthExpr).Compile().DynamicInvoke();
+                details[lengthDisplayName] = value;
+            }
+            catch
+            {
+                details[lengthDisplayName] = "<Failed to evaluate>";
+            }
         }
     }
 
