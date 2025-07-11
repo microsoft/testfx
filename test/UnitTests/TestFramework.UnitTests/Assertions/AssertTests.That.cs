@@ -698,4 +698,346 @@ public partial class AssertTests : TestContainer
               arrayParam[arrayParam.Length - 2] = 20
             """);
     }
+
+    public void That_WithCapturedVariableConstants_IncludesInDetails()
+    {
+        // Test captured variables from closures (non-literal constants)
+        string captured = "captured_value";
+        int capturedNumber = 42;
+
+        Action act = () => Assert.That(() => captured == "wrong_value" && capturedNumber > 50);
+
+        act.Should().Throw<AssertFailedException>()
+            .WithMessage("""
+            Assert.That(() => captured == "wrong_value" && capturedNumber > 50) failed.
+            Details:
+              captured = "captured_value"
+              capturedNumber = 42
+            """);
+    }
+
+    public void That_WithStringLiteralsAndCustomMessage_SkipsLiteralInDetails()
+    {
+        // Test that string literals are not included in details with custom message
+        string testVar = "actual";
+
+        Action act = () => Assert.That(() => testVar == "expected", "Values should match");
+
+        act.Should().Throw<AssertFailedException>()
+            .WithMessage("""
+            Assert.That(() => testVar == "expected") failed.
+            Message: Values should match
+            Details:
+              testVar = "actual"
+            """);
+    }
+
+    public void That_WithNumericLiterals_SkipsLiteralInDetails()
+    {
+        // Test various numeric literals are not included in details
+        int value = 5;
+        double doubleValue = 3.14;
+        float floatValue = 2.5f;
+        decimal decimalValue = 100.50m;
+
+        Action act = () => Assert.That(() => value == 10 && doubleValue == 2.71 && floatValue == 1.5f && decimalValue == 200.75m);
+
+        act.Should().Throw<AssertFailedException>()
+            .WithMessage("""
+            Assert.That(() => value == 10 && doubleValue == 2.71 && floatValue == 1.5f && decimalValue == 200.75m) failed.
+            Details:
+              decimalValue = 100.50
+              doubleValue = 3.14
+              floatValue = 2.5
+              value = 5
+            """);
+    }
+
+    [SuppressMessage("Style", "IDE0100:Remove redundant equality", Justification = "Expected use case")]
+    public void That_WithBooleanLiterals_SkipsLiteralInDetails()
+    {
+        // Test boolean literals are not included in details
+        bool condition = false;
+
+        Action act = () => Assert.That(() => condition == true);
+
+        act.Should().Throw<AssertFailedException>()
+            .WithMessage("""
+            Assert.That(() => condition == True) failed.
+            Details:
+              condition = False
+            """);
+    }
+
+    public void That_WithCharacterLiterals_SkipsLiteralInDetails()
+    {
+        // Test character literals are not included in details
+        char letter = 'a';
+
+        Action act = () => Assert.That(() => letter == 'b');
+
+        act.Should().Throw<AssertFailedException>()
+            .WithMessage("""
+            Assert.That(() => letter == 'b') failed.
+            Details:
+              letter = a
+            """);
+    }
+
+    public void That_WithNullLiterals_SkipsLiteralInDetails()
+    {
+        // Test null literals are not included in details
+        string? nullableString = "not null";
+
+        Action act = () => Assert.That(() => nullableString == null);
+
+        act.Should().Throw<AssertFailedException>()
+            .WithMessage("""
+            Assert.That(() => nullableString == null) failed.
+            Details:
+              nullableString = "not null"
+            """);
+    }
+
+    public void That_WithFuncDelegate_SkipsInDetails()
+    {
+        // Test that Func delegates are not included in details
+        Func<int, bool> predicate = x => x > 0;
+        int value = -1;
+
+        Action act = () => Assert.That(() => predicate(value));
+
+        act.Should().Throw<AssertFailedException>()
+            .WithMessage("""
+            Assert.That(() => predicate(value)) failed.
+            Details:
+              value = -1
+            """);
+    }
+
+    public void That_WithActionDelegate_SkipsInDetails()
+    {
+        // Test that Action delegates are not included in details
+        Action<string> action = Console.WriteLine;
+        bool shouldExecute = false;
+
+        Action act = () => Assert.That(() => shouldExecute && action != null);
+
+        act.Should().Throw<AssertFailedException>()
+            .WithMessage("""
+            Assert.That(() => shouldExecute && action != null) failed.
+            Details:
+              shouldExecute = False
+            """);
+    }
+
+    public void That_WithGenericFuncDelegate_SkipsInDetails()
+    {
+        // Test that generic Func delegates are not included in details
+        Func<string, int, bool> complexFunc = (s, i) => s.Length > i;
+        string text = "hi";
+        int threshold = 5;
+
+        Action act = () => Assert.That(() => complexFunc(text, threshold));
+
+        act.Should().Throw<AssertFailedException>()
+            .WithMessage("""
+            Assert.That(() => complexFunc(text, threshold)) failed.
+            Details:
+              text = "hi"
+              threshold = 5
+            """);
+    }
+
+    [SuppressMessage("Style", "IDE0100:Remove redundant equality", Justification = "Expected use case")]
+    public void That_WithComplexConstantExpression_HandlesCorrectly()
+    {
+        // Test complex scenarios with mixed constant types
+        const int ConstValue = 100;
+        string dynamicValue = "dynamic";
+        bool flag = false;
+
+        Action act = () => Assert.That(() => dynamicValue.Length == ConstValue && flag == true);
+
+        act.Should().Throw<AssertFailedException>()
+            .WithMessage("""
+            Assert.That(() => dynamicValue.Length == ConstValue && flag == True) failed.
+            Details:
+              dynamicValue.Length = 7
+              flag = False
+            """);
+    }
+
+    public void That_WithEmptyStringConstant_SkipsInDetails()
+    {
+        // Test empty string constants are handled correctly
+        string value = "non-empty";
+
+        Action act = () => Assert.That(() => value == "");
+
+        act.Should().Throw<AssertFailedException>()
+            .WithMessage("""
+            Assert.That(() => value == "") failed.
+            Details:
+              value = "non-empty"
+            """);
+    }
+
+    public void That_WithNegativeNumericLiterals_SkipsInDetails()
+    {
+        // Test negative numeric literals are properly identified
+        int positiveValue = 5;
+
+        Action act = () => Assert.That(() => positiveValue == -10);
+
+        act.Should().Throw<AssertFailedException>()
+            .WithMessage("""
+            Assert.That(() => positiveValue == -10) failed.
+            Details:
+              positiveValue = 5
+            """);
+    }
+
+    public void That_WithFloatAndDoubleNotation_SkipsInDetails()
+    {
+        // Test float (f) and double (d) suffixes are handled
+        double value = 1.0;
+
+        Action act = () => Assert.That(() => value == 2.5d && value != 3.14f);
+
+        act.Should().Throw<AssertFailedException>()
+            .WithMessage("""
+            Assert.That(() => value == 2.5d && value != 3.14f) failed.
+            Details:
+              value = 1
+            """);
+    }
+
+    public void That_WithCapturedVariableNamesContainingKeywords_HandlesCorrectly()
+    {
+        // Test that captured variables with names that might conflict with keywords work
+        object @null = new();
+        string @true = "false";
+        int @false = 1;
+
+        Action act = () => Assert.That(() => @null == null && @true == "true" && @false == 0);
+
+        act.Should().Throw<AssertFailedException>()
+            .WithMessage("""
+            Assert.That(() => @null == null && @true == "true" && @false == 0) failed.
+            Details:
+              false = 1
+              null = System.Object
+              true = "false"
+            """);
+    }
+
+    public void That_WithConstExpressionInIndexAccess_FormatsCorrectly()
+    {
+        // Test constant expressions used in array/indexer access
+        int[] array = [1, 2, 3];
+        const int Index = 0;
+        int dynamicIndex = 1;
+
+        Action act = () => Assert.That(() => array[Index] == 5 && array[dynamicIndex] == 10);
+
+        act.Should().Throw<AssertFailedException>()
+            .WithMessage("""
+            Assert.That(() => array[Index] == 5 && array[dynamicIndex] == 10) failed.
+            Details:
+              array[0] = 1
+              array[dynamicIndex] = 2
+              dynamicIndex = 1
+            """);
+    }
+
+    public void That_WithMultipleStringLiterals_OnlyIncludesVariables()
+    {
+        // Test multiple string literals in complex expression
+        string firstName = "John";
+        string lastName = "Doe";
+
+        Action act = () => Assert.That(() => firstName == "Jane" && lastName == "Smith");
+
+        act.Should().Throw<AssertFailedException>()
+            .WithMessage("""
+            Assert.That(() => firstName == "Jane" && lastName == "Smith") failed.
+            Details:
+              firstName = "John"
+              lastName = "Doe"
+            """);
+    }
+
+    public void That_WithMixedLiteralsAndVariables_FiltersCorrectly()
+    {
+        // Test that only variables are included, not literals of any type
+        string name = "Test";
+        int age = 25;
+        bool isActive = true;
+        char grade = 'B';
+
+        Action act = () => Assert.That(() => name == "Admin" && age == 30 && isActive == false && grade == 'A');
+
+        act.Should().Throw<AssertFailedException>()
+            .WithMessage("""
+            Assert.That(() => name == "Admin" && age == 30 && isActive == False && grade == 'A') failed.
+            Details:
+              age = 25
+              grade = B
+              isActive = True
+              name = "Test"
+            """);
+    }
+
+    public void That_WithCustomMessageAndLiterals_SkipsLiteralsInDetails()
+    {
+        // Test custom message with literals
+        int count = 3;
+        string status = "pending";
+
+        Action act = () => Assert.That(() => count > 5 && status == "completed", "Operation should be ready");
+
+        act.Should().Throw<AssertFailedException>()
+            .WithMessage("""
+            Assert.That(() => count > 5 && status == "completed") failed.
+            Message: Operation should be ready
+            Details:
+              count = 3
+              status = "pending"
+            """);
+    }
+
+    public void That_WithCapturedDecimalLiteral_SkipsInDetails()
+    {
+        // Test decimal literals with 'm' suffix
+        decimal price = 19.99m;
+        decimal tax = 2.50m;
+
+        Action act = () => Assert.That(() => price + tax == 25.00m);
+
+        act.Should().Throw<AssertFailedException>()
+            .WithMessage("""
+            Assert.That(() => price + tax == 25.00m) failed.
+            Details:
+              price = 19.99
+              tax = 2.50
+            """);
+    }
+
+    public void That_WithNullConstantAndVariable_OnlyIncludesVariable()
+    {
+        // Test null constant vs null variable
+        string? nullVariable = null;
+        string nonNullVariable = "value";
+
+        Action act = () => Assert.That(() => nullVariable != null && nonNullVariable == null);
+
+        act.Should().Throw<AssertFailedException>()
+            .WithMessage("""
+            Assert.That(() => nullVariable != null && nonNullVariable == null) failed.
+            Details:
+              nonNullVariable = "value"
+              nullVariable = null
+            """);
+    }
 }
