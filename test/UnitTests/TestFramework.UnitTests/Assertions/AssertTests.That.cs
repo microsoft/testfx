@@ -868,6 +868,7 @@ public partial class AssertTests : TestContainer
             """);
     }
 
+    [SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1122:Use string.Empty for empty strings", Justification = "Expected use case")]
     public void That_WithEmptyStringConstant_SkipsInDetails()
     {
         // Test empty string constants are handled correctly
@@ -968,6 +969,7 @@ public partial class AssertTests : TestContainer
             """);
     }
 
+    [SuppressMessage("Style", "IDE0100:Remove redundant equality", Justification = "Expected use case")]
     public void That_WithMixedLiteralsAndVariables_FiltersCorrectly()
     {
         // Test that only variables are included, not literals of any type
