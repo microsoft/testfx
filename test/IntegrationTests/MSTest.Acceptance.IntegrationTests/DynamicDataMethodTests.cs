@@ -21,22 +21,22 @@ public sealed class DynamicDataMethodTests : AcceptanceTestBase<DynamicDataMetho
         testHostResult.AssertOutputContainsSummary(failed: 3, passed: 9, skipped: 0);
 
         // failed TestMethodSingleParameterIntCountMismatchSmaller (0ms)
-        //  Parameter count mismatch.
-        //    at System.Reflection.MethodBaseInvoker.ThrowTargetParameterCountException()
-        //    at System.Reflection.RuntimeMethodInfo.Invoke(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
-        //    at System.Reflection.MethodBase.Invoke(Object obj, Object[] parameters)
+        //   Parameter count mismatch.
+        //     at System.Reflection.MethodBaseInvoker.ThrowTargetParameterCountException()
+        //     at System.Reflection.RuntimeMethodInfo.Invoke(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+        //     at System.Reflection.MethodBase.Invoke(Object obj, Object[] parameters)
         //
         // failed TestMethodSingleParameterIntCountMismatchLarger (0ms)
-        //  Parameter count mismatch.
-        //    at System.Reflection.MethodBaseInvoker.ThrowTargetParameterCountException()
-        //    at System.Reflection.RuntimeMethodInfo.Invoke(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
-        //    at System.Reflection.MethodBase.Invoke(Object obj, Object[] parameters)
+        //   Parameter count mismatch.
+        //     at System.Reflection.MethodBaseInvoker.ThrowTargetParameterCountException()
+        //     at System.Reflection.RuntimeMethodInfo.Invoke(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+        //     at System.Reflection.MethodBase.Invoke(Object obj, Object[] parameters)
         //
-        // failed TestMethodParamsNotSupported(0ms)
-        //  Dynamic data method 'Playground.TestClass1.GetDataParams' should be static, non-generic, and cannot have 'params' parameter.
+        // failed TestMethodParamsNotSupported (0ms)
+        //   Dynamic data method 'TestClass1.GetDataParams' should be static, non-generic, and cannot have 'params' parameter.
         testHostResult.AssertOutputMatchesRegex(@"failed TestMethodSingleParameterIntCountMismatchSmaller \(\d+ms\)[\r\n]+\s+Parameter count mismatch.");
         testHostResult.AssertOutputMatchesRegex(@"failed TestMethodSingleParameterIntCountMismatchLarger \(\d+ms\)[\r\n]+\s+Parameter count mismatch.");
-        testHostResult.AssertOutputMatchesRegex(@"failed TestMethodParamsNotSupported \(\d+ms\)[\r\n]+\s+Dynamic data method 'TestClass1.TestMethodParamsNotSupported' should be static, non-generic, and cannot have 'params' parameter.");
+        testHostResult.AssertOutputMatchesRegex(@"failed TestMethodParamsNotSupported \(\d+ms\)[\r\n]+\s+Dynamic data method 'TestClass1.GetDataParams' should be static, non-generic, and cannot have 'params' parameter.");
 
         testHostResult.AssertOutputContains("TestMethodSingleParameterInt called with: 4");
         testHostResult.AssertOutputContains("TestMethodSingleParameterInt called with: 5");
