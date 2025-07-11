@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using System.Linq.Expressions;
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -224,6 +225,13 @@ public sealed partial class Assert
         try
         {
             object? value = Expression.Lambda(memberExpr).Compile().DynamicInvoke();
+
+            // Skip Func and Action delegates as they don't provide useful information in assertion failures
+            if (IsFuncOrActionType(value?.GetType()))
+            {
+                return;
+            }
+
             details[displayName] = value;
         }
         catch
@@ -372,11 +380,40 @@ public sealed partial class Assert
             return;
         }
 
+        // Skip Func and Action delegates
+        if (IsFuncOrActionType(constantExpr.Value?.GetType()))
+        {
+            return;
+        }
+
         string cleanName = CleanExpressionText(constantStr);
         if (!details.ContainsKey(cleanName))
         {
             details[cleanName] = constantExpr.Value;
         }
+    }
+
+    private static bool IsFuncOrActionType(Type? type)
+    {
+        if (type is null)
+        {
+            return false;
+        }
+
+        // Check for Action types
+        if (type == typeof(Action) ||
+            (type.IsGenericType && type.GetGenericTypeDefinition().Name.StartsWith("Action`", StringComparison.Ordinal)))
+        {
+            return true;
+        }
+
+        // Check for Func types
+        if (type.IsGenericType && type.GetGenericTypeDefinition().Name.StartsWith("Func`", StringComparison.Ordinal))
+        {
+            return true;
+        }
+
+        return false;
     }
 
     private static string GetCleanMemberName(Expression? expr)

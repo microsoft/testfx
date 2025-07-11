@@ -413,7 +413,6 @@ public partial class AssertTests : TestContainer
             .WithMessage("""
                 Assert.That(() => !Convert.ToBoolean(value)) failed.
                 Details:
-                  Convert.ToBoolean(value) = True
                   value = 5
                 """);
     }
