@@ -287,9 +287,7 @@ internal sealed class DotnetMuxerLocator
 
         try
         {
-            using Stream stream = new FileStream(installLocation, FileMode.Open, FileAccess.Read);
-            using StreamReader streamReader = new(stream);
-            string content = streamReader.ReadToEnd().Trim();
+            string content = File.ReadAllText(installLocation).Trim();
             _resolutionLog($"DotnetHostHelper: '{installLocation}' content '{content}'");
             string path = Path.Combine(content, _muxerName);
             _resolutionLog($"DotnetHostHelper: Muxer resolved using '{installLocation}' in '{path}'");
