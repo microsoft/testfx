@@ -1666,4 +1666,31 @@ public sealed class DynamicDataShouldBeValidAnalyzerTests
             }
             
             """);
+
+    [TestMethod]
+    public async Task WhenDataWithArgument_ParameterCountMismatch_Diagnostic()
+        => await VerifyCS.VerifyAnalyzerAsync(
+            """            
+            using System;
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                [{|#0:DynamicData(nameof(GetData), 4, 5)|}]
+                public void TestMethod(int a)
+                {
+                }
+
+                public static IEnumerable<int> GetData(int i)
+                {
+                    yield return i++;
+                    yield return i++;
+                    yield return i++;
+                }
+            }
+            
+            """,
+            VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.DataMemberSignatureRule).WithLocation(0).WithArguments("MyTestClass", "GetData"));
 }
