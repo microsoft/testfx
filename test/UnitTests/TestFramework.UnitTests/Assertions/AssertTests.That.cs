@@ -501,7 +501,7 @@ public partial class AssertTests : TestContainer
                 Details:
                   firstName = "John"
                   lastName = "Doe"
-                  new { Name = firstName + " " + lastName }.Name = "John Doe"
+                  new { Name = ((firstName + " ") + lastName) }.Name = "John Doe"
                 """);
     }
 

@@ -430,6 +430,9 @@ public sealed partial class Assert
         // Remove compiler-generated wrappers FIRST, before display class cleanup
         cleaned = RemoveCompilerGeneratedWrappers(cleaned);
 
+        // Handle anonymous types - remove the compiler-generated type wrapper
+        cleaned = RemoveAnonymousTypeWrappers(cleaned);
+
         // Handle compiler-generated display classes more comprehensively
         // Updated pattern to handle cases with and without parentheses around the display class
         cleaned = CompilerGeneratedDisplayClassRegex().Replace(cleaned, "$1");
@@ -438,6 +441,65 @@ public sealed partial class Assert
         cleaned = CleanParentheses(cleaned);
 
         return cleaned;
+    }
+
+    private static string RemoveAnonymousTypeWrappers(string input)
+    {
+        if (string.IsNullOrEmpty(input))
+        {
+            return input;
+        }
+
+        var result = new StringBuilder();
+        int i = 0;
+
+        while (i < input.Length)
+        {
+            // Look for anonymous type pattern: new <>f__AnonymousType followed by generic parameters
+            if (i <= input.Length - 4 && input.Substring(i, 4) == "new " &&
+                i + 4 < input.Length && input.Substring(i + 4).StartsWith("<>f__AnonymousType", StringComparison.Ordinal))
+            {
+                // Find the start of the constructor parameters
+                int constructorStart = input.IndexOf('(', i + 4);
+                if (constructorStart == -1)
+                {
+                    result.Append(input[i]);
+                    i++;
+                    continue;
+                }
+
+                // Find the matching closing parenthesis
+                int parenCount = 1;
+                int constructorEnd = constructorStart + 1;
+                while (constructorEnd < input.Length && parenCount > 0)
+                {
+                    if (input[constructorEnd] == '(')
+                    {
+                        parenCount++;
+                    }
+                    else if (input[constructorEnd] == ')')
+                    {
+                        parenCount--;
+                    }
+
+                    constructorEnd++;
+                }
+
+                if (parenCount == 0)
+                {
+                    // Extract the content inside the parentheses and wrap with anonymous type notation
+                    string content = input.Substring(constructorStart + 1, constructorEnd - constructorStart - 2);
+                    result.Append($"new {{ {content} }}");
+                    i = constructorEnd;
+                    continue;
+                }
+            }
+
+            result.Append(input[i]);
+            i++;
+        }
+
+        return result.ToString();
     }
 
     private static string CleanParentheses(string input)
