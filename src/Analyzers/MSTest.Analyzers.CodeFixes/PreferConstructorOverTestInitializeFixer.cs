@@ -90,6 +90,9 @@ public sealed class PreferConstructorOverTestInitializeFixer : CodeFixProvider
                 }
 
                 editor.ReplaceNode(existingConstructor, newConstructor);
+
+                // Remove the TestInitialize method
+                editor.RemoveNode(testInitializeMethod);
             }
             else
             {
@@ -99,11 +102,8 @@ public sealed class PreferConstructorOverTestInitializeFixer : CodeFixProvider
                     .WithBody(testInitializeBody);
 
                 // Insert the constructor at the position of the existing TestInitialize method
-                editor.InsertBefore(testInitializeMethod, constructor);
+                editor.ReplaceNode(testInitializeMethod, constructor);
             }
-
-            // Remove the TestInitialize method
-            editor.RemoveNode(testInitializeMethod);
         }
 
         return editor.GetChangedDocument();
