@@ -48,7 +48,7 @@ internal sealed class HotReloadTestHostTestFrameworkInvoker : TestHostTestFramew
             var hotReloadOutputDevice = ServiceProvider.GetPlatformOutputDevice() as IHotReloadPlatformOutputDevice;
             if (hotReloadOutputDevice is not null)
             {
-                await hotReloadOutputDevice.DisplayBeforeHotReloadSessionStartAsync().ConfigureAwait(false);
+                await hotReloadOutputDevice.DisplayBeforeHotReloadSessionStartAsync(cancellationToken).ConfigureAwait(false);
             }
 
             await testFrameworkAdapter.ExecuteRequestAsync(new(request, messageBus, new SemaphoreSlimRequestCompleteNotifier(requestSemaphore), cancellationToken)).ConfigureAwait(false);
@@ -57,7 +57,7 @@ internal sealed class HotReloadTestHostTestFrameworkInvoker : TestHostTestFramew
             await ServiceProvider.GetBaseMessageBus().DrainDataAsync().ConfigureAwait(false);
             if (hotReloadOutputDevice is not null)
             {
-                await hotReloadOutputDevice.DisplayAfterHotReloadSessionEndAsync().ConfigureAwait(false);
+                await hotReloadOutputDevice.DisplayAfterHotReloadSessionEndAsync(cancellationToken).ConfigureAwait(false);
             }
 
             executionCompleted.SetResult(0);

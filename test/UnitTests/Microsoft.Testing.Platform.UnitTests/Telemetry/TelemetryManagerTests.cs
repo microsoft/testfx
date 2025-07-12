@@ -61,12 +61,12 @@ public sealed class TelemetryManagerTests
         if (value != "0")
         {
             // Message is suppressed.
-            outputDevice.Verify(c => c.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>()), Times.Never);
+            outputDevice.Verify(c => c.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>(), It.IsAny<CancellationToken>()), Times.Never);
         }
         else
         {
             // Message is not suppressed.
-            outputDevice.Verify(c => c.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>()), Times.Once);
+            outputDevice.Verify(c => c.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>(), It.IsAny<CancellationToken>()), Times.Once);
         }
     }
 
@@ -118,13 +118,13 @@ public sealed class TelemetryManagerTests
         {
             // Telemetry is suppressed.
             Assert.IsFalse(telemetryInformation.IsEnabled);
-            outputDevice.Verify(c => c.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>()), Times.Never);
+            outputDevice.Verify(c => c.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>(), It.IsAny<CancellationToken>()), Times.Never);
         }
         else
         {
             // Telemetry is not suppressed.
             Assert.IsTrue(telemetryInformation.IsEnabled);
-            outputDevice.Verify(c => c.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>()), Times.Once);
+            outputDevice.Verify(c => c.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>(), It.IsAny<CancellationToken>()), Times.Once);
         }
     }
 
@@ -172,7 +172,7 @@ public sealed class TelemetryManagerTests
         fileSystemMock.Verify(f => f.Exists(path), Times.Once);
 
         // Message was written to screen.
-        outputDevice.Verify(c => c.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>()), Times.Once);
+        outputDevice.Verify(c => c.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>(), It.IsAny<CancellationToken>()), Times.Once);
 
         // And sentinel was written to filesystem.
         fileSystemMock.Verify(f => f.NewFileStream(path, It.IsAny<FileMode>(), It.IsAny<FileAccess>()), Times.Once);
@@ -186,7 +186,7 @@ public sealed class TelemetryManagerTests
         fileSystemMock.Verify(f => f.Exists(path), Times.Once);
 
         // Message is not written to screen.
-        outputDevice.Verify(c => c.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>()), Times.Never);
+        outputDevice.Verify(c => c.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>(), It.IsAny<CancellationToken>()), Times.Never);
 
         // And sentinel is not written to filesystem, because it is already there.
         fileSystemMock.Verify(f => f.NewFileStream(path, It.IsAny<FileMode>(), It.IsAny<FileAccess>()), Times.Never);
@@ -240,7 +240,7 @@ public sealed class TelemetryManagerTests
         fileSystemMock.Verify(f => f.Exists(path), Times.Never);
 
         // Message was not written to screen.
-        outputDevice.Verify(c => c.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>()), Times.Never);
+        outputDevice.Verify(c => c.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>(), It.IsAny<CancellationToken>()), Times.Never);
 
         // And sentinel was not written to filesystem.
         fileSystemMock.Verify(f => f.NewFileStream(path, It.IsAny<FileMode>(), It.IsAny<FileAccess>()), Times.Never);
@@ -257,7 +257,7 @@ public sealed class TelemetryManagerTests
         fileSystemMock.Verify(f => f.Exists(path), Times.Once);
 
         // Message is written to screen.
-        outputDevice.Verify(c => c.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>()), Times.Once);
+        outputDevice.Verify(c => c.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>(), It.IsAny<CancellationToken>()), Times.Once);
 
         // And sentinel is written to filesystem, because in the first run the user would not see the message, so we should not write sentinel.
         fileSystemMock.Verify(f => f.NewFileStream(path, It.IsAny<FileMode>(), It.IsAny<FileAccess>()), Times.Once);
@@ -291,6 +291,6 @@ public sealed class TelemetryManagerTests
         TelemetryManager telemetryManager = new();
         await telemetryManager.BuildAsync(serviceProvider, loggerFactoryMock.Object, options);
 
-        outputDevice.Verify(c => c.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>()), Times.Never);
+        outputDevice.Verify(c => c.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 }

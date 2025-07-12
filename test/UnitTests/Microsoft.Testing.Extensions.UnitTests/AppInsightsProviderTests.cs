@@ -57,13 +57,13 @@ public sealed class AppInsightsProviderTests
             "sessionId");
 
         // Fire the consume loop
-        _ = appInsightsProvider.LogEventAsync("Sample", new Dictionary<string, object>());
+        _ = appInsightsProvider.LogEventAsync("Sample", new Dictionary<string, object>(), CancellationToken.None);
 
         // Wait for the consume loop
         loopInitialized.WaitOne();
 
         // Fire the consume loop
-        _ = appInsightsProvider.LogEventAsync("Sample2", new Dictionary<string, object>());
+        _ = appInsightsProvider.LogEventAsync("Sample2", new Dictionary<string, object>(), CancellationToken.None);
 
         // Cancel the platform token
         cancellationTokenSource.Cancel();

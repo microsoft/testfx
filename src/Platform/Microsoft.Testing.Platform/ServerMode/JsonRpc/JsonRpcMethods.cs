@@ -11,8 +11,6 @@ internal static class JsonRpcMethods
     public const string TestingRunTests = "testing/runTests";
     public const string TestingTestUpdatesTests = "testing/testUpdates/tests";
     public const string TelemetryUpdate = "telemetry/update";
-    public const string ClientLaunchDebugger = "client/launchDebugger";
-    public const string ClientAttachDebugger = "client/attachDebugger";
     public const string ClientLog = "client/log";
     public const string Exit = "exit";
     public const string CancelRequest = "$/cancelRequest";

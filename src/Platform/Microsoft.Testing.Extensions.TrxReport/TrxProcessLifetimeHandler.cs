@@ -175,7 +175,7 @@ internal sealed class TrxProcessLifetimeHandler :
                 testHostCrashInfo: $"Test host process pid: {testHostProcessInformation.PID} crashed.").ConfigureAwait(false);
             if (warning is not null)
             {
-                await _outputDevice.DisplayAsync(this, new WarningMessageOutputDeviceData(warning)).ConfigureAwait(false);
+                await _outputDevice.DisplayAsync(this, new WarningMessageOutputDeviceData(warning), cancellation).ConfigureAwait(false);
             }
 
             await _messageBus.PublishAsync(

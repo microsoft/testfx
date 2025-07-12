@@ -240,9 +240,9 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
 
         if (!loggingState.CommandLineParseResult.HasTool && !commandLineValidationResult.IsValid)
         {
-            await DisplayBannerIfEnabledAsync(loggingState, proxyOutputDevice, testFrameworkCapabilities).ConfigureAwait(false);
-            await proxyOutputDevice.DisplayAsync(commandLineHandler, new ErrorMessageOutputDeviceData(commandLineValidationResult.ErrorMessage)).ConfigureAwait(false);
-            await commandLineHandler.PrintHelpAsync(proxyOutputDevice).ConfigureAwait(false);
+            await DisplayBannerIfEnabledAsync(loggingState, proxyOutputDevice, testFrameworkCapabilities, testApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
+            await proxyOutputDevice.DisplayAsync(commandLineHandler, new ErrorMessageOutputDeviceData(commandLineValidationResult.ErrorMessage), testApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
+            await commandLineHandler.PrintHelpAsync(proxyOutputDevice, null, testApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
             return new InformativeCommandLineTestHost(ExitCodes.InvalidCommandLine, serviceProvider);
         }
 
@@ -278,7 +278,7 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
 
         // Display banner now because we need capture the output in case of MSBuild integration and we want to forward
         // to file disc also the banner, so at this point we need to have all services and configuration(result directory) built.
-        await DisplayBannerIfEnabledAsync(loggingState, proxyOutputDevice, testFrameworkCapabilities).ConfigureAwait(false);
+        await DisplayBannerIfEnabledAsync(loggingState, proxyOutputDevice, testFrameworkCapabilities, testApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
 
         // Add global telemetry service.
         // Add at this point or the telemetry banner appearance order will be wrong, we want the testing app banner before the telemetry banner.
@@ -323,7 +323,8 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
                 serviceProvider,
                 mode: TelemetryProperties.ApplicationMode.Tool,
                 metrics: builderMetrics,
-                stop: systemClock.UtcNow).ConfigureAwait(false);
+                stop: systemClock.UtcNow,
+                testApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
 
             return toolsTestHost;
         }
@@ -344,7 +345,7 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
             }
             else
             {
-                await commandLineHandler.PrintHelpAsync(proxyOutputDevice, toolsInformation).ConfigureAwait(false);
+                await commandLineHandler.PrintHelpAsync(proxyOutputDevice, toolsInformation, testApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
             }
 
             return new InformativeCommandLineTestHost(0, serviceProvider);
@@ -353,7 +354,7 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
         // If --info is invoked we return
         if (commandLineHandler.IsInfoInvoked())
         {
-            await commandLineHandler.PrintInfoAsync(proxyOutputDevice, toolsInformation).ConfigureAwait(false);
+            await commandLineHandler.PrintInfoAsync(proxyOutputDevice, toolsInformation, testApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
             return new InformativeCommandLineTestHost(0, serviceProvider);
         }
 
@@ -362,7 +363,7 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
         if (testHostOrchestratorConfiguration.TestHostOrchestrators.Length > 0 && !commandLineHandler.IsOptionSet(PlatformCommandLineProvider.DiscoverTestsOptionKey))
         {
             policiesService.ProcessRole = TestProcessRole.TestHostOrchestrator;
-            await proxyOutputDevice.HandleProcessRoleAsync(TestProcessRole.TestHostOrchestrator).ConfigureAwait(false);
+            await proxyOutputDevice.HandleProcessRoleAsync(TestProcessRole.TestHostOrchestrator, testApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
 
             // Build and register the test application lifecycle callbacks.
             ITestHostOrchestratorApplicationLifetime[] orchestratorLifetimes =
@@ -405,14 +406,15 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
             {
                 testHostControllerInfo.IsCurrentProcessTestHostController = true;
                 policiesService.ProcessRole = TestProcessRole.TestHostController;
-                await proxyOutputDevice.HandleProcessRoleAsync(TestProcessRole.TestHostController).ConfigureAwait(false);
+                await proxyOutputDevice.HandleProcessRoleAsync(TestProcessRole.TestHostController, testApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
                 TestHostControllersTestHost testHostControllersTestHost = new(testHostControllers, testHostControllersServiceProvider, passiveNode, systemEnvironment, loggerFactory, systemClock);
 
                 await LogTestHostCreatedAsync(
                     serviceProvider,
                     mode: TelemetryProperties.ApplicationMode.TestHostControllers,
                     metrics: builderMetrics,
-                    stop: systemClock.UtcNow).ConfigureAwait(false);
+                    stop: systemClock.UtcNow,
+                    testApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
 
                 return testHostControllersTestHost;
             }
@@ -420,7 +422,7 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
 
         // ======= TEST HOST MODE ======== //
         policiesService.ProcessRole = TestProcessRole.TestHost;
-        await proxyOutputDevice.HandleProcessRoleAsync(TestProcessRole.TestHost).ConfigureAwait(false);
+        await proxyOutputDevice.HandleProcessRoleAsync(TestProcessRole.TestHost, testApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
 
         // Setup the test host working folder.
         // Out of the test host controller extension the current working directory is the test host working directory.
@@ -467,7 +469,8 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
                 serviceProvider,
                 mode: TelemetryProperties.ApplicationMode.Server,
                 metrics: builderMetrics,
-                stop: systemClock.UtcNow).ConfigureAwait(false);
+                stop: systemClock.UtcNow,
+                testApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
 
             return actualTestHost;
         }
@@ -512,7 +515,8 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
                 serviceProvider,
                 mode: TelemetryProperties.ApplicationMode.Console,
                 metrics: builderMetrics,
-                stop: systemClock.UtcNow).ConfigureAwait(false);
+                stop: systemClock.UtcNow,
+                testApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
 #pragma warning restore SA1118 // Parameter should not span multiple lines
 
             return actualTestHost;
@@ -600,7 +604,8 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
         IServiceProvider serviceProvider,
         string mode,
         Dictionary<string, object> metrics,
-        DateTimeOffset stop)
+        DateTimeOffset stop,
+        CancellationToken cancellationToken)
     {
         ITelemetryCollector telemetryService = serviceProvider.GetTelemetryCollector();
         ITelemetryInformation telemetryInformation = serviceProvider.GetTelemetryInformation();
@@ -616,7 +621,7 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
                 [TelemetryProperties.HostProperties.BuildBuilderStop] = stop,
                 [TelemetryProperties.HostProperties.CreateBuilderStop] = stop,
             };
-            await telemetryService.LogEventAsync(TelemetryEvents.TestHostBuiltEventName, metricsObj).ConfigureAwait(false);
+            await telemetryService.LogEventAsync(TelemetryEvents.TestHostBuiltEventName, metricsObj, cancellationToken).ConfigureAwait(false);
         }
     }
 
@@ -789,7 +794,7 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
     }
 
     private async Task DisplayBannerIfEnabledAsync(ApplicationLoggingState loggingState, ProxyOutputDevice outputDevice,
-        ITestFrameworkCapabilities testFrameworkCapabilities)
+        ITestFrameworkCapabilities testFrameworkCapabilities, CancellationToken cancellationToken)
     {
         bool isNoBannerSet = loggingState.CommandLineParseResult.IsOptionSet(PlatformCommandLineProvider.NoBannerOptionKey);
         string? noBannerEnvironmentVar = environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_NOBANNER);
@@ -801,7 +806,7 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
                 ? await bannerMessageOwnerCapability.GetBannerMessageAsync().ConfigureAwait(false)
                 : null;
 
-            await outputDevice.DisplayBannerAsync(bannerMessage).ConfigureAwait(false);
+            await outputDevice.DisplayBannerAsync(bannerMessage, cancellationToken).ConfigureAwait(false);
         }
     }
 }

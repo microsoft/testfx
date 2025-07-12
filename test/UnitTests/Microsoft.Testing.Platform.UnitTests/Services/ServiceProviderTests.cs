@@ -7,7 +7,6 @@ using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Extensions.TestHostControllers;
 using Microsoft.Testing.Platform.Services;
-using Microsoft.Testing.Platform.TestHost;
 
 namespace Microsoft.Testing.Platform.UnitTests;
 
@@ -296,9 +295,9 @@ public sealed class ServiceProviderTests
 
         public Task<bool> IsEnabledAsync() => throw new NotImplementedException();
 
-        public Task OnTestSessionFinishingAsync(SessionUid sessionUid, CancellationToken cancellationToken) => throw new NotImplementedException();
+        public Task OnTestSessionFinishingAsync(ITestSessionContext testSessionContext) => throw new NotImplementedException();
 
-        public Task OnTestSessionStartingAsync(SessionUid sessionUid, CancellationToken cancellationToken) => throw new NotImplementedException();
+        public Task OnTestSessionStartingAsync(ITestSessionContext testSessionContext) => throw new NotImplementedException();
     }
 
     private sealed class DataConsumer : IDataConsumer
