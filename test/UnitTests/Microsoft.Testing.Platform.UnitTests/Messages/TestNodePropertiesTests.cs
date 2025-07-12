@@ -200,7 +200,7 @@ public sealed class TestNodePropertiesTests
     [TestMethod]
     public void TestMethodIdentifierProperty_ToStringIsCorrect()
         => Assert.AreEqual(
-            "TestMethodIdentifierProperty { AssemblyFullName = assembly, Namespace = namespace, TypeName = type, MethodName = method, ParameterTypeFullNames = [string], ReturnTypeFullName = bool }",
+            "TestMethodIdentifierProperty { AssemblyFullName = assembly, Namespace = namespace, TypeName = type, MethodName = method, MethodArity = 0, ParameterTypeFullNames = [string], ReturnTypeFullName = bool }",
             new TestMethodIdentifierProperty("assembly", "namespace", "type", "method", 0, ["string"], "bool").ToString());
 
     [TestMethod]
