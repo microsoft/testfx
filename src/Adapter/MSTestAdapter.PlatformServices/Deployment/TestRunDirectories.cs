@@ -37,30 +37,15 @@ internal sealed class TestRunDirectories
         DebugEx.Assert(!StringEx.IsNullOrEmpty(rootDirectory), "rootDirectory");
 
         RootDeploymentDirectory = rootDirectory;
-    }
-
-    [MemberNotNull(nameof(InDirectory), nameof(OutDirectory), nameof(InMachineNameDirectory))]
-    private void OnRootDeploymentDirectoryUpdated()
-    {
         InDirectory = Path.Combine(RootDeploymentDirectory, DeploymentInDirectorySuffix);
         OutDirectory = Path.Combine(RootDeploymentDirectory, DeploymentOutDirectorySuffix);
         InMachineNameDirectory = Path.Combine(InDirectory, Environment.MachineName);
     }
 
     /// <summary>
-    /// Gets or sets the root deployment directory.
+    /// Gets the root deployment directory.
     /// </summary>
-    public string RootDeploymentDirectory
-    {
-        get => field;
-        // TODO: Remove the setter as a breaking change and simplify the code.
-        [MemberNotNull(nameof(InDirectory), nameof(OutDirectory), nameof(InMachineNameDirectory))]
-        set
-        {
-            field = value;
-            OnRootDeploymentDirectoryUpdated();
-        }
-    }
+    public string RootDeploymentDirectory { get; }
 
     /// <summary>
     /// Gets the In directory.

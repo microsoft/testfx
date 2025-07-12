@@ -9,14 +9,6 @@ namespace Microsoft.Testing.Platform.Extensions.Messages;
 public interface IProperty;
 
 /// <summary>
-/// Node property that represents a key-value pair.
-/// </summary>
-/// <param name="Key">Key name.</param>
-/// <param name="Value">Key value.</param>
-[Obsolete("Use TestMetadataProperty instead. This will be removed in a future version.")]
-public record KeyValuePairStringProperty(string Key, string Value) : IProperty;
-
-/// <summary>
 /// Base class for test node state properties.
 /// </summary>
 /// <param name="Explanation">Textual explanation of the node state.</param>
@@ -322,40 +314,6 @@ public sealed record TestFileLocationProperty(string FilePath, LinePositionSpan 
 /// <param name="ReturnTypeFullName">Return type full name in metadata format.</param>
 public sealed record TestMethodIdentifierProperty(string AssemblyFullName, string Namespace, string TypeName, string MethodName, int MethodArity, string[] ParameterTypeFullNames, string ReturnTypeFullName) : IProperty
 {
-    /// <summary>
-    /// Initializes a new instance of the <see cref="TestMethodIdentifierProperty"/> class.
-    /// </summary>
-    /// <param name="AssemblyFullName">Assembly full name.</param>
-    /// <param name="Namespace">Namespace.</param>
-    /// <param name="TypeName">Type name in metadata format, not including the namespace. Generics are represented by backtick followed by arity. Nested types are represented by <c>+</c>.</param>
-    /// <param name="MethodName">Method name in metadata format.</param>
-    /// <param name="ParameterTypeFullNames">Parameter type full names in metadata format.</param>
-    /// <param name="ReturnTypeFullName">Return type full name in metadata format.</param>
-    [Obsolete("Use the overload with method arity instead.")]
-    public TestMethodIdentifierProperty(string AssemblyFullName, string Namespace, string TypeName, string MethodName, string[] ParameterTypeFullNames, string ReturnTypeFullName)
-        : this(AssemblyFullName, Namespace, TypeName, MethodName, 0, ParameterTypeFullNames, ReturnTypeFullName)
-    {
-    }
-
-    /// <summary>
-    /// Deconstructs properties of TestMethodIdentifierProperty, except MethodArity. This is present only for backwards compatibility.
-    /// </summary>
-    /// <param name="AssemblyFullName">The value of <see cref="AssemblyFullName" />.</param>
-    /// <param name="Namespace">The value of <see cref="Namespace" />.</param>
-    /// <param name="TypeName">The value of <see cref="TypeName" />.</param>
-    /// <param name="MethodName">The value of <see cref="MethodName" />.</param>
-    /// <param name="ParameterTypeFullNames">The value of <see cref="ParameterTypeFullNames" />.</param>
-    /// <param name="ReturnTypeFullName">The value of <see cref="ReturnTypeFullName" />.</param>
-    public void Deconstruct(out string AssemblyFullName, out string Namespace, out string TypeName, out string MethodName, out string[] ParameterTypeFullNames, out string ReturnTypeFullName)
-    {
-        AssemblyFullName = this.AssemblyFullName;
-        Namespace = this.Namespace;
-        TypeName = this.TypeName;
-        MethodName = this.MethodName;
-        ParameterTypeFullNames = this.ParameterTypeFullNames;
-        ReturnTypeFullName = this.ReturnTypeFullName;
-    }
-
     [SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "https://github.com/dotnet/roslyn/issues/52421")]
     private bool PrintMembers(StringBuilder builder)
     {
@@ -367,6 +325,8 @@ public sealed record TestMethodIdentifierProperty(string AssemblyFullName, strin
         builder.Append(TypeName);
         builder.Append(", MethodName = ");
         builder.Append(MethodName);
+        builder.Append(", MethodArity = ");
+        builder.Append(MethodArity);
         builder.Append(", ParameterTypeFullNames = [");
         builder.AppendJoin(", ", ParameterTypeFullNames);
         builder.Append("], ReturnTypeFullName = ");
@@ -416,6 +376,4 @@ public record StandardErrorProperty(string StandardError) : IProperty;
 /// <param name="Description">The description.</param>
 public record FileArtifactProperty(FileInfo FileInfo, string DisplayName, string? Description = null) : IProperty;
 
-#pragma warning disable CS0618 // Type or member is obsolete
-internal sealed record SerializableKeyValuePairStringProperty(string Key, string Value) : KeyValuePairStringProperty(Key, Value);
-#pragma warning restore CS0618 // Type or member is obsolete
+internal sealed record SerializableKeyValuePairStringProperty(string Key, string Value) : IProperty;

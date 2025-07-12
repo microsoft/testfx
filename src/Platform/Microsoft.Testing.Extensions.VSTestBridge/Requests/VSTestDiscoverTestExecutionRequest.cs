@@ -24,13 +24,6 @@ public sealed class VSTestDiscoverTestExecutionRequest : DiscoverTestExecutionRe
     }
 
     /// <summary>
-    /// Gets the VSTest filter.
-    /// </summary>
-    [Obsolete("VSTestTestExecutionFilter always have null TestCases and should not be used.", error: true)]
-    public VSTestTestExecutionFilter VSTestFilter
-        => VSTestTestExecutionFilter.Instance;
-
-    /// <summary>
     /// Gets the paths of the assemblies to discover tests from.
     /// </summary>
     public string[] AssemblyPaths { get; }
