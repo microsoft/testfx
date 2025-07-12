@@ -7,7 +7,6 @@ using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Hosts;
 using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.Services;
-using Microsoft.Testing.Platform.TestHost;
 
 using static Microsoft.Testing.Platform.Hosts.ServerTestHost;
 
@@ -194,8 +193,9 @@ internal sealed class PerRequestServerDataConsumer(IServiceProvider serviceProvi
         }
     }
 
-    public async Task OnTestSessionFinishingAsync(SessionUid sessionUid, CancellationToken cancellationToken)
+    public async Task OnTestSessionFinishingAsync(ITestSessionContext testSessionContext)
     {
+        CancellationToken cancellationToken = testSessionContext.CancellationToken;
         try
         {
             // We signal the test session end so we can complete the flush.
@@ -293,5 +293,5 @@ internal sealed class PerRequestServerDataConsumer(IServiceProvider serviceProvi
         }
     }
 
-    public Task OnTestSessionStartingAsync(SessionUid sessionUid, CancellationToken cancellationToken) => Task.CompletedTask;
+    public Task OnTestSessionStartingAsync(ITestSessionContext testSessionContext) => Task.CompletedTask;
 }
