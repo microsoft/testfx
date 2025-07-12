@@ -37,7 +37,7 @@ public static class ConfigurationExtensions
     /// <returns>The test host working directory.</returns>
     [Obsolete("This API is obsolete and will be removed in v2. Use GetCurrentWorkingDirectory instead.", error: true)]
     // TODO: This is only used by CC so far. It can be removed once we update CC in this repo to a version where the API is no longer used.
-    internal static string GetTestHostWorkingDirectory(this IConfiguration configuration)
+    public static string GetTestHostWorkingDirectory(this IConfiguration configuration)
     {
         string? workingDirectory = configuration[PlatformConfigurationConstants.PlatformTestHostWorkingDirectory];
         return Guard.NotNull(workingDirectory);
