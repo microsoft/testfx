@@ -14,7 +14,7 @@ public interface ITestSessionContext
     /// <summary>
     /// Gets a unique identifier for the test session.
     /// </summary>
-    SessionUid SessionId { get; } // TODO: Should this rename to SessionUid?
+    SessionUid SessionUid { get; }
 
     /// <summary>
     /// Gets the cancellation token for the test session.
