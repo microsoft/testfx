@@ -17,7 +17,6 @@ using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.Services;
-using Microsoft.Testing.Platform.TestHost;
 
 namespace Microsoft.Testing.Extensions.TrxReport.Abstractions;
 
@@ -166,8 +165,9 @@ internal sealed class TrxReportGenerator :
         return Task.CompletedTask;
     }
 
-    public async Task OnTestSessionStartingAsync(SessionUid _, CancellationToken cancellationToken)
+    public async Task OnTestSessionStartingAsync(ITestSessionContext testSessionContext)
     {
+        CancellationToken cancellationToken = testSessionContext.CancellationToken;
         if (!_isEnabled || cancellationToken.IsCancellationRequested)
         {
             return;
@@ -209,8 +209,9 @@ TrxReportGeneratorCommandLine.IsTrxReportEnabled: {_commandLineOptionsService.Is
         _testStartTime = _clock.UtcNow;
     }
 
-    public async Task OnTestSessionFinishingAsync(SessionUid sessionUid, CancellationToken cancellationToken)
+    public async Task OnTestSessionFinishingAsync(ITestSessionContext testSessionContext)
     {
+        CancellationToken cancellationToken = testSessionContext.CancellationToken;
         if (!_isEnabled || cancellationToken.IsCancellationRequested)
         {
             return;
@@ -242,7 +243,7 @@ TrxReportGeneratorCommandLine.IsTrxReportEnabled: {_commandLineOptionsService.Is
                 !_commandLineOptionsService.IsOptionSet(CrashDumpCommandLineOptions.CrashDumpOptionName))
             {
                 // In server mode we report the trx in-process
-                await _messageBus.PublishAsync(this, new SessionFileArtifact(sessionUid, new FileInfo(reportFileName), ExtensionResources.TrxReportArtifactDisplayName, ExtensionResources.TrxReportArtifactDescription)).ConfigureAwait(false);
+                await _messageBus.PublishAsync(this, new SessionFileArtifact(testSessionContext.SessionId, new FileInfo(reportFileName), ExtensionResources.TrxReportArtifactDisplayName, ExtensionResources.TrxReportArtifactDescription)).ConfigureAwait(false);
             }
             else
             {

@@ -11,7 +11,6 @@ using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.OutputDevice.Terminal;
 using Microsoft.Testing.Platform.Resources;
 using Microsoft.Testing.Platform.Services;
-using Microsoft.Testing.Platform.TestHost;
 using Microsoft.Testing.Platform.TestHostControllers;
 
 namespace Microsoft.Testing.Platform.OutputDevice;
@@ -319,11 +318,11 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
         }
     }
 
-    public Task OnTestSessionFinishingAsync(SessionUid sessionUid, CancellationToken cancellationToken) => Task.CompletedTask;
+    public Task OnTestSessionFinishingAsync(ITestSessionContext testSessionContext) => Task.CompletedTask;
 
-    public Task OnTestSessionStartingAsync(SessionUid sessionUid, CancellationToken cancellationToken)
+    public Task OnTestSessionStartingAsync(ITestSessionContext testSessionContext)
     {
-        if (_isServerMode || cancellationToken.IsCancellationRequested)
+        if (_isServerMode || testSessionContext.CancellationToken.IsCancellationRequested)
         {
             return Task.CompletedTask;
         }

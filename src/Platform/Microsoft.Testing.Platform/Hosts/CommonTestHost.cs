@@ -10,7 +10,6 @@ using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.ServerMode;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.Telemetry;
-using Microsoft.Testing.Platform.TestHost;
 
 namespace Microsoft.Testing.Platform.Hosts;
 
@@ -130,40 +129,36 @@ internal abstract class CommonTestHost(ServiceProvider serviceProvider) : ITestH
     protected static async Task ExecuteRequestAsync(ProxyOutputDevice outputDevice, ITestSessionContext testSessionInfo,
         ServiceProvider serviceProvider, BaseMessageBus baseMessageBus, ITestFramework testFramework, TestHost.ClientInfo client)
     {
-        CancellationToken testSessionCancellationToken = serviceProvider.GetTestSessionContext().CancellationToken;
-
-        await DisplayBeforeSessionStartAsync(outputDevice, testSessionInfo, testSessionCancellationToken).ConfigureAwait(false);
-
+        await DisplayBeforeSessionStartAsync(outputDevice, testSessionInfo).ConfigureAwait(false);
+        CancellationToken cancellationToken = testSessionInfo.CancellationToken;
         try
         {
-            await NotifyTestSessionStartAsync(testSessionInfo.SessionId, baseMessageBus, serviceProvider, testSessionCancellationToken).ConfigureAwait(false);
-            await serviceProvider.GetTestAdapterInvoker().ExecuteAsync(testFramework, client, testSessionCancellationToken).ConfigureAwait(false);
-            await NotifyTestSessionEndAsync(testSessionInfo.SessionId, baseMessageBus, serviceProvider, testSessionCancellationToken).ConfigureAwait(false);
+            await NotifyTestSessionStartAsync(testSessionInfo, baseMessageBus, serviceProvider).ConfigureAwait(false);
+            await serviceProvider.GetTestAdapterInvoker().ExecuteAsync(testFramework, client, cancellationToken).ConfigureAwait(false);
+            await NotifyTestSessionEndAsync(testSessionInfo, baseMessageBus, serviceProvider).ConfigureAwait(false);
         }
-        catch (OperationCanceledException) when (testSessionCancellationToken.IsCancellationRequested)
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
             // Do nothing we're canceled
         }
 
         // We keep the display after session out of the OperationCanceledException catch because we want to notify the IPlatformOutputDevice
         // also in case of cancellation. Most likely it needs to notify users that the session was canceled.
-        await DisplayAfterSessionEndRunAsync(outputDevice, testSessionInfo, testSessionCancellationToken).ConfigureAwait(false);
+        await DisplayAfterSessionEndRunAsync(outputDevice, testSessionInfo).ConfigureAwait(false);
     }
 
-    private static async Task DisplayBeforeSessionStartAsync(ProxyOutputDevice outputDevice, ITestSessionContext sessionInfo, CancellationToken cancellationToken)
+    private static async Task DisplayBeforeSessionStartAsync(ProxyOutputDevice outputDevice, ITestSessionContext sessionInfo)
     {
         // Display before session start
         await outputDevice.DisplayBeforeSessionStartAsync().ConfigureAwait(false);
 
         if (outputDevice.OriginalOutputDevice is ITestSessionLifetimeHandler testSessionLifetimeHandler)
         {
-            await testSessionLifetimeHandler.OnTestSessionStartingAsync(
-                sessionInfo.SessionId,
-                cancellationToken).ConfigureAwait(false);
+            await testSessionLifetimeHandler.OnTestSessionStartingAsync(sessionInfo).ConfigureAwait(false);
         }
     }
 
-    private static async Task DisplayAfterSessionEndRunAsync(ProxyOutputDevice outputDevice, ITestSessionContext sessionInfo, CancellationToken cancellationToken)
+    private static async Task DisplayAfterSessionEndRunAsync(ProxyOutputDevice outputDevice, ITestSessionContext sessionInfo)
     {
         // Display after session end
         await outputDevice.DisplayAfterSessionEndRunAsync().ConfigureAwait(false);
@@ -171,13 +166,11 @@ internal abstract class CommonTestHost(ServiceProvider serviceProvider) : ITestH
         // We want to ensure that the output service is the last one to run
         if (outputDevice.OriginalOutputDevice is ITestSessionLifetimeHandler testSessionLifetimeHandlerFinishing)
         {
-            await testSessionLifetimeHandlerFinishing.OnTestSessionFinishingAsync(
-                sessionInfo.SessionId,
-                cancellationToken).ConfigureAwait(false);
+            await testSessionLifetimeHandlerFinishing.OnTestSessionFinishingAsync(sessionInfo).ConfigureAwait(false);
         }
     }
 
-    private static async Task NotifyTestSessionStartAsync(SessionUid sessionUid, BaseMessageBus baseMessageBus, ServiceProvider serviceProvider, CancellationToken cancellationToken)
+    private static async Task NotifyTestSessionStartAsync(ITestSessionContext testSessionContext, BaseMessageBus baseMessageBus, ServiceProvider serviceProvider)
     {
         TestSessionLifetimeHandlersContainer? testSessionLifetimeHandlersContainer = serviceProvider.GetService<TestSessionLifetimeHandlersContainer>();
         if (testSessionLifetimeHandlersContainer is null)
@@ -187,14 +180,14 @@ internal abstract class CommonTestHost(ServiceProvider serviceProvider) : ITestH
 
         foreach (ITestSessionLifetimeHandler testSessionLifetimeHandler in testSessionLifetimeHandlersContainer.TestSessionLifetimeHandlers)
         {
-            await testSessionLifetimeHandler.OnTestSessionStartingAsync(sessionUid, cancellationToken).ConfigureAwait(false);
+            await testSessionLifetimeHandler.OnTestSessionStartingAsync(testSessionContext).ConfigureAwait(false);
         }
 
         // Drain messages generated by the session start notification before to start test execution.
         await baseMessageBus.DrainDataAsync().ConfigureAwait(false);
     }
 
-    private static async Task NotifyTestSessionEndAsync(SessionUid sessionUid, BaseMessageBus baseMessageBus, ServiceProvider serviceProvider, CancellationToken cancellationToken)
+    private static async Task NotifyTestSessionEndAsync(ITestSessionContext testSessionContext, BaseMessageBus baseMessageBus, ServiceProvider serviceProvider)
     {
         // Drain messages generated by the test session execution before to process the session end notification.
         await baseMessageBus.DrainDataAsync().ConfigureAwait(false);
@@ -207,7 +200,7 @@ internal abstract class CommonTestHost(ServiceProvider serviceProvider) : ITestH
 
         foreach (ITestSessionLifetimeHandler testSessionLifetimeHandler in serviceProvider.GetRequiredService<TestSessionLifetimeHandlersContainer>().TestSessionLifetimeHandlers)
         {
-            await testSessionLifetimeHandler.OnTestSessionFinishingAsync(sessionUid, cancellationToken).ConfigureAwait(false);
+            await testSessionLifetimeHandler.OnTestSessionFinishingAsync(testSessionContext).ConfigureAwait(false);
 
             // OnTestSessionFinishingAsync could produce information that needs to be handled by others.
             await baseMessageBus.DrainDataAsync().ConfigureAwait(false);
