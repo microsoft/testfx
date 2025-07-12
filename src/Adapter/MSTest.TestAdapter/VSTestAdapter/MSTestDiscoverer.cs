@@ -27,7 +27,22 @@ internal sealed class MSTestDiscoverer : ITestDiscoverer
     /// <param name="discoverySink">Used to send testcases and discovery related events back to Discoverer manager.</param>
     [System.Security.SecurityCritical]
     [SuppressMessage("Microsoft.Design", "CA1062:Validate arguments of public methods", MessageId = "0", Justification = "Discovery context can be null.")]
-    public void DiscoverTests(IEnumerable<string> sources, IDiscoveryContext discoveryContext, IMessageLogger logger, ITestCaseDiscoverySink discoverySink) => DiscoverTests(sources, discoveryContext, logger, discoverySink, null);
+    public void DiscoverTests(IEnumerable<string> sources, IDiscoveryContext discoveryContext, IMessageLogger logger, ITestCaseDiscoverySink discoverySink)
+    {
+#if NETFRAMEWORK
+        if (AppDomain.CurrentDomain.Id == 1 &&
+            AppDomain.CurrentDomain.FriendlyName.StartsWith("testhost.net", StringComparison.Ordinal) &&
+            AppDomain.CurrentDomain.FriendlyName.EndsWith(".exe", StringComparison.Ordinal) &&
+            sources.FirstOrDefault() is { } source)
+        {
+            new AppDomainEngineInvoker(source, () => DiscoverTests(sources, discoveryContext, logger, discoverySink, null)).Invoke();
+        }
+        else
+#endif
+        {
+            DiscoverTests(sources, discoveryContext, logger, discoverySink, null);
+        }
+    }
 
     internal static void DiscoverTests(IEnumerable<string> sources, IDiscoveryContext discoveryContext, IMessageLogger logger, ITestCaseDiscoverySink discoverySink, IConfiguration? configuration)
     {

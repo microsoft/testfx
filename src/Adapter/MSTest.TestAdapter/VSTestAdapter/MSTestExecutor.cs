@@ -68,7 +68,21 @@ internal sealed class MSTestExecutor : ITestExecutor
     [Obsolete("Use RunTestsAsync instead.")]
 #endif
     public void RunTests(IEnumerable<TestCase>? tests, IRunContext? runContext, IFrameworkHandle? frameworkHandle)
-        => RunTestsAsync(tests, runContext, frameworkHandle, null).GetAwaiter().GetResult();
+    {
+#if NETFRAMEWORK
+        if (AppDomain.CurrentDomain.Id == 1 &&
+            AppDomain.CurrentDomain.FriendlyName.StartsWith("testhost.net", StringComparison.Ordinal) &&
+            AppDomain.CurrentDomain.FriendlyName.EndsWith(".exe", StringComparison.Ordinal) &&
+            tests?.FirstOrDefault()?.Source is { } source)
+        {
+            new AppDomainEngineInvoker(source, () => RunTestsAsync(tests, runContext, frameworkHandle, null).GetAwaiter().GetResult()).Invoke();
+        }
+        else
+#endif
+        {
+            RunTestsAsync(tests, runContext, frameworkHandle, null).GetAwaiter().GetResult();
+        }
+    }
 
     /// <summary>
     /// Runs the tests.
@@ -80,7 +94,21 @@ internal sealed class MSTestExecutor : ITestExecutor
     [Obsolete("Use RunTestsAsync instead.")]
 #endif
     public void RunTests(IEnumerable<string>? sources, IRunContext? runContext, IFrameworkHandle? frameworkHandle)
-        => RunTestsAsync(sources, runContext, frameworkHandle, null).GetAwaiter().GetResult();
+    {
+#if NETFRAMEWORK
+        if (AppDomain.CurrentDomain.Id == 1 &&
+            AppDomain.CurrentDomain.FriendlyName.StartsWith("testhost.net", StringComparison.Ordinal) &&
+            AppDomain.CurrentDomain.FriendlyName.EndsWith(".exe", StringComparison.Ordinal) &&
+            sources.FirstOrDefault() is { } source)
+        {
+            new AppDomainEngineInvoker(source, () => RunTestsAsync(sources, runContext, frameworkHandle, null).GetAwaiter().GetResult()).Invoke();
+        }
+        else
+#endif
+        {
+            RunTestsAsync(sources, runContext, frameworkHandle, null).GetAwaiter().GetResult();
+        }
+    }
 
     internal async Task RunTestsAsync(IEnumerable<TestCase>? tests, IRunContext? runContext, IFrameworkHandle? frameworkHandle, IConfiguration? configuration)
     {
