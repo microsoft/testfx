@@ -184,7 +184,7 @@ internal sealed class PerRequestServerDataConsumer(IServiceProvider serviceProvi
 
             if (change is not null)
             {
-                await _serverTestHost.SendTestUpdateAsync(change).ConfigureAwait(false);
+                await _serverTestHost.SendTestUpdateAsync(change, cancellationToken).ConfigureAwait(false);
             }
         }
         finally

@@ -116,7 +116,7 @@ internal sealed partial class BrowserOutputDevice : IPlatformOutputDevice,
     /// <inheritdoc />
     public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 
-    public async Task DisplayBannerAsync(string? bannerMessage)
+    public async Task DisplayBannerAsync(string? bannerMessage, CancellationToken cancellationToken)
     {
         using (await _asyncMonitor.LockAsync(TimeoutHelper.DefaultHangTimeSpanTimeout).ConfigureAwait(false))
         {
@@ -166,7 +166,7 @@ internal sealed partial class BrowserOutputDevice : IPlatformOutputDevice,
         }
     }
 
-    public Task DisplayBeforeSessionStartAsync()
+    public Task DisplayBeforeSessionStartAsync(CancellationToken cancellationToken)
     {
         AppendAssemblyLinkTargetFrameworkAndArchitecture(_console, _assemblyName, _targetFramework, _longArchitecture);
         return Task.CompletedTask;
@@ -199,7 +199,7 @@ internal sealed partial class BrowserOutputDevice : IPlatformOutputDevice,
         console.WriteLine(builder.ToString());
     }
 
-    public async Task DisplayAfterSessionEndRunAsync()
+    public async Task DisplayAfterSessionEndRunAsync(CancellationToken cancellationToken)
     {
         using (await _asyncMonitor.LockAsync(TimeoutHelper.DefaultHangTimeSpanTimeout).ConfigureAwait(false))
         {
@@ -254,7 +254,8 @@ internal sealed partial class BrowserOutputDevice : IPlatformOutputDevice,
     /// </summary>
     /// <param name="producer">The producer that sent the data.</param>
     /// <param name="data">The data to be displayed.</param>
-    public async Task DisplayAsync(IOutputDeviceDataProducer producer, IOutputDeviceData data)
+    /// <param name="cancellationToken">The cancellation token.</param>
+    public async Task DisplayAsync(IOutputDeviceDataProducer producer, IOutputDeviceData data, CancellationToken cancellationToken)
     {
         using (await _asyncMonitor.LockAsync(TimeoutHelper.DefaultHangTimeSpanTimeout).ConfigureAwait(false))
         {
@@ -391,13 +392,13 @@ internal sealed partial class BrowserOutputDevice : IPlatformOutputDevice,
         return Task.CompletedTask;
     }
 
-    public async Task HandleProcessRoleAsync(TestProcessRole processRole)
+    public async Task HandleProcessRoleAsync(TestProcessRole processRole, CancellationToken cancellationToken)
     {
         if (processRole == TestProcessRole.TestHost)
         {
             await _policiesService.RegisterOnMaxFailedTestsCallbackAsync(
                 async (maxFailedTests, _) => await DisplayAsync(
-                    this, new TextOutputDeviceData(string.Format(CultureInfo.InvariantCulture, PlatformResources.ReachedMaxFailedTestsMessage, maxFailedTests))).ConfigureAwait(false)).ConfigureAwait(false);
+                    this, new TextOutputDeviceData(string.Format(CultureInfo.InvariantCulture, PlatformResources.ReachedMaxFailedTestsMessage, maxFailedTests)), cancellationToken).ConfigureAwait(false)).ConfigureAwait(false);
         }
     }
 }

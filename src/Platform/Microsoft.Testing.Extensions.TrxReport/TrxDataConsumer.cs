@@ -221,7 +221,7 @@ TrxReportGeneratorCommandLine.IsTrxReportEnabled: {_commandLineOptionsService.Is
         {
             if (!_adapterSupportTrxCapability)
             {
-                await _outputDisplay.DisplayAsync(this, new WarningMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.TrxReportFrameworkDoesNotSupportTrxReportCapability, _testFramework.DisplayName, _testFramework.Uid))).ConfigureAwait(false);
+                await _outputDisplay.DisplayAsync(this, new WarningMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.TrxReportFrameworkDoesNotSupportTrxReportCapability, _testFramework.DisplayName, _testFramework.Uid)), testSessionContext.CancellationToken).ConfigureAwait(false);
             }
 
             ApplicationStateGuard.Ensure(_testStartTime is not null);
@@ -233,7 +233,7 @@ TrxReportGeneratorCommandLine.IsTrxReportEnabled: {_commandLineOptionsService.Is
             (string reportFileName, string? warning) = await trxReportGeneratorEngine.GenerateReportAsync().ConfigureAwait(false);
             if (warning is not null)
             {
-                await _outputDisplay.DisplayAsync(this, new WarningMessageOutputDeviceData(warning)).ConfigureAwait(false);
+                await _outputDisplay.DisplayAsync(this, new WarningMessageOutputDeviceData(warning), testSessionContext.CancellationToken).ConfigureAwait(false);
             }
 
             if (

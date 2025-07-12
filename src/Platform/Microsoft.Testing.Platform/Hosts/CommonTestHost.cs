@@ -108,7 +108,7 @@ internal abstract class CommonTestHost(ServiceProvider serviceProvider) : ITestH
 #pragma warning restore CS0618 // Type or member is obsolete
         }
 
-        int exitCode = await InternalRunAsync().ConfigureAwait(false);
+        int exitCode = await InternalRunAsync(testApplicationCancellationToken).ConfigureAwait(false);
 
         if (RunTestApplicationLifeCycleCallbacks)
         {
@@ -124,7 +124,7 @@ internal abstract class CommonTestHost(ServiceProvider serviceProvider) : ITestH
         return exitCode;
     }
 
-    protected abstract Task<int> InternalRunAsync();
+    protected abstract Task<int> InternalRunAsync(CancellationToken cancellationToken);
 
     protected static async Task ExecuteRequestAsync(ProxyOutputDevice outputDevice, ITestSessionContext testSessionInfo,
         ServiceProvider serviceProvider, BaseMessageBus baseMessageBus, ITestFramework testFramework, TestHost.ClientInfo client)
@@ -150,7 +150,7 @@ internal abstract class CommonTestHost(ServiceProvider serviceProvider) : ITestH
     private static async Task DisplayBeforeSessionStartAsync(ProxyOutputDevice outputDevice, ITestSessionContext sessionInfo)
     {
         // Display before session start
-        await outputDevice.DisplayBeforeSessionStartAsync().ConfigureAwait(false);
+        await outputDevice.DisplayBeforeSessionStartAsync(sessionInfo.CancellationToken).ConfigureAwait(false);
 
         if (outputDevice.OriginalOutputDevice is ITestSessionLifetimeHandler testSessionLifetimeHandler)
         {
@@ -161,7 +161,7 @@ internal abstract class CommonTestHost(ServiceProvider serviceProvider) : ITestH
     private static async Task DisplayAfterSessionEndRunAsync(ProxyOutputDevice outputDevice, ITestSessionContext sessionInfo)
     {
         // Display after session end
-        await outputDevice.DisplayAfterSessionEndRunAsync().ConfigureAwait(false);
+        await outputDevice.DisplayAfterSessionEndRunAsync(sessionInfo.CancellationToken).ConfigureAwait(false);
 
         // We want to ensure that the output service is the last one to run
         if (outputDevice.OriginalOutputDevice is ITestSessionLifetimeHandler testSessionLifetimeHandlerFinishing)
