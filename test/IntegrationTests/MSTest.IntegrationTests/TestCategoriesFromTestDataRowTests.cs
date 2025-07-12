@@ -13,7 +13,7 @@ public class TestCategoriesFromTestDataRowTests : CLITestBase
     public void TestCategoriesFromTestDataRow_ShouldDiscoverTestsWithIntegrationCategory()
     {
         // Arrange
-        string assemblyPath = GetAssetFullPath(TestAssetName);
+        string assemblyPath = GetAssetFullPath(TestAssetName, targetFramework: "net8.0");
 
         // Act - Filter by "Integration" category which should come from TestDataRow
         System.Collections.Immutable.ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestCase> testCases = DiscoverTests(assemblyPath, "TestCategory~Integration");
@@ -29,7 +29,7 @@ public class TestCategoriesFromTestDataRowTests : CLITestBase
     public void TestCategoriesFromTestDataRow_ShouldDiscoverTestsWithUnitCategory()
     {
         // Arrange
-        string assemblyPath = GetAssetFullPath(TestAssetName);
+        string assemblyPath = GetAssetFullPath(TestAssetName, targetFramework: "net8.0");
 
         // Act - Filter by "Unit" category which should come from TestDataRow
         System.Collections.Immutable.ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestCase> testCases = DiscoverTests(assemblyPath, "TestCategory~Unit");
@@ -45,7 +45,7 @@ public class TestCategoriesFromTestDataRowTests : CLITestBase
     public void TestCategoriesFromTestDataRow_ShouldCombineMethodAndDataCategories()
     {
         // Arrange
-        string assemblyPath = GetAssetFullPath(TestAssetName);
+        string assemblyPath = GetAssetFullPath(TestAssetName, targetFramework: "net8.0");
 
         // Act - Filter by "MethodLevel" category (method attribute)
         System.Collections.Immutable.ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestCase> methodLevelTests = DiscoverTests(assemblyPath, "TestCategory~MethodLevel");
@@ -68,7 +68,7 @@ public class TestCategoriesFromTestDataRowTests : CLITestBase
     public async Task TestCategoriesFromTestDataRow_ShouldExecuteCorrectly()
     {
         // Arrange
-        string assemblyPath = GetAssetFullPath(TestAssetName);
+        string assemblyPath = GetAssetFullPath(TestAssetName, targetFramework: "net8.0");
 
         // Act
         System.Collections.Immutable.ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestCase> testCases = DiscoverTests(assemblyPath, "FullyQualifiedName~TestCategoriesFromTestDataRowTests");
