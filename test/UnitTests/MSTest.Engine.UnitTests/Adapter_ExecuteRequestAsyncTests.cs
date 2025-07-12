@@ -35,7 +35,7 @@ public class Adapter_ExecuteRequestAsyncTests : TestBase
         // Act
 #pragma warning disable TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
         await adapter.ExecuteRequestAsync(new(
-            new RunTestExecutionRequest(new(new("id"), new ClientInfo(string.Empty, string.Empty))),
+            new RunTestExecutionRequest(new(new("id"))),
             services.ServiceProvider.GetRequiredService<IMessageBus>(),
             new SemaphoreSlimRequestCompleteNotifier(new SemaphoreSlim(1)),
             cancellationToken));
@@ -69,7 +69,7 @@ public class Adapter_ExecuteRequestAsyncTests : TestBase
         // Act
 #pragma warning disable TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
         await adapter.ExecuteRequestAsync(new(
-            new RunTestExecutionRequest(new(new("id"), new ClientInfo(string.Empty, string.Empty))),
+            new RunTestExecutionRequest(new(new("id"))),
             services.ServiceProvider.GetRequiredService<IMessageBus>(),
             new SemaphoreSlimRequestCompleteNotifier(new SemaphoreSlim(1)),
             cancellationToken));
