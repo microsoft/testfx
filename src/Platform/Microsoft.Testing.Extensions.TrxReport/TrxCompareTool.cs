@@ -60,8 +60,9 @@ internal sealed class TrxCompareTool : ITool, IOutputDeviceDataProducer
         List<(string TestName, string Outcome, string Storage)> comparedResults = [];
         List<string> comparedIssues = [];
         await _task.WhenAll(
-            _task.Run(() => CollectEntriesAndErrors(baselineFilePaths[0], trxNamespace, baseLineResults, baseLineIssues)),
-            _task.Run(() => CollectEntriesAndErrors(comparedFilePaths[0], trxNamespace, comparedResults, comparedIssues))).ConfigureAwait(false);
+            CollectEntriesAndErrorsAsync(baselineFilePaths[0], trxNamespace, baseLineResults, baseLineIssues),
+            CollectEntriesAndErrorsAsync(comparedFilePaths[0], trxNamespace, comparedResults, comparedIssues))
+            .ConfigureAwait(false);
 
         StringBuilder outputBuilder = new();
         AppendResultsAndIssues("Baseline", baselineFilePaths[0], baseLineResults, baseLineIssues, outputBuilder);
@@ -174,9 +175,10 @@ internal sealed class TrxCompareTool : ITool, IOutputDeviceDataProducer
         outputBuilder.AppendLine();
     }
 
-    private static void CollectEntriesAndErrors(string trxFile, XNamespace ns, List<(string TestName, string Outcome, string Storage)> results, List<string> issues)
+    private static async Task CollectEntriesAndErrorsAsync(string trxFile, XNamespace ns, List<(string TestName, string Outcome, string Storage)> results, List<string> issues)
     {
-        var trxTestRun = XElement.Parse(File.ReadAllText(trxFile));
+        using FileStream stream = File.OpenRead(trxFile);
+        XElement trxTestRun = await XElement.LoadAsync(stream, LoadOptions.None, CancellationToken.None).ConfigureAwait(false);
         int testResultIndex = 0;
         foreach (XElement testResult in trxTestRun.Elements(ns + "Results").Elements(ns + "UnitTestResult"))
         {
