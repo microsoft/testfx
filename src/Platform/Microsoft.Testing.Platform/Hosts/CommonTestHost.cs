@@ -102,7 +102,7 @@ internal abstract class CommonTestHost(ServiceProvider serviceProvider) : ITestH
         {
             // Get the test application lifecycle callbacks to be able to call the before run
 #pragma warning disable CS0618 // Type or member is obsolete
-            foreach (ITestApplicationLifecycleCallbacks testApplicationLifecycleCallbacks in ServiceProvider.GetServicesInternal<ITestApplicationLifecycleCallbacks>())
+            foreach (ITestHostApplicationLifetime testApplicationLifecycleCallbacks in ServiceProvider.GetServicesInternal<ITestHostApplicationLifetime>())
             {
                 await testApplicationLifecycleCallbacks.BeforeRunAsync(testApplicationCancellationToken).ConfigureAwait(false);
             }
@@ -114,7 +114,7 @@ internal abstract class CommonTestHost(ServiceProvider serviceProvider) : ITestH
         if (RunTestApplicationLifeCycleCallbacks)
         {
 #pragma warning disable CS0618 // Type or member is obsolete
-            foreach (ITestApplicationLifecycleCallbacks testApplicationLifecycleCallbacks in ServiceProvider.GetServicesInternal<ITestApplicationLifecycleCallbacks>())
+            foreach (ITestHostApplicationLifetime testApplicationLifecycleCallbacks in ServiceProvider.GetServicesInternal<ITestHostApplicationLifetime>())
             {
                 await testApplicationLifecycleCallbacks.AfterRunAsync(exitCode, testApplicationCancellationToken).ConfigureAwait(false);
                 await DisposeHelper.DisposeAsync(testApplicationLifecycleCallbacks).ConfigureAwait(false);
@@ -246,7 +246,7 @@ internal abstract class CommonTestHost(ServiceProvider serviceProvider) : ITestH
 #pragma warning disable CS0618 // Type or member is obsolete
             if (!isProcessShutdown &&
                 service is ITelemetryCollector or
-                 ITestApplicationLifecycleCallbacks or
+                 ITestHostApplicationLifetime or
                  ITestHostApplicationLifetime or
                  IPushOnlyProtocol)
             {

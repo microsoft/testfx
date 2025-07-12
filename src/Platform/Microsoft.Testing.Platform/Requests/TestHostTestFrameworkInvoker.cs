@@ -50,17 +50,17 @@ internal class TestHostTestFrameworkInvoker(IServiceProvider serviceProvider) : 
         DateTimeOffset startTime = DateTimeOffset.UtcNow;
         var stopwatch = Stopwatch.StartNew();
         SessionUid sessionId = ServiceProvider.GetTestSessionContext().SessionId;
-        CreateTestSessionResult createTestSessionResult = await testFramework.CreateTestSessionAsync(new(sessionId, client, cancellationToken)).ConfigureAwait(false);
+        CreateTestSessionResult createTestSessionResult = await testFramework.CreateTestSessionAsync(new(sessionId, cancellationToken)).ConfigureAwait(false);
         await HandleTestSessionResultAsync(createTestSessionResult.IsSuccess, createTestSessionResult.WarningMessage, createTestSessionResult.ErrorMessage).ConfigureAwait(false);
 
         ITestExecutionRequestFactory testExecutionRequestFactory = ServiceProvider.GetTestExecutionRequestFactory();
-        TestExecutionRequest request = await testExecutionRequestFactory.CreateRequestAsync(new(sessionId, client)).ConfigureAwait(false);
+        TestExecutionRequest request = await testExecutionRequestFactory.CreateRequestAsync(new(sessionId)).ConfigureAwait(false);
         IMessageBus messageBus = ServiceProvider.GetMessageBus();
 
         // Execute the test request
         await ExecuteRequestAsync(testFramework, request, messageBus, cancellationToken).ConfigureAwait(false);
 
-        CloseTestSessionResult closeTestSessionResult = await testFramework.CloseTestSessionAsync(new(sessionId, client, cancellationToken)).ConfigureAwait(false);
+        CloseTestSessionResult closeTestSessionResult = await testFramework.CloseTestSessionAsync(new(sessionId, cancellationToken)).ConfigureAwait(false);
         await HandleTestSessionResultAsync(closeTestSessionResult.IsSuccess, closeTestSessionResult.WarningMessage, closeTestSessionResult.ErrorMessage).ConfigureAwait(false);
         DateTimeOffset endTime = DateTimeOffset.UtcNow;
         await messageBus.PublishAsync(this, new TestRequestExecutionTimeInfo(new TimingInfo(startTime, endTime, stopwatch.Elapsed))).ConfigureAwait(false);
