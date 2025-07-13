@@ -35,7 +35,8 @@ internal sealed class MSTestDiscoverer : ITestDiscoverer
             AppDomain.CurrentDomain.FriendlyName.EndsWith(".exe", StringComparison.Ordinal) &&
             sources.FirstOrDefault() is { } source)
         {
-            new AppDomainEngineInvoker(source, () => DiscoverTests(sources, discoveryContext, logger, discoverySink, null)).Invoke();
+            using var invoker = new AppDomainEngineInvoker(source);
+            invoker.CreateInvokerInAppDomain<MSTestDiscoverer>().DiscoverTests(sources, discoveryContext, logger, discoverySink);
         }
         else
 #endif

@@ -75,7 +75,8 @@ internal sealed class MSTestExecutor : ITestExecutor
             AppDomain.CurrentDomain.FriendlyName.EndsWith(".exe", StringComparison.Ordinal) &&
             tests?.FirstOrDefault()?.Source is { } source)
         {
-            new AppDomainEngineInvoker(source, () => RunTestsAsync(tests, runContext, frameworkHandle, null).GetAwaiter().GetResult()).Invoke();
+            using var invoker = new AppDomainEngineInvoker(source);
+            invoker.CreateInvokerInAppDomain<MSTestExecutor>().RunTests(tests, runContext, frameworkHandle);
         }
         else
 #endif
@@ -101,7 +102,8 @@ internal sealed class MSTestExecutor : ITestExecutor
             AppDomain.CurrentDomain.FriendlyName.EndsWith(".exe", StringComparison.Ordinal) &&
             sources.FirstOrDefault() is { } source)
         {
-            new AppDomainEngineInvoker(source, () => RunTestsAsync(sources, runContext, frameworkHandle, null).GetAwaiter().GetResult()).Invoke();
+            using var invoker = new AppDomainEngineInvoker(source);
+            invoker.CreateInvokerInAppDomain<MSTestExecutor>().RunTests(sources, runContext, frameworkHandle);
         }
         else
 #endif

@@ -11,57 +11,39 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 /// Implementation for the Invoker which invokes engine in a new AppDomain
 /// Type of the engine must be a marshalable object for app domain calls and also must have a parameterless constructor.
 /// </summary>
-internal sealed class AppDomainEngineInvoker
+internal sealed class AppDomainEngineInvoker : IDisposable
 {
-    private sealed class ActionWrapper : MarshalByRefObject
-    {
-        public ActionWrapper(Action action)
-            => Action = action;
-
-        public Action Action { get; }
-    }
-
     private const string XmlNamespace = "urn:schemas-microsoft-com:asm.v1";
 
     private readonly AppDomain _appDomain;
-    private readonly ActionWrapper _actualInvoker;
 
     private string? _mergedTempConfigFile;
 
-    public AppDomainEngineInvoker(string testSourcePath, Action action)
-    {
-        _appDomain = CreateNewAppDomain(testSourcePath);
-        _actualInvoker = CreateInvokerInAppDomain(_appDomain, action);
-    }
+    public AppDomainEngineInvoker(string testSourcePath)
+        => _appDomain = CreateNewAppDomain(testSourcePath);
+
 
     /// <summary>
     /// Invokes the Engine.
     /// </summary>
-    public void Invoke()
+    public void Dispose()
     {
         try
         {
-            _actualInvoker.Action.Invoke();
+            // if(AppDomain != null)
+            // {
+            //     // Do not unload appdomain as there are lot is issues reported against appdomain unload
+            //     // any ways the process is going to die off.
+            //     AppDomain.Unload(AppDomain);
+            // }
+            if (!string.IsNullOrWhiteSpace(_mergedTempConfigFile) && File.Exists(_mergedTempConfigFile))
+            {
+                File.Delete(_mergedTempConfigFile);
+            }
         }
-        finally
+        catch
         {
-            try
-            {
-                // if(appDomain != null)
-                // {
-                //     // Do not unload appdomain as there are lot is issues reported against appdomain unload
-                //     // any ways the process is going to die off.
-                //     AppDomain.Unload(appDomain);
-                // }
-                if (!string.IsNullOrWhiteSpace(_mergedTempConfigFile) && File.Exists(_mergedTempConfigFile))
-                {
-                    File.Delete(_mergedTempConfigFile);
-                }
-            }
-            catch
-            {
-                // ignore
-            }
+            // ignore
         }
     }
 
@@ -86,14 +68,14 @@ internal sealed class AppDomainEngineInvoker
     /// <summary>
     /// Create the Engine Invoker in new AppDomain based on test source path.
     /// </summary>
-    /// <param name="appDomain">The appdomain in which the invoker should be created.</param>
-    /// <param name="action">The action to invoke in app domain.</param>
+    /// <typeparam name="T">The type to create in the app domain</typeparam>
     /// <returns>The engine invoker in AppDomain.</returns>
-    private static ActionWrapper CreateInvokerInAppDomain(AppDomain appDomain, Action action)
+    internal T CreateInvokerInAppDomain<T>()
+        where T : new()
     {
         // Create CustomAssembly setup that sets a custom assembly resolver to be able to resolve TestPlatform assemblies
         // and also sets the correct UI culture to propagate the dotnet or VS culture to the adapters running in the app domain
-        appDomain.CreateInstanceFromAndUnwrap(
+        _appDomain.CreateInstanceFromAndUnwrap(
             typeof(CustomAssemblySetup).Assembly.Location,
             typeof(CustomAssemblySetup).FullName,
             false,
@@ -104,14 +86,14 @@ internal sealed class AppDomainEngineInvoker
             null);
 
         // Create Invoker object in new appdomain
-        Type invokerType = typeof(ActionWrapper);
-        return (ActionWrapper)appDomain.CreateInstanceFromAndUnwrap(
+        Type invokerType = typeof(T);
+        return (T)_appDomain.CreateInstanceFromAndUnwrap(
             invokerType.Assembly.Location,
             invokerType.FullName,
             false,
             BindingFlags.Default,
             null,
-            args: [action],
+            null,
             null,
             null);
     }
