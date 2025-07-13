@@ -67,7 +67,7 @@ internal sealed class AppDomainEngineInvoker : IDisposable
     /// <summary>
     /// Create the Engine Invoker in new AppDomain based on test source path.
     /// </summary>
-    /// <typeparam name="T">The type to create in the app domain</typeparam>
+    /// <typeparam name="T">The type to create in the app domain.</typeparam>
     /// <returns>The engine invoker in AppDomain.</returns>
     internal T CreateInvokerInAppDomain<T>()
         where T : new()
