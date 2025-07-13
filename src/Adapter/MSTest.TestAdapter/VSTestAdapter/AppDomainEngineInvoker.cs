@@ -22,7 +22,6 @@ internal sealed class AppDomainEngineInvoker : IDisposable
     public AppDomainEngineInvoker(string testSourcePath)
         => _appDomain = CreateNewAppDomain(testSourcePath);
 
-
     /// <summary>
     /// Invokes the Engine.
     /// </summary>
