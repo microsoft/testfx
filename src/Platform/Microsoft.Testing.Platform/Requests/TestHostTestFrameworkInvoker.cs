@@ -49,7 +49,7 @@ internal class TestHostTestFrameworkInvoker(IServiceProvider serviceProvider) : 
 
         DateTimeOffset startTime = DateTimeOffset.UtcNow;
         var stopwatch = Stopwatch.StartNew();
-        SessionUid sessionId = ServiceProvider.GetTestSessionContext().SessionId;
+        SessionUid sessionId = ServiceProvider.GetTestSessionContext().SessionUid;
         CreateTestSessionResult createTestSessionResult = await testFramework.CreateTestSessionAsync(new(sessionId, client, cancellationToken)).ConfigureAwait(false);
         await HandleTestSessionResultAsync(createTestSessionResult.IsSuccess, createTestSessionResult.WarningMessage, createTestSessionResult.ErrorMessage).ConfigureAwait(false);
 
