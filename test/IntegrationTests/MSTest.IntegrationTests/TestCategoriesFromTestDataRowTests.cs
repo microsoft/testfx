@@ -77,11 +77,11 @@ public class TestCategoriesFromTestDataRowTests : CLITestBase
         // Assert - All tests should pass
         VerifyE2E.TestsPassed(
             testResults,
-            "TestMethodWithDynamicDataCategories (Test with Integration and Slow categories)",
-            "TestMethodWithDynamicDataCategories (Test with Unit and Fast categories)",
-            "TestMethodWithDynamicDataCategories (Test with no additional categories)",
-            "TestMethodWithDynamicDataCategories (value4,4)",
-            "TestMethodWithMethodLevelCategoriesAndDataCategories (Test with method and data categories)");
+            "Test with Integration and Slow categories",
+            "Test with Unit and Fast categories",
+            "Test with no additional categories",
+            "TestMethodWithRegularData (\"value4\",4)",
+            "Test with method and data categories");
 
         VerifyE2E.FailedTestCount(testResults, 0);
     }
