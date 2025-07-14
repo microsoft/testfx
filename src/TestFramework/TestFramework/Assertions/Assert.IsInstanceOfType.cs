@@ -267,24 +267,22 @@ public sealed partial class Assert
     /// <param name="expectedType">
     /// The expected type of <paramref name="value"/>.
     /// </param>
+    /// <param name="message">
+    /// The message to include in the exception when <paramref name="value"/>
+    /// is not an instance of <paramref name="expectedType"/>. The message is
+    /// shown in test results.
+    /// </param>
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="value"/> is null or
     /// <paramref name="expectedType"/> is not in the inheritance hierarchy
     /// of <paramref name="value"/>.
     /// </exception>
-    public static void IsInstanceOfType([NotNull] object? value, [NotNull] Type? expectedType)
-        => IsInstanceOfType(value, expectedType, string.Empty);
-
-    /// <summary>
-    /// Tests whether the specified object is an instance of the generic
-    /// type and throws an exception if the generic type is not in the
-    /// inheritance hierarchy of the object.
-    /// </summary>
-    /// <typeparam name="T">The expected type of <paramref name="value"/>.</typeparam>
-    public static T IsInstanceOfType<T>([NotNull] object? value)
+    public static void IsInstanceOfType([NotNull] object? value, [NotNull] Type? expectedType, string message = "")
     {
-        IsInstanceOfType(value, typeof(T), string.Empty);
-        return (T)value!;
+        if (IsInstanceOfTypeFailing(value, expectedType))
+        {
+            ThrowAssertIsInstanceOfTypeFailed(value, expectedType, BuildUserMessage(message));
+        }
     }
 
     /// <inheritdoc cref="IsInstanceOfType(object?, Type?, string?)" />
@@ -301,7 +299,7 @@ public sealed partial class Assert
     /// inheritance hierarchy of the object.
     /// </summary>
     /// <typeparam name="T">The expected type of <paramref name="value"/>.</typeparam>
-    public static T IsInstanceOfType<T>([NotNull] object? value, string? message)
+    public static T IsInstanceOfType<T>([NotNull] object? value, string message = "")
     {
         IsInstanceOfType(value, typeof(T), message);
         return (T)value!;
@@ -317,35 +315,6 @@ public sealed partial class Assert
         return (T)value!;
     }
 #pragma warning restore CS8777 // Parameter must have a non-null value when exiting.
-
-    /// <summary>
-    /// Tests whether the specified object is an instance of the expected
-    /// type and throws an exception if the expected type is not in the
-    /// inheritance hierarchy of the object.
-    /// </summary>
-    /// <param name="value">
-    /// The object the test expects to be of the specified type.
-    /// </param>
-    /// <param name="expectedType">
-    /// The expected type of <paramref name="value"/>.
-    /// </param>
-    /// <param name="message">
-    /// The message to include in the exception when <paramref name="value"/>
-    /// is not an instance of <paramref name="expectedType"/>. The message is
-    /// shown in test results.
-    /// </param>
-    /// <exception cref="AssertFailedException">
-    /// Thrown if <paramref name="value"/> is null or
-    /// <paramref name="expectedType"/> is not in the inheritance hierarchy
-    /// of <paramref name="value"/>.
-    /// </exception>
-    public static void IsInstanceOfType([NotNull] object? value, [NotNull] Type? expectedType, string? message)
-    {
-        if (IsInstanceOfTypeFailing(value, expectedType))
-        {
-            ThrowAssertIsInstanceOfTypeFailed(value, expectedType, BuildUserMessage(message));
-        }
-    }
 
     private static bool IsInstanceOfTypeFailing([NotNullWhen(false)] object? value, [NotNullWhen(false)] Type? expectedType)
         => expectedType == null || value == null || !expectedType.IsInstanceOfType(value);
@@ -378,24 +347,25 @@ public sealed partial class Assert
     /// <param name="wrongType">
     /// The type that <paramref name="value"/> should not be.
     /// </param>
+    /// <param name="message">
+    /// The message to include in the exception when <paramref name="value"/>
+    /// is an instance of <paramref name="wrongType"/>. The message is shown
+    /// in test results.
+    /// </param>
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="value"/> is not null and
     /// <paramref name="wrongType"/> is in the inheritance hierarchy
     /// of <paramref name="value"/>.
     /// </exception>
-    public static void IsNotInstanceOfType(object? value, [NotNull] Type? wrongType)
-        => IsNotInstanceOfType(value, wrongType, string.Empty);
+    public static void IsNotInstanceOfType(object? value, [NotNull] Type? wrongType, string message = "")
+    {
+        if (IsNotInstanceOfTypeFailing(value, wrongType))
+        {
+            ThrowAssertIsNotInstanceOfTypeFailed(value, wrongType, BuildUserMessage(message));
+        }
+    }
 
-    /// <summary>
-    /// Tests whether the specified object is not an instance of the wrong generic
-    /// type and throws an exception if the specified type is in the
-    /// inheritance hierarchy of the object.
-    /// </summary>
-    /// <typeparam name="T">The type that <paramref name="value"/> should not be.</typeparam>
-    public static void IsNotInstanceOfType<T>(object? value)
-        => IsNotInstanceOfType(value, typeof(T), string.Empty);
-
-    /// <inheritdoc cref="IsNotInstanceOfType(object?, Type?, string?)" />
+    /// <inheritdoc cref="IsNotInstanceOfType(object?, Type?, string)" />
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
     public static void IsNotInstanceOfType(object? value, [NotNull] Type? wrongType, [InterpolatedStringHandlerArgument(nameof(value), nameof(wrongType))] ref AssertIsNotInstanceOfTypeInterpolatedStringHandler message)
 #pragma warning restore IDE0060 // Remove unused parameter
@@ -409,7 +379,7 @@ public sealed partial class Assert
     /// inheritance hierarchy of the object.
     /// </summary>
     /// <typeparam name="T">The type that <paramref name="value"/> should not be.</typeparam>
-    public static void IsNotInstanceOfType<T>(object? value, string? message)
+    public static void IsNotInstanceOfType<T>(object? value, string message = "")
         => IsNotInstanceOfType(value, typeof(T), message);
 
     /// <inheritdoc cref="IsNotInstanceOfType{T}(object?, string?)" />
@@ -417,35 +387,6 @@ public sealed partial class Assert
     public static void IsNotInstanceOfType<T>(object? value, [InterpolatedStringHandlerArgument(nameof(value))] AssertGenericIsNotInstanceOfTypeInterpolatedStringHandler<T> message)
 #pragma warning restore IDE0060 // Remove unused parameter
         => message.ComputeAssertion();
-
-    /// <summary>
-    /// Tests whether the specified object is not an instance of the wrong
-    /// type and throws an exception if the specified type is in the
-    /// inheritance hierarchy of the object.
-    /// </summary>
-    /// <param name="value">
-    /// The object the test expects not to be of the specified type.
-    /// </param>
-    /// <param name="wrongType">
-    /// The type that <paramref name="value"/> should not be.
-    /// </param>
-    /// <param name="message">
-    /// The message to include in the exception when <paramref name="value"/>
-    /// is an instance of <paramref name="wrongType"/>. The message is shown
-    /// in test results.
-    /// </param>
-    /// <exception cref="AssertFailedException">
-    /// Thrown if <paramref name="value"/> is not null and
-    /// <paramref name="wrongType"/> is in the inheritance hierarchy
-    /// of <paramref name="value"/>.
-    /// </exception>
-    public static void IsNotInstanceOfType(object? value, [NotNull] Type? wrongType, string? message)
-    {
-        if (IsNotInstanceOfTypeFailing(value, wrongType))
-        {
-            ThrowAssertIsNotInstanceOfTypeFailed(value, wrongType, BuildUserMessage(message));
-        }
-    }
 
     private static bool IsNotInstanceOfTypeFailing(object? value, [NotNullWhen(false)] Type? wrongType)
         => wrongType is null ||

@@ -456,7 +456,7 @@ public partial class AssertTests : TestContainer
         var collection = new List<int> { 5, 10, 15 };
 
         // Act
-        Action action = () => Assert.DoesNotContain(20, collection, "No failure expected");
+        Action action = () => Assert.DoesNotContain(20, collection, message: "No failure expected");
 
         // Assert
         action.Should().NotThrow<AssertFailedException>();
@@ -472,7 +472,7 @@ public partial class AssertTests : TestContainer
         var collection = new List<int> { 5, 10, 15 };
 
         // Act
-        Action action = () => Assert.DoesNotContain(10, collection, "Item 10 should not be found");
+        Action action = () => Assert.DoesNotContain(10, collection, message: "Item 10 should not be found");
 
         // Assert
         action.Should().Throw<AssertFailedException>().WithMessage("*10*");
