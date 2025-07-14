@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -12,13 +12,21 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, Inherited = false, AllowMultiple = false)]
 public sealed class CIConditionAttribute : ConditionBaseAttribute
 {
+    private readonly IEnvironment _environment;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="CIConditionAttribute"/> class.
     /// </summary>
     /// <param name="mode">Decides whether the test should be included or excluded in CI environments.</param>
     public CIConditionAttribute(ConditionMode mode)
+        : this(mode, new EnvironmentWrapper())
+    {
+    }
+
+    internal CIConditionAttribute(ConditionMode mode, IEnvironment environment)
         : base(mode)
     {
+        _environment = environment;
         IgnoreMessage = mode == ConditionMode.Include
             ? "Test is only supported in CI environments"
             : "Test is not supported in CI environments";
@@ -41,7 +49,7 @@ public sealed class CIConditionAttribute : ConditionBaseAttribute
 
     // CI Detection logic based on https://learn.microsoft.com/dotnet/core/tools/telemetry#continuous-integration-detection
     // From: https://github.com/dotnet/sdk/blob/main/src/Cli/dotnet/Telemetry/CIEnvironmentDetectorForTelemetry.cs
-    private static bool IsCIEnvironment()
+    private bool IsCIEnvironment()
     {
         // Systems that provide boolean values only, so we can simply parse and check for true
         string[] booleanVariables =
@@ -90,7 +98,7 @@ public sealed class CIConditionAttribute : ConditionBaseAttribute
 
         foreach (string booleanVariable in booleanVariables)
         {
-            if (bool.TryParse(Environment.GetEnvironmentVariable(booleanVariable), out bool envVar) && envVar)
+            if (bool.TryParse(_environment.GetEnvironmentVariable(booleanVariable), out bool envVar) && envVar)
             {
                 return true;
             }
@@ -101,7 +109,7 @@ public sealed class CIConditionAttribute : ConditionBaseAttribute
             bool allVariablesPresent = true;
             foreach (string variable in variables)
             {
-                if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable(variable)))
+                if (string.IsNullOrEmpty(_environment.GetEnvironmentVariable(variable)))
                 {
                     allVariablesPresent = false;
                     break;
@@ -116,7 +124,7 @@ public sealed class CIConditionAttribute : ConditionBaseAttribute
 
         foreach (string variable in ifNonNullVariables)
         {
-            if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable(variable)))
+            if (!string.IsNullOrEmpty(_environment.GetEnvironmentVariable(variable)))
             {
                 return true;
             }
