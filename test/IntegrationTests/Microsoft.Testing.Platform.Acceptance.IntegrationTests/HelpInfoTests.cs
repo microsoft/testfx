@@ -39,6 +39,8 @@ Options:
         The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', and 'Critical'.
     --exit-on-process-exit
         Exit the test process if dependent process exits. PID must be provided.
+    --filter-uid
+        Provides a list of test node UIDs to filter by.
     --help
         Show the command line help.
     --ignore-exit-code
@@ -183,6 +185,10 @@ Built-in command line providers:
         Arity: 1
         Hidden: False
         Description: Exit the test process if dependent process exits\. PID must be provided\.
+      --filter-uid
+        Arity: 1\.\.N
+        Hidden: False
+        Description: Provides a list of test node UIDs to filter by\.
       --help
         Arity: 0
         Hidden: False
@@ -290,6 +296,8 @@ Options:
         The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', and 'Critical'.
     --exit-on-process-exit
         Exit the test process if dependent process exits. PID must be provided.
+    --filter-uid
+        Provides a list of test node UIDs to filter by.
     --help
         Show the command line help.
     --ignore-exit-code
@@ -445,6 +453,10 @@ Built-in command line providers:
         Arity: 1
         Hidden: False
         Description: Exit the test process if dependent process exits. PID must be provided.
+      --filter-uid
+        Arity: 1..N
+        Hidden: False
+        Description: Provides a list of test node UIDs to filter by.
       --help
         Arity: 0
         Hidden: False
