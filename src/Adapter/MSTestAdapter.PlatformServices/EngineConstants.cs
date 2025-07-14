@@ -66,8 +66,7 @@ internal static class EngineConstants
     internal const string TestRunParametersName = "TestRunParameters";
 
     #region Test Property registration
-    internal static readonly TestProperty DescriptionProperty = TestProperty.Register("Description", DescriptionLabel, typeof(string), TestPropertyAttributes.Hidden, typeof(TestCase));
-
+    
     internal static readonly TestProperty WorkItemIdsProperty = TestProperty.Register("WorkItemIds", WorkItemIdsLabel, typeof(string[]), TestPropertyAttributes.Hidden, typeof(TestCase));
 
     internal static readonly TestProperty CssIterationProperty = TestProperty.Register("CssIteration", CssIterationLabel, typeof(string), TestPropertyAttributes.Hidden, typeof(TestCase));
