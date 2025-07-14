@@ -21,7 +21,6 @@ internal sealed class ServiceProvider : IServiceProvider, ICloneable
     private static Type[] InternalOnlyExtensions =>
     [
         // TestHost
-        typeof(ITestApplicationLifecycleCallbacks),
         typeof(ITestHostApplicationLifetime),
         typeof(IDataConsumer),
         typeof(ITestSessionLifetimeHandler),

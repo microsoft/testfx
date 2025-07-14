@@ -8,7 +8,6 @@ using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.Requests;
 using Microsoft.Testing.Platform.Services;
-using Microsoft.Testing.Platform.TestHost;
 
 namespace Microsoft.Testing.Framework.UnitTests;
 
@@ -33,13 +32,11 @@ public class Adapter_ExecuteRequestAsyncTests : TestBase
         CancellationToken cancellationToken = CancellationToken.None;
 
         // Act
-#pragma warning disable TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
         await adapter.ExecuteRequestAsync(new(
-            new RunTestExecutionRequest(new(new("id"), new ClientInfo(string.Empty, string.Empty))),
+            new RunTestExecutionRequest(new(new("id"))),
             services.ServiceProvider.GetRequiredService<IMessageBus>(),
             new SemaphoreSlimRequestCompleteNotifier(new SemaphoreSlim(1)),
             cancellationToken));
-#pragma warning restore TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
 
         // Assert
         IEnumerable<TestNodeUpdateMessage> nodeStateChanges = services.MessageBus.Messages.OfType<TestNodeUpdateMessage>();
@@ -67,13 +64,11 @@ public class Adapter_ExecuteRequestAsyncTests : TestBase
         CancellationToken cancellationToken = CancellationToken.None;
 
         // Act
-#pragma warning disable TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
         await adapter.ExecuteRequestAsync(new(
-            new RunTestExecutionRequest(new(new("id"), new ClientInfo(string.Empty, string.Empty))),
+            new RunTestExecutionRequest(new(new("id"))),
             services.ServiceProvider.GetRequiredService<IMessageBus>(),
             new SemaphoreSlimRequestCompleteNotifier(new SemaphoreSlim(1)),
             cancellationToken));
-#pragma warning restore TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
 
         // Assert
         IEnumerable<TestNodeUpdateMessage> nodeStateChanges = services.MessageBus.Messages.OfType<TestNodeUpdateMessage>();
@@ -115,9 +110,7 @@ public class Adapter_ExecuteRequestAsyncTests : TestBase
             ServiceProvider.AddService(new LoggerFactory());
             ServiceProvider.AddService(new FakeClock());
             ServiceProvider.AddService(new SystemTask());
-#pragma warning disable TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
             ServiceProvider.AddService(new AggregatedConfiguration([], new CurrentTestApplicationModuleInfo(new SystemEnvironment(), new SystemProcessHandler()), new SystemFileSystem(), new(null, [], [])));
-#pragma warning restore TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
         }
 
         public MessageBus MessageBus { get; }
