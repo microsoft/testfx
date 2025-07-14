@@ -454,9 +454,9 @@ Built-in command line providers:
         Hidden: False
         Description: Exit the test process if dependent process exits. PID must be provided.
       --filter-uid
-        Arity: 1\.\.N
+        Arity: 1..N
         Hidden: False
-        Description: Provides a list of test node UIDs to filter by\.
+        Description: Provides a list of test node UIDs to filter by.
       --help
         Arity: 0
         Hidden: False
