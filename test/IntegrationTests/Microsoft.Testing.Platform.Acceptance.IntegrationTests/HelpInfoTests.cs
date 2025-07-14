@@ -40,7 +40,7 @@ Options:
     --exit-on-process-exit
         Exit the test process if dependent process exits. PID must be provided.
     --filter-uid
-        Specifies a list of test node uids to filter.
+        Provides a list of test node UIDs to filter by.
     --help
         Show the command line help.
     --ignore-exit-code
@@ -188,7 +188,7 @@ Built-in command line providers:
       --filter-uid
         Arity: 1\.\.N
         Hidden: False
-        Description: Specifies a list of test node uids to filter\.
+        Description: Provides a list of test node UIDs to filter by\.
       --help
         Arity: 0
         Hidden: False
@@ -297,7 +297,7 @@ Options:
     --exit-on-process-exit
         Exit the test process if dependent process exits. PID must be provided.
     --filter-uid
-        Specifies a list of test node uids to filter.
+        Provides a list of test node UIDs to filter by.
     --help
         Show the command line help.
     --ignore-exit-code
@@ -456,7 +456,7 @@ Built-in command line providers:
       --filter-uid
         Arity: 1\.\.N
         Hidden: False
-        Description: Specifies a list of test node uids to filter\.
+        Description: Provides a list of test node UIDs to filter by\.
       --help
         Arity: 0
         Hidden: False

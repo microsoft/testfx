@@ -539,8 +539,8 @@ Kullanılabilir değerler: 'Trace', 'Debug', 'Information', 'Warning', 'Error' v
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineFilterUidOptionDescription">
-        <source>Specifies a list of test node uids to filter.</source>
-        <target state="new">Specifies a list of test node uids to filter.</target>
+        <source>Provides a list of test node UIDs to filter by.</source>
+        <target state="new">Provides a list of test node UIDs to filter by.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineHelpOptionDescription">

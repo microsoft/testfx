@@ -708,7 +708,7 @@ Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is
     <value>The current test framework does not implement 'IGracefulStopTestExecutionCapability' which is required for '--maximum-failed-tests' feature.</value>
   </data>
   <data name="PlatformCommandLineFilterUidOptionDescription" xml:space="preserve">
-    <value>Specifies a list of test node uids to filter.</value>
+    <value>Provides a list of test node UIDs to filter by.</value>
   </data>
   <data name="OnlyOneFilterSupported" xml:space="preserve">
     <value>Passing both '--treenode-filter' and '--filter-uid' is unsupported.</value>
