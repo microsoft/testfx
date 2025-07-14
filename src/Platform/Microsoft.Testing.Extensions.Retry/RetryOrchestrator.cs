@@ -73,10 +73,13 @@ internal sealed class RetryOrchestrator : ITestHostOrchestrator, IOutputDeviceDa
             throw new InvalidOperationException(ExtensionResources.RetryFailedTestsNotSupportedInServerModeErrorMessage);
         }
 
-        if (IsHotReloadEnabled(_serviceProvider.GetEnvironment()))
+        IEnvironment environment = _serviceProvider.GetEnvironment();
+        if (IsHotReloadEnabled(environment))
         {
             throw new InvalidOperationException(ExtensionResources.RetryFailedTestsNotSupportedInHotReloadErrorMessage);
         }
+
+        environment.SetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_TRX_TESTRUN_ID, Guid.NewGuid().ToString("N"));
 
         ILogger logger = _serviceProvider.GetLoggerFactory().CreateLogger<RetryOrchestrator>();
         IConfiguration configuration = _serviceProvider.GetConfiguration();

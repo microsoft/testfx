@@ -178,16 +178,16 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
     ];
 
     /// <inheritdoc />
-    public string Uid { get; } = nameof(TerminalOutputDevice);
+    public string Uid => nameof(TerminalOutputDevice);
 
     /// <inheritdoc />
-    public string Version { get; } = AppVersion.DefaultSemVer;
+    public string Version => AppVersion.DefaultSemVer;
 
     /// <inheritdoc />
-    public string DisplayName { get; } = "Test Platform Console Service";
+    public string DisplayName => "Test Platform Console Service";
 
     /// <inheritdoc />
-    public string Description { get; } = "Test Platform default console service";
+    public string Description => "Test Platform default console service";
 
     /// <inheritdoc />
     public Task<bool> IsEnabledAsync() => Task.FromResult(true);

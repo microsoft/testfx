@@ -312,11 +312,6 @@ Gerçekte olan: {2}</target>
         <target state="translated">{0} ({1})</target>
         <note></note>
       </trans-unit>
-      <trans-unit id="AsyncUITestMethodNotSupported">
-        <source>async TestMethod with UITestMethodAttribute are not supported. Either remove async or use TestMethodAttribute.</source>
-        <target state="translated">UITestMethodAttribute özniteliğine sahip async TestMethod metodu desteklenmiyor. async ifadesini kaldırın ya da TestMethodAttribute özniteliğini kullanın.</target>
-        <note></note>
-      </trans-unit>
       <trans-unit id="DynamicDataIEnumerableNull">
         <source>Property or method {0} on {1} return type is not assignable to 'IEnumerable'.</source>
         <target state="translated">{1} dönüş türündeki {0} özelliği veya yöntemi 'IEnumerable' öğesine atanamaz.</target>
@@ -336,19 +331,6 @@ Gerçekte olan: {2}</target>
         <source>Property or method {0} on {1} returns empty IEnumerable&lt;object[]&gt;.</source>
         <target state="translated">{1} üzerindeki {0} özelliği veya metodu boş IEnumerable&lt;object[]&gt; döndürür.</target>
         <note></note>
-      </trans-unit>
-      <trans-unit id="AsyncUITestMethodWithNoDispatcherQueue">
-        <source>UITestMethodAttribute.DispatcherQueue should not be null. To use UITestMethodAttribute within a WinUI Desktop App, remember to set the static UITestMethodAttribute.DispatcherQueue during the test initialization.</source>
-        <target state="translated">UITestMethodAttribute.DispatcherQueue boş olmamalıdır. UITestMethodAttribute'ı bir WinUI Masaüstü Uygulamasında kullanmak için, test başlatma sırasında statik UITestMethodAttribute.DispatcherQueue'yu ayarlamayı unutmayın.</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="ArgumentXMustDeriveFromClassY">
-        <source>Type '{0}' is not assignable to '{1}'.</source>
-        <target state="translated">'{0}' tipi '{1}'ye atanamaz.</target>
-        <note>
-      - {0} argument name like "applicationType"
-      - {1} fully qualified class name like "Microsoft.UI.Xaml.Application"
-    </note>
       </trans-unit>
       <trans-unit id="IsGreaterThanFailMsg">
         <source>Actual value &lt;{2}&gt; is not greater than expected value &lt;{1}&gt;. {0}</source>

@@ -3,6 +3,8 @@
 
 using Microsoft.Testing.Platform;
 
+using Polyfills;
+
 namespace Microsoft.Testing.Framework;
 
 internal sealed class TestArgumentsManager : ITestArgumentsManager
@@ -19,12 +21,10 @@ internal sealed class TestArgumentsManager : ITestArgumentsManager
             throw new InvalidOperationException("Cannot register TestArgumentsEntry provider after registration is frozen.");
         }
 
-        if (_testArgumentsEntryProviders.ContainsKey(testNodeStableUid))
+        if (!_testArgumentsEntryProviders.TryAdd(testNodeStableUid, argumentPropertiesProviderCallback))
         {
             throw new InvalidOperationException($"TestArgumentsEntry provider is already registered for test node with UID '{testNodeStableUid}'.");
         }
-
-        _testArgumentsEntryProviders.Add(testNodeStableUid, argumentPropertiesProviderCallback);
     }
 
     internal void FreezeRegistration() => _isRegistrationFrozen = true;

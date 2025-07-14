@@ -151,38 +151,11 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Type &apos;{0}&apos; is not assignable to &apos;{1}&apos;..
-        /// </summary>
-        internal static string ArgumentXMustDeriveFromClassY {
-            get {
-                return ResourceManager.GetString("ArgumentXMustDeriveFromClassY", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to {0} failed. {1}.
         /// </summary>
         internal static string AssertionFailed {
             get {
                 return ResourceManager.GetString("AssertionFailed", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to async TestMethod with UITestMethodAttribute are not supported. Either remove async or use TestMethodAttribute..
-        /// </summary>
-        internal static string AsyncUITestMethodNotSupported {
-            get {
-                return ResourceManager.GetString("AsyncUITestMethodNotSupported", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to UITestMethodAttribute.DispatcherQueue should not be null. To use UITestMethodAttribute within a WinUI Desktop App, remember to set the static UITestMethodAttribute.DispatcherQueue during the test initialization..
-        /// </summary>
-        internal static string AsyncUITestMethodWithNoDispatcherQueue {
-            get {
-                return ResourceManager.GetString("AsyncUITestMethodWithNoDispatcherQueue", resourceCulture);
             }
         }
         
@@ -259,6 +232,42 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Expected collection to contain the specified item. {0}.
+        /// </summary>
+        internal static string ContainsItemFailMsg {
+            get {
+                return ResourceManager.GetString("ContainsItemFailMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Expected at least one item to match the predicate. {0}.
+        /// </summary>
+        internal static string ContainsPredicateFailMsg {
+            get {
+                return ResourceManager.GetString("ContainsPredicateFailMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Expected collection to contain exactly one element but found {1} element(s). {0}.
+        /// </summary>
+        internal static string ContainsSingleFailMsg {
+            get {
+                return ResourceManager.GetString("ContainsSingleFailMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Expected exactly one item to match the predicate but found {1} item(s). {0}.
+        /// </summary>
+        internal static string ContainsSingleMatchFailMsg {
+            get {
+                return ResourceManager.GetString("ContainsSingleMatchFailMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0} ({1}).
         /// </summary>
         internal static string DataDrivenResultDisplayName {
@@ -273,6 +282,24 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         internal static string DoesNotContainFail {
             get {
                 return ResourceManager.GetString("DoesNotContainFail", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Expected collection to not contain the specified item. {0}.
+        /// </summary>
+        internal static string DoesNotContainItemFailMsg {
+            get {
+                return ResourceManager.GetString("DoesNotContainItemFailMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Expected no items to match the predicate. {0}.
+        /// </summary>
+        internal static string DoesNotContainPredicateFailMsg {
+            get {
+                return ResourceManager.GetString("DoesNotContainPredicateFailMsg", resourceCulture);
             }
         }
         
@@ -455,60 +482,6 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         internal static string HasCountFailMsg {
             get {
                 return ResourceManager.GetString("HasCountFailMsg", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Expected exactly one item to match the predicate. Actual: {1}. {0}.
-        /// </summary>
-        internal static string ContainsSingleMatchFailMsg {
-            get {
-                return ResourceManager.GetString("ContainsSingleMatchFailMsg", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Expected collection to contain exactly one element. Actual: {1}. {0}.
-        /// </summary>
-        internal static string ContainsSingleFailMsg {
-            get {
-                return ResourceManager.GetString("ContainsSingleFailMsg", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Expected collection to contain '{1}'. {0}.
-        /// </summary>
-        internal static string ContainsItemFailMsg {
-            get {
-                return ResourceManager.GetString("ContainsItemFailMsg", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Expected at least one item to match the predicate. {0}.
-        /// </summary>
-        internal static string ContainsPredicateFailMsg {
-            get {
-                return ResourceManager.GetString("ContainsPredicateFailMsg", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Expected collection to not contain '{1}'. {0}.
-        /// </summary>
-        internal static string DoesNotContainItemFailMsg {
-            get {
-                return ResourceManager.GetString("DoesNotContainItemFailMsg", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Expected no items to match the predicate. {0}.
-        /// </summary>
-        internal static string DoesNotContainPredicateFailMsg {
-            get {
-                return ResourceManager.GetString("DoesNotContainPredicateFailMsg", resourceCulture);
             }
         }
         

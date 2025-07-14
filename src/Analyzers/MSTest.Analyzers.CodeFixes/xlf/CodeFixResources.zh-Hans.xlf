@@ -74,7 +74,7 @@
       </trans-unit>
       <trans-unit id="StringAssertToAssertTitle">
         <source>Use 'Assert.{0}' instead of 'StringAssert'</source>
-        <target state="new">Use 'Assert.{0}' instead of 'StringAssert'</target>
+        <target state="translated">使用 'Assert.{0}' 而不是 'StringAssert'</target>
         <note />
       </trans-unit>
       <trans-unit id="TestClassShouldBeValidFix">
