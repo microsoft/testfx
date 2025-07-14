@@ -7,11 +7,6 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// Description of the test.
 /// </summary>
 [AttributeUsage(AttributeTargets.Method)]
-#if NET6_0_OR_GREATER
-[Obsolete(FrameworkConstants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
-#else
-[Obsolete(FrameworkConstants.PublicTypeObsoleteMessage)]
-#endif
 public sealed class DescriptionAttribute : Attribute
 {
     /// <summary>
