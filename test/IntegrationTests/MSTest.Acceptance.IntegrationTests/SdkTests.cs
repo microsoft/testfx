@@ -145,34 +145,37 @@ namespace MSTestSdkTest
         }
     }
 
-    public static IEnumerable<(string MultiTfm, BuildConfiguration BuildConfiguration, string MSBuildExtensionEnableFragment, string EnableCommandLineArg, string InvalidCommandLineArg)> RunTests_With_MSTestRunner_Standalone_Plus_Extensions_Data()
+    public static IEnumerable<TestDataRow<(string MultiTfm, BuildConfiguration BuildConfiguration, string MSBuildExtensionEnableFragment, string EnableCommandLineArg, string InvalidCommandLineArg)>> RunTests_With_MSTestRunner_Standalone_Plus_Extensions_Data()
     {
         foreach ((string MultiTfm, BuildConfiguration BuildConfiguration) buildConfig in GetBuildMatrixMultiTfmFoldedBuildConfiguration())
         {
-            yield return new(buildConfig.MultiTfm, buildConfig.BuildConfiguration,
+            yield return new((buildConfig.MultiTfm, buildConfig.BuildConfiguration,
                 "<EnableMicrosoftTestingExtensionsCodeCoverage>true</EnableMicrosoftTestingExtensionsCodeCoverage>",
                 "--coverage",
-                "--crashdump");
+                "--crashdump"))
+            {
+                IgnoreMessage = "Re-enable back after CC releases a version for MTP v2",
+            };
 
-            yield return new(buildConfig.MultiTfm, buildConfig.BuildConfiguration,
+            yield return new((buildConfig.MultiTfm, buildConfig.BuildConfiguration,
               "<EnableMicrosoftTestingExtensionsRetry>true</EnableMicrosoftTestingExtensionsRetry>",
               "--retry-failed-tests 3",
-              "--crashdump");
+              "--crashdump"));
 
-            yield return new(buildConfig.MultiTfm, buildConfig.BuildConfiguration,
+            yield return new((buildConfig.MultiTfm, buildConfig.BuildConfiguration,
               "<EnableMicrosoftTestingExtensionsTrxReport>true</EnableMicrosoftTestingExtensionsTrxReport>",
               "--report-trx",
-              "--crashdump");
+              "--crashdump"));
 
-            yield return new(buildConfig.MultiTfm, buildConfig.BuildConfiguration,
+            yield return new((buildConfig.MultiTfm, buildConfig.BuildConfiguration,
               "<EnableMicrosoftTestingExtensionsCrashDump>true</EnableMicrosoftTestingExtensionsCrashDump>",
               "--crashdump",
-              "--hangdump");
+              "--hangdump"));
 
-            yield return new(buildConfig.MultiTfm, buildConfig.BuildConfiguration,
+            yield return new((buildConfig.MultiTfm, buildConfig.BuildConfiguration,
               "<EnableMicrosoftTestingExtensionsHangDump>true</EnableMicrosoftTestingExtensionsHangDump>",
               "--hangdump",
-              "--crashdump");
+              "--crashdump"));
         }
     }
 
@@ -205,6 +208,7 @@ namespace MSTestSdkTest
 
     [TestMethod]
     [DynamicData(nameof(GetBuildMatrixMultiTfmFoldedBuildConfiguration), typeof(AcceptanceTestBase<NopAssetFixture>), DynamicDataSourceType.Method)]
+    [Ignore("Re-enable back after CC releases a version for MTP v2")]
     public async Task RunTests_With_MSTestRunner_Standalone_EnableAll_Extensions(string multiTfm, BuildConfiguration buildConfiguration)
     {
         using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
@@ -235,6 +239,7 @@ namespace MSTestSdkTest
 
     [TestMethod]
     [DynamicData(nameof(RunTests_With_MSTestRunner_Standalone_Default_Extensions_Data), DynamicDataSourceType.Method)]
+    [Ignore("Re-enable back after CC releases a version for MTP v2")]
     public async Task RunTests_With_MSTestRunner_Standalone_Enable_Default_Extensions(string multiTfm, BuildConfiguration buildConfiguration, bool enableDefaultExtensions)
     {
         using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
