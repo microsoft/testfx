@@ -163,6 +163,9 @@ public sealed partial class Assert
     }
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 
+#pragma warning disable RS0026 // Do not add multiple public overloads with optional parameters
+#pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
+
     #region IsNotEmpty
 
     /// <summary>
@@ -245,7 +248,7 @@ public sealed partial class Assert
 
     #endregion // IsEmpty
 
-    private static void HasCount<T>(string assertionName, int expected, IEnumerable<T> collection, string? message)
+    private static void HasCount<T>(string assertionName, int expected, IEnumerable<T> collection, string message)
     {
         int actualCount = collection.Count();
         if (actualCount == expected)

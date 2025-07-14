@@ -4,9 +4,33 @@
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 #pragma warning disable RS0026 // Do not add multiple public overloads with optional parameters
+#pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
 
 public sealed partial class Assert
 {
+    /// <summary>
+    /// Tests whether the specified string ends with the specified substring
+    /// and throws an exception if the test string does not end with the
+    /// substring.
+    /// </summary>
+    /// <param name="substring">
+    /// The string expected to be a suffix of <paramref name="value"/>.
+    /// </param>
+    /// <param name="value">
+    /// The string that is expected to end with <paramref name="substring"/>.
+    /// </param>
+    /// <param name="message">
+    /// The message to include in the exception when <paramref name="value"/>
+    /// does not end with <paramref name="substring"/>. The message is
+    /// shown in test results.
+    /// </param>
+    /// <exception cref="AssertFailedException">
+    /// <paramref name="value"/> is null, or <paramref name="substring"/> is null,
+    /// or <paramref name="value"/> does not start with <paramref name="substring"/>.
+    /// </exception>
+    public static void EndsWith([NotNull] string? substring, [NotNull] string? value, string message = "")
+        => EndsWith(substring, value, StringComparison.Ordinal, message);
+
     /// <summary>
     /// Tests whether the specified string ends with the specified substring
     /// and throws an exception if the test string does not end with the
@@ -30,7 +54,7 @@ public sealed partial class Assert
     /// <paramref name="value"/> is null, or <paramref name="substring"/> is null,
     /// or <paramref name="value"/> does not start with <paramref name="substring"/>.
     /// </exception>
-    public static void EndsWith([NotNull] string? substring, [NotNull] string? value, StringComparison comparisonType = StringComparison.Ordinal, string message = "")
+    public static void EndsWith([NotNull] string? substring, [NotNull] string? value, StringComparison comparisonType, string message = "")
     {
         CheckParameterNotNull(value, "Assert.EndsWith", "value", string.Empty);
         CheckParameterNotNull(substring, "Assert.EndsWith", "substring", string.Empty);
@@ -41,6 +65,29 @@ public sealed partial class Assert
             ThrowAssertFailed("Assert.EndsWith", finalMessage);
         }
     }
+
+    /// <summary>
+    /// Tests whether the specified string does not end with the specified substring
+    /// and throws an exception if the test string does not end with the
+    /// substring.
+    /// </summary>
+    /// <param name="substring">
+    /// The string expected not to be a suffix of <paramref name="value"/>.
+    /// </param>
+    /// <param name="value">
+    /// The string that is expected not to end with <paramref name="substring"/>.
+    /// </param>
+    /// <param name="message">
+    /// The message to include in the exception when <paramref name="value"/>
+    /// ends with <paramref name="substring"/>. The message is
+    /// shown in test results.
+    /// </param>
+    /// <exception cref="AssertFailedException">
+    /// <paramref name="value"/> is null, or <paramref name="substring"/> is null,
+    /// or <paramref name="value"/> ends with <paramref name="substring"/>.
+    /// </exception>
+    public static void DoesNotEndWith([NotNull] string? substring, [NotNull] string? value, string message = "")
+        => DoesNotEndWith(substring, value, StringComparison.Ordinal, message);
 
     /// <summary>
     /// Tests whether the specified string does not end with the specified substring
@@ -65,7 +112,7 @@ public sealed partial class Assert
     /// <paramref name="value"/> is null, or <paramref name="substring"/> is null,
     /// or <paramref name="value"/> ends with <paramref name="substring"/>.
     /// </exception>
-    public static void DoesNotEndWith([NotNull] string? substring, [NotNull] string? value, StringComparison comparisonType = StringComparison.Ordinal, string message = "")
+    public static void DoesNotEndWith([NotNull] string? substring, [NotNull] string? value, StringComparison comparisonType, string message = "")
     {
         CheckParameterNotNull(value, "Assert.DoesNotEndWith", "value", string.Empty);
         CheckParameterNotNull(substring, "Assert.DoesNotEndWith", "substring", string.Empty);

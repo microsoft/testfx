@@ -256,6 +256,9 @@ public sealed partial class Assert
     }
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 
+#pragma warning disable RS0026 // Do not add multiple public overloads with optional parameters
+#pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
+
     /// <summary>
     /// Tests whether the specified object is an instance of the expected
     /// type and throws an exception if the expected type is not in the

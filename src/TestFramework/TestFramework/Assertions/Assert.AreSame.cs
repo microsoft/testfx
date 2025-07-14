@@ -138,6 +138,9 @@ public sealed partial class Assert
 #pragma warning restore IDE0060 // Remove unused parameter
         => message.ComputeAssertion();
 
+#pragma warning disable RS0026 // Do not add multiple public overloads with optional parameters
+#pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
+
     /// <summary>
     /// Tests whether the specified objects both refer to the same object and
     /// throws an exception if the two inputs do not refer to the same object.
