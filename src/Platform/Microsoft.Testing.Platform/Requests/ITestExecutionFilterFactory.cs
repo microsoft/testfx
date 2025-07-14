@@ -7,5 +7,5 @@ namespace Microsoft.Testing.Platform.Requests;
 
 internal interface ITestExecutionFilterFactory : IExtension
 {
-    public Task<(bool Success, ITestExecutionFilter? TestExecutionFilter)> TryCreateAsync();
+    Task<(bool Success, ITestExecutionFilter? TestExecutionFilter)> TryCreateAsync();
 }

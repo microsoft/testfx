@@ -431,6 +431,11 @@
         <target state="translated">Nenalezeno</target>
         <note />
       </trans-unit>
+      <trans-unit id="OnlyOneFilterSupported">
+        <source>Passing both '--treenode-filter' and '--filter-uid' is unsupported.</source>
+        <target state="new">Passing both '--treenode-filter' and '--filter-uid' is unsupported.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="OutOfProcessArtifactsProduced">
         <source>Out of process file artifacts produced:</source>
         <target state="translated">Vytvořené artefakty souboru mimo proces:</target>
@@ -531,6 +536,11 @@ Dostupné hodnoty jsou Trace, Debug, Information, Warning, Error a Critical.</ta
       <trans-unit id="PlatformCommandLineExitOnProcessExitSingleArgument">
         <source>'--{0}' expects a single int PID argument</source>
         <target state="translated">„ --{0}“ očekává jeden argument int PID.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineFilterUidOptionDescription">
+        <source>Provides a list of test node UIDs to filter by.</source>
+        <target state="new">Provides a list of test node UIDs to filter by.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineHelpOptionDescription">
