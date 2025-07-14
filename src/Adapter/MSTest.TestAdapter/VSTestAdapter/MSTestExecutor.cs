@@ -98,7 +98,7 @@ internal sealed class MSTestExecutor : ITestExecutor
     {
 #if NETFRAMEWORK
         if (AppDomain.CurrentDomain.Id == 1 &&
-            AppDomain.CurrentDomain.FriendlyName.StartsWith("testhost.net", StringComparison.Ordinal) &&
+            AppDomain.CurrentDomain.FriendlyName.StartsWith("testhost.", StringComparison.Ordinal) &&
             AppDomain.CurrentDomain.FriendlyName.EndsWith(".exe", StringComparison.Ordinal) &&
             sources.FirstOrDefault() is { } source)
         {
