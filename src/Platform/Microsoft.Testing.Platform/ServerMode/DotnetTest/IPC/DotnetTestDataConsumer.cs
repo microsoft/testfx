@@ -262,7 +262,7 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
 
         TestSessionEvent sessionStartEvent = new(
             SessionEventTypes.TestSessionStart,
-            testSessionContext.SessionId.Value,
+            testSessionContext.SessionUid.Value,
             ExecutionId);
 
         await _dotnetTestConnection.SendMessageAsync(sessionStartEvent).ConfigureAwait(false);
@@ -274,7 +274,7 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
 
         TestSessionEvent sessionEndEvent = new(
             SessionEventTypes.TestSessionEnd,
-            testSessionContext.SessionId.Value,
+            testSessionContext.SessionUid.Value,
             ExecutionId);
 
         await _dotnetTestConnection.SendMessageAsync(sessionEndEvent).ConfigureAwait(false);
