@@ -17,6 +17,29 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 [ExtensionUri(EngineConstants.ExecutorUriString)]
 internal sealed class MSTestExecutor : ITestExecutor
 {
+#if NETFRAMEWORK
+    private sealed class ExecutorRemotingParameters : MarshalByRefObject
+    {
+        public ExecutorRemotingParameters(IRunContext? runContext, IFrameworkHandle? frameworkHandle)
+        {
+            RunContext = runContext;
+            FrameworkHandle = frameworkHandle;
+        }
+
+        public IRunContext? RunContext { get; }
+
+        public IFrameworkHandle? FrameworkHandle { get; }
+    }
+
+    [Obsolete]
+    private void RunTests(IEnumerable<TestCase>? tests, ExecutorRemotingParameters parameters)
+        => RunTests(tests, parameters.RunContext, parameters.FrameworkHandle);
+
+    [Obsolete]
+    private void RunTests(IEnumerable<string>? sources, ExecutorRemotingParameters parameters)
+        => RunTests(sources, parameters.RunContext, parameters.FrameworkHandle);
+#endif
+
     private readonly CancellationToken _cancellationToken;
 
     /// <summary>
@@ -76,7 +99,7 @@ internal sealed class MSTestExecutor : ITestExecutor
             tests?.FirstOrDefault()?.Source is { } source)
         {
             using var invoker = new AppDomainEngineInvoker(source);
-            invoker.CreateInvokerInAppDomain<MSTestExecutor>().RunTests(tests, runContext, frameworkHandle);
+            invoker.CreateInvokerInAppDomain<MSTestExecutor>().RunTests(tests, new ExecutorRemotingParameters(runContext, frameworkHandle));
         }
         else
 #endif
@@ -103,7 +126,7 @@ internal sealed class MSTestExecutor : ITestExecutor
             sources.FirstOrDefault() is { } source)
         {
             using var invoker = new AppDomainEngineInvoker(source);
-            invoker.CreateInvokerInAppDomain<MSTestExecutor>().RunTests(sources, runContext, frameworkHandle);
+            invoker.CreateInvokerInAppDomain<MSTestExecutor>().RunTests(sources, new ExecutorRemotingParameters(runContext, frameworkHandle));
         }
         else
 #endif

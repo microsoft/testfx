@@ -18,6 +18,27 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 [FileExtension(".exe")]
 internal sealed class MSTestDiscoverer : ITestDiscoverer
 {
+#if NETFRAMEWORK
+    private sealed class DiscovererRemotingParameters : MarshalByRefObject
+    {
+        public DiscovererRemotingParameters(IDiscoveryContext discoveryContext, IMessageLogger logger, ITestCaseDiscoverySink discoverySink)
+        {
+            DiscoveryContext = discoveryContext;
+            MessageLogger = logger;
+            DiscoverySink = discoverySink;
+        }
+
+        public IDiscoveryContext DiscoveryContext { get; }
+
+        public IMessageLogger MessageLogger { get; }
+
+        public ITestCaseDiscoverySink DiscoverySink { get; }
+    }
+
+    private void DiscoverTests(IEnumerable<string> sources, DiscovererRemotingParameters parameters)
+        => DiscoverTests(sources, parameters.DiscoveryContext, parameters.MessageLogger, parameters.DiscoverySink);
+#endif
+
     /// <summary>
     /// Discovers the tests available from the provided source. Not supported for .xap source.
     /// </summary>
@@ -36,7 +57,7 @@ internal sealed class MSTestDiscoverer : ITestDiscoverer
             sources.FirstOrDefault() is { } source)
         {
             using var invoker = new AppDomainEngineInvoker(source);
-            invoker.CreateInvokerInAppDomain<MSTestDiscoverer>().DiscoverTests(sources, discoveryContext, logger, discoverySink);
+            invoker.CreateInvokerInAppDomain<MSTestDiscoverer>().DiscoverTests(sources, new DiscovererRemotingParameters(discoveryContext, logger, discoverySink));
         }
         else
 #endif

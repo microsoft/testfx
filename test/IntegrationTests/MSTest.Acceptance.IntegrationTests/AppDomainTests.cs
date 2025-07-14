@@ -36,6 +36,7 @@ name= "VSTest"
 
 #file UnitTest1.cs
 using System;
+using System.Collections.Generic;
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -48,6 +49,24 @@ namespace AppDomainTests
         public void TestMethod1()
         {
             Assert.AreEqual(Path.GetDirectoryName(typeof(UnitTest1).Assembly.Location), AppDomain.CurrentDomain.BaseDirectory);
+        }
+
+        [TestMethod]
+        [DynamicData(nameof(GetData))]
+        public void TestMethod2(int _)
+        {
+            Assert.AreEqual(Path.GetDirectoryName(typeof(UnitTest1).Assembly.Location), AppDomain.CurrentDomain.BaseDirectory);
+        }
+
+        public static IEnumerable<int> GetData()
+        {
+            if (Path.GetDirectoryName(typeof(UnitTest1).Assembly.Location) != AppDomain.CurrentDomain.BaseDirectory)
+            {
+                Environment.FailFast(
+                    $"Expected {Path.GetDirectoryName(typeof(UnitTest1).Assembly.Location)} to be equal to {AppDomain.CurrentDomain.BaseDirectory}");
+            }
+
+            yield return 1;
         }
     }
 }
@@ -75,6 +94,29 @@ namespace AppDomainTests
         DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"test {testAsset.TargetAssetPath}{disableAppDomainCommand}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, workingDirectory: testAsset.TargetAssetPath);
         Assert.AreEqual(0, compilationResult.ExitCode);
 
-        compilationResult.AssertOutputContains(@"Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1");
+        compilationResult.AssertOutputContains(@"Passed!  - Failed:     0, Passed:     2, Skipped:     0, Total:     2");
+    }
+
+    [TestMethod]
+    [DataRow(true)]
+    [DataRow(false)]
+    [DataRow(null)]
+    public async Task DiscoverTests_With_VSTest(bool? disableAppDomain)
+    {
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
+            AssetName,
+            SingleTestSourceCode
+            .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+            .PatchCodeWithReplace("$TargetFramework$", TargetFrameworks.NetFramework[0]));
+
+        string disableAppDomainCommand = disableAppDomain switch
+        {
+            true => " -- RunConfiguration.DisableAppDomain=true",
+            false => " -- RunConfiguration.EnableAppDomain=false",
+            null => string.Empty,
+        };
+
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"test {testAsset.TargetAssetPath} --list-tests{disableAppDomainCommand}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, workingDirectory: testAsset.TargetAssetPath);
+        Assert.AreEqual(0, compilationResult.ExitCode);
     }
 }
