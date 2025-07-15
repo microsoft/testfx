@@ -37,8 +37,6 @@ internal sealed class TestArgumentsManager : ITestArgumentsManager
     {
         RoslynDebug.Assert(IsExpandableTestNode(currentNode), "Test node is not expandable");
 
-        var expandableTestNode = (IExpandableTestNode)currentNode;
-
         int argumentsRowIndex = -1;
         bool isIndexArgumentPropertiesProvider = false;
         if (!_testArgumentsEntryProviders.TryGetValue(

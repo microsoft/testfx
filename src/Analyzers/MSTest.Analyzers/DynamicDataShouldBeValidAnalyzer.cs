@@ -282,7 +282,7 @@ public sealed class DynamicDataShouldBeValidAnalyzer : DiagnosticAnalyzer
 
         // Validate member return type.
         ITypeSymbol? memberTypeSymbol = member.GetMemberType();
-        if (memberTypeSymbol is IArrayTypeSymbol arrayType)
+        if (memberTypeSymbol is IArrayTypeSymbol)
         {
             return;
         }
