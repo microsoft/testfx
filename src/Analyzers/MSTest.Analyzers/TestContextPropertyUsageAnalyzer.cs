@@ -41,7 +41,7 @@ public sealed class TestContextPropertyUsageAnalyzer : DiagnosticAnalyzer
         "TestData",
         "TestDisplayName",
         "DataRow",
-        "DataConnection", 
+        "DataConnection",
         "TestName",
         "ManagedMethod");
 
@@ -91,8 +91,7 @@ public sealed class TestContextPropertyUsageAnalyzer : DiagnosticAnalyzer
         string propertyName = propertyReference.Property.Name;
 
         // Check if we're in a forbidden context
-        IMethodSymbol? containingMethod = context.ContainingSymbol as IMethodSymbol;
-        if (containingMethod is null)
+        if (context.ContainingSymbol is not IMethodSymbol containingMethod)
         {
             return;
         }
@@ -103,8 +102,8 @@ public sealed class TestContextPropertyUsageAnalyzer : DiagnosticAnalyzer
         bool isClassInitialize = containingMethod.HasAttribute(classInitializeAttributeSymbol);
         bool isClassCleanup = containingMethod.HasAttribute(classCleanupAttributeSymbol);
 
-        bool isInFixtureMethod = isAssemblyInitialize || isAssemblyCleanup || isClassInitialize || isClassCleanup;
         bool isInAssemblyMethod = isAssemblyInitialize || isAssemblyCleanup;
+        bool isInFixtureMethod = isInAssemblyMethod || isClassInitialize || isClassCleanup;
 
         // Check if the property is restricted in the current context
         if (isInFixtureMethod && RestrictedInAllFixtureMethods.Contains(propertyName))
@@ -118,11 +117,12 @@ public sealed class TestContextPropertyUsageAnalyzer : DiagnosticAnalyzer
     }
 
     private static string GetMethodType(bool isAssemblyInitialize, bool isAssemblyCleanup, bool isClassInitialize, bool isClassCleanup)
-    {
-        if (isAssemblyInitialize) return "AssemblyInitialize";
-        if (isAssemblyCleanup) return "AssemblyCleanup";
-        if (isClassInitialize) return "ClassInitialize";
-        if (isClassCleanup) return "ClassCleanup";
-        return "unknown";
-    }
+        => (isAssemblyInitialize, isAssemblyCleanup, isClassInitialize, isClassCleanup) switch
+        {
+            (true, _, _, _) => "AssemblyInitialize",
+            (_, true, _, _) => "AssemblyCleanup",
+            (_, _, true, _) => "ClassInitialize",
+            (_, _, _, true) => "ClassCleanup",
+            _ => "unknown",
+        };
 }
