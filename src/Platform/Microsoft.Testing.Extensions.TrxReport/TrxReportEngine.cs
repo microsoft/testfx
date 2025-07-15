@@ -203,7 +203,7 @@ internal sealed partial class TrxReportEngine
             string outputDirectory = _configuration.GetTestResultDirectory(); // add var for this
             string finalFileName = Path.Combine(outputDirectory, trxFileName);
 
-            bool isFileNameExplicitlyProvidedAndFileExists = isFileNameExplicitlyProvided && _fileSystem.Exists(finalFileName);
+            bool isFileNameExplicitlyProvidedAndFileExists = isFileNameExplicitlyProvided && _fileSystem.ExistFile(finalFileName);
 
             // Note that we need to dispose the IFileStream, not the inner stream.
             // IFileStream implementations will be responsible to dispose their inner stream.
