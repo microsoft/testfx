@@ -237,7 +237,7 @@ public class TrxTests
         using MemoryFileStream memoryStream = new();
         PropertyBag propertyBag = new(
             new FailedTestNodeStateProperty("test failed"),
-            new TrxMessagesProperty([new("error message")]));
+            new TrxMessagesProperty([new StandardOutputTrxMessage("error message")]));
         TrxReportEngine trxReportEngine = GenerateTrxReportEngine(0, 1, propertyBag, memoryStream);
 
         // Act
@@ -267,7 +267,7 @@ public class TrxTests
         using MemoryFileStream memoryStream = new();
         PropertyBag propertyBag = new(
             new FailedTestNodeStateProperty("test failed"),
-            new TrxMessagesProperty([new("base trx message"), new StandardErrorTrxMessage("stderr trx message"), new StandardOutputTrxMessage("stdout trx message"), new DebugOrTraceTrxMessage("debug trx message")]));
+            new TrxMessagesProperty([new StandardErrorTrxMessage("stderr trx message"), new StandardOutputTrxMessage("stdout trx message"), new DebugOrTraceTrxMessage("debug trx message")]));
         TrxReportEngine trxReportEngine = GenerateTrxReportEngine(0, 1, propertyBag, memoryStream);
 
         // Act
@@ -283,8 +283,7 @@ public class TrxTests
         string trxContentsPattern = @"
     <UnitTestResult .* testName=""TestMethod"" .* outcome=""Failed"" .*>
       <Output>
-        <StdOut>base trx message
-stdout trx message</StdOut>
+        <StdOut>stdout trx message</StdOut>
         <StdErr>stderr trx message</StdErr>
         <DebugTrace>debug trx message</DebugTrace>
       </Output>
