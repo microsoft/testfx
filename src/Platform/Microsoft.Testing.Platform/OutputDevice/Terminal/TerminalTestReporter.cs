@@ -113,20 +113,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
     }
 
     public void AssemblyRunStarted()
-    {
-        if (_options.ShowAssembly && _options.ShowAssemblyStartAndComplete)
-        {
-            _terminalWithProgress.WriteToTerminal(terminal =>
-            {
-                terminal.Append(_isDiscovery ? PlatformResources.DiscoveringTestsFrom : PlatformResources.RunningTestsFrom);
-                terminal.Append(' ');
-                AppendAssemblyLinkTargetFrameworkAndArchitecture(terminal);
-                terminal.AppendLine();
-            });
-        }
-
-        GetOrAddAssemblyRun();
-    }
+        => GetOrAddAssemblyRun();
 
     private TestProgressState GetOrAddAssemblyRun()
     {
@@ -230,13 +217,10 @@ internal sealed partial class TerminalTestReporter : IDisposable
             terminal.Append($"{PlatformResources.Passed}!");
         }
 
-        if (!_options.ShowAssembly)
-        {
-            terminal.SetColor(TerminalColor.DarkGray);
-            terminal.Append(" - ");
-            terminal.ResetColor();
-            AppendAssemblyLinkTargetFrameworkAndArchitecture(terminal);
-        }
+        terminal.SetColor(TerminalColor.DarkGray);
+        terminal.Append(" - ");
+        terminal.ResetColor();
+        AppendAssemblyLinkTargetFrameworkAndArchitecture(terminal);
 
         terminal.AppendLine();
 
@@ -297,39 +281,6 @@ internal sealed partial class TerminalTestReporter : IDisposable
         terminal.Append(durationText);
         AppendLongDuration(terminal, runDuration, wrapInParentheses: false, colorize: false);
         terminal.AppendLine();
-    }
-
-    /// <summary>
-    /// Print a build result summary to the output.
-    /// </summary>
-    private static void AppendAssemblyResult(ITerminal terminal, bool succeeded, int countErrors, int countWarnings)
-    {
-        if (!succeeded)
-        {
-            terminal.SetColor(TerminalColor.DarkRed);
-            // If the build failed, we print one of three red strings.
-            string text = (countErrors > 0, countWarnings > 0) switch
-            {
-                (true, true) => string.Format(CultureInfo.CurrentCulture, PlatformResources.FailedWithErrorsAndWarnings, countErrors, countWarnings),
-                (true, _) => string.Format(CultureInfo.CurrentCulture, PlatformResources.FailedWithErrors, countErrors),
-                (false, true) => string.Format(CultureInfo.CurrentCulture, PlatformResources.FailedWithWarnings, countWarnings),
-                _ => PlatformResources.FailedLowercase,
-            };
-            terminal.Append(text);
-            terminal.ResetColor();
-        }
-        else if (countWarnings > 0)
-        {
-            terminal.SetColor(TerminalColor.DarkYellow);
-            terminal.Append($"succeeded with {countWarnings} warning(s)");
-            terminal.ResetColor();
-        }
-        else
-        {
-            terminal.SetColor(TerminalColor.DarkGreen);
-            terminal.Append(PlatformResources.PassedLowercase);
-            terminal.ResetColor();
-        }
     }
 
     internal void TestCompleted(
@@ -466,14 +417,6 @@ internal sealed partial class TerminalTestReporter : IDisposable
         terminal.SetColor(TerminalColor.DarkGray);
         terminal.Append(' ');
         AppendLongDuration(terminal, duration);
-        if (_options.ShowAssembly)
-        {
-            terminal.AppendLine();
-            terminal.Append(SingleIndentation);
-            terminal.Append(PlatformResources.FromFile);
-            terminal.Append(' ');
-            AppendAssemblyLinkTargetFrameworkAndArchitecture(terminal);
-        }
 
         terminal.AppendLine();
 
@@ -686,29 +629,12 @@ internal sealed partial class TerminalTestReporter : IDisposable
         assemblyRun.Stopwatch.Stop();
 
         _terminalWithProgress.RemoveWorker(assemblyRun.SlotIndex);
-
-        if (!_isDiscovery && _options.ShowAssembly && _options.ShowAssemblyStartAndComplete)
-        {
-            _terminalWithProgress.WriteToTerminal(terminal => AppendAssemblySummary(assemblyRun, terminal));
-        }
     }
 
     private static string? NormalizeSpecialCharacters(string? text)
         => text?.Replace('\0', '\x2400')
             // escape char
             .Replace('\x001b', '\x241b');
-
-    private void AppendAssemblySummary(TestProgressState assemblyRun, ITerminal terminal)
-    {
-        int failedTests = assemblyRun.FailedTests;
-        int warnings = 0;
-
-        AppendAssemblyLinkTargetFrameworkAndArchitecture(terminal);
-        terminal.Append(' ');
-        AppendAssemblyResult(terminal, assemblyRun.FailedTests == 0, failedTests, warnings);
-        terminal.Append(' ');
-        AppendLongDuration(terminal, assemblyRun.Stopwatch.Elapsed);
-    }
 
     /// <summary>
     /// Appends a long duration in human readable format such as 1h 23m 500ms.
@@ -855,14 +781,6 @@ internal sealed partial class TerminalTestReporter : IDisposable
         int totalTests = assembly?.TotalTests ?? 0;
         bool runFailed = _wasCancelled;
 
-        if (_options.ShowAssembly && assembly is not null)
-        {
-            terminal.Append(string.Format(CultureInfo.CurrentCulture, PlatformResources.DiscoveredTestsInAssembly, assembly.DiscoveredTestDisplayNames.Count));
-            terminal.Append(" - ");
-            AppendAssemblyLinkTargetFrameworkAndArchitecture(terminal);
-            terminal.AppendLine();
-        }
-
         if (assembly is not null)
         {
             foreach (string displayName in assembly.DiscoveredTestDisplayNames)
@@ -877,13 +795,10 @@ internal sealed partial class TerminalTestReporter : IDisposable
         terminal.SetColor(runFailed ? TerminalColor.DarkRed : TerminalColor.DarkGreen);
         terminal.Append(string.Format(CultureInfo.CurrentCulture, PlatformResources.TestDiscoverySummarySingular, totalTests));
 
-        if (!_options.ShowAssembly)
-        {
-            terminal.SetColor(TerminalColor.DarkGray);
-            terminal.Append(" - ");
-            terminal.ResetColor();
-            AppendAssemblyLinkTargetFrameworkAndArchitecture(terminal);
-        }
+        terminal.SetColor(TerminalColor.DarkGray);
+        terminal.Append(" - ");
+        terminal.ResetColor();
+        AppendAssemblyLinkTargetFrameworkAndArchitecture(terminal);
 
         terminal.ResetColor();
         terminal.AppendLine();

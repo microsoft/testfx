@@ -154,8 +154,6 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
         _terminalTestReporter = new TerminalTestReporter(_assemblyName, _targetFramework, _shortArchitecture, _console, new()
         {
             BaseDirectory = null,
-            ShowAssembly = false,
-            ShowAssemblyStartAndComplete = false,
             ShowPassedTests = showPassed,
             MinimumExpectedTests = PlatformCommandLineProvider.GetMinimumExpectedTests(_commandLineOptions),
             UseAnsi = !noAnsi,

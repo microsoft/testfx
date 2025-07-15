@@ -80,8 +80,6 @@ public sealed class TerminalTestReporterTests
             // Like --no-ansi in commandline, should disable ANSI altogether.
             UseAnsi = false,
 
-            ShowAssembly = false,
-            ShowAssemblyStartAndComplete = false,
             ShowProgress = () => false,
         });
 
@@ -182,8 +180,6 @@ public sealed class TerminalTestReporterTests
             UseCIAnsi = true,
             ForceAnsi = true,
 
-            ShowAssembly = false,
-            ShowAssemblyStartAndComplete = false,
             ShowProgress = () => false,
         });
 
@@ -284,8 +280,6 @@ public sealed class TerminalTestReporterTests
             UseCIAnsi = false,
             ForceAnsi = true,
 
-            ShowAssembly = false,
-            ShowAssemblyStartAndComplete = false,
             ShowProgress = () => false,
         });
 
@@ -388,8 +382,6 @@ public sealed class TerminalTestReporterTests
             ForceAnsi = true,
 
             ShowActiveTests = true,
-            ShowAssembly = false,
-            ShowAssemblyStartAndComplete = false,
             ShowProgress = () => true,
         })
         {
