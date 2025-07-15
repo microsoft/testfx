@@ -126,15 +126,6 @@ public sealed class TrxMessagesProperty : IProperty
     /// Gets the TRX message properties.
     /// </summary>
     public TrxMessage[] Messages { get; }
-
-    [SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "https://github.com/dotnet/roslyn/issues/52421")]
-    private bool PrintMembers(StringBuilder builder)
-    {
-        builder.Append("Messages = [");
-        builder.AppendJoin(", ", Messages.Select(x => x.ToString()));
-        builder.Append(']');
-        return true;
-    }
 }
 
 /// <summary>
