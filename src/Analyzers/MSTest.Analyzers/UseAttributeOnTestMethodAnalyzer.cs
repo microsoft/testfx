@@ -46,6 +46,20 @@ public sealed class UseAttributeOnTestMethodAnalyzer : DiagnosticAnalyzer
         DiagnosticSeverity.Warning,
         isEnabledByDefault: true);
 
+    private const string DescriptionAttributeShortName = "Description";
+
+    /// <inheritdoc cref="Resources.UseAttributeOnTestMethodAnalyzerTitle" />
+    public static readonly DiagnosticDescriptor DescriptionRule = DiagnosticDescriptorHelper.Create(
+        DiagnosticIds.UseAttributeOnTestMethodRuleId,
+        title: new LocalizableResourceString(
+            nameof(Resources.UseAttributeOnTestMethodAnalyzerTitle), Resources.ResourceManager, typeof(Resources), DescriptionAttributeShortName),
+        messageFormat: new LocalizableResourceString(
+            nameof(Resources.UseAttributeOnTestMethodAnalyzerMessageFormat), Resources.ResourceManager, typeof(Resources), DescriptionAttributeShortName),
+        description: null,
+        Category.Usage,
+        DiagnosticSeverity.Warning,
+        isEnabledByDefault: true);
+
     private const string TestPropertyAttributeShortName = "TestProperty";
 
     /// <inheritdoc cref="Resources.UseAttributeOnTestMethodAnalyzerTitle" />
@@ -106,6 +120,7 @@ public sealed class UseAttributeOnTestMethodAnalyzer : DiagnosticAnalyzer
         ImmutableArray.Create(
             OwnerRule,
             PriorityRule,
+            DescriptionRule,
             TestPropertyRule,
             WorkItemRule);
 

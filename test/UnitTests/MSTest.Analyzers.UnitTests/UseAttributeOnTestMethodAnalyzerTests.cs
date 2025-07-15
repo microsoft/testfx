@@ -16,6 +16,7 @@ public sealed class UseAttributeOnTestMethodAnalyzerTests
     [
         (UseAttributeOnTestMethodAnalyzer.OwnerRule, """Owner("owner")"""),
         (UseAttributeOnTestMethodAnalyzer.PriorityRule, "Priority(1)"),
+        (UseAttributeOnTestMethodAnalyzer.DescriptionRule, """Description("description")"""),
         (UseAttributeOnTestMethodAnalyzer.TestPropertyRule, """TestProperty("name", "value")"""),
         (UseAttributeOnTestMethodAnalyzer.WorkItemRule, "WorkItem(100)"),
     ];
