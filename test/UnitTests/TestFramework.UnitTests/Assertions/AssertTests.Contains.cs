@@ -649,7 +649,7 @@ public partial class AssertTests : TestContainer
     /// Tests the ContainsSingle method with predicate and formatted message when no elements match.
     /// Expects an exception with the custom message.
     /// </summary>
-    public void ContainsSinglePredicate_WithMessageAndParams_NoItemMatches_ThrowsException()
+    public void ContainsSinglePredicate_WithMessage_NoItemMatches_ThrowsException()
     {
         // Arrange
         var collection = new List<int> { 1, 3, 5 };
@@ -665,7 +665,7 @@ public partial class AssertTests : TestContainer
     /// Tests the ContainsSingle method with predicate and formatted message when multiple elements match.
     /// Expects an exception with the custom message.
     /// </summary>
-    public void ContainsSinglePredicate_WithMessageAndParams_MultipleItemsMatch_ThrowsException()
+    public void ContainsSinglePredicate_WithMessage_MultipleItemsMatch_ThrowsException()
     {
         // Arrange
         var collection = new List<int> { 2, 4, 6 };

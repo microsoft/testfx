@@ -503,6 +503,51 @@ stdout trx message</StdOut>
         Assert.AreEqual(4, retryCount);
     }
 
+    [TestMethod]
+    public async Task TrxReportEngine_GenerateReportAsync_WithMetadataProperties_TrxHandlesProperties()
+    {
+        // Arrange
+        using MemoryFileStream memoryStream = new();
+        TrxReportEngine trxReportEngine = GenerateTrxReportEngine(1, 0,
+            new(
+                new PassedTestNodeStateProperty(),
+                new TestMetadataProperty("Owner", "ValueOfOwner"),
+                new TestMetadataProperty("Priority", "5"),
+                new TestMetadataProperty("MyProperty1", "MyValue1"),
+                new TestMetadataProperty("MyProperty2", "MyValue2")), memoryStream);
+
+        // Act
+        (string fileName, string? warning) = await trxReportEngine.GenerateReportAsync();
+
+        // Assert
+        Assert.IsNull(warning);
+        AssertExpectedTrxFileName(fileName);
+        Assert.IsNotNull(memoryStream.TrxContent);
+        XDocument xml = memoryStream.TrxContent;
+        AssertTrxOutcome(xml, "Completed");
+        string trxContent = xml.ToString();
+        string trxContentsPattern = @"
+    <UnitTest name=""TestMethod"" storage=""testapppath"" id=""39697f97-07bd-1f42-c69a-32f372f41ef4"" priority=""5"">
+      <Execution id="".+?"" />
+      <Owners>
+        <Owner name=""ValueOfOwner"" />
+      </Owners>
+      <Properties>
+        <Property>
+          <Key>MyProperty2</Key>
+          <Value>MyValue2</Value>
+        </Property>
+        <Property>
+          <Key>MyProperty1</Key>
+          <Value>MyValue1</Value>
+        </Property>
+      </Properties>
+      <TestMethod codeBase=""TestAppPath"" adapterTypeName=""executor:///"" name=""TestMethod"" />
+    </UnitTest>
+ ";
+        Assert.IsTrue(Regex.IsMatch(trxContent, trxContentsPattern), trxContent);
+    }
+
     private static void AssertTrxOutcome(XDocument xml, string expectedOutcome)
     {
         Assert.IsNotNull(xml);
@@ -516,7 +561,7 @@ stdout trx message</StdOut>
     }
 
     private static void AssertExpectedTrxFileName(string fileName)
-           => Assert.IsTrue(fileName.Equals("_MachineName_0001-01-01_00_00_00.000.trx", StringComparison.Ordinal));
+           => Assert.IsTrue(fileName.Equals("_MachineName_0001-01-01_00_00_00.0000000.trx", StringComparison.Ordinal));
 
     private TrxReportEngine GenerateTrxReportEngine(int passedTestsCount, int failedTestsCount, PropertyBag propertyBag, MemoryFileStream memoryStream,
            bool? adapterSupportTrxCapability = null, int notExecutedTestsCount = 0, int timeoutTestsCount = 0,

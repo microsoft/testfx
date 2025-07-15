@@ -28,12 +28,6 @@ internal static class EngineConstants
 
 #if NETFRAMEWORK
     internal const string PhoneAppxPackageExtension = ".appx";
-
-    // These are tied to a specific VS version. Can be changed to have a list of supported version instead.
-    internal const string VisualStudioRootRegKey32ForDev14 = @"SOFTWARE\Microsoft\VisualStudio\" + VisualStudioVersion;
-    internal const string VisualStudioRootRegKey64ForDev14 = @"SOFTWARE\Wow6432Node\Microsoft\VisualStudio\" + VisualStudioVersion;
-
-    internal const string VisualStudioVersion = "14.0";
 #endif
 
     /// <summary>
@@ -124,11 +118,18 @@ internal static class EngineConstants
 
     internal static readonly TestProperty TfsTeamProjectProperty = TestProperty.Register(TfsTeamProject, TfsTeamProject, typeof(string), TestPropertyAttributes.Hidden, typeof(TestCase));
 
+    internal static readonly TestProperty ParameterTypesProperty = TestProperty.Register("MSTest.ParameterTypes", "ParameterTypes", typeof(string), TestPropertyAttributes.Hidden, typeof(TestCase));
+
     internal static readonly TestProperty TestDynamicDataTypeProperty = TestProperty.Register("MSTest.DynamicDataType", "DynamicDataType", typeof(int), TestPropertyAttributes.Hidden, typeof(TestCase));
+
+    internal static readonly TestProperty TestCaseIndexProperty = TestProperty.Register("MSTest.TestCaseIndex", "TestCaseIndex", typeof(int), TestPropertyAttributes.Hidden, typeof(TestCase));
 
     internal static readonly TestProperty TestDynamicDataProperty = TestProperty.Register("MSTest.DynamicData", "DynamicData", typeof(string[]), TestPropertyAttributes.Hidden, typeof(TestCase));
 
     internal static readonly TestProperty TestDataSourceIgnoreMessageProperty = TestProperty.Register("MSTest.TestDataSourceIgnoreMessageProperty", "TestDataSourceIgnoreMessageProperty", typeof(string), TestPropertyAttributes.Hidden, typeof(TestCase));
+
+    internal static readonly TestProperty UnfoldingStrategy = TestProperty.Register("MSTestDiscoverer.UnfoldingStrategy", "UnfoldingStrategy", typeof(int), TestPropertyAttributes.Hidden, typeof(TestCase));
+
     #endregion
 
     #region Private Constants

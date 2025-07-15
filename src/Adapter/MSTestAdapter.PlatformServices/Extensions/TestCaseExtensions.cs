@@ -74,7 +74,7 @@ internal static class TestCaseExtensions
         string name = testCase.GetTestName(testClassName);
 
         TestMethod testMethod = testCase.ContainsManagedMethodAndType()
-            ? new(testCase.GetManagedType(), testCase.GetManagedMethod(), testCase.GetHierarchy()!, name, testClassName!, source, testCase.DisplayName)
+            ? new(testCase.GetManagedType(), testCase.GetManagedMethod(), testCase.GetHierarchy()!, name, testClassName!, source, testCase.DisplayName, testCase.GetPropertyValue<string>(EngineConstants.ParameterTypesProperty, null))
             : new(name, testClassName!, source, testCase.DisplayName);
         var dataType = (DynamicDataType)testCase.GetPropertyValue(EngineConstants.TestDynamicDataTypeProperty, (int)DynamicDataType.None);
         if (dataType != DynamicDataType.None)
@@ -83,6 +83,7 @@ internal static class TestCaseExtensions
 
             testMethod.DataType = dataType;
             testMethod.SerializedData = data;
+            testMethod.TestCaseIndex = testCase.GetPropertyValue<int>(EngineConstants.TestCaseIndexProperty, 0);
             if (UnitTestDiscoverer.TryGetActualData(testCase, out object?[]? actualData))
             {
                 testMethod.ActualData = actualData;
@@ -100,6 +101,7 @@ internal static class TestCaseExtensions
         {
             TestCategory = testCase.GetPropertyValue(EngineConstants.TestCategoryProperty) as string[],
             Priority = testCase.GetPropertyValue(EngineConstants.PriorityProperty) as int?,
+            UnfoldingStrategy = (TestDataSourceUnfoldingStrategy)testCase.GetPropertyValue(EngineConstants.UnfoldingStrategy, (int)TestDataSourceUnfoldingStrategy.Auto),
             DisplayName = testCase.DisplayName,
         };
 
@@ -130,8 +132,6 @@ internal static class TestCaseExtensions
     internal static void SetManagedType(this TestCase testCase, string value) => testCase.SetPropertyValue(ManagedTypeProperty, value);
 
     internal static string? GetManagedMethod(this TestCase testCase) => testCase.GetPropertyValue<string>(ManagedMethodProperty, null);
-
-    internal static void SetManagedMethod(this TestCase testCase, string value) => testCase.SetPropertyValue(ManagedMethodProperty, value);
 
     internal static bool ContainsManagedMethodAndType(this TestCase testCase) => !StringEx.IsNullOrWhiteSpace(testCase.GetManagedMethod()) && !StringEx.IsNullOrWhiteSpace(testCase.GetManagedType());
 

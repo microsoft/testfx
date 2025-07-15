@@ -22,7 +22,8 @@ public sealed class DataRowShouldBeValidAnalyzer : DiagnosticAnalyzer
     private static readonly LocalizableResourceString Description = new(nameof(Resources.DataRowShouldBeValidDescription), Resources.ResourceManager, typeof(Resources));
     private static readonly LocalizableResourceString MessageFormat = new(nameof(Resources.DataRowShouldBeValidMessageFormat_OnTestMethod), Resources.ResourceManager, typeof(Resources));
 
-    internal static readonly DiagnosticDescriptor DataRowOnTestMethodRule = DiagnosticDescriptorHelper.Create(
+    /// <inheritdoc cref="Resources.DataRowShouldBeValidTitle" />
+    public static readonly DiagnosticDescriptor DataRowOnTestMethodRule = DiagnosticDescriptorHelper.Create(
         DiagnosticIds.DataRowShouldBeValidRuleId,
         Title,
         MessageFormat,
@@ -31,16 +32,20 @@ public sealed class DataRowShouldBeValidAnalyzer : DiagnosticAnalyzer
         DiagnosticSeverity.Warning,
         isEnabledByDefault: true);
 
-    internal static readonly DiagnosticDescriptor ArgumentCountMismatchRule = DataRowOnTestMethodRule
+    /// <inheritdoc cref="Resources.DataRowShouldBeValidMessageFormat_ArgumentCountMismatch" />
+    public static readonly DiagnosticDescriptor ArgumentCountMismatchRule = DataRowOnTestMethodRule
         .WithMessage(new(nameof(Resources.DataRowShouldBeValidMessageFormat_ArgumentCountMismatch), Resources.ResourceManager, typeof(Resources)));
 
-    internal static readonly DiagnosticDescriptor ArgumentTypeMismatchRule = DataRowOnTestMethodRule
+    /// <inheritdoc cref="Resources.DataRowShouldBeValidMessageFormat_ArgumentTypeMismatch" />
+    public static readonly DiagnosticDescriptor ArgumentTypeMismatchRule = DataRowOnTestMethodRule
         .WithMessage(new(nameof(Resources.DataRowShouldBeValidMessageFormat_ArgumentTypeMismatch), Resources.ResourceManager, typeof(Resources)));
 
-    internal static readonly DiagnosticDescriptor GenericTypeArgumentNotResolvedRule = DataRowOnTestMethodRule
+    /// <inheritdoc cref="Resources.DataRowShouldBeValidMessageFormat_GenericTypeArgumentNotResolved" />
+    public static readonly DiagnosticDescriptor GenericTypeArgumentNotResolvedRule = DataRowOnTestMethodRule
         .WithMessage(new(nameof(Resources.DataRowShouldBeValidMessageFormat_GenericTypeArgumentNotResolved), Resources.ResourceManager, typeof(Resources)));
 
-    internal static readonly DiagnosticDescriptor GenericTypeArgumentConflictingTypesRule = DataRowOnTestMethodRule
+    /// <inheritdoc cref="Resources.DataRowShouldBeValidMessageFormat_GenericTypeArgumentConflictingTypes" />
+    public static readonly DiagnosticDescriptor GenericTypeArgumentConflictingTypesRule = DataRowOnTestMethodRule
         .WithMessage(new(nameof(Resources.DataRowShouldBeValidMessageFormat_GenericTypeArgumentConflictingTypes), Resources.ResourceManager, typeof(Resources)));
 
     /// <inheritdoc />
@@ -184,7 +189,7 @@ public sealed class DataRowShouldBeValidAnalyzer : DiagnosticAnalyzer
         AnalyzeGenericMethod(context, dataRowSyntax, methodSymbol, constructorArguments);
 
         // Check constructor argument types match method parameter types.
-        List<(int ConstructorArgumentIndex, int MethodParameterIndex)> typeMismatchIndices = [];
+        List<(string ParameterName, string ExpectedType, string ActualType)> typeMismatches = [];
         for (int currentArgumentIndex = 0; currentArgumentIndex < constructorArguments.Length; currentArgumentIndex++)
         {
             // Null is considered as default for non-nullable types.
@@ -205,16 +210,34 @@ public sealed class DataRowShouldBeValidAnalyzer : DiagnosticAnalyzer
 
             if (argumentType is not null && !argumentType.IsAssignableTo(paramType, context.Compilation))
             {
-                typeMismatchIndices.Add((currentArgumentIndex, Math.Min(currentArgumentIndex, methodSymbol.Parameters.Length - 1)));
+                int parameterIndex = Math.Min(currentArgumentIndex, methodSymbol.Parameters.Length - 1);
+                string parameterName = methodSymbol.Parameters[parameterIndex].Name;
+                string expectedType = paramType.ToDisplayString();
+                string actualType = argumentType.ToDisplayString();
+                typeMismatches.Add((parameterName, expectedType, actualType));
             }
         }
 
         // Report diagnostics if there's any type mismatch.
-        if (typeMismatchIndices.Count > 0)
+        if (typeMismatches.Count > 0)
         {
+            // Format all mismatches into a single message
+            string mismatchMessage;
+            if (typeMismatches.Count == 1)
+            {
+                (string parameterName, string expectedType, string actualType) = typeMismatches[0];
+                mismatchMessage = string.Format(CultureInfo.InvariantCulture, Resources.DataRowShouldBeValidMessageFormat_ParameterMismatch, parameterName, expectedType, actualType);
+            }
+            else
+            {
+                IEnumerable<string> mismatchDescriptions = typeMismatches.Select(m =>
+                    string.Format(CultureInfo.InvariantCulture, Resources.DataRowShouldBeValidMessageFormat_ParameterMismatch, m.ParameterName, m.ExpectedType, m.ActualType));
+                mismatchMessage = string.Join("; ", mismatchDescriptions);
+            }
+
             context.ReportDiagnostic(dataRowSyntax.CreateDiagnostic(
                 ArgumentTypeMismatchRule,
-                string.Join(", ", typeMismatchIndices)));
+                mismatchMessage));
         }
     }
 

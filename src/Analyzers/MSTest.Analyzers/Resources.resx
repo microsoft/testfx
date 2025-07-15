@@ -251,7 +251,10 @@ The type declaring these methods should also respect the following rules:
     <value>DataRow argument count should match method parameter count (constructor arguments: {0}, method parameters: {1})</value>
   </data>
   <data name="DataRowShouldBeValidMessageFormat_ArgumentTypeMismatch" xml:space="preserve">
-    <value>DataRow argument type should match method parameter type. Mismatches occur at indices: {0}</value>
+    <value>DataRow argument types do not match method parameter types. {0}</value>
+  </data>
+  <data name="DataRowShouldBeValidMessageFormat_ParameterMismatch" xml:space="preserve">
+    <value>Parameter '{0}' expects type '{1}', but the provided value has type '{2}'</value>
   </data>
   <data name="DataRowShouldBeValidMessageFormat_OnTestMethod" xml:space="preserve">
     <value>DataRow should only be set on a test method</value>
@@ -533,6 +536,12 @@ The type declaring these methods should also respect the following rules:
   </data>
   <data name="UseProperAssertMethodsMessageFormat" xml:space="preserve">
     <value>Use 'Assert.{0}' instead of 'Assert.{1}'</value>
+  </data>
+  <data name="StringAssertToAssertTitle" xml:space="preserve">
+    <value>Use 'Assert' instead of 'StringAssert'</value>
+  </data>
+  <data name="StringAssertToAssertMessageFormat" xml:space="preserve">
+    <value>Use 'Assert.{0}' instead of 'StringAssert.{1}'</value>
   </data>
   <data name="DataRowShouldBeValidMessageFormat_GenericTypeArgumentNotResolved" xml:space="preserve">
     <value>The type of the generic parameter '{0}' could not be inferred.</value>

@@ -393,6 +393,19 @@ public partial class TypeEnumeratorTests : TestContainer
         Verify(testElement.Priority == 1);
     }
 
+    public void GetTestFromMethodShouldSetDescription()
+    {
+        SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true, isMethodFromSameAssembly: true);
+        TypeEnumerator typeEnumerator = GetTypeEnumeratorInstance(typeof(DummyTestClass), "DummyAssemblyName");
+        MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("MethodWithVoidReturnType")!;
+        methodInfo = new MockedMethodInfoWithExtraAttributes(methodInfo, new DescriptionAttribute("Dummy description"));
+
+        MSTest.TestAdapter.ObjectModel.UnitTestElement testElement = typeEnumerator.GetTestFromMethod(methodInfo, true, _warnings);
+
+        Verify(testElement.Traits is not null);
+        Verify(testElement.Traits.Any(t => t.Name == "Description" && t.Value == "Dummy description"));
+    }
+
     public void GetTestFromMethodShouldSetWorkItemIds()
     {
         SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true, isMethodFromSameAssembly: true);

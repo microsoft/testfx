@@ -26,7 +26,8 @@ public sealed class DynamicDataShouldBeValidAnalyzer : DiagnosticAnalyzer
     private static readonly LocalizableResourceString Description = new(nameof(Resources.DynamicDataShouldBeValidDescription), Resources.ResourceManager, typeof(Resources));
     private static readonly LocalizableResourceString MessageFormat = new(nameof(Resources.DynamicDataShouldBeValidMessageFormat_OnTestMethod), Resources.ResourceManager, typeof(Resources));
 
-    internal static readonly DiagnosticDescriptor NotTestMethodRule = DiagnosticDescriptorHelper.Create(
+    /// <inheritdoc cref="Resources.DynamicDataShouldBeValidTitle"/>
+    public static readonly DiagnosticDescriptor NotTestMethodRule = DiagnosticDescriptorHelper.Create(
         DiagnosticIds.DynamicDataShouldBeValidRuleId,
         Title,
         MessageFormat,
@@ -35,31 +36,40 @@ public sealed class DynamicDataShouldBeValidAnalyzer : DiagnosticAnalyzer
         DiagnosticSeverity.Warning,
         isEnabledByDefault: true);
 
-    internal static readonly DiagnosticDescriptor MemberNotFoundRule = NotTestMethodRule
+    /// <inheritdoc cref="Resources.DynamicDataShouldBeValidMessageFormat_MemberNotFound"/>
+    public static readonly DiagnosticDescriptor MemberNotFoundRule = NotTestMethodRule
         .WithMessage(new(nameof(Resources.DynamicDataShouldBeValidMessageFormat_MemberNotFound), Resources.ResourceManager, typeof(Resources)));
 
-    internal static readonly DiagnosticDescriptor FoundTooManyMembersRule = NotTestMethodRule
+    /// <inheritdoc cref="Resources.DynamicDataShouldBeValidMessageFormat_TooManyMembers"/>
+    public static readonly DiagnosticDescriptor FoundTooManyMembersRule = NotTestMethodRule
         .WithMessage(new(nameof(Resources.DynamicDataShouldBeValidMessageFormat_TooManyMembers), Resources.ResourceManager, typeof(Resources)));
 
-    internal static readonly DiagnosticDescriptor SourceTypePropertyRule = NotTestMethodRule
+    /// <inheritdoc cref="Resources.DynamicDataShouldBeValidMessageFormat_SourceTypeProperty"/>
+    public static readonly DiagnosticDescriptor SourceTypePropertyRule = NotTestMethodRule
         .WithMessage(new(nameof(Resources.DynamicDataShouldBeValidMessageFormat_SourceTypeProperty), Resources.ResourceManager, typeof(Resources)));
 
-    internal static readonly DiagnosticDescriptor SourceTypeMethodRule = NotTestMethodRule
+    /// <inheritdoc cref="Resources.DynamicDataShouldBeValidMessageFormat_SourceTypeMethod"/>
+    public static readonly DiagnosticDescriptor SourceTypeMethodRule = NotTestMethodRule
         .WithMessage(new(nameof(Resources.DynamicDataShouldBeValidMessageFormat_SourceTypeMethod), Resources.ResourceManager, typeof(Resources)));
 
-    internal static readonly DiagnosticDescriptor SourceTypeNotPropertyOrMethodRule = NotTestMethodRule
+    /// <inheritdoc cref="Resources.DynamicDataShouldBeValidMessageFormat_SourceTypeNotPropertyOrMethod"/>
+    public static readonly DiagnosticDescriptor SourceTypeNotPropertyOrMethodRule = NotTestMethodRule
         .WithMessage(new(nameof(Resources.DynamicDataShouldBeValidMessageFormat_SourceTypeNotPropertyOrMethod), Resources.ResourceManager, typeof(Resources)));
 
-    internal static readonly DiagnosticDescriptor MemberMethodRule = NotTestMethodRule
+    /// <inheritdoc cref="Resources.DynamicDataShouldBeValidMessageFormat_MemberMethod"/>
+    public static readonly DiagnosticDescriptor MemberMethodRule = NotTestMethodRule
         .WithMessage(new(nameof(Resources.DynamicDataShouldBeValidMessageFormat_MemberMethod), Resources.ResourceManager, typeof(Resources)));
 
-    internal static readonly DiagnosticDescriptor MemberTypeRule = NotTestMethodRule
+    /// <inheritdoc cref="Resources.DynamicDataShouldBeValidMessageFormat_MemberType"/>
+    public static readonly DiagnosticDescriptor MemberTypeRule = NotTestMethodRule
         .WithMessage(new(nameof(Resources.DynamicDataShouldBeValidMessageFormat_MemberType), Resources.ResourceManager, typeof(Resources)));
 
-    internal static readonly DiagnosticDescriptor DataMemberSignatureRule = NotTestMethodRule
+    /// <inheritdoc cref="Resources.DynamicDataShouldBeValidMessageFormat_DataMemberSignature"/>
+    public static readonly DiagnosticDescriptor DataMemberSignatureRule = NotTestMethodRule
         .WithMessage(new(nameof(Resources.DynamicDataShouldBeValidMessageFormat_DataMemberSignature), Resources.ResourceManager, typeof(Resources)));
 
-    internal static readonly DiagnosticDescriptor DisplayMethodSignatureRule = NotTestMethodRule
+    /// <inheritdoc cref="Resources.DynamicDataShouldBeValidMessageFormat_DisplayMethodSignature"/>
+    public static readonly DiagnosticDescriptor DisplayMethodSignatureRule = NotTestMethodRule
         .WithMessage(new(nameof(Resources.DynamicDataShouldBeValidMessageFormat_DisplayMethodSignature), Resources.ResourceManager, typeof(Resources)));
 
     /// <inheritdoc />
@@ -272,7 +282,7 @@ public sealed class DynamicDataShouldBeValidAnalyzer : DiagnosticAnalyzer
 
         // Validate member return type.
         ITypeSymbol? memberTypeSymbol = member.GetMemberType();
-        if (memberTypeSymbol is IArrayTypeSymbol arrayType)
+        if (memberTypeSymbol is IArrayTypeSymbol)
         {
             return;
         }

@@ -166,11 +166,19 @@ public class UnitTestElementTests : TestContainer
     public void ToTestCase_WhenStrategyIsData_DoesNotUseDefaultTestCaseId()
     {
 #pragma warning disable CA2263 // Prefer generic overload when type is known
-        foreach (DynamicDataType dataType in EnumPolyfill.GetValues<DynamicDataType>())
+        foreach (DynamicDataType dataType in Enum.GetValues<DynamicDataType>())
         {
-            var testCase = new UnitTestElement(new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", null) { DataType = dataType }).ToTestCase();
+            var testCase = new UnitTestElement(new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", null)
+            {
+                DataType = dataType,
+                SerializedData = dataType == DynamicDataType.None ? null : [],
+            }).ToTestCase();
             var expectedTestCase = new TestCase(testCase.FullyQualifiedName, testCase.ExecutorUri, testCase.Source);
+            Guid expectedId = UnitTestElement.GuidFromString("MyAssemblyMyProduct.MyNamespace.MyClass.MyMethod" + (dataType == DynamicDataType.None ? string.Empty : "[0]"));
             Verify(expectedTestCase.Id != testCase.Id);
+            Verify(expectedId == testCase.Id);
+            Verify(Guid.TryParse(dataType == DynamicDataType.None ? "acd77ae5-d290-058e-2240-056ef4253f19" : "10fb34b8-d5d2-06a1-0620-918822cdc63a", out Guid expectedId2));
+            Verify(expectedId == expectedId2);
         }
 #pragma warning restore CA2263 // Prefer generic overload when type is known
     }
@@ -195,18 +203,21 @@ public class UnitTestElementTests : TestContainer
                 new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", null)
                 {
                     SerializedData = ["System.Int32[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089", "[]"],
+                    TestCaseIndex = 0,
                 })
             .ToTestCase(),
             new UnitTestElement(
                 new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", null)
                 {
                     SerializedData = ["System.Int32[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089", "[1]"],
+                    TestCaseIndex = 1,
                 })
             .ToTestCase(),
             new UnitTestElement(
                 new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", null)
                 {
                     SerializedData = ["System.Int32[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089", "[1,1]"],
+                    TestCaseIndex = 2,
                 })
             .ToTestCase()
         ];

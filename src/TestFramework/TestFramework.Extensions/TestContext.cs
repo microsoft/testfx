@@ -14,8 +14,6 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 public abstract class TestContext
 {
     internal static readonly string FullyQualifiedTestClassNameLabel = nameof(FullyQualifiedTestClassName);
-    internal static readonly string ManagedTypeLabel = nameof(ManagedType);
-    internal static readonly string ManagedMethodLabel = nameof(ManagedMethod);
     internal static readonly string TestNameLabel = nameof(TestName);
 #if WINDOWS_UWP || WIN_UI
     internal static readonly string TestRunDirectoryLabel = "TestRunDirectory";
@@ -103,28 +101,14 @@ public abstract class TestContext
     /// <summary>
     /// Gets the Fully-qualified name of the class containing the test method currently being executed.
     /// </summary>
-    /// <remarks>
-    /// This property can be useful in attributes derived from ExpectedExceptionBaseAttribute.
-    /// Those attributes have access to the test context, and provide messages that are included
-    /// in the test results. Users can benefit from messages that include the fully-qualified
-    /// class name in addition to the name of the test method currently being executed.
-    /// </remarks>
-    public virtual string? FullyQualifiedTestClassName => GetProperty<string>(FullyQualifiedTestClassNameLabel);
-
-    /// <summary>
-    /// Gets the fully specified type name metadata format.
-    /// </summary>
-    public virtual string? ManagedType => GetProperty<string>(ManagedTypeLabel);
-
-    /// <summary>
-    /// Gets the fully specified method name metadata format.
-    /// </summary>
-    public virtual string? ManagedMethod => GetProperty<string>(ManagedMethodLabel);
+    public virtual string FullyQualifiedTestClassName => GetProperty<string>(FullyQualifiedTestClassNameLabel)
+        ?? throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, FrameworkMessages.InvalidAccessToTestContextProperty, nameof(FullyQualifiedTestClassName)));
 
     /// <summary>
     /// Gets the name of the test method currently being executed.
     /// </summary>
-    public virtual string? TestName => GetProperty<string>(TestNameLabel);
+    public virtual string TestName => GetProperty<string>(TestNameLabel)
+        ?? throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, FrameworkMessages.InvalidAccessToTestContextProperty, nameof(TestName)));
 
     /// <summary>
     /// Gets the current test outcome.

@@ -136,6 +136,20 @@ public partial class AssertTests
         Verify(ex.Message == "Assert.ContainsSingle failed. Expected exactly one item to match the predicate but found 3 item(s). ");
     }
 
+    public void SinglePredicate_Message_WhenNoItemMatches_ShouldFail()
+    {
+        var collection = new List<int> { 1, 3, 5 };
+        Exception ex = VerifyThrows(() => Assert.ContainsSingle(x => x % 2 == 0, collection, "No even numbers found: test"));
+        Verify(ex.Message == "Assert.ContainsSingle failed. Expected exactly one item to match the predicate but found 0 item(s). No even numbers found: test");
+    }
+
+    public void SinglePredicate_Message_WhenMultipleItemsMatch_ShouldFail()
+    {
+        var collection = new List<int> { 2, 4, 6 };
+        Exception ex = VerifyThrows(() => Assert.ContainsSingle(x => x % 2 == 0, collection, "Too many even numbers: test"));
+        Verify(ex.Message == "Assert.ContainsSingle failed. Expected exactly one item to match the predicate but found 3 item(s). Too many even numbers: test");
+    }
+
     public void Any_WhenOneItem_ShouldPass()
     {
         var collection = new List<int> { 1 };

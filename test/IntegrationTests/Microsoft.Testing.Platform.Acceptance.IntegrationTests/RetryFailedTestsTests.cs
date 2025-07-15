@@ -28,7 +28,7 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
         string resultDirectory = Path.Combine(testHost.DirectoryName, Guid.NewGuid().ToString("N"));
         TestHostResult testHostResult = await testHost.ExecuteAsync(
-            $"--retry-failed-tests 3 --results-directory {resultDirectory}",
+            $"--retry-failed-tests 3 --results-directory {resultDirectory} --report-trx",
             new()
             {
                 { EnvironmentVariableConstants.TESTINGPLATFORM_TELEMETRY_OPTOUT, "1" },
@@ -43,6 +43,15 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
             testHostResult.AssertOutputContains("Tests suite completed successfully in 2 attempts");
             testHostResult.AssertOutputContains("Failed! -");
             testHostResult.AssertOutputContains("Passed! -");
+
+            string[] trxFiles = Directory.GetFiles(resultDirectory, "*.trx", SearchOption.AllDirectories);
+            Assert.AreEqual(2, trxFiles.Length);
+            string trxContents1 = File.ReadAllText(trxFiles[0]);
+            string trxContents2 = File.ReadAllText(trxFiles[1]);
+            Assert.AreNotEqual(trxContents1, trxContents2);
+            string id1 = Regex.Match(trxContents1, "<TestRun id=\"(.+?)\"").Groups[1].Value;
+            string id2 = Regex.Match(trxContents2, "<TestRun id=\"(.+?)\"").Groups[1].Value;
+            Assert.AreEqual(id1, id2);
         }
         else
         {

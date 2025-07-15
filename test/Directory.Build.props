@@ -11,7 +11,10 @@
     <PublishAot Condition=" '$(PublishAot)' == '' ">false</PublishAot>
     <!-- At the moment we don't run single file tests we should do it in integration/isolation -->
     <EnableSingleFileAnalyzer>false</EnableSingleFileAnalyzer>
-    <EnableCodeCoverage Condition=" '$(EnableCodeCoverage)' == '' ">true</EnableCodeCoverage>
+
+    <!-- Temporary setting to false until newer version of CC is released that addresses the breaking changes in v2. -->
+    <EnableCodeCoverage Condition=" '$(EnableCodeCoverage)' == '' ">false</EnableCodeCoverage>
+
     <DefineConstants Condition=" '$(PublishAot)' == 'true' ">$(DefineConstants);NATIVE_AOT</DefineConstants>
     <DefineConstants Condition=" '$(EnableCodeCoverage)' == 'True' ">$(DefineConstants);ENABLE_CODECOVERAGE</DefineConstants>
     <!-- Do not capture test output on CI to help community see errors -->

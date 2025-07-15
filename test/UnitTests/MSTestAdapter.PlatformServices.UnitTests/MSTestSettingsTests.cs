@@ -344,7 +344,7 @@ public class MSTestSettingsTests : TestContainer
         Verify(adapterSettings.TreatClassAndAssemblyCleanupWarningsAsErrors);
     }
 
-    public void TreatDiscoveryWarningsAsErrorsShouldBeFalseByDefault()
+    public void TreatDiscoveryWarningsAsErrorsShouldBeTrueByDefault()
     {
         string runSettingsXml =
             """
@@ -356,7 +356,7 @@ public class MSTestSettingsTests : TestContainer
 
         MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object)!;
 
-        Verify(!adapterSettings.TreatDiscoveryWarningsAsErrors);
+        Verify(adapterSettings.TreatDiscoveryWarningsAsErrors);
     }
 
     public void TreatDiscoveryWarningsAsErrorsShouldBeConsumedFromRunSettingsWhenSpecified()
@@ -1025,7 +1025,7 @@ public class MSTestSettingsTests : TestContainer
         Verify(!adapterSettings.MapInconclusiveToFailed);
         Verify(adapterSettings.MapNotRunnableToFailed);
         Verify(adapterSettings.EnableBaseClassTestMethodsFromOtherAssemblies);
-        Verify(!adapterSettings.TreatDiscoveryWarningsAsErrors);
+        Verify(adapterSettings.TreatDiscoveryWarningsAsErrors);
     }
 
     public void PopulateSettingsShouldInitializeDefaultSettingsWhenRunSettingsIsNull()
@@ -1037,7 +1037,7 @@ public class MSTestSettingsTests : TestContainer
         Verify(!adapterSettings.MapInconclusiveToFailed);
         Verify(adapterSettings.MapNotRunnableToFailed);
         Verify(adapterSettings.EnableBaseClassTestMethodsFromOtherAssemblies);
-        Verify(!adapterSettings.TreatDiscoveryWarningsAsErrors);
+        Verify(adapterSettings.TreatDiscoveryWarningsAsErrors);
     }
 
     public void PopulateSettingsShouldInitializeDefaultSettingsWhenRunSettingsXmlIsEmpty()
@@ -1050,7 +1050,7 @@ public class MSTestSettingsTests : TestContainer
         Verify(!adapterSettings.MapInconclusiveToFailed);
         Verify(adapterSettings.MapNotRunnableToFailed);
         Verify(adapterSettings.EnableBaseClassTestMethodsFromOtherAssemblies);
-        Verify(!adapterSettings.TreatDiscoveryWarningsAsErrors);
+        Verify(adapterSettings.TreatDiscoveryWarningsAsErrors);
     }
 
     public void PopulateSettingsShouldInitializeSettingsToDefaultIfNotSpecified()

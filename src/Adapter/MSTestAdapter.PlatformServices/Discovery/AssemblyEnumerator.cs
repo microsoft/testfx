@@ -269,13 +269,13 @@ internal class AssemblyEnumerator : MarshalByRefObject
         {
             ParameterInfo[] args = methodInfo.GetParameters();
             return args.Length > 0
-                ? $"{methodInfo.Name}({string.Join(",", args.Select(a => a.ParameterType.FullName))})"
+                ? $"{methodInfo.Name}({string.Join(',', args.Select(a => a.ParameterType.FullName))})"
                 : methodInfo.Name;
         }
 
         static UnitTestElement GetFixtureTest(string classFullName, string assemblyLocation, string fixtureType, string methodName, string[] hierarchy)
         {
-            var method = new TestMethod(classFullName, methodName, hierarchy, methodName, classFullName, assemblyLocation, null);
+            var method = new TestMethod(classFullName, methodName, hierarchy, methodName, classFullName, assemblyLocation, null, null);
             return new UnitTestElement(method)
             {
                 DisplayName = $"[{fixtureType}] {methodName}",
@@ -293,6 +293,19 @@ internal class AssemblyEnumerator : MarshalByRefObject
             return false;
         }
 
+        // If the global strategy is to fold and local uses Auto then return false
+        if (dataSourcesUnfoldingStrategy == TestDataSourceUnfoldingStrategy.Fold
+            && test.UnfoldingStrategy == TestDataSourceUnfoldingStrategy.Auto)
+        {
+            return false;
+        }
+
+        // If the data source specifies the unfolding strategy as fold then return false
+        if (test.UnfoldingStrategy == TestDataSourceUnfoldingStrategy.Fold)
+        {
+            return false;
+        }
+
         // We don't have a special method to filter attributes that are not derived from Attribute, so we take all
         // attributes and filter them. We don't have to care if there is one, because this method is only entered when
         // there is at least one (we determine this in TypeEnumerator.GetTestFromMethod.
@@ -304,10 +317,11 @@ internal class AssemblyEnumerator : MarshalByRefObject
         try
         {
             bool isDataDriven = false;
+            int globalTestCaseIndex = 0;
             foreach (ITestDataSource dataSource in testDataSources)
             {
                 isDataDriven = true;
-                if (!TryUnfoldITestDataSource(dataSource, dataSourcesUnfoldingStrategy, test, new(testMethodInfo.MethodInfo, test.DisplayName), tempListOfTests))
+                if (!TryUnfoldITestDataSource(dataSource, test, new(testMethodInfo.MethodInfo, test.DisplayName), tempListOfTests, ref globalTestCaseIndex))
                 {
                     // TODO: Improve multi-source design!
                     // Ideally we would want to consider each data source separately but when one source cannot be expanded,
@@ -337,23 +351,8 @@ internal class AssemblyEnumerator : MarshalByRefObject
         }
     }
 
-    private static bool TryUnfoldITestDataSource(ITestDataSource dataSource, TestDataSourceUnfoldingStrategy dataSourcesUnfoldingStrategy, UnitTestElement test, ReflectionTestMethodInfo methodInfo, List<UnitTestElement> tests)
+    private static bool TryUnfoldITestDataSource(ITestDataSource dataSource, UnitTestElement test, ReflectionTestMethodInfo methodInfo, List<UnitTestElement> tests, ref int globalTestCaseIndex)
     {
-        var unfoldingCapability = dataSource as ITestDataSourceUnfoldingCapability;
-
-        // If the global strategy is to fold and local has no strategy or uses Auto then return false
-        if (dataSourcesUnfoldingStrategy == TestDataSourceUnfoldingStrategy.Fold
-            && (unfoldingCapability is null || unfoldingCapability.UnfoldingStrategy == TestDataSourceUnfoldingStrategy.Auto))
-        {
-            return false;
-        }
-
-        // If the data source specifies the unfolding strategy as fold then return false
-        if (unfoldingCapability?.UnfoldingStrategy == TestDataSourceUnfoldingStrategy.Fold)
-        {
-            return false;
-        }
-
         // Otherwise, unfold the data source and verify it can be serialized.
         IEnumerable<object?[]>? data;
 
@@ -373,38 +372,62 @@ internal class AssemblyEnumerator : MarshalByRefObject
             // Make the test not data driven, because it had no data.
             discoveredTest.TestMethod.DataType = DynamicDataType.None;
             discoveredTest.TestMethod.TestDataSourceIgnoreMessage = testDataSourceIgnoreMessage;
-            discoveredTest.DisplayName = dataSource.GetDisplayName(methodInfo, null) ?? discoveredTest.DisplayName;
+            discoveredTest.DisplayName = dataSource.GetDisplayName(methodInfo, null)
+                ?? discoveredTest.DisplayName;
 
             tests.Add(discoveredTest);
 
             return true;
         }
 
-        var testDisplayNameFirstSeen = new Dictionary<string, int>();
         var discoveredTests = new List<UnitTestElement>();
-        int index = 0;
 
         foreach (object?[] dataOrTestDataRow in data)
         {
             object?[] d = dataOrTestDataRow;
-            if (TestDataSourceHelpers.TryHandleITestDataRow(d, methodInfo.GetParameters(), out d, out string? ignoreMessageFromTestDataRow, out string? displayNameFromTestDataRow))
+            ParameterInfo[] parameters = methodInfo.GetParameters();
+            if (TestDataSourceHelpers.TryHandleITestDataRow(d, parameters, out d, out string? ignoreMessageFromTestDataRow, out string? displayNameFromTestDataRow))
             {
                 testDataSourceIgnoreMessage = ignoreMessageFromTestDataRow ?? testDataSourceIgnoreMessage;
             }
+            else if (TestDataSourceHelpers.IsDataConsideredSingleArgumentValue(d, parameters))
+            {
+                // SPECIAL CASE:
+                // This condition is a duplicate of the condition in InvokeAsSynchronousTask.
+                //
+                // The known scenario we know of that shows importance of that check is if we have DynamicData using this member
+                //
+                // public static IEnumerable<object[]> GetData()
+                // {
+                //     yield return new object[] { ("Hello", "World") };
+                // }
+                //
+                // If the test method has a single parameter which is 'object[]', then we should pass the tuple array as is.
+                // Note that normally, the array in this code path represents the arguments of the test method.
+                // However, InvokeAsSynchronousTask uses the above check to mean "the whole array is the single argument to the test method"
+            }
+            else if (d?.Length == 1 && TestDataSourceHelpers.TryHandleTupleDataSource(d[0], parameters, out object?[] tupleExpandedToArray))
+            {
+                d = tupleExpandedToArray;
+            }
 
             UnitTestElement discoveredTest = test.Clone();
-            discoveredTest.DisplayName = displayNameFromTestDataRow ?? dataSource.GetDisplayName(methodInfo, d) ?? discoveredTest.DisplayName;
+            discoveredTest.DisplayName = displayNameFromTestDataRow
+                ?? dataSource.GetDisplayName(methodInfo, d)
+                ?? TestDataSourceUtilities.ComputeDefaultDisplayName(methodInfo, d)
+                ?? discoveredTest.DisplayName;
 
             try
             {
                 discoveredTest.TestMethod.SerializedData = DataSerializationHelper.Serialize(d);
                 discoveredTest.TestMethod.ActualData = d;
+                discoveredTest.TestMethod.TestCaseIndex = globalTestCaseIndex;
                 discoveredTest.TestMethod.TestDataSourceIgnoreMessage = testDataSourceIgnoreMessage;
                 discoveredTest.TestMethod.DataType = DynamicDataType.ITestDataSource;
             }
             catch (SerializationException ex)
             {
-                string warning = string.Format(CultureInfo.CurrentCulture, Resource.CannotExpandIDataSourceAttribute_CannotSerialize, index, discoveredTest.DisplayName);
+                string warning = string.Format(CultureInfo.CurrentCulture, Resource.CannotExpandIDataSourceAttribute_CannotSerialize, globalTestCaseIndex, discoveredTest.DisplayName);
                 warning += Environment.NewLine;
                 warning += ex.ToString();
                 warning = string.Format(CultureInfo.CurrentCulture, Resource.CannotExpandIDataSourceAttribute, test.TestMethod.ManagedTypeName, test.TestMethod.ManagedMethodName, warning);
@@ -415,7 +438,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
             }
 
             discoveredTests.Add(discoveredTest);
-            testDisplayNameFirstSeen[discoveredTest.DisplayName!] = index++;
+            globalTestCaseIndex++;
         }
 
         tests.AddRange(discoveredTests);

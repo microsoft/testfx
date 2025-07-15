@@ -39,7 +39,7 @@ public class TestMethodRunnerTests : TestContainer
         _testMethodAttribute = new TestMethodAttribute();
 
         _testMethod = new TestMethod("dummyTestName", "dummyClassName", "dummyAssemblyName", false);
-        _testContextImplementation = new TestContextImplementation(_testMethod, new Dictionary<string, object?>());
+        _testContextImplementation = new TestContextImplementation(_testMethod, null, new Dictionary<string, object?>());
         _testClassInfo = GetTestClassInfo<DummyTestClass>();
 
         _testMethodOptions = new TestMethodOptions(TimeoutInfo.FromTimeout(200), _testContextImplementation, _testMethodAttribute);
@@ -530,7 +530,7 @@ public class TestMethodRunnerTests : TestContainer
 
     public class DummyTestClassWithTestContextWithoutSetter
     {
-        public TestContext TestContext { get; } = null!;
+        public TestContext TestContext => null!;
     }
 
     public class DummyTestClassEmptyDataSource

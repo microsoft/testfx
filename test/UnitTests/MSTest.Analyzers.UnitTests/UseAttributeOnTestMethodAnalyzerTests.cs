@@ -16,18 +16,10 @@ public sealed class UseAttributeOnTestMethodAnalyzerTests
     [
         (UseAttributeOnTestMethodAnalyzer.OwnerRule, """Owner("owner")"""),
         (UseAttributeOnTestMethodAnalyzer.PriorityRule, "Priority(1)"),
+        (UseAttributeOnTestMethodAnalyzer.DescriptionRule, """Description("description")"""),
         (UseAttributeOnTestMethodAnalyzer.TestPropertyRule, """TestProperty("name", "value")"""),
         (UseAttributeOnTestMethodAnalyzer.WorkItemRule, "WorkItem(100)"),
-        (UseAttributeOnTestMethodAnalyzer.ExpectedExceptionRule, "ExpectedException(null)"),
-        (UseAttributeOnTestMethodAnalyzer.ExpectedExceptionRule, "MyExpectedException"),
     ];
-
-    private const string MyExpectedExceptionAttributeDeclaration = """
-        public class MyExpectedExceptionAttribute : ExpectedExceptionBaseAttribute
-        {
-            protected override void Verify(System.Exception exception) { }
-        }
-        """;
 
     internal static IEnumerable<(DiagnosticDescriptor Rule, string AttributeUsageExample)> GetAttributeUsageExampleAndRuleTuples()
         => RuleUsageExamples.Select(tuple => (tuple.Rule, tuple.AttributeUsageExample));
@@ -51,8 +43,6 @@ public sealed class UseAttributeOnTestMethodAnalyzerTests
         string code = $$"""
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-            {{MyExpectedExceptionAttributeDeclaration}}
-
             [TestClass]
             public class MyTestClass
             {
@@ -74,8 +64,6 @@ public sealed class UseAttributeOnTestMethodAnalyzerTests
         string code = $$"""
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-            {{MyExpectedExceptionAttributeDeclaration}}
-
             [TestClass]
             public class MyTestClass
             {
@@ -88,8 +76,6 @@ public sealed class UseAttributeOnTestMethodAnalyzerTests
 
         string fixedCode = $$"""
             using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-            {{MyExpectedExceptionAttributeDeclaration}}
 
             [TestClass]
             public class MyTestClass
@@ -116,8 +102,6 @@ public sealed class UseAttributeOnTestMethodAnalyzerTests
         string code = $$"""
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-            {{MyExpectedExceptionAttributeDeclaration}}
-
             [TestClass]
             public class MyTestClass
             {
@@ -131,8 +115,6 @@ public sealed class UseAttributeOnTestMethodAnalyzerTests
 
         string fixedCode = $$"""
             using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-            {{MyExpectedExceptionAttributeDeclaration}}
 
             [TestClass]
             public class MyTestClass
@@ -156,8 +138,6 @@ public sealed class UseAttributeOnTestMethodAnalyzerTests
         string code = $$"""
             using System;
             using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-            {{MyExpectedExceptionAttributeDeclaration}}
 
             [TestClass]
             public class MyTestClass

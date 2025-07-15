@@ -71,6 +71,26 @@ public sealed partial class Assert
             ? FrameworkMessages.Common_NullInMessages.ToString()
             : ReplaceNullChars(format);
 
+    private static string BuildUserMessageForSingleExpression(string? format, string callerArgExpression, string parameterName)
+    {
+        string userMessage = BuildUserMessage(format);
+        if (string.IsNullOrEmpty(callerArgExpression))
+        {
+            return userMessage;
+        }
+
+        string callerArgMessagePart = string.Format(CultureInfo.InvariantCulture, FrameworkMessages.CallerArgumentExpressionSingleParameterMessage, parameterName, callerArgExpression);
+        return string.IsNullOrEmpty(userMessage)
+            ? callerArgMessagePart
+            : $"{callerArgMessagePart} {userMessage}";
+    }
+
+    private static string BuildUserMessageForConditionExpression(string? format, string conditionExpression)
+        => BuildUserMessageForSingleExpression(format, conditionExpression, "condition");
+
+    private static string BuildUserMessageForValueExpression(string? format, string conditionExpression)
+        => BuildUserMessageForSingleExpression(format, conditionExpression, "value");
+
     /// <summary>
     /// Checks the parameter for valid conditions.
     /// </summary>

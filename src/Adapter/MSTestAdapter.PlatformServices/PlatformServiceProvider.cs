@@ -165,6 +165,9 @@ internal sealed class PlatformServiceProvider : IPlatformServiceProvider
     /// <param name="testMethod">
     /// The test method.
     /// </param>
+    /// <param name="testClassFullName">
+    /// The test class full name.
+    /// </param>
     /// <param name="properties">
     /// The default set of properties the test context needs to be filled with.
     /// </param>
@@ -176,9 +179,9 @@ internal sealed class PlatformServiceProvider : IPlatformServiceProvider
     /// <remarks>
     /// This was required for compatibility reasons since the TestContext object that the V1 adapter had for desktop is not .Net Core compliant.
     /// </remarks>
-    public ITestContext GetTestContext(ITestMethod testMethod, IDictionary<string, object?> properties, IMessageLogger messageLogger, UTF.UnitTestOutcome outcome)
+    public ITestContext GetTestContext(ITestMethod? testMethod, string? testClassFullName, IDictionary<string, object?> properties, IMessageLogger messageLogger, UTF.UnitTestOutcome outcome)
     {
-        var testContextImplementation = new TestContextImplementation(testMethod, properties, messageLogger, TestRunCancellationToken);
+        var testContextImplementation = new TestContextImplementation(testMethod, testClassFullName, properties, messageLogger, TestRunCancellationToken);
         testContextImplementation.SetOutcome(outcome);
         return testContextImplementation;
     }

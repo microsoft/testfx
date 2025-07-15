@@ -142,7 +142,7 @@ internal sealed class TestDataSource : ITestDataSource
         providerNameInvariant = ConfigurationManager.ConnectionStrings[element.ConnectionString].ProviderName;
         connectionString = ConfigurationManager.ConnectionStrings[element.ConnectionString].ConnectionString;
         tableName = element.DataTableName;
-        dataAccessMethod = EnumPolyfill.Parse<DataAccessMethod>(element.DataAccessMethod);
+        dataAccessMethod = Enum.Parse<DataAccessMethod>(element.DataAccessMethod);
     }
 #endif
 }

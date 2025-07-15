@@ -51,10 +51,10 @@ internal sealed class AzureDevOpsReporter :
     public Type[] DataTypesProduced { get; } = [typeof(SessionFileArtifact)];
 
     /// <inheritdoc />
-    public string Uid { get; } = nameof(AzureDevOpsReporter);
+    public string Uid => nameof(AzureDevOpsReporter);
 
     /// <inheritdoc />
-    public string Version { get; } = AppVersion.DefaultSemVer;
+    public string Version => AppVersion.DefaultSemVer;
 
     /// <inheritdoc />
     public string DisplayName { get; } = AzureDevOpsResources.DisplayName;
@@ -124,21 +124,21 @@ internal sealed class AzureDevOpsReporter :
         switch (nodeState)
         {
             case FailedTestNodeStateProperty failed:
-                await WriteExceptionAsync(failed.Explanation, failed.Exception).ConfigureAwait(false);
+                await WriteExceptionAsync(failed.Explanation, failed.Exception, cancellationToken).ConfigureAwait(false);
                 break;
             case ErrorTestNodeStateProperty error:
-                await WriteExceptionAsync(error.Explanation, error.Exception).ConfigureAwait(false);
+                await WriteExceptionAsync(error.Explanation, error.Exception, cancellationToken).ConfigureAwait(false);
                 break;
             case CancelledTestNodeStateProperty cancelled:
-                await WriteExceptionAsync(cancelled.Explanation, cancelled.Exception).ConfigureAwait(false);
+                await WriteExceptionAsync(cancelled.Explanation, cancelled.Exception, cancellationToken).ConfigureAwait(false);
                 break;
             case TimeoutTestNodeStateProperty timeout:
-                await WriteExceptionAsync(timeout.Explanation, timeout.Exception).ConfigureAwait(false);
+                await WriteExceptionAsync(timeout.Explanation, timeout.Exception, cancellationToken).ConfigureAwait(false);
                 break;
         }
     }
 
-    private async Task WriteExceptionAsync(string? explanation, Exception? exception)
+    private async Task WriteExceptionAsync(string? explanation, Exception? exception, CancellationToken cancellationToken)
     {
         if (_logger.IsEnabled(LogLevel.Trace))
         {
@@ -161,7 +161,7 @@ internal sealed class AzureDevOpsReporter :
             _logger.LogTrace($"Showing failure message '{line}'.");
         }
 
-        await _outputDisplay.DisplayAsync(this, new FormattedTextOutputDeviceData(line)).ConfigureAwait(false);
+        await _outputDisplay.DisplayAsync(this, new FormattedTextOutputDeviceData(line), cancellationToken).ConfigureAwait(false);
     }
 
     internal static /* for testing */ string? GetErrorText(string? explanation, Exception? exception, string severity, IFileSystem fileSystem, ILogger logger)

@@ -8,7 +8,6 @@ using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.IPC.Models;
 using Microsoft.Testing.Platform.Services;
-using Microsoft.Testing.Platform.TestHost;
 
 namespace Microsoft.Testing.Extensions.MSBuild;
 
@@ -46,14 +45,14 @@ internal sealed class MSBuildConsumer : IDataConsumer, ITestSessionLifetimeHandl
     public Task<bool> IsEnabledAsync()
         => Task.FromResult(_commandLineOptions.IsOptionSet(MSBuildConstants.MSBuildNodeOptionKey));
 
-    public Task OnTestSessionStartingAsync(SessionUid sessionUid, CancellationToken cancellationToken)
+    public Task OnTestSessionStartingAsync(ITestSessionContext testSessionContext)
     {
         // We get the pipe from the MSBuildTestApplicationLifecycleCallbacks only if we're enabled.
         _msBuildTestApplicationLifecycleCallbacks = _serviceProvider.GetRequiredService<MSBuildTestApplicationLifecycleCallbacks>();
         return Task.CompletedTask;
     }
 
-    public Task OnTestSessionFinishingAsync(SessionUid sessionUid, CancellationToken cancellationToken)
+    public Task OnTestSessionFinishingAsync(ITestSessionContext testSessionContext)
     {
         _sessionEnded = true;
         return Task.CompletedTask;

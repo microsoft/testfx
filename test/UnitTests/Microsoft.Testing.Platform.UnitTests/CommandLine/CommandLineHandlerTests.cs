@@ -205,8 +205,8 @@ public sealed class CommandLineHandlerTests
 
         // Assert
         Assert.IsTrue(result);
-        _outputDisplayMock.Verify(o => o.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>()), Times.Never);
-        _outputDisplayMock.Verify(o => o.DisplayBannerAsync(It.IsAny<string?>()), Times.Never);
+        _outputDisplayMock.Verify(o => o.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>(), It.IsAny<CancellationToken>()), Times.Never);
+        _outputDisplayMock.Verify(o => o.DisplayBannerAsync(It.IsAny<string?>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [TestMethod]
@@ -223,8 +223,8 @@ public sealed class CommandLineHandlerTests
 
         // Assert
         Assert.IsTrue(result);
-        _outputDisplayMock.Verify(o => o.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>()), Times.Never);
-        _outputDisplayMock.Verify(o => o.DisplayBannerAsync(It.IsAny<string?>()), Times.Never);
+        _outputDisplayMock.Verify(o => o.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>(), It.IsAny<CancellationToken>()), Times.Never);
+        _outputDisplayMock.Verify(o => o.DisplayBannerAsync(It.IsAny<string?>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [TestMethod]
@@ -241,8 +241,8 @@ public sealed class CommandLineHandlerTests
 
         // Assert
         Assert.IsTrue(result);
-        _outputDisplayMock.Verify(o => o.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>()), Times.Never);
-        _outputDisplayMock.Verify(o => o.DisplayBannerAsync(It.IsAny<string?>()), Times.Never);
+        _outputDisplayMock.Verify(o => o.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>(), It.IsAny<CancellationToken>()), Times.Never);
+        _outputDisplayMock.Verify(o => o.DisplayBannerAsync(It.IsAny<string?>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [TestMethod]
@@ -272,8 +272,8 @@ public sealed class CommandLineHandlerTests
         string[] args = [];
         CommandLineParseResult parseResult = CommandLineParser.Parse(args, new SystemEnvironment());
 
-        _outputDisplayMock.Setup(x => x.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>()))
-            .Callback((IOutputDeviceDataProducer message, IOutputDeviceData data) =>
+        _outputDisplayMock.Setup(x => x.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>(), It.IsAny<CancellationToken>()))
+            .Callback((IOutputDeviceDataProducer message, IOutputDeviceData data, CancellationToken _) =>
             {
                 Assert.IsTrue(((TextOutputDeviceData)data).Text.Contains("Invalid command line arguments:"));
                 Assert.IsTrue(((TextOutputDeviceData)data).Text.Contains("Unexpected argument"));
@@ -294,16 +294,16 @@ public sealed class CommandLineHandlerTests
     {
         public const string HelpOption = "help";
 
-        public string Uid { get; } = nameof(PlatformCommandLineProvider);
+        public string Uid => nameof(PlatformCommandLineProvider);
 
         /// <inheritdoc />
-        public string Version { get; } = AppVersion.DefaultSemVer;
+        public string Version => AppVersion.DefaultSemVer;
 
         /// <inheritdoc />
-        public string DisplayName { get; } = "Microsoft Testing Platform command line provider";
+        public string DisplayName => "Microsoft Testing Platform command line provider";
 
         /// <inheritdoc />
-        public string Description { get; } = "Built-in command line provider";
+        public string Description => "Built-in command line provider";
 
         /// <inheritdoc />
         public Task<bool> IsEnabledAsync() => Task.FromResult(true);
@@ -322,16 +322,16 @@ public sealed class CommandLineHandlerTests
     {
         public const string Option = "option";
 
-        public string Uid { get; } = nameof(PlatformCommandLineProvider);
+        public string Uid => nameof(PlatformCommandLineProvider);
 
         /// <inheritdoc />
-        public string Version { get; } = AppVersion.DefaultSemVer;
+        public string Version => AppVersion.DefaultSemVer;
 
         /// <inheritdoc />
-        public string DisplayName { get; } = "Microsoft Testing Platform command line provider";
+        public string DisplayName => "Microsoft Testing Platform command line provider";
 
         /// <inheritdoc />
-        public string Description { get; } = "Built-in command line provider";
+        public string Description => "Built-in command line provider";
 
         /// <inheritdoc />
         public Task<bool> IsEnabledAsync() => Task.FromResult(true);
@@ -352,16 +352,16 @@ public sealed class CommandLineHandlerTests
 
         public ExtensionCommandLineProviderMockInvalidConfiguration(string optionName = "option") => _option = optionName;
 
-        public string Uid { get; } = nameof(PlatformCommandLineProvider);
+        public string Uid => nameof(PlatformCommandLineProvider);
 
         /// <inheritdoc />
-        public string Version { get; } = AppVersion.DefaultSemVer;
+        public string Version => AppVersion.DefaultSemVer;
 
         /// <inheritdoc />
-        public string DisplayName { get; } = "Microsoft Testing Platform command line provider";
+        public string DisplayName => "Microsoft Testing Platform command line provider";
 
         /// <inheritdoc />
-        public string Description { get; } = "Built-in command line provider";
+        public string Description => "Built-in command line provider";
 
         /// <inheritdoc />
         public Task<bool> IsEnabledAsync() => Task.FromResult(true);

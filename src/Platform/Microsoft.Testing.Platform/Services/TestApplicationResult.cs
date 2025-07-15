@@ -36,10 +36,10 @@ internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, I
     }
 
     /// <inheritdoc />
-    public string Uid { get; } = nameof(TestApplicationResult);
+    public string Uid => nameof(TestApplicationResult);
 
     /// <inheritdoc />
-    public string Version { get; } = AppVersion.DefaultSemVer;
+    public string Version => AppVersion.DefaultSemVer;
 
     /// <inheritdoc />
     public string DisplayName { get; } = PlatformResources.TestApplicationResultDisplayName;
@@ -121,11 +121,11 @@ internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, I
         return exitCode;
     }
 
-    public async Task SetTestAdapterTestSessionFailureAsync(string errorMessage)
+    public async Task SetTestAdapterTestSessionFailureAsync(string errorMessage, CancellationToken cancellationToken)
     {
         TestAdapterTestSessionFailureErrorMessage = errorMessage;
         _testAdapterTestSessionFailure = true;
-        await _outputService.DisplayAsync(this, new ErrorMessageOutputDeviceData(errorMessage)).ConfigureAwait(false);
+        await _outputService.DisplayAsync(this, new ErrorMessageOutputDeviceData(errorMessage), cancellationToken).ConfigureAwait(false);
     }
 
     public Statistics GetStatistics()

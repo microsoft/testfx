@@ -72,6 +72,11 @@
         <target state="translated">Konstruktor durch TestInitialize-Methode ersetzen</target>
         <note />
       </trans-unit>
+      <trans-unit id="StringAssertToAssertTitle">
+        <source>Use 'Assert.{0}' instead of 'StringAssert'</source>
+        <target state="translated">Verwenden Sie „Assert.{0}“ anstelle von „StringAssert“.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TestClassShouldBeValidFix">
         <source>Fix test class signature</source>
         <target state="translated">Testklassensignatur korrigieren</target>
@@ -99,7 +104,7 @@
       </trans-unit>
       <trans-unit id="UseCooperativeCancellationForTimeoutFix">
         <source>Use 'CooperativeCancellation = true'</source>
-        <target state="new">Use 'CooperativeCancellation = true'</target>
+        <target state="translated">Verwenden Sie „CooperativeCancellation = true“.</target>
         <note />
       </trans-unit>
       <trans-unit id="UseNewerAssertThrows">

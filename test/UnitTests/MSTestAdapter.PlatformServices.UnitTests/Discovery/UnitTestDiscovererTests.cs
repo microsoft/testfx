@@ -262,7 +262,7 @@ internal sealed class TestableTestCaseFilterExpression : ITestCaseFilterExpressi
 
     public TestableTestCaseFilterExpression(Func<TestCase, bool> matchTestCase) => _matchTest = matchTestCase;
 
-    public string TestCaseFilterValue { get; } = null!;
+    public string TestCaseFilterValue => null!;
 
     public bool MatchTestCase(TestCase testCase, Func<string, object?> propertyValueProvider) => _matchTest(testCase);
 }

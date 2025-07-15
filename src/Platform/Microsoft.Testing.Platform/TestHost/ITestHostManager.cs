@@ -14,8 +14,8 @@ public interface ITestHostManager
     /// <summary>
     /// Adds a test application lifecycle callbacks.
     /// </summary>
-    /// <param name="testApplicationLifecycleCallbacks">The factory method for creating the test application lifecycle callbacks.</param>
-    void AddTestApplicationLifecycleCallbacks(Func<IServiceProvider, ITestApplicationLifecycleCallbacks> testApplicationLifecycleCallbacks);
+    /// <param name="testHostApplicationLifetimeFactory">The factory method for creating the test host application lifetime callbacks.</param>
+    void AddTestHostApplicationLifetime(Func<IServiceProvider, ITestHostApplicationLifetime> testHostApplicationLifetimeFactory);
 
     /// <summary>
     /// Adds a data consumer.

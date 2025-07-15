@@ -5,8 +5,8 @@
   <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" Condition=" '$(OS)' != 'Windows_NT' " />
 
   <PropertyGroup>
-    <TargetFrameworks Condition=" '$(OS)' == 'Windows_NT' ">netstandard2.0;$(NetFrameworkMinimum);$(SupportedNetFrameworks);$(UwpMinimum)</TargetFrameworks>
-    <TargetFrameworks Condition=" '$(OS)' != 'Windows_NT' ">$(SupportedNetFrameworks);netstandard2.0</TargetFrameworks>
+    <TargetFrameworks Condition=" '$(OS)' == 'Windows_NT' ">$(NetFrameworkMinimum);$(SupportedNetFrameworks);$(UwpMinimum)</TargetFrameworks>
+    <TargetFrameworks Condition=" '$(OS)' != 'Windows_NT' ">$(SupportedNetFrameworks)</TargetFrameworks>
 
     <!--
       warning NETSDK1023: A PackageReference for 'Microsoft.NET.Test.Sdk' was included in your project. This package
@@ -27,9 +27,8 @@
 
       Supported platforms:
       - .NET 4.6.2+
-      - .NET Core 3.1+
-      - .NET 6.0+
-      - .NET 6.0 Windows.18362+
+      - .NET 8.0+
+      - .NET 8.0 Windows.18362+ (WinUI)
       - UWP 10.0.16299
       - UWP 10.0.17763 with .NET 9+
     </PackageDescription>
@@ -49,9 +48,7 @@
     <ProjectReference Include="$(RepoRoot)src\Analyzers\MSTest.Analyzers.Package\MSTest.Analyzers.Package.csproj" />
     <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.TrxReport\Microsoft.Testing.Extensions.TrxReport.csproj" Condition=" '$(TargetFramework)' != '$(UwpMinimum)' " />
 
-    <!-- CodeCoverage 17.14 doesn't support netcoreapp3.1. -->
-    <!-- We end up having System.Collections.Immutable 8.0.0 which is not compatible with netcoreapp3.1 -->
-    <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" Condition="'$(TargetFramework)' != 'netcoreapp3.1'" />
+    <!-- TODO: Add Microsoft.Testing.Extensions.CodeCoverage back once a new version for MTP v2 is released -->
   </ItemGroup>
 
   <ItemGroup>

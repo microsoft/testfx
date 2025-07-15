@@ -11,7 +11,6 @@ using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.OutputDevice.Terminal;
 using Microsoft.Testing.Platform.Resources;
 using Microsoft.Testing.Platform.Services;
-using Microsoft.Testing.Platform.TestHost;
 using Microsoft.Testing.Platform.TestHostControllers;
 
 namespace Microsoft.Testing.Platform.OutputDevice;
@@ -30,6 +29,8 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
 #pragma warning disable SA1310 // Field names should not contain underscore
     private const string TESTINGPLATFORM_CONSOLEOUTPUTDEVICE_SKIP_BANNER = nameof(TESTINGPLATFORM_CONSOLEOUTPUTDEVICE_SKIP_BANNER);
 #pragma warning restore SA1310 // Field names should not contain underscore
+
+    private const char Dash = '-';
 
     private readonly IConsole _console;
     private readonly ITestHostControllerInfo _testHostControllerInfo;
@@ -51,7 +52,6 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
     // The targeted framework, .NET 8 when application specifies <TargetFramework>net8.0</TargetFramework>
     private readonly string? _targetFramework;
     private readonly string _assemblyName;
-    private readonly char[] _dash = ['-'];
 
     private TerminalTestReporter? _terminalTestReporter;
     private bool _firstCallTo_OnSessionStartingAsync = true;
@@ -87,7 +87,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
 #else
             // RID has the operating system, we want to see that in the banner, but not next to every dll.
             _longArchitecture = RuntimeInformation.RuntimeIdentifier;
-            _shortArchitecture = GetShortArchitecture(RuntimeInformation.RuntimeIdentifier);
+            _shortArchitecture = TerminalOutputDevice.GetShortArchitecture(RuntimeInformation.RuntimeIdentifier);
 #endif
             _runtimeFramework = TargetFrameworkParser.GetShortTargetFramework(RuntimeInformation.FrameworkDescription);
             _targetFramework = TargetFrameworkParser.GetShortTargetFramework(Assembly.GetEntryAssembly()?.GetCustomAttribute<TargetFrameworkAttribute>()?.FrameworkDisplayName) ?? _runtimeFramework;
@@ -164,9 +164,9 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
         });
     }
 
-    private string GetShortArchitecture(string runtimeIdentifier)
-        => runtimeIdentifier.Contains('-')
-            ? runtimeIdentifier.Split(_dash, 2)[1]
+    private static string GetShortArchitecture(string runtimeIdentifier)
+        => runtimeIdentifier.Contains(Dash)
+            ? runtimeIdentifier.Split(Dash, 2)[1]
             : runtimeIdentifier;
 
     public Type[] DataTypesConsumed { get; } =
@@ -177,16 +177,16 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
     ];
 
     /// <inheritdoc />
-    public string Uid { get; } = nameof(TerminalOutputDevice);
+    public string Uid => nameof(TerminalOutputDevice);
 
     /// <inheritdoc />
-    public string Version { get; } = AppVersion.DefaultSemVer;
+    public string Version => AppVersion.DefaultSemVer;
 
     /// <inheritdoc />
-    public string DisplayName { get; } = "Test Platform Console Service";
+    public string DisplayName => "Test Platform Console Service";
 
     /// <inheritdoc />
-    public string Description { get; } = "Test Platform default console service";
+    public string Description => "Test Platform default console service";
 
     /// <inheritdoc />
     public Task<bool> IsEnabledAsync() => Task.FromResult(true);
@@ -199,7 +199,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
         }
     }
 
-    public async Task DisplayBannerAsync(string? bannerMessage)
+    public async Task DisplayBannerAsync(string? bannerMessage, CancellationToken cancellationToken)
     {
         RoslynDebug.Assert(_terminalTestReporter is not null);
 
@@ -262,10 +262,10 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
         }
     }
 
-    public async Task DisplayBeforeHotReloadSessionStartAsync()
-        => await DisplayBeforeSessionStartAsync().ConfigureAwait(false);
+    public async Task DisplayBeforeHotReloadSessionStartAsync(CancellationToken cancellationToken)
+        => await DisplayBeforeSessionStartAsync(cancellationToken).ConfigureAwait(false);
 
-    public async Task DisplayBeforeSessionStartAsync()
+    public async Task DisplayBeforeSessionStartAsync(CancellationToken cancellationToken)
     {
         if (_isServerMode)
         {
@@ -284,10 +284,10 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
         }
     }
 
-    public async Task DisplayAfterHotReloadSessionEndAsync()
+    public async Task DisplayAfterHotReloadSessionEndAsync(CancellationToken cancellationToken)
         => await DisplayAfterSessionEndRunInternalAsync().ConfigureAwait(false);
 
-    public async Task DisplayAfterSessionEndRunAsync()
+    public async Task DisplayAfterSessionEndRunAsync(CancellationToken cancellationToken)
     {
         if (_isServerMode)
         {
@@ -318,11 +318,11 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
         }
     }
 
-    public Task OnTestSessionFinishingAsync(SessionUid sessionUid, CancellationToken cancellationToken) => Task.CompletedTask;
+    public Task OnTestSessionFinishingAsync(ITestSessionContext testSessionContext) => Task.CompletedTask;
 
-    public Task OnTestSessionStartingAsync(SessionUid sessionUid, CancellationToken cancellationToken)
+    public Task OnTestSessionStartingAsync(ITestSessionContext testSessionContext)
     {
-        if (_isServerMode || cancellationToken.IsCancellationRequested)
+        if (_isServerMode || testSessionContext.CancellationToken.IsCancellationRequested)
         {
             return Task.CompletedTask;
         }
@@ -343,7 +343,8 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
     /// </summary>
     /// <param name="producer">The producer that sent the data.</param>
     /// <param name="data">The data to be displayed.</param>
-    public async Task DisplayAsync(IOutputDeviceDataProducer producer, IOutputDeviceData data)
+    /// <param name="cancellationToken">The cancellation token.</param>
+    public async Task DisplayAsync(IOutputDeviceDataProducer producer, IOutputDeviceData data, CancellationToken cancellationToken)
     {
         RoslynDebug.Assert(_terminalTestReporter is not null);
 
@@ -573,13 +574,13 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
     public void Dispose()
         => _terminalTestReporter?.Dispose();
 
-    public async Task HandleProcessRoleAsync(TestProcessRole processRole)
+    public async Task HandleProcessRoleAsync(TestProcessRole processRole, CancellationToken cancellationToken)
     {
         if (processRole == TestProcessRole.TestHost)
         {
             await _policiesService.RegisterOnMaxFailedTestsCallbackAsync(
                 async (maxFailedTests, _) => await DisplayAsync(
-                    this, new TextOutputDeviceData(string.Format(CultureInfo.InvariantCulture, PlatformResources.ReachedMaxFailedTestsMessage, maxFailedTests))).ConfigureAwait(false)).ConfigureAwait(false);
+                    this, new TextOutputDeviceData(string.Format(CultureInfo.InvariantCulture, PlatformResources.ReachedMaxFailedTestsMessage, maxFailedTests)), cancellationToken).ConfigureAwait(false)).ConfigureAwait(false);
         }
     }
 }

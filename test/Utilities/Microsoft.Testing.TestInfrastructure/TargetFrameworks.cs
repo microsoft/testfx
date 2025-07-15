@@ -10,8 +10,6 @@ public static class TargetFrameworks
         "net9.0",
 #if !SKIP_INTERMEDIATE_TARGET_FRAMEWORKS
         "net8.0",
-        "net7.0",
-        "net6.0",
 #endif
     ];
 
@@ -31,5 +29,5 @@ public static class TargetFrameworks
         All.Select(tfm => new object[] { tfm });
 
     public static string ToMSBuildTargetFrameworks(this string[] targetFrameworksEntries)
-        => string.Join(";", targetFrameworksEntries);
+        => string.Join(';', targetFrameworksEntries);
 }

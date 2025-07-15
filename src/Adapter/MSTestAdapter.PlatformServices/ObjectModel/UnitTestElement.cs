@@ -1,7 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.TestPlatform.AdapterUtilities;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
@@ -16,6 +15,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 [DebuggerDisplay("{GetDisplayName()} ({TestMethod.ManagedTypeName})")]
 internal sealed class UnitTestElement
 {
+    private static readonly byte[] OpenParen = [40, 0]; // Encoding.Unicode.GetBytes("(");
+    private static readonly byte[] CloseParen = [41, 0]; // Encoding.Unicode.GetBytes(")");
+    private static readonly byte[] OpenBracket = [91, 0]; // Encoding.Unicode.GetBytes("[");
+    private static readonly byte[] CloseBracket = [93, 0]; // Encoding.Unicode.GetBytes("]");
+
     /// <summary>
     /// Initializes a new instance of the <see cref="UnitTestElement"/> class.
     /// </summary>
@@ -33,6 +37,8 @@ internal sealed class UnitTestElement
     /// Gets the test method which should be executed as part of this test case.
     /// </summary>
     public TestMethod TestMethod { get; private set; }
+
+    public TestDataSourceUnfoldingStrategy UnfoldingStrategy { get; set; } = TestDataSourceUnfoldingStrategy.Auto;
 
     /// <summary>
     /// Gets or sets the test categories for test method.
@@ -113,6 +119,11 @@ internal sealed class UnitTestElement
             testCase.SetPropertyValue(EngineConstants.TestClassNameProperty, TestMethod.FullClassName);
         }
 
+        if (TestMethod.ParameterTypes is not null)
+        {
+            testCase.SetPropertyValue(EngineConstants.ParameterTypesProperty, TestMethod.ParameterTypes);
+        }
+
         IReadOnlyCollection<string?> hierarchy = TestMethod.Hierarchy;
         if (hierarchy is { Count: > 0 })
         {
@@ -159,6 +170,11 @@ internal sealed class UnitTestElement
             testCase.SetPropertyValue(EngineConstants.DoNotParallelizeProperty, DoNotParallelize);
         }
 
+        if (UnfoldingStrategy != TestDataSourceUnfoldingStrategy.Auto)
+        {
+            testCase.SetPropertyValue(EngineConstants.UnfoldingStrategy, (int)UnfoldingStrategy);
+        }
+
         // Store resolved data if any
         if (TestMethod.DataType != DynamicDataType.None)
         {
@@ -166,6 +182,7 @@ internal sealed class UnitTestElement
 
             testCase.SetPropertyValue(EngineConstants.TestDynamicDataTypeProperty, (int)TestMethod.DataType);
             testCase.SetPropertyValue(EngineConstants.TestDynamicDataProperty, data);
+            testCase.SetPropertyValue(EngineConstants.TestCaseIndexProperty, TestMethod.TestCaseIndex);
             // VSTest serialization doesn't handle null so instead don't set the property so that it's deserialized as null
             if (TestMethod.TestDataSourceIgnoreMessage is not null)
             {
@@ -184,10 +201,14 @@ internal sealed class UnitTestElement
     private void SetTestCaseId(TestCase testCase, string testFullName)
         => testCase.Id = GenerateSerializedDataStrategyTestId(testFullName);
 
+    internal static Guid GuidFromString(string data)
+    {
+        byte[] hash = TestFx.Hashing.XxHash128.Hash(Encoding.Unicode.GetBytes(data));
+        return new Guid(hash);
+    }
+
     private Guid GenerateSerializedDataStrategyTestId(string testFullName)
     {
-        var idProvider = new TestIdProvider();
-
         // Below comment is copied over from Test Platform.
         // If source is a file name then just use the filename for the identifier since the file might have moved between
         // discovery and execution (in appx mode for example). This is not elegant because the Source contents should be
@@ -208,18 +229,24 @@ internal sealed class UnitTestElement
             // In case path contains invalid characters.
         }
 
-        idProvider.AppendString(fileNameOrFilePath);
-        idProvider.AppendString(testFullName);
+        var hash = new TestFx.Hashing.XxHash128();
+        hash.Append(Encoding.Unicode.GetBytes(fileNameOrFilePath));
+        hash.Append(Encoding.Unicode.GetBytes(testFullName));
+        if (TestMethod.ParameterTypes is not null)
+        {
+            hash.Append(OpenParen);
+            hash.Append(Encoding.Unicode.GetBytes(TestMethod.ParameterTypes));
+            hash.Append(CloseParen);
+        }
 
         if (TestMethod.SerializedData != null)
         {
-            foreach (string? item in TestMethod.SerializedData)
-            {
-                idProvider.AppendString(item ?? "null");
-            }
+            hash.Append(OpenBracket);
+            hash.Append(Encoding.Unicode.GetBytes(TestMethod.TestCaseIndex.ToString(CultureInfo.InvariantCulture)));
+            hash.Append(CloseBracket);
         }
 
-        return idProvider.GetId();
+        return new Guid(hash.GetCurrentHash());
     }
 
     private string GetDisplayName() => StringEx.IsNullOrWhiteSpace(DisplayName) ? TestMethod.Name : DisplayName;
