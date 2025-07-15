@@ -533,8 +533,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
                             _assemblyName,
                             _targetFramework,
                             _shortArchitecture,
-                            testNodeStateChanged.TestNode.DisplayName,
-                            testNodeStateChanged.TestNode.Uid);
+                            testNodeStateChanged.TestNode.DisplayName);
                         break;
                 }
 
