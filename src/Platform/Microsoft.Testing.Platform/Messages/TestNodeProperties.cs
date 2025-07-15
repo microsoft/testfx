@@ -11,15 +11,35 @@ public interface IProperty;
 /// <summary>
 /// Base class for test node state properties.
 /// </summary>
-/// <param name="Explanation">Textual explanation of the node state.</param>
-public abstract record TestNodeStateProperty(string? Explanation) : IProperty;
+public abstract class TestNodeStateProperty : IProperty
+{
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TestNodeStateProperty"/> class.
+    /// </summary>
+    /// <param name="explanation">Textual explanation of the node state.</param>
+    protected TestNodeStateProperty(string? explanation)
+        => Explanation = explanation;
+
+    /// <summary>
+    /// Gets the textual explanation of the node state.
+    /// </summary>
+    public string? Explanation { get; }
+}
 
 /// <summary>
 /// Property that represents test node that has been discovered.
 /// </summary>
-/// <param name="Explanation">Textual explanation of the node.</param>
-public sealed record DiscoveredTestNodeStateProperty(string? Explanation = null) : TestNodeStateProperty(Explanation)
+public sealed class DiscoveredTestNodeStateProperty : TestNodeStateProperty
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="DiscoveredTestNodeStateProperty"/> class.
+    /// </summary>
+    /// <param name="explanation">Textual explanation of the node.</param>
+    public DiscoveredTestNodeStateProperty(string? explanation = null)
+        : base(explanation)
+    {
+    }
+
     /// <summary>
     /// Gets cached instance of the <see cref="DiscoveredTestNodeStateProperty"/>.
     /// </summary>
@@ -29,9 +49,17 @@ public sealed record DiscoveredTestNodeStateProperty(string? Explanation = null)
 /// <summary>
 /// Property that represents a test node that is being executed.
 /// </summary>
-/// <param name="Explanation">Textual explanation of the node.</param>
-public sealed record InProgressTestNodeStateProperty(string? Explanation = null) : TestNodeStateProperty(Explanation)
+public sealed class InProgressTestNodeStateProperty : TestNodeStateProperty
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="InProgressTestNodeStateProperty"/> class.
+    /// </summary>
+    /// <param name="explanation">Textual explanation of the node.</param>
+    public InProgressTestNodeStateProperty(string? explanation = null)
+        : base(explanation)
+    {
+    }
+
     /// <summary>
     /// Gets cached instance of the <see cref="InProgressTestNodeStateProperty"/>.
     /// </summary>
@@ -41,9 +69,17 @@ public sealed record InProgressTestNodeStateProperty(string? Explanation = null)
 /// <summary>
 /// Property that represents a test node that has been executed and passed.
 /// </summary>
-/// <param name="Explanation">Textual explanation of the node.</param>
-public sealed record PassedTestNodeStateProperty(string? Explanation = null) : TestNodeStateProperty(Explanation)
+public sealed class PassedTestNodeStateProperty : TestNodeStateProperty
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="PassedTestNodeStateProperty"/> class.
+    /// </summary>
+    /// <param name="explanation">Textual explanation of the node.</param>
+    public PassedTestNodeStateProperty(string? explanation = null)
+        : base(explanation)
+    {
+    }
+
     /// <summary>
     /// Gets the cached instance of the <see cref="PassedTestNodeStateProperty"/> property.
     /// </summary>
@@ -53,9 +89,17 @@ public sealed record PassedTestNodeStateProperty(string? Explanation = null) : T
 /// <summary>
 /// Property that represents a test node that has been skipped.
 /// </summary>
-/// <param name="Explanation">Textual explanation of the node.</param>
-public sealed record SkippedTestNodeStateProperty(string? Explanation = null) : TestNodeStateProperty(Explanation)
+public sealed class SkippedTestNodeStateProperty : TestNodeStateProperty
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SkippedTestNodeStateProperty"/> class.
+    /// </summary>
+    /// <param name="explanation">Textual explanation of the node.</param>
+    public SkippedTestNodeStateProperty(string? explanation = null)
+        : base(explanation)
+    {
+    }
+
     /// <summary>
     /// Gets the cached instance of the <see cref="SkippedTestNodeStateProperty"/> property.
     /// </summary>
@@ -65,13 +109,13 @@ public sealed record SkippedTestNodeStateProperty(string? Explanation = null) : 
 /// <summary>
 /// Property that represents a test node that has been failed.
 /// </summary>
-public sealed record FailedTestNodeStateProperty : TestNodeStateProperty
+public sealed class FailedTestNodeStateProperty : TestNodeStateProperty
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="FailedTestNodeStateProperty"/> class.
     /// </summary>
     public FailedTestNodeStateProperty()
-        : base(default(string))
+        : base(default)
     {
     }
 
@@ -101,13 +145,13 @@ public sealed record FailedTestNodeStateProperty : TestNodeStateProperty
 /// <summary>
 /// Property that represents an eventual error in the test node.
 /// </summary>
-public sealed record ErrorTestNodeStateProperty : TestNodeStateProperty
+public sealed class ErrorTestNodeStateProperty : TestNodeStateProperty
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="ErrorTestNodeStateProperty"/> class.
     /// </summary>
     public ErrorTestNodeStateProperty()
-        : base(default(string))
+        : base(default)
     {
     }
 
@@ -137,13 +181,13 @@ public sealed record ErrorTestNodeStateProperty : TestNodeStateProperty
 /// <summary>
 /// Property that represents an eventual timeout in the test node.
 /// </summary>
-public sealed record TimeoutTestNodeStateProperty : TestNodeStateProperty
+public sealed class TimeoutTestNodeStateProperty : TestNodeStateProperty
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="TimeoutTestNodeStateProperty"/> class.
     /// </summary>
     public TimeoutTestNodeStateProperty()
-        : base(default(string))
+        : base(default)
     {
     }
 
@@ -178,13 +222,13 @@ public sealed record TimeoutTestNodeStateProperty : TestNodeStateProperty
 /// <summary>
 /// Property that represents an eventual cancellation of a test node.
 /// </summary>
-public sealed record CancelledTestNodeStateProperty : TestNodeStateProperty
+public sealed class CancelledTestNodeStateProperty : TestNodeStateProperty
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="CancelledTestNodeStateProperty"/> class.
     /// </summary>
     public CancelledTestNodeStateProperty()
-        : base(default(string))
+        : base(default)
     {
     }
 
@@ -214,38 +258,90 @@ public sealed record CancelledTestNodeStateProperty : TestNodeStateProperty
 /// <summary>
 /// Information about the timing of a test node.
 /// </summary>
-/// <param name="StartTime">Test start time.</param>
-/// <param name="EndTime">Test end time.</param>
-/// <param name="Duration">Total test duration.</param>
-public readonly record struct TimingInfo(DateTimeOffset StartTime, DateTimeOffset EndTime, TimeSpan Duration);
+public readonly struct TimingInfo
+{
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TimingInfo"/> struct.
+    /// </summary>
+    /// <param name="startTime">Test start time.</param>
+    /// <param name="endTime">Test end time.</param>
+    /// <param name="duration">Total test duration.</param>
+    public TimingInfo(DateTimeOffset startTime, DateTimeOffset endTime, TimeSpan duration)
+    {
+        StartTime = startTime;
+        EndTime = endTime;
+        Duration = duration;
+    }
+
+    /// <summary>
+    /// Gets the test start time.
+    /// </summary>
+    public DateTimeOffset StartTime { get; }
+
+    /// <summary>
+    /// Gets the test end time.
+    /// </summary>
+    public DateTimeOffset EndTime { get; }
+
+    /// <summary>
+    /// Gets the total test duration.
+    /// </summary>
+    public TimeSpan Duration { get; }
+}
 
 /// <summary>
 /// Information about the timing of a test node step.
 /// </summary>
-/// <param name="Id">Step identifier.</param>
-/// <param name="Description">Step description.</param>
-/// <param name="Timing">Step timing info.</param>
-public sealed record StepTimingInfo(string Id, string Description, TimingInfo Timing);
+public sealed class StepTimingInfo
+{
+    /// <summary>
+    /// Initializes a new instance of the <see cref="StepTimingInfo"/> class.
+    /// </summary>
+    /// <param name="id">Step identifier.</param>
+    /// <param name="description">Step description.</param>
+    /// <param name="timing">Step timing info.</param>
+    public StepTimingInfo(string id, string description, TimingInfo timing)
+    {
+        Id = id;
+        Description = description;
+        Timing = timing;
+    }
+
+    /// <summary>
+    /// Gets the step identifier.
+    /// </summary>
+    public string Id { get; }
+
+    /// <summary>
+    /// Gets the step description.
+    /// </summary>
+    public string Description { get; }
+
+    /// <summary>
+    /// Gets the step timing info.
+    /// </summary>
+    public TimingInfo Timing { get; }
+}
 
 /// <summary>
 /// Property that represents the timing of a test node.
 /// </summary>
-public sealed record TimingProperty : IProperty
+public sealed class TimingProperty : IProperty
 {
     /// <summary>
-    /// Initializes a new instance of the <see cref="TimingProperty"/> class.
+    /// Initializes a new instance of the <see cref="TimingProperty"/> class with only global timing.
     /// </summary>
-    /// <param name="globalTiming">Timing info.</param>
+    /// <param name="globalTiming">The global timing information.</param>
     public TimingProperty(TimingInfo globalTiming)
         : this(globalTiming, [])
     {
     }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="TimingProperty"/> class.
+    /// Initializes a new instance of the <see cref="TimingProperty"/> class with global and step timings.
     /// </summary>
-    /// <param name="globalTiming">Timing info.</param>
-    /// <param name="stepTimings">Steps timing.</param>
+    /// <param name="globalTiming">The global timing information.</param>
+    /// <param name="stepTimings">The step timing information.</param>
     public TimingProperty(TimingInfo globalTiming, StepTimingInfo[] stepTimings)
     {
         GlobalTiming = globalTiming;
@@ -253,127 +349,299 @@ public sealed record TimingProperty : IProperty
     }
 
     /// <summary>
-    /// Gets the global timing info.
+    /// Gets the global timing information.
     /// </summary>
     public TimingInfo GlobalTiming { get; }
 
     /// <summary>
-    /// Gets the steps timing info.
+    /// Gets the step timing information.
     /// </summary>
     public StepTimingInfo[] StepTimings { get; }
-
-    [SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "https://github.com/dotnet/roslyn/issues/52421")]
-    private bool PrintMembers(StringBuilder builder)
-    {
-        builder.Append("GlobalTiming = ");
-        builder.Append(GlobalTiming);
-        builder.Append(", StepTimings = [");
-        builder.AppendJoin(", ", StepTimings.Select(x => x.ToString()));
-        builder.Append(']');
-        return true;
-    }
 }
 
 /// <summary>
 /// Line position in a file.
 /// </summary>
-/// <param name="Line">Line number.</param>
-/// <param name="Column">Column number.</param>
-public record struct LinePosition(int Line, int Column);
+public readonly struct LinePosition
+{
+    /// <summary>
+    /// Initializes a new instance of the <see cref="LinePosition"/> struct.
+    /// </summary>
+    /// <param name="line">Line number.</param>
+    /// <param name="column">Column number.</param>
+    public LinePosition(int line, int column)
+    {
+        Line = line;
+        Column = column;
+    }
+
+    /// <summary>
+    /// Gets the line number.
+    /// </summary>
+    public int Line { get; }
+
+    /// <summary>
+    /// Gets the column number.
+    /// </summary>
+    public int Column { get; }
+}
 
 /// <summary>
 /// Line position span in a file.
 /// </summary>
-/// <param name="Start">Start line position.</param>
-/// <param name="End">End line position.</param>
-public record struct LinePositionSpan(LinePosition Start, LinePosition End);
+public readonly struct LinePositionSpan
+{
+    /// <summary>
+    /// Initializes a new instance of the <see cref="LinePositionSpan"/> struct.
+    /// </summary>
+    /// <param name="start">Start line position.</param>
+    /// <param name="end">End line position.</param>
+    public LinePositionSpan(LinePosition start, LinePosition end)
+    {
+        Start = start;
+        End = end;
+    }
+
+    /// <summary>
+    /// Gets the start line position.
+    /// </summary>
+    public LinePosition Start { get; }
+
+    /// <summary>
+    /// Gets the end line position.
+    /// </summary>
+    public LinePosition End { get; }
+}
 
 /// <summary>
 /// Base property that represents a file location.
 /// </summary>
-/// <param name="FilePath">File path.</param>
-/// <param name="LineSpan">Line position.</param>
-public abstract record FileLocationProperty(string FilePath, LinePositionSpan LineSpan) : IProperty;
+public abstract class FileLocationProperty : IProperty
+{
+    /// <summary>
+    /// Initializes a new instance of the <see cref="FileLocationProperty"/> class.
+    /// </summary>
+    /// <param name="filePath">File path.</param>
+    /// <param name="lineSpan">Line position.</param>
+    protected FileLocationProperty(string filePath, LinePositionSpan lineSpan)
+    {
+        FilePath = filePath;
+        LineSpan = lineSpan;
+    }
+
+    /// <summary>
+    /// Gets the file path.
+    /// </summary>
+    public string FilePath { get; }
+
+    /// <summary>
+    /// Gets the line position span.
+    /// </summary>
+    public LinePositionSpan LineSpan { get; }
+}
 
 /// <summary>
 /// Property that represents a file location for a test node.
 /// </summary>
-/// <param name="FilePath">File path.</param>
-/// <param name="LineSpan">Line position.</param>
-public sealed record TestFileLocationProperty(string FilePath, LinePositionSpan LineSpan) : FileLocationProperty(FilePath, LineSpan);
-
-/// <summary>
-/// Property that uniquely identifies a test method. Values are ECMA-335 compliant.
-/// </summary>
-/// <param name="AssemblyFullName">Assembly full name.</param>
-/// <param name="Namespace">Namespace.</param>
-/// <param name="TypeName">Type name in metadata format, not including the namespace. Generics are represented by backtick followed by arity. Nested types are represented by <c>+</c>.</param>
-/// <param name="MethodName">Method name in metadata format. This is simply the method name, it doesn't include backtick followed by arity.</param>
-/// <param name="MethodArity">The number of generic parameters of the method.</param>
-/// <param name="ParameterTypeFullNames">Parameter type full names in metadata format.</param>
-/// <param name="ReturnTypeFullName">Return type full name in metadata format.</param>
-public sealed record TestMethodIdentifierProperty(string AssemblyFullName, string Namespace, string TypeName, string MethodName, int MethodArity, string[] ParameterTypeFullNames, string ReturnTypeFullName) : IProperty
+public sealed class TestFileLocationProperty : FileLocationProperty
 {
-    [SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "https://github.com/dotnet/roslyn/issues/52421")]
-    private bool PrintMembers(StringBuilder builder)
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TestFileLocationProperty"/> class.
+    /// </summary>
+    /// <param name="filePath">File path.</param>
+    /// <param name="lineSpan">Line position.</param>
+    public TestFileLocationProperty(string filePath, LinePositionSpan lineSpan)
+        : base(filePath, lineSpan)
     {
-        builder.Append("AssemblyFullName = ");
-        builder.Append(AssemblyFullName);
-        builder.Append(", Namespace = ");
-        builder.Append(Namespace);
-        builder.Append(", TypeName = ");
-        builder.Append(TypeName);
-        builder.Append(", MethodName = ");
-        builder.Append(MethodName);
-        builder.Append(", MethodArity = ");
-        builder.Append(MethodArity);
-        builder.Append(", ParameterTypeFullNames = [");
-        builder.AppendJoin(", ", ParameterTypeFullNames);
-        builder.Append("], ReturnTypeFullName = ");
-        builder.Append(ReturnTypeFullName);
-        return true;
     }
 }
 
 /// <summary>
-/// Initializes a new instance of the <see cref="TestMetadataProperty"/> class.
-/// Property that represents a generic test metadata property in the shape of a key-value pair associated with a <see cref="TestNode"/>.
+/// Property that uniquely identifies a test method. Values are ECMA-335 compliant.
 /// </summary>
-/// <param name="Key">The metadata key.</param>
-/// <param name="Value">The metadata value.</param>
-public sealed record TestMetadataProperty(string Key, string Value) : IProperty
+public sealed class TestMethodIdentifierProperty : IProperty
 {
     /// <summary>
-    /// Initializes a new instance of the <see cref="TestMetadataProperty"/> class.
-    /// Property that represents a generic test metadata property in the shape of a value associated with a <see cref="TestNode"/>.
+    /// Initializes a new instance of the <see cref="TestMethodIdentifierProperty"/> class.
+    /// </summary>
+    /// <param name="assemblyFullName">Assembly full name.</param>
+    /// <param name="namespace">Namespace.</param>
+    /// <param name="typeName">Type name in metadata format, not including the namespace. Generics are represented by backtick followed by arity. Nested types are represented by <c>+</c>.</param>
+    /// <param name="methodName">Method name in metadata format. This is simply the method name, it doesn't include backtick followed by arity.</param>
+    /// <param name="methodArity">The number of generic parameters of the method.</param>
+    /// <param name="parameterTypeFullNames">Parameter type full names in metadata format.</param>
+    /// <param name="returnTypeFullName">Return type full name in metadata format.</param>
+    public TestMethodIdentifierProperty(
+        string assemblyFullName,
+        string @namespace,
+        string typeName,
+        string methodName,
+        int methodArity,
+        string[] parameterTypeFullNames,
+        string returnTypeFullName)
+    {
+        AssemblyFullName = assemblyFullName;
+        Namespace = @namespace;
+        TypeName = typeName;
+        MethodName = methodName;
+        MethodArity = methodArity;
+        ParameterTypeFullNames = parameterTypeFullNames;
+        ReturnTypeFullName = returnTypeFullName;
+    }
+
+    /// <summary>
+    /// Gets the assembly full name.
+    /// </summary>
+    public string AssemblyFullName { get; }
+
+    /// <summary>
+    /// Gets the namespace.
+    /// </summary>
+    public string Namespace { get; }
+
+    /// <summary>
+    /// Gets the type name in metadata format, not including the namespace.
+    /// </summary>
+    public string TypeName { get; }
+
+    /// <summary>
+    /// Gets the method name in metadata format.
+    /// </summary>
+    public string MethodName { get; }
+
+    /// <summary>
+    /// Gets the number of generic parameters of the method.
+    /// </summary>
+    public int MethodArity { get; }
+
+    /// <summary>
+    /// Gets the parameter type full names in metadata format.
+    /// </summary>
+    public string[] ParameterTypeFullNames { get; }
+
+    /// <summary>
+    /// Gets the return type full name in metadata format.
+    /// </summary>
+    public string ReturnTypeFullName { get; }
+}
+
+/// <summary>
+/// Property that represents a generic test metadata property in the shape of a key-value pair associated with a <see cref="TestNode"/>.
+/// </summary>
+public sealed class TestMetadataProperty : IProperty
+{
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TestMetadataProperty"/> class with a key and value.
+    /// </summary>
+    /// <param name="key">The metadata key.</param>
+    /// <param name="value">The metadata value.</param>
+    public TestMetadataProperty(string key, string value)
+    {
+        Key = key;
+        Value = value;
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TestMetadataProperty"/> class with a key and an empty value.
     /// </summary>
     /// <param name="key">The metadata key.</param>
     public TestMetadataProperty(string key)
         : this(key, string.Empty)
     {
     }
+
+    /// <summary>
+    /// Gets the metadata key.
+    /// </summary>
+    public string Key { get; }
+
+    /// <summary>
+    /// Gets the metadata value.
+    /// </summary>
+    public string Value { get; }
 }
 
 /// <summary>
 /// Property that represents standard output to associate with a test node.
 /// </summary>
-/// <param name="StandardOutput">The standard output.</param>
 [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
-public record StandardOutputProperty(string StandardOutput) : IProperty;
+public class StandardOutputProperty : IProperty
+{
+    /// <summary>
+    /// Initializes a new instance of the <see cref="StandardOutputProperty"/> class.
+    /// </summary>
+    /// <param name="standardOutput">The standard output.</param>
+    public StandardOutputProperty(string standardOutput)
+        => StandardOutput = standardOutput;
+
+    /// <summary>
+    /// Gets the standard output.
+    /// </summary>
+    public string StandardOutput { get; }
+}
 
 /// <summary>
 /// Property that represents standard error to associate with a test node.
 /// </summary>
-/// <param name="StandardError">The standard error.</param>
 [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
-public record StandardErrorProperty(string StandardError) : IProperty;
+public class StandardErrorProperty : IProperty
+{
+    /// <summary>
+    /// Initializes a new instance of the <see cref="StandardErrorProperty"/> class.
+    /// </summary>
+    /// <param name="standardError">The standard error.</param>
+    public StandardErrorProperty(string standardError)
+        => StandardError = standardError;
+
+    /// <summary>
+    /// Gets the standard error.
+    /// </summary>
+    public string StandardError { get; }
+}
 
 /// <summary>
 /// Property that represents multiple artifacts/attachments to associate with a test node.
 /// </summary>
-/// <param name="FileInfo">The file information.</param>
-/// <param name="DisplayName">The display name.</param>
-/// <param name="Description">The description.</param>
-public record FileArtifactProperty(FileInfo FileInfo, string DisplayName, string? Description = null) : IProperty;
+public class FileArtifactProperty : IProperty
+{
+    /// <summary>
+    /// Initializes a new instance of the <see cref="FileArtifactProperty"/> class.
+    /// </summary>
+    /// <param name="fileInfo">The file information.</param>
+    /// <param name="displayName">The display name.</param>
+    /// <param name="description">The description.</param>
+    public FileArtifactProperty(FileInfo fileInfo, string displayName, string? description = null)
+    {
+        FileInfo = fileInfo;
+        DisplayName = displayName;
+        Description = description;
+    }
 
-internal sealed record SerializableKeyValuePairStringProperty(string Key, string Value) : IProperty;
+    /// <summary>
+    /// Gets the file information.
+    /// </summary>
+    public FileInfo FileInfo { get; }
+
+    /// <summary>
+    /// Gets the display name.
+    /// </summary>
+    public string DisplayName { get; }
+
+    /// <summary>
+    /// Gets the description.
+    /// </summary>
+    public string? Description { get; }
+}
+
+internal sealed class SerializableKeyValuePairStringProperty : IProperty
+{
+    public SerializableKeyValuePairStringProperty(string key, string value)
+    {
+        Key = key;
+        Value = value;
+    }
+
+    public string Key { get; }
+
+    public string Value { get; }
+}
