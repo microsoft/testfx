@@ -162,7 +162,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
             UseCIAnsi = inCI,
             ShowActiveTests = true,
             ShowProgress = shouldShowProgress,
-        });
+        }, _policiesService);
     }
 
     private static string GetShortArchitecture(string runtimeIdentifier)
