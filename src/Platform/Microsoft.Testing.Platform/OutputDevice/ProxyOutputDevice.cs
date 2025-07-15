@@ -19,39 +19,39 @@ internal sealed class ProxyOutputDevice : IOutputDevice
 
     internal IPlatformOutputDevice OriginalOutputDevice { get; }
 
-    public async Task DisplayAsync(IOutputDeviceDataProducer producer, IOutputDeviceData data)
+    public async Task DisplayAsync(IOutputDeviceDataProducer producer, IOutputDeviceData data, CancellationToken cancellationToken)
     {
-        await OriginalOutputDevice.DisplayAsync(producer, data).ConfigureAwait(false);
+        await OriginalOutputDevice.DisplayAsync(producer, data, cancellationToken).ConfigureAwait(false);
         if (_serverModeOutputDevice is not null)
         {
-            await _serverModeOutputDevice.DisplayAsync(producer, data).ConfigureAwait(false);
+            await _serverModeOutputDevice.DisplayAsync(producer, data, cancellationToken).ConfigureAwait(false);
         }
     }
 
-    internal async Task DisplayBannerAsync(string? bannerMessage)
+    internal async Task DisplayBannerAsync(string? bannerMessage, CancellationToken cancellationToken)
     {
-        await OriginalOutputDevice.DisplayBannerAsync(bannerMessage).ConfigureAwait(false);
+        await OriginalOutputDevice.DisplayBannerAsync(bannerMessage, cancellationToken).ConfigureAwait(false);
         if (_serverModeOutputDevice is not null)
         {
-            await _serverModeOutputDevice.DisplayBannerAsync(bannerMessage).ConfigureAwait(false);
+            await _serverModeOutputDevice.DisplayBannerAsync(bannerMessage, cancellationToken).ConfigureAwait(false);
         }
     }
 
-    internal async Task DisplayBeforeSessionStartAsync()
+    internal async Task DisplayBeforeSessionStartAsync(CancellationToken cancellationToken)
     {
-        await OriginalOutputDevice.DisplayBeforeSessionStartAsync().ConfigureAwait(false);
+        await OriginalOutputDevice.DisplayBeforeSessionStartAsync(cancellationToken).ConfigureAwait(false);
         if (_serverModeOutputDevice is not null)
         {
-            await _serverModeOutputDevice.DisplayBeforeSessionStartAsync().ConfigureAwait(false);
+            await _serverModeOutputDevice.DisplayBeforeSessionStartAsync(cancellationToken).ConfigureAwait(false);
         }
     }
 
-    internal async Task DisplayAfterSessionEndRunAsync()
+    internal async Task DisplayAfterSessionEndRunAsync(CancellationToken cancellationToken)
     {
-        await OriginalOutputDevice.DisplayAfterSessionEndRunAsync().ConfigureAwait(false);
+        await OriginalOutputDevice.DisplayAfterSessionEndRunAsync(cancellationToken).ConfigureAwait(false);
         if (_serverModeOutputDevice is not null)
         {
-            await _serverModeOutputDevice.DisplayAfterSessionEndRunAsync().ConfigureAwait(false);
+            await _serverModeOutputDevice.DisplayAfterSessionEndRunAsync(cancellationToken).ConfigureAwait(false);
         }
     }
 
@@ -63,12 +63,12 @@ internal sealed class ProxyOutputDevice : IOutputDevice
         }
     }
 
-    internal async Task HandleProcessRoleAsync(TestProcessRole processRole)
+    internal async Task HandleProcessRoleAsync(TestProcessRole processRole, CancellationToken cancellationToken)
     {
-        await OriginalOutputDevice.HandleProcessRoleAsync(processRole).ConfigureAwait(false);
+        await OriginalOutputDevice.HandleProcessRoleAsync(processRole, cancellationToken).ConfigureAwait(false);
         if (_serverModeOutputDevice is not null)
         {
-            await _serverModeOutputDevice.HandleProcessRoleAsync(processRole).ConfigureAwait(false);
+            await _serverModeOutputDevice.HandleProcessRoleAsync(processRole, cancellationToken).ConfigureAwait(false);
         }
     }
 }

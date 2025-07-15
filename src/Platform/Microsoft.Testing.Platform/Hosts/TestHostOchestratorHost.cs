@@ -32,7 +32,7 @@ internal sealed class TestHostOrchestratorHost(TestHostOrchestratorConfiguration
                 await orchestratorLifetime.BeforeRunAsync(applicationCancellationToken.CancellationToken).ConfigureAwait(false);
             }
 
-            exitCode = await testHostOrchestrator.OrchestrateTestHostExecutionAsync().ConfigureAwait(false);
+            exitCode = await testHostOrchestrator.OrchestrateTestHostExecutionAsync(applicationCancellationToken.CancellationToken).ConfigureAwait(false);
 
             foreach (ITestHostOrchestratorApplicationLifetime orchestratorLifetime in _serviceProvider.GetServicesInternal<ITestHostOrchestratorApplicationLifetime>())
             {

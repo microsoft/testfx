@@ -46,6 +46,20 @@ public sealed class UseAttributeOnTestMethodAnalyzer : DiagnosticAnalyzer
         DiagnosticSeverity.Warning,
         isEnabledByDefault: true);
 
+    private const string DescriptionAttributeShortName = "Description";
+
+    /// <inheritdoc cref="Resources.UseAttributeOnTestMethodAnalyzerTitle" />
+    public static readonly DiagnosticDescriptor DescriptionRule = DiagnosticDescriptorHelper.Create(
+        DiagnosticIds.UseAttributeOnTestMethodRuleId,
+        title: new LocalizableResourceString(
+            nameof(Resources.UseAttributeOnTestMethodAnalyzerTitle), Resources.ResourceManager, typeof(Resources), DescriptionAttributeShortName),
+        messageFormat: new LocalizableResourceString(
+            nameof(Resources.UseAttributeOnTestMethodAnalyzerMessageFormat), Resources.ResourceManager, typeof(Resources), DescriptionAttributeShortName),
+        description: null,
+        Category.Usage,
+        DiagnosticSeverity.Warning,
+        isEnabledByDefault: true);
+
     private const string TestPropertyAttributeShortName = "TestProperty";
 
     /// <inheritdoc cref="Resources.UseAttributeOnTestMethodAnalyzerTitle" />
@@ -89,12 +103,13 @@ public sealed class UseAttributeOnTestMethodAnalyzer : DiagnosticAnalyzer
         isEnabledByDefault: true);
 
     // IMPORTANT: Remember to add any new rule to the rule tuple.
-    // IMPORTANT: The order is important. For example, Owner is also TestProperty. We report the first violation and then bail-out.
-    //            It may be a better idea to consolidate OwnerRule, PriorityRule, and TestPropertyRule into a single rule.
+    // IMPORTANT: The order is important. For example, Owner, Priority, and Description are also TestProperty. We report the first violation and then bail-out.
+    //            It may be a better idea to consolidate OwnerRule, PriorityRule, DescriptionRule, and TestPropertyRule into a single rule.
     private static readonly List<(string AttributeFullyQualifiedName, DiagnosticDescriptor Rule)> RuleTuples =
     [
         (WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingOwnerAttribute, OwnerRule),
         (WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingPriorityAttribute, PriorityRule),
+        (WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingDescriptionAttribute, DescriptionRule),
         (WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestPropertyAttribute, TestPropertyRule),
         (WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingWorkItemAttribute, WorkItemRule),
         (WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingConditionBaseAttribute, ConditionBaseRule),
@@ -105,6 +120,7 @@ public sealed class UseAttributeOnTestMethodAnalyzer : DiagnosticAnalyzer
         ImmutableArray.Create(
             OwnerRule,
             PriorityRule,
+            DescriptionRule,
             TestPropertyRule,
             WorkItemRule);
 
