@@ -27,6 +27,21 @@ public sealed class TrxExceptionProperty : IProperty
     /// Gets the exception stack trace.
     /// </summary>
     public string StackTrace { get; }
+
+    /// <inheritdoc />
+    public override string ToString()
+    {
+        var builder = new StringBuilder();
+        builder.Append(nameof(TrxExceptionProperty));
+        builder.Append(" { ");
+        builder.Append($"{nameof(Message)} = ");
+        builder.Append(Message);
+        builder.Append($"{nameof(StackTrace)} = ");
+        builder.Append(StackTrace);
+
+        builder.Append(" }");
+        return builder.ToString();
+    }
 }
 
 /// <summary>
@@ -45,6 +60,18 @@ public sealed class TrxFullyQualifiedTypeNameProperty : IProperty
     /// Gets the fully qualified type name.
     /// </summary>
     public string FullyQualifiedTypeName { get; }
+
+    /// <inheritdoc />
+    public override string ToString()
+    {
+        var builder = new StringBuilder();
+        builder.Append(nameof(TrxFullyQualifiedTypeNameProperty));
+        builder.Append(" { ");
+        builder.Append($"{nameof(FullyQualifiedTypeName)} = ");
+        builder.Append(FullyQualifiedTypeName);
+        builder.Append(" }");
+        return builder.ToString();
+    }
 }
 
 /// <summary>
@@ -78,6 +105,18 @@ public sealed class StandardErrorTrxMessage : TrxMessage
         : base(message)
     {
     }
+
+    /// <inheritdoc />
+    public override string ToString()
+    {
+        var builder = new StringBuilder();
+        builder.Append(nameof(StandardErrorTrxMessage));
+        builder.Append(" { ");
+        builder.Append($"{nameof(Message)} = ");
+        builder.Append(Message);
+        builder.Append(" }");
+        return builder.ToString();
+    }
 }
 
 /// <summary>
@@ -93,6 +132,18 @@ public sealed class StandardOutputTrxMessage : TrxMessage
         : base(message)
     {
     }
+
+    /// <inheritdoc />
+    public override string ToString()
+    {
+        var builder = new StringBuilder();
+        builder.Append(nameof(StandardOutputTrxMessage));
+        builder.Append(" { ");
+        builder.Append($"{nameof(Message)} = ");
+        builder.Append(Message);
+        builder.Append(" }");
+        return builder.ToString();
+    }
 }
 
 /// <summary>
@@ -107,6 +158,18 @@ public sealed class DebugOrTraceTrxMessage : TrxMessage
     public DebugOrTraceTrxMessage(string? message)
         : base(message)
     {
+    }
+
+    /// <inheritdoc />
+    public override string ToString()
+    {
+        var builder = new StringBuilder();
+        builder.Append(nameof(DebugOrTraceTrxMessage));
+        builder.Append(" { ");
+        builder.Append($"{nameof(Message)} = ");
+        builder.Append(Message);
+        builder.Append(" }");
+        return builder.ToString();
     }
 }
 
@@ -126,6 +189,20 @@ public sealed class TrxMessagesProperty : IProperty
     /// Gets the TRX message properties.
     /// </summary>
     public TrxMessage[] Messages { get; }
+
+    /// <inheritdoc />
+    public override string ToString()
+    {
+        var builder = new StringBuilder();
+        builder.Append(nameof(DebugOrTraceTrxMessage));
+        builder.Append(" { ");
+
+        builder.Append("Messages = [");
+        builder.AppendJoin(", ", Messages.Select(x => x.ToString()));
+        builder.Append(']');
+        builder.Append(" }");
+        return builder.ToString();
+    }
 }
 
 /// <summary>
@@ -144,4 +221,17 @@ public sealed class TrxCategoriesProperty : IProperty
     /// Gets the categories.
     /// </summary>
     public string[] Categories { get; }
+
+    /// <inheritdoc />
+    public override string ToString()
+    {
+        var builder = new StringBuilder();
+        builder.Append(nameof(DebugOrTraceTrxMessage));
+        builder.Append(" { ");
+        builder.Append("Categories = [");
+        builder.AppendJoin(", ", Categories);
+        builder.Append(']');
+        builder.Append(" }");
+        return builder.ToString();
+    }
 }

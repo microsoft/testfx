@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Data.Common;
+
 namespace Microsoft.Testing.Platform.Extensions.Messages;
 
 /// <summary>
@@ -24,6 +26,23 @@ public abstract class TestNodeStateProperty : IProperty
     /// Gets the textual explanation of the node state.
     /// </summary>
     public string? Explanation { get; }
+
+    private protected virtual void PrintMembers(StringBuilder builder)
+    {
+        builder.Append($"{nameof(Explanation)} = ");
+        builder.Append(Explanation);
+    }
+
+    /// <inheritdoc />
+    public override string ToString()
+    {
+        var builder = new StringBuilder();
+        builder.Append(nameof(TestNodeStateProperty));
+        builder.Append(" { ");
+        PrintMembers(builder);
+        builder.Append(" }");
+        return builder.ToString();
+    }
 }
 
 /// <summary>
@@ -44,6 +63,17 @@ public sealed class DiscoveredTestNodeStateProperty : TestNodeStateProperty
     /// Gets cached instance of the <see cref="DiscoveredTestNodeStateProperty"/>.
     /// </summary>
     public static DiscoveredTestNodeStateProperty CachedInstance { get; } = new DiscoveredTestNodeStateProperty();
+
+    /// <inheritdoc />
+    public override string ToString()
+    {
+        var builder = new StringBuilder();
+        builder.Append(nameof(DiscoveredTestNodeStateProperty));
+        builder.Append(" { ");
+        PrintMembers(builder);
+        builder.Append(" }");
+        return builder.ToString();
+    }
 }
 
 /// <summary>
@@ -64,6 +94,17 @@ public sealed class InProgressTestNodeStateProperty : TestNodeStateProperty
     /// Gets cached instance of the <see cref="InProgressTestNodeStateProperty"/>.
     /// </summary>
     public static InProgressTestNodeStateProperty CachedInstance { get; } = new InProgressTestNodeStateProperty();
+
+    /// <inheritdoc />
+    public override string ToString()
+    {
+        var builder = new StringBuilder();
+        builder.Append(nameof(InProgressTestNodeStateProperty));
+        builder.Append(" { ");
+        PrintMembers(builder);
+        builder.Append(" }");
+        return builder.ToString();
+    }
 }
 
 /// <summary>
@@ -84,6 +125,17 @@ public sealed class PassedTestNodeStateProperty : TestNodeStateProperty
     /// Gets the cached instance of the <see cref="PassedTestNodeStateProperty"/> property.
     /// </summary>
     public static PassedTestNodeStateProperty CachedInstance { get; } = new PassedTestNodeStateProperty();
+
+    /// <inheritdoc />
+    public override string ToString()
+    {
+        var builder = new StringBuilder();
+        builder.Append(nameof(PassedTestNodeStateProperty));
+        builder.Append(" { ");
+        PrintMembers(builder);
+        builder.Append(" }");
+        return builder.ToString();
+    }
 }
 
 /// <summary>
@@ -104,6 +156,17 @@ public sealed class SkippedTestNodeStateProperty : TestNodeStateProperty
     /// Gets the cached instance of the <see cref="SkippedTestNodeStateProperty"/> property.
     /// </summary>
     public static SkippedTestNodeStateProperty CachedInstance { get; } = new SkippedTestNodeStateProperty();
+
+    /// <inheritdoc />
+    public override string ToString()
+    {
+        var builder = new StringBuilder();
+        builder.Append(nameof(SkippedTestNodeStateProperty));
+        builder.Append(" { ");
+        PrintMembers(builder);
+        builder.Append(" }");
+        return builder.ToString();
+    }
 }
 
 /// <summary>
@@ -140,6 +203,25 @@ public sealed class FailedTestNodeStateProperty : TestNodeStateProperty
     /// Gets the failure exception.
     /// </summary>
     public Exception? Exception { get; }
+
+    /// <inheritdoc />
+    public override string ToString()
+    {
+        var builder = new StringBuilder();
+        builder.Append(nameof(FailedTestNodeStateProperty));
+        builder.Append(" { ");
+        PrintMembers(builder);
+        builder.Append(" }");
+        return builder.ToString();
+    }
+
+    private protected override void PrintMembers(StringBuilder builder)
+    {
+        base.PrintMembers(builder);
+        builder.Append(", ");
+        builder.Append($"{nameof(Exception)} = ");
+        builder.Append(Exception);
+    }
 }
 
 /// <summary>
@@ -176,6 +258,25 @@ public sealed class ErrorTestNodeStateProperty : TestNodeStateProperty
     /// Gets the error exception.
     /// </summary>
     public Exception? Exception { get; }
+
+    /// <inheritdoc />
+    public override string ToString()
+    {
+        var builder = new StringBuilder();
+        builder.Append(nameof(ErrorTestNodeStateProperty));
+        builder.Append(" { ");
+        PrintMembers(builder);
+        builder.Append(" }");
+        return builder.ToString();
+    }
+
+    private protected override void PrintMembers(StringBuilder builder)
+    {
+        base.PrintMembers(builder);
+        builder.Append(", ");
+        builder.Append($"{nameof(Exception)} = ");
+        builder.Append(Exception);
+    }
 }
 
 /// <summary>
@@ -217,6 +318,26 @@ public sealed class TimeoutTestNodeStateProperty : TestNodeStateProperty
     /// Gets get the timeout Timespan.
     /// </summary>
     public TimeSpan? Timeout { get; init; }
+
+    /// <inheritdoc />
+    public override string ToString()
+    {
+        var builder = new StringBuilder();
+        builder.Append(nameof(TimeoutTestNodeStateProperty));
+        builder.Append(" { ");
+        PrintMembers(builder);
+        builder.Append(" }");
+        return builder.ToString();
+    }
+
+    private protected override void PrintMembers(StringBuilder builder)
+    {
+        base.PrintMembers(builder);
+        builder.Append($", {nameof(Exception)} = ");
+        builder.Append(Exception);
+        builder.Append($", {nameof(Timeout)} = ");
+        builder.Append(Timeout);
+    }
 }
 
 /// <summary>
@@ -253,6 +374,25 @@ public sealed class CancelledTestNodeStateProperty : TestNodeStateProperty
     /// Gets the cancellation exception.
     /// </summary>
     public Exception? Exception { get; }
+
+    /// <inheritdoc />
+    public override string ToString()
+    {
+        var builder = new StringBuilder();
+        builder.Append(nameof(CancelledTestNodeStateProperty));
+        builder.Append(" { ");
+        PrintMembers(builder);
+        builder.Append(" }");
+        return builder.ToString();
+    }
+
+    private protected override void PrintMembers(StringBuilder builder)
+    {
+        base.PrintMembers(builder);
+        builder.Append(", ");
+        builder.Append($"{nameof(Exception)} = ");
+        builder.Append(Exception);
+    }
 }
 
 /// <summary>
@@ -287,6 +427,21 @@ public readonly struct TimingInfo
     /// Gets the total test duration.
     /// </summary>
     public TimeSpan Duration { get; }
+
+    /// <inheritdoc />
+    public override string ToString()
+    {
+        var builder = new StringBuilder();
+        builder.Append("TimingInfo { ");
+        builder.Append("StartTime = ");
+        builder.Append(StartTime);
+        builder.Append(", EndTime = ");
+        builder.Append(EndTime);
+        builder.Append(", Duration = ");
+        builder.Append(Duration.ToString());
+        builder.Append(" }");
+        return builder.ToString();
+    }
 }
 
 /// <summary>
@@ -321,6 +476,22 @@ public sealed class StepTimingInfo
     /// Gets the step timing info.
     /// </summary>
     public TimingInfo Timing { get; }
+
+    /// <inheritdoc />
+    public override string ToString()
+    {
+        var builder = new StringBuilder();
+        builder.Append("StepTimingInfo");
+        builder.Append(" { ");
+        builder.Append("Id = ");
+        builder.Append(Id);
+        builder.Append(", Description = ");
+        builder.Append(Description);
+        builder.Append(", Timing = ");
+        builder.Append(Timing);
+        builder.Append(" }");
+        return builder.ToString();
+    }
 }
 
 /// <summary>
@@ -357,6 +528,21 @@ public sealed class TimingProperty : IProperty
     /// Gets the step timing information.
     /// </summary>
     public StepTimingInfo[] StepTimings { get; }
+
+    /// <inheritdoc />
+    public override string ToString()
+    {
+        var builder = new StringBuilder();
+        builder.Append(nameof(TestNodeStateProperty));
+        builder.Append(" { ");
+        builder.Append("GlobalTiming = ");
+        builder.Append(GlobalTiming);
+        builder.Append(", StepTimings = [");
+        builder.AppendJoin(", ", StepTimings.Select(x => x.ToString()));
+        builder.Append(']');
+        builder.Append(" }");
+        return builder.ToString();
+    }
 }
 
 /// <summary>
@@ -384,6 +570,21 @@ public readonly struct LinePosition
     /// Gets the column number.
     /// </summary>
     public int Column { get; }
+
+    /// <inheritdoc />
+    public override string ToString()
+    {
+        var builder = new StringBuilder();
+        builder.Append("LinePosition");
+        builder.Append(" { ");
+        builder.Append("Line = ");
+        builder.Append(Line);
+        builder.Append(", Column = ");
+        builder.Append(Column);
+        builder.Append(' ');
+        builder.Append('}');
+        return builder.ToString();
+    }
 }
 
 /// <summary>
@@ -411,6 +612,21 @@ public readonly struct LinePositionSpan
     /// Gets the end line position.
     /// </summary>
     public LinePosition End { get; }
+
+    /// <inheritdoc />
+    public override string ToString()
+    {
+        var builder = new StringBuilder();
+        builder.Append("LinePositionSpan");
+        builder.Append(" { ");
+        builder.Append("Start = ");
+        builder.Append(Start);
+        builder.Append(", End = ");
+        builder.Append(End);
+        builder.Append(' ');
+        builder.Append('}');
+        return builder.ToString();
+    }
 }
 
 /// <summary>
