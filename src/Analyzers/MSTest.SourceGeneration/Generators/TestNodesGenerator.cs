@@ -159,7 +159,7 @@ internal sealed class TestNodesGenerator : IIncrementalGenerator
             foreach (TestTypeInfo testClassInfo in namespaceClasses)
             {
                 string escapedClassFullName = TestNodeHelpers.GenerateEscapedName(testClassInfo.FullyQualifiedName);
-                sourceStringBuilder.AppendLine($"{namespaceTestsVariableName}.Add({testClassInfo.GeneratedTypeName}.TestNode);");
+                sourceStringBuilder.AppendLine($"{namespaceTestsVariableName}.Add({escapedClassFullName}.TestNode);");
             }
 
             variableIndex++;
