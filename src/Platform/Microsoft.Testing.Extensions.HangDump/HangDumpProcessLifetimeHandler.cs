@@ -39,7 +39,6 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
     private readonly IConfiguration _configuration;
     private readonly IProcessHandler _processHandler;
     private readonly IClock _clock;
-    private readonly ITestApplicationCancellationTokenSource _testApplicationCancellationTokenSource;
     private readonly PipeNameDescription _pipeNameDescription;
     private readonly bool _traceEnabled;
     private readonly ILogger<HangDumpProcessLifetimeHandler> _logger;
@@ -70,7 +69,6 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
         ITestApplicationModuleInfo testApplicationModuleInfo,
         IConfiguration configuration,
         IProcessHandler processHandler,
-        IServiceProvider serviceProvider,
         IClock clock)
     {
         _logger = loggerFactory.CreateLogger<HangDumpProcessLifetimeHandler>();
@@ -84,7 +82,6 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
         _configuration = configuration;
         _processHandler = processHandler;
         _clock = clock;
-        _testApplicationCancellationTokenSource = serviceProvider.GetTestApplicationCancellationTokenSource();
         _dumpFileNamePattern = $"{Path.GetFileNameWithoutExtension(testApplicationModuleInfo.GetCurrentTestApplicationFullPath())}_%p_hang.dmp";
     }
 
@@ -196,11 +193,11 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
                 {
                     try
                     {
-                        await ActivityTimerAsync().ConfigureAwait(false);
+                        await ActivityTimerAsync(cancellation).ConfigureAwait(false);
                     }
                     catch (Exception e)
                     {
-                        await _outputDisplay.DisplayAsync(this, new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.HangDumpFailed, e.ToString(), GetDiskInfo()))).ConfigureAwait(false);
+                        await _outputDisplay.DisplayAsync(this, new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.HangDumpFailed, e.ToString(), GetDiskInfo())), cancellation).ConfigureAwait(false);
                         throw;
                     }
                 }, "[HangDump] ActivityTimerAsync", cancellation);
@@ -248,11 +245,11 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
         }
     }
 
-    private async Task ActivityTimerAsync()
+    private async Task ActivityTimerAsync(CancellationToken cancellationToken)
     {
         _logger.LogDebug("Wait for mutex name from the test host");
 
-        if (!_mutexNameReceived.Wait(TimeoutHelper.DefaultHangTimeSpanTimeout))
+        if (!_mutexNameReceived.Wait(TimeoutHelper.DefaultHangTimeSpanTimeout, cancellationToken))
         {
             throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, ExtensionResources.MutexNameReceptionTimeoutErrorMessage, TimeoutHelper.DefaultHangTimeoutSeconds));
         }
@@ -340,35 +337,35 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
 
         if (timeoutFired)
         {
-            await TakeDumpAsync().ConfigureAwait(false);
+            await TakeDumpAsync(cancellationToken).ConfigureAwait(false);
         }
     }
 
-    private async Task TakeDumpAsync()
+    private async Task TakeDumpAsync(CancellationToken cancellationToken)
     {
         ApplicationStateGuard.Ensure(_testHostProcessInformation is not null);
         ApplicationStateGuard.Ensure(_dumpType is not null);
 
         await _logger.LogInformationAsync($"Hang dump timeout({_activityTimerValue}) expired.").ConfigureAwait(false);
-        await _outputDisplay.DisplayAsync(this, new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.HangDumpTimeoutExpired, _activityTimerValue))).ConfigureAwait(false);
+        await _outputDisplay.DisplayAsync(this, new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.HangDumpTimeoutExpired, _activityTimerValue)), cancellationToken).ConfigureAwait(false);
 
         string finalDumpFileName = _dumpFileNamePattern.Replace("%p", _testHostProcessInformation.PID.ToString(CultureInfo.InvariantCulture));
         finalDumpFileName = Path.Combine(_configuration.GetTestResultDirectory(), finalDumpFileName);
 
         ApplicationStateGuard.Ensure(_namedPipeClient is not null);
-        GetInProgressTestsResponse tests = await _namedPipeClient.RequestReplyAsync<GetInProgressTestsRequest, GetInProgressTestsResponse>(new GetInProgressTestsRequest(), _testApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
-        await _namedPipeClient.RequestReplyAsync<ExitSignalActivityIndicatorTaskRequest, VoidResponse>(new ExitSignalActivityIndicatorTaskRequest(), _testApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
+        GetInProgressTestsResponse tests = await _namedPipeClient.RequestReplyAsync<GetInProgressTestsRequest, GetInProgressTestsResponse>(new GetInProgressTestsRequest(), cancellationToken).ConfigureAwait(false);
+        await _namedPipeClient.RequestReplyAsync<ExitSignalActivityIndicatorTaskRequest, VoidResponse>(new ExitSignalActivityIndicatorTaskRequest(), cancellationToken).ConfigureAwait(false);
         if (tests.Tests.Length > 0)
         {
             string hangTestsFileName = Path.Combine(_configuration.GetTestResultDirectory(), Path.ChangeExtension(Path.GetFileName(finalDumpFileName), ".log"));
             using (FileStream fs = File.OpenWrite(hangTestsFileName))
             using (StreamWriter sw = new(fs))
             {
-                await _outputDisplay.DisplayAsync(this, new ErrorMessageOutputDeviceData(ExtensionResources.RunningTestsWhileDumping)).ConfigureAwait(false);
+                await _outputDisplay.DisplayAsync(this, new ErrorMessageOutputDeviceData(ExtensionResources.RunningTestsWhileDumping), cancellationToken).ConfigureAwait(false);
                 foreach ((string testName, int seconds) in tests.Tests)
                 {
                     await sw.WriteLineAsync($"[{TimeSpan.FromSeconds(seconds)}] {testName}").ConfigureAwait(false);
-                    await _outputDisplay.DisplayAsync(this, new ErrorMessageOutputDeviceData($"[{TimeSpan.FromSeconds(seconds)}] {testName}")).ConfigureAwait(false);
+                    await _outputDisplay.DisplayAsync(this, new ErrorMessageOutputDeviceData($"[{TimeSpan.FromSeconds(seconds)}] {testName}"), cancellationToken).ConfigureAwait(false);
                 }
             }
 
@@ -377,7 +374,7 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
 
         await _logger.LogInformationAsync($"Creating dump filename {finalDumpFileName}").ConfigureAwait(false);
 
-        await _outputDisplay.DisplayAsync(this, new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.CreatingDumpFile, finalDumpFileName))).ConfigureAwait(false);
+        await _outputDisplay.DisplayAsync(this, new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.CreatingDumpFile, finalDumpFileName)), cancellationToken).ConfigureAwait(false);
 
         try
         {
