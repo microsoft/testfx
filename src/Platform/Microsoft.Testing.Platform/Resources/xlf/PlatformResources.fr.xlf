@@ -433,7 +433,7 @@
       </trans-unit>
       <trans-unit id="OnlyOneFilterSupported">
         <source>Passing both '--treenode-filter' and '--filter-uid' is unsupported.</source>
-        <target state="new">Passing both '--treenode-filter' and '--filter-uid' is unsupported.</target>
+        <target state="translated">Vous ne pouvez pas passer à la fois « --treenode-filter » et « --filter-uid ». Cette action n’est pas prise en charge.</target>
         <note />
       </trans-unit>
       <trans-unit id="OutOfProcessArtifactsProduced">
@@ -540,7 +540,7 @@ Les valeurs disponibles sont « Trace », « Debug », « Information », 
       </trans-unit>
       <trans-unit id="PlatformCommandLineFilterUidOptionDescription">
         <source>Provides a list of test node UIDs to filter by.</source>
-        <target state="new">Provides a list of test node UIDs to filter by.</target>
+        <target state="translated">Fournit la liste des IUD de nœud de test à filtrer.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineHelpOptionDescription">
