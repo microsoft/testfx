@@ -45,7 +45,6 @@ internal abstract class CommonTestHost(ServiceProvider serviceProvider) : ITestH
             {
                 RoslynDebug.Assert(PushOnlyProtocol is not null);
 
-                ITestApplicationModuleInfo testApplicationModuleInfo = serviceProvider.GetTestApplicationModuleInfo();
                 bool isValidProtocol = await PushOnlyProtocol.IsCompatibleProtocolAsync(GetHostType()).ConfigureAwait(false);
 
                 exitCode = isValidProtocol
