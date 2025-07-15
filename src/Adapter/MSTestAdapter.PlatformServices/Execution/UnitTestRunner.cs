@@ -294,9 +294,7 @@ internal sealed class UnitTestRunner : MarshalByRefObject
 
                 if (results.Length > 0 && ex is not null)
                 {
-#pragma warning disable IDE0056 // Use index operator
-                    TestResult lastResult = results[results.Length - 1];
-#pragma warning restore IDE0056 // Use index operator
+                    TestResult lastResult = results[^1];
                     lastResult.Outcome = UTF.UnitTestOutcome.Error;
                     lastResult.TestFailureException = ex;
                     return;
@@ -310,9 +308,7 @@ internal sealed class UnitTestRunner : MarshalByRefObject
 
                 if (results.Length > 0 && ex is not null)
                 {
-#pragma warning disable IDE0056 // Use index operator
-                    TestResult lastResult = results[results.Length - 1];
-#pragma warning restore IDE0056 // Use index operator
+                    TestResult lastResult = results[^1];
                     lastResult.Outcome = UTF.UnitTestOutcome.Error;
                     lastResult.TestFailureException = ex;
                     return;
@@ -323,9 +319,7 @@ internal sealed class UnitTestRunner : MarshalByRefObject
         {
             if (results.Length > 0)
             {
-#pragma warning disable IDE0056 // Use index operator
-                TestResult lastResult = results[results.Length - 1];
-#pragma warning restore IDE0056 // Use index operator
+                TestResult lastResult = results[^1];
                 var testContextImpl = testContext as TestContextImplementation;
                 lastResult.LogOutput += testContextImpl?.GetOut();
                 lastResult.LogError += testContextImpl?.GetErr();

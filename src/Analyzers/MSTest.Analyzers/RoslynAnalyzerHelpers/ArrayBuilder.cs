@@ -150,10 +150,7 @@ internal sealed partial class ArrayBuilder<T> : IReadOnlyList<T>, IDisposable
 
     public void CopyTo(T[] array, int start) => _builder.CopyTo(array, start);
 
-    public T Last() =>
-#pragma warning disable IDE0056
-        _builder[_builder.Count - 1];
-#pragma warning restore IDE0056
+    public T Last() => _builder[^1];
 
     public T First() => _builder[0];
 

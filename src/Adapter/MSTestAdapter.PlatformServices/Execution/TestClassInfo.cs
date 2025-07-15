@@ -765,9 +765,7 @@ public class TestClassInfo
                 TestFailedException? ex = ExecuteClassCleanup(testContext.Context);
                 if (ex is not null && results.Length > 0)
                 {
-#pragma warning disable IDE0056 // Use index operator
-                    TestResult lastResult = results[results.Length - 1];
-#pragma warning restore IDE0056 // Use index operator
+                    TestResult lastResult = results[^1];
                     lastResult.Outcome = TestTools.UnitTesting.UnitTestOutcome.Error;
                     lastResult.TestFailureException = ex;
                 }
@@ -776,9 +774,7 @@ public class TestClassInfo
             {
                 if (results.Length > 0)
                 {
-#pragma warning disable IDE0056 // Use index operator
-                    TestResult lastResult = results[results.Length - 1];
-#pragma warning restore IDE0056 // Use index operator
+                    TestResult lastResult = results[^1];
                     var testContextImpl = testContext as TestContextImplementation;
                     lastResult.LogOutput += testContextImpl?.GetOut();
                     lastResult.LogError += testContextImpl?.GetErr();
