@@ -750,7 +750,7 @@ public sealed class AssertionArgsShouldAvoidConditionalAccessAnalyzerTests
                 [TestMethod]
                 public void Compliant()
                 {
-                    Assert.AreEqual(new object(), new object(), new A().S?.Length.ToString());
+                    Assert.AreEqual(new object(), new object(), "message");
                 }
             }
             """;
