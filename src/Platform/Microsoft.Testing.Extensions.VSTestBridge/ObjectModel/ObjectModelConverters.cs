@@ -172,10 +172,10 @@ internal static class ObjectModelConverters
                 .Select(msg =>
                     msg.Category switch
                     {
-                        string x when x == TestResultMessage.StandardErrorCategory => new StandardErrorTrxMessage(msg.Text),
+                        string x when x == TestResultMessage.StandardErrorCategory => (TrxMessage)new StandardErrorTrxMessage(msg.Text),
                         string x when x == TestResultMessage.StandardOutCategory => new StandardOutputTrxMessage(msg.Text),
                         string x when x == TestResultMessage.DebugTraceCategory => new DebugOrTraceTrxMessage(msg.Text),
-                        _ => new TrxMessage(msg.Text),
+                        _ => throw new UnreachableException(),
                     })]));
         }
 

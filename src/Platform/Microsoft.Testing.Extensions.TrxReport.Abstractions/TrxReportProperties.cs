@@ -15,18 +15,18 @@ public sealed class TrxExceptionProperty : IProperty
     /// </summary>
     /// <param name="message">The exception message.</param>
     /// <param name="stackTrace">The exception stack trace.</param>
-    public TrxExceptionProperty(string message, string stackTrace)
+    public TrxExceptionProperty(string? message, string? stackTrace)
         => (Message, StackTrace) = (message, stackTrace);
 
     /// <summary>
     /// Gets the exception message.
     /// </summary>
-    public string Message { get; }
+    public string? Message { get; }
 
     /// <summary>
     /// Gets the exception stack trace.
     /// </summary>
-    public string StackTrace { get; }
+    public string? StackTrace { get; }
 
     /// <inheritdoc />
     public override string ToString()
