@@ -20,7 +20,7 @@ public sealed class RunSettingsCommandLineOptionsProviderTests
         // Arrange
         const string filePath = "file";
         var fileSystem = new Mock<IFileSystem>(MockBehavior.Strict);
-        fileSystem.Setup(fs => fs.Exists(It.IsAny<string>())).Returns(false);
+        fileSystem.Setup(fs => fs.ExistFile(It.IsAny<string>())).Returns(false);
 
         var provider = new RunSettingsCommandLineOptionsProvider(new TestExtension(), fileSystem.Object);
         CommandLineOption option = provider.GetCommandLineOptions().Single();
@@ -39,7 +39,7 @@ public sealed class RunSettingsCommandLineOptionsProviderTests
         // Arrange
         const string filePath = "file";
         var fileSystem = new Mock<IFileSystem>(MockBehavior.Strict);
-        fileSystem.Setup(fs => fs.Exists(filePath)).Returns(true);
+        fileSystem.Setup(fs => fs.ExistFile(filePath)).Returns(true);
         fileSystem.Setup(fs => fs.NewFileStream(filePath, FileMode.Open, FileAccess.Read)).Throws(new IOException());
 
         var provider = new RunSettingsCommandLineOptionsProvider(new TestExtension(), fileSystem.Object);
@@ -59,7 +59,7 @@ public sealed class RunSettingsCommandLineOptionsProviderTests
         // Arrange
         const string filePath = "file";
         var fileSystem = new Mock<IFileSystem>(MockBehavior.Strict);
-        fileSystem.Setup(fs => fs.Exists(filePath)).Returns(true);
+        fileSystem.Setup(fs => fs.ExistFile(filePath)).Returns(true);
         fileSystem.Setup(fs => fs.NewFileStream(filePath, FileMode.Open, FileAccess.Read)).Returns(new Mock<IFileStream>().Object);
 
         var provider = new RunSettingsCommandLineOptionsProvider(new TestExtension(), fileSystem.Object);

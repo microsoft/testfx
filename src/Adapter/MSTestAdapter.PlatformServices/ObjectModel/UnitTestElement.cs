@@ -163,11 +163,6 @@ internal sealed class UnitTestElement
             testCase.SetPropertyValue(EngineConstants.CssProjectStructureProperty, CssProjectStructure);
         }
 
-        if (!StringEx.IsNullOrEmpty(Description))
-        {
-            testCase.SetPropertyValue(EngineConstants.DescriptionProperty, Description);
-        }
-
         if (WorkItemIds != null)
         {
             testCase.SetPropertyValue(EngineConstants.WorkItemIdsProperty, WorkItemIds);
