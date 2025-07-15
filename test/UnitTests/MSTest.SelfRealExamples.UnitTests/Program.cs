@@ -13,7 +13,11 @@ ITestApplicationBuilder testApplicationBuilder = await TestApplication.CreateBui
 testApplicationBuilder.AddMSTest(() => [Assembly.GetEntryAssembly()!]);
 testApplicationBuilder.AddTrxReportProvider();
 testApplicationBuilder.AddAppInsightsTelemetryProvider();
+
+#if ENABLE_CODECOVERAGE
 testApplicationBuilder.AddCodeCoverageProvider();
+#endif
+
 testApplicationBuilder.AddAzureDevOpsProvider();
 using ITestApplication testApplication = await testApplicationBuilder.BuildAsync();
 return await testApplication.RunAsync();

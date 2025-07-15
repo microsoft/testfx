@@ -71,7 +71,7 @@ internal sealed class ConsoleTestHost(
         ITelemetryInformation telemetryInformation = ServiceProvider.GetTelemetryInformation();
         Statistics? statistics = null;
         string? extensionInformation = null;
-        await _logger.LogInformationAsync($"Starting test session '{ServiceProvider.GetTestSessionContext().SessionId}'").ConfigureAwait(false);
+        await _logger.LogInformationAsync($"Starting test session '{ServiceProvider.GetTestSessionContext().SessionUid}'").ConfigureAwait(false);
         int exitCode;
         DateTimeOffset adapterLoadStop = _clock.UtcNow;
         DateTimeOffset requestExecuteStart = _clock.UtcNow;
@@ -94,7 +94,7 @@ internal sealed class ConsoleTestHost(
             statistics = testApplicationResult.GetStatistics();
             exitCode = testApplicationResult.GetProcessExitCode();
 
-            await _logger.LogInformationAsync($"Test session '{ServiceProvider.GetTestSessionContext().SessionId}' ended with exit code '{exitCode}' in {consoleRunStarted.Elapsed}").ConfigureAwait(false);
+            await _logger.LogInformationAsync($"Test session '{ServiceProvider.GetTestSessionContext().SessionUid}' ended with exit code '{exitCode}' in {consoleRunStarted.Elapsed}").ConfigureAwait(false);
 
             // We collect info about the extensions before the dispose to avoid possible issue with cleanup.
             if (telemetryInformation.IsEnabled)

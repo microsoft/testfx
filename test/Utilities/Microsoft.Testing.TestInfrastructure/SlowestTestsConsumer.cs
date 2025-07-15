@@ -3,7 +3,7 @@
 
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.TestHost;
-using Microsoft.Testing.Platform.TestHost;
+using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.TestInfrastructure;
 
@@ -37,7 +37,7 @@ public sealed class SlowestTestsConsumer : IDataConsumer, ITestSessionLifetimeHa
         return Task.CompletedTask;
     }
 
-    public Task OnTestSessionFinishingAsync(SessionUid sessionUid, CancellationToken cancellationToken)
+    public Task OnTestSessionFinishingAsync(ITestSessionContext testSessionContext)
     {
         Console.WriteLine("Slowest 10 tests");
         foreach ((_, string displayName, double milliseconds) in _testPerf.OrderByDescending(x => x.Milliseconds).Take(10))
@@ -48,5 +48,5 @@ public sealed class SlowestTestsConsumer : IDataConsumer, ITestSessionLifetimeHa
         return Task.CompletedTask;
     }
 
-    public Task OnTestSessionStartingAsync(SessionUid sessionUid, CancellationToken cancellationToken) => Task.CompletedTask;
+    public Task OnTestSessionStartingAsync(ITestSessionContext testSessionContext) => Task.CompletedTask;
 }

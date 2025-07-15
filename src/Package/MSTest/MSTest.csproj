@@ -48,9 +48,7 @@
     <ProjectReference Include="$(RepoRoot)src\Analyzers\MSTest.Analyzers.Package\MSTest.Analyzers.Package.csproj" />
     <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.TrxReport\Microsoft.Testing.Extensions.TrxReport.csproj" Condition=" '$(TargetFramework)' != '$(UwpMinimum)' " />
 
-    <!-- CodeCoverage 17.14 doesn't support netcoreapp3.1. -->
-    <!-- We end up having System.Collections.Immutable 8.0.0 which is not compatible with netcoreapp3.1 -->
-    <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" Condition="'$(TargetFramework)' != 'netcoreapp3.1'" />
+    <!-- TODO: Add Microsoft.Testing.Extensions.CodeCoverage back once a new version for MTP v2 is released -->
   </ItemGroup>
 
   <ItemGroup>
