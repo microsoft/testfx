@@ -263,7 +263,7 @@ internal sealed class AzureDevOpsReporter :
 
             // Combine with repo root, to be able to resolve deterministic build paths.
             string fullPath = Path.Combine(repoRoot, relativePath);
-            if (!fileSystem.Exists(fullPath))
+            if (!fileSystem.ExistFile(fullPath))
             {
                 // Path does not belong to current repository or does not exist, no need to report it because it will not show up in the PR error, we will only see it details of the run, which is the same
                 // as not reporting it this way. Maybe there can be 2 modes, but right now we want this to be usable for GitHub + AzDo, not for pure AzDo.
