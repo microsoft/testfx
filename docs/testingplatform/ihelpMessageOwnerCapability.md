@@ -24,7 +24,7 @@ Usage: myapp.exe [options]
 
 Options:
   --test-file <path>      Path to test file
-  --config <file>         Configuration file  
+  --config <file>         Configuration file
   --parallel              Run tests in parallel
   --help                  Show this help
 
@@ -72,7 +72,7 @@ return await app.RunAsync();
 
 ## Behavior
 
-- When `--help` is invoked and a custom help capability is registered, the platform will call `GetHelpMessageAsync()` 
+- When `--help` is invoked and a custom help capability is registered, the platform will call `GetHelpMessageAsync()`
 - If the method returns a non-null, non-empty string, that content is displayed instead of the default help
 - If the method returns `null` or an empty string, the platform falls back to its default help behavior
 - If no `IHelpMessageOwnerCapability` is registered, the default help is always shown
@@ -80,6 +80,7 @@ return await app.RunAsync();
 ## Integration with Existing Features
 
 This capability works alongside other platform features:
+
 - **Custom Banner**: You can have both custom banner (`IBannerMessageOwnerCapability`) and custom help
 - **Custom Output Device**: Custom help respects the configured output device
 - **Command Line Options**: Your custom help can document framework-specific command line options
@@ -87,7 +88,7 @@ This capability works alongside other platform features:
 ## Example Scenarios
 
 1. **Framework-specific help**: Show help content specific to your test framework's features and options
-2. **Branded experience**: Provide a consistent branded help experience matching your framework's documentation  
+2. **Branded experience**: Provide a consistent branded help experience matching your framework's documentation
 3. **Context-aware help**: Generate dynamic help content based on the current environment or configuration
 4. **Simplified help**: Show a simplified help message for end users while keeping the full platform help available through other means
 
