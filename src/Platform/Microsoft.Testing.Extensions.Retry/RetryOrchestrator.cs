@@ -133,7 +133,6 @@ internal sealed class RetryOrchestrator : ITestHostOrchestrator, IOutputDeviceDa
 
         List<int> exitCodes = [];
         IOutputDevice outputDevice = _serviceProvider.GetOutputDevice();
-        IFileSystem fileSystem = _serviceProvider.GetFileSystem();
 
         int attemptCount = 0;
         List<string> finalArguments = [];
