@@ -50,13 +50,13 @@ public sealed class TrxFullyQualifiedTypeNameProperty : IProperty
 /// <summary>
 /// A property that represents a message to be reported in the TRX file.
 /// </summary>
-public class TrxMessage
+public abstract class TrxMessage
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="TrxMessage"/> class.
     /// </summary>
     /// <param name="message">The message.</param>
-    public TrxMessage(string? message)
+    protected TrxMessage(string? message)
         => Message = message;
 
     /// <summary>
