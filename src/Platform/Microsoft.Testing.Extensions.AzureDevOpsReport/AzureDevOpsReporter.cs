@@ -11,6 +11,7 @@ using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.OutputDevice;
+using Microsoft.Testing.TestInfrastructure;
 
 namespace Microsoft.Testing.Extensions.AzureDevOpsReport;
 
