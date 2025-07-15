@@ -7,6 +7,11 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// CSS Iteration URI.
 /// </summary>
 [AttributeUsage(AttributeTargets.Method)]
+#if NET6_0_OR_GREATER
+[Obsolete(FrameworkConstants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
+#else
+[Obsolete(FrameworkConstants.PublicTypeObsoleteMessage)]
+#endif
 public sealed class CssIterationAttribute : Attribute
 {
     /// <summary>

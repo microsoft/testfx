@@ -71,7 +71,7 @@ internal sealed class FileLogger : IDisposable
         if (_options.FileName is not null)
         {
             string fileNameFullPath = Path.Combine(_options.LogFolder, _options.FileName);
-            _fileStream = fileSystem.Exists(fileNameFullPath)
+            _fileStream = fileSystem.ExistFile(fileNameFullPath)
                 ? OpenFileStreamForAppend(fileStreamFactory, fileNameFullPath)
                 : CreateFileStream(fileStreamFactory, fileNameFullPath);
         }
