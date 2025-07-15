@@ -352,9 +352,9 @@ Microsoft.Testing.Platform.Extensions.TestFramework.ITestFramework
 Microsoft.Testing.Platform.Extensions.TestFramework.ITestFramework.CloseTestSessionAsync(Microsoft.Testing.Platform.Extensions.TestFramework.CloseTestSessionContext! context) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.TestFramework.CloseTestSessionResult!>!
 Microsoft.Testing.Platform.Extensions.TestFramework.ITestFramework.CreateTestSessionAsync(Microsoft.Testing.Platform.Extensions.TestFramework.CreateTestSessionContext! context) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.TestFramework.CreateTestSessionResult!>!
 Microsoft.Testing.Platform.Extensions.TestFramework.ITestFramework.ExecuteRequestAsync(Microsoft.Testing.Platform.Extensions.TestFramework.ExecuteRequestContext! context) -> System.Threading.Tasks.Task!
-Microsoft.Testing.Platform.Extensions.TestHost.IDataConsumer
-Microsoft.Testing.Platform.Extensions.TestHost.IDataConsumer.ConsumeAsync(Microsoft.Testing.Platform.Extensions.Messages.IDataProducer! dataProducer, Microsoft.Testing.Platform.Extensions.Messages.IData! value, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
-Microsoft.Testing.Platform.Extensions.TestHost.IDataConsumer.DataTypesConsumed.get -> System.Type![]!
+Microsoft.Testing.Platform.Extensions.IDataConsumer
+Microsoft.Testing.Platform.Extensions.IDataConsumer.ConsumeAsync(Microsoft.Testing.Platform.Extensions.Messages.IDataProducer! dataProducer, Microsoft.Testing.Platform.Extensions.Messages.IData! value, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+Microsoft.Testing.Platform.Extensions.IDataConsumer.DataTypesConsumed.get -> System.Type![]!
 Microsoft.Testing.Platform.Extensions.TestHost.ITestApplicationLifecycleCallbacks
 Microsoft.Testing.Platform.Extensions.TestHost.ITestApplicationLifecycleCallbacks.AfterRunAsync(int exitCode, System.Threading.CancellationToken cancellation) -> System.Threading.Tasks.Task!
 Microsoft.Testing.Platform.Extensions.TestHost.ITestApplicationLifecycleCallbacks.BeforeRunAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
@@ -460,7 +460,7 @@ Microsoft.Testing.Platform.TestHost.ClientInfo
 Microsoft.Testing.Platform.TestHost.ClientInfo.Id.get -> string!
 Microsoft.Testing.Platform.TestHost.ClientInfo.Version.get -> string!
 Microsoft.Testing.Platform.TestHost.ITestHostManager
-Microsoft.Testing.Platform.TestHost.ITestHostManager.AddDataConsumer(System.Func<System.IServiceProvider!, Microsoft.Testing.Platform.Extensions.TestHost.IDataConsumer!>! dataConsumerFactory) -> void
+Microsoft.Testing.Platform.TestHost.ITestHostManager.AddDataConsumer(System.Func<System.IServiceProvider!, Microsoft.Testing.Platform.Extensions.IDataConsumer!>! dataConsumerFactory) -> void
 Microsoft.Testing.Platform.TestHost.ITestHostManager.AddDataConsumer<T>(Microsoft.Testing.Platform.Extensions.CompositeExtensionFactory<T!>! compositeServiceFactory) -> void
 Microsoft.Testing.Platform.TestHost.ITestHostManager.AddTestApplicationLifecycleCallbacks(System.Func<System.IServiceProvider!, Microsoft.Testing.Platform.Extensions.TestHost.ITestApplicationLifecycleCallbacks!>! testApplicationLifecycleCallbacks) -> void
 Microsoft.Testing.Platform.TestHost.ITestHostManager.AddTestSessionLifetimeHandle(System.Func<System.IServiceProvider!, Microsoft.Testing.Platform.Extensions.TestHost.ITestSessionLifetimeHandler!>! testSessionLifetimeHandleFactory) -> void

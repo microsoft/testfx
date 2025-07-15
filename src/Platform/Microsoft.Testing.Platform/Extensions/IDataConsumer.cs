@@ -3,12 +3,12 @@
 
 using Microsoft.Testing.Platform.Extensions.Messages;
 
-namespace Microsoft.Testing.Platform.Extensions.TestHost;
+namespace Microsoft.Testing.Platform.Extensions;
 
 /// <summary>
 /// Represents a data consumer that can consume data produced by a data producer.
 /// </summary>
-public interface IDataConsumer : ITestHostExtension
+public interface IDataConsumer : IExtension
 {
     /// <summary>
     /// Gets the types of data consumed by the data consumer.
