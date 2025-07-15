@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
+using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.CommandLine;
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
 using Microsoft.Testing.Platform.Helpers;
@@ -228,22 +229,16 @@ internal sealed class CommandLineHandler : ICommandLineHandler, ICommandLineOpti
     {
         // Check for custom help capability first
         IHelpMessageOwnerCapability? helpMessageOwnerCapability = testFrameworkCapabilities?.GetCapability<IHelpMessageOwnerCapability>();
-        
         if (helpMessageOwnerCapability is not null)
         {
             // Prepare command line options information for the capability
-            var systemCommandLineOptions = SystemCommandLineOptionsProviders
-                .Select(provider => ((IExtension)provider, provider.GetCommandLineOptions()))
-                .ToArray();
-            
-            var extensionsCommandLineOptions = ExtensionsCommandLineOptionsProviders
-                .Select(provider => ((IExtension)provider, provider.GetCommandLineOptions()))
-                .ToArray();
+            (IExtension, IReadOnlyCollection<CommandLineOption>)[] systemCommandLineOptions = [.. SystemCommandLineOptionsProviders.Select(provider => ((IExtension)provider, provider.GetCommandLineOptions()))];
+            (IExtension, IReadOnlyCollection<CommandLineOption>)[] extensionsCommandLineOptions = [.. ExtensionsCommandLineOptionsProviders.Select(provider => ((IExtension)provider, provider.GetCommandLineOptions()))];
 
             // Let the capability display custom help
             bool customHelpDisplayed = await helpMessageOwnerCapability.DisplayHelpAsync(
-                outputDevice, 
-                systemCommandLineOptions, 
+                outputDevice,
+                systemCommandLineOptions,
                 extensionsCommandLineOptions).ConfigureAwait(false);
 
             // If custom help was displayed, we're done

@@ -1,7 +1,6 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.CommandLine;
 using Microsoft.Testing.Platform.OutputDevice;
@@ -25,10 +24,11 @@ public interface IHelpMessageOwnerCapability : ITestFrameworkCapability
     /// <param name="systemCommandLineOptions">Collection of system command line options available in the platform.</param>
     /// <param name="extensionsCommandLineOptions">Collection of extension command line options available in the platform.</param>
     /// <returns>
-    /// A task that represents the asynchronous display operation. Returns <c>true</c> if custom help was displayed, 
+    /// A task that represents the asynchronous display operation. Returns <c>true</c> if custom help was displayed,
     /// <c>false</c> to use the default platform help message.
     /// </returns>
-    Task<bool> DisplayHelpAsync(IOutputDevice outputDevice, 
+    Task<bool> DisplayHelpAsync(
+        IOutputDevice outputDevice,
         IReadOnlyCollection<(IExtension Extension, IReadOnlyCollection<CommandLineOption> Options)> systemCommandLineOptions,
         IReadOnlyCollection<(IExtension Extension, IReadOnlyCollection<CommandLineOption> Options)> extensionsCommandLineOptions);
 }
