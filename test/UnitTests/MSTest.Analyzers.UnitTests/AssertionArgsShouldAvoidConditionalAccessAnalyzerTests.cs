@@ -739,8 +739,8 @@ public sealed class AssertionArgsShouldAvoidConditionalAccessAnalyzerTests
 
             public class A
             {
-                public string? S { get; set; }
-                public Regex? R { get; set; }
+                public string S { get; set; }
+                public Regex R { get; set; }
             }
 
             [TestClass]
@@ -749,7 +749,7 @@ public sealed class AssertionArgsShouldAvoidConditionalAccessAnalyzerTests
                 [TestMethod]
                 public void Compliant()
                 {
-                    Assert.AreEqual(new object(), new object(), new A().S?.Length.ToString() ?? "null");
+                    Assert.AreEqual(new object(), new object(), new A().S?.Length.ToString());
                 }
             }
             """;
