@@ -39,7 +39,6 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
     private readonly IConfiguration _configuration;
     private readonly IProcessHandler _processHandler;
     private readonly IClock _clock;
-    private readonly ITestApplicationCancellationTokenSource _testApplicationCancellationTokenSource;
     private readonly PipeNameDescription _pipeNameDescription;
     private readonly bool _traceEnabled;
     private readonly ILogger<HangDumpProcessLifetimeHandler> _logger;
@@ -70,7 +69,6 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
         ITestApplicationModuleInfo testApplicationModuleInfo,
         IConfiguration configuration,
         IProcessHandler processHandler,
-        IServiceProvider serviceProvider,
         IClock clock)
     {
         _logger = loggerFactory.CreateLogger<HangDumpProcessLifetimeHandler>();
@@ -84,7 +82,6 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
         _configuration = configuration;
         _processHandler = processHandler;
         _clock = clock;
-        _testApplicationCancellationTokenSource = serviceProvider.GetTestApplicationCancellationTokenSource();
         _dumpFileNamePattern = $"{Path.GetFileNameWithoutExtension(testApplicationModuleInfo.GetCurrentTestApplicationFullPath())}_%p_hang.dmp";
     }
 
@@ -356,8 +353,8 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
         finalDumpFileName = Path.Combine(_configuration.GetTestResultDirectory(), finalDumpFileName);
 
         ApplicationStateGuard.Ensure(_namedPipeClient is not null);
-        GetInProgressTestsResponse tests = await _namedPipeClient.RequestReplyAsync<GetInProgressTestsRequest, GetInProgressTestsResponse>(new GetInProgressTestsRequest(), _testApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
-        await _namedPipeClient.RequestReplyAsync<ExitSignalActivityIndicatorTaskRequest, VoidResponse>(new ExitSignalActivityIndicatorTaskRequest(), _testApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
+        GetInProgressTestsResponse tests = await _namedPipeClient.RequestReplyAsync<GetInProgressTestsRequest, GetInProgressTestsResponse>(new GetInProgressTestsRequest(), cancellationToken).ConfigureAwait(false);
+        await _namedPipeClient.RequestReplyAsync<ExitSignalActivityIndicatorTaskRequest, VoidResponse>(new ExitSignalActivityIndicatorTaskRequest(), cancellationToken).ConfigureAwait(false);
         if (tests.Tests.Length > 0)
         {
             string hangTestsFileName = Path.Combine(_configuration.GetTestResultDirectory(), Path.ChangeExtension(Path.GetFileName(finalDumpFileName), ".log"));

@@ -66,7 +66,7 @@ internal sealed class RetryOrchestrator : ITestHostOrchestrator, IOutputDeviceDa
         throw new IOException(string.Format(CultureInfo.InvariantCulture, ExtensionResources.FailedToCreateRetryDirectoryBecauseOfCollision, resultDirectory));
     }
 
-    public async Task<int> OrchestrateTestHostExecutionAsync()
+    public async Task<int> OrchestrateTestHostExecutionAsync(CancellationToken cancellationToken)
     {
         if (_commandLineOptions.IsOptionSet(PlatformCommandLineProvider.ServerOptionKey) && !_commandLineOptions.IsOptionSet(PlatformCommandLineProvider.DotNetTestPipeOptionKey))
         {
@@ -142,7 +142,6 @@ internal sealed class RetryOrchestrator : ITestHostOrchestrator, IOutputDeviceDa
         bool thresholdPolicyKickedIn = false;
         string retryRootFolder = CreateRetriesDirectory(resultDirectory);
         bool retryInterrupted = false;
-        CancellationToken cancellationToken = _serviceProvider.GetTestApplicationCancellationTokenSource().CancellationToken;
         while (attemptCount < userMaxRetryCount + 1)
         {
             attemptCount++;
@@ -199,7 +198,7 @@ internal sealed class RetryOrchestrator : ITestHostOrchestrator, IOutputDeviceDa
             };
 
             using (var timeout = new CancellationTokenSource(TimeoutHelper.DefaultHangTimeSpanTimeout))
-            using (var linkedToken = CancellationTokenSource.CreateLinkedTokenSource(timeout.Token, _serviceProvider.GetTestApplicationCancellationTokenSource().CancellationToken))
+            using (var linkedToken = CancellationTokenSource.CreateLinkedTokenSource(timeout.Token, cancellationToken))
             using (var linkedToken2 = CancellationTokenSource.CreateLinkedTokenSource(linkedToken.Token, processExitedCancellationToken.Token))
             {
                 await logger.LogDebugAsync("Wait connection from the test host process").ConfigureAwait(false);

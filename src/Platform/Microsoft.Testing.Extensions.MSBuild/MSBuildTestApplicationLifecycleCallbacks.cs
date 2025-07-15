@@ -17,16 +17,13 @@ internal sealed class MSBuildTestApplicationLifecycleCallbacks : ITestHostApplic
 {
     private readonly IConfiguration _configuration;
     private readonly ICommandLineOptions _commandLineOptions;
-    private readonly ITestApplicationCancellationTokenSource _testApplicationCancellationTokenSource;
 
     public MSBuildTestApplicationLifecycleCallbacks(
         IConfiguration configuration,
-        ICommandLineOptions commandLineOptions,
-        ITestApplicationCancellationTokenSource testApplicationCancellationTokenSource)
+        ICommandLineOptions commandLineOptions)
     {
         _configuration = configuration;
         _commandLineOptions = commandLineOptions;
-        _testApplicationCancellationTokenSource = testApplicationCancellationTokenSource;
     }
 
     public NamedPipeClient? PipeClient { get; private set; }
@@ -60,14 +57,14 @@ internal sealed class MSBuildTestApplicationLifecycleCallbacks : ITestHostApplic
         PipeClient.RegisterSerializer(new FailedTestInfoRequestSerializer(), typeof(FailedTestInfoRequest));
         PipeClient.RegisterSerializer(new RunSummaryInfoRequestSerializer(), typeof(RunSummaryInfoRequest));
         using var cancellationTokenSource = new CancellationTokenSource(TimeoutHelper.DefaultHangTimeSpanTimeout);
-        using var linkedCancellationToken = CancellationTokenSource.CreateLinkedTokenSource(cancellationTokenSource.Token, _testApplicationCancellationTokenSource.CancellationToken);
+        using var linkedCancellationToken = CancellationTokenSource.CreateLinkedTokenSource(cancellationTokenSource.Token, cancellationToken);
         await PipeClient.ConnectAsync(linkedCancellationToken.Token).ConfigureAwait(false);
         await PipeClient.RequestReplyAsync<ModuleInfoRequest, VoidResponse>(
             new ModuleInfoRequest(
             RuntimeInformation.FrameworkDescription,
             RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant(),
             _configuration.GetTestResultDirectory()),
-            _testApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
+            cancellationToken).ConfigureAwait(false);
     }
 
     public void Dispose()

@@ -41,7 +41,7 @@ internal sealed class HotReloadTestHostTestFrameworkInvoker : TestHostTestFramew
         IOutputDevice outputDevice = ServiceProvider.GetOutputDevice();
         var hotReloadHandler = new HotReloadHandler(ServiceProvider.GetConsole(), outputDevice, this);
         TaskCompletionSource<int>? executionCompleted = null;
-        while (await hotReloadHandler.ShouldRunAsync(executionCompleted?.Task, ServiceProvider.GetTestApplicationCancellationTokenSource().CancellationToken).ConfigureAwait(false))
+        while (await hotReloadHandler.ShouldRunAsync(executionCompleted?.Task, cancellationToken).ConfigureAwait(false))
         {
             executionCompleted = new();
             using SemaphoreSlim requestSemaphore = new(1);
