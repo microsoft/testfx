@@ -310,7 +310,7 @@ internal static class ObjectModelConverters
         // But the eventual goal should be to stop using the VSTestBridge altogether.
         // TODO: For AssemblyFullName, can we use Assembly.GetEntryAssembly().FullName?
         // Or alternatively, does VSTest object model expose the assembly full name somewhere?
-        return new TestMethodIdentifierProperty(AssemblyFullName: string.Empty, @namespace, typeName, methodName, arity, parameterTypes, ReturnTypeFullName: string.Empty);
+        return new TestMethodIdentifierProperty(assemblyFullName: string.Empty, @namespace, typeName, methodName, arity, parameterTypes, returnTypeFullName: string.Empty);
     }
 
     private static bool TryParseFullyQualifiedType(string fullyQualifiedName, [NotNullWhen(true)] out string? fullyQualifiedType)
