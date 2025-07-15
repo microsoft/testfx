@@ -416,12 +416,12 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
 
             case (JsonRpcMethods.TestingDiscoverTests, DiscoverRequestArgs args):
                 {
-                    return await ExecuteRequestAsync(args, JsonRpcMethods.TestingDiscoverTests, perRequestServiceProvider).ConfigureAwait(false);
+                    return await ExecuteRequestAsync(args, JsonRpcMethods.TestingDiscoverTests, perRequestServiceProvider, cancellationToken).ConfigureAwait(false);
                 }
 
             case (JsonRpcMethods.TestingRunTests, RunRequestArgs args):
                 {
-                    return await ExecuteRequestAsync(args, JsonRpcMethods.TestingRunTests, perRequestServiceProvider).ConfigureAwait(false);
+                    return await ExecuteRequestAsync(args, JsonRpcMethods.TestingRunTests, perRequestServiceProvider, cancellationToken).ConfigureAwait(false);
                 }
 
             default:
@@ -429,14 +429,14 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
         }
     }
 
-    private async Task<ResponseArgsBase> ExecuteRequestAsync(RequestArgsBase args, string method, ServiceProvider perRequestServiceProvider)
+    private async Task<ResponseArgsBase> ExecuteRequestAsync(RequestArgsBase args, string method, ServiceProvider perRequestServiceProvider, CancellationToken cancellationToken)
     {
         DateTimeOffset requestStart = _clock.UtcNow;
         ITestSessionContext perRequestTestSessionContext = perRequestServiceProvider.GetTestSessionContext();
 
         // Verify request cancellation, above the chain the exception will be
         // catch and propagated as correct json rpc error
-        perRequestTestSessionContext.CancellationToken.ThrowIfCancellationRequested();
+        cancellationToken.ThrowIfCancellationRequested();
 
         // Note: Currently the request generation and filtering isn't extensible
         // in server mode, we create NoOp services, so that they're always available.
@@ -514,8 +514,7 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
             // catch and propagated as correct json rpc error
             perRequestTestSessionContext.CancellationToken.ThrowIfCancellationRequested();
 
-            // TODO: Should this be ServiceProvider.GetTestApplicationCancellationTokenSource().CancellationToken? Or perRequestTestSessionContext.CancellationToken?
-            await SendTestUpdateCompleteAsync(args.RunId, ServiceProvider.GetTestApplicationCancellationTokenSource().CancellationToken).ConfigureAwait(false);
+            await SendTestUpdateCompleteAsync(args.RunId, cancellationToken).ConfigureAwait(false);
             requestExecuteStop = _clock.UtcNow;
         }
         finally
@@ -552,8 +551,7 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
                     testNodeUpdateProcessor.GetTestNodeStatistics().TotalDiscoveredTests)
                 : throw new NotImplementedException($"Request not implemented '{method}'");
 
-        // TODO: Should this be ServiceProvider.GetTestApplicationCancellationTokenSource()? Or perRequestTestSessionContext.CancellationToken?
-        await _telemetryService.LogEventAsync(TelemetryEvents.TestsRunEventName, metadata, ServiceProvider.GetTestApplicationCancellationTokenSource().CancellationToken).ConfigureAwait(false);
+        await _telemetryService.LogEventAsync(TelemetryEvents.TestsRunEventName, metadata, cancellationToken).ConfigureAwait(false);
 
         return method == JsonRpcMethods.TestingRunTests
             ? new RunResponseArgs([.. testNodeUpdateProcessor.Artifacts])
