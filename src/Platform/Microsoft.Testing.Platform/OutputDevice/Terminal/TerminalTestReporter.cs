@@ -886,7 +886,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
     {
         terminal.AppendLine();
 
-        var assemblies = _assemblies.Select(asm => asm.Value).OrderBy(a => a.Assembly).Where(a => a is not null).ToList();
+        var assemblies = _assemblies.Values.OrderBy(a => a.Assembly).ToList();
 
         int totalTests = _assemblies.Values.Sum(a => a.TotalTests);
         bool runFailed = _wasCancelled;
