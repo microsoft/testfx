@@ -16,8 +16,6 @@ using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.Services;
 
-using Polyfills;
-
 namespace Microsoft.Testing.Extensions.TrxReport.Abstractions;
 
 internal sealed partial class TrxReportEngine
