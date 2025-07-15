@@ -242,7 +242,7 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
         {
             await DisplayBannerIfEnabledAsync(loggingState, proxyOutputDevice, testFrameworkCapabilities).ConfigureAwait(false);
             await proxyOutputDevice.DisplayAsync(commandLineHandler, new ErrorMessageOutputDeviceData(commandLineValidationResult.ErrorMessage)).ConfigureAwait(false);
-            await commandLineHandler.PrintHelpAsync(proxyOutputDevice).ConfigureAwait(false);
+            await commandLineHandler.PrintHelpAsync(proxyOutputDevice, availableTools: null, testFrameworkCapabilities).ConfigureAwait(false);
             return new InformativeCommandLineTestHost(ExitCodes.InvalidCommandLine, serviceProvider);
         }
 
@@ -344,7 +344,7 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
             }
             else
             {
-                await commandLineHandler.PrintHelpAsync(proxyOutputDevice, toolsInformation).ConfigureAwait(false);
+                await commandLineHandler.PrintHelpAsync(proxyOutputDevice, toolsInformation, testFrameworkCapabilities).ConfigureAwait(false);
             }
 
             return new InformativeCommandLineTestHost(0, serviceProvider);

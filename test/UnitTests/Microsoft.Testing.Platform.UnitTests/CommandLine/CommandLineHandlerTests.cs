@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions.CommandLine;
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
@@ -344,6 +345,78 @@ public sealed class CommandLineHandlerTests
         public Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions) => throw new NotImplementedException();
 
         public Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments) => ValidationResult.ValidTask;
+    }
+
+    [TestMethod]
+    public async Task PrintHelpAsync_CustomHelpCapabilityProvided_UsesCustomHelp()
+    {
+        // Arrange
+        string[] args = ["--help"];
+        CommandLineParseResult parseResult = CommandLineParser.Parse(args, new SystemEnvironment());
+        CommandLineHandler commandLineHandler = new(parseResult, _extensionCommandLineOptionsProviders, _systemCommandLineOptionsProviders,
+            _testApplicationModuleInfoMock.Object, _runtimeFeatureMock.Object);
+
+        const string customHelpMessage = "Custom help message from test framework";
+        var mockHelpCapability = new Mock<IHelpMessageOwnerCapability>();
+        mockHelpCapability.Setup(x => x.GetHelpMessageAsync()).ReturnsAsync(customHelpMessage);
+
+        var mockTestFrameworkCapabilities = new Mock<ITestFrameworkCapabilities>();
+        mockTestFrameworkCapabilities.Setup(x => x.GetCapability<IHelpMessageOwnerCapability>()).Returns(mockHelpCapability.Object);
+
+        // Act
+        await commandLineHandler.PrintHelpAsync(_outputDisplayMock.Object, availableTools: null, mockTestFrameworkCapabilities.Object);
+
+        // Assert
+        _outputDisplayMock.Verify(o => o.DisplayAsync(commandLineHandler, It.Is<TextOutputDeviceData>(data => data.Text == customHelpMessage)), Times.Once);
+    }
+
+    [TestMethod]
+    public async Task PrintHelpAsync_NoCustomHelpCapability_UsesDefaultHelp()
+    {
+        // Arrange
+        string[] args = ["--help"];
+        CommandLineParseResult parseResult = CommandLineParser.Parse(args, new SystemEnvironment());
+        CommandLineHandler commandLineHandler = new(parseResult, _extensionCommandLineOptionsProviders, _systemCommandLineOptionsProviders,
+            _testApplicationModuleInfoMock.Object, _runtimeFeatureMock.Object);
+
+        var mockTestFrameworkCapabilities = new Mock<ITestFrameworkCapabilities>();
+        mockTestFrameworkCapabilities.Setup(x => x.GetCapability<IHelpMessageOwnerCapability>()).Returns((IHelpMessageOwnerCapability?)null);
+
+        _testApplicationModuleInfoMock.Setup(x => x.IsAppHostOrSingleFileOrNativeAot).Returns(true);
+        _testApplicationModuleInfoMock.Setup(x => x.GetProcessPath()).Returns("/path/to/testapp.exe");
+
+        // Act
+        await commandLineHandler.PrintHelpAsync(_outputDisplayMock.Object, availableTools: null, mockTestFrameworkCapabilities.Object);
+
+        // Assert
+        // Should use default help which includes usage information
+        _outputDisplayMock.Verify(o => o.DisplayAsync(commandLineHandler, It.Is<TextOutputDeviceData>(data => data.Text.Contains("Usage testapp.exe"))), Times.Once);
+    }
+
+    [TestMethod]
+    public async Task PrintHelpAsync_CustomHelpReturnsNull_UsesDefaultHelp()
+    {
+        // Arrange
+        string[] args = ["--help"];
+        CommandLineParseResult parseResult = CommandLineParser.Parse(args, new SystemEnvironment());
+        CommandLineHandler commandLineHandler = new(parseResult, _extensionCommandLineOptionsProviders, _systemCommandLineOptionsProviders,
+            _testApplicationModuleInfoMock.Object, _runtimeFeatureMock.Object);
+
+        var mockHelpCapability = new Mock<IHelpMessageOwnerCapability>();
+        mockHelpCapability.Setup(x => x.GetHelpMessageAsync()).ReturnsAsync((string?)null);
+
+        var mockTestFrameworkCapabilities = new Mock<ITestFrameworkCapabilities>();
+        mockTestFrameworkCapabilities.Setup(x => x.GetCapability<IHelpMessageOwnerCapability>()).Returns(mockHelpCapability.Object);
+
+        _testApplicationModuleInfoMock.Setup(x => x.IsAppHostOrSingleFileOrNativeAot).Returns(true);
+        _testApplicationModuleInfoMock.Setup(x => x.GetProcessPath()).Returns("/path/to/testapp.exe");
+
+        // Act
+        await commandLineHandler.PrintHelpAsync(_outputDisplayMock.Object, availableTools: null, mockTestFrameworkCapabilities.Object);
+
+        // Assert
+        // Should use default help when custom help returns null
+        _outputDisplayMock.Verify(o => o.DisplayAsync(commandLineHandler, It.Is<TextOutputDeviceData>(data => data.Text.Contains("Usage testapp.exe"))), Times.Once);
     }
 
     private sealed class ExtensionCommandLineProviderMockInvalidConfiguration : ICommandLineOptionsProvider

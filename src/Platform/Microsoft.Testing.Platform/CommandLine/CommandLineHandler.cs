@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.Extensions.CommandLine;
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
 using Microsoft.Testing.Platform.Helpers;
@@ -224,9 +225,23 @@ internal sealed class CommandLineHandler : ICommandLineHandler, ICommandLineOpti
     public bool IsDotNetTestPipeInvoked() => IsOptionSet(PlatformCommandLineProvider.DotNetTestPipeOptionKey);
 
 #pragma warning disable IDE0060 // Remove unused parameter, temporary we don't use it.
-    public async Task PrintHelpAsync(IOutputDevice outputDevice, IReadOnlyList<ITool>? availableTools = null)
+    public async Task PrintHelpAsync(IOutputDevice outputDevice, IReadOnlyList<ITool>? availableTools = null, ITestFrameworkCapabilities? testFrameworkCapabilities = null)
 #pragma warning restore IDE0060 // Remove unused parameter
     {
+        // Check for custom help capability first
+        IHelpMessageOwnerCapability? helpMessageOwnerCapability = testFrameworkCapabilities?.GetCapability<IHelpMessageOwnerCapability>();
+        string? customHelpMessage = helpMessageOwnerCapability is not null
+            ? await helpMessageOwnerCapability.GetHelpMessageAsync().ConfigureAwait(false)
+            : null;
+
+        // If custom help is provided, use it instead of the default help
+        if (!string.IsNullOrEmpty(customHelpMessage))
+        {
+            await outputDevice.DisplayAsync(this, new TextOutputDeviceData(customHelpMessage)).ConfigureAwait(false);
+            return;
+        }
+
+        // Otherwise, use the default help implementation
         string applicationName = GetApplicationName(_testApplicationModuleInfo);
         await PrintApplicationUsageAsync(applicationName).ConfigureAwait(false);
 
