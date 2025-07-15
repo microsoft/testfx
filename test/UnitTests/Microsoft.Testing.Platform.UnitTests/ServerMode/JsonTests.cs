@@ -16,13 +16,13 @@ public sealed class JsonTests
 
     public JsonTests()
     {
-        Dictionary<Type, JsonSerializer> serializers = new();
-        Dictionary<Type, JsonDeserializer> deserializers = new();
+        Dictionary<Type, JsonSerializer> serializers = [];
+        Dictionary<Type, JsonDeserializer> deserializers = [];
 
         foreach (Type serializableType in SerializerUtilities.SerializerTypes)
         {
             serializers[serializableType] = new JsonObjectSerializer<object>(
-                o => SerializerUtilities.Serialize(serializableType, o).Select(kvp => (kvp.Key, kvp.Value)).ToArray());
+                o => [.. SerializerUtilities.Serialize(serializableType, o).Select(kvp => (kvp.Key, kvp.Value))]);
         }
 
         foreach (Type deserializableType in SerializerUtilities.DeserializerTypes)
@@ -125,43 +125,14 @@ public sealed class JsonTests
             [typeof(Person)] = new JsonElementDeserializer<Person>((json, jsonElement) => new Person
             {
                 Name = json.Bind<string?>(jsonElement, "name"),
-                Children = json.Bind<List<Person>>(jsonElement, "children"),
             }),
-
-            [typeof(List<Person>)] = new JsonCollectionDeserializer<List<Person>, Person>(_ => [], (c, i) => c.Add(i)),
         });
 
         // Act
-        Person actual = json.Deserialize<Person>(new("""{"name":"Thomas","children":[{"name":"Ruth","children":null}]}""".ToCharArray()));
+        Person actual = json.Deserialize<Person>(new("""{"name":"Thomas"}""".ToCharArray()));
 
         // Assert
         Assert.AreEqual("Thomas", actual.Name);
-        Assert.AreEqual(1, actual.Children!.Count);
-        Assert.AreEqual("Ruth", actual.Children![0].Name);
-        Assert.IsNull(actual.Children![0].Children);
-    }
-
-    [TestMethod]
-    public void DeserializePersonList()
-    {
-        // Arrange
-        Json json = new(null, new Dictionary<Type, JsonDeserializer>
-        {
-            [typeof(Person)] = new JsonElementDeserializer<Person>((json, jsonElement) => new Person
-            {
-                Name = json.Bind<string?>(jsonElement, "name"),
-                Children = json.Bind<List<Person>>(jsonElement, "children"),
-            }),
-
-            [typeof(List<Person>)] = new JsonCollectionDeserializer<List<Person>, Person>(_ => [], (c, i) => c.Add(i)),
-        });
-
-        // Act
-        List<Person> actual = json.Deserialize<List<Person>>(new("""[{"name":"Thomas","children":[{"name":"Ruth","children":null}]}]""".ToCharArray()));
-
-        // Assert
-        Assert.AreEqual(1, actual.Count);
-        Assert.AreEqual("Thomas", actual[0].Name);
     }
 
     private sealed class Person

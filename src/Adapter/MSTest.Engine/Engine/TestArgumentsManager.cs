@@ -3,11 +3,13 @@
 
 using Microsoft.Testing.Platform;
 
+using Polyfills;
+
 namespace Microsoft.Testing.Framework;
 
 internal sealed class TestArgumentsManager : ITestArgumentsManager
 {
-    private readonly Dictionary<TestNodeUid, Func<TestArgumentsContext, ITestArgumentsEntry>> _testArgumentsEntryProviders = new();
+    private readonly Dictionary<TestNodeUid, Func<TestArgumentsContext, ITestArgumentsEntry>> _testArgumentsEntryProviders = [];
     private bool _isRegistrationFrozen;
 
     public void RegisterTestArgumentsEntryProvider<TArguments>(
@@ -19,12 +21,10 @@ internal sealed class TestArgumentsManager : ITestArgumentsManager
             throw new InvalidOperationException("Cannot register TestArgumentsEntry provider after registration is frozen.");
         }
 
-        if (_testArgumentsEntryProviders.ContainsKey(testNodeStableUid))
+        if (!_testArgumentsEntryProviders.TryAdd(testNodeStableUid, argumentPropertiesProviderCallback))
         {
             throw new InvalidOperationException($"TestArgumentsEntry provider is already registered for test node with UID '{testNodeStableUid}'.");
         }
-
-        _testArgumentsEntryProviders.Add(testNodeStableUid, argumentPropertiesProviderCallback);
     }
 
     internal void FreezeRegistration() => _isRegistrationFrozen = true;
@@ -36,8 +36,6 @@ internal sealed class TestArgumentsManager : ITestArgumentsManager
     internal async Task<TestNode> ExpandTestNodeAsync(TestNode currentNode)
     {
         RoslynDebug.Assert(IsExpandableTestNode(currentNode), "Test node is not expandable");
-
-        var expandableTestNode = (IExpandableTestNode)currentNode;
 
         int argumentsRowIndex = -1;
         bool isIndexArgumentPropertiesProvider = false;
@@ -53,8 +51,8 @@ internal sealed class TestArgumentsManager : ITestArgumentsManager
             };
         }
 
-        HashSet<TestNodeUid> expandedTestNodeUids = new();
-        List<TestNode> expandedTestNodes = new(currentNode.Tests);
+        HashSet<TestNodeUid> expandedTestNodeUids = [];
+        List<TestNode> expandedTestNodes = [.. currentNode.Tests];
         switch (currentNode)
         {
             case IParameterizedTestNode parameterizedTestNode:
@@ -67,7 +65,7 @@ internal sealed class TestArgumentsManager : ITestArgumentsManager
                 break;
 
             case ITaskParameterizedTestNode parameterizedTestNode:
-                foreach (object? arguments in await parameterizedTestNode.GetArguments())
+                foreach (object? arguments in await parameterizedTestNode.GetArguments().ConfigureAwait(false))
                 {
                     ExpandNodeWithArguments(currentNode, arguments, ref argumentsRowIndex, expandedTestNodes,
                         expandedTestNodeUids, argumentPropertiesProvider, isIndexArgumentPropertiesProvider);
@@ -77,7 +75,7 @@ internal sealed class TestArgumentsManager : ITestArgumentsManager
 
 #if NET
             case IAsyncParameterizedTestNode parameterizedTestNode:
-                await foreach (object? arguments in parameterizedTestNode.GetArguments())
+                await foreach (object? arguments in parameterizedTestNode.GetArguments().ConfigureAwait(false))
                 {
                     ExpandNodeWithArguments(currentNode, arguments, ref argumentsRowIndex, expandedTestNodes,
                         expandedTestNodeUids, argumentPropertiesProvider, isIndexArgumentPropertiesProvider);
@@ -98,7 +96,7 @@ internal sealed class TestArgumentsManager : ITestArgumentsManager
             DisplayName = currentNode.DisplayName,
             OverriddenEdgeName = currentNode.OverriddenEdgeName,
             Properties = currentNode.Properties,
-            Tests = expandedTestNodes.ToArray(),
+            Tests = [.. expandedTestNodes],
         };
 
         return expandedNode;

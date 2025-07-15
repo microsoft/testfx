@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Extensions.TrxReport.Abstractions;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Messages;
@@ -19,8 +20,7 @@ internal sealed class TestFrameworkEngine : IDataProducer
         _logger = loggerFactory.CreateLogger("InternalTestFrameworkEngine");
     }
 
-    public Type[] DataTypesProduced { get; }
-        = new Type[1] { typeof(TestNodeUpdateMessage) };
+    public Type[] DataTypesProduced { get; } = [typeof(TestNodeUpdateMessage)];
 
     public string Uid => _extension.Uid;
 
@@ -97,8 +97,11 @@ internal sealed class TestFrameworkEngine : IDataProducer
                     testContainerType.Namespace!,
                     testContainerType.Name,
                     publicMethod.Name,
-                    publicMethod.GetParameters().Select(x => x.ParameterType.FullName!).ToArray(),
+                    publicMethod.GetGenericArguments().Length,
+                    [.. publicMethod.GetParameters().Select(x => x.ParameterType.FullName!)],
                     publicMethod.ReturnType.FullName!));
+
+                testNode.Properties.Add(new TrxFullyQualifiedTypeNameProperty(testContainerType.FullName!));
 
                 TestNode progressNode = CloneTestNode(testNode);
                 progressNode.Properties.Add(InProgressTestNodeStateProperty.CachedInstance);
@@ -171,7 +174,8 @@ internal sealed class TestFrameworkEngine : IDataProducer
                     testContainerType.Namespace!,
                     testContainerType.Name,
                     publicMethod.Name,
-                    publicMethod.GetParameters().Select(x => x.ParameterType.FullName!).ToArray(),
+                    publicMethod.GetGenericArguments().Length,
+                    [.. publicMethod.GetParameters().Select(x => x.ParameterType.FullName!)],
                     publicMethod.ReturnType.FullName!));
 
                 await messageBus.PublishAsync(this, new TestNodeUpdateMessage(request.Session.SessionUid, testNode));
@@ -209,6 +213,7 @@ internal sealed class TestFrameworkEngine : IDataProducer
             _logger.LogError("Error during test setup", realException);
             TestNode errorNode = CloneTestNode(testNode);
             errorNode.Properties.Add(new ErrorTestNodeStateProperty(ex));
+            errorNode.Properties.Add(new TrxExceptionProperty(ex.Message, ex.StackTrace));
             await publishNodeUpdateAsync(errorNode);
             return null;
         }
@@ -233,6 +238,7 @@ internal sealed class TestFrameworkEngine : IDataProducer
             _logger.LogError("Error during test", realException);
             TestNode errorNode = CloneTestNode(testNode);
             errorNode.Properties.Add(new ErrorTestNodeStateProperty(realException));
+            errorNode.Properties.Add(new TrxExceptionProperty(realException.Message, realException.StackTrace));
             await publishNodeUpdateAsync(errorNode);
 
             return false;

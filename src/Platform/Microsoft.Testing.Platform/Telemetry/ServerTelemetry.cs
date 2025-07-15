@@ -13,9 +13,9 @@ internal sealed class ServerTelemetry(IServerTestHost serverTestHost) : ITelemet
     public async Task LogEventAsync(string eventName, IDictionary<string, object> paramsMap)
     {
         TelemetryEventArgs logMessage = new(eventName, paramsMap);
-        await PushTelemetryToServerTestHostAsync(logMessage);
+        await PushTelemetryToServerTestHostAsync(logMessage).ConfigureAwait(false);
     }
 
     private async Task PushTelemetryToServerTestHostAsync(TelemetryEventArgs telemetryEvent)
-        => await _serverTestHost.SendTelemetryEventUpdateAsync(telemetryEvent);
+        => await _serverTestHost.SendTelemetryEventUpdateAsync(telemetryEvent).ConfigureAwait(false);
 }

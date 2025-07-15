@@ -15,16 +15,16 @@ internal sealed class RunSettingsConfigurationProvider(IFileSystem fileSystem) :
     private string? _runSettingsFileContent;
 
     /// <inheritdoc />
-    public string Uid { get; } = nameof(RunSettingsConfigurationProvider);
+    public string Uid => nameof(RunSettingsConfigurationProvider);
 
     /// <inheritdoc />
-    public string Version { get; } = AppVersion.DefaultSemVer;
+    public string Version => AppVersion.DefaultSemVer;
 
     /// <inheritdoc />
-    public string DisplayName { get; } = "VSTest Helpers: runsettings configuration";
+    public string DisplayName => "VSTest Helpers: runsettings configuration";
 
     /// <inheritdoc />
-    public string Description { get; } = "Configuration source to bridge VSTest xml runsettings configuration into Microsoft Testing Platform configuration model.";
+    public string Description => "Configuration source to bridge VSTest xml runsettings configuration into Microsoft Testing Platform configuration model.";
 
     public int Order => 2;
 
@@ -62,9 +62,9 @@ internal sealed class RunSettingsConfigurationProvider(IFileSystem fileSystem) :
     {
         if (commandLineParseResult.TryGetOptionArgumentList(RunSettingsCommandLineOptionsProvider.RunSettingsOptionName, out string[]? runSettingsFilePath))
         {
-            if (_fileSystem.Exists(runSettingsFilePath[0]))
+            if (_fileSystem.ExistFile(runSettingsFilePath[0]))
             {
-                _runSettingsFileContent = await _fileSystem.ReadAllTextAsync(runSettingsFilePath[0]);
+                _runSettingsFileContent = await _fileSystem.ReadAllTextAsync(runSettingsFilePath[0]).ConfigureAwait(false);
             }
         }
 

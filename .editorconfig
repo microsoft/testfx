@@ -35,7 +35,11 @@ charset = utf-8
 indent_size = 2
 
 # Xml files
-[*.{xml}]
+[*.xml]
+indent_size = 2
+
+# Xlf files
+[*.xlf]
 indent_size = 2
 
 # YAML files
@@ -428,6 +432,9 @@ dotnet_diagnostic.CA1854.severity = warning
 # CA1863: Use 'CompositeFormat'
 dotnet_diagnostic.CA1863.severity = none
 
+# CA2007: Consider calling ConfigureAwait on the awaited task
+dotnet_diagnostic.CA2007.severity = warning
+
 # CA2016: Forward the 'CancellationToken' parameter to methods
 dotnet_diagnostic.CA2016.severity = warning
 
@@ -683,11 +690,14 @@ csharp_style_unused_value_expression_statement_preference = discard_variable:sil
 # IDE0290: Use primary constructor
 csharp_style_prefer_primary_constructors = false
 
+# Empty constructor
+resharper_empty_constructor_highlighting = warning
+
 # Redundant empty argument list on object creation expression
 resharper_redundant_empty_object_creation_argument_list_highlighting = warning
 
-# IDE0300: Simplify collection initialization
-dotnet_style_prefer_collection_expression = false
+# IDE0300-IDE0306: Simplify collection initialization
+dotnet_style_prefer_collection_expression = true
 
 # IDE0065: using directive placement
 csharp_using_directive_placement = outside_namespace:warning

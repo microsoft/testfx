@@ -22,6 +22,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <AdditionalFiles Include="PublicAPI.Shipped.txt" />
+    <AdditionalFiles Include="PublicAPI.Unshipped.txt" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\MSTest.Analyzers.CodeFixes\MSTest.Analyzers.CodeFixes.csproj" />
     <ProjectReference Include="..\MSTest.Analyzers\MSTest.Analyzers.csproj" />
   </ItemGroup>
@@ -35,7 +40,7 @@
       <DotNetExecutable Condition="'$(OS)' == 'Windows_NT'">$(DotNetRoot)dotnet.exe</DotNetExecutable>
       <DotNetExecutable Condition="'$(DotNetExecutable)' == ''">$(DotNetRoot)dotnet</DotNetExecutable>
     </PropertyGroup>
-    <Exec Command="$(DotNetExecutable) run" WorkingDirectory="$(RepoRoot)src\Analyzers\MSTest.GlobalConfigsGenerator" EnvironmentVariables="OUTPUT_PATH=$(OutputPath)" />
+    <Exec Command="$(DotNetExecutable) run --no-build -c $(Configuration)" WorkingDirectory="$(RepoRoot)src\Analyzers\MSTest.GlobalConfigsGenerator" EnvironmentVariables="OUTPUT_PATH=$(OutputPath)" />
   </Target>
 
   <Target Name="_AddAnalyzersToOutput" DependsOnTargets="_GenerateGlobalConfigs">

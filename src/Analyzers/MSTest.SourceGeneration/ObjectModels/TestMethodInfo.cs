@@ -19,6 +19,7 @@ internal sealed record class TestMethodInfo
     private const string DataDotArgumentsMemberAccessName = DataVariableName + ".Arguments";
     private readonly EquatableArray<(string FilePath, int StartLine, int EndLine)> _declarationReferences;
     private readonly string _methodName;
+    private readonly int _methodArity;
     private readonly string _declaringAssemblyName;
     private readonly string _usingTypeFullyQualifiedName;
     private readonly bool _isAsync;
@@ -53,6 +54,7 @@ internal sealed record class TestMethodInfo
             .Select(tuple => (tuple.FilePath, tuple.Item2.StartLinePosition.Line + 1, tuple.Item2.EndLinePosition.Line + 1))
             .ToImmutableArray();
         _methodName = methodSymbol.Name;
+        _methodArity = methodSymbol.Arity;
         // 'SymbolDisplayFormat.FullyQualifiedFormat' would add version, culture and public key token to the assembly name.
         _declaringAssemblyName = methodSymbol.ContainingAssembly.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat);
         _methodIdentifierAssemblyName = methodSymbol.ContainingAssembly.ToDisplayString();
@@ -87,10 +89,10 @@ internal sealed record class TestMethodInfo
                 return null;
             }
 
-            List<AttributeData> dataRowAttributes = new();
-            List<AttributeData> dynamicDataAttributes = new();
-            List<AttributeData> testPropertyAttributes = new();
-            List<(string RuleId, string Description)> pragmas = new();
+            List<AttributeData> dataRowAttributes = [];
+            List<AttributeData> dynamicDataAttributes = [];
+            List<AttributeData> testPropertyAttributes = [];
+            List<(string RuleId, string Description)> pragmas = [];
             TimeSpan? testExecutionTimeout = null;
             foreach (AttributeData attribute in attributes)
             {
@@ -171,6 +173,7 @@ internal sealed record class TestMethodInfo
                 sourceStringBuilder.AppendLine($"\"{_methodIdentifierNamespace}\",");
                 sourceStringBuilder.AppendLine($"\"{_methodIdentifierTypeName}\",");
                 sourceStringBuilder.AppendLine($"\"{_methodName}\",");
+                sourceStringBuilder.AppendLine($"{_methodArity},");
 
                 if (ParametersInfo.ParametersMethodIdentifierFullyQualifiedTypes.Length > 0)
                 {

@@ -60,30 +60,30 @@ internal sealed class ToolsTestHost(
             {
                 if (UnknownOptions(out string? unknownOptionsError, tool))
                 {
-                    await _outputDevice.DisplayAsync(this, new ErrorMessageOutputDeviceData(unknownOptionsError));
+                    await _outputDevice.DisplayAsync(this, new ErrorMessageOutputDeviceData(unknownOptionsError)).ConfigureAwait(false);
                     console.WriteLine();
                     return ExitCodes.InvalidCommandLine;
                 }
 
                 if (ExtensionArgumentArityAreInvalid(out string? arityErrors, tool))
                 {
-                    await _outputDevice.DisplayAsync(this, new ErrorMessageOutputDeviceData(arityErrors));
+                    await _outputDevice.DisplayAsync(this, new ErrorMessageOutputDeviceData(arityErrors)).ConfigureAwait(false);
                     return ExitCodes.InvalidCommandLine;
                 }
 
-                ValidationResult optionsArgumentsValidationResult = await ValidateOptionsArgumentsAsync(tool);
+                ValidationResult optionsArgumentsValidationResult = await ValidateOptionsArgumentsAsync(tool).ConfigureAwait(false);
                 if (!optionsArgumentsValidationResult.IsValid)
                 {
-                    await _outputDevice.DisplayAsync(this, new ErrorMessageOutputDeviceData(optionsArgumentsValidationResult.ErrorMessage));
+                    await _outputDevice.DisplayAsync(this, new ErrorMessageOutputDeviceData(optionsArgumentsValidationResult.ErrorMessage)).ConfigureAwait(false);
                     return ExitCodes.InvalidCommandLine;
                 }
 
-                return await tool.RunAsync();
+                return await tool.RunAsync().ConfigureAwait(false);
             }
         }
 
-        await _outputDevice.DisplayAsync(this, new ErrorMessageOutputDeviceData($"Tool '{toolNameToRun}' not found in the list of registered tools."));
-        await _commandLineHandler.PrintHelpAsync(_outputDevice);
+        await _outputDevice.DisplayAsync(this, new ErrorMessageOutputDeviceData($"Tool '{toolNameToRun}' not found in the list of registered tools.")).ConfigureAwait(false);
+        await _commandLineHandler.PrintHelpAsync(_outputDevice).ConfigureAwait(false);
         return ExitCodes.InvalidCommandLine;
     }
 
@@ -164,7 +164,7 @@ internal sealed class ToolsTestHost(
         foreach (CommandLineParseOption optionRecord in _commandLineHandler.ParseResult.Options)
         {
             ICommandLineOptionsProvider extension = GetAllCommandLineOptionsProviderByOptionName(optionRecord.Name).Single();
-            ValidationResult result = await extension.ValidateOptionArgumentsAsync(extension.GetCommandLineOptions().Single(x => x.Name == optionRecord.Name), optionRecord.Arguments);
+            ValidationResult result = await extension.ValidateOptionArgumentsAsync(extension.GetCommandLineOptions().Single(x => x.Name == optionRecord.Name), optionRecord.Arguments).ConfigureAwait(false);
             if (!result.IsValid)
             {
                 stringBuilder.AppendLine(CultureInfo.InvariantCulture, $"Invalid arguments for option '--{optionRecord.Name}': {result.ErrorMessage}, tool {tool.DisplayName}");

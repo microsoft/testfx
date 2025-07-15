@@ -164,7 +164,7 @@ internal sealed class Condition
             ThrownFormatExceptionForInvalidCondition(conditionString);
         }
 
-        string[] parts = TokenizeFilterConditionString(conditionString).ToArray();
+        string[] parts = [.. TokenizeFilterConditionString(conditionString)];
         if (parts.Length == 1)
         {
             // If only parameter values is passed, create condition with default property name,
@@ -193,9 +193,9 @@ internal sealed class Condition
     }
 
     [DoesNotReturn]
-    private static void ThrownFormatExceptionForInvalidCondition(string? conditionString) => throw new FormatException(
-            string.Format(CultureInfo.CurrentCulture, "Incorrect format for TestCaseFilter {0}. Specify the correct format and try again. Note that the incorrect format can lead to no test getting executed..",
-            string.Format(CultureInfo.CurrentCulture, "Error: Invalid Condition '{0}'", conditionString)));
+    private static void ThrownFormatExceptionForInvalidCondition(string? conditionString) =>
+        throw new FormatException(
+            $"Incorrect format for TestCaseFilter Error: Invalid Condition '{conditionString}'. Specify the correct format and try again. Note that the incorrect format can lead to no test getting executed..");
 
     /// <summary>
     /// Check if condition validates any property in properties.
@@ -247,8 +247,7 @@ internal sealed class Condition
         "~" => Operation.Contains,
         "!~" => Operation.NotContains,
         _ => throw new FormatException(
-            string.Format(CultureInfo.CurrentCulture, "Incorrect format for TestCaseFilter {0}. Specify the correct format and try again. Note that the incorrect format can lead to no test getting executed..",
-                string.Format(CultureInfo.CurrentCulture, "Error: Invalid operator '{0}'", operationString))),
+            $"Incorrect format for TestCaseFilter Error: Invalid operator '{operationString}'. Specify the correct format and try again. Note that the incorrect format can lead to no test getting executed.."),
     };
 
     /// <summary>

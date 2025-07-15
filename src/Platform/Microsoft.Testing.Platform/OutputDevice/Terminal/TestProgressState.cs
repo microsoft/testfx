@@ -27,7 +27,7 @@ internal sealed class TestProgressState
 
     public IStopwatch Stopwatch { get; }
 
-    public List<IProgressMessage> Messages { get; } = new();
+    public List<IProgressMessage> Messages { get; } = [];
 
     public int FailedTests { get; internal set; }
 
@@ -45,7 +45,7 @@ internal sealed class TestProgressState
 
     public long Version { get; internal set; }
 
-    public List<(string? DisplayName, string? UID)> DiscoveredTests { get; internal set; } = new();
+    public List<string> DiscoveredTestDisplayNames { get; internal set; } = [];
 
     internal void AddError(string text)
         => Messages.Add(new ErrorMessage(text));

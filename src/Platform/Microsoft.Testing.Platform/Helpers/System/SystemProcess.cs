@@ -24,15 +24,10 @@ internal sealed class SystemProcess : IProcess, IDisposable
 
     public int ExitCode => _process.ExitCode;
 
-#if NETCOREAPP
     public IMainModule? MainModule
         => _process.MainModule is null
             ? null
-            : (IMainModule)new SystemMainModule(_process.MainModule);
-#else
-    public IMainModule MainModule
-        => new SystemMainModule(_process.MainModule);
-#endif
+            : new SystemMainModule(_process.MainModule);
 
     private void OnProcessExited(object? sender, EventArgs e)
         => Exited?.Invoke(sender, e);
@@ -43,13 +38,8 @@ internal sealed class SystemProcess : IProcess, IDisposable
     public Task WaitForExitAsync()
         => _process.WaitForExitAsync();
 
-#if NETCOREAPP
     public void Kill()
         => _process.Kill(true);
-#else
-    public void Kill()
-        => _process.Kill();
-#endif
 
     public void Dispose() => _process.Dispose();
 #pragma warning restore CA1416

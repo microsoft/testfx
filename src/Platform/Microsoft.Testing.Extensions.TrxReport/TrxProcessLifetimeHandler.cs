@@ -44,7 +44,7 @@ internal sealed class TrxProcessLifetimeHandler :
     private readonly IOutputDevice _outputDevice;
     private readonly ILogger<TrxProcessLifetimeHandler> _logger;
     private readonly PipeNameDescription _pipeNameDescription;
-    private readonly Dictionary<IDataProducer, List<FileArtifact>> _fileArtifacts = new();
+    private readonly Dictionary<IDataProducer, List<FileArtifact>> _fileArtifacts = [];
     private readonly DateTimeOffset _startTime;
 
     private NamedPipeServer? _singleConnectionNamedPipeServer;
@@ -109,7 +109,7 @@ internal sealed class TrxProcessLifetimeHandler :
                 _singleConnectionNamedPipeServer.RegisterSerializer(new ReportFileNameRequestSerializer(), typeof(ReportFileNameRequest));
                 _singleConnectionNamedPipeServer.RegisterSerializer(new TestAdapterInformationRequestSerializer(), typeof(TestAdapterInformationRequest));
                 _singleConnectionNamedPipeServer.RegisterSerializer(new VoidResponseSerializer(), typeof(VoidResponse));
-                await _singleConnectionNamedPipeServer.WaitConnectionAsync(cancellation).TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout, cancellation);
+                await _singleConnectionNamedPipeServer.WaitConnectionAsync(cancellation).TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout, cancellation).ConfigureAwait(false);
             }, cancellation);
 
         return Task.CompletedTask;
@@ -122,7 +122,7 @@ internal sealed class TrxProcessLifetimeHandler :
             throw new InvalidOperationException(ExtensionResources.TrxReportGeneratorBeforeTestHostProcessStartAsyncNotCalled);
         }
 
-        await _waitConnectionTask.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout, cancellation);
+        await _waitConnectionTask.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout, cancellation).ConfigureAwait(false);
     }
 
     public Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken)
@@ -144,7 +144,7 @@ internal sealed class TrxProcessLifetimeHandler :
             return;
         }
 
-        Dictionary<IExtension, List<SessionFileArtifact>> artifacts = new();
+        Dictionary<IExtension, List<SessionFileArtifact>> artifacts = [];
 
         foreach (KeyValuePair<IDataProducer, List<FileArtifact>> prodArtifacts in _fileArtifacts)
         {
@@ -172,10 +172,10 @@ internal sealed class TrxProcessLifetimeHandler :
 
             (string fileName, string? warning) = await trxReportGeneratorEngine.GenerateReportAsync(
                 isTestHostCrashed: true,
-                testHostCrashInfo: $"Test host process pid: {testHostProcessInformation.PID} crashed.");
+                testHostCrashInfo: $"Test host process pid: {testHostProcessInformation.PID} crashed.").ConfigureAwait(false);
             if (warning is not null)
             {
-                await _outputDevice.DisplayAsync(this, new WarningMessageOutputDeviceData(warning));
+                await _outputDevice.DisplayAsync(this, new WarningMessageOutputDeviceData(warning)).ConfigureAwait(false);
             }
 
             await _messageBus.PublishAsync(
@@ -183,7 +183,7 @@ internal sealed class TrxProcessLifetimeHandler :
                 new FileArtifact(
                     new FileInfo(fileName),
                     ExtensionResources.TrxReportArtifactDisplayName,
-                    ExtensionResources.TrxReportArtifactDescription));
+                    ExtensionResources.TrxReportArtifactDescription)).ConfigureAwait(false);
             return;
         }
 
@@ -206,10 +206,10 @@ internal sealed class TrxProcessLifetimeHandler :
                testHostProcessInformation.ExitCode,
                cancellation);
 
-            await trxReportGeneratorEngine.AddArtifactsAsync(trxFile, artifacts);
+            await trxReportGeneratorEngine.AddArtifactsAsync(trxFile, artifacts).ConfigureAwait(false);
         }
 
-        await _messageBus.PublishAsync(this, new FileArtifact(trxFile, ExtensionResources.TrxReportArtifactDisplayName, ExtensionResources.TrxReportArtifactDescription));
+        await _messageBus.PublishAsync(this, new FileArtifact(trxFile, ExtensionResources.TrxReportArtifactDisplayName, ExtensionResources.TrxReportArtifactDescription)).ConfigureAwait(false);
     }
 
     private Task<IResponse> CallbackAsync(IRequest request)
@@ -233,10 +233,10 @@ internal sealed class TrxProcessLifetimeHandler :
 #if NETCOREAPP
     public async ValueTask DisposeAsync()
     {
-        await DisposeHelper.DisposeAsync(_singleConnectionNamedPipeServer);
+        await DisposeHelper.DisposeAsync(_singleConnectionNamedPipeServer).ConfigureAwait(false);
 
         // Dispose the pipe descriptor after the server to ensure the pipe is closed.
-        _pipeNameDescription?.Dispose();
+        _pipeNameDescription.Dispose();
     }
 #else
     public void Dispose()
@@ -244,7 +244,7 @@ internal sealed class TrxProcessLifetimeHandler :
         _singleConnectionNamedPipeServer?.Dispose();
 
         // Dispose the pipe descriptor after the server to ensure the pipe is closed.
-        _pipeNameDescription?.Dispose();
+        _pipeNameDescription.Dispose();
     }
 #endif
 

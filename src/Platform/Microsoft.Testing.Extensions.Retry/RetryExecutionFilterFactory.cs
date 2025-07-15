@@ -38,13 +38,12 @@ internal sealed class RetryExecutionFilterFactory : ITestExecutionFilterFactory
         _retryFailedTestsLifecycleCallbacks = _serviceProvider.GetRequiredService<RetryLifecycleCallbacks>();
         if (_retryFailedTestsLifecycleCallbacks.FailedTestsIDToRetry?.Length > 0)
         {
-            return (true, new TestNodeUidListFilter(_retryFailedTestsLifecycleCallbacks.FailedTestsIDToRetry
-                .Select(x => new TestNodeUid(x)).ToArray()));
+            return (true, new TestNodeUidListFilter([.. _retryFailedTestsLifecycleCallbacks.FailedTestsIDToRetry.Select(x => new TestNodeUid(x))]));
         }
         else
         {
             ConsoleTestExecutionFilterFactory consoleTestExecutionFilterFactory = new(_commandLineOptions);
-            return await consoleTestExecutionFilterFactory.TryCreateAsync();
+            return await consoleTestExecutionFilterFactory.TryCreateAsync().ConfigureAwait(false);
         }
     }
 }

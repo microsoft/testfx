@@ -5,10 +5,10 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests;
 
 public partial class AssertTests
 {
-    #region That tests
-    public void ThatShouldReturnAnInstanceOfAssert() => Verify(Assert.That is not null);
+    #region Instance tests
+    public void InstanceShouldReturnAnInstanceOfAssert() => Verify(Assert.Instance is not null);
 
-    public void ThatShouldCacheAssertInstance() => Verify(ReferenceEquals(Assert.That, Assert.That));
+    public void InstanceShouldCacheAssertInstance() => Verify(ReferenceEquals(Assert.Instance, Assert.Instance));
     #endregion
 
     #region ReplaceNullChars tests
@@ -36,6 +36,29 @@ public partial class AssertTests
         string message = Assert.BuildUserMessage("{");
         Verify(message == "{");
     }
+    #endregion
+
+    #region Obsolete methods tests
+#if DEBUG
+    public void ObsoleteEqualsMethodThrowsAssertFailedException()
+    {
+#pragma warning disable CS0618 // Type or member is obsolete
+        Exception ex = VerifyThrows(() => Assert.Equals("test", "test"));
+#pragma warning restore CS0618 // Type or member is obsolete
+        Verify(ex is AssertFailedException);
+        Verify(ex.Message.Contains("Assert.Equals should not be used for Assertions"));
+    }
+
+    public void ObsoleteReferenceEqualsMethodThrowsAssertFailedException()
+    {
+        object obj = new();
+#pragma warning disable CS0618 // Type or member is obsolete
+        Exception ex = VerifyThrows(() => Assert.ReferenceEquals(obj, obj));
+#pragma warning restore CS0618 // Type or member is obsolete
+        Verify(ex is AssertFailedException);
+        Verify(ex.Message.Contains("Assert.ReferenceEquals should not be used for Assertions"));
+    }
+#endif
     #endregion
 
     private static Task<string> GetHelloStringAsync()

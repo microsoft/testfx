@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Helpers;
-using Microsoft.Testing.Platform.Hosts;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Services;
 
@@ -12,7 +11,7 @@ internal sealed class PassiveNode : IDisposable
 {
     private readonly IMessageHandlerFactory _messageHandlerFactory;
     private readonly ITestApplicationCancellationTokenSource _testApplicationCancellationTokenSource;
-    private readonly IProcessHandler _processHandler;
+    private readonly IEnvironment _environment;
     private readonly ILogger<PassiveNode> _logger;
     private readonly IAsyncMonitor _messageMonitor;
     private IMessageHandler? _messageHandler;
@@ -20,13 +19,13 @@ internal sealed class PassiveNode : IDisposable
     public PassiveNode(
         IMessageHandlerFactory messageHandlerFactory,
         ITestApplicationCancellationTokenSource testApplicationCancellationTokenSource,
-        IProcessHandler processHandler,
+        IEnvironment environment,
         IAsyncMonitorFactory asyncMonitorFactory,
         ILogger<PassiveNode> logger)
     {
         _messageHandlerFactory = messageHandlerFactory;
         _testApplicationCancellationTokenSource = testApplicationCancellationTokenSource;
-        _processHandler = processHandler;
+        _environment = environment;
         _messageMonitor = asyncMonitorFactory.Create();
         _logger = logger;
     }
@@ -43,12 +42,12 @@ internal sealed class PassiveNode : IDisposable
     public async Task<bool> ConnectAsync()
     {
         // Create message handler
-        await _logger.LogDebugAsync("Create message handler");
-        _messageHandler = await _messageHandlerFactory.CreateMessageHandlerAsync(_testApplicationCancellationTokenSource.CancellationToken);
+        await _logger.LogDebugAsync("Create message handler").ConfigureAwait(false);
+        _messageHandler = await _messageHandlerFactory.CreateMessageHandlerAsync(_testApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
 
         // Wait the initial message
-        await _logger.LogDebugAsync("Wait the initial message");
-        RpcMessage? message = await _messageHandler.ReadAsync(_testApplicationCancellationTokenSource.CancellationToken);
+        await _logger.LogDebugAsync("Wait the initial message").ConfigureAwait(false);
+        RpcMessage? message = await _messageHandler.ReadAsync(_testApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
         if (message is null)
         {
             return false;
@@ -57,13 +56,13 @@ internal sealed class PassiveNode : IDisposable
         // Log the message
         if (_logger.IsEnabled(LogLevel.Trace))
         {
-            await _logger.LogTraceAsync(message!.ToString());
+            await _logger.LogTraceAsync(message!.ToString()).ConfigureAwait(false);
         }
 
         var requestMessage = (RequestMessage)message;
         var responseObject = new InitializeResponseArgs(
-                        ProcessId: _processHandler.GetCurrentProcess().Id,
-                        ServerInfo: new ServerInfo("test-anywhere", Version: ServerTestHost.ProtocolVersion),
+                        ProcessId: _environment.ProcessId,
+                        ServerInfo: new ServerInfo("test-anywhere", Version: PlatformVersion.Version),
                         Capabilities: new ServerCapabilities(
                             new ServerTestingCapabilities(
                                 SupportsDiscovery: false,
@@ -74,7 +73,7 @@ internal sealed class PassiveNode : IDisposable
                                 // This means we're a push node
                                 MultiConnectionProvider: true)));
 
-        await SendResponseAsync(requestMessage.Id, responseObject, _testApplicationCancellationTokenSource.CancellationToken);
+        await SendResponseAsync(requestMessage.Id, responseObject, _testApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
         return true;
     }
 
@@ -83,9 +82,9 @@ internal sealed class PassiveNode : IDisposable
         AssertInitialized();
 
         ResponseMessage response = new(reqId, result);
-        using (await _messageMonitor.LockAsync(cancellationToken))
+        using (await _messageMonitor.LockAsync(cancellationToken).ConfigureAwait(false))
         {
-            await _messageHandler.WriteRequestAsync(response, cancellationToken);
+            await _messageHandler.WriteRequestAsync(response, cancellationToken).ConfigureAwait(false);
         }
     }
 
@@ -94,9 +93,9 @@ internal sealed class PassiveNode : IDisposable
         AssertInitialized();
 
         NotificationMessage notification = new(JsonRpcMethods.TestingTestUpdatesAttachments, testsAttachments);
-        using (await _messageMonitor.LockAsync(cancellationToken))
+        using (await _messageMonitor.LockAsync(cancellationToken).ConfigureAwait(false))
         {
-            await _messageHandler.WriteRequestAsync(notification, cancellationToken);
+            await _messageHandler.WriteRequestAsync(notification, cancellationToken).ConfigureAwait(false);
         }
     }
 

@@ -277,8 +277,13 @@ The type declaring these methods should also respect the following rules:
         <note />
       </trans-unit>
       <trans-unit id="DataRowShouldBeValidMessageFormat_ArgumentTypeMismatch">
-        <source>DataRow argument type should match method parameter type. Mismatches occur at indices: {0}</source>
-        <target state="translated">DataRow 인수 형식은 메서드 매개 변수 형식과 일치해야 합니다. 인덱스에서 불일치 발생: {0}</target>
+        <source>DataRow argument types do not match method parameter types. {0}</source>
+        <target state="translated">DataRow 인수 형식이 메서드 매개 변수 형식과 일치하지 않습니다. {0}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DataRowShouldBeValidMessageFormat_ParameterMismatch">
+        <source>Parameter '{0}' expects type '{1}', but the provided value has type '{2}'</source>
+        <target state="translated">'{0}' 매개 변수에는 '{1}' 형식이 필요한데 제공된 값의 형식은 '{2}'입니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="DataRowShouldBeValidMessageFormat_GenericTypeArgumentConflictingTypes">
@@ -437,6 +442,21 @@ The type declaring these methods should also respect the following rules:
         <target state="translated">항상 실패하는 어설션 대신 'Assert.Fail' 사용</target>
         <note />
       </trans-unit>
+      <trans-unit id="PreferTestMethodOverDataTestMethodAnalyzerDescription">
+        <source>'DataTestMethodAttribute' is obsolete and provides no additional functionality over 'TestMethodAttribute'. Use 'TestMethodAttribute' for all test methods, including parameterized tests.</source>
+        <target state="translated">'DataTestMethodAttribute'는 더 이상 사용되지 않으며 'TestMethodAttribute'에 대한 추가 기능을 제공하지 않습니다. 매개 변수가 있는 테스트를 포함하여 모든 테스트 메서드에 'TestMethodAttribute'를 사용하세요.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PreferTestMethodOverDataTestMethodAnalyzerMessageFormat">
+        <source>'DataTestMethod' is obsolete. Use 'TestMethod' instead.</source>
+        <target state="translated">'DataTestMethod'는 사용되지 않습니다. 대신 'TestMethod'를 사용하세요.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PreferTestMethodOverDataTestMethodAnalyzerTitle">
+        <source>Prefer 'TestMethod' over 'DataTestMethod'</source>
+        <target state="translated">'DataTestMethod'보다 'TestMethod' 선호</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ReviewAlwaysTrueAssertConditionAnalyzerMessageFormat">
         <source>Review or remove the assertion as its condition is known to be always true</source>
         <target state="translated">조건이 항상 true인 것으로 알려진 어설션 검토 또는 제거</target>
@@ -515,6 +535,16 @@ The type declaring these methods should also respect the following rules:
       <trans-unit id="PublicTypeShouldBeTestClassTitle">
         <source>Public types should be test classes</source>
         <target state="translated">공용 형식은 테스트 클래스여야 합니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="StringAssertToAssertMessageFormat">
+        <source>Use 'Assert.{0}' instead of 'StringAssert.{1}'</source>
+        <target state="translated">'StringAssert.{1}' 대신 'Assert.{0}' 사용</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="StringAssertToAssertTitle">
+        <source>Use 'Assert' instead of 'StringAssert'</source>
+        <target state="translated">'StringAssert' 대신 'Assert' 사용</target>
         <note />
       </trans-unit>
       <trans-unit id="TestClassShouldBeValidMessageFormat">
@@ -762,6 +792,21 @@ The type declaring these methods should also respect the following rules:
       <trans-unit id="UseConditionBaseWithTestClassTitle">
         <source>Use 'ConditionBaseAttribute' on test classes</source>
         <target state="translated">테스트 클래스에 'ConditionBaseAttribute' 사용</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseCooperativeCancellationForTimeoutDescription">
+        <source>Using '[Timeout]' without explicitly setting 'CooperativeCancellation = true' is discouraged. In a future version, cooperative cancellation will become the default behavior. Set 'CooperativeCancellation = true' to opt into the recommended behavior and avoid breaking changes.</source>
+        <target state="translated">'CooperativeCancellation = true'를 명시적으로 설정하지 않고 '[Timeout]'을 사용하는 것은 권장되지 않습니다. 향후 버전에서는 협동 취소가 기본 동작으로 설정될 것입니다. 권장 동작을 선택하고 변경 사항으로 인한 문제를 피하려면 'CooperativeCancellation = true'를 설정하세요.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseCooperativeCancellationForTimeoutMessageFormat">
+        <source>Use 'CooperativeCancellation = true' with '[Timeout]' to enable cooperative cancellation behavior</source>
+        <target state="translated">'[Timeout]'와 함께 'CooperativeCancellation = true'를 사용하여 협동 취소 동작을 활성화하세요.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseCooperativeCancellationForTimeoutTitle">
+        <source>Use 'CooperativeCancellation = true' with '[Timeout]'</source>
+        <target state="translated">'[Timeout]'와 함께 'CooperativeCancellation = true'를 사용하세요.</target>
         <note />
       </trans-unit>
       <trans-unit id="UseDeploymentItemWithTestMethodOrTestClassMessageFormat">

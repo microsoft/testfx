@@ -4,7 +4,6 @@
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Requests;
 
-#pragma warning disable TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
 namespace Microsoft.Testing.Framework.UnitTests;
 
 [TestClass]
@@ -18,21 +17,21 @@ public sealed class BFSTestNodeVisitorTests : TestBase
         {
             StableUid = "ID1",
             DisplayName = "A",
-            Tests = new[]
-            {
+            Tests =
+            [
                 new TestNode
                 {
                     StableUid = "ID2",
                     DisplayName = "B/C",
                 },
-            },
+            ],
         };
 
         var filter = new TreeNodeFilter("/A/B/C");
         var visitor = new BFSTestNodeVisitor(new[] { rootNode }, filter, null!);
 
         // Act
-        List<TestNode> includedTestNodes = new();
+        List<TestNode> includedTestNodes = [];
         await visitor.VisitAsync((testNode, _) =>
         {
             includedTestNodes.Add(testNode);
@@ -55,21 +54,21 @@ public sealed class BFSTestNodeVisitorTests : TestBase
         {
             StableUid = "ID1",
             DisplayName = "A",
-            Tests = new[]
-            {
+            Tests =
+            [
                 new TestNode
                 {
                     StableUid = "ID2",
                     DisplayName = "B" + nodeSpecialString + "C",
                 },
-            },
+            ],
         };
 
         var filter = new TreeNodeFilter("/A/B" + filterEncodedSpecialString + "C");
         var visitor = new BFSTestNodeVisitor(new[] { rootNode }, filter, null!);
 
         // Act
-        List<TestNode> includedTestNodes = new();
+        List<TestNode> includedTestNodes = [];
         await visitor.VisitAsync((testNode, _) =>
         {
             includedTestNodes.Add(testNode);
@@ -107,7 +106,7 @@ public sealed class BFSTestNodeVisitorTests : TestBase
         var visitor = new BFSTestNodeVisitor(new[] { rootNode }, new NopFilter(), null!);
 
         // Act
-        List<TestNode> includedTestNodes = new();
+        List<TestNode> includedTestNodes = [];
         await visitor.VisitAsync((testNode, _) =>
         {
             includedTestNodes.Add(testNode);
@@ -129,7 +128,7 @@ public sealed class BFSTestNodeVisitorTests : TestBase
         var visitor = new BFSTestNodeVisitor(new[] { rootNode }, new NopFilter(), new TestArgumentsManager());
 
         // Act
-        List<(TestNode Node, TestNodeUid? ParentNodeUid)> includedTestNodes = new();
+        List<(TestNode Node, TestNodeUid? ParentNodeUid)> includedTestNodes = [];
         await visitor.VisitAsync((testNode, parentNodeUid) =>
         {
             includedTestNodes.Add((testNode, parentNodeUid));
@@ -158,7 +157,7 @@ public sealed class BFSTestNodeVisitorTests : TestBase
         var visitor = new BFSTestNodeVisitor(new[] { rootNode }, new NopFilter(), new TestArgumentsManager());
 
         // Act
-        List<(TestNode Node, TestNodeUid? ParentNodeUid)> includedTestNodes = new();
+        List<(TestNode Node, TestNodeUid? ParentNodeUid)> includedTestNodes = [];
         await visitor.VisitAsync((testNode, parentNodeUid) =>
         {
             includedTestNodes.Add((testNode, parentNodeUid));
@@ -177,14 +176,14 @@ public sealed class BFSTestNodeVisitorTests : TestBase
         {
             StableUid = "MyModule",
             DisplayName = "MyModule",
-            Tests = new[]
-            {
+            Tests =
+            [
                 new TestNode
                 {
                     StableUid = "MyNamespace",
                     DisplayName = "MyNamespace",
-                    Tests = new[]
-                    {
+                    Tests =
+                    [
                         new TestNode
                         {
                             StableUid = "MyType",
@@ -200,14 +199,14 @@ public sealed class BFSTestNodeVisitorTests : TestBase
                                 },
                             },
                         },
-                    },
+                    ],
                 },
-            },
+            ],
         };
         var visitor = new BFSTestNodeVisitor(new[] { rootNode }, new NopFilter(), new TestArgumentsManager());
 
         // Act
-        List<(TestNode Node, TestNodeUid? ParentNodeUid)> includedTestNodes = new();
+        List<(TestNode Node, TestNodeUid? ParentNodeUid)> includedTestNodes = [];
         await visitor.VisitAsync((testNode, parentNodeUid) =>
         {
             includedTestNodes.Add((testNode, parentNodeUid));
@@ -267,13 +266,13 @@ public sealed class BFSTestNodeVisitorTests : TestBase
         static IEnumerable<byte> GetArguments() => new byte[] { 0, 1 };
         static IProperty[] GetProperties(bool? hasExpansionProperty)
             => hasExpansionProperty.HasValue
-                ? new IProperty[1]
-                {
+                ?
+                [
                     new FrameworkEngineMetadataProperty
                     {
                         PreventArgumentsExpansion = hasExpansionProperty.Value,
                     },
-                }
-                : Array.Empty<IProperty>();
+                ]
+                : [];
     }
 }

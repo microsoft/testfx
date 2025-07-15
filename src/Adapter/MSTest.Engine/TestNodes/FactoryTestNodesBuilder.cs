@@ -15,8 +15,7 @@ internal sealed class FactoryTestNodesBuilder : ITestNodesBuilder
 
     public bool IsSupportingTrxProperties { get; }
 
-    IReadOnlyCollection<ITestFrameworkCapability> ICapabilities<ITestFrameworkCapability>.Capabilities
-        => Array.Empty<ITestFrameworkCapability>();
+    IReadOnlyCollection<ITestFrameworkCapability> ICapabilities<ITestFrameworkCapability>.Capabilities => [];
 
     public Task<TestNode[]> BuildAsync(ITestSessionContext _) => Task.FromResult(_testNodesFactory());
 }

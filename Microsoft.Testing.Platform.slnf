@@ -1,6 +1,6 @@
 {
   "solution": {
-    "path": "TestFx.sln",
+    "path": "TestFx.slnx",
     "projects": [
       "samples\\Playground\\Playground.csproj",
       "src\\Platform\\Microsoft.Testing.Extensions.CrashDump\\Microsoft.Testing.Extensions.CrashDump.csproj",

@@ -24,12 +24,12 @@ public static class TargetFrameworks
 
     public static string[] All { get; }
         = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
-            ? Net.Concat(NetFramework).ToArray()
+            ? [.. Net, .. NetFramework]
             : Net;
 
     public static IEnumerable<object[]> AllForDynamicData { get; } =
         All.Select(tfm => new object[] { tfm });
 
     public static string ToMSBuildTargetFrameworks(this string[] targetFrameworksEntries)
-        => string.Join(";", targetFrameworksEntries);
+        => string.Join(';', targetFrameworksEntries);
 }

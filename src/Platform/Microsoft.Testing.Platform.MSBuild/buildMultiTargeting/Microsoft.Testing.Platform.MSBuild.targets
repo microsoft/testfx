@@ -4,7 +4,7 @@
   <!-- Setup the task folder -->
   <PropertyGroup>
     <!-- Constants -->
-    <MicrosoftTestingPlatformMSBuildTaskFolder Condition=" $(MicrosoftTestingPlatformMSBuildTaskFolder) == '' ">$(MSBuildThisFileDirectory)..\_MSBuildTasks\netstandard2.0\</MicrosoftTestingPlatformMSBuildTaskFolder>
+    <MicrosoftTestingPlatformMSBuildTaskFolder Condition=" '$(MicrosoftTestingPlatformMSBuildTaskFolder)' == '' ">$(MSBuildThisFileDirectory)..\_MSBuildTasks\netstandard2.0\</MicrosoftTestingPlatformMSBuildTaskFolder>
   </PropertyGroup>
 
 

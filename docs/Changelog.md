@@ -4,9 +4,162 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
+## <a name="3.9.3" />[3.9.3] - 2025-06-17
+
+See full log [of v3.9.2...v3.9.3](https://github.com/microsoft/testfx/compare/v3.9.2...v3.9.3)
+
+### Fixed
+
+* No change, released to keep version aligned with Microsoft.Testing.Platform.
+
+### Artifacts
+
+* MSTest: [3.9.3](https://www.nuget.org/packages/MSTest/3.9.3)
+* MSTest.TestFramework: [3.9.3](https://www.nuget.org/packages/MSTest.TestFramework/3.9.3)
+* MSTest.TestAdapter: [3.9.3](https://www.nuget.org/packages/MSTest.TestAdapter/3.9.3)
+* MSTest.Analyzers: [3.9.3](https://www.nuget.org/packages/MSTest.Analyzers/3.9.3)
+* MSTest.Sdk: [3.9.3](https://www.nuget.org/packages/MSTest.Sdk/3.9.3)
+* Microsoft.Testing.Extensions.CrashDump: [1.7.3](https://www.nuget.org/packages/Microsoft.Testing.Extensions.CrashDump/1.7.3)
+* Microsoft.Testing.Extensions.HangDump: [1.7.3](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HangDump/1.7.3)
+* Microsoft.Testing.Extensions.HotReload: [1.7.3](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HotReload/1.7.3)
+* Microsoft.Testing.Extensions.Retry: [1.7.3](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Retry/1.7.3)
+* Microsoft.Testing.Extensions.TrxReport: [1.7.3](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport/1.7.3)
+* Microsoft.Testing.Extensions.AzureDevOpsReport [1.0.0-alpha.25317.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.AzureDevOpsReport/1.0.0-alpha.25317.1)
+* MSTest.SourceGeneration: [1.0.0-alpha.25317.1](https://www.nuget.org/packages/MSTest.SourceGeneration/1.0.0-alpha.25317.1)
+* MSTest.Engine: [1.0.0-alpha.25317.1](https://www.nuget.org/packages/MSTest.Engine/1.0.0-alpha.25317.1)
+
+## <a name="3.9.2" />[3.9.2] - 2025-06-10
+
+See full log [of v3.9.1...v3.9.2](https://github.com/microsoft/testfx/compare/v3.9.1...v3.9.2)
+
+### Fixed
+
+* Fix MSTEST0042 (duplicate data row) false positive with Zero/NegativeZero by @Youssef1313 in [#5684](https://github.com/microsoft/testfx/pull/5684)
+* Ensure TestMethodAttribute.Execute is run on the correct execution context by @Youssef1313 in [#5688](https://github.com/microsoft/testfx/pull/5688)
+* Avoid loading System.Threading.Tasks.Extensions when not needed by @Youssef1313 in [#5694](https://github.com/microsoft/testfx/pull/5694)
+* Fix UseAsync property in TestMethodAttribute derived classes to use type checks by @Youssef1313 and @Copilot in [#5708](https://github.com/microsoft/testfx/pull/5708)
+* Fix UnitTestRunner leaking some test class instances by @Youssef1313 in [#5715](https://github.com/microsoft/testfx/pull/5715)
+
+### Artifacts
+
+* MSTest: [3.9.2](https://www.nuget.org/packages/MSTest/3.9.2)
+* MSTest.TestFramework: [3.9.2](https://www.nuget.org/packages/MSTest.TestFramework/3.9.2)
+* MSTest.TestAdapter: [3.9.2](https://www.nuget.org/packages/MSTest.TestAdapter/3.9.2)
+* MSTest.Analyzers: [3.9.2](https://www.nuget.org/packages/MSTest.Analyzers/3.9.2)
+* MSTest.Sdk: [3.9.2](https://www.nuget.org/packages/MSTest.Sdk/3.9.2)
+* Microsoft.Testing.Extensions.CrashDump: [1.7.2](https://www.nuget.org/packages/Microsoft.Testing.Extensions.CrashDump/1.7.2)
+* Microsoft.Testing.Extensions.HangDump: [1.7.2](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HangDump/1.7.2)
+* Microsoft.Testing.Extensions.HotReload: [1.7.2](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HotReload/1.7.2)
+* Microsoft.Testing.Extensions.Retry: [1.7.2](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Retry/1.7.2)
+* Microsoft.Testing.Extensions.TrxReport: [1.7.2](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport/1.7.2)
+* Microsoft.Testing.Extensions.AzureDevOpsReport [1.0.0-alpha.25310.6](https://www.nuget.org/packages/Microsoft.Testing.Extensions.AzureDevOpsReport/1.0.0-alpha.25310.6)
+* MSTest.SourceGeneration: [1.0.0-alpha.25310.6](https://www.nuget.org/packages/MSTest.SourceGeneration/1.0.0-alpha.25310.6)
+* MSTest.Engine: [1.0.0-alpha.25310.6](https://www.nuget.org/packages/MSTest.Engine/1.0.0-alpha.25310.6)
+
+## <a name="3.9.1" />[3.9.1] - 2025-05-27
+
+See full log [of v3.9.0...v3.9.1](https://github.com/microsoft/testfx/compare/v3.9.0...v3.9.1)
+
+### Fixed
+
+* Make ConditionBaseAttribute.Mode public by @Youssef1313 in [#5581](https://github.com/microsoft/testfx/pull/5581)
+* Add missing overload for Assert.Throws by @Youssef1313 in [#5619](https://github.com/microsoft/testfx/pull/5619)
+* Fix System.MissingMethodException for KeyValuePair Deconstruction by @Youssef1313 in [#5633](https://github.com/microsoft/testfx/pull/5633)
+* Run the whole ExecuteInternal logic under the right execution context by @Youssef1313 in [#5636](https://github.com/microsoft/testfx/pull/5636)
+
+### Artifacts
+
+* MSTest: [3.9.1](https://www.nuget.org/packages/MSTest/3.9.1)
+* MSTest.TestFramework: [3.9.1](https://www.nuget.org/packages/MSTest.TestFramework/3.9.1)
+* MSTest.TestAdapter: [3.9.1](https://www.nuget.org/packages/MSTest.TestAdapter/3.9.1)
+* MSTest.Analyzers: [3.9.1](https://www.nuget.org/packages/MSTest.Analyzers/3.9.1)
+* MSTest.Sdk: [3.9.1](https://www.nuget.org/packages/MSTest.Sdk/3.9.1)
+* Microsoft.Testing.Extensions.CrashDump: [1.7.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.CrashDump/1.7.1)
+* Microsoft.Testing.Extensions.HangDump: [1.7.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HangDump/1.7.1)
+* Microsoft.Testing.Extensions.HotReload: [1.7.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HotReload/1.7.1)
+* Microsoft.Testing.Extensions.Retry: [1.7.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Retry/1.7.1)
+* Microsoft.Testing.Extensions.TrxReport: [1.7.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport/1.7.1)
+* Microsoft.Testing.Extensions.AzureDevOpsReport [1.0.0-alpha.25277.3](https://www.nuget.org/packages/Microsoft.Testing.Extensions.AzureDevOpsReport/1.0.0-alpha.25277.3)
+* MSTest.SourceGeneration: [1.0.0-alpha.25277.3](https://www.nuget.org/packages/MSTest.SourceGeneration/1.0.0-alpha.25277.3)
+* MSTest.Engine: [1.0.0-alpha.25277.3](https://www.nuget.org/packages/MSTest.Engine/1.0.0-alpha.25277.3)
+
+## <a name="3.9.0" />[3.9.0] - 2025-05-20
+
+See full log [of v3.8.3...v3.9.0](https://github.com/microsoft/testfx/compare/v3.8.3...v3.9.0)
+
+### Added
+
+* Allow async test methods for UITestMethod on UWP and WinUI by @Youssef1313 in [#5297](https://github.com/microsoft/testfx/pull/5297)
+* Add analyzer for duplicate data row by @Youssef1313 in [#5144](https://github.com/microsoft/testfx/pull/5144)
+* Add `Func<object>` overloads for Assert.Throws[Exactly] by @Youssef1313 in [#5313](https://github.com/microsoft/testfx/pull/5313)
+* Add TestRunCount to TestContext by @Youssef1313 in [#5425](https://github.com/microsoft/testfx/pull/5425)
+
+### Fixed
+
+* Fix ClassCleanup not called when the first test in class is ignored by @Youssef1313 in [#5070](https://github.com/microsoft/testfx/pull/5070)
+* Write warnings outside of appdomain by @nohwnd in [#5371](https://github.com/microsoft/testfx/pull/5371)
+* Fix MSTEST0038 message by @Youssef1313 in [#5008](https://github.com/microsoft/testfx/pull/5008)
+* Fix parameterized test treated as ignored when using VSTest in Test Explorer by @Youssef1313 in [#5020](https://github.com/microsoft/testfx/pull/5020)
+* Avoid handling tuples for test methods with only object[] parameter by @Youssef1313 in [#5013](https://github.com/microsoft/testfx/pull/5013)
+* Follow-up to ignore fix by @Youssef1313 in [#5042](https://github.com/microsoft/testfx/pull/5042)
+* Fix discard handling for newer Assert.Throws codefix by @Youssef1313 in [#5117](https://github.com/microsoft/testfx/pull/5117)
+* Ship props/targets of MSTest.TestFramework and MSTest.TestAdapter in both build and buildTransitive by @Youssef1313 in [#5220](https://github.com/microsoft/testfx/pull/5220)
+* Fix TestFailedException outcome not propagating to TestResult outcome by @Youssef1313 in [#5236](https://github.com/microsoft/testfx/pull/5236)
+* Fix stackoverflow in Assert.DoesNotContain by @Youssef1313 in [#5275](https://github.com/microsoft/testfx/pull/5275)
+* Fix typo in docs for StringAssert.That by @YoshiRulz in [#5281](https://github.com/microsoft/testfx/pull/5281)
+* Fix TypeCache re-calculating info when running in parallel by @Youssef1313 in [#5291](https://github.com/microsoft/testfx/pull/5291)
+* Fix test property not considering the test class correctly by @Youssef1313 in [#5293](https://github.com/microsoft/testfx/pull/5293)
+* Fix typo in TestMethodAttribute documentation by @bjornhellander in [#5300](https://github.com/microsoft/testfx/pull/5300)
+* Fix parameterized UI tests for WinUI by @Youssef1313 in [#5305](https://github.com/microsoft/testfx/pull/5305)
+* Fix MSTEST0032 false positive with nullability analysis by @Youssef1313 in [#5315](https://github.com/microsoft/testfx/pull/5315)
+* Move System.Threading.Tasks.Extensions to TestFramework by @Youssef1313 in [#5330](https://github.com/microsoft/testfx/pull/5330)
+* remove redundant null check in WriteExceptionAsync by @SimonCropp in [#5393](https://github.com/microsoft/testfx/pull/5393)
+* remove redundant null checks in DeploymentItemUtility by @SimonCropp in [#5399](https://github.com/microsoft/testfx/pull/5399)
+* add disable CS0618 to MSTestSettingsTests by @SimonCropp in [#5389](https://github.com/microsoft/testfx/pull/5389)
+* remove redundant catch by @SimonCropp in [#5376](https://github.com/microsoft/testfx/pull/5376)
+* remove redundant ReflectHelper constructor by @SimonCropp in [#5379](https://github.com/microsoft/testfx/pull/5379)
+* remove redundant braces and mark as error in rider and R# by @SimonCropp in [#5380](https://github.com/microsoft/testfx/pull/5380)
+* avoid redundant where and mark as an error for rider and r# by @SimonCropp in [#5384](https://github.com/microsoft/testfx/pull/5384)
+* Update MSTestSettingsTests.cs by @SimonCropp in [#5388](https://github.com/microsoft/testfx/pull/5388)
+* remove redundant null checks in UnitTestRunnerTests by @SimonCropp in [#5390](https://github.com/microsoft/testfx/pull/5390)
+* remove redundant null checks in AssemblyEnumeratorTests by @SimonCropp in [#5391](https://github.com/microsoft/testfx/pull/5391)
+* remove redundant null check in UnitTestElement by @SimonCropp in [#5400](https://github.com/microsoft/testfx/pull/5400)
+* fix nullability in TestableMSTestAdapterSettings by @SimonCropp in [#5387](https://github.com/microsoft/testfx/pull/5387)
+* Downgrade error entries in .editorconfig to warning by @Youssef1313 in [#5416](https://github.com/microsoft/testfx/pull/5416)
+* Conditional expression can be rewritten as null-coalescing and mark as warning by @SimonCropp in [#5429](https://github.com/microsoft/testfx/pull/5429)
+* remove un-used IParameterInfo by @SimonCropp in [#5431](https://github.com/microsoft/testfx/pull/5431)
+* remove Trimming, AOT, and SingleFile config from MSTest.SourceGeneration by @SimonCropp in [#5433](https://github.com/microsoft/testfx/pull/5433)
+* Add test for TestContext.TestRunCount by @Youssef1313 in [#5440](https://github.com/microsoft/testfx/pull/5440)
+* Add test for TestProperty attribute by @Youssef1313 in [#5439](https://github.com/microsoft/testfx/pull/5439)
+* remove dead code from SourceGeneration by @SimonCropp in [#5446](https://github.com/microsoft/testfx/pull/5446)
+* use-char-based-replace-in-string by @SimonCropp in [#5447](https://github.com/microsoft/testfx/pull/5447)
+* remove un-used static class EquatableArray by @SimonCropp in [#5445](https://github.com/microsoft/testfx/pull/5445)
+* Fix exception in assembly initialize shown as aggregate exception by @Youssef1313 in [#5498](https://github.com/microsoft/testfx/pull/5498)
+* Skip analyzing TestContext fields that are generated via primary constructor parameters by @Youssef1313 in [#5501](https://github.com/microsoft/testfx/pull/5501)
+* Fix MSTEST0017 (actual/expected order) false negative for conversions by @Youssef1313 in [#5502](https://github.com/microsoft/testfx/pull/5502)
+* Avoid overwriting TestFailureException by @Youssef1313 in [#5505](https://github.com/microsoft/testfx/pull/5505)
+* Add some unit tests for Assert.Contains/DoesNotContain by @Evangelink in [#5541](https://github.com/microsoft/testfx/pull/5541)
+* Fix false positive of Assert.IsTrue(x == null) when x is a pointer type by @Youssef1313 in [#5548](https://github.com/microsoft/testfx/pull/5548)
+
+### Artifacts
+
+* MSTest: [3.9.0](https://www.nuget.org/packages/MSTest/3.9.0)
+* MSTest.TestFramework: [3.9.0](https://www.nuget.org/packages/MSTest.TestFramework/3.9.0)
+* MSTest.TestAdapter: [3.9.0](https://www.nuget.org/packages/MSTest.TestAdapter/3.9.0)
+* MSTest.Analyzers: [3.9.0](https://www.nuget.org/packages/MSTest.Analyzers/3.9.0)
+* MSTest.Sdk: [3.9.0](https://www.nuget.org/packages/MSTest.Sdk/3.9.0)
+* Microsoft.Testing.Extensions.CrashDump: [1.7.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.CrashDump/1.7.0)
+* Microsoft.Testing.Extensions.HangDump: [1.7.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HangDump/1.7.0)
+* Microsoft.Testing.Extensions.HotReload: [1.7.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HotReload/1.7.0)
+* Microsoft.Testing.Extensions.Retry: [1.7.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Retry/1.7.0)
+* Microsoft.Testing.Extensions.TrxReport: [1.7.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport/1.7.0)
+* Microsoft.Testing.Extensions.AzureDevOpsReport [1.0.0-alpha.25256.6](https://www.nuget.org/packages/Microsoft.Testing.Extensions.AzureDevOpsReport/1.0.0-alpha.25256.6)
+* MSTest.SourceGeneration: [1.0.0-alpha.25256.6](https://www.nuget.org/packages/MSTest.SourceGeneration/1.0.0-alpha.25256.6)
+* MSTest.Engine: [1.0.0-alpha.25256.6](https://www.nuget.org/packages/MSTest.Engine/1.0.0-alpha.25256.6)
+
 ## <a name="3.8.3" />[3.8.3] - 2025-03-17
 
-See full log [here](https://github.com/microsoft/testfx/compare/v3.8.2...v3.8.3)
+See full log [of v3.8.2...v3.8.3](https://github.com/microsoft/testfx/compare/v3.8.2...v3.8.3)
 
 ### Fixed
 
@@ -33,7 +186,7 @@ See full log [here](https://github.com/microsoft/testfx/compare/v3.8.2...v3.8.3)
 
 ## <a name="3.8.2" />[3.8.2] - 2025-02-19
 
-See full log [here](https://github.com/microsoft/testfx/compare/v3.8.1...v3.8.2)
+See full log [of v3.8.1...v3.8.2](https://github.com/microsoft/testfx/compare/v3.8.1...v3.8.2)
 
 ### Fixed
 
@@ -56,7 +209,7 @@ See full log [here](https://github.com/microsoft/testfx/compare/v3.8.1...v3.8.2)
 
 ## <a name="3.8.1" />[3.8.1] - 2025-02-18
 
-See full log [here](https://github.com/microsoft/testfx/compare/v3.8.0...v3.8.1)
+See full log [of v3.8.0...v3.8.1](https://github.com/microsoft/testfx/compare/v3.8.0...v3.8.1)
 
 ### Fixed
 
@@ -83,7 +236,7 @@ See full log [here](https://github.com/microsoft/testfx/compare/v3.8.0...v3.8.1)
 
 ## <a name="3.8.0" />[3.8.0] - 2025-02-12
 
-See full log [here](https://github.com/microsoft/testfx/compare/v3.7.3...v3.8.0)
+See full log [of v3.7.3...v3.8.0](https://github.com/microsoft/testfx/compare/v3.7.3...v3.8.0)
 
 ### Added
 
@@ -194,7 +347,7 @@ See full log [here](https://github.com/microsoft/testfx/compare/v3.7.3...v3.8.0)
 
 ## <a name="3.7.3" />[3.7.3] - 2025-01-27
 
-See full log [here](https://github.com/microsoft/testfx/compare/v3.7.2...v3.7.3)
+See full log [of v3.7.2...v3.7.3](https://github.com/microsoft/testfx/compare/v3.7.2...v3.7.3)
 
 ### Fixed
 
@@ -215,7 +368,7 @@ See full log [here](https://github.com/microsoft/testfx/compare/v3.7.2...v3.7.3)
 
 ## <a name="3.7.2" />[3.7.2] - 2025-01-21
 
-See full log [here](https://github.com/microsoft/testfx/compare/v3.7.1...v3.7.2)
+See full log [of v3.7.1...v3.7.2](https://github.com/microsoft/testfx/compare/v3.7.1...v3.7.2)
 
 ### Fixed
 
@@ -237,7 +390,7 @@ See full log [here](https://github.com/microsoft/testfx/compare/v3.7.1...v3.7.2)
 
 ## <a name="3.7.1" />[3.7.1] - 2024-01-13
 
-See full log [here](https://github.com/microsoft/testfx/compare/v3.7.0...v3.7.1)
+See full log [of v3.7.0...v3.7.1](https://github.com/microsoft/testfx/compare/v3.7.0...v3.7.1)
 
 ### Fixed
 
@@ -266,7 +419,7 @@ See full log [here](https://github.com/microsoft/testfx/compare/v3.7.0...v3.7.1)
 
 ## <a name="3.7.0" />[3.7.0] - 2024-12-20
 
-See full log [here](https://github.com/microsoft/testfx/compare/v3.6.4...v3.7.0)
+See full log [of v3.6.4...v3.7.0](https://github.com/microsoft/testfx/compare/v3.6.4...v3.7.0)
 
 ### Added
 
@@ -396,7 +549,7 @@ See full log [here](https://github.com/microsoft/testfx/compare/v3.6.4...v3.7.0)
 
 ## <a name="3.6.4" />[3.6.4] - 2024-12-03
 
-See full log [here](https://github.com/microsoft/testfx/compare/v3.6.3...v3.6.4)
+See full log [of v3.6.3...v3.6.4](https://github.com/microsoft/testfx/compare/v3.6.3...v3.6.4)
 
 ### Fixed
 
@@ -418,7 +571,7 @@ See full log [here](https://github.com/microsoft/testfx/compare/v3.6.3...v3.6.4)
 
 ## <a name="3.6.3" />[3.6.3] - 2024-11-12
 
-See full log [here](https://github.com/microsoft/testfx/compare/v3.6.2...v3.6.3)
+See full log [of v3.6.2...v3.6.3](https://github.com/microsoft/testfx/compare/v3.6.2...v3.6.3)
 
 ### Fixed
 
@@ -439,7 +592,7 @@ See full log [here](https://github.com/microsoft/testfx/compare/v3.6.2...v3.6.3)
 
 ## <a name="3.6.2" />[3.6.2] - 2024-10-31
 
-See full log [here](https://github.com/microsoft/testfx/compare/v3.6.1...v3.6.2)
+See full log [of v3.6.1...v3.6.2](https://github.com/microsoft/testfx/compare/v3.6.1...v3.6.2)
 
 ### Fixed
 
@@ -465,7 +618,7 @@ See full log [here](https://github.com/microsoft/testfx/compare/v3.6.1...v3.6.2)
 
 ## <a name="3.6.1" />[3.6.1] - 2024-10-03
 
-See full log [here](https://github.com/microsoft/testfx/compare/v3.6.0...v3.6.1)
+See full log [of v3.6.0...v3.6.1](https://github.com/microsoft/testfx/compare/v3.6.0...v3.6.1)
 
 ### Fixed
 
@@ -492,7 +645,7 @@ See full log [here](https://github.com/microsoft/testfx/compare/v3.6.0...v3.6.1)
 
 ## <a name="3.6.1" />[3.6.0] - 2024-09-11
 
-See full log [here](https://github.com/microsoft/testfx/compare/v3.5.2...v3.6.0)
+See full log [of v3.5.2...v3.6.0](https://github.com/microsoft/testfx/compare/v3.5.2...v3.6.0)
 
 ### Added
 
@@ -576,7 +729,7 @@ See full log [here](https://github.com/microsoft/testfx/compare/v3.5.2...v3.6.0)
 
 ## <a name="3.5.2" />[3.5.2] - 2024-08-13
 
-See full log [here](https://github.com/microsoft/testfx/compare/v3.5.1...v3.5.2)
+See full log [of v3.5.1...v3.5.2](https://github.com/microsoft/testfx/compare/v3.5.1...v3.5.2)
 
 ### Fixed
 
@@ -597,7 +750,7 @@ See full log [here](https://github.com/microsoft/testfx/compare/v3.5.1...v3.5.2)
 
 ## <a name="3.5.1" />[3.5.1] - 2024-08-05
 
-See full log [here](https://github.com/microsoft/testfx/compare/v3.5.0...v3.5.1)
+See full log [of v3.5.0...v3.5.1](https://github.com/microsoft/testfx/compare/v3.5.0...v3.5.1)
 
 ### Fixed
 
@@ -620,7 +773,7 @@ See full log [here](https://github.com/microsoft/testfx/compare/v3.5.0...v3.5.1)
 
 ## <a name="3.5.0" />[3.5.0] - 2024-07-15
 
-See full log [here](https://github.com/microsoft/testfx/compare/v3.4.3...v3.5.0)
+See full log [of v3.4.3...v3.5.0](https://github.com/microsoft/testfx/compare/v3.4.3...v3.5.0)
 
 ### Added
 
@@ -724,7 +877,7 @@ See full log [here](https://github.com/microsoft/testfx/compare/v3.4.3...v3.5.0)
 
 ## <a name="3.4.3" />[3.4.3] - 2024-05-30
 
-See full log [here](https://github.com/microsoft/testfx/compare/v3.4.2...v3.4.3)
+See full log [of v3.4.2...v3.4.3](https://github.com/microsoft/testfx/compare/v3.4.2...v3.4.3)
 
 ### Fixed
 
@@ -745,7 +898,7 @@ See full log [here](https://github.com/microsoft/testfx/compare/v3.4.2...v3.4.3)
 
 ## <a name="3.4.2" />[3.4.2] - 2024-05-30
 
-See full log [here](https://github.com/microsoft/testfx/compare/v3.4.1...v3.4.2)
+See full log [of v3.4.1...v3.4.2](https://github.com/microsoft/testfx/compare/v3.4.1...v3.4.2)
 
 ### Fixed
 
@@ -768,7 +921,7 @@ See full log [here](https://github.com/microsoft/testfx/compare/v3.4.1...v3.4.2)
 
 ## <a name="3.4.1" />[3.4.1] - 2024-05-27
 
-See full log [here](https://github.com/microsoft/testfx/compare/v3.4.0...v3.4.1)
+See full log [of v3.4.0...v3.4.1](https://github.com/microsoft/testfx/compare/v3.4.0...v3.4.1)
 
 ### Fixed
 
@@ -789,7 +942,7 @@ See full log [here](https://github.com/microsoft/testfx/compare/v3.4.0...v3.4.1)
 
 ## <a name="3.4.0" />[3.4.0] - 2024-05-23
 
-See full log [here](https://github.com/microsoft/testfx/compare/v3.3.1...v3.4.0)
+See full log [of v3.3.1...v3.4.0](https://github.com/microsoft/testfx/compare/v3.3.1...v3.4.0)
 
 ### Added
 
@@ -884,7 +1037,7 @@ See full log [here](https://github.com/microsoft/testfx/compare/v3.3.1...v3.4.0)
 
 ## <a name="3.3.1" />[3.3.1] - 2024-04-04
 
-See full log [here](https://github.com/microsoft/testfx/compare/v3.3.0...v3.3.1)
+See full log [of v3.3.0...v3.3.1](https://github.com/microsoft/testfx/compare/v3.3.0...v3.3.1)
 
 ### Fixed
 
@@ -905,7 +1058,7 @@ See full log [here](https://github.com/microsoft/testfx/compare/v3.3.0...v3.3.1)
 
 ## <a name="3.3.0" />[3.3.0] - 2024-04-03
 
-See full log [here](https://github.com/microsoft/testfx/compare/v3.2.2...v3.3.0)
+See full log [of v3.2.2...v3.3.0](https://github.com/microsoft/testfx/compare/v3.2.2...v3.3.0)
 
 ### Added
 
@@ -978,7 +1131,7 @@ See full log [here](https://github.com/microsoft/testfx/compare/v3.2.2...v3.3.0)
 
 ## <a name="3.2.2" />[3.2.2] - 2024-02-22
 
-See full log [here](https://github.com/microsoft/testfx/compare/v3.2.1...v3.2.2)
+See full log [of v3.2.1...v3.2.2](https://github.com/microsoft/testfx/compare/v3.2.1...v3.2.2)
 
 ### Fixed
 
@@ -1002,7 +1155,7 @@ See full log [here](https://github.com/microsoft/testfx/compare/v3.2.1...v3.2.2)
 
 ## <a name="3.2.1" />[3.2.1] - 2024-02-13
 
-See full log [here](https://github.com/microsoft/testfx/compare/v3.2.0...v.3.2.1)
+See full log [of v3.2.0...v.3.2.1](https://github.com/microsoft/testfx/compare/v3.2.0...v.3.2.1)
 
 ### Fixed
 
@@ -1032,7 +1185,7 @@ See full log [here](https://github.com/microsoft/testfx/compare/v3.2.0...v.3.2.1
 
 ## <a name="3.2.0" />[3.2.0] - 2024-01-24
 
-See full log [here](https://github.com/microsoft/testfx/compare/v3.1.1...v.3.2.0)
+See full log [of v3.1.1...v.3.2.0](https://github.com/microsoft/testfx/compare/v3.1.1...v.3.2.0)
 
 ### Added
 
@@ -1113,7 +1266,7 @@ See full log [here](https://github.com/microsoft/testfx/compare/v3.1.1...v.3.2.0
 
 ## <a name="3.2.0-preview.24069.3" />[3.2.0-preview.24069.3] - 2024-01-19
 
-See full log [here](https://github.com/microsoft/testfx/compare/v3.2.0-preview.23623.1...v3.2.0-preview.24069.3)
+See full log [of v3.2.0-preview.23623.1...v3.2.0-preview.24069.3](https://github.com/microsoft/testfx/compare/v3.2.0-preview.23623.1...v3.2.0-preview.24069.3)
 
 ### Added
 
@@ -1166,7 +1319,7 @@ See full log [here](https://github.com/microsoft/testfx/compare/v3.2.0-preview.2
 
 ## <a name="3.2.0-preview.23623.1" />[3.2.0-preview.23623.1] - 2023-12-23
 
-See full log [here](https://github.com/Microsoft/testfx/compare/v3.2.0-preview.23622.1...3.2.0-preview.23623.1)
+See full log [of v3.2.0-preview.23622.1...3.2.0-preview.23623.1](https://github.com/microsoft/testfx/compare/v3.2.0-preview.23622.1...3.2.0-preview.23623.1)
 
 ### Fixed
 
@@ -1181,7 +1334,7 @@ See full log [here](https://github.com/Microsoft/testfx/compare/v3.2.0-preview.2
 
 ## <a name="3.2.0-preview.23622.1" />[3.2.0-preview.23622.1] - 2023-12-22
 
-See full log [here](https://github.com/Microsoft/testfx/compare/v3.1.1...v3.2.0-preview.23622.1)
+See full log [of v3.1.1...v3.2.0-preview.23622.1](https://github.com/microsoft/testfx/compare/v3.1.1...v3.2.0-preview.23622.1)
 
 ### Added
 
@@ -1233,7 +1386,7 @@ See full log [here](https://github.com/Microsoft/testfx/compare/v3.1.1...v3.2.0-
 
 * Artifact `3.1.0` was corrupted during pipeline and for security reasons we cannot regenerate it.
 
-See full log [here](https://github.com/Microsoft/testfx/compare/v3.1.0...v3.1.1)
+See full log [of v3.1.0...v3.1.1](https://github.com/microsoft/testfx/compare/v3.1.0...v3.1.1)
 
 ### Artifacts
 
@@ -1243,7 +1396,7 @@ See full log [here](https://github.com/Microsoft/testfx/compare/v3.1.0...v3.1.1)
 
 ## <a name="3.1.0" />[3.1.0] - 2023-07-14
 
-See full log [here](https://github.com/Microsoft/testfx/compare/v3.0.4...v3.1.0)
+See full log [of v3.0.4...v3.1.0](https://github.com/microsoft/testfx/compare/v3.0.4...v3.1.0)
 
 ### Added
 
@@ -1289,7 +1442,7 @@ See full log [here](https://github.com/Microsoft/testfx/compare/v3.0.4...v3.1.0)
 
 ## <a name="3.0.4" />[3.0.4] - 2023-06-01
 
-See full log [here](https://github.com/microsoft/testfx/compare/v3.0.3...v3.0.4)
+See full log [of v3.0.3...v3.0.4](https://github.com/microsoft/testfx/compare/v3.0.3...v3.0.4)
 
 ### Fixed
 
@@ -1304,7 +1457,7 @@ See full log [here](https://github.com/microsoft/testfx/compare/v3.0.3...v3.0.4)
 
 ## <a name="3.0.3" />[3.0.3] - 2023-05-24
 
-See full log [here](https://github.com/Microsoft/testfx/compare/v3.0.2...v3.0.3)
+See full log [of v3.0.2...v3.0.3](https://github.com/microsoft/testfx/compare/v3.0.2...v3.0.3)
 
 ### Changed
 
@@ -1325,7 +1478,7 @@ See full log [here](https://github.com/Microsoft/testfx/compare/v3.0.2...v3.0.3)
 
 ## <a name="3.0.2" />[3.0.2] - 2022-12-27
 
-See full log [here](https://github.com/microsoft/testfx/compare/v3.0.1...v3.0.2)
+See full log [of v3.0.1...v3.0.2](https://github.com/microsoft/testfx/compare/v3.0.1...v3.0.2)
 
 ### Fixed
 
@@ -1339,7 +1492,7 @@ See full log [here](https://github.com/microsoft/testfx/compare/v3.0.1...v3.0.2)
 
 ## <a name="3.0.1" />[3.0.1] - 2022-12-20
 
-See full log [here](https://github.com/microsoft/testfx/compare/v3.0.0...v3.0.1)
+See full log [of v3.0.0...v3.0.1](https://github.com/microsoft/testfx/compare/v3.0.0...v3.0.1)
 
 ### Fixed
 
@@ -1362,7 +1515,7 @@ See full log [here](https://github.com/microsoft/testfx/compare/v3.0.0...v3.0.1)
 
 ## <a name="3.0.0" />[3.0.0] - 2022-12-06
 
-See full log [here](https://github.com/microsoft/testfx/compare/v2.2.10...v3.0.0)
+See full log [of v2.2.10...v3.0.0](https://github.com/microsoft/testfx/compare/v2.2.10...v3.0.0)
 
 Breaking changes announcements [#1274](https://github.com/microsoft/testfx/issues/1274)
 
@@ -1419,7 +1572,7 @@ Breaking changes announcements [#1274](https://github.com/microsoft/testfx/issue
 
 ## <a name="3.0.0-preview-20221122-01" />[3.0.0-preview-20221122-01] - 2022-11-23
 
-See full log [here](https://github.com/microsoft/testfx/compare/v3.0.0-preview-20221110-04...v3.0.0-preview-20221122-01)
+See full log [of v3.0.0-preview-20221110-04...v3.0.0-preview-20221122-01](https://github.com/microsoft/testfx/compare/v3.0.0-preview-20221110-04...v3.0.0-preview-20221122-01)
 
 ### Added
 
@@ -1463,7 +1616,7 @@ See full log [here](https://github.com/microsoft/testfx/compare/v3.0.0-preview-2
 
 ## <a name="3.0.0-preview-20221110-04" />[3.0.0-preview-20221110-04] - 2022-11-11
 
-See full log [here](https://github.com/microsoft/testfx/compare/v2.3.0-preview-20220810-02...v3.0.0-preview-20221110-04)
+See full log [of v2.3.0-preview-20220810-02...v3.0.0-preview-20221110-04](https://github.com/microsoft/testfx/compare/v2.3.0-preview-20220810-02...v3.0.0-preview-20221110-04)
 
 ### Added
 
@@ -1596,7 +1749,7 @@ See full log [here](https://github.com/microsoft/testfx/compare/v2.3.0-preview-2
 
 ## <a name="2.3.0-preview-20220810-02" />[2.3.0-preview-20220810-02] 2022-08-10
 
-A list of changes since last release are available [here](https://github.com/microsoft/testfx/compare/v2.2.10...v2.3.0-preview-20220810-02)
+A list of changes since last release are available [of v2.2.10...v2.3.0-preview-20220810-02](https://github.com/microsoft/testfx/compare/v2.2.10...v2.3.0-preview-20220810-02)
 
 ### Added
 
@@ -1629,7 +1782,7 @@ A list of changes since last release are available [here](https://github.com/mic
 
 ## <a name="2.2.10" />[2.2.10] - 2022-04-26
 
-A list of changes since last release are available [here](https://github.com/microsoft/testfx/compare/v2.2.10-preview-20220414-01...v2.2.10)
+A list of changes since last release are available [of v2.2.10-preview-20220414-01...v2.2.10](https://github.com/microsoft/testfx/compare/v2.2.10-preview-20220414-01...v2.2.10)
 
 ### Added
 
@@ -1669,7 +1822,7 @@ A list of changes since last release are available [here](https://github.com/mic
 
 ## <a name="2.2.9" />[2.2.9] 2022-04-08
 
-A list of changes since last release are available [here](https://github.com/microsoft/testfx/compare/v2.2.8...v2.2.9)
+A list of changes since last release are available [of v2.2.8...v2.2.9](https://github.com/microsoft/testfx/compare/v2.2.8...v2.2.9)
 
 ### Parallel output
 
@@ -1703,7 +1856,7 @@ Due to the way that class and assembly initialize, and cleanup are invoked, thei
 
 ## <a name="2.2.8" />[2.2.8] - 2021-11-23
 
-A list of changes since last release are available [here](https://github.com/microsoft/testfx/compare/v2.2.7...v2.2.8)
+A list of changes since last release are available [of v2.2.7...v2.2.8](https://github.com/microsoft/testfx/compare/v2.2.7...v2.2.8)
 
 ### Added
 
@@ -1735,7 +1888,7 @@ A list of changes since last release are available [here](https://github.com/mic
 
 ## <a name="2.2.7" />[2.2.7] - 2021-09-03
 
-A list of changes since last release are available [here](https://github.com/microsoft/testfx/compare/v2.2.6...v2.2.7)
+A list of changes since last release are available [of v2.2.6...v2.2.7](https://github.com/microsoft/testfx/compare/v2.2.6...v2.2.7)
 
 ### Changed
 
@@ -1752,7 +1905,7 @@ A list of changes since last release are available [here](https://github.com/mic
 
 ## <a name="2.2.6" />[2.2.6] - 2021-08-25
 
-A list of changes since last release are available [here](https://github.com/microsoft/testfx/compare/v2.2.5...v2.2.6)
+A list of changes since last release are available [of v2.2.5...v2.2.6](https://github.com/microsoft/testfx/compare/v2.2.5...v2.2.6)
 
 ### Changed
 
@@ -1770,7 +1923,7 @@ A list of changes since last release are available [here](https://github.com/mic
 
 ## <a name="2.2.5" />[2.2.5] - 2021-06-28
 
-A list of changes since last release are available [here](https://github.com/microsoft/testfx/compare/v2.2.4...v2.2.5)
+A list of changes since last release are available [of v2.2.4...v2.2.5](https://github.com/microsoft/testfx/compare/v2.2.4...v2.2.5)
 
 ### Added
 
@@ -1795,7 +1948,7 @@ A list of changes since last release are available [here](https://github.com/mic
 
 ## <a name="2.2.4" />[2.2.4] - 2021-05-25
 
-A list of changes since last release are available [here](https://github.com/microsoft/testfx/compare/0b95a26282eae17f896d732381e5c77b9a603382...v2.2.4)
+A list of changes since last release are available [of 0b95a26282eae17f896d732381e5c77b9a603382...v2.2.4](https://github.com/microsoft/testfx/compare/0b95a26282eae17f896d732381e5c77b9a603382...v2.2.4)
 
 ### Artifacts
 
@@ -1804,7 +1957,7 @@ A list of changes since last release are available [here](https://github.com/mic
 
 ## <a name="2.2.4-preview-20210331-02" />[2.2.4-preview-20210331-02] - 2021-04-02
 
-A list of changes since last release are available [here](https://github.com/microsoft/testfx/compare/v2.2.3...v2.2.4-preview-20210331-02)
+A list of changes since last release are available [of v2.2.3...v2.2.4-preview-20210331-02](https://github.com/microsoft/testfx/compare/v2.2.3...v2.2.4-preview-20210331-02)
 
 ### Added
 
@@ -1826,7 +1979,7 @@ A list of changes since last release are available [here](https://github.com/mic
 
 ## <a name="2.2.3" />[2.2.3] - 2021-03-16
 
-A list of changes since last release are available [here](https://github.com/microsoft/testfx/compare/v2.2.2...v2.2.3)
+A list of changes since last release are available [of v2.2.2...v2.2.3](https://github.com/microsoft/testfx/compare/v2.2.2...v2.2.3)
 
 ### Added
 
@@ -1839,7 +1992,7 @@ A list of changes since last release are available [here](https://github.com/mic
 
 ## <a name="2.2.2" />[2.2.2] - 2021-03-15
 
-A list of changes since last release are available [here](https://github.com/microsoft/testfx/compare/v2.2.1...v2.2.2)
+A list of changes since last release are available [of v2.2.1...v2.2.2](https://github.com/microsoft/testfx/compare/v2.2.1...v2.2.2)
 
 ### Added
 
@@ -1858,7 +2011,7 @@ A list of changes since last release are available [here](https://github.com/mic
 
 ## <a name="2.2.1" />[2.2.1] - 2021-03-01
 
-A list of changes since last release are available [here](https://github.com/microsoft/testfx/compare/v2.2.0-preview-20210115-03...v2.2.1)
+A list of changes since last release are available [of v2.2.0-preview-20210115-03...v2.2.1](https://github.com/microsoft/testfx/compare/v2.2.0-preview-20210115-03...v2.2.1)
 
 ### Added
 
@@ -1887,7 +2040,7 @@ A list of changes since last release are available [here](https://github.com/mic
 
 ## <a name="2.2.0-preview-20210115-03" />[2.2.0-preview-20210115-03] - 2021-01-20
 
-A list of changes since last release are available [here](https://github.com/microsoft/testfx/compare/v2.2.0-preview-20201126-03...v2.2.0-preview-20210115-03)
+A list of changes since last release are available [of v2.2.0-preview-20201126-03...v2.2.0-preview-20210115-03](https://github.com/microsoft/testfx/compare/v2.2.0-preview-20201126-03...v2.2.0-preview-20210115-03)
 
 ### Changed
 
@@ -1914,7 +2067,7 @@ A list of changes since last release are available [here](https://github.com/mic
 
 ## <a name="2.2.0-preview-20201126-03" />[2.2.0-preview-20201126-03] - 2020-11-26
 
-A list of changes since last release are available [here](https://github.com/microsoft/testfx/compare/v2.1.2...v2.2.0-preview-20201126-03)
+A list of changes since last release are available [of v2.1.2...v2.2.0-preview-20201126-03](https://github.com/microsoft/testfx/compare/v2.1.2...v2.2.0-preview-20201126-03)
 
 ### Added
 
@@ -1944,7 +2097,7 @@ A list of changes since last release are available [here](https://github.com/mic
 
 ## <a name="2.1.2" />[2.1.2] - 2020-06-08
 
-A list of changes since last release are available [here](https://github.com/microsoft/testfx/compare/v2.1.1...v2.1.2)
+A list of changes since last release are available [of v2.1.1...v2.1.2](https://github.com/microsoft/testfx/compare/v2.1.1...v2.1.2)
 
 ### Changed
 
@@ -1965,7 +2118,7 @@ A list of changes since last release are available [here](https://github.com/mic
 
 ## <a name="2.1.1" />[2.1.1] - 2020-04-01
 
-A list of changes since last release are available [here](https://github.com/microsoft/testfx/compare/v2.1.0...v2.1.1)
+A list of changes since last release are available [of v2.1.0...v2.1.1](https://github.com/microsoft/testfx/compare/v2.1.0...v2.1.1)
 
 ### Added
 
@@ -1992,7 +2145,7 @@ A list of changes since last release are available [here](https://github.com/mic
 
 ## <a name="2.1.0" />[2.1.0] - 2020-02-03
 
-A list of changes since last release are available [here](https://github.com/microsoft/testfx/compare/v2.1.0-beta2...v2.1.0)
+A list of changes since last release are available [of v2.1.0-beta2...v2.1.0](https://github.com/microsoft/testfx/compare/v2.1.0-beta2...v2.1.0)
 
 ### Changed
 
@@ -2010,7 +2163,7 @@ A list of changes since last release are available [here](https://github.com/mic
 
 ## <a name="2.1.0-beta2" />[2.1.0-beta2] - 2019-12-18
 
-A list of changes since last release are available [here](https://github.com/Microsoft/testfx/compare/v2.1.0-beta...v2.1.0-beta2)
+A list of changes since last release are available [of v2.1.0-beta...v2.1.0-beta2](https://github.com/microsoft/testfx/compare/v2.1.0-beta...v2.1.0-beta2)
 
 ### Changed
 
@@ -2023,7 +2176,7 @@ A list of changes since last release are available [here](https://github.com/Mic
 
 ## <a name="2.1.0-beta" />[2.1.0-beta] - 2019-11-28
 
-A list of changes since last release are available [here](https://github.com/Microsoft/testfx/compare/v2.0.0...v2.1.0-beta)
+A list of changes since last release are available [of v2.0.0...v2.1.0-beta](https://github.com/microsoft/testfx/compare/v2.0.0...v2.1.0-beta)
 
 ### Fixed
 
@@ -2037,7 +2190,7 @@ A list of changes since last release are available [here](https://github.com/Mic
 
 ## <a name="2.0.0" />[2.0.0] 2019-09-03
 
-A list of changes since last release are available [here](https://github.com/Microsoft/testfx/compare/v2.0.0-beta4...v2.0.0)
+A list of changes since last release are available [of v2.0.0-beta4...v2.0.0](https://github.com/microsoft/testfx/compare/v2.0.0-beta4...v2.0.0)
 
 ### Added
 
@@ -2061,7 +2214,7 @@ A list of changes since last release are available [here](https://github.com/Mic
 
 ## <a name="2.0.0-beta4" />[2.0.0-beta4] - 2019-04-10
 
-A list of changes since last release are available [here](https://github.com/Microsoft/testfx/compare/2.0.0-beta2...v2.0.0-beta4)
+A list of changes since last release are available [of 2.0.0-beta2...v2.0.0-beta4](https://github.com/microsoft/testfx/compare/2.0.0-beta2...v2.0.0-beta4)
 
 ### Changed
 
@@ -2076,7 +2229,7 @@ A list of changes since last release are available [here](https://github.com/Mic
 
 ## <a name="2.0.0-beta2" />[2.0.0-beta2] - 2019-02-15
 
-A list of changes since last release are available [here](https://github.com/Microsoft/testfx/compare/1.4.0...2.0.0-beta2)
+A list of changes since last release are available [of 1.4.0...2.0.0-beta2](https://github.com/microsoft/testfx/compare/1.4.0...2.0.0-beta2)
 
 ### Changed
 
@@ -2091,7 +2244,7 @@ A list of changes since last release are available [here](https://github.com/Mic
 
 ## <a name="1.4.0" />[1.4.0] - 2018-11-26
 
-A list of changes since last release are available [here](https://github.com/Microsoft/testfx/compare/1.4.0-beta...1.4.0)
+A list of changes since last release are available [of 1.4.0-beta...1.4.0](https://github.com/microsoft/testfx/compare/1.4.0-beta...1.4.0)
 
 ### Added
 
@@ -2113,7 +2266,7 @@ A list of changes since last release are available [here](https://github.com/Mic
 
 ## <a name="1.4.0-beta" />[1.4.0-beta] 2018-10-17
 
-A list of changes since last release are available [here](https://github.com/Microsoft/testfx/compare/1.3.2...1.4.0-beta)
+A list of changes since last release are available [of 1.3.2...1.4.0-beta](https://github.com/microsoft/testfx/compare/1.3.2...1.4.0-beta)
 
 ### Added
 
@@ -2131,7 +2284,7 @@ A list of changes since last release are available [here](https://github.com/Mic
 
 ## <a name="1.3.2" />[1.3.2] - 2018-06-06
 
-A list of changes since last release are available [here](https://github.com/Microsoft/testfx/compare/v1.3.1...v1.3.2)
+A list of changes since last release are available [of v1.3.1...v1.3.2](https://github.com/microsoft/testfx/compare/v1.3.1...v1.3.2)
 
 ### Changed
 
@@ -2144,7 +2297,7 @@ A list of changes since last release are available [here](https://github.com/Mic
 
 ## <a name="1.3.1" />[1.3.1] - 2018-05-25
 
-A list of changes since last release are available [here](https://github.com/Microsoft/testfx/compare/v1.3.0...v1.3.1)
+A list of changes since last release are available [of v1.3.0...v1.3.1](https://github.com/microsoft/testfx/compare/v1.3.0...v1.3.1)
 
 ### Changed
 
@@ -2158,7 +2311,7 @@ A list of changes since last release are available [here](https://github.com/Mic
 
 ## <a name="1.3.0" />[1.3.0] - 2018-05-11
 
-A list of changes since last release are available [here](https://github.com/Microsoft/testfx/compare/v1.2.1...v1.3.0)
+A list of changes since last release are available [of v1.2.1...v1.3.0](https://github.com/microsoft/testfx/compare/v1.2.1...v1.3.0)
 
 ### Changed
 
@@ -2180,7 +2333,7 @@ A list of changes since last release are available [here](https://github.com/Mic
 
 ## <a name="1.3.0-beta2" />[1.3.0-beta2] - 2018-01-15
 
-A list of changes since last release are available [here](https://github.com/Microsoft/testfx/compare/v1.2.0...v1.3.0-beta2)
+A list of changes since last release are available [of v1.2.0...v1.3.0-beta2](https://github.com/microsoft/testfx/compare/v1.2.0...v1.3.0-beta2)
 
 ### Added
 
@@ -2223,7 +2376,7 @@ A list of changes since last release are available [here](https://github.com/Mic
 
 ## <a name="1.2.0" />[1.2.0] - 2017-10-11
 
-A list of changes since last release are available [here](https://github.com/Microsoft/testfx/compare/v1.2.0-beta3...v1.2.0)
+A list of changes since last release are available [of v1.2.0-beta3...v1.2.0](https://github.com/microsoft/testfx/compare/v1.2.0-beta3...v1.2.0)
 
 ### Added
 
@@ -2243,7 +2396,7 @@ A list of changes since last release are available [here](https://github.com/Mic
 
 ## <a name="1.2.0-beta3" />[1.2.0-beta3] - 2017-08-09
 
-A list of changes since last release are available [here](https://github.com/Microsoft/testfx/compare/v1.2.0-beta...v1.2.0-beta3)
+A list of changes since last release are available [of v1.2.0-beta...v1.2.0-beta3](https://github.com/microsoft/testfx/compare/v1.2.0-beta...v1.2.0-beta3)
 
 ### Added
 
@@ -2263,7 +2416,7 @@ A list of changes since last release are available [here](https://github.com/Mic
 
 ## <a name="1.2.0-beta" />[1.2.0-beta] - 2017-06-29
 
-A list of changes since last release are available [here](https://github.com/Microsoft/testfx/compare/v1.1.18...v1.2.0-beta)
+A list of changes since last release are available [of v1.1.18...v1.2.0-beta](https://github.com/microsoft/testfx/compare/v1.1.18...v1.2.0-beta)
 
 ### Changed
 
@@ -2278,7 +2431,7 @@ A list of changes since last release are available [here](https://github.com/Mic
 
 ## <a name="1.1.18" />[1.1.18] - 2017-06-01
 
-A list of changes since last release are available [here](https://github.com/Microsoft/testfx/compare/v1.1.17...v1.1.18)
+A list of changes since last release are available [of v1.1.17...v1.1.18](https://github.com/microsoft/testfx/compare/v1.1.17...v1.1.18)
 
 ### Changed
 
@@ -2296,7 +2449,7 @@ A list of changes since last release are available [here](https://github.com/Mic
 
 ## <a name="1.1.17" />[1.1.17] - 2017-04-21
 
-A list of changes since last release are available [here](https://github.com/Microsoft/testfx/compare/v1.1.14...v1.1.17)
+A list of changes since last release are available [of v1.1.14...v1.1.17](https://github.com/microsoft/testfx/compare/v1.1.14...v1.1.17)
 
 ### Changed
 
@@ -2314,7 +2467,7 @@ A list of changes since last release are available [here](https://github.com/Mic
 
 ## <a name="1.1.14" />[1.1.14] - 2017-03-31
 
-A list of changes since last release are available [here](https://github.com/Microsoft/testfx/compare/v1.1.13...v1.1.14)
+A list of changes since last release are available [of v1.1.13...v1.1.14](https://github.com/microsoft/testfx/compare/v1.1.13...v1.1.14)
 
 ### Changed
 

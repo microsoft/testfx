@@ -5,6 +5,7 @@
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.AppContainer;
 #endif
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 #if NETFRAMEWORK
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
 #endif
@@ -16,9 +17,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 /// the test sources provided to the adapter.
 /// </summary>
 #if NET6_0_OR_GREATER
-[Obsolete(Constants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
+[Obsolete(FrameworkConstants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
 #else
-[Obsolete(Constants.PublicTypeObsoleteMessage)]
+[Obsolete(FrameworkConstants.PublicTypeObsoleteMessage)]
 #endif
 public class TestSource : ITestSource
 {
@@ -27,22 +28,22 @@ public class TestSource : ITestSource
 
     private static readonly IEnumerable<string> ExecutableExtensions = new HashSet<string>()
     {
-         Constants.ExeExtension,
+         EngineConstants.ExeExtension,
 
          // Required only for store 8.1. In future if that support is needed, uncomment this.
          // Constants.DllExtension
     };
 
-    private static readonly HashSet<string> SystemAssemblies = new(new string[]
-    {
+    private static readonly HashSet<string> SystemAssemblies =
+        [
         "MICROSOFT.CSHARP.DLL",
         "MICROSOFT.VISUALBASIC.DLL",
         "CLRCOMPRESSION.DLL",
-    });
+        ];
 
     // Well known platform assemblies.
-    private static readonly HashSet<string> PlatformAssemblies = new(new string[]
-    {
+    private static readonly HashSet<string> PlatformAssemblies =
+        [
         "MICROSOFT.VISUALSTUDIO.TESTPLATFORM.TESTFRAMEWORK.DLL",
         "MICROSOFT.VISUALSTUDIO.TESTPLATFORM.TESTFRAMEWORK.EXTENSIONS.CORE.DLL",
         "MICROSOFT.VISUALSTUDIO.TESTPLATFORM.CORE.DLL",
@@ -54,7 +55,7 @@ public class TestSource : ITestSource
         "VSTEST_EXECUTIONENGINE_PLATFORMBRIDGE.DLL",
         "VSTEST_EXECUTIONENGINE_PLATFORMBRIDGE.WINMD",
         "VSTEST.EXECUTIONENGINE.WINDOWSPHONE.DLL",
-    });
+        ];
 #endif
 
     /// <summary>
@@ -62,13 +63,13 @@ public class TestSource : ITestSource
     /// </summary>
     public IEnumerable<string> ValidSourceExtensions => new List<string>
             {
-                Constants.DllExtension,
+                EngineConstants.DllExtension,
 #if NETFRAMEWORK
-                Constants.PhoneAppxPackageExtension,
+                EngineConstants.PhoneAppxPackageExtension,
 #elif WINDOWS_UWP || WIN_UI
-                Constants.AppxPackageExtension,
+                EngineConstants.AppxPackageExtension,
 #endif
-                Constants.ExeExtension,
+                EngineConstants.ExeExtension,
             };
 
     /// <summary>
@@ -149,7 +150,7 @@ public class TestSource : ITestSource
                 {
                     // WinUI Desktop uses .NET 6, which builds both a .dll and an .exe.
                     // The manifest will provide the .exe, but the tests are inside the .dll, so we replace the name here.
-                    newSources.Add(Path.Combine(appxSourceDirectory, Path.ChangeExtension(filePath, Constants.DllExtension)));
+                    newSources.Add(Path.Combine(appxSourceDirectory, Path.ChangeExtension(filePath, EngineConstants.DllExtension)));
                 }
             }
 
@@ -170,7 +171,7 @@ public class TestSource : ITestSource
     {
         foreach (string source in sources)
         {
-            if (string.Equals(Path.GetExtension(source), Constants.AppxPackageExtension, StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(Path.GetExtension(source), EngineConstants.AppxPackageExtension, StringComparison.OrdinalIgnoreCase))
             {
                 return true;
             }
@@ -190,7 +191,7 @@ public class TestSource : ITestSource
     {
         foreach (string source in sources)
         {
-            if (string.Equals(Path.GetExtension(source), Constants.AppxPackageExtension, StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(Path.GetExtension(source), EngineConstants.AppxPackageExtension, StringComparison.OrdinalIgnoreCase))
             {
                 return source;
             }

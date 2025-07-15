@@ -226,4 +226,15 @@ public class MSTestDiscovererTests : TestContainer
         _testablePlatformServiceProvider.MockTestSourceValidator.SetupGet(ts => ts.ValidSourceExtensions).Returns(new List<string> { ".nte", ".tep" });
         Verify(!MSTestDiscovererHelpers.AreValidSources(new List<string> { "dummy.te" }));
     }
+
+    [TestClass]
+    public class DummyClass
+    {
+        [TestMethod]
+        public void DummyTestMethod()
+        {
+            // This is a dummy test method to ensure that the MSTestDiscoverer can discover tests.
+            // It does not perform any assertions or operations.
+        }
+    }
 }

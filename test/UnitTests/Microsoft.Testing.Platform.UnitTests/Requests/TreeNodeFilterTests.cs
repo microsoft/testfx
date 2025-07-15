@@ -3,8 +3,8 @@
 
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Requests;
+#pragma warning disable CS0618 // Type or member is obsolete
 
-#pragma warning disable TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
 namespace Microsoft.Testing.Platform.UnitTests;
 
 [TestClass]
@@ -218,6 +218,14 @@ public sealed class TreeNodeFilterTests
         TreeNodeFilter filter = new("/A/**[A=B]");
         Assert.IsTrue(filter.MatchesFilter("/A/B/C/D", new PropertyBag(new KeyValuePairStringProperty("A", "B"))));
         Assert.IsFalse(filter.MatchesFilter("/B/A/C/D", new PropertyBag(new KeyValuePairStringProperty("A", "B"))));
+    }
+
+    [TestMethod]
+    public void MatchAllFilterSubpathWithPropertyExpression_WithTestMetadataProperty()
+    {
+        TreeNodeFilter filter = new("/A/**[A=B]");
+        Assert.IsTrue(filter.MatchesFilter("/A/B/C/D", new PropertyBag(new TestMetadataProperty("A", "B"))));
+        Assert.IsFalse(filter.MatchesFilter("/B/A/C/D", new PropertyBag(new TestMetadataProperty("A", "B"))));
     }
 
     [TestMethod]

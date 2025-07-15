@@ -42,13 +42,11 @@ internal sealed class AsynchronousMessageBus : BaseMessageBus, IMessageBus, IDis
     public override IDataConsumer[] DataConsumerServices
         => _dataConsumers;
 
-    public override async Task InitAsync() => await BuildConsumerProducersAsync();
-
-    private async Task BuildConsumerProducersAsync()
+    public override async Task InitAsync()
     {
         foreach (IDataConsumer consumer in _dataConsumers)
         {
-            if (!await consumer.IsEnabledAsync())
+            if (!await consumer.IsEnabledAsync().ConfigureAwait(false))
             {
                 throw new InvalidOperationException($"Unexpected disabled IDataConsumer '{consumer}'");
             }
@@ -96,7 +94,7 @@ internal sealed class AsynchronousMessageBus : BaseMessageBus, IMessageBus, IDis
 
         if (_isTraceLoggingEnabled)
         {
-            await LogDataAsync(dataProducer, data);
+            await LogDataAsync(dataProducer, data).ConfigureAwait(false);
         }
 
         Type dataType = data.GetType();
@@ -112,7 +110,7 @@ internal sealed class AsynchronousMessageBus : BaseMessageBus, IMessageBus, IDis
 
         for (int i = 0; i < values.Count; i++)
         {
-            await values[i].PublishAsync(dataProducer, data);
+            await values[i].PublishAsync(dataProducer, data).ConfigureAwait(false);
         }
     }
 
@@ -124,7 +122,7 @@ internal sealed class AsynchronousMessageBus : BaseMessageBus, IMessageBus, IDis
             $"The producer '{dataProducer.DisplayName}' (ID: {dataProducer.Uid}) pushed data:");
         messageBuilder.AppendLine(data.ToString());
 
-        await _logger.LogTraceAsync(messageBuilder.ToString());
+        await _logger.LogTraceAsync(messageBuilder.ToString()).ConfigureAwait(false);
     }
 
     public override async Task DrainDataAsync()
@@ -165,12 +163,9 @@ internal sealed class AsynchronousMessageBus : BaseMessageBus, IMessageBus, IDis
             {
                 foreach (AsyncConsumerDataProcessor asyncMultiProducerMultiConsumerDataProcessor in dataProcessors)
                 {
-                    if (!consumerToDrain.TryGetValue(asyncMultiProducerMultiConsumerDataProcessor, out long _))
-                    {
-                        consumerToDrain.Add(asyncMultiProducerMultiConsumerDataProcessor, 0);
-                    }
+                    consumerToDrain.TryAdd(asyncMultiProducerMultiConsumerDataProcessor, 0);
 
-                    long totalPayloadReceived = await asyncMultiProducerMultiConsumerDataProcessor.DrainDataAsync();
+                    long totalPayloadReceived = await asyncMultiProducerMultiConsumerDataProcessor.DrainDataAsync().ConfigureAwait(false);
                     if (consumerToDrain[asyncMultiProducerMultiConsumerDataProcessor] != totalPayloadReceived)
                     {
                         consumerToDrain[asyncMultiProducerMultiConsumerDataProcessor] = totalPayloadReceived;
@@ -194,7 +189,7 @@ internal sealed class AsynchronousMessageBus : BaseMessageBus, IMessageBus, IDis
         {
             foreach (AsyncConsumerDataProcessor asyncMultiProducerMultiConsumerDataProcessor in dataProcessors)
             {
-                await asyncMultiProducerMultiConsumerDataProcessor.CompleteAddingAsync();
+                await asyncMultiProducerMultiConsumerDataProcessor.CompleteAddingAsync().ConfigureAwait(false);
             }
         }
     }

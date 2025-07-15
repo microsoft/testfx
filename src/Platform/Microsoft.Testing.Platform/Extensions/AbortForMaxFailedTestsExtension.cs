@@ -41,13 +41,13 @@ internal sealed class AbortForMaxFailedTestsExtension : IDataConsumer
     public Type[] DataTypesConsumed { get; } = [typeof(TestNodeUpdateMessage)];
 
     /// <inheritdoc />
-    public string Uid { get; } = nameof(AbortForMaxFailedTestsExtension);
+    public string Uid => nameof(AbortForMaxFailedTestsExtension);
 
     /// <inheritdoc />
-    public string Version { get; } = AppVersion.DefaultSemVer;
+    public string Version => AppVersion.DefaultSemVer;
 
     /// <inheritdoc />
-    public string DisplayName { get; } = nameof(AbortForMaxFailedTestsExtension);
+    public string DisplayName => nameof(AbortForMaxFailedTestsExtension);
 
     /// <inheritdoc />
     public string Description { get; } = PlatformResources.AbortForMaxFailedTestsDescription;
@@ -63,14 +63,19 @@ internal sealed class AbortForMaxFailedTestsExtension : IDataConsumer
         RoslynDebug.Assert(_maxFailedTests is not null);
         RoslynDebug.Assert(_capability is not null);
 
-        TestNodeStateProperty testNodeStateProperty = node.TestNode.Properties.Single<TestNodeStateProperty>();
+        TestNodeStateProperty? testNodeStateProperty = node.TestNode.Properties.SingleOrDefault<TestNodeStateProperty>();
+        if (testNodeStateProperty is null)
+        {
+            return;
+        }
+
         if (TestNodePropertiesCategories.WellKnownTestNodeTestRunOutcomeFailedProperties.Any(t => t == testNodeStateProperty.GetType()) &&
             ++_failCount >= _maxFailedTests.Value &&
             // If already triggered, don't do it again.
             !_policiesService.IsMaxFailedTestsTriggered)
         {
-            await _capability.StopTestExecutionAsync(_testApplicationCancellationTokenSource.CancellationToken);
-            await _policiesService.ExecuteMaxFailedTestsCallbacksAsync(_maxFailedTests.Value, _testApplicationCancellationTokenSource.CancellationToken);
+            await _capability.StopTestExecutionAsync(_testApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
+            await _policiesService.ExecuteMaxFailedTestsCallbacksAsync(_maxFailedTests.Value, _testApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
         }
     }
 }

@@ -17,7 +17,7 @@ internal sealed class TcpMessageHandler(
     {
         try
         {
-            return await base.ReadAsync(cancellationToken);
+            return await base.ReadAsync(cancellationToken).ConfigureAwait(false);
         }
 
         // Client close the connection in an unexpected way

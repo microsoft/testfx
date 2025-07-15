@@ -28,7 +28,7 @@ internal sealed class TrxCompareTool : ITool, IOutputDeviceDataProducer
     }
 
     /// <inheritdoc />
-    public string Name { get; } = ToolName;
+    public string Name => ToolName;
 
     /// <inheritdoc />
     public string Uid => _extension.Uid;
@@ -55,13 +55,14 @@ internal sealed class TrxCompareTool : ITool, IOutputDeviceDataProducer
 
         XNamespace trxNamespace = "http://microsoft.com/schemas/VisualStudio/TeamTest/2010";
 
-        List<(string TestName, string Outcome, string Storage)> baseLineResults = new();
-        List<string> baseLineIssues = new();
-        List<(string TestName, string Outcome, string Storage)> comparedResults = new();
-        List<string> comparedIssues = new();
+        List<(string TestName, string Outcome, string Storage)> baseLineResults = [];
+        List<string> baseLineIssues = [];
+        List<(string TestName, string Outcome, string Storage)> comparedResults = [];
+        List<string> comparedIssues = [];
         await _task.WhenAll(
-            _task.Run(() => CollectEntriesAndErrors(baselineFilePaths[0], trxNamespace, baseLineResults, baseLineIssues)),
-            _task.Run(() => CollectEntriesAndErrors(comparedFilePaths[0], trxNamespace, comparedResults, comparedIssues)));
+            CollectEntriesAndErrorsAsync(baselineFilePaths[0], trxNamespace, baseLineResults, baseLineIssues),
+            CollectEntriesAndErrorsAsync(comparedFilePaths[0], trxNamespace, comparedResults, comparedIssues))
+            .ConfigureAwait(false);
 
         StringBuilder outputBuilder = new();
         AppendResultsAndIssues("Baseline", baselineFilePaths[0], baseLineResults, baseLineIssues, outputBuilder);
@@ -69,12 +70,12 @@ internal sealed class TrxCompareTool : ITool, IOutputDeviceDataProducer
 
         if (AreMatchingTrxFiles(baseLineResults, comparedResults, outputBuilder))
         {
-            await _outputDisplay.DisplayAsync(this, new TextOutputDeviceData(outputBuilder.ToString()));
+            await _outputDisplay.DisplayAsync(this, new TextOutputDeviceData(outputBuilder.ToString())).ConfigureAwait(false);
             return ExitCodes.Success;
         }
         else
         {
-            await _outputDisplay.DisplayAsync(this, new TextOutputDeviceData(outputBuilder.ToString()));
+            await _outputDisplay.DisplayAsync(this, new TextOutputDeviceData(outputBuilder.ToString())).ConfigureAwait(false);
             return ExitCodes.GenericFailure;
         }
     }
@@ -174,9 +175,10 @@ internal sealed class TrxCompareTool : ITool, IOutputDeviceDataProducer
         outputBuilder.AppendLine();
     }
 
-    private static void CollectEntriesAndErrors(string trxFile, XNamespace ns, List<(string TestName, string Outcome, string Storage)> results, List<string> issues)
+    private static async Task CollectEntriesAndErrorsAsync(string trxFile, XNamespace ns, List<(string TestName, string Outcome, string Storage)> results, List<string> issues)
     {
-        var trxTestRun = XElement.Parse(File.ReadAllText(trxFile));
+        using FileStream stream = File.OpenRead(trxFile);
+        XElement trxTestRun = await XElement.LoadAsync(stream, LoadOptions.None, CancellationToken.None).ConfigureAwait(false);
         int testResultIndex = 0;
         foreach (XElement testResult in trxTestRun.Elements(ns + "Results").Elements(ns + "UnitTestResult"))
         {
@@ -202,11 +204,10 @@ internal sealed class TrxCompareTool : ITool, IOutputDeviceDataProducer
                 continue;
             }
 
-            XElement[] matchingUnitTestDefinitions = trxTestRun
+            XElement[] matchingUnitTestDefinitions = [.. trxTestRun
                 .Elements(ns + "TestDefinitions")
                 .Elements(ns + "UnitTest")
-                .Where(x => x.Attribute("id")?.Value == testId)
-                .ToArray();
+                .Where(x => x.Attribute("id")?.Value == testId)];
             if (matchingUnitTestDefinitions.Length > 1)
             {
                 issues.Add($"Found more than one entry in 'TestDefinitions.UnitTest' matching the test ID '{testId}'.");

@@ -42,6 +42,11 @@
         <target state="translated">Corrigir assinatura</target>
         <note />
       </trans-unit>
+      <trans-unit id="ReplaceDataTestMethodWithTestMethodTitle">
+        <source>Replace 'DataTestMethod' with 'TestMethod'</source>
+        <target state="translated">Substitua 'DataTestMethod' por 'TestMethod'</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ReplaceWithConstructorFix">
         <source>Replace TestInitialize method with constructor</source>
         <target state="translated">Substituir o método TestInitialize pelo construtor.</target>
@@ -67,6 +72,11 @@
         <target state="translated">Substitua o construtor pelo método TestInitialize.</target>
         <note />
       </trans-unit>
+      <trans-unit id="StringAssertToAssertTitle">
+        <source>Use 'Assert.{0}' instead of 'StringAssert'</source>
+        <target state="translated">Use 'Assert'{0}. em vez de 'StringAssert'</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TestClassShouldBeValidFix">
         <source>Fix test class signature</source>
         <target state="translated">Correção da assinatura de classe do teste</target>
@@ -90,6 +100,11 @@
       <trans-unit id="UseAttributeOnTestMethodFix">
         <source>Add '[TestMethod]'</source>
         <target state="translated">Adicionar ''[TestMethod]"</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseCooperativeCancellationForTimeoutFix">
+        <source>Use 'CooperativeCancellation = true'</source>
+        <target state="translated">Usar “CooperativoCancellation = true”</target>
         <note />
       </trans-unit>
       <trans-unit id="UseNewerAssertThrows">

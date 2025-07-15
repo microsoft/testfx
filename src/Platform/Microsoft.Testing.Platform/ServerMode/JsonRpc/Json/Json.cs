@@ -19,28 +19,27 @@ internal sealed class Json
         // Overridden default serializers for better performance using .NET runtime serialization APIs
 
         // Serialize response types.
-        _serializers[typeof(RequestMessage)] = new JsonObjectSerializer<RequestMessage>(request => new[]
-             {
-                 (JsonRpcStrings.JsonRpc, "2.0"),
+        _serializers[typeof(RequestMessage)] = new JsonObjectSerializer<RequestMessage>(request =>
+        [
+            (JsonRpcStrings.JsonRpc, "2.0"),
                  (JsonRpcStrings.Id, request.Id),
                  (JsonRpcStrings.Method, request.Method),
-                 (JsonRpcStrings.Params, request.Params),
-             });
+                 (JsonRpcStrings.Params, request.Params)
+        ]);
 
-        _serializers[typeof(ResponseMessage)] = new JsonObjectSerializer<ResponseMessage>(response => new[]
-            {
-                 (JsonRpcStrings.JsonRpc, "2.0"),
+        _serializers[typeof(ResponseMessage)] = new JsonObjectSerializer<ResponseMessage>(response =>
+        [
+            (JsonRpcStrings.JsonRpc, "2.0"),
                  (JsonRpcStrings.Id, response.Id),
-                 (JsonRpcStrings.Result, response.Result),
-            });
+                 (JsonRpcStrings.Result, response.Result)
+        ]);
 
         _serializers[typeof(NotificationMessage)] = new JsonObjectSerializer<NotificationMessage>(notification =>
-            new[]
-            {
-                 (JsonRpcStrings.JsonRpc, "2.0"),
+        [
+            (JsonRpcStrings.JsonRpc, "2.0"),
                  (JsonRpcStrings.Method, notification.Method),
-                 (JsonRpcStrings.Params, notification.Params),
-            });
+                 (JsonRpcStrings.Params, notification.Params)
+        ]);
 
         _serializers[typeof(ErrorMessage)] = new JsonObjectSerializer<ErrorMessage>(error =>
         {
@@ -51,76 +50,69 @@ internal sealed class Json
                 (JsonRpcStrings.Message, error.Message),
             };
 
-            return new (string, object?)[]
-            {
-                 (JsonRpcStrings.JsonRpc, "2.0"),
+            return
+            [
+                (JsonRpcStrings.JsonRpc, "2.0"),
                  (JsonRpcStrings.Code, error.ErrorCode),
                  (JsonRpcStrings.Id, error.Id),
-                 (JsonRpcStrings.Error, errorMsg),
-            };
+                 (JsonRpcStrings.Error, errorMsg)
+            ];
         });
 
         _serializers[typeof(InitializeResponseArgs)] = new JsonObjectSerializer<InitializeResponseArgs>(response =>
-            new (string, object?)[]
-            {
-                (JsonRpcStrings.ProcessId, response.ProcessId),
+        [
+            (JsonRpcStrings.ProcessId, response.ProcessId),
                 (JsonRpcStrings.ServerInfo, response.ServerInfo),
-                (JsonRpcStrings.Capabilities, response.Capabilities),
-            });
+                (JsonRpcStrings.Capabilities, response.Capabilities)
+        ]);
 
-        _serializers[typeof(ServerInfo)] = new JsonObjectSerializer<ServerInfo>(info => new (string, object?)[]
-            {
-                (JsonRpcStrings.Name, info.Name),
-                (JsonRpcStrings.Version, info.Version),
-            });
+        _serializers[typeof(ServerInfo)] = new JsonObjectSerializer<ServerInfo>(info =>
+        [
+            (JsonRpcStrings.Name, info.Name),
+                (JsonRpcStrings.Version, info.Version)
+        ]);
 
         _serializers[typeof(ServerCapabilities)] = new JsonObjectSerializer<ServerCapabilities>(capabilities =>
-            new (string, object?)[]
-            {
-                (JsonRpcStrings.Testing, capabilities.TestingCapabilities),
-            });
+        [
+            (JsonRpcStrings.Testing, capabilities.TestingCapabilities)
+        ]);
 
         _serializers[typeof(ServerTestingCapabilities)] = new JsonObjectSerializer<ServerTestingCapabilities>(capabilities =>
-            new (string, object?)[]
-            {
-                (JsonRpcStrings.SupportsDiscovery, capabilities.SupportsDiscovery),
+        [
+            (JsonRpcStrings.SupportsDiscovery, capabilities.SupportsDiscovery),
                 (JsonRpcStrings.MultiRequestSupport, capabilities.MultiRequestSupport),
                 (JsonRpcStrings.VSTestProviderSupport, capabilities.VSTestProviderSupport),
                 (JsonRpcStrings.AttachmentsSupport, capabilities.SupportsAttachments),
-                (JsonRpcStrings.MultiConnectionProvider, capabilities.MultiConnectionProvider),
-            });
+                (JsonRpcStrings.MultiConnectionProvider, capabilities.MultiConnectionProvider)
+        ]);
 
         _serializers[typeof(Artifact)] = new JsonObjectSerializer<Artifact>(artifact =>
-            new (string, object?)[]
-            {
-                (JsonRpcStrings.Uri, artifact.Uri),
+        [
+            (JsonRpcStrings.Uri, artifact.Uri),
                 (JsonRpcStrings.Producer, artifact.Producer),
                 (JsonRpcStrings.Type, artifact.Type),
                 (JsonRpcStrings.DisplayName, artifact.DisplayName),
-                (JsonRpcStrings.Description, artifact.Description),
-            });
+                (JsonRpcStrings.Description, artifact.Description)
+        ]);
 
         _serializers[typeof(DiscoverResponseArgs)] = new JsonObjectSerializer<DiscoverResponseArgs>(response => []);
 
         _serializers[typeof(RunResponseArgs)] = new JsonObjectSerializer<RunResponseArgs>(response =>
-            new (string, object?)[]
-            {
-                (JsonRpcStrings.Attachments, response.Artifacts),
-            });
+        [
+            (JsonRpcStrings.Attachments, response.Artifacts)
+        ]);
 
         _serializers[typeof(TestNodeUpdateMessage)] = new JsonObjectSerializer<TestNodeUpdateMessage>(message =>
-            new (string, object?)[]
-            {
-                (JsonRpcStrings.Node, message.TestNode),
-                (JsonRpcStrings.Parent, message.ParentTestNodeUid?.Value),
-            });
+        [
+            (JsonRpcStrings.Node, message.TestNode),
+                (JsonRpcStrings.Parent, message.ParentTestNodeUid?.Value)
+        ]);
 
         _serializers[typeof(TestNodeStateChangedEventArgs)] = new JsonObjectSerializer<TestNodeStateChangedEventArgs>(message =>
-            new (string, object?)[]
-            {
-                (JsonRpcStrings.RunId, message.RunId),
-                (JsonRpcStrings.Changes, message.Changes),
-            });
+        [
+            (JsonRpcStrings.RunId, message.RunId),
+                (JsonRpcStrings.Changes, message.Changes)
+        ]);
 
         _serializers[typeof(TestNode)] = new JsonObjectSerializer<TestNode>(message =>
         {
@@ -147,12 +139,6 @@ internal sealed class Json
                     continue;
                 }
 
-                if (property is SerializableNamedArrayStringProperty namedArrayStringProperty)
-                {
-                    properties.Add((namedArrayStringProperty.Name, namedArrayStringProperty.Values));
-                    continue;
-                }
-
                 if (property is TestFileLocationProperty fileLocationProperty)
                 {
                     properties.Add(("location.file", fileLocationProperty.FilePath));
@@ -163,11 +149,16 @@ internal sealed class Json
 
                 if (property is TestMethodIdentifierProperty testMethodIdentifierProperty)
                 {
-                    properties.Add(("location.namespace", testMethodIdentifierProperty.Namespace));
-                    properties.Add(("location.type", testMethodIdentifierProperty.TypeName));
+                    properties.Add(("location.type", RoslynString.IsNullOrEmpty(testMethodIdentifierProperty.Namespace)
+                        ? testMethodIdentifierProperty.TypeName
+                        : $"{testMethodIdentifierProperty.Namespace}.{testMethodIdentifierProperty.TypeName}"));
+
                     properties.Add(("location.method", testMethodIdentifierProperty.ParameterTypeFullNames.Length > 0
-                        ? $"{testMethodIdentifierProperty.MethodName}({string.Join(",", testMethodIdentifierProperty.ParameterTypeFullNames)})"
+                        ? $"{testMethodIdentifierProperty.MethodName}({string.Join(',', testMethodIdentifierProperty.ParameterTypeFullNames)})"
                         : testMethodIdentifierProperty.MethodName));
+
+                    properties.Add(("location.method-arity", testMethodIdentifierProperty.MethodArity));
+
                     continue;
                 }
 
@@ -300,59 +291,52 @@ internal sealed class Json
                 properties.Add(("node-type", "group"));
             }
 
-            return properties.ToArray();
+            return [.. properties];
         });
 
         _serializers[typeof(LogEventArgs)] = new JsonObjectSerializer<LogEventArgs>(message =>
-            new (string, object?)[]
-            {
-                (JsonRpcStrings.Level, message.LogMessage.Level.ToString()),
-                (JsonRpcStrings.Message, message.LogMessage.Message),
-            });
+        [
+            (JsonRpcStrings.Level, message.LogMessage.Level.ToString()),
+                (JsonRpcStrings.Message, message.LogMessage.Message)
+        ]);
 
         _serializers[typeof(CancelRequestArgs)] = new JsonObjectSerializer<CancelRequestArgs>(request =>
-            new (string, object?)[]
-            {
-                (JsonRpcStrings.Id, request.CancelRequestId),
-            });
+        [
+            (JsonRpcStrings.Id, request.CancelRequestId)
+        ]);
 
         _serializers[typeof(TelemetryEventArgs)] = new JsonObjectSerializer<TelemetryEventArgs>(ev =>
-            new (string, object?)[]
-            {
-                (JsonRpcStrings.EventName, ev.EventName),
-                (JsonRpcStrings.Metrics, ev.Metrics),
-            });
+        [
+            (JsonRpcStrings.EventName, ev.EventName),
+                (JsonRpcStrings.Metrics, ev.Metrics)
+        ]);
 
         _serializers[typeof(ProcessInfoArgs)] = new JsonObjectSerializer<ProcessInfoArgs>(info =>
-            new (string, object?)[]
-            {
-                (JsonRpcStrings.Program, info.Program),
+        [
+            (JsonRpcStrings.Program, info.Program),
                 (JsonRpcStrings.Args, info.Args),
                 (JsonRpcStrings.WorkingDirectory, info.WorkingDirectory),
-                (JsonRpcStrings.EnvironmentVariables, info.EnvironmentVariables),
-            });
+                (JsonRpcStrings.EnvironmentVariables, info.EnvironmentVariables)
+        ]);
 
         _serializers[typeof(AttachDebuggerInfoArgs)] = new JsonObjectSerializer<AttachDebuggerInfoArgs>(info =>
-            new (string, object?)[]
-            {
-                (JsonRpcStrings.ProcessId, info.ProcessId),
-            });
+        [
+            (JsonRpcStrings.ProcessId, info.ProcessId)
+        ]);
 
         _serializers[typeof(TestsAttachments)] = new JsonObjectSerializer<TestsAttachments>(info =>
-            new (string, object?)[]
-            {
-                 (JsonRpcStrings.Attachments, info.Attachments),
-            });
+        [
+            (JsonRpcStrings.Attachments, info.Attachments)
+        ]);
 
         _serializers[typeof(RunTestAttachment)] = new JsonObjectSerializer<RunTestAttachment>(info =>
-            new (string, object?)[]
-            {
-                    (JsonRpcStrings.Uri, info.Uri),
+        [
+            (JsonRpcStrings.Uri, info.Uri),
                     (JsonRpcStrings.Producer, info.Producer),
                     (JsonRpcStrings.Type, info.Type),
                     (JsonRpcStrings.DisplayName, info.DisplayName),
-                    (JsonRpcStrings.Description, info.Description),
-            });
+                    (JsonRpcStrings.Description, info.Description)
+        ]);
 
         // Serializers
         _serializers[typeof(string)] = new JsonValueSerializer<string>((w, v) => w.WriteStringValue(v));
@@ -369,7 +353,7 @@ internal sealed class Json
 
         // _serializers[typeof(TimeSpan)] = new JsonValueSerializer<TimeSpan>((w, v) => w.WriteStringValue(v.ToString())); // Remove for now
         _serializers[typeof((string, object?)[])] = new JsonObjectSerializer<(string, object?)[]>(n => n);
-        _serializers[typeof(Dictionary<string, object>)] = new JsonObjectSerializer<Dictionary<string, object>>(d => d.Select(kvp => (kvp.Key, (object?)kvp.Value)).ToArray());
+        _serializers[typeof(Dictionary<string, object>)] = new JsonObjectSerializer<Dictionary<string, object>>(d => [.. d.Select(kvp => (kvp.Key, (object?)kvp.Value))]);
 
         // Deserializers
         _deserializers[typeof(string)] = new JsonElementDeserializer<string>((json, jsonDocument) => jsonDocument.GetString()!);
@@ -380,7 +364,7 @@ internal sealed class Json
 
         _deserializers[typeof(IDictionary<string, object?>)] = new JsonElementDeserializer<IDictionary<string, object?>>((json, jsonDocument) =>
         {
-            Dictionary<string, object?> items = new();
+            Dictionary<string, object?> items = [];
             foreach (JsonProperty kvp in jsonDocument.EnumerateObject())
             {
                 switch (kvp.Value.ValueKind)
@@ -619,14 +603,12 @@ internal sealed class Json
         try
         {
             stream.Position = 0;
+#pragma warning disable CA2007 // Consider calling ConfigureAwait on the awaited task
             await using Utf8JsonWriter writer = new(stream);
-            await SerializeAsync(obj, writer);
-            await writer.FlushAsync();
-#if NETCOREAPP
+#pragma warning restore CA2007 // Consider calling ConfigureAwait on the awaited task
+            await SerializeAsync(obj, writer).ConfigureAwait(false);
+            await writer.FlushAsync().ConfigureAwait(false);
             return Encoding.UTF8.GetString(stream.GetBuffer().AsMemory().Span[..(int)stream.Position]);
-#else
-            return Encoding.UTF8.GetString(stream.ToArray());
-#endif
         }
         finally
         {
@@ -639,13 +621,6 @@ internal sealed class Json
         using var document = JsonDocument.Parse(utf8Json);
         return Bind<T>(document.RootElement, null);
     }
-
-    internal T Bind<T>(IEnumerable<JsonProperty> properties)
-        => !_deserializers.TryGetValue(typeof(T), out JsonDeserializer? deserializer)
-            ? throw new InvalidOperationException($"Cannot find deserializer for {typeof(T)}.")
-            : deserializer is not JsonPropertyCollectionDeserializer<T> propertyBagDeserializer
-            ? throw new InvalidOperationException("we need property bag deserializer")
-            : propertyBagDeserializer.CreateObject(this, properties);
 
     internal T Bind<T>(JsonElement element, string? property = null)
     {
@@ -684,7 +659,7 @@ internal sealed class Json
             return false;
         }
 
-        value = element.EnumerateArray().Select(Deserialize<T>).ToArray();
+        value = [.. element.EnumerateArray().Select(Deserialize<T>)];
         return true;
     }
 
@@ -734,12 +709,10 @@ internal sealed class Json
                 (string Key, object? Value)[]? properties = objectConverter.Properties(obj);
                 if (properties is not null)
                 {
-                    int count = 1;
                     foreach ((string property, object? value) in properties)
                     {
                         writer.WritePropertyName(property);
-                        await SerializeAsync(value, writer);
-                        count++;
+                        await SerializeAsync(value, writer).ConfigureAwait(false);
                     }
                 }
 
@@ -766,7 +739,7 @@ internal sealed class Json
                 }
                 else
                 {
-                    await SerializeAsync(o, writer);
+                    await SerializeAsync(o, writer).ConfigureAwait(false);
                 }
             }
 

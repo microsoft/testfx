@@ -9,9 +9,9 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.Assertions
 
 public class CollectionAssertTests : TestContainer
 {
-    public void ThatShouldReturnAnInstanceOfCollectionAssert() => Verify(CollectionAssert.That is not null);
+    public void InstanceShouldReturnAnInstanceOfCollectionAssert() => Verify(CollectionAssert.Instance is not null);
 
-    public void ThatShouldCacheCollectionAssertInstance() => Verify(CollectionAssert.That == CollectionAssert.That);
+    public void InstanceShouldCacheCollectionAssertInstance() => Verify(CollectionAssert.Instance == CollectionAssert.Instance);
 
     public void CollectionAssertContainsNullabilityPostConditions()
     {
@@ -488,7 +488,7 @@ public class CollectionAssertTests : TestContainer
     {
         if (depth == 0)
         {
-            return new List<object> { new ReadOnlyCollection<int>(Enumerable.Range(1, 10).ToList()) };
+            return [new ReadOnlyCollection<int>([.. Enumerable.Range(1, 10)])];
         }
 
         var nestedCollection = new List<object>();
@@ -528,14 +528,14 @@ public class CollectionAssertTests : TestContainer
 
     private ICollection? GetNonICollectionInnerCollection() => new List<ReadOnlyCollection<int>>
         {
-            new(new List<int> { 1, 2 }),
-            new(new List<int> { 3, 4 }),
+            new([1, 2]),
+            new([3, 4]),
         };
 
     private ICollection? GetNotMatchingGetNonICollectionInnerCollection() => new List<ReadOnlyCollection<int>>
         {
-            new(new List<int> { 6, 5 }),
-            new(new List<int> { 3, 4 }),
+            new([6, 5]),
+            new([3, 4]),
         };
 
     private Type? GetStringType() => typeof(string);
@@ -561,4 +561,27 @@ public class CollectionAssertTests : TestContainer
 
         public int GetHashCode(string obj) => obj.ToUpperInvariant().GetHashCode();
     }
+
+    #region Obsolete methods tests
+#if DEBUG
+    public void ObsoleteEqualsMethodThrowsAssertFailedException()
+    {
+#pragma warning disable CS0618 // Type or member is obsolete
+        Exception ex = VerifyThrows(() => CollectionAssert.Equals("test", "test"));
+#pragma warning restore CS0618 // Type or member is obsolete
+        Verify(ex is AssertFailedException);
+        Verify(ex.Message.Contains("CollectionAssert.Equals should not be used for Assertions"));
+    }
+
+    public void ObsoleteReferenceEqualsMethodThrowsAssertFailedException()
+    {
+        object obj = new();
+#pragma warning disable CS0618 // Type or member is obsolete
+        Exception ex = VerifyThrows(() => CollectionAssert.ReferenceEquals(obj, obj));
+#pragma warning restore CS0618 // Type or member is obsolete
+        Verify(ex is AssertFailedException);
+        Verify(ex.Message.Contains("CollectionAssert.ReferenceEquals should not be used for Assertions"));
+    }
+#endif
+    #endregion
 }

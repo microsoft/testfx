@@ -1,5 +1,3 @@
 #nullable enable
-*REMOVED*Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.FileOperations.GetNavigationData(object! navigationSession, string! className, string! methodName, out int minLineNumber, out string? fileName) -> void
-Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.FileOperations.GetNavigationData(object? navigationSession, string! className, string! methodName, out int minLineNumber, out string? fileName) -> void
-*REMOVED*Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.MSTestSettingsProvider.GetProperties(string! source) -> System.Collections.Generic.IDictionary<string!, object!>!
-Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.MSTestSettingsProvider.GetProperties(string? source) -> System.Collections.Generic.IDictionary<string!, object!>!
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.Dispose() -> void
+virtual Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.Dispose(bool disposing) -> void

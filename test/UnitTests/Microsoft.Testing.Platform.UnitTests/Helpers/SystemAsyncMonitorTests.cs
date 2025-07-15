@@ -20,7 +20,7 @@ public sealed class SystemAsyncMonitorTests
             tasks.Add(Task.Run(TestLock));
         }
 
-        await Task.WhenAll(tasks.ToArray());
+        await Task.WhenAll([.. tasks]);
 
         // Give more time to be above 3s
         Thread.Sleep(500);

@@ -35,23 +35,23 @@ internal sealed class TelemetryManager : ITelemetryManager, IOutputDeviceDataPro
         bool isTelemetryOptedOut = !testApplicationOptions.EnableTelemetry;
 
         ILogger<TelemetryManager> logger = loggerFactory.CreateLogger<TelemetryManager>();
-        await logger.LogDebugAsync($"TestApplicationOptions.EnableTelemetry: {testApplicationOptions.EnableTelemetry}");
+        await logger.LogDebugAsync($"TestApplicationOptions.EnableTelemetry: {testApplicationOptions.EnableTelemetry}").ConfigureAwait(false);
 
         // If the environment variable is not set or is set to 0, telemetry is opted in.
         IEnvironment environment = serviceProvider.GetEnvironment();
         string? telemetryOptOut = environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_TELEMETRY_OPTOUT);
-        await logger.LogDebugAsync($"{EnvironmentVariableConstants.TESTINGPLATFORM_TELEMETRY_OPTOUT} environment variable: '{telemetryOptOut}'");
+        await logger.LogDebugAsync($"{EnvironmentVariableConstants.TESTINGPLATFORM_TELEMETRY_OPTOUT} environment variable: '{telemetryOptOut}'").ConfigureAwait(false);
         isTelemetryOptedOut = (telemetryOptOut is "1" or "true") || isTelemetryOptedOut;
 
         string? cli_telemetryOptOut = environment.GetEnvironmentVariable(EnvironmentVariableConstants.DOTNET_CLI_TELEMETRY_OPTOUT);
-        await logger.LogDebugAsync($"{EnvironmentVariableConstants.DOTNET_CLI_TELEMETRY_OPTOUT} environment variable: '{cli_telemetryOptOut}'");
+        await logger.LogDebugAsync($"{EnvironmentVariableConstants.DOTNET_CLI_TELEMETRY_OPTOUT} environment variable: '{cli_telemetryOptOut}'").ConfigureAwait(false);
         isTelemetryOptedOut = (cli_telemetryOptOut is "1" or "true") || isTelemetryOptedOut;
 
-        await logger.LogDebugAsync($"Telemetry is '{(!isTelemetryOptedOut ? "ENABLED" : "DISABLED")}'");
+        await logger.LogDebugAsync($"Telemetry is '{(!isTelemetryOptedOut ? "ENABLED" : "DISABLED")}'").ConfigureAwait(false);
 
         if (!isTelemetryOptedOut && _telemetryFactory is not null)
         {
-            await ShowTelemetryBannerFirstNoticeAsync(serviceProvider, logger, environment);
+            await ShowTelemetryBannerFirstNoticeAsync(serviceProvider, logger, environment).ConfigureAwait(false);
         }
 
         serviceProvider.TryAddService(new TelemetryInformation(!isTelemetryOptedOut, TelemetryProperties.VersionValue));
@@ -62,7 +62,7 @@ internal sealed class TelemetryManager : ITelemetryManager, IOutputDeviceDataPro
 
         if (!isTelemetryOptedOut)
         {
-            await logger.LogDebugAsync($"Telemetry collector provider: '{telemetryCollector.GetType()}'");
+            await logger.LogDebugAsync($"Telemetry collector provider: '{telemetryCollector.GetType()}'").ConfigureAwait(false);
         }
 
         return telemetryCollector;
@@ -75,11 +75,11 @@ internal sealed class TelemetryManager : ITelemetryManager, IOutputDeviceDataPro
         bool doNotShowLogo = commandLineOptions.IsOptionSet(PlatformCommandLineProvider.NoBannerOptionKey);
 
         string? noBannerEnvVar = environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_NOBANNER);
-        await logger.LogDebugAsync($"{EnvironmentVariableConstants.TESTINGPLATFORM_NOBANNER} environment variable: '{noBannerEnvVar}'");
+        await logger.LogDebugAsync($"{EnvironmentVariableConstants.TESTINGPLATFORM_NOBANNER} environment variable: '{noBannerEnvVar}'").ConfigureAwait(false);
         doNotShowLogo = (noBannerEnvVar is "1" or "true") || doNotShowLogo;
 
         string? dotnetNoLogoEnvVar = environment.GetEnvironmentVariable(EnvironmentVariableConstants.DOTNET_NOLOGO);
-        await logger.LogDebugAsync($"{EnvironmentVariableConstants.DOTNET_NOLOGO} environment variable: '{dotnetNoLogoEnvVar}'");
+        await logger.LogDebugAsync($"{EnvironmentVariableConstants.DOTNET_NOLOGO} environment variable: '{dotnetNoLogoEnvVar}'").ConfigureAwait(false);
         doNotShowLogo = (dotnetNoLogoEnvVar is "1" or "true") || doNotShowLogo;
 
         if (doNotShowLogo)
@@ -103,7 +103,7 @@ internal sealed class TelemetryManager : ITelemetryManager, IOutputDeviceDataPro
 
         bool sentinelIsNotPresent =
             RoslynString.IsNullOrWhiteSpace(directory)
-            || !fileSystem.Exists(Path.Combine(directory, fileName));
+            || !fileSystem.ExistFile(Path.Combine(directory, fileName));
 
         if (!sentinelIsNotPresent)
         {
@@ -111,7 +111,7 @@ internal sealed class TelemetryManager : ITelemetryManager, IOutputDeviceDataPro
         }
 
         IOutputDevice outputDevice = serviceProvider.GetOutputDevice();
-        await outputDevice.DisplayAsync(this, new TextOutputDeviceData(PlatformResources.TelemetryNotice));
+        await outputDevice.DisplayAsync(this, new TextOutputDeviceData(PlatformResources.TelemetryNotice)).ConfigureAwait(false);
 
         string? path = null;
         try
@@ -130,7 +130,7 @@ internal sealed class TelemetryManager : ITelemetryManager, IOutputDeviceDataPro
         }
         catch (Exception exception) when (exception is IOException or SystemException)
         {
-            await logger.LogErrorAsync($"Could not write sentinel file for telemetry to path,'{path ?? "<unknown>"}'.", exception);
+            await logger.LogErrorAsync($"Could not write sentinel file for telemetry to path,'{path ?? "<unknown>"}'.", exception).ConfigureAwait(false);
         }
     }
 

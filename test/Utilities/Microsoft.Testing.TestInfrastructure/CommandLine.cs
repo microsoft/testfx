@@ -14,8 +14,8 @@ public sealed class CommandLine : IDisposable
 
     public static int TotalProcessesAttempt => s_totalProcessesAttempt;
 
-    private readonly List<string> _errorOutputLines = new();
-    private readonly List<string> _standardOutputLines = new();
+    private readonly List<string> _errorOutputLines = [];
+    private readonly List<string> _standardOutputLines = [];
     private IProcessHandle? _process;
 
     public ReadOnlyCollection<string> StandardOutputLines => _standardOutputLines.AsReadOnly();
@@ -60,7 +60,7 @@ public sealed class CommandLine : IDisposable
         if (!commandLine.StartsWith('"'))
         {
             string[] tokens = commandLine.Split(' ');
-            return (tokens[0], string.Join(" ", tokens.Skip(1)));
+            return (tokens[0], string.Join(' ', tokens.Skip(1)));
         }
 
         int endQuote = commandLine.IndexOf('"', 1);

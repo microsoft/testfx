@@ -40,7 +40,7 @@ public sealed class AssertionArgsShouldAvoidConditionalAccessFixer : CodeFixProv
         protected override async Task<Document?> FixAllAsync(FixAllContext fixAllContext, Document document, ImmutableArray<Diagnostic> diagnostics)
         {
             SyntaxNode root = await document.GetRequiredSyntaxRootAsync(fixAllContext.CancellationToken).ConfigureAwait(false);
-            DocumentEditor editor = await DocumentEditor.CreateAsync(document, fixAllContext.CancellationToken);
+            DocumentEditor editor = await DocumentEditor.CreateAsync(document, fixAllContext.CancellationToken).ConfigureAwait(false);
             Document currentDocument = document;
             foreach (Diagnostic diagnostic in diagnostics)
             {

@@ -26,7 +26,7 @@ internal sealed class PlatformOutputDeviceManager
             : _platformOutputDeviceFactory(serviceProvider);
 
         // If the externally provided output device is not enabled, we opt-in the default terminal output device.
-        if (_platformOutputDeviceFactory is not null && !await nonServerOutputDevice.IsEnabledAsync())
+        if (_platformOutputDeviceFactory is not null && !await nonServerOutputDevice.IsEnabledAsync().ConfigureAwait(false))
         {
             nonServerOutputDevice = GetDefaultTerminalOutputDevice(serviceProvider);
         }

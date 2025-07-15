@@ -27,19 +27,17 @@ public class Adapter_ExecuteRequestAsyncTests : TestBase
         };
 
         var services = new Services();
-        var adapter = new TestFramework(new(), new[] { new FactoryTestNodesBuilder(() => new[] { testNode }) }, new(),
+        var adapter = new TestFramework(new(), [new FactoryTestNodesBuilder(() => [testNode])], new(),
             services.ServiceProvider.GetSystemClock(), services.ServiceProvider.GetTask(), services.ServiceProvider.GetConfiguration(), new Platform.Capabilities.TestFramework.TestFrameworkCapabilities());
 
         CancellationToken cancellationToken = CancellationToken.None;
 
         // Act
-#pragma warning disable TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
         await adapter.ExecuteRequestAsync(new(
             new RunTestExecutionRequest(new(new("id"), new ClientInfo(string.Empty, string.Empty))),
             services.ServiceProvider.GetRequiredService<IMessageBus>(),
             new SemaphoreSlimRequestCompleteNotifier(new SemaphoreSlim(1)),
             cancellationToken));
-#pragma warning restore TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
 
         // Assert
         IEnumerable<TestNodeUpdateMessage> nodeStateChanges = services.MessageBus.Messages.OfType<TestNodeUpdateMessage>();
@@ -62,18 +60,16 @@ public class Adapter_ExecuteRequestAsyncTests : TestBase
         var services = new Services();
         var fakeClock = (FakeClock)services.ServiceProvider.GetService(typeof(FakeClock))!;
 
-        var adapter = new TestFramework(new(), new[] { new FactoryTestNodesBuilder(() => new[] { testNode }) }, new(),
+        var adapter = new TestFramework(new(), [new FactoryTestNodesBuilder(() => [testNode])], new(),
             services.ServiceProvider.GetSystemClock(), services.ServiceProvider.GetTask(), services.ServiceProvider.GetConfiguration(), new Platform.Capabilities.TestFramework.TestFrameworkCapabilities());
         CancellationToken cancellationToken = CancellationToken.None;
 
         // Act
-#pragma warning disable TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
         await adapter.ExecuteRequestAsync(new(
             new RunTestExecutionRequest(new(new("id"), new ClientInfo(string.Empty, string.Empty))),
             services.ServiceProvider.GetRequiredService<IMessageBus>(),
             new SemaphoreSlimRequestCompleteNotifier(new SemaphoreSlim(1)),
             cancellationToken));
-#pragma warning restore TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
 
         // Assert
         IEnumerable<TestNodeUpdateMessage> nodeStateChanges = services.MessageBus.Messages.OfType<TestNodeUpdateMessage>();
@@ -93,7 +89,7 @@ public class Adapter_ExecuteRequestAsyncTests : TestBase
 
     private sealed class FakeClock : IClock
     {
-        public List<DateTimeOffset> UsedTimes { get; } = new();
+        public List<DateTimeOffset> UsedTimes { get; } = [];
 
         public DateTimeOffset UtcNow
         {
@@ -115,9 +111,7 @@ public class Adapter_ExecuteRequestAsyncTests : TestBase
             ServiceProvider.AddService(new LoggerFactory());
             ServiceProvider.AddService(new FakeClock());
             ServiceProvider.AddService(new SystemTask());
-#pragma warning disable TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
-            ServiceProvider.AddService(new AggregatedConfiguration(Array.Empty<IConfigurationProvider>(), new CurrentTestApplicationModuleInfo(new SystemEnvironment(), new SystemProcessHandler()), new SystemFileSystem(), new(null, [], [])));
-#pragma warning restore TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+            ServiceProvider.AddService(new AggregatedConfiguration([], new CurrentTestApplicationModuleInfo(new SystemEnvironment(), new SystemProcessHandler()), new SystemFileSystem(), new(null, [], [])));
         }
 
         public MessageBus MessageBus { get; }
@@ -127,7 +121,7 @@ public class Adapter_ExecuteRequestAsyncTests : TestBase
 
     private sealed class MessageBus : IMessageBus
     {
-        public List<IData> Messages { get; } = new();
+        public List<IData> Messages { get; } = [];
 
         public Task PublishAsync(IDataProducer dataProducer, IData data)
         {

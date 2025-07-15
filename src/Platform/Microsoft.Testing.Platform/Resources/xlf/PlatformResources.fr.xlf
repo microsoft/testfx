@@ -431,6 +431,11 @@
         <target state="translated">Introuvable</target>
         <note />
       </trans-unit>
+      <trans-unit id="OnlyOneFilterSupported">
+        <source>Passing both '--treenode-filter' and '--filter-uid' is unsupported.</source>
+        <target state="translated">Vous ne pouvez pas passer à la fois « --treenode-filter » et « --filter-uid ». Cette action n’est pas prise en charge.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="OutOfProcessArtifactsProduced">
         <source>Out of process file artifacts produced:</source>
         <target state="translated">Artefacts de fichier hors processus produits :</target>
@@ -531,6 +536,11 @@ Les valeurs disponibles sont « Trace », « Debug », « Information », 
       <trans-unit id="PlatformCommandLineExitOnProcessExitSingleArgument">
         <source>'--{0}' expects a single int PID argument</source>
         <target state="translated">« --{0} » attend un seul argument PID int</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineFilterUidOptionDescription">
+        <source>Provides a list of test node UIDs to filter by.</source>
+        <target state="translated">Fournit la liste des IUD de nœud de test à filtrer.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineHelpOptionDescription">
@@ -731,11 +741,6 @@ Prend un argument sous forme de chaîne au format &lt;value&gt;[h|m|s] où « v
       <trans-unit id="StandardOutput">
         <source>Standard output</source>
         <target state="translated">Sortie standard</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="StartingServer">
-        <source>Starting server. Listening on port '{0}'</source>
-        <target state="translated">Démarrage du serveur. Écoute sur le port « {0} »</target>
         <note />
       </trans-unit>
       <trans-unit id="StartingTestSession">
@@ -950,11 +955,6 @@ Les valeurs valides sont « Normal » et « Détaillé ». La valeur par dé
       <trans-unit id="UnexpectedStateErrorMessage">
         <source>Unexpected state in file '{0}' at line '{1}'</source>
         <target state="translated">État inattendu dans le fichier « {0} » à la ligne « {1} »</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="UnknownCommunicationProtocolErrorMessage">
-        <source>The communication protocol '{0}' is not supported</source>
-        <target state="translated">Le protocole de communication « {0} » n’est pas pris en charge</target>
         <note />
       </trans-unit>
       <trans-unit id="UnobservedTaskExceptionWarningMessage">

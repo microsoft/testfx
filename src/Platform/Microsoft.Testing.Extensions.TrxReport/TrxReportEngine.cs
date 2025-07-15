@@ -148,7 +148,12 @@ internal sealed partial class TrxReportEngine
             // create the xml doc
             var document = new XDocument(new XDeclaration("1.0", "UTF-8", null));
             var testRun = new XElement(_namespaceUri + "TestRun");
-            testRun.SetAttributeValue("id", Guid.NewGuid());
+            if (!Guid.TryParse(_environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_TRX_TESTRUN_ID), out Guid testRunId))
+            {
+                testRunId = Guid.NewGuid();
+            }
+
+            testRun.SetAttributeValue("id", testRunId);
             string testRunName = $"{_environment.GetEnvironmentVariable("UserName")}@{_environment.MachineName} {FormatDateTimeForRunName(_clock.UtcNow)}";
             testRun.SetAttributeValue("name", testRunName);
 
@@ -177,7 +182,7 @@ internal sealed partial class TrxReportEngine
             // NotExecuted is the status for the skipped test.
             resultSummaryOutcome = isTestHostCrashed || _exitCode != ExitCodes.Success ? "Failed" : resultSummaryOutcome is "Passed" or "NotExecuted" ? "Completed" : resultSummaryOutcome;
 
-            await AddResultSummaryAsync(testRun, resultSummaryOutcome, runDeploymentRoot, testHostCrashInfo, _exitCode, isTestHostCrashed);
+            await AddResultSummaryAsync(testRun, resultSummaryOutcome, runDeploymentRoot, testHostCrashInfo, _exitCode, isTestHostCrashed).ConfigureAwait(false);
 
             // will need catch Unauthorized access
             document.Add(testRun);
@@ -198,16 +203,16 @@ internal sealed partial class TrxReportEngine
             string outputDirectory = _configuration.GetTestResultDirectory(); // add var for this
             string finalFileName = Path.Combine(outputDirectory, trxFileName);
 
-            bool isFileNameExplicitlyProvidedAndFileExists = isFileNameExplicitlyProvided && _fileSystem.Exists(finalFileName);
+            bool isFileNameExplicitlyProvidedAndFileExists = isFileNameExplicitlyProvided && _fileSystem.ExistFile(finalFileName);
 
             // Note that we need to dispose the IFileStream, not the inner stream.
             // IFileStream implementations will be responsible to dispose their inner stream.
             using IFileStream stream = _fileSystem.NewFileStream(finalFileName, isFileNameExplicitlyProvided ? FileMode.Create : FileMode.CreateNew);
-            await document.SaveAsync(stream.Stream, SaveOptions.None, _cancellationToken);
+            await document.SaveAsync(stream.Stream, SaveOptions.None, _cancellationToken).ConfigureAwait(false);
             return isFileNameExplicitlyProvidedAndFileExists
                 ? (finalFileName, string.Format(CultureInfo.InvariantCulture, ExtensionResources.TrxFileExistsAndWillBeOverwritten, finalFileName))
                 : (finalFileName, null);
-        });
+        }).ConfigureAwait(false);
 
     private async Task<(string FileName, string? Warning)> RetryWhenIOExceptionAsync(Func<Task<(string FileName, string? Warning)>> func)
     {
@@ -217,7 +222,7 @@ internal sealed partial class TrxReportEngine
         {
             try
             {
-                return await func();
+                return await func().ConfigureAwait(false);
             }
             catch (IOException)
             {
@@ -254,10 +259,10 @@ internal sealed partial class TrxReportEngine
             resultSummary.Add(collectorDataEntries);
         }
 
-        await AddArtifactsToCollectionAsync(artifacts, collectorDataEntries, runDeploymentRoot);
+        await AddArtifactsToCollectionAsync(artifacts, collectorDataEntries, runDeploymentRoot).ConfigureAwait(false);
 
         using FileStream fs = File.OpenWrite(trxFile.FullName);
-        await document.SaveAsync(fs, SaveOptions.None, _cancellationToken);
+        await document.SaveAsync(fs, SaveOptions.None, _cancellationToken).ConfigureAwait(false);
     }
 
     private async Task AddArtifactsToCollectionAsync(Dictionary<IExtension, List<SessionFileArtifact>> artifacts, XElement collectorDataEntries, string runDeploymentRoot)
@@ -276,7 +281,7 @@ internal sealed partial class TrxReportEngine
 
             foreach (SessionFileArtifact artifact in extensionArtifacts.Value)
             {
-                string href = await CopyArtifactIntoTrxDirectoryAndReturnHrefValueAsync(artifact.FileInfo, runDeploymentRoot);
+                string href = await CopyArtifactIntoTrxDirectoryAndReturnHrefValueAsync(artifact.FileInfo, runDeploymentRoot).ConfigureAwait(false);
                 uriAttachments.Add(new XElement(_namespaceUri + "UriAttachment", new XElement(_namespaceUri + "A", new XAttribute("href", href))));
             }
         }
@@ -344,7 +349,7 @@ internal sealed partial class TrxReportEngine
         var collectorDataEntries = new XElement(_namespaceUri + "CollectorDataEntries");
         resultSummary.Add(collectorDataEntries);
 
-        await AddArtifactsToCollectionAsync(_artifactsByExtension, collectorDataEntries, runDeploymentRoot);
+        await AddArtifactsToCollectionAsync(_artifactsByExtension, collectorDataEntries, runDeploymentRoot).ConfigureAwait(false);
     }
 
     private async Task<string> CopyArtifactIntoTrxDirectoryAndReturnHrefValueAsync(FileInfo artifact, string runDeploymentRoot)
@@ -368,7 +373,7 @@ internal sealed partial class TrxReportEngine
             break;
         }
 
-        await CopyFileAsync(artifact, new FileInfo(destination));
+        await CopyFileAsync(artifact, new FileInfo(destination)).ConfigureAwait(false);
 
         return Path.Combine(_environment.MachineName, Path.GetFileName(destination));
     }
@@ -393,7 +398,7 @@ internal sealed partial class TrxReportEngine
 
         using FileStream fileStream = File.OpenRead(origin.FullName);
         using var destinationStream = new FileStream(destination.FullName, FileMode.Create);
-        await fileStream.CopyToAsync(destinationStream, _cancellationToken);
+        await fileStream.CopyToAsync(destinationStream, _cancellationToken).ConfigureAwait(false);
     }
 
     private static void AddTestLists(XElement testRun, string uncategorizedTestId)
@@ -482,7 +487,7 @@ internal sealed partial class TrxReportEngine
             var output = new XElement("Output");
 
             TrxMessagesProperty? trxMessages = testNode.Properties.SingleOrDefault<TrxMessagesProperty>();
-            IEnumerable<string?>? nonErrorMessages = trxMessages?.Messages.Where(x => x is not StandardErrorTrxMessage).Select(x => x.Message);
+            IEnumerable<string?>? nonErrorMessages = trxMessages?.Messages.Where(x => x is not StandardErrorTrxMessage and not DebugOrTraceTrxMessage).Select(x => x.Message);
             if (nonErrorMessages?.Any() == true)
             {
                 output.Add(new XElement("StdOut", RemoveInvalidXmlChar(string.Join(Environment.NewLine, nonErrorMessages))));
@@ -492,6 +497,12 @@ internal sealed partial class TrxReportEngine
             if (errorMessages?.Any() == true)
             {
                 output.Add(new XElement("StdErr", RemoveInvalidXmlChar(string.Join(Environment.NewLine, errorMessages))));
+            }
+
+            IEnumerable<string?>? debugOrTraceMessages = trxMessages?.Messages.Where(x => x is DebugOrTraceTrxMessage).Select(x => x.Message);
+            if (debugOrTraceMessages?.Any() == true)
+            {
+                output.Add(new XElement("DebugTrace", RemoveInvalidXmlChar(string.Join(Environment.NewLine, debugOrTraceMessages))));
             }
 
             TrxExceptionProperty? trxException = testNode.Properties.SingleOrDefault<TrxExceptionProperty>();
@@ -512,8 +523,7 @@ internal sealed partial class TrxReportEngine
                 output.Add(errorInfoElement);
             }
 
-            // add collectorDataEntries details
-            if (output.HasElements && outcome != "NotExecuted")
+            if (output.HasElements)
             {
                 unitTestResult.Add(output);
             }
@@ -548,6 +558,66 @@ internal sealed partial class TrxReportEngine
             }
 
             unitTest.Add(new XElement("Execution", new XAttribute("id", executionId)));
+
+            XElement? properties = null;
+            XElement? owners = null;
+            foreach (TestMetadataProperty property in testNode.Properties.OfType<TestMetadataProperty>())
+            {
+                switch (property.Key)
+                {
+                    case "Owner":
+                        owners ??= new XElement("Owners", new XElement("Owner", new XAttribute("name", property.Value)));
+                        break;
+
+                    case "Priority":
+                        if (int.TryParse(property.Value, out _))
+                        {
+                            unitTest.SetAttributeValue("priority", property.Value);
+                        }
+
+                        break;
+
+                    default:
+                        // NOTE: VSTest doesn't produce Properties as of writing this.
+                        // It was historically fixed, but the fix wasn't correct and the fix was reverted and never revisited to be properly fixed.
+                        // Revert PR: https://github.com/microsoft/vstest/pull/15080
+                        // The original implementation (buggy) was setting "Key" and "Value" as attributes on "Property" element.
+                        // However, Visual Studio will validate the TRX file against vstst.xsd file in
+                        //  C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Xml\Schemas\vstst.xsd
+                        // In xsd, "Properties" element is defined as:
+                        // <xs:element name="Properties" minOccurs="0">
+                        //   <xs:complexType>
+                        //     <xs:sequence>
+                        //       <xs:element name="Property" minOccurs="0" maxOccurs="unbounded">
+                        //         <xs:complexType>
+                        //           <xs:sequence>
+                        //             <xs:element name="Key" />
+                        //             <xs:element name="Value" />
+                        //           </xs:sequence>
+                        //         </xs:complexType>
+                        //       </xs:element>
+                        //     </xs:sequence>
+                        //   </xs:complexType>
+                        // </xs:element>
+                        // So, Key and Value are **elements**, not attributes.
+                        // In MTP, we do the right thing and follow the XSD definition.
+                        properties ??= new XElement("Properties");
+                        properties.Add(new XElement(
+                            "Property",
+                            new XElement("Key", property.Key), new XElement("Value", property.Value)));
+                        break;
+                }
+            }
+
+            if (owners is not null)
+            {
+                unitTest.Add(owners);
+            }
+
+            if (properties is not null)
+            {
+                unitTest.Add(properties);
+            }
 
             var testMethod = new XElement(
                 "TestMethod",
@@ -613,7 +683,7 @@ internal sealed partial class TrxReportEngine
 
         // We use custom format string to make sure that runs are sorted in the same way on all intl machines.
         // This is both for directory names and for Data Warehouse.
-        date.ToString("yyyy-MM-dd HH:mm:ss.fff", DateTimeFormatInfo.InvariantInfo);
+        date.ToString("yyyy-MM-dd HH:mm:ss.fffffff", DateTimeFormatInfo.InvariantInfo);
 
     private static string ReplaceInvalidFileNameChars(string fileName)
     {
@@ -647,7 +717,7 @@ internal sealed partial class TrxReportEngine
         // LPT1, LPT2, LPT3, LPT4, LPT5, LPT6, LPT7, LPT8, and LPT9.
         // Also avoid these names followed by an extension, for example, NUL.tx7.
         // Windows NT: CLOCK$ is also a reserved device name.
-        ReservedFileNamesRegex.Match(fileName).Success;
+        ReservedFileNamesRegex.IsMatch(fileName);
 
     private static Guid GuidFromString(string data)
     {

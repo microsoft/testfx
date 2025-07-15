@@ -1,11 +1,39 @@
 #nullable enable
-Microsoft.VisualStudio.TestTools.UnitTesting.AssertFailedException.AssertFailedException(System.Runtime.Serialization.SerializationInfo! info, System.Runtime.Serialization.StreamingContext context) -> void
-Microsoft.VisualStudio.TestTools.UnitTesting.AssertInconclusiveException.AssertInconclusiveException(System.Runtime.Serialization.SerializationInfo! info, System.Runtime.Serialization.StreamingContext context) -> void
-Microsoft.VisualStudio.TestTools.UnitTesting.InternalTestFailureException.InternalTestFailureException(System.Runtime.Serialization.SerializationInfo! info, System.Runtime.Serialization.StreamingContext context) -> void
-Microsoft.VisualStudio.TestTools.UnitTesting.ITestMethod.InvokeAsync(object![]? arguments) -> System.Threading.Tasks.Task<Microsoft.VisualStudio.TestTools.UnitTesting.TestResult!>!
-Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestAssertException.UnitTestAssertException(System.Runtime.Serialization.SerializationInfo! info, System.Runtime.Serialization.StreamingContext context) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Throws<TException>(System.Func<object?>! action, string! message = "", params object![]! messageArgs) -> TException!
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Throws<TException>(System.Func<object?>! action, System.Func<System.Exception?, string!>! messageBuilder) -> TException!
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ThrowsExactly<TException>(System.Func<object?>! action, string! message = "", params object![]! messageArgs) -> TException!
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ThrowsExactly<TException>(System.Func<object?>! action, System.Func<System.Exception?, string!>! messageBuilder) -> TException!
-[MSTESTEXP]Microsoft.VisualStudio.TestTools.UnitTesting.RetryContext.FirstRunResults.get -> Microsoft.VisualStudio.TestTools.UnitTesting.TestResult![]!
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertNonStrictThrowsInterpolatedStringHandler<TException>.AssertNonStrictThrowsInterpolatedStringHandler(int literalLength, int formattedCount, System.Func<object?>! action, out bool shouldAppend) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.CIConditionAttribute
+Microsoft.VisualStudio.TestTools.UnitTesting.CIConditionAttribute.CIConditionAttribute(Microsoft.VisualStudio.TestTools.UnitTesting.ConditionMode mode) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.ConditionBaseAttribute.Mode.get -> Microsoft.VisualStudio.TestTools.UnitTesting.ConditionMode
+override Microsoft.VisualStudio.TestTools.UnitTesting.CIConditionAttribute.GroupName.get -> string!
+override Microsoft.VisualStudio.TestTools.UnitTesting.CIConditionAttribute.IgnoreMessage.get -> string?
+override Microsoft.VisualStudio.TestTools.UnitTesting.CIConditionAttribute.ShouldRun.get -> bool
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ContainsSingle<T>(System.Func<T, bool>! predicate, System.Collections.Generic.IEnumerable<T>! collection, string! message = "") -> T
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.DoesNotEndWith(string? substring, string? value, string! message = "") -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.DoesNotEndWith(string? substring, string? value, System.StringComparison comparisonType, string! message = "") -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.DoesNotMatchRegex(string? pattern, string? value, string! message = "") -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.DoesNotMatchRegex(System.Text.RegularExpressions.Regex? pattern, string? value, string! message = "") -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.DoesNotStartWith(string? substring, string? value, string! message = "") -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.DoesNotStartWith(string? substring, string? value, System.StringComparison comparisonType, string! message = "") -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.EndsWith(string? substring, string? value, string! message = "") -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.EndsWith(string? substring, string? value, System.StringComparison comparisonType, string! message = "") -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsGreaterThan<T>(T lowerBound, T value, string! message = "") -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsGreaterThanOrEqualTo<T>(T lowerBound, T value, string! message = "") -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Instance.get -> Microsoft.VisualStudio.TestTools.UnitTesting.Assert!
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Contains<T>(System.Func<T, bool>! predicate, System.Collections.Generic.IEnumerable<T>! collection, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsInRange<T>(T minValue, T maxValue, T value, string! message = "") -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsLessThan<T>(T upperBound, T value, string! message = "") -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsLessThanOrEqualTo<T>(T upperBound, T value, string! message = "") -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsNegative<T>(T value, string! message = "") -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsPositive<T>(T value, string! message = "") -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.MatchesRegex(string? pattern, string? value, string! message = "") -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.MatchesRegex(System.Text.RegularExpressions.Regex? pattern, string? value, string! message = "") -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.StartsWith(string? substring, string? value, string! message = "") -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.StartsWith(string? substring, string? value, System.StringComparison comparisonType, string! message = "") -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Throws<TException>(System.Func<object?>! action, ref Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertNonStrictThrowsInterpolatedStringHandler<TException!> message) -> TException!
+static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.Instance.get -> Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert!
+static Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert.Instance.get -> Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert!
+*REMOVED*static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Contains<T>(System.Collections.Generic.IEnumerable<T>! collection, System.Func<T, bool>! predicate, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ReferenceEquals(object? objA, object? objB) -> bool
+static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.Equals(object? objA, object? objB) -> bool
+static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.ReferenceEquals(object? objA, object? objB) -> bool
+static Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert.Equals(object? objA, object? objB) -> bool
+static Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert.ReferenceEquals(object? objA, object? objB) -> bool

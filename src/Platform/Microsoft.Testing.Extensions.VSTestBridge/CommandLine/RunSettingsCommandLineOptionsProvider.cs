@@ -57,7 +57,7 @@ internal sealed class RunSettingsCommandLineOptionsProvider : ICommandLineOption
         RoslynDebug.Assert(commandOption.Name == RunSettingsOptionName);
         string filePath = arguments[0];
 
-        if (!_fileSystem.Exists(filePath))
+        if (!_fileSystem.ExistFile(filePath))
         {
             return ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, ExtensionResources.RunsettingsFileDoesNotExist, filePath));
         }

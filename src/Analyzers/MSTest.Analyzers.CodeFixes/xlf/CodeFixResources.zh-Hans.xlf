@@ -42,6 +42,11 @@
         <target state="translated">修复签名</target>
         <note />
       </trans-unit>
+      <trans-unit id="ReplaceDataTestMethodWithTestMethodTitle">
+        <source>Replace 'DataTestMethod' with 'TestMethod'</source>
+        <target state="translated">将 'DataTestMethod' 替换为 'TestMethod'</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ReplaceWithConstructorFix">
         <source>Replace TestInitialize method with constructor</source>
         <target state="translated">将 TestInitialize 方法替换为构造函数</target>
@@ -67,6 +72,11 @@
         <target state="translated">将构造函数替换为 TestInitialize 方法</target>
         <note />
       </trans-unit>
+      <trans-unit id="StringAssertToAssertTitle">
+        <source>Use 'Assert.{0}' instead of 'StringAssert'</source>
+        <target state="translated">使用 'Assert.{0}' 而不是 'StringAssert'</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TestClassShouldBeValidFix">
         <source>Fix test class signature</source>
         <target state="translated">修复测试类签名</target>
@@ -90,6 +100,11 @@
       <trans-unit id="UseAttributeOnTestMethodFix">
         <source>Add '[TestMethod]'</source>
         <target state="translated">添加“[TestMethod]”</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseCooperativeCancellationForTimeoutFix">
+        <source>Use 'CooperativeCancellation = true'</source>
+        <target state="translated">使用 'CooperativeCancellation = true'</target>
         <note />
       </trans-unit>
       <trans-unit id="UseNewerAssertThrows">

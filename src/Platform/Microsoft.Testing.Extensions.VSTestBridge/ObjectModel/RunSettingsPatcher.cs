@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#pragma warning disable TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
-
 using Microsoft.Testing.Extensions.VSTestBridge.CommandLine;
 using Microsoft.Testing.Extensions.VSTestBridge.Resources;
 using Microsoft.Testing.Platform;
@@ -47,12 +45,6 @@ internal static class RunSettingsPatcher
             runConfigurationElement = new XElement("RunConfiguration");
             AddPatchingCommentIfNeeded(runConfigurationElement, ref isPatchingCommentAdded);
             runSettingsElement.AddFirst(runConfigurationElement);
-        }
-
-        if (runConfigurationElement.Element("DisableAppDomain") is null)
-        {
-            AddPatchingCommentIfNeeded(runConfigurationElement, ref isPatchingCommentAdded);
-            runConfigurationElement.Add(new XElement("DisableAppDomain", false));
         }
 
         if (runConfigurationElement.Element("DesignMode") is null)
@@ -107,7 +99,7 @@ internal static class RunSettingsPatcher
             runSettingsElement.Add(testRunParametersElement);
         }
 
-        XElement[] testRunParametersNodes = testRunParametersElement.Nodes().OfType<XElement>().ToArray();
+        XElement[] testRunParametersNodes = [.. testRunParametersElement.Nodes().OfType<XElement>()];
         foreach (string testRunParameter in testRunParameters)
         {
             string[] parts = testRunParameter.Split(TestRunParameterSeparator, 2);

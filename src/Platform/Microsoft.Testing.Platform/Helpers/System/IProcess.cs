@@ -7,34 +7,29 @@ internal interface IProcess : IDisposable
 {
     event EventHandler Exited;
 
-    /// <inheritdoc cref="System.Diagnostics.Process.Id" />
+    /// <inheritdoc cref="Process.Id" />
     int Id { get; }
 
-    /// <inheritdoc cref="System.Diagnostics.Process.ProcessName" />
+    /// <inheritdoc cref="Process.ProcessName" />
     string Name { get; }
 
-    /// <inheritdoc cref="System.Diagnostics.Process.ExitCode" />
+    /// <inheritdoc cref="Process.ExitCode" />
     int ExitCode { get; }
 
-    /// <inheritdoc cref="System.Diagnostics.Process.HasExited" />
+    /// <inheritdoc cref="Process.HasExited" />
     bool HasExited { get; }
 
-#if NETCOREAPP
-    /// <inheritdoc cref="System.Diagnostics.Process.MainModule" />
+    /// <inheritdoc cref="Process.MainModule" />
     IMainModule? MainModule { get; }
-#else
-    /// <inheritdoc cref="System.Diagnostics.Process.MainModule" />
-    IMainModule MainModule { get; }
-#endif
 
     /// <summary>
     /// Instructs the Process component to wait for the associated process to exit, or for the cancellationToken to be canceled.
     /// </summary>
     Task WaitForExitAsync();
 
-    /// <inheritdoc cref="System.Diagnostics.Process.WaitForExit()" />
+    /// <inheritdoc cref="Process.WaitForExit()" />
     void WaitForExit();
 
-    /// <inheritdoc cref="System.Diagnostics.Process.Kill()" />
+    /// <inheritdoc cref="Process.Kill()" />
     void Kill();
 }

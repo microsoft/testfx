@@ -21,7 +21,7 @@ internal sealed class FastFilter
             (filterOperation != Operation.Equal || (filterOperator != Operator.Or && filterOperator != Operator.None))
             && (filterOperation == Operation.NotEqual && (filterOperator == Operator.And || filterOperator == Operator.None)
                 ? true
-                : throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, "An error occurred while creating Fast filter.")));
+                : throw new ArgumentException("An error occurred while creating Fast filter."));
     }
 
     internal ImmutableDictionary<string, ISet<string>> FilterProperties { get; }
@@ -37,7 +37,7 @@ internal sealed class FastFilter
             ? null
             : FilterProperties.Keys.All(name => properties.Contains(name))
                 ? null
-                : FilterProperties.Keys.Where(name => !properties.Contains(name)).ToArray();
+                : [.. FilterProperties.Keys.Where(name => !properties.Contains(name))];
 
     internal bool Evaluate(Func<string, object?> propertyValueProvider)
     {

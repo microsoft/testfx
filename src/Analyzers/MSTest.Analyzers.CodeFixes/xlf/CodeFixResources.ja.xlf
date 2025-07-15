@@ -42,6 +42,11 @@
         <target state="translated">署名の修正</target>
         <note />
       </trans-unit>
+      <trans-unit id="ReplaceDataTestMethodWithTestMethodTitle">
+        <source>Replace 'DataTestMethod' with 'TestMethod'</source>
+        <target state="translated">'DataTestMethod' を 'TestMethod' に置き換えます</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ReplaceWithConstructorFix">
         <source>Replace TestInitialize method with constructor</source>
         <target state="translated">TestInitialize メソッドをコンストラクターに置き換える</target>
@@ -67,6 +72,11 @@
         <target state="translated">コンストラクターを TestInitialize メソッドに置き換える</target>
         <note />
       </trans-unit>
+      <trans-unit id="StringAssertToAssertTitle">
+        <source>Use 'Assert.{0}' instead of 'StringAssert'</source>
+        <target state="translated">'StringAssert' の代わりに 'Assert.{0}' を使用</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TestClassShouldBeValidFix">
         <source>Fix test class signature</source>
         <target state="translated">テスト クラスのシグネチャの修正</target>
@@ -90,6 +100,11 @@
       <trans-unit id="UseAttributeOnTestMethodFix">
         <source>Add '[TestMethod]'</source>
         <target state="translated">'[TestMethod]' の追加</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseCooperativeCancellationForTimeoutFix">
+        <source>Use 'CooperativeCancellation = true'</source>
+        <target state="translated">'CooperativeCancellation = true' を使用する</target>
         <note />
       </trans-unit>
       <trans-unit id="UseNewerAssertThrows">

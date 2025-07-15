@@ -431,6 +431,11 @@
         <target state="translated">Nicht gefunden</target>
         <note />
       </trans-unit>
+      <trans-unit id="OnlyOneFilterSupported">
+        <source>Passing both '--treenode-filter' and '--filter-uid' is unsupported.</source>
+        <target state="translated">Das gleichzeitige Übergeben von „--treenode-filter“ und „--filter-uid“ wird nicht unterstützt.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="OutOfProcessArtifactsProduced">
         <source>Out of process file artifacts produced:</source>
         <target state="translated">Nicht verarbeitete Dateiartefakte erstellt:</target>
@@ -531,6 +536,11 @@ Die verfügbaren Werte sind "Trace", "Debug", "Information", "Warning", "Error" 
       <trans-unit id="PlatformCommandLineExitOnProcessExitSingleArgument">
         <source>'--{0}' expects a single int PID argument</source>
         <target state="translated">"--{0}" erwartet ein einzelnes int-PID-Argument.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineFilterUidOptionDescription">
+        <source>Provides a list of test node UIDs to filter by.</source>
+        <target state="translated">Stellt eine Liste der UIDs von Testknoten bereit, nach denen gefiltert werden kann.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineHelpOptionDescription">
@@ -731,11 +741,6 @@ Nimmt ein Argument als Zeichenfolge im Format &lt;value&gt;[h|m|s], wobei "value
       <trans-unit id="StandardOutput">
         <source>Standard output</source>
         <target state="translated">Standardausgabe</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="StartingServer">
-        <source>Starting server. Listening on port '{0}'</source>
-        <target state="translated">Server wird gestartet. An Port "{0}" lauschen</target>
         <note />
       </trans-unit>
       <trans-unit id="StartingTestSession">
@@ -950,11 +955,6 @@ Gültige Werte sind „Normal“, „Detailed“. Der Standardwert ist „Normal
       <trans-unit id="UnexpectedStateErrorMessage">
         <source>Unexpected state in file '{0}' at line '{1}'</source>
         <target state="translated">Unerwarteter Status in Datei "{0}" in Zeile "{1}"</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="UnknownCommunicationProtocolErrorMessage">
-        <source>The communication protocol '{0}' is not supported</source>
-        <target state="translated">Das Kommunikationsprotokoll "{0}" wird nicht unterstützt</target>
         <note />
       </trans-unit>
       <trans-unit id="UnobservedTaskExceptionWarningMessage">

@@ -54,7 +54,7 @@ public static class DotnetCli
         Dictionary<string, string?>? environmentVariables = null,
         bool failIfReturnValueIsNotZero = true,
         bool disableTelemetry = true,
-        int timeoutInSeconds = 50,
+        int timeoutInSeconds = 60,
         int retryCount = 5,
         bool disableCodeCoverage = true,
         bool warnAsError = true,
@@ -64,7 +64,7 @@ public static class DotnetCli
         await s_maxOutstandingCommands_semaphore.WaitAsync();
         try
         {
-            environmentVariables ??= new Dictionary<string, string?>();
+            environmentVariables ??= [];
             foreach (DictionaryEntry entry in Environment.GetEnvironmentVariables())
             {
                 // Skip all unwanted environment variables.

@@ -93,7 +93,7 @@ internal sealed partial class BrowserOutputDevice : IPlatformOutputDevice,
             {
                 ConsoleLog(PlatformResources.CancellingTestSession);
                 return Task.CompletedTask;
-            });
+            }).ConfigureAwait(false);
 
     public Type[] DataTypesConsumed { get; } =
     [
@@ -103,23 +103,23 @@ internal sealed partial class BrowserOutputDevice : IPlatformOutputDevice,
     ];
 
     /// <inheritdoc />
-    public string Uid { get; } = nameof(BrowserOutputDevice);
+    public string Uid => nameof(BrowserOutputDevice);
 
     /// <inheritdoc />
-    public string Version { get; } = AppVersion.DefaultSemVer;
+    public string Version => AppVersion.DefaultSemVer;
 
     /// <inheritdoc />
-    public string DisplayName { get; } = "Test Platform Browser Console Service";
+    public string DisplayName => "Test Platform Browser Console Service";
 
     /// <inheritdoc />
-    public string Description { get; } = "Test Platform default browser console service";
+    public string Description => "Test Platform default browser console service";
 
     /// <inheritdoc />
     public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 
     public async Task DisplayBannerAsync(string? bannerMessage)
     {
-        using (await _asyncMonitor.LockAsync(TimeoutHelper.DefaultHangTimeSpanTimeout))
+        using (await _asyncMonitor.LockAsync(TimeoutHelper.DefaultHangTimeSpanTimeout).ConfigureAwait(false))
         {
             if (_bannerDisplayed)
             {
@@ -202,7 +202,7 @@ internal sealed partial class BrowserOutputDevice : IPlatformOutputDevice,
 
     public async Task DisplayAfterSessionEndRunAsync()
     {
-        using (await _asyncMonitor.LockAsync(TimeoutHelper.DefaultHangTimeSpanTimeout))
+        using (await _asyncMonitor.LockAsync(TimeoutHelper.DefaultHangTimeSpanTimeout).ConfigureAwait(false))
         {
             if (_firstCallTo_OnSessionStartingAsync)
             {
@@ -257,7 +257,7 @@ internal sealed partial class BrowserOutputDevice : IPlatformOutputDevice,
     /// <param name="data">The data to be displayed.</param>
     public async Task DisplayAsync(IOutputDeviceDataProducer producer, IOutputDeviceData data)
     {
-        using (await _asyncMonitor.LockAsync(TimeoutHelper.DefaultHangTimeSpanTimeout))
+        using (await _asyncMonitor.LockAsync(TimeoutHelper.DefaultHangTimeSpanTimeout).ConfigureAwait(false))
         {
             switch (data)
             {
@@ -398,7 +398,7 @@ internal sealed partial class BrowserOutputDevice : IPlatformOutputDevice,
         {
             await _policiesService.RegisterOnMaxFailedTestsCallbackAsync(
                 async (maxFailedTests, _) => await DisplayAsync(
-                    this, new TextOutputDeviceData(string.Format(CultureInfo.InvariantCulture, PlatformResources.ReachedMaxFailedTestsMessage, maxFailedTests))));
+                    this, new TextOutputDeviceData(string.Format(CultureInfo.InvariantCulture, PlatformResources.ReachedMaxFailedTestsMessage, maxFailedTests))).ConfigureAwait(false)).ConfigureAwait(false);
         }
     }
 }

@@ -174,9 +174,9 @@ public class ReflectionUtilityTests : TestContainer
         IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributes(methodInfo, typeof(TestPropertyAttribute), true);
 
         attributes.Should().NotBeNull();
-        attributes.Should().HaveCount(1);
+        attributes.Should().HaveCount(2);
 
-        string[] expectedAttributes = ["Duration : superfast"];
+        string[] expectedAttributes = ["Duration : superfast", "Owner : base"];
         GetAttributeValuePairs(attributes).Should().Equal(expectedAttributes);
     }
 
@@ -263,7 +263,7 @@ public class ReflectionUtilityTests : TestContainer
             }
             else if (attribute is TestCategoryAttribute categoryAttribute)
             {
-                attributeValuePairs.Add("TestCategory : " + categoryAttribute.TestCategories.Aggregate((i, j) => i + "," + j));
+                attributeValuePairs.Add("TestCategory : " + categoryAttribute.TestCategories.Aggregate((i, j) => i + ',' + j));
             }
             else if (attribute is DurationAttribute durationAttribute)
             {
@@ -271,10 +271,10 @@ public class ReflectionUtilityTests : TestContainer
             }
             else if (attribute is CategoryArrayAttribute arrayAttribute)
             {
-                attributeValuePairs.Add("CategoryAttribute : " + arrayAttribute.Value.Aggregate((i, j) => i + "," + j));
+                attributeValuePairs.Add("CategoryAttribute : " + arrayAttribute.Value.Aggregate((i, j) => i + ',' + j));
             }
         }
 
-        return attributeValuePairs.ToArray();
+        return [.. attributeValuePairs];
     }
 }

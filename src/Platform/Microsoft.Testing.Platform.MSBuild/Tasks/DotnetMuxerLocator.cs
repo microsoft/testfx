@@ -9,13 +9,14 @@ namespace Microsoft.Testing.Platform.MSBuild.Tasks;
 internal sealed class DotnetMuxerLocator
 {
     private readonly string _muxerName;
-    private readonly Process _currentProcess;
     private readonly Action<string> _resolutionLog;
+    private readonly string _currentProcessFileName;
 
     internal DotnetMuxerLocator(Action<string> resolutionLog)
     {
         _muxerName = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "dotnet.exe" : "dotnet";
-        _currentProcess = Process.GetCurrentProcess();
+        using var currentProcess = Process.GetCurrentProcess();
+        _currentProcessFileName = currentProcess.MainModule!.FileName!;
         _resolutionLog = resolutionLog;
     }
 
@@ -52,15 +53,14 @@ internal sealed class DotnetMuxerLocator
         // If current process is the same as the target architecture we return the current process filename.
         if (GetCurrentProcessArchitecture() == targetArchitecture)
         {
-            string currentProcessFileName = _currentProcess.MainModule!.FileName!;
-            if (Path.GetFileName(currentProcessFileName) == _muxerName)
+            if (Path.GetFileName(_currentProcessFileName) == _muxerName)
             {
-                muxerPath = currentProcessFileName;
+                muxerPath = _currentProcessFileName;
                 _resolutionLog($"DotnetHostHelper.TryGetDotnetPathByArchitecture: Target architecture is the same as the current process architecture '{targetArchitecture}', and the current process is a muxer, using that: '{muxerPath}'");
                 return true;
             }
 
-            _resolutionLog($"DotnetHostHelper.TryGetDotnetPathByArchitecture: Target architecture is the same as the current process architecture '{targetArchitecture}', but the current process is not a muxer: '{currentProcessFileName}'");
+            _resolutionLog($"DotnetHostHelper.TryGetDotnetPathByArchitecture: Target architecture is the same as the current process architecture '{targetArchitecture}', but the current process is not a muxer: '{_currentProcessFileName}'");
         }
 
         // We used similar approach as the runtime resolver.
@@ -287,9 +287,7 @@ internal sealed class DotnetMuxerLocator
 
         try
         {
-            using Stream stream = new FileStream(installLocation, FileMode.Open, FileAccess.Read);
-            using StreamReader streamReader = new(stream);
-            string content = streamReader.ReadToEnd().Trim();
+            string content = File.ReadAllText(installLocation).Trim();
             _resolutionLog($"DotnetHostHelper: '{installLocation}' content '{content}'");
             string path = Path.Combine(content, _muxerName);
             _resolutionLog($"DotnetHostHelper: Muxer resolved using '{installLocation}' in '{path}'");

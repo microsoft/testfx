@@ -2,6 +2,7 @@
 [MSTESTEXP]abstract Microsoft.VisualStudio.TestTools.UnitTesting.RetryBaseAttribute.ExecuteAsync(Microsoft.VisualStudio.TestTools.UnitTesting.RetryContext retryContext) -> System.Threading.Tasks.Task<Microsoft.VisualStudio.TestTools.UnitTesting.RetryResult!>!
 [MSTESTEXP]Microsoft.VisualStudio.TestTools.UnitTesting.RetryContext
 [MSTESTEXP]Microsoft.VisualStudio.TestTools.UnitTesting.RetryContext.ExecuteTaskGetter.get -> System.Func<System.Threading.Tasks.Task<Microsoft.VisualStudio.TestTools.UnitTesting.TestResult![]!>!>!
+[MSTESTEXP]Microsoft.VisualStudio.TestTools.UnitTesting.RetryContext.FirstRunResults.get -> Microsoft.VisualStudio.TestTools.UnitTesting.TestResult![]!
 [MSTESTEXP]Microsoft.VisualStudio.TestTools.UnitTesting.RetryContext.RetryContext() -> void
 [MSTESTEXP]Microsoft.VisualStudio.TestTools.UnitTesting.RetryResult
 [MSTESTEXP]Microsoft.VisualStudio.TestTools.UnitTesting.RetryResult.AddResult(Microsoft.VisualStudio.TestTools.UnitTesting.TestResult![]! testResults) -> void
@@ -243,10 +244,12 @@ Microsoft.VisualStudio.TestTools.UnitTesting.AssertFailedException
 Microsoft.VisualStudio.TestTools.UnitTesting.AssertFailedException.AssertFailedException() -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.AssertFailedException.AssertFailedException(string! msg, System.Exception! ex) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.AssertFailedException.AssertFailedException(string! msg) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.AssertFailedException.AssertFailedException(System.Runtime.Serialization.SerializationInfo! info, System.Runtime.Serialization.StreamingContext context) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.AssertInconclusiveException
 Microsoft.VisualStudio.TestTools.UnitTesting.AssertInconclusiveException.AssertInconclusiveException() -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.AssertInconclusiveException.AssertInconclusiveException(string! msg, System.Exception! ex) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.AssertInconclusiveException.AssertInconclusiveException(string! msg) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.AssertInconclusiveException.AssertInconclusiveException(System.Runtime.Serialization.SerializationInfo! info, System.Runtime.Serialization.StreamingContext context) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.ClassCleanupAttribute
 Microsoft.VisualStudio.TestTools.UnitTesting.ClassCleanupAttribute.ClassCleanupAttribute() -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.ClassCleanupAttribute.ClassCleanupAttribute(Microsoft.VisualStudio.TestTools.UnitTesting.ClassCleanupBehavior cleanupBehavior) -> void
@@ -369,6 +372,7 @@ Microsoft.VisualStudio.TestTools.UnitTesting.InternalTestFailureException
 Microsoft.VisualStudio.TestTools.UnitTesting.InternalTestFailureException.InternalTestFailureException() -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.InternalTestFailureException.InternalTestFailureException(string! msg, System.Exception! ex) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.InternalTestFailureException.InternalTestFailureException(string! msg) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.InternalTestFailureException.InternalTestFailureException(System.Runtime.Serialization.SerializationInfo! info, System.Runtime.Serialization.StreamingContext context) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.ITestDataSource
 Microsoft.VisualStudio.TestTools.UnitTesting.ITestDataSource.GetData(System.Reflection.MethodInfo! methodInfo) -> System.Collections.Generic.IEnumerable<object?[]!>!
 Microsoft.VisualStudio.TestTools.UnitTesting.ITestDataSource.GetDisplayName(System.Reflection.MethodInfo! methodInfo, object?[]? data) -> string?
@@ -382,6 +386,7 @@ Microsoft.VisualStudio.TestTools.UnitTesting.ITestMethod.Arguments.get -> object
 Microsoft.VisualStudio.TestTools.UnitTesting.ITestMethod.GetAllAttributes(bool inherit) -> System.Attribute![]?
 Microsoft.VisualStudio.TestTools.UnitTesting.ITestMethod.GetAttributes<TAttributeType>(bool inherit) -> TAttributeType![]!
 Microsoft.VisualStudio.TestTools.UnitTesting.ITestMethod.Invoke(object![]? arguments) -> Microsoft.VisualStudio.TestTools.UnitTesting.TestResult!
+Microsoft.VisualStudio.TestTools.UnitTesting.ITestMethod.InvokeAsync(object![]? arguments) -> System.Threading.Tasks.Task<Microsoft.VisualStudio.TestTools.UnitTesting.TestResult!>!
 Microsoft.VisualStudio.TestTools.UnitTesting.ITestMethod.MethodInfo.get -> System.Reflection.MethodInfo!
 Microsoft.VisualStudio.TestTools.UnitTesting.ITestMethod.ParameterTypes.get -> System.Reflection.ParameterInfo![]!
 Microsoft.VisualStudio.TestTools.UnitTesting.ITestMethod.ReturnType.get -> System.Type!
@@ -512,6 +517,7 @@ Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestAssertException
 Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestAssertException.UnitTestAssertException() -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestAssertException.UnitTestAssertException(string! msg, System.Exception! ex) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestAssertException.UnitTestAssertException(string! msg) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestAssertException.UnitTestAssertException(System.Runtime.Serialization.SerializationInfo! info, System.Runtime.Serialization.StreamingContext context) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome
 Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome.Aborted = 6 -> Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome
 Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome.Error = 4 -> Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome
@@ -618,7 +624,6 @@ static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Contains(string! subs
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Contains(string! substring, string! value, System.StringComparison comparisonType, string? message) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Contains(string! substring, string! value, System.StringComparison comparisonType) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Contains(string! substring, string! value) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Contains<T>(System.Collections.Generic.IEnumerable<T>! collection, System.Func<T, bool>! predicate, string? message) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Contains<T>(System.Func<T, bool>! predicate, System.Collections.Generic.IEnumerable<T>! collection, string? message, params object?[]? parameters) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Contains<T>(System.Func<T, bool>! predicate, System.Collections.Generic.IEnumerable<T>! collection) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Contains<T>(T expected, System.Collections.Generic.IEnumerable<T>! collection, string? message, params object?[]? parameters) -> void
@@ -714,11 +719,15 @@ static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.That.get -> Microsoft
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Throws<TException>(System.Action! action, ref Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertNonStrictThrowsInterpolatedStringHandler<TException!> message) -> TException!
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Throws<TException>(System.Action! action, string! message = "", params object![]! messageArgs) -> TException!
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Throws<TException>(System.Action! action, System.Func<System.Exception?, string!>! messageBuilder) -> TException!
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Throws<TException>(System.Func<object?>! action, string! message = "", params object![]! messageArgs) -> TException!
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Throws<TException>(System.Func<object?>! action, System.Func<System.Exception?, string!>! messageBuilder) -> TException!
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ThrowsAsync<TException>(System.Func<System.Threading.Tasks.Task!>! action, string! message = "", params object![]! messageArgs) -> System.Threading.Tasks.Task<TException!>!
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ThrowsAsync<TException>(System.Func<System.Threading.Tasks.Task!>! action, System.Func<System.Exception?, string!>! messageBuilder) -> System.Threading.Tasks.Task<TException!>!
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ThrowsExactly<TException>(System.Action! action, ref Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertThrowsExactlyInterpolatedStringHandler<TException!> message) -> TException!
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ThrowsExactly<TException>(System.Action! action, string! message = "", params object![]! messageArgs) -> TException!
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ThrowsExactly<TException>(System.Action! action, System.Func<System.Exception?, string!>! messageBuilder) -> TException!
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ThrowsExactly<TException>(System.Func<object?>! action, string! message = "", params object![]! messageArgs) -> TException!
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ThrowsExactly<TException>(System.Func<object?>! action, System.Func<System.Exception?, string!>! messageBuilder) -> TException!
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ThrowsExactlyAsync<TException>(System.Func<System.Threading.Tasks.Task!>! action, string! message = "", params object![]! messageArgs) -> System.Threading.Tasks.Task<TException!>!
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ThrowsExactlyAsync<TException>(System.Func<System.Threading.Tasks.Task!>! action, System.Func<System.Exception?, string!>! messageBuilder) -> System.Threading.Tasks.Task<TException!>!
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ThrowsException<T>(System.Action! action, string! message, params object?[]? parameters) -> T!

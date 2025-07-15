@@ -30,8 +30,8 @@ public sealed class TestApplicationBuilderTests
     public async Task TestApplicationLifecycleCallbacks_DuplicatedId_ShouldFail()
     {
         TestHostManager testHostManager = new();
-        testHostManager.AddTestApplicationLifecycleCallbacks(_ => new ApplicationLifecycleCallbacks("duplicatedId"));
-        testHostManager.AddTestApplicationLifecycleCallbacks(_ => new ApplicationLifecycleCallbacks("duplicatedId"));
+        testHostManager.AddTestHostApplicationLifetime(_ => new ApplicationLifecycleCallbacks("duplicatedId"));
+        testHostManager.AddTestHostApplicationLifetime(_ => new ApplicationLifecycleCallbacks("duplicatedId"));
         InvalidOperationException invalidOperationException = await Assert.ThrowsExceptionAsync<InvalidOperationException>(() => testHostManager.BuildTestApplicationLifecycleCallbackAsync(_serviceProvider));
         Assert.IsTrue(invalidOperationException.Message.Contains("duplicatedId") && invalidOperationException.Message.Contains(typeof(ApplicationLifecycleCallbacks).ToString()));
     }
@@ -91,8 +91,8 @@ public sealed class TestApplicationBuilderTests
         testHostManager.AddTestSessionLifetimeHandle(compositeExtensionFactory);
         testHostManager.AddDataConsumer(compositeExtensionFactory);
         List<ICompositeExtensionFactory> compositeExtensions = [];
-        IDataConsumer[] consumers = (await testHostManager.BuildDataConsumersAsync(_serviceProvider, compositeExtensions)).Select(x => (IDataConsumer)x.Consumer).ToArray();
-        ITestSessionLifetimeHandler[] sessionLifetimeHandle = (await testHostManager.BuildTestSessionLifetimeHandleAsync(_serviceProvider, compositeExtensions)).Select(x => (ITestSessionLifetimeHandler)x.TestSessionLifetimeHandler).ToArray();
+        IDataConsumer[] consumers = [.. (await testHostManager.BuildDataConsumersAsync(_serviceProvider, compositeExtensions)).Select(x => (IDataConsumer)x.Consumer)];
+        ITestSessionLifetimeHandler[] sessionLifetimeHandle = [.. (await testHostManager.BuildTestSessionLifetimeHandleAsync(_serviceProvider, compositeExtensions)).Select(x => (ITestSessionLifetimeHandler)x.TestSessionLifetimeHandler)];
         Assert.AreEqual(1, consumers.Length);
         Assert.AreEqual(1, sessionLifetimeHandle.Length);
         Assert.AreEqual(compositeExtensions[0].GetInstance(), consumers[0]);
@@ -345,7 +345,7 @@ public sealed class TestApplicationBuilderTests
         public Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken) => throw new NotImplementedException();
     }
 
-    private sealed class ApplicationLifecycleCallbacks : ITestApplicationLifecycleCallbacks
+    private sealed class ApplicationLifecycleCallbacks : ITestHostApplicationLifetime
     {
         public ApplicationLifecycleCallbacks(string id) => Uid = id;
 

@@ -28,7 +28,7 @@ internal sealed class RetryDataConsumer : IDataConsumer, ITestSessionLifetimeHan
         _commandLineOptions = _serviceProvider.GetCommandLineOptions();
     }
 
-    public Type[] DataTypesConsumed => new[] { typeof(TestNodeUpdateMessage) };
+    public Type[] DataTypesConsumed => [typeof(TestNodeUpdateMessage)];
 
     public string Uid => nameof(RetryDataConsumer);
 
@@ -41,12 +41,17 @@ internal sealed class RetryDataConsumer : IDataConsumer, ITestSessionLifetimeHan
     public async Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken)
     {
         var testNodeUpdateMessage = (TestNodeUpdateMessage)value;
-        TestNodeStateProperty nodeState = testNodeUpdateMessage.TestNode.Properties.Single<TestNodeStateProperty>();
+        TestNodeStateProperty? nodeState = testNodeUpdateMessage.TestNode.Properties.SingleOrDefault<TestNodeStateProperty>();
+        if (nodeState is null)
+        {
+            return;
+        }
+
         if (Array.IndexOf(TestNodePropertiesCategories.WellKnownTestNodeTestRunOutcomeFailedProperties, nodeState.GetType()) != -1)
         {
             ApplicationStateGuard.Ensure(_retryFailedTestsLifecycleCallbacks is not null);
             ApplicationStateGuard.Ensure(_retryFailedTestsLifecycleCallbacks.Client is not null);
-            await _retryFailedTestsLifecycleCallbacks.Client.RequestReplyAsync<FailedTestRequest, VoidResponse>(new FailedTestRequest(testNodeUpdateMessage.TestNode.Uid), cancellationToken);
+            await _retryFailedTestsLifecycleCallbacks.Client.RequestReplyAsync<FailedTestRequest, VoidResponse>(new FailedTestRequest(testNodeUpdateMessage.TestNode.Uid), cancellationToken).ConfigureAwait(false);
         }
 
         if (Array.IndexOf(TestNodePropertiesCategories.WellKnownTestNodeTestRunOutcomeProperties, nodeState.GetType()) != -1)
@@ -59,7 +64,7 @@ internal sealed class RetryDataConsumer : IDataConsumer, ITestSessionLifetimeHan
     {
         ApplicationStateGuard.Ensure(_retryFailedTestsLifecycleCallbacks is not null);
         ApplicationStateGuard.Ensure(_retryFailedTestsLifecycleCallbacks.Client is not null);
-        await _retryFailedTestsLifecycleCallbacks.Client.RequestReplyAsync<TotalTestsRunRequest, VoidResponse>(new TotalTestsRunRequest(_totalTests), cancellationToken);
+        await _retryFailedTestsLifecycleCallbacks.Client.RequestReplyAsync<TotalTestsRunRequest, VoidResponse>(new TotalTestsRunRequest(_totalTests), cancellationToken).ConfigureAwait(false);
     }
 
     public Task OnTestSessionStartingAsync(SessionUid sessionUid, CancellationToken cancellationToken)
@@ -71,7 +76,7 @@ internal sealed class RetryDataConsumer : IDataConsumer, ITestSessionLifetimeHan
 
     public async Task InitializeAsync()
     {
-        if (await IsEnabledAsync())
+        if (await IsEnabledAsync().ConfigureAwait(false))
         {
             _retryFailedTestsLifecycleCallbacks = _serviceProvider.GetRequiredService<RetryLifecycleCallbacks>();
         }
