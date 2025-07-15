@@ -8,6 +8,13 @@ namespace Microsoft.Testing.Platform.MSBuild.Tasks;
 
 internal sealed class DotnetMuxerLocator
 {
+    // Mach-O magic numbers from https://en.wikipedia.org/wiki/Mach-O
+    private const uint MachOMagic32BigEndian = 0xfeedface;    // 32-bit big-endian
+    private const uint MachOMagic64BigEndian = 0xfeedfacf;    // 64-bit big-endian
+    private const uint MachOMagic32LittleEndian = 0xcefaedfe; // 32-bit little-endian
+    private const uint MachOMagic64LittleEndian = 0xcffaedfe; // 64-bit little-endian
+    private const uint MachOMagicFatBigEndian = 0xcafebabe;   // Multi-architecture big-endian
+
     private readonly string _muxerName;
     private readonly Action<string> _resolutionLog;
     private readonly string _currentProcessFileName;
@@ -396,13 +403,6 @@ internal sealed class DotnetMuxerLocator
 
     // See https://opensource.apple.com/source/xnu/xnu-2050.18.24/EXTERNAL_HEADERS/mach-o/loader.h
     // https://opensource.apple.com/source/xnu/xnu-4570.41.2/osfmk/mach/machine.h.auto.html
-    // Mach-O magic numbers from https://en.wikipedia.org/wiki/Mach-O
-    private const uint MachOMagic32BigEndian = 0xfeedface;    // 32-bit big-endian
-    private const uint MachOMagic64BigEndian = 0xfeedfacf;    // 64-bit big-endian
-    private const uint MachOMagic32LittleEndian = 0xcefaedfe; // 32-bit little-endian
-    private const uint MachOMagic64LittleEndian = 0xcffaedfe; // 64-bit little-endian
-    private const uint MachOMagicFatBigEndian = 0xcafebabe;   // Multi-architecture big-endian
-
     private PlatformArchitecture? GetMuxerArchitectureByMachoOnMac(string path)
     {
         try
@@ -416,13 +416,9 @@ internal sealed class DotnetMuxerLocator
 #pragma warning restore CA2022 // Avoid inexact read with 'Stream.Read'
 
             uint magic = BitConverter.ToUInt32(magicBytes, 0);
-            
+
             // Validate magic bytes to ensure this is a valid Mach-O binary
-            if (magic != MachOMagic32BigEndian &&
-                magic != MachOMagic64BigEndian &&
-                magic != MachOMagic32LittleEndian &&
-                magic != MachOMagic64LittleEndian &&
-                magic != MachOMagicFatBigEndian)
+            if (magic is not (MachOMagic32BigEndian or MachOMagic64BigEndian or MachOMagic32LittleEndian or MachOMagic64LittleEndian or MachOMagicFatBigEndian))
             {
                 _resolutionLog($"DotnetHostHelper.GetMuxerArchitectureByMachoOnMac: Invalid Mach-O magic bytes: 0x{magic:X8}");
                 return null;
