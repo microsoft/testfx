@@ -21,7 +21,7 @@ internal static class DataSerializationHelper
 #if NETFRAMEWORK
         DataContractSurrogate = SerializationSurrogateProvider.Instance,
 #endif
-        KnownTypes = [typeof(SurrogatedDateOnly), typeof(SurrogatedTimeOnly)],
+        KnownTypes = [typeof(SurrogatedDateOnly), typeof(SurrogatedTimeOnly), typeof(SurrogatedSystemType)],
     };
 
     /// <summary>
@@ -163,6 +163,13 @@ internal static class DataSerializationHelper
         public long Ticks { get; set; }
     }
 
+    [DataContract]
+    private sealed class SurrogatedSystemType
+    {
+        [DataMember]
+        public string AssemblyQualifiedName { get; set; } = null!;
+    }
+
     private sealed class SerializationSurrogateProvider
 #if NETFRAMEWORK
         : IDataContractSurrogate
@@ -190,20 +197,15 @@ internal static class DataSerializationHelper
             => GetDeserializedObject(obj);
 
         internal static object GetDeserializedObject(object obj)
-        {
+            => obj switch
+            {
 #if NET6_0_OR_GREATER
-            if (obj is SurrogatedDateOnly surrogatedDateOnly)
-            {
-                return DateOnly.FromDayNumber(surrogatedDateOnly.DayNumber);
-            }
-            else if (obj is SurrogatedTimeOnly surrogatedTimeOnly)
-            {
-                return new TimeOnly(surrogatedTimeOnly.Ticks);
-            }
+                SurrogatedDateOnly surrogatedDateOnly => DateOnly.FromDayNumber(surrogatedDateOnly.DayNumber),
+                SurrogatedTimeOnly surrogatedTimeOnly => new TimeOnly(surrogatedTimeOnly.Ticks),
 #endif
-
-            return obj;
-        }
+                SurrogatedSystemType surrogatedSystemType => Type.GetType(surrogatedSystemType.AssemblyQualifiedName) ?? throw new SerializationException(),
+                _ => obj,
+            };
 
         public object GetObjectToSerialize(object obj, Type targetType)
             => obj switch
@@ -212,6 +214,7 @@ internal static class DataSerializationHelper
                 DateOnly dateOnly => new SurrogatedDateOnly() { DayNumber = dateOnly.DayNumber },
                 TimeOnly timeOnly => new SurrogatedTimeOnly() { Ticks = timeOnly.Ticks },
 #endif
+                Type type when type.AssemblyQualifiedName is { } typeAssemblyQualifiedName => new SurrogatedSystemType() { AssemblyQualifiedName = typeAssemblyQualifiedName },
                 _ => obj,
             };
 
@@ -232,7 +235,7 @@ internal static class DataSerializationHelper
             }
 #endif
 
-            return type;
+            return type.IsAssignableTo<Type>() ? typeof(SurrogatedSystemType) : type;
         }
     }
 #pragma warning restore IL3050 // IL3050: Avoid calling members annotated with 'RequiresDynamicCodeAttribute' when publishing as Native AOT
