@@ -877,7 +877,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
             asm.TotalTests++;
         }
 
-        asm.DiscoveredTests.Add(displayName);
+        asm.DiscoveredTestDisplayNames.Add(displayName);
 
         _terminalWithProgress.UpdateWorker(asm.SlotIndex);
     }
@@ -895,13 +895,13 @@ internal sealed partial class TerminalTestReporter : IDisposable
         {
             if (_options.ShowAssembly)
             {
-                terminal.Append(string.Format(CultureInfo.CurrentCulture, PlatformResources.DiscoveredTestsInAssembly, assembly.DiscoveredTests.Count));
+                terminal.Append(string.Format(CultureInfo.CurrentCulture, PlatformResources.DiscoveredTestsInAssembly, assembly.DiscoveredTestDisplayNames.Count));
                 terminal.Append(" - ");
                 AppendAssemblyLinkTargetFrameworkAndArchitecture(terminal, assembly.Assembly, assembly.TargetFramework, assembly.Architecture);
                 terminal.AppendLine();
             }
 
-            foreach (string displayName in assembly.DiscoveredTests)
+            foreach (string displayName in assembly.DiscoveredTestDisplayNames)
             {
                 terminal.Append(SingleIndentation);
                 terminal.AppendLine(displayName);
