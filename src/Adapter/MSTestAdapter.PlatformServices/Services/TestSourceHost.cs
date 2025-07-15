@@ -219,7 +219,6 @@ internal class TestSourceHost : ITestSourceHost
 #if NETFRAMEWORK || (NET && !WINDOWS_UWP)
         _parentDomainAssemblyResolver?.Dispose();
         _parentDomainAssemblyResolver = null;
-
 #endif
 
 #if NETFRAMEWORK

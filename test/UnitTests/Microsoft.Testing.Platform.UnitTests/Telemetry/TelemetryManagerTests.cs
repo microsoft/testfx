@@ -176,7 +176,7 @@ public sealed class TelemetryManagerTests
 
         // Combination of where LOCALAPPDATA or HOME is, the name of the exe and our file extension.
         string path = Path.Combine("sentinelDir", "Microsoft", "TestingPlatform", "myExe.testingPlatformFirstTimeUseSentinel");
-        fileSystemMock.Verify(f => f.Exists(path), Times.Once);
+        fileSystemMock.Verify(f => f.ExistFile(path), Times.Once);
 
         // Message was written to screen.
         outputDevice.Verify(c => c.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>(), It.IsAny<CancellationToken>()), Times.Once);
@@ -188,9 +188,9 @@ public sealed class TelemetryManagerTests
         outputDevice.Invocations.Clear();
         fileSystemMock.Invocations.Clear();
 
-        fileSystemMock.Setup(f => f.Exists(path)).Returns(true);
+        fileSystemMock.Setup(f => f.ExistFile(path)).Returns(true);
         await telemetryManager.BuildAsync(serviceProvider, loggerFactoryMock.Object, options);
-        fileSystemMock.Verify(f => f.Exists(path), Times.Once);
+        fileSystemMock.Verify(f => f.ExistFile(path), Times.Once);
 
         // Message is not written to screen.
         outputDevice.Verify(c => c.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>(), It.IsAny<CancellationToken>()), Times.Never);
@@ -246,7 +246,7 @@ public sealed class TelemetryManagerTests
         string path = Path.Combine("sentinelDir", "Microsoft", "TestingPlatform", "myExe.testingPlatformFirstTimeUseSentinel");
 
         // We should not check for the sentinel, because we disabled the logo.
-        fileSystemMock.Verify(f => f.Exists(path), Times.Never);
+        fileSystemMock.Verify(f => f.ExistFile(path), Times.Never);
 
         // Message was not written to screen.
         outputDevice.Verify(c => c.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>(), It.IsAny<CancellationToken>()), Times.Never);
@@ -261,9 +261,9 @@ public sealed class TelemetryManagerTests
         // Enable showing the telemetry message.
         environmentMock.Setup(s => s.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_NOBANNER)).Returns("0");
 
-        fileSystemMock.Setup(f => f.Exists(path)).Returns(false);
+        fileSystemMock.Setup(f => f.ExistFile(path)).Returns(false);
         await telemetryManager.BuildAsync(serviceProvider, loggerFactoryMock.Object, options);
-        fileSystemMock.Verify(f => f.Exists(path), Times.Once);
+        fileSystemMock.Verify(f => f.ExistFile(path), Times.Once);
 
         // Message is written to screen.
         outputDevice.Verify(c => c.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>(), It.IsAny<CancellationToken>()), Times.Once);

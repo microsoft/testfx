@@ -56,7 +56,7 @@ internal sealed class FileLoggerProvider(
         await DisposeHelper.DisposeAsync(FileLogger).ConfigureAwait(false);
 
         // Move the log file to the new directory
-        _fileSystem.Move(FileLogger.FileName, Path.Combine(testResultDirectory, fileName));
+        _fileSystem.MoveFile(FileLogger.FileName, Path.Combine(testResultDirectory, fileName));
 
         FileLogger = new FileLogger(
             new FileLoggerOptions(testResultDirectory, _options.LogPrefixName, fileName, _options.SyncFlush),
