@@ -45,7 +45,7 @@ internal sealed class TestProgressState
 
     public long Version { get; internal set; }
 
-    public List<(string DisplayName, string UID)> DiscoveredTests { get; internal set; } = [];
+    public List<string> DiscoveredTests { get; internal set; } = [];
 
     internal void AddError(string text)
         => Messages.Add(new ErrorMessage(text));

@@ -865,8 +865,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
         string assembly,
         string? targetFramework,
         string? architecture,
-        string displayName,
-        string uid)
+        string displayName)
     {
         TestProgressState asm = _assemblies[$"{assembly}|{targetFramework}|{architecture}"];
 
@@ -878,7 +877,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
             asm.TotalTests++;
         }
 
-        asm.DiscoveredTests.Add(new(displayName, uid));
+        asm.DiscoveredTests.Add(displayName);
 
         _terminalWithProgress.UpdateWorker(asm.SlotIndex);
     }
@@ -902,7 +901,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
                 terminal.AppendLine();
             }
 
-            foreach ((string displayName, string? uid) in assembly.DiscoveredTests)
+            foreach (string displayName in assembly.DiscoveredTests)
             {
                 terminal.Append(SingleIndentation);
                 terminal.AppendLine(displayName);
