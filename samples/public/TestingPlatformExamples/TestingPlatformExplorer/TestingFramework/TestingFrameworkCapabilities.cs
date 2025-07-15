@@ -3,14 +3,23 @@
 
 using Microsoft.Testing.Extensions.TrxReport.Abstractions;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
+using Microsoft.Testing.Platform.Services;
 
 namespace TestingPlatformExplorer.TestingFramework;
 
 internal sealed class TestingFrameworkCapabilities : ITestFrameworkCapabilities
 {
-    public TrxCapability TrxCapability { get; } = new();
+    public TestingFrameworkCapabilities(IPlatformInformation platformInformation)
+    {
+        TrxCapability = new();
+        HelpCapability = new(platformInformation);
+    }
 
-    public IReadOnlyCollection<ITestFrameworkCapability> Capabilities => [TrxCapability];
+    public TrxCapability TrxCapability { get; }
+    
+    public TestingFrameworkHelpCapability HelpCapability { get; }
+
+    public IReadOnlyCollection<ITestFrameworkCapability> Capabilities => [TrxCapability, HelpCapability];
 }
 
 internal sealed class TrxCapability : ITrxReportCapability

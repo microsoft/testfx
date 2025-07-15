@@ -224,21 +224,33 @@ internal sealed class CommandLineHandler : ICommandLineHandler, ICommandLineOpti
 
     public bool IsDotNetTestPipeInvoked() => IsOptionSet(PlatformCommandLineProvider.DotNetTestPipeOptionKey);
 
-#pragma warning disable IDE0060 // Remove unused parameter, temporary we don't use it.
     public async Task PrintHelpAsync(IOutputDevice outputDevice, IReadOnlyList<ITool>? availableTools = null, ITestFrameworkCapabilities? testFrameworkCapabilities = null)
-#pragma warning restore IDE0060 // Remove unused parameter
     {
         // Check for custom help capability first
         IHelpMessageOwnerCapability? helpMessageOwnerCapability = testFrameworkCapabilities?.GetCapability<IHelpMessageOwnerCapability>();
-        string? customHelpMessage = helpMessageOwnerCapability is not null
-            ? await helpMessageOwnerCapability.GetHelpMessageAsync().ConfigureAwait(false)
-            : null;
-
-        // If custom help is provided, use it instead of the default help
-        if (!string.IsNullOrEmpty(customHelpMessage))
+        
+        if (helpMessageOwnerCapability is not null)
         {
-            await outputDevice.DisplayAsync(this, new TextOutputDeviceData(customHelpMessage)).ConfigureAwait(false);
-            return;
+            // Prepare command line options information for the capability
+            var systemCommandLineOptions = SystemCommandLineOptionsProviders
+                .Select(provider => ((IExtension)provider, provider.GetCommandLineOptions()))
+                .ToArray();
+            
+            var extensionsCommandLineOptions = ExtensionsCommandLineOptionsProviders
+                .Select(provider => ((IExtension)provider, provider.GetCommandLineOptions()))
+                .ToArray();
+
+            // Let the capability display custom help
+            bool customHelpDisplayed = await helpMessageOwnerCapability.DisplayHelpAsync(
+                outputDevice, 
+                systemCommandLineOptions, 
+                extensionsCommandLineOptions).ConfigureAwait(false);
+
+            // If custom help was displayed, we're done
+            if (customHelpDisplayed)
+            {
+                return;
+            }
         }
 
         // Otherwise, use the default help implementation

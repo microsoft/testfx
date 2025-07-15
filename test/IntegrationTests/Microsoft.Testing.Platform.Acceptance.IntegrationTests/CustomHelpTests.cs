@@ -69,6 +69,10 @@ using System;
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
+using Microsoft.Testing.Platform.CommandLine;
+using Microsoft.Testing.Platform.Extensions;
+using Microsoft.Testing.Platform.Extensions.CommandLine;
+using Microsoft.Testing.Platform.OutputDevice;
 
 ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
 builder.RegisterTestFramework(
@@ -109,9 +113,11 @@ public class CustomTestFrameworkCapabilities : ITestFrameworkCapabilities
 
 public class CustomHelpCapability : IHelpMessageOwnerCapability
 {
-    public Task<string?> GetHelpMessageAsync()
+    public Task<bool> DisplayHelpAsync(IOutputDevice outputDevice, 
+        IReadOnlyCollection<(IExtension Extension, IReadOnlyCollection<CommandLineOption> Options)> systemCommandLineOptions,
+        IReadOnlyCollection<(IExtension Extension, IReadOnlyCollection<CommandLineOption> Options)> extensionsCommandLineOptions)
     {
-        return Task.FromResult<string?>("""
+        var customHelpMessage = """
 Custom Help Message from CustomTestFramework
 
 This is a custom help implementation that demonstrates the IHelpMessageOwnerCapability.
@@ -121,7 +127,10 @@ Available options:
   --framework-help   Display framework-specific help
 
 For more information, visit: https://example.com/docs
-""");
+""";
+        
+        return outputDevice.DisplayAsync(this, new TextOutputDeviceData(customHelpMessage))
+            .ContinueWith(_ => true);
     }
 }
 

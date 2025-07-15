@@ -356,9 +356,12 @@ public sealed class CommandLineHandlerTests
         CommandLineHandler commandLineHandler = new(parseResult, _extensionCommandLineOptionsProviders, _systemCommandLineOptionsProviders,
             _testApplicationModuleInfoMock.Object, _runtimeFeatureMock.Object);
 
-        const string customHelpMessage = "Custom help message from test framework";
         var mockHelpCapability = new Mock<IHelpMessageOwnerCapability>();
-        mockHelpCapability.Setup(x => x.GetHelpMessageAsync()).ReturnsAsync(customHelpMessage);
+        mockHelpCapability.Setup(x => x.DisplayHelpAsync(
+            It.IsAny<IOutputDevice>(),
+            It.IsAny<IReadOnlyCollection<(IExtension Extension, IReadOnlyCollection<CommandLineOption> Options)>>(),
+            It.IsAny<IReadOnlyCollection<(IExtension Extension, IReadOnlyCollection<CommandLineOption> Options)>>()))
+            .ReturnsAsync(true);
 
         var mockTestFrameworkCapabilities = new Mock<ITestFrameworkCapabilities>();
         mockTestFrameworkCapabilities.Setup(x => x.GetCapability<IHelpMessageOwnerCapability>()).Returns(mockHelpCapability.Object);
@@ -367,7 +370,11 @@ public sealed class CommandLineHandlerTests
         await commandLineHandler.PrintHelpAsync(_outputDisplayMock.Object, availableTools: null, mockTestFrameworkCapabilities.Object);
 
         // Assert
-        _outputDisplayMock.Verify(o => o.DisplayAsync(commandLineHandler, It.Is<TextOutputDeviceData>(data => data.Text == customHelpMessage)), Times.Once);
+        mockHelpCapability.Verify(x => x.DisplayHelpAsync(
+            _outputDisplayMock.Object,
+            It.IsAny<IReadOnlyCollection<(IExtension Extension, IReadOnlyCollection<CommandLineOption> Options)>>(),
+            It.IsAny<IReadOnlyCollection<(IExtension Extension, IReadOnlyCollection<CommandLineOption> Options)>>()),
+            Times.Once);
     }
 
     [TestMethod]
@@ -403,7 +410,11 @@ public sealed class CommandLineHandlerTests
             _testApplicationModuleInfoMock.Object, _runtimeFeatureMock.Object);
 
         var mockHelpCapability = new Mock<IHelpMessageOwnerCapability>();
-        mockHelpCapability.Setup(x => x.GetHelpMessageAsync()).ReturnsAsync((string?)null);
+        mockHelpCapability.Setup(x => x.DisplayHelpAsync(
+            It.IsAny<IOutputDevice>(),
+            It.IsAny<IReadOnlyCollection<(IExtension Extension, IReadOnlyCollection<CommandLineOption> Options)>>(),
+            It.IsAny<IReadOnlyCollection<(IExtension Extension, IReadOnlyCollection<CommandLineOption> Options)>>()))
+            .ReturnsAsync(false);
 
         var mockTestFrameworkCapabilities = new Mock<ITestFrameworkCapabilities>();
         mockTestFrameworkCapabilities.Setup(x => x.GetCapability<IHelpMessageOwnerCapability>()).Returns(mockHelpCapability.Object);
@@ -415,7 +426,7 @@ public sealed class CommandLineHandlerTests
         await commandLineHandler.PrintHelpAsync(_outputDisplayMock.Object, availableTools: null, mockTestFrameworkCapabilities.Object);
 
         // Assert
-        // Should use default help when custom help returns null
+        // Should use default help when custom help returns false
         _outputDisplayMock.Verify(o => o.DisplayAsync(commandLineHandler, It.Is<TextOutputDeviceData>(data => data.Text.Contains("Usage testapp.exe"))), Times.Once);
     }
 
