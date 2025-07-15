@@ -202,9 +202,9 @@ public sealed class TestApplicationBuilderTests
 
         public Task OnTestHostProcessStartedAsync(ITestHostProcessInformation testHostProcessInformation, CancellationToken cancellation) => throw new NotImplementedException();
 
-        public Task OnTestSessionStartingAsync(SessionUid sessionUid, CancellationToken cancellationToken) => throw new NotImplementedException();
+        public Task OnTestSessionStartingAsync(ITestSessionContext testSessionContext) => throw new NotImplementedException();
 
-        public Task OnTestSessionFinishingAsync(SessionUid sessionUid, CancellationToken cancellationToken) => throw new NotImplementedException();
+        public Task OnTestSessionFinishingAsync(ITestSessionContext testSessionContext) => throw new NotImplementedException();
     }
 
     private sealed class TestHostProcessLifetimeHandlerPlusTestHostEnvironmentVariableProvider : ITestHostProcessLifetimeHandler, ITestHostEnvironmentVariableProvider
@@ -302,9 +302,9 @@ public sealed class TestApplicationBuilderTests
 
         public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 
-        public Task OnTestSessionFinishingAsync(SessionUid sessionUid, CancellationToken cancellationToken) => throw new NotImplementedException();
+        public Task OnTestSessionFinishingAsync(ITestSessionContext testSessionContext) => throw new NotImplementedException();
 
-        public Task OnTestSessionStartingAsync(SessionUid sessionUid, CancellationToken cancellationToken) => throw new NotImplementedException();
+        public Task OnTestSessionStartingAsync(ITestSessionContext testSessionContext) => throw new NotImplementedException();
     }
 
     private sealed class TestSessionLifetimeHandler : ITestSessionLifetimeHandler
@@ -321,9 +321,9 @@ public sealed class TestApplicationBuilderTests
 
         public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 
-        public Task OnTestSessionStartingAsync(SessionUid sessionUid, CancellationToken cancellationToken) => throw new NotImplementedException();
+        public Task OnTestSessionStartingAsync(ITestSessionContext testSessionContext) => throw new NotImplementedException();
 
-        public Task OnTestSessionFinishingAsync(SessionUid sessionUid, CancellationToken cancellationToken) => throw new NotImplementedException();
+        public Task OnTestSessionFinishingAsync(ITestSessionContext testSessionContext) => throw new NotImplementedException();
     }
 
     private sealed class Consumer : IDataConsumer

@@ -13,7 +13,6 @@ using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.OutputDevice.Terminal;
 using Microsoft.Testing.Platform.Resources;
 using Microsoft.Testing.Platform.Services;
-using Microsoft.Testing.Platform.TestHost;
 
 namespace Microsoft.Testing.Platform.OutputDevice;
 
@@ -230,11 +229,11 @@ internal sealed partial class BrowserOutputDevice : IPlatformOutputDevice,
         }
     }
 
-    public Task OnTestSessionFinishingAsync(SessionUid sessionUid, CancellationToken cancellationToken) => Task.CompletedTask;
+    public Task OnTestSessionFinishingAsync(ITestSessionContext testSessionContext) => Task.CompletedTask;
 
-    public Task OnTestSessionStartingAsync(SessionUid sessionUid, CancellationToken cancellationToken)
+    public Task OnTestSessionStartingAsync(ITestSessionContext testSessionContext)
     {
-        if (cancellationToken.IsCancellationRequested)
+        if (testSessionContext.CancellationToken.IsCancellationRequested)
         {
             return Task.CompletedTask;
         }
