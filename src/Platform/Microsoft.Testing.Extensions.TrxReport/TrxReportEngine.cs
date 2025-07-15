@@ -16,6 +16,8 @@ using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.Services;
 
+using Polyfills;
+
 namespace Microsoft.Testing.Extensions.TrxReport.Abstractions;
 
 internal sealed partial class TrxReportEngine
@@ -736,8 +738,7 @@ internal sealed partial class TrxReportEngine
             ArrayPool<byte>.Shared.Return(dataBytes);
         }
 #else
-        var sha256 = SHA256.Create();
-        byte[] hash = sha256.ComputeHash(Encoding.Unicode.GetBytes(data));
+        byte[] hash = SHA256.HashData(Encoding.Unicode.GetBytes(data));
         byte[] bytes = new byte[16];
         Array.Copy(hash, bytes, 16);
         return new Guid(bytes);
