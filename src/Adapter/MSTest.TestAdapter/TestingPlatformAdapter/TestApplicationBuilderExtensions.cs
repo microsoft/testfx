@@ -48,30 +48,5 @@ public static class TestApplicationBuilderExtensions
                 MSTestGracefulStopTestExecutionCapability.Instance),
             (capabilities, serviceProvider) => new MSTestBridgedTestFramework(extension, getTestAssemblies, serviceProvider, capabilities));
     }
-
-    /// <summary>
-    /// Register MSTest as the test framework with custom help capability and register the necessary services.
-    /// This is an example demonstrating how to use the custom help capability alongside the banner.
-    /// </summary>
-    /// <param name="testApplicationBuilder">The test application builder on which to register.</param>
-    /// <param name="getTestAssemblies">The function to get the test assemblies.</param>
-    public static void AddMSTestWithCustomHelp(this ITestApplicationBuilder testApplicationBuilder, Func<IEnumerable<Assembly>> getTestAssemblies)
-    {
-        MSTestExtension extension = new();
-        testApplicationBuilder.AddRunSettingsService(extension);
-        testApplicationBuilder.AddTestCaseFilterService(extension);
-        testApplicationBuilder.AddTestRunParametersService(extension);
-        testApplicationBuilder.AddMaximumFailedTestsService(extension);
-        testApplicationBuilder.AddRunSettingsEnvironmentVariableProvider(extension);
-        testApplicationBuilder.RegisterTestFramework(
-            serviceProvider => new TestFrameworkCapabilities(
-                new MSTestCapabilities(),
-                new MSTestBannerCapability(serviceProvider.GetRequiredService<IPlatformInformation>()),
-#pragma warning disable TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
-                new MSTestHelpCapability(serviceProvider.GetRequiredService<IPlatformInformation>()),
-#pragma warning restore TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
-                MSTestGracefulStopTestExecutionCapability.Instance),
-            (capabilities, serviceProvider) => new MSTestBridgedTestFramework(extension, getTestAssemblies, serviceProvider, capabilities));
-    }
 }
 #endif
