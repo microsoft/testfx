@@ -39,6 +39,8 @@ Options:
         The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', and 'Critical'.
     --exit-on-process-exit
         Exit the test process if dependent process exits. PID must be provided.
+    --filter-uid
+        Provides a list of test node UIDs to filter by.
     --help
         Show the command line help.
     --ignore-exit-code
@@ -183,6 +185,10 @@ Built-in command line providers:
         Arity: 1
         Hidden: False
         Description: Exit the test process if dependent process exits\. PID must be provided\.
+      --filter-uid
+        Arity: 1\.\.N
+        Hidden: False
+        Description: Provides a list of test node UIDs to filter by\.
       --help
         Arity: 0
         Hidden: False
@@ -290,6 +296,8 @@ Options:
         The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', and 'Critical'.
     --exit-on-process-exit
         Exit the test process if dependent process exits. PID must be provided.
+    --filter-uid
+        Provides a list of test node UIDs to filter by.
     --help
         Show the command line help.
     --ignore-exit-code
@@ -445,6 +453,10 @@ Built-in command line providers:
         Arity: 1
         Hidden: False
         Description: Exit the test process if dependent process exits. PID must be provided.
+      --filter-uid
+        Arity: 1..N
+        Hidden: False
+        Description: Provides a list of test node UIDs to filter by.
       --help
         Arity: 0
         Hidden: False
@@ -625,6 +637,72 @@ Registered tools:
 """;
 
         testHostResult.AssertOutputMatchesLines(wildcardPattern);
+    }
+
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
+    public async Task Help_DoesNotCreateTestResultsFolder(string tfm)
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.NoExtensionTargetAssetPath, TestAssetFixture.NoExtensionAssetName, tfm);
+        string testHostDirectory = testHost.DirectoryName;
+        string testResultsPath = Path.Combine(testHostDirectory, "TestResults");
+
+        // Ensure TestResults folder doesn't exist before running the test
+        if (Directory.Exists(testResultsPath))
+        {
+            Directory.Delete(testResultsPath, recursive: true);
+        }
+
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--help");
+
+        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+
+        // Verify that TestResults folder was not created
+        Assert.IsFalse(Directory.Exists(testResultsPath), "TestResults folder should not be created for help command");
+    }
+
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
+    public async Task HelpShortName_DoesNotCreateTestResultsFolder(string tfm)
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.NoExtensionTargetAssetPath, TestAssetFixture.NoExtensionAssetName, tfm);
+        string testHostDirectory = testHost.DirectoryName;
+        string testResultsPath = Path.Combine(testHostDirectory, "TestResults");
+
+        // Ensure TestResults folder doesn't exist before running the test
+        if (Directory.Exists(testResultsPath))
+        {
+            Directory.Delete(testResultsPath, recursive: true);
+        }
+
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--?");
+
+        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+
+        // Verify that TestResults folder was not created
+        Assert.IsFalse(Directory.Exists(testResultsPath), "TestResults folder should not be created for help short name command");
+    }
+
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
+    public async Task Info_DoesNotCreateTestResultsFolder(string tfm)
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.NoExtensionTargetAssetPath, TestAssetFixture.NoExtensionAssetName, tfm);
+        string testHostDirectory = testHost.DirectoryName;
+        string testResultsPath = Path.Combine(testHostDirectory, "TestResults");
+
+        // Ensure TestResults folder doesn't exist before running the test
+        if (Directory.Exists(testResultsPath))
+        {
+            Directory.Delete(testResultsPath, recursive: true);
+        }
+
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--info");
+
+        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+
+        // Verify that TestResults folder was not created
+        Assert.IsFalse(Directory.Exists(testResultsPath), "TestResults folder should not be created for info command");
     }
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
