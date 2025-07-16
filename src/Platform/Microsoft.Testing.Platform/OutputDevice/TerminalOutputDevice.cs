@@ -251,7 +251,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
 
             if (_fileLoggerInformation is not null)
             {
-                if (_fileLoggerInformation.SyncronousWrite)
+                if (_fileLoggerInformation.SynchronousWrite)
                 {
                     _terminalTestReporter.WriteWarningMessage(_assemblyName, _targetFramework, _shortArchitecture, string.Format(CultureInfo.CurrentCulture, PlatformResources.DiagnosticFileLevelWithFlush, _fileLoggerInformation.LogLevel, _fileLoggerInformation.LogFile.FullName), padding: null);
                 }
