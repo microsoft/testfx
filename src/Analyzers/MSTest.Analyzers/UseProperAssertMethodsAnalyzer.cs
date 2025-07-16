@@ -152,6 +152,18 @@ internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
     /// </remarks>
     internal const string CodeFixModeRemoveArgument = nameof(CodeFixModeRemoveArgument);
 
+    /// <summary>
+    /// This mode means the codefix operation is as follows for collection count checks:
+    /// <list type="number">
+    /// <item>Find the right assert method name from the properties bag using <see cref="ProperAssertMethodNameKey"/>.</item>
+    /// <item>Replace the identifier syntax for the invocation with the right assert method name.</item>
+    /// <item>Transform arguments based on the count check pattern.</item>
+    /// </list>
+    /// <para>Example: For <c>Assert.AreEqual(0, list.Count)</c>, it will become <c>Assert.IsEmpty(list)</c>.</para>
+    /// <para>Example: For <c>Assert.AreEqual(3, list.Count)</c>, it will become <c>Assert.HasCount(3, list)</c>.</para>
+    /// </summary>
+    internal const string CodeFixModeCollectionCount = nameof(CodeFixModeCollectionCount);
+
     private static readonly LocalizableResourceString Title = new(nameof(Resources.UseProperAssertMethodsTitle), Resources.ResourceManager, typeof(Resources));
     private static readonly LocalizableResourceString MessageFormat = new(nameof(Resources.UseProperAssertMethodsMessageFormat), Resources.ResourceManager, typeof(Resources));
 
@@ -556,12 +568,39 @@ internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
                 _ => throw new InvalidOperationException("Unexpected ComparisonCheckStatus value.")
             };
 
+            // For Assert.IsGreaterThan, IsLessThan etc., the method signature is (lowerBound, value) or (upperBound, value)
+            // So for a > b -> Assert.IsGreaterThan(b, a) where b is the lower bound and a is the value
+            // For a < b -> Assert.IsLessThan(b, a) where b is the upper bound and a is the value
+            
+            SyntaxNode? firstArg, secondArg;
+            switch ((isTrueInvocation, comparisonStatus))
+            {
+                case (true, ComparisonCheckStatus.GreaterThan):         // a > b -> IsGreaterThan(b, a)
+                case (true, ComparisonCheckStatus.GreaterThanOrEqual):  // a >= b -> IsGreaterThanOrEqualTo(b, a)
+                case (false, ComparisonCheckStatus.LessThan):           // !(a < b) -> IsGreaterThanOrEqualTo(b, a)  
+                case (false, ComparisonCheckStatus.LessThanOrEqual):    // !(a <= b) -> IsGreaterThan(b, a)
+                    firstArg = rightExpr;  // b becomes first arg (lower bound)
+                    secondArg = leftExpr;  // a becomes second arg (value)
+                    break;
+                    
+                case (true, ComparisonCheckStatus.LessThan):            // a < b -> IsLessThan(b, a) 
+                case (true, ComparisonCheckStatus.LessThanOrEqual):     // a <= b -> IsLessThanOrEqualTo(b, a)
+                case (false, ComparisonCheckStatus.GreaterThan):        // !(a > b) -> IsLessThanOrEqualTo(b, a)
+                case (false, ComparisonCheckStatus.GreaterThanOrEqual): // !(a >= b) -> IsLessThan(b, a)
+                    firstArg = rightExpr;  // b becomes first arg (upper bound)
+                    secondArg = leftExpr;  // a becomes second arg (value)
+                    break;
+                    
+                default:
+                    throw new InvalidOperationException("Unexpected comparison case.");
+            }
+
             ImmutableDictionary<string, string?>.Builder properties = ImmutableDictionary.CreateBuilder<string, string?>();
             properties.Add(ProperAssertMethodNameKey, properAssertMethod);
             properties.Add(CodeFixModeKey, CodeFixModeAddArgument);
             context.ReportDiagnostic(context.Operation.CreateDiagnostic(
                 Rule,
-                additionalLocations: ImmutableArray.Create(conditionArgument.Syntax.GetLocation(), leftExpr!.GetLocation(), rightExpr!.GetLocation()),
+                additionalLocations: ImmutableArray.Create(conditionArgument.Syntax.GetLocation(), firstArg!.GetLocation(), secondArg!.GetLocation()),
                 properties: properties.ToImmutable(),
                 properAssertMethod,
                 isTrueInvocation ? "IsTrue" : "IsFalse"));
@@ -622,10 +661,13 @@ internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
                     if (countStatus == CountCheckStatus.IsEmpty)
                     {
                         // Assert.IsEmpty(collection)
-                        properties.Add(CodeFixModeKey, CodeFixModeRemoveArgument);
+                        properties.Add(CodeFixModeKey, CodeFixModeCollectionCount);
                         context.ReportDiagnostic(context.Operation.CreateDiagnostic(
                             Rule,
-                            additionalLocations: ImmutableArray.Create(expectedArgument.Syntax.GetLocation(), collectionExpr!.GetLocation()),
+                            additionalLocations: ImmutableArray.Create(
+                                expectedArgument.Syntax.GetLocation(),      // argument to remove/modify
+                                actualArgumentValue.Syntax.GetLocation(),   // argument to remove/modify  
+                                collectionExpr!.GetLocation()),             // collection expression
                             properties: properties.ToImmutable(),
                             properAssertMethod,
                             "AreEqual"));
@@ -633,12 +675,17 @@ internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
                     else
                     {
                         // Assert.HasCount(expectedCount, collection)  
-                        properties.Add(CodeFixModeKey, CodeFixModeAddArgument);
+                        properties.Add(CodeFixModeKey, CodeFixModeCollectionCount);
                         var expectedCountExpr = expectedArgument.ConstantValue.HasValue && expectedArgument.ConstantValue.Value is int ? 
                             expectedArgument.Syntax : actualArgumentValue.Syntax;
+                        
                         context.ReportDiagnostic(context.Operation.CreateDiagnostic(
                             Rule,
-                            additionalLocations: ImmutableArray.Create(countExpr!.GetLocation(), expectedCountExpr.GetLocation(), collectionExpr!.GetLocation()),
+                            additionalLocations: ImmutableArray.Create(
+                                expectedArgument.Syntax.GetLocation(),      // first original argument  
+                                actualArgumentValue.Syntax.GetLocation(),   // second original argument
+                                collectionExpr!.GetLocation(),              // collection expression
+                                expectedCountExpr.GetLocation()),           // count value expression
                             properties: properties.ToImmutable(),
                             properAssertMethod,
                             "AreEqual"));

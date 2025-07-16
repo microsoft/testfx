@@ -78,6 +78,9 @@ public sealed class UseProperAssertMethodsFixer : CodeFixProvider
             case UseProperAssertMethodsAnalyzer.CodeFixModeRemoveArgument:
                 createChangedDocument = ct => FixAssertMethodForRemoveArgumentModeAsync(context.Document, diagnostic.AdditionalLocations, root, simpleNameSyntax, properAssertMethodName, diagnostic.Properties.ContainsKey(UseProperAssertMethodsAnalyzer.NeedsNullableBooleanCastKey), ct);
                 break;
+            case UseProperAssertMethodsAnalyzer.CodeFixModeCollectionCount:
+                createChangedDocument = ct => FixAssertMethodForCollectionCountModeAsync(context.Document, diagnostic.AdditionalLocations, root, simpleNameSyntax, properAssertMethodName, ct);
+                break;
             default:
                 break;
         }
@@ -196,6 +199,68 @@ public sealed class UseProperAssertMethodsFixer : CodeFixProvider
         else
         {
             newArgumentList = argumentList.WithArguments(argumentList.Arguments.RemoveAt(argumentIndexToRemove));
+        }
+
+        editor.ReplaceNode(argumentList, newArgumentList);
+
+        return editor.GetChangedDocument();
+    }
+
+    private static async Task<Document> FixAssertMethodForCollectionCountModeAsync(
+        Document document,
+        IReadOnlyList<Location> additionalLocations,
+        SyntaxNode root,
+        SimpleNameSyntax simpleNameSyntax,
+        string properAssertMethodName,
+        CancellationToken cancellationToken)
+    {
+        // Handle collection count transformations:
+        // Assert.AreEqual(0, list.Count) -> Assert.IsEmpty(list)
+        // Assert.AreEqual(3, list.Count) -> Assert.HasCount(3, list)
+        // Assert.AreEqual(list.Count, 0) -> Assert.IsEmpty(list)  
+        // Assert.AreEqual(list.Count, 3) -> Assert.HasCount(3, list)
+
+        if (root.FindNode(additionalLocations[0].SourceSpan) is not ArgumentSyntax firstArgument ||
+            root.FindNode(additionalLocations[1].SourceSpan) is not ArgumentSyntax secondArgument ||
+            firstArgument.Parent is not ArgumentListSyntax argumentList)
+        {
+            return document;
+        }
+
+        if (root.FindNode(additionalLocations[2].SourceSpan) is not ExpressionSyntax collectionExpression)
+        {
+            return document;
+        }
+
+        DocumentEditor editor = await DocumentEditor.CreateAsync(document, cancellationToken).ConfigureAwait(false);
+        FixInvocationMethodName(editor, simpleNameSyntax, properAssertMethodName);
+
+        ArgumentListSyntax newArgumentList;
+        
+        if (properAssertMethodName == "IsEmpty")
+        {
+            // For IsEmpty, we just need the collection argument
+            newArgumentList = argumentList.WithArguments(
+                SyntaxFactory.SeparatedList(new[] { SyntaxFactory.Argument(collectionExpression).WithAdditionalAnnotations(Formatter.Annotation) }));
+        }
+        else // HasCount
+        {
+            // For HasCount, we need count and collection arguments
+            // additionalLocations[3] should contain the count expression
+            if (additionalLocations.Count > 3 && 
+                root.FindNode(additionalLocations[3].SourceSpan) is ExpressionSyntax countExpression)
+            {
+                newArgumentList = argumentList.WithArguments(
+                    SyntaxFactory.SeparatedList(new[] { 
+                        SyntaxFactory.Argument(countExpression).WithAdditionalAnnotations(Formatter.Annotation),
+                        SyntaxFactory.Argument(collectionExpression).WithAdditionalAnnotations(Formatter.Annotation)
+                    }));
+            }
+            else
+            {
+                // Fallback: something went wrong, don't apply the fix
+                return document;
+            }
         }
 
         editor.ReplaceNode(argumentList, newArgumentList);
