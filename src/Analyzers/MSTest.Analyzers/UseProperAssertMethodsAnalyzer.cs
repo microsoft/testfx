@@ -43,6 +43,26 @@ namespace MSTest.Analyzers;
 /// <code>Assert.[AreEqual|AreNotEqual](null, x)</code>
 /// </description>
 /// </item>
+/// <item>
+/// <description>
+/// <code>Assert.IsTrue(myString.[StartsWith|EndsWith|Contains]("..."))</code>
+/// </description>
+/// </item>
+/// <item>
+/// <description>
+/// <code>Assert.IsTrue(myCollection.Contains(...))</code>
+/// </description>
+/// </item>
+/// <item>
+/// <description>
+/// <code>Assert.[IsTrue|IsFalse](x [>|>=|<|<=] y)</code>
+/// </description>
+/// </item>
+/// <item>
+/// <description>
+/// <code>Assert.AreEqual([0|X], myCollection.[Count|Length])</code>
+/// </description>
+/// </item>
 /// </list>
 /// </remarks>
 [DiagnosticAnalyzer(LanguageNames.CSharp, LanguageNames.VisualBasic)]
