@@ -72,16 +72,15 @@ internal sealed class TcpMessageHandler(
         }
 
         // Client close the connection in an unexpected way
-        catch (Exception ex)
+        catch (Exception ex) when
+            (ex is
+                 SocketException { SocketErrorCode: SocketError.ConnectionReset } or
+                 IOException
+                 {
+                     InnerException: SocketException { SocketErrorCode: SocketError.ConnectionReset }
+                 })
         {
-            switch (ex)
-            {
-                case SocketException { SocketErrorCode: SocketError.ConnectionReset }:
-                case IOException { InnerException: SocketException { SocketErrorCode: SocketError.ConnectionReset } }:
-                    return null;
-                default:
-                    throw;
-            }
+            return null;
         }
     }
 
