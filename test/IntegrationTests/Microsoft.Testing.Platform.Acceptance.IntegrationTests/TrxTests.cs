@@ -57,7 +57,7 @@ Out of process file artifacts produced:
         string trxFile = Directory.GetFiles(testHost.DirectoryName, $"{fileName}.trx", SearchOption.AllDirectories).Single();
         string trxContent = File.ReadAllText(trxFile);
         Assert.IsTrue(Regex.IsMatch(trxContent, @"Test host process pid: .* crashed\."), trxContent);
-        StringAssert.Contains(trxContent, """<ResultSummary outcome="Failed">""", trxContent);
+        Assert.Contains("""<ResultSummary outcome="Failed">""", trxContent, trxContent);
     }
 
     [DynamicData(nameof(TargetFrameworks.NetForDynamicData), typeof(TargetFrameworks))]
@@ -73,14 +73,12 @@ Out of process file artifacts produced:
         string trxFile = Directory.GetFiles(testHost.DirectoryName, $"{fileName}.trx", SearchOption.AllDirectories).Single();
 
         string trxContent = File.ReadAllText(trxFile);
-
-        // check if the tests have been added to Results, TestDefinitions, TestEntries and ResultSummary.
-        StringAssert.Contains(trxContent, @"<UnitTestResult ", trxContent);
-        StringAssert.Contains(trxContent, @"outcome=""NotExecuted""", trxContent);
-        StringAssert.Contains(trxContent, @"<UnitTest name=""TestMethod1", trxContent);
-        StringAssert.Contains(trxContent, @"<TestEntry ", trxContent);
-        StringAssert.Contains(trxContent, """<ResultSummary outcome="Failed">""", trxContent);
-        StringAssert.Contains(trxContent, """<Counters total="2" executed="0" passed="0" failed="0" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="2" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />""", trxContent);
+        Assert.Contains(@"<UnitTestResult ", trxContent, trxContent);
+        Assert.Contains(@"outcome=""NotExecuted""", trxContent, trxContent);
+        Assert.Contains(@"<UnitTest name=""TestMethod1", trxContent, trxContent);
+        Assert.Contains(@"<TestEntry ", trxContent, trxContent);
+        Assert.Contains("""<ResultSummary outcome="Failed">""", trxContent, trxContent);
+        Assert.Contains("""<Counters total="2" executed="0" passed="0" failed="0" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="2" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />""", trxContent, trxContent);
     }
 
     [DynamicData(nameof(TargetFrameworks.NetForDynamicData), typeof(TargetFrameworks))]

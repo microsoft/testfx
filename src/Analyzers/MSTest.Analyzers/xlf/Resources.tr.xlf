@@ -549,7 +549,7 @@ Bu yöntemleri bildiren tipin ayrıca aşağıdaki kurallara uyması gerekir:
       </trans-unit>
       <trans-unit id="TestClassShouldBeValidMessageFormat">
         <source>Test class '{0}' should be valid</source>
-        <target state="translated">'{0}' test türü geçerli olmalıdır</target>
+        <target state="translated">'{0}' test sınıfı geçerli olmalıdır</target>
         <note />
       </trans-unit>
       <trans-unit id="TestContextShouldBeValidMessageFormat">
@@ -564,7 +564,7 @@ Bu yöntemleri bildiren tipin ayrıca aşağıdaki kurallara uyması gerekir:
       </trans-unit>
       <trans-unit id="UseClassCleanupBehaviorEndOfClassDescription">
         <source>Without using  'ClassCleanupBehavior.EndOfClass', the '[ClassCleanup]' will by default be run at the end of the assembly and not at the end of the class.</source>
-        <target state="translated">'ClassCleanupBehavior.EndOfClass' kullanılmadığında, '[ClassCleanup]' varsayılan olarak türün sonunda değil derlemenin sonunda çalıştırılır.</target>
+        <target state="translated">'ClassCleanupBehavior.EndOfClass' kullanılmadığında, '[ClassCleanup]' varsayılan olarak sınıfın sonunda değil derlemenin sonunda çalıştırılır.</target>
         <note />
       </trans-unit>
       <trans-unit id="UseClassCleanupBehaviorEndOfClassMessageFormat">
@@ -596,17 +596,17 @@ Bu yöntemleri bildiren tipin ayrıca aşağıdaki kurallara uyması gerekir:
       </trans-unit>
       <trans-unit id="TestClassShouldHaveTestMethodDescription">
         <source>Test class should have at least one test method or be 'static' with method(s) marked by '[AssemblyInitialize]' and/or '[AssemblyCleanup]'.</source>
-        <target state="translated">Test türü en az bir test yöntemine sahip olmalıdır veya '[AssemblyInitialize]' ve/veya '[AssemblyCleanup]' ile işaretlenen yöntemlere sahip 'static' olmalıdır.</target>
+        <target state="translated">Test sınıfı en az bir test yöntemine sahip olmalıdır veya '[AssemblyInitialize]' ve/veya '[AssemblyCleanup]' ile işaretlenen yöntemlere sahip 'static' olmalıdır.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestClassShouldHaveTestMethodMessageFormat">
         <source>Test class '{0}' should have at least one test method or be 'static' with method(s) marked by '[AssemblyInitialize]' and/or '[AssemblyCleanup]'</source>
-        <target state="translated">'{0}' test türü en az bir test yöntemine sahip olmalıdır veya '[AssemblyInitialize]' ve/veya '[AssemblyCleanup]' ile işaretlenen yöntemlere sahip 'static' olmalıdır</target>
+        <target state="translated">'{0}' test sınıfı en az bir test yöntemine sahip olmalıdır veya '[AssemblyInitialize]' ve/veya '[AssemblyCleanup]' ile işaretlenen yöntemlere sahip 'static' olmalıdır</target>
         <note />
       </trans-unit>
       <trans-unit id="TestClassShouldHaveTestMethodTitle">
         <source>Test class should have test method</source>
-        <target state="translated">Test türü test yöntemine sahip olmalıdır</target>
+        <target state="translated">Test sınıfı test yöntemine sahip olmalıdır</target>
         <note />
       </trans-unit>
       <trans-unit id="TestCleanupShouldBeValidDescription">
@@ -753,12 +753,12 @@ Bu yöntemleri bildiren tipin ayrıca aşağıdaki kurallara uyması gerekir:
       </trans-unit>
       <trans-unit id="TypeContainingTestMethodShouldBeATestClassDescription">
         <source>Type containing '[TestMethod]' should be marked with '[TestClass]', otherwise the test method will be silently ignored.</source>
-        <target state="needs-review-translation">'[TestMethod]' içeren tür '[TestClass]' ile işaretlenmeli, aksi takdirde test yöntemi sessizce yoksayılır.</target>
+        <target state="new">Type containing '[TestMethod]' should be marked with '[TestClass]', otherwise the test method will be silently ignored.</target>
         <note />
       </trans-unit>
       <trans-unit id="TypeContainingTestMethodShouldBeATestClassMessageFormat">
         <source>Type '{0}' contains test methods and should be marked with '[TestClass]'</source>
-        <target state="translated">'{0}' türü test yöntemleri içeriyor ve '[TestClass]' ile işaretlenmeli</target>
+        <target state="new">Type '{0}' contains test methods and should be marked with '[TestClass]'</target>
         <note />
       </trans-unit>
       <trans-unit id="TypeContainingTestMethodShouldBeATestClassTitle">
@@ -774,6 +774,11 @@ Bu yöntemleri bildiren tipin ayrıca aşağıdaki kurallara uyması gerekir:
       <trans-unit id="UseAsyncSuffixTestMethodSuppressorJustification">
         <source>Asynchronous test methods do not require the 'Async' suffix</source>
         <target state="translated">Asenkron test metotları için 'Async' soneki gerekmez</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UnusedParameterSuppressorJustification">
+        <source>TestContext parameter is required by MSTest for AssemblyInitialize and ClassInitialize methods</source>
+        <target state="new">TestContext parameter is required by MSTest for AssemblyInitialize and ClassInitialize methods</target>
         <note />
       </trans-unit>
       <trans-unit id="UseAttributeOnTestMethodAnalyzerMessageFormat">
@@ -813,12 +818,12 @@ Bu yöntemleri bildiren tipin ayrıca aşağıdaki kurallara uyması gerekir:
       </trans-unit>
       <trans-unit id="UseDeploymentItemWithTestMethodOrTestClassMessageFormat">
         <source>'[DeploymentItem]' can be specified only on test class or test method</source>
-        <target state="translated">'[DeploymentItem]' yalnızca test türünda veya test yönteminde belirtilebilir</target>
+        <target state="translated">'[DeploymentItem]' yalnızca test sınıfında veya test yönteminde belirtilebilir</target>
         <note />
       </trans-unit>
       <trans-unit id="UseDeploymentItemWithTestMethodOrTestClassTitle">
         <source>'[DeploymentItem]' can be specified only on test class or test method</source>
-        <target state="translated">'[DeploymentItem]' yalnızca test türünda veya test yönteminde belirtilebilir</target>
+        <target state="translated">'[DeploymentItem]' yalnızca test sınıfında veya test yönteminde belirtilebilir</target>
         <note />
       </trans-unit>
       <trans-unit id="UseNewerAssertThrowsMessageFormat">

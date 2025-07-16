@@ -751,12 +751,12 @@ El tipo que declara estos métodos también debe respetar las reglas siguientes:
       </trans-unit>
       <trans-unit id="TypeContainingTestMethodShouldBeATestClassDescription">
         <source>Type containing '[TestMethod]' should be marked with '[TestClass]', otherwise the test method will be silently ignored.</source>
-        <target state="needs-review-translation">El tipo que contiene '[TestMethod]' debe marcarse con '[TestClass]'; de lo contrario, el método de prueba se omitirá de forma silenciosa.</target>
+        <target state="new">Type containing '[TestMethod]' should be marked with '[TestClass]', otherwise the test method will be silently ignored.</target>
         <note />
       </trans-unit>
       <trans-unit id="TypeContainingTestMethodShouldBeATestClassMessageFormat">
         <source>Type '{0}' contains test methods and should be marked with '[TestClass]'</source>
-        <target state="translated">El tipo '{0}' contiene métodos de prueba y debe marcarse con '[TestClass]'</target>
+        <target state="new">Type '{0}' contains test methods and should be marked with '[TestClass]'</target>
         <note />
       </trans-unit>
       <trans-unit id="TypeContainingTestMethodShouldBeATestClassTitle">
@@ -772,6 +772,11 @@ El tipo que declara estos métodos también debe respetar las reglas siguientes:
       <trans-unit id="UseAsyncSuffixTestMethodSuppressorJustification">
         <source>Asynchronous test methods do not require the 'Async' suffix</source>
         <target state="translated">Los métodos de prueba asincrónicos no requieren el sufijo "Async".</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UnusedParameterSuppressorJustification">
+        <source>TestContext parameter is required by MSTest for AssemblyInitialize and ClassInitialize methods</source>
+        <target state="new">TestContext parameter is required by MSTest for AssemblyInitialize and ClassInitialize methods</target>
         <note />
       </trans-unit>
       <trans-unit id="UseAttributeOnTestMethodAnalyzerMessageFormat">
