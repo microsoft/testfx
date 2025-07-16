@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Linq;
 using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.TestHost;
@@ -92,10 +93,17 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
             ITestHostEnvironmentVariableProvider envVarProvider = environmentVariableProviderFactory(serviceProvider);
 
             // Check if we have already extensions of the same type with same id registered
-            (ITestHostEnvironmentVariableProvider testHostEnvironmentVariableProvider, int order)? existingProvider = environmentVariableProviders.Where(x => x.TestHostEnvironmentVariableProvider.Uid == envVarProvider.Uid).FirstOrDefault();
-            if (existingProvider is not null)
+            (ITestHostEnvironmentVariableProvider TestHostEnvironmentVariableProvider, int Order)[] duplicates = environmentVariableProviders.Where(x => x.TestHostEnvironmentVariableProvider.Uid == envVarProvider.Uid).Take(2).ToArray();
+            if (duplicates.Length > 0)
             {
-                throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.ExtensionWithSameUidAlreadyRegisteredErrorMessage, envVarProvider.Uid, existingProvider.Value.testHostEnvironmentVariableProvider.GetType()));
+                if (duplicates.Length == 1)
+                {
+                    throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.ExtensionWithSameUidAlreadyRegisteredErrorMessage, envVarProvider.Uid, duplicates[0].TestHostEnvironmentVariableProvider.GetType()));
+                }
+                else
+                {
+                    throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.MultipleExtensionsWithSameUidAlreadyRegisteredErrorMessage, envVarProvider.Uid));
+                }
             }
 
             // We initialize only if enabled
@@ -119,10 +127,17 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
             if (!_alreadyBuiltServices.Contains(compositeServiceFactory))
             {
                 // Check if we have already extensions of the same type with same id registered
-                (ITestHostEnvironmentVariableProvider testHostEnvironmentVariableProvider, int order)? existingProvider = environmentVariableProviders.Where(x => x.TestHostEnvironmentVariableProvider.Uid == extension.Uid).FirstOrDefault();
-                if (existingProvider is not null)
+                (ITestHostEnvironmentVariableProvider TestHostEnvironmentVariableProvider, int Order)[] duplicates = environmentVariableProviders.Where(x => x.TestHostEnvironmentVariableProvider.Uid == extension.Uid).Take(2).ToArray();
+                if (duplicates.Length > 0)
                 {
-                    throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.ExtensionWithSameUidAlreadyRegisteredErrorMessage, extension.Uid, existingProvider.Value.testHostEnvironmentVariableProvider.GetType()));
+                    if (duplicates.Length == 1)
+                    {
+                        throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.ExtensionWithSameUidAlreadyRegisteredErrorMessage, extension.Uid, duplicates[0].TestHostEnvironmentVariableProvider.GetType()));
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.MultipleExtensionsWithSameUidAlreadyRegisteredErrorMessage, extension.Uid));
+                    }
                 }
 
                 // We initialize only if enabled
@@ -157,10 +172,17 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
             ITestHostProcessLifetimeHandler lifetimeHandler = lifetimeHandlerFactory(serviceProvider);
 
             // Check if we have already extensions of the same type with same id registered
-            (ITestHostProcessLifetimeHandler testHostProcessLifetimeHandler, int order)? existingHandler = lifetimeHandlers.Where(x => x.TestHostProcessLifetimeHandler.Uid == lifetimeHandler.Uid).FirstOrDefault();
-            if (existingHandler is not null)
+            (ITestHostProcessLifetimeHandler TestHostProcessLifetimeHandler, int Order)[] duplicates = lifetimeHandlers.Where(x => x.TestHostProcessLifetimeHandler.Uid == lifetimeHandler.Uid).Take(2).ToArray();
+            if (duplicates.Length > 0)
             {
-                throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.ExtensionWithSameUidAlreadyRegisteredErrorMessage, lifetimeHandler.Uid, existingHandler.Value.testHostProcessLifetimeHandler.GetType()));
+                if (duplicates.Length == 1)
+                {
+                    throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.ExtensionWithSameUidAlreadyRegisteredErrorMessage, lifetimeHandler.Uid, duplicates[0].TestHostProcessLifetimeHandler.GetType()));
+                }
+                else
+                {
+                    throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.MultipleExtensionsWithSameUidAlreadyRegisteredErrorMessage, lifetimeHandler.Uid));
+                }
             }
 
             // We initialize only if enabled
@@ -183,10 +205,17 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
             // Check if we have already built the singleton for this composite factory
             if (!_alreadyBuiltServices.Contains(compositeServiceFactory))
             {
-                (ITestHostProcessLifetimeHandler testHostProcessLifetimeHandler, int order)? existingHandler = lifetimeHandlers.Where(x => x.TestHostProcessLifetimeHandler.Uid == extension.Uid).FirstOrDefault();
-                if (existingHandler is not null)
+                (ITestHostProcessLifetimeHandler TestHostProcessLifetimeHandler, int Order)[] duplicates = lifetimeHandlers.Where(x => x.TestHostProcessLifetimeHandler.Uid == extension.Uid).Take(2).ToArray();
+                if (duplicates.Length > 0)
                 {
-                    throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.ExtensionWithSameUidAlreadyRegisteredErrorMessage, extension.Uid, existingHandler.Value.testHostProcessLifetimeHandler.GetType()));
+                    if (duplicates.Length == 1)
+                    {
+                        throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.ExtensionWithSameUidAlreadyRegisteredErrorMessage, extension.Uid, duplicates[0].TestHostProcessLifetimeHandler.GetType()));
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.MultipleExtensionsWithSameUidAlreadyRegisteredErrorMessage, extension.Uid));
+                    }
                 }
 
                 // We initialize only if enabled
@@ -221,10 +250,17 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
             IDataConsumer service = dataConsumerFactory(serviceProvider);
 
             // Check if we have already extensions of the same type with same id registered
-            (IExtension consumer, int order)? existingConsumer = dataConsumers.Where(x => x.Consumer.Uid == service.Uid).FirstOrDefault();
-            if (existingConsumer is not null)
+            (IExtension Consumer, int RegistrationOrder)[] duplicates = dataConsumers.Where(x => x.Consumer.Uid == service.Uid).Take(2).ToArray();
+            if (duplicates.Length > 0)
             {
-                throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.ExtensionWithSameUidAlreadyRegisteredErrorMessage, service.Uid, existingConsumer.Value.consumer.GetType()));
+                if (duplicates.Length == 1)
+                {
+                    throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.ExtensionWithSameUidAlreadyRegisteredErrorMessage, service.Uid, duplicates[0].Consumer.GetType()));
+                }
+                else
+                {
+                    throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.MultipleExtensionsWithSameUidAlreadyRegisteredErrorMessage, service.Uid));
+                }
             }
 
             // We initialize only if enabled
@@ -251,10 +287,17 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
                 var instance = (IExtension)compositeFactoryInstance.GetInstance(serviceProvider);
 
                 // Check if we have already extensions of the same type with same id registered
-                (IExtension consumer, int order)? existingConsumer = dataConsumers.Where(x => x.Consumer.Uid == instance.Uid).FirstOrDefault();
-                if (existingConsumer is not null)
+                (IExtension Consumer, int RegistrationOrder)[] duplicates = dataConsumers.Where(x => x.Consumer.Uid == instance.Uid).Take(2).ToArray();
+                if (duplicates.Length > 0)
                 {
-                    throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.ExtensionWithSameUidAlreadyRegisteredErrorMessage, instance.Uid, existingConsumer.Value.consumer.GetType()));
+                    if (duplicates.Length == 1)
+                    {
+                        throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.ExtensionWithSameUidAlreadyRegisteredErrorMessage, instance.Uid, duplicates[0].Consumer.GetType()));
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.MultipleExtensionsWithSameUidAlreadyRegisteredErrorMessage, instance.Uid));
+                    }
                 }
 
                 // We initialize only if enabled

@@ -254,6 +254,11 @@
         <target state="translated">Ya se registró otra extensión con el mismo UID "{0}". La extensión registrada es de tipo "{1}"</target>
         <note />
       </trans-unit>
+      <trans-unit id="MultipleExtensionsWithSameUidAlreadyRegisteredErrorMessage">
+        <source>Multiple extensions with the same UID '{0}' have been registered. This indicates a configuration error.</source>
+        <target state="new">Multiple extensions with the same UID '{0}' have been registered. This indicates a configuration error.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="Failed">
         <source>Failed</source>
         <target state="translated">Error</target>
