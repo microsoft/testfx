@@ -7,8 +7,6 @@ using Analyzer.Utilities;
 using Analyzer.Utilities.Extensions;
 
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Operations;
 
@@ -403,13 +401,13 @@ internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
             {
                 stringExpression = invocation.Instance?.Syntax;
                 substringExpression = invocation.Arguments[0].Value.Syntax;
-                
+
                 return methodName switch
                 {
                     "StartsWith" => StringMethodCheckStatus.StartsWith,
                     "EndsWith" => StringMethodCheckStatus.EndsWith,
                     "Contains" => StringMethodCheckStatus.Contains,
-                    _ => StringMethodCheckStatus.Unknown
+                    _ => StringMethodCheckStatus.Unknown,
                 };
             }
         }
@@ -427,13 +425,13 @@ internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
         if (operation is IInvocationOperation invocation)
         {
             string methodName = invocation.TargetMethod.Name;
-            
+
             // Check for Collection.Contains(item)
             if (methodName == "Contains" && invocation.Arguments.Length == 1)
             {
                 // Ensure it's a collection type (implements IEnumerable)
-                var receiverType = invocation.Instance?.Type;
-                if (receiverType is not null && 
+                ITypeSymbol? receiverType = invocation.Instance?.Type;
+                if (receiverType is not null &&
                     IsCollectionType(receiverType))
                 {
                     collectionExpression = invocation.Instance?.Syntax;
@@ -449,15 +447,10 @@ internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
     }
 
     private static bool IsCollectionType(ITypeSymbol type)
-    {
         // Check if the type implements IEnumerable (but is not string)
-        if (type.SpecialType == SpecialType.System_String)
-            return false;
-            
-        return type.AllInterfaces.Any(i => 
+        => type.SpecialType != SpecialType.System_String && type.AllInterfaces.Any(i =>
             i.SpecialType == SpecialType.System_Collections_IEnumerable ||
             (i.OriginalDefinition?.SpecialType == SpecialType.System_Collections_Generic_IEnumerable_T));
-    }
 
     private static ComparisonCheckStatus RecognizeComparisonCheck(
         IOperation operation,
@@ -469,14 +462,14 @@ internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
         {
             leftExpression = binaryOperation.LeftOperand.Syntax;
             rightExpression = binaryOperation.RightOperand.Syntax;
-            
+
             return binaryOperation.OperatorKind switch
             {
                 BinaryOperatorKind.GreaterThan => ComparisonCheckStatus.GreaterThan,
                 BinaryOperatorKind.GreaterThanOrEqual => ComparisonCheckStatus.GreaterThanOrEqual,
                 BinaryOperatorKind.LessThan => ComparisonCheckStatus.LessThan,
                 BinaryOperatorKind.LessThanOrEqual => ComparisonCheckStatus.LessThanOrEqual,
-                _ => ComparisonCheckStatus.Unknown
+                _ => ComparisonCheckStatus.Unknown,
             };
         }
 
@@ -534,7 +527,7 @@ internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
                     StringMethodCheckStatus.StartsWith => "StartsWith",
                     StringMethodCheckStatus.EndsWith => "EndsWith",
                     StringMethodCheckStatus.Contains => "Contains",
-                    _ => throw new InvalidOperationException("Unexpected StringMethodCheckStatus value.")
+                    _ => throw new InvalidOperationException("Unexpected StringMethodCheckStatus value."),
                 };
 
                 ImmutableDictionary<string, string?>.Builder properties = ImmutableDictionary.CreateBuilder<string, string?>();
@@ -585,32 +578,38 @@ internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
                 (false, ComparisonCheckStatus.GreaterThanOrEqual) => "IsLessThan",
                 (false, ComparisonCheckStatus.LessThan) => "IsGreaterThanOrEqualTo",
                 (false, ComparisonCheckStatus.LessThanOrEqual) => "IsGreaterThan",
-                _ => throw new InvalidOperationException("Unexpected ComparisonCheckStatus value.")
+                _ => throw new InvalidOperationException("Unexpected ComparisonCheckStatus value."),
             };
 
             // For Assert.IsGreaterThan, IsLessThan etc., the method signature is (lowerBound, value) or (upperBound, value)
             // So for a > b -> Assert.IsGreaterThan(b, a) where b is the lower bound and a is the value
             // For a < b -> Assert.IsLessThan(b, a) where b is the upper bound and a is the value
-            
             SyntaxNode? firstArg, secondArg;
             switch ((isTrueInvocation, comparisonStatus))
             {
-                case (true, ComparisonCheckStatus.GreaterThan):         // a > b -> IsGreaterThan(b, a)
-                case (true, ComparisonCheckStatus.GreaterThanOrEqual):  // a >= b -> IsGreaterThanOrEqualTo(b, a)
-                case (false, ComparisonCheckStatus.LessThan):           // !(a < b) -> IsGreaterThanOrEqualTo(b, a)  
-                case (false, ComparisonCheckStatus.LessThanOrEqual):    // !(a <= b) -> IsGreaterThan(b, a)
+                // a > b -> IsGreaterThan(b, a)
+                case (true, ComparisonCheckStatus.GreaterThan):
+                // a >= b -> IsGreaterThanOrEqualTo(b, a)
+                case (true, ComparisonCheckStatus.GreaterThanOrEqual):
+                // !(a < b) -> IsGreaterThanOrEqualTo(b, a)
+                case (false, ComparisonCheckStatus.LessThan):
+                // !(a <= b) -> IsGreaterThan(b, a)
+                case (false, ComparisonCheckStatus.LessThanOrEqual):
                     firstArg = rightExpr;  // b becomes first arg (lower bound)
                     secondArg = leftExpr;  // a becomes second arg (value)
                     break;
-                    
-                case (true, ComparisonCheckStatus.LessThan):            // a < b -> IsLessThan(b, a) 
-                case (true, ComparisonCheckStatus.LessThanOrEqual):     // a <= b -> IsLessThanOrEqualTo(b, a)
-                case (false, ComparisonCheckStatus.GreaterThan):        // !(a > b) -> IsLessThanOrEqualTo(b, a)
-                case (false, ComparisonCheckStatus.GreaterThanOrEqual): // !(a >= b) -> IsLessThan(b, a)
+                // a < b -> IsLessThan(b, a)
+                case (true, ComparisonCheckStatus.LessThan):
+                // a <= b -> IsLessThanOrEqualTo(b, a)
+                case (true, ComparisonCheckStatus.LessThanOrEqual):
+                // !(a > b) -> IsLessThanOrEqualTo(b, a)
+                case (false, ComparisonCheckStatus.GreaterThan):
+                // !(a >= b) -> IsLessThan(b, a)
+                case (false, ComparisonCheckStatus.GreaterThanOrEqual):
                     firstArg = rightExpr;  // b becomes first arg (upper bound)
                     secondArg = leftExpr;  // a becomes second arg (value)
                     break;
-                    
+
                 default:
                     throw new InvalidOperationException("Unexpected comparison case.");
             }
@@ -668,16 +667,16 @@ internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
                     expectedArgument,
                     actualArgumentValue,
                     out SyntaxNode? collectionExpr,
-                    out SyntaxNode? countExpr,
-                    out int countValue);
+                    out _,
+                    out _);
 
                 if (countStatus != CountCheckStatus.Unknown)
                 {
                     string properAssertMethod = countStatus == CountCheckStatus.IsEmpty ? "IsEmpty" : "HasCount";
-                    
+
                     ImmutableDictionary<string, string?>.Builder properties = ImmutableDictionary.CreateBuilder<string, string?>();
                     properties.Add(ProperAssertMethodNameKey, properAssertMethod);
-                    
+
                     if (countStatus == CountCheckStatus.IsEmpty)
                     {
                         // Assert.IsEmpty(collection)
@@ -686,7 +685,7 @@ internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
                             Rule,
                             additionalLocations: ImmutableArray.Create(
                                 expectedArgument.Syntax.GetLocation(),      // argument to remove/modify
-                                actualArgumentValue.Syntax.GetLocation(),   // argument to remove/modify  
+                                actualArgumentValue.Syntax.GetLocation(),   // argument to remove/modify
                                 collectionExpr!.GetLocation()),             // collection expression
                             properties: properties.ToImmutable(),
                             properAssertMethod,
@@ -694,15 +693,15 @@ internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
                     }
                     else
                     {
-                        // Assert.HasCount(expectedCount, collection)  
+                        // Assert.HasCount(expectedCount, collection)
                         properties.Add(CodeFixModeKey, CodeFixModeCollectionCount);
-                        var expectedCountExpr = expectedArgument.ConstantValue.HasValue && expectedArgument.ConstantValue.Value is int ? 
+                        SyntaxNode expectedCountExpr = expectedArgument.ConstantValue.HasValue && expectedArgument.ConstantValue.Value is int ?
                             expectedArgument.Syntax : actualArgumentValue.Syntax;
-                        
+
                         context.ReportDiagnostic(context.Operation.CreateDiagnostic(
                             Rule,
                             additionalLocations: ImmutableArray.Create(
-                                expectedArgument.Syntax.GetLocation(),      // first original argument  
+                                expectedArgument.Syntax.GetLocation(),      // first original argument
                                 actualArgumentValue.Syntax.GetLocation(),   // second original argument
                                 collectionExpr!.GetLocation(),              // collection expression
                                 expectedCountExpr.GetLocation()),           // count value expression
@@ -710,6 +709,7 @@ internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
                             properAssertMethod,
                             "AreEqual"));
                     }
+
                     return;
                 }
             }
@@ -777,7 +777,7 @@ internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
         out int countValue)
     {
         // Check if expectedArgument is a literal and actualArgument is a count/length property
-        if (expectedArgument.ConstantValue.HasValue && 
+        if (expectedArgument.ConstantValue.HasValue &&
             expectedArgument.ConstantValue.Value is int expectedValue &&
             expectedValue >= 0 &&
             actualArgument is IPropertyReferenceOperation propertyRef &&
@@ -791,8 +791,8 @@ internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
             return expectedValue == 0 ? CountCheckStatus.IsEmpty : CountCheckStatus.HasCount;
         }
 
-        // Check if actualArgument is a literal and expectedArgument is a count/length property  
-        if (actualArgument.ConstantValue.HasValue && 
+        // Check if actualArgument is a literal and expectedArgument is a count/length property
+        if (actualArgument.ConstantValue.HasValue &&
             actualArgument.ConstantValue.Value is int actualValue &&
             actualValue >= 0 &&
             expectedArgument is IPropertyReferenceOperation propertyRef2 &&
