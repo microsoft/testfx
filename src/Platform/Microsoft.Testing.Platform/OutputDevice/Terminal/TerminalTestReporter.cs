@@ -105,7 +105,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
 
     public void AssemblyRunStarted(string assembly, string? targetFramework, string? architecture)
     {
-        if (_options.ShowAssembly && _options.ShowAssemblyStartAndComplete)
+        if (_options is { ShowAssembly: true, ShowAssemblyStartAndComplete: true })
         {
             _terminalWithProgress.WriteToTerminal(terminal =>
             {
@@ -696,7 +696,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
 
         _terminalWithProgress.RemoveWorker(assemblyRun.SlotIndex);
 
-        if (!_isDiscovery && _options.ShowAssembly && _options.ShowAssemblyStartAndComplete)
+        if (!_isDiscovery && _options is { ShowAssembly: true, ShowAssemblyStartAndComplete: true })
         {
             _terminalWithProgress.WriteToTerminal(terminal => AppendAssemblySummary(assemblyRun, terminal));
         }

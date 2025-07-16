@@ -20,7 +20,7 @@ internal static class TestDataSourceHelpers
         out string? ignoreMessageFromTestDataRow,
         out string? displayNameFromTestDataRow)
     {
-        if (d.Length == 1 && d[0] is ITestDataRow testDataRow)
+        if (d is [ITestDataRow testDataRow])
         {
             object? dataFromTestDataRow = testDataRow.Value;
             ignoreMessageFromTestDataRow = testDataRow.IgnoreMessage;

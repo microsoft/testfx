@@ -23,9 +23,8 @@ internal static class IMethodSymbolExtensions
 
         // Identify the implementor of IDisposable.Dispose in the given method's containing type and check
         // if it is the given method.
-        return method.ReturnsVoid
-            && method.Parameters.IsEmpty
-            && method.IsImplementationOfInterfaceMethod(null, iDisposable, "Dispose");
+        return method is { ReturnsVoid: true, Parameters.IsEmpty: true }
+               && method.IsImplementationOfInterfaceMethod(null, iDisposable, "Dispose");
     }
 
     /// <summary>

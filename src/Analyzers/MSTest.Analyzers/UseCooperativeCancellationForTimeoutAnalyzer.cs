@@ -68,7 +68,7 @@ public sealed class UseCooperativeCancellationForTimeoutAnalyzer : DiagnosticAna
 
         // Report diagnostic if CooperativeCancellation is not explicitly set to true
         if (timeoutAttribute is not null
-            && !timeoutAttribute.NamedArguments.Any(x => x.Key == "CooperativeCancellation" && x.Value.Value is bool boolValue && boolValue))
+            && !timeoutAttribute.NamedArguments.Any(x => x is { Key: "CooperativeCancellation", Value.Value: true }))
         {
             if (timeoutAttribute.ApplicationSyntaxReference?.GetSyntax() is { } syntax)
             {

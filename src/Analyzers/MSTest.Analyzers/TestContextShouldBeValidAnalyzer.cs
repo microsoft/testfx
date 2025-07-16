@@ -92,8 +92,7 @@ public sealed class TestContextShouldBeValidAnalyzer : DiagnosticAnalyzer
             operation = expressionStatementOperation.Operation;
         }
 
-        if (operation is ISimpleAssignmentOperation assignmentOperation &&
-            assignmentOperation.Target is IMemberReferenceOperation targetMemberReference &&
+        if (operation is ISimpleAssignmentOperation { Target: IMemberReferenceOperation targetMemberReference } assignmentOperation &&
             SymbolEqualityComparer.Default.Equals(targetMemberReference.Member, member))
         {
             // Extract parameter reference from the value, unwrapping from coalesce operation if necessary
@@ -139,8 +138,7 @@ public sealed class TestContextShouldBeValidAnalyzer : DiagnosticAnalyzer
             operation = expressionStatementOperation.Operation;
         }
 
-        if (operation is ISimpleAssignmentOperation assignmentOperation &&
-            assignmentOperation.Target is IMemberReferenceOperation { Member: IFieldSymbol { } candidateField })
+        if (operation is ISimpleAssignmentOperation { Target: IMemberReferenceOperation { Member: IFieldSymbol candidateField } } assignmentOperation)
         {
             // Extract parameter reference from the value, unwrapping from coalesce operation if necessary
             IOperation effectiveValue = assignmentOperation.Value;

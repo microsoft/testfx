@@ -295,7 +295,7 @@ public sealed class DataRowShouldBeValidAnalyzer : DiagnosticAnalyzer
             // It also happens with [DataRow((object[]?)null)] which resolves
             // to the params object[] constructor
             // In this case, the argument is simply "null".
-            if (constructorArgument.Kind == TypedConstantKind.Array && constructorArgument.IsNull)
+            if (constructorArgument is { Kind: TypedConstantKind.Array, IsNull: true })
             {
                 continue;
             }

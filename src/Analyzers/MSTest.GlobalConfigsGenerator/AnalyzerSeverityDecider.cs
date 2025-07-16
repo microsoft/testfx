@@ -83,7 +83,7 @@ internal static class AnalyzerSeverityDecider
             return DiagnosticSeverity.Error;
         }
 
-        if (rule.IsEnabledByDefault && rule.DefaultSeverity >= DiagnosticSeverity.Info)
+        if (rule is { IsEnabledByDefault: true, DefaultSeverity: >= DiagnosticSeverity.Info })
         {
             // Recommended mode will elevate info to warning only if the rule is enabled by default.
             return DiagnosticSeverity.Warning;
@@ -101,7 +101,7 @@ internal static class AnalyzerSeverityDecider
 
     private static DiagnosticSeverity? DecideForModeDefault(DiagnosticDescriptor rule)
     {
-        if (rule.IsEnabledByDefault && rule.DefaultSeverity >= DiagnosticSeverity.Warning)
+        if (rule is { IsEnabledByDefault: true, DefaultSeverity: >= DiagnosticSeverity.Warning })
         {
             // Default mode will enable warnings only if the rule is enabled by default.
             return rule.DefaultSeverity;

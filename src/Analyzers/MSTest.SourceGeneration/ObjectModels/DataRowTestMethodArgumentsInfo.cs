@@ -110,8 +110,7 @@ internal sealed class DataRowTestMethodArgumentsInfo : ITestMethodArgumentsInfo
         Stack<(TypedConstant Argument, bool HasNextArg, bool IsInArray, int ClosingCurlyBraceCount)> argumentStack = new();
 
         bool hasManyArgsButExpectsSingleArray =
-            methodSymbol.Parameters.Length == 1
-            && methodSymbol.Parameters[0].Type.TypeKind == TypeKind.Array
+            methodSymbol.Parameters is [{ Type.TypeKind: TypeKind.Array }]
             && argumentsAttributeArguments.Values.Length > 1;
 
         if (hasManyArgsButExpectsSingleArray)

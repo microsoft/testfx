@@ -99,7 +99,7 @@ public static class DotnetCli
 
             string extraArgs = warnAsError ? " /warnaserror" : string.Empty;
             extraArgs += suppressPreviewDotNetMessage ? " -p:SuppressNETCoreSdkPreviewMessage=true" : string.Empty;
-            if (args.IndexOf("-- ", StringComparison.Ordinal) is int platformArgsIndex && platformArgsIndex > 0)
+            if (args.IndexOf("-- ", StringComparison.Ordinal) is int platformArgsIndex and > 0)
             {
                 args = args.Insert(platformArgsIndex, extraArgs + " ");
             }
@@ -150,7 +150,7 @@ public static class DotnetCli
             // We do this here rather than in the caller so that different retries produce different binlog file names.
             binlogFullPath = Path.Combine(TempDirectory.TestSuiteDirectory, $"{binlogBaseFileName}-{Interlocked.Increment(ref s_binlogCounter)}.binlog");
             string binlogArg = $" -bl:\"{binlogFullPath}\"";
-            if (args.IndexOf("-- ", StringComparison.Ordinal) is int platformArgsIndex && platformArgsIndex > 0)
+            if (args.IndexOf("-- ", StringComparison.Ordinal) is int platformArgsIndex and > 0)
             {
                 args = args.Insert(platformArgsIndex, binlogArg + " ");
             }

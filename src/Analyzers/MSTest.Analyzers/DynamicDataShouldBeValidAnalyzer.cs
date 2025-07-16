@@ -298,13 +298,11 @@ public sealed class DynamicDataShouldBeValidAnalyzer : DiagnosticAnalyzer
                 continue;
             }
 
-            if (namedArgument.Key == "DynamicDataDisplayName"
-                && namedArgument.Value.Value is string name)
+            if (namedArgument is { Key: "DynamicDataDisplayName", Value.Value: string name })
             {
                 memberName = name;
             }
-            else if (namedArgument.Key == "DynamicDataDisplayNameDeclaringType"
-                && namedArgument.Value.Value is INamedTypeSymbol type)
+            else if (namedArgument is { Key: "DynamicDataDisplayNameDeclaringType", Value.Value: INamedTypeSymbol type })
             {
                 declaringType = type;
             }
