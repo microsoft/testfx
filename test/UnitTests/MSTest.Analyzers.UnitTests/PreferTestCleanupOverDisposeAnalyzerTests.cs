@@ -68,6 +68,7 @@ public sealed class PreferTestCleanupOverDisposeAnalyzerTests
         await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
+#if NET
     [TestMethod]
     public async Task WhenTestClassHasDisposeAsync_Diagnostic()
     {
@@ -142,5 +143,6 @@ public sealed class PreferTestCleanupOverDisposeAnalyzerTests
             """;
 
         await VerifyCS.VerifyCodeFixAsync(code, code);
-    }
+    } 
+#endif
 }

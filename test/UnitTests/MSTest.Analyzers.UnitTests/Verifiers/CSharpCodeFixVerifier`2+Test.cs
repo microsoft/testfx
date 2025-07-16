@@ -21,6 +21,8 @@ public static partial class CSharpCodeFixVerifier<TAnalyzer, TCodeFix>
         {
 #if NET462
             ReferenceAssemblies = ReferenceAssemblies.NetFramework.Net462.Default;
+            TestState.AdditionalReferences.Add(MetadataReference.CreateFromFile(typeof(ValueTask<>).Assembly.Location));
+            TestState.AdditionalReferences.Add(MetadataReference.CreateFromFile(typeof(IAsyncDisposable).Assembly.Location));
 #else
             ReferenceAssemblies = ReferenceAssemblies.Net.Net60;
 #endif

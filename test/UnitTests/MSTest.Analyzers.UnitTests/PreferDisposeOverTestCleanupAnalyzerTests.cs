@@ -29,6 +29,7 @@ public sealed class PreferDisposeOverTestCleanupAnalyzerTests
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+#if NET
     [TestMethod]
     public async Task WhenTestClassHasDisposeAsync_NoDiagnostic()
     {
@@ -48,7 +49,8 @@ public sealed class PreferDisposeOverTestCleanupAnalyzerTests
             """;
 
         await VerifyCS.VerifyCodeFixAsync(code, code);
-    }
+    } 
+#endif
 
     [TestMethod]
     public async Task WhenTestClassHasTestCleanup_Diagnostic()
@@ -230,6 +232,7 @@ public sealed class PreferDisposeOverTestCleanupAnalyzerTests
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+#if NET
     [TestMethod]
     public async Task WhenTestClassHasTestCleanupValueTask_Diagnostic()
     {
@@ -250,5 +253,6 @@ public sealed class PreferDisposeOverTestCleanupAnalyzerTests
             """;
 
         await VerifyCS.VerifyCodeFixAsync(code, code);
-    }
+    } 
+#endif
 }

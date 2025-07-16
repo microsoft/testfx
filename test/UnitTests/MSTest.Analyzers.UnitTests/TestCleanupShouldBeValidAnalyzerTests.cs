@@ -292,6 +292,7 @@ public sealed class TestCleanupShouldBeValidAnalyzerTests
             fixedCode);
     }
 
+#if NET
     [TestMethod]
     public async Task WhenTestCleanupReturnTypeIsNotValid_Diagnostic()
     {
@@ -398,7 +399,8 @@ public sealed class TestCleanupShouldBeValidAnalyzerTests
             """;
 
         await VerifyCS.VerifyAnalyzerAsync(code);
-    }
+    } 
+#endif
 
     [TestMethod]
     public async Task WhenTestCleanupIsAsyncVoid_Diagnostic()
