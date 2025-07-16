@@ -55,7 +55,7 @@ namespace MSTest.Analyzers;
 /// </item>
 /// <item>
 /// <description>
-/// <code>Assert.[IsTrue|IsFalse](x [>|>=|<|<=] y)</code>
+/// <code>Assert.[IsTrue|IsFalse](x [&gt;|&gt;=|&lt;|&lt;=] y)</code>
 /// </description>
 /// </item>
 /// <item>
