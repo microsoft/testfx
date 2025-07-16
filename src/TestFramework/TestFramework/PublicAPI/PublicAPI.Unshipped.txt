@@ -6,6 +6,8 @@ Microsoft.VisualStudio.TestTools.UnitTesting.ConditionBaseAttribute.Mode.get -> 
 override Microsoft.VisualStudio.TestTools.UnitTesting.CIConditionAttribute.GroupName.get -> string!
 override Microsoft.VisualStudio.TestTools.UnitTesting.CIConditionAttribute.IgnoreMessage.get -> string?
 override Microsoft.VisualStudio.TestTools.UnitTesting.CIConditionAttribute.ShouldRun.get -> bool
+Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataAttribute.DynamicDataAttribute(string! dynamicDataSourceName, params object?[]! dynamicDataSourceArguments) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataAttribute.DynamicDataAttribute(string! dynamicDataSourceName, System.Type! dynamicDataDeclaringType, params object?[]! dynamicDataSourceArguments) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.TestDataRow<T>.TestCategories.get -> System.Collections.Generic.IList<string!>?
 Microsoft.VisualStudio.TestTools.UnitTesting.TestDataRow<T>.TestCategories.set -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ContainsSingle<T>(System.Func<T, bool>! predicate, System.Collections.Generic.IEnumerable<T>! collection, string! message = "") -> T

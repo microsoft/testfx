@@ -639,6 +639,72 @@ Registered tools:
         testHostResult.AssertOutputMatchesLines(wildcardPattern);
     }
 
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
+    public async Task Help_DoesNotCreateTestResultsFolder(string tfm)
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.NoExtensionTargetAssetPath, TestAssetFixture.NoExtensionAssetName, tfm);
+        string testHostDirectory = testHost.DirectoryName;
+        string testResultsPath = Path.Combine(testHostDirectory, "TestResults");
+
+        // Ensure TestResults folder doesn't exist before running the test
+        if (Directory.Exists(testResultsPath))
+        {
+            Directory.Delete(testResultsPath, recursive: true);
+        }
+
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--help");
+
+        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+
+        // Verify that TestResults folder was not created
+        Assert.IsFalse(Directory.Exists(testResultsPath), "TestResults folder should not be created for help command");
+    }
+
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
+    public async Task HelpShortName_DoesNotCreateTestResultsFolder(string tfm)
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.NoExtensionTargetAssetPath, TestAssetFixture.NoExtensionAssetName, tfm);
+        string testHostDirectory = testHost.DirectoryName;
+        string testResultsPath = Path.Combine(testHostDirectory, "TestResults");
+
+        // Ensure TestResults folder doesn't exist before running the test
+        if (Directory.Exists(testResultsPath))
+        {
+            Directory.Delete(testResultsPath, recursive: true);
+        }
+
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--?");
+
+        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+
+        // Verify that TestResults folder was not created
+        Assert.IsFalse(Directory.Exists(testResultsPath), "TestResults folder should not be created for help short name command");
+    }
+
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
+    public async Task Info_DoesNotCreateTestResultsFolder(string tfm)
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.NoExtensionTargetAssetPath, TestAssetFixture.NoExtensionAssetName, tfm);
+        string testHostDirectory = testHost.DirectoryName;
+        string testResultsPath = Path.Combine(testHostDirectory, "TestResults");
+
+        // Ensure TestResults folder doesn't exist before running the test
+        if (Directory.Exists(testResultsPath))
+        {
+            Directory.Delete(testResultsPath, recursive: true);
+        }
+
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--info");
+
+        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+
+        // Verify that TestResults folder was not created
+        Assert.IsFalse(Directory.Exists(testResultsPath), "TestResults folder should not be created for info command");
+    }
+
     public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
     {
         public const string AllExtensionsAssetName = "AllExtensionsInfoTest";

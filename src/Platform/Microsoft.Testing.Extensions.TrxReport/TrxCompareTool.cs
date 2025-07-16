@@ -12,6 +12,8 @@ namespace Microsoft.Testing.Extensions.TrxReport.Abstractions;
 
 internal sealed class TrxCompareTool : ITool, IOutputDeviceDataProducer
 {
+    private record struct Trx(string TestName, string Outcome, string Storage);
+
     public const string ToolName = "ms-trxcompare";
     private readonly ICommandLineOptions _commandLineOptions;
     private readonly IExtension _extension;
@@ -55,9 +57,9 @@ internal sealed class TrxCompareTool : ITool, IOutputDeviceDataProducer
 
         XNamespace trxNamespace = "http://microsoft.com/schemas/VisualStudio/TeamTest/2010";
 
-        List<(string TestName, string Outcome, string Storage)> baseLineResults = [];
+        List<Trx> baseLineResults = [];
         List<string> baseLineIssues = [];
-        List<(string TestName, string Outcome, string Storage)> comparedResults = [];
+        List<Trx> comparedResults = [];
         List<string> comparedIssues = [];
         await _task.WhenAll(
             CollectEntriesAndErrorsAsync(baselineFilePaths[0], trxNamespace, baseLineResults, baseLineIssues),
@@ -81,22 +83,22 @@ internal sealed class TrxCompareTool : ITool, IOutputDeviceDataProducer
     }
 
     private static bool AreMatchingTrxFiles(
-        List<(string TestName, string Outcome, string Storage)> baseLineResults,
-        List<(string TestName, string Outcome, string Storage)> comparedResults,
+        List<Trx> baseLineResults,
+        List<Trx> comparedResults,
         StringBuilder outputBuilder)
     {
         bool checkFailed = false;
         outputBuilder.AppendLine("--- Comparing TRX files ---");
 
-        IEnumerable<((string TestName, string Outcome, string Storage), string Source)> trxEntries =
+        IEnumerable<(Trx, string Source)> trxEntries =
             baseLineResults.Select(tuple => (tuple, "baseline"))
             .Concat(comparedResults.Select(tuple => (tuple, "other")))
             .OrderBy(x => x.tuple.TestName);
 
-        foreach (((string TestName, string Outcome, string Storage) sourceTrx, string entrySource) in trxEntries)
+        foreach ((Trx sourceTrx, string entrySource) in trxEntries)
         {
             string otherSource = entrySource == "baseline" ? "other" : "baseline";
-            IEnumerable<(string MatchingTestName, string MatchingOutcome, string MatchingStorage)> matchingEntries =
+            IEnumerable<Trx> matchingEntries =
                 entrySource == "baseline"
                     ? comparedResults.Where(x => x.TestName == sourceTrx.TestName)
                     : baseLineResults.Where(x => x.TestName == sourceTrx.TestName);
@@ -118,13 +120,13 @@ internal sealed class TrxCompareTool : ITool, IOutputDeviceDataProducer
                 continue;
             }
 
-            (string otherTestName, string otherOutcome, string otherStorage) = matchingEntries.First();
-            if (sourceTrx.Outcome != otherOutcome)
+            Trx otherTrx = matchingEntries.First();
+            if (sourceTrx.Outcome != otherTrx.Outcome)
             {
                 checkFailed = true;
                 outputBuilder.AppendLine(
                     CultureInfo.InvariantCulture,
-                    $"  - Test '{sourceTrx.TestName}' has a different outcome. Got '{otherOutcome}', expected '{sourceTrx.Outcome}'");
+                    $"  - Test '{sourceTrx.TestName}' has a different outcome. Got '{otherTrx.Outcome}', expected '{sourceTrx.Outcome}'");
             }
         }
 
@@ -142,7 +144,7 @@ internal sealed class TrxCompareTool : ITool, IOutputDeviceDataProducer
     }
 
     private static void AppendResultsAndIssues(string category, string filePath,
-        List<(string TestName, string Outcome, string Storage)> results, List<string> issues, StringBuilder outputBuilder)
+        List<Trx> results, List<string> issues, StringBuilder outputBuilder)
     {
         outputBuilder.AppendLine(CultureInfo.InvariantCulture, $"--- {category} ---");
         outputBuilder.AppendLine(CultureInfo.InvariantCulture, $"File '{filePath}'");
@@ -175,7 +177,7 @@ internal sealed class TrxCompareTool : ITool, IOutputDeviceDataProducer
         outputBuilder.AppendLine();
     }
 
-    private static async Task CollectEntriesAndErrorsAsync(string trxFile, XNamespace ns, List<(string TestName, string Outcome, string Storage)> results, List<string> issues)
+    private static async Task CollectEntriesAndErrorsAsync(string trxFile, XNamespace ns, List<Trx> results, List<string> issues)
     {
         using FileStream stream = File.OpenRead(trxFile);
         XElement trxTestRun = await XElement.LoadAsync(stream, LoadOptions.None, CancellationToken.None).ConfigureAwait(false);
@@ -239,7 +241,7 @@ internal sealed class TrxCompareTool : ITool, IOutputDeviceDataProducer
                 continue;
             }
 
-            results.Add((testDefinitionClassName + "." + testResultTestName, testResultOutcome, testDefinitionStorage));
+            results.Add(new(testDefinitionClassName + "." + testResultTestName, testResultOutcome, testDefinitionStorage));
         }
     }
 }
