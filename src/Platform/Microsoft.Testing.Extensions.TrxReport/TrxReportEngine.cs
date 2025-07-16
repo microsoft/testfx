@@ -447,7 +447,7 @@ internal sealed partial class TrxReportEngine
                 new XAttribute("testName", displayName),
                 new XAttribute("computerName", _environment.MachineName));
 
-            TimingProperty? timing = testNode.Properties.SingleOrDefault<TimingProperty>();
+            TimingProperty? timing = nodeMessage.Properties.SingleOrDefault<TimingProperty>();
             string testDuration = timing?.GlobalTiming.Duration is { } duration
                 ? duration.ToString("hh\\:mm\\:ss\\.fffffff", CultureInfo.InvariantCulture)
                 : "00:00:00";

@@ -75,7 +75,7 @@ internal sealed class MSBuildConsumer : IDataConsumer, ITestSessionLifetimeHandl
         switch (value)
         {
             case TestNodeUpdateMessage testNodeStateChanged:
-                TimingProperty? timingProperty = testNodeStateChanged.TestNode.Properties.SingleOrDefault<TimingProperty>();
+                TimingProperty? timingProperty = testNodeStateChanged.Properties.SingleOrDefault<TimingProperty>();
                 string? duration = timingProperty is null ? null :
                     ToHumanReadableDuration(timingProperty.GlobalTiming.Duration.TotalMilliseconds);
 

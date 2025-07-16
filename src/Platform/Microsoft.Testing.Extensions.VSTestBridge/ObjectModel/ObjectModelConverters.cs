@@ -8,6 +8,7 @@ using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.ServerMode;
 using Microsoft.Testing.Platform.Services;
+using Microsoft.Testing.Platform.TestHost;
 using Microsoft.TestPlatform.AdapterUtilities.ManagedNameUtilities;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
@@ -138,16 +139,17 @@ internal static class ObjectModelConverters
     /// <summary>
     /// Converts a VSTest <see cref="TestResult"/> to a Microsoft Testing Platform <see cref="TestNode"/>.
     /// </summary>
-    public static TestNode ToTestNode(
+    public static TestNodeUpdateMessage ToTestNodeUpdateMessage(
         this TestResult testResult,
         bool isTrxEnabled,
         bool useFullyQualifiedNameAsUid,
         INamedFeatureCapability? namedFeatureCapability,
         ICommandLineOptions commandLineOptions,
-        IClientInfo clientInfo)
+        IClientInfo clientInfo,
+        SessionUid sessionUid)
     {
         var testNode = testResult.TestCase.ToTestNode(isTrxEnabled, useFullyQualifiedNameAsUid, namedFeatureCapability, commandLineOptions, clientInfo, testResult.DisplayName);
-
+        var testNodeUpdateMessage = new TestNodeUpdateMessage(sessionUid, testNode);
         CopyCategoryAndTraits(testResult, testNode, isTrxEnabled);
 
         testNode.AddOutcome(testResult);
@@ -179,7 +181,7 @@ internal static class ObjectModelConverters
                     })]));
         }
 
-        testNode.Properties.Add(new TimingProperty(new(testResult.StartTime, testResult.EndTime, testResult.Duration), []));
+        testNodeUpdateMessage.Properties.Add(new TimingProperty(new(testResult.StartTime, testResult.EndTime, testResult.Duration), []));
 
         var standardErrorMessages = new List<string>();
         var standardOutputMessages = new List<string>();
@@ -227,7 +229,7 @@ internal static class ObjectModelConverters
             testNode.Properties.Add(new StandardOutputProperty(string.Join(Environment.NewLine, standardOutputMessages)));
         }
 
-        return testNode;
+        return testNodeUpdateMessage;
     }
 
     private static void AddOutcome(this TestNode testNode, TestResult testResult)

@@ -193,7 +193,7 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
 
             case PassedTestNodeStateProperty:
                 state = TestStates.Passed;
-                duration = testNodeUpdateMessage.TestNode.Properties.SingleOrDefault<TimingProperty>()?.GlobalTiming.Duration.Ticks;
+                duration = testNodeUpdateMessage.Properties.SingleOrDefault<TimingProperty>()?.GlobalTiming.Duration.Ticks;
                 reason = nodeState.Explanation;
                 break;
 
@@ -204,28 +204,28 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
 
             case FailedTestNodeStateProperty failedTestNodeStateProperty:
                 state = TestStates.Failed;
-                duration = testNodeUpdateMessage.TestNode.Properties.SingleOrDefault<TimingProperty>()?.GlobalTiming.Duration.Ticks;
+                duration = testNodeUpdateMessage.Properties.SingleOrDefault<TimingProperty>()?.GlobalTiming.Duration.Ticks;
                 reason = nodeState.Explanation;
                 exceptions = FlattenToExceptionMessages(reason, failedTestNodeStateProperty.Exception);
                 break;
 
             case ErrorTestNodeStateProperty errorTestNodeStateProperty:
                 state = TestStates.Error;
-                duration = testNodeUpdateMessage.TestNode.Properties.SingleOrDefault<TimingProperty>()?.GlobalTiming.Duration.Ticks;
+                duration = testNodeUpdateMessage.Properties.SingleOrDefault<TimingProperty>()?.GlobalTiming.Duration.Ticks;
                 reason = nodeState.Explanation;
                 exceptions = FlattenToExceptionMessages(reason, errorTestNodeStateProperty.Exception);
                 break;
 
             case TimeoutTestNodeStateProperty timeoutTestNodeStateProperty:
                 state = TestStates.Timeout;
-                duration = testNodeUpdateMessage.TestNode.Properties.SingleOrDefault<TimingProperty>()?.GlobalTiming.Duration.Ticks;
+                duration = testNodeUpdateMessage.Properties.SingleOrDefault<TimingProperty>()?.GlobalTiming.Duration.Ticks;
                 reason = nodeState.Explanation;
                 exceptions = FlattenToExceptionMessages(reason, timeoutTestNodeStateProperty.Exception);
                 break;
 
             case CancelledTestNodeStateProperty cancelledTestNodeStateProperty:
                 state = TestStates.Cancelled;
-                duration = testNodeUpdateMessage.TestNode.Properties.SingleOrDefault<TimingProperty>()?.GlobalTiming.Duration.Ticks;
+                duration = testNodeUpdateMessage.Properties.SingleOrDefault<TimingProperty>()?.GlobalTiming.Duration.Ticks;
                 reason = nodeState.Explanation;
                 exceptions = FlattenToExceptionMessages(reason, cancelledTestNodeStateProperty.Exception);
                 break;

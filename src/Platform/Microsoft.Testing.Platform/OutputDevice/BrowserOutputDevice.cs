@@ -337,7 +337,7 @@ internal sealed partial class BrowserOutputDevice : IPlatformOutputDevice,
         {
             case TestNodeUpdateMessage testNodeStateChanged:
 
-                TimeSpan duration = testNodeStateChanged.TestNode.Properties.SingleOrDefault<TimingProperty>()?.GlobalTiming.Duration ?? TimeSpan.Zero;
+                TimeSpan duration = testNodeStateChanged.Properties.SingleOrDefault<TimingProperty>()?.GlobalTiming.Duration ?? TimeSpan.Zero;
 
                 switch (testNodeStateChanged.TestNode.Properties.SingleOrDefault<TestNodeStateProperty>())
                 {
