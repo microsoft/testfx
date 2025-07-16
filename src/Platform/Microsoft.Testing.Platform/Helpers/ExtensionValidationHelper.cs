@@ -1,7 +1,5 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
-using System.Globalization;
 
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Resources;
@@ -24,10 +22,10 @@ internal static class ExtensionValidationHelper
         Guard.NotNull(newExtension);
         Guard.NotNull(extensionSelector);
 
-        T[] duplicates = existingExtensions.Where(x => extensionSelector(x).Uid == newExtension.Uid).ToArray();
+        T[] duplicates = [.. existingExtensions.Where(x => extensionSelector(x).Uid == newExtension.Uid)];
         if (duplicates.Length > 0)
         {
-            IExtension[] allDuplicates = duplicates.Select(extensionSelector).Concat([newExtension]).ToArray();
+            IExtension[] allDuplicates = [.. duplicates.Select(extensionSelector), newExtension];
             string typesList = string.Join(", ", allDuplicates.Select(x => $"'{x.GetType()}'"));
             throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.ExtensionWithSameUidAlreadyRegisteredErrorMessage, newExtension.Uid, typesList));
         }
