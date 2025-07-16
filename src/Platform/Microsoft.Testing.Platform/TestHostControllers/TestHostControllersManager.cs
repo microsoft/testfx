@@ -94,7 +94,7 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
             ITestHostEnvironmentVariableProvider envVarProvider = environmentVariableProviderFactory(serviceProvider);
 
             // Check if we have already extensions of the same type with same id registered
-            ExtensionValidationHelper.ValidateUniqueExtension(environmentVariableProviders, envVarProvider, x => x.TestHostEnvironmentVariableProvider);
+            environmentVariableProviders.ValidateUniqueExtension(envVarProvider, x => x.TestHostEnvironmentVariableProvider);
 
             // We initialize only if enabled
             if (await envVarProvider.IsEnabledAsync().ConfigureAwait(false))
@@ -117,7 +117,7 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
             if (!_alreadyBuiltServices.Contains(compositeServiceFactory))
             {
                 // Check if we have already extensions of the same type with same id registered
-                ExtensionValidationHelper.ValidateUniqueExtension(environmentVariableProviders, extension, x => x.TestHostEnvironmentVariableProvider);
+                environmentVariableProviders.ValidateUniqueExtension(extension, x => x.TestHostEnvironmentVariableProvider);
 
                 // We initialize only if enabled
                 if (isEnabledAsync)
@@ -151,7 +151,7 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
             ITestHostProcessLifetimeHandler lifetimeHandler = lifetimeHandlerFactory(serviceProvider);
 
             // Check if we have already extensions of the same type with same id registered
-            ExtensionValidationHelper.ValidateUniqueExtension(lifetimeHandlers, lifetimeHandler, x => x.TestHostProcessLifetimeHandler);
+            lifetimeHandlers.ValidateUniqueExtension(lifetimeHandler, x => x.TestHostProcessLifetimeHandler);
 
             // We initialize only if enabled
             if (await lifetimeHandler.IsEnabledAsync().ConfigureAwait(false))
@@ -173,7 +173,7 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
             // Check if we have already built the singleton for this composite factory
             if (!_alreadyBuiltServices.Contains(compositeServiceFactory))
             {
-                ExtensionValidationHelper.ValidateUniqueExtension(lifetimeHandlers, extension, x => x.TestHostProcessLifetimeHandler);
+                lifetimeHandlers.ValidateUniqueExtension(extension, x => x.TestHostProcessLifetimeHandler);
 
                 // We initialize only if enabled
                 if (isEnabledAsync)
@@ -207,7 +207,7 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
             IDataConsumer service = dataConsumerFactory(serviceProvider);
 
             // Check if we have already extensions of the same type with same id registered
-            ExtensionValidationHelper.ValidateUniqueExtension(dataConsumers, service, x => x.Consumer);
+            dataConsumers.ValidateUniqueExtension(service, x => x.Consumer);
 
             // We initialize only if enabled
             if (await service.IsEnabledAsync().ConfigureAwait(false))
@@ -233,7 +233,7 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
                 var instance = (IExtension)compositeFactoryInstance.GetInstance(serviceProvider);
 
                 // Check if we have already extensions of the same type with same id registered
-                ExtensionValidationHelper.ValidateUniqueExtension(dataConsumers, instance, x => x.Consumer);
+                dataConsumers.ValidateUniqueExtension(instance, x => x.Consumer);
 
                 // We initialize only if enabled
                 if (await instance.IsEnabledAsync().ConfigureAwait(false))

@@ -34,7 +34,7 @@ internal sealed class TestHostOrchestratorManager : ITestHostOrchestratorManager
             ITestHostOrchestrator orchestrator = factory(serviceProvider);
 
             // Check if we have already extensions of the same type with same id registered
-            ExtensionValidationHelper.ValidateUniqueExtension(orchestrators, orchestrator);
+            orchestrators.ValidateUniqueExtension(orchestrator);
 
             // We initialize only if enabled
             if (await orchestrator.IsEnabledAsync().ConfigureAwait(false))
@@ -63,7 +63,7 @@ internal sealed class TestHostOrchestratorManager : ITestHostOrchestratorManager
             ITestHostOrchestratorApplicationLifetime service = testHostOrchestratorApplicationLifetimeFactory(serviceProvider);
 
             // Check if we have already extensions of the same type with same id registered
-            ExtensionValidationHelper.ValidateUniqueExtension(lifetimes, service);
+            lifetimes.ValidateUniqueExtension(service);
 
             // We initialize only if enabled
             if (await service.IsEnabledAsync().ConfigureAwait(false))

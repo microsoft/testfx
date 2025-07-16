@@ -116,7 +116,7 @@ internal sealed class TestHostManager : ITestHostManager
             ITestApplicationLifecycleCallbacks service = testApplicationLifecycleCallbacksFactory(serviceProvider);
 
             // Check if we have already extensions of the same type with same id registered
-            ExtensionValidationHelper.ValidateUniqueExtension(testApplicationLifecycleCallbacks, service);
+            testApplicationLifecycleCallbacks.ValidateUniqueExtension(service);
 
             // We initialize only if enabled
             if (await service.IsEnabledAsync().ConfigureAwait(false))
@@ -160,7 +160,7 @@ internal sealed class TestHostManager : ITestHostManager
             IDataConsumer service = dataConsumerFactory(serviceProvider);
 
             // Check if we have already extensions of the same type with same id registered
-            ExtensionValidationHelper.ValidateUniqueExtension(dataConsumers, service, x => x.Consumer);
+            dataConsumers.ValidateUniqueExtension(service, x => x.Consumer);
 
             // We initialize only if enabled
             if (await service.IsEnabledAsync().ConfigureAwait(false))
@@ -186,7 +186,7 @@ internal sealed class TestHostManager : ITestHostManager
                 var instance = (IExtension)compositeFactoryInstance.GetInstance(serviceProvider);
 
                 // Check if we have already extensions of the same type with same id registered
-                ExtensionValidationHelper.ValidateUniqueExtension(dataConsumers, instance, x => x.Consumer);
+                dataConsumers.ValidateUniqueExtension(instance, x => x.Consumer);
 
                 // We initialize only if enabled
                 if (await instance.IsEnabledAsync().ConfigureAwait(false))
@@ -246,7 +246,7 @@ internal sealed class TestHostManager : ITestHostManager
             ITestSessionLifetimeHandler service = testSessionLifetimeHandlerFactory(serviceProvider);
 
             // Check if we have already extensions of the same type with same id registered
-            ExtensionValidationHelper.ValidateUniqueExtension(testSessionLifetimeHandlers, service, x => x.TestSessionLifetimeHandler);
+            testSessionLifetimeHandlers.ValidateUniqueExtension(service, x => x.TestSessionLifetimeHandler);
 
             // We initialize only if enabled
             if (await service.IsEnabledAsync().ConfigureAwait(false))
@@ -272,7 +272,7 @@ internal sealed class TestHostManager : ITestHostManager
                 var instance = (IExtension)compositeFactoryInstance.GetInstance(serviceProvider);
 
                 // Check if we have already extensions of the same type with same id registered
-                ExtensionValidationHelper.ValidateUniqueExtension(testSessionLifetimeHandlers, instance, x => x.TestSessionLifetimeHandler);
+                testSessionLifetimeHandlers.ValidateUniqueExtension(instance, x => x.TestSessionLifetimeHandler);
 
                 // We initialize only if enabled
                 if (await instance.IsEnabledAsync().ConfigureAwait(false))
