@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Immutable;
@@ -51,11 +51,11 @@ public sealed class UnusedParameterSuppressor : DiagnosticSuppressor
 
             SemanticModel semanticModel = context.GetSemanticModel(tree);
             ISymbol? declaredSymbol = semanticModel.GetDeclaredSymbol(node, context.CancellationToken);
-            
+
             if (declaredSymbol is IParameterSymbol parameter
                 && SymbolEqualityComparer.Default.Equals(testContextSymbol, parameter.Type)
                 && parameter.ContainingSymbol is IMethodSymbol method
-                && method.GetAttributes().Any(attr => 
+                && method.GetAttributes().Any(attr =>
                     SymbolEqualityComparer.Default.Equals(attr.AttributeClass, assemblyInitializeAttributeSymbol) ||
                     SymbolEqualityComparer.Default.Equals(attr.AttributeClass, classInitializeAttributeSymbol)))
             {
