@@ -237,7 +237,7 @@ public class UnitTest4
 
         foreach (string containsElement in contains)
         {
-            StringAssert.Contains(output, containsElement, $"Expected to find '{containsElement}' for analysisMode {mode}");
+            Assert.Contains(containsElement, output, $"Expected to find '{containsElement}' for analysisMode {mode}");
         }
 
         foreach (string doesNotContainElement in doesNotContain)

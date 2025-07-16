@@ -386,7 +386,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
         {
             object?[] d = dataOrTestDataRow;
             ParameterInfo[] parameters = methodInfo.GetParameters();
-            if (TestDataSourceHelpers.TryHandleITestDataRow(d, parameters, out d, out string? ignoreMessageFromTestDataRow, out string? displayNameFromTestDataRow))
+            if (TestDataSourceHelpers.TryHandleITestDataRow(d, parameters, out d, out string? ignoreMessageFromTestDataRow, out string? displayNameFromTestDataRow, out IList<string>? testCategoriesFromTestDataRow))
             {
                 testDataSourceIgnoreMessage = ignoreMessageFromTestDataRow ?? testDataSourceIgnoreMessage;
             }
@@ -416,6 +416,14 @@ internal class AssemblyEnumerator : MarshalByRefObject
                 ?? dataSource.GetDisplayName(methodInfo, d)
                 ?? TestDataSourceUtilities.ComputeDefaultDisplayName(methodInfo, d)
                 ?? discoveredTest.DisplayName;
+
+            // Merge test categories from the test data row with the existing categories
+            if (testCategoriesFromTestDataRow is { Count: > 0 })
+            {
+                discoveredTest.TestCategory = discoveredTest.TestCategory is { Length: > 0 }
+                    ? [.. testCategoriesFromTestDataRow, .. discoveredTest.TestCategory]
+                    : [.. testCategoriesFromTestDataRow];
+            }
 
             try
             {

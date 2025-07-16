@@ -194,7 +194,7 @@ public sealed class IPCTests
                 new SystemTask(),
                 maxNumberOfServerInstances: 3,
                 _testContext.CancellationTokenSource.Token));
-        StringAssert.Contains(exception.Message, "All pipe instances are busy.");
+        Assert.Contains("All pipe instances are busy.", exception.Message);
 
         List<Task> waitConnectionTask = [];
         int connectionCompleted = 0;
