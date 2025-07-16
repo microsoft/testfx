@@ -1629,6 +1629,90 @@ public sealed class UseProperAssertMethodsAnalyzerTests
             fixedCode);
     }
 
+    [TestMethod]
+    public async Task WhenAssertIsTrueWithEqualsComparison()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    int a = 5;
+                    int b = 5;
+                    {|#0:Assert.IsTrue(a == b)|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    int a = 5;
+                    int b = 5;
+                    Assert.AreEqual(b, a);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            // /0/Test0.cs(11,9): info MSTEST0037: Use 'Assert.AreEqual' instead of 'Assert.IsTrue'
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("AreEqual", "IsTrue"),
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertIsFalseWithEqualsComparison()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    int a = 5;
+                    int b = 3;
+                    {|#0:Assert.IsFalse(a == b)|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    int a = 5;
+                    int b = 3;
+                    Assert.AreNotEqual(b, a);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            // /0/Test0.cs(11,9): info MSTEST0037: Use 'Assert.AreNotEqual' instead of 'Assert.IsFalse'
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("AreNotEqual", "IsFalse"),
+            fixedCode);
+    }
+
     #endregion
 
     #region New test cases for collection count
