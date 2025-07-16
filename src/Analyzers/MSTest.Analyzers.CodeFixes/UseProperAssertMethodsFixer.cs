@@ -217,11 +217,10 @@ public sealed class UseProperAssertMethodsFixer : CodeFixProvider
         // Handle collection count transformations:
         // Assert.AreEqual(0, list.Count) -> Assert.IsEmpty(list)
         // Assert.AreEqual(3, list.Count) -> Assert.HasCount(3, list)
-        // Assert.AreEqual(list.Count, 0) -> Assert.IsEmpty(list)  
+        // Assert.AreEqual(list.Count, 0) -> Assert.IsEmpty(list)
         // Assert.AreEqual(list.Count, 3) -> Assert.HasCount(3, list)
-
         if (root.FindNode(additionalLocations[0].SourceSpan) is not ArgumentSyntax firstArgument ||
-            root.FindNode(additionalLocations[1].SourceSpan) is not ArgumentSyntax secondArgument ||
+            root.FindNode(additionalLocations[1].SourceSpan) is not ArgumentSyntax ||
             firstArgument.Parent is not ArgumentListSyntax argumentList)
         {
             return document;
@@ -236,7 +235,7 @@ public sealed class UseProperAssertMethodsFixer : CodeFixProvider
         FixInvocationMethodName(editor, simpleNameSyntax, properAssertMethodName);
 
         ArgumentListSyntax newArgumentList;
-        
+
         if (properAssertMethodName == "IsEmpty")
         {
             // For IsEmpty, we just need the collection argument
@@ -247,13 +246,14 @@ public sealed class UseProperAssertMethodsFixer : CodeFixProvider
         {
             // For HasCount, we need count and collection arguments
             // additionalLocations[3] should contain the count expression
-            if (additionalLocations.Count > 3 && 
+            if (additionalLocations.Count > 3 &&
                 root.FindNode(additionalLocations[3].SourceSpan) is ExpressionSyntax countExpression)
             {
                 newArgumentList = argumentList.WithArguments(
-                    SyntaxFactory.SeparatedList(new[] { 
+                    SyntaxFactory.SeparatedList(new[]
+                    {
                         SyntaxFactory.Argument(countExpression).WithAdditionalAnnotations(Formatter.Annotation),
-                        SyntaxFactory.Argument(collectionExpression).WithAdditionalAnnotations(Formatter.Annotation)
+                        SyntaxFactory.Argument(collectionExpression).WithAdditionalAnnotations(Formatter.Annotation),
                     }));
             }
             else
