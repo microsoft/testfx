@@ -774,6 +774,11 @@ Typ deklarujący te metody powinien również przestrzegać następujących regu
         <target state="translated">Asynchroniczne metody testowe nie wymagają sufiksu „Async”</target>
         <note />
       </trans-unit>
+      <trans-unit id="UnusedParameterSuppressorJustification">
+        <source>TestContext parameter is required by MSTest for AssemblyInitialize and ClassInitialize methods</source>
+        <target state="new">TestContext parameter is required by MSTest for AssemblyInitialize and ClassInitialize methods</target>
+        <note />
+      </trans-unit>
       <trans-unit id="UseAttributeOnTestMethodAnalyzerMessageFormat">
         <source>[{0}] can only be set on methods marked with [TestMethod]</source>
         <target state="translated">[{0}] można ustawić tylko dla metod oznaczonych znakiem [TestMethod]</target>
