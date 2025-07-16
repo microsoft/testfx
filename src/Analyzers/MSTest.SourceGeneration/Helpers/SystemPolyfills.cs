@@ -4,6 +4,7 @@
 #if !NETCOREAPP
 #pragma warning disable SA1403 // File may only contain a single namespace
 #pragma warning disable SA1642 // Constructor summary documentation should begin with standard text
+#pragma warning disable SA1623 // Property summary documentation should match accessors
 
 using System.ComponentModel;
 
