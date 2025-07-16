@@ -19,7 +19,7 @@ namespace MSTest.Analyzers {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "18.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class Resources {
@@ -355,7 +355,7 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to DataRow argument type should match method parameter type. Mismatches occur at indices: {0}.
+        ///   Looks up a localized string similar to DataRow argument types do not match method parameter types. {0}.
         /// </summary>
         internal static string DataRowShouldBeValidMessageFormat_ArgumentTypeMismatch {
             get {
@@ -387,6 +387,15 @@ namespace MSTest.Analyzers {
         internal static string DataRowShouldBeValidMessageFormat_OnTestMethod {
             get {
                 return ResourceManager.GetString("DataRowShouldBeValidMessageFormat_OnTestMethod", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Parameter &apos;{0}&apos; expects type &apos;{1}&apos;, but the provided value has type &apos;{2}&apos;.
+        /// </summary>
+        internal static string DataRowShouldBeValidMessageFormat_ParameterMismatch {
+            get {
+                return ResourceManager.GetString("DataRowShouldBeValidMessageFormat_ParameterMismatch", resourceCulture);
             }
         }
         
@@ -808,6 +817,24 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Use &apos;Assert.{0}&apos; instead of &apos;StringAssert.{1}&apos;.
+        /// </summary>
+        internal static string StringAssertToAssertMessageFormat {
+            get {
+                return ResourceManager.GetString("StringAssertToAssertMessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Use &apos;Assert&apos; instead of &apos;StringAssert&apos;.
+        /// </summary>
+        internal static string StringAssertToAssertTitle {
+            get {
+                return ResourceManager.GetString("StringAssertToAssertTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Test classes, classes marked with the &apos;[TestClass]&apos; attribute, should respect the following layout to be considered valid by MSTest:
         ///- it should be &apos;public&apos; (or &apos;internal&apos; if &apos;[assembly: DiscoverInternals]&apos; attribute is set)
         ///- it should not be &apos;static&apos; (except if it contains only &apos;AssemblyInitialize&apos; and/or &apos;AssemblyCleanup&apos; methods)
@@ -1034,7 +1061,7 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Type contaning &apos;[TestMethod]&apos; should be marked with &apos;[TestClass]&apos;, otherwise the test method will be silently ignored..
+        ///   Looks up a localized string similar to Type containing &apos;[TestMethod]&apos; should be marked with &apos;[TestClass]&apos;, otherwise the test method will be silently ignored..
         /// </summary>
         internal static string TypeContainingTestMethodShouldBeATestClassDescription {
             get {
@@ -1043,7 +1070,7 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Class &apos;{0}&apos; contains test methods and should be marked with &apos;[TestClass]&apos;.
+        ///   Looks up a localized string similar to Type &apos;{0}&apos; contains test methods and should be marked with &apos;[TestClass]&apos;.
         /// </summary>
         internal static string TypeContainingTestMethodShouldBeATestClassMessageFormat {
             get {
@@ -1057,6 +1084,15 @@ namespace MSTest.Analyzers {
         internal static string TypeContainingTestMethodShouldBeATestClassTitle {
             get {
                 return ResourceManager.GetString("TypeContainingTestMethodShouldBeATestClassTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to TestContext parameter is required by MSTest for AssemblyInitialize and ClassInitialize methods.
+        /// </summary>
+        internal static string UnusedParameterSuppressorJustification {
+            get {
+                return ResourceManager.GetString("UnusedParameterSuppressorJustification", resourceCulture);
             }
         }
         
@@ -1138,6 +1174,33 @@ namespace MSTest.Analyzers {
         internal static string UseConditionBaseWithTestClassTitle {
             get {
                 return ResourceManager.GetString("UseConditionBaseWithTestClassTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Using &apos;[Timeout]&apos; without explicitly setting &apos;CooperativeCancellation = true&apos; is discouraged. In a future version, cooperative cancellation will become the default behavior. Set &apos;CooperativeCancellation = true&apos; to opt into the recommended behavior and avoid breaking changes..
+        /// </summary>
+        internal static string UseCooperativeCancellationForTimeoutDescription {
+            get {
+                return ResourceManager.GetString("UseCooperativeCancellationForTimeoutDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Use &apos;CooperativeCancellation = true&apos; with &apos;[Timeout]&apos; to enable cooperative cancellation behavior.
+        /// </summary>
+        internal static string UseCooperativeCancellationForTimeoutMessageFormat {
+            get {
+                return ResourceManager.GetString("UseCooperativeCancellationForTimeoutMessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Use &apos;CooperativeCancellation = true&apos; with &apos;[Timeout]&apos;.
+        /// </summary>
+        internal static string UseCooperativeCancellationForTimeoutTitle {
+            get {
+                return ResourceManager.GetString("UseCooperativeCancellationForTimeoutTitle", resourceCulture);
             }
         }
         

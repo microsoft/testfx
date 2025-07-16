@@ -70,6 +70,15 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Change to &apos;class&apos; and add &apos;[TestClass]&apos;.
+        /// </summary>
+        internal static string ChangeStructToClassAndAddTestClassFix {
+            get {
+                return ResourceManager.GetString("ChangeStructToClassAndAddTestClassFix", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Add &apos;[TestMethod]&apos;.
         /// </summary>
         internal static string AddTestMethodAttributeFix {
@@ -246,6 +255,24 @@ namespace MSTest.Analyzers {
         internal static string UseProperAssertMethodsFix {
             get {
                 return ResourceManager.GetString("UseProperAssertMethodsFix", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Use &apos;CooperativeCancellation = true&apos;.
+        /// </summary>
+        internal static string UseCooperativeCancellationForTimeoutFix {
+            get {
+                return ResourceManager.GetString("UseCooperativeCancellationForTimeoutFix", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Use &apos;Assert.{0}&apos; instead of &apos;StringAssert&apos;.
+        /// </summary>
+        internal static string StringAssertToAssertTitle {
+            get {
+                return ResourceManager.GetString("StringAssertToAssertTitle", resourceCulture);
             }
         }
     }

@@ -405,7 +405,7 @@ internal sealed partial class ServerTestHost : CommonHost, IServerTestHost, IDis
 
                     INamedFeatureCapability? namedFeatureCapability = ServiceProvider.GetTestFrameworkCapabilities().GetCapability<INamedFeatureCapability>();
                     return new InitializeResponseArgs(
-                        ProcessId: ServiceProvider.GetProcessHandler().GetCurrentProcess().Id,
+                        ProcessId: ServiceProvider.GetEnvironment().ProcessId,
                         ServerInfo: new ServerInfo("test-anywhere", Version: ProtocolVersion),
                         Capabilities: new ServerCapabilities(
                             new ServerTestingCapabilities(

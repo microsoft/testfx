@@ -40,7 +40,7 @@ internal sealed partial class JsonConfigurationSource
             if (_commandLineParseResult.TryGetOptionArgumentList(PlatformCommandLineProvider.ConfigFileOptionKey, out string[]? configOptions))
             {
                 configFileName = configOptions[0];
-                if (!_fileSystem.Exists(configFileName))
+                if (!_fileSystem.ExistFile(configFileName))
                 {
                     try
                     {
@@ -63,7 +63,7 @@ internal sealed partial class JsonConfigurationSource
                         Path.GetFileNameWithoutExtension(fullPath))}{PlatformConfigurationConstants.PlatformConfigSuffixFileName}"
                     : $"{_testApplicationModuleInfo.TryGetAssemblyName()}{PlatformConfigurationConstants.PlatformConfigSuffixFileName}";
 
-                if (!_fileSystem.Exists(configFileName))
+                if (!_fileSystem.ExistFile(configFileName))
                 {
                     return;
                 }

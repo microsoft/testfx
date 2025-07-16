@@ -86,6 +86,11 @@ internal static class TestCaseExtensions
 
             testMethod.DataType = dataType;
             testMethod.SerializedData = data;
+            if (UnitTestDiscoverer.TryGetActualData(testCase, out object?[]? actualData))
+            {
+                testMethod.ActualData = actualData;
+            }
+
             testMethod.TestDataSourceIgnoreMessage = testCase.GetPropertyValue(EngineConstants.TestDataSourceIgnoreMessageProperty) as string;
         }
 
@@ -118,12 +123,6 @@ internal static class TestCaseExtensions
             testElement.CssProjectStructure = cssProjectStructure;
         }
 
-        string? description = testCase.GetPropertyValue<string>(EngineConstants.DescriptionProperty, null);
-        if (!StringEx.IsNullOrWhiteSpace(description))
-        {
-            testElement.Description = description;
-        }
-
         string[]? workItemIds = testCase.GetPropertyValue<string[]>(EngineConstants.WorkItemIdsProperty, null);
         if (workItemIds is { Length: > 0 })
         {
@@ -146,8 +145,6 @@ internal static class TestCaseExtensions
     internal static void SetManagedType(this TestCase testCase, string value) => testCase.SetPropertyValue(ManagedTypeProperty, value);
 
     internal static string? GetManagedMethod(this TestCase testCase) => testCase.GetPropertyValue<string>(ManagedMethodProperty, null);
-
-    internal static void SetManagedMethod(this TestCase testCase, string value) => testCase.SetPropertyValue(ManagedMethodProperty, value);
 
     internal static bool ContainsManagedMethodAndType(this TestCase testCase) => !StringEx.IsNullOrWhiteSpace(testCase.GetManagedMethod()) && !StringEx.IsNullOrWhiteSpace(testCase.GetManagedType());
 

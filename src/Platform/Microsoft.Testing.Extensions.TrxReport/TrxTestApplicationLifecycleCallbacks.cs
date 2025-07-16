@@ -12,7 +12,7 @@ using Microsoft.Testing.Platform.IPC.Serializers;
 
 namespace Microsoft.Testing.Extensions.TrxReport.Abstractions;
 
-internal sealed class TrxTestApplicationLifecycleCallbacks : ITestApplicationLifecycleCallbacks, IDisposable
+internal sealed class TrxTestApplicationLifecycleCallbacks : ITestHostApplicationLifetime, IDisposable
 {
     private readonly bool _isEnabled;
     private readonly IEnvironment _environment;
@@ -34,10 +34,10 @@ internal sealed class TrxTestApplicationLifecycleCallbacks : ITestApplicationLif
 
     public NamedPipeClient? NamedPipeClient { get; private set; }
 
-    public string Uid { get; } = nameof(TrxTestApplicationLifecycleCallbacks);
+    public string Uid => nameof(TrxTestApplicationLifecycleCallbacks);
 
     /// <inheritdoc />
-    public string Version { get; } = AppVersion.DefaultSemVer;
+    public string Version => AppVersion.DefaultSemVer;
 
     /// <inheritdoc />
     public string DisplayName { get; } = ExtensionResources.TrxReportGeneratorDisplayName;

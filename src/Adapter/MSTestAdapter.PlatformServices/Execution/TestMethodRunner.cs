@@ -63,7 +63,7 @@ internal sealed class TestMethodRunner
     /// Executes a test.
     /// </summary>
     /// <returns>The test results.</returns>
-    internal async Task<TestResult[]> ExecuteAsync(string initializationLogs, string initializationErrorLogs, string initializationTrace, string initializationTestContextMessages)
+    internal async Task<TestResult[]> ExecuteAsync(string? initializationLogs, string? initializationErrorLogs, string? initializationTrace, string? initializationTestContextMessages)
     {
         _testContext.Context.TestRunCount++;
         bool isSTATestClass = _testMethodInfo.Parent.ClassAttribute is STATestClassAttribute;
@@ -109,7 +109,7 @@ internal sealed class TestMethodRunner
         }
 
         // Local functions
-        async Task<TestResult[]> SafeRunTestMethodAsync(string initializationLogs, string initializationErrorLogs, string initializationTrace, string initializationTestContextMessages)
+        async Task<TestResult[]> SafeRunTestMethodAsync(string? initializationLogs, string? initializationErrorLogs, string? initializationTrace, string? initializationTestContextMessages)
         {
             TestResult[]? result = null;
 
@@ -161,7 +161,7 @@ internal sealed class TestMethodRunner
     internal async Task<TestResult[]> RunTestMethodAsync()
     {
         DebugEx.Assert(_test != null, "Test should not be null.");
-        DebugEx.Assert(_testMethodInfo.TestMethod != null, "Test method should not be null.");
+        DebugEx.Assert(_testMethodInfo.MethodInfo != null, "Test method should not be null.");
 
         List<TestResult> results = [];
         if (_testMethodInfo.Executor == null)
@@ -179,8 +179,8 @@ internal sealed class TestMethodRunner
                 return [TestResult.CreateIgnoredResult(_test.TestDataSourceIgnoreMessage)];
             }
 
-            object?[]? data = DataSerializationHelper.Deserialize(_test.SerializedData);
-            TestResult[] testResults = await ExecuteTestWithDataSourceAsync(null, data).ConfigureAwait(false);
+            object?[]? data = _test.ActualData ?? DataSerializationHelper.Deserialize(_test.SerializedData);
+            TestResult[] testResults = await ExecuteTestWithDataSourceAsync(null, data, actualDataAlreadyHandledDuringDiscovery: true).ConfigureAwait(false);
             results.AddRange(testResults);
         }
         else if (await TryExecuteDataSourceBasedTestsAsync(results).ConfigureAwait(false))
@@ -303,7 +303,7 @@ internal sealed class TestMethodRunner
             {
                 try
                 {
-                    TestResult[] testResults = await ExecuteTestWithDataSourceAsync(testDataSource, data).ConfigureAwait(false);
+                    TestResult[] testResults = await ExecuteTestWithDataSourceAsync(testDataSource, data, actualDataAlreadyHandledDuringDiscovery: false).ConfigureAwait(false);
 
                     results.AddRange(testResults);
                 }
@@ -364,7 +364,7 @@ internal sealed class TestMethodRunner
         }
     }
 
-    private async Task<TestResult[]> ExecuteTestWithDataSourceAsync(UTF.ITestDataSource? testDataSource, object?[]? data)
+    private async Task<TestResult[]> ExecuteTestWithDataSourceAsync(UTF.ITestDataSource? testDataSource, object?[]? data, bool actualDataAlreadyHandledDuringDiscovery)
     {
         string? displayName = StringEx.IsNullOrWhiteSpace(_test.DisplayName)
             ? _test.Name
@@ -372,12 +372,12 @@ internal sealed class TestMethodRunner
 
         string? displayNameFromTestDataRow = null;
         string? ignoreFromTestDataRow = null;
-        if (data is not null &&
+        if (!actualDataAlreadyHandledDuringDiscovery && data is not null &&
             TestDataSourceHelpers.TryHandleITestDataRow(data, _testMethodInfo.ParameterTypes, out data, out ignoreFromTestDataRow, out displayNameFromTestDataRow))
         {
             // Handled already.
         }
-        else if (TestDataSourceHelpers.IsDataConsideredSingleArgumentValue(data, _testMethodInfo.ParameterTypes))
+        else if (!actualDataAlreadyHandledDuringDiscovery && TestDataSourceHelpers.IsDataConsideredSingleArgumentValue(data, _testMethodInfo.ParameterTypes))
         {
             // SPECIAL CASE:
             // This condition is a duplicate of the condition in InvokeAsSynchronousTask.
@@ -393,16 +393,14 @@ internal sealed class TestMethodRunner
             // Note that normally, the array in this code path represents the arguments of the test method.
             // However, InvokeAsSynchronousTask uses the above check to mean "the whole array is the single argument to the test method"
         }
-        else if (data?.Length == 1 && TestDataSourceHelpers.TryHandleTupleDataSource(data[0], _testMethodInfo.ParameterTypes, out object?[] tupleExpandedToArray))
+        else if (!actualDataAlreadyHandledDuringDiscovery && data?.Length == 1 && TestDataSourceHelpers.TryHandleTupleDataSource(data[0], _testMethodInfo.ParameterTypes, out object?[] tupleExpandedToArray))
         {
             data = tupleExpandedToArray;
         }
 
-        displayName = testDataSource != null
-            ? displayNameFromTestDataRow
-                ?? testDataSource.GetDisplayName(new ReflectionTestMethodInfo(_testMethodInfo.MethodInfo, _test.DisplayName), data)
-                ?? displayName
-            : displayNameFromTestDataRow ?? displayName;
+        displayName = displayNameFromTestDataRow
+            ?? testDataSource?.GetDisplayName(new ReflectionTestMethodInfo(_testMethodInfo.MethodInfo, _test.DisplayName), data)
+            ?? displayName;
 
         var stopwatch = Stopwatch.StartNew();
         _testMethodInfo.SetArguments(data);
@@ -469,7 +467,10 @@ internal sealed class TestMethodRunner
                 {
                     try
                     {
-                        tcs.SetResult(await _testMethodInfo.Executor.ExecuteAsync(testMethodInfo).ConfigureAwait(false));
+                        using (TestContextImplementation.SetCurrentTestContext(_testMethodInfo.TestContext as TestContextImplementation))
+                        {
+                            tcs.SetResult(await _testMethodInfo.Executor.ExecuteAsync(testMethodInfo).ConfigureAwait(false));
+                        }
                     }
                     catch (Exception e)
                     {

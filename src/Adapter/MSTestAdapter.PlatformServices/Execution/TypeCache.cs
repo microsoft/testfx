@@ -777,16 +777,16 @@ internal sealed class TypeCache : MarshalByRefObject
     private void SetCustomProperties(TestMethodInfo testMethodInfo, ITestContext testContext)
     {
         DebugEx.Assert(testMethodInfo != null, "testMethodInfo is Null");
-        DebugEx.Assert(testMethodInfo.TestMethod != null, "testMethodInfo.TestMethod is Null");
+        DebugEx.Assert(testMethodInfo.MethodInfo != null, "testMethodInfo.TestMethod is Null");
 
-        IEnumerable<TestPropertyAttribute> attributes = _reflectionHelper.GetAttributes<TestPropertyAttribute>(testMethodInfo.TestMethod, inherit: true);
+        IEnumerable<TestPropertyAttribute> attributes = _reflectionHelper.GetAttributes<TestPropertyAttribute>(testMethodInfo.MethodInfo, inherit: true);
         DebugEx.Assert(attributes != null, "attributes is null");
 
         attributes = attributes.Concat(_reflectionHelper.GetAttributes<TestPropertyAttribute>(testMethodInfo.Parent.ClassType, inherit: true));
 
         foreach (TestPropertyAttribute attribute in attributes)
         {
-            if (!ValidateAndAssignTestProperty(testMethodInfo, testContext, attribute.Name, attribute.Value))
+            if (!ValidateAndAssignTestProperty(testMethodInfo, testContext, attribute.Name, attribute.Value, isPredefinedAttribute: attribute is OwnerAttribute or PriorityAttribute))
             {
                 break;
             }
@@ -800,20 +800,22 @@ internal sealed class TypeCache : MarshalByRefObject
     /// <param name="testContext"> The test context. </param>
     /// <param name="propertyName"> The property name. </param>
     /// <param name="propertyValue"> The property value. </param>
+    /// <param name="isPredefinedAttribute"> If the property originates from a predefined attribute. </param>
     /// <returns> True if its a valid Test Property. </returns>
     private static bool ValidateAndAssignTestProperty(
         TestMethodInfo testMethodInfo,
         ITestContext testContext,
         string propertyName,
-        string propertyValue)
+        string propertyValue,
+        bool isPredefinedAttribute)
     {
-        if (PredefinedNames.Any(predefinedProp => predefinedProp == propertyName))
+        if (!isPredefinedAttribute && PredefinedNames.Any(predefinedProp => predefinedProp == propertyName))
         {
             testMethodInfo.NotRunnableReason = string.Format(
                 CultureInfo.CurrentCulture,
                 Resource.UTA_ErrorPredefinedTestProperty,
-                testMethodInfo.TestMethod.DeclaringType!.FullName,
-                testMethodInfo.TestMethod.Name,
+                testMethodInfo.MethodInfo.DeclaringType!.FullName,
+                testMethodInfo.MethodInfo.Name,
                 propertyName);
 
             return false;
@@ -824,8 +826,8 @@ internal sealed class TypeCache : MarshalByRefObject
             testMethodInfo.NotRunnableReason = string.Format(
                 CultureInfo.CurrentCulture,
                 Resource.UTA_ErrorTestPropertyNullOrEmpty,
-                testMethodInfo.TestMethod.DeclaringType!.FullName,
-                testMethodInfo.TestMethod.Name);
+                testMethodInfo.MethodInfo.DeclaringType!.FullName,
+                testMethodInfo.MethodInfo.Name);
 
             return false;
         }

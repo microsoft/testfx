@@ -16,6 +16,8 @@
     <DefineConstants Condition=" '$(EnableCodeCoverage)' == 'True' ">$(DefineConstants);ENABLE_CODECOVERAGE</DefineConstants>
     <!-- Do not capture test output on CI to help community see errors -->
     <TestCaptureOutput Condition=" '$(ContinuousIntegrationBuild)' == 'true' ">false</TestCaptureOutput>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);SA0001;EnableGenerateDocumentationFile</NoWarn>
   </PropertyGroup>
 
 </Project>

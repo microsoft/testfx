@@ -16,10 +16,10 @@ internal sealed class TrxReportGeneratorCommandLine : ICommandLineOptionsProvide
     public const string TrxReportFileNameOptionName = "report-trx-filename";
 
     /// <inheritdoc />
-    public string Uid { get; } = nameof(TrxReportGeneratorCommandLine);
+    public string Uid => nameof(TrxReportGeneratorCommandLine);
 
     /// <inheritdoc />
-    public string Version { get; } = AppVersion.DefaultSemVer;
+    public string Version => AppVersion.DefaultSemVer;
 
     /// <inheritdoc />
     public string DisplayName { get; } = ExtensionResources.TrxReportGeneratorDisplayName;

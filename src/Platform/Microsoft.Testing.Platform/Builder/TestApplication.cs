@@ -92,7 +92,7 @@ public sealed class TestApplication : ITestApplication
         {
             ILogger logger = loggingState.FileLoggerProvider.CreateLogger(typeof(TestApplication).ToString());
             s_unhandledExceptionHandler.SetLogger(logger);
-            await LogInformationAsync(logger, testApplicationModuleInfo, testHostControllerInfo, systemProcess, systemEnvironment, createBuilderEntryTime, loggingState.IsSynchronousWrite, loggingState.LogLevel, args).ConfigureAwait(false);
+            await LogInformationAsync(logger, testApplicationModuleInfo, testHostControllerInfo, systemEnvironment, createBuilderEntryTime, loggingState.IsSynchronousWrite, loggingState.LogLevel, args).ConfigureAwait(false);
         }
 
         // All checks are fine, create the TestApplication.
@@ -103,7 +103,6 @@ public sealed class TestApplication : ITestApplication
         ILogger logger,
         CurrentTestApplicationModuleInfo testApplicationModuleInfo,
         TestHostControllerInfo testHostControllerInfo,
-        SystemProcessHandler processHandler,
         SystemEnvironment environment,
         string createBuilderEntryTime,
         bool syncWrite,
@@ -124,8 +123,7 @@ public sealed class TestApplication : ITestApplication
         await logger.LogInformationAsync("Logging mode: " + (syncWrite ? "synchronous" : "asynchronous")).ConfigureAwait(false);
         await logger.LogInformationAsync($"Logging level: {loggerLevel}").ConfigureAwait(false);
         await logger.LogInformationAsync($"CreateBuilderAsync entry time: {createBuilderEntryTime}").ConfigureAwait(false);
-        using IProcess currentProcess = processHandler.GetCurrentProcess();
-        await logger.LogInformationAsync($"PID: {currentProcess.Id}").ConfigureAwait(false);
+        await logger.LogInformationAsync($"PID: {environment.ProcessId}").ConfigureAwait(false);
 
 #if NETCOREAPP
         string runtimeInformation = $"{RuntimeInformation.RuntimeIdentifier} - {RuntimeInformation.FrameworkDescription}";
@@ -232,8 +230,8 @@ public sealed class TestApplication : ITestApplication
 
         if (environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER) == "1")
         {
-            IProcess currentProcess = systemProcess.GetCurrentProcess();
-            console.WriteLine($"Waiting for debugger to attach... Process Id: {currentProcess.Id}, Name: {currentProcess.Name}");
+            using IProcess currentProcess = systemProcess.GetCurrentProcess();
+            console.WriteLine($"Waiting for debugger to attach... Process Id: {environment.ProcessId}, Name: {currentProcess.Name}");
 
             while (!Debugger.IsAttached)
             {
@@ -282,7 +280,7 @@ public sealed class TestApplication : ITestApplication
 
         if (result.TryGetOptionArgumentList(PlatformCommandLineProvider.DiagnosticVerbosityOptionKey, out string[]? verbosity))
         {
-            logLevel = EnumPolyfill.Parse<LogLevel>(verbosity[0], true);
+            logLevel = Enum.Parse<LogLevel>(verbosity[0], true);
         }
 
         // Override the log level if the environment variable is set

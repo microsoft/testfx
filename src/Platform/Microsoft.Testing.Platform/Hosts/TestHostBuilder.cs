@@ -134,7 +134,6 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
         // Current test platform is picky on unhandled exception, we will tear down the process in that case.
         // This mode can be too aggressive especially compared to the old framework, so we allow the user to disable it if their suite
         // relies on unhandled exception.
-        IEnvironment environment = serviceProvider.GetEnvironment();
 
         // Check the config file, by default is not specified the policy is false.
         _ = bool.TryParse(configuration[PlatformConfigurationConstants.PlatformExitProcessOnUnhandledException]!, out bool isFileConfiguredToFailFast);
@@ -271,11 +270,18 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
             testApplicationCancellationTokenSource.CancelAfter(timeout);
         }
 
-        // At this point we start to build extensions so we need to have all the information complete for the usage,
-        // here we ensure to override the result directory if user passed the argument --results-directory in command line.
-        // After this check users can get the result directory using IConfiguration["platformOptions:resultDirectory"] or the
-        // extension method helper serviceProvider.GetConfiguration()
-        await configuration.CheckTestResultsDirectoryOverrideAndCreateItAsync(loggingState.FileLoggerProvider).ConfigureAwait(false);
+        bool isHelpCommand = commandLineHandler.IsHelpInvoked();
+        bool isInfoCommand = commandLineHandler.IsInfoInvoked();
+
+        // Do not create the result directory if the user invoked --help or --info command.
+        if (!isHelpCommand && !isInfoCommand)
+        {
+            // At this point we start to build extensions so we need to have all the information complete for the usage,
+            // here we ensure to override the result directory if user passed the argument --results-directory in command line.
+            // After this check users can get the result directory using IConfiguration["platformOptions:resultDirectory"] or the
+            // extension method helper serviceProvider.GetConfiguration()
+            await configuration.CheckTestResultsDirectoryOverrideAndCreateItAsync(loggingState.FileLoggerProvider).ConfigureAwait(false);
+        }
 
         // Display banner now because we need capture the output in case of MSBuild integration and we want to forward
         // to file disc also the banner, so at this point we need to have all services and configuration(result directory) built.
@@ -329,7 +335,7 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
             return toolsTestHost;
         }
 
-        var pushOnlyProtocol = new DotnetTestConnection(commandLineHandler, processHandler, environment, _testApplicationModuleInfo, testApplicationCancellationTokenSource);
+        var pushOnlyProtocol = new DotnetTestConnection(commandLineHandler, environment, _testApplicationModuleInfo, testApplicationCancellationTokenSource);
         await pushOnlyProtocol.AfterCommonServiceSetupAsync().ConfigureAwait(false);
         if (pushOnlyProtocol.IsServerMode)
         {
@@ -337,7 +343,7 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
         }
 
         // If --help is invoked we return
-        if (commandLineHandler.IsHelpInvoked())
+        if (isHelpCommand)
         {
             if (pushOnlyProtocol.IsServerMode)
             {
@@ -352,7 +358,7 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
         }
 
         // If --info is invoked we return
-        if (commandLineHandler.IsInfoInvoked())
+        if (isInfoCommand)
         {
             await commandLineHandler.PrintInfoAsync(proxyOutputDevice, toolsInformation).ConfigureAwait(false);
             return new InformativeCommandLineHost(0, serviceProvider);
@@ -388,7 +394,7 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
                 passiveNode = new PassiveNode(
                     messageHandlerFactory,
                     testApplicationCancellationTokenSource,
-                    processHandler,
+                    systemEnvironment,
                     systemMonitorAsyncFactory,
                     loggerFactory.CreateLogger<PassiveNode>());
             }
@@ -433,7 +439,6 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
         // If we're under test controllers and currently we're inside the started test host we connect to the out of process
         // test controller manager.
         NamedPipeClient? testControllerConnection = await ConnectToTestHostProcessMonitorIfAvailableAsync(
-            processHandler,
             testApplicationCancellationTokenSource,
             loggerFactory.CreateLogger(nameof(ConnectToTestHostProcessMonitorIfAvailableAsync)),
             testHostControllerInfo,
@@ -441,8 +446,10 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
             systemEnvironment).ConfigureAwait(false);
 
         // Build and register the test application lifecycle callbacks.
+#pragma warning disable CS0618 // Type or member is obsolete
         ITestApplicationLifecycleCallbacks[] testApplicationLifecycleCallback =
             await ((TestHostManager)TestHost).BuildTestApplicationLifecycleCallbackAsync(serviceProvider).ConfigureAwait(false);
+#pragma warning restore CS0618 // Type or member is obsolete
         serviceProvider.AddServices(testApplicationLifecycleCallback);
 
         // ServerMode and Console mode uses different host
@@ -520,7 +527,6 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
     }
 
     private static async Task<NamedPipeClient?> ConnectToTestHostProcessMonitorIfAvailableAsync(
-        IProcessHandler processHandler,
         CTRLPlusCCancellationTokenSource testApplicationCancellationTokenSource,
         ILogger logger,
         TestHostControllerInfo testHostControllerInfo,
@@ -554,9 +560,8 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
         await logger.LogDebugAsync($"Connected to named pipe '{pipeName}'").ConfigureAwait(false);
 
         // Send the PID
-        using IProcess currentProcess = processHandler.GetCurrentProcess();
         await client.RequestReplyAsync<TestHostProcessPIDRequest, VoidResponse>(
-            new TestHostProcessPIDRequest(currentProcess.Id),
+            new TestHostProcessPIDRequest(environment.ProcessId),
             testApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
         return client;
     }

@@ -7,9 +7,9 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.Assertions
 
 public class StringAssertTests : TestContainer
 {
-    public void ThatShouldReturnAnInstanceOfStringAssert() => Verify(StringAssert.That is not null);
+    public void InstanceShouldReturnAnInstanceOfStringAssert() => Verify(StringAssert.Instance is not null);
 
-    public void ThatShouldCacheStringAssertInstance() => Verify(StringAssert.That == StringAssert.That);
+    public void InstanceShouldCacheStringAssertInstance() => Verify(StringAssert.Instance == StringAssert.Instance);
 
     public void StringAssertContains()
     {
@@ -311,4 +311,27 @@ public class StringAssertTests : TestContainer
     private Regex? GetMatchingPattern() => new("some*");
 
     private Regex? GetNonMatchingPattern() => new("something");
+
+    #region Obsolete methods tests
+#if DEBUG
+    public void ObsoleteEqualsMethodThrowsAssertFailedException()
+    {
+#pragma warning disable CS0618 // Type or member is obsolete
+        Exception ex = VerifyThrows(() => StringAssert.Equals("test", "test"));
+#pragma warning restore CS0618 // Type or member is obsolete
+        Verify(ex is AssertFailedException);
+        Verify(ex.Message.Contains("StringAssert.Equals should not be used for Assertions"));
+    }
+
+    public void ObsoleteReferenceEqualsMethodThrowsAssertFailedException()
+    {
+        object obj = new();
+#pragma warning disable CS0618 // Type or member is obsolete
+        Exception ex = VerifyThrows(() => StringAssert.ReferenceEquals(obj, obj));
+#pragma warning restore CS0618 // Type or member is obsolete
+        Verify(ex is AssertFailedException);
+        Verify(ex.Message.Contains("StringAssert.ReferenceEquals should not be used for Assertions"));
+    }
+#endif
+    #endregion
 }

@@ -205,7 +205,7 @@ internal sealed class DynamicDataTestMethodArgumentsInfo : ITestMethodArgumentsI
                 nodeBuilder.Append("()");
             }
 
-            nodeBuilder.AppendLine(";");
+            nodeBuilder.AppendLine(';');
 
             if (!_targetMethodReturnsCollectionOfTestArgumentsEntry)
             {
@@ -225,6 +225,6 @@ internal sealed class DynamicDataTestMethodArgumentsInfo : ITestMethodArgumentsI
             }
         }
 
-        nodeBuilder.AppendLine(",");
+        nodeBuilder.AppendLine(',');
     }
 }

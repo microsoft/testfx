@@ -62,9 +62,9 @@
         <source>Cannot run test method '{0}.{1}': Test data doesn't match method parameters. Either the count or types are different.
 Test expected {2} parameter(s), with types '{3}',
 but received {4} argument(s), with types '{5}'.</source>
-        <target state="new">Cannot run test method '{0}.{1}': Test data doesn't match method parameters. Either the count or types are different.
-Test expected {2} parameter(s), with types '{3}',
-but received {4} argument(s), with types '{5}'.</target>
+        <target state="translated">Não é possível executar o método de teste '{0}.{1}': Os dados de teste não correspondem aos parâmetros do método. A contagem ou os tipos são diferentes.
+Testar {2} parâmetros esperados, com tipos '{3}',
+mas {4} argumentos recebidos, com tipos '{5}'.</target>
         <note />
       </trans-unit>
       <trans-unit id="CannotRunTestMethodNoDataError">
@@ -205,12 +205,12 @@ but received {4} argument(s), with types '{5}'.</target>
       </trans-unit>
       <trans-unit id="Execution_Test_Cancelled">
         <source>Test '{0}' was canceled</source>
-        <target state="new">Test '{0}' was canceled</target>
+        <target state="translated">O teste "{0}" foi cancelado</target>
         <note />
       </trans-unit>
       <trans-unit id="Execution_Test_Timeout">
         <source>Test '{0}' timed out after {1}ms</source>
-        <target state="new">Test '{0}' timed out after {1}ms</target>
+        <target state="translated">O teste "{0}" atingiu o tempo limite após {1}ms</target>
         <note />
       </trans-unit>
       <trans-unit id="FailedToGetCustomAttribute">
@@ -221,17 +221,17 @@ but received {4} argument(s), with types '{5}'.</target>
       </trans-unit>
       <trans-unit id="GenericParameterCantBeInferred">
         <source>The type of the generic parameter '{0}' could not be inferred.</source>
-        <target state="new">The type of the generic parameter '{0}' could not be inferred.</target>
+        <target state="translated">O tipo do parâmetro genérico "{0}" não pôde ser inferido.</target>
         <note />
       </trans-unit>
       <trans-unit id="GenericParameterCantBeInferredBecauseNoArguments">
         <source>The generic test method '{0}' doesn't have arguments, so the generic parameter cannot be inferred.</source>
-        <target state="new">The generic test method '{0}' doesn't have arguments, so the generic parameter cannot be inferred.</target>
+        <target state="translated">O método de teste genérico "{0}" não tem argumentos; portanto, o parâmetro genérico não pode ser inferido.</target>
         <note />
       </trans-unit>
       <trans-unit id="GenericParameterConflict">
         <source>Found two conflicting types for generic parameter '{0}'. The conflicting types are '{1}' and '{2}'.</source>
-        <target state="new">Found two conflicting types for generic parameter '{0}'. The conflicting types are '{1}' and '{2}'.</target>
+        <target state="translated">Foram encontrados dois tipos conflitantes para o parâmetro genérico "{0}". Os tipos conflitantes são "{1}" e "{2}".</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidClassCleanupLifecycleValue">
@@ -438,7 +438,7 @@ Erro: {1}</target>
       </trans-unit>
       <trans-unit id="UTA_ErrorInvalidTimeout">
         <source>UTA054: {0}.{1} has invalid Timeout attribute. The timeout must be an integer value greater than 0.</source>
-        <target state="new">UTA054: {0}.{1} has invalid Timeout attribute. The timeout must be an integer value greater than 0.</target>
+        <target state="translated">UTA054: {0}.{1} tem atributo Timeout inválido. O tempo limite deve ser um valor inteiro maior que 0.</target>
         <note />
       </trans-unit>
       <trans-unit id="UTA_ErrorMultiAssemblyClean">
@@ -494,7 +494,7 @@ Erro: {1}</target>
       <trans-unit id="UTA_ExecuteThrewException">
         <source>An unhandled exception was thrown by the 'Execute' method. Please report this error to the author of the attribute '{0}'.
 {1}</source>
-        <target state="new">An unhandled exception was thrown by the 'Execute' method. Please report this error to the author of the attribute '{0}'.
+        <target state="translated">Uma exceção sem tratamento foi lançada pelo método "Execute". Relate esse erro ao autor do atributo "{0}".
 {1}</target>
         <note />
       </trans-unit>
@@ -589,7 +589,7 @@ Erro: {1}</target>
       </trans-unit>
       <trans-unit id="VersionMismatchBetweenAdapterAndFramework">
         <source>'MSTest.TestAdapter' and 'MSTest.TestFramework' must have the same version. Found 'MSTest.TestAdapter' version '{0}' and 'MSTest.TestFramework' version '{1}'. Please make sure that the versions of  'MSTest.TestAdapter' and 'MSTest.TestFramework' NuGet packages have the same version.</source>
-        <target state="new">'MSTest.TestAdapter' and 'MSTest.TestFramework' must have the same version. Found 'MSTest.TestAdapter' version '{0}' and 'MSTest.TestFramework' version '{1}'. Please make sure that the versions of  'MSTest.TestAdapter' and 'MSTest.TestFramework' NuGet packages have the same version.</target>
+        <target state="translated">'MSTest.TestAdapter' e 'MSTest.TestFramework' devem ter a mesma versão. Encontrada a versão '{0}' do 'MSTest.TestAdapter' e a versão '{1}' do 'MSTest.TestFramework'. Por favor, verifique se as versões dos pacotes NuGet 'MSTest.TestAdapter' e 'MSTest.TestFramework' são iguais.</target>
         <note />
       </trans-unit>
       <trans-unit id="WrongNumberOfObjects">

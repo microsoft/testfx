@@ -89,10 +89,10 @@ internal sealed class TrxReportGenerator :
     public Type[] DataTypesProduced { get; } = [typeof(SessionFileArtifact)];
 
     /// <inheritdoc />
-    public string Uid { get; } = nameof(TrxReportGenerator);
+    public string Uid => nameof(TrxReportGenerator);
 
     /// <inheritdoc />
-    public string Version { get; } = AppVersion.DefaultSemVer;
+    public string Version => AppVersion.DefaultSemVer;
 
     /// <inheritdoc />
     public string DisplayName { get; } = ExtensionResources.TrxReportGeneratorDisplayName;
@@ -227,8 +227,8 @@ TrxReportGeneratorCommandLine.IsTrxReportEnabled: {_commandLineOptionsService.Is
 
             int exitCode = _testApplicationProcessExitCode.GetProcessExitCode();
             TrxReportEngine trxReportGeneratorEngine = new(_testApplicationModuleInfo, _environment, _commandLineOptionsService, _configuration,
-            _clock, [.. _tests], _failedTestsCount, _passedTestsCount, _notExecutedTestsCount, _timeoutTestsCount, _artifactsByExtension,
-            _adapterSupportTrxCapability, _testFramework, _testStartTime.Value, exitCode, cancellationToken);
+                _clock, [.. _tests], _failedTestsCount, _passedTestsCount, _notExecutedTestsCount, _timeoutTestsCount, _artifactsByExtension,
+                _adapterSupportTrxCapability, _testFramework, _testStartTime.Value, exitCode, cancellationToken);
             (string reportFileName, string? warning) = await trxReportGeneratorEngine.GenerateReportAsync().ConfigureAwait(false);
             if (warning is not null)
             {

@@ -92,25 +92,25 @@ public partial class AssertTests
     public void Single_WhenNoItems_ShouldFail()
     {
         Exception ex = VerifyThrows(() => Assert.ContainsSingle(Array.Empty<int>()));
-        Verify(ex.Message == "Assert.ContainsSingle failed. Expected collection of size 1. Actual: 0. ");
+        Verify(ex.Message == "Assert.ContainsSingle failed. Expected collection to contain exactly one element but found 0 element(s). ");
     }
 
     public void Single_WhenMultipleItems_ShouldFail()
     {
         Exception ex = VerifyThrows(() => Assert.ContainsSingle([1, 2, 3]));
-        Verify(ex.Message == "Assert.ContainsSingle failed. Expected collection of size 1. Actual: 3. ");
+        Verify(ex.Message == "Assert.ContainsSingle failed. Expected collection to contain exactly one element but found 3 element(s). ");
     }
 
     public void Single_MessageArgs_WhenNoItem_ShouldFail()
     {
         Exception ex = VerifyThrows(() => Assert.ContainsSingle(Array.Empty<float>(), "User-provided message: System.Object type: {0}", new object().GetType()));
-        Verify(ex.Message == "Assert.ContainsSingle failed. Expected collection of size 1. Actual: 0. User-provided message: System.Object type: System.Object");
+        Verify(ex.Message == "Assert.ContainsSingle failed. Expected collection to contain exactly one element but found 0 element(s). User-provided message: System.Object type: System.Object");
     }
 
     public void Single_MessageArgs_WhenMultipleItems_ShouldFail()
     {
         Exception ex = VerifyThrows(() => Assert.ContainsSingle([1, 2, 3], "User-provided message: System.Object type: {0}", new object().GetType()));
-        Verify(ex.Message == "Assert.ContainsSingle failed. Expected collection of size 1. Actual: 3. User-provided message: System.Object type: System.Object");
+        Verify(ex.Message == "Assert.ContainsSingle failed. Expected collection to contain exactly one element but found 3 element(s). User-provided message: System.Object type: System.Object");
     }
 
     public async Task Single_InterpolatedString_WhenNoItem_ShouldFail()
@@ -118,7 +118,7 @@ public partial class AssertTests
         DummyClassTrackingToStringCalls o = new();
         DateTime dateTime = DateTime.Now;
         Exception ex = await VerifyThrowsAsync(async () => Assert.ContainsSingle(Array.Empty<int>(), $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}"));
-        Verify(ex.Message == $"Assert.ContainsSingle failed. Expected collection of size 1. Actual: 0. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
+        Verify(ex.Message == $"Assert.ContainsSingle failed. Expected collection to contain exactly one element but found 0 element(s). User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
         Verify(o.WasToStringCalled);
     }
 
@@ -127,7 +127,7 @@ public partial class AssertTests
         DummyClassTrackingToStringCalls o = new();
         DateTime dateTime = DateTime.Now;
         Exception ex = await VerifyThrowsAsync(async () => Assert.ContainsSingle([1, 2, 3], $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}"));
-        Verify(ex.Message == $"Assert.ContainsSingle failed. Expected collection of size 1. Actual: 3. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
+        Verify(ex.Message == $"Assert.ContainsSingle failed. Expected collection to contain exactly one element but found 3 element(s). User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
         Verify(o.WasToStringCalled);
     }
 
@@ -151,28 +151,28 @@ public partial class AssertTests
     {
         var collection = new List<int> { 1, 3, 5 };
         Exception ex = VerifyThrows(() => Assert.ContainsSingle(x => x % 2 == 0, collection));
-        Verify(ex.Message == "Assert.ContainsSingle failed. Expected collection of size 1. Actual: 0. ");
+        Verify(ex.Message == "Assert.ContainsSingle failed. Expected exactly one item to match the predicate but found 0 item(s). ");
     }
 
     public void SinglePredicate_WhenMultipleItemsMatch_ShouldFail()
     {
         var collection = new List<int> { 2, 4, 6 };
         Exception ex = VerifyThrows(() => Assert.ContainsSingle(x => x % 2 == 0, collection));
-        Verify(ex.Message == "Assert.ContainsSingle failed. Expected collection of size 1. Actual: 3. ");
+        Verify(ex.Message == "Assert.ContainsSingle failed. Expected exactly one item to match the predicate but found 3 item(s). ");
     }
 
-    public void SinglePredicate_MessageArgs_WhenNoItemMatches_ShouldFail()
+    public void SinglePredicate_Message_WhenNoItemMatches_ShouldFail()
     {
         var collection = new List<int> { 1, 3, 5 };
-        Exception ex = VerifyThrows(() => Assert.ContainsSingle(x => x % 2 == 0, collection, "No even numbers found: {0}", "test"));
-        Verify(ex.Message == "Assert.ContainsSingle failed. Expected collection of size 1. Actual: 0. No even numbers found: test");
+        Exception ex = VerifyThrows(() => Assert.ContainsSingle(x => x % 2 == 0, collection, "No even numbers found: test"));
+        Verify(ex.Message == "Assert.ContainsSingle failed. Expected exactly one item to match the predicate but found 0 item(s). No even numbers found: test");
     }
 
-    public void SinglePredicate_MessageArgs_WhenMultipleItemsMatch_ShouldFail()
+    public void SinglePredicate_Message_WhenMultipleItemsMatch_ShouldFail()
     {
         var collection = new List<int> { 2, 4, 6 };
-        Exception ex = VerifyThrows(() => Assert.ContainsSingle(x => x % 2 == 0, collection, "Too many even numbers: {0}", "test"));
-        Verify(ex.Message == "Assert.ContainsSingle failed. Expected collection of size 1. Actual: 3. Too many even numbers: test");
+        Exception ex = VerifyThrows(() => Assert.ContainsSingle(x => x % 2 == 0, collection, "Too many even numbers: test"));
+        Verify(ex.Message == "Assert.ContainsSingle failed. Expected exactly one item to match the predicate but found 3 item(s). Too many even numbers: test");
     }
 
     public void Any_WhenOneItem_ShouldPass()
