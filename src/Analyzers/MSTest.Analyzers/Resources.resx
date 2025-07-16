@@ -429,6 +429,9 @@ The type declaring these methods should also respect the following rules:
   <data name="UseAsyncSuffixTestMethodSuppressorJustification" xml:space="preserve">
     <value>Asynchronous test methods do not require the 'Async' suffix</value>
   </data>
+  <data name="UnusedParameterSuppressorJustification" xml:space="preserve">
+    <value>TestContext parameter is required by MSTest for AssemblyInitialize and ClassInitialize methods</value>
+  </data>
   <data name="UseAttributeOnTestMethodAnalyzerMessageFormat" xml:space="preserve">
     <value>[{0}] can only be set on methods marked with [TestMethod]</value>
   </data>

@@ -31,10 +31,10 @@ The type declaring these methods should also respect the following rules:
 
 Anche il tipo che dichiara questi metodi deve rispettare le regole seguenti:
 -Il tipo deve essere una classe
--Il tipo deve essere 'public' o 'internal' (se il progetto di test usa l'attributo '[DiscoverInternals]')
--Il tipo non deve essere 'static'
--Il tipo deve essere contrassegnata con '[TestClass]' (o un attributo derivato)
--Il tipo non deve essere generica.</target>
+-La classe deve essere 'public' o 'internal' (se il progetto di test usa l'attributo '[DiscoverInternals]')
+-La classe non deve essere 'static'
+-La classe deve essere contrassegnata con '[TestClass]' (o un attributo derivato)
+-La classe non deve essere generica.</target>
         <note />
       </trans-unit>
       <trans-unit id="AssemblyCleanupShouldBeValidMessageFormat">
@@ -76,10 +76,10 @@ The type declaring these methods should also respect the following rules:
 
 Anche il tipo che dichiara questi metodi deve rispettare le regole seguenti:
 -Il tipo deve essere una classe
--Il tipo deve essere 'public' o 'internal' (se il progetto di test usa l'attributo '[DiscoverInternals]')
--Il tipo non deve essere 'static'
--Il tipo deve essere contrassegnata con '[TestClass]' (o un attributo derivato).
--Il tipo non deve essere generica.</target>
+-La classe deve essere 'public' o 'internal' (se il progetto di test usa l'attributo '[DiscoverInternals]')
+-La classe non deve essere 'static'
+-La classe deve essere contrassegnata con '[TestClass]' (o un attributo derivato).
+-La classe non deve essere generica.</target>
         <note />
       </trans-unit>
       <trans-unit id="AssemblyInitializeShouldBeValidMessageFormat">
@@ -195,10 +195,10 @@ The type declaring these methods should also respect the following rules:
 
 Anche il tipo che dichiara questi metodi deve rispettare le regole seguenti:
 -Il tipo deve essere una classe
--Il tipo deve essere 'public' o 'internal' (se il progetto di test usa l'attributo '[DiscoverInternals]')
--Il tipo non deve essere 'static'
+-La classe deve essere 'public' o 'internal' (se il progetto di test usa l'attributo '[DiscoverInternals]')
+-La classe non deve essere 'static'
 -Se la classe è 'sealed', deve essere contrassegnata con '[TestClass]' (o un attributo derivato)
--Il tipo non deve essere generica.</target>
+-La classe non deve essere generica.</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassCleanupShouldBeValidMessageFormat">
@@ -244,10 +244,10 @@ The type declaring these methods should also respect the following rules:
 
 Anche il tipo che dichiara questi metodi deve rispettare le regole seguenti:
 -Il tipo deve essere una classe
--Il tipo deve essere 'public' o 'internal' (se il progetto di test usa l'attributo '[DiscoverInternals]')
--Il tipo non deve essere 'static'
+-La classe deve essere 'public' o 'internal' (se il progetto di test usa l'attributo '[DiscoverInternals]')
+-La classe non deve essere 'static'
 -Se la classe è 'sealed', deve essere contrassegnata con '[TestClass]' (o un attributo derivato)
--Il tipo non deve essere generica.</target>
+-La classe non deve essere generica.</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassInitializeShouldBeValidMessageFormat">
@@ -549,7 +549,7 @@ Anche il tipo che dichiara questi metodi deve rispettare le regole seguenti:
       </trans-unit>
       <trans-unit id="TestClassShouldBeValidMessageFormat">
         <source>Test class '{0}' should be valid</source>
-        <target state="translated">Il tipo di test '{0}' deve essere valida</target>
+        <target state="translated">La classe di test '{0}' deve essere valida</target>
         <note />
       </trans-unit>
       <trans-unit id="TestContextShouldBeValidMessageFormat">
@@ -595,17 +595,17 @@ Anche il tipo che dichiara questi metodi deve rispettare le regole seguenti:
       </trans-unit>
       <trans-unit id="TestClassShouldHaveTestMethodDescription">
         <source>Test class should have at least one test method or be 'static' with method(s) marked by '[AssemblyInitialize]' and/or '[AssemblyCleanup]'.</source>
-        <target state="translated">Il tipo di test deve avere almeno un metodo di test o essere 'static' con metodi contrassegnati da '[AssemblyInitialize]' e/o '[AssemblyCleanup]'.</target>
+        <target state="translated">La classe di test deve avere almeno un metodo di test o essere 'static' con metodi contrassegnati da '[AssemblyInitialize]' e/o '[AssemblyCleanup]'.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestClassShouldHaveTestMethodMessageFormat">
         <source>Test class '{0}' should have at least one test method or be 'static' with method(s) marked by '[AssemblyInitialize]' and/or '[AssemblyCleanup]'</source>
-        <target state="translated">Il tipo di test '{0}' deve avere almeno un metodo di test o essere 'static' con metodi contrassegnati da '[AssemblyInitializate]' e/o '[AssemblyCleanup]'</target>
+        <target state="translated">La classe di test '{0}' deve avere almeno un metodo di test o essere 'static' con metodi contrassegnati da '[AssemblyInitializate]' e/o '[AssemblyCleanup]'</target>
         <note />
       </trans-unit>
       <trans-unit id="TestClassShouldHaveTestMethodTitle">
         <source>Test class should have test method</source>
-        <target state="translated">Il tipo di test deve avere un metodo di test</target>
+        <target state="translated">La classe di test deve avere un metodo di test</target>
         <note />
       </trans-unit>
       <trans-unit id="TestCleanupShouldBeValidDescription">
@@ -636,8 +636,8 @@ The type declaring these methods should also respect the following rules:
 
 Anche il tipo che dichiara questi metodi deve rispettare le regole seguenti:
 -Il tipo deve essere una classe
--Il tipo deve essere 'public' o 'internal' (se il progetto di test usa l'attributo '[DiscoverInternals]')
--Il tipo non deve essere 'static'
+-La classe deve essere 'public' o 'internal' (se il progetto di test usa l'attributo '[DiscoverInternals]')
+-La classe non deve essere 'static'
 -Se la classe è 'sealed', deve essere contrassegnata con '[TestClass]' (o un attributo derivato).</target>
         <note />
       </trans-unit>
@@ -695,8 +695,8 @@ The type declaring these methods should also respect the following rules:
 
 Anche il tipo che dichiara questi metodi deve rispettare le regole seguenti:
 -Il tipo deve essere una classe
--Il tipo deve essere 'public' o 'internal' (se il progetto di test usa l'attributo '[DiscoverInternals]')
--Il tipo non deve essere 'static'
+-La classe deve essere 'public' o 'internal' (se il progetto di test usa l'attributo '[DiscoverInternals]')
+-La classe non deve essere 'static'
 -Se la classe è 'sealed', deve essere contrassegnata con '[TestClass]' (o un attributo derivato).</target>
         <note />
       </trans-unit>
@@ -751,12 +751,12 @@ Anche il tipo che dichiara questi metodi deve rispettare le regole seguenti:
       </trans-unit>
       <trans-unit id="TypeContainingTestMethodShouldBeATestClassDescription">
         <source>Type containing '[TestMethod]' should be marked with '[TestClass]', otherwise the test method will be silently ignored.</source>
-        <target state="needs-review-translation">Il tipo contenente '[TestMethod]' deve essere contrassegnato con '[TestClass]', altrimenti il metodo di test verrà ignorato automaticamente.</target>
+        <target state="new">Type containing '[TestMethod]' should be marked with '[TestClass]', otherwise the test method will be silently ignored.</target>
         <note />
       </trans-unit>
       <trans-unit id="TypeContainingTestMethodShouldBeATestClassMessageFormat">
         <source>Type '{0}' contains test methods and should be marked with '[TestClass]'</source>
-        <target state="translated">Il tipo '{0}' contiene metodi di test e deve essere contrassegnata come '[TestClass]'</target>
+        <target state="new">Type '{0}' contains test methods and should be marked with '[TestClass]'</target>
         <note />
       </trans-unit>
       <trans-unit id="TypeContainingTestMethodShouldBeATestClassTitle">
@@ -772,6 +772,11 @@ Anche il tipo che dichiara questi metodi deve rispettare le regole seguenti:
       <trans-unit id="UseAsyncSuffixTestMethodSuppressorJustification">
         <source>Asynchronous test methods do not require the 'Async' suffix</source>
         <target state="translated">I metodi di test asincroni non richiedono il suffisso 'Async'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UnusedParameterSuppressorJustification">
+        <source>TestContext parameter is required by MSTest for AssemblyInitialize and ClassInitialize methods</source>
+        <target state="new">TestContext parameter is required by MSTest for AssemblyInitialize and ClassInitialize methods</target>
         <note />
       </trans-unit>
       <trans-unit id="UseAttributeOnTestMethodAnalyzerMessageFormat">
