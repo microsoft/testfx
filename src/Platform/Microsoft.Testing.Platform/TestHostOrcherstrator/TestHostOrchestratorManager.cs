@@ -2,6 +2,8 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Linq;
+
+using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Resources;
 using Microsoft.Testing.Platform.Services;
 
@@ -32,13 +34,7 @@ internal sealed class TestHostOrchestratorManager : ITestHostOrchestratorManager
             ITestHostOrchestrator orchestrator = factory(serviceProvider);
 
             // Check if we have already extensions of the same type with same id registered
-            ITestHostOrchestrator[] duplicates = orchestrators.Where(x => x.Uid == orchestrator.Uid).ToArray();
-            if (duplicates.Length > 0)
-            {
-                var allDuplicates = duplicates.Concat([orchestrator]).ToArray();
-                string typesList = string.Join(", ", allDuplicates.Select(x => $"'{x.GetType()}'"));
-                throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.ExtensionWithSameUidAlreadyRegisteredErrorMessage, orchestrator.Uid, typesList));
-            }
+            ExtensionValidationHelper.ValidateUniqueExtension(orchestrators, orchestrator);
 
             // We initialize only if enabled
             if (await orchestrator.IsEnabledAsync().ConfigureAwait(false))
@@ -67,13 +63,7 @@ internal sealed class TestHostOrchestratorManager : ITestHostOrchestratorManager
             ITestHostOrchestratorApplicationLifetime service = testHostOrchestratorApplicationLifetimeFactory(serviceProvider);
 
             // Check if we have already extensions of the same type with same id registered
-            ITestHostOrchestratorApplicationLifetime[] duplicates = lifetimes.Where(x => x.Uid == service.Uid).ToArray();
-            if (duplicates.Length > 0)
-            {
-                var allDuplicates = duplicates.Concat([service]).ToArray();
-                string typesList = string.Join(", ", allDuplicates.Select(x => $"'{x.GetType()}'"));
-                throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.ExtensionWithSameUidAlreadyRegisteredErrorMessage, service.Uid, typesList));
-            }
+            ExtensionValidationHelper.ValidateUniqueExtension(lifetimes, service);
 
             // We initialize only if enabled
             if (await service.IsEnabledAsync().ConfigureAwait(false))
