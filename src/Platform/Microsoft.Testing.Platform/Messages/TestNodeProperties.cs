@@ -652,6 +652,25 @@ public abstract class FileLocationProperty : IProperty
     /// Gets the line position span.
     /// </summary>
     public LinePositionSpan LineSpan { get; }
+
+    /// <inheritdoc />
+    public override string ToString()
+    {
+        var builder = new StringBuilder();
+        builder.Append("FileLocationProperty");
+        builder.Append(" { ");
+        PrintMembers(builder);
+        builder.Append(" }");
+        return builder.ToString();
+    }
+
+    private protected virtual void PrintMembers(StringBuilder builder)
+    {
+        builder.Append("FilePath = ");
+        builder.Append(FilePath);
+        builder.Append(", LineSpan = ");
+        builder.Append(LineSpan);
+    }
 }
 
 /// <summary>
@@ -667,6 +686,17 @@ public sealed class TestFileLocationProperty : FileLocationProperty
     public TestFileLocationProperty(string filePath, LinePositionSpan lineSpan)
         : base(filePath, lineSpan)
     {
+    }
+
+    /// <inheritdoc />
+    public override string ToString()
+    {
+        var builder = new StringBuilder();
+        builder.Append("TestFileLocationProperty");
+        builder.Append(" { ");
+        PrintMembers(builder);
+        builder.Append(" }");
+        return builder.ToString();
     }
 }
 
@@ -737,6 +767,30 @@ public sealed class TestMethodIdentifierProperty : IProperty
     /// Gets the return type full name in metadata format.
     /// </summary>
     public string ReturnTypeFullName { get; }
+
+    /// <inheritdoc />
+    public override string ToString()
+    {
+        var builder = new StringBuilder();
+        builder.Append("TestMethodIdentifierProperty");
+        builder.Append(" { ");
+        builder.Append("AssemblyFullName = ");
+        builder.Append(AssemblyFullName);
+        builder.Append(", Namespace = ");
+        builder.Append(Namespace);
+        builder.Append(", TypeName = ");
+        builder.Append(TypeName);
+        builder.Append(", MethodName = ");
+        builder.Append(MethodName);
+        builder.Append(", MethodArity = ");
+        builder.Append(MethodArity);
+        builder.Append(", ParameterTypeFullNames = [");
+        builder.AppendJoin(", ", ParameterTypeFullNames);
+        builder.Append("], ReturnTypeFullName = ");
+        builder.Append(ReturnTypeFullName);
+        builder.Append(" }");
+        return builder.ToString();
+    }
 }
 
 /// <summary>
@@ -773,6 +827,20 @@ public sealed class TestMetadataProperty : IProperty
     /// Gets the metadata value.
     /// </summary>
     public string Value { get; }
+
+    /// <inheritdoc />
+    public override string ToString()
+    {
+        var builder = new StringBuilder();
+        builder.Append("TestMetadataProperty");
+        builder.Append(" { ");
+        builder.Append("Key = ");
+        builder.Append(Key);
+        builder.Append(", Value = ");
+        builder.Append(Value);
+        builder.Append(" }");
+        return builder.ToString();
+    }
 }
 
 /// <summary>
@@ -792,6 +860,18 @@ public class StandardOutputProperty : IProperty
     /// Gets the standard output.
     /// </summary>
     public string StandardOutput { get; }
+
+    /// <inheritdoc />
+    public override string ToString()
+    {
+        var builder = new StringBuilder();
+        builder.Append("StandardOutputProperty");
+        builder.Append(" { ");
+        builder.Append("StandardOutput = ");
+        builder.Append(StandardOutput);
+        builder.Append(" }");
+        return builder.ToString();
+    }
 }
 
 /// <summary>
@@ -811,12 +891,24 @@ public class StandardErrorProperty : IProperty
     /// Gets the standard error.
     /// </summary>
     public string StandardError { get; }
+
+    /// <inheritdoc />
+    public override string ToString()
+    {
+        var builder = new StringBuilder();
+        builder.Append("StandardErrorProperty");
+        builder.Append(" { ");
+        builder.Append("StandardError = ");
+        builder.Append(StandardError);
+        builder.Append(" }");
+        return builder.ToString();
+    }
 }
 
 /// <summary>
 /// Property that represents multiple artifacts/attachments to associate with a test node.
 /// </summary>
-public class FileArtifactProperty : IProperty
+public sealed class FileArtifactProperty : IProperty
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="FileArtifactProperty"/> class.
@@ -845,6 +937,22 @@ public class FileArtifactProperty : IProperty
     /// Gets the description.
     /// </summary>
     public string? Description { get; }
+
+    /// <inheritdoc />
+    public override string ToString()
+    {
+        var builder = new StringBuilder();
+        builder.Append("FileArtifactProperty");
+        builder.Append(" { ");
+        builder.Append("FileInfo = ");
+        builder.Append(FileInfo);
+        builder.Append(", DisplayName = ");
+        builder.Append(DisplayName);
+        builder.Append(", Description = ");
+        builder.Append(Description);
+        builder.Append(" }");
+        return builder.ToString();
+    }
 }
 
 internal sealed class SerializableKeyValuePairStringProperty : IProperty
@@ -858,4 +966,17 @@ internal sealed class SerializableKeyValuePairStringProperty : IProperty
     public string Key { get; }
 
     public string Value { get; }
+
+    public override string ToString()
+    {
+        var builder = new StringBuilder();
+        builder.Append("SerializableKeyValuePairStringProperty");
+        builder.Append(" { ");
+        builder.Append("Key = ");
+        builder.Append((object)Key);
+        builder.Append(", Value = ");
+        builder.Append((object)Value);
+        builder.Append(" }");
+        return builder.ToString();
+    }
 }
