@@ -58,7 +58,7 @@ internal sealed class ServerModePerCallOutputDevice : IPlatformOutputDevice, IOu
     public async Task DisplayAfterSessionEndRunAsync()
         => await LogAsync(LogLevel.Trace, PlatformResources.FinishedTestSession, padding: null).ConfigureAwait(false);
 
-    public async Task DisplayAsync(IOutputDeviceDataProducer producer, IOutputDeviceData data)
+    public async Task DisplayAsync(IOutputDeviceData data)
     {
         switch (data)
         {
@@ -155,8 +155,7 @@ internal sealed class ServerModePerCallOutputDevice : IPlatformOutputDevice, IOu
         if (processRole == TestProcessRole.TestHost)
         {
             await _policiesService.RegisterOnMaxFailedTestsCallbackAsync(
-                async (maxFailedTests, _) => await DisplayAsync(
-                    this, new TextOutputDeviceData(string.Format(CultureInfo.InvariantCulture, PlatformResources.ReachedMaxFailedTestsMessage, maxFailedTests))).ConfigureAwait(false)).ConfigureAwait(false);
+                async (maxFailedTests, _) => await DisplayAsync(new TextOutputDeviceData(string.Format(CultureInfo.InvariantCulture, PlatformResources.ReachedMaxFailedTestsMessage, maxFailedTests))).ConfigureAwait(false)).ConfigureAwait(false);
         }
     }
 }

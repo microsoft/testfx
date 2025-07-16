@@ -21,10 +21,10 @@ internal sealed class ProxyOutputDevice : IOutputDevice
 
     public async Task DisplayAsync(IOutputDeviceDataProducer producer, IOutputDeviceData data)
     {
-        await OriginalOutputDevice.DisplayAsync(producer, data).ConfigureAwait(false);
+        await OriginalOutputDevice.DisplayAsync(data).ConfigureAwait(false);
         if (_serverModeOutputDevice is not null)
         {
-            await _serverModeOutputDevice.DisplayAsync(producer, data).ConfigureAwait(false);
+            await _serverModeOutputDevice.DisplayAsync(data).ConfigureAwait(false);
         }
     }
 

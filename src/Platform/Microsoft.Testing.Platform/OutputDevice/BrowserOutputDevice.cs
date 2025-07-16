@@ -253,9 +253,8 @@ internal sealed partial class BrowserOutputDevice : IPlatformOutputDevice,
     /// <summary>
     /// Displays provided data through IConsole, which is typically System.Console.
     /// </summary>
-    /// <param name="producer">The producer that sent the data.</param>
     /// <param name="data">The data to be displayed.</param>
-    public async Task DisplayAsync(IOutputDeviceDataProducer producer, IOutputDeviceData data)
+    public async Task DisplayAsync(IOutputDeviceData data)
     {
         using (await _asyncMonitor.LockAsync(TimeoutHelper.DefaultHangTimeSpanTimeout).ConfigureAwait(false))
         {
@@ -397,8 +396,7 @@ internal sealed partial class BrowserOutputDevice : IPlatformOutputDevice,
         if (processRole == TestProcessRole.TestHost)
         {
             await _policiesService.RegisterOnMaxFailedTestsCallbackAsync(
-                async (maxFailedTests, _) => await DisplayAsync(
-                    this, new TextOutputDeviceData(string.Format(CultureInfo.InvariantCulture, PlatformResources.ReachedMaxFailedTestsMessage, maxFailedTests))).ConfigureAwait(false)).ConfigureAwait(false);
+                async (maxFailedTests, _) => await DisplayAsync(new TextOutputDeviceData(string.Format(CultureInfo.InvariantCulture, PlatformResources.ReachedMaxFailedTestsMessage, maxFailedTests))).ConfigureAwait(false)).ConfigureAwait(false);
         }
     }
 }
