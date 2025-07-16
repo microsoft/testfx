@@ -16,16 +16,6 @@ internal sealed class TerminalTestReporterOptions
     public Func<bool> ShowPassedTests { get; init; } = () => true;
 
     /// <summary>
-    /// Gets a value indicating whether we should show information about which assembly is the source of the data on screen. Turn this off when running directly from an exe to reduce noise, because the path will always be the same.
-    /// </summary>
-    public bool ShowAssembly { get; init; }
-
-    /// <summary>
-    /// Gets a value indicating whether we should show information about which assembly started or completed. Turn this off when running directly from an exe to reduce noise, because the path will always be the same.
-    /// </summary>
-    public bool ShowAssemblyStartAndComplete { get; init; }
-
-    /// <summary>
     /// Gets minimum amount of tests to run.
     /// </summary>
     public int MinimumExpectedTests { get; init; }

@@ -27,6 +27,11 @@
         <target state="translated">將方法協助工具變更為 'private'</target>
         <note />
       </trans-unit>
+      <trans-unit id="ChangeStructToClassAndAddTestClassFix">
+        <source>Change to 'class' and add '[TestClass]'</source>
+        <target state="new">Change to 'class' and add '[TestClass]'</target>
+        <note />
+      </trans-unit>
       <trans-unit id="FixAssertionArgsOrder">
         <source>Fix actual/expected arguments order</source>
         <target state="translated">修正實際/預期的引數順序</target>

@@ -70,6 +70,15 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Change to &apos;class&apos; and add &apos;[TestClass]&apos;.
+        /// </summary>
+        internal static string ChangeStructToClassAndAddTestClassFix {
+            get {
+                return ResourceManager.GetString("ChangeStructToClassAndAddTestClassFix", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Add &apos;[TestMethod]&apos;.
         /// </summary>
         internal static string AddTestMethodAttributeFix {
