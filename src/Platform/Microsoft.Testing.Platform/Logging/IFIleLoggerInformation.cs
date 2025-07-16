@@ -5,7 +5,7 @@ namespace Microsoft.Testing.Platform.Logging;
 
 internal interface IFileLoggerInformation
 {
-    bool SyncronousWrite { get; }
+    bool SynchronousWrite { get; }
 
     FileInfo LogFile { get; }
 

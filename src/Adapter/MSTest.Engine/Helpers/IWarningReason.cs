@@ -3,6 +3,4 @@
 
 namespace Microsoft.Testing.Framework;
 
-internal interface IWarningReason : IReason
-{
-}
+internal interface IWarningReason : IReason;
