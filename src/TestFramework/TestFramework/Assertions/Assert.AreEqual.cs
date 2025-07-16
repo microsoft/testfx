@@ -24,7 +24,7 @@ public sealed partial class Assert
         public AssertAreEqualInterpolatedStringHandler(int literalLength, int formattedCount, TArgument? expected, TArgument? actual, out bool shouldAppend)
         {
             _expected = expected!;
-            shouldAppend = AreEqualFailing(expected, actual);
+            shouldAppend = AreEqualFailing(expected, actual, null);
             if (shouldAppend)
             {
                 _builder = new StringBuilder(literalLength + formattedCount);
@@ -353,49 +353,8 @@ public sealed partial class Assert
     }
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 
-    /// <summary>
-    /// Tests whether the specified values are equal and throws an exception
-    /// if the two values are not equal.
-    /// The equality is computed using the default <see cref="EqualityComparer{T}"/>.
-    /// </summary>
-    /// <typeparam name="T">
-    /// The type of values to compare.
-    /// </typeparam>
-    /// <param name="expected">
-    /// The first value to compare. This is the value the tests expects.
-    /// </param>
-    /// <param name="actual">
-    /// The second value to compare. This is the value produced by the code under test.
-    /// </param>
-    /// <exception cref="AssertFailedException">
-    /// Thrown if <paramref name="expected"/> is not equal to <paramref name="actual"/>.
-    /// </exception>
-    public static void AreEqual<T>(T? expected, T? actual)
-        => AreEqual(expected, actual, null, string.Empty);
-
-    /// <summary>
-    /// Tests whether the specified values are equal and throws an exception
-    /// if the two values are not equal.
-    /// The equality is computed using the default <see cref="EqualityComparer{T}"/>.
-    /// </summary>
-    /// <typeparam name="T">
-    /// The type of values to compare.
-    /// </typeparam>
-    /// <param name="expected">
-    /// The first value to compare. This is the value the tests expects.
-    /// </param>
-    /// <param name="actual">
-    /// The second value to compare. This is the value produced by the code under test.
-    /// </param>
-    /// <param name="comparer">
-    /// The <see cref="IEqualityComparer{T}"/> implementation to use when comparing keys,
-    /// or null to use the default <see cref="EqualityComparer{T}"/>.
-    /// </param>
-    /// <exception cref="AssertFailedException">
-    /// Thrown if <paramref name="expected"/> is not equal to <paramref name="actual"/>.
-    /// </exception>
-    public static void AreEqual<T>(T? expected, T? actual, IEqualityComparer<T>? comparer)
-        => AreEqual(expected, actual, comparer, string.Empty);
+#pragma warning disable RS0026 // Do not add multiple public overloads with optional parameters
+#pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
 
     /// <summary>
     /// Tests whether the specified values are equal and throws an exception
@@ -420,8 +379,8 @@ public sealed partial class Assert
     /// Thrown if <paramref name="expected"/> is not equal to
     /// <paramref name="actual"/>.
     /// </exception>
-    public static void AreEqual<T>(T? expected, T? actual, string? message)
-        => AreEqual(expected, actual, null, message);
+    public static void AreEqual<T>(T? expected, T? actual, string message = "")
+        => AreEqual(expected, actual, EqualityComparer<T>.Default, message);
 
     /// <summary>
     /// Tests whether the specified values are equal and throws an exception
@@ -484,7 +443,7 @@ public sealed partial class Assert
     /// Thrown if <paramref name="expected"/> is not equal to
     /// <paramref name="actual"/>.
     /// </exception>
-    public static void AreEqual<T>(T? expected, T? actual, IEqualityComparer<T>? comparer, string? message)
+    public static void AreEqual<T>(T? expected, T? actual, IEqualityComparer<T> comparer, string message = "")
     {
         if (!AreEqualFailing(expected, actual, comparer))
         {
@@ -494,9 +453,6 @@ public sealed partial class Assert
         string userMessage = BuildUserMessage(message);
         ThrowAssertAreEqualFailed(expected, actual, userMessage);
     }
-
-    private static bool AreEqualFailing<T>(T? expected, T? actual)
-        => AreEqualFailing(expected, actual, null);
 
     private static bool AreEqualFailing<T>(T? expected, T? actual, IEqualityComparer<T>? comparer)
         => !(comparer ?? EqualityComparer<T>.Default).Equals(expected!, actual!);
@@ -621,52 +577,6 @@ public sealed partial class Assert
     /// <param name="actual">
     /// The second value to compare. This is the value produced by the code under test.
     /// </param>
-    /// <exception cref="AssertFailedException">
-    /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
-    /// </exception>
-    public static void AreNotEqual<T>(T? notExpected, T? actual)
-        => AreNotEqual(notExpected, actual, null, string.Empty);
-
-    /// <summary>
-    /// Tests whether the specified values are unequal and throws an exception
-    /// if the two values are equal.
-    /// The equality is computed using the provided <paramref name="comparer"/> parameter.
-    /// </summary>
-    /// <typeparam name="T">
-    /// The type of values to compare.
-    /// </typeparam>
-    /// <param name="notExpected">
-    /// The first value to compare. This is the value the test expects not
-    /// to match <paramref name="actual"/>.
-    /// </param>
-    /// <param name="actual">
-    /// The second value to compare. This is the value produced by the code under test.
-    /// </param>
-    /// <param name="comparer">
-    /// The <see cref="IEqualityComparer{T}"/> implementation to use when comparing keys,
-    /// or null to use the default <see cref="EqualityComparer{T}"/>.
-    /// </param>
-    /// <exception cref="AssertFailedException">
-    /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
-    /// </exception>
-    public static void AreNotEqual<T>(T? notExpected, T? actual, IEqualityComparer<T>? comparer)
-        => AreNotEqual(notExpected, actual, comparer, string.Empty);
-
-    /// <summary>
-    /// Tests whether the specified values are unequal and throws an exception
-    /// if the two values are equal.
-    /// The equality is computed using the default <see cref="EqualityComparer{T}"/>.
-    /// </summary>
-    /// <typeparam name="T">
-    /// The type of values to compare.
-    /// </typeparam>
-    /// <param name="notExpected">
-    /// The first value to compare. This is the value the test expects not
-    /// to match <paramref name="actual"/>.
-    /// </param>
-    /// <param name="actual">
-    /// The second value to compare. This is the value produced by the code under test.
-    /// </param>
     /// <param name="message">
     /// The message to include in the exception when <paramref name="actual"/>
     /// is equal to <paramref name="notExpected"/>. The message is shown in
@@ -675,8 +585,8 @@ public sealed partial class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
     /// </exception>
-    public static void AreNotEqual<T>(T? notExpected, T? actual, string? message)
-        => AreNotEqual(notExpected, actual, null, message);
+    public static void AreNotEqual<T>(T? notExpected, T? actual, string message = "")
+        => AreNotEqual(notExpected, actual, EqualityComparer<T>.Default, message);
 
     /// <inheritdoc cref="AreNotEqual{T}(T, T, string?)" />
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
@@ -686,7 +596,7 @@ public sealed partial class Assert
 
     /// <inheritdoc cref="AreNotEqual{T}(T, T, string?)" />
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
-    public static void AreNotEqual<T>(T? notExpected, T? actual, IEqualityComparer<T>? comparer, [InterpolatedStringHandlerArgument(nameof(notExpected), nameof(actual), nameof(comparer))] ref AssertAreNotEqualInterpolatedStringHandler<T> message)
+    public static void AreNotEqual<T>(T? notExpected, T? actual, IEqualityComparer<T> comparer, [InterpolatedStringHandlerArgument(nameof(notExpected), nameof(actual), nameof(comparer))] ref AssertAreNotEqualInterpolatedStringHandler<T> message)
 #pragma warning restore IDE0060 // Remove unused parameter
         => message.ComputeAssertion();
 
@@ -717,7 +627,7 @@ public sealed partial class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
     /// </exception>
-    public static void AreNotEqual<T>(T? notExpected, T? actual, IEqualityComparer<T>? comparer, string? message)
+    public static void AreNotEqual<T>(T? notExpected, T? actual, IEqualityComparer<T> comparer, string message = "")
     {
         if (!AreNotEqualFailing(notExpected, actual, comparer))
         {
@@ -727,28 +637,6 @@ public sealed partial class Assert
         string userMessage = BuildUserMessage(message);
         ThrowAssertAreNotEqualFailed(notExpected, actual, userMessage);
     }
-
-    /// <summary>
-    /// Tests whether the specified floats are equal and throws an exception
-    /// if they are not equal.
-    /// </summary>
-    /// <param name="expected">
-    /// The first float to compare. This is the float the tests expects.
-    /// </param>
-    /// <param name="actual">
-    /// The second float to compare. This is the float produced by the code under test.
-    /// </param>
-    /// <param name="delta">
-    /// The required accuracy. An exception will be thrown only if
-    /// <paramref name="actual"/> is different than <paramref name="expected"/>
-    /// by more than <paramref name="delta"/>.
-    /// </param>
-    /// <exception cref="AssertFailedException">
-    /// Thrown if <paramref name="expected"/> is not equal to
-    /// <paramref name="actual"/>.
-    /// </exception>
-    public static void AreEqual(float expected, float actual, float delta)
-        => AreEqual(expected, actual, delta, string.Empty);
 
     /// <inheritdoc cref="AreEqual(float, float, float, string?)"/>
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
@@ -780,7 +668,7 @@ public sealed partial class Assert
     /// Thrown if <paramref name="expected"/> is not equal to
     /// <paramref name="actual"/>.
     /// </exception>
-    public static void AreEqual(float expected, float actual, float delta, string? message)
+    public static void AreEqual(float expected, float actual, float delta, string message = "")
     {
         if (AreEqualFailing(expected, actual, delta))
         {
@@ -788,28 +676,6 @@ public sealed partial class Assert
             ThrowAssertAreEqualFailed(expected, actual, delta, userMessage);
         }
     }
-
-    /// <summary>
-    /// Tests whether the specified floats are unequal and throws an exception
-    /// if they are equal.
-    /// </summary>
-    /// <param name="notExpected">
-    /// The first float to compare. This is the float the test expects not to
-    /// match <paramref name="actual"/>.
-    /// </param>
-    /// <param name="actual">
-    /// The second float to compare. This is the float produced by the code under test.
-    /// </param>
-    /// <param name="delta">
-    /// The required accuracy. An exception will be thrown only if
-    /// <paramref name="actual"/> is different than <paramref name="notExpected"/>
-    /// by at most <paramref name="delta"/>.
-    /// </param>
-    /// <exception cref="AssertFailedException">
-    /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
-    /// </exception>
-    public static void AreNotEqual(float notExpected, float actual, float delta)
-        => AreNotEqual(notExpected, actual, delta, string.Empty);
 
     /// <inheritdoc cref="AreNotEqual(float, float, float, string?)" />
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
@@ -841,7 +707,7 @@ public sealed partial class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
     /// </exception>
-    public static void AreNotEqual(float notExpected, float actual, float delta, string? message)
+    public static void AreNotEqual(float notExpected, float actual, float delta, string message = "")
     {
         if (AreNotEqualFailing(notExpected, actual, delta))
         {
@@ -870,28 +736,6 @@ public sealed partial class Assert
         // And in this case we will correctly be returning false, because NaN <= anything is always false.
         return Math.Abs(notExpected - actual) <= delta;
     }
-
-    /// <summary>
-    /// Tests whether the specified decimals are equal and throws an exception
-    /// if they are not equal.
-    /// </summary>
-    /// <param name="expected">
-    /// The first decimal to compare. This is the decimal the tests expects.
-    /// </param>
-    /// <param name="actual">
-    /// The second decimal to compare. This is the decimal produced by the code under test.
-    /// </param>
-    /// <param name="delta">
-    /// The required accuracy. An exception will be thrown only if
-    /// <paramref name="actual"/> is different than <paramref name="expected"/>
-    /// by more than <paramref name="delta"/>.
-    /// </param>
-    /// <exception cref="AssertFailedException">
-    /// Thrown if <paramref name="expected"/> is not equal to
-    /// <paramref name="actual"/>.
-    /// </exception>
-    public static void AreEqual(decimal expected, decimal actual, decimal delta)
-        => AreEqual(expected, actual, delta, string.Empty);
 
     /// <inheritdoc cref="AreEqual(decimal, decimal, decimal, string?)" />
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
@@ -923,7 +767,7 @@ public sealed partial class Assert
     /// Thrown if <paramref name="expected"/> is not equal to
     /// <paramref name="actual"/>.
     /// </exception>
-    public static void AreEqual(decimal expected, decimal actual, decimal delta, string? message)
+    public static void AreEqual(decimal expected, decimal actual, decimal delta, string message = "")
     {
         if (AreEqualFailing(expected, actual, delta))
         {
@@ -931,28 +775,6 @@ public sealed partial class Assert
             ThrowAssertAreEqualFailed(expected, actual, delta, userMessage);
         }
     }
-
-    /// <summary>
-    /// Tests whether the specified decimals are unequal and throws an exception
-    /// if they are equal.
-    /// </summary>
-    /// <param name="notExpected">
-    /// The first decimal to compare. This is the decimal the test expects not to
-    /// match <paramref name="actual"/>.
-    /// </param>
-    /// <param name="actual">
-    /// The second decimal to compare. This is the decimal produced by the code under test.
-    /// </param>
-    /// <param name="delta">
-    /// The required accuracy. An exception will be thrown only if
-    /// <paramref name="actual"/> is different than <paramref name="notExpected"/>
-    /// by at most <paramref name="delta"/>.
-    /// </param>
-    /// <exception cref="AssertFailedException">
-    /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
-    /// </exception>
-    public static void AreNotEqual(decimal notExpected, decimal actual, decimal delta)
-        => AreNotEqual(notExpected, actual, delta, string.Empty);
 
     /// <inheritdoc cref="AreNotEqual(decimal, decimal, decimal, string?)" />
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
@@ -984,7 +806,7 @@ public sealed partial class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
     /// </exception>
-    public static void AreNotEqual(decimal notExpected, decimal actual, decimal delta, string? message)
+    public static void AreNotEqual(decimal notExpected, decimal actual, decimal delta, string message = "")
     {
         if (AreNotEqualFailing(notExpected, actual, delta))
         {
@@ -995,28 +817,6 @@ public sealed partial class Assert
 
     private static bool AreNotEqualFailing(decimal notExpected, decimal actual, decimal delta)
         => Math.Abs(notExpected - actual) <= delta;
-
-    /// <summary>
-    /// Tests whether the specified longs are equal and throws an exception
-    /// if they are not equal.
-    /// </summary>
-    /// <param name="expected">
-    /// The first long to compare. This is the long the tests expects.
-    /// </param>
-    /// <param name="actual">
-    /// The second long to compare. This is the long produced by the code under test.
-    /// </param>
-    /// <param name="delta">
-    /// The required accuracy. An exception will be thrown only if
-    /// <paramref name="actual"/> is different than <paramref name="expected"/>
-    /// by more than <paramref name="delta"/>.
-    /// </param>
-    /// <exception cref="AssertFailedException">
-    /// Thrown if <paramref name="expected"/> is not equal to
-    /// <paramref name="actual"/>.
-    /// </exception>
-    public static void AreEqual(long expected, long actual, long delta)
-        => AreEqual(expected, actual, delta, string.Empty);
 
     /// <inheritdoc cref="AreEqual(long, long, long, string?)" />
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
@@ -1048,7 +848,7 @@ public sealed partial class Assert
     /// Thrown if <paramref name="expected"/> is not equal to
     /// <paramref name="actual"/>.
     /// </exception>
-    public static void AreEqual(long expected, long actual, long delta, string? message)
+    public static void AreEqual(long expected, long actual, long delta, string message = "")
     {
         if (AreEqualFailing(expected, actual, delta))
         {
@@ -1056,28 +856,6 @@ public sealed partial class Assert
             ThrowAssertAreEqualFailed(expected, actual, delta, userMessage);
         }
     }
-
-    /// <summary>
-    /// Tests whether the specified longs are unequal and throws an exception
-    /// if they are equal.
-    /// </summary>
-    /// <param name="notExpected">
-    /// The first long to compare. This is the long the test expects not to
-    /// match <paramref name="actual"/>.
-    /// </param>
-    /// <param name="actual">
-    /// The second long to compare. This is the long produced by the code under test.
-    /// </param>
-    /// <param name="delta">
-    /// The required accuracy. An exception will be thrown only if
-    /// <paramref name="actual"/> is different than <paramref name="notExpected"/>
-    /// by at most <paramref name="delta"/>.
-    /// </param>
-    /// <exception cref="AssertFailedException">
-    /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
-    /// </exception>
-    public static void AreNotEqual(long notExpected, long actual, long delta)
-        => AreNotEqual(notExpected, actual, delta, string.Empty);
 
     /// <inheritdoc cref="AreNotEqual(long, long, long, string?)" />
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
@@ -1109,7 +887,7 @@ public sealed partial class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
     /// </exception>
-    public static void AreNotEqual(long notExpected, long actual, long delta, string? message)
+    public static void AreNotEqual(long notExpected, long actual, long delta, string message = "")
     {
         if (AreNotEqualFailing(notExpected, actual, delta))
         {
@@ -1120,28 +898,6 @@ public sealed partial class Assert
 
     private static bool AreNotEqualFailing(long notExpected, long actual, long delta)
         => Math.Abs(notExpected - actual) <= delta;
-
-    /// <summary>
-    /// Tests whether the specified doubles are equal and throws an exception
-    /// if they are not equal.
-    /// </summary>
-    /// <param name="expected">
-    /// The first double to compare. This is the double the tests expects.
-    /// </param>
-    /// <param name="actual">
-    /// The second double to compare. This is the double produced by the code under test.
-    /// </param>
-    /// <param name="delta">
-    /// The required accuracy. An exception will be thrown only if
-    /// <paramref name="actual"/> is different than <paramref name="expected"/>
-    /// by more than <paramref name="delta"/>.
-    /// </param>
-    /// <exception cref="AssertFailedException">
-    /// Thrown if <paramref name="expected"/> is not equal to
-    /// <paramref name="actual"/>.
-    /// </exception>
-    public static void AreEqual(double expected, double actual, double delta)
-        => AreEqual(expected, actual, delta, string.Empty);
 
     /// <inheritdoc cref="AreEqual(double, double, double, string?)" />
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
@@ -1172,7 +928,7 @@ public sealed partial class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="expected"/> is not equal to <paramref name="actual"/>.
     /// </exception>
-    public static void AreEqual(double expected, double actual, double delta, string? message)
+    public static void AreEqual(double expected, double actual, double delta, string message = "")
     {
         if (AreEqualFailing(expected, actual, delta))
         {
@@ -1180,28 +936,6 @@ public sealed partial class Assert
             ThrowAssertAreEqualFailed(expected, actual, delta, userMessage);
         }
     }
-
-    /// <summary>
-    /// Tests whether the specified doubles are unequal and throws an exception
-    /// if they are equal.
-    /// </summary>
-    /// <param name="notExpected">
-    /// The first double to compare. This is the double the test expects not to
-    /// match <paramref name="actual"/>.
-    /// </param>
-    /// <param name="actual">
-    /// The second double to compare. This is the double produced by the code under test.
-    /// </param>
-    /// <param name="delta">
-    /// The required accuracy. An exception will be thrown only if
-    /// <paramref name="actual"/> is different than <paramref name="notExpected"/>
-    /// by at most <paramref name="delta"/>.
-    /// </param>
-    /// <exception cref="AssertFailedException">
-    /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
-    /// </exception>
-    public static void AreNotEqual(double notExpected, double actual, double delta)
-        => AreNotEqual(notExpected, actual, delta, string.Empty);
 
     /// <inheritdoc cref="AreNotEqual(double, double, double, string?)" />
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
@@ -1233,7 +967,7 @@ public sealed partial class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
     /// </exception>
-    public static void AreNotEqual(double notExpected, double actual, double delta, string? message)
+    public static void AreNotEqual(double notExpected, double actual, double delta, string message = "")
     {
         if (AreNotEqualFailing(notExpected, actual, delta))
         {
@@ -1291,26 +1025,6 @@ public sealed partial class Assert
     /// A Boolean indicating a case-sensitive or insensitive comparison. (true
     /// indicates a case-insensitive comparison.)
     /// </param>
-    /// <exception cref="AssertFailedException">
-    /// Thrown if <paramref name="expected"/> is not equal to <paramref name="actual"/>.
-    /// </exception>
-    public static void AreEqual(string? expected, string? actual, bool ignoreCase)
-        => AreEqual(expected, actual, ignoreCase, CultureInfo.InvariantCulture, string.Empty);
-
-    /// <summary>
-    /// Tests whether the specified strings are equal and throws an exception
-    /// if they are not equal. The invariant culture is used for the comparison.
-    /// </summary>
-    /// <param name="expected">
-    /// The first string to compare. This is the string the tests expects.
-    /// </param>
-    /// <param name="actual">
-    /// The second string to compare. This is the string produced by the code under test.
-    /// </param>
-    /// <param name="ignoreCase">
-    /// A Boolean indicating a case-sensitive or insensitive comparison. (true
-    /// indicates a case-insensitive comparison.)
-    /// </param>
     /// <param name="message">
     /// The message to include in the exception when <paramref name="actual"/>
     /// is not equal to <paramref name="expected"/>. The message is shown in
@@ -1319,7 +1033,7 @@ public sealed partial class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="expected"/> is not equal to <paramref name="actual"/>.
     /// </exception>
-    public static void AreEqual(string? expected, string? actual, bool ignoreCase, string? message)
+    public static void AreEqual(string? expected, string? actual, bool ignoreCase, string message = "")
         => AreEqual(expected, actual, ignoreCase, CultureInfo.InvariantCulture, message);
 
     /// <inheritdoc cref="AreEqual(string?, string?, bool, string?)" />
@@ -1327,29 +1041,6 @@ public sealed partial class Assert
     public static void AreEqual(string? expected, string? actual, bool ignoreCase, [InterpolatedStringHandlerArgument(nameof(expected), nameof(actual), nameof(ignoreCase))] ref AssertNonGenericAreEqualInterpolatedStringHandler message)
 #pragma warning restore IDE0060 // Remove unused parameter
         => message.ComputeAssertion();
-
-    /// <summary>
-    /// Tests whether the specified strings are equal and throws an exception
-    /// if they are not equal.
-    /// </summary>
-    /// <param name="expected">
-    /// The first string to compare. This is the string the tests expects.
-    /// </param>
-    /// <param name="actual">
-    /// The second string to compare. This is the string produced by the code under test.
-    /// </param>
-    /// <param name="ignoreCase">
-    /// A Boolean indicating a case-sensitive or insensitive comparison. (true
-    /// indicates a case-insensitive comparison.)
-    /// </param>
-    /// <param name="culture">
-    /// A CultureInfo object that supplies culture-specific comparison information. If culture is null, the current culture is used.
-    /// </param>
-    /// <exception cref="AssertFailedException">
-    /// Thrown if <paramref name="expected"/> is not equal to <paramref name="actual"/>.
-    /// </exception>
-    public static void AreEqual(string? expected, string? actual, bool ignoreCase, CultureInfo culture)
-        => AreEqual(expected, actual, ignoreCase, culture, string.Empty);
 
     /// <inheritdoc cref="AreEqual(string?, string?, bool, CultureInfo, string?)" />
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
@@ -1386,7 +1077,7 @@ public sealed partial class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="expected"/> is not equal to <paramref name="actual"/>.
     /// </exception>
-    public static void AreEqual(string? expected, string? actual, bool ignoreCase, CultureInfo culture, string? message)
+    public static void AreEqual(string? expected, string? actual, bool ignoreCase, CultureInfo culture, string message = "")
     {
         CheckParameterNotNull(culture, "Assert.AreEqual", "culture", string.Empty);
         if (!AreEqualFailing(expected, actual, ignoreCase, culture))
@@ -1413,27 +1104,6 @@ public sealed partial class Assert
     /// A Boolean indicating a case-sensitive or insensitive comparison. (true
     /// indicates a case-insensitive comparison.)
     /// </param>
-    /// <exception cref="AssertFailedException">
-    /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
-    /// </exception>
-    public static void AreNotEqual(string? notExpected, string? actual, bool ignoreCase)
-        => AreNotEqual(notExpected, actual, ignoreCase, CultureInfo.InvariantCulture, string.Empty);
-
-    /// <summary>
-    /// Tests whether the specified strings are unequal and throws an exception
-    /// if they are equal. The invariant culture is used for the comparison.
-    /// </summary>
-    /// <param name="notExpected">
-    /// The first string to compare. This is the string the test expects not to
-    /// match <paramref name="actual"/>.
-    /// </param>
-    /// <param name="actual">
-    /// The second string to compare. This is the string produced by the code under test.
-    /// </param>
-    /// <param name="ignoreCase">
-    /// A Boolean indicating a case-sensitive or insensitive comparison. (true
-    /// indicates a case-insensitive comparison.)
-    /// </param>
     /// <param name="message">
     /// The message to include in the exception when <paramref name="actual"/>
     /// is equal to <paramref name="notExpected"/>. The message is shown in
@@ -1442,7 +1112,7 @@ public sealed partial class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
     /// </exception>
-    public static void AreNotEqual(string? notExpected, string? actual, bool ignoreCase, string? message)
+    public static void AreNotEqual(string? notExpected, string? actual, bool ignoreCase, string message = "")
         => AreNotEqual(notExpected, actual, ignoreCase, CultureInfo.InvariantCulture, message);
 
     /// <inheritdoc cref="AreNotEqual(string?, string?, bool, string?)" />
@@ -1450,30 +1120,6 @@ public sealed partial class Assert
     public static void AreNotEqual(string? notExpected, string? actual, bool ignoreCase, [InterpolatedStringHandlerArgument(nameof(notExpected), nameof(actual), nameof(ignoreCase))] ref AssertNonGenericAreNotEqualInterpolatedStringHandler message)
 #pragma warning restore IDE0060 // Remove unused parameter
         => message.ComputeAssertion();
-
-    /// <summary>
-    /// Tests whether the specified strings are unequal and throws an exception
-    /// if they are equal.
-    /// </summary>
-    /// <param name="notExpected">
-    /// The first string to compare. This is the string the test expects not to
-    /// match <paramref name="actual"/>.
-    /// </param>
-    /// <param name="actual">
-    /// The second string to compare. This is the string produced by the code under test.
-    /// </param>
-    /// <param name="ignoreCase">
-    /// A Boolean indicating a case-sensitive or insensitive comparison. (true
-    /// indicates a case-insensitive comparison.)
-    /// </param>
-    /// <param name="culture">
-    /// A CultureInfo object that supplies culture-specific comparison information. If culture is null, the current culture is used.
-    /// </param>
-    /// <exception cref="AssertFailedException">
-    /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
-    /// </exception>
-    public static void AreNotEqual(string? notExpected, string? actual, bool ignoreCase, CultureInfo culture)
-        => AreNotEqual(notExpected, actual, ignoreCase, culture, string.Empty);
 
     /// <inheritdoc cref="AreNotEqual(string?, string?, bool, CultureInfo, string?)" />
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
@@ -1511,7 +1157,7 @@ public sealed partial class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
     /// </exception>
-    public static void AreNotEqual(string? notExpected, string? actual, bool ignoreCase, CultureInfo culture, string? message)
+    public static void AreNotEqual(string? notExpected, string? actual, bool ignoreCase, CultureInfo culture, string message = "")
     {
         CheckParameterNotNull(culture, "Assert.AreNotEqual", "culture", string.Empty);
         if (!AreNotEqualFailing(notExpected, actual, ignoreCase, culture))

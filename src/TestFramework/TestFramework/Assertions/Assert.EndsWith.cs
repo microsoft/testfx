@@ -4,11 +4,10 @@
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 #pragma warning disable RS0026 // Do not add multiple public overloads with optional parameters
+#pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
 
 public sealed partial class Assert
 {
-    #region EndsWith
-
     /// <summary>
     /// Tests whether the specified string ends with the specified substring
     /// and throws an exception if the test string does not end with the
@@ -27,7 +26,7 @@ public sealed partial class Assert
     /// </param>
     /// <exception cref="AssertFailedException">
     /// <paramref name="value"/> is null, or <paramref name="substring"/> is null,
-    /// or <paramref name="value"/> does not end with <paramref name="substring"/>.
+    /// or <paramref name="value"/> does not start with <paramref name="substring"/>.
     /// </exception>
     public static void EndsWith([NotNull] string? substring, [NotNull] string? value, string message = "")
         => EndsWith(substring, value, StringComparison.Ordinal, message);
@@ -66,10 +65,6 @@ public sealed partial class Assert
             ThrowAssertFailed("Assert.EndsWith", finalMessage);
         }
     }
-
-    #endregion // EndsWith
-
-    #region DoesNotEndWith
 
     /// <summary>
     /// Tests whether the specified string does not end with the specified substring
@@ -128,6 +123,4 @@ public sealed partial class Assert
             ThrowAssertFailed("Assert.DoesNotEndWith", finalMessage);
         }
     }
-
-    #endregion // DoesNotEndWith
 }

@@ -163,13 +163,10 @@ public sealed partial class Assert
     }
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 
-    /// <summary>
-    /// Tests that the collection is not empty.
-    /// </summary>
-    /// <typeparam name="T">The type of the items of the collection.</typeparam>
-    /// <param name="collection">The collection.</param>
-    public static void IsNotEmpty<T>(IEnumerable<T> collection)
-        => IsNotEmpty(collection, string.Empty);
+#pragma warning disable RS0026 // Do not add multiple public overloads with optional parameters
+#pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
+
+    #region IsNotEmpty
 
     /// <summary>
     /// Tests that the collection is not empty.
@@ -188,7 +185,7 @@ public sealed partial class Assert
     /// <typeparam name="T">The type of the collection items.</typeparam>
     /// <param name="collection">The collection.</param>
     /// <param name="message">The message format to display when the assertion fails.</param>
-    public static void IsNotEmpty<T>(IEnumerable<T> collection, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message)
+    public static void IsNotEmpty<T>(IEnumerable<T> collection, string message = "")
     {
         if (collection.Any())
         {
@@ -199,14 +196,9 @@ public sealed partial class Assert
         ThrowAssertIsNotEmptyFailed(userMessage);
     }
 
-    /// <summary>
-    /// Tests whether the collection has the expected count/length.
-    /// </summary>
-    /// <typeparam name="T">The type of the collection items.</typeparam>
-    /// <param name="expected">The expected count.</param>
-    /// <param name="collection">The collection.</param>
-    public static void HasCount<T>(int expected, IEnumerable<T> collection)
-        => HasCount(expected, collection, string.Empty);
+    #endregion // IsNotEmpty
+
+    #region HasCount
 
     /// <summary>
     /// Tests whether the collection has the expected count/length.
@@ -226,17 +218,13 @@ public sealed partial class Assert
     /// <typeparam name="T">The type of the collection items.</typeparam>
     /// <param name="expected">The expected count.</param>
     /// <param name="collection">The collection.</param>
-    /// <param name="message">The message format to display when the assertion fails.</param>
-    public static void HasCount<T>(int expected, IEnumerable<T> collection, string? message)
+    /// <param name="message">The message to display when the assertion fails.</param>
+    public static void HasCount<T>(int expected, IEnumerable<T> collection, string message = "")
         => HasCount("HasCount", expected, collection, message);
 
-    /// <summary>
-    /// Tests that the collection is empty.
-    /// </summary>
-    /// <typeparam name="T">The type of the collection items.</typeparam>
-    /// <param name="collection">The collection.</param>
-    public static void IsEmpty<T>(IEnumerable<T> collection)
-        => IsEmpty(collection, string.Empty);
+    #endregion // HasCount
+
+    #region IsEmpty
 
     /// <summary>
     /// Tests that the collection is empty.
@@ -254,11 +242,13 @@ public sealed partial class Assert
     /// </summary>
     /// <typeparam name="T">The type of the collection items.</typeparam>
     /// <param name="collection">The collection.</param>
-    /// <param name="message">The message format to display when the assertion fails.</param>
-    public static void IsEmpty<T>(IEnumerable<T> collection, string? message)
+    /// <param name="message">The message to display when the assertion fails.</param>
+    public static void IsEmpty<T>(IEnumerable<T> collection, string message = "")
         => HasCount("IsEmpty", 0, collection, message);
 
-    private static void HasCount<T>(string assertionName, int expected, IEnumerable<T> collection, string? message)
+    #endregion // IsEmpty
+
+    private static void HasCount<T>(string assertionName, int expected, IEnumerable<T> collection, string message)
     {
         int actualCount = collection.Count();
         if (actualCount == expected)

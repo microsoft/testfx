@@ -4,11 +4,10 @@
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 #pragma warning disable RS0026 // Do not add multiple public overloads with optional parameters
+#pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
 
 public sealed partial class Assert
 {
-    #region StartsWith
-
     /// <summary>
     /// Tests whether the specified string begins with the specified substring
     /// and throws an exception if the test string does not start with the
@@ -67,10 +66,6 @@ public sealed partial class Assert
         }
     }
 
-    #endregion // StartsWith
-
-    #region DoesNotStartWith
-
     /// <summary>
     /// Tests whether the specified string does not begin with the specified substring
     /// and throws an exception if the test string does start with the substring.
@@ -126,6 +121,4 @@ public sealed partial class Assert
             ThrowAssertFailed("Assert.DoesNotStartWith", finalMessage);
         }
     }
-
-    #endregion // DoesNotStartWith
 }

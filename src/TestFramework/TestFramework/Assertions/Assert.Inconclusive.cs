@@ -13,16 +13,6 @@ public sealed partial class Assert
     /// <summary>
     /// Throws an AssertInconclusiveException.
     /// </summary>
-    /// <exception cref="AssertInconclusiveException">
-    /// Always thrown.
-    /// </exception>
-    [DoesNotReturn]
-    public static void Inconclusive()
-        => Inconclusive(string.Empty);
-
-    /// <summary>
-    /// Throws an AssertInconclusiveException.
-    /// </summary>
     /// <param name="message">
     /// The message to include in the exception. The message is shown in
     /// test results.
@@ -31,7 +21,7 @@ public sealed partial class Assert
     /// Always thrown.
     /// </exception>
     [DoesNotReturn]
-    public static void Inconclusive(string? message)
+    public static void Inconclusive(string message = "")
     {
         string userMessage = BuildUserMessage(message);
         throw new AssertInconclusiveException(
