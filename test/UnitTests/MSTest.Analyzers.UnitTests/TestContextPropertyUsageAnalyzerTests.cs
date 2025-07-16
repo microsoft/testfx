@@ -1,9 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.Testing;
-
 using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
     MSTest.Analyzers.TestContextPropertyUsageAnalyzer,
     Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider>;
@@ -11,7 +8,7 @@ using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
 namespace MSTest.Analyzers.Test;
 
 [TestClass]
-public sealed class TestContextPropertyUsageAnalyzerTests(TestContext testContext)
+public sealed class TestContextPropertyUsageAnalyzerTests
 {
     [TestMethod]
     public async Task WhenTestContextPropertyAccessedInAssemblyInitialize_Diagnostic()
@@ -205,8 +202,8 @@ public sealed class TestContextPropertyUsageAnalyzerTests(TestContext testContex
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+#if NETFRAMEWORK
     [TestMethod]
-    [Ignore("DataRow and DataConnection are not available in .NET Core, test needs to be fixed")]
     public async Task WhenDataRowAndDataConnectionAccessedInNetFramework_Diagnostic()
     {
         string code = """
@@ -218,32 +215,15 @@ public sealed class TestContextPropertyUsageAnalyzerTests(TestContext testContex
                 [AssemblyInitialize]
                 public static void AssemblyInit(TestContext testContext)
                 {
-                    _ = testContext.DataRow;
-                    _ = testContext.DataConnection;
+                    _ = [|testContext.DataRow|];
+                    _ = [|testContext.DataConnection|];
                 }
             }
             """;
 
-        var test = new VerifyCS.Test
-        {
-            ReferenceAssemblies = ReferenceAssemblies.NetFramework.Net462.Default,
-            TestState =
-            {
-                Sources = { code, },
-                ExpectedDiagnostics =
-                {
-                    VerifyCS.Diagnostic(TestContextPropertyUsageAnalyzer.Rule)
-                        .WithLocation(7, 30) // Location of DataRow
-                        .WithArguments("Microsoft.VisualStudio.TestTools.UnitTesting.TestContext", "DataRow"),
-                    VerifyCS.Diagnostic(TestContextPropertyUsageAnalyzer.Rule)
-                        .WithLocation(8, 30) // Location of DataConnection
-                        .WithArguments("Microsoft.VisualStudio.TestTools.UnitTesting.TestContext", "DataConnection"),
-                },
-            },
-        };
-
-        await test.RunAsync(testContext.CancellationTokenSource.Token);
+        await VerifyCS.VerifyAnalyzerAsync(code);
     }
+#endif
 
     [TestMethod]
     public async Task WhenAllowedPropertiesAccessedInFixtureMethods_NoDiagnostic()
