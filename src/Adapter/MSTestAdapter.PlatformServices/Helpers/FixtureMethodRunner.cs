@@ -194,7 +194,11 @@ internal static class FixtureMethodRunner
                 realException = ex;
                 tcs.SetException(ex);
             }
-        }) { IsBackground = true, Name = "MSTest Fixture Execution Thread", };
+        })
+        {
+            IsBackground = true,
+            Name = "MSTest Fixture Execution Thread",
+        };
 
         executionThread.SetApartmentState(ApartmentState.STA);
         executionThread.Start();
