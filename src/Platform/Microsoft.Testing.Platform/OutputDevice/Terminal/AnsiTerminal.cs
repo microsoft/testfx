@@ -43,10 +43,10 @@ internal sealed class AnsiTerminal : ITerminal
     private bool _isBatching;
     private AnsiTerminalTestProgressFrame _currentFrame = new(0, 0);
 
-    public AnsiTerminal(IConsole console, string? baseDirectory)
+    public AnsiTerminal(IConsole console)
     {
         _console = console;
-        _baseDirectory = baseDirectory ?? Directory.GetCurrentDirectory();
+        _baseDirectory = Directory.GetCurrentDirectory();
 
         // Output ansi code to get spinner on top of a terminal, to indicate in-progress task.
         // https://github.com/dotnet/msbuild/issues/8958: iTerm2 treats ;9 code to post a notification instead, so disable progress reporting on Mac.
