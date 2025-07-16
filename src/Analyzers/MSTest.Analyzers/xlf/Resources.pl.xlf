@@ -76,10 +76,10 @@ The type declaring these methods should also respect the following rules:
 
 Typ deklarujący te metody powinien również przestrzegać następujących reguł:
 — Typ powinien być klasą
-— Typ powinna mieć wartość „public” lub „internal” (jeśli projekt testowy używa atrybutu „[DiscoverInternals]”)
-— Typ nie powinna mieć wartości „static”
-— Typ powinna być oznaczona znakiem „[TestClass]” (lub atrybutem pochodnym)
-— Typ nie powinna być ogólna.</target>
+— Klasa powinna mieć wartość „public” lub „internal” (jeśli projekt testowy używa atrybutu „[DiscoverInternals]”)
+— Klasa nie powinna mieć wartości „static”
+— Klasa powinna być oznaczona znakiem „[TestClass]” (lub atrybutem pochodnym)
+— Klasa nie powinna być ogólna.</target>
         <note />
       </trans-unit>
       <trans-unit id="AssemblyInitializeShouldBeValidMessageFormat">
@@ -244,10 +244,10 @@ The type declaring these methods should also respect the following rules:
 
 Typ deklarujący te metody powinien również przestrzegać następujących reguł:
 — Typ powinien być klasą
-— Typ powinna mieć wartość „public” lub „internal” (jeśli projekt testowy używa atrybutu „[DiscoverInternals]”)
-— Typ nie powinna mieć wartości „static”
+— Klasa powinna mieć wartość „public” lub „internal” (jeśli projekt testowy używa atrybutu „[DiscoverInternals]”)
+— Klasa nie powinna mieć wartości „static”
 — Jeśli klasa ma wartość „sealed”, powinna być oznaczona znakiem „[TestClass]” (lub atrybutem pochodnym)
-— Typ nie powinna być ogólna.</target>
+— Klasa nie powinna być ogólna.</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassInitializeShouldBeValidMessageFormat">
@@ -549,7 +549,7 @@ Typ deklarujący te metody powinien również przestrzegać następujących regu
       </trans-unit>
       <trans-unit id="TestClassShouldBeValidMessageFormat">
         <source>Test class '{0}' should be valid</source>
-        <target state="translated">Typ testowa „{0}” powinna być prawidłowa</target>
+        <target state="translated">Klasa testowa „{0}” powinna być prawidłowa</target>
         <note />
       </trans-unit>
       <trans-unit id="TestContextShouldBeValidMessageFormat">
@@ -595,17 +595,17 @@ Typ deklarujący te metody powinien również przestrzegać następujących regu
       </trans-unit>
       <trans-unit id="TestClassShouldHaveTestMethodDescription">
         <source>Test class should have at least one test method or be 'static' with method(s) marked by '[AssemblyInitialize]' and/or '[AssemblyCleanup]'.</source>
-        <target state="translated">Typ testowa powinna mieć co najmniej jedną metodę testową lub być „statyczna” z metodami oznaczonymi jako „[AssemblyInitialize]” i/lub „[AssemblyCleanup]”.</target>
+        <target state="translated">Klasa testowa powinna mieć co najmniej jedną metodę testową lub być „statyczna” z metodami oznaczonymi jako „[AssemblyInitialize]” i/lub „[AssemblyCleanup]”.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestClassShouldHaveTestMethodMessageFormat">
         <source>Test class '{0}' should have at least one test method or be 'static' with method(s) marked by '[AssemblyInitialize]' and/or '[AssemblyCleanup]'</source>
-        <target state="translated">Typ „{0}” testowa powinna mieć co najmniej jedną metodę testową lub być „statyczna” z metodami oznaczonymi jako „[AssemblyInitialize]” i/lub „[AssemblyCleanup]”.</target>
+        <target state="translated">Klasa „{0}” testowa powinna mieć co najmniej jedną metodę testową lub być „statyczna” z metodami oznaczonymi jako „[AssemblyInitialize]” i/lub „[AssemblyCleanup]”.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestClassShouldHaveTestMethodTitle">
         <source>Test class should have test method</source>
-        <target state="translated">Typ testowa powinna mieć metodę testową</target>
+        <target state="translated">Klasa testowa powinna mieć metodę testową</target>
         <note />
       </trans-unit>
       <trans-unit id="TestCleanupShouldBeValidDescription">
@@ -636,8 +636,8 @@ The type declaring these methods should also respect the following rules:
 
 Typ deklarujący te metody powinien również przestrzegać następujących reguł:
 — Typ powinien być klasą
-— Typ powinna mieć wartość „public” lub „internal” (jeśli projekt testowy używa atrybutu „[DiscoverInternals]”)
-— Typ nie powinna mieć wartości „static”
+— Klasa powinna mieć wartość „public” lub „internal” (jeśli projekt testowy używa atrybutu „[DiscoverInternals]”)
+— Klasa nie powinna mieć wartości „static”
 — Jeśli klasa jest zapieczętowana, powinna być oznaczona znakiem „[TestClass]” (lub atrybutem pochodnym).</target>
         <note />
       </trans-unit>
@@ -695,8 +695,8 @@ The type declaring these methods should also respect the following rules:
 
 Typ deklarujący te metody powinien również przestrzegać następujących reguł:
 — Typ powinien być klasą
-— Typ powinna mieć wartość „public” lub „internal” (jeśli projekt testowy używa atrybutu „[DiscoverInternals]”)
-— Typ nie powinna mieć wartości „static”
+— Klasa powinna mieć wartość „public” lub „internal” (jeśli projekt testowy używa atrybutu „[DiscoverInternals]”)
+— Klasa nie powinna mieć wartości „static”
 — Jeśli klasa jest zapieczętowana, powinna być oznaczona znakiem „[TestClass]” (lub atrybutem pochodnym).</target>
         <note />
       </trans-unit>
@@ -751,12 +751,12 @@ Typ deklarujący te metody powinien również przestrzegać następujących regu
       </trans-unit>
       <trans-unit id="TypeContainingTestMethodShouldBeATestClassDescription">
         <source>Type containing '[TestMethod]' should be marked with '[TestClass]', otherwise the test method will be silently ignored.</source>
-        <target state="needs-review-translation">Typ zwierający metodę „[TestMethod]” powinien być oznaczony klasa „[TestClass]”. W przeciwnym razie metoda testowa zostanie zignorowana w trybie dyskretnym.</target>
+        <target state="new">Type containing '[TestMethod]' should be marked with '[TestClass]', otherwise the test method will be silently ignored.</target>
         <note />
       </trans-unit>
       <trans-unit id="TypeContainingTestMethodShouldBeATestClassMessageFormat">
         <source>Type '{0}' contains test methods and should be marked with '[TestClass]'</source>
-        <target state="translated">Typ „{0}” zawiera metody testowe i powinna być oznaczona klasą „[TestClass]”</target>
+        <target state="new">Type '{0}' contains test methods and should be marked with '[TestClass]'</target>
         <note />
       </trans-unit>
       <trans-unit id="TypeContainingTestMethodShouldBeATestClassTitle">

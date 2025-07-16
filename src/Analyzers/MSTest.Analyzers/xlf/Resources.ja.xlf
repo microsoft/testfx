@@ -20,7 +20,7 @@ The type declaring these methods should also respect the following rules:
 -The class should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</source>
         <target state="translated">'[AssemblyCleanup]' でマークされたメソッドを有効にするには、次のレイアウトに従う必要があります:
-- ジェネリック 型で宣言することはできません
+- ジェネリック クラスで宣言することはできません
 - 'public' である必要があります
 - 'static' である必要があります
 - 'async void' にすることはできません
@@ -30,11 +30,11 @@ The type declaring these methods should also respect the following rules:
 - 戻り値の型が 'void'、'Task'、または 'ValueTask' である必要があります
 
 これらのメソッドを宣言する型も、次の規則に従う必要があります:
-- 型は型である必要があります
-- 型は 'public' または 'internal' である必要があります (テスト プロジェクトが '[DiscoverInternals]' 属性を使用している場合)
-- 型を 'static' にすることはできません
-- 型は '[TestClass]' (または派生属性) でマークする必要があります
-- 型をジェネリックにすることはできません。</target>
+- 型はクラスである必要があります
+- クラスは 'public' または 'internal' である必要があります (テスト プロジェクトが '[DiscoverInternals]' 属性を使用している場合)
+- クラスを 'static' にすることはできません
+- クラスは '[TestClass]' (または派生属性) でマークする必要があります
+- クラスをジェネリックにすることはできません。</target>
         <note />
       </trans-unit>
       <trans-unit id="AssemblyCleanupShouldBeValidMessageFormat">
@@ -65,7 +65,7 @@ The type declaring these methods should also respect the following rules:
 -The class should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</source>
         <target state="translated">'[AssemblyInitialize]' でマークされたメソッドを有効にするには、次のレイアウトに従う必要があります: 
-- ジェネリック 型で宣言することはできません
+- ジェネリック クラスで宣言することはできません
 - 'public' である必要があります
 - 'static' である必要があります
 - 'async void' にすることはできません
@@ -75,11 +75,11 @@ The type declaring these methods should also respect the following rules:
 - 戻り値の型が 'void'、'Task'、または 'ValueTask' である必要があります
 
 これらのメソッドを宣言する型も、次の規則に従う必要があります:
-- 型は型である必要があります
-- 型は 'public' または 'internal' である必要があります (テスト プロジェクトが '[DiscoverInternals]' 属性を使用している場合)
-- 型を 'static' にすることはできません
-- 型は '[TestClass]' (または派生属性) でマークする必要があります
-- 型をジェネリックにすることはできません。</target>
+- 型はクラスである必要があります
+- クラスは 'public' または 'internal' である必要があります (テスト プロジェクトが '[DiscoverInternals]' 属性を使用している場合)
+- クラスを 'static' にすることはできません
+- クラスは '[TestClass]' (または派生属性) でマークする必要があります
+- クラスをジェネリックにすることはできません。</target>
         <note />
       </trans-unit>
       <trans-unit id="AssemblyInitializeShouldBeValidMessageFormat">
@@ -182,7 +182,7 @@ The type declaring these methods should also respect the following rules:
 -If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</source>
         <target state="translated">'[ClassCleanup]' でマークされたメソッドを有効にするには、次のレイアウトに従う必要があります:
-- 'InheritanceBehavior' モードが設定されていないと、ジェネリック 型で宣言できません
+- 'InheritanceBehavior' モードが設定されていないと、ジェネリック クラスで宣言できません
 - 'public' である必要があります
 - 'static' である必要があります
 - 'async void' にすることはできません
@@ -190,15 +190,15 @@ The type declaring these methods should also respect the following rules:
 - ジェネリックにすることはできません
 - パラメーターを受け取らないか、'TestContext' 型の 1 つのパラメーターを受け取る必要があります
 - 戻り値の型が 'void'、'Task'、または 'ValueTask' である必要があります
-- 型が 'abstract' である場合は 'InheritanceBehavior.BeforeEachDerivedClass' 属性パラメーターを指定する必要があります
-- 型が 'sealed' である場合は 'InheritanceBehavior.BeforeEachDerivedClass' 属性パラメーターを指定しない必要があります
+- クラスが 'abstract' である場合は 'InheritanceBehavior.BeforeEachDerivedClass' 属性パラメーターを指定する必要があります
+- クラスが 'sealed' である場合は 'InheritanceBehavior.BeforeEachDerivedClass' 属性パラメーターを指定しない必要があります
 
 これらのメソッドを宣言する型も、次の規則に従う必要があります:
-- 型は型である必要があります
-- 型は 'public' または 'internal' である必要があります (テスト プロジェクトが '[DiscoverInternals]' 属性を使用している場合)
-- 型を 'static' にすることはできません
-- 型が 'sealed' の場合は、'[TestClass]' (または派生属性) でマークする必要があります
-- 型をジェネリックにすることはできません。</target>
+- 型はクラスである必要があります
+- クラスは 'public' または 'internal' である必要があります (テスト プロジェクトが '[DiscoverInternals]' 属性を使用している場合)
+- クラスを 'static' にすることはできません
+- クラスが 'sealed' の場合は、'[TestClass]' (または派生属性) でマークする必要があります
+- クラスをジェネリックにすることはできません。</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassCleanupShouldBeValidMessageFormat">
@@ -231,7 +231,7 @@ The type declaring these methods should also respect the following rules:
 -If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</source>
         <target state="translated">'[ClassInitialize]' でマークされたメソッドを有効にするには、次のレイアウトに従う必要があります:
-- 'InheritanceBehavior' モードが設定されていないと、ジェネリック 型で宣言できません
+- 'InheritanceBehavior' モードが設定されていないと、ジェネリック クラスで宣言できません
 - 'public' である必要があります
 - 'static' である必要があります
 - 'async void' にすることはできません
@@ -239,15 +239,15 @@ The type declaring these methods should also respect the following rules:
 - ジェネリックにすることはできません
 - 'TestContext' 型のパラメーターを 1 つ受け取る必要があります
 - 戻り値の型が 'void'、'Task'、または 'ValueTask' である必要があります
-- 型が 'abstract' である場合は 'InheritanceBehavior.BeforeEachDerivedClass' 属性パラメーターーを指定する必要があります
-- 型が 'sealed' である場合は 'InheritanceBehavior.BeforeEachDerivedClass' 属性パラメーターーを指定しない必要があります
+- クラスが 'abstract' である場合は 'InheritanceBehavior.BeforeEachDerivedClass' 属性パラメーターーを指定する必要があります
+- クラスが 'sealed' である場合は 'InheritanceBehavior.BeforeEachDerivedClass' 属性パラメーターーを指定しない必要があります
 
 これらのメソッドを宣言する型も、次の規則に従う必要があります:
-- 型は型である必要があります
-- 型は 'public' または 'internal' である必要があります (テスト プロジェクトが '[DiscoverInternals]' 属性を使用している場合)
-- 型を 'static' にすることはできません
-- 型が 'sealed' の場合は、'[TestClass]' (または派生属性) でマークする必要があります
-- 型をジェネリックにすることはできません。</target>
+- 型はクラスである必要があります
+- クラスは 'public' または 'internal' である必要があります (テスト プロジェクトが '[DiscoverInternals]' 属性を使用している場合)
+- クラスを 'static' にすることはできません
+- クラスが 'sealed' の場合は、'[TestClass]' (または派生属性) でマークする必要があります
+- クラスをジェネリックにすることはできません。</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassInitializeShouldBeValidMessageFormat">
@@ -333,7 +333,7 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="DoNotUseShadowingMessageFormat">
         <source>Member '{0}' already exists in the base class</source>
-        <target state="translated">メンバー '{0}' は既に基本型に存在します</target>
+        <target state="translated">メンバー '{0}' は既に基本クラスに存在します</target>
         <note />
       </trans-unit>
       <trans-unit id="DoNotUseShadowingTitle">
@@ -524,7 +524,7 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="PublicTypeShouldBeTestClassDescription">
         <source>It's considered a good practice to have only test classes marked public in a test project.</source>
-        <target state="translated">テスト プロジェクトでは、テスト 型のみをパブリックとしてマークすることをお勧めします。</target>
+        <target state="translated">テスト プロジェクトでは、テスト クラスのみをパブリックとしてマークすることをお勧めします。</target>
         <note />
       </trans-unit>
       <trans-unit id="PublicTypeShouldBeTestClassMessageFormat">
@@ -534,7 +534,7 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="PublicTypeShouldBeTestClassTitle">
         <source>Public types should be test classes</source>
-        <target state="translated">パブリック型はテスト 型である必要があります</target>
+        <target state="translated">パブリック型はテスト クラスである必要があります</target>
         <note />
       </trans-unit>
       <trans-unit id="StringAssertToAssertMessageFormat">
@@ -549,7 +549,7 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="TestClassShouldBeValidMessageFormat">
         <source>Test class '{0}' should be valid</source>
-        <target state="translated">テスト 型 '{0}' は有効である必要があります</target>
+        <target state="translated">テスト クラス '{0}' は有効である必要があります</target>
         <note />
       </trans-unit>
       <trans-unit id="TestContextShouldBeValidMessageFormat">
@@ -564,7 +564,7 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="UseClassCleanupBehaviorEndOfClassDescription">
         <source>Without using  'ClassCleanupBehavior.EndOfClass', the '[ClassCleanup]' will by default be run at the end of the assembly and not at the end of the class.</source>
-        <target state="translated">'ClassCleanupBehavior.EndOfClass' を使用しない場合、'[ClassCleanup]' は既定でアセンブリの最後に実行され、型の最後には実行されません。</target>
+        <target state="translated">'ClassCleanupBehavior.EndOfClass' を使用しない場合、'[ClassCleanup]' は既定でアセンブリの最後に実行され、クラスの最後には実行されません。</target>
         <note />
       </trans-unit>
       <trans-unit id="UseClassCleanupBehaviorEndOfClassMessageFormat">
@@ -582,7 +582,7 @@ The type declaring these methods should also respect the following rules:
 - it should be 'public' (or 'internal' if '[assembly: DiscoverInternals]' attribute is set)
 - it should not be 'static' (except if it contains only 'AssemblyInitialize' and/or 'AssemblyCleanup' methods)
 - it should not be generic.</source>
-        <target state="translated">テスト 型 ('[TestClass]' 属性でマークされた型) は、MSTest によって有効と見なされるように、次のレイアウトを考慮する必要があります:
+        <target state="translated">テスト クラス ('[TestClass]' 属性でマークされたクラス) は、MSTest によって有効と見なされるように、次のレイアウトを考慮する必要があります:
 - 'public' である必要があります ('[assembly: DiscoverInternals]' 属性が設定されている場合は 'internal' である必要があります)
 - 'static' にすることはできません ('AssemblyInitialize' メソッドおよび/または 'AssemblyCleanup' メソッドのみが含まれる場合は除きます)
 - ジェネリックにすることはできません。</target>
@@ -590,22 +590,22 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="TestClassShouldBeValidTitle">
         <source>Test classes should have valid layout</source>
-        <target state="translated">テスト 型には有効なレイアウトが必要です</target>
+        <target state="translated">テスト クラスには有効なレイアウトが必要です</target>
         <note />
       </trans-unit>
       <trans-unit id="TestClassShouldHaveTestMethodDescription">
         <source>Test class should have at least one test method or be 'static' with method(s) marked by '[AssemblyInitialize]' and/or '[AssemblyCleanup]'.</source>
-        <target state="translated">テスト 型には、少なくとも 1 つのテスト メソッドがあるか、'[AssemblyInitialize]' または '[AssemblyCleanup]' によってマークされたメソッドを含む 'static' である必要があります。</target>
+        <target state="translated">テスト クラスには、少なくとも 1 つのテスト メソッドがあるか、'[AssemblyInitialize]' または '[AssemblyCleanup]' によってマークされたメソッドを含む 'static' である必要があります。</target>
         <note />
       </trans-unit>
       <trans-unit id="TestClassShouldHaveTestMethodMessageFormat">
         <source>Test class '{0}' should have at least one test method or be 'static' with method(s) marked by '[AssemblyInitialize]' and/or '[AssemblyCleanup]'</source>
-        <target state="translated">テスト 型 '{0}' には、少なくとも 1 つのテスト メソッドがあるか、'[AssemblyInitialize]' または '[AssemblyCleanup]' によってマークされたメソッドを含む 'static' である必要があります。</target>
+        <target state="translated">テスト クラス '{0}' には、少なくとも 1 つのテスト メソッドがあるか、'[AssemblyInitialize]' または '[AssemblyCleanup]' によってマークされたメソッドを含む 'static' である必要があります。</target>
         <note />
       </trans-unit>
       <trans-unit id="TestClassShouldHaveTestMethodTitle">
         <source>Test class should have test method</source>
-        <target state="translated">テスト 型にはテスト メソッドが必要です</target>
+        <target state="translated">テスト クラスにはテスト メソッドが必要です</target>
         <note />
       </trans-unit>
       <trans-unit id="TestCleanupShouldBeValidDescription">
@@ -635,10 +635,10 @@ The type declaring these methods should also respect the following rules:
 - 戻り値の型が 'void'、'Task'、または 'ValueTask' である必要があります
 
 これらのメソッドを宣言する型も、次の規則に従う必要があります:
-- 型は型である必要があります
-- 型は 'public' または 'internal' である必要があります (テスト プロジェクトが '[DiscoverInternals]' 属性を使用している場合)
-- 型を 'static' にすることはできません
--型が 'sealed' の場合は、'[TestClass]' (または派生属性) でマークする必要があります。</target>
+- 型はクラスである必要があります
+- クラスは 'public' または 'internal' である必要があります (テスト プロジェクトが '[DiscoverInternals]' 属性を使用している場合)
+- クラスを 'static' にすることはできません
+-クラスが 'sealed' の場合は、'[TestClass]' (または派生属性) でマークする必要があります。</target>
         <note />
       </trans-unit>
       <trans-unit id="TestCleanupShouldBeValidMessageFormat">
@@ -694,10 +694,10 @@ The type declaring these methods should also respect the following rules:
 - 戻り値の型が 'void'、'Task'、または 'ValueTask' である必要があります
 
 これらのメソッドを宣言する型も、次の規則に従う必要があります:
-- 型は型である必要があります
-- 型は 'public' または 'internal' である必要があります (テスト プロジェクトが '[DiscoverInternals]' 属性を使用している場合)
-- 型を 'static' にすることはできません
--型が 'sealed' の場合は、'[TestClass]' (または派生属性) でマークする必要があります。</target>
+- 型はクラスである必要があります
+- クラスは 'public' または 'internal' である必要があります (テスト プロジェクトが '[DiscoverInternals]' 属性を使用している場合)
+- クラスを 'static' にすることはできません
+-クラスが 'sealed' の場合は、'[TestClass]' (または派生属性) でマークする必要があります。</target>
         <note />
       </trans-unit>
       <trans-unit id="TestInitializeShouldBeValidMessageFormat">
@@ -751,12 +751,12 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="TypeContainingTestMethodShouldBeATestClassDescription">
         <source>Type containing '[TestMethod]' should be marked with '[TestClass]', otherwise the test method will be silently ignored.</source>
-        <target state="needs-review-translation">連続する型 '[TestMethod]' は '[TestClass]' でマークする必要があります。それ以外の場合、テスト メソッドは暗黙的に無視されます。</target>
+        <target state="new">Type containing '[TestMethod]' should be marked with '[TestClass]', otherwise the test method will be silently ignored.</target>
         <note />
       </trans-unit>
       <trans-unit id="TypeContainingTestMethodShouldBeATestClassMessageFormat">
         <source>Type '{0}' contains test methods and should be marked with '[TestClass]'</source>
-        <target state="translated">型 '{0}' にはテスト メソッドが含まれており、'[TestClass]' でマークする必要があります</target>
+        <target state="new">Type '{0}' contains test methods and should be marked with '[TestClass]'</target>
         <note />
       </trans-unit>
       <trans-unit id="TypeContainingTestMethodShouldBeATestClassTitle">
@@ -786,12 +786,12 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="UseConditionBaseWithTestClassMessageFormat">
         <source>The attribute '{0}' which derives from 'ConditionBaseAttribute' should be used only on classes marked with `TestClassAttribute`</source>
-        <target state="translated">'ConditionBaseAttribute' から派生する属性 '{0}' は、'TestClassAttribute' でマークされた型でのみ使用する必要があります</target>
+        <target state="translated">'ConditionBaseAttribute' から派生する属性 '{0}' は、'TestClassAttribute' でマークされたクラスでのみ使用する必要があります</target>
         <note />
       </trans-unit>
       <trans-unit id="UseConditionBaseWithTestClassTitle">
         <source>Use 'ConditionBaseAttribute' on test classes</source>
-        <target state="translated">テスト 型で 'ConditionBaseAttribute' を使用する</target>
+        <target state="translated">テスト クラスで 'ConditionBaseAttribute' を使用する</target>
         <note />
       </trans-unit>
       <trans-unit id="UseCooperativeCancellationForTimeoutDescription">
@@ -811,12 +811,12 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="UseDeploymentItemWithTestMethodOrTestClassMessageFormat">
         <source>'[DeploymentItem]' can be specified only on test class or test method</source>
-        <target state="translated">'[DeploymentItem]' は、テスト 型またはテスト メソッドでのみ指定できます</target>
+        <target state="translated">'[DeploymentItem]' は、テスト クラスまたはテスト メソッドでのみ指定できます</target>
         <note />
       </trans-unit>
       <trans-unit id="UseDeploymentItemWithTestMethodOrTestClassTitle">
         <source>'[DeploymentItem]' can be specified only on test class or test method</source>
-        <target state="translated">'[DeploymentItem]' は、テスト 型またはテスト メソッドでのみ指定できます</target>
+        <target state="translated">'[DeploymentItem]' は、テスト クラスまたはテスト メソッドでのみ指定できます</target>
         <note />
       </trans-unit>
       <trans-unit id="UseNewerAssertThrowsMessageFormat">
