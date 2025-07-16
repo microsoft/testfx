@@ -32,17 +32,12 @@ internal sealed class TestHostOrchestratorManager : ITestHostOrchestratorManager
             ITestHostOrchestrator orchestrator = factory(serviceProvider);
 
             // Check if we have already extensions of the same type with same id registered
-            ITestHostOrchestrator[] duplicates = orchestrators.Where(x => x.Uid == orchestrator.Uid).Take(2).ToArray();
+            ITestHostOrchestrator[] duplicates = orchestrators.Where(x => x.Uid == orchestrator.Uid).ToArray();
             if (duplicates.Length > 0)
             {
-                if (duplicates.Length == 1)
-                {
-                    throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.ExtensionWithSameUidAlreadyRegisteredErrorMessage, orchestrator.Uid, duplicates[0].GetType()));
-                }
-                else
-                {
-                    throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.MultipleExtensionsWithSameUidAlreadyRegisteredErrorMessage, orchestrator.Uid));
-                }
+                var allDuplicates = duplicates.Concat([orchestrator]).ToArray();
+                string typesList = string.Join(", ", allDuplicates.Select(x => $"'{x.GetType()}'"));
+                throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.ExtensionWithSameUidAlreadyRegisteredErrorMessage, orchestrator.Uid, typesList));
             }
 
             // We initialize only if enabled
@@ -72,17 +67,12 @@ internal sealed class TestHostOrchestratorManager : ITestHostOrchestratorManager
             ITestHostOrchestratorApplicationLifetime service = testHostOrchestratorApplicationLifetimeFactory(serviceProvider);
 
             // Check if we have already extensions of the same type with same id registered
-            ITestHostOrchestratorApplicationLifetime[] duplicates = lifetimes.Where(x => x.Uid == service.Uid).Take(2).ToArray();
+            ITestHostOrchestratorApplicationLifetime[] duplicates = lifetimes.Where(x => x.Uid == service.Uid).ToArray();
             if (duplicates.Length > 0)
             {
-                if (duplicates.Length == 1)
-                {
-                    throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.ExtensionWithSameUidAlreadyRegisteredErrorMessage, service.Uid, duplicates[0].GetType()));
-                }
-                else
-                {
-                    throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.MultipleExtensionsWithSameUidAlreadyRegisteredErrorMessage, service.Uid));
-                }
+                var allDuplicates = duplicates.Concat([service]).ToArray();
+                string typesList = string.Join(", ", allDuplicates.Select(x => $"'{x.GetType()}'"));
+                throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.ExtensionWithSameUidAlreadyRegisteredErrorMessage, service.Uid, typesList));
             }
 
             // We initialize only if enabled

@@ -250,13 +250,8 @@
         <note />
       </trans-unit>
       <trans-unit id="ExtensionWithSameUidAlreadyRegisteredErrorMessage">
-        <source>Another extension with same the same UID '{0}' has already been registered. Registered extension is of type '{1}'</source>
+        <source>Extensions with the same UID '{0}' have already been registered. Registered extensions are of types: {1}</source>
         <target state="translated">已註冊另一個具有相同 UID '{0}' 的延伸模組。已註冊的延伸模組屬於 '{1}' 類型</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="MultipleExtensionsWithSameUidAlreadyRegisteredErrorMessage">
-        <source>Multiple extensions with the same UID '{0}' have been registered. This indicates a configuration error.</source>
-        <target state="new">Multiple extensions with the same UID '{0}' have been registered. This indicates a configuration error.</target>
         <note />
       </trans-unit>
       <trans-unit id="Failed">
