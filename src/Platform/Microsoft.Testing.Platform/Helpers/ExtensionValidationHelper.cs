@@ -41,3 +41,4 @@ internal static class ExtensionValidationHelper
     /// <param name="newExtension">The new extension being registered.</param>
     public static void ValidateUniqueExtension(this IEnumerable<IExtension> existingExtensions, IExtension newExtension)
         => existingExtensions.ValidateUniqueExtension(newExtension, x => x);
+}
