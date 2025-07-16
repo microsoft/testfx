@@ -774,6 +774,11 @@ The type declaring these methods should also respect the following rules:
         <target state="translated">비동기 테스트 메서드에는 'Async' 접미사가 필요하지 않습니다.</target>
         <note />
       </trans-unit>
+      <trans-unit id="UnusedParameterSuppressorJustification">
+        <source>TestContext parameter is required by MSTest for AssemblyInitialize and ClassInitialize methods</source>
+        <target state="new">TestContext parameter is required by MSTest for AssemblyInitialize and ClassInitialize methods</target>
+        <note />
+      </trans-unit>
       <trans-unit id="UseAttributeOnTestMethodAnalyzerMessageFormat">
         <source>[{0}] can only be set on methods marked with [TestMethod]</source>
         <target state="translated">[{0}]은(는) [TestMethod] 표시된 메서드에만 설정할 수 있습니다.</target>
