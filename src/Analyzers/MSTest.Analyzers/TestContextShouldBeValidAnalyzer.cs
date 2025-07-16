@@ -92,11 +92,11 @@ public sealed class TestContextShouldBeValidAnalyzer : DiagnosticAnalyzer
             operation = expressionStatementOperation.Operation;
         }
 
-        if (operation is ISimpleAssignmentOperation { Target: IMemberReferenceOperation targetMemberReference } assignmentOperation &&
-            SymbolEqualityComparer.Default.Equals(targetMemberReference.Member, member))
+        if (operation is ISimpleAssignmentOperation { Target: IMemberReferenceOperation { Member: { } targetMember }, Value: { } assignmentValue } &&
+            SymbolEqualityComparer.Default.Equals(targetMember, member))
         {
             // Extract parameter reference from the value, unwrapping from coalesce operation if necessary
-            IOperation effectiveValue = assignmentOperation.Value;
+            IOperation effectiveValue = assignmentValue;
             if (effectiveValue is ICoalesceOperation coalesceOperation)
             {
                 effectiveValue = coalesceOperation.Value;
