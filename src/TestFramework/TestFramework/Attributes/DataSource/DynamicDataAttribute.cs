@@ -136,8 +136,6 @@ public sealed class DynamicDataAttribute : Attribute, ITestDataSource, ITestData
         _dynamicDataSourceArguments = dynamicDataSourceArguments;
     }
 
-    internal static TestIdGenerationStrategy TestIdGenerationStrategy { get; set; }
-
     /// <summary>
     /// Gets or sets the name of method used to customize the display name in test results.
     /// </summary>
