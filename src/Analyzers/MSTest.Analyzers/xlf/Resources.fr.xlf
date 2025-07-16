@@ -19,7 +19,7 @@ The type declaring these methods should also respect the following rules:
 -The class shouldn't be 'static'
 -The class should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</source>
-        <target state="translated">Les méthodes marqués par « [AssemblyCleanup] » doivent respecter le schéma suivant pour être valides : 
+        <target state="translated">Les méthodes marquées par « [AssemblyCleanup] » doivent respecter le schéma suivant pour être valides : 
 -il ne peut pas être déclarée dans une classe générique
 – il doit être « public »
 – il doit être « static »
@@ -31,9 +31,9 @@ The type declaring these methods should also respect the following rules:
 
 Le type déclarant ces méthodes doit également respecter les règles suivantes :
 Le type doit être une classe
--Le type doit être « public » ou « internal » (si le projet de test utilise l’attribut ’[DiscoverInternals]’)
--Le type ne doit pas être» ’static »
--Le type doit être marqué par « [TestClass] » (ou un attribut dérivé)
+-La classe doit être « public » ou « internal » (si le projet de test utilise l’attribut ’[DiscoverInternals]’)
+-La classe ne doit pas être» ’static »
+-La classe doit être marquée par « [TestClass] » (ou un attribut dérivé)
 -la classe ne doit pas être générique.</target>
         <note />
       </trans-unit>
@@ -64,7 +64,7 @@ The type declaring these methods should also respect the following rules:
 -The class shouldn't be 'static'
 -The class should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</source>
-        <target state="translated">Les méthodes marqués par « [AssemblyInitialize] » doivent respecter le schéma suivant pour être valides :
+        <target state="translated">Les méthodes marquées par « [AssemblyInitialize] » doivent respecter le schéma suivant pour être valides :
 -il ne peut pas être déclarée dans une classe générique
 – il doit être « public »
 – il doit être « static »
@@ -76,9 +76,9 @@ The type declaring these methods should also respect the following rules:
 
 Le type déclarant ces méthodes doit également respecter les règles suivantes :
 Le type doit être une classe
--Le type doit être « public » ou « internal » (si le projet de test utilise l’attribut ’[DiscoverInternals]’)
--Le type ne doit pas être» ’static »
--Le type doit être marqué par « [TestClass] » (ou un attribut dérivé).
+-La classe doit être « public » ou « internal » (si le projet de test utilise l’attribut ’[DiscoverInternals]’)
+-La classe ne doit pas être» ’static »
+-La classe doit être marquée par « [TestClass] » (ou un attribut dérivé).
 -la classe ne doit pas être générique.</target>
         <note />
       </trans-unit>
@@ -181,7 +181,7 @@ The type declaring these methods should also respect the following rules:
 -The class shouldn't be 'static'
 -If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</source>
-        <target state="translated">Les méthodes marqués par « [ClassCleanup] » doivent respecter le schéma suivant pour être valides : 
+        <target state="translated">Les méthodes marquées par « [ClassCleanup] » doivent respecter le schéma suivant pour être valides : 
 -il ne peut pas être déclarée dans une classe générique si le mode ’InheritanceBehavior’ n’est pas activé
 – il doit être « public »
 – il doit être « static »
@@ -195,9 +195,9 @@ The type declaring these methods should also respect the following rules:
 
 Le type déclarant ces méthodes doit également respecter les règles suivantes :
 Le type doit être une classe
--Le type doit être « public » ou « internal » (si le projet de test utilise l’attribut ’[DiscoverInternals]’)
--Le type ne doit pas être « static »
--Si la classe est « sealed », elle doit être marqué avec « [TestClass] » (ou un attribut dérivé)
+-La classe doit être « public » ou « internal » (si le projet de test utilise l’attribut ’[DiscoverInternals]’)
+-La classe ne doit pas être « static »
+-Si la classe est « sealed », elle doit être marquée avec « [TestClass] » (ou un attribut dérivé)
 -la classe ne doit pas être générique.</target>
         <note />
       </trans-unit>
@@ -230,7 +230,7 @@ The type declaring these methods should also respect the following rules:
 -The class shouldn't be 'static'
 -If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</source>
-        <target state="translated">Les méthodes marqués par « [ClassInitialize] » doivent respecter le schéma suivant pour être valides : 
+        <target state="translated">Les méthodes marquées par « [ClassInitialize] » doivent respecter le schéma suivant pour être valides : 
 -il ne peut pas être déclarée dans une classe générique si le mode ’InheritanceBehavior’ n’est pas activé.
 – il doit être « public »
 – il doit être « static »
@@ -244,9 +244,9 @@ The type declaring these methods should also respect the following rules:
 
 Le type déclarant ces méthodes doit également respecter les règles suivantes :
 Le type doit être une classe
--Le type doit être « public » ou « internal » (si le projet de test utilise l’attribut ’[DiscoverInternals]’)
--Le type ne doit pas être « static »
--Si la classe est « sealed », elle doit être marqué avec « [TestClass] » (ou un attribut dérivé).
+-La classe doit être « public » ou « internal » (si le projet de test utilise l’attribut ’[DiscoverInternals]’)
+-La classe ne doit pas être « static »
+-Si la classe est « sealed », elle doit être marquée avec « [TestClass] » (ou un attribut dérivé).
 -la classe ne doit pas être générique.</target>
         <note />
       </trans-unit>
@@ -524,7 +524,7 @@ Le type doit être une classe
       </trans-unit>
       <trans-unit id="PublicTypeShouldBeTestClassDescription">
         <source>It's considered a good practice to have only test classes marked public in a test project.</source>
-        <target state="translated">C’est considéré comme une bonne pratique d’avoir uniquement des classes de test marqués comme publiques dans un projet de test.</target>
+        <target state="translated">C’est considéré comme une bonne pratique d’avoir uniquement des classes de test marquées comme publiques dans un projet de test.</target>
         <note />
       </trans-unit>
       <trans-unit id="PublicTypeShouldBeTestClassMessageFormat">
@@ -549,7 +549,7 @@ Le type doit être une classe
       </trans-unit>
       <trans-unit id="TestClassShouldBeValidMessageFormat">
         <source>Test class '{0}' should be valid</source>
-        <target state="translated">Le type de test « {0} » doit être valide</target>
+        <target state="translated">La classe de test « {0} » doit être valide</target>
         <note />
       </trans-unit>
       <trans-unit id="TestContextShouldBeValidMessageFormat">
@@ -582,7 +582,7 @@ Le type doit être une classe
 - it should be 'public' (or 'internal' if '[assembly: DiscoverInternals]' attribute is set)
 - it should not be 'static' (except if it contains only 'AssemblyInitialize' and/or 'AssemblyCleanup' methods)
 - it should not be generic.</source>
-        <target state="translated">Les classes de test, à savoir les classes marqués par l’attribut « [TestClass] », doivent respecter la disposition suivante pour être considérées comme valides par MSTest :
+        <target state="translated">Les classes de test, à savoir les classes marquées par l’attribut « [TestClass] », doivent respecter la disposition suivante pour être considérées comme valides par MSTest :
 – Elle doit être « publique » (ou « interne » si l’attribut « [assembly : DiscoverInternals] » est défini)
 – Elle ne doit pas être « statique » (sauf si elle ne contient que des méthodes « AssemblyInitialize » et/ou « AssemblyCleanup »)
 – Elle ne doit pas être générique.</target>
@@ -595,17 +595,17 @@ Le type doit être une classe
       </trans-unit>
       <trans-unit id="TestClassShouldHaveTestMethodDescription">
         <source>Test class should have at least one test method or be 'static' with method(s) marked by '[AssemblyInitialize]' and/or '[AssemblyCleanup]'.</source>
-        <target state="translated">Le type de test doit avoir au moins une méthode de test ou être « statique » avec une ou plusieurs méthodes marqués par « [AssemblyInitialize] » et/ou « [AssemblyCleanup] ».</target>
+        <target state="translated">La classe de test doit avoir au moins une méthode de test ou être « statique » avec une ou plusieurs méthodes marquées par « [AssemblyInitialize] » et/ou « [AssemblyCleanup] ».</target>
         <note />
       </trans-unit>
       <trans-unit id="TestClassShouldHaveTestMethodMessageFormat">
         <source>Test class '{0}' should have at least one test method or be 'static' with method(s) marked by '[AssemblyInitialize]' and/or '[AssemblyCleanup]'</source>
-        <target state="translated">Le type de test '{0}' doit avoir au moins une méthode de test ou être « statique » avec une ou plusieurs méthodes marqués par « [AssemblyInitialize] » et/ou « [AssemblyCleanup] »</target>
+        <target state="translated">La classe de test '{0}' doit avoir au moins une méthode de test ou être « statique » avec une ou plusieurs méthodes marquées par « [AssemblyInitialize] » et/ou « [AssemblyCleanup] »</target>
         <note />
       </trans-unit>
       <trans-unit id="TestClassShouldHaveTestMethodTitle">
         <source>Test class should have test method</source>
-        <target state="translated">Le type de test doit avoir une méthode de test</target>
+        <target state="translated">La classe de test doit avoir une méthode de test</target>
         <note />
       </trans-unit>
       <trans-unit id="TestCleanupShouldBeValidDescription">
@@ -624,7 +624,7 @@ The type declaring these methods should also respect the following rules:
 -The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
 -The class shouldn't be 'static'
 -If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute).</source>
-        <target state="translated">Les méthodes marqués par « [TestCleanup] » doivent respecter le schéma suivant pour être valides :
+        <target state="translated">Les méthodes marquées par « [TestCleanup] » doivent respecter le schéma suivant pour être valides :
 – il doit être « public »
 – il ne doit pas être « abstract »
 – il ne doit pas être « async void »
@@ -636,9 +636,9 @@ The type declaring these methods should also respect the following rules:
 
 Le type déclarant ces méthodes doit également respecter les règles suivantes :
 Le type doit être une classe
--Le type doit être « public » ou « internal » (si le projet de test utilise l’attribut ’[DiscoverInternals]’)
--Le type ne doit pas être» ’static »
--Si la classe est « sealed », elle doit être marqué avec « [TestClass] » (ou un attribut dérivé).</target>
+-La classe doit être « public » ou « internal » (si le projet de test utilise l’attribut ’[DiscoverInternals]’)
+-La classe ne doit pas être» ’static »
+-Si la classe est « sealed », elle doit être marquée avec « [TestClass] » (ou un attribut dérivé).</target>
         <note />
       </trans-unit>
       <trans-unit id="TestCleanupShouldBeValidMessageFormat">
@@ -683,7 +683,7 @@ The type declaring these methods should also respect the following rules:
 -The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
 -The class shouldn't be 'static'
 -If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute).</source>
-        <target state="translated">Les méthodes marqués par [TestInitialize] doivent respecter le schéma suivant pour être valides : 
+        <target state="translated">Les méthodes marquées par [TestInitialize] doivent respecter le schéma suivant pour être valides : 
 – il doit être « public »
 – il ne doit pas être « abstract »
 – il ne doit pas être « async void »
@@ -695,9 +695,9 @@ The type declaring these methods should also respect the following rules:
 
 Le type déclarant ces méthodes doit également respecter les règles suivantes :
 Le type doit être une classe
--Le type doit être « public » ou « internal » (si le projet de test utilise l’attribut ’[DiscoverInternals]’)
--Le type ne doit pas être» ’static »
--Si la classe est « sealed », elle doit être marqué avec « [TestClass] » (ou un attribut dérivé).</target>
+-La classe doit être « public » ou « internal » (si le projet de test utilise l’attribut ’[DiscoverInternals]’)
+-La classe ne doit pas être» ’static »
+-Si la classe est « sealed », elle doit être marquée avec « [TestClass] » (ou un attribut dérivé).</target>
         <note />
       </trans-unit>
       <trans-unit id="TestInitializeShouldBeValidMessageFormat">
@@ -719,7 +719,7 @@ Le type doit être une classe
 - return type should be 'void', 'Task' or 'ValueTask'
 - it should not be 'async void'
 - it should not be a special method (finalizer, operator...).</source>
-        <target state="translated">Les méthodes de test, c’est-à-dire les méthodes marqués de l’attribut « [TestMethod] », doivent respecter la disposition suivante pour être considérées comme valides par MSTest : 
+        <target state="translated">Les méthodes de test, c’est-à-dire les méthodes marquées de l’attribut « [TestMethod] », doivent respecter la disposition suivante pour être considérées comme valides par MSTest : 
 – elle doit être « publique » (ou « interne » si l’attribut « [assembly : DiscoverInternals] » est défini)
 – elle ne doit pas être « statique »
 – elle peut être générique tant que les paramètres de type peuvent être déduits et que les types d’arguments sont compatibles
@@ -736,7 +736,7 @@ Le type doit être une classe
       </trans-unit>
       <trans-unit id="TestMethodShouldNotBeIgnoredAnalyzerDescription">
         <source>Test methods should not be ignored (marked with '[Ignore]').</source>
-        <target state="translated">Les méthodes de test ne doivent pas être ignorées (marqués avec « [Ignorer] »).</target>
+        <target state="translated">Les méthodes de test ne doivent pas être ignorées (marquées avec « [Ignorer] »).</target>
         <note />
       </trans-unit>
       <trans-unit id="TestMethodShouldNotBeIgnoredAnalyzerFormat">
@@ -751,12 +751,12 @@ Le type doit être une classe
       </trans-unit>
       <trans-unit id="TypeContainingTestMethodShouldBeATestClassDescription">
         <source>Type containing '[TestMethod]' should be marked with '[TestClass]', otherwise the test method will be silently ignored.</source>
-        <target state="needs-review-translation">Le type contenant « [TestMethod] » doit être marqué avec « [TestClass] », sans quoi la méthode de test sera ignorée silencieusement.</target>
+        <target state="new">Type containing '[TestMethod]' should be marked with '[TestClass]', otherwise the test method will be silently ignored.</target>
         <note />
       </trans-unit>
       <trans-unit id="TypeContainingTestMethodShouldBeATestClassMessageFormat">
         <source>Type '{0}' contains test methods and should be marked with '[TestClass]'</source>
-        <target state="translated">Le type « {0} » contient des méthodes de test et doit être marqué avec « [TestClass] »</target>
+        <target state="new">Type '{0}' contains test methods and should be marked with '[TestClass]'</target>
         <note />
       </trans-unit>
       <trans-unit id="TypeContainingTestMethodShouldBeATestClassTitle">
@@ -776,17 +776,17 @@ Le type doit être une classe
       </trans-unit>
       <trans-unit id="UseAttributeOnTestMethodAnalyzerMessageFormat">
         <source>[{0}] can only be set on methods marked with [TestMethod]</source>
-        <target state="translated">[{0}] ne peut être défini que sur les méthodes marqués avec [TestMethod]</target>
+        <target state="translated">[{0}] ne peut être défini que sur les méthodes marquées avec [TestMethod]</target>
         <note />
       </trans-unit>
       <trans-unit id="UseAttributeOnTestMethodAnalyzerTitle">
         <source>[{0}] can only be set on methods marked with [TestMethod]</source>
-        <target state="translated">[{0}] ne peut être défini que sur les méthodes marqués avec [TestMethod]</target>
+        <target state="translated">[{0}] ne peut être défini que sur les méthodes marquées avec [TestMethod]</target>
         <note />
       </trans-unit>
       <trans-unit id="UseConditionBaseWithTestClassMessageFormat">
         <source>The attribute '{0}' which derives from 'ConditionBaseAttribute' should be used only on classes marked with `TestClassAttribute`</source>
-        <target state="translated">L’attribut '{0}' qui dérive de 'ConditionBaseAttribute' doit être utilisé uniquement sur les classes marqués avec 'TestClassAttribute'</target>
+        <target state="translated">L’attribut '{0}' qui dérive de 'ConditionBaseAttribute' doit être utilisé uniquement sur les classes marquées avec 'TestClassAttribute'</target>
         <note />
       </trans-unit>
       <trans-unit id="UseConditionBaseWithTestClassTitle">

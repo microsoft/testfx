@@ -29,8 +29,6 @@
   </PropertyGroup>
   <PropertyGroup Label="Test dependencies">
     <MicrosoftCodeAnalysisAnalyzerTestingVersion>1.1.3-beta1.24423.1</MicrosoftCodeAnalysisAnalyzerTestingVersion>
-    <MSTestVersion>3.10.0-preview.25365.10</MSTestVersion>
-    <MicrosoftTestingPlatformVersion>1.8.0-preview.25365.10</MicrosoftTestingPlatformVersion>
   </PropertyGroup>
   <ItemGroup Label="Analyzers">
     <PackageVersion Include="Microsoft.CodeAnalysis.BannedApiAnalyzers" Version="$(MicrosoftCodeAnalysisBannedApiAnalyzersVersion)" />
