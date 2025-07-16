@@ -31,9 +31,9 @@ internal sealed class TestHostOrchestratorManager : ITestHostOrchestratorManager
             ITestHostOrchestrator orchestrator = factory(serviceProvider);
 
             // Check if we have already extensions of the same type with same id registered
-            if (orchestrators.Any(x => x.Uid == orchestrator.Uid))
+            ITestHostOrchestrator? currentRegisteredExtension = orchestrators.Where(x => x.Uid == orchestrator.Uid).FirstOrDefault();
+            if (currentRegisteredExtension is not null)
             {
-                ITestHostOrchestrator currentRegisteredExtension = orchestrators.Single(x => x.Uid == orchestrator.Uid);
                 throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.ExtensionWithSameUidAlreadyRegisteredErrorMessage, orchestrator.Uid, currentRegisteredExtension.GetType()));
             }
 
@@ -64,9 +64,9 @@ internal sealed class TestHostOrchestratorManager : ITestHostOrchestratorManager
             ITestHostOrchestratorApplicationLifetime service = testHostOrchestratorApplicationLifetimeFactory(serviceProvider);
 
             // Check if we have already extensions of the same type with same id registered
-            if (lifetimes.Any(x => x.Uid == service.Uid))
+            ITestHostOrchestratorApplicationLifetime? currentRegisteredExtension = lifetimes.Where(x => x.Uid == service.Uid).FirstOrDefault();
+            if (currentRegisteredExtension is not null)
             {
-                ITestHostOrchestratorApplicationLifetime currentRegisteredExtension = lifetimes.Single(x => x.Uid == service.Uid);
                 throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.ExtensionWithSameUidAlreadyRegisteredErrorMessage, service.Uid, currentRegisteredExtension.GetType()));
             }
 
