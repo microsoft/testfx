@@ -56,7 +56,7 @@ public sealed class AsynchronousMessageBusTests
         }
         catch (InvalidOperationException ex)
         {
-            StringAssert.Contains(ex.Message, "Publisher/Consumer loop detected during the drain after");
+            Assert.Contains("Publisher/Consumer loop detected during the drain after", ex.Message);
         }
 
         // Prevent loop to continue
