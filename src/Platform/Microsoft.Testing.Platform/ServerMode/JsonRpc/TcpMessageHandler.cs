@@ -28,7 +28,6 @@ internal sealed class TcpMessageHandler(
     };
 
     private readonly IMessageFormatter _formatter = formatter;
-    private bool _isDisposed;
 
     public async Task<RpcMessage?> ReadAsync(CancellationToken cancellationToken)
     {
@@ -131,26 +130,22 @@ internal sealed class TcpMessageHandler(
 
     public void Dispose()
     {
-        if (!_isDisposed)
+        _reader.Dispose();
+
+        try
         {
-            _reader.Dispose();
-            try
-            {
-                _writer.Dispose();
-            }
-            catch (InvalidOperationException)
-            {
-                // We can exit the server without wait that the streaming activity is completed.
-                // In that case we can get an InvalidOperationException
-                // (https://learn.microsoft.com/dotnet/api/system.io.streamwriter.writelineasync?view=net-7.0#system-io-streamwriter-writelineasync(system-string)):
-                // The stream writer is currently in use by a previous write operation.
-            }
+            _writer.Dispose();
+        }
+        catch (InvalidOperationException)
+        {
+            // We can exit the server without wait that the streaming activity is completed.
+            // In that case we can get an InvalidOperationException
+            // (https://learn.microsoft.com/dotnet/api/system.io.streamwriter.writelineasync?view=net-7.0#system-io-streamwriter-writelineasync(system-string)):
+            // The stream writer is currently in use by a previous write operation.
+        }
 
 #pragma warning disable CA1416 // Validate platform compatibility
-            _client.Close();
+        _client.Dispose();
 #pragma warning restore CA1416
-
-            _isDisposed = true;
-        }
     }
 }
