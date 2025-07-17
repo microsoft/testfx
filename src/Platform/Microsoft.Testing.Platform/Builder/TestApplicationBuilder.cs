@@ -29,7 +29,7 @@ internal sealed class TestApplicationBuilder : ITestApplicationBuilder
     private readonly TestApplicationOptions _testApplicationOptions;
     private readonly IUnhandledExceptionsHandler _unhandledExceptionsHandler;
     private readonly TestHostBuilder _testHostBuilder;
-    private ITestHost? _testHost;
+    private IHost? _host;
     private Func<ITestFrameworkCapabilities, IServiceProvider, ITestFramework>? _testFrameworkFactory;
     private Func<IServiceProvider, ITestFrameworkCapabilities>? _testFrameworkCapabilitiesFactory;
 
@@ -98,13 +98,13 @@ internal sealed class TestApplicationBuilder : ITestApplicationBuilder
             throw new InvalidOperationException(PlatformResources.TestApplicationBuilderTestFrameworkNotRegistered);
         }
 
-        if (_testHost is not null)
+        if (_host is not null)
         {
             throw new InvalidOperationException(PlatformResources.TestApplicationBuilderApplicationAlreadyRegistered);
         }
 
-        _testHost = await _testHostBuilder.BuildAsync(_loggingState, _testApplicationOptions, _unhandledExceptionsHandler, _createBuilderStart).ConfigureAwait(false);
+        _host = await _testHostBuilder.BuildAsync(_loggingState, _testApplicationOptions, _unhandledExceptionsHandler, _createBuilderStart).ConfigureAwait(false);
 
-        return new TestApplication(_testHost);
+        return new TestApplication(_host);
     }
 }

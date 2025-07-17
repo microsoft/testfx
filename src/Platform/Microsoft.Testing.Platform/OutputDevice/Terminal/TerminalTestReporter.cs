@@ -97,7 +97,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
                 (bool consoleAcceptsAnsiCodes, bool _, uint? originalConsoleMode) = NativeMethods.QueryIsScreenAndTryEnableAnsiColorCodes();
                 _originalConsoleMode = originalConsoleMode;
                 terminalWithProgress = consoleAcceptsAnsiCodes || _options.ForceAnsi is true
-                    ? new TestProgressStateAwareTerminal(new AnsiTerminal(console, _options.BaseDirectory), showProgress, writeProgressImmediatelyAfterOutput: true, updateEvery: ansiUpdateCadenceInMs)
+                    ? new TestProgressStateAwareTerminal(new AnsiTerminal(console), showProgress, writeProgressImmediatelyAfterOutput: true, updateEvery: ansiUpdateCadenceInMs)
                         : new TestProgressStateAwareTerminal(new NonAnsiTerminal(console), showProgress, writeProgressImmediatelyAfterOutput: false, updateEvery: nonAnsiUpdateCadenceInMs);
             }
         }
@@ -657,7 +657,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
     public void Dispose() => _terminalWithProgress.Dispose();
 
     public void ArtifactAdded(bool outOfProcess, string? testName, string path)
-        => _artifacts.Add(new TestRunArtifact(outOfProcess, _assembly, _targetFramework, _architecture, testName, path));
+        => _artifacts.Add(new TestRunArtifact(outOfProcess, testName, path));
 
     /// <summary>
     /// Let the user know that cancellation was triggered.
