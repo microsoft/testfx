@@ -36,6 +36,7 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
     private int? _testHostExitCode;
     private int? _testHostPID;
 
+    [UnsupportedOSPlatform("browser")]
     public TestHostControllersTestHost(TestHostControllerConfiguration testHostsInformation, ServiceProvider serviceProvider, PassiveNode? passiveNode, IEnvironment environment,
         ILoggerFactory loggerFactory, IClock clock)
         : base(serviceProvider)
@@ -60,7 +61,6 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
 
     public Task<bool> IsEnabledAsync() => Task.FromResult(false);
 
-    [UnsupportedOSPlatform("browser")]
     protected override async Task<int> InternalRunAsync()
     {
         int exitCode;
