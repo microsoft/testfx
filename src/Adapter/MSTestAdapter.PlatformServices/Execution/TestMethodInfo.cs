@@ -624,9 +624,7 @@ public class TestMethodInfo : ITestMethod
             && RuntimeContext.IsHotReloadEnabled
             && missingMethodException.StackTrace?.IndexOf(Environment.NewLine, StringComparison.Ordinal) is { } lineReturnIndex
             && lineReturnIndex >= 0
-#pragma warning disable IDE0057 // Use range operator
-            && missingMethodException.StackTrace.Substring(0, lineReturnIndex).Contains($"{className}.{methodName}"))
-#pragma warning restore IDE0057 // Use range operator
+            && missingMethodException.StackTrace[..lineReturnIndex].Contains($"{className}.{methodName}"))
         {
             return new TestFailedException(UTFUnitTestOutcome.NotFound, missingMethodException.Message, missingMethodException);
         }

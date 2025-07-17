@@ -170,17 +170,13 @@ public class FileUtilityTests : TestContainer
     private void SetupMockFileAPIs(string[] files)
     {
         _fileUtility.Setup(fu => fu.GetFilesInADirectory(It.IsAny<string>())).Returns((string dp) =>
-#pragma warning disable CA1865 // Use char overload
-            [.. files.Where(f => f.Contains(dp) && f.LastIndexOf('\\') == (f.IndexOf(dp, StringComparison.Ordinal) + dp.Length) && !f.EndsWith("\\", StringComparison.Ordinal))]);
+            [.. files.Where(f => f.Contains(dp) && f.LastIndexOf('\\') == (f.IndexOf(dp, StringComparison.Ordinal) + dp.Length) && !f.EndsWith('\\'))]);
         _fileUtility.Setup(fu => fu.GetDirectoriesInADirectory(It.IsAny<string>())).Returns((string dp) => [.. files.Where(f => f.Contains(dp) && f.LastIndexOf('\\') > (f.IndexOf(dp, StringComparison.Ordinal) + dp.Length))
                     .Select(f =>
                     {
-#pragma warning disable IDE0057 // Use range operator
-                        string val = f.Substring(
-                            f.IndexOf(dp, StringComparison.Ordinal) + dp.Length + 1,
-                            f.Length - (f.IndexOf(dp, StringComparison.Ordinal) + dp.Length + 1));
-                        return f.Substring(0, dp.Length + 1 + val.IndexOf('\\'));
-#pragma warning restore IDE0057 // Use range operator
+                        string val = f[
+                            (f.IndexOf(dp, StringComparison.Ordinal) + dp.Length + 1)..];
+                        return f[..(dp.Length + 1 + val.IndexOf('\\'))];
                     })
                     .Distinct()]);
     }
