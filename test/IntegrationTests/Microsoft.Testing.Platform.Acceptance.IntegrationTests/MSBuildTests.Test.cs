@@ -119,7 +119,7 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
         {
             ["DOTNET_ROOT"] = Path.Combine(RootFinder.Find(), ".dotnet"),
         });
-        StringAssert.Contains(commandLine.StandardOutput, "Tests succeeded");
+        Assert.Contains("Tests succeeded", commandLine.StandardOutput);
     }
 
     [TestMethod]

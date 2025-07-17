@@ -28,7 +28,7 @@ public class DynamicDataNameProviderTests
         //  you will get empty string while with the call you will get "null,a".
         //
         // check that this is still true:
-        ArgumentException exception = Assert.ThrowsException<ArgumentException>(() => DynamicDataNameProvider.GetUidFragment(["parameter1"], [null, "a"], 0));
+        ArgumentException exception = Assert.ThrowsExactly<ArgumentException>(() => DynamicDataNameProvider.GetUidFragment(["parameter1"], [null, "a"], 0));
         Assert.AreEqual("Parameter count mismatch. The provided data (null, a) have 2 items, but there are 1 parameters.", exception.Message);
     }
 }
