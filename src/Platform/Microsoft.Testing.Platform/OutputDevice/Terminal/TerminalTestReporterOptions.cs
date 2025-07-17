@@ -6,11 +6,6 @@ namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 internal sealed class TerminalTestReporterOptions
 {
     /// <summary>
-    /// Gets path to which all other paths in output should be relative.
-    /// </summary>
-    public string? BaseDirectory { get; init; }
-
-    /// <summary>
     /// Gets a value indicating whether we should show passed tests.
     /// </summary>
     public Func<bool> ShowPassedTests { get; init; } = () => true;
