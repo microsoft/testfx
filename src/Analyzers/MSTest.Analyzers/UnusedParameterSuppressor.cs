@@ -22,6 +22,7 @@ public sealed class UnusedParameterSuppressor : DiagnosticSuppressor
     // https://learn.microsoft.com/dotnet/fundamentals/code-analysis/style-rules/ide0060
     private const string SuppressedDiagnosticId = "IDE0060";
 
+    /// <inheritdoc cref="Resources.UnusedParameterSuppressorJustification"/>
     public static readonly SuppressionDescriptor Rule =
         new(DiagnosticIds.UnusedParameterSuppressorRuleId, SuppressedDiagnosticId, Resources.UnusedParameterSuppressorJustification);
 
