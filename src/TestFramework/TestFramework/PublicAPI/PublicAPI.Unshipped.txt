@@ -41,3 +41,17 @@ static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.Equals(obje
 static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.ReferenceEquals(object? objA, object? objB) -> bool
 static Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert.Equals(object? objA, object? objB) -> bool
 static Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert.ReferenceEquals(object? objA, object? objB) -> bool
+Microsoft.VisualStudio.TestTools.UnitTesting.Frameworks
+Microsoft.VisualStudio.TestTools.UnitTesting.Frameworks.Net = 4 -> Microsoft.VisualStudio.TestTools.UnitTesting.Frameworks
+Microsoft.VisualStudio.TestTools.UnitTesting.Frameworks.Net6OrGreater = 8 -> Microsoft.VisualStudio.TestTools.UnitTesting.Frameworks
+Microsoft.VisualStudio.TestTools.UnitTesting.Frameworks.Net7OrGreater = 16 -> Microsoft.VisualStudio.TestTools.UnitTesting.Frameworks
+Microsoft.VisualStudio.TestTools.UnitTesting.Frameworks.Net8OrGreater = 32 -> Microsoft.VisualStudio.TestTools.UnitTesting.Frameworks
+Microsoft.VisualStudio.TestTools.UnitTesting.Frameworks.Net9OrGreater = 64 -> Microsoft.VisualStudio.TestTools.UnitTesting.Frameworks
+Microsoft.VisualStudio.TestTools.UnitTesting.Frameworks.NetCore = 2 -> Microsoft.VisualStudio.TestTools.UnitTesting.Frameworks
+Microsoft.VisualStudio.TestTools.UnitTesting.Frameworks.NetFramework = 1 -> Microsoft.VisualStudio.TestTools.UnitTesting.Frameworks
+Microsoft.VisualStudio.TestTools.UnitTesting.FrameworkConditionAttribute
+Microsoft.VisualStudio.TestTools.UnitTesting.FrameworkConditionAttribute.FrameworkConditionAttribute(Microsoft.VisualStudio.TestTools.UnitTesting.ConditionMode mode, Microsoft.VisualStudio.TestTools.UnitTesting.Frameworks frameworks) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.FrameworkConditionAttribute.FrameworkConditionAttribute(Microsoft.VisualStudio.TestTools.UnitTesting.Frameworks frameworks) -> void
+override Microsoft.VisualStudio.TestTools.UnitTesting.FrameworkConditionAttribute.GroupName.get -> string!
+override Microsoft.VisualStudio.TestTools.UnitTesting.FrameworkConditionAttribute.IgnoreMessage.get -> string?
+override Microsoft.VisualStudio.TestTools.UnitTesting.FrameworkConditionAttribute.ShouldRun.get -> bool
