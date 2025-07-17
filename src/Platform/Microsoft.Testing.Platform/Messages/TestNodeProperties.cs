@@ -11,7 +11,7 @@ public interface IProperty;
 /// <summary>
 /// Base class for test node state properties.
 /// </summary>
-public abstract class TestNodeStateProperty : IProperty
+public abstract class TestNodeStateProperty : IProperty, IEquatable<TestNodeStateProperty>
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="TestNodeStateProperty"/> class.
@@ -41,12 +41,24 @@ public abstract class TestNodeStateProperty : IProperty
         builder.Append(" }");
         return builder.ToString();
     }
+
+    /// <inheritdoc />
+    public override bool Equals(object? obj)
+        => Equals(obj as TestNodeStateProperty);
+
+    /// <inheritdoc />
+    public bool Equals(TestNodeStateProperty? other)
+        => other is not null && Explanation == other.Explanation;
+
+    /// <inheritdoc />
+    public override int GetHashCode()
+        => Explanation?.GetHashCode() ?? 0;
 }
 
 /// <summary>
 /// Property that represents test node that has been discovered.
 /// </summary>
-public sealed class DiscoveredTestNodeStateProperty : TestNodeStateProperty
+public sealed class DiscoveredTestNodeStateProperty : TestNodeStateProperty, IEquatable<DiscoveredTestNodeStateProperty>
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="DiscoveredTestNodeStateProperty"/> class.
@@ -72,12 +84,24 @@ public sealed class DiscoveredTestNodeStateProperty : TestNodeStateProperty
         builder.Append(" }");
         return builder.ToString();
     }
+
+    /// <inheritdoc />
+    public override bool Equals(object? obj)
+        => Equals(obj as DiscoveredTestNodeStateProperty);
+
+    /// <inheritdoc />
+    public bool Equals(DiscoveredTestNodeStateProperty? other)
+        => other is not null && Explanation == other.Explanation;
+
+    /// <inheritdoc />
+    public override int GetHashCode()
+        => Explanation?.GetHashCode() ?? 0;
 }
 
 /// <summary>
 /// Property that represents a test node that is being executed.
 /// </summary>
-public sealed class InProgressTestNodeStateProperty : TestNodeStateProperty
+public sealed class InProgressTestNodeStateProperty : TestNodeStateProperty, IEquatable<InProgressTestNodeStateProperty>
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="InProgressTestNodeStateProperty"/> class.
@@ -103,12 +127,24 @@ public sealed class InProgressTestNodeStateProperty : TestNodeStateProperty
         builder.Append(" }");
         return builder.ToString();
     }
+
+    /// <inheritdoc />
+    public override bool Equals(object? obj)
+        => Equals(obj as InProgressTestNodeStateProperty);
+
+    /// <inheritdoc />
+    public bool Equals(InProgressTestNodeStateProperty? other)
+        => other is not null && Explanation == other.Explanation;
+
+    /// <inheritdoc />
+    public override int GetHashCode()
+        => Explanation?.GetHashCode() ?? 0;
 }
 
 /// <summary>
 /// Property that represents a test node that has been executed and passed.
 /// </summary>
-public sealed class PassedTestNodeStateProperty : TestNodeStateProperty
+public sealed class PassedTestNodeStateProperty : TestNodeStateProperty, IEquatable<PassedTestNodeStateProperty>
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="PassedTestNodeStateProperty"/> class.
@@ -134,12 +170,24 @@ public sealed class PassedTestNodeStateProperty : TestNodeStateProperty
         builder.Append(" }");
         return builder.ToString();
     }
+
+    /// <inheritdoc />
+    public override bool Equals(object? obj)
+        => Equals(obj as PassedTestNodeStateProperty);
+
+    /// <inheritdoc />
+    public bool Equals(PassedTestNodeStateProperty? other)
+        => other is not null && Explanation == other.Explanation;
+
+    /// <inheritdoc />
+    public override int GetHashCode()
+        => Explanation?.GetHashCode() ?? 0;
 }
 
 /// <summary>
 /// Property that represents a test node that has been skipped.
 /// </summary>
-public sealed class SkippedTestNodeStateProperty : TestNodeStateProperty
+public sealed class SkippedTestNodeStateProperty : TestNodeStateProperty, IEquatable<SkippedTestNodeStateProperty>
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="SkippedTestNodeStateProperty"/> class.
@@ -165,12 +213,24 @@ public sealed class SkippedTestNodeStateProperty : TestNodeStateProperty
         builder.Append(" }");
         return builder.ToString();
     }
+
+    /// <inheritdoc />
+    public override bool Equals(object? obj)
+        => Equals(obj as SkippedTestNodeStateProperty);
+
+    /// <inheritdoc />
+    public bool Equals(SkippedTestNodeStateProperty? other)
+        => other is not null && Explanation == other.Explanation;
+
+    /// <inheritdoc />
+    public override int GetHashCode()
+        => Explanation?.GetHashCode() ?? 0;
 }
 
 /// <summary>
 /// Property that represents a test node that has been failed.
 /// </summary>
-public sealed class FailedTestNodeStateProperty : TestNodeStateProperty
+public sealed class FailedTestNodeStateProperty : TestNodeStateProperty, IEquatable<FailedTestNodeStateProperty>
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="FailedTestNodeStateProperty"/> class.
@@ -220,12 +280,24 @@ public sealed class FailedTestNodeStateProperty : TestNodeStateProperty
         builder.Append($"{nameof(Exception)} = ");
         builder.Append(Exception);
     }
+
+    /// <inheritdoc />
+    public override bool Equals(object? obj)
+        => Equals(obj as FailedTestNodeStateProperty);
+
+    /// <inheritdoc />
+    public bool Equals(FailedTestNodeStateProperty? other)
+        => other is not null && Explanation == other.Explanation && Equals(Exception, other.Exception);
+
+    /// <inheritdoc />
+    public override int GetHashCode()
+        => RoslynHashCode.Combine(Explanation, Exception);
 }
 
 /// <summary>
 /// Property that represents an eventual error in the test node.
 /// </summary>
-public sealed class ErrorTestNodeStateProperty : TestNodeStateProperty
+public sealed class ErrorTestNodeStateProperty : TestNodeStateProperty, IEquatable<ErrorTestNodeStateProperty>
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="ErrorTestNodeStateProperty"/> class.
@@ -275,12 +347,24 @@ public sealed class ErrorTestNodeStateProperty : TestNodeStateProperty
         builder.Append($"{nameof(Exception)} = ");
         builder.Append(Exception);
     }
+
+    /// <inheritdoc />
+    public override bool Equals(object? obj)
+        => Equals(obj as ErrorTestNodeStateProperty);
+
+    /// <inheritdoc />
+    public bool Equals(ErrorTestNodeStateProperty? other)
+        => other is not null && Explanation == other.Explanation && Equals(Exception, other.Exception);
+
+    /// <inheritdoc />
+    public override int GetHashCode()
+        => RoslynHashCode.Combine(Explanation, Exception);
 }
 
 /// <summary>
 /// Property that represents an eventual timeout in the test node.
 /// </summary>
-public sealed class TimeoutTestNodeStateProperty : TestNodeStateProperty
+public sealed class TimeoutTestNodeStateProperty : TestNodeStateProperty, IEquatable<TimeoutTestNodeStateProperty>
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="TimeoutTestNodeStateProperty"/> class.
@@ -336,12 +420,24 @@ public sealed class TimeoutTestNodeStateProperty : TestNodeStateProperty
         builder.Append($", {nameof(Timeout)} = ");
         builder.Append(Timeout);
     }
+
+    /// <inheritdoc />
+    public override bool Equals(object? obj)
+        => Equals(obj as TimeoutTestNodeStateProperty);
+
+    /// <inheritdoc />
+    public bool Equals(TimeoutTestNodeStateProperty? other)
+        => other is not null && Explanation == other.Explanation && Equals(Exception, other.Exception) && Timeout == other.Timeout;
+
+    /// <inheritdoc />
+    public override int GetHashCode()
+        => RoslynHashCode.Combine(Explanation, Exception, Timeout);
 }
 
 /// <summary>
 /// Property that represents an eventual cancellation of a test node.
 /// </summary>
-public sealed class CancelledTestNodeStateProperty : TestNodeStateProperty
+public sealed class CancelledTestNodeStateProperty : TestNodeStateProperty, IEquatable<CancelledTestNodeStateProperty>
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="CancelledTestNodeStateProperty"/> class.
@@ -391,12 +487,24 @@ public sealed class CancelledTestNodeStateProperty : TestNodeStateProperty
         builder.Append($"{nameof(Exception)} = ");
         builder.Append(Exception);
     }
+
+    /// <inheritdoc />
+    public override bool Equals(object? obj)
+        => Equals(obj as CancelledTestNodeStateProperty);
+
+    /// <inheritdoc />
+    public bool Equals(CancelledTestNodeStateProperty? other)
+        => other is not null && Explanation == other.Explanation && Equals(Exception, other.Exception);
+
+    /// <inheritdoc />
+    public override int GetHashCode()
+        => RoslynHashCode.Combine(Explanation, Exception);
 }
 
 /// <summary>
 /// Information about the timing of a test node.
 /// </summary>
-public readonly struct TimingInfo
+public readonly struct TimingInfo : IEquatable<TimingInfo>
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="TimingInfo"/> struct.
@@ -440,12 +548,36 @@ public readonly struct TimingInfo
         builder.Append(" }");
         return builder.ToString();
     }
+
+    /// <inheritdoc />
+    public override bool Equals(object? obj)
+        => obj is TimingInfo other && Equals(other);
+
+    /// <inheritdoc />
+    public bool Equals(TimingInfo other)
+        => StartTime.Equals(other.StartTime) && EndTime.Equals(other.EndTime) && Duration.Equals(other.Duration);
+
+    /// <inheritdoc />
+    public override int GetHashCode()
+        => RoslynHashCode.Combine(StartTime, EndTime, Duration);
+
+    /// <summary>
+    /// Implementation of the non-equality operator.
+    /// </summary>
+    public static bool operator !=(TimingInfo left, TimingInfo right)
+        => !(left == right);
+
+    /// <summary>
+    /// Implementation of the equality operator.
+    /// </summary>
+    public static bool operator ==(TimingInfo left, TimingInfo right)
+        => left.Equals(right);
 }
 
 /// <summary>
 /// Information about the timing of a test node step.
 /// </summary>
-public sealed class StepTimingInfo
+public sealed class StepTimingInfo : IEquatable<StepTimingInfo>
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="StepTimingInfo"/> class.
@@ -490,12 +622,24 @@ public sealed class StepTimingInfo
         builder.Append(" }");
         return builder.ToString();
     }
+
+    /// <inheritdoc />
+    public override bool Equals(object? obj)
+        => Equals(obj as StepTimingInfo);
+
+    /// <inheritdoc />
+    public bool Equals(StepTimingInfo? other)
+        => other is not null && Id == other.Id && Description == other.Description && Timing.Equals(other.Timing);
+
+    /// <inheritdoc />
+    public override int GetHashCode()
+        => RoslynHashCode.Combine(Id, Description, Timing);
 }
 
 /// <summary>
 /// Property that represents the timing of a test node.
 /// </summary>
-public sealed class TimingProperty : IProperty
+public sealed class TimingProperty : IProperty, IEquatable<TimingProperty>
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="TimingProperty"/> class with only global timing.
@@ -541,12 +685,24 @@ public sealed class TimingProperty : IProperty
         builder.Append(" }");
         return builder.ToString();
     }
+
+    /// <inheritdoc />
+    public override bool Equals(object? obj)
+        => Equals(obj as TimingProperty);
+
+    /// <inheritdoc />
+    public bool Equals(TimingProperty? other)
+        => other is not null && GlobalTiming.Equals(other.GlobalTiming) && StepTimings.SequenceEqual(other.StepTimings);
+
+    /// <inheritdoc />
+    public override int GetHashCode()
+        => RoslynHashCode.Combine(GlobalTiming, StructuralComparisons.StructuralEqualityComparer.GetHashCode(StepTimings));
 }
 
 /// <summary>
 /// Line position in a file.
 /// </summary>
-public readonly struct LinePosition
+public readonly struct LinePosition : IEquatable<LinePosition>
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="LinePosition"/> struct.
@@ -583,12 +739,36 @@ public readonly struct LinePosition
         builder.Append('}');
         return builder.ToString();
     }
+
+    /// <inheritdoc />
+    public override bool Equals(object? obj)
+        => obj is LinePosition other && Equals(other);
+
+    /// <inheritdoc />
+    public bool Equals(LinePosition other)
+        => Line == other.Line && Column == other.Column;
+
+    /// <inheritdoc />
+    public override int GetHashCode()
+        => RoslynHashCode.Combine(Line, Column);
+
+    /// <summary>
+    /// Implementation of the non-equality operator.
+    /// </summary>
+    public static bool operator !=(LinePosition left, LinePosition right)
+        => !(left == right);
+
+    /// <summary>
+    /// Implementation of the equality operator.
+    /// </summary>
+    public static bool operator ==(LinePosition left, LinePosition right)
+        => left.Equals(right);
 }
 
 /// <summary>
 /// Line position span in a file.
 /// </summary>
-public readonly struct LinePositionSpan
+public readonly struct LinePositionSpan : IEquatable<LinePositionSpan>
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="LinePositionSpan"/> struct.
@@ -625,12 +805,36 @@ public readonly struct LinePositionSpan
         builder.Append('}');
         return builder.ToString();
     }
+
+    /// <inheritdoc />
+    public override bool Equals(object? obj)
+        => obj is LinePositionSpan other && Equals(other);
+
+    /// <inheritdoc />
+    public bool Equals(LinePositionSpan other)
+        => Start.Equals(other.Start) && End.Equals(other.End);
+
+    /// <inheritdoc />
+    public override int GetHashCode()
+        => RoslynHashCode.Combine(Start, End);
+
+    /// <summary>
+    /// Implementation of the non-equality operator.
+    /// </summary>
+    public static bool operator !=(LinePositionSpan left, LinePositionSpan right)
+        => !(left == right);
+
+    /// <summary>
+    /// Implementation of the equality operator.
+    /// </summary>
+    public static bool operator ==(LinePositionSpan left, LinePositionSpan right)
+        => left.Equals(right);
 }
 
 /// <summary>
 /// Base property that represents a file location.
 /// </summary>
-public abstract class FileLocationProperty : IProperty
+public abstract class FileLocationProperty : IProperty, IEquatable<FileLocationProperty>
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="FileLocationProperty"/> class.
@@ -671,12 +875,24 @@ public abstract class FileLocationProperty : IProperty
         builder.Append($", {nameof(LineSpan)} = ");
         builder.Append(LineSpan);
     }
+
+    /// <inheritdoc />
+    public override bool Equals(object? obj)
+        => Equals(obj as FileLocationProperty);
+
+    /// <inheritdoc />
+    public bool Equals(FileLocationProperty? other)
+        => other is not null && FilePath == other.FilePath && LineSpan.Equals(other.LineSpan);
+
+    /// <inheritdoc />
+    public override int GetHashCode()
+        => RoslynHashCode.Combine(FilePath, LineSpan);
 }
 
 /// <summary>
 /// Property that represents a file location for a test node.
 /// </summary>
-public sealed class TestFileLocationProperty : FileLocationProperty
+public sealed class TestFileLocationProperty : FileLocationProperty, IEquatable<TestFileLocationProperty>
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="TestFileLocationProperty"/> class.
@@ -698,12 +914,23 @@ public sealed class TestFileLocationProperty : FileLocationProperty
         builder.Append(" }");
         return builder.ToString();
     }
+
+    /// <inheritdoc />
+    public override bool Equals(object? obj)
+        => Equals(obj as TestFileLocationProperty);
+
+    /// <inheritdoc />
+    public bool Equals(TestFileLocationProperty? other) => other is not null && FilePath == other.FilePath && LineSpan.Equals(other.LineSpan);
+
+    /// <inheritdoc />
+    public override int GetHashCode()
+        => RoslynHashCode.Combine(FilePath, LineSpan);
 }
 
 /// <summary>
 /// Property that uniquely identifies a test method. Values are ECMA-335 compliant.
 /// </summary>
-public sealed class TestMethodIdentifierProperty : IProperty
+public sealed class TestMethodIdentifierProperty : IProperty, IEquatable<TestMethodIdentifierProperty>
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="TestMethodIdentifierProperty"/> class.
@@ -791,12 +1018,24 @@ public sealed class TestMethodIdentifierProperty : IProperty
         builder.Append(" }");
         return builder.ToString();
     }
+
+    /// <inheritdoc />
+    public override bool Equals(object? obj)
+        => Equals(obj as TestMethodIdentifierProperty);
+
+    /// <inheritdoc />
+    public bool Equals(TestMethodIdentifierProperty? other)
+        => other is not null && AssemblyFullName == other.AssemblyFullName && Namespace == other.Namespace && TypeName == other.TypeName && MethodName == other.MethodName && MethodArity == other.MethodArity && ParameterTypeFullNames.SequenceEqual(other.ParameterTypeFullNames) && ReturnTypeFullName == other.ReturnTypeFullName;
+
+    /// <inheritdoc />
+    public override int GetHashCode()
+        => RoslynHashCode.Combine(AssemblyFullName, Namespace, TypeName, MethodName, MethodArity, StructuralComparisons.StructuralEqualityComparer.GetHashCode(ParameterTypeFullNames), ReturnTypeFullName);
 }
 
 /// <summary>
 /// Property that represents a generic test metadata property in the shape of a key-value pair associated with a <see cref="TestNode"/>.
 /// </summary>
-public sealed class TestMetadataProperty : IProperty
+public sealed class TestMetadataProperty : IProperty, IEquatable<TestMetadataProperty>
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="TestMetadataProperty"/> class with a key and value.
@@ -841,13 +1080,25 @@ public sealed class TestMetadataProperty : IProperty
         builder.Append(" }");
         return builder.ToString();
     }
+
+    /// <inheritdoc />
+    public override bool Equals(object? obj)
+        => Equals(obj as TestMetadataProperty);
+
+    /// <inheritdoc />
+    public bool Equals(TestMetadataProperty? other)
+        => other is not null && Key == other.Key && Value == other.Value;
+
+    /// <inheritdoc />
+    public override int GetHashCode()
+        => RoslynHashCode.Combine(Key, Value);
 }
 
 /// <summary>
 /// Property that represents standard output to associate with a test node.
 /// </summary>
 [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
-public class StandardOutputProperty : IProperty
+public class StandardOutputProperty : IProperty, IEquatable<StandardOutputProperty>
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="StandardOutputProperty"/> class.
@@ -872,13 +1123,25 @@ public class StandardOutputProperty : IProperty
         builder.Append(" }");
         return builder.ToString();
     }
+
+    /// <inheritdoc />
+    public override bool Equals(object? obj)
+        => Equals(obj as StandardOutputProperty);
+
+    /// <inheritdoc />
+    public bool Equals(StandardOutputProperty? other)
+        => other is not null && StandardOutput == other.StandardOutput;
+
+    /// <inheritdoc />
+    public override int GetHashCode()
+        => StandardOutput?.GetHashCode() ?? 0;
 }
 
 /// <summary>
 /// Property that represents standard error to associate with a test node.
 /// </summary>
 [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
-public class StandardErrorProperty : IProperty
+public class StandardErrorProperty : IProperty, IEquatable<StandardErrorProperty>
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="StandardErrorProperty"/> class.
@@ -903,12 +1166,24 @@ public class StandardErrorProperty : IProperty
         builder.Append(" }");
         return builder.ToString();
     }
+
+    /// <inheritdoc />
+    public override bool Equals(object? obj)
+        => Equals(obj as StandardErrorProperty);
+
+    /// <inheritdoc />
+    public bool Equals(StandardErrorProperty? other)
+        => other is not null && StandardError == other.StandardError;
+
+    /// <inheritdoc />
+    public override int GetHashCode()
+        => StandardError?.GetHashCode() ?? 0;
 }
 
 /// <summary>
 /// Property that represents multiple artifacts/attachments to associate with a test node.
 /// </summary>
-public sealed class FileArtifactProperty : IProperty
+public sealed class FileArtifactProperty : IProperty, IEquatable<FileArtifactProperty>
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="FileArtifactProperty"/> class.
@@ -953,9 +1228,21 @@ public sealed class FileArtifactProperty : IProperty
         builder.Append(" }");
         return builder.ToString();
     }
+
+    /// <inheritdoc />
+    public override bool Equals(object? obj)
+        => Equals(obj as FileArtifactProperty);
+
+    /// <inheritdoc />
+    public bool Equals(FileArtifactProperty? other)
+        => other is not null && Equals(FileInfo, other.FileInfo) && DisplayName == other.DisplayName && Description == other.Description;
+
+    /// <inheritdoc />
+    public override int GetHashCode()
+        => RoslynHashCode.Combine(FileInfo, DisplayName, Description);
 }
 
-internal sealed class SerializableKeyValuePairStringProperty : IProperty
+internal sealed class SerializableKeyValuePairStringProperty : IProperty, IEquatable<SerializableKeyValuePairStringProperty>
 {
     public SerializableKeyValuePairStringProperty(string key, string value)
     {
@@ -979,4 +1266,13 @@ internal sealed class SerializableKeyValuePairStringProperty : IProperty
         builder.Append(" }");
         return builder.ToString();
     }
+
+    public override bool Equals(object? obj)
+        => Equals(obj as SerializableKeyValuePairStringProperty);
+
+    public bool Equals(SerializableKeyValuePairStringProperty? other)
+        => other is not null && Key == other.Key && Value == other.Value;
+
+    public override int GetHashCode()
+        => RoslynHashCode.Combine(Key, Value);
 }
