@@ -110,7 +110,7 @@ public sealed class FileLoggerTests : IDisposable
             .Throws<IOException>()
             .Returns(_mockStream.Object);
 
-        Assert.ThrowsException<InvalidOperationException>(() => _ = new FileLogger(
+        Assert.ThrowsExactly<InvalidOperationException>(() => _ = new FileLogger(
             new(LogFolder, LogPrefix, fileName: null, syncFlush: true),
             LogLevel.Trace,
             _mockClock.Object,
