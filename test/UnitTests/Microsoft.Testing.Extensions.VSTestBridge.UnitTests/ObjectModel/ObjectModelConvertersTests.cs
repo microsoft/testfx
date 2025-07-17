@@ -267,7 +267,7 @@ public sealed class ObjectModelConvertersTests
         var testNode = testResult.ToTestNode(isTrxEnabled: false, useFullyQualifiedNameAsUid: false, new NamedFeatureCapabilityWithVSTestProvider(), new ServerModeCommandLineOptions(), ClientInfo);
 
         StandardOutputProperty[] standardOutputProperties = [.. testNode.Properties.OfType<StandardOutputProperty>()];
-        Assert.IsTrue(standardOutputProperties.Length == 1);
+        Assert.AreEqual(1, standardOutputProperties.Length);
         Assert.AreEqual($"message1{Environment.NewLine}message2", standardOutputProperties[0].StandardOutput);
     }
 
@@ -287,7 +287,7 @@ public sealed class ObjectModelConvertersTests
         var testNode = testResult.ToTestNode(isTrxEnabled: false, useFullyQualifiedNameAsUid: false, new NamedFeatureCapabilityWithVSTestProvider(), new ServerModeCommandLineOptions(), ClientInfo);
 
         StandardErrorProperty[] standardErrorProperties = [.. testNode.Properties.OfType<StandardErrorProperty>()];
-        Assert.IsTrue(standardErrorProperties.Length == 1);
+        Assert.AreEqual(1, standardErrorProperties.Length);
         Assert.AreEqual($"message1{Environment.NewLine}message2", standardErrorProperties[0].StandardError);
     }
 

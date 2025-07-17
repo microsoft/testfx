@@ -27,11 +27,11 @@ public sealed class TerminalTestReporterTests
         TerminalTestReporter.AppendStackFrame(terminal, firstStackTraceLine);
 
 #if NETCOREAPP
-        StringAssert.Contains(terminal.Output, "    at Microsoft.Testing.Platform.UnitTests.TerminalTestReporterTests.AppendStackFrameFormatsStackTraceLineCorrectly() in ");
+        Assert.Contains("    at Microsoft.Testing.Platform.UnitTests.TerminalTestReporterTests.AppendStackFrameFormatsStackTraceLineCorrectly() in ", terminal.Output);
 #else
         // This is caused by us using portable symbols, and .NET Framework 4.6.2, once we update to .NET Framework 4.7.2 the path to file will be included in the stacktrace and this won't be necessary.
         // See first point here: https://learn.microsoft.com/en-us/dotnet/core/diagnostics/symbols#support-for-portable-pdbs
-        StringAssert.Contains(terminal.Output, "    at Microsoft.Testing.Platform.UnitTests.TerminalTestReporterTests.AppendStackFrameFormatsStackTraceLineCorrectly()");
+        Assert.Contains("    at Microsoft.Testing.Platform.UnitTests.TerminalTestReporterTests.AppendStackFrameFormatsStackTraceLineCorrectly()", terminal.Output);
 #endif
         // Line number without the respective file
         Assert.IsFalse(terminal.Output.Contains(" :0"));

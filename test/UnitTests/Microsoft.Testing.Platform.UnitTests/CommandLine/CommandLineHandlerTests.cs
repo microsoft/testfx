@@ -38,8 +38,8 @@ public sealed class CommandLineHandlerTests
 
         // Assert
         Assert.IsFalse(result.IsValid);
-        StringAssert.Contains(result.ErrorMessage, "Invalid command line arguments:");
-        StringAssert.Contains(result.ErrorMessage, "Unexpected argument 'a'");
+        Assert.Contains("Invalid command line arguments:", result.ErrorMessage);
+        Assert.Contains("Unexpected argument 'a'", result.ErrorMessage);
     }
 
     [TestMethod]
@@ -75,7 +75,7 @@ public sealed class CommandLineHandlerTests
 
         // Assert
         Assert.IsFalse(result.IsValid);
-        StringAssert.Contains(result.ErrorMessage, "Option '--userOption' is declared by multiple extensions: 'Microsoft Testing Platform command line provider', 'Microsoft Testing Platform command line provider'");
+        Assert.Contains("Option '--userOption' is declared by multiple extensions: 'Microsoft Testing Platform command line provider', 'Microsoft Testing Platform command line provider'", result.ErrorMessage);
     }
 
     [TestMethod]
