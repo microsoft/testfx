@@ -675,7 +675,7 @@ public sealed class TimingProperty : IProperty, IEquatable<TimingProperty>
     public override string ToString()
     {
         var builder = new StringBuilder();
-        builder.Append(nameof(TestNodeStateProperty));
+        builder.Append(nameof(TimingProperty));
         builder.Append(" { ");
         builder.Append($"{nameof(GlobalTiming)} = ");
         builder.Append(GlobalTiming);
