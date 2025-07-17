@@ -194,10 +194,10 @@ public sealed class TrxMessagesProperty : IProperty
     public override string ToString()
     {
         var builder = new StringBuilder();
-        builder.Append(nameof(DebugOrTraceTrxMessage));
+        builder.Append(nameof(TrxMessagesProperty));
         builder.Append(" { ");
 
-        builder.Append("Messages = [");
+        builder.Append($"{nameof(Messages)} = [");
         builder.AppendJoin(", ", Messages.Select(x => x.ToString()));
         builder.Append(']');
         builder.Append(" }");
@@ -226,9 +226,9 @@ public sealed class TrxCategoriesProperty : IProperty
     public override string ToString()
     {
         var builder = new StringBuilder();
-        builder.Append(nameof(DebugOrTraceTrxMessage));
+        builder.Append(nameof(TrxCategoriesProperty));
         builder.Append(" { ");
-        builder.Append("Categories = [");
+        builder.Append($"{nameof(Categories)} = [");
         builder.AppendJoin(", ", Categories);
         builder.Append(']');
         builder.Append(" }");

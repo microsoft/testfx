@@ -430,12 +430,12 @@ public readonly struct TimingInfo
     public override string ToString()
     {
         var builder = new StringBuilder();
-        builder.Append("TimingInfo { ");
-        builder.Append("StartTime = ");
+        builder.Append($"{nameof(TimingInfo)} {{ ");
+        builder.Append($"{nameof(StartTime)} = ");
         builder.Append(StartTime);
-        builder.Append(", EndTime = ");
+        builder.Append($", {nameof(EndTime)} = ");
         builder.Append(EndTime);
-        builder.Append(", Duration = ");
+        builder.Append($", {nameof(Duration)} = ");
         builder.Append(Duration.ToString());
         builder.Append(" }");
         return builder.ToString();
@@ -479,13 +479,13 @@ public sealed class StepTimingInfo
     public override string ToString()
     {
         var builder = new StringBuilder();
-        builder.Append("StepTimingInfo");
+        builder.Append(nameof(StepTimingInfo));
         builder.Append(" { ");
-        builder.Append("Id = ");
+        builder.Append($"{nameof(Id)} = ");
         builder.Append(Id);
-        builder.Append(", Description = ");
+        builder.Append($", {nameof(Description)} = ");
         builder.Append(Description);
-        builder.Append(", Timing = ");
+        builder.Append($", {nameof(Timing)} = ");
         builder.Append(Timing);
         builder.Append(" }");
         return builder.ToString();
@@ -533,9 +533,9 @@ public sealed class TimingProperty : IProperty
         var builder = new StringBuilder();
         builder.Append(nameof(TestNodeStateProperty));
         builder.Append(" { ");
-        builder.Append("GlobalTiming = ");
+        builder.Append($"{nameof(GlobalTiming)} = ");
         builder.Append(GlobalTiming);
-        builder.Append(", StepTimings = [");
+        builder.Append($", {nameof(StepTimings)} = [");
         builder.AppendJoin(", ", StepTimings.Select(x => x.ToString()));
         builder.Append(']');
         builder.Append(" }");
@@ -573,11 +573,11 @@ public readonly struct LinePosition
     public override string ToString()
     {
         var builder = new StringBuilder();
-        builder.Append("LinePosition");
+        builder.Append(nameof(LinePosition));
         builder.Append(" { ");
-        builder.Append("Line = ");
+        builder.Append($"{nameof(Line)} = ");
         builder.Append(Line);
-        builder.Append(", Column = ");
+        builder.Append($", {nameof(Column)} = ");
         builder.Append(Column);
         builder.Append(' ');
         builder.Append('}');
@@ -615,11 +615,11 @@ public readonly struct LinePositionSpan
     public override string ToString()
     {
         var builder = new StringBuilder();
-        builder.Append("LinePositionSpan");
+        builder.Append(nameof(LinePositionSpan));
         builder.Append(" { ");
-        builder.Append("Start = ");
+        builder.Append($"{nameof(Start)} = ");
         builder.Append(Start);
-        builder.Append(", End = ");
+        builder.Append($", {nameof(End)} = ");
         builder.Append(End);
         builder.Append(' ');
         builder.Append('}');
@@ -657,7 +657,7 @@ public abstract class FileLocationProperty : IProperty
     public override string ToString()
     {
         var builder = new StringBuilder();
-        builder.Append("FileLocationProperty");
+        builder.Append(nameof(FileLocationProperty));
         builder.Append(" { ");
         PrintMembers(builder);
         builder.Append(" }");
@@ -666,9 +666,9 @@ public abstract class FileLocationProperty : IProperty
 
     private protected virtual void PrintMembers(StringBuilder builder)
     {
-        builder.Append("FilePath = ");
+        builder.Append($"{nameof(FilePath)} = ");
         builder.Append(FilePath);
-        builder.Append(", LineSpan = ");
+        builder.Append($", {nameof(LineSpan)} = ");
         builder.Append(LineSpan);
     }
 }
@@ -692,7 +692,7 @@ public sealed class TestFileLocationProperty : FileLocationProperty
     public override string ToString()
     {
         var builder = new StringBuilder();
-        builder.Append("TestFileLocationProperty");
+        builder.Append(nameof(TestFileLocationProperty));
         builder.Append(" { ");
         PrintMembers(builder);
         builder.Append(" }");
@@ -772,21 +772,21 @@ public sealed class TestMethodIdentifierProperty : IProperty
     public override string ToString()
     {
         var builder = new StringBuilder();
-        builder.Append("TestMethodIdentifierProperty");
+        builder.Append(nameof(TestMethodIdentifierProperty));
         builder.Append(" { ");
-        builder.Append("AssemblyFullName = ");
+        builder.Append($"{nameof(AssemblyFullName)} = ");
         builder.Append(AssemblyFullName);
-        builder.Append(", Namespace = ");
+        builder.Append($", {nameof(Namespace)} = ");
         builder.Append(Namespace);
-        builder.Append(", TypeName = ");
+        builder.Append($", {nameof(TypeName)} = ");
         builder.Append(TypeName);
-        builder.Append(", MethodName = ");
+        builder.Append($", {nameof(MethodName)} = ");
         builder.Append(MethodName);
-        builder.Append(", MethodArity = ");
+        builder.Append($", {nameof(MethodArity)} = ");
         builder.Append(MethodArity);
-        builder.Append(", ParameterTypeFullNames = [");
+        builder.Append($", {nameof(ParameterTypeFullNames)} = [");
         builder.AppendJoin(", ", ParameterTypeFullNames);
-        builder.Append("], ReturnTypeFullName = ");
+        builder.Append($"], {nameof(ReturnTypeFullName)} = ");
         builder.Append(ReturnTypeFullName);
         builder.Append(" }");
         return builder.ToString();
@@ -832,11 +832,11 @@ public sealed class TestMetadataProperty : IProperty
     public override string ToString()
     {
         var builder = new StringBuilder();
-        builder.Append("TestMetadataProperty");
+        builder.Append(nameof(TestMetadataProperty));
         builder.Append(" { ");
-        builder.Append("Key = ");
+        builder.Append($"{nameof(Key)} = ");
         builder.Append(Key);
-        builder.Append(", Value = ");
+        builder.Append($", {nameof(Value)} = ");
         builder.Append(Value);
         builder.Append(" }");
         return builder.ToString();
@@ -865,9 +865,9 @@ public class StandardOutputProperty : IProperty
     public override string ToString()
     {
         var builder = new StringBuilder();
-        builder.Append("StandardOutputProperty");
+        builder.Append(nameof(StandardOutputProperty));
         builder.Append(" { ");
-        builder.Append("StandardOutput = ");
+        builder.Append($"{nameof(StandardOutput)} = ");
         builder.Append(StandardOutput);
         builder.Append(" }");
         return builder.ToString();
@@ -896,9 +896,9 @@ public class StandardErrorProperty : IProperty
     public override string ToString()
     {
         var builder = new StringBuilder();
-        builder.Append("StandardErrorProperty");
+        builder.Append(nameof(StandardErrorProperty));
         builder.Append(" { ");
-        builder.Append("StandardError = ");
+        builder.Append($"{nameof(StandardError)} = ");
         builder.Append(StandardError);
         builder.Append(" }");
         return builder.ToString();
@@ -942,13 +942,13 @@ public sealed class FileArtifactProperty : IProperty
     public override string ToString()
     {
         var builder = new StringBuilder();
-        builder.Append("FileArtifactProperty");
+        builder.Append(nameof(FileArtifactProperty));
         builder.Append(" { ");
-        builder.Append("FileInfo = ");
+        builder.Append($"{nameof(FileInfo)} = ");
         builder.Append(FileInfo);
-        builder.Append(", DisplayName = ");
+        builder.Append($", {nameof(DisplayName)} = ");
         builder.Append(DisplayName);
-        builder.Append(", Description = ");
+        builder.Append($", {nameof(Description)} = ");
         builder.Append(Description);
         builder.Append(" }");
         return builder.ToString();
@@ -970,12 +970,12 @@ internal sealed class SerializableKeyValuePairStringProperty : IProperty
     public override string ToString()
     {
         var builder = new StringBuilder();
-        builder.Append("SerializableKeyValuePairStringProperty");
+        builder.Append(nameof(SerializableKeyValuePairStringProperty));
         builder.Append(" { ");
-        builder.Append("Key = ");
-        builder.Append((object)Key);
-        builder.Append(", Value = ");
-        builder.Append((object)Value);
+        builder.Append($"{nameof(Key)} = ");
+        builder.Append(Key);
+        builder.Append($", {nameof(Value)} = ");
+        builder.Append(Value);
         builder.Append(" }");
         return builder.ToString();
     }
