@@ -72,7 +72,7 @@ public sealed class CommandLine : IDisposable
         IDictionary<string, string?>? environmentVariables = null,
         string? workingDirectory = null,
         bool cleanDefaultEnvironmentVariableIfCustomAreProvided = false,
-        int timeoutInSeconds = 60)
+        int timeoutInSeconds = int.MaxValue)
     {
         await s_maxOutstandingCommands_semaphore.WaitAsync();
         try

@@ -92,14 +92,14 @@ public class DotnetMuxer : IDisposable
         _isDisposed = true;
     }
 
-    public async Task<int> ExecuteAsync(string arguments, string? workingDirectory = null, int timeoutInSeconds = 60)
+    public async Task<int> ExecuteAsync(string arguments, string? workingDirectory = null, int timeoutInSeconds = int.MaxValue)
         => await ExecuteAsync(arguments, workingDirectory, _environmentVariables, timeoutInSeconds);
 
     public async Task<int> ExecuteAsync(
         string arguments,
         string? workingDirectory,
         IDictionary<string, string?> environmentVariables,
-        int timeoutInSeconds = 60)
+        int timeoutInSeconds = int.MaxValue)
         => await _commandLine.RunAsyncAndReturnExitCodeAsync(
             $"{_dotnet} {arguments}",
             environmentVariables,

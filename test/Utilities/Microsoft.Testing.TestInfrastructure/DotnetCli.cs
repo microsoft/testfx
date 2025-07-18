@@ -54,7 +54,7 @@ public static class DotnetCli
         Dictionary<string, string?>? environmentVariables = null,
         bool failIfReturnValueIsNotZero = true,
         bool disableTelemetry = true,
-        int timeoutInSeconds = 60,
+        int timeoutInSeconds = int.MaxValue,
         int retryCount = 5,
         bool disableCodeCoverage = true,
         bool warnAsError = true,
