@@ -41,7 +41,7 @@ public sealed class TestHost
         string? command = null,
         Dictionary<string, string?>? environmentVariables = null,
         bool disableTelemetry = true,
-        int timeoutSeconds = int.MaxValue)
+        int timeoutSeconds = 10000)
     {
         await s_maxOutstandingExecutions_semaphore.WaitAsync();
         try
