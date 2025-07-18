@@ -4,7 +4,7 @@
     <!-- C# Source generators have to target netstandard -->
     <TargetFrameworks>netstandard2.0</TargetFrameworks>
     <!-- Disable Polyfill validation for source generators -->
-    <PolyfillTargetsForNuget>false</PolyfillTargetsForNuget>
+    <PolyfillTargetsForNuget>true</PolyfillTargetsForNuget>
     <!-- Generates a package at build -->
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <!-- Do not include the generator as a lib dependency -->
