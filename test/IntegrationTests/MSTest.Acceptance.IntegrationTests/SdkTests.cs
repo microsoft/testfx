@@ -102,7 +102,7 @@ namespace MSTestSdkTest
 
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
-            compilationResult.AssertOutputMatchesRegex(@"MSTestSdk.*? \(net462\|x64\) passed");
+            compilationResult.AssertOutputMatchesRegex(@"MSTestSdk.*? \(net48\|x64\) passed");
         }
     }
 
