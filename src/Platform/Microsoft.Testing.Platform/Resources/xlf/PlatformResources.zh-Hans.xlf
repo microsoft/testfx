@@ -251,7 +251,7 @@
       </trans-unit>
       <trans-unit id="ExtensionWithSameUidAlreadyRegisteredErrorMessage">
         <source>Extensions with the same UID '{0}' have already been registered. Registered extensions are of types: {1}</source>
-        <target state="translated">已注册另一个具有相同 UID“{0}”的扩展。已注册的扩展属于“{1}”类型</target>
+        <target state="new">Extensions with the same UID '{0}' have already been registered. Registered extensions are of types: {1}</target>
         <note />
       </trans-unit>
       <trans-unit id="Failed">
