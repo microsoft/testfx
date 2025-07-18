@@ -268,7 +268,8 @@
     <!-- Multiple TFMs: we call _MTPTestTargetMultiTargeting which builds and dispatches to inner builds -->
     <CallTarget Targets="_MTPTestTargetMultiTargeting" Condition=" '$(TargetFramework)' == '' "/>
 
-    <!-- Single TFM: we call directly our target -->
+    <!-- Single TFM: we build and then call directly our target -->
+    <CallTarget Targets="Build" Condition=" '$(TargetFrameworks)' == '' " />
     <CallTarget Targets="InvokeTestingPlatform" Condition=" '$(TargetFrameworks)' == '' "/>
   </Target>
 
