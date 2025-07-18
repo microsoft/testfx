@@ -49,13 +49,20 @@ namespace MSTestSdkTest
 }
 """;
 
+    private const string SingleTestSourceCodeVSTest = SingleTestSourceCode + """
+
+        #file dotnet.config
+        [dotnet.test.runner]
+        name = "VSTest"
+        """;
+
     [TestMethod]
     [DynamicData(nameof(GetBuildMatrixMultiTfmFoldedBuildConfiguration), typeof(AcceptanceTestBase<NopAssetFixture>), DynamicDataSourceType.Method)]
     public async Task RunTests_With_VSTest(string multiTfm, BuildConfiguration buildConfiguration)
     {
         using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
             AssetName,
-            SingleTestSourceCode
+            SingleTestSourceCodeVSTest
             .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
             .PatchCodeWithReplace("$TargetFramework$", multiTfm)
             .PatchCodeWithReplace("$ExtraProperties$", "<UseVSTest>true</UseVSTest>"));
@@ -85,7 +92,7 @@ namespace MSTestSdkTest
                .PatchCodeWithReplace("$TargetFramework$", multiTfm)
                .PatchCodeWithReplace("$ExtraProperties$", string.Empty));
 
-        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"test -c {buildConfiguration} {testAsset.TargetAssetPath}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, workingDirectory: testAsset.TargetAssetPath);
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"test -c {buildConfiguration} --directory {testAsset.TargetAssetPath}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, workingDirectory: testAsset.TargetAssetPath);
         Assert.AreEqual(0, compilationResult.ExitCode);
 
         compilationResult.AssertOutputMatchesRegex(@"Tests succeeded: .* \[net9\.0|x64\]");
@@ -416,7 +423,7 @@ namespace MSTestSdkTest
     {
         using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
                AssetName,
-               SingleTestSourceCode
+               SingleTestSourceCodeVSTest
                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
                .PatchCodeWithReplace("$TargetFramework$", TargetFrameworks.NetCurrent)
                .PatchCodeWithReplace("$ExtraProperties$", "<IsTestApplication>false</IsTestApplication>"));

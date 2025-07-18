@@ -31,6 +31,8 @@ public sealed class PublishAotNonNativeTests : AcceptanceTestBase<NopAssetFixtur
         // They must not be next to the local dotnet.exe.
         string testsFailed = "error run failed: Tests failed:";
         compilationResult.AssertOutputContains(testsFailed);
+
+        Assert.Fail("For debugging purposes:\r\n" + compilationResult.StandardOutput);
         string failedResultsLine = compilationResult.StandardOutputLines.Single(l => l.Contains(testsFailed));
         if (failedResultsLine.Contains("dotnet"))
         {
