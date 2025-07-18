@@ -97,7 +97,7 @@ public static class DotnetCli
 
             environmentVariables["NUGET_PACKAGES"] = nugetGlobalPackagesFolder;
 
-            string extraArgs = warnAsError ? " /warnaserror" : string.Empty;
+            string extraArgs = warnAsError ? " -p:MSBuildTreatWarningsAsErrors=true" : string.Empty;
             extraArgs += suppressPreviewDotNetMessage ? " -p:SuppressNETCoreSdkPreviewMessage=true" : string.Empty;
             if (args.IndexOf("-- ", StringComparison.Ordinal) is int platformArgsIndex && platformArgsIndex > 0)
             {
