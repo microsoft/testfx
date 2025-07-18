@@ -751,12 +751,12 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="TypeContainingTestMethodShouldBeATestClassDescription">
         <source>Type containing '[TestMethod]' should be marked with '[TestClass]', otherwise the test method will be silently ignored.</source>
-        <target state="new">Type containing '[TestMethod]' should be marked with '[TestClass]', otherwise the test method will be silently ignored.</target>
+        <target state="translated">'[TestMethod]' を含む型は '[TestClass]' でマークする必要があります。そうしないとテスト メソッドは暗黙的に無視されます。</target>
         <note />
       </trans-unit>
       <trans-unit id="TypeContainingTestMethodShouldBeATestClassMessageFormat">
         <source>Type '{0}' contains test methods and should be marked with '[TestClass]'</source>
-        <target state="new">Type '{0}' contains test methods and should be marked with '[TestClass]'</target>
+        <target state="translated">型 '{0}' にはテスト メソッドが含まれており、'[TestClass]' でマークする必要があります</target>
         <note />
       </trans-unit>
       <trans-unit id="TypeContainingTestMethodShouldBeATestClassTitle">
@@ -776,7 +776,7 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="UnusedParameterSuppressorJustification">
         <source>TestContext parameter is required by MSTest for AssemblyInitialize and ClassInitialize methods</source>
-        <target state="new">TestContext parameter is required by MSTest for AssemblyInitialize and ClassInitialize methods</target>
+        <target state="translated">AssemblyInitialize メソッドと ClassInitialize メソッドに対する MSTest には TestContext パラメーターが必要です</target>
         <note />
       </trans-unit>
       <trans-unit id="UseAttributeOnTestMethodAnalyzerMessageFormat">

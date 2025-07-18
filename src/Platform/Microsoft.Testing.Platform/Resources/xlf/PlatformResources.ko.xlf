@@ -251,7 +251,7 @@
       </trans-unit>
       <trans-unit id="ExtensionWithSameUidAlreadyRegisteredErrorMessage">
         <source>Extensions with the same UID '{0}' have already been registered. Registered extensions are of types: {1}</source>
-        <target state="translated">UID '{0}'과(와) 동일한 다른 확장이 이미 등록되었습니다. 등록된 확장은 '{1}' 형식임</target>
+        <target state="new">Extensions with the same UID '{0}' have already been registered. Registered extensions are of types: {1}</target>
         <note />
       </trans-unit>
       <trans-unit id="Failed">

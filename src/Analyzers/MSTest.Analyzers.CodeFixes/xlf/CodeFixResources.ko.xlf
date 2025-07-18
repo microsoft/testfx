@@ -29,7 +29,7 @@
       </trans-unit>
       <trans-unit id="ChangeStructToClassAndAddTestClassFix">
         <source>Change to 'class' and add '[TestClass]'</source>
-        <target state="new">Change to 'class' and add '[TestClass]'</target>
+        <target state="translated">'class'로 변경하고 '[TestClass]'를 추가합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="FixAssertionArgsOrder">
