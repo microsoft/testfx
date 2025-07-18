@@ -33,10 +33,6 @@ public sealed class SdkTests : AcceptanceTestBase<SdkTests.TestAssetFixture>
 
 </Project>
 
-#file dotnet.config
-[dotnet.test.runner]
-name= "VSTest"
-
 #file UnitTest1.cs
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
