@@ -47,7 +47,7 @@ internal static class TestMethods
         }
 
         // We don't support async void
-        if (methodSymbol.ReturnsVoid && methodSymbol.IsAsync)
+        if (methodSymbol is { ReturnsVoid: true, IsAsync: true })
         {
             return false;
         }

@@ -57,7 +57,7 @@ internal sealed class CrashDumpProcessLifetimeHandler : ITestHostProcessLifetime
     {
         if (cancellation.IsCancellationRequested
             || testHostProcessInformation.HasExitedGracefully
-            || (AppDomain.CurrentDomain.GetData("ProcessKilledByHangDump") is string processKilledByHangDump && processKilledByHangDump == "true"))
+            || AppDomain.CurrentDomain.GetData("ProcessKilledByHangDump") is "true")
         {
             return;
         }

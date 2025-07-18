@@ -29,7 +29,7 @@ internal static class TestDataSourceHelpers
         out string? displayNameFromTestDataRow,
         out IList<string>? testCategoriesFromTestDataRow)
     {
-        if (d.Length == 1 && d[0] is ITestDataRow testDataRow)
+        if (d is [ITestDataRow testDataRow])
         {
             object? dataFromTestDataRow = testDataRow.Value;
             ignoreMessageFromTestDataRow = testDataRow.IgnoreMessage;

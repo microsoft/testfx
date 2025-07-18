@@ -21,9 +21,7 @@ internal static class AttributeDataExtensions
 
     private static bool TryGetTimeoutValue(this AttributeData attribute, INamedTypeSymbol? timeSpanSymbol, out TimeSpan timeout)
     {
-        if (attribute.ConstructorArguments.Length == 1
-            && attribute.ConstructorArguments[0].Type is { } executionTimeoutCtorArgType
-            && attribute.ConstructorArguments[0].Value is { } executionTimeoutCtorArgValue)
+        if (attribute.ConstructorArguments is [{ Type: { } executionTimeoutCtorArgType, Value: { } executionTimeoutCtorArgValue }])
         {
             if (executionTimeoutCtorArgType.SpecialType is SpecialType.System_Int32 or SpecialType.System_Int64)
             {

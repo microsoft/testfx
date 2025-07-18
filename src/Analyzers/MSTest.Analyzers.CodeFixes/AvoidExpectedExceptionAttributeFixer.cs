@@ -133,9 +133,7 @@ public sealed class AvoidExpectedExceptionAttributeFixer : CodeFixProvider
             {
                 return (expressionStatement.Expression, statement);
             }
-            else if (statement is LocalDeclarationStatementSyntax localDeclarationStatementSyntax &&
-                localDeclarationStatementSyntax.Declaration.Variables.Count == 1 &&
-                localDeclarationStatementSyntax.Declaration.Variables[0].Initializer is { } initializer)
+            else if (statement is LocalDeclarationStatementSyntax { Declaration.Variables: [{ Initializer: { } initializer }] })
             {
                 return (initializer.Value, statement);
             }

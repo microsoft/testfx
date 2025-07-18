@@ -178,7 +178,7 @@ internal sealed class AnsiTerminalTestProgressFrame
         //   quickly determine if the detail has changed since the last render.
 
         // Don't go up if we did not render any lines in previous frame or we already cleared them.
-        if (previousFrame.RenderedLines != null && previousFrame.RenderedLines.Count > 0)
+        if (previousFrame.RenderedLines is { Count: > 0 })
         {
             // Move cursor back to 1st line of progress.
             // + 2 because we output and empty line right below.

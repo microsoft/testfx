@@ -3,6 +3,8 @@
   <PropertyGroup>
     <!-- C# Source generators have to target netstandard -->
     <TargetFrameworks>netstandard2.0</TargetFrameworks>
+    <!-- Disable Polyfill validation for source generators -->
+    <PolyfillTargetsForNuget>true</PolyfillTargetsForNuget>
     <!-- Generates a package at build -->
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <!-- Do not include the generator as a lib dependency -->
@@ -46,6 +48,7 @@ This package provides the C# source generators for MSTest test framework.]]>
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" PrivateAssets="all" />
     <!-- Analyzers to help write analyzers/generators -->
     <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" PrivateAssets="all" />
+    <PackageReference Include="Polyfill" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>
