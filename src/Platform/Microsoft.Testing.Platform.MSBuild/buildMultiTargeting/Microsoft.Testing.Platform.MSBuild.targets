@@ -256,7 +256,7 @@
 
   <Target Name="_MTPVSTestError" BeforeTargets="VSTest">
     <Error Text="Testing with VSTest target is no longer supported by Microsoft.Testing.Platform. If you use dotnet test, you should opt-in to the new dotnet test experience in .NET 10 SDK via dotnet.config. For more information, see ..."
-           Condition="'$(IsTestingPlatformApplication)'=='true'" />
+           Condition="'$(IsTestingPlatformApplication)'=='true' AND '$(TargetFramework)'!=''" />
   </Target>
 
   <!-- The Test target is separated so that we can conditionally define it. -->
