@@ -517,7 +517,7 @@ public class DynamicDataAttributeTests : TestContainer
             }
         }
 
-        [TestMethod]
+        [DataTestMethod]
         public void DynamicDataTestWithTuple(int value, string integerAsString)
         {
         }
