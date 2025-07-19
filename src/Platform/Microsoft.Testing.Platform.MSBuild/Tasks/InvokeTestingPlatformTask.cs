@@ -140,11 +140,6 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
     /// </summary>
     public ITaskItem? TestingPlatformCommandLineArguments { get; set; }
 
-    /// <summary>
-    /// Gets or sets the VSTestCLI run settings.
-    /// </summary>
-    public ITaskItem[]? VSTestCLIRunSettings { get; set; }
-
     private bool IsNetCoreApp => TargetFrameworkIdentifier.ItemSpec == ".NETCoreApp";
 
     /// <inheritdoc />
@@ -294,14 +289,6 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
         if (!string.IsNullOrEmpty(TestingPlatformCommandLineArguments?.ItemSpec))
         {
             builder.AppendTextUnquoted($" {TestingPlatformCommandLineArguments!.ItemSpec} ");
-        }
-
-        if (VSTestCLIRunSettings?.Length > 0)
-        {
-            foreach (ITaskItem taskItem in VSTestCLIRunSettings)
-            {
-                builder.AppendTextUnquoted($" {taskItem.ItemSpec}");
-            }
         }
 
         return builder.ToString();

@@ -33,10 +33,6 @@ public sealed class SdkTests : AcceptanceTestBase<SdkTests.TestAssetFixture>
 
 </Project>
 
-#file dotnet.config
-[dotnet.test.runner]
-name= "VSTest"
-
 #file UnitTest1.cs
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -53,13 +49,20 @@ namespace MSTestSdkTest
 }
 """;
 
+    private const string SingleTestSourceCodeVSTest = SingleTestSourceCode + """
+
+        #file dotnet.config
+        [dotnet.test.runner]
+        name = "VSTest"
+        """;
+
     [TestMethod]
     [DynamicData(nameof(GetBuildMatrixMultiTfmFoldedBuildConfiguration), typeof(AcceptanceTestBase<NopAssetFixture>), DynamicDataSourceType.Method)]
     public async Task RunTests_With_VSTest(string multiTfm, BuildConfiguration buildConfiguration)
     {
         using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
             AssetName,
-            SingleTestSourceCode
+            SingleTestSourceCodeVSTest
             .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
             .PatchCodeWithReplace("$TargetFramework$", multiTfm)
             .PatchCodeWithReplace("$ExtraProperties$", "<UseVSTest>true</UseVSTest>"));
@@ -89,17 +92,17 @@ namespace MSTestSdkTest
                .PatchCodeWithReplace("$TargetFramework$", multiTfm)
                .PatchCodeWithReplace("$ExtraProperties$", string.Empty));
 
-        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"test -c {buildConfiguration} {testAsset.TargetAssetPath}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, workingDirectory: testAsset.TargetAssetPath);
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"test -c {buildConfiguration} --directory {testAsset.TargetAssetPath} --no-progress --no-ansi", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, workingDirectory: testAsset.TargetAssetPath);
         Assert.AreEqual(0, compilationResult.ExitCode);
 
-        compilationResult.AssertOutputMatchesRegex(@"Tests succeeded: .* \[net9\.0|x64\]");
+        compilationResult.AssertOutputMatchesRegex(@"MSTestSdk.*? \(net9\.0\|x64\) passed");
 #if !SKIP_INTERMEDIATE_TARGET_FRAMEWORKS
-        compilationResult.AssertOutputMatchesRegex(@"Tests succeeded: .* \[net8\.0|x64\]");
+        compilationResult.AssertOutputMatchesRegex(@"MSTestSdk.*? \(net8\.0\|x64\) passed");
 #endif
 
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
-            compilationResult.AssertOutputMatchesRegex(@"Tests succeeded: .* \[net462|x64\]");
+            compilationResult.AssertOutputMatchesRegex(@"MSTestSdk.*? \(net48\|x64\) passed");
         }
     }
 
@@ -420,7 +423,7 @@ namespace MSTestSdkTest
     {
         using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
                AssetName,
-               SingleTestSourceCode
+               SingleTestSourceCodeVSTest
                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
                .PatchCodeWithReplace("$TargetFramework$", TargetFrameworks.NetCurrent)
                .PatchCodeWithReplace("$ExtraProperties$", "<IsTestApplication>false</IsTestApplication>"));
