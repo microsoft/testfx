@@ -73,12 +73,14 @@ internal sealed class Program
         using ITestApplication app = await builder.BuildAsync();
         _ = Task.Run(() =>
         {
+            Console.WriteLine("Waiting signal");
             DummyTestFramework.FireCancel.Wait();
-
+            Console.WriteLine("Got signal");
             if (!GenerateConsoleCtrlEvent(ConsoleCtrlEvent.CTRL_C, 0))
             {
                 throw new Exception($"GetLastWin32Error '{Marshal.GetLastWin32Error()}'");
             }
+            Console.WriteLine("Generated Ctrl+C event!");
         });
         return await app.RunAsync();
     }
@@ -110,13 +112,17 @@ internal class DummyTestFramework : ITestFramework, IDataProducer
     public Type[] DataTypesProduced => new[] { typeof(TestNodeUpdateMessage) };
 
     public Task<CloseTestSessionResult> CloseTestSessionAsync(CloseTestSessionContext context)
-        => Task.FromResult(new CloseTestSessionResult() { IsSuccess = true });
+    {
+        Console.WriteLine("This should never be printed! We are canceled already during execute request and won't call CloseTestSessionAsync!");
+        return Task.FromResult(new CloseTestSessionResult() { IsSuccess = true });
+    }
 
     public Task<CreateTestSessionResult> CreateTestSessionAsync(CreateTestSessionContext context)
         => Task.FromResult(new CreateTestSessionResult() { IsSuccess = true });
 
     public async Task ExecuteRequestAsync(ExecuteRequestContext context)
     {
+        Console.WriteLine("Will set signal");
         // This will trigger pressing CTRL+C that should propagate through the platform
         // and down to us as the context.Cancellation token being canceled.
         // It should happen almost immediately, but we allow 15 seconds for this to happen
@@ -124,6 +130,7 @@ internal class DummyTestFramework : ITestFramework, IDataProducer
         // the test fails.
         // If it happens, we return a result, and platform should report Aborted exit code and result.
         FireCancel.Set();
+        Console.WriteLine("Set signal done");
 
         var timeoutTask = Task.Delay(15_000, context.CancellationToken);
         await timeoutTask;
