@@ -79,4 +79,14 @@ public class DataSerializationHelperTests : TestContainer
         Verify(actual[0]!.Equals(source));
     }
 #endif
+
+    public void DataSerializerShouldRoundTripSystemType()
+    {
+        foreach (Type source in (Type[])[typeof(Console), typeof(DataSerializationHelperTests), typeof(DataSerializationHelper)])
+        {
+            object?[]? actual = DataSerializationHelper.Deserialize(DataSerializationHelper.Serialize([source]));
+            Verify(actual!.Length == 1, $"Deserialization length check failed for type {source.Name}");
+            Verify((Type)actual[0]! == source, $"Deserialization equality failed for type {source.Name}");
+        }
+    }
 }
