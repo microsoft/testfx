@@ -142,11 +142,11 @@ extends:
 
             - ${{ if eq(parameters.SkipTests, False) }}:
               # -ci is allowing to import some environment variables and some required configurations
-              # -nobl avoids overwriting build binlog with binlog from tests
               - script: Test.cmd
                   -configuration $(_BuildConfig)
                   -ci
                   -nobl
+                  -bl:$(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig)\TestStep.binlog
                 name: Test
                 displayName: Test
 
@@ -214,10 +214,9 @@ extends:
 
             - ${{ if eq(parameters.SkipTests, False) }}:
               # -ci is allowing to import some environment variables and some required configurations
-               # --nobl avoids overwriting build binlog with binlog from tests
               - script: |
                   chmod +x ./test.sh
-                  ./test.sh --configuration $(_BuildConfig) --ci --test --integrationTest --nobl
+                  ./test.sh --configuration $(_BuildConfig) --ci --test --integrationTest --nobl -bl:$(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig)\TestStep.binlog
                 name: Test
                 displayName: Tests
 
