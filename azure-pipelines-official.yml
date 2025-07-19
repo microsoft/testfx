@@ -171,14 +171,11 @@ extends:
                   Remove-Item -Path $(Build.SourcesDirectory)/artifacts/tmp -Recurse -Force
                 displayName: Remove artifacts/tmp
 
-              # This step is only helpful for diagnosing some issues with vstest/test host that would not appear
-              # through the console or trx
               - task: 1ES.PublishBuildArtifacts@1
                 displayName: 'Publish Test Results folders'
                 inputs:
                   PathtoPublish: '$(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)'
                   ArtifactName: TestResults_Windows
-                condition: failed()
 
             - task: NuGetAuthenticate@1
               displayName: 'NuGet Authenticate to test-tools feed'
@@ -221,14 +218,11 @@ extends:
                 name: Test
                 displayName: Tests
 
-              # This step is only helpful for diagnosing some issues with vstest/test host that would not appear
-              # through the console or trx
               - task: 1ES.PublishBuildArtifacts@1
                 displayName: 'Publish Test Results folders'
                 inputs:
                   PathtoPublish: '$(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)'
                   ArtifactName: TestResults_Linux
-                condition: failed()
 
       - ${{ if eq(variables['Build.SourceBranchName'], 'main') }}:
         - template: /eng/common/templates-official/job/onelocbuild.yml@self
