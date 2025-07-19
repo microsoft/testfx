@@ -16,18 +16,8 @@ public class DataTestMethodAttribute : TestMethodAttribute
     /// <summary>
     /// Initializes a new instance of the <see cref="DataTestMethodAttribute"/> class.
     /// </summary>
-    public DataTestMethodAttribute()
-    {
-    }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="DataTestMethodAttribute"/> class.
-    /// </summary>
-    /// <param name="displayName">
-    /// Display name for the test.
-    /// </param>
-    public DataTestMethodAttribute(string? displayName)
-        : base(displayName)
+    public STATestMethodAttribute([CallerFilePath] string callerFilePath = "", [CallerLineNumber] int callerLineNumber = -1)
+        : base(callerFilePath, callerLineNumber)
     {
     }
 }
