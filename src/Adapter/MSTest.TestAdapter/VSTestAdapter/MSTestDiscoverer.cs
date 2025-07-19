@@ -18,6 +18,27 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 [FileExtension(".exe")]
 internal sealed class MSTestDiscoverer : ITestDiscoverer
 {
+#if NETFRAMEWORK
+    private sealed class DiscovererRemotingParameters : MarshalByRefObject
+    {
+        public DiscovererRemotingParameters(IDiscoveryContext discoveryContext, IMessageLogger logger, ITestCaseDiscoverySink discoverySink)
+        {
+            DiscoveryContext = discoveryContext;
+            MessageLogger = logger;
+            DiscoverySink = discoverySink;
+        }
+
+        public IDiscoveryContext DiscoveryContext { get; }
+
+        public IMessageLogger MessageLogger { get; }
+
+        public ITestCaseDiscoverySink DiscoverySink { get; }
+    }
+
+    private void DiscoverTests(IEnumerable<string> sources, DiscovererRemotingParameters parameters)
+        => DiscoverTests(sources, parameters.DiscoveryContext, parameters.MessageLogger, parameters.DiscoverySink);
+#endif
+
     /// <summary>
     /// Discovers the tests available from the provided source. Not supported for .xap source.
     /// </summary>
@@ -27,7 +48,23 @@ internal sealed class MSTestDiscoverer : ITestDiscoverer
     /// <param name="discoverySink">Used to send testcases and discovery related events back to Discoverer manager.</param>
     [System.Security.SecurityCritical]
     [SuppressMessage("Microsoft.Design", "CA1062:Validate arguments of public methods", MessageId = "0", Justification = "Discovery context can be null.")]
-    public void DiscoverTests(IEnumerable<string> sources, IDiscoveryContext discoveryContext, IMessageLogger logger, ITestCaseDiscoverySink discoverySink) => DiscoverTests(sources, discoveryContext, logger, discoverySink, null);
+    public void DiscoverTests(IEnumerable<string> sources, IDiscoveryContext discoveryContext, IMessageLogger logger, ITestCaseDiscoverySink discoverySink)
+    {
+#if NETFRAMEWORK
+        if (AppDomain.CurrentDomain.Id == 1 &&
+            AppDomain.CurrentDomain.FriendlyName.StartsWith("testhost.net", StringComparison.Ordinal) &&
+            AppDomain.CurrentDomain.FriendlyName.EndsWith(".exe", StringComparison.Ordinal) &&
+            sources.FirstOrDefault() is { } source)
+        {
+            using var invoker = new AppDomainEngineInvoker(source);
+            invoker.CreateInvokerInAppDomain<MSTestDiscoverer>().DiscoverTests(sources, new DiscovererRemotingParameters(discoveryContext, logger, discoverySink));
+        }
+        else
+#endif
+        {
+            DiscoverTests(sources, discoveryContext, logger, discoverySink, null);
+        }
+    }
 
     internal static void DiscoverTests(IEnumerable<string> sources, IDiscoveryContext discoveryContext, IMessageLogger logger, ITestCaseDiscoverySink discoverySink, IConfiguration? configuration)
     {

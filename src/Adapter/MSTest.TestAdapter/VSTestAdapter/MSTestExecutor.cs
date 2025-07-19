@@ -17,6 +17,29 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 [ExtensionUri(EngineConstants.ExecutorUriString)]
 internal sealed class MSTestExecutor : ITestExecutor
 {
+#if NETFRAMEWORK
+    private sealed class ExecutorRemotingParameters : MarshalByRefObject
+    {
+        public ExecutorRemotingParameters(IRunContext? runContext, IFrameworkHandle? frameworkHandle)
+        {
+            RunContext = runContext;
+            FrameworkHandle = frameworkHandle;
+        }
+
+        public IRunContext? RunContext { get; }
+
+        public IFrameworkHandle? FrameworkHandle { get; }
+    }
+
+    [Obsolete]
+    private void RunTests(IEnumerable<TestCase>? tests, ExecutorRemotingParameters parameters)
+        => RunTests(tests, parameters.RunContext, parameters.FrameworkHandle);
+
+    [Obsolete]
+    private void RunTests(IEnumerable<string>? sources, ExecutorRemotingParameters parameters)
+        => RunTests(sources, parameters.RunContext, parameters.FrameworkHandle);
+#endif
+
     private readonly CancellationToken _cancellationToken;
 
     /// <summary>
@@ -68,7 +91,22 @@ internal sealed class MSTestExecutor : ITestExecutor
     [Obsolete("Use RunTestsAsync instead.")]
 #endif
     public void RunTests(IEnumerable<TestCase>? tests, IRunContext? runContext, IFrameworkHandle? frameworkHandle)
-        => RunTestsAsync(tests, runContext, frameworkHandle, null).GetAwaiter().GetResult();
+    {
+#if NETFRAMEWORK
+        if (AppDomain.CurrentDomain.Id == 1 &&
+            AppDomain.CurrentDomain.FriendlyName.StartsWith("testhost.net", StringComparison.Ordinal) &&
+            AppDomain.CurrentDomain.FriendlyName.EndsWith(".exe", StringComparison.Ordinal) &&
+            tests?.FirstOrDefault()?.Source is { } source)
+        {
+            using var invoker = new AppDomainEngineInvoker(source);
+            invoker.CreateInvokerInAppDomain<MSTestExecutor>().RunTests(tests, new ExecutorRemotingParameters(runContext, frameworkHandle));
+        }
+        else
+#endif
+        {
+            RunTestsAsync(tests, runContext, frameworkHandle, null).GetAwaiter().GetResult();
+        }
+    }
 
     /// <summary>
     /// Runs the tests.
@@ -80,7 +118,22 @@ internal sealed class MSTestExecutor : ITestExecutor
     [Obsolete("Use RunTestsAsync instead.")]
 #endif
     public void RunTests(IEnumerable<string>? sources, IRunContext? runContext, IFrameworkHandle? frameworkHandle)
-        => RunTestsAsync(sources, runContext, frameworkHandle, null).GetAwaiter().GetResult();
+    {
+#if NETFRAMEWORK
+        if (AppDomain.CurrentDomain.Id == 1 &&
+            AppDomain.CurrentDomain.FriendlyName.StartsWith("testhost.", StringComparison.Ordinal) &&
+            AppDomain.CurrentDomain.FriendlyName.EndsWith(".exe", StringComparison.Ordinal) &&
+            sources.FirstOrDefault() is { } source)
+        {
+            using var invoker = new AppDomainEngineInvoker(source);
+            invoker.CreateInvokerInAppDomain<MSTestExecutor>().RunTests(sources, new ExecutorRemotingParameters(runContext, frameworkHandle));
+        }
+        else
+#endif
+        {
+            RunTestsAsync(sources, runContext, frameworkHandle, null).GetAwaiter().GetResult();
+        }
+    }
 
     internal async Task RunTestsAsync(IEnumerable<TestCase>? tests, IRunContext? runContext, IFrameworkHandle? frameworkHandle, IConfiguration? configuration)
     {
