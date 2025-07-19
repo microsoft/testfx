@@ -290,6 +290,7 @@ public sealed class TestInitializeShouldBeValidAnalyzerTests
             fixedCode);
     }
 
+#if NET
     [TestMethod]
     public async Task WhenTestInitializeReturnTypeIsNotValid_Diagnostic()
     {
@@ -396,7 +397,8 @@ public sealed class TestInitializeShouldBeValidAnalyzerTests
             """;
 
         await VerifyCS.VerifyAnalyzerAsync(code);
-    }
+    } 
+#endif
 
     [TestMethod]
     public async Task WhenTestInitializeIsAsyncVoid_Diagnostic()

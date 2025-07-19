@@ -52,4 +52,5 @@ internal static class DiagnosticIds
     public const string UseCooperativeCancellationForTimeoutRuleId = "MSTEST0045";
     public const string StringAssertToAssertRuleId = "MSTEST0046";
     public const string UnusedParameterSuppressorRuleId = "MSTEST0047";
+    public const string TestContextPropertyUsageRuleId = "MSTEST0048";
 }

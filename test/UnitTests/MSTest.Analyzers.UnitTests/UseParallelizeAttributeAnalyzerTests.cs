@@ -24,7 +24,9 @@ public class UseParallelizeAttributeAnalyzerTests
         if (includeTestAdapter)
         {
             // NOTE: Test constructor already adds TestFramework refs.
+#pragma warning disable CS0618 // Type or member is obsolete
             test.TestState.AdditionalReferences.Add(MetadataReference.CreateFromFile(typeof(MSTestExecutor).Assembly.Location));
+#pragma warning restore CS0618 // Type or member is obsolete
         }
 
         test.ExpectedDiagnostics.AddRange(expected);

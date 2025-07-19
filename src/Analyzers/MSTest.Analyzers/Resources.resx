@@ -615,4 +615,13 @@ The type declaring these methods should also respect the following rules:
   <data name="UseCooperativeCancellationForTimeoutDescription" xml:space="preserve">
     <value>Using '[Timeout]' without explicitly setting 'CooperativeCancellation = true' is discouraged. In a future version, cooperative cancellation will become the default behavior. Set 'CooperativeCancellation = true' to opt into the recommended behavior and avoid breaking changes.</value>
   </data>
+  <data name="TestContextPropertyUsageTitle" xml:space="preserve">
+    <value>TestContext property cannot be accessed in this context</value>
+  </data>
+  <data name="TestContextPropertyUsageMessageFormat" xml:space="preserve">
+    <value>TestContext property '{0}' cannot be accessed in '{1}' method</value>
+  </data>
+  <data name="TestContextPropertyUsageDescription" xml:space="preserve">
+    <value>Some TestContext properties are only available during test execution and cannot be accessed in assembly initialize, class initialize, class cleanup, or assembly cleanup methods.</value>
+  </data>
 </root>
