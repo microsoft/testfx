@@ -59,7 +59,7 @@ public class MyTestClass
 {
     public TestContext TestContext { get; set; }
 
-    [TestMethod]
+    [DataTestMethod]
     [DataSource("TestData")]
     public void TestSum()
     {
