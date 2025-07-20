@@ -71,9 +71,9 @@ internal sealed class CrashDumpEnvironmentVariableProvider : ITestHostEnvironmen
 
         string miniDumpTypeValue = "4";
 
-        if (_commandLineOptions.TryGetOptionArgumentList(CrashDumpCommandLineOptions.CrashDumpTypeOptionName, out string[]? dumpTypeString))
+        if (_commandLineOptions.TryGetOptionArgument(CrashDumpCommandLineOptions.CrashDumpTypeOptionName, out string? dumpTypeString))
         {
-            switch (dumpTypeString[0].ToLowerInvariant().Trim())
+            switch (dumpTypeString.ToLowerInvariant().Trim())
             {
                 case "mini":
                     {
@@ -112,8 +112,8 @@ internal sealed class CrashDumpEnvironmentVariableProvider : ITestHostEnvironmen
             environmentVariables.SetVariable(new($"{prefix}{MiniDumpTypeVariable}", miniDumpTypeValue, false, true));
         }
 
-        _miniDumpNameValue = _commandLineOptions.TryGetOptionArgumentList(CrashDumpCommandLineOptions.CrashDumpFileNameOptionName, out string[]? dumpFileName)
-            ? Path.Combine(_configuration.GetTestResultDirectory(), dumpFileName[0])
+        _miniDumpNameValue = _commandLineOptions.TryGetOptionArgument(CrashDumpCommandLineOptions.CrashDumpFileNameOptionName, out string? dumpFileName)
+            ? Path.Combine(_configuration.GetTestResultDirectory(), dumpFileName)
             : Path.Combine(_configuration.GetTestResultDirectory(), $"{Path.GetFileNameWithoutExtension(_testApplicationModuleInfo.GetCurrentTestApplicationFullPath())}_%p_crash.dmp");
         _crashDumpGeneratorConfiguration.DumpFileNamePattern = _miniDumpNameValue;
         foreach (string prefix in Prefixes)

@@ -89,13 +89,13 @@ internal sealed class RetryOrchestrator : ITestHostOrchestrator, IOutputDeviceDa
         ITestApplicationModuleInfo currentTestApplicationModuleInfo = _serviceProvider.GetTestApplicationModuleInfo();
         ExecutableInfo executableInfo = currentTestApplicationModuleInfo.GetCurrentExecutableInfo();
 
-        if (!_commandLineOptions.TryGetOptionArgumentList(RetryCommandLineOptionsProvider.RetryFailedTestsOptionName, out string[]? cmdRetries))
+        if (!_commandLineOptions.TryGetOptionArgument(RetryCommandLineOptionsProvider.RetryFailedTestsOptionName, out string? cmdRetries))
         {
             throw ApplicationStateGuard.Unreachable();
         }
 
         ApplicationStateGuard.Ensure(cmdRetries is not null);
-        int userMaxRetryCount = int.Parse(cmdRetries[0], CultureInfo.InvariantCulture);
+        int userMaxRetryCount = int.Parse(cmdRetries, CultureInfo.InvariantCulture);
 
         // Find out the retry args index inside the arguments to after cleanup the command line when we restart
         List<int> indexToCleanup = [];
@@ -243,15 +243,15 @@ internal sealed class RetryOrchestrator : ITestHostOrchestrator, IOutputDeviceDa
                     double? maxFailedTests = null;
                     double? maxPercentage = null;
                     double? maxCount = null;
-                    if (_commandLineOptions.TryGetOptionArgumentList(RetryCommandLineOptionsProvider.RetryFailedTestsMaxPercentageOptionName, out string[]? retryFailedTestsMaxPercentage))
+                    if (_commandLineOptions.TryGetOptionArgument(RetryCommandLineOptionsProvider.RetryFailedTestsMaxPercentageOptionName, out string? retryFailedTestsMaxPercentage))
                     {
-                        maxPercentage = double.Parse(retryFailedTestsMaxPercentage[0], CultureInfo.InvariantCulture);
+                        maxPercentage = double.Parse(retryFailedTestsMaxPercentage, CultureInfo.InvariantCulture);
                         maxFailedTests = maxPercentage / 100 * retryFailedTestsPipeServer.TotalTestRan;
                     }
 
-                    if (_commandLineOptions.TryGetOptionArgumentList(RetryCommandLineOptionsProvider.RetryFailedTestsMaxTestsOptionName, out string[]? retryFailedTestsMaxCount))
+                    if (_commandLineOptions.TryGetOptionArgument(RetryCommandLineOptionsProvider.RetryFailedTestsMaxTestsOptionName, out string? retryFailedTestsMaxCount))
                     {
-                        maxCount = double.Parse(retryFailedTestsMaxCount[0], CultureInfo.InvariantCulture);
+                        maxCount = double.Parse(retryFailedTestsMaxCount, CultureInfo.InvariantCulture);
                         maxFailedTests = maxCount.Value;
                     }
 
