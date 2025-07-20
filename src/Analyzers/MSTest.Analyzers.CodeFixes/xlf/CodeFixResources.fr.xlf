@@ -29,7 +29,7 @@
       </trans-unit>
       <trans-unit id="ChangeStructToClassAndAddTestClassFix">
         <source>Change to 'class' and add '[TestClass]'</source>
-        <target state="new">Change to 'class' and add '[TestClass]'</target>
+        <target state="translated">Remplacez par « classe » et ajoutez « [TestClass] »</target>
         <note />
       </trans-unit>
       <trans-unit id="FixAssertionArgsOrder">
