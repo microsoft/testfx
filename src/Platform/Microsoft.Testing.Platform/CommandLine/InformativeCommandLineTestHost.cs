@@ -7,7 +7,7 @@ using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Platform.CommandLine;
 
-internal sealed class InformativeCommandLineTestHost(int returnValue, IServiceProvider serviceProvider) : ITestHost, IDisposable
+internal sealed class InformativeCommandLineHost(int returnValue, IServiceProvider serviceProvider) : IHost, IDisposable
 #if NETCOREAPP
 #pragma warning disable SA1001 // Commas should be spaced correctly
     , IAsyncDisposable

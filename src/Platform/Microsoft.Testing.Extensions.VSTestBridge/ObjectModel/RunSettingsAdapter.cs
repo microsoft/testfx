@@ -41,7 +41,7 @@ internal sealed class RunSettingsAdapter : IRunSettings
         string? runSettingsXml = string.Empty;
 
         if (commandLineOptions.TryGetOptionArgument(RunSettingsCommandLineOptionsProvider.RunSettingsOptionName, out string? fileName)
-            && fileSystem.Exists(fileName))
+            && fileSystem.ExistFile(fileName))
         {
             runSettingsXml = fileSystem.ReadAllText(fileName);
         }

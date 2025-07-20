@@ -260,9 +260,6 @@ public class MSTestSettings
 
 #if !WINDOWS_UWP
     private static bool IsRunSettingsFileHasMSTestSettings(string? runSettingsXml)
-    => IsRunSettingsFileHasSettingName(runSettingsXml, SettingsName) || IsRunSettingsFileHasSettingName(runSettingsXml, SettingsNameAlias);
-
-    private static bool IsRunSettingsFileHasSettingName(string? runSettingsXml, string SettingName)
     {
         if (StringEx.IsNullOrWhiteSpace(runSettingsXml))
         {
@@ -277,7 +274,8 @@ public class MSTestSettings
         reader.ReadToNextElement();
 
         // Read till we reach nodeName element or reach EOF
-        while (!string.Equals(reader.Name, SettingName, StringComparison.OrdinalIgnoreCase)
+        while (!string.Equals(reader.Name, SettingsName, StringComparison.OrdinalIgnoreCase)
+                && !string.Equals(reader.Name, SettingsNameAlias, StringComparison.OrdinalIgnoreCase)
                 && !reader.EOF)
         {
             reader.SkipToNextElement();
@@ -308,6 +306,8 @@ public class MSTestSettings
         var settings = new MSTestSettings();
         var runConfigurationSettings = RunConfigurationSettings.PopulateSettings(context);
 
+        // We have runsettings, but we don't have testconfig.
+        // Just use runsettings.
 #if !WINDOWS_UWP
         if (!StringEx.IsNullOrEmpty(context?.RunSettings?.SettingsXml)
             && configuration?["mstest"] is null)

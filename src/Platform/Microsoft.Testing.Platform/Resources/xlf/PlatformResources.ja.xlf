@@ -250,8 +250,8 @@
         <note />
       </trans-unit>
       <trans-unit id="ExtensionWithSameUidAlreadyRegisteredErrorMessage">
-        <source>Another extension with same the same UID '{0}' has already been registered. Registered extension is of type '{1}'</source>
-        <target state="translated">同じ UID '{0}' を持つ別の拡張機能が既に登録されています。登録されている拡張機能の種類は '{1}' です</target>
+        <source>Extensions with the same UID '{0}' have already been registered. Registered extensions are of types: {1}</source>
+        <target state="translated">同じ UID '{0}' の拡張機能は既に登録されています。登録済みの拡張機能の種類: {1}</target>
         <note />
       </trans-unit>
       <trans-unit id="Failed">
@@ -431,6 +431,11 @@
         <target state="translated">見つかりません</target>
         <note />
       </trans-unit>
+      <trans-unit id="OnlyOneFilterSupported">
+        <source>Passing both '--treenode-filter' and '--filter-uid' is unsupported.</source>
+        <target state="translated">'--treenode-filter' と '--filter-uid' の両方を渡すことはサポートされていません。</target>
+        <note />
+      </trans-unit>
       <trans-unit id="OutOfProcessArtifactsProduced">
         <source>Out of process file artifacts produced:</source>
         <target state="translated">アウトプロセスのファイル成果物が生成されました:</target>
@@ -532,6 +537,11 @@ The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', an
       <trans-unit id="PlatformCommandLineExitOnProcessExitSingleArgument">
         <source>'--{0}' expects a single int PID argument</source>
         <target state="translated">'--{0}' には 1 つの int PID 引数が必要です</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineFilterUidOptionDescription">
+        <source>Provides a list of test node UIDs to filter by.</source>
+        <target state="translated">フィルター対象のテスト ノード UID のリストを提供します。</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineHelpOptionDescription">

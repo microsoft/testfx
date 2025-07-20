@@ -38,7 +38,7 @@ internal sealed class RunSettingsEnvironmentVariableProvider : ITestHostEnvironm
             return false;
         }
 
-        if (!_fileSystem.Exists(runsettings))
+        if (!_fileSystem.ExistFile(runsettings))
         {
             return false;
         }

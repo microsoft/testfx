@@ -750,12 +750,12 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
         <note />
       </trans-unit>
       <trans-unit id="TypeContainingTestMethodShouldBeATestClassDescription">
-        <source>Type contaning '[TestMethod]' should be marked with '[TestClass]', otherwise the test method will be silently ignored.</source>
-        <target state="translated">Typ obsahující [TestMethod] by měl mít označení [TestClass], jinak bude testovací metoda bez jakéhokoli upozornění ignorována.</target>
+        <source>Type containing '[TestMethod]' should be marked with '[TestClass]', otherwise the test method will be silently ignored.</source>
+        <target state="translated">Typ obsahující [TestMethod] by měl mít označení [TestClass], jinak se bude testovací metoda bez upozornění ignorovat.</target>
         <note />
       </trans-unit>
       <trans-unit id="TypeContainingTestMethodShouldBeATestClassMessageFormat">
-        <source>Class '{0}' contains test methods and should be marked with '[TestClass]'</source>
+        <source>Type '{0}' contains test methods and should be marked with '[TestClass]'</source>
         <target state="translated">Třída {0} obsahuje testovací metody a měla by mít označení [TestClass].</target>
         <note />
       </trans-unit>
@@ -772,6 +772,11 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
       <trans-unit id="UseAsyncSuffixTestMethodSuppressorJustification">
         <source>Asynchronous test methods do not require the 'Async' suffix</source>
         <target state="translated">Asynchronní testovací metody nevyžadují příponu Async.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UnusedParameterSuppressorJustification">
+        <source>TestContext parameter is required by MSTest for AssemblyInitialize and ClassInitialize methods</source>
+        <target state="translated">Parametr TestContext vyžaduje MSTest pro metody AssemblyInitialize a ClassInitialize.</target>
         <note />
       </trans-unit>
       <trans-unit id="UseAttributeOnTestMethodAnalyzerMessageFormat">
