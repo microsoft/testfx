@@ -251,7 +251,7 @@
       </trans-unit>
       <trans-unit id="ExtensionWithSameUidAlreadyRegisteredErrorMessage">
         <source>Extensions with the same UID '{0}' have already been registered. Registered extensions are of types: {1}</source>
-        <target state="new">Extensions with the same UID '{0}' have already been registered. Registered extensions are of types: {1}</target>
+        <target state="translated">Aynı UID ‘{0}’ ile uzantılar zaten kayıtlıdır. Kayıtlı uzantılar şu türlerde olabilir: {1}</target>
         <note />
       </trans-unit>
       <trans-unit id="Failed">
