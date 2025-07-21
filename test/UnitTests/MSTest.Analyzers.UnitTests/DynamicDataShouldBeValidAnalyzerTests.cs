@@ -202,6 +202,7 @@ public sealed class DynamicDataShouldBeValidAnalyzerTests
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+#if NET
     [TestMethod]
     public async Task WhenDataIsIEnumerableValueTuple_NoDiagnostic()
     {
@@ -273,6 +274,7 @@ public sealed class DynamicDataShouldBeValidAnalyzerTests
             """;
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
+#endif
 
     [TestMethod]
     public async Task WhenDataIsJaggedArrays_NoDiagnostic()
