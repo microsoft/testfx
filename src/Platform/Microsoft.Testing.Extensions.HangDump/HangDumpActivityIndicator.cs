@@ -4,6 +4,7 @@
 using Microsoft.Testing.Extensions.Diagnostics.Resources;
 using Microsoft.Testing.Extensions.HangDump.Serializers;
 using Microsoft.Testing.Platform.CommandLine;
+using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Helpers;
@@ -12,7 +13,6 @@ using Microsoft.Testing.Platform.IPC.Models;
 using Microsoft.Testing.Platform.IPC.Serializers;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Services;
-using Microsoft.Testing.Platform.TestHost;
 
 namespace Microsoft.Testing.Extensions.Diagnostics;
 
@@ -86,8 +86,9 @@ internal sealed class HangDumpActivityIndicator : IDataConsumer, ITestSessionLif
     public Task<bool> IsEnabledAsync() => Task.FromResult(_commandLineOptions.IsOptionSet(HangDumpCommandLineProvider.HangDumpOptionName) &&
         !_commandLineOptions.IsOptionSet(PlatformCommandLineProvider.ServerOptionKey));
 
-    public async Task OnTestSessionStartingAsync(SessionUid sessionUid, CancellationToken cancellationToken)
+    public async Task OnTestSessionStartingAsync(ITestSessionContext testSessionContext)
     {
+        CancellationToken cancellationToken = testSessionContext.CancellationToken;
         ApplicationStateGuard.Ensure(_namedPipeClient is not null);
 
         if (!await IsEnabledAsync().ConfigureAwait(false) || cancellationToken.IsCancellationRequested)
@@ -229,8 +230,9 @@ internal sealed class HangDumpActivityIndicator : IDataConsumer, ITestSessionLif
         return Task.CompletedTask;
     }
 
-    public async Task OnTestSessionFinishingAsync(SessionUid sessionUid, CancellationToken cancellationToken)
+    public async Task OnTestSessionFinishingAsync(ITestSessionContext testSessionContext)
     {
+        CancellationToken cancellationToken = testSessionContext.CancellationToken;
         ApplicationStateGuard.Ensure(_namedPipeClient is not null);
         ApplicationStateGuard.Ensure(_activityIndicatorMutex is not null);
 

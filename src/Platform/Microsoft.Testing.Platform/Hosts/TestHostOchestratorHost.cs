@@ -8,7 +8,7 @@ using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Platform.Hosts;
 
-internal sealed class TestHostOrchestratorHost(TestHostOrchestratorConfiguration testHostOrchestratorConfiguration, ServiceProvider serviceProvider) : ITestHost
+internal sealed class TestHostOrchestratorHost(TestHostOrchestratorConfiguration testHostOrchestratorConfiguration, ServiceProvider serviceProvider) : IHost
 {
     private readonly TestHostOrchestratorConfiguration _testHostOrchestratorConfiguration = testHostOrchestratorConfiguration;
     private readonly ServiceProvider _serviceProvider = serviceProvider;
@@ -32,7 +32,7 @@ internal sealed class TestHostOrchestratorHost(TestHostOrchestratorConfiguration
                 await orchestratorLifetime.BeforeRunAsync(applicationCancellationToken.CancellationToken).ConfigureAwait(false);
             }
 
-            exitCode = await testHostOrchestrator.OrchestrateTestHostExecutionAsync().ConfigureAwait(false);
+            exitCode = await testHostOrchestrator.OrchestrateTestHostExecutionAsync(applicationCancellationToken.CancellationToken).ConfigureAwait(false);
 
             foreach (ITestHostOrchestratorApplicationLifetime orchestratorLifetime in _serviceProvider.GetServicesInternal<ITestHostOrchestratorApplicationLifetime>())
             {

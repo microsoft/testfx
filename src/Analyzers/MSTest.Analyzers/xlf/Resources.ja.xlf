@@ -750,13 +750,13 @@ The type declaring these methods should also respect the following rules:
         <note />
       </trans-unit>
       <trans-unit id="TypeContainingTestMethodShouldBeATestClassDescription">
-        <source>Type contaning '[TestMethod]' should be marked with '[TestClass]', otherwise the test method will be silently ignored.</source>
-        <target state="translated">連続する型 '[TestMethod]' は '[TestClass]' でマークする必要があります。それ以外の場合、テスト メソッドは暗黙的に無視されます。</target>
+        <source>Type containing '[TestMethod]' should be marked with '[TestClass]', otherwise the test method will be silently ignored.</source>
+        <target state="translated">'[TestMethod]' を含む型は '[TestClass]' でマークする必要があります。そうしないとテスト メソッドは暗黙的に無視されます。</target>
         <note />
       </trans-unit>
       <trans-unit id="TypeContainingTestMethodShouldBeATestClassMessageFormat">
-        <source>Class '{0}' contains test methods and should be marked with '[TestClass]'</source>
-        <target state="translated">クラス '{0}' にはテスト メソッドが含まれており、'[TestClass]' でマークする必要があります</target>
+        <source>Type '{0}' contains test methods and should be marked with '[TestClass]'</source>
+        <target state="translated">型 '{0}' にはテスト メソッドが含まれており、'[TestClass]' でマークする必要があります</target>
         <note />
       </trans-unit>
       <trans-unit id="TypeContainingTestMethodShouldBeATestClassTitle">
@@ -772,6 +772,11 @@ The type declaring these methods should also respect the following rules:
       <trans-unit id="UseAsyncSuffixTestMethodSuppressorJustification">
         <source>Asynchronous test methods do not require the 'Async' suffix</source>
         <target state="translated">非同期テスト メソッドには 'Async' サフィックスは不要です</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UnusedParameterSuppressorJustification">
+        <source>TestContext parameter is required by MSTest for AssemblyInitialize and ClassInitialize methods</source>
+        <target state="translated">AssemblyInitialize メソッドと ClassInitialize メソッドに対する MSTest には TestContext パラメーターが必要です</target>
         <note />
       </trans-unit>
       <trans-unit id="UseAttributeOnTestMethodAnalyzerMessageFormat">

@@ -17,11 +17,13 @@ internal sealed class RetryOrchestrator : ITestHostOrchestrator, IOutputDeviceDa
 {
     private readonly IServiceProvider _serviceProvider;
     private readonly ICommandLineOptions _commandLineOptions;
+    private readonly IFileSystem _fileSystem;
 
     public RetryOrchestrator(IServiceProvider serviceProvider)
     {
         _serviceProvider = serviceProvider;
         _commandLineOptions = _serviceProvider.GetCommandLineOptions();
+        _fileSystem = _serviceProvider.GetFileSystem();
     }
 
     public string Uid => nameof(RetryOrchestrator);
@@ -35,21 +37,21 @@ internal sealed class RetryOrchestrator : ITestHostOrchestrator, IOutputDeviceDa
     public Task<bool> IsEnabledAsync()
         => Task.FromResult(_commandLineOptions.IsOptionSet(RetryCommandLineOptionsProvider.RetryFailedTestsOptionName));
 
-    private static string CreateRetriesDirectory(string resultDirectory)
+    private string CreateRetriesDirectory(string resultDirectory)
     {
         Exception? lastException = null;
         // Quite arbitrary. Keep trying to create the directory for 10 times.
         for (int i = 0; i < 10; i++)
         {
             string retryRootFolder = Path.Combine(resultDirectory, "Retries", RandomId.Next());
-            if (Directory.Exists(retryRootFolder))
+            if (_fileSystem.ExistDirectory(retryRootFolder))
             {
                 continue;
             }
 
             try
             {
-                Directory.CreateDirectory(retryRootFolder);
+                _fileSystem.CreateDirectory(retryRootFolder);
                 return retryRootFolder;
             }
             catch (IOException ex)
@@ -66,7 +68,7 @@ internal sealed class RetryOrchestrator : ITestHostOrchestrator, IOutputDeviceDa
         throw new IOException(string.Format(CultureInfo.InvariantCulture, ExtensionResources.FailedToCreateRetryDirectoryBecauseOfCollision, resultDirectory));
     }
 
-    public async Task<int> OrchestrateTestHostExecutionAsync()
+    public async Task<int> OrchestrateTestHostExecutionAsync(CancellationToken cancellationToken)
     {
         if (_commandLineOptions.IsOptionSet(PlatformCommandLineProvider.ServerOptionKey) && !_commandLineOptions.IsOptionSet(PlatformCommandLineProvider.DotNetTestPipeOptionKey))
         {
@@ -198,7 +200,7 @@ internal sealed class RetryOrchestrator : ITestHostOrchestrator, IOutputDeviceDa
             };
 
             using (var timeout = new CancellationTokenSource(TimeoutHelper.DefaultHangTimeSpanTimeout))
-            using (var linkedToken = CancellationTokenSource.CreateLinkedTokenSource(timeout.Token, _serviceProvider.GetTestApplicationCancellationTokenSource().CancellationToken))
+            using (var linkedToken = CancellationTokenSource.CreateLinkedTokenSource(timeout.Token, cancellationToken))
             using (var linkedToken2 = CancellationTokenSource.CreateLinkedTokenSource(linkedToken.Token, processExitedCancellationToken.Token))
             {
                 await logger.LogDebugAsync("Wait connection from the test host process").ConfigureAwait(false);
@@ -216,7 +218,7 @@ internal sealed class RetryOrchestrator : ITestHostOrchestrator, IOutputDeviceDa
                 }
                 catch (OperationCanceledException) when (processExitedCancellationToken.IsCancellationRequested)
                 {
-                    await outputDevice.DisplayAsync(this, new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.TestHostProcessExitedBeforeRetryCouldConnect, testHostProcess.ExitCode))).ConfigureAwait(false);
+                    await outputDevice.DisplayAsync(this, new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.TestHostProcessExitedBeforeRetryCouldConnect, testHostProcess.ExitCode)), cancellationToken).ConfigureAwait(false);
                     return ExitCodes.GenericFailure;
                 }
             }
@@ -228,12 +230,12 @@ internal sealed class RetryOrchestrator : ITestHostOrchestrator, IOutputDeviceDa
             {
                 if (testHostProcess.ExitCode != ExitCodes.AtLeastOneTestFailed)
                 {
-                    await outputDevice.DisplayAsync(this, new WarningMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.TestSuiteFailedWithWrongExitCode, testHostProcess.ExitCode))).ConfigureAwait(false);
+                    await outputDevice.DisplayAsync(this, new WarningMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.TestSuiteFailedWithWrongExitCode, testHostProcess.ExitCode)), cancellationToken).ConfigureAwait(false);
                     retryInterrupted = true;
                     break;
                 }
 
-                await outputDevice.DisplayAsync(this, new WarningMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.TestSuiteFailed, retryFailedTestsPipeServer.FailedUID?.Count ?? 0, testHostProcess.ExitCode, attemptCount, userMaxRetryCount + 1))).ConfigureAwait(false);
+                await outputDevice.DisplayAsync(this, new WarningMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.TestSuiteFailed, retryFailedTestsPipeServer.FailedUID?.Count ?? 0, testHostProcess.ExitCode, attemptCount, userMaxRetryCount + 1)), cancellationToken).ConfigureAwait(false);
 
                 // Check thresholds
                 if (attemptCount == 1)
@@ -272,7 +274,7 @@ internal sealed class RetryOrchestrator : ITestHostOrchestrator, IOutputDeviceDa
                                 explanation.AppendLine(string.Format(CultureInfo.InvariantCulture, ExtensionResources.FailureThresholdPolicyMaxCount, maxCount, retryFailedTestsPipeServer.FailedUID!.Count));
                             }
 
-                            await outputDevice.DisplayAsync(this, new ErrorMessageOutputDeviceData(explanation.ToString())).ConfigureAwait(false);
+                            await outputDevice.DisplayAsync(this, new ErrorMessageOutputDeviceData(explanation.ToString()), cancellationToken).ConfigureAwait(false);
                             break;
                         }
                     }
@@ -291,20 +293,20 @@ internal sealed class RetryOrchestrator : ITestHostOrchestrator, IOutputDeviceDa
         {
             if (exitCodes[^1] != ExitCodes.Success)
             {
-                await outputDevice.DisplayAsync(this, new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.TestSuiteFailedInAllAttempts, userMaxRetryCount + 1))).ConfigureAwait(false);
+                await outputDevice.DisplayAsync(this, new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.TestSuiteFailedInAllAttempts, userMaxRetryCount + 1)), cancellationToken).ConfigureAwait(false);
             }
             else
             {
-                await outputDevice.DisplayAsync(this, new FormattedTextOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.TestSuiteCompletedSuccessfully, attemptCount)) { ForegroundColor = new SystemConsoleColor { ConsoleColor = ConsoleColor.DarkGreen } }).ConfigureAwait(false);
+                await outputDevice.DisplayAsync(this, new FormattedTextOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.TestSuiteCompletedSuccessfully, attemptCount)) { ForegroundColor = new SystemConsoleColor { ConsoleColor = ConsoleColor.DarkGreen } }, cancellationToken).ConfigureAwait(false);
             }
         }
 
         ApplicationStateGuard.Ensure(currentTryResultFolder is not null);
 
-        string[] filesToMove = Directory.GetFiles(currentTryResultFolder, "*.*", SearchOption.AllDirectories);
+        string[] filesToMove = _fileSystem.GetFiles(currentTryResultFolder, "*.*", SearchOption.AllDirectories);
         if (filesToMove.Length > 0)
         {
-            await outputDevice.DisplayAsync(this, new TextOutputDeviceData(ExtensionResources.MoveFiles)).ConfigureAwait(false);
+            await outputDevice.DisplayAsync(this, new TextOutputDeviceData(ExtensionResources.MoveFiles), cancellationToken).ConfigureAwait(false);
 
             // Move last attempt assets
             foreach (string file in filesToMove)
@@ -312,14 +314,14 @@ internal sealed class RetryOrchestrator : ITestHostOrchestrator, IOutputDeviceDa
                 string finalFileLocation = file.Replace(currentTryResultFolder, resultDirectory);
 
                 // Create the directory if missing
-                Directory.CreateDirectory(Path.GetDirectoryName(finalFileLocation)!);
+                fileSystem.CreateDirectory(Path.GetDirectoryName(finalFileLocation)!);
 
-                await outputDevice.DisplayAsync(this, new TextOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.MovingFileToLocation, file, finalFileLocation))).ConfigureAwait(false);
+                await outputDevice.DisplayAsync(this, new TextOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.MovingFileToLocation, file, finalFileLocation)), cancellationToken).ConfigureAwait(false);
 #if NETCOREAPP
-                File.Move(file, finalFileLocation, overwrite: true);
+                fileSystem.MoveFile(file, finalFileLocation, overwrite: true);
 #else
-                File.Copy(file, finalFileLocation, overwrite: true);
-                File.Delete(file);
+                fileSystem.CopyFile(file, finalFileLocation, overwrite: true);
+                fileSystem.DeleteFile(file);
 #endif
             }
         }

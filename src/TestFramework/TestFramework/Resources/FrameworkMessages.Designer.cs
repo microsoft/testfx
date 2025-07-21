@@ -439,7 +439,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Dynamic data method &apos;{0}&apos; should be static, parameterless and non-generic..
+        ///   Looks up a localized string similar to Dynamic data method &apos;{0}&apos; should be static, non-generic, and cannot have &apos;params&apos; parameter..
         /// </summary>
         internal static string DynamicDataInvalidMethodLayout {
             get {

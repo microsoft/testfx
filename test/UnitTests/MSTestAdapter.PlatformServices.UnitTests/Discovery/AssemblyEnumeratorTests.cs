@@ -83,7 +83,7 @@ public class AssemblyEnumeratorTests : TestContainer
         // Setup mocks
         mockAssembly.Setup(a => a.GetTypes()).Returns([]);
 
-        Verify(AssemblyEnumerator.GetTypes(mockAssembly.Object, string.Empty, _warnings).Length == 0);
+        Verify(AssemblyEnumerator.GetTypes(mockAssembly.Object).Length == 0);
     }
 
     public void GetTypesShouldReturnSetOfDefinedTypes()
@@ -95,117 +95,8 @@ public class AssemblyEnumeratorTests : TestContainer
         // Setup mocks
         mockAssembly.Setup(a => a.GetTypes()).Returns(expectedTypes);
 
-        Type[] types = AssemblyEnumerator.GetTypes(mockAssembly.Object, string.Empty, _warnings);
+        Type[] types = AssemblyEnumerator.GetTypes(mockAssembly.Object);
         Verify(expectedTypes.SequenceEqual(types));
-    }
-
-    public void GetTypesShouldHandleReflectionTypeLoadException()
-    {
-        Mock<TestableAssembly> mockAssembly = new();
-
-        // Setup mocks
-        mockAssembly.Setup(a => a.GetTypes()).Throws(new ReflectionTypeLoadException(null, null));
-
-        AssemblyEnumerator.GetTypes(mockAssembly.Object, string.Empty, _warnings);
-    }
-
-    public void GetTypesShouldReturnReflectionTypeLoadExceptionTypesOnException()
-    {
-        Mock<TestableAssembly> mockAssembly = new();
-        var reflectedTypes = new Type[] { typeof(DummyTestClass) };
-
-        // Setup mocks
-        mockAssembly.Setup(a => a.GetTypes()).Throws(new ReflectionTypeLoadException(reflectedTypes, null));
-
-        Type[] types = AssemblyEnumerator.GetTypes(mockAssembly.Object, string.Empty, _warnings);
-
-        Verify(types is not null);
-        Verify(reflectedTypes.Equals(types));
-    }
-
-    public void GetTypesShouldLogWarningsWhenReflectionFailsWithLoaderExceptions()
-    {
-        Mock<TestableAssembly> mockAssembly = new();
-        var exceptions = new Exception[] { new("DummyLoaderException") };
-
-        // Setup mocks
-        mockAssembly.Setup(a => a.GetTypes()).Throws(new ReflectionTypeLoadException(null, exceptions));
-        mockAssembly.Setup(a => a.GetTypes()).Throws(new ReflectionTypeLoadException(null, exceptions));
-
-        Type[] types = AssemblyEnumerator.GetTypes(mockAssembly.Object, "DummyAssembly", _warnings);
-
-        // Depending on the TFM, .NET either gives us null or empty array.
-        Verify(types is null || types.Length == 0);
-
-        Verify(_warnings.Count == 1);
-        Verify(_warnings.ToList().Contains(
-            string.Format(CultureInfo.CurrentCulture, Resource.TypeLoadFailed, "DummyAssembly", "System.Exception: DummyLoaderException\r\n")));
-
-        _testablePlatformServiceProvider.MockTraceLogger.Verify(tl => tl.LogWarning("{0}", exceptions[0]), Times.Once);
-    }
-
-    #endregion
-
-    #region GetLoadExceptionDetails tests
-
-    public void GetLoadExceptionDetailsShouldReturnExceptionMessageIfLoaderExceptionsIsNull() => Verify(
-            AssemblyEnumerator.GetLoadExceptionDetails(
-                new ReflectionTypeLoadException(null, null, "DummyMessage")) ==
-            "DummyMessage\r\n");
-
-    public void GetLoadExceptionDetailsShouldReturnLoaderExceptionMessage()
-    {
-        var loaderException = new AccessViolationException("DummyLoaderExceptionMessage2");
-        var exceptions = new ReflectionTypeLoadException(null, [loaderException]);
-
-        Verify(
-            string.Concat(
-                string.Format(
-                    CultureInfo.CurrentCulture,
-                    Resource.EnumeratorLoadTypeErrorFormat,
-                    loaderException.GetType(),
-                    loaderException.Message),
-                "\r\n") ==
-            AssemblyEnumerator.GetLoadExceptionDetails(exceptions));
-    }
-
-    public void GetLoadExceptionDetailsShouldReturnLoaderExceptionMessagesForMoreThanOneException()
-    {
-        var loaderException1 = new ArgumentNullException("DummyLoaderExceptionMessage1", (Exception)null!);
-        var loaderException2 = new AccessViolationException("DummyLoaderExceptionMessage2");
-        var exceptions = new ReflectionTypeLoadException(
-            null,
-            [loaderException1, loaderException2]);
-        StringBuilder errorDetails = new();
-
-        errorDetails.AppendFormat(
-                CultureInfo.CurrentCulture,
-                Resource.EnumeratorLoadTypeErrorFormat,
-                loaderException1.GetType(),
-                loaderException1.Message).AppendLine();
-        errorDetails.AppendFormat(
-                CultureInfo.CurrentCulture,
-                Resource.EnumeratorLoadTypeErrorFormat,
-                loaderException2.GetType(),
-                loaderException2.Message).AppendLine();
-
-        Verify(errorDetails.ToString() == AssemblyEnumerator.GetLoadExceptionDetails(exceptions));
-    }
-
-    public void GetLoadExceptionDetailsShouldLogUniqueExceptionsOnly()
-    {
-        var loaderException = new AccessViolationException("DummyLoaderExceptionMessage2");
-        var exceptions = new ReflectionTypeLoadException(null, [loaderException, loaderException]);
-
-        Verify(
-            string.Concat(
-                string.Format(
-                    CultureInfo.CurrentCulture,
-                    Resource.EnumeratorLoadTypeErrorFormat,
-                    loaderException.GetType(),
-                    loaderException.Message),
-                "\r\n") ==
-            AssemblyEnumerator.GetLoadExceptionDetails(exceptions));
     }
 
     #endregion

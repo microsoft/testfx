@@ -132,31 +132,14 @@ public sealed partial class Assert
     }
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 
-    /// <summary>
-    /// Tests whether the specified objects both refer to the same object and
-    /// throws an exception if the two inputs do not refer to the same object.
-    /// </summary>
-    /// <typeparam name="T">
-    /// The type of values to compare.
-    /// </typeparam>
-    /// <param name="expected">
-    /// The first object to compare. This is the value the test expects.
-    /// </param>
-    /// <param name="actual">
-    /// The second object to compare. This is the value produced by the code under test.
-    /// </param>
-    /// <exception cref="AssertFailedException">
-    /// Thrown if <paramref name="expected"/> does not refer to the same object
-    /// as <paramref name="actual"/>.
-    /// </exception>
-    public static void AreSame<T>(T? expected, T? actual)
-        => AreSame(expected, actual, string.Empty);
-
     /// <inheritdoc cref="AreSame{T}(T, T, string?)" />
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
     public static void AreSame<T>(T? expected, T? actual, [InterpolatedStringHandlerArgument(nameof(expected), nameof(actual))] ref AssertAreSameInterpolatedStringHandler<T> message)
 #pragma warning restore IDE0060 // Remove unused parameter
         => message.ComputeAssertion();
+
+#pragma warning disable RS0026 // Do not add multiple public overloads with optional parameters
+#pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
 
     /// <summary>
     /// Tests whether the specified objects both refer to the same object and
@@ -180,7 +163,7 @@ public sealed partial class Assert
     /// Thrown if <paramref name="expected"/> does not refer to the same object
     /// as <paramref name="actual"/>.
     /// </exception>
-    public static void AreSame<T>(T? expected, T? actual, string? message)
+    public static void AreSame<T>(T? expected, T? actual, string message = "")
     {
         if (!IsAreSameFailing(expected, actual))
         {
@@ -208,27 +191,6 @@ public sealed partial class Assert
 
         ThrowAssertFailed("Assert.AreSame", finalMessage);
     }
-
-    /// <summary>
-    /// Tests whether the specified objects refer to different objects and
-    /// throws an exception if the two inputs refer to the same object.
-    /// </summary>
-    /// <typeparam name="T">
-    /// The type of values to compare.
-    /// </typeparam>
-    /// <param name="notExpected">
-    /// The first object to compare. This is the value the test expects not
-    /// to match <paramref name="actual"/>.
-    /// </param>
-    /// <param name="actual">
-    /// The second object to compare. This is the value produced by the code under test.
-    /// </param>
-    /// <exception cref="AssertFailedException">
-    /// Thrown if <paramref name="notExpected"/> refers to the same object
-    /// as <paramref name="actual"/>.
-    /// </exception>
-    public static void AreNotSame<T>(T? notExpected, T? actual)
-        => AreNotSame(notExpected, actual, string.Empty);
 
     /// <inheritdoc cref="AreNotSame{T}(T, T, string?)" />
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
@@ -259,7 +221,7 @@ public sealed partial class Assert
     /// Thrown if <paramref name="notExpected"/> refers to the same object
     /// as <paramref name="actual"/>.
     /// </exception>
-    public static void AreNotSame<T>(T? notExpected, T? actual, string? message)
+    public static void AreNotSame<T>(T? notExpected, T? actual, string message = "")
     {
         if (IsAreNotSameFailing(notExpected, actual))
         {

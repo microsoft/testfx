@@ -103,7 +103,7 @@ internal sealed class TelemetryManager : ITelemetryManager, IOutputDeviceDataPro
 
         bool sentinelIsNotPresent =
             RoslynString.IsNullOrWhiteSpace(directory)
-            || !fileSystem.Exists(Path.Combine(directory, fileName));
+            || !fileSystem.ExistFile(Path.Combine(directory, fileName));
 
         if (!sentinelIsNotPresent)
         {
@@ -111,7 +111,8 @@ internal sealed class TelemetryManager : ITelemetryManager, IOutputDeviceDataPro
         }
 
         IOutputDevice outputDevice = serviceProvider.GetOutputDevice();
-        await outputDevice.DisplayAsync(this, new TextOutputDeviceData(PlatformResources.TelemetryNotice)).ConfigureAwait(false);
+        CancellationToken cancellationToken = serviceProvider.GetTestApplicationCancellationTokenSource().CancellationToken;
+        await outputDevice.DisplayAsync(this, new TextOutputDeviceData(PlatformResources.TelemetryNotice), cancellationToken).ConfigureAwait(false);
 
         string? path = null;
         try

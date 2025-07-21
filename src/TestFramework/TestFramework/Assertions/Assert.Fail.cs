@@ -13,16 +13,6 @@ public sealed partial class Assert
     /// <summary>
     /// Throws an AssertFailedException.
     /// </summary>
-    /// <exception cref="AssertFailedException">
-    /// Always thrown.
-    /// </exception>
-    [DoesNotReturn]
-    public static void Fail()
-        => Fail(string.Empty);
-
-    /// <summary>
-    /// Throws an AssertFailedException.
-    /// </summary>
     /// <param name="message">
     /// The message to include in the exception. The message is shown in
     /// test results.
@@ -31,6 +21,6 @@ public sealed partial class Assert
     /// Always thrown.
     /// </exception>
     [DoesNotReturn]
-    public static void Fail(string? message)
+    public static void Fail(string message = "")
         => ThrowAssertFailed("Assert.Fail", BuildUserMessage(message));
 }

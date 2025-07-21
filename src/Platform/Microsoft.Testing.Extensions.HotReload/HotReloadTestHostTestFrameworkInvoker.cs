@@ -41,25 +41,23 @@ internal sealed class HotReloadTestHostTestFrameworkInvoker : TestHostTestFramew
         IOutputDevice outputDevice = ServiceProvider.GetOutputDevice();
         var hotReloadHandler = new HotReloadHandler(ServiceProvider.GetConsole(), outputDevice, this);
         TaskCompletionSource<int>? executionCompleted = null;
-        while (await hotReloadHandler.ShouldRunAsync(executionCompleted?.Task, ServiceProvider.GetTestApplicationCancellationTokenSource().CancellationToken).ConfigureAwait(false))
+        while (await hotReloadHandler.ShouldRunAsync(executionCompleted?.Task, cancellationToken).ConfigureAwait(false))
         {
             executionCompleted = new();
             using SemaphoreSlim requestSemaphore = new(1);
             var hotReloadOutputDevice = ServiceProvider.GetPlatformOutputDevice() as IHotReloadPlatformOutputDevice;
             if (hotReloadOutputDevice is not null)
             {
-                await hotReloadOutputDevice.DisplayBeforeHotReloadSessionStartAsync().ConfigureAwait(false);
+                await hotReloadOutputDevice.DisplayBeforeHotReloadSessionStartAsync(cancellationToken).ConfigureAwait(false);
             }
 
-#pragma warning disable TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
             await testFrameworkAdapter.ExecuteRequestAsync(new(request, messageBus, new SemaphoreSlimRequestCompleteNotifier(requestSemaphore), cancellationToken)).ConfigureAwait(false);
-#pragma warning restore TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
 
             await requestSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
             await ServiceProvider.GetBaseMessageBus().DrainDataAsync().ConfigureAwait(false);
             if (hotReloadOutputDevice is not null)
             {
-                await hotReloadOutputDevice.DisplayAfterHotReloadSessionEndAsync().ConfigureAwait(false);
+                await hotReloadOutputDevice.DisplayAfterHotReloadSessionEndAsync(cancellationToken).ConfigureAwait(false);
             }
 
             executionCompleted.SetResult(0);

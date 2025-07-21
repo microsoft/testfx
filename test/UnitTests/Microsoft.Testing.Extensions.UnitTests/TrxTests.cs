@@ -122,7 +122,7 @@ public class TrxTests
         _ = _commandLineOptionsMock.Setup(_ => _.TryGetOptionArgumentList(TrxReportGeneratorCommandLine.TrxReportFileNameOptionName, out argumentTrxReportFileName)).Returns(true);
         PropertyBag propertyBag = new(new PassedTestNodeStateProperty());
         TrxReportEngine trxReportEngine = GenerateTrxReportEngine(1, 0, propertyBag, memoryStream, isExplicitFileName: true);
-        _ = _fileSystem.Setup(x => x.Exists(It.IsAny<string>())).Returns(true);
+        _ = _fileSystem.Setup(x => x.ExistFile(It.IsAny<string>())).Returns(true);
 
         // Act
         (string fileName, string? warning) = await trxReportEngine.GenerateReportAsync();
@@ -237,7 +237,7 @@ public class TrxTests
         using MemoryFileStream memoryStream = new();
         PropertyBag propertyBag = new(
             new FailedTestNodeStateProperty("test failed"),
-            new TrxMessagesProperty([new("error message")]));
+            new TrxMessagesProperty([new StandardOutputTrxMessage("error message")]));
         TrxReportEngine trxReportEngine = GenerateTrxReportEngine(0, 1, propertyBag, memoryStream);
 
         // Act
@@ -267,7 +267,7 @@ public class TrxTests
         using MemoryFileStream memoryStream = new();
         PropertyBag propertyBag = new(
             new FailedTestNodeStateProperty("test failed"),
-            new TrxMessagesProperty([new("base trx message"), new StandardErrorTrxMessage("stderr trx message"), new StandardOutputTrxMessage("stdout trx message"), new DebugOrTraceTrxMessage("debug trx message")]));
+            new TrxMessagesProperty([new StandardErrorTrxMessage("stderr trx message"), new StandardOutputTrxMessage("stdout trx message"), new DebugOrTraceTrxMessage("debug trx message")]));
         TrxReportEngine trxReportEngine = GenerateTrxReportEngine(0, 1, propertyBag, memoryStream);
 
         // Act
@@ -283,8 +283,7 @@ public class TrxTests
         string trxContentsPattern = @"
     <UnitTestResult .* testName=""TestMethod"" .* outcome=""Failed"" .*>
       <Output>
-        <StdOut>base trx message
-stdout trx message</StdOut>
+        <StdOut>stdout trx message</StdOut>
         <StdErr>stderr trx message</StdErr>
         <DebugTrace>debug trx message</DebugTrace>
       </Output>
@@ -576,7 +575,7 @@ stdout trx message</StdOut>
         DateTime testStartTime = DateTime.Now;
         CancellationToken cancellationToken = CancellationToken.None;
 
-        _ = _fileSystem.Setup(x => x.Exists(It.IsAny<string>())).Returns(false);
+        _ = _fileSystem.Setup(x => x.ExistFile(It.IsAny<string>())).Returns(false);
         _ = _fileSystem.Setup(x => x.NewFileStream(It.IsAny<string>(), isExplicitFileName ? FileMode.Create : FileMode.CreateNew))
             .Returns(memoryStream);
 

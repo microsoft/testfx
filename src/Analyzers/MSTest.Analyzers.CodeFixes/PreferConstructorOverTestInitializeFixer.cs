@@ -90,19 +90,20 @@ public sealed class PreferConstructorOverTestInitializeFixer : CodeFixProvider
                 }
 
                 editor.ReplaceNode(existingConstructor, newConstructor);
+
+                // Remove the TestInitialize method
+                editor.RemoveNode(testInitializeMethod);
             }
             else
             {
                 // Create a new constructor with the TestInitialize body if one doesn't exist
-                ConstructorDeclarationSyntax constructor = SyntaxFactory.ConstructorDeclaration(containingClass.Identifier)
+                ConstructorDeclarationSyntax constructor = SyntaxFactory.ConstructorDeclaration(containingClass.Identifier.WithoutTrivia())
                     .WithModifiers(SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PublicKeyword)))
                     .WithBody(testInitializeBody);
 
-                editor.AddMember(containingClass, constructor);
+                // Insert the constructor at the position of the existing TestInitialize method
+                editor.ReplaceNode(testInitializeMethod, constructor);
             }
-
-            // Remove the TestInitialize method
-            editor.RemoveNode(testInitializeMethod);
         }
 
         return editor.GetChangedDocument();

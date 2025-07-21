@@ -29,7 +29,7 @@ internal sealed class TestApplicationBuilder : ITestApplicationBuilder
     private readonly TestApplicationOptions _testApplicationOptions;
     private readonly IUnhandledExceptionsHandler _unhandledExceptionsHandler;
     private readonly TestHostBuilder _testHostBuilder;
-    private ITestHost? _testHost;
+    private IHost? _host;
     private Func<ITestFrameworkCapabilities, IServiceProvider, ITestFramework>? _testFrameworkFactory;
     private Func<IServiceProvider, ITestFrameworkCapabilities>? _testFrameworkCapabilitiesFactory;
 
@@ -54,9 +54,6 @@ internal sealed class TestApplicationBuilder : ITestApplicationBuilder
 
     internal ITestHostOrchestratorManager TestHostOrchestrator => _testHostBuilder.TestHostOrchestratorManager;
 
-    [Obsolete("Remove in v2. Avoid breaking change with the rename of the property. See https://github.com/microsoft/testfx/issues/5015", error: true)]
-    internal ITestHostOrchestratorManager TestHostControllersManager => _testHostBuilder.TestHostOrchestratorManager;
-
     [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
     public IConfigurationManager Configuration => _testHostBuilder.Configuration;
 
@@ -64,9 +61,6 @@ internal sealed class TestApplicationBuilder : ITestApplicationBuilder
     public ILoggingManager Logging => _testHostBuilder.Logging;
 
     internal ITelemetryManager Telemetry => _testHostBuilder.Telemetry;
-
-    [Obsolete("Remove in v2. Avoid breaking change with the rename of the property. See https://github.com/microsoft/testfx/issues/5015", error: true)]
-    internal ITelemetryManager TelemetryManager => _testHostBuilder.Telemetry;
 
     internal IToolsManager Tools => _testHostBuilder.Tools;
 
@@ -104,13 +98,13 @@ internal sealed class TestApplicationBuilder : ITestApplicationBuilder
             throw new InvalidOperationException(PlatformResources.TestApplicationBuilderTestFrameworkNotRegistered);
         }
 
-        if (_testHost is not null)
+        if (_host is not null)
         {
             throw new InvalidOperationException(PlatformResources.TestApplicationBuilderApplicationAlreadyRegistered);
         }
 
-        _testHost = await _testHostBuilder.BuildAsync(_loggingState, _testApplicationOptions, _unhandledExceptionsHandler, _createBuilderStart).ConfigureAwait(false);
+        _host = await _testHostBuilder.BuildAsync(_loggingState, _testApplicationOptions, _unhandledExceptionsHandler, _createBuilderStart).ConfigureAwait(false);
 
-        return new TestApplication(_testHost);
+        return new TestApplication(_host);
     }
 }

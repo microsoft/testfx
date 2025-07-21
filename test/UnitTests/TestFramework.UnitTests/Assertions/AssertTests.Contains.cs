@@ -575,6 +575,107 @@ public partial class AssertTests : TestContainer
         action.Should().Throw<AssertFailedException>().WithMessage("*brown*");
     }
 
+    /// <summary>
+    /// Tests the string DoesNotContain overload with StringComparison and message when substring is not present.
+    /// This test ensures the method overload works correctly and prevents regression of stackoverflow bug.
+    /// </summary>
+    public void DoesNotContain_StringWithComparisonAndMessage_SubstringNotPresent_DoesNotThrow()
+    {
+        // Arrange
+        string value = "The quick brown fox";
+        string substring = "LAZY";
+
+        // Act
+        Action action = () => Assert.DoesNotContain(substring, value, StringComparison.OrdinalIgnoreCase, "Should not contain lazy");
+
+        // Assert
+        action.Should().NotThrow<AssertFailedException>();
+    }
+
+    /// <summary>
+    /// Tests the string DoesNotContain overload with StringComparison and message when substring is present.
+    /// This test ensures the method overload works correctly and prevents regression of stackoverflow bug.
+    /// Expects an exception.
+    /// </summary>
+    public void DoesNotContain_StringWithComparisonAndMessage_SubstringPresent_ThrowsException()
+    {
+        // Arrange
+        string value = "The quick brown fox";
+        string substring = "BROWN";
+
+        // Act
+        Action action = () => Assert.DoesNotContain(substring, value, StringComparison.OrdinalIgnoreCase, "Found unexpected substring");
+
+        // Assert
+        action.Should().Throw<AssertFailedException>().WithMessage("*Found unexpected substring*");
+    }
+
+    /// <summary>
+    /// Tests the simplest string DoesNotContain overload when substring is not present.
+    /// </summary>
+    public void DoesNotContain_StringSimpleOverload_SubstringNotPresent_DoesNotThrow()
+    {
+        // Arrange
+        string value = "The quick brown fox";
+        string substring = "lazy";
+
+        // Act
+        Action action = () => Assert.DoesNotContain(substring, value);
+
+        // Assert
+        action.Should().NotThrow<AssertFailedException>();
+    }
+
+    /// <summary>
+    /// Tests the simplest string DoesNotContain overload when substring is present.
+    /// Expects an exception.
+    /// </summary>
+    public void DoesNotContain_StringSimpleOverload_SubstringPresent_ThrowsException()
+    {
+        // Arrange
+        string value = "The quick brown fox";
+        string substring = "brown";
+
+        // Act
+        Action action = () => Assert.DoesNotContain(substring, value);
+
+        // Assert
+        action.Should().Throw<AssertFailedException>().WithMessage("*brown*");
+    }
+
+    /// <summary>
+    /// Tests the string DoesNotContain overload with message only when substring is not present.
+    /// </summary>
+    public void DoesNotContain_StringWithMessageOnly_SubstringNotPresent_DoesNotThrow()
+    {
+        // Arrange
+        string value = "The quick brown fox";
+        string substring = "lazy";
+
+        // Act
+        Action action = () => Assert.DoesNotContain(substring, value, "Should not contain lazy");
+
+        // Assert
+        action.Should().NotThrow<AssertFailedException>();
+    }
+
+    /// <summary>
+    /// Tests the string DoesNotContain overload with message only when substring is present.
+    /// Expects an exception.
+    /// </summary>
+    public void DoesNotContain_StringWithMessageOnly_SubstringPresent_ThrowsException()
+    {
+        // Arrange
+        string value = "The quick brown fox";
+        string substring = "brown";
+
+        // Act
+        Action action = () => Assert.DoesNotContain(substring, value, "Found unexpected substring");
+
+        // Assert
+        action.Should().Throw<AssertFailedException>().WithMessage("*Found unexpected substring*");
+    }
+
     private static bool IsEven(int x) => x % 2 == 0;
 
     #endregion

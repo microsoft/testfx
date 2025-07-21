@@ -157,7 +157,7 @@ internal class MSTestAdapterSettings
         //  },
         //  ... remaining settings
         // }
-        var settings = new MSTestAdapterSettings();
+        MSTestAdapterSettings settings = MSTestSettingsProvider.Settings;
         Configuration = configuration;
         ParseBooleanSetting(configuration, "deployment:enabled", value => settings.DeploymentEnabled = value);
         ParseBooleanSetting(configuration, "deployment:deployTestSourceDependencies", value => settings.DeployTestSourceDependencies = value);
@@ -187,6 +187,16 @@ internal class MSTestAdapterSettings
         }
 
         bool disableAppDomain = true;
+        // HACK: When running VSTest, and VSTest didn't create TestHostAppDomain (default behavior), we must be enabling appdomain in MSTest.
+        // Otherwise, we will not merge app.config properly, nor we will have correct BaseDirectory of current domain.
+#if NETFRAMEWORK
+        if (AppDomain.CurrentDomain.Id == 1 &&
+            AppDomain.CurrentDomain.FriendlyName.StartsWith("testhost.", StringComparison.Ordinal) &&
+            AppDomain.CurrentDomain.FriendlyName.EndsWith(".exe", StringComparison.Ordinal))
+        {
+            disableAppDomain = false;
+        }
+#endif
 
         if (!StringEx.IsNullOrEmpty(settingsXml))
         {

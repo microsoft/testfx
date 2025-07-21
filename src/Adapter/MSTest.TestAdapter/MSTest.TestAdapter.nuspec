@@ -13,16 +13,20 @@
       <group targetFramework="net462">
         <dependency id="Microsoft.Testing.Extensions.VSTestBridge" version="$TestingPlatformVersion$" />
         <dependency id="Microsoft.Testing.Platform.MSBuild" version="$TestingPlatformVersion$" />
+        <dependency id="MSTest.TestFramework" version="$Version$" />
       </group>
       <group targetFramework="uap10.0">
+        <dependency id="MSTest.TestFramework" version="$Version$" />
       </group>
       <group targetFramework="net8.0">
         <dependency id="Microsoft.Testing.Extensions.VSTestBridge" version="$TestingPlatformVersion$" />
         <dependency id="Microsoft.Testing.Platform.MSBuild" version="$TestingPlatformVersion$" />
+        <dependency id="MSTest.TestFramework" version="$Version$" />
       </group>
       <group targetFramework="net9.0">
         <dependency id="Microsoft.Testing.Extensions.VSTestBridge" version="$TestingPlatformVersion$" />
         <dependency id="Microsoft.Testing.Platform.MSBuild" version="$TestingPlatformVersion$" />
+        <dependency id="MSTest.TestFramework" version="$Version$" />
       </group>
     </dependencies>
     <readme>PACKAGE.md</readme>

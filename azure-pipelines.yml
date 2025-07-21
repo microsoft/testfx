@@ -116,7 +116,7 @@ stages:
           # Because the build step is using -ci flag, restore is done in a local .packages directory.
           # We need to pass NUGET_PACKAGES so that when dotnet test is doing evaluation phase on the projects, it can resolve .props/.targets from packages and import them.
           # Otherwise, props/targets are not imported. It's important that they are imported so that IsTestingPlatformApplication ends up being set.
-          - script: dotnet test -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)\artifacts\log\$(_BuildConfig)\TestStep.binlog
+          - script: dotnet test -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig)\TestStep.binlog --no-progress
             name: Test
             displayName: Test
             env:
@@ -124,14 +124,11 @@ stages:
               NUGET_PACKAGES: $(Build.SourcesDirectory)/.packages
               DOTNET_CLI_CONTEXT_VERBOSE: 1
 
-          # This step is only helpful for diagnosing some issues with vstest/test host that would not appear
-          # through the console or trx
           - task: PublishBuildArtifacts@1
             displayName: 'Publish Test Results folders'
             inputs:
               PathtoPublish: '$(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)'
               ArtifactName: TestResults_Windows_$(_BuildConfig)
-            condition: failed()
 
           - task: CopyFiles@2
             displayName: 'Copy binlogs'
@@ -196,7 +193,7 @@ stages:
           # Because the build step is using -ci flag, restore is done in a local .packages directory.
           # We need to pass NUGET_PACKAGES so that when dotnet test is doing evaluation phase on the projects, it can resolve .props/.targets from packages and import them.
           # Otherwise, props/targets are not imported. It's important that they are imported so that IsTestingPlatformApplication ends up being set.
-          - script: dotnet test --solution NonWindowsTests.slnf -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)\artifacts\log\$(_BuildConfig)\TestStep.binlog
+          - script: dotnet test --solution NonWindowsTests.slnf -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig)\TestStep.binlog --no-progress
             name: Test
             displayName: Test
             env:
@@ -204,14 +201,11 @@ stages:
               NUGET_PACKAGES: $(Build.SourcesDirectory)/.packages
               DOTNET_CLI_CONTEXT_VERBOSE: 1
 
-          # This step is only helpful for diagnosing some issues with vstest/test host that would not appear
-          # through the console or trx
           - task: PublishBuildArtifacts@1
             displayName: 'Publish Test Results folders'
             inputs:
               PathtoPublish: '$(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)'
               ArtifactName: TestResults_Linux_$(_BuildConfig)
-            condition: failed()
 
           - task: CopyFiles@2
             displayName: 'Copy binlogs'
@@ -262,7 +256,7 @@ stages:
           # Because the build step is using -ci flag, restore is done in a local .packages directory.
           # We need to pass NUGET_PACKAGES so that when dotnet test is doing evaluation phase on the projects, it can resolve .props/.targets from packages and import them.
           # Otherwise, props/targets are not imported. It's important that they are imported so that IsTestingPlatformApplication ends up being set.
-          - script: dotnet test --solution NonWindowsTests.slnf -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)\artifacts\log\$(_BuildConfig)\TestStep.binlog
+          - script: dotnet test --solution NonWindowsTests.slnf -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig)\TestStep.binlog --no-progress
             name: Test
             displayName: Test
             env:
@@ -270,14 +264,11 @@ stages:
               NUGET_PACKAGES: $(Build.SourcesDirectory)/.packages
               DOTNET_CLI_CONTEXT_VERBOSE: 1
 
-          # This step is only helpful for diagnosing some issues with vstest/test host that would not appear
-          # through the console or trx
           - task: PublishBuildArtifacts@1
             displayName: 'Publish Test Results folders'
             inputs:
               PathtoPublish: '$(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)'
               ArtifactName: TestResults_MacOs_$(_BuildConfig)
-            condition: failed()
 
           - task: CopyFiles@2
             displayName: 'Copy binlogs'

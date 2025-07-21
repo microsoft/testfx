@@ -29,7 +29,7 @@ public sealed partial class ServerLoggingTests : ServerModeTestsBase<ServerLoggi
         ResponseListener runListener = await jsonClient.RunTests(Guid.NewGuid(), runCollector.CollectNodeUpdates);
 
         await Task.WhenAll(discoveryListener.WaitCompletion(), runListener.WaitCompletion());
-        Assert.IsFalse(logs.Count == 0, "Logs are empty");
+        Assert.AreNotEqual(0, logs.Count, "Logs are empty");
         string logsString = string.Join(Environment.NewLine, logs.Select(l => l.ToString()));
         string logPath = LogFilePathRegex().Match(logsString).Groups[1].Value;
         string port = PortRegex().Match(logsString).Groups[1].Value;
@@ -136,26 +136,26 @@ public class DummyTestFramework : ITestFramework, IDataProducer, IOutputDeviceDa
 
     public async Task ExecuteRequestAsync(ExecuteRequestContext context)
     {
-        await _outputDevice.DisplayAsync(this, new ExceptionOutputDeviceData(new Exception("This is an exception output")));
+        await _outputDevice.DisplayAsync(this, new ExceptionOutputDeviceData(new Exception("This is an exception output")), context.CancellationToken);
         await _outputDevice.DisplayAsync(this, new FormattedTextOutputDeviceData("This is a red output with padding set to 3")
         {
             ForegroundColor = new SystemConsoleColor() { ConsoleColor = ConsoleColor.Red },
             Padding = 3,
-        });
+        }, context.CancellationToken);
 
         await _outputDevice.DisplayAsync(this, new FormattedTextOutputDeviceData("This is a yellow output with padding set to 2")
         {
             ForegroundColor = new SystemConsoleColor() { ConsoleColor = ConsoleColor.Yellow },
             Padding = 2,
-        });
+        }, context.CancellationToken);
 
         await _outputDevice.DisplayAsync(this, new FormattedTextOutputDeviceData("This is a blue output with padding set to 1")
         {
             ForegroundColor = new SystemConsoleColor() { ConsoleColor = ConsoleColor.Blue },
             Padding = 1,
-        });
+        }, context.CancellationToken);
 
-        await _outputDevice.DisplayAsync(this, new TextOutputDeviceData("This is normal text output."));
+        await _outputDevice.DisplayAsync(this, new TextOutputDeviceData("This is normal text output."), context.CancellationToken);
         context.Complete();
     }
 }

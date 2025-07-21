@@ -354,10 +354,7 @@ internal static class SerializerUtilities
                     }
                 }
 
-                if (!properties.ContainsKey("node-type"))
-                {
-                    properties["node-type"] = "group";
-                }
+                properties.TryAdd("node-type", "group");
 
                 return properties;
             });

@@ -48,7 +48,8 @@ internal static class DiagnosticIds
     public const string UseConditionBaseWithTestClassRuleId = "MSTEST0041";
     public const string DuplicateDataRowRuleId = "MSTEST0042";
     public const string UseRetryWithTestMethodRuleId = "MSTEST0043";
-    // public const string PreferTestMethodOverDataTestMethodRuleId = "MSTEST0044"; - // Don't remove this commented out line, and don't reuse this ID.
+    public const string PreferTestMethodOverDataTestMethodRuleId = "MSTEST0044";
     public const string UseCooperativeCancellationForTimeoutRuleId = "MSTEST0045";
     public const string StringAssertToAssertRuleId = "MSTEST0046";
+    public const string UnusedParameterSuppressorRuleId = "MSTEST0047";
 }

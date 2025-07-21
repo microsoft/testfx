@@ -38,8 +38,8 @@ public sealed class CommandLineHandlerTests
 
         // Assert
         Assert.IsFalse(result.IsValid);
-        StringAssert.Contains(result.ErrorMessage, "Invalid command line arguments:");
-        StringAssert.Contains(result.ErrorMessage, "Unexpected argument 'a'");
+        Assert.Contains("Invalid command line arguments:", result.ErrorMessage);
+        Assert.Contains("Unexpected argument 'a'", result.ErrorMessage);
     }
 
     [TestMethod]
@@ -75,7 +75,7 @@ public sealed class CommandLineHandlerTests
 
         // Assert
         Assert.IsFalse(result.IsValid);
-        StringAssert.Contains(result.ErrorMessage, "Option '--userOption' is declared by multiple extensions: 'Microsoft Testing Platform command line provider', 'Microsoft Testing Platform command line provider'");
+        Assert.Contains("Option '--userOption' is declared by multiple extensions: 'Microsoft Testing Platform command line provider', 'Microsoft Testing Platform command line provider'", result.ErrorMessage);
     }
 
     [TestMethod]
@@ -205,8 +205,8 @@ public sealed class CommandLineHandlerTests
 
         // Assert
         Assert.IsTrue(result);
-        _outputDisplayMock.Verify(o => o.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>()), Times.Never);
-        _outputDisplayMock.Verify(o => o.DisplayBannerAsync(It.IsAny<string?>()), Times.Never);
+        _outputDisplayMock.Verify(o => o.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>(), It.IsAny<CancellationToken>()), Times.Never);
+        _outputDisplayMock.Verify(o => o.DisplayBannerAsync(It.IsAny<string?>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [TestMethod]
@@ -223,8 +223,8 @@ public sealed class CommandLineHandlerTests
 
         // Assert
         Assert.IsTrue(result);
-        _outputDisplayMock.Verify(o => o.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>()), Times.Never);
-        _outputDisplayMock.Verify(o => o.DisplayBannerAsync(It.IsAny<string?>()), Times.Never);
+        _outputDisplayMock.Verify(o => o.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>(), It.IsAny<CancellationToken>()), Times.Never);
+        _outputDisplayMock.Verify(o => o.DisplayBannerAsync(It.IsAny<string?>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [TestMethod]
@@ -241,8 +241,8 @@ public sealed class CommandLineHandlerTests
 
         // Assert
         Assert.IsTrue(result);
-        _outputDisplayMock.Verify(o => o.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>()), Times.Never);
-        _outputDisplayMock.Verify(o => o.DisplayBannerAsync(It.IsAny<string?>()), Times.Never);
+        _outputDisplayMock.Verify(o => o.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>(), It.IsAny<CancellationToken>()), Times.Never);
+        _outputDisplayMock.Verify(o => o.DisplayBannerAsync(It.IsAny<string?>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [TestMethod]
@@ -272,8 +272,8 @@ public sealed class CommandLineHandlerTests
         string[] args = [];
         CommandLineParseResult parseResult = CommandLineParser.Parse(args, new SystemEnvironment());
 
-        _outputDisplayMock.Setup(x => x.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>()))
-            .Callback((IOutputDeviceDataProducer message, IOutputDeviceData data) =>
+        _outputDisplayMock.Setup(x => x.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>(), It.IsAny<CancellationToken>()))
+            .Callback((IOutputDeviceDataProducer message, IOutputDeviceData data, CancellationToken _) =>
             {
                 Assert.IsTrue(((TextOutputDeviceData)data).Text.Contains("Invalid command line arguments:"));
                 Assert.IsTrue(((TextOutputDeviceData)data).Text.Contains("Unexpected argument"));

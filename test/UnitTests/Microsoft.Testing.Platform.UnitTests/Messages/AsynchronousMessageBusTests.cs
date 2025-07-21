@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Extensions.Messages;
-using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Messages;
@@ -56,7 +55,7 @@ public sealed class AsynchronousMessageBusTests
         }
         catch (InvalidOperationException ex)
         {
-            StringAssert.Contains(ex.Message, "Publisher/Consumer loop detected during the drain after");
+            Assert.Contains("Publisher/Consumer loop detected during the drain after", ex.Message);
         }
 
         // Prevent loop to continue

@@ -17,7 +17,7 @@ internal sealed class ServerModePerCallOutputDevice : IPlatformOutputDevice, IOu
     private readonly IStopPoliciesService _policiesService;
     private readonly ConcurrentBag<ServerLogMessage> _messages = [];
 
-    private IServerTestHost? _serverTestHost;
+    private ServerTestHost? _serverTestHost;
 
     private static readonly string[] NewLineStrings = ["\r\n", "\n"];
 
@@ -27,7 +27,7 @@ internal sealed class ServerModePerCallOutputDevice : IPlatformOutputDevice, IOu
         _policiesService = policiesService;
     }
 
-    internal async Task InitializeAsync(IServerTestHost serverTestHost)
+    internal async Task InitializeAsync(ServerTestHost serverTestHost)
     {
         // Server mode output device is basically used to send messages to Test Explorer.
         // For that, it needs the ServerTestHost.
@@ -41,7 +41,7 @@ internal sealed class ServerModePerCallOutputDevice : IPlatformOutputDevice, IOu
 
         foreach (ServerLogMessage message in _messages)
         {
-            await LogAsync(message).ConfigureAwait(false);
+            await LogAsync(message, serverTestHost.ServiceProvider.GetTestApplicationCancellationTokenSource().CancellationToken).ConfigureAwait(false);
         }
 
         _messages.Clear();
@@ -55,61 +55,61 @@ internal sealed class ServerModePerCallOutputDevice : IPlatformOutputDevice, IOu
 
     public string Description => nameof(ServerModePerCallOutputDevice);
 
-    public async Task DisplayAfterSessionEndRunAsync()
-        => await LogAsync(LogLevel.Trace, PlatformResources.FinishedTestSession, padding: null).ConfigureAwait(false);
+    public async Task DisplayAfterSessionEndRunAsync(CancellationToken cancellationToken)
+        => await LogAsync(LogLevel.Trace, PlatformResources.FinishedTestSession, padding: null, cancellationToken).ConfigureAwait(false);
 
-    public async Task DisplayAsync(IOutputDeviceDataProducer producer, IOutputDeviceData data)
+    public async Task DisplayAsync(IOutputDeviceDataProducer producer, IOutputDeviceData data, CancellationToken cancellationToken)
     {
         switch (data)
         {
             case FormattedTextOutputDeviceData formattedTextOutputDeviceData:
-                await LogAsync(LogLevel.Information, formattedTextOutputDeviceData.Text, formattedTextOutputDeviceData.Padding).ConfigureAwait(false);
+                await LogAsync(LogLevel.Information, formattedTextOutputDeviceData.Text, formattedTextOutputDeviceData.Padding, cancellationToken).ConfigureAwait(false);
                 break;
 
             case TextOutputDeviceData textOutputDeviceData:
-                await LogAsync(LogLevel.Information, textOutputDeviceData.Text, padding: null).ConfigureAwait(false);
+                await LogAsync(LogLevel.Information, textOutputDeviceData.Text, padding: null, cancellationToken).ConfigureAwait(false);
                 break;
 
             case WarningMessageOutputDeviceData warningData:
-                await LogAsync(LogLevel.Warning, warningData.Message, padding: null).ConfigureAwait(false);
+                await LogAsync(LogLevel.Warning, warningData.Message, padding: null, cancellationToken).ConfigureAwait(false);
                 break;
 
             case ErrorMessageOutputDeviceData errorData:
-                await LogAsync(LogLevel.Error, errorData.Message, padding: null).ConfigureAwait(false);
+                await LogAsync(LogLevel.Error, errorData.Message, padding: null, cancellationToken).ConfigureAwait(false);
                 break;
 
             case ExceptionOutputDeviceData exceptionOutputDeviceData:
-                await LogAsync(LogLevel.Error, exceptionOutputDeviceData.Exception.ToString(), padding: null).ConfigureAwait(false);
+                await LogAsync(LogLevel.Error, exceptionOutputDeviceData.Exception.ToString(), padding: null, cancellationToken).ConfigureAwait(false);
                 break;
         }
     }
 
-    public async Task DisplayBannerAsync(string? bannerMessage)
+    public async Task DisplayBannerAsync(string? bannerMessage, CancellationToken cancellationToken)
     {
         if (bannerMessage is not null)
         {
-            await LogAsync(LogLevel.Debug, bannerMessage, padding: null).ConfigureAwait(false);
+            await LogAsync(LogLevel.Debug, bannerMessage, padding: null, cancellationToken).ConfigureAwait(false);
         }
     }
 
-    public async Task DisplayBeforeSessionStartAsync()
+    public async Task DisplayBeforeSessionStartAsync(CancellationToken cancellationToken)
     {
         if (_fileLoggerProvider is { FileLogger.FileName: { } logFileName })
         {
-            await LogAsync(LogLevel.Trace, string.Format(CultureInfo.InvariantCulture, PlatformResources.StartingTestSessionWithLogFilePath, logFileName), padding: null).ConfigureAwait(false);
+            await LogAsync(LogLevel.Trace, string.Format(CultureInfo.InvariantCulture, PlatformResources.StartingTestSessionWithLogFilePath, logFileName), padding: null, cancellationToken).ConfigureAwait(false);
         }
         else
         {
-            await LogAsync(LogLevel.Trace, PlatformResources.StartingTestSession, padding: null).ConfigureAwait(false);
+            await LogAsync(LogLevel.Trace, PlatformResources.StartingTestSession, padding: null, cancellationToken).ConfigureAwait(false);
         }
     }
 
     public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 
-    private async Task LogAsync(LogLevel logLevel, string message, int? padding)
-        => await LogAsync(GetServerLogMessage(logLevel, message, padding)).ConfigureAwait(false);
+    private async Task LogAsync(LogLevel logLevel, string message, int? padding, CancellationToken cancellationToken)
+        => await LogAsync(GetServerLogMessage(logLevel, message, padding), cancellationToken).ConfigureAwait(false);
 
-    private async Task LogAsync(ServerLogMessage message)
+    private async Task LogAsync(ServerLogMessage message, CancellationToken cancellationToken)
     {
         if (_serverTestHost is null)
         {
@@ -117,7 +117,7 @@ internal sealed class ServerModePerCallOutputDevice : IPlatformOutputDevice, IOu
         }
         else
         {
-            await _serverTestHost.PushDataAsync(message).ConfigureAwait(false);
+            await _serverTestHost.PushDataAsync(message, cancellationToken).ConfigureAwait(false);
         }
     }
 
@@ -150,13 +150,13 @@ internal sealed class ServerModePerCallOutputDevice : IPlatformOutputDevice, IOu
         return builder.ToString();
     }
 
-    public async Task HandleProcessRoleAsync(TestProcessRole processRole)
+    public async Task HandleProcessRoleAsync(TestProcessRole processRole, CancellationToken cancellationToken)
     {
         if (processRole == TestProcessRole.TestHost)
         {
             await _policiesService.RegisterOnMaxFailedTestsCallbackAsync(
                 async (maxFailedTests, _) => await DisplayAsync(
-                    this, new TextOutputDeviceData(string.Format(CultureInfo.InvariantCulture, PlatformResources.ReachedMaxFailedTestsMessage, maxFailedTests))).ConfigureAwait(false)).ConfigureAwait(false);
+                    this, new TextOutputDeviceData(string.Format(CultureInfo.InvariantCulture, PlatformResources.ReachedMaxFailedTestsMessage, maxFailedTests)), cancellationToken).ConfigureAwait(false)).ConfigureAwait(false);
         }
     }
 }

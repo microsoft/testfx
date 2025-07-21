@@ -27,8 +27,8 @@ public sealed class ServerTelemetryTests
             [TelemetryProperties.RequestProperties.IsFilterEnabledPropertyName] = TelemetryProperties.False,
         };
 
-        await _serverTelemetry.LogEventAsync(TelemetryEvents.TestsDiscoveryEventName, metadata);
-        _serverTestHost.Verify(s => s.SendTelemetryEventUpdateAsync(new TelemetryEventArgs(TelemetryEvents.TestsDiscoveryEventName, metadata)));
+        await _serverTelemetry.LogEventAsync(TelemetryEvents.TestsDiscoveryEventName, metadata, CancellationToken.None);
+        _serverTestHost.Verify(s => s.SendTelemetryEventUpdateAsync(new TelemetryEventArgs(TelemetryEvents.TestsDiscoveryEventName, metadata), CancellationToken.None));
     }
 
     [TestMethod]
@@ -41,7 +41,7 @@ public sealed class ServerTelemetryTests
             [TelemetryProperties.RequestProperties.IsFilterEnabledPropertyName] = TelemetryProperties.True,
         };
 
-        await _serverTelemetry.LogEventAsync(TelemetryEvents.TestsRunEventName, metadata);
-        _serverTestHost.Verify(s => s.SendTelemetryEventUpdateAsync(new TelemetryEventArgs(TelemetryEvents.TestsRunEventName, metadata)));
+        await _serverTelemetry.LogEventAsync(TelemetryEvents.TestsRunEventName, metadata, CancellationToken.None);
+        _serverTestHost.Verify(s => s.SendTelemetryEventUpdateAsync(new TelemetryEventArgs(TelemetryEvents.TestsRunEventName, metadata), CancellationToken.None));
     }
 }

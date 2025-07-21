@@ -165,7 +165,7 @@ public sealed class PropertyBagTests
 
         foreach (IProperty item in property)
         {
-            Assert.IsTrue(false, "no item expected");
+            Assert.Fail("no item expected");
         }
     }
 

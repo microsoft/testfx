@@ -1,8 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.Messages;
-using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Services;
@@ -163,10 +163,7 @@ internal sealed class AsynchronousMessageBus : BaseMessageBus, IMessageBus, IDis
             {
                 foreach (AsyncConsumerDataProcessor asyncMultiProducerMultiConsumerDataProcessor in dataProcessors)
                 {
-                    if (!consumerToDrain.TryGetValue(asyncMultiProducerMultiConsumerDataProcessor, out long _))
-                    {
-                        consumerToDrain.Add(asyncMultiProducerMultiConsumerDataProcessor, 0);
-                    }
+                    consumerToDrain.TryAdd(asyncMultiProducerMultiConsumerDataProcessor, 0);
 
                     long totalPayloadReceived = await asyncMultiProducerMultiConsumerDataProcessor.DrainDataAsync().ConfigureAwait(false);
                     if (consumerToDrain[asyncMultiProducerMultiConsumerDataProcessor] != totalPayloadReceived)

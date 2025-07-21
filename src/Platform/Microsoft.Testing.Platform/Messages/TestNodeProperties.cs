@@ -9,77 +9,234 @@ namespace Microsoft.Testing.Platform.Extensions.Messages;
 public interface IProperty;
 
 /// <summary>
-/// Node property that represents a key-value pair.
-/// </summary>
-/// <param name="Key">Key name.</param>
-/// <param name="Value">Key value.</param>
-[Obsolete("Use TestMetadataProperty instead. This will be removed in a future version.")]
-public record KeyValuePairStringProperty(string Key, string Value) : IProperty;
-
-/// <summary>
 /// Base class for test node state properties.
 /// </summary>
-/// <param name="Explanation">Textual explanation of the node state.</param>
-public abstract record TestNodeStateProperty(string? Explanation) : IProperty;
+public abstract class TestNodeStateProperty : IProperty, IEquatable<TestNodeStateProperty>
+{
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TestNodeStateProperty"/> class.
+    /// </summary>
+    /// <param name="explanation">Textual explanation of the node state.</param>
+    protected TestNodeStateProperty(string? explanation)
+        => Explanation = explanation;
+
+    /// <summary>
+    /// Gets the textual explanation of the node state.
+    /// </summary>
+    public string? Explanation { get; }
+
+    private protected virtual void PrintMembers(StringBuilder builder)
+    {
+        builder.Append($"{nameof(Explanation)} = ");
+        builder.Append(Explanation);
+    }
+
+    /// <inheritdoc />
+    public override string ToString()
+    {
+        var builder = new StringBuilder();
+        builder.Append(nameof(TestNodeStateProperty));
+        builder.Append(" { ");
+        PrintMembers(builder);
+        builder.Append(" }");
+        return builder.ToString();
+    }
+
+    /// <inheritdoc />
+    public override bool Equals(object? obj)
+        => Equals(obj as TestNodeStateProperty);
+
+    /// <inheritdoc />
+    public bool Equals(TestNodeStateProperty? other)
+        => other is not null && Explanation == other.Explanation;
+
+    /// <inheritdoc />
+    public override int GetHashCode()
+        => Explanation?.GetHashCode() ?? 0;
+}
 
 /// <summary>
 /// Property that represents test node that has been discovered.
 /// </summary>
-/// <param name="Explanation">Textual explanation of the node.</param>
-public sealed record DiscoveredTestNodeStateProperty(string? Explanation = null) : TestNodeStateProperty(Explanation)
+public sealed class DiscoveredTestNodeStateProperty : TestNodeStateProperty, IEquatable<DiscoveredTestNodeStateProperty>
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="DiscoveredTestNodeStateProperty"/> class.
+    /// </summary>
+    /// <param name="explanation">Textual explanation of the node.</param>
+    public DiscoveredTestNodeStateProperty(string? explanation = null)
+        : base(explanation)
+    {
+    }
+
     /// <summary>
     /// Gets cached instance of the <see cref="DiscoveredTestNodeStateProperty"/>.
     /// </summary>
     public static DiscoveredTestNodeStateProperty CachedInstance { get; } = new DiscoveredTestNodeStateProperty();
+
+    /// <inheritdoc />
+    public override string ToString()
+    {
+        var builder = new StringBuilder();
+        builder.Append(nameof(DiscoveredTestNodeStateProperty));
+        builder.Append(" { ");
+        PrintMembers(builder);
+        builder.Append(" }");
+        return builder.ToString();
+    }
+
+    /// <inheritdoc />
+    public override bool Equals(object? obj)
+        => Equals(obj as DiscoveredTestNodeStateProperty);
+
+    /// <inheritdoc />
+    public bool Equals(DiscoveredTestNodeStateProperty? other)
+        => other is not null && Explanation == other.Explanation;
+
+    /// <inheritdoc />
+    public override int GetHashCode()
+        => Explanation?.GetHashCode() ?? 0;
 }
 
 /// <summary>
 /// Property that represents a test node that is being executed.
 /// </summary>
-/// <param name="Explanation">Textual explanation of the node.</param>
-public sealed record InProgressTestNodeStateProperty(string? Explanation = null) : TestNodeStateProperty(Explanation)
+public sealed class InProgressTestNodeStateProperty : TestNodeStateProperty, IEquatable<InProgressTestNodeStateProperty>
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="InProgressTestNodeStateProperty"/> class.
+    /// </summary>
+    /// <param name="explanation">Textual explanation of the node.</param>
+    public InProgressTestNodeStateProperty(string? explanation = null)
+        : base(explanation)
+    {
+    }
+
     /// <summary>
     /// Gets cached instance of the <see cref="InProgressTestNodeStateProperty"/>.
     /// </summary>
     public static InProgressTestNodeStateProperty CachedInstance { get; } = new InProgressTestNodeStateProperty();
+
+    /// <inheritdoc />
+    public override string ToString()
+    {
+        var builder = new StringBuilder();
+        builder.Append(nameof(InProgressTestNodeStateProperty));
+        builder.Append(" { ");
+        PrintMembers(builder);
+        builder.Append(" }");
+        return builder.ToString();
+    }
+
+    /// <inheritdoc />
+    public override bool Equals(object? obj)
+        => Equals(obj as InProgressTestNodeStateProperty);
+
+    /// <inheritdoc />
+    public bool Equals(InProgressTestNodeStateProperty? other)
+        => other is not null && Explanation == other.Explanation;
+
+    /// <inheritdoc />
+    public override int GetHashCode()
+        => Explanation?.GetHashCode() ?? 0;
 }
 
 /// <summary>
 /// Property that represents a test node that has been executed and passed.
 /// </summary>
-/// <param name="Explanation">Textual explanation of the node.</param>
-public sealed record PassedTestNodeStateProperty(string? Explanation = null) : TestNodeStateProperty(Explanation)
+public sealed class PassedTestNodeStateProperty : TestNodeStateProperty, IEquatable<PassedTestNodeStateProperty>
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="PassedTestNodeStateProperty"/> class.
+    /// </summary>
+    /// <param name="explanation">Textual explanation of the node.</param>
+    public PassedTestNodeStateProperty(string? explanation = null)
+        : base(explanation)
+    {
+    }
+
     /// <summary>
     /// Gets the cached instance of the <see cref="PassedTestNodeStateProperty"/> property.
     /// </summary>
     public static PassedTestNodeStateProperty CachedInstance { get; } = new PassedTestNodeStateProperty();
+
+    /// <inheritdoc />
+    public override string ToString()
+    {
+        var builder = new StringBuilder();
+        builder.Append(nameof(PassedTestNodeStateProperty));
+        builder.Append(" { ");
+        PrintMembers(builder);
+        builder.Append(" }");
+        return builder.ToString();
+    }
+
+    /// <inheritdoc />
+    public override bool Equals(object? obj)
+        => Equals(obj as PassedTestNodeStateProperty);
+
+    /// <inheritdoc />
+    public bool Equals(PassedTestNodeStateProperty? other)
+        => other is not null && Explanation == other.Explanation;
+
+    /// <inheritdoc />
+    public override int GetHashCode()
+        => Explanation?.GetHashCode() ?? 0;
 }
 
 /// <summary>
 /// Property that represents a test node that has been skipped.
 /// </summary>
-/// <param name="Explanation">Textual explanation of the node.</param>
-public sealed record SkippedTestNodeStateProperty(string? Explanation = null) : TestNodeStateProperty(Explanation)
+public sealed class SkippedTestNodeStateProperty : TestNodeStateProperty, IEquatable<SkippedTestNodeStateProperty>
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SkippedTestNodeStateProperty"/> class.
+    /// </summary>
+    /// <param name="explanation">Textual explanation of the node.</param>
+    public SkippedTestNodeStateProperty(string? explanation = null)
+        : base(explanation)
+    {
+    }
+
     /// <summary>
     /// Gets the cached instance of the <see cref="SkippedTestNodeStateProperty"/> property.
     /// </summary>
     public static SkippedTestNodeStateProperty CachedInstance { get; } = new SkippedTestNodeStateProperty();
+
+    /// <inheritdoc />
+    public override string ToString()
+    {
+        var builder = new StringBuilder();
+        builder.Append(nameof(SkippedTestNodeStateProperty));
+        builder.Append(" { ");
+        PrintMembers(builder);
+        builder.Append(" }");
+        return builder.ToString();
+    }
+
+    /// <inheritdoc />
+    public override bool Equals(object? obj)
+        => Equals(obj as SkippedTestNodeStateProperty);
+
+    /// <inheritdoc />
+    public bool Equals(SkippedTestNodeStateProperty? other)
+        => other is not null && Explanation == other.Explanation;
+
+    /// <inheritdoc />
+    public override int GetHashCode()
+        => Explanation?.GetHashCode() ?? 0;
 }
 
 /// <summary>
 /// Property that represents a test node that has been failed.
 /// </summary>
-public sealed record FailedTestNodeStateProperty : TestNodeStateProperty
+public sealed class FailedTestNodeStateProperty : TestNodeStateProperty, IEquatable<FailedTestNodeStateProperty>
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="FailedTestNodeStateProperty"/> class.
     /// </summary>
     public FailedTestNodeStateProperty()
-        : base(default(string))
+        : base(default)
     {
     }
 
@@ -104,18 +261,49 @@ public sealed record FailedTestNodeStateProperty : TestNodeStateProperty
     /// Gets the failure exception.
     /// </summary>
     public Exception? Exception { get; }
+
+    /// <inheritdoc />
+    public override string ToString()
+    {
+        var builder = new StringBuilder();
+        builder.Append(nameof(FailedTestNodeStateProperty));
+        builder.Append(" { ");
+        PrintMembers(builder);
+        builder.Append(" }");
+        return builder.ToString();
+    }
+
+    private protected override void PrintMembers(StringBuilder builder)
+    {
+        base.PrintMembers(builder);
+        builder.Append(", ");
+        builder.Append($"{nameof(Exception)} = ");
+        builder.Append(Exception);
+    }
+
+    /// <inheritdoc />
+    public override bool Equals(object? obj)
+        => Equals(obj as FailedTestNodeStateProperty);
+
+    /// <inheritdoc />
+    public bool Equals(FailedTestNodeStateProperty? other)
+        => other is not null && Explanation == other.Explanation && Equals(Exception, other.Exception);
+
+    /// <inheritdoc />
+    public override int GetHashCode()
+        => RoslynHashCode.Combine(Explanation, Exception);
 }
 
 /// <summary>
 /// Property that represents an eventual error in the test node.
 /// </summary>
-public sealed record ErrorTestNodeStateProperty : TestNodeStateProperty
+public sealed class ErrorTestNodeStateProperty : TestNodeStateProperty, IEquatable<ErrorTestNodeStateProperty>
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="ErrorTestNodeStateProperty"/> class.
     /// </summary>
     public ErrorTestNodeStateProperty()
-        : base(default(string))
+        : base(default)
     {
     }
 
@@ -140,18 +328,49 @@ public sealed record ErrorTestNodeStateProperty : TestNodeStateProperty
     /// Gets the error exception.
     /// </summary>
     public Exception? Exception { get; }
+
+    /// <inheritdoc />
+    public override string ToString()
+    {
+        var builder = new StringBuilder();
+        builder.Append(nameof(ErrorTestNodeStateProperty));
+        builder.Append(" { ");
+        PrintMembers(builder);
+        builder.Append(" }");
+        return builder.ToString();
+    }
+
+    private protected override void PrintMembers(StringBuilder builder)
+    {
+        base.PrintMembers(builder);
+        builder.Append(", ");
+        builder.Append($"{nameof(Exception)} = ");
+        builder.Append(Exception);
+    }
+
+    /// <inheritdoc />
+    public override bool Equals(object? obj)
+        => Equals(obj as ErrorTestNodeStateProperty);
+
+    /// <inheritdoc />
+    public bool Equals(ErrorTestNodeStateProperty? other)
+        => other is not null && Explanation == other.Explanation && Equals(Exception, other.Exception);
+
+    /// <inheritdoc />
+    public override int GetHashCode()
+        => RoslynHashCode.Combine(Explanation, Exception);
 }
 
 /// <summary>
 /// Property that represents an eventual timeout in the test node.
 /// </summary>
-public sealed record TimeoutTestNodeStateProperty : TestNodeStateProperty
+public sealed class TimeoutTestNodeStateProperty : TestNodeStateProperty, IEquatable<TimeoutTestNodeStateProperty>
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="TimeoutTestNodeStateProperty"/> class.
     /// </summary>
     public TimeoutTestNodeStateProperty()
-        : base(default(string))
+        : base(default)
     {
     }
 
@@ -181,18 +400,50 @@ public sealed record TimeoutTestNodeStateProperty : TestNodeStateProperty
     /// Gets get the timeout Timespan.
     /// </summary>
     public TimeSpan? Timeout { get; init; }
+
+    /// <inheritdoc />
+    public override string ToString()
+    {
+        var builder = new StringBuilder();
+        builder.Append(nameof(TimeoutTestNodeStateProperty));
+        builder.Append(" { ");
+        PrintMembers(builder);
+        builder.Append(" }");
+        return builder.ToString();
+    }
+
+    private protected override void PrintMembers(StringBuilder builder)
+    {
+        base.PrintMembers(builder);
+        builder.Append($", {nameof(Exception)} = ");
+        builder.Append(Exception);
+        builder.Append($", {nameof(Timeout)} = ");
+        builder.Append(Timeout);
+    }
+
+    /// <inheritdoc />
+    public override bool Equals(object? obj)
+        => Equals(obj as TimeoutTestNodeStateProperty);
+
+    /// <inheritdoc />
+    public bool Equals(TimeoutTestNodeStateProperty? other)
+        => other is not null && Explanation == other.Explanation && Equals(Exception, other.Exception) && Timeout == other.Timeout;
+
+    /// <inheritdoc />
+    public override int GetHashCode()
+        => RoslynHashCode.Combine(Explanation, Exception, Timeout);
 }
 
 /// <summary>
 /// Property that represents an eventual cancellation of a test node.
 /// </summary>
-public sealed record CancelledTestNodeStateProperty : TestNodeStateProperty
+public sealed class CancelledTestNodeStateProperty : TestNodeStateProperty, IEquatable<CancelledTestNodeStateProperty>
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="CancelledTestNodeStateProperty"/> class.
     /// </summary>
     public CancelledTestNodeStateProperty()
-        : base(default(string))
+        : base(default)
     {
     }
 
@@ -217,43 +468,193 @@ public sealed record CancelledTestNodeStateProperty : TestNodeStateProperty
     /// Gets the cancellation exception.
     /// </summary>
     public Exception? Exception { get; }
+
+    /// <inheritdoc />
+    public override string ToString()
+    {
+        var builder = new StringBuilder();
+        builder.Append(nameof(CancelledTestNodeStateProperty));
+        builder.Append(" { ");
+        PrintMembers(builder);
+        builder.Append(" }");
+        return builder.ToString();
+    }
+
+    private protected override void PrintMembers(StringBuilder builder)
+    {
+        base.PrintMembers(builder);
+        builder.Append(", ");
+        builder.Append($"{nameof(Exception)} = ");
+        builder.Append(Exception);
+    }
+
+    /// <inheritdoc />
+    public override bool Equals(object? obj)
+        => Equals(obj as CancelledTestNodeStateProperty);
+
+    /// <inheritdoc />
+    public bool Equals(CancelledTestNodeStateProperty? other)
+        => other is not null && Explanation == other.Explanation && Equals(Exception, other.Exception);
+
+    /// <inheritdoc />
+    public override int GetHashCode()
+        => RoslynHashCode.Combine(Explanation, Exception);
 }
 
 /// <summary>
 /// Information about the timing of a test node.
 /// </summary>
-/// <param name="StartTime">Test start time.</param>
-/// <param name="EndTime">Test end time.</param>
-/// <param name="Duration">Total test duration.</param>
-public readonly record struct TimingInfo(DateTimeOffset StartTime, DateTimeOffset EndTime, TimeSpan Duration);
+public readonly struct TimingInfo : IEquatable<TimingInfo>
+{
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TimingInfo"/> struct.
+    /// </summary>
+    /// <param name="startTime">Test start time.</param>
+    /// <param name="endTime">Test end time.</param>
+    /// <param name="duration">Total test duration.</param>
+    public TimingInfo(DateTimeOffset startTime, DateTimeOffset endTime, TimeSpan duration)
+    {
+        StartTime = startTime;
+        EndTime = endTime;
+        Duration = duration;
+    }
+
+    /// <summary>
+    /// Gets the test start time.
+    /// </summary>
+    public DateTimeOffset StartTime { get; }
+
+    /// <summary>
+    /// Gets the test end time.
+    /// </summary>
+    public DateTimeOffset EndTime { get; }
+
+    /// <summary>
+    /// Gets the total test duration.
+    /// </summary>
+    public TimeSpan Duration { get; }
+
+    /// <inheritdoc />
+    public override string ToString()
+    {
+        var builder = new StringBuilder();
+        builder.Append($"{nameof(TimingInfo)} {{ ");
+        builder.Append($"{nameof(StartTime)} = ");
+        builder.Append(StartTime);
+        builder.Append($", {nameof(EndTime)} = ");
+        builder.Append(EndTime);
+        builder.Append($", {nameof(Duration)} = ");
+        builder.Append(Duration.ToString());
+        builder.Append(" }");
+        return builder.ToString();
+    }
+
+    /// <inheritdoc />
+    public override bool Equals(object? obj)
+        => obj is TimingInfo other && Equals(other);
+
+    /// <inheritdoc />
+    public bool Equals(TimingInfo other)
+        => StartTime.Equals(other.StartTime) && EndTime.Equals(other.EndTime) && Duration.Equals(other.Duration);
+
+    /// <inheritdoc />
+    public override int GetHashCode()
+        => RoslynHashCode.Combine(StartTime, EndTime, Duration);
+
+    /// <summary>
+    /// Implementation of the non-equality operator.
+    /// </summary>
+    public static bool operator !=(TimingInfo left, TimingInfo right)
+        => !(left == right);
+
+    /// <summary>
+    /// Implementation of the equality operator.
+    /// </summary>
+    public static bool operator ==(TimingInfo left, TimingInfo right)
+        => left.Equals(right);
+}
 
 /// <summary>
 /// Information about the timing of a test node step.
 /// </summary>
-/// <param name="Id">Step identifier.</param>
-/// <param name="Description">Step description.</param>
-/// <param name="Timing">Step timing info.</param>
-public sealed record StepTimingInfo(string Id, string Description, TimingInfo Timing);
+public sealed class StepTimingInfo : IEquatable<StepTimingInfo>
+{
+    /// <summary>
+    /// Initializes a new instance of the <see cref="StepTimingInfo"/> class.
+    /// </summary>
+    /// <param name="id">Step identifier.</param>
+    /// <param name="description">Step description.</param>
+    /// <param name="timing">Step timing info.</param>
+    public StepTimingInfo(string id, string description, TimingInfo timing)
+    {
+        Id = id;
+        Description = description;
+        Timing = timing;
+    }
+
+    /// <summary>
+    /// Gets the step identifier.
+    /// </summary>
+    public string Id { get; }
+
+    /// <summary>
+    /// Gets the step description.
+    /// </summary>
+    public string Description { get; }
+
+    /// <summary>
+    /// Gets the step timing info.
+    /// </summary>
+    public TimingInfo Timing { get; }
+
+    /// <inheritdoc />
+    public override string ToString()
+    {
+        var builder = new StringBuilder();
+        builder.Append(nameof(StepTimingInfo));
+        builder.Append(" { ");
+        builder.Append($"{nameof(Id)} = ");
+        builder.Append(Id);
+        builder.Append($", {nameof(Description)} = ");
+        builder.Append(Description);
+        builder.Append($", {nameof(Timing)} = ");
+        builder.Append(Timing);
+        builder.Append(" }");
+        return builder.ToString();
+    }
+
+    /// <inheritdoc />
+    public override bool Equals(object? obj)
+        => Equals(obj as StepTimingInfo);
+
+    /// <inheritdoc />
+    public bool Equals(StepTimingInfo? other)
+        => other is not null && Id == other.Id && Description == other.Description && Timing.Equals(other.Timing);
+
+    /// <inheritdoc />
+    public override int GetHashCode()
+        => RoslynHashCode.Combine(Id, Description, Timing);
+}
 
 /// <summary>
 /// Property that represents the timing of a test node.
 /// </summary>
-public sealed record TimingProperty : IProperty
+public sealed class TimingProperty : IProperty, IEquatable<TimingProperty>
 {
     /// <summary>
-    /// Initializes a new instance of the <see cref="TimingProperty"/> class.
+    /// Initializes a new instance of the <see cref="TimingProperty"/> class with only global timing.
     /// </summary>
-    /// <param name="globalTiming">Timing info.</param>
+    /// <param name="globalTiming">The global timing information.</param>
     public TimingProperty(TimingInfo globalTiming)
         : this(globalTiming, [])
     {
     }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="TimingProperty"/> class.
+    /// Initializes a new instance of the <see cref="TimingProperty"/> class with global and step timings.
     /// </summary>
-    /// <param name="globalTiming">Timing info.</param>
-    /// <param name="stepTimings">Steps timing.</param>
+    /// <param name="globalTiming">The global timing information.</param>
+    /// <param name="stepTimings">The step timing information.</param>
     public TimingProperty(TimingInfo globalTiming, StepTimingInfo[] stepTimings)
     {
         GlobalTiming = globalTiming;
@@ -261,161 +662,617 @@ public sealed record TimingProperty : IProperty
     }
 
     /// <summary>
-    /// Gets the global timing info.
+    /// Gets the global timing information.
     /// </summary>
     public TimingInfo GlobalTiming { get; }
 
     /// <summary>
-    /// Gets the steps timing info.
+    /// Gets the step timing information.
     /// </summary>
     public StepTimingInfo[] StepTimings { get; }
 
-    [SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "https://github.com/dotnet/roslyn/issues/52421")]
-    private bool PrintMembers(StringBuilder builder)
+    /// <inheritdoc />
+    public override string ToString()
     {
-        builder.Append("GlobalTiming = ");
+        var builder = new StringBuilder();
+        builder.Append(nameof(TimingProperty));
+        builder.Append(" { ");
+        builder.Append($"{nameof(GlobalTiming)} = ");
         builder.Append(GlobalTiming);
-        builder.Append(", StepTimings = [");
+        builder.Append($", {nameof(StepTimings)} = [");
         builder.AppendJoin(", ", StepTimings.Select(x => x.ToString()));
         builder.Append(']');
-        return true;
+        builder.Append(" }");
+        return builder.ToString();
     }
+
+    /// <inheritdoc />
+    public override bool Equals(object? obj)
+        => Equals(obj as TimingProperty);
+
+    /// <inheritdoc />
+    public bool Equals(TimingProperty? other)
+        => other is not null && GlobalTiming.Equals(other.GlobalTiming) && StepTimings.SequenceEqual(other.StepTimings);
+
+    /// <inheritdoc />
+    public override int GetHashCode()
+        => RoslynHashCode.Combine(GlobalTiming, StructuralComparisons.StructuralEqualityComparer.GetHashCode(StepTimings));
 }
 
 /// <summary>
 /// Line position in a file.
 /// </summary>
-/// <param name="Line">Line number.</param>
-/// <param name="Column">Column number.</param>
-public record struct LinePosition(int Line, int Column);
+public readonly struct LinePosition : IEquatable<LinePosition>
+{
+    /// <summary>
+    /// Initializes a new instance of the <see cref="LinePosition"/> struct.
+    /// </summary>
+    /// <param name="line">Line number.</param>
+    /// <param name="column">Column number.</param>
+    public LinePosition(int line, int column)
+    {
+        Line = line;
+        Column = column;
+    }
+
+    /// <summary>
+    /// Gets the line number.
+    /// </summary>
+    public int Line { get; }
+
+    /// <summary>
+    /// Gets the column number.
+    /// </summary>
+    public int Column { get; }
+
+    /// <inheritdoc />
+    public override string ToString()
+    {
+        var builder = new StringBuilder();
+        builder.Append(nameof(LinePosition));
+        builder.Append(" { ");
+        builder.Append($"{nameof(Line)} = ");
+        builder.Append(Line);
+        builder.Append($", {nameof(Column)} = ");
+        builder.Append(Column);
+        builder.Append(' ');
+        builder.Append('}');
+        return builder.ToString();
+    }
+
+    /// <inheritdoc />
+    public override bool Equals(object? obj)
+        => obj is LinePosition other && Equals(other);
+
+    /// <inheritdoc />
+    public bool Equals(LinePosition other)
+        => Line == other.Line && Column == other.Column;
+
+    /// <inheritdoc />
+    public override int GetHashCode()
+        => RoslynHashCode.Combine(Line, Column);
+
+    /// <summary>
+    /// Implementation of the non-equality operator.
+    /// </summary>
+    public static bool operator !=(LinePosition left, LinePosition right)
+        => !(left == right);
+
+    /// <summary>
+    /// Implementation of the equality operator.
+    /// </summary>
+    public static bool operator ==(LinePosition left, LinePosition right)
+        => left.Equals(right);
+}
 
 /// <summary>
 /// Line position span in a file.
 /// </summary>
-/// <param name="Start">Start line position.</param>
-/// <param name="End">End line position.</param>
-public record struct LinePositionSpan(LinePosition Start, LinePosition End);
+public readonly struct LinePositionSpan : IEquatable<LinePositionSpan>
+{
+    /// <summary>
+    /// Initializes a new instance of the <see cref="LinePositionSpan"/> struct.
+    /// </summary>
+    /// <param name="start">Start line position.</param>
+    /// <param name="end">End line position.</param>
+    public LinePositionSpan(LinePosition start, LinePosition end)
+    {
+        Start = start;
+        End = end;
+    }
+
+    /// <summary>
+    /// Gets the start line position.
+    /// </summary>
+    public LinePosition Start { get; }
+
+    /// <summary>
+    /// Gets the end line position.
+    /// </summary>
+    public LinePosition End { get; }
+
+    /// <inheritdoc />
+    public override string ToString()
+    {
+        var builder = new StringBuilder();
+        builder.Append(nameof(LinePositionSpan));
+        builder.Append(" { ");
+        builder.Append($"{nameof(Start)} = ");
+        builder.Append(Start);
+        builder.Append($", {nameof(End)} = ");
+        builder.Append(End);
+        builder.Append(' ');
+        builder.Append('}');
+        return builder.ToString();
+    }
+
+    /// <inheritdoc />
+    public override bool Equals(object? obj)
+        => obj is LinePositionSpan other && Equals(other);
+
+    /// <inheritdoc />
+    public bool Equals(LinePositionSpan other)
+        => Start.Equals(other.Start) && End.Equals(other.End);
+
+    /// <inheritdoc />
+    public override int GetHashCode()
+        => RoslynHashCode.Combine(Start, End);
+
+    /// <summary>
+    /// Implementation of the non-equality operator.
+    /// </summary>
+    public static bool operator !=(LinePositionSpan left, LinePositionSpan right)
+        => !(left == right);
+
+    /// <summary>
+    /// Implementation of the equality operator.
+    /// </summary>
+    public static bool operator ==(LinePositionSpan left, LinePositionSpan right)
+        => left.Equals(right);
+}
 
 /// <summary>
 /// Base property that represents a file location.
 /// </summary>
-/// <param name="FilePath">File path.</param>
-/// <param name="LineSpan">Line position.</param>
-public abstract record FileLocationProperty(string FilePath, LinePositionSpan LineSpan) : IProperty;
+public abstract class FileLocationProperty : IProperty, IEquatable<FileLocationProperty>
+{
+    /// <summary>
+    /// Initializes a new instance of the <see cref="FileLocationProperty"/> class.
+    /// </summary>
+    /// <param name="filePath">File path.</param>
+    /// <param name="lineSpan">Line position.</param>
+    protected FileLocationProperty(string filePath, LinePositionSpan lineSpan)
+    {
+        FilePath = filePath;
+        LineSpan = lineSpan;
+    }
+
+    /// <summary>
+    /// Gets the file path.
+    /// </summary>
+    public string FilePath { get; }
+
+    /// <summary>
+    /// Gets the line position span.
+    /// </summary>
+    public LinePositionSpan LineSpan { get; }
+
+    /// <inheritdoc />
+    public override string ToString()
+    {
+        var builder = new StringBuilder();
+        builder.Append(nameof(FileLocationProperty));
+        builder.Append(" { ");
+        PrintMembers(builder);
+        builder.Append(" }");
+        return builder.ToString();
+    }
+
+    private protected virtual void PrintMembers(StringBuilder builder)
+    {
+        builder.Append($"{nameof(FilePath)} = ");
+        builder.Append(FilePath);
+        builder.Append($", {nameof(LineSpan)} = ");
+        builder.Append(LineSpan);
+    }
+
+    /// <inheritdoc />
+    public override bool Equals(object? obj)
+        => Equals(obj as FileLocationProperty);
+
+    /// <inheritdoc />
+    public bool Equals(FileLocationProperty? other)
+        => other is not null && FilePath == other.FilePath && LineSpan.Equals(other.LineSpan);
+
+    /// <inheritdoc />
+    public override int GetHashCode()
+        => RoslynHashCode.Combine(FilePath, LineSpan);
+}
 
 /// <summary>
 /// Property that represents a file location for a test node.
 /// </summary>
-/// <param name="FilePath">File path.</param>
-/// <param name="LineSpan">Line position.</param>
-public sealed record TestFileLocationProperty(string FilePath, LinePositionSpan LineSpan) : FileLocationProperty(FilePath, LineSpan);
+public sealed class TestFileLocationProperty : FileLocationProperty, IEquatable<TestFileLocationProperty>
+{
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TestFileLocationProperty"/> class.
+    /// </summary>
+    /// <param name="filePath">File path.</param>
+    /// <param name="lineSpan">Line position.</param>
+    public TestFileLocationProperty(string filePath, LinePositionSpan lineSpan)
+        : base(filePath, lineSpan)
+    {
+    }
+
+    /// <inheritdoc />
+    public override string ToString()
+    {
+        var builder = new StringBuilder();
+        builder.Append(nameof(TestFileLocationProperty));
+        builder.Append(" { ");
+        PrintMembers(builder);
+        builder.Append(" }");
+        return builder.ToString();
+    }
+
+    /// <inheritdoc />
+    public override bool Equals(object? obj)
+        => Equals(obj as TestFileLocationProperty);
+
+    /// <inheritdoc />
+    public bool Equals(TestFileLocationProperty? other) => other is not null && FilePath == other.FilePath && LineSpan.Equals(other.LineSpan);
+
+    /// <inheritdoc />
+    public override int GetHashCode()
+        => RoslynHashCode.Combine(FilePath, LineSpan);
+}
 
 /// <summary>
 /// Property that uniquely identifies a test method. Values are ECMA-335 compliant.
 /// </summary>
-/// <param name="AssemblyFullName">Assembly full name.</param>
-/// <param name="Namespace">Namespace.</param>
-/// <param name="TypeName">Type name in metadata format, not including the namespace. Generics are represented by backtick followed by arity. Nested types are represented by <c>+</c>.</param>
-/// <param name="MethodName">Method name in metadata format. This is simply the method name, it doesn't include backtick followed by arity.</param>
-/// <param name="MethodArity">The number of generic parameters of the method.</param>
-/// <param name="ParameterTypeFullNames">Parameter type full names in metadata format.</param>
-/// <param name="ReturnTypeFullName">Return type full name in metadata format.</param>
-public sealed record TestMethodIdentifierProperty(string AssemblyFullName, string Namespace, string TypeName, string MethodName, int MethodArity, string[] ParameterTypeFullNames, string ReturnTypeFullName) : IProperty
+public sealed class TestMethodIdentifierProperty : IProperty, IEquatable<TestMethodIdentifierProperty>
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="TestMethodIdentifierProperty"/> class.
     /// </summary>
-    /// <param name="AssemblyFullName">Assembly full name.</param>
-    /// <param name="Namespace">Namespace.</param>
-    /// <param name="TypeName">Type name in metadata format, not including the namespace. Generics are represented by backtick followed by arity. Nested types are represented by <c>+</c>.</param>
-    /// <param name="MethodName">Method name in metadata format.</param>
-    /// <param name="ParameterTypeFullNames">Parameter type full names in metadata format.</param>
-    /// <param name="ReturnTypeFullName">Return type full name in metadata format.</param>
-    [Obsolete("Use the overload with method arity instead.")]
-    public TestMethodIdentifierProperty(string AssemblyFullName, string Namespace, string TypeName, string MethodName, string[] ParameterTypeFullNames, string ReturnTypeFullName)
-        : this(AssemblyFullName, Namespace, TypeName, MethodName, 0, ParameterTypeFullNames, ReturnTypeFullName)
+    /// <param name="assemblyFullName">Assembly full name.</param>
+    /// <param name="namespace">Namespace.</param>
+    /// <param name="typeName">Type name in metadata format, not including the namespace. Generics are represented by backtick followed by arity. Nested types are represented by <c>+</c>.</param>
+    /// <param name="methodName">Method name in metadata format. This is simply the method name, it doesn't include backtick followed by arity.</param>
+    /// <param name="methodArity">The number of generic parameters of the method.</param>
+    /// <param name="parameterTypeFullNames">Parameter type full names in metadata format.</param>
+    /// <param name="returnTypeFullName">Return type full name in metadata format.</param>
+    public TestMethodIdentifierProperty(
+        string assemblyFullName,
+        string @namespace,
+        string typeName,
+        string methodName,
+        int methodArity,
+        string[] parameterTypeFullNames,
+        string returnTypeFullName)
     {
+        AssemblyFullName = assemblyFullName;
+        Namespace = @namespace;
+        TypeName = typeName;
+        MethodName = methodName;
+        MethodArity = methodArity;
+        ParameterTypeFullNames = parameterTypeFullNames;
+        ReturnTypeFullName = returnTypeFullName;
     }
 
     /// <summary>
-    /// Deconstructs properties of TestMethodIdentifierProperty, except MethodArity. This is present only for backwards compatibility.
+    /// Gets the assembly full name.
     /// </summary>
-    /// <param name="AssemblyFullName">The value of <see cref="AssemblyFullName" />.</param>
-    /// <param name="Namespace">The value of <see cref="Namespace" />.</param>
-    /// <param name="TypeName">The value of <see cref="TypeName" />.</param>
-    /// <param name="MethodName">The value of <see cref="MethodName" />.</param>
-    /// <param name="ParameterTypeFullNames">The value of <see cref="ParameterTypeFullNames" />.</param>
-    /// <param name="ReturnTypeFullName">The value of <see cref="ReturnTypeFullName" />.</param>
-    public void Deconstruct(out string AssemblyFullName, out string Namespace, out string TypeName, out string MethodName, out string[] ParameterTypeFullNames, out string ReturnTypeFullName)
+    public string AssemblyFullName { get; }
+
+    /// <summary>
+    /// Gets the namespace.
+    /// </summary>
+    public string Namespace { get; }
+
+    /// <summary>
+    /// Gets the type name in metadata format, not including the namespace.
+    /// </summary>
+    public string TypeName { get; }
+
+    /// <summary>
+    /// Gets the method name in metadata format.
+    /// </summary>
+    public string MethodName { get; }
+
+    /// <summary>
+    /// Gets the number of generic parameters of the method.
+    /// </summary>
+    public int MethodArity { get; }
+
+    /// <summary>
+    /// Gets the parameter type full names in metadata format.
+    /// </summary>
+    public string[] ParameterTypeFullNames { get; }
+
+    /// <summary>
+    /// Gets the return type full name in metadata format.
+    /// </summary>
+    public string ReturnTypeFullName { get; }
+
+    /// <inheritdoc />
+    public override string ToString()
     {
-        AssemblyFullName = this.AssemblyFullName;
-        Namespace = this.Namespace;
-        TypeName = this.TypeName;
-        MethodName = this.MethodName;
-        ParameterTypeFullNames = this.ParameterTypeFullNames;
-        ReturnTypeFullName = this.ReturnTypeFullName;
+        var builder = new StringBuilder();
+        builder.Append(nameof(TestMethodIdentifierProperty));
+        builder.Append(" { ");
+        builder.Append($"{nameof(AssemblyFullName)} = ");
+        builder.Append(AssemblyFullName);
+        builder.Append($", {nameof(Namespace)} = ");
+        builder.Append(Namespace);
+        builder.Append($", {nameof(TypeName)} = ");
+        builder.Append(TypeName);
+        builder.Append($", {nameof(MethodName)} = ");
+        builder.Append(MethodName);
+        builder.Append($", {nameof(MethodArity)} = ");
+        builder.Append(MethodArity);
+        builder.Append($", {nameof(ParameterTypeFullNames)} = [");
+        builder.AppendJoin(", ", ParameterTypeFullNames);
+        builder.Append($"], {nameof(ReturnTypeFullName)} = ");
+        builder.Append(ReturnTypeFullName);
+        builder.Append(" }");
+        return builder.ToString();
     }
 
-    [SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "https://github.com/dotnet/roslyn/issues/52421")]
-    private bool PrintMembers(StringBuilder builder)
-    {
-        builder.Append("AssemblyFullName = ");
-        builder.Append(AssemblyFullName);
-        builder.Append(", Namespace = ");
-        builder.Append(Namespace);
-        builder.Append(", TypeName = ");
-        builder.Append(TypeName);
-        builder.Append(", MethodName = ");
-        builder.Append(MethodName);
-        builder.Append(", ParameterTypeFullNames = [");
-        builder.AppendJoin(", ", ParameterTypeFullNames);
-        builder.Append("], ReturnTypeFullName = ");
-        builder.Append(ReturnTypeFullName);
-        return true;
-    }
+    /// <inheritdoc />
+    public override bool Equals(object? obj)
+        => Equals(obj as TestMethodIdentifierProperty);
+
+    /// <inheritdoc />
+    public bool Equals(TestMethodIdentifierProperty? other)
+        => other is not null && AssemblyFullName == other.AssemblyFullName && Namespace == other.Namespace && TypeName == other.TypeName && MethodName == other.MethodName && MethodArity == other.MethodArity && ParameterTypeFullNames.SequenceEqual(other.ParameterTypeFullNames) && ReturnTypeFullName == other.ReturnTypeFullName;
+
+    /// <inheritdoc />
+    public override int GetHashCode()
+        => RoslynHashCode.Combine(AssemblyFullName, Namespace, TypeName, MethodName, MethodArity, StructuralComparisons.StructuralEqualityComparer.GetHashCode(ParameterTypeFullNames), ReturnTypeFullName);
 }
 
 /// <summary>
-/// Initializes a new instance of the <see cref="TestMetadataProperty"/> class.
 /// Property that represents a generic test metadata property in the shape of a key-value pair associated with a <see cref="TestNode"/>.
 /// </summary>
-/// <param name="Key">The metadata key.</param>
-/// <param name="Value">The metadata value.</param>
-public sealed record TestMetadataProperty(string Key, string Value) : IProperty
+public sealed class TestMetadataProperty : IProperty, IEquatable<TestMetadataProperty>
 {
     /// <summary>
-    /// Initializes a new instance of the <see cref="TestMetadataProperty"/> class.
-    /// Property that represents a generic test metadata property in the shape of a value associated with a <see cref="TestNode"/>.
+    /// Initializes a new instance of the <see cref="TestMetadataProperty"/> class with a key and value.
+    /// </summary>
+    /// <param name="key">The metadata key.</param>
+    /// <param name="value">The metadata value.</param>
+    public TestMetadataProperty(string key, string value)
+    {
+        Key = key;
+        Value = value;
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TestMetadataProperty"/> class with a key and an empty value.
     /// </summary>
     /// <param name="key">The metadata key.</param>
     public TestMetadataProperty(string key)
         : this(key, string.Empty)
     {
     }
+
+    /// <summary>
+    /// Gets the metadata key.
+    /// </summary>
+    public string Key { get; }
+
+    /// <summary>
+    /// Gets the metadata value.
+    /// </summary>
+    public string Value { get; }
+
+    /// <inheritdoc />
+    public override string ToString()
+    {
+        var builder = new StringBuilder();
+        builder.Append(nameof(TestMetadataProperty));
+        builder.Append(" { ");
+        builder.Append($"{nameof(Key)} = ");
+        builder.Append(Key);
+        builder.Append($", {nameof(Value)} = ");
+        builder.Append(Value);
+        builder.Append(" }");
+        return builder.ToString();
+    }
+
+    /// <inheritdoc />
+    public override bool Equals(object? obj)
+        => Equals(obj as TestMetadataProperty);
+
+    /// <inheritdoc />
+    public bool Equals(TestMetadataProperty? other)
+        => other is not null && Key == other.Key && Value == other.Value;
+
+    /// <inheritdoc />
+    public override int GetHashCode()
+        => RoslynHashCode.Combine(Key, Value);
 }
 
 /// <summary>
 /// Property that represents standard output to associate with a test node.
 /// </summary>
-/// <param name="StandardOutput">The standard output.</param>
 [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
-public record StandardOutputProperty(string StandardOutput) : IProperty;
+public class StandardOutputProperty : IProperty, IEquatable<StandardOutputProperty>
+{
+    /// <summary>
+    /// Initializes a new instance of the <see cref="StandardOutputProperty"/> class.
+    /// </summary>
+    /// <param name="standardOutput">The standard output.</param>
+    public StandardOutputProperty(string standardOutput)
+        => StandardOutput = standardOutput;
+
+    /// <summary>
+    /// Gets the standard output.
+    /// </summary>
+    public string StandardOutput { get; }
+
+    /// <inheritdoc />
+    public override string ToString()
+    {
+        var builder = new StringBuilder();
+        builder.Append(nameof(StandardOutputProperty));
+        builder.Append(" { ");
+        builder.Append($"{nameof(StandardOutput)} = ");
+        builder.Append(StandardOutput);
+        builder.Append(" }");
+        return builder.ToString();
+    }
+
+    /// <inheritdoc />
+    public override bool Equals(object? obj)
+        => Equals(obj as StandardOutputProperty);
+
+    /// <inheritdoc />
+    public bool Equals(StandardOutputProperty? other)
+        => other is not null && StandardOutput == other.StandardOutput;
+
+    /// <inheritdoc />
+    public override int GetHashCode()
+        => StandardOutput?.GetHashCode() ?? 0;
+}
 
 /// <summary>
 /// Property that represents standard error to associate with a test node.
 /// </summary>
-/// <param name="StandardError">The standard error.</param>
 [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
-public record StandardErrorProperty(string StandardError) : IProperty;
+public class StandardErrorProperty : IProperty, IEquatable<StandardErrorProperty>
+{
+    /// <summary>
+    /// Initializes a new instance of the <see cref="StandardErrorProperty"/> class.
+    /// </summary>
+    /// <param name="standardError">The standard error.</param>
+    public StandardErrorProperty(string standardError)
+        => StandardError = standardError;
+
+    /// <summary>
+    /// Gets the standard error.
+    /// </summary>
+    public string StandardError { get; }
+
+    /// <inheritdoc />
+    public override string ToString()
+    {
+        var builder = new StringBuilder();
+        builder.Append(nameof(StandardErrorProperty));
+        builder.Append(" { ");
+        builder.Append($"{nameof(StandardError)} = ");
+        builder.Append(StandardError);
+        builder.Append(" }");
+        return builder.ToString();
+    }
+
+    /// <inheritdoc />
+    public override bool Equals(object? obj)
+        => Equals(obj as StandardErrorProperty);
+
+    /// <inheritdoc />
+    public bool Equals(StandardErrorProperty? other)
+        => other is not null && StandardError == other.StandardError;
+
+    /// <inheritdoc />
+    public override int GetHashCode()
+        => StandardError?.GetHashCode() ?? 0;
+}
 
 /// <summary>
 /// Property that represents multiple artifacts/attachments to associate with a test node.
 /// </summary>
-/// <param name="FileInfo">The file information.</param>
-/// <param name="DisplayName">The display name.</param>
-/// <param name="Description">The description.</param>
-public record FileArtifactProperty(FileInfo FileInfo, string DisplayName, string? Description = null) : IProperty;
+public sealed class FileArtifactProperty : IProperty, IEquatable<FileArtifactProperty>
+{
+    /// <summary>
+    /// Initializes a new instance of the <see cref="FileArtifactProperty"/> class.
+    /// </summary>
+    /// <param name="fileInfo">The file information.</param>
+    /// <param name="displayName">The display name.</param>
+    /// <param name="description">The description.</param>
+    public FileArtifactProperty(FileInfo fileInfo, string displayName, string? description = null)
+    {
+        FileInfo = fileInfo;
+        DisplayName = displayName;
+        Description = description;
+    }
 
-#pragma warning disable CS0618 // Type or member is obsolete
-internal sealed record SerializableKeyValuePairStringProperty(string Key, string Value) : KeyValuePairStringProperty(Key, Value);
-#pragma warning restore CS0618 // Type or member is obsolete
+    /// <summary>
+    /// Gets the file information.
+    /// </summary>
+    public FileInfo FileInfo { get; }
+
+    /// <summary>
+    /// Gets the display name.
+    /// </summary>
+    public string DisplayName { get; }
+
+    /// <summary>
+    /// Gets the description.
+    /// </summary>
+    public string? Description { get; }
+
+    /// <inheritdoc />
+    public override string ToString()
+    {
+        var builder = new StringBuilder();
+        builder.Append(nameof(FileArtifactProperty));
+        builder.Append(" { ");
+        builder.Append($"{nameof(FileInfo)} = ");
+        builder.Append(FileInfo);
+        builder.Append($", {nameof(DisplayName)} = ");
+        builder.Append(DisplayName);
+        builder.Append($", {nameof(Description)} = ");
+        builder.Append(Description);
+        builder.Append(" }");
+        return builder.ToString();
+    }
+
+    /// <inheritdoc />
+    public override bool Equals(object? obj)
+        => Equals(obj as FileArtifactProperty);
+
+    /// <inheritdoc />
+    public bool Equals(FileArtifactProperty? other)
+        => other is not null && Equals(FileInfo, other.FileInfo) && DisplayName == other.DisplayName && Description == other.Description;
+
+    /// <inheritdoc />
+    public override int GetHashCode()
+        => RoslynHashCode.Combine(FileInfo, DisplayName, Description);
+}
+
+internal sealed class SerializableKeyValuePairStringProperty : IProperty, IEquatable<SerializableKeyValuePairStringProperty>
+{
+    public SerializableKeyValuePairStringProperty(string key, string value)
+    {
+        Key = key;
+        Value = value;
+    }
+
+    public string Key { get; }
+
+    public string Value { get; }
+
+    public override string ToString()
+    {
+        var builder = new StringBuilder();
+        builder.Append(nameof(SerializableKeyValuePairStringProperty));
+        builder.Append(" { ");
+        builder.Append($"{nameof(Key)} = ");
+        builder.Append(Key);
+        builder.Append($", {nameof(Value)} = ");
+        builder.Append(Value);
+        builder.Append(" }");
+        return builder.ToString();
+    }
+
+    public override bool Equals(object? obj)
+        => Equals(obj as SerializableKeyValuePairStringProperty);
+
+    public bool Equals(SerializableKeyValuePairStringProperty? other)
+        => other is not null && Key == other.Key && Value == other.Value;
+
+    public override int GetHashCode()
+        => RoslynHashCode.Combine(Key, Value);
+}
