@@ -10,6 +10,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Int
 /// </summary>
 internal interface IAdapterTraceLogger
 {
+    bool IsInfoEnabled { get; }
+
     /// <summary>
     /// Log an error in a given format.
     /// </summary>
@@ -30,4 +32,6 @@ internal interface IAdapterTraceLogger
     /// <param name="format"> The format. </param>
     /// <param name="args"> The args. </param>
     void LogInfo(string format, params object?[] args);
+
+    void LogVerbose(string format, params object?[] args);
 }

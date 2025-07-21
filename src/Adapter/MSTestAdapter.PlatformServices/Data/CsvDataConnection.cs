@@ -6,7 +6,7 @@
 using System.Data;
 using System.Data.OleDb;
 
-using Microsoft.VisualStudio.TestPlatform.ObjectModel;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Data;
@@ -22,8 +22,8 @@ internal sealed class CsvDataConnection : TestDataConnection
 
     private readonly string _fileName;
 
-    public CsvDataConnection(string fileName, List<string> dataFolders)
-        : base(dataFolders)
+    public CsvDataConnection(string fileName, List<string> dataFolders, IAdapterTraceLogger logger)
+        : base(dataFolders, logger)
     {
         DebugEx.Assert(!StringEx.IsNullOrEmpty(fileName), "fileName");
         _fileName = fileName;
@@ -63,7 +63,7 @@ internal sealed class CsvDataConnection : TestDataConnection
         }
         catch (Exception exception)
         {
-            EqtTrace.ErrorIf(EqtTrace.IsErrorEnabled, exception.Message + " for CSV data source " + _fileName);
+            Logger.LogError(exception.Message + " for CSV data source " + _fileName);
         }
 
         return null;

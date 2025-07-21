@@ -3,6 +3,7 @@
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
@@ -24,6 +25,7 @@ public class TestDeploymentTests : TestContainer
 
     private readonly Mock<ReflectionUtility> _mockReflectionUtility;
     private readonly Mock<FileUtility> _mockFileUtility;
+    private readonly Mock<IAdapterTraceLogger> _mockAdapterLogger;
 
 #pragma warning disable IDE0044 // Add readonly modifier
     private IList<string> _warnings;
@@ -34,6 +36,7 @@ public class TestDeploymentTests : TestContainer
         _mockReflectionUtility = new Mock<ReflectionUtility>();
         _mockFileUtility = new Mock<FileUtility>();
         _warnings = [];
+        _mockAdapterLogger = new Mock<IAdapterTraceLogger>();
 
         // Reset adapter settings.
         MSTestSettingsProvider.Reset();
@@ -44,13 +47,13 @@ public class TestDeploymentTests : TestContainer
     public void GetDeploymentItemsReturnsNullWhenNoDeploymentItems()
     {
         MethodInfo methodInfo = typeof(TestDeploymentTests).GetMethod("GetDeploymentItemsReturnsNullWhenNoDeploymentItems")!;
-        Verify(new TestDeployment().GetDeploymentItems(methodInfo, typeof(TestDeploymentTests), _warnings) is null);
+        Verify(new TestDeployment(_mockAdapterLogger.Object).GetDeploymentItems(methodInfo, typeof(TestDeploymentTests), _warnings) is null);
     }
 
     public void GetDeploymentItemsReturnsDeploymentItems()
     {
         // Arrange.
-        var testDeployment = new TestDeployment(new DeploymentItemUtility(_mockReflectionUtility.Object), null!, null!);
+        var testDeployment = new TestDeployment(new DeploymentItemUtility(_mockReflectionUtility.Object), null!, null!, _mockAdapterLogger.Object);
 
         // setup mocks
         KeyValuePair<string, string>[] methodLevelDeploymentItems =
@@ -92,7 +95,7 @@ public class TestDeploymentTests : TestContainer
 
     public void CleanupShouldNotDeleteDirectoriesIfRunDirectoriesIsNull()
     {
-        var testDeployment = new TestDeployment(null!, null!, _mockFileUtility.Object);
+        var testDeployment = new TestDeployment(null!, null!, _mockFileUtility.Object, _mockAdapterLogger.Object);
 
         testDeployment.Cleanup();
 
@@ -145,7 +148,7 @@ public class TestDeploymentTests : TestContainer
 
     #region GetDeploymentDirectory tests
 
-    public void GetDeploymentDirectoryShouldReturnNullIfDeploymentDirectoryIsNull() => Verify(new TestDeployment().GetDeploymentDirectory() is null);
+    public void GetDeploymentDirectoryShouldReturnNullIfDeploymentDirectoryIsNull() => Verify(new TestDeployment(_mockAdapterLogger.Object).GetDeploymentDirectory() is null);
 
     public void GetDeploymentDirectoryShouldReturnDeploymentOutputDirectory()
     {
@@ -180,8 +183,9 @@ public class TestDeploymentTests : TestContainer
 
         var testDeployment = new TestDeployment(
             new DeploymentItemUtility(_mockReflectionUtility.Object),
-            new DeploymentUtility(),
-            _mockFileUtility.Object);
+            new DeploymentUtility(_mockAdapterLogger.Object),
+            _mockFileUtility.Object,
+            _mockAdapterLogger.Object);
 
         string runSettingsXml =
              "<DeploymentEnabled>False</DeploymentEnabled>";
@@ -203,8 +207,9 @@ public class TestDeploymentTests : TestContainer
         testCase.SetPropertyValue(DeploymentItemUtilityTests.DeploymentItemsProperty, null);
         var testDeployment = new TestDeployment(
             new DeploymentItemUtility(_mockReflectionUtility.Object),
-            new DeploymentUtility(),
-            _mockFileUtility.Object);
+            new DeploymentUtility(_mockAdapterLogger.Object),
+            _mockFileUtility.Object,
+            _mockAdapterLogger.Object);
 
         string runSettingsXml =
             "<DeploymentEnabled>False</DeploymentEnabled>";
@@ -226,8 +231,9 @@ public class TestDeploymentTests : TestContainer
         testCase.SetPropertyValue(DeploymentItemUtilityTests.DeploymentItemsProperty, null);
         var testDeployment = new TestDeployment(
             new DeploymentItemUtility(_mockReflectionUtility.Object),
-            new DeploymentUtility(),
-            _mockFileUtility.Object);
+            new DeploymentUtility(_mockAdapterLogger.Object),
+            _mockFileUtility.Object,
+            _mockAdapterLogger.Object);
 
         string runSettingsXml =
             "<DeploymentEnabled>True</DeploymentEnabled>";
@@ -256,8 +262,9 @@ public class TestDeploymentTests : TestContainer
         testCase.SetPropertyValue(DeploymentItemUtilityTests.DeploymentItemsProperty, kvpArray);
         var testDeployment = new TestDeployment(
             new DeploymentItemUtility(_mockReflectionUtility.Object),
-            new DeploymentUtility(),
-            _mockFileUtility.Object);
+            new DeploymentUtility(_mockAdapterLogger.Object),
+            _mockFileUtility.Object,
+            _mockAdapterLogger.Object);
 
         string runSettingsXml =
             "<DeploymentEnabled>True</DeploymentEnabled>";
@@ -413,8 +420,9 @@ public class TestDeploymentTests : TestContainer
 
         return new TestDeployment(
             deploymentItemUtility,
-            new DeploymentUtility(deploymentItemUtility, mockAssemblyUtility.Object, _mockFileUtility.Object),
-            _mockFileUtility.Object);
+            new DeploymentUtility(deploymentItemUtility, mockAssemblyUtility.Object, _mockFileUtility.Object, _mockAdapterLogger.Object),
+            _mockFileUtility.Object,
+            _mockAdapterLogger.Object);
     }
     #endregion
 }

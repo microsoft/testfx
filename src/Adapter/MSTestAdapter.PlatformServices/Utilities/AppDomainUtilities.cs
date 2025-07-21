@@ -4,6 +4,7 @@
 #if NETFRAMEWORK
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -31,42 +32,26 @@ internal static class AppDomainUtilities
         set;
     }
 
-    /// <summary>
-    /// Set the target framework for app domain setup if target framework of dll is > 4.5.
-    /// </summary>
-    /// <param name="setup">AppdomainSetup for app domain creation.</param>
-    /// <param name="frameworkVersionString">The target framework version of the test source.</param>
     [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1650:ElementDocumentationMustBeSpelledCorrectly", Justification = "Reviewed. Suppression is OK here.")]
     [SuppressMessage("StyleCop.CSharp.NamingRules", "SA1305:FieldNamesMustNotUseHungarianNotation", Justification = "Reviewed. Suppression is OK here.")]
-    internal static void SetAppDomainFrameworkVersionBasedOnTestSource(AppDomainSetup setup, string frameworkVersionString)
+    internal static void SetAppDomainFrameworkVersionBasedOnTestSource(AppDomainSetup setup, string frameworkVersionString, IAdapterTraceLogger logger)
     {
-        if (GetTargetFrameworkVersionFromVersionString(frameworkVersionString).CompareTo(Version45) > 0)
+        if (GetTargetFrameworkVersionFromVersionString(frameworkVersionString, logger).CompareTo(Version45) > 0)
         {
             PropertyInfo? pInfo = typeof(AppDomainSetup).GetProperty(EngineConstants.TargetFrameworkName);
             pInfo?.SetValue(setup, frameworkVersionString, null);
         }
     }
 
-    /// <summary>
-    /// Get target framework version string from the given dll.
-    /// </summary>
-    /// <param name="testSourcePath">
-    /// The path of the dll.
-    /// </param>
-    /// <returns>
-    /// Framework string
-    /// TODO: Need to add components/E2E tests to cover these scenarios.
-    /// </returns>
     [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1650:ElementDocumentationMustBeSpelledCorrectly", Justification = "Reviewed. Suppression is OK here.")]
-    internal static string GetTargetFrameworkVersionString(string testSourcePath)
+    internal static string GetTargetFrameworkVersionString(string testSourcePath, IAdapterTraceLogger logger)
     {
         AppDomainSetup appDomainSetup = new()
         {
             LoaderOptimization = LoaderOptimization.MultiDomainHost,
         };
 
-        SetConfigurationFile(appDomainSetup, new DeploymentUtility().GetConfigFile(testSourcePath));
-
+        SetConfigurationFile(appDomainSetup, new DeploymentUtility(logger).GetConfigFile(testSourcePath), logger);
         if (!File.Exists(testSourcePath))
         {
             return string.Empty;
@@ -104,20 +89,16 @@ internal static class AppDomainUtilities
                 null);
 
             string targetFramework = assemblyLoadWorker.GetTargetFrameworkVersionStringFromPath(testSourcePath, out string? errorMessage);
-
             if (errorMessage is not null)
             {
-                EqtTrace.Error(errorMessage);
+                logger.LogError(errorMessage);
             }
 
             return targetFramework;
         }
         catch (Exception exception)
         {
-            if (EqtTrace.IsErrorEnabled)
-            {
-                EqtTrace.Error(exception);
-            }
+            logger.LogError(exception.ToString());
         }
         finally
         {
@@ -130,13 +111,8 @@ internal static class AppDomainUtilities
         return string.Empty;
     }
 
-    /// <summary>
-    /// Set configuration file on the parameter appDomain.
-    /// </summary>
-    /// <param name="appDomainSetup"> The app Domain Setup. </param>
-    /// <param name="testSourceConfigFile"> The test Source Config File. </param>
     [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
-    internal static void SetConfigurationFile(AppDomainSetup appDomainSetup, string? testSourceConfigFile)
+    internal static void SetConfigurationFile(AppDomainSetup appDomainSetup, string? testSourceConfigFile, IAdapterTraceLogger logger)
     {
         if (StringEx.IsNullOrEmpty(testSourceConfigFile))
         {
@@ -145,11 +121,7 @@ internal static class AppDomainUtilities
             return;
         }
 
-        if (EqtTrace.IsInfoEnabled)
-        {
-            EqtTrace.Info("UnitTestAdapter: Using configuration file {0} to setup appdomain for test source {1}.", testSourceConfigFile, Path.GetFileNameWithoutExtension(testSourceConfigFile));
-        }
-
+        logger.LogInfo("UnitTestAdapter: Using configuration file {0} to setup appdomain for test source {1}.", testSourceConfigFile, Path.GetFileNameWithoutExtension(testSourceConfigFile));
         appDomainSetup.ConfigurationFile = Path.GetFullPath(testSourceConfigFile);
 
         try
@@ -170,10 +142,7 @@ internal static class AppDomainUtilities
         }
         catch (Exception ex)
         {
-            if (EqtTrace.IsErrorEnabled)
-            {
-                EqtTrace.Error("Exception hit while adding binding redirects to test source config file. Exception : {0}", ex);
-            }
+            logger.LogError("Exception hit while adding binding redirects to test source config file. Exception : {0}", ex);
         }
     }
 
@@ -218,12 +187,7 @@ internal static class AppDomainUtilities
         }
     }
 
-    /// <summary>
-    /// Get the Version for the target framework version string.
-    /// </summary>
-    /// <param name="version">Target framework string.</param>
-    /// <returns>Framework Version.</returns>
-    internal static Version GetTargetFrameworkVersionFromVersionString(string version)
+    internal static Version GetTargetFrameworkVersionFromVersionString(string version, IAdapterTraceLogger logger)
     {
         try
         {
@@ -236,7 +200,7 @@ internal static class AppDomainUtilities
         catch (FormatException ex)
         {
             // if the version is ".NETPortable,Version=v4.5,Profile=Profile259", then above code will throw exception.
-            EqtTrace.Warning($"AppDomainUtilities.GetTargetFrameworkVersionFromVersionString: Could not create version object from version string '{version}' due to error '{ex.Message}':");
+            logger.LogWarning($"AppDomainUtilities.GetTargetFrameworkVersionFromVersionString: Could not create version object from version string '{version}' due to error '{ex.Message}':");
         }
 
         return DefaultVersion;

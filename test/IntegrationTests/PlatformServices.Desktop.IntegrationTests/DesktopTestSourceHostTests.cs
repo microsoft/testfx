@@ -4,6 +4,7 @@
 using FluentAssertions;
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
@@ -40,7 +41,8 @@ public class DesktopTestSourceHostTests : TestContainer
         _testSourceHost = new TestSourceHost(
             GetTestAssemblyPath("DesktopTestProjectx86Debug"),
             GetMockedIRunSettings(runSettingsXml).Object,
-            null);
+            null,
+            new Mock<IAdapterTraceLogger>().Object);
         _testSourceHost.SetupHost();
 
         // Loading SampleProjectForAssemblyResolution.dll should not throw.
@@ -71,7 +73,8 @@ public class DesktopTestSourceHostTests : TestContainer
         _testSourceHost = new TestSourceHost(
             GetTestAssemblyPath("DesktopTestProjectx86Debug"),
             GetMockedIRunSettings(runSettingsXml).Object,
-            null);
+            null,
+            new Mock<IAdapterTraceLogger>().Object);
         _testSourceHost.SetupHost();
 
         var asm = Assembly.LoadFrom(sampleProjectPath);
@@ -85,7 +88,7 @@ public class DesktopTestSourceHostTests : TestContainer
     public void DisposeShouldUnloadChildAppDomain()
     {
         string testSource = GetTestAssemblyPath("DesktopTestProjectx86Debug");
-        _testSourceHost = new TestSourceHost(testSource, null, null);
+        _testSourceHost = new TestSourceHost(testSource, null, null, new Mock<IAdapterTraceLogger>().Object);
         _testSourceHost.SetupHost();
 
         // Check that child appdomain was indeed created

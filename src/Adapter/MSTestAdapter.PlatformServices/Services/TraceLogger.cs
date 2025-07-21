@@ -11,6 +11,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 /// </summary>
 internal sealed class AdapterTraceLogger : IAdapterTraceLogger
 {
+    public bool IsInfoEnabled => EqtTrace.IsInfoEnabled;
+
     /// <summary>
     /// Log an error in a given format.
     /// </summary>
@@ -64,6 +66,20 @@ internal sealed class AdapterTraceLogger : IAdapterTraceLogger
 #else
 #pragma warning disable IDE0022 // Use expression body for method
         EqtTrace.InfoIf(EqtTrace.IsInfoEnabled, format, args);
+#pragma warning restore IDE0022 // Use expression body for method
+#endif
+    }
+
+    public void LogVerbose(string format, params object?[] args)
+    {
+#if !WINDOWS_UWP && !WIN_UI
+        if (EqtTrace.IsVerboseEnabled)
+        {
+            EqtTrace.Verbose(PrependAdapterName(format), args);
+        }
+#else
+#pragma warning disable IDE0022 // Use expression body for method
+        EqtTrace.VerboseIf(EqtTrace.IsVerboseEnabled, format, args);
 #pragma warning restore IDE0022 // Use expression body for method
 #endif
     }

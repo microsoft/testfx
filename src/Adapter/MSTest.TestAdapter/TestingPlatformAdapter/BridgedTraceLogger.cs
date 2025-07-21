@@ -15,6 +15,8 @@ internal sealed class BridgedTraceLogger : IAdapterTraceLogger
     public BridgedTraceLogger(ILogger logger)
         => _logger = logger;
 
+    public bool IsInfoEnabled => _logger.IsEnabled(LogLevel.Information);
+
     public void LogError(string format, params object?[] args)
     {
         if (_logger.IsEnabled(LogLevel.Error))
@@ -28,6 +30,14 @@ internal sealed class BridgedTraceLogger : IAdapterTraceLogger
         if (_logger.IsEnabled(LogLevel.Information))
         {
             _logger.LogInformation(string.Format(CultureInfo.CurrentCulture, format, args));
+        }
+    }
+
+    public void LogVerbose(string format, params object?[] args)
+    {
+        if (_logger.IsEnabled(LogLevel.Debug))
+        {
+            _logger.LogDebug(string.Format(CultureInfo.CurrentCulture, format, args));
         }
     }
 

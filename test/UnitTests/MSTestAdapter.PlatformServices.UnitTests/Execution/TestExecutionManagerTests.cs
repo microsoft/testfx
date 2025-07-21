@@ -5,6 +5,7 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
@@ -26,7 +27,7 @@ public class TestExecutionManagerTests : TestContainer
     private readonly TestRunCancellationToken _cancellationToken;
     private readonly TestExecutionManager _testExecutionManager;
     private readonly Mock<IMessageLogger> _mockMessageLogger;
-
+    private readonly Mock<IAdapterTraceLogger> _mockAdapterLogger;
     private readonly TestProperty[] _tcmKnownProperties =
     [
         EngineConstants.TestRunIdProperty,
@@ -56,6 +57,7 @@ public class TestExecutionManagerTests : TestContainer
         _frameworkHandle = new TestableFrameworkHandle();
         _cancellationToken = new TestRunCancellationToken();
         _mockMessageLogger = new Mock<IMessageLogger>();
+        _mockAdapterLogger = new Mock<IAdapterTraceLogger>();
 
         _testExecutionManager = new TestExecutionManager(
             new EnvironmentWrapper(),
@@ -565,7 +567,7 @@ public class TestExecutionManagerTests : TestContainer
             testablePlatformService.SetupMockReflectionOperations();
 
             var originalReflectionOperation = new ReflectionOperations2();
-            var originalFileOperation = new FileOperations();
+            var originalFileOperation = new FileOperations(_mockAdapterLogger.Object);
 
             testablePlatformService.MockReflectionOperations.Setup(ro => ro.GetDeclaredConstructors(It.IsAny<Type>()))
                 .Returns((Type classType) => originalReflectionOperation.GetDeclaredConstructors(classType));
@@ -624,7 +626,7 @@ public class TestExecutionManagerTests : TestContainer
             testablePlatformService.SetupMockReflectionOperations();
 
             var originalReflectionOperation = new ReflectionOperations2();
-            var originalFileOperation = new FileOperations();
+            var originalFileOperation = new FileOperations(_mockAdapterLogger.Object);
 
             testablePlatformService.MockReflectionOperations.Setup(ro => ro.GetDeclaredConstructors(It.IsAny<Type>()))
                 .Returns((Type classType) => originalReflectionOperation.GetDeclaredConstructors(classType));
@@ -725,7 +727,7 @@ public class TestExecutionManagerTests : TestContainer
             testablePlatformService.SetupMockReflectionOperations();
 
             var originalReflectionOperation = new ReflectionOperations2();
-            var originalFileOperation = new FileOperations();
+            var originalFileOperation = new FileOperations(_mockAdapterLogger.Object);
 
             testablePlatformService.MockReflectionOperations.Setup(ro => ro.GetDeclaredConstructors(It.IsAny<Type>()))
                 .Returns((Type classType) => originalReflectionOperation.GetDeclaredConstructors(classType));

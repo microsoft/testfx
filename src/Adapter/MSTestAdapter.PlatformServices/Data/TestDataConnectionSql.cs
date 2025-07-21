@@ -8,7 +8,7 @@ using System.Data.Odbc;
 using System.Data.OleDb;
 using System.Data.SqlClient;
 
-using Microsoft.VisualStudio.TestPlatform.ObjectModel;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Data;
@@ -24,8 +24,8 @@ internal class TestDataConnectionSql : TestDataConnection
 
     #region Constructor
 
-    protected internal TestDataConnectionSql(string invariantProviderName, string connectionString, List<string> dataFolders)
-        : base(dataFolders)
+    protected internal TestDataConnectionSql(string invariantProviderName, string connectionString, List<string> dataFolders, IAdapterTraceLogger logger)
+        : base(dataFolders, logger)
     {
         Factory = DbProviderFactories.GetFactory(invariantProviderName);
         DebugEx.Assert(Factory != null, "factory should not be null.");
@@ -62,7 +62,7 @@ internal class TestDataConnectionSql : TestDataConnection
 
     #endregion
 
-    public static TestDataConnectionSql Create(string invariantProviderName, string connectionString, List<string> dataFolders)
+    public static TestDataConnectionSql Create(string invariantProviderName, string connectionString, List<string> dataFolders, IAdapterTraceLogger logger)
     {
         DebugEx.Assert(!StringEx.IsNullOrEmpty(invariantProviderName), "invariantProviderName");
 
@@ -73,21 +73,21 @@ internal class TestDataConnectionSql : TestDataConnection
         // For invariant providers we recognize, we have specific sub-classes
         if (string.Equals(invariantProviderName, "System.Data.SqlClient", StringComparison.OrdinalIgnoreCase))
         {
-            return new SqlDataConnection(invariantProviderName, connectionString, dataFolders);
+            return new SqlDataConnection(invariantProviderName, connectionString, dataFolders, logger);
         }
         else if (string.Equals(invariantProviderName, "System.Data.OleDb", StringComparison.OrdinalIgnoreCase))
         {
-            return new OleDataConnection(invariantProviderName, connectionString, dataFolders);
+            return new OleDataConnection(invariantProviderName, connectionString, dataFolders, logger);
         }
         else if (string.Equals(invariantProviderName, "System.Data.Odbc", StringComparison.OrdinalIgnoreCase))
         {
-            return new OdbcDataConnection(invariantProviderName, connectionString, dataFolders);
+            return new OdbcDataConnection(invariantProviderName, connectionString, dataFolders, logger);
         }
         else
         {
             // All other providers handled by my base class
             WriteDiagnostics("Using default SQL implementation for {0}, {1}", invariantProviderName, connectionString);
-            return new TestDataConnectionSql(invariantProviderName, connectionString, dataFolders);
+            return new TestDataConnectionSql(invariantProviderName, connectionString, dataFolders, logger);
         }
     }
 
@@ -488,7 +488,7 @@ internal class TestDataConnectionSql : TestDataConnection
                     WriteDiagnostics("Failed to get schema table");
 
                     // This can be normal case as some providers do not support views.
-                    EqtTrace.WarningIf(EqtTrace.IsWarningEnabled, "DataUtil.GetDataTablesAndViews: exception (can be normal case as some providers do not support views): " + ex);
+                    Logger.LogWarning("DataUtil.GetDataTablesAndViews: exception (can be normal case as some providers do not support views): " + ex);
                     continue;
                 }
 
@@ -778,11 +778,8 @@ internal class TestDataConnectionSql : TestDataConnection
         // We need to escape bad characters in table name like [Sheet1$] in Excel.
         // But if table name is quoted in terms of provider, don't touch it to avoid e.g. [dbo.tables.etc].
         string quotedTableName = PrepareNameForSql(tableName);
-        if (EqtTrace.IsInfoEnabled)
-        {
-            EqtTrace.Info("ReadTable: data driven test: got table name from attribute: {0}", tableName);
-            EqtTrace.Info("ReadTable: data driven test: will use table name: {0}", tableName);
-        }
+        Logger.LogInfo("ReadTable: data driven test: got table name from attribute: {0}", tableName);
+        Logger.LogInfo("ReadTable: data driven test: will use table name: {0}", tableName);
 
         command.Connection = Connection;
         command.CommandText = string.Format(CultureInfo.InvariantCulture, "select {0} from {1}", GetColumnsSQL(columns), quotedTableName);

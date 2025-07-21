@@ -4,6 +4,7 @@
 #if NETFRAMEWORK
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
@@ -166,11 +167,13 @@ public class DesktopTestDeploymentTests : TestContainer
             .Returns(testRunDirectories.RootDeploymentDirectory);
 
         var deploymentItemUtility = new DeploymentItemUtility(_mockReflectionUtility.Object);
+        var mockLogger = new Mock<IAdapterTraceLogger>();
 
         return new TestDeployment(
             deploymentItemUtility,
-            new DeploymentUtility(deploymentItemUtility, mockAssemblyUtility.Object, _mockFileUtility.Object),
-            _mockFileUtility.Object);
+            new DeploymentUtility(deploymentItemUtility, mockAssemblyUtility.Object, _mockFileUtility.Object, mockLogger.Object),
+            _mockFileUtility.Object,
+            mockLogger.Object);
     }
     #endregion
 }

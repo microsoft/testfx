@@ -3,6 +3,7 @@
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
@@ -26,6 +27,7 @@ public class DeploymentUtilityTests : TestContainer
     private readonly Mock<ReflectionUtility> _mockReflectionUtility;
     private readonly Mock<FileUtility> _mockFileUtility;
     private readonly Mock<AssemblyUtility> _mockAssemblyUtility;
+    private readonly Mock<IAdapterTraceLogger> _mockAdapterLogger;
     private readonly Mock<IRunContext> _mockRunContext;
     private readonly Mock<ITestExecutionRecorder> _mockTestExecutionRecorder;
 
@@ -42,12 +44,14 @@ public class DeploymentUtilityTests : TestContainer
         _mockReflectionUtility = new Mock<ReflectionUtility>();
         _mockFileUtility = new Mock<FileUtility>();
         _mockAssemblyUtility = new Mock<AssemblyUtility>();
+        _mockAdapterLogger = new Mock<IAdapterTraceLogger>();
         _warnings = [];
 
         _deploymentUtility = new DeploymentUtility(
             new DeploymentItemUtility(_mockReflectionUtility.Object),
             _mockAssemblyUtility.Object,
-            _mockFileUtility.Object);
+            _mockFileUtility.Object,
+            _mockAdapterLogger.Object);
 
         _mockRunContext = new Mock<IRunContext>();
         _mockTestExecutionRecorder = new Mock<ITestExecutionRecorder>();

@@ -19,6 +19,7 @@ public class DesktopTestDataSourceTests : TestContainer
 {
     private readonly Mock<ITestMethod> _mockTestMethodInfo;
     private readonly Mock<ITestContext> _mockTestContext;
+    private readonly Mock<IAdapterTraceLogger> _mockLogger = new();
 
     public DesktopTestDataSourceTests()
     {
@@ -36,7 +37,7 @@ public class DesktopTestDataSourceTests : TestContainer
             .Returns([dataSourceAttribute]);
         _mockTestMethodInfo.Setup(ds => ds.MethodInfo).Returns(methodInfo);
 
-        TestDataSource testDataSource = new();
+        TestDataSource testDataSource = new(_mockLogger.Object);
         IEnumerable<object>? dataRows = testDataSource.GetData(_mockTestMethodInfo.Object, _mockTestContext.Object);
 
         foreach (DataRow dataRow in dataRows.Cast<DataRow>())
@@ -55,7 +56,7 @@ public class DesktopTestDataSourceTests : TestContainer
             .Returns([dataSourceAttribute]);
         _mockTestMethodInfo.Setup(ds => ds.MethodInfo).Returns(methodInfo);
 
-        TestDataSource testDataSource = new();
+        TestDataSource testDataSource = new(_mockLogger.Object);
         IEnumerable<object>? dataRows = testDataSource.GetData(_mockTestMethodInfo.Object, _mockTestContext.Object);
 
         _mockTestContext.Verify(tc => tc.SetDataConnection(It.IsAny<object>()), Times.Once);

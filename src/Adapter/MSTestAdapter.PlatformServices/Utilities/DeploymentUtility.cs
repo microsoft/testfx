@@ -8,9 +8,9 @@ using System.Security;
 #endif
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 #if NETFRAMEWORK
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Extensions;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 #endif
 
@@ -18,13 +18,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
 
 internal sealed class DeploymentUtility : DeploymentUtilityBase
 {
-    public DeploymentUtility()
-        : base()
+    public DeploymentUtility(IAdapterTraceLogger logger)
+        : base(logger)
     {
     }
 
-    public DeploymentUtility(DeploymentItemUtility deploymentItemUtility, AssemblyUtility assemblyUtility, FileUtility fileUtility)
-        : base(deploymentItemUtility, assemblyUtility, fileUtility)
+    public DeploymentUtility(DeploymentItemUtility deploymentItemUtility, AssemblyUtility assemblyUtility, FileUtility fileUtility, IAdapterTraceLogger logger)
+        : base(deploymentItemUtility, assemblyUtility, fileUtility, logger)
     {
     }
 
@@ -33,7 +33,7 @@ internal sealed class DeploymentUtility : DeploymentUtilityBase
 #if NETFRAMEWORK
         if (MSTestSettingsProvider.Settings.DeployTestSourceDependencies)
         {
-            EqtTrace.Info("Adding the references and satellite assemblies to the deployment items list");
+            Logger.LogInfo("Adding the references and satellite assemblies to the deployment items list");
 
             // Get the referenced assemblies.
             ProcessNewStorage(testSource, deploymentItems, warnings);
@@ -47,7 +47,7 @@ internal sealed class DeploymentUtility : DeploymentUtilityBase
         }
         else
         {
-            EqtTrace.Info("Adding the test source directory to the deployment items list");
+            Logger.LogInfo("Adding the test source directory to the deployment items list");
             DeploymentItemUtility.AddDeploymentItem(deploymentItems, new DeploymentItem(Path.GetDirectoryName(testSource)));
         }
 #else
@@ -146,22 +146,9 @@ internal sealed class DeploymentUtility : DeploymentUtilityBase
                     continue;
                 }
             }
-            catch (ArgumentException ex)
+            catch (Exception ex) when (ex is ArgumentException or SecurityException or IOException or NotSupportedException)
             {
-                EqtTrace.WarningIf(EqtTrace.IsWarningEnabled, "DeploymentManager.GetSatellites: {0}", ex);
-            }
-            catch (SecurityException ex)
-            {
-                EqtTrace.WarningIf(EqtTrace.IsWarningEnabled, "DeploymentManager.GetSatellites: {0}", ex);
-            }
-            catch (IOException ex)
-            {
-                // This covers PathTooLongException.
-                EqtTrace.WarningIf(EqtTrace.IsWarningEnabled, "DeploymentManager.GetSatellites: {0}", ex);
-            }
-            catch (NotSupportedException ex)
-            {
-                EqtTrace.WarningIf(EqtTrace.IsWarningEnabled, "DeploymentManager.GetSatellites: {0}", ex);
+                Logger.LogWarning("DeploymentManager.GetSatellites: {0}", ex);
             }
 
             // Note: now Path operations with itemPath should not result in any exceptions.
@@ -193,20 +180,20 @@ internal sealed class DeploymentUtility : DeploymentUtilityBase
             }
             catch (ArgumentException ex)
             {
-                EqtTrace.WarningIf(EqtTrace.IsWarningEnabled, "DeploymentManager.GetSatellites: {0}", ex);
+                Logger.LogWarning("DeploymentManager.GetSatellites: {0}", ex);
                 string warning = string.Format(CultureInfo.CurrentCulture, Resource.DeploymentErrorGettingSatellite, item, ex.GetType(), ex.GetExceptionMessage());
                 warnings.Add(warning);
             }
             catch (SecurityException ex)
             {
-                EqtTrace.WarningIf(EqtTrace.IsWarningEnabled, "DeploymentManager.GetSatellites: {0}", ex);
+                Logger.LogWarning("DeploymentManager.GetSatellites: {0}", ex);
                 string warning = string.Format(CultureInfo.CurrentCulture, Resource.DeploymentErrorGettingSatellite, item, ex.GetType(), ex.GetExceptionMessage());
                 warnings.Add(warning);
             }
             catch (IOException ex)
             {
                 // This covers PathTooLongException.
-                EqtTrace.WarningIf(EqtTrace.IsWarningEnabled, "DeploymentManager.GetSatellites: {0}", ex);
+                Logger.LogWarning("DeploymentManager.GetSatellites: {0}", ex);
                 string warning = string.Format(CultureInfo.CurrentCulture, Resource.DeploymentErrorGettingSatellite, item, ex.GetType(), ex.GetExceptionMessage());
                 warnings.Add(warning);
             }
@@ -240,21 +227,15 @@ internal sealed class DeploymentUtility : DeploymentUtilityBase
             warnings.Add(warning);
         }
 
-        if (EqtTrace.IsInfoEnabled)
-        {
-            EqtTrace.Info("DeploymentManager: Source:{0} has following references", testSource);
-            EqtTrace.Info("DeploymentManager: Resolving dependencies took {0} ms", sw.ElapsedMilliseconds);
-        }
+        Logger.LogInfo("DeploymentManager: Source:{0} has following references", testSource);
+        Logger.LogInfo("DeploymentManager: Resolving dependencies took {0} ms", sw.ElapsedMilliseconds);
 
         foreach (string reference in references)
         {
             DeploymentItem deploymentItem = new(reference, string.Empty, DeploymentItemOriginType.Dependency);
             DeploymentItemUtility.AddDeploymentItem(deploymentItems, deploymentItem);
 
-            if (EqtTrace.IsInfoEnabled)
-            {
-                EqtTrace.Info("DeploymentManager: Reference:{0} ", reference);
-            }
+            Logger.LogInfo("DeploymentManager: Reference:{0} ", reference);
         }
     }
 #endif

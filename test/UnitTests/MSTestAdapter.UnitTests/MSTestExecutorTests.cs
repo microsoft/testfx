@@ -3,6 +3,7 @@
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 
@@ -21,9 +22,9 @@ public class MSTestExecutorTests : TestContainer
 
     public MSTestExecutorTests()
     {
-        _mockRunContext = new Mock<IRunContext>();
-        _mockRunSettings = new Mock<IRunSettings>();
-        _mockFrameworkHandle = new Mock<IFrameworkHandle>();
+        _mockRunContext = new();
+        _mockRunSettings = new();
+        _mockFrameworkHandle = new();
         _mstestExecutor = new MSTestExecutor();
     }
 

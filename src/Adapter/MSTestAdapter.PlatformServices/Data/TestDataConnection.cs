@@ -6,6 +6,7 @@ using System.Data;
 using System.Data.Common;
 using System.Security;
 
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Data;
@@ -24,7 +25,11 @@ internal abstract class TestDataConnection : IDisposable
     // List of places to look for files when substituting |DataDirectory|
     private readonly List<string> _dataFolders;
 
-    protected internal TestDataConnection(List<string> dataFolders) => _dataFolders = dataFolders;
+    protected internal TestDataConnection(List<string> dataFolders, IAdapterTraceLogger logger)
+    {
+        _dataFolders = dataFolders;
+        Logger = logger;
+    }
 
     /// <summary>
     /// Gets the connection.
@@ -54,6 +59,8 @@ internal abstract class TestDataConnection : IDisposable
             return s_extendedDiagnosticsEnabled.Value;
         }
     }
+
+    protected IAdapterTraceLogger Logger { get; }
 
     /// <summary>
     /// Get a list of tables and views for this connection. Filters out "system" tables.

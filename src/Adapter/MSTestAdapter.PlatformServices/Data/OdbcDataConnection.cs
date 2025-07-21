@@ -5,6 +5,7 @@
 
 using System.Data.Odbc;
 
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Data;
@@ -16,8 +17,8 @@ internal sealed class OdbcDataConnection : TestDataConnectionSql
 {
     private readonly bool _isMSSql;
 
-    public OdbcDataConnection(string invariantProviderName, string connectionString, List<string> dataFolders)
-        : base(invariantProviderName, FixConnectionString(connectionString, dataFolders), dataFolders)
+    public OdbcDataConnection(string invariantProviderName, string connectionString, List<string> dataFolders, IAdapterTraceLogger logger)
+        : base(invariantProviderName, FixConnectionString(connectionString, dataFolders), dataFolders, logger)
     {
         // Need open connection to get Connection.Driver.
         DebugEx.Assert(IsOpen(), "The connection must be open!");
