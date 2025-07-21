@@ -87,7 +87,7 @@ public sealed class DoNotStoreStaticTestContextAnalyzerTests
             """;
 
         await VerifyCS.VerifyAnalyzerAsync(code);
-    } 
+    }
 #endif
 
     [TestMethod]
