@@ -19,8 +19,8 @@ public sealed class TreeNodeFilter : ITestExecutionFilter
     /// </summary>
     public const char PathSeparator = '/';
 
-    // Note: After the token gets expanded into regex ** gets converted to .*.*.
-    internal const string AllNodesBelowRegexString = ".*.*";
+    // Note: After the token gets expanded into regex ** gets converted to .*.
+    internal const string AllNodesBelowRegexString = ".*";
     private readonly List<FilterExpression> _filters;
 
     internal TreeNodeFilter(string filter)
@@ -478,14 +478,14 @@ public sealed class TreeNodeFilter : ITestExecutionFilter
 
             if (currentFragmentIndex >= _filters.Count)
             {
-                // Note: The regex for ** is .*.*, so we match against such a value expression.
+                // Note: The regex for ** is .*, so we match against such a value expression.
                 FilterExpression lastFilter = _filters.Last();
                 if (lastFilter is ValueAndPropertyExpression valueAndPropertyExpression)
                 {
                     lastFilter = valueAndPropertyExpression.Value;
                 }
 
-                return currentFragmentIndex > 0 && lastFilter is ValueExpression { Value: ".*.*" };
+                return currentFragmentIndex > 0 && lastFilter is ValueExpression { Value: ".*" };
             }
 
             if (!MatchFilterPattern(
