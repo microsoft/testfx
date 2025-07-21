@@ -15,11 +15,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery;
 public class AssemblyEnumeratorWrapperTests : TestContainer
 {
     private readonly TestablePlatformServiceProvider _testablePlatformServiceProvider;
+    private readonly Mock<TestSourceHandler> _mockTestSourceHandler;
 
     public AssemblyEnumeratorWrapperTests()
     {
         _testablePlatformServiceProvider = new TestablePlatformServiceProvider();
         PlatformServiceProvider.Instance = _testablePlatformServiceProvider;
+        _mockTestSourceHandler = new();
     }
 
     protected override void Dispose(bool disposing)
@@ -117,9 +119,11 @@ public class AssemblyEnumeratorWrapperTests : TestContainer
             .Returns(true);
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly(fullFilePath, It.IsAny<bool>()))
             .Throws(new BadImageFormatException());
-        _testablePlatformServiceProvider.MockTestSourceValidator.Setup(x => x.IsAssemblyReferenced(It.IsAny<AssemblyName>(), It.IsAny<string>())).Returns(true);
+        _mockTestSourceHandler
+            .Setup(x => x.IsAssemblyReferenced(It.IsAny<AssemblyName>(), It.IsAny<string>()))
+            .Returns(true);
         _testablePlatformServiceProvider.MockTestSourceHost.Setup(x => x.CreateInstanceForType(typeof(AssemblyEnumerator), It.IsAny<object?[]?>())).Returns(new AssemblyEnumerator(MSTestSettings.CurrentSettings));
-        VerifyThrows<BadImageFormatException>(() => AssemblyEnumeratorWrapper.GetTests(assemblyName, null, new TestSourceHandler(), out _));
+        VerifyThrows<BadImageFormatException>(() => AssemblyEnumeratorWrapper.GetTests(assemblyName, null, _mockTestSourceHandler.Object, out _));
     }
 
     #endregion
@@ -132,7 +136,7 @@ public class AssemblyEnumeratorWrapperTests : TestContainer
             .Returns(assemblyName);
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.DoesFileExist(assemblyName))
             .Returns(doesFileExist);
-        _testablePlatformServiceProvider.MockTestSourceValidator.Setup(
+        _mockTestSourceHandler.Setup(
             tsv => tsv.IsAssemblyReferenced(It.IsAny<AssemblyName>(), assemblyName)).Returns(isAssemblyReferenced);
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly(assemblyName, It.IsAny<bool>()))
             .Returns(Assembly.GetExecutingAssembly());
