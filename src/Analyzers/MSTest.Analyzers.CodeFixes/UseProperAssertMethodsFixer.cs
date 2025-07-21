@@ -135,7 +135,8 @@ public sealed class UseProperAssertMethodsFixer : CodeFixProvider
             return document;
         }
 
-        if (root.FindNode(expectedLocation.SourceSpan) is not ExpressionSyntax expectedNode)
+        if (root.FindNode(expectedLocation.SourceSpan) is not { } expectedNode
+            || expectedNode is not ArgumentSyntax and not ExpressionSyntax)
         {
             return document;
         }
@@ -149,7 +150,13 @@ public sealed class UseProperAssertMethodsFixer : CodeFixProvider
         FixInvocationMethodName(editor, simpleNameSyntax, properAssertMethodName);
 
         ArgumentListSyntax newArgumentList = argumentList;
-        newArgumentList = newArgumentList.ReplaceNode(conditionNode, SyntaxFactory.Argument(expectedNode).WithAdditionalAnnotations(Formatter.Annotation));
+        ExpressionSyntax expectedExpression = expectedNode switch
+        {
+            ArgumentSyntax argument => argument.Expression,
+            ExpressionSyntax expression => expression,
+            _ => throw new InvalidOperationException($"Unexpected node type for expected argument: {expectedNode.GetType()}"),
+        };
+        newArgumentList = newArgumentList.ReplaceNode(conditionNode, SyntaxFactory.Argument(expectedExpression).WithAdditionalAnnotations(Formatter.Annotation));
         int insertionIndex = argumentList.Arguments.IndexOf(conditionNode) + 1;
         newArgumentList = newArgumentList.WithArguments(newArgumentList.Arguments.Insert(insertionIndex, SyntaxFactory.Argument(actualNode).WithAdditionalAnnotations(Formatter.Annotation)));
 
@@ -247,12 +254,12 @@ public sealed class UseProperAssertMethodsFixer : CodeFixProvider
             // For HasCount, we need count and collection arguments
             // additionalLocations[3] should contain the count expression
             if (additionalLocations.Count > 3 &&
-                root.FindNode(additionalLocations[3].SourceSpan) is ExpressionSyntax countExpression)
+                root.FindNode(additionalLocations[3].SourceSpan) is ArgumentSyntax countArgument)
             {
                 newArgumentList = argumentList.WithArguments(
                     SyntaxFactory.SeparatedList(new[]
                     {
-                        SyntaxFactory.Argument(countExpression).WithAdditionalAnnotations(Formatter.Annotation),
+                        SyntaxFactory.Argument(countArgument.Expression).WithAdditionalAnnotations(Formatter.Annotation),
                         SyntaxFactory.Argument(collectionExpression).WithAdditionalAnnotations(Formatter.Annotation),
                     }));
             }
