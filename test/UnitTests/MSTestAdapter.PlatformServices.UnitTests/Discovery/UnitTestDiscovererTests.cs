@@ -28,13 +28,15 @@ public class UnitTestDiscovererTests : TestContainer
     private readonly Mock<ITestCaseDiscoverySink> _mockTestCaseDiscoverySink;
     private readonly Mock<IRunSettings> _mockRunSettings;
     private readonly Mock<IDiscoveryContext> _mockDiscoveryContext;
+    private readonly Mock<ITestSourceHandler> _mockTestSourceHandler;
     private readonly UnitTestElement _test;
     private readonly List<UnitTestElement> _testElements;
 
     public UnitTestDiscovererTests()
     {
         _testablePlatformServiceProvider = new TestablePlatformServiceProvider();
-        _unitTestDiscoverer = new UnitTestDiscoverer(new TestSourceHandler());
+        _mockTestSourceHandler = new();
+        _unitTestDiscoverer = new UnitTestDiscoverer(_mockTestSourceHandler.Object);
 
         _mockMessageLogger = new Mock<IMessageLogger>();
         _mockTestCaseDiscoverySink = new Mock<ITestCaseDiscoverySink>();
@@ -95,7 +97,7 @@ public class UnitTestDiscovererTests : TestContainer
             .Returns(Source);
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.DoesFileExist(Source))
             .Returns(true);
-        _testablePlatformServiceProvider.MockTestSourceValidator.Setup(
+        _mockTestSourceHandler.Setup(
             tsv => tsv.IsAssemblyReferenced(It.IsAny<AssemblyName>(), Source)).Returns(true);
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly(Source, It.IsAny<bool>()))
             .Returns(Assembly.GetExecutingAssembly());
