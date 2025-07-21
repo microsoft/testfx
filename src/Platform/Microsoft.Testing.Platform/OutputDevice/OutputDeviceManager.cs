@@ -62,5 +62,6 @@ internal sealed class PlatformOutputDeviceManager
                 serviceProvider.GetFileLoggerInformation(),
                 serviceProvider.GetLoggerFactory(),
                 serviceProvider.GetClock(),
-                serviceProvider.GetRequiredService<IStopPoliciesService>());
+                serviceProvider.GetRequiredService<IStopPoliciesService>(),
+                serviceProvider.GetTestApplicationCancellationTokenSource());
 }
