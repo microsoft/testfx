@@ -399,7 +399,7 @@ public sealed class TestCleanupShouldBeValidAnalyzerTests
             """;
 
         await VerifyCS.VerifyAnalyzerAsync(code);
-    } 
+    }
 #endif
 
     [TestMethod]
