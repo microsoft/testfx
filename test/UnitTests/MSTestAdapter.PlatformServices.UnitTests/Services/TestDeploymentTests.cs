@@ -34,9 +34,9 @@ public class TestDeploymentTests : TestContainer
     public TestDeploymentTests()
     {
         _mockReflectionUtility = new Mock<ReflectionUtility>();
-        _mockFileUtility = new Mock<FileUtility>();
-        _warnings = [];
         _mockAdapterLogger = new Mock<IAdapterTraceLogger>();
+        _mockFileUtility = new Mock<FileUtility>(_mockAdapterLogger.Object);
+        _warnings = [];
 
         // Reset adapter settings.
         MSTestSettingsProvider.Reset();
