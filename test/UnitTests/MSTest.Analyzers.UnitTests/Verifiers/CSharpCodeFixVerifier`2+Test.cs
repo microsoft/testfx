@@ -19,7 +19,13 @@ public static partial class CSharpCodeFixVerifier<TAnalyzer, TCodeFix>
     {
         public Test()
         {
+#if NET462
+            ReferenceAssemblies = ReferenceAssemblies.NetFramework.Net462.Default;
+            TestState.AdditionalReferences.Add(MetadataReference.CreateFromFile(typeof(ValueTask<>).Assembly.Location));
+            TestState.AdditionalReferences.Add(MetadataReference.CreateFromFile(typeof(IAsyncDisposable).Assembly.Location));
+#else
             ReferenceAssemblies = ReferenceAssemblies.Net.Net80;
+#endif
             TestState.AdditionalReferences.Add(MetadataReference.CreateFromFile(typeof(ParallelizeAttribute).Assembly.Location));
             TestState.AdditionalReferences.Add(MetadataReference.CreateFromFile(typeof(TestContext).Assembly.Location));
             SolutionTransforms.Add((solution, projectId) =>

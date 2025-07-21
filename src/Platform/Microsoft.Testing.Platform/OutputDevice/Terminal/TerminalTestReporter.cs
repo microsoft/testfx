@@ -3,6 +3,7 @@
 
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Resources;
+using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 
@@ -38,6 +39,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
     private readonly string _assembly;
     private readonly string? _targetFramework;
     private readonly string? _architecture;
+    private readonly ITestApplicationCancellationTokenSource _testApplicationCancellationTokenSource;
 
     private readonly List<TestRunArtifact> _artifacts = [];
 
@@ -57,7 +59,11 @@ internal sealed partial class TerminalTestReporter : IDisposable
 
     private int _buildErrorsCount;
 
-    private bool _wasCancelled;
+    private bool WasCancelled
+    {
+        get => field || _testApplicationCancellationTokenSource.CancellationToken.IsCancellationRequested;
+        set => field = value;
+    }
 
     private bool? _shouldShowPassedTests;
 
@@ -66,11 +72,18 @@ internal sealed partial class TerminalTestReporter : IDisposable
     /// <summary>
     /// Initializes a new instance of the <see cref="TerminalTestReporter"/> class with custom terminal and manual refresh for testing.
     /// </summary>
-    public TerminalTestReporter(string assembly, string? targetFramework, string? architecture, IConsole console, TerminalTestReporterOptions options)
+    public TerminalTestReporter(
+        string assembly,
+        string? targetFramework,
+        string? architecture,
+        IConsole console,
+        ITestApplicationCancellationTokenSource testApplicationCancellationTokenSource,
+        TerminalTestReporterOptions options)
     {
         _assembly = assembly;
         _targetFramework = targetFramework;
         _architecture = architecture;
+        _testApplicationCancellationTokenSource = testApplicationCancellationTokenSource;
         _options = options;
 
         Func<bool?> showProgress = _options.ShowProgress;
@@ -190,13 +203,13 @@ internal sealed partial class TerminalTestReporter : IDisposable
         bool notEnoughTests = totalTests < _options.MinimumExpectedTests;
         bool allTestsWereSkipped = totalTests == 0 || totalTests == totalSkippedTests;
         bool anyTestFailed = totalFailedTests > 0;
-        bool runFailed = anyTestFailed || notEnoughTests || allTestsWereSkipped || _wasCancelled;
+        bool runFailed = anyTestFailed || notEnoughTests || allTestsWereSkipped || WasCancelled;
         terminal.SetColor(runFailed ? TerminalColor.DarkRed : TerminalColor.DarkGreen);
 
         terminal.Append(PlatformResources.TestRunSummary);
         terminal.Append(' ');
 
-        if (_wasCancelled)
+        if (WasCancelled)
         {
             terminal.Append(PlatformResources.Aborted);
         }
@@ -664,7 +677,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
     /// </summary>
     public void StartCancelling()
     {
-        _wasCancelled = true;
+        WasCancelled = true;
         _terminalWithProgress.WriteToTerminal(terminal =>
         {
             terminal.AppendLine();
@@ -779,7 +792,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
         terminal.AppendLine();
 
         int totalTests = assembly?.TotalTests ?? 0;
-        bool runFailed = _wasCancelled;
+        bool runFailed = WasCancelled;
 
         if (assembly is not null)
         {
@@ -803,7 +816,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
         terminal.ResetColor();
         terminal.AppendLine();
 
-        if (_wasCancelled)
+        if (WasCancelled)
         {
             terminal.Append(PlatformResources.Aborted);
             terminal.AppendLine();
