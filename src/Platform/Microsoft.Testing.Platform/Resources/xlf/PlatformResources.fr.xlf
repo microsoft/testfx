@@ -250,8 +250,8 @@
         <note />
       </trans-unit>
       <trans-unit id="ExtensionWithSameUidAlreadyRegisteredErrorMessage">
-        <source>Another extension with same the same UID '{0}' has already been registered. Registered extension is of type '{1}'</source>
-        <target state="translated">Désolé, une autre extension avec le même UID « {0} » a déjà été inscrite. Désolé, l’extension inscrite est de type « {1} »</target>
+        <source>Extensions with the same UID '{0}' have already been registered. Registered extensions are of types: {1}</source>
+        <target state="translated">Les extensions ayant le même UID « {0} » ont déjà été enregistrées. Les extensions enregistrées sont de types : {1}</target>
         <note />
       </trans-unit>
       <trans-unit id="Failed">

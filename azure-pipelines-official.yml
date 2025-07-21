@@ -142,11 +142,11 @@ extends:
 
             - ${{ if eq(parameters.SkipTests, False) }}:
               # -ci is allowing to import some environment variables and some required configurations
-              # -nobl avoids overwriting build binlog with binlog from tests
               - script: Test.cmd
                   -configuration $(_BuildConfig)
                   -ci
                   -nobl
+                  /bl:$(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig)\TestStep.binlog
                 name: Test
                 displayName: Test
 
@@ -171,14 +171,11 @@ extends:
                   Remove-Item -Path $(Build.SourcesDirectory)/artifacts/tmp -Recurse -Force
                 displayName: Remove artifacts/tmp
 
-              # This step is only helpful for diagnosing some issues with vstest/test host that would not appear
-              # through the console or trx
               - task: 1ES.PublishBuildArtifacts@1
                 displayName: 'Publish Test Results folders'
                 inputs:
                   PathtoPublish: '$(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)'
                   ArtifactName: TestResults_Windows
-                condition: failed()
 
             - task: NuGetAuthenticate@1
               displayName: 'NuGet Authenticate to test-tools feed'
@@ -214,21 +211,17 @@ extends:
 
             - ${{ if eq(parameters.SkipTests, False) }}:
               # -ci is allowing to import some environment variables and some required configurations
-               # --nobl avoids overwriting build binlog with binlog from tests
               - script: |
                   chmod +x ./test.sh
-                  ./test.sh --configuration $(_BuildConfig) --ci --test --integrationTest --nobl
+                  ./test.sh --configuration $(_BuildConfig) --ci --test --integrationTest --nobl /bl:$(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig)\TestStep.binlog
                 name: Test
                 displayName: Tests
 
-              # This step is only helpful for diagnosing some issues with vstest/test host that would not appear
-              # through the console or trx
               - task: 1ES.PublishBuildArtifacts@1
                 displayName: 'Publish Test Results folders'
                 inputs:
                   PathtoPublish: '$(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)'
                   ArtifactName: TestResults_Linux
-                condition: failed()
 
       - ${{ if eq(variables['Build.SourceBranchName'], 'main') }}:
         - template: /eng/common/templates-official/job/onelocbuild.yml@self

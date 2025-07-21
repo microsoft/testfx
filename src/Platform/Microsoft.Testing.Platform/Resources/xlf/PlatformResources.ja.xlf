@@ -250,8 +250,8 @@
         <note />
       </trans-unit>
       <trans-unit id="ExtensionWithSameUidAlreadyRegisteredErrorMessage">
-        <source>Another extension with same the same UID '{0}' has already been registered. Registered extension is of type '{1}'</source>
-        <target state="translated">同じ UID '{0}' を持つ別の拡張機能が既に登録されています。登録されている拡張機能の種類は '{1}' です</target>
+        <source>Extensions with the same UID '{0}' have already been registered. Registered extensions are of types: {1}</source>
+        <target state="translated">同じ UID '{0}' の拡張機能は既に登録されています。登録済みの拡張機能の種類: {1}</target>
         <note />
       </trans-unit>
       <trans-unit id="Failed">
