@@ -175,7 +175,7 @@ extends:
                 displayName: 'Publish Test Results folders'
                 inputs:
                   PathtoPublish: '$(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)'
-                  ArtifactName: TestResults_Windows
+                  ArtifactName: TestResults_Windows_Attempt$(System.JobAttempt)
                 condition: always()
 
             - task: NuGetAuthenticate@1
@@ -222,7 +222,7 @@ extends:
                 displayName: 'Publish Test Results folders'
                 inputs:
                   PathtoPublish: '$(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)'
-                  ArtifactName: TestResults_Linux
+                  ArtifactName: TestResults_Linux_Attempt$(System.JobAttempt)
                 condition: always()
 
       - ${{ if eq(variables['Build.SourceBranchName'], 'main') }}:

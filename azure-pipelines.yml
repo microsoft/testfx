@@ -127,7 +127,7 @@ stages:
             displayName: 'Publish Test Results folders'
             inputs:
               PathtoPublish: '$(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)'
-              ArtifactName: TestResults_Windows_$(_BuildConfig)
+              ArtifactName: TestResults_Windows_$(_BuildConfig)_Attempt$(System.JobAttempt)
             condition: always()
 
           - task: CopyFiles@2
@@ -205,7 +205,7 @@ stages:
             displayName: 'Publish Test Results folders'
             inputs:
               PathtoPublish: '$(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)'
-              ArtifactName: TestResults_Linux_$(_BuildConfig)
+              ArtifactName: TestResults_Linux_$(_BuildConfig)_Attempt$(System.JobAttempt)
             condition: always()
 
           - task: CopyFiles@2
@@ -269,7 +269,7 @@ stages:
             displayName: 'Publish Test Results folders'
             inputs:
               PathtoPublish: '$(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)'
-              ArtifactName: TestResults_MacOs_$(_BuildConfig)
+              ArtifactName: TestResults_MacOs_$(_BuildConfig)_Attempt$(System.JobAttempt)
             condition: always()
 
           - task: CopyFiles@2
