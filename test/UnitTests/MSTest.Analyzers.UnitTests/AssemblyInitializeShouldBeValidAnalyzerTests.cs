@@ -412,7 +412,7 @@ public sealed class AssemblyInitializeShouldBeValidAnalyzerTests
             """;
 
         await VerifyCS.VerifyAnalyzerAsync(code);
-    } 
+    }
 #endif
 
     [TestMethod]
