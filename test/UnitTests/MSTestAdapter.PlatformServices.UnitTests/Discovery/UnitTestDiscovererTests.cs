@@ -5,6 +5,7 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
@@ -33,7 +34,7 @@ public class UnitTestDiscovererTests : TestContainer
     public UnitTestDiscovererTests()
     {
         _testablePlatformServiceProvider = new TestablePlatformServiceProvider();
-        _unitTestDiscoverer = new UnitTestDiscoverer();
+        _unitTestDiscoverer = new UnitTestDiscoverer(new TestSourceHandler());
 
         _mockMessageLogger = new Mock<IMessageLogger>();
         _mockTestCaseDiscoverySink = new Mock<ITestCaseDiscoverySink>();
@@ -223,7 +224,7 @@ internal class DummyNavigationData
     public int MaxLineNumber { get; set; }
 }
 
-internal class TestableUnitTestDiscoverer : UnitTestDiscoverer
+internal class TestableUnitTestDiscoverer(ITestSourceHandler? testSourceHandler = null) : UnitTestDiscoverer(testSourceHandler ?? new TestSourceHandler())
 {
     internal override void DiscoverTestsInSource(
         string source,

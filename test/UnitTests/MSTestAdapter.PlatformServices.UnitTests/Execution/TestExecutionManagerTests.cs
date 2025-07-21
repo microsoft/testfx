@@ -5,6 +5,7 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
@@ -357,7 +358,7 @@ public class TestExecutionManagerTests : TestContainer
     {
         var sources = new List<string> { Assembly.GetExecutingAssembly().Location };
 
-        await _testExecutionManager.RunTestsAsync(sources, _runContext, _frameworkHandle, _cancellationToken);
+        await _testExecutionManager.RunTestsAsync(sources, _runContext, _frameworkHandle, new TestSourceHandler(), _cancellationToken);
 
         Verify(_frameworkHandle.TestCaseStartList.Contains("PassingTest"));
         Verify(_frameworkHandle.TestCaseEndList.Contains("PassingTest:Passed"));
@@ -379,7 +380,7 @@ public class TestExecutionManagerTests : TestContainer
             </RunSettings>
             """);
 
-        await _testExecutionManager.RunTestsAsync(sources, _runContext, _frameworkHandle, _cancellationToken);
+        await _testExecutionManager.RunTestsAsync(sources, _runContext, _frameworkHandle, new TestSourceHandler(), _cancellationToken);
 
         Verify(
             DummyTestClass.TestContextProperties!.Contains(
@@ -391,7 +392,7 @@ public class TestExecutionManagerTests : TestContainer
     {
         var sources = new List<string> { Assembly.GetExecutingAssembly().Location };
 
-        await _testExecutionManager.RunTestsAsync(sources, _runContext, _frameworkHandle, _cancellationToken);
+        await _testExecutionManager.RunTestsAsync(sources, _runContext, _frameworkHandle, new TestSourceHandler(), _cancellationToken);
 
         Verify(DummyTestClass.TestContextProperties is not null);
     }
@@ -405,7 +406,7 @@ public class TestExecutionManagerTests : TestContainer
             ExecuteTestsWrapper = (tests, runContext, frameworkHandle, isDeploymentDone) => testsCount += tests.Count(),
         };
 
-        await testableTestExecutionManager.RunTestsAsync(sources, _runContext, _frameworkHandle, _cancellationToken);
+        await testableTestExecutionManager.RunTestsAsync(sources, _runContext, _frameworkHandle, new TestSourceHandler(), _cancellationToken);
         Verify(testsCount == 4);
     }
 
@@ -1133,6 +1134,6 @@ internal class TestableTestExecutionManager : TestExecutionManager
         return Task.CompletedTask;
     }
 
-    internal override UnitTestDiscoverer GetUnitTestDiscoverer() => new TestableUnitTestDiscoverer();
+    internal override UnitTestDiscoverer GetUnitTestDiscoverer(ITestSourceHandler testSourceHandler) => new TestableUnitTestDiscoverer(testSourceHandler);
 }
 #endregion

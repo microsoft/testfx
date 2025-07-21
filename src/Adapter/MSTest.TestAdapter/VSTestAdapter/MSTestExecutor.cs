@@ -88,7 +88,7 @@ internal sealed class MSTestExecutor : ITestExecutor
         Guard.NotNull(frameworkHandle);
         Guard.NotNullOrEmpty(tests);
 
-        if (!MSTestDiscovererHelpers.InitializeDiscovery(from test in tests select test.Source, runContext, frameworkHandle, configuration))
+        if (!MSTestDiscovererHelpers.InitializeDiscovery(from test in tests select test.Source, runContext, frameworkHandle, configuration, new TestSourceHandler()))
         {
             return;
         }
@@ -101,13 +101,15 @@ internal sealed class MSTestExecutor : ITestExecutor
         PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("MSTestExecutor.RunTests: Running tests from sources.");
         Guard.NotNull(frameworkHandle);
         Guard.NotNullOrEmpty(sources);
-        if (!MSTestDiscovererHelpers.InitializeDiscovery(sources, runContext, frameworkHandle, configuration))
+
+        TestSourceHandler testSourceHandler = new();
+        if (!MSTestDiscovererHelpers.InitializeDiscovery(sources, runContext, frameworkHandle, configuration, testSourceHandler))
         {
             return;
         }
 
-        sources = PlatformServiceProvider.Instance.TestSource.GetTestSources(sources);
-        await RunTestsFromRightContextAsync(frameworkHandle, async testRunToken => await TestExecutionManager.RunTestsAsync(sources, runContext, frameworkHandle, testRunToken).ConfigureAwait(false)).ConfigureAwait(false);
+        sources = testSourceHandler.GetTestSources(sources);
+        await RunTestsFromRightContextAsync(frameworkHandle, async testRunToken => await TestExecutionManager.RunTestsAsync(sources, runContext, frameworkHandle, testSourceHandler, testRunToken).ConfigureAwait(false)).ConfigureAwait(false);
     }
 
     /// <summary>

@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
@@ -35,9 +36,10 @@ internal sealed class MSTestDiscoverer : ITestDiscoverer
         Guard.NotNull(logger);
         Guard.NotNull(discoverySink);
 
-        if (MSTestDiscovererHelpers.InitializeDiscovery(sources, discoveryContext, logger, configuration))
+        TestSourceHandler testSourceHandler = new();
+        if (MSTestDiscovererHelpers.InitializeDiscovery(sources, discoveryContext, logger, configuration, testSourceHandler))
         {
-            new UnitTestDiscoverer().DiscoverTests(sources, logger, discoverySink, discoveryContext);
+            new UnitTestDiscoverer(testSourceHandler).DiscoverTests(sources, logger, discoverySink, discoveryContext);
         }
     }
 }
