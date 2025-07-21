@@ -25,10 +25,9 @@ public abstract class ConditionBaseAttribute : Attribute
     public ConditionMode Mode { get; }
 
     /// <summary>
-    /// Gets the ignore message (in case <see cref="ShouldRun"/> returns <see langword="false"/>) indicating
-    /// the reason for ignoring the test method or test class.
+    /// Gets or sets the ignore message indicating the reason for ignoring the test method or test class.
     /// </summary>
-    public abstract string? IgnoreMessage { get; }
+    public abstract string? IgnoreMessage { get; set; }
 
     /// <summary>
     /// Gets the group name for this attribute. This is relevant when multiple
@@ -43,7 +42,7 @@ public abstract class ConditionBaseAttribute : Attribute
     public abstract string GroupName { get; }
 
     /// <summary>
-    /// Gets a value indicating whether the test method or test class should be ignored.
+    /// Gets a value indicating whether the condition is met. The implementation of this property shouldn't read the <see cref="Mode"/> property.
     /// </summary>
-    public abstract bool ShouldRun { get; }
+    public abstract bool IsConditionMet { get; }
 }
