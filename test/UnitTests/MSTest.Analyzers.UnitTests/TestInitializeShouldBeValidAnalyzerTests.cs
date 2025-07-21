@@ -397,7 +397,7 @@ public sealed class TestInitializeShouldBeValidAnalyzerTests
             """;
 
         await VerifyCS.VerifyAnalyzerAsync(code);
-    } 
+    }
 #endif
 
     [TestMethod]
