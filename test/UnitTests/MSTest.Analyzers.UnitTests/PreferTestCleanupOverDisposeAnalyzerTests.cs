@@ -143,6 +143,6 @@ public sealed class PreferTestCleanupOverDisposeAnalyzerTests
             """;
 
         await VerifyCS.VerifyCodeFixAsync(code, code);
-    } 
+    }
 #endif
 }
