@@ -284,7 +284,7 @@ internal sealed class MSTestSettings
 
         // This will contain default adapter settings
         var settings = new MSTestSettings();
-        var runConfigurationSettings = RunConfigurationSettings.PopulateSettings(context);
+        var runConfigurationSettings = RunConfigurationSettings.PopulateSettings(context?.RunSettings?.SettingsXml);
 
         // We have runsettings, but we don't have testconfig.
         // Just use runsettings.
