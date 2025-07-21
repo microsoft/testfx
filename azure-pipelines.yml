@@ -128,6 +128,7 @@ stages:
             inputs:
               PathtoPublish: '$(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)'
               ArtifactName: TestResults_Windows_$(_BuildConfig)
+            condition: always()
 
           - task: CopyFiles@2
             displayName: 'Copy binlogs'
@@ -205,6 +206,7 @@ stages:
             inputs:
               PathtoPublish: '$(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)'
               ArtifactName: TestResults_Linux_$(_BuildConfig)
+            condition: always()
 
           - task: CopyFiles@2
             displayName: 'Copy binlogs'
@@ -268,6 +270,7 @@ stages:
             inputs:
               PathtoPublish: '$(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)'
               ArtifactName: TestResults_MacOs_$(_BuildConfig)
+            condition: always()
 
           - task: CopyFiles@2
             displayName: 'Copy binlogs'
