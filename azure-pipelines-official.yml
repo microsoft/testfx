@@ -176,6 +176,7 @@ extends:
                 inputs:
                   PathtoPublish: '$(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)'
                   ArtifactName: TestResults_Windows
+                condition: always()
 
             - task: NuGetAuthenticate@1
               displayName: 'NuGet Authenticate to test-tools feed'
@@ -222,6 +223,7 @@ extends:
                 inputs:
                   PathtoPublish: '$(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)'
                   ArtifactName: TestResults_Linux
+                condition: always()
 
       - ${{ if eq(variables['Build.SourceBranchName'], 'main') }}:
         - template: /eng/common/templates-official/job/onelocbuild.yml@self
