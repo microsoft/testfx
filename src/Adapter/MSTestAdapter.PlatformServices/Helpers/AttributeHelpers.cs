@@ -17,7 +17,7 @@ internal static class AttributeExtensions
             string? firstNonSatisfiedMatch = null;
             foreach (ConditionBaseAttribute attribute in group)
             {
-                bool shouldRun = attribute.Mode == ConditionMode.Include ? attribute.ShouldRun : !attribute.ShouldRun;
+                bool shouldRun = attribute.Mode == ConditionMode.Include ? attribute.IsConditionMet : !attribute.IsConditionMet;
                 if (shouldRun)
                 {
                     atLeastOneInGroupIsSatisfied = true;
