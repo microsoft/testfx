@@ -49,7 +49,7 @@ public sealed class PreferDisposeOverTestCleanupAnalyzerTests
             """;
 
         await VerifyCS.VerifyCodeFixAsync(code, code);
-    } 
+    }
 #endif
 
     [TestMethod]
@@ -253,6 +253,6 @@ public sealed class PreferDisposeOverTestCleanupAnalyzerTests
             """;
 
         await VerifyCS.VerifyCodeFixAsync(code, code);
-    } 
+    }
 #endif
 }
