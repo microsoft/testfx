@@ -273,7 +273,7 @@ public sealed class DynamicDataShouldBeValidAnalyzerTests
             }
             """;
         await VerifyCS.VerifyAnalyzerAsync(code);
-    } 
+    }
 #endif
 
     [TestMethod]
