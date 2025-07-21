@@ -3,7 +3,6 @@
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
-using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
@@ -208,25 +207,25 @@ public class MSTestDiscovererTests : TestContainer
     {
         _mockTestSourceHandler.SetupGet(ts => ts.ValidSourceExtensions).Returns((List<string>)null!);
         var sources = new List<string> { "dummy" };
-        VerifyThrows<ArgumentNullException>(() => MSTestDiscovererHelpers.AreValidSources(sources, new TestSourceHandler()));
+        VerifyThrows<ArgumentNullException>(() => MSTestDiscovererHelpers.AreValidSources(sources, _mockTestSourceHandler.Object));
     }
 
     public void AreValidSourcesShouldReturnFalseIfValidSourceExtensionsIsEmpty()
     {
         _mockTestSourceHandler.SetupGet(ts => ts.ValidSourceExtensions).Returns(new List<string> { });
-        Verify(!MSTestDiscovererHelpers.AreValidSources(new List<string> { "dummy.te" }, new TestSourceHandler()));
+        Verify(!MSTestDiscovererHelpers.AreValidSources(new List<string> { "dummy.te" }, _mockTestSourceHandler.Object));
     }
 
     public void AreValidSourcesShouldReturnTrueForValidSourceExtensions()
     {
         _mockTestSourceHandler.SetupGet(ts => ts.ValidSourceExtensions).Returns(new List<string> { ".te" });
-        Verify(MSTestDiscovererHelpers.AreValidSources(new List<string> { "dummy.te" }, new TestSourceHandler()));
+        Verify(MSTestDiscovererHelpers.AreValidSources(new List<string> { "dummy.te" }, _mockTestSourceHandler.Object));
     }
 
     public void AreValidSourcesShouldReturnFalseForInvalidSourceExtensions()
     {
         _mockTestSourceHandler.SetupGet(ts => ts.ValidSourceExtensions).Returns(new List<string> { ".nte", ".tep" });
-        Verify(!MSTestDiscovererHelpers.AreValidSources(new List<string> { "dummy.te" }, new TestSourceHandler()));
+        Verify(!MSTestDiscovererHelpers.AreValidSources(new List<string> { "dummy.te" }, _mockTestSourceHandler.Object));
     }
 
     [TestClass]
