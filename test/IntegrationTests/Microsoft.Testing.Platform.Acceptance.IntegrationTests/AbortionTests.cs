@@ -25,12 +25,7 @@ public class AbortionTests : AcceptanceTestBase<AbortionTests.TestAssetFixture>
 
         testHostResult.AssertExitCodeIs(ExitCodes.TestSessionAborted);
 
-        // We check only in netcore for netfx is now showing in CI every time, the same behavior in local something works sometime nope.
-        // Manual test works pretty always as expected, looks like the implementation is different, we care more on .NET Core.
-        if (TargetFrameworks.Net.Contains(tfm))
-        {
-            testHostResult.AssertOutputMatchesRegex("Canceling the test session.*");
-        }
+        testHostResult.AssertOutputMatchesRegex("Canceling the test session.*");
 
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 0, skipped: 0, aborted: true);
     }

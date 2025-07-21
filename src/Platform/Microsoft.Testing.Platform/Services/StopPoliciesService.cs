@@ -53,18 +53,23 @@ internal sealed class StopPoliciesService : IStopPoliciesService
 
     public async Task ExecuteAbortCallbacksAsync()
     {
-        IsAbortTriggered = true;
-
-        if (_abortCallbacks is null)
+        try
         {
-            return;
+            if (_abortCallbacks is null)
+            {
+                return;
+            }
+
+            foreach (Func<Task> callback in _abortCallbacks)
+            {
+                // For now, we are fine if the callback crashed us. It shouldn't happen for our
+                // current usage anyway and the APIs around this are all internal for now.
+                await callback.Invoke().ConfigureAwait(false);
+            }
         }
-
-        foreach (Func<Task> callback in _abortCallbacks)
+        finally
         {
-            // For now, we are fine if the callback crashed us. It shouldn't happen for our
-            // current usage anyway and the APIs around this are all internal for now.
-            await callback.Invoke().ConfigureAwait(false);
+            IsAbortTriggered = true;
         }
     }
 

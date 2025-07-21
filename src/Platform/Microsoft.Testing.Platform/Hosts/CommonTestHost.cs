@@ -148,6 +148,14 @@ internal abstract class CommonHost(ServiceProvider serviceProvider) : IHost
             // Do nothing we're canceled
         }
 
+        if (testSessionCancellationToken.IsCancellationRequested &&
+            serviceProvider.GetService<IStopPoliciesService>() is { } stopPoliciesService)
+        {
+            // Before calling DisplayAfterSessionEndRunAsync, ensure that give one second for stop policies to have executed abort callbacks.
+            // One of the callbacks is what tells TerminalTestReporter to have cancelled state and prints canceling test session message.
+            SpinWait.SpinUntil(() => stopPoliciesService.IsAbortTriggered, millisecondsTimeout: 1000);
+        }
+
         // We keep the display after session out of the OperationCanceledException catch because we want to notify the IPlatformOutputDevice
         // also in case of cancellation. Most likely it needs to notify users that the session was canceled.
         await DisplayAfterSessionEndRunAsync(outputDevice, testSessionInfo, testSessionCancellationToken).ConfigureAwait(false);
