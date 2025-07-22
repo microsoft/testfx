@@ -87,8 +87,8 @@ public class DesktopTestSourceHostTests : TestContainer
 
     public void DisposeShouldUnloadChildAppDomain()
     {
-        string testSource = GetTestAssemblyPath("DesktopTestProjectx86Debug");
-        _testSourceHost = new TestSourceHost(testSource, null, null, new Mock<IAdapterTraceLogger>().Object);
+        string testSourceHandler = GetTestAssemblyPath("DesktopTestProjectx86Debug");
+        _testSourceHost = new TestSourceHost(testSourceHandler, null, null, new Mock<IAdapterTraceLogger>().Object);
         _testSourceHost.SetupHost();
 
         // Check that child appdomain was indeed created

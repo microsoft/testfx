@@ -10,9 +10,9 @@ namespace MSTestAdapter.PlatformServices.UnitTests;
 
 public class DesktopTestSourceTests : TestContainer
 {
-    private readonly TestSource _testSource;
+    private readonly TestSourceHandler _testSource;
 
-    public DesktopTestSourceTests() => _testSource = new TestSource();
+    public DesktopTestSourceTests() => _testSource = new TestSourceHandler();
 
     public void ValidSourceExtensionsShouldContainDllExtensions() => Verify(_testSource.ValidSourceExtensions.Contains(".dll"));
 

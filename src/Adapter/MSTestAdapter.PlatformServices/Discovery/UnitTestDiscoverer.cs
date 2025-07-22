@@ -4,6 +4,7 @@
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
@@ -15,8 +16,11 @@ internal class UnitTestDiscoverer
 {
     private readonly TestMethodFilter _testMethodFilter;
 
-    internal UnitTestDiscoverer()
-        => _testMethodFilter = new TestMethodFilter();
+    internal UnitTestDiscoverer(ITestSourceHandler testSourceHandler)
+    {
+        _testMethodFilter = new TestMethodFilter();
+        _testSource = testSourceHandler;
+    }
 
     /// <summary>
     /// Discovers the tests available from the provided sources.
@@ -50,7 +54,7 @@ internal class UnitTestDiscoverer
         ITestCaseDiscoverySink discoverySink,
         IDiscoveryContext? discoveryContext)
     {
-        ICollection<UnitTestElement>? testElements = AssemblyEnumeratorWrapper.GetTests(source, discoveryContext?.RunSettings, out List<string> warnings);
+        ICollection<UnitTestElement>? testElements = AssemblyEnumeratorWrapper.GetTests(source, discoveryContext?.RunSettings, _testSource, out List<string> warnings);
 
         bool treatDiscoveryWarningsAsErrors = MSTestSettings.CurrentSettings.TreatDiscoveryWarningsAsErrors;
 
@@ -81,6 +85,7 @@ internal class UnitTestDiscoverer
 
 #pragma warning disable IDE0028 // Collection initialization can be simplified - cannot be done for all TFMs. So suppressing.
     private static readonly ConditionalWeakTable<TestCase, object?[]> TestCaseToDataDictionary = new();
+    private readonly ITestSourceHandler _testSource;
 #pragma warning restore IDE0028 // Collection initialization can be simplified
 
     internal static bool TryGetActualData(TestCase testCase, [NotNullWhen(true)] out object?[]? actualData)

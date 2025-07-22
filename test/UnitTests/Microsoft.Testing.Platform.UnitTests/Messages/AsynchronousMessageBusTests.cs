@@ -87,10 +87,10 @@ public sealed class AsynchronousMessageBusTests
         await proxy.DrainDataAsync();
 
         // assert
-        Assert.AreEqual(1, consumerA.ConsumedData.Count);
+        Assert.HasCount(1, consumerA.ConsumedData);
         Assert.AreEqual(consumerBData, consumerA.ConsumedData[0]);
 
-        Assert.AreEqual(1, consumerB.ConsumedData.Count);
+        Assert.HasCount(1, consumerB.ConsumedData);
         Assert.AreEqual(consumerAData, consumerB.ConsumedData[0]);
     }
 

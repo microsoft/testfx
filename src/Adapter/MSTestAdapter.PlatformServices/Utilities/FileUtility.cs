@@ -242,7 +242,7 @@ internal class FileUtility
 
     public virtual bool DoesDirectoryExist(string deploymentDirectory) => Directory.Exists(deploymentDirectory);
 
-    public virtual bool DoesFileExist(string testSource) => File.Exists(testSource);
+    public virtual bool DoesFileExist(string testSourceHandler) => File.Exists(testSourceHandler);
 
     public virtual void SetAttributes(string path, FileAttributes fileAttributes) => File.SetAttributes(path, fileAttributes);
 

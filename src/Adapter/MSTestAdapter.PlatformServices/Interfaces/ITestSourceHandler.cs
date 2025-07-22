@@ -7,7 +7,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Int
 /// This platform service is responsible for any data or operations to validate
 /// the test sources provided to the adapter.
 /// </summary>
-internal interface ITestSource
+internal interface ITestSourceHandler
 {
     /// <summary>
     /// Gets the set of valid extensions for sources targeting this platform.

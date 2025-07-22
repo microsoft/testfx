@@ -34,16 +34,6 @@ public class PlatformServiceProviderTests : TestContainer
 
     public void TestSourceShouldReturnANonNullInstance() => Verify(PlatformServiceProvider.Instance is not null);
 
-    public void TestSourceShouldReturnAValidTestSource() => Verify(PlatformServiceProvider.Instance.TestSource.GetType() == typeof(TestSource));
-
-    public void TestSourceShouldBeCached()
-    {
-        PlatformServices.Interface.ITestSource testSourceInstance = PlatformServiceProvider.Instance.TestSource;
-
-        Verify(testSourceInstance is not null);
-        Verify(testSourceInstance == PlatformServiceProvider.Instance.TestSource);
-    }
-
     public void ReflectionOperationsShouldReturnAValidInstance() => Verify(PlatformServiceProvider.Instance.ReflectionOperations.GetType() == typeof(ReflectionOperations2));
 
     public void ReflectionOperationsShouldBeCached()

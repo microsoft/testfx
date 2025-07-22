@@ -170,7 +170,7 @@ Test discovery summary: found 1 test\(s\)\ - .*\.(dll|exe) \(net.+\|.+\)
         TestHostResult testHostResult = await testHost.ExecuteAsync();
         stopwatch.Stop();
         Assert.AreEqual(ExitCodes.Success, testHostResult.ExitCode);
-        Assert.IsTrue(stopwatch.Elapsed.TotalSeconds > 3);
+        Assert.IsGreaterThan(3, stopwatch.Elapsed.TotalSeconds);
     }
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)

@@ -3,6 +3,7 @@
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -21,11 +22,8 @@ internal sealed class AssemblyEnumeratorWrapper
     /// <summary>
     /// Gets test elements from an assembly.
     /// </summary>
-    /// <param name="assemblyFileName"> The assembly file name. </param>
-    /// <param name="runSettings"> The run Settings. </param>
-    /// <param name="warnings"> Contains warnings if any, that need to be passed back to the caller. </param>
     /// <returns> A collection of test elements. </returns>
-    internal static ICollection<UnitTestElement>? GetTests(string? assemblyFileName, IRunSettings? runSettings, out List<string> warnings)
+    internal static ICollection<UnitTestElement>? GetTests(string? assemblyFileName, IRunSettings? runSettings, ITestSourceHandler testSourceHandler, out List<string> warnings)
     {
         warnings = [];
 
@@ -42,7 +40,7 @@ internal sealed class AssemblyEnumeratorWrapper
             throw new FileNotFoundException(message);
         }
 
-        if (!PlatformServiceProvider.Instance.TestSource.IsAssemblyReferenced(UnitTestFrameworkAssemblyName, fullFilePath))
+        if (!testSourceHandler.IsAssemblyReferenced(UnitTestFrameworkAssemblyName, fullFilePath))
         {
             return null;
         }

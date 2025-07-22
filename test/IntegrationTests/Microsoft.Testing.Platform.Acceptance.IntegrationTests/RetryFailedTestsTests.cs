@@ -45,7 +45,7 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
             testHostResult.AssertOutputContains("Passed! -");
 
             string[] trxFiles = Directory.GetFiles(resultDirectory, "*.trx", SearchOption.AllDirectories);
-            Assert.AreEqual(2, trxFiles.Length);
+            Assert.HasCount(2, trxFiles);
             string trxContents1 = File.ReadAllText(trxFiles[0]);
             string trxContents2 = File.ReadAllText(trxFiles[1]);
             Assert.AreNotEqual(trxContents1, trxContents2);
@@ -85,7 +85,7 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
         string retriesPath = Path.Combine(resultDirectory, "Retries");
         Assert.IsTrue(Directory.Exists(retriesPath));
         string[] retriesDirectories = Directory.GetDirectories(retriesPath);
-        Assert.AreEqual(1, retriesDirectories.Length);
+        Assert.HasCount(1, retriesDirectories);
         string createdDirName = Path.GetFileName(retriesDirectories[0]);
 
         // Asserts that we are not using long names, to reduce long path issues.
