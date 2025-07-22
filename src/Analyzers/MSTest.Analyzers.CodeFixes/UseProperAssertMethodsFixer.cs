@@ -252,7 +252,7 @@ public sealed class UseProperAssertMethodsFixer : CodeFixProvider
             // For IsEmpty, we just need the collection argument plus any additional arguments
             var newArguments = new List<ArgumentSyntax>
             {
-                SyntaxFactory.Argument(collectionExpression).WithAdditionalAnnotations(Formatter.Annotation)
+                SyntaxFactory.Argument(collectionExpression).WithAdditionalAnnotations(Formatter.Annotation),
             };
             newArguments.AddRange(additionalArguments);
             newArgumentList = argumentList.WithArguments(SyntaxFactory.SeparatedList(newArguments));
