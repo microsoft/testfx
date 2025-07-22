@@ -5,7 +5,6 @@ using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Requests;
 #pragma warning disable CS0618 // Type or member is obsolete
 
-#pragma warning disable TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
 namespace Microsoft.Testing.Platform.UnitTests;
 
 [TestClass]
@@ -27,10 +26,10 @@ public sealed class TreeNodeFilterTests
     }
 
     [TestMethod]
-    public void MatchAllFilter_Invalid() => Assert.ThrowsException<InvalidOperationException>(() => _ = new TreeNodeFilter("/A(&B)"));
+    public void MatchAllFilter_Invalid() => Assert.ThrowsExactly<InvalidOperationException>(() => _ = new TreeNodeFilter("/A(&B)"));
 
     [TestMethod]
-    public void MatchAllFilter_DoNotAllowInMiddleOfFilter() => Assert.ThrowsException<ArgumentException>(() => _ = new TreeNodeFilter("/**/Path"));
+    public void MatchAllFilter_DoNotAllowInMiddleOfFilter() => Assert.ThrowsExactly<ArgumentException>(() => _ = new TreeNodeFilter("/**/Path"));
 
     [TestMethod]
     public void MatchWildcard_MatchesSubstrings()
@@ -60,7 +59,7 @@ public sealed class TreeNodeFilterTests
     }
 
     [TestMethod]
-    public void EscapeSequences_ThrowsIfLastCharIsAnEscapeChar() => Assert.ThrowsException<InvalidOperationException>(() => _ = new TreeNodeFilter("/*.\\(UnitTests\\)\\"));
+    public void EscapeSequences_ThrowsIfLastCharIsAnEscapeChar() => Assert.ThrowsExactly<InvalidOperationException>(() => _ = new TreeNodeFilter("/*.\\(UnitTests\\)\\"));
 
     [TestMethod]
     public void OrExpression_WorksForLiteralStrings()
@@ -95,7 +94,7 @@ public sealed class TreeNodeFilterTests
 
     [TestMethod]
     public void Parenthesis_DisallowSeparatorInside()
-        => Assert.ThrowsException<InvalidOperationException>(() => new TreeNodeFilter("/(A/B)"));
+        => Assert.ThrowsExactly<InvalidOperationException>(() => new TreeNodeFilter("/(A/B)"));
 
     [TestMethod]
     public void Parameters_PropertyCheck()
@@ -144,19 +143,19 @@ public sealed class TreeNodeFilterTests
 
     [TestMethod]
     public void Parameters_DisallowAtStart()
-        => Assert.ThrowsException<InvalidOperationException>(() => _ = new TreeNodeFilter("/[Tag=Fast]"));
+        => Assert.ThrowsExactly<InvalidOperationException>(() => _ = new TreeNodeFilter("/[Tag=Fast]"));
 
     [TestMethod]
     public void Parameters_DisallowEmpty()
-        => Assert.ThrowsException<InvalidOperationException>(() => _ = new TreeNodeFilter("/Path[]"));
+        => Assert.ThrowsExactly<InvalidOperationException>(() => _ = new TreeNodeFilter("/Path[]"));
 
     [TestMethod]
     public void Parameters_DisallowMultiple()
-        => Assert.ThrowsException<InvalidOperationException>(() => _ = new TreeNodeFilter("/Path[Prop=2][Prop=B]"));
+        => Assert.ThrowsExactly<InvalidOperationException>(() => _ = new TreeNodeFilter("/Path[Prop=2][Prop=B]"));
 
     [TestMethod]
     public void Parameters_DisallowNested()
-        => Assert.ThrowsException<InvalidOperationException>(() => _ = new TreeNodeFilter("/Path[X=[Y=1]]"));
+        => Assert.ThrowsExactly<InvalidOperationException>(() => _ = new TreeNodeFilter("/Path[X=[Y=1]]"));
 
     [DataRow("/A/B", "/A/B", true)]
     [DataRow("/A/B", "/A%2FB", false)]
@@ -230,5 +229,5 @@ public sealed class TreeNodeFilterTests
     }
 
     [TestMethod]
-    public void MatchAllFilterWithPropertyExpression_DoNotAllowInMiddleOfFilter() => Assert.ThrowsException<ArgumentException>(() => _ = new TreeNodeFilter("/**/Path[A=B]"));
+    public void MatchAllFilterWithPropertyExpression_DoNotAllowInMiddleOfFilter() => Assert.ThrowsExactly<ArgumentException>(() => _ = new TreeNodeFilter("/**/Path[A=B]"));
 }

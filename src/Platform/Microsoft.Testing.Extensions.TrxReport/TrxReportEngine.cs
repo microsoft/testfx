@@ -148,7 +148,12 @@ internal sealed partial class TrxReportEngine
             // create the xml doc
             var document = new XDocument(new XDeclaration("1.0", "UTF-8", null));
             var testRun = new XElement(_namespaceUri + "TestRun");
-            testRun.SetAttributeValue("id", Guid.NewGuid());
+            if (!Guid.TryParse(_environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_TRX_TESTRUN_ID), out Guid testRunId))
+            {
+                testRunId = Guid.NewGuid();
+            }
+
+            testRun.SetAttributeValue("id", testRunId);
             string testRunName = $"{_environment.GetEnvironmentVariable("UserName")}@{_environment.MachineName} {FormatDateTimeForRunName(_clock.UtcNow)}";
             testRun.SetAttributeValue("name", testRunName);
 
@@ -198,7 +203,7 @@ internal sealed partial class TrxReportEngine
             string outputDirectory = _configuration.GetTestResultDirectory(); // add var for this
             string finalFileName = Path.Combine(outputDirectory, trxFileName);
 
-            bool isFileNameExplicitlyProvidedAndFileExists = isFileNameExplicitlyProvided && _fileSystem.Exists(finalFileName);
+            bool isFileNameExplicitlyProvidedAndFileExists = isFileNameExplicitlyProvided && _fileSystem.ExistFile(finalFileName);
 
             // Note that we need to dispose the IFileStream, not the inner stream.
             // IFileStream implementations will be responsible to dispose their inner stream.
@@ -678,7 +683,7 @@ internal sealed partial class TrxReportEngine
 
         // We use custom format string to make sure that runs are sorted in the same way on all intl machines.
         // This is both for directory names and for Data Warehouse.
-        date.ToString("yyyy-MM-dd HH:mm:ss.fff", DateTimeFormatInfo.InvariantInfo);
+        date.ToString("yyyy-MM-dd HH:mm:ss.fffffff", DateTimeFormatInfo.InvariantInfo);
 
     private static string ReplaceInvalidFileNameChars(string fileName)
     {
@@ -731,8 +736,7 @@ internal sealed partial class TrxReportEngine
             ArrayPool<byte>.Shared.Return(dataBytes);
         }
 #else
-        var sha256 = SHA256.Create();
-        byte[] hash = sha256.ComputeHash(Encoding.Unicode.GetBytes(data));
+        byte[] hash = SHA256.HashData(Encoding.Unicode.GetBytes(data));
         byte[] bytes = new byte[16];
         Array.Copy(hash, bytes, 16);
         return new Guid(bytes);

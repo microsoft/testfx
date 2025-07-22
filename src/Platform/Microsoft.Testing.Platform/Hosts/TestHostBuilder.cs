@@ -52,7 +52,7 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
 
     public ITestHostOrchestratorManager TestHostOrchestratorManager { get; } = new TestHostOrchestratorManager();
 
-    public async Task<ITestHost> BuildAsync(
+    public async Task<IHost> BuildAsync(
         ApplicationLoggingState loggingState,
         TestApplicationOptions testApplicationOptions,
         IUnhandledExceptionsHandler unhandledExceptionsHandler,
@@ -243,7 +243,7 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
             await DisplayBannerIfEnabledAsync(loggingState, proxyOutputDevice, testFrameworkCapabilities).ConfigureAwait(false);
             await proxyOutputDevice.DisplayAsync(commandLineHandler, new ErrorMessageOutputDeviceData(commandLineValidationResult.ErrorMessage)).ConfigureAwait(false);
             await commandLineHandler.PrintHelpAsync(proxyOutputDevice).ConfigureAwait(false);
-            return new InformativeCommandLineTestHost(ExitCodes.InvalidCommandLine, serviceProvider);
+            return new InformativeCommandLineHost(ExitCodes.InvalidCommandLine, serviceProvider);
         }
 
         // Register as ICommandLineOptions.
@@ -270,11 +270,18 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
             testApplicationCancellationTokenSource.CancelAfter(timeout);
         }
 
-        // At this point we start to build extensions so we need to have all the information complete for the usage,
-        // here we ensure to override the result directory if user passed the argument --results-directory in command line.
-        // After this check users can get the result directory using IConfiguration["platformOptions:resultDirectory"] or the
-        // extension method helper serviceProvider.GetConfiguration()
-        await configuration.CheckTestResultsDirectoryOverrideAndCreateItAsync(loggingState.FileLoggerProvider).ConfigureAwait(false);
+        bool isHelpCommand = commandLineHandler.IsHelpInvoked();
+        bool isInfoCommand = commandLineHandler.IsInfoInvoked();
+
+        // Do not create the result directory if the user invoked --help or --info command.
+        if (!isHelpCommand && !isInfoCommand)
+        {
+            // At this point we start to build extensions so we need to have all the information complete for the usage,
+            // here we ensure to override the result directory if user passed the argument --results-directory in command line.
+            // After this check users can get the result directory using IConfiguration["platformOptions:resultDirectory"] or the
+            // extension method helper serviceProvider.GetConfiguration()
+            await configuration.CheckTestResultsDirectoryOverrideAndCreateItAsync(loggingState.FileLoggerProvider).ConfigureAwait(false);
+        }
 
         // Display banner now because we need capture the output in case of MSBuild integration and we want to forward
         // to file disc also the banner, so at this point we need to have all services and configuration(result directory) built.
@@ -317,7 +324,7 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
             // Add the platform output device to the service provider.
             serviceProvider.TryAddService(proxyOutputDevice);
 
-            ToolsTestHost toolsTestHost = new(toolsInformation, serviceProvider, commandLineHandler, proxyOutputDevice);
+            ToolsHost toolsTestHost = new(toolsInformation, serviceProvider, commandLineHandler, proxyOutputDevice);
 
             await LogTestHostCreatedAsync(
                 serviceProvider,
@@ -336,7 +343,7 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
         }
 
         // If --help is invoked we return
-        if (commandLineHandler.IsHelpInvoked())
+        if (isHelpCommand)
         {
             if (pushOnlyProtocol.IsServerMode)
             {
@@ -347,14 +354,14 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
                 await commandLineHandler.PrintHelpAsync(proxyOutputDevice, toolsInformation).ConfigureAwait(false);
             }
 
-            return new InformativeCommandLineTestHost(0, serviceProvider);
+            return new InformativeCommandLineHost(0, serviceProvider);
         }
 
         // If --info is invoked we return
-        if (commandLineHandler.IsInfoInvoked())
+        if (isInfoCommand)
         {
             await commandLineHandler.PrintInfoAsync(proxyOutputDevice, toolsInformation).ConfigureAwait(false);
-            return new InformativeCommandLineTestHost(0, serviceProvider);
+            return new InformativeCommandLineHost(0, serviceProvider);
         }
 
         // ======= TEST HOST ORCHESTRATOR ======== //
@@ -458,7 +465,7 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
                 new(serviceProvider, BuildTestFrameworkAsync, messageHandlerFactory, (TestFrameworkManager)TestFramework, (TestHostManager)TestHost);
 
             // If needed we wrap the host inside the TestHostControlledHost to automatically handle the shutdown of the connected pipe.
-            ITestHost actualTestHost = testControllerConnection is not null
+            IHost actualTestHost = testControllerConnection is not null
                 ? new TestHostControlledHost(testControllerConnection, serverTestHost, testApplicationCancellationTokenSource.CancellationToken)
                 : serverTestHost;
 
@@ -502,7 +509,7 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
                 (TestHostManager)TestHost);
 
             // If needed we wrap the host inside the TestHostControlledHost to automatically handle the shutdown of the connected pipe.
-            ITestHost actualTestHost = testControllerConnection is not null
+            IHost actualTestHost = testControllerConnection is not null
                 ? new TestHostControlledHost(testControllerConnection, consoleHost, testApplicationCancellationTokenSource.CancellationToken)
                 : consoleHost;
 

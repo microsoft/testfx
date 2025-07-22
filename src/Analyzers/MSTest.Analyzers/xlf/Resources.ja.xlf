@@ -277,8 +277,13 @@ The type declaring these methods should also respect the following rules:
         <note />
       </trans-unit>
       <trans-unit id="DataRowShouldBeValidMessageFormat_ArgumentTypeMismatch">
-        <source>DataRow argument type should match method parameter type. Mismatches occur at indices: {0}</source>
-        <target state="translated">DataRow 引数の型は、メソッド パラメーターの型と一致させる必要があります。インデックスで不一致が発生しました: {0}</target>
+        <source>DataRow argument types do not match method parameter types. {0}</source>
+        <target state="translated">DataRow 引数の型がメソッド パラメーターの型と一致しません。 {0}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DataRowShouldBeValidMessageFormat_ParameterMismatch">
+        <source>Parameter '{0}' expects type '{1}', but the provided value has type '{2}'</source>
+        <target state="translated">パラメーター '{0}' の型は '{1}' が想定されていますが、指定された値の型は '{2}' です</target>
         <note />
       </trans-unit>
       <trans-unit id="DataRowShouldBeValidMessageFormat_GenericTypeArgumentConflictingTypes">
@@ -534,12 +539,12 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="StringAssertToAssertMessageFormat">
         <source>Use 'Assert.{0}' instead of 'StringAssert.{1}'</source>
-        <target state="new">Use 'Assert.{0}' instead of 'StringAssert.{1}'</target>
+        <target state="translated">'StringAssert.{1}' の代わりに 'Assert.{0}' を使用します</target>
         <note />
       </trans-unit>
       <trans-unit id="StringAssertToAssertTitle">
         <source>Use 'Assert' instead of 'StringAssert'</source>
-        <target state="new">Use 'Assert' instead of 'StringAssert'</target>
+        <target state="translated">'StringAssert' の代わりに 'Assert' を使用</target>
         <note />
       </trans-unit>
       <trans-unit id="TestClassShouldBeValidMessageFormat">
@@ -745,13 +750,13 @@ The type declaring these methods should also respect the following rules:
         <note />
       </trans-unit>
       <trans-unit id="TypeContainingTestMethodShouldBeATestClassDescription">
-        <source>Type contaning '[TestMethod]' should be marked with '[TestClass]', otherwise the test method will be silently ignored.</source>
-        <target state="translated">連続する型 '[TestMethod]' は '[TestClass]' でマークする必要があります。それ以外の場合、テスト メソッドは暗黙的に無視されます。</target>
+        <source>Type containing '[TestMethod]' should be marked with '[TestClass]', otherwise the test method will be silently ignored.</source>
+        <target state="translated">'[TestMethod]' を含む型は '[TestClass]' でマークする必要があります。そうしないとテスト メソッドは暗黙的に無視されます。</target>
         <note />
       </trans-unit>
       <trans-unit id="TypeContainingTestMethodShouldBeATestClassMessageFormat">
-        <source>Class '{0}' contains test methods and should be marked with '[TestClass]'</source>
-        <target state="translated">クラス '{0}' にはテスト メソッドが含まれており、'[TestClass]' でマークする必要があります</target>
+        <source>Type '{0}' contains test methods and should be marked with '[TestClass]'</source>
+        <target state="translated">型 '{0}' にはテスト メソッドが含まれており、'[TestClass]' でマークする必要があります</target>
         <note />
       </trans-unit>
       <trans-unit id="TypeContainingTestMethodShouldBeATestClassTitle">
@@ -767,6 +772,11 @@ The type declaring these methods should also respect the following rules:
       <trans-unit id="UseAsyncSuffixTestMethodSuppressorJustification">
         <source>Asynchronous test methods do not require the 'Async' suffix</source>
         <target state="translated">非同期テスト メソッドには 'Async' サフィックスは不要です</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UnusedParameterSuppressorJustification">
+        <source>TestContext parameter is required by MSTest for AssemblyInitialize and ClassInitialize methods</source>
+        <target state="translated">AssemblyInitialize メソッドと ClassInitialize メソッドに対する MSTest には TestContext パラメーターが必要です</target>
         <note />
       </trans-unit>
       <trans-unit id="UseAttributeOnTestMethodAnalyzerMessageFormat">
@@ -857,6 +867,21 @@ The type declaring these methods should also respect the following rules:
       <trans-unit id="UseRetryWithTestMethodTitle">
         <source>Use retry attribute on test method</source>
         <target state="translated">テスト メソッドで retry 属性を使用する</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestContextPropertyUsageTitle">
+        <source>TestContext property cannot be accessed in this context</source>
+        <target state="new">TestContext property cannot be accessed in this context</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestContextPropertyUsageMessageFormat">
+        <source>TestContext property '{0}' cannot be accessed in '{1}' method</source>
+        <target state="new">TestContext property '{0}' cannot be accessed in '{1}' method</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestContextPropertyUsageDescription">
+        <source>Some TestContext properties are only available during test execution and cannot be accessed in assembly initialize, class initialize, class cleanup, or assembly cleanup methods.</source>
+        <target state="new">Some TestContext properties are only available during test execution and cannot be accessed in assembly initialize, class initialize, class cleanup, or assembly cleanup methods.</target>
         <note />
       </trans-unit>
     </body>

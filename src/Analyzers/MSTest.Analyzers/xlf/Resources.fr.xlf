@@ -277,8 +277,13 @@ Le type doit être une classe
         <note />
       </trans-unit>
       <trans-unit id="DataRowShouldBeValidMessageFormat_ArgumentTypeMismatch">
-        <source>DataRow argument type should match method parameter type. Mismatches occur at indices: {0}</source>
-        <target state="translated">Le type d’argument DataRow doit correspondre au type de paramètre de la méthode. Des incompatibilités se produisent aux index :{0}</target>
+        <source>DataRow argument types do not match method parameter types. {0}</source>
+        <target state="translated">Les types d’argument DataRow ne correspondent pas aux types de paramètre de la méthode. {0}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DataRowShouldBeValidMessageFormat_ParameterMismatch">
+        <source>Parameter '{0}' expects type '{1}', but the provided value has type '{2}'</source>
+        <target state="translated">Le paramètre « {0} » attend un type « {1} », mais la valeur fournie a un type « {2} »</target>
         <note />
       </trans-unit>
       <trans-unit id="DataRowShouldBeValidMessageFormat_GenericTypeArgumentConflictingTypes">
@@ -534,12 +539,12 @@ Le type doit être une classe
       </trans-unit>
       <trans-unit id="StringAssertToAssertMessageFormat">
         <source>Use 'Assert.{0}' instead of 'StringAssert.{1}'</source>
-        <target state="new">Use 'Assert.{0}' instead of 'StringAssert.{1}'</target>
+        <target state="translated">Utilisez « Assert.{0} » au lieu de « StringAssert.{1} »</target>
         <note />
       </trans-unit>
       <trans-unit id="StringAssertToAssertTitle">
         <source>Use 'Assert' instead of 'StringAssert'</source>
-        <target state="new">Use 'Assert' instead of 'StringAssert'</target>
+        <target state="translated">Utilisez « Assert » au lieu de « StringAssert »</target>
         <note />
       </trans-unit>
       <trans-unit id="TestClassShouldBeValidMessageFormat">
@@ -745,13 +750,13 @@ Le type doit être une classe
         <note />
       </trans-unit>
       <trans-unit id="TypeContainingTestMethodShouldBeATestClassDescription">
-        <source>Type contaning '[TestMethod]' should be marked with '[TestClass]', otherwise the test method will be silently ignored.</source>
+        <source>Type containing '[TestMethod]' should be marked with '[TestClass]', otherwise the test method will be silently ignored.</source>
         <target state="translated">Le type contenant « [TestMethod] » doit être marqué avec « [TestClass] », sans quoi la méthode de test sera ignorée silencieusement.</target>
         <note />
       </trans-unit>
       <trans-unit id="TypeContainingTestMethodShouldBeATestClassMessageFormat">
-        <source>Class '{0}' contains test methods and should be marked with '[TestClass]'</source>
-        <target state="translated">La classe « {0} » contient des méthodes de test et doit être marquée avec « [TestClass] »</target>
+        <source>Type '{0}' contains test methods and should be marked with '[TestClass]'</source>
+        <target state="translated">Le type « {0} » contient des méthodes de test et doit être marquée avec « [TestClass] »</target>
         <note />
       </trans-unit>
       <trans-unit id="TypeContainingTestMethodShouldBeATestClassTitle">
@@ -767,6 +772,11 @@ Le type doit être une classe
       <trans-unit id="UseAsyncSuffixTestMethodSuppressorJustification">
         <source>Asynchronous test methods do not require the 'Async' suffix</source>
         <target state="translated">Les méthodes de test asynchrones ne nécessitent pas le suffixe 'Async'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UnusedParameterSuppressorJustification">
+        <source>TestContext parameter is required by MSTest for AssemblyInitialize and ClassInitialize methods</source>
+        <target state="translated">Le paramètre TestContext est requis par MSTest pour les méthodes AssemblyInitialize et ClassInitialize</target>
         <note />
       </trans-unit>
       <trans-unit id="UseAttributeOnTestMethodAnalyzerMessageFormat">
@@ -791,17 +801,17 @@ Le type doit être une classe
       </trans-unit>
       <trans-unit id="UseCooperativeCancellationForTimeoutDescription">
         <source>Using '[Timeout]' without explicitly setting 'CooperativeCancellation = true' is discouraged. In a future version, cooperative cancellation will become the default behavior. Set 'CooperativeCancellation = true' to opt into the recommended behavior and avoid breaking changes.</source>
-        <target state="new">Using '[Timeout]' without explicitly setting 'CooperativeCancellation = true' is discouraged. In a future version, cooperative cancellation will become the default behavior. Set 'CooperativeCancellation = true' to opt into the recommended behavior and avoid breaking changes.</target>
+        <target state="translated">L’utilisation de '[Timeout]' sans définir explicitement 'CooperativeCancellation = true' est déconseillée. Dans une future version, l’annulation coopérative deviendra le comportement par défaut. Définissez 'CooperativeCancellation = true' pour adopter le comportement recommandé et éviter les changements incompatibles.</target>
         <note />
       </trans-unit>
       <trans-unit id="UseCooperativeCancellationForTimeoutMessageFormat">
         <source>Use 'CooperativeCancellation = true' with '[Timeout]' to enable cooperative cancellation behavior</source>
-        <target state="new">Use 'CooperativeCancellation = true' with '[Timeout]' to enable cooperative cancellation behavior</target>
+        <target state="translated">Utilisez 'CooperativeCancellation = true' avec '[Timeout]' pour activer le comportement d’annulation coopératif</target>
         <note />
       </trans-unit>
       <trans-unit id="UseCooperativeCancellationForTimeoutTitle">
         <source>Use 'CooperativeCancellation = true' with '[Timeout]'</source>
-        <target state="new">Use 'CooperativeCancellation = true' with '[Timeout]'</target>
+        <target state="translated">Utiliser 'CooperativeCancellation = true' avec '[Timeout]'</target>
         <note />
       </trans-unit>
       <trans-unit id="UseDeploymentItemWithTestMethodOrTestClassMessageFormat">
@@ -857,6 +867,21 @@ Le type doit être une classe
       <trans-unit id="UseRetryWithTestMethodTitle">
         <source>Use retry attribute on test method</source>
         <target state="translated">Utilisez l’attribut de nouvelle tentative sur la méthode de test</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestContextPropertyUsageTitle">
+        <source>TestContext property cannot be accessed in this context</source>
+        <target state="new">TestContext property cannot be accessed in this context</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestContextPropertyUsageMessageFormat">
+        <source>TestContext property '{0}' cannot be accessed in '{1}' method</source>
+        <target state="new">TestContext property '{0}' cannot be accessed in '{1}' method</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestContextPropertyUsageDescription">
+        <source>Some TestContext properties are only available during test execution and cannot be accessed in assembly initialize, class initialize, class cleanup, or assembly cleanup methods.</source>
+        <target state="new">Some TestContext properties are only available during test execution and cannot be accessed in assembly initialize, class initialize, class cleanup, or assembly cleanup methods.</target>
         <note />
       </trans-unit>
     </body>

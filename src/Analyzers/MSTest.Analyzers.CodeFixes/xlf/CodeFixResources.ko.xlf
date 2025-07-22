@@ -27,6 +27,11 @@
         <target state="translated">메서드 접근성 '비공개'로 변경하기</target>
         <note />
       </trans-unit>
+      <trans-unit id="ChangeStructToClassAndAddTestClassFix">
+        <source>Change to 'class' and add '[TestClass]'</source>
+        <target state="translated">'class'로 변경하고 '[TestClass]'를 추가합니다.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="FixAssertionArgsOrder">
         <source>Fix actual/expected arguments order</source>
         <target state="translated">실제/예상 인수 순서 수정</target>
@@ -74,7 +79,7 @@
       </trans-unit>
       <trans-unit id="StringAssertToAssertTitle">
         <source>Use 'Assert.{0}' instead of 'StringAssert'</source>
-        <target state="new">Use 'Assert.{0}' instead of 'StringAssert'</target>
+        <target state="translated">'StringAssert' 대신 'Assert.{0}' 사용</target>
         <note />
       </trans-unit>
       <trans-unit id="TestClassShouldBeValidFix">
@@ -104,7 +109,7 @@
       </trans-unit>
       <trans-unit id="UseCooperativeCancellationForTimeoutFix">
         <source>Use 'CooperativeCancellation = true'</source>
-        <target state="new">Use 'CooperativeCancellation = true'</target>
+        <target state="translated">'CooperativeCancellation = true'를 사용하세요.</target>
         <note />
       </trans-unit>
       <trans-unit id="UseNewerAssertThrows">

@@ -20,7 +20,7 @@ internal sealed class ConsoleTestHost(
     Func<TestFrameworkBuilderData, Task<ITestFramework>> buildTestFrameworkAsync,
     TestFrameworkManager testFrameworkManager,
     TestHostManager testHostManager)
-    : CommonTestHost(serviceProvider)
+    : CommonHost(serviceProvider)
 {
     private static readonly ClientInfo ClientInfoHost = new("testingplatform-console", AppVersion.DefaultSemVer);
     private static readonly IClientInfo ClientInfoService = new ClientInfoService("testingplatform-console", AppVersion.DefaultSemVer);

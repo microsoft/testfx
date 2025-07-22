@@ -277,8 +277,13 @@ Bu yöntemleri bildiren tipin ayrıca aşağıdaki kurallara uyması gerekir:
         <note />
       </trans-unit>
       <trans-unit id="DataRowShouldBeValidMessageFormat_ArgumentTypeMismatch">
-        <source>DataRow argument type should match method parameter type. Mismatches occur at indices: {0}</source>
-        <target state="translated">DataRow bağımsız değişken türü, yöntem parametresinin türüyle eşleşmelidir. Dizinler sırasında uyuşmazlıklar oluştu: {0}</target>
+        <source>DataRow argument types do not match method parameter types. {0}</source>
+        <target state="translated">DataRow bağımsız değişken türleri, yöntem parametre türleriyle eşleşmiyor. {0}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DataRowShouldBeValidMessageFormat_ParameterMismatch">
+        <source>Parameter '{0}' expects type '{1}', but the provided value has type '{2}'</source>
+        <target state="translated">Parametre ‘{0}’ tipi ‘{1}’ bekliyor, ancak verilen değer ‘{2}’ tipindedir</target>
         <note />
       </trans-unit>
       <trans-unit id="DataRowShouldBeValidMessageFormat_GenericTypeArgumentConflictingTypes">
@@ -534,12 +539,12 @@ Bu yöntemleri bildiren tipin ayrıca aşağıdaki kurallara uyması gerekir:
       </trans-unit>
       <trans-unit id="StringAssertToAssertMessageFormat">
         <source>Use 'Assert.{0}' instead of 'StringAssert.{1}'</source>
-        <target state="new">Use 'Assert.{0}' instead of 'StringAssert.{1}'</target>
+        <target state="translated">‘StringAssert.{1}’ yerine ‘Assert.{0}’ kullanın</target>
         <note />
       </trans-unit>
       <trans-unit id="StringAssertToAssertTitle">
         <source>Use 'Assert' instead of 'StringAssert'</source>
-        <target state="new">Use 'Assert' instead of 'StringAssert'</target>
+        <target state="translated">‘StringAssert’ yerine ‘Assert’ kullanın</target>
         <note />
       </trans-unit>
       <trans-unit id="TestClassShouldBeValidMessageFormat">
@@ -747,13 +752,13 @@ Bu yöntemleri bildiren tipin ayrıca aşağıdaki kurallara uyması gerekir:
         <note />
       </trans-unit>
       <trans-unit id="TypeContainingTestMethodShouldBeATestClassDescription">
-        <source>Type contaning '[TestMethod]' should be marked with '[TestClass]', otherwise the test method will be silently ignored.</source>
+        <source>Type containing '[TestMethod]' should be marked with '[TestClass]', otherwise the test method will be silently ignored.</source>
         <target state="translated">'[TestMethod]' içeren tür '[TestClass]' ile işaretlenmeli, aksi takdirde test yöntemi sessizce yoksayılır.</target>
         <note />
       </trans-unit>
       <trans-unit id="TypeContainingTestMethodShouldBeATestClassMessageFormat">
-        <source>Class '{0}' contains test methods and should be marked with '[TestClass]'</source>
-        <target state="translated">'{0}' sınıfı test yöntemleri içeriyor ve '[TestClass]' ile işaretlenmeli</target>
+        <source>Type '{0}' contains test methods and should be marked with '[TestClass]'</source>
+        <target state="translated">'{0}' türü test yöntemleri içeriyor ve '[TestClass]' ile işaretlenmeli</target>
         <note />
       </trans-unit>
       <trans-unit id="TypeContainingTestMethodShouldBeATestClassTitle">
@@ -769,6 +774,11 @@ Bu yöntemleri bildiren tipin ayrıca aşağıdaki kurallara uyması gerekir:
       <trans-unit id="UseAsyncSuffixTestMethodSuppressorJustification">
         <source>Asynchronous test methods do not require the 'Async' suffix</source>
         <target state="translated">Asenkron test metotları için 'Async' soneki gerekmez</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UnusedParameterSuppressorJustification">
+        <source>TestContext parameter is required by MSTest for AssemblyInitialize and ClassInitialize methods</source>
+        <target state="translated">AssemblyInitialize ve ClassInitialize yöntemleri için MSTest tarafından TestContext parametresi gereklidir.</target>
         <note />
       </trans-unit>
       <trans-unit id="UseAttributeOnTestMethodAnalyzerMessageFormat">
@@ -793,17 +803,17 @@ Bu yöntemleri bildiren tipin ayrıca aşağıdaki kurallara uyması gerekir:
       </trans-unit>
       <trans-unit id="UseCooperativeCancellationForTimeoutDescription">
         <source>Using '[Timeout]' without explicitly setting 'CooperativeCancellation = true' is discouraged. In a future version, cooperative cancellation will become the default behavior. Set 'CooperativeCancellation = true' to opt into the recommended behavior and avoid breaking changes.</source>
-        <target state="new">Using '[Timeout]' without explicitly setting 'CooperativeCancellation = true' is discouraged. In a future version, cooperative cancellation will become the default behavior. Set 'CooperativeCancellation = true' to opt into the recommended behavior and avoid breaking changes.</target>
+        <target state="translated">'[Timeout]' ayarını 'CooperativeCancellation = true' olarak açıkça ayarlamadan kullanmak önerilmez. Gelecek bir sürümde, birlikte iptal etme varsayılan davranış haline gelecektir. Önerilen davranışı kabul etmek ve uyumsuzlukları önlemek için 'CooperativeCancellation = true' değerini ayarlayın.</target>
         <note />
       </trans-unit>
       <trans-unit id="UseCooperativeCancellationForTimeoutMessageFormat">
         <source>Use 'CooperativeCancellation = true' with '[Timeout]' to enable cooperative cancellation behavior</source>
-        <target state="new">Use 'CooperativeCancellation = true' with '[Timeout]' to enable cooperative cancellation behavior</target>
+        <target state="translated">'[Timeout]' ile 'CooperativeCancellation = true' kullanarak birlikte iptal etme davranışını etkinleştirin</target>
         <note />
       </trans-unit>
       <trans-unit id="UseCooperativeCancellationForTimeoutTitle">
         <source>Use 'CooperativeCancellation = true' with '[Timeout]'</source>
-        <target state="new">Use 'CooperativeCancellation = true' with '[Timeout]'</target>
+        <target state="translated">'[Timeout]' ile 'CooperativeCancellation = true' kullanın</target>
         <note />
       </trans-unit>
       <trans-unit id="UseDeploymentItemWithTestMethodOrTestClassMessageFormat">
@@ -859,6 +869,21 @@ Bu yöntemleri bildiren tipin ayrıca aşağıdaki kurallara uyması gerekir:
       <trans-unit id="UseRetryWithTestMethodTitle">
         <source>Use retry attribute on test method</source>
         <target state="translated">Test yönteminde yeniden deneme özniteliğini kullan</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestContextPropertyUsageTitle">
+        <source>TestContext property cannot be accessed in this context</source>
+        <target state="new">TestContext property cannot be accessed in this context</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestContextPropertyUsageMessageFormat">
+        <source>TestContext property '{0}' cannot be accessed in '{1}' method</source>
+        <target state="new">TestContext property '{0}' cannot be accessed in '{1}' method</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestContextPropertyUsageDescription">
+        <source>Some TestContext properties are only available during test execution and cannot be accessed in assembly initialize, class initialize, class cleanup, or assembly cleanup methods.</source>
+        <target state="new">Some TestContext properties are only available during test execution and cannot be accessed in assembly initialize, class initialize, class cleanup, or assembly cleanup methods.</target>
         <note />
       </trans-unit>
     </body>

@@ -27,6 +27,11 @@
         <target state="translated">Alterar a acessibilidade do método para 'privado'</target>
         <note />
       </trans-unit>
+      <trans-unit id="ChangeStructToClassAndAddTestClassFix">
+        <source>Change to 'class' and add '[TestClass]'</source>
+        <target state="translated">Alterar para 'classe' e adicionar '[TestClass]'</target>
+        <note />
+      </trans-unit>
       <trans-unit id="FixAssertionArgsOrder">
         <source>Fix actual/expected arguments order</source>
         <target state="translated">Corrigir ordem de argumentos real/esperada</target>
@@ -74,7 +79,7 @@
       </trans-unit>
       <trans-unit id="StringAssertToAssertTitle">
         <source>Use 'Assert.{0}' instead of 'StringAssert'</source>
-        <target state="new">Use 'Assert.{0}' instead of 'StringAssert'</target>
+        <target state="translated">Use 'Assert'{0}. em vez de 'StringAssert'</target>
         <note />
       </trans-unit>
       <trans-unit id="TestClassShouldBeValidFix">

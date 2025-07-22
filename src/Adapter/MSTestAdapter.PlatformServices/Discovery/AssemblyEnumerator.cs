@@ -173,9 +173,8 @@ internal class AssemblyEnumerator : MarshalByRefObject
             {
                 DebugEx.Assert(loaderException != null, "loader exception should not be null.");
                 string line = string.Format(CultureInfo.CurrentCulture, Resource.EnumeratorLoadTypeErrorFormat, loaderException.GetType(), loaderException.Message);
-                if (!map.ContainsKey(line))
+                if (map.TryAdd(line, null))
                 {
-                    map.Add(line, null);
                     errorDetails.AppendLine(line);
                 }
             }
@@ -440,7 +439,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
         {
             object?[] d = dataOrTestDataRow;
             ParameterInfo[] parameters = methodInfo.GetParameters();
-            if (TestDataSourceHelpers.TryHandleITestDataRow(d, parameters, out d, out string? ignoreMessageFromTestDataRow, out string? displayNameFromTestDataRow))
+            if (TestDataSourceHelpers.TryHandleITestDataRow(d, parameters, out d, out string? ignoreMessageFromTestDataRow, out string? displayNameFromTestDataRow, out IList<string>? testCategoriesFromTestDataRow))
             {
                 testDataSourceIgnoreMessage = ignoreMessageFromTestDataRow ?? testDataSourceIgnoreMessage;
             }
@@ -467,6 +466,14 @@ internal class AssemblyEnumerator : MarshalByRefObject
 
             UnitTestElement discoveredTest = test.Clone();
             discoveredTest.DisplayName = displayNameFromTestDataRow ?? dataSource.GetDisplayName(methodInfo, d) ?? discoveredTest.DisplayName;
+
+            // Merge test categories from the test data row with the existing categories
+            if (testCategoriesFromTestDataRow is { Count: > 0 })
+            {
+                discoveredTest.TestCategory = discoveredTest.TestCategory is { Length: > 0 }
+                    ? [.. testCategoriesFromTestDataRow, .. discoveredTest.TestCategory]
+                    : [.. testCategoriesFromTestDataRow];
+            }
 
             // If strategy is DisplayName and we have a duplicate test name don't expand the test, bail out.
 #pragma warning disable CS0618 // Type or member is obsolete

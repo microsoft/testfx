@@ -103,7 +103,7 @@ internal sealed class TelemetryManager : ITelemetryManager, IOutputDeviceDataPro
 
         bool sentinelIsNotPresent =
             RoslynString.IsNullOrWhiteSpace(directory)
-            || !fileSystem.Exists(Path.Combine(directory, fileName));
+            || !fileSystem.ExistFile(Path.Combine(directory, fileName));
 
         if (!sentinelIsNotPresent)
         {

@@ -136,7 +136,7 @@
     <value>Extension of type '{0}' is not implementing the required '{1}' interface</value>
   </data>
   <data name="ExtensionWithSameUidAlreadyRegisteredErrorMessage" xml:space="preserve">
-    <value>Another extension with same the same UID '{0}' has already been registered. Registered extension is of type '{1}'</value>
+    <value>Extensions with the same UID '{0}' have already been registered. Registered extensions are of types: {1}</value>
   </data>
   <data name="JsonConfigurationFileParserDuplicateKeyErrorMessage" xml:space="preserve">
     <value>A duplicate key '{0}' was found</value>
@@ -706,5 +706,11 @@ Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is
   </data>
   <data name="AbortForMaxFailedTestsCapabilityNotAvailable" xml:space="preserve">
     <value>The current test framework does not implement 'IGracefulStopTestExecutionCapability' which is required for '--maximum-failed-tests' feature.</value>
+  </data>
+  <data name="PlatformCommandLineFilterUidOptionDescription" xml:space="preserve">
+    <value>Provides a list of test node UIDs to filter by.</value>
+  </data>
+  <data name="OnlyOneFilterSupported" xml:space="preserve">
+    <value>Passing both '--treenode-filter' and '--filter-uid' is unsupported.</value>
   </data>
 </root>

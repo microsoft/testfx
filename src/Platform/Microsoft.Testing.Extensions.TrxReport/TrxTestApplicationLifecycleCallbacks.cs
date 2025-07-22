@@ -34,10 +34,10 @@ internal sealed class TrxTestApplicationLifecycleCallbacks : ITestHostApplicatio
 
     public NamedPipeClient? NamedPipeClient { get; private set; }
 
-    public string Uid { get; } = nameof(TrxTestApplicationLifecycleCallbacks);
+    public string Uid => nameof(TrxTestApplicationLifecycleCallbacks);
 
     /// <inheritdoc />
-    public string Version { get; } = AppVersion.DefaultSemVer;
+    public string Version => AppVersion.DefaultSemVer;
 
     /// <inheritdoc />
     public string DisplayName { get; } = ExtensionResources.TrxReportGeneratorDisplayName;

@@ -251,7 +251,10 @@ The type declaring these methods should also respect the following rules:
     <value>DataRow argument count should match method parameter count (constructor arguments: {0}, method parameters: {1})</value>
   </data>
   <data name="DataRowShouldBeValidMessageFormat_ArgumentTypeMismatch" xml:space="preserve">
-    <value>DataRow argument type should match method parameter type. Mismatches occur at indices: {0}</value>
+    <value>DataRow argument types do not match method parameter types. {0}</value>
+  </data>
+  <data name="DataRowShouldBeValidMessageFormat_ParameterMismatch" xml:space="preserve">
+    <value>Parameter '{0}' expects type '{1}', but the provided value has type '{2}'</value>
   </data>
   <data name="DataRowShouldBeValidMessageFormat_OnTestMethod" xml:space="preserve">
     <value>DataRow should only be set on a test method</value>
@@ -426,6 +429,9 @@ The type declaring these methods should also respect the following rules:
   <data name="UseAsyncSuffixTestMethodSuppressorJustification" xml:space="preserve">
     <value>Asynchronous test methods do not require the 'Async' suffix</value>
   </data>
+  <data name="UnusedParameterSuppressorJustification" xml:space="preserve">
+    <value>TestContext parameter is required by MSTest for AssemblyInitialize and ClassInitialize methods</value>
+  </data>
   <data name="UseAttributeOnTestMethodAnalyzerMessageFormat" xml:space="preserve">
     <value>[{0}] can only be set on methods marked with [TestMethod]</value>
   </data>
@@ -445,10 +451,10 @@ The type declaring these methods should also respect the following rules:
     <value>Type containing '[TestMethod]' should be marked with '[TestClass]'</value>
   </data>
   <data name="TypeContainingTestMethodShouldBeATestClassDescription" xml:space="preserve">
-    <value>Type contaning '[TestMethod]' should be marked with '[TestClass]', otherwise the test method will be silently ignored.</value>
+    <value>Type containing '[TestMethod]' should be marked with '[TestClass]', otherwise the test method will be silently ignored.</value>
   </data>
   <data name="TypeContainingTestMethodShouldBeATestClassMessageFormat" xml:space="preserve">
-    <value>Class '{0}' contains test methods and should be marked with '[TestClass]'</value>
+    <value>Type '{0}' contains test methods and should be marked with '[TestClass]'</value>
   </data>
   <data name="DoNotUseSystemDescriptionAttributeTitle" xml:space="preserve">
     <value>'System.ComponentModel.DescriptionAttribute' has no effect on test methods</value>
@@ -608,5 +614,14 @@ The type declaring these methods should also respect the following rules:
   </data>
   <data name="UseCooperativeCancellationForTimeoutDescription" xml:space="preserve">
     <value>Using '[Timeout]' without explicitly setting 'CooperativeCancellation = true' is discouraged. In a future version, cooperative cancellation will become the default behavior. Set 'CooperativeCancellation = true' to opt into the recommended behavior and avoid breaking changes.</value>
+  </data>
+  <data name="TestContextPropertyUsageTitle" xml:space="preserve">
+    <value>TestContext property cannot be accessed in this context</value>
+  </data>
+  <data name="TestContextPropertyUsageMessageFormat" xml:space="preserve">
+    <value>TestContext property '{0}' cannot be accessed in '{1}' method</value>
+  </data>
+  <data name="TestContextPropertyUsageDescription" xml:space="preserve">
+    <value>Some TestContext properties are only available during test execution and cannot be accessed in assembly initialize, class initialize, class cleanup, or assembly cleanup methods.</value>
   </data>
 </root>

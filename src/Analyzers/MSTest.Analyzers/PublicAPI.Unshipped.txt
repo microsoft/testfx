@@ -7,3 +7,11 @@ MSTest.Analyzers.UseCooperativeCancellationForTimeoutAnalyzer
 MSTest.Analyzers.UseCooperativeCancellationForTimeoutAnalyzer.UseCooperativeCancellationForTimeoutAnalyzer() -> void
 override MSTest.Analyzers.UseCooperativeCancellationForTimeoutAnalyzer.Initialize(Microsoft.CodeAnalysis.Diagnostics.AnalysisContext! context) -> void
 override MSTest.Analyzers.UseCooperativeCancellationForTimeoutAnalyzer.SupportedDiagnostics.get -> System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.DiagnosticDescriptor!>
+MSTest.Analyzers.UnusedParameterSuppressor
+MSTest.Analyzers.UnusedParameterSuppressor.UnusedParameterSuppressor() -> void
+override MSTest.Analyzers.UnusedParameterSuppressor.ReportSuppressions(Microsoft.CodeAnalysis.Diagnostics.SuppressionAnalysisContext context) -> void
+override MSTest.Analyzers.UnusedParameterSuppressor.SupportedSuppressions.get -> System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.SuppressionDescriptor!>
+MSTest.Analyzers.TestContextPropertyUsageAnalyzer
+MSTest.Analyzers.TestContextPropertyUsageAnalyzer.TestContextPropertyUsageAnalyzer() -> void
+override MSTest.Analyzers.TestContextPropertyUsageAnalyzer.Initialize(Microsoft.CodeAnalysis.Diagnostics.AnalysisContext! context) -> void
+override MSTest.Analyzers.TestContextPropertyUsageAnalyzer.SupportedDiagnostics.get -> System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.DiagnosticDescriptor!>
