@@ -77,14 +77,13 @@ public class Adapter_ExecuteRequestAsyncTests : TestBase
         Platform.Extensions.Messages.TestNode lastNode = lastStateChange.TestNode;
         _ = lastNode.Properties.Single<ErrorTestNodeStateProperty>();
         Assert.AreEqual("Oh no!", lastNode.Properties.Single<ErrorTestNodeStateProperty>().Exception!.Message);
-        Assert.IsTrue(
-            lastNode.Properties.Single<ErrorTestNodeStateProperty>().Exception!.StackTrace!
-            .Contains(nameof(ExecutableNode_ThatThrows_ShouldReportError)), "lastNode properties should contain the name of the test");
+        Assert.Contains(
+            nameof(ExecutableNode_ThatThrows_ShouldReportError), lastNode.Properties.Single<ErrorTestNodeStateProperty>().Exception!.StackTrace!, "lastNode properties should contain the name of the test");
         TimingProperty timingProperty = lastStateChange.Properties.Single<TimingProperty>();
         Assert.AreEqual(fakeClock.UsedTimes[0], timingProperty.GlobalTiming.StartTime);
         Assert.IsTrue(timingProperty.GlobalTiming.StartTime <= timingProperty.GlobalTiming.EndTime, "start time is before (or the same as) stop time");
         Assert.AreEqual(fakeClock.UsedTimes[1], timingProperty.GlobalTiming.EndTime);
-        Assert.IsTrue(timingProperty.GlobalTiming.Duration.TotalMilliseconds > 0, $"duration should be greater than 0");
+        Assert.IsGreaterThan(0, timingProperty.GlobalTiming.Duration.TotalMilliseconds, $"duration should be greater than 0");
     }
 
     private sealed class FakeClock : IClock
