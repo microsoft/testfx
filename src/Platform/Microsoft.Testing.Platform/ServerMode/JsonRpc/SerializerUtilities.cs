@@ -147,15 +147,15 @@ internal static class SerializerUtilities
 
         Serializers[typeof(TestNodeUpdateMessage)] = new ObjectSerializer<TestNodeUpdateMessage>(ev =>
         {
-            // Historically, both MTP and Test Explorer used to expect TimingProperty to be part of the TestNode.
+            // Historically, both MTP and Test Explorer used to expect these properties to be part of the TestNode.
             // Starting with MTP v2, we are moving the property to its right location, to be on TestNodeUpdateMessage.
             // However, we still need to support what Test Explorer expects so we add the property back again to TestNode here as a hack.
             TestNode testNode = ev.TestNode;
             foreach (IProperty prop in ev.Properties)
             {
-                if (prop is TimingProperty timingProperty)
+                if (prop is TimingProperty or StandardOutputProperty or StandardErrorProperty)
                 {
-                    testNode.Properties.Add(timingProperty);
+                    testNode.Properties.Add(prop);
                 }
             }
 

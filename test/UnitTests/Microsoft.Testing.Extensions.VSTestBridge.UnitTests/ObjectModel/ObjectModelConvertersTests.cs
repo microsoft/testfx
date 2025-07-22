@@ -266,8 +266,7 @@ public sealed class ObjectModelConvertersTests
         };
 
         var testNodeUpdateMessage = testResult.ToTestNodeUpdateMessage(isTrxEnabled: false, useFullyQualifiedNameAsUid: false, new NamedFeatureCapabilityWithVSTestProvider(), new ServerModeCommandLineOptions(), ClientInfo, new SessionUid("SessionUid"));
-        TestNode testNode = testNodeUpdateMessage.TestNode;
-        StandardOutputProperty[] standardOutputProperties = [.. testNode.Properties.OfType<StandardOutputProperty>()];
+        StandardOutputProperty[] standardOutputProperties = [.. testNodeUpdateMessage.Properties.OfType<StandardOutputProperty>()];
         Assert.AreEqual(1, standardOutputProperties.Length);
         Assert.AreEqual($"message1{Environment.NewLine}message2", standardOutputProperties[0].StandardOutput);
     }
@@ -286,8 +285,7 @@ public sealed class ObjectModelConvertersTests
         };
 
         var testNodeUpdateMessage = testResult.ToTestNodeUpdateMessage(isTrxEnabled: false, useFullyQualifiedNameAsUid: false, new NamedFeatureCapabilityWithVSTestProvider(), new ServerModeCommandLineOptions(), ClientInfo, new SessionUid("SessionUid"));
-        TestNode testNode = testNodeUpdateMessage.TestNode;
-        StandardErrorProperty[] standardErrorProperties = [.. testNode.Properties.OfType<StandardErrorProperty>()];
+        StandardErrorProperty[] standardErrorProperties = [.. testNodeUpdateMessage.Properties.OfType<StandardErrorProperty>()];
         Assert.AreEqual(1, standardErrorProperties.Length);
         Assert.AreEqual($"message1{Environment.NewLine}message2", standardErrorProperties[0].StandardError);
     }

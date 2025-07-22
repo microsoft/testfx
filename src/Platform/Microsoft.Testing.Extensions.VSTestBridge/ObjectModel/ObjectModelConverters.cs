@@ -221,12 +221,12 @@ internal static class ObjectModelConverters
 
         if (standardErrorMessages.Count > 0)
         {
-            testNode.Properties.Add(new StandardErrorProperty(string.Join(Environment.NewLine, standardErrorMessages)));
+            testNodeUpdateMessage.Properties.Add(new StandardErrorProperty(string.Join(Environment.NewLine, standardErrorMessages)));
         }
 
         if (standardOutputMessages.Count > 0)
         {
-            testNode.Properties.Add(new StandardOutputProperty(string.Join(Environment.NewLine, standardOutputMessages)));
+            testNodeUpdateMessage.Properties.Add(new StandardOutputProperty(string.Join(Environment.NewLine, standardOutputMessages)));
         }
 
         return testNodeUpdateMessage;

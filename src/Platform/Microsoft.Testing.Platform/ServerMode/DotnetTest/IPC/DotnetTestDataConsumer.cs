@@ -182,8 +182,8 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
             return null;
         }
 
-        string? standardOutput = testNodeUpdateMessage.TestNode.Properties.SingleOrDefault<StandardOutputProperty>()?.StandardOutput;
-        string? standardError = testNodeUpdateMessage.TestNode.Properties.SingleOrDefault<StandardErrorProperty>()?.StandardError;
+        string? standardOutput = testNodeUpdateMessage.Properties.SingleOrDefault<StandardOutputProperty>()?.StandardOutput;
+        string? standardError = testNodeUpdateMessage.Properties.SingleOrDefault<StandardErrorProperty>()?.StandardError;
 
         switch (nodeState)
         {

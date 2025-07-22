@@ -395,8 +395,8 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
             case TestNodeUpdateMessage testNodeStateChanged:
 
                 TimeSpan duration = testNodeStateChanged.Properties.SingleOrDefault<TimingProperty>()?.GlobalTiming.Duration ?? TimeSpan.Zero;
-                string? standardOutput = testNodeStateChanged.TestNode.Properties.SingleOrDefault<StandardOutputProperty>()?.StandardOutput;
-                string? standardError = testNodeStateChanged.TestNode.Properties.SingleOrDefault<StandardErrorProperty>()?.StandardError;
+                string? standardOutput = testNodeStateChanged.Properties.SingleOrDefault<StandardOutputProperty>()?.StandardOutput;
+                string? standardError = testNodeStateChanged.Properties.SingleOrDefault<StandardErrorProperty>()?.StandardError;
 
                 foreach (FileArtifactProperty artifact in testNodeStateChanged.TestNode.Properties.OfType<FileArtifactProperty>())
                 {
