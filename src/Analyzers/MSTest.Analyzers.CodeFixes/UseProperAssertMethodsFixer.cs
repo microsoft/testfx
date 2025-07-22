@@ -1,7 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Composition;
 
@@ -243,10 +242,10 @@ public sealed class UseProperAssertMethodsFixer : CodeFixProvider
         FixInvocationMethodName(editor, simpleNameSyntax, properAssertMethodName);
 
         // Preserve any additional arguments beyond the first two (expected/actual)
-        var additionalArguments = new List<ArgumentSyntax>();
+        ArgumentSyntax[] additionalArguments = new ArgumentSyntax[argumentList.Arguments.Count - 2];
         for (int i = 2; i < argumentList.Arguments.Count; i++)
         {
-            additionalArguments.Add(argumentList.Arguments[i]);
+            additionalArguments[i - 2] = argumentList.Arguments[i];
         }
 
         ArgumentListSyntax newArgumentList;
@@ -254,11 +253,12 @@ public sealed class UseProperAssertMethodsFixer : CodeFixProvider
         if (properAssertMethodName == "IsEmpty")
         {
             // For IsEmpty, we just need the collection argument plus any additional arguments
-            var newArguments = new List<ArgumentSyntax>
+            ArgumentSyntax[] newArguments = new ArgumentSyntax[1 + additionalArguments.Length];
+            newArguments[0] = SyntaxFactory.Argument(collectionExpression).WithAdditionalAnnotations(Formatter.Annotation);
+            for (int i = 0; i < additionalArguments.Length; i++)
             {
-                SyntaxFactory.Argument(collectionExpression).WithAdditionalAnnotations(Formatter.Annotation),
-            };
-            newArguments.AddRange(additionalArguments);
+                newArguments[i + 1] = additionalArguments[i];
+            }
             newArgumentList = argumentList.WithArguments(SyntaxFactory.SeparatedList(newArguments));
         }
         else // HasCount
@@ -268,12 +268,13 @@ public sealed class UseProperAssertMethodsFixer : CodeFixProvider
             if (additionalLocations.Count > 3 &&
                 root.FindNode(additionalLocations[3].SourceSpan) is ArgumentSyntax countArgument)
             {
-                var newArguments = new List<ArgumentSyntax>
+                ArgumentSyntax[] newArguments = new ArgumentSyntax[2 + additionalArguments.Length];
+                newArguments[0] = SyntaxFactory.Argument(countArgument.Expression).WithAdditionalAnnotations(Formatter.Annotation);
+                newArguments[1] = SyntaxFactory.Argument(collectionExpression).WithAdditionalAnnotations(Formatter.Annotation);
+                for (int i = 0; i < additionalArguments.Length; i++)
                 {
-                    SyntaxFactory.Argument(countArgument.Expression).WithAdditionalAnnotations(Formatter.Annotation),
-                    SyntaxFactory.Argument(collectionExpression).WithAdditionalAnnotations(Formatter.Annotation),
-                };
-                newArguments.AddRange(additionalArguments);
+                    newArguments[i + 2] = additionalArguments[i];
+                }
                 newArgumentList = argumentList.WithArguments(SyntaxFactory.SeparatedList(newArguments));
             }
             else
