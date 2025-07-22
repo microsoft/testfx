@@ -172,7 +172,12 @@ public sealed class FlowTestContextCancellationTokenAnalyzer : DiagnosticAnalyze
             method.ContainingType.GetMembers().FirstOrDefault(
                 m => !m.IsStatic && m.Kind is SymbolKind.Field or SymbolKind.Property && testContextSymbol.Equals(m.GetMemberType(), SymbolEqualityComparer.Default)) is { } testContextMember)
         {
-            testContextMemberNameInScope = ((testContextMember as IFieldSymbol)?.AssociatedSymbol ?? testContextMember).Name;
+            testContextMember = (testContextMember as IFieldSymbol)?.AssociatedSymbol ?? testContextMember;
+            // Workaround https://github.com/dotnet/roslyn/issues/70208
+            // https://github.com/dotnet/roslyn/blob/f25ae8e02a91169f45060951a168b233ad588ed3/src/Compilers/CSharp/Portable/Symbols/Synthesized/GeneratedNameKind.cs#L47
+            testContextMemberNameInScope = testContextMember.Name.StartsWith('<') && testContextMember.Name.EndsWith(">P", StringComparison.Ordinal)
+                ? testContextMember.Name.Substring(1, testContextMember.Name.Length - 3)
+                : testContextMember.Name;
             return true;
         }
 

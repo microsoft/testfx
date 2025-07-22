@@ -244,6 +244,225 @@ public sealed class FlowTestContextCancellationTokenAnalyzerTests
     }
 
     [TestMethod]
+    public async Task WhenInClassCleanupWithTestContextParameter_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Threading;
+            using System.Threading.Tasks;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [ClassCleanup]
+                public static async Task ClassCleanup(TestContext testContext)
+                {
+                    await [|Task.Delay(1000)|];
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Threading;
+            using System.Threading.Tasks;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [ClassCleanup]
+                public static async Task ClassCleanup(TestContext testContext)
+                {
+                    await Task.Delay(1000, testContext.CancellationTokenSource.Token);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenInClassCleanupWithoutTestContextParameter_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Threading;
+            using System.Threading.Tasks;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [ClassCleanup]
+                public static async Task ClassCleanup()
+                {
+                    await [|Task.Delay(1000)|];
+                }
+            }
+            """;
+
+        // Codefix doesn't yet handle the addition of TestContext parameter.
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Threading;
+            using System.Threading.Tasks;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [ClassCleanup]
+                public static async Task ClassCleanup()
+                {
+                    await Task.Delay(1000, {|CS0103:testContext|}.CancellationTokenSource.Token);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenInTestMethodWithoutTestContextInScope_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Threading;
+            using System.Threading.Tasks;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public async Task Test1()
+                {
+                    await [|Task.Delay(1000)|];
+                }
+
+                [TestMethod]
+                [DataRow(0)]
+                [DataRow(1)]
+                public async Task Test2(int _)
+                {
+                    await [|Task.Delay(1000)|];
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Threading;
+            using System.Threading.Tasks;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public async Task Test1()
+                {
+                    await Task.Delay(1000, {|CS0103:testContext|}.CancellationTokenSource.Token);
+                }
+
+                [TestMethod]
+                [DataRow(0)]
+                [DataRow(1)]
+                public async Task Test2(int _)
+                {
+                    await Task.Delay(1000, {|CS0103:testContext|}.CancellationTokenSource.Token);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenInTestMethodWithTestContextFieldInScope_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Threading;
+            using System.Threading.Tasks;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                private readonly TestContext _testContext;
+
+                public MyTestClass(TestContext testContext)
+                    => _testContext = testContext;
+
+                [TestMethod]
+                public async Task Test1()
+                {
+                    await [|Task.Delay(1000)|];
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Threading;
+            using System.Threading.Tasks;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                private readonly TestContext _testContext;
+            
+                public MyTestClass(TestContext testContext)
+                    => _testContext = testContext;
+
+                [TestMethod]
+                public async Task Test1()
+                {
+                    await Task.Delay(1000, _testContext.CancellationTokenSource.Token);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenInTestMethodWithTestContextInScopeViaPrimaryConstructor_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Threading;
+            using System.Threading.Tasks;
+
+            [TestClass]
+            public class MyTestClass(TestContext MyTestContext)
+            {
+                [TestMethod]
+                public async Task Test1()
+                {
+                    _ = MyTestContext;
+                    await [|Task.Delay(1000)|];
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Threading;
+            using System.Threading.Tasks;
+
+            [TestClass]
+            public class MyTestClass(TestContext MyTestContext)
+            {
+                [TestMethod]
+                public async Task Test1()
+                {
+                    _ = MyTestContext;
+                    await Task.Delay(1000, MyTestContext.CancellationTokenSource.Token);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    [TestMethod]
     public async Task WhenWithCancellationTokenNone_NoDiagnostic()
     {
         string code = """
