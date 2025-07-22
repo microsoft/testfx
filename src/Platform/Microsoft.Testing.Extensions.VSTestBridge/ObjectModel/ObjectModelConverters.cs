@@ -215,7 +215,7 @@ internal static class ObjectModelConverters
         {
             foreach (UriDataAttachment attachment in attachmentSet.Attachments)
             {
-                testNode.Properties.Add(new FileArtifactProperty(new FileInfo(attachment.Uri.LocalPath), attachmentSet.DisplayName, attachment.Description));
+                testNodeUpdateMessage.Properties.Add(new FileArtifactProperty(new FileInfo(attachment.Uri.LocalPath), attachmentSet.DisplayName, attachment.Description));
             }
         }
 

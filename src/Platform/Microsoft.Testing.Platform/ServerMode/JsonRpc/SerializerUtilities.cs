@@ -153,7 +153,7 @@ internal static class SerializerUtilities
             TestNode testNode = ev.TestNode;
             foreach (IProperty prop in ev.Properties)
             {
-                if (prop is TimingProperty or StandardOutputProperty or StandardErrorProperty)
+                if (prop is TimingProperty or StandardOutputProperty or StandardErrorProperty or FileArtifactProperty)
                 {
                     testNode.Properties.Add(prop);
                 }

@@ -20,6 +20,4 @@ public interface ITestExecutionContext
     void CancelTestExecution(TimeSpan delay);
 
     void ReportException(Exception exception, CancellationToken? timeoutCancellationToken = null);
-
-    Task AddTestAttachmentAsync(FileInfo file, string displayName, string? description = null);
 }
