@@ -266,7 +266,7 @@ public sealed class UseProperAssertMethodsFixer : CodeFixProvider
                 var newArguments = new List<ArgumentSyntax>
                 {
                     SyntaxFactory.Argument(countArgument.Expression).WithAdditionalAnnotations(Formatter.Annotation),
-                    SyntaxFactory.Argument(collectionExpression).WithAdditionalAnnotations(Formatter.Annotation)
+                    SyntaxFactory.Argument(collectionExpression).WithAdditionalAnnotations(Formatter.Annotation),
                 };
                 newArguments.AddRange(additionalArguments);
                 newArgumentList = argumentList.WithArguments(SyntaxFactory.SeparatedList(newArguments));
