@@ -421,6 +421,24 @@ internal sealed class TypeCache : MarshalByRefObject
                             assemblyInfo.AssemblyCleanupMethod = methodInfo;
                             assemblyInfo.AssemblyCleanupMethodTimeoutMilliseconds = @this.TryGetTimeoutInfo(methodInfo, FixtureKind.AssemblyCleanup);
                         }
+
+                        if (methodInfo.IsPublic && methodInfo.IsStatic && !methodInfo.IsGenericMethod &&
+                            methodInfo.GetParameters() is { } parameters && parameters.Length == 1 && parameters[0].ParameterType == typeof(TestContext))
+                        {
+                            // TODO: Consider before merging this PR.
+                            // Should we allow only a single method in an assembly? or allow multiple and document there is no order guarantee?
+                            bool isBeforeEveryTest = @this._reflectionHelper.IsAttributeDefined<BeforeEveryTestMethodAttribute>(methodInfo, inherit: true);
+                            bool isAfterEveryTest = @this._reflectionHelper.IsAttributeDefined<AfterEveryTestMethodAttribute>(methodInfo, inherit: true);
+                            if (isBeforeEveryTest)
+                            {
+                                assemblyInfo.GlobalTestInitializations.Add(methodInfo);
+                            }
+
+                            if (isAfterEveryTest)
+                            {
+                                assemblyInfo.GlobalTestCleanups.Add(methodInfo);
+                            }
+                        }
                     }
                 }
 

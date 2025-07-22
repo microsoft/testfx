@@ -31,6 +31,10 @@ public class TestAssemblyInfo
     internal TestAssemblyInfo(Assembly assembly)
         => Assembly = assembly;
 
+    internal List<MethodInfo> GlobalTestInitializations { get; } = [];
+
+    internal List<MethodInfo> GlobalTestCleanups { get; } = [];
+
     /// <summary>
     /// Gets <c>AssemblyInitialize</c> method for the assembly.
     /// </summary>
