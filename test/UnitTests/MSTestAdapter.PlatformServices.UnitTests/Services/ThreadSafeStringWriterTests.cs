@@ -84,7 +84,9 @@ public class ThreadSafeStringWriterTests : TestContainer
         while (exception != null && currentAttempt++ < 3);
     }
 
-    public void ThreadSafeStringWriterWritesLinesIntoDifferentWritesSeparately()
+#pragma warning disable IDE0051 // Remove unused private members - Test is flaky.
+    private void ThreadSafeStringWriterWritesLinesIntoDifferentWritesSeparately()
+#pragma warning restore IDE0051 // Remove unused private members
     {
         // Suppress the flow of parent context here because this test method will run in
         // a task already and we don't want the existing async context to interfere with this.

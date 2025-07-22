@@ -5,11 +5,11 @@ namespace Microsoft.Testing.Platform.Helpers;
 
 internal sealed class SystemFileSystem : IFileSystem
 {
-    public bool Exists(string path) => File.Exists(path);
+    public bool ExistFile(string path) => File.Exists(path);
 
     public string CreateDirectory(string path) => Directory.CreateDirectory(path).FullName;
 
-    public void Move(string sourceFileName, string destFileName) => File.Move(sourceFileName, destFileName);
+    public void MoveFile(string sourceFileName, string destFileName, bool overwrite = false) => File.Move(sourceFileName, destFileName, overwrite);
 
     public IFileStream NewFileStream(string path, FileMode mode) => new SystemFileStream(path, mode);
 
@@ -18,4 +18,12 @@ internal sealed class SystemFileSystem : IFileSystem
     public string ReadAllText(string path) => File.ReadAllText(path);
 
     public Task<string> ReadAllTextAsync(string path) => File.ReadAllTextAsync(path);
+
+    public void CopyFile(string sourceFileName, string destFileName, bool overwrite = false) => File.Copy(sourceFileName, destFileName, overwrite);
+
+    public void DeleteFile(string path) => File.Delete(path);
+
+    public bool ExistDirectory(string? path) => Directory.Exists(path);
+
+    public string[] GetFiles(string path, string searchPattern, SearchOption searchOption) => Directory.GetFiles(path, searchPattern, searchOption);
 }

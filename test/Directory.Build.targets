@@ -11,6 +11,8 @@
     <Architecture Condition=" '$(PlatformTarget)' == '' or '$(PlatformTarget)' == 'AnyCpu' ">x64</Architecture>
     <ModuleName>$(MSBuildProjectName)_$(TargetFramework)_$(Configuration)_$(Architecture)</ModuleName>
 
+    <MSTestAnalysisMode>Recommended</MSTestAnalysisMode>
+
     <!-- Arcade runner settings -->
     <TestRunnerAdditionalArguments>$(TestRunnerAdditionalArguments) --diagnostic --diagnostic-output-directory $(RepoRoot)artifacts/log/$(Configuration) --diagnostic-output-fileprefix $(ModuleName) --diagnostic-verbosity trace</TestRunnerAdditionalArguments>
     <TestRunnerAdditionalArguments Condition=" $([MSBuild]::GetTargetFrameworkIdentifier('$(TargetFramework)')) == '.NETCoreApp' ">$(TestRunnerAdditionalArguments) --crashdump</TestRunnerAdditionalArguments>
@@ -47,7 +49,6 @@
   <Import Project="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\buildMultiTargeting\Microsoft.Testing.Platform.targets" Condition=" '$(EnableMSTestRunner)' == 'true' OR '$(UseInternalTestFramework)' == 'true' " />
 
   <ItemGroup Condition=" '$(EnableMSTestRunner)' == 'true' AND '$(UseInternalTestFramework)' != 'true' AND '$(UseMSTestFromSource)' != 'true' ">
-    <PackageReference Include="MSTest.Analyzers" />
     <PackageReference Include="MSTest.TestFramework" />
     <PackageReference Include="MSTest.TestAdapter" />
   </ItemGroup>

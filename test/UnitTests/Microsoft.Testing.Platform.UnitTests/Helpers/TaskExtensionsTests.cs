@@ -84,7 +84,7 @@ public sealed class TaskExtensionsTests
 
                 waitException.WaitOne();
                 await Task.Delay(TimeSpan.FromSeconds(4));
-            }, 3, TimeSpan.FromSeconds(3), _ => true);
+            }, 3, TimeSpan.FromSeconds(3));
 
     [TestMethod]
     public async Task CancellationAsyncWithReturnValue_ObserveException_Succeeds()
@@ -111,7 +111,7 @@ public sealed class TaskExtensionsTests
 
                 waitException.WaitOne();
                 await Task.Delay(TimeSpan.FromSeconds(4));
-            }, 3, TimeSpan.FromSeconds(3), _ => true);
+            }, 3, TimeSpan.FromSeconds(3));
 
     private static async Task<string> DoSomething()
     {

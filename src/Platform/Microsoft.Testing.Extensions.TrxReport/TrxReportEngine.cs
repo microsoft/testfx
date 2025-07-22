@@ -203,7 +203,7 @@ internal sealed partial class TrxReportEngine
             string outputDirectory = _configuration.GetTestResultDirectory(); // add var for this
             string finalFileName = Path.Combine(outputDirectory, trxFileName);
 
-            bool isFileNameExplicitlyProvidedAndFileExists = isFileNameExplicitlyProvided && _fileSystem.Exists(finalFileName);
+            bool isFileNameExplicitlyProvidedAndFileExists = isFileNameExplicitlyProvided && _fileSystem.ExistFile(finalFileName);
 
             // Note that we need to dispose the IFileStream, not the inner stream.
             // IFileStream implementations will be responsible to dispose their inner stream.
@@ -736,8 +736,7 @@ internal sealed partial class TrxReportEngine
             ArrayPool<byte>.Shared.Return(dataBytes);
         }
 #else
-        var sha256 = SHA256.Create();
-        byte[] hash = sha256.ComputeHash(Encoding.Unicode.GetBytes(data));
+        byte[] hash = SHA256.HashData(Encoding.Unicode.GetBytes(data));
         byte[] bytes = new byte[16];
         Array.Copy(hash, bytes, 16);
         return new Guid(bytes);

@@ -77,6 +77,13 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
 
     public async Task WaitConnectionAsync(CancellationToken cancellationToken)
     {
+        // NOTE: _cancellationToken field is usually the "test session" cancellation token.
+        // And cancellationToken parameter may have hang mitigating timeout.
+        // The parameter should only be used for the call of WaitForConnectionAsync and Task.Run call.
+        // NOTE: The cancellation token passed to Task.Run will only have effect before the task is started by runtime.
+        // Once it starts, it won't be considered.
+        // Then, for the internal loop, we should use _cancellationToken, because we don't know for how long the loop will run.
+        // So what we pass to InternalLoopAsync shouldn't have any timeout (it's usually linked to Ctrl+C).
         await _logger.LogDebugAsync($"Waiting for connection for the pipe name {PipeName.Name}").ConfigureAwait(false);
 #pragma warning disable CA1416 // Validate platform compatibility
         await _namedPipeServerStream.WaitForConnectionAsync(cancellationToken).ConfigureAwait(false);

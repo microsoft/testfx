@@ -66,7 +66,6 @@ internal static class EngineConstants
     internal const string TestRunParametersName = "TestRunParameters";
 
     #region Test Property registration
-    internal static readonly TestProperty DescriptionProperty = TestProperty.Register("Description", DescriptionLabel, typeof(string), TestPropertyAttributes.Hidden, typeof(TestCase));
 
     internal static readonly TestProperty WorkItemIdsProperty = TestProperty.Register("WorkItemIds", WorkItemIdsLabel, typeof(string[]), TestPropertyAttributes.Hidden, typeof(TestCase));
 
@@ -149,7 +148,6 @@ internal static class EngineConstants
     private const string ExecutionIdLabel = "ExecutionId";
     private const string ParentExecIdLabel = "ParentExecId";
     private const string InnerResultsCountLabel = "InnerResultsCount";
-    private const string DescriptionLabel = "Description";
     private const string CssIterationLabel = "CssIteration";
     private const string CssProjectStructureLabel = "CssProjectStructure";
     private const string WorkItemIdsLabel = "WorkItemIds";

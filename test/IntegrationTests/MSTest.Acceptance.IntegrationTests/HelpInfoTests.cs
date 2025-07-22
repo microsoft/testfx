@@ -45,6 +45,8 @@ Options:
         The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', and 'Critical'.
     --exit-on-process-exit
         Exit the test process if dependent process exits. PID must be provided.
+    --filter-uid
+        Provides a list of test node UIDs to filter by.
     --help
         Show the command line help.
     --ignore-exit-code

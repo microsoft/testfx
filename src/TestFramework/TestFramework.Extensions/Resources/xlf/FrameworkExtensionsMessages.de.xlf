@@ -4,7 +4,7 @@
     <body>
       <trans-unit id="ArgumentXMustDeriveFromClassY">
         <source>Type '{0}' is not assignable to '{1}'.</source>
-        <target state="new">Type '{0}' is not assignable to '{1}'.</target>
+        <target state="translated">Der Typ "{0}" kann nicht "{1}" zugewiesen werden.</target>
         <note>
       - {0} argument name like "applicationType"
       - {1} fully qualified class name like "Microsoft.UI.Xaml.Application"
@@ -12,7 +12,7 @@
       </trans-unit>
       <trans-unit id="AsyncUITestMethodWithNoDispatcherQueue">
         <source>UITestMethodAttribute.DispatcherQueue should not be null. To use UITestMethodAttribute within a WinUI Desktop App, remember to set the static UITestMethodAttribute.DispatcherQueue during the test initialization.</source>
-        <target state="new">UITestMethodAttribute.DispatcherQueue should not be null. To use UITestMethodAttribute within a WinUI Desktop App, remember to set the static UITestMethodAttribute.DispatcherQueue during the test initialization.</target>
+        <target state="translated">UITestMethodAttribute.DispatcherQueue darf nicht NULL sein. Um UITestMethodAttribute in einer WinUI-Desktop-App zu verwenden, denken Sie daran, die statische UITestMethodAttribute.DispatcherQueue während der Testinitialisierung festzulegen.</target>
         <note></note>
       </trans-unit>
     </body>

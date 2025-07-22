@@ -16,9 +16,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution;
 
 public class TestClassInfoTests : TestContainer
 {
-    private sealed class TestTestCoxtextImpl : ITestContext
+    private sealed class TestTestContextImpl : ITestContext
     {
-        public TestTestCoxtextImpl(TestContext testContext)
+        public TestTestContextImpl(TestContext testContext)
             => Context = testContext;
 
         public TestContext Context { get; }
@@ -450,7 +450,7 @@ public class TestClassInfoTests : TestContainer
         => GetResultOrRunClassInitialize(_testContext);
 
     private TestResult GetResultOrRunClassInitialize(TestContext? testContext)
-        => _testClassInfo.GetResultOrRunClassInitialize(new TestTestCoxtextImpl(testContext!), string.Empty, string.Empty, string.Empty, string.Empty);
+        => _testClassInfo.GetResultOrRunClassInitialize(new TestTestContextImpl(testContext!), string.Empty, string.Empty, string.Empty, string.Empty);
     #endregion
 
     #region Run Class Cleanup tests

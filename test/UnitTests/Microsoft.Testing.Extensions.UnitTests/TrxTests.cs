@@ -122,7 +122,7 @@ public class TrxTests
         _ = _commandLineOptionsMock.Setup(_ => _.TryGetOptionArgumentList(TrxReportGeneratorCommandLine.TrxReportFileNameOptionName, out argumentTrxReportFileName)).Returns(true);
         PropertyBag propertyBag = new(new PassedTestNodeStateProperty());
         TrxReportEngine trxReportEngine = GenerateTrxReportEngine(1, 0, propertyBag, memoryStream, isExplicitFileName: true);
-        _ = _fileSystem.Setup(x => x.Exists(It.IsAny<string>())).Returns(true);
+        _ = _fileSystem.Setup(x => x.ExistFile(It.IsAny<string>())).Returns(true);
 
         // Act
         (string fileName, string? warning) = await trxReportEngine.GenerateReportAsync();
@@ -576,7 +576,7 @@ stdout trx message</StdOut>
         DateTime testStartTime = DateTime.Now;
         CancellationToken cancellationToken = CancellationToken.None;
 
-        _ = _fileSystem.Setup(x => x.Exists(It.IsAny<string>())).Returns(false);
+        _ = _fileSystem.Setup(x => x.ExistFile(It.IsAny<string>())).Returns(false);
         _ = _fileSystem.Setup(x => x.NewFileStream(It.IsAny<string>(), isExplicitFileName ? FileMode.Create : FileMode.CreateNew))
             .Returns(memoryStream);
 

@@ -35,26 +35,22 @@ internal static class FixtureMethodRunner
                 return null;
             }
             catch (Exception ex)
+                when (ex.GetRealException().IsOperationCanceledExceptionFromToken(cancellationTokenSource.Token))
             {
-                if (ex.GetRealException().IsOperationCanceledExceptionFromToken(cancellationTokenSource.Token))
-                {
-                    return new(
-                        UnitTestOutcome.Timeout,
-                        testTimeoutInfo?.TokenSource.Token.IsCancellationRequested == true
-                            ? string.Format(
-                                CultureInfo.InvariantCulture,
-                                methodTimedOutMessageFormat,
-                                methodInfo.DeclaringType!.FullName,
-                                methodInfo.Name,
-                                testTimeoutInfo.Value.Timeout)
-                            : string.Format(
-                                CultureInfo.InvariantCulture,
-                                methodCanceledMessageFormat,
-                                methodInfo.DeclaringType!.FullName,
-                                methodInfo.Name));
-                }
-
-                throw;
+                return new(
+                    UnitTestOutcome.Timeout,
+                    testTimeoutInfo?.TokenSource.Token.IsCancellationRequested == true
+                        ? string.Format(
+                            CultureInfo.InvariantCulture,
+                            methodTimedOutMessageFormat,
+                            methodInfo.DeclaringType!.FullName,
+                            methodInfo.Name,
+                            testTimeoutInfo.Value.Timeout)
+                        : string.Format(
+                            CultureInfo.InvariantCulture,
+                            methodCanceledMessageFormat,
+                            methodInfo.DeclaringType!.FullName,
+                            methodInfo.Name));
             }
         }
 
@@ -172,15 +168,10 @@ internal static class FixtureMethodRunner
                 UnitTestOutcome.Timeout,
                 string.Format(CultureInfo.InvariantCulture, methodCanceledMessageFormat, methodInfo.DeclaringType!.FullName, methodInfo.Name));
         }
-        catch (Exception)
+        catch (Exception) when (realException is not null)
         {
             // We throw the real exception to have the original stack trace to elaborate up the chain.
-            if (realException is not null)
-            {
-                throw realException;
-            }
-
-            throw;
+            throw realException;
         }
     }
 
@@ -236,20 +227,15 @@ internal static class FixtureMethodRunner
                 UnitTestOutcome.Timeout,
                 string.Format(CultureInfo.InvariantCulture, methodCanceledMessageFormat, methodInfo.DeclaringType!.FullName, methodInfo.Name));
         }
-        catch (Exception)
+        catch (Exception) when (realException is not null)
         {
             // We throw the real exception to have the original stack trace to elaborate up the chain.
-            // Also note that tcs.Task.Exception can be an AggregateException, so we favor the "real exception".
-            if (realException is not null)
-            {
-                throw realException;
-            }
-            else if (tcs.Task.Exception is not null)
-            {
-                throw tcs.Task.Exception;
-            }
-
-            throw;
+            throw realException;
+        }
+        catch (Exception) when (tcs.Task.Exception is not null)
+        {
+            // The tcs.Task.Exception can be an AggregateException, so we favor the "real exception".
+            throw tcs.Task.Exception;
         }
     }
 }

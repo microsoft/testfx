@@ -140,7 +140,7 @@ public sealed class ObjectModelConvertersTests
     {
         TestResult testResult = new(new TestCase("test", new("executor://uri", UriKind.Absolute), "source.cs"));
 
-        string errorMessage = Assert.ThrowsException<InvalidOperationException>(() => testResult.ToTestNode(isTrxEnabled: true, useFullyQualifiedNameAsUid: false, null, new ConsoleCommandLineOptions(), ClientInfo)).Message;
+        string errorMessage = Assert.ThrowsExactly<InvalidOperationException>(() => testResult.ToTestNode(isTrxEnabled: true, useFullyQualifiedNameAsUid: false, null, new ConsoleCommandLineOptions(), ClientInfo)).Message;
 
         Assert.IsTrue(errorMessage.Contains("Unable to parse fully qualified type name from test case: "));
     }
@@ -267,7 +267,7 @@ public sealed class ObjectModelConvertersTests
         var testNode = testResult.ToTestNode(isTrxEnabled: false, useFullyQualifiedNameAsUid: false, new NamedFeatureCapabilityWithVSTestProvider(), new ServerModeCommandLineOptions(), ClientInfo);
 
         StandardOutputProperty[] standardOutputProperties = [.. testNode.Properties.OfType<StandardOutputProperty>()];
-        Assert.IsTrue(standardOutputProperties.Length == 1);
+        Assert.AreEqual(1, standardOutputProperties.Length);
         Assert.AreEqual($"message1{Environment.NewLine}message2", standardOutputProperties[0].StandardOutput);
     }
 
@@ -287,7 +287,7 @@ public sealed class ObjectModelConvertersTests
         var testNode = testResult.ToTestNode(isTrxEnabled: false, useFullyQualifiedNameAsUid: false, new NamedFeatureCapabilityWithVSTestProvider(), new ServerModeCommandLineOptions(), ClientInfo);
 
         StandardErrorProperty[] standardErrorProperties = [.. testNode.Properties.OfType<StandardErrorProperty>()];
-        Assert.IsTrue(standardErrorProperties.Length == 1);
+        Assert.AreEqual(1, standardErrorProperties.Length);
         Assert.AreEqual($"message1{Environment.NewLine}message2", standardErrorProperties[0].StandardError);
     }
 

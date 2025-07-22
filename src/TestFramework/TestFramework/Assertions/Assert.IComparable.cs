@@ -183,14 +183,14 @@ public sealed partial class Assert
         var zero = default(T);
 
         // Handle special case for floating point NaN values
-        if (value is float floatValue && float.IsNaN(floatValue))
+        if (value is float.NaN)
         {
             string userMessage = BuildUserMessage(message);
             ThrowAssertIsPositiveFailed(value, userMessage);
             return;
         }
 
-        if (value is double doubleValue && double.IsNaN(doubleValue))
+        if (value is double.NaN)
         {
             string userMessage = BuildUserMessage(message);
             ThrowAssertIsPositiveFailed(value, userMessage);
@@ -233,14 +233,14 @@ public sealed partial class Assert
         var zero = default(T);
 
         // Handle special case for floating point NaN values
-        if (value is float floatValue && float.IsNaN(floatValue))
+        if (value is float.NaN)
         {
             string userMessage = BuildUserMessage(message);
             ThrowAssertIsNegativeFailed(value, userMessage);
             return;
         }
 
-        if (value is double doubleValue && double.IsNaN(doubleValue))
+        if (value is double.NaN)
         {
             string userMessage = BuildUserMessage(message);
             ThrowAssertIsNegativeFailed(value, userMessage);

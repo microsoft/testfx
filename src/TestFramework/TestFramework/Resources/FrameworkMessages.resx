@@ -269,7 +269,7 @@ Actual: {2}</value>
     <value>Property or method {0} on {1} returns empty IEnumerable&lt;object[]&gt;.</value>
   </data>
   <data name="DynamicDataInvalidMethodLayout" xml:space="preserve">
-    <value>Dynamic data method '{0}' should be static, parameterless and non-generic.</value>
+    <value>Dynamic data method '{0}' should be static, non-generic, and cannot have 'params' parameter.</value>
   </data>
   <data name="DynamicDataInvalidPropertyLayout" xml:space="preserve">
     <value>Dynamic data property '{0}' should be static and have a getter.</value>

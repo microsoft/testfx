@@ -82,7 +82,6 @@ public sealed class PreferDisposeOverTestCleanupFixer : CodeFixProvider
         SyntaxGenerator generator = editor.Generator;
         TypeDeclarationSyntax newParent = containingType;
         INamedTypeSymbol? iDisposableSymbol = semanticModel.Compilation.GetTypeByMetadataName(WellKnownTypeNames.SystemIDisposable);
-        INamedTypeSymbol? testCleanupAttributeSymbol = semanticModel.Compilation.GetTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestCleanupAttribute);
 
         // Move the code from TestCleanup to Dispose method
         MethodDeclarationSyntax? existingDisposeMethod = containingType.Members

@@ -106,6 +106,7 @@
     <Project Path="test/IntegrationTests/TestAssets/SampleFrameworkExtensions/SampleFrameworkExtensions.csproj" />
     <Project Path="test/IntegrationTests/TestAssets/SampleProjectForAssemblyResolution/SampleProjectForAssemblyResolution.csproj" />
     <Project Path="test/IntegrationTests/TestAssets/SuiteLifeCycleTestProject/SuiteLifeCycleTestProject.csproj" />
+    <Project Path="test/IntegrationTests/TestAssets/TestCategoriesFromTestDataRowProject/TestCategoriesFromTestDataRowProject.csproj" />
     <Project Path="test/IntegrationTests/TestAssets/TestIdProject.DefaultStrategy/TestIdProject.DefaultStrategy.csproj" />
     <Project Path="test/IntegrationTests/TestAssets/TestIdProject.DisplayNameStrategy/TestIdProject.DisplayNameStrategy.csproj" />
     <Project Path="test/IntegrationTests/TestAssets/TestIdProject.FullyQualifiedTestStrategy/TestIdProject.FullyQualifiedStrategy.csproj" />

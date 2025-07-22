@@ -123,12 +123,6 @@ internal static class TestCaseExtensions
             testElement.CssProjectStructure = cssProjectStructure;
         }
 
-        string? description = testCase.GetPropertyValue<string>(EngineConstants.DescriptionProperty, null);
-        if (!StringEx.IsNullOrWhiteSpace(description))
-        {
-            testElement.Description = description;
-        }
-
         string[]? workItemIds = testCase.GetPropertyValue<string[]>(EngineConstants.WorkItemIdsProperty, null);
         if (workItemIds is { Length: > 0 })
         {
