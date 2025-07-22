@@ -57,10 +57,10 @@ public sealed class IPCTests
         await namedPipeClient1.ConnectAsync(_testContext.CancellationTokenSource.Token);
         waitException.Wait();
 
-        Assert.AreEqual(1, openedPipe.Count);
-        Assert.AreEqual(1, exceptions.Count);
+        Assert.HasCount(1, openedPipe);
+        Assert.HasCount(1, exceptions);
         Assert.AreEqual(exceptions[0].GetType(), typeof(IOException));
-        Assert.IsTrue(exceptions[0].Message.Contains("All pipe instances are busy."));
+        Assert.Contains("All pipe instances are busy.", exceptions[0].Message);
 
         await waitTask;
 #if NETCOREAPP
@@ -151,7 +151,7 @@ public sealed class IPCTests
         {
             string currentString = RandomString(random.Next(1024, 1024 * 1024 * 2), random);
             await namedPipeClient.RequestReplyAsync<TextMessage, VoidResponse>(new TextMessage(currentString), CancellationToken.None);
-            Assert.AreEqual(1, receivedMessages.Count);
+            Assert.HasCount(1, receivedMessages);
             Assert.AreEqual(receivedMessages.Dequeue(), new TextMessage(currentString));
             currentRound--;
         }

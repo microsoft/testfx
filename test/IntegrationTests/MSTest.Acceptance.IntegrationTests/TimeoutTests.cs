@@ -406,7 +406,7 @@ public class TimeoutTests : AcceptanceTestBase<TimeoutTests.TestAssetFixture>
 
         if (assertAttributePrecedence)
         {
-            Assert.IsTrue(stopwatch.Elapsed.TotalSeconds < 25);
+            Assert.IsLessThan(25, stopwatch.Elapsed.TotalSeconds);
         }
 
         testHostResult.AssertOutputContains($"{InfoByKind[entryKind].Prefix} method '{InfoByKind[entryKind].MethodFullName}' timed out after {timeoutValue}ms");
