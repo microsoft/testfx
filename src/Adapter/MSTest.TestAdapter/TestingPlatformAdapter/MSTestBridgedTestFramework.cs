@@ -37,7 +37,7 @@ internal sealed class MSTestBridgedTestFramework : SynchronizedSingleSessionVSTe
         }
 
         PlatformServiceProvider.Instance.AdapterTraceLogger = new BridgedTraceLogger(_loggerFactory.CreateLogger("mstest-trace"));
-        MSTestDiscoverer.DiscoverTests(request.AssemblyPaths, request.DiscoveryContext, request.MessageLogger, request.DiscoverySink, _configuration);
+        new MSTestDiscoverer().DiscoverTests(request.AssemblyPaths, request.DiscoveryContext, request.MessageLogger, request.DiscoverySink, _configuration);
         return Task.CompletedTask;
     }
 

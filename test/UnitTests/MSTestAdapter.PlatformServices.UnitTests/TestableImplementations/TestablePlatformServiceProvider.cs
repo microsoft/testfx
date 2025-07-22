@@ -17,8 +17,6 @@ internal class TestablePlatformServiceProvider : IPlatformServiceProvider
 {
     #region Mock Implementations
 
-    public Mock<ITestSource> MockTestSourceValidator { get; } = new();
-
     public Mock<IFileOperations> MockFileOperations { get; } = new();
 
     public Mock<IAdapterTraceLogger> MockTraceLogger { get; } = new();
@@ -36,8 +34,6 @@ internal class TestablePlatformServiceProvider : IPlatformServiceProvider
     public Mock<IReflectionOperations2> MockReflectionOperations { get; set; } = null!;
 
     #endregion
-
-    public ITestSource TestSource => MockTestSourceValidator.Object;
 
     public IFileOperations FileOperations => MockFileOperations.Object;
 

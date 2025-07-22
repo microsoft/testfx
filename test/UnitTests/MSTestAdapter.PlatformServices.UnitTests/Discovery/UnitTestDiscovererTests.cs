@@ -5,6 +5,7 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
@@ -27,13 +28,15 @@ public class UnitTestDiscovererTests : TestContainer
     private readonly Mock<ITestCaseDiscoverySink> _mockTestCaseDiscoverySink;
     private readonly Mock<IRunSettings> _mockRunSettings;
     private readonly Mock<IDiscoveryContext> _mockDiscoveryContext;
+    private readonly Mock<ITestSourceHandler> _mockTestSourceHandler;
     private readonly UnitTestElement _test;
     private readonly List<UnitTestElement> _testElements;
 
     public UnitTestDiscovererTests()
     {
         _testablePlatformServiceProvider = new TestablePlatformServiceProvider();
-        _unitTestDiscoverer = new UnitTestDiscoverer();
+        _mockTestSourceHandler = new();
+        _unitTestDiscoverer = new UnitTestDiscoverer(_mockTestSourceHandler.Object);
 
         _mockMessageLogger = new Mock<IMessageLogger>();
         _mockTestCaseDiscoverySink = new Mock<ITestCaseDiscoverySink>();
@@ -94,7 +97,7 @@ public class UnitTestDiscovererTests : TestContainer
             .Returns(Source);
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.DoesFileExist(Source))
             .Returns(true);
-        _testablePlatformServiceProvider.MockTestSourceValidator.Setup(
+        _mockTestSourceHandler.Setup(
             tsv => tsv.IsAssemblyReferenced(It.IsAny<AssemblyName>(), Source)).Returns(true);
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly(Source, It.IsAny<bool>()))
             .Returns(Assembly.GetExecutingAssembly());
@@ -223,7 +226,7 @@ internal class DummyNavigationData
     public int MaxLineNumber { get; set; }
 }
 
-internal class TestableUnitTestDiscoverer : UnitTestDiscoverer
+internal class TestableUnitTestDiscoverer(ITestSourceHandler? testSourceHandler = null) : UnitTestDiscoverer(testSourceHandler ?? new TestSourceHandler())
 {
     internal override void DiscoverTestsInSource(
         string source,
