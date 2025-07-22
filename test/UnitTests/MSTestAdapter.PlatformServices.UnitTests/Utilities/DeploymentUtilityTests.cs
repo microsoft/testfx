@@ -42,9 +42,9 @@ public class DeploymentUtilityTests : TestContainer
     public DeploymentUtilityTests()
     {
         _mockReflectionUtility = new Mock<ReflectionUtility>();
-        _mockFileUtility = new Mock<FileUtility>();
-        _mockAssemblyUtility = new Mock<AssemblyUtility>();
         _mockAdapterLogger = new Mock<IAdapterTraceLogger>();
+        _mockFileUtility = new Mock<FileUtility>(_mockAdapterLogger.Object);
+        _mockAssemblyUtility = new Mock<AssemblyUtility>(_mockAdapterLogger.Object);
         _warnings = [];
 
         _deploymentUtility = new DeploymentUtility(

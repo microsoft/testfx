@@ -404,7 +404,7 @@ public class TestDeploymentTests : TestContainer
 
         _mockFileUtility.Setup(fu => fu.DoesDirectoryExist(It.Is<string>(s => !s.EndsWith(".dll")))).Returns(true);
         _mockFileUtility.Setup(fu => fu.DoesFileExist(It.IsAny<string>())).Returns(true);
-        var mockAssemblyUtility = new Mock<AssemblyUtility>();
+        var mockAssemblyUtility = new Mock<AssemblyUtility>(_mockAdapterLogger.Object);
 #if NETFRAMEWORK
         mockAssemblyUtility.Setup(
            au => au.GetFullPathToDependentAssemblies(It.IsAny<string>(), It.IsAny<string>(), out _warnings))

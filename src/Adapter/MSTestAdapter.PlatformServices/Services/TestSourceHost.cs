@@ -163,7 +163,7 @@ internal class TestSourceHost : ITestSourceHost
             object resolver = AppDomainUtilities.CreateInstance(
                 AppDomain,
                 assemblyResolverType,
-                [resolutionPaths]);
+                [resolutionPaths, _logger]);
 
             _logger.LogInfo(
                 "DesktopTestSourceHost.SetupHost(): resolver type: {0} , resolve type assembly: {1} ",

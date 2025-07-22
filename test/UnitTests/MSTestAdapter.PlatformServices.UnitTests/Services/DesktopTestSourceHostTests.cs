@@ -12,6 +12,8 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
 
 using Moq;
 
+using MSTestAdapter.PlatformServices.UnitTests.TestableImplementations;
+
 using TestFramework.ForTestingMSTest;
 
 namespace MSTestAdapter.PlatformServices.UnitTests;
@@ -83,7 +85,8 @@ public class DesktopTestSourceHostTests : TestContainer
         DummyClass dummyClass = new();
         int currentAppDomainId = dummyClass.AppDomainId;
 
-        TestSourceHost sut = new(Assembly.GetExecutingAssembly().Location, null, null, new Mock<IAdapterTraceLogger>().Object);
+        // We cannot used mock of IAdapterTraceLogger here because instance needs to be serializable.
+        TestSourceHost sut = new(Assembly.GetExecutingAssembly().Location, null, null, new TestableAdapterTraceLogger());
         sut.SetupHost();
 
         // Execute
@@ -103,7 +106,8 @@ public class DesktopTestSourceHostTests : TestContainer
         _ = new DummyClass();
 
         string location = typeof(TestSourceHost).Assembly.Location;
-        Mock<TestSourceHost> sourceHost = new(location, null, null) { CallBase = true };
+        // We cannot used mock of IAdapterTraceLogger here because instance needs to be serializable.
+        Mock<TestSourceHost> sourceHost = new(location, null, null, new TestableAdapterTraceLogger()) { CallBase = true };
 
         try
         {
@@ -137,7 +141,8 @@ public class DesktopTestSourceHostTests : TestContainer
         var mockRunSettings = new Mock<IRunSettings>();
         mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
 
-        TestSourceHost sourceHost = new(location, mockRunSettings.Object, null, new Mock<IAdapterTraceLogger>().Object);
+        // We cannot used mock of IAdapterTraceLogger here because instance needs to be serializable.
+        TestSourceHost sourceHost = new(location, mockRunSettings.Object, null, new TestableAdapterTraceLogger());
 
         try
         {
@@ -160,7 +165,8 @@ public class DesktopTestSourceHostTests : TestContainer
         DummyClass dummyClass = new();
 
         string location = typeof(TestSourceHost).Assembly.Location;
-        Mock<TestSourceHost> sourceHost = new(location, null, null) { CallBase = true };
+        // We cannot used mock of IAdapterTraceLogger here because instance needs to be serializable.
+        Mock<TestSourceHost> sourceHost = new(location, null, null, new TestableAdapterTraceLogger()) { CallBase = true };
 
         try
         {
@@ -209,7 +215,7 @@ public class DesktopTestSourceHostTests : TestContainer
         var mockRunSettings = new Mock<IRunSettings>();
         mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
 
-        Mock<TestSourceHost> testSourceHost = new(location, mockRunSettings.Object, null) { CallBase = true };
+        Mock<TestSourceHost> testSourceHost = new(location, mockRunSettings.Object, null, new Mock<IAdapterTraceLogger>().Object) { CallBase = true };
 
         try
         {
@@ -240,7 +246,8 @@ public class DesktopTestSourceHostTests : TestContainer
         var mockRunSettings = new Mock<IRunSettings>();
         mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
 
-        Mock<TestSourceHost> testSourceHost = new(location, mockRunSettings.Object, null) { CallBase = true };
+        // We cannot used mock of IAdapterTraceLogger here because instance needs to be serializable.
+        Mock<TestSourceHost> testSourceHost = new(location, mockRunSettings.Object, null, new TestableAdapterTraceLogger()) { CallBase = true };
 
         try
         {
