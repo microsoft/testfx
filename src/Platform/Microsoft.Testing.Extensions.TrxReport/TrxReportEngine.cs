@@ -507,7 +507,7 @@ internal sealed partial class TrxReportEngine
                 output.Add(new XElement("DebugTrace", RemoveInvalidXmlChar(string.Join(Environment.NewLine, debugOrTraceMessages))));
             }
 
-            TrxExceptionProperty? trxException = testNode.Properties.SingleOrDefault<TrxExceptionProperty>();
+            TrxExceptionProperty? trxException = nodeMessage.Properties.SingleOrDefault<TrxExceptionProperty>();
             if (trxException?.Message is not null || trxException?.StackTrace is not null)
             {
                 XElement errorInfoElement = new("ErrorInfo");

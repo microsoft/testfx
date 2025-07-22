@@ -6,6 +6,7 @@ using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.Requests;
+using Microsoft.Testing.Platform.TestHost;
 
 namespace TestFramework.ForTestingMSTest;
 
@@ -109,26 +110,26 @@ internal sealed class TestFrameworkEngine : IDataProducer
 
                 bool isSuccessRun = false;
 
-                object? testClassInstance = await TryRunSetupMethodAsync(testContainerType, setupMethod, testNode, PublishNodeUpdateAsync);
+                object? testClassInstance = await TryRunSetupMethodAsync(testContainerType, setupMethod, request.Session.SessionUid, testNode, PublishNodeUpdateAsync);
                 if (testClassInstance is not null)
                 {
-                    isSuccessRun = await RunTestMethodAsync(testClassInstance, publicMethod, testNode, PublishNodeUpdateAsync);
+                    isSuccessRun = await RunTestMethodAsync(testClassInstance, publicMethod, request.Session.SessionUid, testNode, PublishNodeUpdateAsync);
                 }
 
                 // Always call teardown even if previous steps failed because we want to try to clean as much as we can.
-                bool isSuccessTeardown = await RunTestTeardownAsync(testClassInstance, testContainerType, teardownMethod, testNode, PublishNodeUpdateAsync);
+                bool isSuccessTeardown = await RunTestTeardownAsync(testClassInstance, testContainerType, teardownMethod, request.Session.SessionUid, testNode, PublishNodeUpdateAsync);
 
                 if (isSuccessRun && isSuccessTeardown)
                 {
                     testNode.Properties.Add(PassedTestNodeStateProperty.CachedInstance);
-                    await PublishNodeUpdateAsync(testNode);
+                    await PublishNodeUpdateAsync(new TestNodeUpdateMessage(request.Session.SessionUid, testNode));
                 }
             }
         }
 
         // Local functions
-        Task PublishNodeUpdateAsync(TestNode testNode)
-            => messageBus.PublishAsync(this, new TestNodeUpdateMessage(request.Session.SessionUid, testNode));
+        Task PublishNodeUpdateAsync(TestNodeUpdateMessage testNodeUpdateMessage)
+            => messageBus.PublishAsync(this, testNodeUpdateMessage);
     }
 
     private async Task ExecuteTestNodeDiscoveryAsync(DiscoverTestExecutionRequest request, IMessageBus messageBus,
@@ -199,8 +200,8 @@ internal sealed class TestFrameworkEngine : IDataProducer
         return false;
     }
 
-    private async Task<object?> TryRunSetupMethodAsync(TypeInfo testContainerType, ConstructorInfo setupMethod, TestNode testNode,
-        Func<TestNode, Task> publishNodeUpdateAsync)
+    private async Task<object?> TryRunSetupMethodAsync(TypeInfo testContainerType, ConstructorInfo setupMethod, SessionUid sessionUid, TestNode testNode,
+        Func<TestNodeUpdateMessage, Task> publishNodeUpdateAsync)
     {
         try
         {
@@ -213,14 +214,15 @@ internal sealed class TestFrameworkEngine : IDataProducer
             _logger.LogError("Error during test setup", realException);
             TestNode errorNode = CloneTestNode(testNode);
             errorNode.Properties.Add(new ErrorTestNodeStateProperty(ex));
-            errorNode.Properties.Add(new TrxExceptionProperty(ex.Message, ex.StackTrace));
-            await publishNodeUpdateAsync(errorNode);
+            var testNodeUpdateMessage = new TestNodeUpdateMessage(sessionUid, errorNode);
+            testNodeUpdateMessage.Properties.Add(new TrxExceptionProperty(ex.Message, ex.StackTrace));
+            await publishNodeUpdateAsync(testNodeUpdateMessage);
             return null;
         }
     }
 
-    private async Task<bool> RunTestMethodAsync(object testClassInstance, MethodInfo publicMethod, TestNode testNode,
-        Func<TestNode, Task> publishNodeUpdateAsync)
+    private async Task<bool> RunTestMethodAsync(object testClassInstance, MethodInfo publicMethod, SessionUid sessionUid, TestNode testNode,
+        Func<TestNodeUpdateMessage, Task> publishNodeUpdateAsync)
     {
         try
         {
@@ -237,16 +239,17 @@ internal sealed class TestFrameworkEngine : IDataProducer
             Exception realException = ex is TargetInvocationException ? ex.InnerException! : ex;
             _logger.LogError("Error during test", realException);
             TestNode errorNode = CloneTestNode(testNode);
+            var testNodeUpdateMessage = new TestNodeUpdateMessage(sessionUid, errorNode);
             errorNode.Properties.Add(new ErrorTestNodeStateProperty(realException));
-            errorNode.Properties.Add(new TrxExceptionProperty(realException.Message, realException.StackTrace));
-            await publishNodeUpdateAsync(errorNode);
+            testNodeUpdateMessage.Properties.Add(new TrxExceptionProperty(realException.Message, realException.StackTrace));
+            await publishNodeUpdateAsync(testNodeUpdateMessage);
 
             return false;
         }
     }
 
-    private async Task<bool> RunTestTeardownAsync(object? testClassInstance, TypeInfo testContainerType, MethodInfo teardownMethod, TestNode testNode,
-        Func<TestNode, Task> publishNodeUpdateAsync)
+    private async Task<bool> RunTestTeardownAsync(object? testClassInstance, TypeInfo testContainerType, MethodInfo teardownMethod, SessionUid sessionUid, TestNode testNode,
+        Func<TestNodeUpdateMessage, Task> publishNodeUpdateAsync)
     {
         try
         {
@@ -263,8 +266,9 @@ internal sealed class TestFrameworkEngine : IDataProducer
             Exception realException = ex.InnerException ?? ex;
             _logger.LogError("Error during test teardown", realException);
             TestNode errorNode = CloneTestNode(testNode);
+            var testNodeUpdateMessage = new TestNodeUpdateMessage(sessionUid, errorNode);
             errorNode.Properties.Add(new ErrorTestNodeStateProperty(ex));
-            await publishNodeUpdateAsync(errorNode);
+            await publishNodeUpdateAsync(testNodeUpdateMessage);
 
             return false;
         }

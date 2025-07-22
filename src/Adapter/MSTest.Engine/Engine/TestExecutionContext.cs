@@ -14,14 +14,17 @@ internal sealed class TestExecutionContext : ITestExecutionContext
 {
     private readonly CancellationTokenSource _cancellationTokenSource;
     private readonly PlatformTestNode _platformTestNode;
+    private readonly TestNodeUpdateMessage? _testNodeUpdateMessage;
+
     private readonly ITrxReportCapability? _trxReportCapability;
     private readonly CancellationToken _originalCancellationToken;
 
-    public TestExecutionContext(IConfiguration configuration, TestNode testNode, PlatformTestNode platformTestNode,
+    public TestExecutionContext(IConfiguration configuration, TestNode testNode, PlatformTestNode platformTestNode, TestNodeUpdateMessage? testNodeUpdateMessage,
         ITrxReportCapability? trxReportCapability, CancellationToken cancellationToken)
     {
         Configuration = configuration;
         _platformTestNode = platformTestNode;
+        _testNodeUpdateMessage = testNodeUpdateMessage;
         _trxReportCapability = trxReportCapability;
         TestInfo = new TestInfo(testNode);
         _cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
@@ -45,9 +48,9 @@ internal sealed class TestExecutionContext : ITestExecutionContext
 
     public void ReportException(Exception exception, CancellationToken? timeoutCancellationToken = null)
     {
-        if (_trxReportCapability is not null && _trxReportCapability.IsSupported)
+        if (_trxReportCapability is not null && _trxReportCapability.IsSupported && _testNodeUpdateMessage is not null)
         {
-            AddTrxExceptionInformation(_platformTestNode.Properties, exception);
+            AddTrxExceptionInformation(_testNodeUpdateMessage.Properties, exception);
         }
 
         TestNodeStateProperty executionState = exception switch

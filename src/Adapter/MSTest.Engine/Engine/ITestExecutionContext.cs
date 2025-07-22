@@ -5,7 +5,7 @@ using Microsoft.Testing.Framework.Configurations;
 
 namespace Microsoft.Testing.Framework;
 
-public interface ITestExecutionContext
+internal interface ITestExecutionContext
 {
     CancellationToken CancellationToken { get; }
 
