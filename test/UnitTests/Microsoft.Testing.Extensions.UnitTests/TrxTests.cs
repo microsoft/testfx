@@ -566,11 +566,18 @@ public class TrxTests
            bool? adapterSupportTrxCapability = null, int notExecutedTestsCount = 0, int timeoutTestsCount = 0,
            bool isExplicitFileName = false)
     {
-        var testNode = new TestNodeUpdateMessage(
+        // TODO: Don't add the properties to both TestNodeUpdateMessage and TestNode.
+        // This method should accept two property bags, one for TestNodeUpdateMessage and one for TestNode.
+        // And callers need to be adjusted accordingly.
+        var testNodeUpdateMessage = new TestNodeUpdateMessage(
             new SessionUid("1"),
             new TestNode { Uid = new TestNodeUid("test()"), DisplayName = "TestMethod", Properties = propertyBag });
+        foreach (IProperty prop in propertyBag)
+        {
+            testNodeUpdateMessage.Properties.Add(prop);
+        }
 
-        TestNodeUpdateMessage[] testNodeUpdatedMessages = [testNode];
+        TestNodeUpdateMessage[] testNodeUpdatedMessages = [testNodeUpdateMessage];
 
         DateTime testStartTime = DateTime.Now;
         CancellationToken cancellationToken = CancellationToken.None;

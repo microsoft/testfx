@@ -71,12 +71,6 @@ internal sealed class TestExecutionContext : ITestExecutionContext
         }
     }
 
-    public Task AddTestAttachmentAsync(FileInfo file, string displayName, string? description = null)
-    {
-        _platformTestNode.Properties.Add(new FileArtifactProperty(file, displayName, description));
-        return Task.CompletedTask;
-    }
-
     private static void AddTrxExceptionInformation(PropertyBag propertyBag, Exception? exception)
     {
         Exception? flatException = exception != null
