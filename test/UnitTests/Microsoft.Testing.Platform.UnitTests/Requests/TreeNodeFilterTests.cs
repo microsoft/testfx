@@ -81,6 +81,36 @@ public sealed class TreeNodeFilterTests
     }
 
     [TestMethod]
+    public void NotExpression_DisallowSuffix()
+    {
+        TreeNodeFilter filter = new("/(!*UnitTests)");
+        Assert.IsFalse(filter.MatchesFilter("/A.UnitTests", new PropertyBag()));
+        Assert.IsFalse(filter.MatchesFilter("/UnitTests", new PropertyBag()));
+        Assert.IsTrue(filter.MatchesFilter("/A", new PropertyBag()));
+        Assert.IsTrue(filter.MatchesFilter("/UnitTests.A", new PropertyBag()));
+    }
+
+    [TestMethod]
+    public void NotExpression_DisallowPrefix()
+    {
+        TreeNodeFilter filter = new("/(!UnitTests*)");
+        Assert.IsFalse(filter.MatchesFilter("/UnitTests.A", new PropertyBag()));
+        Assert.IsFalse(filter.MatchesFilter("/UnitTests", new PropertyBag()));
+        Assert.IsTrue(filter.MatchesFilter("/A", new PropertyBag()));
+        Assert.IsTrue(filter.MatchesFilter("/A.UnitTests", new PropertyBag()));
+    }
+
+    [TestMethod]
+    public void NotExpression_DisallowContains()
+    {
+        TreeNodeFilter filter = new("/(!*UnitTests*)");
+        Assert.IsFalse(filter.MatchesFilter("/UnitTests.A", new PropertyBag()));
+        Assert.IsFalse(filter.MatchesFilter("/A.UnitTests", new PropertyBag()));
+        Assert.IsFalse(filter.MatchesFilter("/UnitTests", new PropertyBag()));
+        Assert.IsTrue(filter.MatchesFilter("/A", new PropertyBag()));
+    }
+
+    [TestMethod]
     public void Parentheses_EnsuresOrdering()
     {
         TreeNodeFilter filter = new("/((*.UnitTests)&(*ProjectB*))|C");
