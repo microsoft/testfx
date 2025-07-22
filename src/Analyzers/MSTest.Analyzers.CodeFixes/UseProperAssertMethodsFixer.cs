@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Composition;
 
@@ -242,7 +243,11 @@ public sealed class UseProperAssertMethodsFixer : CodeFixProvider
         FixInvocationMethodName(editor, simpleNameSyntax, properAssertMethodName);
 
         // Preserve any additional arguments beyond the first two (expected/actual)
-        var additionalArguments = argumentList.Arguments.Skip(2).ToList();
+        var additionalArguments = new List<ArgumentSyntax>();
+        for (int i = 2; i < argumentList.Arguments.Count; i++)
+        {
+            additionalArguments.Add(argumentList.Arguments[i]);
+        }
 
         ArgumentListSyntax newArgumentList;
 
