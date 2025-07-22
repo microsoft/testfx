@@ -27,6 +27,7 @@ public class TestExecutionManagerTests : TestContainer
     private readonly TestRunCancellationToken _cancellationToken;
     private readonly TestExecutionManager _testExecutionManager;
     private readonly Mock<IMessageLogger> _mockMessageLogger;
+    private readonly Mock<ITestSourceHandler> _mockTestSourceHandler;
 
     private readonly TestProperty[] _tcmKnownProperties =
     [
@@ -57,6 +58,7 @@ public class TestExecutionManagerTests : TestContainer
         _frameworkHandle = new TestableFrameworkHandle();
         _cancellationToken = new TestRunCancellationToken();
         _mockMessageLogger = new Mock<IMessageLogger>();
+        _mockTestSourceHandler = new Mock<ITestSourceHandler>();
 
         _testExecutionManager = new TestExecutionManager(
             new EnvironmentWrapper(),
@@ -358,7 +360,7 @@ public class TestExecutionManagerTests : TestContainer
     {
         var sources = new List<string> { Assembly.GetExecutingAssembly().Location };
 
-        await _testExecutionManager.RunTestsAsync(sources, _runContext, _frameworkHandle, new TestSourceHandler(), _cancellationToken);
+        await _testExecutionManager.RunTestsAsync(sources, _runContext, _frameworkHandle, _mockTestSourceHandler.Object, _cancellationToken);
 
         Verify(_frameworkHandle.TestCaseStartList.Contains("PassingTest"));
         Verify(_frameworkHandle.TestCaseEndList.Contains("PassingTest:Passed"));
@@ -380,7 +382,7 @@ public class TestExecutionManagerTests : TestContainer
             </RunSettings>
             """);
 
-        await _testExecutionManager.RunTestsAsync(sources, _runContext, _frameworkHandle, new TestSourceHandler(), _cancellationToken);
+        await _testExecutionManager.RunTestsAsync(sources, _runContext, _frameworkHandle, _mockTestSourceHandler.Object, _cancellationToken);
 
         Verify(
             DummyTestClass.TestContextProperties!.Contains(
@@ -392,7 +394,7 @@ public class TestExecutionManagerTests : TestContainer
     {
         var sources = new List<string> { Assembly.GetExecutingAssembly().Location };
 
-        await _testExecutionManager.RunTestsAsync(sources, _runContext, _frameworkHandle, new TestSourceHandler(), _cancellationToken);
+        await _testExecutionManager.RunTestsAsync(sources, _runContext, _frameworkHandle, _mockTestSourceHandler.Object, _cancellationToken);
 
         Verify(DummyTestClass.TestContextProperties is not null);
     }
@@ -406,7 +408,7 @@ public class TestExecutionManagerTests : TestContainer
             ExecuteTestsWrapper = (tests, runContext, frameworkHandle, isDeploymentDone) => testsCount += tests.Count(),
         };
 
-        await testableTestExecutionManager.RunTestsAsync(sources, _runContext, _frameworkHandle, new TestSourceHandler(), _cancellationToken);
+        await testableTestExecutionManager.RunTestsAsync(sources, _runContext, _frameworkHandle, _mockTestSourceHandler.Object, _cancellationToken);
         Verify(testsCount == 4);
     }
 
