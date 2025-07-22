@@ -144,6 +144,49 @@ public sealed class TreeNodeFilterTests
     }
 
     [TestMethod]
+    public void NotExpression_CombinedWithAND_NotParenthesized()
+    {
+        // Matches anything that doesn't start with A, but should end with Z
+        TreeNodeFilter filter = new("/(!A*&*Z)");
+
+        // Cases not ending with Z, filter doesn't match.
+        Assert.IsFalse(filter.MatchesFilter("/A", new PropertyBag()));
+        Assert.IsFalse(filter.MatchesFilter("/ZA", new PropertyBag()));
+        Assert.IsFalse(filter.MatchesFilter("/AZA", new PropertyBag()));
+
+        // Cases ending with Z but starts with A. Filter shouldn't match.
+        Assert.IsFalse(filter.MatchesFilter("/AZ", new PropertyBag()));
+        Assert.IsFalse(filter.MatchesFilter("/ABZ", new PropertyBag()));
+
+        // Cases ending with Z and don't start with A. Filter should match.
+        Assert.IsTrue(filter.MatchesFilter("/BAZ", new PropertyBag()));
+        Assert.IsTrue(filter.MatchesFilter("/BZ", new PropertyBag()));
+    }
+
+    [TestMethod]
+    public void NotExpression_CombinedWithOR_NotParenthesized()
+    {
+        // Matches anything that either doesn't start with A, or ends with Z
+        TreeNodeFilter filter = new("/(!A*|*Z)");
+
+        // Cases not starting with A
+        Assert.IsTrue(filter.MatchesFilter("/Y", new PropertyBag()));
+        Assert.IsTrue(filter.MatchesFilter("/Z", new PropertyBag()));
+        Assert.IsTrue(filter.MatchesFilter("/ZA", new PropertyBag()));
+        Assert.IsTrue(filter.MatchesFilter("/ZAZ", new PropertyBag()));
+        Assert.IsTrue(filter.MatchesFilter("/YAZ", new PropertyBag()));
+
+        // Cases starting with A, and ending with Z
+        Assert.IsTrue(filter.MatchesFilter("/AZ", new PropertyBag()));
+        Assert.IsTrue(filter.MatchesFilter("/ABZ", new PropertyBag()));
+
+        // Cases starting with A, and not ending with Z
+        Assert.IsFalse(filter.MatchesFilter("/A", new PropertyBag()));
+        Assert.IsFalse(filter.MatchesFilter("/AB", new PropertyBag()));
+        Assert.IsFalse(filter.MatchesFilter("/AZB", new PropertyBag()));
+    }
+
+    [TestMethod]
     public void Parentheses_EnsuresOrdering()
     {
         TreeNodeFilter filter = new("/((*.UnitTests)&(*ProjectB*))|C");
