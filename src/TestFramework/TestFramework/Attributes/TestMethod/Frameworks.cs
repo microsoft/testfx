@@ -23,24 +23,4 @@ public enum Frameworks
     /// Represents .NET 5 and later versions (unified platform).
     /// </summary>
     Net = 1 << 2,
-
-    /// <summary>
-    /// Represents .NET 6 and later versions.
-    /// </summary>
-    Net6OrGreater = 1 << 3,
-
-    /// <summary>
-    /// Represents .NET 7 and later versions.
-    /// </summary>
-    Net7OrGreater = 1 << 4,
-
-    /// <summary>
-    /// Represents .NET 8 and later versions.
-    /// </summary>
-    Net8OrGreater = 1 << 5,
-
-    /// <summary>
-    /// Represents .NET 9 and later versions.
-    /// </summary>
-    Net9OrGreater = 1 << 6,
 }

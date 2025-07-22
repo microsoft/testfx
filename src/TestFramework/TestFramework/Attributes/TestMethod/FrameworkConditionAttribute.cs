@@ -63,7 +63,6 @@ public sealed class FrameworkConditionAttribute : ConditionBaseAttribute
     private static Frameworks GetCurrentFramework()
     {
         string frameworkDescription = RuntimeInformation.FrameworkDescription;
-        Version version = Environment.Version;
 
         // Check for .NET Framework
         if (frameworkDescription.StartsWith(".NET Framework", StringComparison.OrdinalIgnoreCase))
@@ -77,30 +76,10 @@ public sealed class FrameworkConditionAttribute : ConditionBaseAttribute
             return Frameworks.NetCore;
         }
 
-        // Check for .NET 5+
+        // Check for .NET 5+ (includes .NET 5, 6, 7, 8, 9, etc.)
         if (frameworkDescription.StartsWith(".NET ", StringComparison.OrdinalIgnoreCase))
         {
-            Frameworks framework = Frameworks.Net;
-
-            // Add version-specific flags
-            if (version.Major >= 6)
-            {
-                framework |= Frameworks.Net6OrGreater;
-            }
-            if (version.Major >= 7)
-            {
-                framework |= Frameworks.Net7OrGreater;
-            }
-            if (version.Major >= 8)
-            {
-                framework |= Frameworks.Net8OrGreater;
-            }
-            if (version.Major >= 9)
-            {
-                framework |= Frameworks.Net9OrGreater;
-            }
-
-            return framework;
+            return Frameworks.Net;
         }
 
         // Default to .NET for unknown cases

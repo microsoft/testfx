@@ -43,10 +43,6 @@ static Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert.Equals(object? 
 static Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert.ReferenceEquals(object? objA, object? objB) -> bool
 Microsoft.VisualStudio.TestTools.UnitTesting.Frameworks
 Microsoft.VisualStudio.TestTools.UnitTesting.Frameworks.Net = 4 -> Microsoft.VisualStudio.TestTools.UnitTesting.Frameworks
-Microsoft.VisualStudio.TestTools.UnitTesting.Frameworks.Net6OrGreater = 8 -> Microsoft.VisualStudio.TestTools.UnitTesting.Frameworks
-Microsoft.VisualStudio.TestTools.UnitTesting.Frameworks.Net7OrGreater = 16 -> Microsoft.VisualStudio.TestTools.UnitTesting.Frameworks
-Microsoft.VisualStudio.TestTools.UnitTesting.Frameworks.Net8OrGreater = 32 -> Microsoft.VisualStudio.TestTools.UnitTesting.Frameworks
-Microsoft.VisualStudio.TestTools.UnitTesting.Frameworks.Net9OrGreater = 64 -> Microsoft.VisualStudio.TestTools.UnitTesting.Frameworks
 Microsoft.VisualStudio.TestTools.UnitTesting.Frameworks.NetCore = 2 -> Microsoft.VisualStudio.TestTools.UnitTesting.Frameworks
 Microsoft.VisualStudio.TestTools.UnitTesting.Frameworks.NetFramework = 1 -> Microsoft.VisualStudio.TestTools.UnitTesting.Frameworks
 Microsoft.VisualStudio.TestTools.UnitTesting.FrameworkConditionAttribute

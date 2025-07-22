@@ -114,20 +114,16 @@ public class FrameworkConditionAttributeTests : TestContainer
         attribute.ShouldRun.Should().BeFalse();
     }
 
-    public void ShouldRun_Net8OrGreater_OnNet8_ReturnsTrue()
+    public void ShouldRun_Net_OnCurrentDotNet_ReturnsTrue()
     {
         // Arrange
-        var attribute = new FrameworkConditionAttribute(Frameworks.Net8OrGreater);
+        var attribute = new FrameworkConditionAttribute(Frameworks.Net);
 
         // Act & Assert
-        // This test assumes we're running on .NET 8+ in the test environment
-        if (Environment.Version.Major >= 8)
+        // This test verifies that .NET 5+ apps match the Net flag
+        if (Environment.Version.Major >= 5 && !System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription.StartsWith(".NET Core", StringComparison.OrdinalIgnoreCase))
         {
             attribute.ShouldRun.Should().BeTrue();
-        }
-        else
-        {
-            attribute.ShouldRun.Should().BeFalse();
         }
     }
 
@@ -156,7 +152,6 @@ public class FrameworkConditionAttributeTests : TestContainer
     private static Frameworks GetCurrentFrameworkEnum()
     {
         string frameworkDescription = System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription;
-        Version version = Environment.Version;
 
         if (frameworkDescription.StartsWith(".NET Framework", StringComparison.OrdinalIgnoreCase))
         {
@@ -169,25 +164,7 @@ public class FrameworkConditionAttributeTests : TestContainer
         }
 
         // .NET 5+
-        Frameworks framework = Frameworks.Net;
-        if (version.Major >= 6)
-        {
-            framework |= Frameworks.Net6OrGreater;
-        }
-        if (version.Major >= 7)
-        {
-            framework |= Frameworks.Net7OrGreater;
-        }
-        if (version.Major >= 8)
-        {
-            framework |= Frameworks.Net8OrGreater;
-        }
-        if (version.Major >= 9)
-        {
-            framework |= Frameworks.Net9OrGreater;
-        }
-
-        return framework;
+        return Frameworks.Net;
     }
 
     private static Frameworks GetDifferentFramework(Frameworks current)
