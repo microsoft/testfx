@@ -68,7 +68,7 @@ public class TrxTests
         XDocument xml = memoryStream.TrxContent;
         AssertTrxOutcome(xml, "Completed");
         string trxContent = xml.ToString();
-        Assert.IsTrue(trxContent.Contains(@"notExecuted=""1"""));
+        Assert.Contains(@"notExecuted=""1""", trxContent);
     }
 
     [TestMethod]
@@ -89,7 +89,7 @@ public class TrxTests
         XDocument xml = memoryStream.TrxContent;
         AssertTrxOutcome(xml, "Completed");
         string trxContent = xml.ToString();
-        Assert.IsTrue(trxContent.Contains(@"timeout=""1"""));
+        Assert.Contains(@"timeout=""1""", trxContent);
     }
 
     [TestMethod]
@@ -405,7 +405,7 @@ stdout trx message</StdOut>
         XDocument xml = memoryStream.TrxContent;
         AssertTrxOutcome(xml, "Completed");
         string trxContent = xml.ToString();
-        Assert.IsTrue(trxContent.Contains(@"className=""TrxFullyQualifiedTypeName"), trxContent);
+        Assert.Contains(@"className=""TrxFullyQualifiedTypeName", trxContent, trxContent);
     }
 
     [TestMethod]

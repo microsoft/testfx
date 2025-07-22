@@ -130,7 +130,7 @@ module MicrosoftTestingPlatformEntryPoint =
         var testHost = TestInfrastructure.TestHost.LocateFrom(testAsset.TargetAssetPath, AssetName, tfm, rid: RID, verb: verb, buildConfiguration: compilationMode);
         TestHostResult testHostResult = await testHost.ExecuteAsync();
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
-        Assert.IsTrue(testHostResult.StandardOutput.Contains("Passed!"));
+        Assert.Contains("Passed!", testHostResult.StandardOutput);
 
         SL.Target coreCompile = binLog.FindChildrenRecursive<SL.Target>().Single(t => t.Name == "CoreCompile" && t.Children.Count > 0);
         SL.Task csc = coreCompile.FindChildrenRecursive<SL.Task>(t => t.Name == cscProcessName).Single();
@@ -147,7 +147,7 @@ module MicrosoftTestingPlatformEntryPoint =
         testHost = TestInfrastructure.TestHost.LocateFrom(testAsset.TargetAssetPath, AssetName, tfm, rid: RID, verb: verb, buildConfiguration: compilationMode);
         testHostResult = await testHost.ExecuteAsync();
         Assert.AreEqual(ExitCodes.Success, testHostResult.ExitCode);
-        Assert.IsTrue(testHostResult.StandardOutput.Contains("Passed!"));
+        Assert.Contains("Passed!", testHostResult.StandardOutput);
     }
 
     private const string CSharpSourceCode = """

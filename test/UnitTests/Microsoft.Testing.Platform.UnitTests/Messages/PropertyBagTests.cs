@@ -40,14 +40,14 @@ public sealed class PropertyBagTests
         PropertyBag property = new();
 
         Assert.IsFalse(property.Any<TestNodeStateProperty>());
-        Assert.AreEqual(0, property.OfType<TestNodeStateProperty>().Length);
+        Assert.IsEmpty(property.OfType<TestNodeStateProperty>());
 
         property.Add(PassedTestNodeStateProperty.CachedInstance);
 
         Assert.AreEqual(PassedTestNodeStateProperty.CachedInstance, property.Single<TestNodeStateProperty>());
         Assert.AreEqual(PassedTestNodeStateProperty.CachedInstance, property.SingleOrDefault<TestNodeStateProperty>());
         Assert.IsTrue(property.Any<TestNodeStateProperty>());
-        Assert.AreEqual(1, property.OfType<TestNodeStateProperty>().Length);
+        Assert.HasCount(1, property.OfType<TestNodeStateProperty>());
     }
 
     [TestMethod]
@@ -120,7 +120,7 @@ public sealed class PropertyBagTests
         property.Add(PassedTestNodeStateProperty.CachedInstance);
 
         Assert.AreEqual(PassedTestNodeStateProperty.CachedInstance, property.OfType<TestNodeStateProperty>().Single());
-        Assert.AreEqual(2, property.OfType<DummyProperty>().Length);
+        Assert.HasCount(2, property.OfType<DummyProperty>());
     }
 
     [TestMethod]
@@ -141,7 +141,7 @@ public sealed class PropertyBagTests
             list.Remove(prop);
         }
 
-        Assert.AreEqual(0, list.Count);
+        Assert.IsEmpty(list);
 
         list = [.. property.AsEnumerable()];
         foreach (IProperty prop in property)
@@ -149,7 +149,7 @@ public sealed class PropertyBagTests
             list.Remove(prop);
         }
 
-        Assert.AreEqual(0, list.Count);
+        Assert.IsEmpty(list);
     }
 
     [TestMethod]
@@ -160,7 +160,7 @@ public sealed class PropertyBagTests
         Assert.IsFalse(property.Any<TestNodeStateProperty>());
         Assert.IsNull(property.SingleOrDefault<TestNodeStateProperty>());
         Assert.ThrowsExactly<InvalidOperationException>(property.Single<TestNodeStateProperty>);
-        Assert.AreEqual(0, property.OfType<TestNodeStateProperty>().Length);
+        Assert.IsEmpty(property.OfType<TestNodeStateProperty>());
         Assert.AreEqual(0, property.AsEnumerable().Count());
 
         foreach (IProperty item in property)
