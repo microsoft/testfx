@@ -78,8 +78,7 @@ public sealed class FrameworkConditionAttribute : ConditionBaseAttribute
         }
 
         // Check for .NET 5+
-        if (frameworkDescription.StartsWith(".NET ", StringComparison.OrdinalIgnoreCase) ||
-            frameworkDescription.StartsWith(".NET Core", StringComparison.OrdinalIgnoreCase))
+        if (frameworkDescription.StartsWith(".NET ", StringComparison.OrdinalIgnoreCase))
         {
             Frameworks framework = Frameworks.Net;
 
