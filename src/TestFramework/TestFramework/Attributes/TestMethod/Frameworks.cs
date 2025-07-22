@@ -23,4 +23,9 @@ public enum Frameworks
     /// Represents .NET 5 and later versions (unified platform).
     /// </summary>
     Net = 1 << 2,
+
+    /// <summary>
+    /// Represents Universal Windows Platform (UWP).
+    /// </summary>
+    Uwp = 1 << 3,
 }

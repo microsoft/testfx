@@ -69,6 +69,24 @@ public class FrameworkConditionAttributeTests : TestContainer
         attribute.IgnoreMessage.Should().Be("Test is only supported on NetFramework, NetCore");
     }
 
+    public void IgnoreMessage_UwpFramework_ReturnsCorrectMessage()
+    {
+        // Arrange
+        var attribute = new FrameworkConditionAttribute(ConditionMode.Include, Frameworks.Uwp);
+
+        // Act & Assert
+        attribute.IgnoreMessage.Should().Be("Test is only supported on Uwp");
+    }
+
+    public void IgnoreMessage_ExcludeUwpFramework_ReturnsCorrectMessage()
+    {
+        // Arrange
+        var attribute = new FrameworkConditionAttribute(ConditionMode.Exclude, Frameworks.Uwp);
+
+        // Act & Assert
+        attribute.IgnoreMessage.Should().Be("Test is not supported on Uwp");
+    }
+
     public void ShouldRun_IncludeMode_CurrentFrameworkMatches_ReturnsTrue()
     {
         // Arrange
@@ -149,8 +167,51 @@ public class FrameworkConditionAttributeTests : TestContainer
         attribute.ShouldRun.Should().BeFalse();
     }
 
+    public void ShouldRun_UwpFramework_OnNonUwp_ReturnsFalse()
+    {
+        // Arrange
+        var attribute = new FrameworkConditionAttribute(Frameworks.Uwp);
+
+        // Act & Assert
+        // This test assumes we're not running on UWP in the test environment
+        if (!IsRunningOnUwp())
+        {
+            attribute.ShouldRun.Should().BeFalse();
+        }
+    }
+
+    public void ShouldRun_ExcludeUwpFramework_OnNonUwp_ReturnsTrue()
+    {
+        // Arrange
+        var attribute = new FrameworkConditionAttribute(ConditionMode.Exclude, Frameworks.Uwp);
+
+        // Act & Assert
+        // This test assumes we're not running on UWP in the test environment
+        if (!IsRunningOnUwp())
+        {
+            attribute.ShouldRun.Should().BeFalse();
+        }
+    }
+
+    public void ShouldRun_MultipleFrameworksIncludingUwp_IncludesCurrent_ReturnsTrue()
+    {
+        // Arrange
+        var currentFramework = GetCurrentFrameworkEnum();
+        var multipleFrameworks = currentFramework | Frameworks.Uwp; // Include current plus UWP
+        var attribute = new FrameworkConditionAttribute(ConditionMode.Include, multipleFrameworks);
+
+        // Act & Assert
+        attribute.ShouldRun.Should().BeTrue();
+    }
+
     private static Frameworks GetCurrentFrameworkEnum()
     {
+        // Check for UWP first
+        if (IsRunningOnUwp())
+        {
+            return Frameworks.Uwp;
+        }
+
         string frameworkDescription = System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription;
 
         if (frameworkDescription.StartsWith(".NET Framework", StringComparison.OrdinalIgnoreCase))
@@ -167,6 +228,31 @@ public class FrameworkConditionAttributeTests : TestContainer
         return Frameworks.Net;
     }
 
+    private static bool IsRunningOnUwp()
+    {
+        try
+        {
+            // Try to access Windows.ApplicationModel.Package.Current
+            // This is only available in UWP applications
+            var packageType = Type.GetType("Windows.ApplicationModel.Package, Windows.Runtime");
+            if (packageType is not null)
+            {
+                var currentProperty = packageType.GetProperty("Current");
+                if (currentProperty is not null)
+                {
+                    var current = currentProperty.GetValue(null);
+                    return current is not null;
+                }
+            }
+        }
+        catch
+        {
+            // If we can't access the UWP APIs, we're not running on UWP
+        }
+
+        return false;
+    }
+
     private static Frameworks GetDifferentFramework(Frameworks current)
     {
         // Return a framework that's different from the current one
@@ -179,6 +265,10 @@ public class FrameworkConditionAttributeTests : TestContainer
             return Frameworks.NetFramework;
         }
         if ((current & Frameworks.Net) != 0)
+        {
+            return Frameworks.NetFramework;
+        }
+        if ((current & Frameworks.Uwp) != 0)
         {
             return Frameworks.NetFramework;
         }

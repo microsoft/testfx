@@ -64,6 +64,12 @@ public sealed class FrameworkConditionAttribute : ConditionBaseAttribute
     {
         string frameworkDescription = RuntimeInformation.FrameworkDescription;
 
+        // Check for UWP first as it may also have .NET Core or .NET in its description
+        if (IsRunningOnUwp())
+        {
+            return Frameworks.Uwp;
+        }
+
         // Check for .NET Framework
         if (frameworkDescription.StartsWith(".NET Framework", StringComparison.OrdinalIgnoreCase))
         {
@@ -84,5 +90,30 @@ public sealed class FrameworkConditionAttribute : ConditionBaseAttribute
 
         // Default to .NET for unknown cases
         return Frameworks.Net;
+    }
+
+    private static bool IsRunningOnUwp()
+    {
+        try
+        {
+            // Try to access Windows.ApplicationModel.Package.Current
+            // This is only available in UWP applications
+            var packageType = Type.GetType("Windows.ApplicationModel.Package, Windows.Runtime");
+            if (packageType is not null)
+            {
+                var currentProperty = packageType.GetProperty("Current");
+                if (currentProperty is not null)
+                {
+                    var current = currentProperty.GetValue(null);
+                    return current is not null;
+                }
+            }
+        }
+        catch
+        {
+            // If we can't access the UWP APIs, we're not running on UWP
+        }
+
+        return false;
     }
 }

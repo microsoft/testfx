@@ -45,6 +45,7 @@ Microsoft.VisualStudio.TestTools.UnitTesting.Frameworks
 Microsoft.VisualStudio.TestTools.UnitTesting.Frameworks.Net = 4 -> Microsoft.VisualStudio.TestTools.UnitTesting.Frameworks
 Microsoft.VisualStudio.TestTools.UnitTesting.Frameworks.NetCore = 2 -> Microsoft.VisualStudio.TestTools.UnitTesting.Frameworks
 Microsoft.VisualStudio.TestTools.UnitTesting.Frameworks.NetFramework = 1 -> Microsoft.VisualStudio.TestTools.UnitTesting.Frameworks
+Microsoft.VisualStudio.TestTools.UnitTesting.Frameworks.Uwp = 8 -> Microsoft.VisualStudio.TestTools.UnitTesting.Frameworks
 Microsoft.VisualStudio.TestTools.UnitTesting.FrameworkConditionAttribute
 Microsoft.VisualStudio.TestTools.UnitTesting.FrameworkConditionAttribute.FrameworkConditionAttribute(Microsoft.VisualStudio.TestTools.UnitTesting.ConditionMode mode, Microsoft.VisualStudio.TestTools.UnitTesting.Frameworks frameworks) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.FrameworkConditionAttribute.FrameworkConditionAttribute(Microsoft.VisualStudio.TestTools.UnitTesting.Frameworks frameworks) -> void
