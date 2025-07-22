@@ -57,7 +57,7 @@ internal enum OperatorKind
     And,
 
     /// <summary>
-    /// Operator used to negate an expression
+    /// Operator used to negate an expression.
     /// </summary>
     UnaryNot,
 }
