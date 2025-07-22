@@ -147,12 +147,13 @@ public class DummyTestFramework : ITestFramework, IDataProducer
 
         Thread.Sleep(60_000);
 
-        await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid, new TestNode()
+        var testNodeUpdateMessage = new TestNodeUpdateMessage(context.Request.Session.SessionUid, new TestNode()
         {
             Uid = "Test1",
-            DisplayName = "Test1",
-            Properties = new PropertyBag(new PassedTestNodeStateProperty()),
-        }));
+            DisplayName = "Test1"
+        });
+        testNodeUpdateMessage.Properties.Add(new PassedTestNodeStateProperty());
+        await context.MessageBus.PublishAsync(this, testNodeUpdateMessage);
 
         context.Complete();
     }

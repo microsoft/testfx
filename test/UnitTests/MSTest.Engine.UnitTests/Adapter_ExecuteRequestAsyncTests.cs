@@ -41,7 +41,7 @@ public class Adapter_ExecuteRequestAsyncTests : TestBase
         // Assert
         IEnumerable<TestNodeUpdateMessage> nodeStateChanges = services.MessageBus.Messages.OfType<TestNodeUpdateMessage>();
         Assert.IsTrue(nodeStateChanges.Any(), $"{nameof(nodeStateChanges)} should have at least 1 item.");
-        Platform.Extensions.Messages.TestNode lastNode = nodeStateChanges.Last().TestNode;
+        TestNodeUpdateMessage lastNode = nodeStateChanges.Last();
         _ = lastNode.Properties.Single<PassedTestNodeStateProperty>();
     }
 
@@ -74,11 +74,10 @@ public class Adapter_ExecuteRequestAsyncTests : TestBase
         IEnumerable<TestNodeUpdateMessage> nodeStateChanges = services.MessageBus.Messages.OfType<TestNodeUpdateMessage>();
         Assert.IsTrue(nodeStateChanges.Any(), $"{nameof(nodeStateChanges)} should have at least 1 item.");
         TestNodeUpdateMessage lastStateChange = nodeStateChanges.Last();
-        Platform.Extensions.Messages.TestNode lastNode = lastStateChange.TestNode;
-        _ = lastNode.Properties.Single<ErrorTestNodeStateProperty>();
-        Assert.AreEqual("Oh no!", lastNode.Properties.Single<ErrorTestNodeStateProperty>().Exception!.Message);
+        _ = lastStateChange.Properties.Single<ErrorTestNodeStateProperty>();
+        Assert.AreEqual("Oh no!", lastStateChange.Properties.Single<ErrorTestNodeStateProperty>().Exception!.Message);
         Assert.Contains(
-            nameof(ExecutableNode_ThatThrows_ShouldReportError), lastNode.Properties.Single<ErrorTestNodeStateProperty>().Exception!.StackTrace!, "lastNode properties should contain the name of the test");
+            nameof(ExecutableNode_ThatThrows_ShouldReportError), lastStateChange.Properties.Single<ErrorTestNodeStateProperty>().Exception!.StackTrace!, "lastNode properties should contain the name of the test");
         TimingProperty timingProperty = lastStateChange.Properties.Single<TimingProperty>();
         Assert.AreEqual(fakeClock.UsedTimes[0], timingProperty.GlobalTiming.StartTime);
         Assert.IsTrue(timingProperty.GlobalTiming.StartTime <= timingProperty.GlobalTiming.EndTime, "start time is before (or the same as) stop time");

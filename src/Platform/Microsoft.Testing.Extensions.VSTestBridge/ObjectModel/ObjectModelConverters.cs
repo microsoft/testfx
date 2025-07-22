@@ -152,7 +152,7 @@ internal static class ObjectModelConverters
         var testNodeUpdateMessage = new TestNodeUpdateMessage(sessionUid, testNode);
         CopyCategoryAndTraits(testResult, testNode, isTrxEnabled);
 
-        testNode.AddOutcome(testResult);
+        testNodeUpdateMessage.AddOutcome(testResult);
 
         if (isTrxEnabled)
         {
@@ -232,26 +232,26 @@ internal static class ObjectModelConverters
         return testNodeUpdateMessage;
     }
 
-    private static void AddOutcome(this TestNode testNode, TestResult testResult)
+    private static void AddOutcome(this TestNodeUpdateMessage testNodeUpdateMessage, TestResult testResult)
     {
         switch (testResult.Outcome)
         {
             case TestOutcome.Passed:
-                testNode.Properties.Add(PassedTestNodeStateProperty.CachedInstance);
+                testNodeUpdateMessage.Properties.Add(PassedTestNodeStateProperty.CachedInstance);
                 break;
 
             case TestOutcome.NotFound:
-                testNode.Properties.Add(new ErrorTestNodeStateProperty(new VSTestException(testResult.ErrorMessage ?? "Not found", testResult.ErrorStackTrace)));
+                testNodeUpdateMessage.Properties.Add(new ErrorTestNodeStateProperty(new VSTestException(testResult.ErrorMessage ?? "Not found", testResult.ErrorStackTrace)));
                 break;
 
             case TestOutcome.Failed:
-                testNode.Properties.Add(new FailedTestNodeStateProperty(new VSTestException(testResult.ErrorMessage, testResult.ErrorStackTrace)));
+                testNodeUpdateMessage.Properties.Add(new FailedTestNodeStateProperty(new VSTestException(testResult.ErrorMessage, testResult.ErrorStackTrace)));
                 break;
 
             // It seems that NUnit inconclusive tests are reported as None which should be considered as Skipped.
             case TestOutcome.None:
             case TestOutcome.Skipped:
-                testNode.Properties.Add(testResult.ErrorMessage is null
+                testNodeUpdateMessage.Properties.Add(testResult.ErrorMessage is null
                     ? SkippedTestNodeStateProperty.CachedInstance
                     : new SkippedTestNodeStateProperty(testResult.ErrorMessage));
                 break;

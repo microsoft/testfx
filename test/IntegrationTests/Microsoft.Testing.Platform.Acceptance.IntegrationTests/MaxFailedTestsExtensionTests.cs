@@ -99,31 +99,43 @@ internal class DummyTestFramework : ITestFramework, IDataProducer
     public async Task ExecuteRequestAsync(ExecuteRequestContext context)
     {
         // First fail.
-        await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid,
-            new TestNode() { Uid = "1", DisplayName = "Test1", Properties = new(new FailedTestNodeStateProperty()) }));
+        var message1 = new TestNodeUpdateMessage(context.Request.Session.SessionUid,
+            new TestNode() { Uid = "1", DisplayName = "Test1" });
+        message1.Properties.Add(new FailedTestNodeStateProperty());
+        await context.MessageBus.PublishAsync(this, message1);
 
-        await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid,
-            new TestNode() { Uid = "2", DisplayName = "Test2", Properties = new(PassedTestNodeStateProperty.CachedInstance) }));
+        var message2 = new TestNodeUpdateMessage(context.Request.Session.SessionUid,
+            new TestNode() { Uid = "2", DisplayName = "Test2" });
+        message2.Properties.Add(PassedTestNodeStateProperty.CachedInstance);
+        await context.MessageBus.PublishAsync(this, message2);
 
-        await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid,
-            new TestNode() { Uid = "3", DisplayName = "Test3", Properties = new(PassedTestNodeStateProperty.CachedInstance) }));
+        var message3 = new TestNodeUpdateMessage(context.Request.Session.SessionUid,
+            new TestNode() { Uid = "3", DisplayName = "Test3" });
+        message3.Properties.Add(PassedTestNodeStateProperty.CachedInstance);
+        await context.MessageBus.PublishAsync(this, message3);
 
-        await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid,
-            new TestNode() { Uid = "4", DisplayName = "Test4", Properties = new(PassedTestNodeStateProperty.CachedInstance) }));
+        var message4 = new TestNodeUpdateMessage(context.Request.Session.SessionUid,
+            new TestNode() { Uid = "4", DisplayName = "Test4" });
+        message4.Properties.Add(PassedTestNodeStateProperty.CachedInstance);
+        await context.MessageBus.PublishAsync(this, message4);
 
         if (GracefulStop.Instance.IsStopRequested) throw new InvalidOperationException("Unexpected stop request!");
 
         // Second fail.
-        await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid,
-            new TestNode() { Uid = "5", DisplayName = "Test5", Properties = new(new FailedTestNodeStateProperty()) }));
+        var message5 = new TestNodeUpdateMessage(context.Request.Session.SessionUid,
+            new TestNode() { Uid = "5", DisplayName = "Test5" });
+        message5.Properties.Add(new FailedTestNodeStateProperty());
+        await context.MessageBus.PublishAsync(this, message5);
 
         await GracefulStop.Instance.TCS.Task;
 
         if (!GracefulStop.Instance.IsStopRequested) throw new InvalidOperationException("Expected stop request!");
 
         // Third fail.
-        await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid,
-            new TestNode() { Uid = "6", DisplayName = "Test6", Properties = new(new FailedTestNodeStateProperty()) }));
+        var message6 = new TestNodeUpdateMessage(context.Request.Session.SessionUid,
+            new TestNode() { Uid = "6", DisplayName = "Test6" });
+        message6.Properties.Add(new FailedTestNodeStateProperty());
+        await context.MessageBus.PublishAsync(this, message6);
 
         context.Complete();
     }

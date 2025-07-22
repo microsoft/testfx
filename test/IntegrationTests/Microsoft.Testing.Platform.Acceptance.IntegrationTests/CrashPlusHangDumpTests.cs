@@ -149,21 +149,23 @@ public class DummyTestFramework : ITestFramework, IDataProducer
             Environment.FailFast("CrashPlusHangDump");
         }
 
-        await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid, new TestNode()
+        var testNodeUpdateMessage = new TestNodeUpdateMessage(context.Request.Session.SessionUid, new TestNode()
         {
             Uid = "Test1",
             DisplayName = "Test1",
-            Properties = new PropertyBag(new PassedTestNodeStateProperty()),
-        }));
+        });
+        testNodeUpdateMessage.Properties.Add(new PassedTestNodeStateProperty());
+        await context.MessageBus.PublishAsync(this, testNodeUpdateMessage);
 
         Thread.Sleep(int.Parse(Environment.GetEnvironmentVariable("SLEEPTIMEMS1")!, CultureInfo.InvariantCulture));
 
-        await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid, new TestNode()
+        var testNodeUpdateMessage2 = new TestNodeUpdateMessage(context.Request.Session.SessionUid, new TestNode()
         {
             Uid = "Test2",
             DisplayName = "Test2",
-            Properties = new PropertyBag(new PassedTestNodeStateProperty()),
-        }));
+        });
+        testNodeUpdateMessage2.Properties.Add(new PassedTestNodeStateProperty());
+        await context.MessageBus.PublishAsync(this, testNodeUpdateMessage2);
 
         Thread.Sleep(int.Parse(Environment.GetEnvironmentVariable("SLEEPTIMEMS2")!, CultureInfo.InvariantCulture));
         context.Complete();

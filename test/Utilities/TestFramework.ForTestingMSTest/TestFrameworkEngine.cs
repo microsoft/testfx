@@ -105,8 +105,9 @@ internal sealed class TestFrameworkEngine : IDataProducer
                 testNode.Properties.Add(new TrxFullyQualifiedTypeNameProperty(testContainerType.FullName!));
 
                 TestNode progressNode = CloneTestNode(testNode);
-                progressNode.Properties.Add(InProgressTestNodeStateProperty.CachedInstance);
-                await messageBus.PublishAsync(this, new TestNodeUpdateMessage(request.Session.SessionUid, progressNode));
+                var updateMessage = new TestNodeUpdateMessage(request.Session.SessionUid, progressNode);
+                updateMessage.Properties.Add(InProgressTestNodeStateProperty.CachedInstance);
+                await messageBus.PublishAsync(this, updateMessage);
 
                 bool isSuccessRun = false;
 
@@ -121,8 +122,9 @@ internal sealed class TestFrameworkEngine : IDataProducer
 
                 if (isSuccessRun && isSuccessTeardown)
                 {
-                    testNode.Properties.Add(PassedTestNodeStateProperty.CachedInstance);
-                    await PublishNodeUpdateAsync(new TestNodeUpdateMessage(request.Session.SessionUid, testNode));
+                    var successUpdateMessage = new TestNodeUpdateMessage(request.Session.SessionUid, testNode);
+                    successUpdateMessage.Properties.Add(PassedTestNodeStateProperty.CachedInstance);
+                    await PublishNodeUpdateAsync(successUpdateMessage);
                 }
             }
         }
@@ -169,7 +171,7 @@ internal sealed class TestFrameworkEngine : IDataProducer
                     Uid = $"{testContainerType.FullName}.{publicMethod.Name}",
                     DisplayName = publicMethod.Name,
                 };
-                testNode.Properties.Add(DiscoveredTestNodeStateProperty.CachedInstance);
+
                 testNode.Properties.Add(new TestMethodIdentifierProperty(
                     assembly.FullName!,
                     testContainerType.Namespace!,
@@ -178,8 +180,9 @@ internal sealed class TestFrameworkEngine : IDataProducer
                     publicMethod.GetGenericArguments().Length,
                     [.. publicMethod.GetParameters().Select(x => x.ParameterType.FullName!)],
                     publicMethod.ReturnType.FullName!));
-
-                await messageBus.PublishAsync(this, new TestNodeUpdateMessage(request.Session.SessionUid, testNode));
+                var discoverUpdateMessage = new TestNodeUpdateMessage(request.Session.SessionUid, testNode);
+                discoverUpdateMessage.Properties.Add(DiscoveredTestNodeStateProperty.CachedInstance);
+                await messageBus.PublishAsync(this, discoverUpdateMessage);
             }
         }
     }
@@ -213,8 +216,8 @@ internal sealed class TestFrameworkEngine : IDataProducer
             Exception realException = ex.InnerException ?? ex;
             _logger.LogError("Error during test setup", realException);
             TestNode errorNode = CloneTestNode(testNode);
-            errorNode.Properties.Add(new ErrorTestNodeStateProperty(ex));
             var testNodeUpdateMessage = new TestNodeUpdateMessage(sessionUid, errorNode);
+            testNodeUpdateMessage.Properties.Add(new ErrorTestNodeStateProperty(ex));
             testNodeUpdateMessage.Properties.Add(new TrxExceptionProperty(ex.Message, ex.StackTrace));
             await publishNodeUpdateAsync(testNodeUpdateMessage);
             return null;
@@ -240,7 +243,7 @@ internal sealed class TestFrameworkEngine : IDataProducer
             _logger.LogError("Error during test", realException);
             TestNode errorNode = CloneTestNode(testNode);
             var testNodeUpdateMessage = new TestNodeUpdateMessage(sessionUid, errorNode);
-            errorNode.Properties.Add(new ErrorTestNodeStateProperty(realException));
+            testNodeUpdateMessage.Properties.Add(new ErrorTestNodeStateProperty(realException));
             testNodeUpdateMessage.Properties.Add(new TrxExceptionProperty(realException.Message, realException.StackTrace));
             await publishNodeUpdateAsync(testNodeUpdateMessage);
 
@@ -267,7 +270,7 @@ internal sealed class TestFrameworkEngine : IDataProducer
             _logger.LogError("Error during test teardown", realException);
             TestNode errorNode = CloneTestNode(testNode);
             var testNodeUpdateMessage = new TestNodeUpdateMessage(sessionUid, errorNode);
-            errorNode.Properties.Add(new ErrorTestNodeStateProperty(ex));
+            testNodeUpdateMessage.Properties.Add(new ErrorTestNodeStateProperty(ex));
             await publishNodeUpdateAsync(testNodeUpdateMessage);
 
             return false;

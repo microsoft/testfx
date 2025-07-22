@@ -464,7 +464,7 @@ internal sealed partial class TrxReportEngine
             unitTestResult.SetAttributeValue("testType", UnitTestTypeGuid);
 
             string outcome = "Passed";
-            TestNodeStateProperty? testState = testNode.Properties.SingleOrDefault<TestNodeStateProperty>();
+            TestNodeStateProperty? testState = nodeMessage.Properties.SingleOrDefault<TestNodeStateProperty>();
             if (testState is { } state
                 && TestNodePropertiesCategories.WellKnownTestNodeTestRunOutcomeFailedProperties.Contains(testState.GetType()))
             {

@@ -128,8 +128,10 @@ internal class DummyTestFramework : ITestFramework, IDataProducer
             throw new Exception("Cancellation was not propagated to the adapter within 15 seconds since CTRL+C.");
         }
 
-        await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid,
-            new TestNode() { Uid = "0", DisplayName = "Test", Properties = new(PassedTestNodeStateProperty.CachedInstance) }));
+        var testNodeUpdateMessage = new TestNodeUpdateMessage(context.Request.Session.SessionUid,
+            new TestNode() { Uid = "0", DisplayName = "Test" });
+        testNodeUpdateMessage.Properties.Add(PassedTestNodeStateProperty.CachedInstance);
+        await context.MessageBus.PublishAsync(this, testNodeUpdateMessage);
         context.Complete();
     }
 

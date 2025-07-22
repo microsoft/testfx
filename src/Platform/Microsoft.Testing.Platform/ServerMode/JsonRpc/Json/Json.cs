@@ -110,7 +110,7 @@ internal sealed class Json
             TestNode testNode = message.TestNode;
             foreach (IProperty prop in message.Properties)
             {
-                if (prop is TimingProperty or StandardOutputProperty or StandardErrorProperty or FileArtifactProperty)
+                if (prop is TimingProperty or StandardOutputProperty or StandardErrorProperty or FileArtifactProperty or TestNodeStateProperty)
                 {
                     testNode.Properties.Add(prop);
                 }
