@@ -170,7 +170,7 @@ internal static class ObjectModelConverters
                 throw new InvalidOperationException("Unable to parse fully qualified type name from test case: " + testResult.TestCase.FullyQualifiedName);
             }
 
-            testNode.Properties.Add(new TrxMessagesProperty([.. testResult.Messages
+            testNodeUpdateMessage.Properties.Add(new TrxMessagesProperty([.. testResult.Messages
                 .Select(msg =>
                     msg.Category switch
                     {

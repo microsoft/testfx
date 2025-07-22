@@ -488,7 +488,7 @@ internal sealed partial class TrxReportEngine
             // i.e. https://github.com/dotnet/runtime/blob/main/src/libraries/System.Private.Xml/src/System/Xml/Core/XmlEncodedRawTextWriter.cs#L890
             var output = new XElement("Output");
 
-            TrxMessagesProperty? trxMessages = testNode.Properties.SingleOrDefault<TrxMessagesProperty>();
+            TrxMessagesProperty? trxMessages = nodeMessage.Properties.SingleOrDefault<TrxMessagesProperty>();
             IEnumerable<string?>? nonErrorMessages = trxMessages?.Messages.Where(x => x is not StandardErrorTrxMessage and not DebugOrTraceTrxMessage).Select(x => x.Message);
             if (nonErrorMessages?.Any() == true)
             {
