@@ -43,6 +43,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
     private readonly ILoggerFactory _loggerFactory;
     private readonly IClock _clock;
     private readonly IStopPoliciesService _policiesService;
+    private readonly ITestApplicationCancellationTokenSource _testApplicationCancellationTokenSource;
     private readonly string? _longArchitecture;
     private readonly string? _shortArchitecture;
 
@@ -65,7 +66,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
         ITestApplicationModuleInfo testApplicationModuleInfo, ITestHostControllerInfo testHostControllerInfo, IAsyncMonitor asyncMonitor,
         IRuntimeFeature runtimeFeature, IEnvironment environment, IPlatformInformation platformInformation,
         ICommandLineOptions commandLineOptions, IFileLoggerInformation? fileLoggerInformation, ILoggerFactory loggerFactory, IClock clock,
-        IStopPoliciesService policiesService)
+        IStopPoliciesService policiesService, ITestApplicationCancellationTokenSource testApplicationCancellationTokenSource)
     {
         _console = console;
         _testHostControllerInfo = testHostControllerInfo;
@@ -78,6 +79,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
         _loggerFactory = loggerFactory;
         _clock = clock;
         _policiesService = policiesService;
+        _testApplicationCancellationTokenSource = testApplicationCancellationTokenSource;
 
         if (_runtimeFeature.IsDynamicCodeSupported)
         {
@@ -99,6 +101,8 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
         {
             _bannerDisplayed = true;
         }
+
+        _testApplicationCancellationTokenSource = testApplicationCancellationTokenSource;
     }
 
     public async Task InitializeAsync()
@@ -150,7 +154,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
                 : !_testHostControllerInfo.IsCurrentProcessTestHostController;
 
         // This is single exe run, don't show all the details of assemblies and their summaries.
-        _terminalTestReporter = new TerminalTestReporter(_assemblyName, _targetFramework, _shortArchitecture, _console, new()
+        _terminalTestReporter = new TerminalTestReporter(_assemblyName, _targetFramework, _shortArchitecture, _console, _testApplicationCancellationTokenSource, new()
         {
             ShowPassedTests = showPassed,
             MinimumExpectedTests = PlatformCommandLineProvider.GetMinimumExpectedTests(_commandLineOptions),
