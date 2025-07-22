@@ -39,7 +39,7 @@ public sealed class BFSTestNodeVisitorTests : TestBase
         });
 
         // Assert
-        Assert.AreEqual(1, includedTestNodes.Count);
+        Assert.HasCount(1, includedTestNodes);
         Assert.AreEqual("ID1", includedTestNodes[0].StableUid);
     }
 
@@ -76,7 +76,7 @@ public sealed class BFSTestNodeVisitorTests : TestBase
         });
 
         // Assert
-        Assert.AreEqual(2, includedTestNodes.Count);
+        Assert.HasCount(2, includedTestNodes);
         Assert.AreEqual("ID1", includedTestNodes[0].StableUid);
         Assert.AreEqual("ID2", includedTestNodes[1].StableUid);
     }
@@ -114,7 +114,7 @@ public sealed class BFSTestNodeVisitorTests : TestBase
         });
 
         // Assert
-        Assert.AreEqual(1, includedTestNodes.Count);
+        Assert.HasCount(1, includedTestNodes);
         Assert.AreEqual("ID1", includedTestNodes[0].StableUid);
     }
 
@@ -136,7 +136,7 @@ public sealed class BFSTestNodeVisitorTests : TestBase
         });
 
         // Assert
-        Assert.AreEqual(3, includedTestNodes.Count);
+        Assert.HasCount(3, includedTestNodes);
 
         Assert.AreEqual("ID1", includedTestNodes[0].Node.StableUid);
         Assert.IsNull(includedTestNodes[0].ParentNodeUid);
@@ -165,7 +165,7 @@ public sealed class BFSTestNodeVisitorTests : TestBase
         });
 
         // Assert
-        Assert.AreEqual(1, includedTestNodes.Count);
+        Assert.HasCount(1, includedTestNodes);
     }
 
     [TestMethod]
@@ -214,7 +214,7 @@ public sealed class BFSTestNodeVisitorTests : TestBase
         });
 
         // Assert
-        Assert.AreEqual(7, includedTestNodes.Count);
+        Assert.HasCount(7, includedTestNodes);
 
         Assert.AreEqual("MyModule", includedTestNodes[0].Node.StableUid);
         Assert.IsNull(includedTestNodes[0].ParentNodeUid);

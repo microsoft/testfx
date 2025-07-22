@@ -77,7 +77,7 @@ public sealed class TreeNodeFilter : ITestExecutionFilter
         //       of an expression operators are not allowed.
         bool isOperatorAllowed = false;
         bool isPropAllowed = false;
-
+        bool lastWasOpenParen = false;
         OperatorKind topStackOperator;
 
         foreach (string token in TokenizeFilter(filter))
@@ -225,6 +225,10 @@ public sealed class TreeNodeFilter : ITestExecutionFilter
                     isPropAllowed = false;
                     break;
 
+                case "!" when lastWasOpenParen:
+                    operatorStack.Push(OperatorKind.UnaryNot);
+                    break;
+
                 default:
                     expressionStack.Push(new ValueExpression(token));
 
@@ -232,6 +236,8 @@ public sealed class TreeNodeFilter : ITestExecutionFilter
                     isPropAllowed = true;
                     break;
             }
+
+            lastWasOpenParen = token == "(";
         }
 
         // Note: What we should end with (as long as the expression is a valid filter)
@@ -350,6 +356,11 @@ public sealed class TreeNodeFilter : ITestExecutionFilter
                 expr.Push(filterExpression);
                 break;
 
+            case OperatorKind.UnaryNot:
+                FilterExpression notOperator = expr.Pop();
+                expr.Push(new OperatorExpression(FilterOperator.Not, [notOperator]));
+                break;
+
             default:
                 // Note: Handling of other operations in valid scenarios should be handled by the caller.
                 //       Reaching this code for instance means that we're trying to process / operator
@@ -437,6 +448,12 @@ public sealed class TreeNodeFilter : ITestExecutionFilter
 
                         yield return "!=";
                         i++;
+                    }
+                    else if (i - 1 >= 0 && filter[i - 1] == '(')
+                    {
+                        // Note: If we have a ! at the start of an expression, we should
+                        //       treat it as a NOT operator.
+                        yield return "!";
                     }
                     else
                     {

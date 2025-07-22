@@ -93,8 +93,8 @@ public sealed class TestApplicationBuilderTests
         List<ICompositeExtensionFactory> compositeExtensions = [];
         IDataConsumer[] consumers = [.. (await testHostManager.BuildDataConsumersAsync(_serviceProvider, compositeExtensions)).Select(x => (IDataConsumer)x.Consumer)];
         ITestSessionLifetimeHandler[] sessionLifetimeHandle = [.. (await testHostManager.BuildTestSessionLifetimeHandleAsync(_serviceProvider, compositeExtensions)).Select(x => (ITestSessionLifetimeHandler)x.TestSessionLifetimeHandler)];
-        Assert.AreEqual(1, consumers.Length);
-        Assert.AreEqual(1, sessionLifetimeHandle.Length);
+        Assert.HasCount(1, consumers);
+        Assert.HasCount(1, sessionLifetimeHandle);
         Assert.AreEqual(compositeExtensions[0].GetInstance(), consumers[0]);
         Assert.AreEqual(compositeExtensions[0].GetInstance(), sessionLifetimeHandle[0]);
     }
@@ -155,8 +155,8 @@ public sealed class TestApplicationBuilderTests
         testHostControllerManager.AddProcessLifetimeHandler(compositeExtensionFactory);
         TestHostControllerConfiguration configuration = await testHostControllerManager.BuildAsync(_serviceProvider);
         Assert.IsTrue(configuration.RequireProcessRestart);
-        Assert.AreEqual(1, configuration.LifetimeHandlers.Length);
-        Assert.AreEqual(1, configuration.EnvironmentVariableProviders.Length);
+        Assert.HasCount(1, configuration.LifetimeHandlers);
+        Assert.HasCount(1, configuration.EnvironmentVariableProviders);
         Assert.AreEqual((object)configuration.LifetimeHandlers[0], configuration.EnvironmentVariableProviders[0]);
         Assert.AreEqual(((ICompositeExtensionFactory)compositeExtensionFactory).GetInstance(), configuration.LifetimeHandlers[0]);
         Assert.AreEqual(((ICompositeExtensionFactory)compositeExtensionFactory).GetInstance(), configuration.EnvironmentVariableProviders[0]);

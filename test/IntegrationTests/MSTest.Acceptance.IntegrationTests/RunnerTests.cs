@@ -102,7 +102,7 @@ return await app.RunAsync();
         {
             if (TargetFrameworks.NetFramework.Any(x => x == tfm))
             {
-                Assert.IsTrue(ex.Message.Contains("Program does not contain a static 'Main' method suitable for an entry point"), ex.Message);
+                Assert.Contains("Program does not contain a static 'Main' method suitable for an entry point", ex.Message, ex.Message);
                 // .NET Framework does not insert the entry point for empty program.
             }
         }

@@ -70,15 +70,6 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Change to &apos;class&apos; and add &apos;[TestClass]&apos;.
-        /// </summary>
-        internal static string ChangeStructToClassAndAddTestClassFix {
-            get {
-                return ResourceManager.GetString("ChangeStructToClassAndAddTestClassFix", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Add &apos;[TestMethod]&apos;.
         /// </summary>
         internal static string AddTestMethodAttributeFix {
@@ -124,6 +115,15 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Change to &apos;class&apos; and add &apos;[TestClass]&apos;.
+        /// </summary>
+        internal static string ChangeStructToClassAndAddTestClassFix {
+            get {
+                return ResourceManager.GetString("ChangeStructToClassAndAddTestClassFix", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Fix actual/expected arguments order.
         /// </summary>
         internal static string FixAssertionArgsOrder {
@@ -138,6 +138,15 @@ namespace MSTest.Analyzers {
         internal static string FixSignatureCodeFix {
             get {
                 return ResourceManager.GetString("FixSignatureCodeFix", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Pass &apos;TestContext.CancellationTokenSource.Token&apos; argument to method call.
+        /// </summary>
+        internal static string PassCancellationTokenFix {
+            get {
+                return ResourceManager.GetString("PassCancellationTokenFix", resourceCulture);
             }
         }
         
@@ -196,6 +205,15 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Use &apos;Assert.{0}&apos; instead of &apos;StringAssert&apos;.
+        /// </summary>
+        internal static string StringAssertToAssertTitle {
+            get {
+                return ResourceManager.GetString("StringAssertToAssertTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Fix test class signature.
         /// </summary>
         internal static string TestClassShouldBeValidFix {
@@ -241,6 +259,15 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Use &apos;CooperativeCancellation = true&apos;.
+        /// </summary>
+        internal static string UseCooperativeCancellationForTimeoutFix {
+            get {
+                return ResourceManager.GetString("UseCooperativeCancellationForTimeoutFix", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Use &apos;{0}&apos;.
         /// </summary>
         internal static string UseNewerAssertThrows {
@@ -255,24 +282,6 @@ namespace MSTest.Analyzers {
         internal static string UseProperAssertMethodsFix {
             get {
                 return ResourceManager.GetString("UseProperAssertMethodsFix", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Use &apos;CooperativeCancellation = true&apos;.
-        /// </summary>
-        internal static string UseCooperativeCancellationForTimeoutFix {
-            get {
-                return ResourceManager.GetString("UseCooperativeCancellationForTimeoutFix", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Use &apos;Assert.{0}&apos; instead of &apos;StringAssert&apos;.
-        /// </summary>
-        internal static string StringAssertToAssertTitle {
-            get {
-                return ResourceManager.GetString("StringAssertToAssertTitle", resourceCulture);
             }
         }
     }

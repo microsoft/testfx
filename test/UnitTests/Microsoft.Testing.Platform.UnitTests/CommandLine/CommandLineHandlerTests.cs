@@ -275,8 +275,8 @@ public sealed class CommandLineHandlerTests
         _outputDisplayMock.Setup(x => x.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>()))
             .Callback((IOutputDeviceDataProducer message, IOutputDeviceData data) =>
             {
-                Assert.IsTrue(((TextOutputDeviceData)data).Text.Contains("Invalid command line arguments:"));
-                Assert.IsTrue(((TextOutputDeviceData)data).Text.Contains("Unexpected argument"));
+                Assert.Contains("Invalid command line arguments:", ((TextOutputDeviceData)data).Text);
+                Assert.Contains("Unexpected argument", ((TextOutputDeviceData)data).Text);
             });
 
         CommandLineHandler commandLineHandler = new(parseResult, _extensionCommandLineOptionsProviders, _systemCommandLineOptionsProviders,
