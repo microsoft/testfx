@@ -69,7 +69,7 @@ public class SomeClass
 }
 ";
 
-        await VerifySingleSuppressionAsync(code, true);
+        await VerifySingleSuppressionAsync(code, isSuppressed: true);
     }
 
     private Task VerifySingleSuppressionAsync(string source, bool isSuppressed)
