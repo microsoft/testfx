@@ -886,17 +886,17 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="TestContextPropertyUsageTitle">
         <source>TestContext property cannot be accessed in this context</source>
-        <target state="new">TestContext property cannot be accessed in this context</target>
+        <target state="translated">이 컨텍스트에서 TestContext 속성에 액세스할 수 없습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestContextPropertyUsageMessageFormat">
         <source>TestContext property '{0}' cannot be accessed in '{1}' method</source>
-        <target state="new">TestContext property '{0}' cannot be accessed in '{1}' method</target>
+        <target state="translated">'{1}' 메서드에서 TestContext 속성 '{0}'에 액세스할 수 없습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestContextPropertyUsageDescription">
         <source>Some TestContext properties are only available during test execution and cannot be accessed in assembly initialize, class initialize, class cleanup, or assembly cleanup methods.</source>
-        <target state="new">Some TestContext properties are only available during test execution and cannot be accessed in assembly initialize, class initialize, class cleanup, or assembly cleanup methods.</target>
+        <target state="translated">일부 TestContext 속성은 테스트 실행 중에만 사용할 수 있으며, 어셈블리 초기화, 클래스 초기화, 클래스 정리 또는 어셈블리 정리 메서드에서는 액세스할 수 없습니다.</target>
         <note />
       </trans-unit>
     </body>

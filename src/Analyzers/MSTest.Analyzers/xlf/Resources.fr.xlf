@@ -886,17 +886,17 @@ Le type doit être une classe
       </trans-unit>
       <trans-unit id="TestContextPropertyUsageTitle">
         <source>TestContext property cannot be accessed in this context</source>
-        <target state="new">TestContext property cannot be accessed in this context</target>
+        <target state="translated">Impossible d’accéder à la propriété TestContext dans ce contexte</target>
         <note />
       </trans-unit>
       <trans-unit id="TestContextPropertyUsageMessageFormat">
         <source>TestContext property '{0}' cannot be accessed in '{1}' method</source>
-        <target state="new">TestContext property '{0}' cannot be accessed in '{1}' method</target>
+        <target state="translated">Impossible d’accéder à la propriété TestContext « {0} » dans la méthode « {1} »</target>
         <note />
       </trans-unit>
       <trans-unit id="TestContextPropertyUsageDescription">
         <source>Some TestContext properties are only available during test execution and cannot be accessed in assembly initialize, class initialize, class cleanup, or assembly cleanup methods.</source>
-        <target state="new">Some TestContext properties are only available during test execution and cannot be accessed in assembly initialize, class initialize, class cleanup, or assembly cleanup methods.</target>
+        <target state="translated">Certaines propriétés TestContext sont disponibles uniquement pendant l’exécution du test et ne sont pas accessibles dans les méthodes d’initialisation d’assembly, d’initialisation de classe, de nettoyage de classe ou de nettoyage d’assembly.</target>
         <note />
       </trans-unit>
     </body>
