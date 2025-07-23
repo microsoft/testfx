@@ -214,7 +214,7 @@ internal class AssemblyUtility
             using var resolver = (AssemblyResolver)AppDomainUtilities.CreateInstance(
                 appDomain,
                 assemblyResolverType,
-                [GetResolutionPaths()]);
+                [GetResolutionPaths(), _logger]);
 
             // This has to be Load, otherwise Serialization of argument types will not work correctly.
             var worker = (AssemblyLoadWorker)AppDomainUtilities.CreateInstance(appDomain, typeof(AssemblyLoadWorker), null);
