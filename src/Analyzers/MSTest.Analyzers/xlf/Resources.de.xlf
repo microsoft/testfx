@@ -887,17 +887,17 @@ Der Typ, der diese Methoden deklariert, sollte auch die folgenden Regeln beachte
       </trans-unit>
       <trans-unit id="TestContextPropertyUsageTitle">
         <source>TestContext property cannot be accessed in this context</source>
-        <target state="new">TestContext property cannot be accessed in this context</target>
+        <target state="translated">Auf die TestContext-Eigenschaft kann in diesem Kontext nicht zugegriffen werden</target>
         <note />
       </trans-unit>
       <trans-unit id="TestContextPropertyUsageMessageFormat">
         <source>TestContext property '{0}' cannot be accessed in '{1}' method</source>
-        <target state="new">TestContext property '{0}' cannot be accessed in '{1}' method</target>
+        <target state="translated">Auf die TestContext-Eigenschaft „{0}“ kann in der Methode „{1}“ nicht zugegriffen werden</target>
         <note />
       </trans-unit>
       <trans-unit id="TestContextPropertyUsageDescription">
         <source>Some TestContext properties are only available during test execution and cannot be accessed in assembly initialize, class initialize, class cleanup, or assembly cleanup methods.</source>
-        <target state="new">Some TestContext properties are only available during test execution and cannot be accessed in assembly initialize, class initialize, class cleanup, or assembly cleanup methods.</target>
+        <target state="translated">Einige TestContext-Eigenschaften sind nur während der Testausführung verfügbar und können nicht in Assemblyinitialisierungs-, Klasseninitialisierungs-, Klassenbereinigungs- oder Assemblybereinigungsmethoden aufgerufen werden.</target>
         <note />
       </trans-unit>
     </body>
