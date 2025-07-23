@@ -340,7 +340,7 @@ Namespace Global.MyNamespaceRoot.Level1.Level2
                                                                           New Messages.TestNode With {
                                                                           .Uid = "1",
                                                                           .DisplayName = "DummyTest" })
-      message.Properties.Add(Messages.PassedTestNodeStateProperty.CachedInstance);
+      message.Properties.Add(Messages.PassedTestNodeStateProperty.CachedInstance)
       Await context.MessageBus.PublishAsync(Me, message)
       context.Complete()
     End Function
@@ -440,12 +440,11 @@ type DummyTestFramework() =
         member _.CreateTestSessionAsync _ = CreateTestSessionResult(IsSuccess = true) |> Task.FromResult
         member _.CloseTestSessionAsync _ = CloseTestSessionResult(IsSuccess = true) |> Task.FromResult
         member _.ExecuteRequestAsync context = task {
-            do! context.MessageBus.PublishAsync(
-                dataProducer,
-                TestNodeUpdateMessage(
-                    context.Request.Session.SessionUid,
-                    // TODO!
-                    TestNode(Uid = "1", DisplayName = "DummyTest", Properties = PropertyBag(PassedTestNodeStateProperty.CachedInstance))))
+            let message = TestNodeUpdateMessage(
+                context.Request.Session.SessionUid,
+                TestNode(Uid = "1", DisplayName = "DummyTest"))
+            message.Properties.Add(PassedTestNodeStateProperty.CachedInstance)
+            do! context.MessageBus.PublishAsync(dataProducer, message)
             context.Complete()
             }
 
