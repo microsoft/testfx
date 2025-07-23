@@ -41,19 +41,25 @@ public sealed class NonNullableReferenceNotInitializedSuppressor : DiagnosticSup
 
         foreach (Diagnostic diagnostic in context.ReportedDiagnostics)
         {
-            // The diagnostic is reported on the test method
-            if (diagnostic.Location.SourceTree is not { } tree)
+            // The main diagnostic location isn't always pointing to the TestContext property.
+            // It can point to the constructor.
+            // The additional locations will have the right thing.
+            // Per https://github.com/dotnet/roslyn/issues/79188#issuecomment-3017087900,
+            // it seems like it was an intentional design to include the additional locations specifically for DiagnosticSuppressor scenarios.
+            // So it is safe to use AdditionalLocations here. We are not relying on an implementation detail here.
+            Location location = diagnostic.AdditionalLocations[0];
+            if (location.SourceTree is not { } tree)
             {
                 continue;
             }
 
             SyntaxNode root = tree.GetRoot(context.CancellationToken);
-            SyntaxNode node = root.FindNode(diagnostic.Location.SourceSpan, getInnermostNodeForTie: true);
+            SyntaxNode node = root.FindNode(location.SourceSpan, getInnermostNodeForTie: true);
 
             SemanticModel semanticModel = context.GetSemanticModel(tree);
             ISymbol? declaredSymbol = semanticModel.GetDeclaredSymbol(node, context.CancellationToken);
             if (declaredSymbol is IPropertySymbol property
-                && string.Equals(property.Name, "TestContext", StringComparison.OrdinalIgnoreCase)
+                && string.Equals(property.Name, "TestContext", StringComparison.Ordinal)
                 && SymbolEqualityComparer.Default.Equals(testContextSymbol, property.GetMethod?.ReturnType)
                 && property.ContainingType.GetAttributes().Any(attr => attr.AttributeClass.Inherits(testClassAttributeSymbol)))
             {

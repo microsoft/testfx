@@ -49,17 +49,48 @@ public class SomeClass
         await VerifySingleSuppressionAsync(code, isSuppressed: false);
     }
 
+    [TestMethod]
+    public async Task TestContextPropertyOnTestClassConstructor_DiagnosticIsSuppressed()
+    {
+        string code = @"
+#nullable enable
+
+using System.Threading.Tasks;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+[TestClass]
+public class SomeClass
+{
+    public {|#0:SomeClass|}()
+    {
+    }
+
+    public TestContext TestContext { get; set; }
+}
+";
+
+        await VerifySingleSuppressionAsync(code, true);
+    }
+
     private Task VerifySingleSuppressionAsync(string source, bool isSuppressed)
-        => new VerifyCS.Test
+        => VerifyDiagnosticsAsync(source, [(0, isSuppressed)]);
+
+    private async Task VerifyDiagnosticsAsync(string source, List<(int Location, bool IsSuppressed)> diagnostics)
+    {
+        var test = new VerifyCS.Test
         {
             TestCode = source,
-            ExpectedDiagnostics =
-            {
-                DiagnosticResult.CompilerError("CS8618")
-                    .WithLocation(0)
-                    .WithOptions(DiagnosticOptions.IgnoreAdditionalLocations)
-                    .WithArguments("property", "TestContext")
-                    .WithIsSuppressed(isSuppressed),
-            },
-        }.RunAsync();
+        };
+
+        foreach ((int location, bool isSuppressed) in diagnostics)
+        {
+            test.ExpectedDiagnostics.Add(DiagnosticResult.CompilerError("CS8618")
+                .WithLocation(location)
+                .WithOptions(DiagnosticOptions.IgnoreAdditionalLocations)
+                .WithArguments("property", "TestContext")
+                .WithIsSuppressed(isSuppressed));
+        }
+
+        await test.RunAsync();
+    }
 }
