@@ -146,7 +146,7 @@ public class DummyTestFramework : ITestFramework, IDataProducer
             Uid = "Class2.Test1",
             DisplayName = "Test1",
         });
-        var testNodeUpdateMessagePassed2.Properties.Add(new PassedTestNodeStateProperty());
+        testNodeUpdateMessagePassed2.Properties.Add(new PassedTestNodeStateProperty());
         await context.MessageBus.PublishAsync(this, testNodeUpdateMessagePassed2);
 
         context.Complete();
