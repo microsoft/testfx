@@ -13,6 +13,8 @@ namespace Microsoft.Testing.Platform.UnitTests;
 [TestClass]
 public sealed class AsynchronousMessageBusTests
 {
+    public TestContext TestContext { get; set; }
+
     [TestMethod]
     public async Task UnexpectedTypePublished_ShouldFail()
     {
@@ -105,7 +107,7 @@ public sealed class AsynchronousMessageBusTests
         Random random = new();
         for (int i = 0; i < totalConsumers; i++)
         {
-            DummyConsumer dummyConsumer = new(async _ => await Task.Delay(random.Next(40, 80)));
+            DummyConsumer dummyConsumer = new(async _ => await Task.Delay(random.Next(40, 80), TestContext.CancellationTokenSource.Token));
             dummyConsumers.Add(dummyConsumer);
         }
 
@@ -120,7 +122,7 @@ public sealed class AsynchronousMessageBusTests
         proxy.SetBuiltMessageBus(asynchronousMessageBus);
 
         DummyConsumer.DummyProducer producer = new();
-        await Task.WhenAll([.. Enumerable.Range(1, totalPayloads).Select(i => Task.Run(async () => await proxy.PublishAsync(producer, new DummyConsumer.DummyData { Data = i })))]);
+        await Task.WhenAll([.. Enumerable.Range(1, totalPayloads).Select(i => Task.Run(async () => await proxy.PublishAsync(producer, new DummyConsumer.DummyData { Data = i }), TestContext.CancellationTokenSource.Token))]);
 
         await proxy.DrainDataAsync();
 
