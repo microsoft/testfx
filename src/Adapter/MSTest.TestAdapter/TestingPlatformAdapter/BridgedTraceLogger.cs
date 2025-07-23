@@ -22,39 +22,53 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 // TODO: We should either not support AppDomains at all or make a marshaling version that would send the message and
 // enum to the outside AppDomain instance that would then log it.
 [Serializable]
-internal sealed class BridgedTraceLogger(ILogger logger) : IAdapterTraceLogger
+internal sealed class BridgedTraceLogger : IAdapterTraceLogger
 {
-    public bool IsInfoEnabled => logger?.IsEnabled(LogLevel.Information) ?? false;
+    [NonSerialized]
+    private readonly ILogger? _logger;
+
+    public BridgedTraceLogger()
+    {
+        // This constructor is used when the logger is not available, e.g., in AppDomains.
+        _logger = null;
+    }
+
+    public BridgedTraceLogger(ILogger logger)
+    {
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    }
+
+    public bool IsInfoEnabled => _logger?.IsEnabled(LogLevel.Information) ?? false;
 
     public void LogError(string format, params object?[] args)
     {
-        if (logger?.IsEnabled(LogLevel.Error) == true)
+        if (_logger?.IsEnabled(LogLevel.Error) == true)
         {
-            logger.LogError(string.Format(CultureInfo.CurrentCulture, format, args));
+            _logger.LogError(string.Format(CultureInfo.CurrentCulture, format, args));
         }
     }
 
     public void LogInfo(string format, params object?[] args)
     {
-        if (logger?.IsEnabled(LogLevel.Information) == true)
+        if (_logger?.IsEnabled(LogLevel.Information) == true)
         {
-            logger.LogInformation(string.Format(CultureInfo.CurrentCulture, format, args));
+            _logger.LogInformation(string.Format(CultureInfo.CurrentCulture, format, args));
         }
     }
 
     public void LogVerbose(string format, params object?[] args)
     {
-        if (logger?.IsEnabled(LogLevel.Debug) == true)
+        if (_logger?.IsEnabled(LogLevel.Debug) == true)
         {
-            logger.LogDebug(string.Format(CultureInfo.CurrentCulture, format, args));
+            _logger.LogDebug(string.Format(CultureInfo.CurrentCulture, format, args));
         }
     }
 
     public void LogWarning(string format, params object?[] args)
     {
-        if (logger?.IsEnabled(LogLevel.Warning) == true)
+        if (_logger?.IsEnabled(LogLevel.Warning) == true)
         {
-            logger.LogWarning(string.Format(CultureInfo.CurrentCulture, format, args));
+            _logger.LogWarning(string.Format(CultureInfo.CurrentCulture, format, args));
         }
     }
 }
