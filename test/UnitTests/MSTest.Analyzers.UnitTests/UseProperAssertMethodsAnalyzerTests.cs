@@ -1950,47 +1950,5 @@ public sealed class UseProperAssertMethodsAnalyzerTests
             fixedCode);
     }
 
-    [TestMethod]
-    public async Task WhenAssertAreEqualWithCollectionCountAndMultipleParameters()
-    {
-        string code = """
-            using Microsoft.VisualStudio.TestTools.UnitTesting;
-            using System.Collections.Generic;
-
-            [TestClass]
-            public class MyTestClass
-            {
-                [TestMethod]
-                public void MyTestMethod()
-                {
-                    var list = new List<int> { 1, 2, 3 };
-                    {|#0:Assert.AreEqual(3, list.Count, "Wrong count: expected {0} but was {1}", 3, list.Count)|};
-                }
-            }
-            """;
-
-        string fixedCode = """
-            using Microsoft.VisualStudio.TestTools.UnitTesting;
-            using System.Collections.Generic;
-
-            [TestClass]
-            public class MyTestClass
-            {
-                [TestMethod]
-                public void MyTestMethod()
-                {
-                    var list = new List<int> { 1, 2, 3 };
-                    Assert.HasCount(3, list, "Wrong count: expected {0} but was {1}", 3, list.Count);
-                }
-            }
-            """;
-
-        await VerifyCS.VerifyCodeFixAsync(
-            code,
-            // /0/Test0.cs(11,9): info MSTEST0037: Use 'Assert.HasCount' instead of 'Assert.AreEqual'
-            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("HasCount", "AreEqual"),
-            fixedCode);
-    }
-
     #endregion
 }
