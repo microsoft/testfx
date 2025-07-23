@@ -47,6 +47,11 @@
         <target state="translated">Popraw podpis</target>
         <note />
       </trans-unit>
+      <trans-unit id="PassCancellationTokenFix">
+        <source>Pass 'TestContext.CancellationTokenSource.Token' argument to method call</source>
+        <target state="new">Pass 'TestContext.CancellationTokenSource.Token' argument to method call</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ReplaceDataTestMethodWithTestMethodTitle">
         <source>Replace 'DataTestMethod' with 'TestMethod'</source>
         <target state="translated">Zastąp element „DataTestMethod” elementem „TestMethod”</target>
