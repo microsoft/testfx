@@ -7,46 +7,54 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interfa
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
+/// <summary>
+/// Provides a bridge for logging messages using an <see cref="ILogger"/> instance.
+/// </summary>
+/// <remarks>
+/// This class adapts logging calls to the <see cref="ILogger"/> interface, allowing messages to be
+/// logged at various levels such as Error, Information, Debug, and Warning. It checks if the respective log level is
+/// enabled before logging the message.
+/// </remarks>
+/// <param name="logger">The real logger.</param>
 [SuppressMessage("ApiDesign", "RS0030:Do not use banned APIs", Justification = "MTP logger bridge")]
+// Type is serializable to support serialization through AppDomains but ILogger is not so we handle it being null
+// when we are inside the AppDomain.
+// TODO: We should either not support AppDomains at all or make a marshaling version that would send the message and
+// enum to the outside AppDomain instance that would then log it.
 [Serializable]
-internal sealed class BridgedTraceLogger : IAdapterTraceLogger
+internal sealed class BridgedTraceLogger(ILogger logger) : IAdapterTraceLogger
 {
-    private readonly ILogger _logger;
-
-    public BridgedTraceLogger(ILogger logger)
-        => _logger = logger;
-
-    public bool IsInfoEnabled => _logger.IsEnabled(LogLevel.Information);
+    public bool IsInfoEnabled => logger?.IsEnabled(LogLevel.Information) ?? false;
 
     public void LogError(string format, params object?[] args)
     {
-        if (_logger.IsEnabled(LogLevel.Error))
+        if (logger?.IsEnabled(LogLevel.Error) == true)
         {
-            _logger.LogError(string.Format(CultureInfo.CurrentCulture, format, args));
+            logger.LogError(string.Format(CultureInfo.CurrentCulture, format, args));
         }
     }
 
     public void LogInfo(string format, params object?[] args)
     {
-        if (_logger.IsEnabled(LogLevel.Information))
+        if (logger?.IsEnabled(LogLevel.Information) == true)
         {
-            _logger.LogInformation(string.Format(CultureInfo.CurrentCulture, format, args));
+            logger.LogInformation(string.Format(CultureInfo.CurrentCulture, format, args));
         }
     }
 
     public void LogVerbose(string format, params object?[] args)
     {
-        if (_logger.IsEnabled(LogLevel.Debug))
+        if (logger?.IsEnabled(LogLevel.Debug) == true)
         {
-            _logger.LogDebug(string.Format(CultureInfo.CurrentCulture, format, args));
+            logger.LogDebug(string.Format(CultureInfo.CurrentCulture, format, args));
         }
     }
 
     public void LogWarning(string format, params object?[] args)
     {
-        if (_logger.IsEnabled(LogLevel.Warning))
+        if (logger?.IsEnabled(LogLevel.Warning) == true)
         {
-            _logger.LogWarning(string.Format(CultureInfo.CurrentCulture, format, args));
+            logger.LogWarning(string.Format(CultureInfo.CurrentCulture, format, args));
         }
     }
 }
