@@ -1866,5 +1866,89 @@ public sealed class UseProperAssertMethodsAnalyzerTests
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
+    public async Task WhenAssertAreEqualWithCollectionCountAndMessage_HasCount()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Collections.Generic;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    var myCollection = new List<int> { 1, 2 };
+                    {|#0:Assert.AreEqual(2, myCollection.Count, "Wrong number of elements")|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Collections.Generic;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    var myCollection = new List<int> { 1, 2 };
+                    Assert.HasCount(2, myCollection, "Wrong number of elements");
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            // /0/Test0.cs(11,9): info MSTEST0037: Use 'Assert.HasCount' instead of 'Assert.AreEqual'
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("HasCount", "AreEqual"),
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertAreEqualWithCollectionCountZeroAndMessage_IsEmpty()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Collections.Generic;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    var list = new List<int>();
+                    {|#0:Assert.AreEqual(0, list.Count, "Collection should be empty")|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Collections.Generic;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    var list = new List<int>();
+                    Assert.IsEmpty(list, "Collection should be empty");
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            // /0/Test0.cs(11,9): info MSTEST0037: Use 'Assert.IsEmpty' instead of 'Assert.AreEqual'
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("IsEmpty", "AreEqual"),
+            fixedCode);
+    }
+
     #endregion
 }
