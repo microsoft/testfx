@@ -241,27 +241,35 @@ public sealed class UseProperAssertMethodsFixer : CodeFixProvider
         DocumentEditor editor = await DocumentEditor.CreateAsync(document, cancellationToken).ConfigureAwait(false);
         FixInvocationMethodName(editor, simpleNameSyntax, properAssertMethodName);
 
+        // Preserve any additional arguments beyond the first two (expected/actual)
+        var additionalArguments = argumentList.Arguments.Skip(2).ToList();
+
         ArgumentListSyntax newArgumentList;
 
         if (properAssertMethodName == "IsEmpty")
         {
-            // For IsEmpty, we just need the collection argument
-            newArgumentList = argumentList.WithArguments(
-                SyntaxFactory.SeparatedList(new[] { SyntaxFactory.Argument(collectionExpression).WithAdditionalAnnotations(Formatter.Annotation) }));
+            // For IsEmpty, we just need the collection argument plus any additional arguments
+            var newArguments = new List<ArgumentSyntax>
+            {
+                SyntaxFactory.Argument(collectionExpression).WithAdditionalAnnotations(Formatter.Annotation),
+            };
+            newArguments.AddRange(additionalArguments);
+            newArgumentList = argumentList.WithArguments(SyntaxFactory.SeparatedList(newArguments));
         }
         else // HasCount
         {
-            // For HasCount, we need count and collection arguments
+            // For HasCount, we need count and collection arguments plus any additional arguments
             // additionalLocations[3] should contain the count expression
             if (additionalLocations.Count > 3 &&
                 root.FindNode(additionalLocations[3].SourceSpan) is ArgumentSyntax countArgument)
             {
-                newArgumentList = argumentList.WithArguments(
-                    SyntaxFactory.SeparatedList(new[]
-                    {
-                        SyntaxFactory.Argument(countArgument.Expression).WithAdditionalAnnotations(Formatter.Annotation),
-                        SyntaxFactory.Argument(collectionExpression).WithAdditionalAnnotations(Formatter.Annotation),
-                    }));
+                var newArguments = new List<ArgumentSyntax>
+                {
+                    SyntaxFactory.Argument(countArgument.Expression).WithAdditionalAnnotations(Formatter.Annotation),
+                    SyntaxFactory.Argument(collectionExpression).WithAdditionalAnnotations(Formatter.Annotation),
+                };
+                newArguments.AddRange(additionalArguments);
+                newArgumentList = argumentList.WithArguments(SyntaxFactory.SeparatedList(newArguments));
             }
             else
             {

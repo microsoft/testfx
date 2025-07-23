@@ -17,6 +17,7 @@
 
     <!-- !!!TEMPORARY!!! Disabling public API temporarily. Re-enable when merging this branch to main!! -->
     <NoWarn>$(NoWarn);RS0016;RS0017;RS2003;RS2002</NoWarn>
+    <ReportAnalyzer>true</ReportAnalyzer>
   </PropertyGroup>
 
   <!-- The TFMs to build and test against. -->
