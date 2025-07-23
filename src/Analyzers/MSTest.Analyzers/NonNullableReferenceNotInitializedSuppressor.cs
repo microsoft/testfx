@@ -44,10 +44,13 @@ public sealed class NonNullableReferenceNotInitializedSuppressor : DiagnosticSup
             // The main diagnostic location isn't always pointing to the TestContext property.
             // It can point to the constructor.
             // The additional locations will have the right thing.
-            // Per https://github.com/dotnet/roslyn/issues/79188#issuecomment-3017087900,
-            // it seems like it was an intentional design to include the additional locations specifically for DiagnosticSuppressor scenarios.
+            // See https://github.com/dotnet/roslyn/issues/79188#issuecomment-3017087900.
+            // It was an intentional design to include the additional locations specifically for DiagnosticSuppressor scenarios.
             // So it is safe to use AdditionalLocations here. We are not relying on an implementation detail here.
-            Location location = diagnostic.AdditionalLocations[0];
+            // However, we still fallback to diagnostic.Location just in case Roslyn regresses the AdditionalLocations behavior.
+            // Such regression happened in the past in Roslyn.
+            // See https://github.com/dotnet/roslyn/issues/66037
+            Location location = diagnostic.AdditionalLocations.Count >= 1 ? diagnostic.AdditionalLocations[0] : diagnostic.Location;
             if (location.SourceTree is not { } tree)
             {
                 continue;
