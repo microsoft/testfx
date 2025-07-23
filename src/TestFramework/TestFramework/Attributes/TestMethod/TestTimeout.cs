@@ -9,9 +9,9 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// </summary>
 [SuppressMessage("Microsoft.Design", "CA1008:EnumsShouldHaveZeroValue", Justification = "Compat reasons")]
 #if NET6_0_OR_GREATER
-[Obsolete("Use 'int.MaxValue' for infinite timeout instead. The enum will be dropped in v4.", error: false, DiagnosticId = "MSTESTOBS")]
+[Obsolete(FrameworkConstants.TestTimeoutAttributeObsoleteMessage, error: false, DiagnosticId = "MSTESTOBS")]
 #else
-[Obsolete("Use 'int.MaxValue' for infinite timeout instead. The enum will be dropped in v4.", error: false)]
+[Obsolete(FrameworkConstants.TestTimeoutAttributeObsoleteMessage, error: false)]
 #endif
 public enum TestTimeout
 {
