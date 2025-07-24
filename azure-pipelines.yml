@@ -127,6 +127,8 @@ stages:
               -ci
               -nobl
               /bl:$(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig)\TestStep.binlog
+            env:
+              DOTNET_ROOT: $(Build.SourcesDirectory)/.dotnet
 
           - task: PublishBuildArtifacts@1
             displayName: 'Publish Test Results folders'
@@ -211,6 +213,8 @@ stages:
               ./test.sh --configuration $(_BuildConfig) --ci --test --integrationTest --nobl /bl:$(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig)\TestStep.binlog
             name: Test
             displayName: Test
+            env:
+              DOTNET_ROOT: $(Build.SourcesDirectory)/.dotnet
 
           - task: PublishBuildArtifacts@1
             displayName: 'Publish Test Results folders'
@@ -280,6 +284,8 @@ stages:
               ./test.sh --configuration $(_BuildConfig) --ci --test --integrationTest --nobl /bl:$(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig)\TestStep.binlog
             name: Test
             displayName: Test
+            env:
+              DOTNET_ROOT: $(Build.SourcesDirectory)/.dotnet
 
           - task: PublishBuildArtifacts@1
             displayName: 'Publish Test Results folders'
