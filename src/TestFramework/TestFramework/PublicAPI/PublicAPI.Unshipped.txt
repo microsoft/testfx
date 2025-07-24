@@ -44,5 +44,6 @@ static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.Equals(obje
 static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.ReferenceEquals(object? objA, object? objB) -> bool
 static Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert.Equals(object? objA, object? objB) -> bool
 static Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert.ReferenceEquals(object? objA, object? objB) -> bool
+*REMOVED*abstract Microsoft.VisualStudio.TestTools.UnitTesting.ConditionBaseAttribute.IgnoreMessage.get -> string?
 virtual Microsoft.VisualStudio.TestTools.UnitTesting.ConditionBaseAttribute.IgnoreMessage.get -> string?
 virtual Microsoft.VisualStudio.TestTools.UnitTesting.ConditionBaseAttribute.IgnoreMessage.set -> void
