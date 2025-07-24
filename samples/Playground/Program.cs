@@ -26,7 +26,7 @@ public class Program
         {
 #if NETCOREAPP
             // To attach to the children
-            Microsoft.Testing.TestInfrastructure.DebuggerUtility.AttachCurrentProcessToParentVSProcess();
+            // Microsoft.Testing.TestInfrastructure.DebuggerUtility.AttachCurrentProcessToParentVSProcess();
 #endif
 
             ITestApplicationBuilder testApplicationBuilder = await TestApplication.CreateBuilderAsync(args);
