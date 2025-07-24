@@ -15,6 +15,8 @@ public class UnhandledExceptionPolicyTests : AcceptanceTestBase<UnhandledExcepti
         Default,
     }
 
+    public TestContext TestContext { get; set; }
+
     internal static IEnumerable<(Mode Mode, string Arguments)> ModeProvider()
     {
         foreach (string tfm in TargetFrameworks.All)
@@ -36,7 +38,7 @@ public class UnhandledExceptionPolicyTests : AcceptanceTestBase<UnhandledExcepti
         await clone.CopyDirectoryAsync(testHost.DirectoryName, clone.Path, retainAttributes: !RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
         testHost = TestInfrastructure.TestHost.LocateFrom(clone.Path, "UnhandledExceptionPolicyTests");
         string configFileName = Path.Combine(testHost.DirectoryName, "UnhandledExceptionPolicyTests.testconfig.json");
-        string contentFile = await File.ReadAllTextAsync(Path.Combine(testHost.DirectoryName, "UnhandledExceptionPolicyTests.testconfig.json"));
+        string contentFile = await File.ReadAllTextAsync(Path.Combine(testHost.DirectoryName, "UnhandledExceptionPolicyTests.testconfig.json"), TestContext.CancellationTokenSource.Token);
 
         TestHostResult? testHostResult;
         switch (mode)
@@ -93,7 +95,7 @@ public class UnhandledExceptionPolicyTests : AcceptanceTestBase<UnhandledExcepti
         await clone.CopyDirectoryAsync(testHost.DirectoryName, clone.Path, retainAttributes: !RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
         testHost = TestInfrastructure.TestHost.LocateFrom(clone.Path, "UnhandledExceptionPolicyTests");
         string configFileName = Path.Combine(testHost.DirectoryName, "UnhandledExceptionPolicyTests.testconfig.json");
-        string contentFile = await File.ReadAllTextAsync(Path.Combine(testHost.DirectoryName, "UnhandledExceptionPolicyTests.testconfig.json"));
+        string contentFile = await File.ReadAllTextAsync(Path.Combine(testHost.DirectoryName, "UnhandledExceptionPolicyTests.testconfig.json"), TestContext.CancellationTokenSource.Token);
 
         TestHostResult? testHostResult;
         switch (mode)
@@ -221,12 +223,13 @@ public class DummyTestFramework : ITestFramework, IDataProducer
     public Task<CloseTestSessionResult> CloseTestSessionAsync(CloseTestSessionContext context) => Task.FromResult(new CloseTestSessionResult() { IsSuccess = true });
     public async Task ExecuteRequestAsync(ExecuteRequestContext context)
     {
-        await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid, new TestNode()
+        var message = new TestNodeUpdateMessage(context.Request.Session.SessionUid, new TestNode()
         {
             Uid = "Test1",
             DisplayName = "Test1",
-            Properties = new PropertyBag(new PassedTestNodeStateProperty())
-        }));
+        });
+        message.Properties.Add(new PassedTestNodeStateProperty());
+        await context.MessageBus.PublishAsync(this, message);
 
         if ( Environment.GetEnvironmentVariable("UNOBSERVEDTASKEXCEPTION") == "1")
         {

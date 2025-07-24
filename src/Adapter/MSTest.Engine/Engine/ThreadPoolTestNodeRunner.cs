@@ -76,8 +76,9 @@ internal sealed class ThreadPoolTestNodeRunner : IDisposable
                                 _runningTestNodeUids.AddOrUpdate(frameworkTestNode.StableUid, 1, (_, count) => count + 1);
 
                                 PlatformTestNode progressNode = frameworkTestNode.ToPlatformTestNode();
-                                progressNode.Properties.Add(InProgressTestNodeStateProperty.CachedInstance);
-                                await _publishDataAsync(new TestNodeUpdateMessage(_sessionUid, progressNode, parentTestNodeUid?.ToPlatformTestNodeUid())).ConfigureAwait(false);
+                                var testNodeUpdateMessage = new TestNodeUpdateMessage(_sessionUid, progressNode, parentTestNodeUid?.ToPlatformTestNodeUid());
+                                testNodeUpdateMessage.Properties.Add(InProgressTestNodeStateProperty.CachedInstance);
+                                await _publishDataAsync(testNodeUpdateMessage).ConfigureAwait(false);
 
                                 Result result = await CreateTestRunTaskAsync(frameworkTestNode, parentTestNodeUid).ConfigureAwait(false);
 
@@ -210,7 +211,8 @@ internal sealed class ThreadPoolTestNodeRunner : IDisposable
             platformTestNode.Properties.Add(new TrxFullyQualifiedTypeNameProperty(platformTestNode.Uid.Value[..platformTestNode.Uid.Value.LastIndexOf('.')]));
         }
 
-        TestExecutionContext testExecutionContext = new(_configuration, testNode, platformTestNode, _trxReportCapability, _cancellationToken);
+        TestNodeUpdateMessage? testNodeUpdateMessage = skipPublishResult ? null : new TestNodeUpdateMessage(_sessionUid, platformTestNode, parentTestNodeUid?.ToPlatformTestNodeUid());
+        TestExecutionContext testExecutionContext = new(_configuration, testNode, testNodeUpdateMessage, _trxReportCapability, _cancellationToken);
         try
         {
             // If we're already enqueued we cancel the test before the start
@@ -218,9 +220,9 @@ internal sealed class ThreadPoolTestNodeRunner : IDisposable
             _cancellationToken.ThrowIfCancellationRequested();
             await testNodeInvokeAction(testNode, testExecutionContext).ConfigureAwait(false);
 
-            if (!platformTestNode.Properties.Any<TestNodeStateProperty>())
+            if (testNodeUpdateMessage is not null && !testNodeUpdateMessage.Properties.Any<TestNodeStateProperty>())
             {
-                platformTestNode.Properties.Add(PassedTestNodeStateProperty.CachedInstance);
+                testNodeUpdateMessage.Properties.Add(PassedTestNodeStateProperty.CachedInstance);
             }
         }
         catch (MissingMethodException ex)
@@ -244,8 +246,7 @@ internal sealed class ThreadPoolTestNodeRunner : IDisposable
 
         if (!skipPublishResult)
         {
-            var testNodeUpdateMessage = new TestNodeUpdateMessage(_sessionUid, platformTestNode, parentTestNodeUid?.ToPlatformTestNodeUid());
-            testNodeUpdateMessage.Properties.Add(new TimingProperty(new TimingInfo(timesheet.StartTime, timesheet.StopTime, timesheet.Duration)));
+            testNodeUpdateMessage!.Properties.Add(new TimingProperty(new TimingInfo(timesheet.StartTime, timesheet.StopTime, timesheet.Duration)));
             await _publishDataAsync(testNodeUpdateMessage).ConfigureAwait(false);
         }
 

@@ -107,10 +107,11 @@ internal sealed class Json
             // Historically, both MTP and Test Explorer used to expect these properties to be part of the TestNode.
             // Starting with MTP v2, we are moving the property to its right location, to be on TestNodeUpdateMessage.
             // However, we still need to support what Test Explorer expects so we add the property back again to TestNode here as a hack.
-            TestNode testNode = message.TestNode;
+            // We add the properties to a clone so that we don't modify the original TestNode instance.
+            TestNode testNode = message.TestNode.CloneTestNode();
             foreach (IProperty prop in message.Properties)
             {
-                if (prop is TimingProperty or StandardOutputProperty or StandardErrorProperty or FileArtifactProperty)
+                if (prop is TimingProperty or StandardOutputProperty or StandardErrorProperty or FileArtifactProperty or TestNodeStateProperty)
                 {
                     testNode.Properties.Add(prop);
                 }
@@ -118,7 +119,7 @@ internal sealed class Json
 
             return
             [
-                (JsonRpcStrings.Node, message.TestNode),
+                (JsonRpcStrings.Node, testNode),
                 (JsonRpcStrings.Parent, message.ParentTestNodeUid?.Value)
             ];
         });

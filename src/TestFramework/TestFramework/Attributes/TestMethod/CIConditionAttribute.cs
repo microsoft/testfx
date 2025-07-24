@@ -35,9 +35,6 @@ public sealed class CIConditionAttribute : ConditionBaseAttribute
     /// <inheritdoc />
     public override bool IsConditionMet => IsCIEnvironment();
 
-    /// <inheritdoc />
-    public override string? IgnoreMessage { get; set; }
-
     /// <summary>
     /// Gets the group name for this attribute.
     /// </summary>

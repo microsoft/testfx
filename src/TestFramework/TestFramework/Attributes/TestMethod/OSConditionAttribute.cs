@@ -79,9 +79,6 @@ public sealed class OSConditionAttribute : ConditionBaseAttribute
     }
 #endif
 
-    /// <inheritdoc />
-    public override string? IgnoreMessage { get; set; }
-
     /// <summary>
     /// Gets the group name for this attribute.
     /// </summary>
