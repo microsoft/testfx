@@ -247,6 +247,7 @@ public sealed class TestMethodShouldBeValidAnalyzerTests
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+#if NET
     [TestMethod]
     public async Task WhenTestMethodReturnTypeIsNotValid_Diagnostic()
     {
@@ -346,6 +347,7 @@ public sealed class TestMethodShouldBeValidAnalyzerTests
 
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
+#endif
 
     [TestMethod]
     public async Task WhenTestMethodIsAsyncVoid_Diagnostic()

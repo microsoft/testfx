@@ -30,8 +30,8 @@ public sealed class CrashPlusHangDumpTests : AcceptanceTestBase<CrashPlusHangDum
         testHostResult.AssertOutputMatchesRegex(@"Test host process with PID \'.+\' crashed, a dump file was generated");
         testHostResult.AssertOutputDoesNotContain(@"Hang dump timeout '00:00:08' expired");
 
-        Assert.IsTrue(Directory.GetFiles(resultDirectory, "CrashPlusHangDump*_crash.dmp", SearchOption.AllDirectories).Length > 0, $"Dump file not found '{TargetFrameworks.NetCurrent}'\n{testHostResult}'");
-        Assert.IsFalse(Directory.GetFiles(resultDirectory, "CrashPlusHangDump*_hang.dmp", SearchOption.AllDirectories).Length > 0, $"Dump file not found '{TargetFrameworks.NetCurrent}'\n{testHostResult}'");
+        Assert.IsGreaterThan(0, Directory.GetFiles(resultDirectory, "CrashPlusHangDump*_crash.dmp", SearchOption.AllDirectories).Length, $"Dump file not found '{TargetFrameworks.NetCurrent}'\n{testHostResult}'");
+        Assert.IsLessThanOrEqualTo(0, Directory.GetFiles(resultDirectory, "CrashPlusHangDump*_hang.dmp", SearchOption.AllDirectories).Length, $"Dump file not found '{TargetFrameworks.NetCurrent}'\n{testHostResult}'");
     }
 
     [TestMethod]
@@ -58,8 +58,8 @@ public sealed class CrashPlusHangDumpTests : AcceptanceTestBase<CrashPlusHangDum
         testHostResult.AssertOutputDoesNotMatchRegex(@"Test host process with PID '.+' crashed, a dump file was generated");
         testHostResult.AssertOutputContains(@"Hang dump timeout of '00:00:08' expired");
 
-        Assert.IsFalse(Directory.GetFiles(resultDirectory, "CrashPlusHangDump.dll*_crash.dmp", SearchOption.AllDirectories).Length > 0, $"Dump file not found '{TargetFrameworks.NetCurrent}'\n{testHostResult}'");
-        Assert.IsTrue(Directory.GetFiles(resultDirectory, "CrashPlusHangDump*_hang.dmp", SearchOption.AllDirectories).Length > 0, $"Dump file not found '{TargetFrameworks.NetCurrent}'\n{testHostResult}'");
+        Assert.IsLessThanOrEqualTo(0, Directory.GetFiles(resultDirectory, "CrashPlusHangDump.dll*_crash.dmp", SearchOption.AllDirectories).Length, $"Dump file not found '{TargetFrameworks.NetCurrent}'\n{testHostResult}'");
+        Assert.IsGreaterThan(0, Directory.GetFiles(resultDirectory, "CrashPlusHangDump*_hang.dmp", SearchOption.AllDirectories).Length, $"Dump file not found '{TargetFrameworks.NetCurrent}'\n{testHostResult}'");
     }
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
@@ -149,21 +149,23 @@ public class DummyTestFramework : ITestFramework, IDataProducer
             Environment.FailFast("CrashPlusHangDump");
         }
 
-        await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid, new TestNode()
+        var testNodeUpdateMessage = new TestNodeUpdateMessage(context.Request.Session.SessionUid, new TestNode()
         {
             Uid = "Test1",
             DisplayName = "Test1",
-            Properties = new PropertyBag(new PassedTestNodeStateProperty()),
-        }));
+        });
+        testNodeUpdateMessage.Properties.Add(new PassedTestNodeStateProperty());
+        await context.MessageBus.PublishAsync(this, testNodeUpdateMessage);
 
         Thread.Sleep(int.Parse(Environment.GetEnvironmentVariable("SLEEPTIMEMS1")!, CultureInfo.InvariantCulture));
 
-        await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid, new TestNode()
+        var testNodeUpdateMessage2 = new TestNodeUpdateMessage(context.Request.Session.SessionUid, new TestNode()
         {
             Uid = "Test2",
             DisplayName = "Test2",
-            Properties = new PropertyBag(new PassedTestNodeStateProperty()),
-        }));
+        });
+        testNodeUpdateMessage2.Properties.Add(new PassedTestNodeStateProperty());
+        await context.MessageBus.PublishAsync(this, testNodeUpdateMessage2);
 
         Thread.Sleep(int.Parse(Environment.GetEnvironmentVariable("SLEEPTIMEMS2")!, CultureInfo.InvariantCulture));
         context.Complete();

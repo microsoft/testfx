@@ -8,24 +8,19 @@ public class MSBuildTests_Solution : AcceptanceTestBase<NopAssetFixture>
 {
     private const string AssetName = "MSTestProject";
 
-    internal static IEnumerable<(string SingleTfmOrMultiTfm, BuildConfiguration BuildConfiguration, bool IsMultiTfm, string Command)> GetBuildMatrix()
+    internal static IEnumerable<(string SingleTfmOrMultiTfm, BuildConfiguration BuildConfiguration, bool IsMultiTfm)> GetBuildMatrix()
     {
         foreach ((string SingleTfmOrMultiTfm, BuildConfiguration BuildConfiguration, bool IsMultiTfm) entry in GetBuildMatrixSingleAndMultiTfmBuildConfiguration())
         {
-            foreach (string command in new string[]
             {
-                "build --no-restore -t:Test -p:UseMSBuildTestInfrastructure=true",
-                "test --no-restore",
-            })
-            {
-                yield return new(entry.SingleTfmOrMultiTfm, entry.BuildConfiguration, entry.IsMultiTfm, command);
+                yield return new(entry.SingleTfmOrMultiTfm, entry.BuildConfiguration, entry.IsMultiTfm);
             }
         }
     }
 
     [DynamicData(nameof(GetBuildMatrix))]
     [TestMethod]
-    public async Task MSBuildTests_UseMSBuildTestInfrastructure_Should_Run_Solution_Tests(string singleTfmOrMultiTfm, BuildConfiguration _, bool isMultiTfm, string command)
+    public async Task MSBuildTests_UseMSBuildTestInfrastructure_Should_Run_Solution_Tests(string singleTfmOrMultiTfm, BuildConfiguration _, bool isMultiTfm)
     {
         using TestAsset generator = await TestAsset.GenerateAssetAsync(
             AssetName,
@@ -59,7 +54,7 @@ public class MSBuildTests_Solution : AcceptanceTestBase<NopAssetFixture>
         // Build the solution
         DotnetMuxerResult restoreResult = await DotnetCli.RunAsync($"restore -nodeReuse:false {solution.SolutionFile} --configfile {nugetFile}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path);
         restoreResult.AssertOutputDoesNotContain("An approximate best match of");
-        DotnetMuxerResult testResult = await DotnetCli.RunAsync($"{command} -nodeReuse:false {solution.SolutionFile}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, workingDirectory: solution.FolderPath);
+        DotnetMuxerResult testResult = await DotnetCli.RunAsync($"build --no-restore -t:Test -p:UseMSBuildTestInfrastructure=true -nodeReuse:false {solution.SolutionFile}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, workingDirectory: solution.FolderPath);
 
         if (isMultiTfm)
         {
@@ -90,7 +85,6 @@ public class MSBuildTests_Solution : AcceptanceTestBase<NopAssetFixture>
         <LangVersion>preview</LangVersion>
         <PlatformTarget>x64</PlatformTarget>
         <GenerateTestingPlatformEntryPoint>false</GenerateTestingPlatformEntryPoint>
-        <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
     </PropertyGroup>
     <ItemGroup>
         <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Version="$MicrosoftTestingPlatformVersion$" />
@@ -142,10 +136,15 @@ public class DummyTestFramework : ITestFramework, IDataProducer
 
     public async Task ExecuteRequestAsync(ExecuteRequestContext context)
     {
-        await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid,
-    new TestNode() { Uid = "1", DisplayName = "Test1", Properties = new(DiscoveredTestNodeStateProperty.CachedInstance) }));
-        await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid,
-    new TestNode() { Uid = "1", DisplayName = "Test1", Properties = new(PassedTestNodeStateProperty.CachedInstance) }));
+        var message1 = new TestNodeUpdateMessage(context.Request.Session.SessionUid,
+            new TestNode() { Uid = "1", DisplayName = "Test1" });
+        message1.Properties.Add(DiscoveredTestNodeStateProperty.CachedInstance);
+        await context.MessageBus.PublishAsync(this, message1);
+
+        var message2 = new TestNodeUpdateMessage(context.Request.Session.SessionUid,
+            new TestNode() { Uid = "1", DisplayName = "Test1" });
+        message2.Properties.Add(PassedTestNodeStateProperty.CachedInstance);
+        await context.MessageBus.PublishAsync(this, message2);
 
         context.Complete();
     }

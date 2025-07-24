@@ -9,9 +9,9 @@ namespace MSTestAdapter.PlatformServices.Tests.Services;
 
 public class TestSourceTests : TestContainer
 {
-    private readonly TestSource _testSource;
+    private readonly TestSourceHandler _testSource;
 
-    public TestSourceTests() => _testSource = new TestSource();
+    public TestSourceTests() => _testSource = new TestSourceHandler();
 
     public void ValidSourceExtensionsShouldContainDllExtensions()
         => Verify(_testSource.ValidSourceExtensions.ToList().Contains(".dll"));

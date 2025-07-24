@@ -32,15 +32,8 @@ public sealed class CIConditionAttribute : ConditionBaseAttribute
             : "Test is not supported in CI environments";
     }
 
-    /// <summary>
-    /// Gets a value indicating whether the test method or test class should run.
-    /// </summary>
-    public override bool ShouldRun => IsCIEnvironment();
-
-    /// <summary>
-    /// Gets the ignore message (in case <see cref="ShouldRun"/> returns <see langword="false"/>).
-    /// </summary>
-    public override string? IgnoreMessage { get; }
+    /// <inheritdoc />
+    public override bool IsConditionMet => IsCIEnvironment();
 
     /// <summary>
     /// Gets the group name for this attribute.

@@ -8,6 +8,7 @@ using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.ServerMode;
 using Microsoft.Testing.Platform.Services;
+using Microsoft.Testing.Platform.TestHost;
 using Microsoft.TestPlatform.AdapterUtilities.ManagedNameUtilities;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
@@ -138,25 +139,26 @@ internal static class ObjectModelConverters
     /// <summary>
     /// Converts a VSTest <see cref="TestResult"/> to a Microsoft Testing Platform <see cref="TestNode"/>.
     /// </summary>
-    public static TestNode ToTestNode(
+    public static TestNodeUpdateMessage ToTestNodeUpdateMessage(
         this TestResult testResult,
         bool isTrxEnabled,
         bool useFullyQualifiedNameAsUid,
         INamedFeatureCapability? namedFeatureCapability,
         ICommandLineOptions commandLineOptions,
-        IClientInfo clientInfo)
+        IClientInfo clientInfo,
+        SessionUid sessionUid)
     {
         var testNode = testResult.TestCase.ToTestNode(isTrxEnabled, useFullyQualifiedNameAsUid, namedFeatureCapability, commandLineOptions, clientInfo, testResult.DisplayName);
-
+        var testNodeUpdateMessage = new TestNodeUpdateMessage(sessionUid, testNode);
         CopyCategoryAndTraits(testResult, testNode, isTrxEnabled);
 
-        testNode.AddOutcome(testResult);
+        testNodeUpdateMessage.AddOutcome(testResult);
 
         if (isTrxEnabled)
         {
             if (!RoslynString.IsNullOrEmpty(testResult.ErrorMessage) || !RoslynString.IsNullOrEmpty(testResult.ErrorStackTrace))
             {
-                testNode.Properties.Add(new TrxExceptionProperty(testResult.ErrorMessage, testResult.ErrorStackTrace));
+                testNodeUpdateMessage.Properties.Add(new TrxExceptionProperty(testResult.ErrorMessage, testResult.ErrorStackTrace));
             }
 
             if (TryParseFullyQualifiedType(testResult.TestCase.FullyQualifiedName, out string? fullyQualifiedType))
@@ -168,7 +170,7 @@ internal static class ObjectModelConverters
                 throw new InvalidOperationException("Unable to parse fully qualified type name from test case: " + testResult.TestCase.FullyQualifiedName);
             }
 
-            testNode.Properties.Add(new TrxMessagesProperty([.. testResult.Messages
+            testNodeUpdateMessage.Properties.Add(new TrxMessagesProperty([.. testResult.Messages
                 .Select(msg =>
                     msg.Category switch
                     {
@@ -179,7 +181,7 @@ internal static class ObjectModelConverters
                     })]));
         }
 
-        testNode.Properties.Add(new TimingProperty(new(testResult.StartTime, testResult.EndTime, testResult.Duration), []));
+        testNodeUpdateMessage.Properties.Add(new TimingProperty(new(testResult.StartTime, testResult.EndTime, testResult.Duration), []));
 
         var standardErrorMessages = new List<string>();
         var standardOutputMessages = new List<string>();
@@ -213,43 +215,43 @@ internal static class ObjectModelConverters
         {
             foreach (UriDataAttachment attachment in attachmentSet.Attachments)
             {
-                testNode.Properties.Add(new FileArtifactProperty(new FileInfo(attachment.Uri.LocalPath), attachmentSet.DisplayName, attachment.Description));
+                testNodeUpdateMessage.Properties.Add(new FileArtifactProperty(new FileInfo(attachment.Uri.LocalPath), attachmentSet.DisplayName, attachment.Description));
             }
         }
 
         if (standardErrorMessages.Count > 0)
         {
-            testNode.Properties.Add(new StandardErrorProperty(string.Join(Environment.NewLine, standardErrorMessages)));
+            testNodeUpdateMessage.Properties.Add(new StandardErrorProperty(string.Join(Environment.NewLine, standardErrorMessages)));
         }
 
         if (standardOutputMessages.Count > 0)
         {
-            testNode.Properties.Add(new StandardOutputProperty(string.Join(Environment.NewLine, standardOutputMessages)));
+            testNodeUpdateMessage.Properties.Add(new StandardOutputProperty(string.Join(Environment.NewLine, standardOutputMessages)));
         }
 
-        return testNode;
+        return testNodeUpdateMessage;
     }
 
-    private static void AddOutcome(this TestNode testNode, TestResult testResult)
+    private static void AddOutcome(this TestNodeUpdateMessage testNodeUpdateMessage, TestResult testResult)
     {
         switch (testResult.Outcome)
         {
             case TestOutcome.Passed:
-                testNode.Properties.Add(PassedTestNodeStateProperty.CachedInstance);
+                testNodeUpdateMessage.Properties.Add(PassedTestNodeStateProperty.CachedInstance);
                 break;
 
             case TestOutcome.NotFound:
-                testNode.Properties.Add(new ErrorTestNodeStateProperty(new VSTestException(testResult.ErrorMessage ?? "Not found", testResult.ErrorStackTrace)));
+                testNodeUpdateMessage.Properties.Add(new ErrorTestNodeStateProperty(new VSTestException(testResult.ErrorMessage ?? "Not found", testResult.ErrorStackTrace)));
                 break;
 
             case TestOutcome.Failed:
-                testNode.Properties.Add(new FailedTestNodeStateProperty(new VSTestException(testResult.ErrorMessage, testResult.ErrorStackTrace)));
+                testNodeUpdateMessage.Properties.Add(new FailedTestNodeStateProperty(new VSTestException(testResult.ErrorMessage, testResult.ErrorStackTrace)));
                 break;
 
             // It seems that NUnit inconclusive tests are reported as None which should be considered as Skipped.
             case TestOutcome.None:
             case TestOutcome.Skipped:
-                testNode.Properties.Add(testResult.ErrorMessage is null
+                testNodeUpdateMessage.Properties.Add(testResult.ErrorMessage is null
                     ? SkippedTestNodeStateProperty.CachedInstance
                     : new SkippedTestNodeStateProperty(testResult.ErrorMessage));
                 break;

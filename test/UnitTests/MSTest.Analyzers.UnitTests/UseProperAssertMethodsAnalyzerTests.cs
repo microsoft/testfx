@@ -1309,4 +1309,646 @@ public sealed class UseProperAssertMethodsAnalyzerTests
 
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
+
+    #region New test cases for string methods
+
+    [TestMethod]
+    public async Task WhenAssertIsTrueWithStringStartsWith()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    string myString = "Hello World";
+                    {|#0:Assert.IsTrue(myString.StartsWith("Hello"))|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    string myString = "Hello World";
+                    Assert.StartsWith("Hello", myString);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            // /0/Test0.cs(10,9): info MSTEST0037: Use 'Assert.StartsWith' instead of 'Assert.IsTrue'
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("StartsWith", "IsTrue"),
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertIsTrueWithStringEndsWith()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    string myString = "Hello World";
+                    {|#0:Assert.IsTrue(myString.EndsWith("World"))|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    string myString = "Hello World";
+                    Assert.EndsWith("World", myString);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            // /0/Test0.cs(10,9): info MSTEST0037: Use 'Assert.EndsWith' instead of 'Assert.IsTrue'
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("EndsWith", "IsTrue"),
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertIsTrueWithStringContains()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    string myString = "Hello World";
+                    {|#0:Assert.IsTrue(myString.Contains("lo Wo"))|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    string myString = "Hello World";
+                    Assert.Contains("lo Wo", myString);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            // /0/Test0.cs(10,9): info MSTEST0037: Use 'Assert.Contains' instead of 'Assert.IsTrue'
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("Contains", "IsTrue"),
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertIsFalseWithStringStartsWith()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    string myString = "Hello World";
+                    Assert.IsFalse(myString.StartsWith("Hello"));
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertIsFalseWithStringEndsWith()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    string myString = "Hello World";
+                    Assert.IsFalse(myString.EndsWith("World"));
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertIsFalseWithStringContains()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    string myString = "Hello World";
+                    Assert.IsFalse(myString.Contains("test"));
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    #endregion
+
+    #region New test cases for collection methods
+
+    [TestMethod]
+    public async Task WhenAssertIsTrueWithCollectionContains()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Collections.Generic;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    var list = new List<int> { 1, 2, 3 };
+                    {|#0:Assert.IsTrue(list.Contains(2))|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Collections.Generic;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    var list = new List<int> { 1, 2, 3 };
+                    Assert.Contains(2, list);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            // /0/Test0.cs(11,9): info MSTEST0037: Use 'Assert.Contains' instead of 'Assert.IsTrue'
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("Contains", "IsTrue"),
+            fixedCode);
+    }
+
+    #endregion
+
+    #region New test cases for comparisons
+
+    [TestMethod]
+    public async Task WhenAssertIsTrueWithGreaterThanComparison()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    int a = 5;
+                    int b = 3;
+                    {|#0:Assert.IsTrue(a > b)|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    int a = 5;
+                    int b = 3;
+                    Assert.IsGreaterThan(b, a);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            // /0/Test0.cs(11,9): info MSTEST0037: Use 'Assert.IsGreaterThan' instead of 'Assert.IsTrue'
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("IsGreaterThan", "IsTrue"),
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertIsFalseWithGreaterThanComparison()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    int a = 5;
+                    int b = 3;
+                    {|#0:Assert.IsFalse(a > b)|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    int a = 5;
+                    int b = 3;
+                    Assert.IsLessThanOrEqualTo(b, a);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            // /0/Test0.cs(11,9): info MSTEST0037: Use 'Assert.IsLessThanOrEqualTo' instead of 'Assert.IsFalse'
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("IsLessThanOrEqualTo", "IsFalse"),
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertIsTrueWithEqualsComparison()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    int a = 5;
+                    int b = 5;
+                    {|#0:Assert.IsTrue(a == b)|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    int a = 5;
+                    int b = 5;
+                    Assert.AreEqual(b, a);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            // /0/Test0.cs(11,9): info MSTEST0037: Use 'Assert.AreEqual' instead of 'Assert.IsTrue'
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("AreEqual", "IsTrue"),
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertIsFalseWithEqualsComparison()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    int a = 5;
+                    int b = 3;
+                    {|#0:Assert.IsFalse(a == b)|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    int a = 5;
+                    int b = 3;
+                    Assert.AreNotEqual(b, a);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            // /0/Test0.cs(11,9): info MSTEST0037: Use 'Assert.AreNotEqual' instead of 'Assert.IsFalse'
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("AreNotEqual", "IsFalse"),
+            fixedCode);
+    }
+
+    #endregion
+
+    #region New test cases for collection count
+
+    [TestMethod]
+    public async Task WhenAssertAreEqualWithCollectionCountZero()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Collections.Generic;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    var list = new List<int>();
+                    {|#0:Assert.AreEqual(0, list.Count)|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Collections.Generic;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    var list = new List<int>();
+                    Assert.IsEmpty(list);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            // /0/Test0.cs(11,9): info MSTEST0037: Use 'Assert.IsEmpty' instead of 'Assert.AreEqual'
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("IsEmpty", "AreEqual"),
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertAreEqualWithCollectionCountNonZero()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Collections.Generic;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    var list = new List<int> { 1, 2, 3 };
+                    {|#0:Assert.AreEqual(3, list.Count)|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Collections.Generic;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    var list = new List<int> { 1, 2, 3 };
+                    Assert.HasCount(3, list);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            // /0/Test0.cs(11,9): info MSTEST0037: Use 'Assert.HasCount' instead of 'Assert.AreEqual'
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("HasCount", "AreEqual"),
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertAreNotEqualWithCollectionCountZero()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Collections.Generic;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    var list = new List<int>();
+                    Assert.AreNotEqual(0, list.Count);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertAreNotEqualWithCollectionCountNonZero()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Collections.Generic;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    var list = new List<int> { 1, 2, 3 };
+                    Assert.AreNotEqual(3, list.Count);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertAreNotEqualWithArrayLength()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    var array = new int[] { 1, 2, 3, 4, 5 };
+                    Assert.AreNotEqual(5, array.Length);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertAreEqualWithCollectionCountAndMessage_HasCount()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Collections.Generic;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    var myCollection = new List<int> { 1, 2 };
+                    {|#0:Assert.AreEqual(2, myCollection.Count, "Wrong number of elements")|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Collections.Generic;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    var myCollection = new List<int> { 1, 2 };
+                    Assert.HasCount(2, myCollection, "Wrong number of elements");
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            // /0/Test0.cs(11,9): info MSTEST0037: Use 'Assert.HasCount' instead of 'Assert.AreEqual'
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("HasCount", "AreEqual"),
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertAreEqualWithCollectionCountZeroAndMessage_IsEmpty()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Collections.Generic;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    var list = new List<int>();
+                    {|#0:Assert.AreEqual(0, list.Count, "Collection should be empty")|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Collections.Generic;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    var list = new List<int>();
+                    Assert.IsEmpty(list, "Collection should be empty");
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            // /0/Test0.cs(11,9): info MSTEST0037: Use 'Assert.IsEmpty' instead of 'Assert.AreEqual'
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("IsEmpty", "AreEqual"),
+            fixedCode);
+    }
+
+    #endregion
 }

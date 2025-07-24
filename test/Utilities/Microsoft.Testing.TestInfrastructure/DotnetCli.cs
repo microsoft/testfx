@@ -54,7 +54,7 @@ public static class DotnetCli
         Dictionary<string, string?>? environmentVariables = null,
         bool failIfReturnValueIsNotZero = true,
         bool disableTelemetry = true,
-        int timeoutInSeconds = 60,
+        int timeoutInSeconds = 10000,
         int retryCount = 5,
         bool disableCodeCoverage = true,
         bool warnAsError = true,
@@ -97,7 +97,7 @@ public static class DotnetCli
 
             environmentVariables["NUGET_PACKAGES"] = nugetGlobalPackagesFolder;
 
-            string extraArgs = warnAsError ? " /warnaserror" : string.Empty;
+            string extraArgs = warnAsError ? " -p:MSBuildTreatWarningsAsErrors=true" : string.Empty;
             extraArgs += suppressPreviewDotNetMessage ? " -p:SuppressNETCoreSdkPreviewMessage=true" : string.Empty;
             if (args.IndexOf("-- ", StringComparison.Ordinal) is int platformArgsIndex && platformArgsIndex > 0)
             {

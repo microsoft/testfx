@@ -49,7 +49,7 @@ public sealed class OSConditionAttribute : ConditionBaseAttribute
     /// <summary>
     /// Gets a value indicating whether the test method or test class should be ignored.
     /// </summary>
-    public override bool ShouldRun
+    public override bool IsConditionMet
 #if NET462
         // On .NET Framework, we are sure we are running on Windows.
         => (_operatingSystems & OperatingSystems.Windows) != 0;
@@ -78,11 +78,6 @@ public sealed class OSConditionAttribute : ConditionBaseAttribute
         }
     }
 #endif
-
-    /// <summary>
-    /// Gets the ignore message (in case <see cref="ShouldRun"/> returns <see langword="false"/>).
-    /// </summary>
-    public override string? IgnoreMessage { get; }
 
     /// <summary>
     /// Gets the group name for this attribute.

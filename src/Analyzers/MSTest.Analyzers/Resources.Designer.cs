@@ -1302,5 +1302,59 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("UseRetryWithTestMethodTitle", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to TestContext property cannot be accessed in this context.
+        /// </summary>
+        internal static string TestContextPropertyUsageTitle {
+            get {
+                return ResourceManager.GetString("TestContextPropertyUsageTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to TestContext property '{0}' cannot be accessed in '{1}' method.
+        /// </summary>
+        internal static string TestContextPropertyUsageMessageFormat {
+            get {
+                return ResourceManager.GetString("TestContextPropertyUsageMessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Some TestContext properties are only available during test execution and cannot be accessed in assembly initialize, class initialize, class cleanup, or assembly cleanup methods.
+        /// </summary>
+        internal static string TestContextPropertyUsageDescription {
+            get {
+                return ResourceManager.GetString("TestContextPropertyUsageDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to When calling async methods that have overloads accepting a CancellationToken parameter, prefer using the overload with TestContext.CancellationTokenSource.Token to enable cooperative cancellation and respect test timeouts.
+        /// </summary>
+        internal static string FlowTestContextCancellationTokenDescription {
+            get {
+                return ResourceManager.GetString("FlowTestContextCancellationTokenDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Consider using the overload that accepts a CancellationToken and pass 'TestContext.CancellationTokenSource.Token'.
+        /// </summary>
+        internal static string FlowTestContextCancellationTokenMessageFormat {
+            get {
+                return ResourceManager.GetString("FlowTestContextCancellationTokenMessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Flow TestContext.CancellationToken to async operations.
+        /// </summary>
+        internal static string FlowTestContextCancellationTokenTitle {
+            get {
+                return ResourceManager.GetString("FlowTestContextCancellationTokenTitle", resourceCulture);
+            }
+        }
     }
 }

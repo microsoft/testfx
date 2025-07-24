@@ -13,6 +13,8 @@ namespace Microsoft.Testing.Framework.SourceGeneration.UnitTests.Generators;
 [TestClass]
 public sealed class DataRowAttributeGenerationTests : TestBase
 {
+    public TestContext TestContext { get; set; }
+
     [TestMethod]
     public async Task DataRowAttribute_HandlesPrimitiveTypes()
     {
@@ -98,7 +100,7 @@ public sealed class DataRowAttributeGenerationTests : TestBase
         SyntaxTree? testClassTree = generatorResult.GeneratedTrees.FirstOrDefault(r => r.FilePath.EndsWith("TestClass.g.cs", StringComparison.OrdinalIgnoreCase));
         testClassTree.Should().NotBeNull();
 
-        SourceText testClass = await testClassTree!.GetTextAsync();
+        SourceText testClass = await testClassTree!.GetTextAsync(TestContext.CancellationTokenSource.Token);
 
         testClass.Should().ContainSourceCode("""
                                 GetArguments = static () => new MSTF::InternalUnsafeTestArgumentsEntry<bool>[]
@@ -213,7 +215,7 @@ public sealed class DataRowAttributeGenerationTests : TestBase
         SyntaxTree? testClassTree = generatorResult.GeneratedTrees.FirstOrDefault(r => r.FilePath.EndsWith("TestClass.g.cs", StringComparison.OrdinalIgnoreCase));
         testClassTree.Should().NotBeNull();
 
-        SourceText testClass = await testClassTree!.GetTextAsync();
+        SourceText testClass = await testClassTree!.GetTextAsync(TestContext.CancellationTokenSource.Token);
 
         testClass.Should().ContainSourceCode("""
                                 GetArguments = static () => new MSTF::InternalUnsafeTestArgumentsEntry<(string s, int i)>[]
@@ -257,7 +259,7 @@ public sealed class DataRowAttributeGenerationTests : TestBase
         SyntaxTree? testClassTree = generatorResult.GeneratedTrees.FirstOrDefault(r => r.FilePath.EndsWith("TestClass.g.cs", StringComparison.OrdinalIgnoreCase));
         testClassTree.Should().NotBeNull();
 
-        SourceText testClass = await testClassTree!.GetTextAsync();
+        SourceText testClass = await testClassTree!.GetTextAsync(TestContext.CancellationTokenSource.Token);
 
         testClass.Should().ContainSourceCode("""
                                 GetArguments = static () => new MSTF::InternalUnsafeTestArgumentsEntry<string>[]
@@ -301,7 +303,7 @@ public sealed class DataRowAttributeGenerationTests : TestBase
         SyntaxTree? testClassTree = generatorResult.GeneratedTrees.FirstOrDefault(r => r.FilePath.EndsWith("TestClass.g.cs", StringComparison.OrdinalIgnoreCase));
         testClassTree.Should().NotBeNull();
 
-        SourceText testClass = await testClassTree!.GetTextAsync();
+        SourceText testClass = await testClassTree!.GetTextAsync(TestContext.CancellationTokenSource.Token);
 
         testClass.Should().ContainSourceCode("""
                                 GetArguments = static () => new MSTF::InternalUnsafeTestArgumentsEntry<global::System.Type>[]
@@ -348,7 +350,7 @@ public sealed class DataRowAttributeGenerationTests : TestBase
         SyntaxTree? testClassTree = generatorResult.GeneratedTrees.FirstOrDefault(r => r.FilePath.EndsWith("TestClass.g.cs", StringComparison.OrdinalIgnoreCase));
         testClassTree.Should().NotBeNull();
 
-        SourceText testClass = await testClassTree!.GetTextAsync();
+        SourceText testClass = await testClassTree!.GetTextAsync(TestContext.CancellationTokenSource.Token);
 
         testClass.Should().ContainSourceCode("""
                                 GetArguments = static () => new MSTF::InternalUnsafeTestArgumentsEntry<global::MyNamespace.ParentClass.MyEnum>[]
@@ -408,7 +410,7 @@ public sealed class DataRowAttributeGenerationTests : TestBase
         SyntaxTree? testClassTree = generatorResult.GeneratedTrees.FirstOrDefault(r => r.FilePath.EndsWith("TestClass.g.cs", StringComparison.OrdinalIgnoreCase));
         testClassTree.Should().NotBeNull();
 
-        SourceText testClass = await testClassTree!.GetTextAsync();
+        SourceText testClass = await testClassTree!.GetTextAsync(TestContext.CancellationTokenSource.Token);
 
         testClass.Should().ContainSourceCode("""
                                 GetArguments = static () => new MSTF::InternalUnsafeTestArgumentsEntry<global::ConflictingNamespace.MyEnum>[]
@@ -462,7 +464,7 @@ public sealed class DataRowAttributeGenerationTests : TestBase
         SyntaxTree? testClassTree = generatorResult.GeneratedTrees.FirstOrDefault(r => r.FilePath.EndsWith("TestClass.g.cs", StringComparison.OrdinalIgnoreCase));
         testClassTree.Should().NotBeNull();
 
-        SourceText testClass = await testClassTree!.GetTextAsync();
+        SourceText testClass = await testClassTree!.GetTextAsync(TestContext.CancellationTokenSource.Token);
 
         testClass.Should().ContainSourceCode("""
                                 GetArguments = static () => new MSTF::InternalUnsafeTestArgumentsEntry<global::MyNamespace.ConflictingNamespace.MyEnum>[]
@@ -511,7 +513,7 @@ public sealed class DataRowAttributeGenerationTests : TestBase
         SyntaxTree? testClassTree = generatorResult.GeneratedTrees.FirstOrDefault(r => r.FilePath.EndsWith("TestClass.g.cs", StringComparison.OrdinalIgnoreCase));
         testClassTree.Should().NotBeNull();
 
-        SourceText testClass = await testClassTree!.GetTextAsync();
+        SourceText testClass = await testClassTree!.GetTextAsync(TestContext.CancellationTokenSource.Token);
 
         testClass.Should().ContainSourceCode("""
                                 GetArguments = static () => new MSTF::InternalUnsafeTestArgumentsEntry<string>[]
@@ -565,7 +567,7 @@ public sealed class DataRowAttributeGenerationTests : TestBase
         SyntaxTree? testClassTree = generatorResult.GeneratedTrees.FirstOrDefault(r => r.FilePath.EndsWith("TestClass.g.cs", StringComparison.OrdinalIgnoreCase));
         testClassTree.Should().NotBeNull();
 
-        SourceText testClass = await testClassTree!.GetTextAsync();
+        SourceText testClass = await testClassTree!.GetTextAsync(TestContext.CancellationTokenSource.Token);
 
         testClass.Should().ContainSourceCode("""
                             // The test method is parameterized but no argument was specified.
@@ -646,7 +648,7 @@ public sealed class DataRowAttributeGenerationTests : TestBase
         SyntaxTree? testClassTree = generatorResult.GeneratedTrees.FirstOrDefault(r => r.FilePath.EndsWith("TestClass.g.cs", StringComparison.OrdinalIgnoreCase));
         testClassTree.Should().NotBeNull();
 
-        SourceText testClass = await testClassTree!.GetTextAsync();
+        SourceText testClass = await testClassTree!.GetTextAsync(TestContext.CancellationTokenSource.Token);
 
         testClass.Should().ContainSourceCode("""
                                 GetArguments = static () => new MSTF::InternalUnsafeTestArgumentsEntry<object[]>[]
@@ -683,7 +685,7 @@ public sealed class DataRowAttributeGenerationTests : TestBase
         SyntaxTree? testClassTree = generatorResult.GeneratedTrees.FirstOrDefault(r => r.FilePath.EndsWith("TestClass.g.cs", StringComparison.OrdinalIgnoreCase));
         testClassTree.Should().NotBeNull();
 
-        SourceText testClass = await testClassTree!.GetTextAsync();
+        SourceText testClass = await testClassTree!.GetTextAsync(TestContext.CancellationTokenSource.Token);
 
         testClass.Should().ContainSourceCode("""
                                 GetArguments = static () => new MSTF::InternalUnsafeTestArgumentsEntry<int[]>[]
@@ -720,7 +722,7 @@ public sealed class DataRowAttributeGenerationTests : TestBase
         SyntaxTree? testClassTree = generatorResult.GeneratedTrees.FirstOrDefault(r => r.FilePath.EndsWith("TestClass.g.cs", StringComparison.OrdinalIgnoreCase));
         testClassTree.Should().NotBeNull();
 
-        SourceText testClass = await testClassTree!.GetTextAsync();
+        SourceText testClass = await testClassTree!.GetTextAsync(TestContext.CancellationTokenSource.Token);
 
         testClass.Should().ContainSourceCode("""
                                 GetArguments = static () => new MSTF::InternalUnsafeTestArgumentsEntry<string[]>[]
@@ -756,7 +758,7 @@ public sealed class DataRowAttributeGenerationTests : TestBase
         SyntaxTree? testClassTree = generatorResult.GeneratedTrees.FirstOrDefault(r => r.FilePath.EndsWith("TestClass.g.cs", StringComparison.OrdinalIgnoreCase));
         testClassTree.Should().NotBeNull();
 
-        SourceText testClass = await testClassTree!.GetTextAsync();
+        SourceText testClass = await testClassTree!.GetTextAsync(TestContext.CancellationTokenSource.Token);
 
         testClass.Should().ContainSourceCode("""
                                 GetArguments = static () => new MSTF::InternalUnsafeTestArgumentsEntry<object[]>[]
@@ -794,7 +796,7 @@ public sealed class DataRowAttributeGenerationTests : TestBase
         SyntaxTree? testClassTree = generatorResult.GeneratedTrees.FirstOrDefault(r => r.FilePath.EndsWith("TestClass.g.cs", StringComparison.OrdinalIgnoreCase));
         testClassTree.Should().NotBeNull();
 
-        SourceText testClass = await testClassTree!.GetTextAsync();
+        SourceText testClass = await testClassTree!.GetTextAsync(TestContext.CancellationTokenSource.Token);
 
         testClass.Should().ContainSourceCode("""
                                 GetArguments = static () => new MSTF::InternalUnsafeTestArgumentsEntry<object[]>[]
@@ -831,7 +833,7 @@ public sealed class DataRowAttributeGenerationTests : TestBase
         SyntaxTree? testClassTree = generatorResult.GeneratedTrees.FirstOrDefault(r => r.FilePath.EndsWith("TestClass.g.cs", StringComparison.OrdinalIgnoreCase));
         testClassTree.Should().NotBeNull();
 
-        SourceText testClass = await testClassTree!.GetTextAsync();
+        SourceText testClass = await testClassTree!.GetTextAsync(TestContext.CancellationTokenSource.Token);
 
         testClass.Should().ContainSourceCode("""
                                 GetArguments = static () => new MSTF::InternalUnsafeTestArgumentsEntry<(object[] args, object[] args2)>[]

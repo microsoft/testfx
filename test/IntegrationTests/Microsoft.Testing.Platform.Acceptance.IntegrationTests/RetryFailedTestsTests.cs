@@ -45,7 +45,7 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
             testHostResult.AssertOutputContains("Passed! -");
 
             string[] trxFiles = Directory.GetFiles(resultDirectory, "*.trx", SearchOption.AllDirectories);
-            Assert.AreEqual(2, trxFiles.Length);
+            Assert.HasCount(2, trxFiles);
             string trxContents1 = File.ReadAllText(trxFiles[0]);
             string trxContents2 = File.ReadAllText(trxFiles[1]);
             Assert.AreNotEqual(trxContents1, trxContents2);
@@ -85,7 +85,7 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
         string retriesPath = Path.Combine(resultDirectory, "Retries");
         Assert.IsTrue(Directory.Exists(retriesPath));
         string[] retriesDirectories = Directory.GetDirectories(retriesPath);
-        Assert.AreEqual(1, retriesDirectories.Length);
+        Assert.HasCount(1, retriesDirectories);
         string createdDirName = Path.GetFileName(retriesDirectories[0]);
 
         // Asserts that we are not using long names, to reduce long path issues.
@@ -188,12 +188,12 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
     }
 
     [TestMethod]
-    public async Task RetryFailedTests_PassingFromFirstTime_UsingOldDotnetTest_MoveFiles_Succeeds()
+    public async Task RetryFailedTests_PassingFromFirstTime_UsingTestTarget_MoveFiles_Succeeds()
     {
         string resultDirectory = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"));
 
         DotnetMuxerResult result = await DotnetCli.RunAsync(
-            $"test \"{AssetFixture.TargetAssetPath}\" -- --retry-failed-tests 1 --results-directory \"{resultDirectory}\"",
+            $"build \"{AssetFixture.TargetAssetPath}\" -t:Test -p:TestingPlatformCommandLineArguments=\"--retry-failed-tests 1 --results-directory %22{resultDirectory}%22\"",
             AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
             workingDirectory: AssetFixture.TargetAssetPath);
 
@@ -235,7 +235,6 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
         <UseAppHost>true</UseAppHost>
         <LangVersion>preview</LangVersion>
         <GenerateTestingPlatformEntryPoint>false</GenerateTestingPlatformEntryPoint>
-        <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
         <TestingPlatformCaptureOutput>false</TestingPlatformCaptureOutput>
     </PropertyGroup>
     <ItemGroup>
@@ -314,35 +313,47 @@ public class DummyTestFramework : ITestFramework, IDataProducer
 
         if (TestMethod1(fail, resultDir, crash))
         {
-            await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid,
-                new TestNode() { Uid = "1", DisplayName = "TestMethod1", Properties = new(PassedTestNodeStateProperty.CachedInstance) }));
+            var message1 = new TestNodeUpdateMessage(context.Request.Session.SessionUid,
+                new TestNode() { Uid = "1", DisplayName = "TestMethod1" });
+            message1.Properties.Add(PassedTestNodeStateProperty.CachedInstance);
+            await context.MessageBus.PublishAsync(this, message1);
         }
         else
         {
-            await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid,
-                new TestNode() { Uid = "1", DisplayName = "TestMethod1", Properties = new(new FailedTestNodeStateProperty()) }));
+            var message2 = new TestNodeUpdateMessage(context.Request.Session.SessionUid,
+                new TestNode() { Uid = "1", DisplayName = "TestMethod1" });
+            message2.Properties.Add(new FailedTestNodeStateProperty());
+            await context.MessageBus.PublishAsync(this, message2);
         }
 
         if (TestMethod2(fail, resultDir))
         {
-            await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid,
-                new TestNode() { Uid = "2", DisplayName = "TestMethod2", Properties = new(PassedTestNodeStateProperty.CachedInstance) }));
+            var message3 = new TestNodeUpdateMessage(context.Request.Session.SessionUid,
+                new TestNode() { Uid = "2", DisplayName = "TestMethod2" });
+            message3.Properties.Add(PassedTestNodeStateProperty.CachedInstance);
+            await context.MessageBus.PublishAsync(this, message3);
         }
         else
         {
-            await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid,
-                new TestNode() { Uid = "2", DisplayName = "TestMethod2", Properties = new(new FailedTestNodeStateProperty()) }));
+            var message4 = new TestNodeUpdateMessage(context.Request.Session.SessionUid,
+                new TestNode() { Uid = "2", DisplayName = "TestMethod2" });
+            message4.Properties.Add(new FailedTestNodeStateProperty());
+            await context.MessageBus.PublishAsync(this, message4);
         }
 
         if (TestMethod3(fail, resultDir))
         {
-            await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid,
-                new TestNode() { Uid = "3", DisplayName = "TestMethod3", Properties = new(PassedTestNodeStateProperty.CachedInstance) }));
+            var message5 = new TestNodeUpdateMessage(context.Request.Session.SessionUid,
+                new TestNode() { Uid = "3", DisplayName = "TestMethod3" });
+            message5.Properties.Add(PassedTestNodeStateProperty.CachedInstance);
+            await context.MessageBus.PublishAsync(this, message5);
         }
         else
         {
-            await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid,
-                new TestNode() { Uid = "3", DisplayName = "TestMethod3", Properties = new(new FailedTestNodeStateProperty()) }));
+            var message6 = new TestNodeUpdateMessage(context.Request.Session.SessionUid,
+                new TestNode() { Uid = "3", DisplayName = "TestMethod3" });
+            message6.Properties.Add(new FailedTestNodeStateProperty());
+            await context.MessageBus.PublishAsync(this, message6);
         }
         
         context.Complete();

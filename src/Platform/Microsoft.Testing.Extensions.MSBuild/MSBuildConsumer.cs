@@ -75,13 +75,13 @@ internal sealed class MSBuildConsumer : IDataConsumer, ITestSessionLifetimeHandl
         switch (value)
         {
             case TestNodeUpdateMessage testNodeStateChanged:
-                TimingProperty? timingProperty = testNodeStateChanged.TestNode.Properties.SingleOrDefault<TimingProperty>();
+                TimingProperty? timingProperty = testNodeStateChanged.Properties.SingleOrDefault<TimingProperty>();
                 string? duration = timingProperty is null ? null :
                     ToHumanReadableDuration(timingProperty.GlobalTiming.Duration.TotalMilliseconds);
 
                 TestFileLocationProperty? testFileLocationProperty = testNodeStateChanged.TestNode.Properties.SingleOrDefault<TestFileLocationProperty>();
 
-                switch (testNodeStateChanged.TestNode.Properties.SingleOrDefault<TestNodeStateProperty>())
+                switch (testNodeStateChanged.Properties.SingleOrDefault<TestNodeStateProperty>())
                 {
                     case ErrorTestNodeStateProperty errorState:
                         await HandleFailuresAsync(

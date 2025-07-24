@@ -433,6 +433,21 @@ Der Typ, der diese Methoden deklariert, sollte auch die folgenden Regeln beachte
         <target state="translated">DynamicData muss gültig sein.</target>
         <note />
       </trans-unit>
+      <trans-unit id="FlowTestContextCancellationTokenDescription">
+        <source>When calling async methods that have overloads accepting a CancellationToken parameter, prefer using the overload with TestContext.CancellationTokenSource.Token to enable cooperative cancellation and respect test timeouts.</source>
+        <target state="translated">Wenn Sie asynchrone Methoden aufrufen, die über Überladungen verfügen, die einen CancellationToken-Parameter akzeptieren, bevorzugen Sie die Verwendung der Überladung mit TestContext.CancellationTokenSource.Token, um einen kooperativen Abbruch zu ermöglichen und Testtimeouts zu berücksichtigen.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="FlowTestContextCancellationTokenMessageFormat">
+        <source>Consider using the overload that accepts a CancellationToken and pass 'TestContext.CancellationTokenSource.Token'</source>
+        <target state="translated">Erwägen Sie die Verwendung der Überladung, die ein CancellationToken akzeptiert, und übergeben Sie „TestContext.CancellationTokenSource.Token“.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="FlowTestContextCancellationTokenTitle">
+        <source>Flow TestContext.CancellationToken to async operations</source>
+        <target state="translated">Fluss von TestContext.CancellationToken zu asynchronen Vorgängen</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PreferAssertFailOverAlwaysFalseConditionsMessageFormat">
         <source>Use 'Assert.Fail' instead of an always-failing 'Assert.{0}' assert</source>
         <target state="translated">Verwenden Sie „Assert.Fail“ anstelle einer Assert-Anweisung „Assert.{0}“, bei der immer ein Fehler auftritt.</target>
@@ -868,6 +883,21 @@ Der Typ, der diese Methoden deklariert, sollte auch die folgenden Regeln beachte
       <trans-unit id="UseRetryWithTestMethodTitle">
         <source>Use retry attribute on test method</source>
         <target state="translated">Verwenden des Wiederholungsattributs für die Testmethode</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestContextPropertyUsageTitle">
+        <source>TestContext property cannot be accessed in this context</source>
+        <target state="translated">Auf die TestContext-Eigenschaft kann in diesem Kontext nicht zugegriffen werden</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestContextPropertyUsageMessageFormat">
+        <source>TestContext property '{0}' cannot be accessed in '{1}' method</source>
+        <target state="translated">Auf die TestContext-Eigenschaft „{0}“ kann in der Methode „{1}“ nicht zugegriffen werden</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestContextPropertyUsageDescription">
+        <source>Some TestContext properties are only available during test execution and cannot be accessed in assembly initialize, class initialize, class cleanup, or assembly cleanup methods.</source>
+        <target state="translated">Einige TestContext-Eigenschaften sind nur während der Testausführung verfügbar und können nicht in Assemblyinitialisierungs-, Klasseninitialisierungs-, Klassenbereinigungs- oder Assemblybereinigungsmethoden aufgerufen werden.</target>
         <note />
       </trans-unit>
     </body>

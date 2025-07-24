@@ -15,11 +15,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 internal interface IPlatformServiceProvider
 {
     /// <summary>
-    /// Gets an instance to the platform service validator for test sources.
-    /// </summary>
-    ITestSource TestSource { get; }
-
-    /// <summary>
     /// Gets an instance to the platform service to data drive a test.
     /// </summary>
     ITestDataSource TestDataSource { get; }

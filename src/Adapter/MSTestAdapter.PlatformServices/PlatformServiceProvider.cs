@@ -23,18 +23,6 @@ internal sealed class PlatformServiceProvider : IPlatformServiceProvider
     }
 
     /// <summary>
-    /// Gets an instance to the platform service validator for test sources.
-    /// </summary>
-    [field: AllowNull]
-    [field: MaybeNull]
-    [AllowNull]
-    public ITestSource TestSource
-    {
-        get => field ??= new TestSource();
-        private set;
-    }
-
-    /// <summary>
     /// Gets an instance to the platform service validator for data sources for tests.
     /// </summary>
     [field: AllowNull]

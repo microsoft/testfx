@@ -8,6 +8,8 @@ Rule ID | Category | Severity | Notes
 MSTEST0044 | Design | Warning | PreferTestMethodOverDataTestMethodAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0044)
 MSTEST0045 | Design | Warning | UseCooperativeCancellationForTimeoutAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0045)
 MSTEST0046 | Usage | Info | StringAssertToAssertAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0046)
+MSTEST0048 | Usage | Warning | TestContextPropertyUsageAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0047)
+MSTEST0049 | Usage | Info | FlowTestContextCancellationTokenAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0049)
 
 ### Changed Rules
 

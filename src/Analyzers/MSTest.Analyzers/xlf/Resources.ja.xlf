@@ -432,6 +432,21 @@ The type declaring these methods should also respect the following rules:
         <target state="translated">DynamicData は有効である必要があります</target>
         <note />
       </trans-unit>
+      <trans-unit id="FlowTestContextCancellationTokenDescription">
+        <source>When calling async methods that have overloads accepting a CancellationToken parameter, prefer using the overload with TestContext.CancellationTokenSource.Token to enable cooperative cancellation and respect test timeouts.</source>
+        <target state="translated">CancellationToken パラメーターを受け入れるオーバーロードを持つ非同期メソッドを呼び出す場合は、TestContext.CancellationTokenSource.Token でオーバーロードを使用して協調的な取り消しを有効にし、テスト タイムアウトを考慮します。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="FlowTestContextCancellationTokenMessageFormat">
+        <source>Consider using the overload that accepts a CancellationToken and pass 'TestContext.CancellationTokenSource.Token'</source>
+        <target state="translated">CancellationToken を受け取り、'TestContext.CancellationTokenSource.Token' を渡すオーバーロードの使用を検討してください</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="FlowTestContextCancellationTokenTitle">
+        <source>Flow TestContext.CancellationToken to async operations</source>
+        <target state="translated">TestContext.CancellationToken を非同期操作にフローする</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PreferAssertFailOverAlwaysFalseConditionsMessageFormat">
         <source>Use 'Assert.Fail' instead of an always-failing 'Assert.{0}' assert</source>
         <target state="translated">常に失敗している 'Assert.{0}' アサートの代わりに 'Assert.Fail' を使用する。</target>
@@ -867,6 +882,21 @@ The type declaring these methods should also respect the following rules:
       <trans-unit id="UseRetryWithTestMethodTitle">
         <source>Use retry attribute on test method</source>
         <target state="translated">テスト メソッドで retry 属性を使用する</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestContextPropertyUsageTitle">
+        <source>TestContext property cannot be accessed in this context</source>
+        <target state="translated">このコンテキストでは TestContext プロパティにアクセスできません</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestContextPropertyUsageMessageFormat">
+        <source>TestContext property '{0}' cannot be accessed in '{1}' method</source>
+        <target state="translated">TestContext プロパティ '{0}' に '{1}' メソッドでアクセスできません</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestContextPropertyUsageDescription">
+        <source>Some TestContext properties are only available during test execution and cannot be accessed in assembly initialize, class initialize, class cleanup, or assembly cleanup methods.</source>
+        <target state="translated">TestContext プロパティの一部はテストの実行中にのみ使用でき、assenbly initialize、class initialize、class cleanup、または assembly cleanup メソッドではアクセスできません。</target>
         <note />
       </trans-unit>
     </body>

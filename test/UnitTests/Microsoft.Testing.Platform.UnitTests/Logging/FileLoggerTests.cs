@@ -11,6 +11,9 @@ namespace Microsoft.Testing.Platform.UnitTests;
 [TestClass]
 public sealed class FileLoggerTests : IDisposable
 {
+    // https://github.com/microsoft/testfx/issues/6136
+    public TestContext TestContext { get; set; } = null!;
+
     private const string LogFolder = "aaa";
     private const string LogPrefix = "bbb";
     private const string FileName = "ccc";
@@ -173,15 +176,15 @@ public sealed class FileLoggerTests : IDisposable
 
         if (LogTestHelpers.IsLogEnabled(defaultLogLevel, currentLogLevel))
         {
-            await _memoryStream.FlushAsync();
+            await _memoryStream.FlushAsync(TestContext.CancellationTokenSource.Token);
             int iteration = 0;
             while (_memoryStream.Length == 0 && iteration < 10)
             {
                 iteration++;
-                await Task.Delay(200);
+                await Task.Delay(200, TestContext.CancellationTokenSource.Token);
             }
 
-            await _memoryStream.FlushAsync();
+            await _memoryStream.FlushAsync(TestContext.CancellationTokenSource.Token);
 
             _mockConsole.Verify(x => x.WriteLine(It.IsAny<string>()), Times.Never);
             Assert.AreEqual($"[00:00:00.000 Test - {currentLogLevel}] Message{Environment.NewLine}", Encoding.Default.GetString(_memoryStream.ToArray()));

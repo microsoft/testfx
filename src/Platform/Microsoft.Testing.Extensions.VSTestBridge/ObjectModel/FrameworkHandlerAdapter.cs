@@ -138,9 +138,8 @@ internal sealed class FrameworkHandlerAdapter : IFrameworkHandle
         _frameworkHandle?.RecordResult(testResult);
 
         // Publish node state change to Microsoft Testing Platform
-        var testNode = testResult.ToTestNode(_isTrxEnabled, _adapterExtensionBase.UseFullyQualifiedNameAsTestNodeUid, _namedFeatureCapability, _commandLineOptions, _clientInfo);
+        var testNodeChange = testResult.ToTestNodeUpdateMessage(_isTrxEnabled, _adapterExtensionBase.UseFullyQualifiedNameAsTestNodeUid, _namedFeatureCapability, _commandLineOptions, _clientInfo, _session.SessionUid);
 
-        var testNodeChange = new TestNodeUpdateMessage(_session.SessionUid, testNode);
         _messageBus.PublishAsync(_adapterExtensionBase, testNodeChange).Await();
     }
 
@@ -158,9 +157,8 @@ internal sealed class FrameworkHandlerAdapter : IFrameworkHandle
 
         // Publish node state change to Microsoft Testing Platform
         var testNode = testCase.ToTestNode(_isTrxEnabled, _adapterExtensionBase.UseFullyQualifiedNameAsTestNodeUid, _namedFeatureCapability, _commandLineOptions, _clientInfo);
-        testNode.Properties.Add(InProgressTestNodeStateProperty.CachedInstance);
         var testNodeChange = new TestNodeUpdateMessage(_session.SessionUid, testNode);
-
+        testNodeChange.Properties.Add(InProgressTestNodeStateProperty.CachedInstance);
         _messageBus.PublishAsync(_adapterExtensionBase, testNodeChange).Await();
     }
 

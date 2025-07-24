@@ -27,12 +27,12 @@ public sealed class SlowestTestsConsumer : IDataConsumer, ITestSessionLifetimeHa
     public Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken)
     {
         if (value is not TestNodeUpdateMessage testNodeUpdatedMessage
-            || testNodeUpdatedMessage.TestNode.Properties.SingleOrDefault<PassedTestNodeStateProperty>() is null)
+            || testNodeUpdatedMessage.Properties.SingleOrDefault<PassedTestNodeStateProperty>() is null)
         {
             return Task.CompletedTask;
         }
 
-        double milliseconds = testNodeUpdatedMessage.TestNode.Properties.Single<TimingProperty>().GlobalTiming.Duration.TotalMilliseconds;
+        double milliseconds = testNodeUpdatedMessage.Properties.Single<TimingProperty>().GlobalTiming.Duration.TotalMilliseconds;
         _testPerf.Add((testNodeUpdatedMessage.TestNode.Uid, testNodeUpdatedMessage.TestNode.DisplayName, milliseconds));
 
         return Task.CompletedTask;

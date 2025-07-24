@@ -293,8 +293,10 @@ public class DummyTestFramework : ITestFramework, IDataProducer
             Environment.FailFast("CRASHPROCESS");
         }
 
-        await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid,
-            new TestNode() { Uid = "0", DisplayName = "Test", Properties = new(PassedTestNodeStateProperty.CachedInstance) }));
+        var message = new TestNodeUpdateMessage(context.Request.Session.SessionUid,
+            new TestNode() { Uid = "0", DisplayName = "Test" });
+        message.Properties.Add(PassedTestNodeStateProperty.CachedInstance);
+        await context.MessageBus.PublishAsync(this, message);
         context.Complete();
     }
 }

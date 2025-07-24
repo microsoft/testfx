@@ -432,6 +432,21 @@ Bu yöntemleri bildiren tipin ayrıca aşağıdaki kurallara uyması gerekir:
         <target state="translated">DynamicData geçerli olmalıdır</target>
         <note />
       </trans-unit>
+      <trans-unit id="FlowTestContextCancellationTokenDescription">
+        <source>When calling async methods that have overloads accepting a CancellationToken parameter, prefer using the overload with TestContext.CancellationTokenSource.Token to enable cooperative cancellation and respect test timeouts.</source>
+        <target state="translated">CancellationToken parametresini kabul eden aşırı yüklemeleri olan asenkron yöntemleri çağırırken, işbirliğine dayalı iptal işlemini etkinleştirmek ve test zaman aşımlarını dikkate almak için TestContext.CancellationTokenSource.Token ile aşırı yüklemeyi kullanmayı tercih edin.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="FlowTestContextCancellationTokenMessageFormat">
+        <source>Consider using the overload that accepts a CancellationToken and pass 'TestContext.CancellationTokenSource.Token'</source>
+        <target state="translated">CancellationToken'ı kabul eden aşırı yüklemeyi kullanmayı düşünün ve 'TestContext.CancellationTokenSource.Token'i geçirin.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="FlowTestContextCancellationTokenTitle">
+        <source>Flow TestContext.CancellationToken to async operations</source>
+        <target state="translated">TestContext.CancellationToken'ı asenkron işlemler için akışa aktarın</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PreferAssertFailOverAlwaysFalseConditionsMessageFormat">
         <source>Use 'Assert.Fail' instead of an always-failing 'Assert.{0}' assert</source>
         <target state="translated">Her zaman başarısız olan 'Assert.{0}' onaylaması yerine 'Assert.Fail' seçeneğini kullanın</target>
@@ -869,6 +884,21 @@ Bu yöntemleri bildiren tipin ayrıca aşağıdaki kurallara uyması gerekir:
       <trans-unit id="UseRetryWithTestMethodTitle">
         <source>Use retry attribute on test method</source>
         <target state="translated">Test yönteminde yeniden deneme özniteliğini kullan</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestContextPropertyUsageTitle">
+        <source>TestContext property cannot be accessed in this context</source>
+        <target state="translated">TestContext özelliğine bu bağlamda erişilemiyor</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestContextPropertyUsageMessageFormat">
+        <source>TestContext property '{0}' cannot be accessed in '{1}' method</source>
+        <target state="translated">TestContext '{0}' özelliğine '{1}' yönteminde erişilemiyor</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestContextPropertyUsageDescription">
+        <source>Some TestContext properties are only available during test execution and cannot be accessed in assembly initialize, class initialize, class cleanup, or assembly cleanup methods.</source>
+        <target state="translated">Bazı TestContext özellikleri yalnızca test yürütmesi sırasında kullanılabilir ve derleme başlatma, sınıf başlatma, sınıf temizleme veya derleme temizleme yöntemlerinde erişilemez.</target>
         <note />
       </trans-unit>
     </body>

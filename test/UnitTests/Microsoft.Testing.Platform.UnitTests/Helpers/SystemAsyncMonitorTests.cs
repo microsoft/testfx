@@ -8,6 +8,8 @@ namespace Microsoft.Testing.Platform.UnitTests;
 [TestClass]
 public sealed class SystemAsyncMonitorTests
 {
+    public TestContext TestContext { get; set; }
+
     [TestMethod]
     public async Task AsyncMonitor_ShouldCorrectlyLock()
     {
@@ -17,7 +19,7 @@ public sealed class SystemAsyncMonitorTests
         var stopwatch = Stopwatch.StartNew();
         for (int i = 0; i < 3; i++)
         {
-            tasks.Add(Task.Run(TestLock));
+            tasks.Add(Task.Run(TestLock, TestContext.CancellationTokenSource.Token));
         }
 
         await Task.WhenAll([.. tasks]);
@@ -25,7 +27,7 @@ public sealed class SystemAsyncMonitorTests
         // Give more time to be above 3s
         Thread.Sleep(500);
 
-        Assert.IsTrue(stopwatch.ElapsedMilliseconds > 3000);
+        Assert.IsGreaterThan(3000, stopwatch.ElapsedMilliseconds);
 
         async Task TestLock()
         {
@@ -37,7 +39,7 @@ public sealed class SystemAsyncMonitorTests
                 }
 
                 lockState = true;
-                await Task.Delay(1000);
+                await Task.Delay(1000, TestContext.CancellationTokenSource.Token);
                 lockState = false;
             }
         }

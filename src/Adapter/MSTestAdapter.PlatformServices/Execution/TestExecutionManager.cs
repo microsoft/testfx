@@ -5,6 +5,7 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
@@ -132,7 +133,7 @@ internal class TestExecutionManager
         }
     }
 
-    internal async Task RunTestsAsync(IEnumerable<string> sources, IRunContext? runContext, IFrameworkHandle frameworkHandle, TestRunCancellationToken cancellationToken)
+    internal async Task RunTestsAsync(IEnumerable<string> sources, IRunContext? runContext, IFrameworkHandle frameworkHandle, ITestSourceHandler testSourceHandler, TestRunCancellationToken cancellationToken)
     {
         _testRunCancellationToken = cancellationToken;
         PlatformServiceProvider.Instance.TestRunCancellationToken = _testRunCancellationToken;
@@ -149,7 +150,7 @@ internal class TestExecutionManager
             var logger = (IMessageLogger)frameworkHandle;
 
             // discover the tests
-            GetUnitTestDiscoverer().DiscoverTestsInSource(source, logger, discoverySink, runContext);
+            GetUnitTestDiscoverer(testSourceHandler).DiscoverTestsInSource(source, logger, discoverySink, runContext);
             tests.AddRange(discoverySink.Tests);
 
             // Clear discoverSinksTests so that it just stores test for one source at one point of time
@@ -190,7 +191,7 @@ internal class TestExecutionManager
         }
     }
 
-    internal virtual UnitTestDiscoverer GetUnitTestDiscoverer() => new();
+    internal virtual UnitTestDiscoverer GetUnitTestDiscoverer(ITestSourceHandler testSourceHandler) => new(testSourceHandler);
 
     internal void SendTestResults(TestCase test, TestTools.UnitTesting.TestResult[] unitTestResults, DateTimeOffset startTime, DateTimeOffset endTime,
         ITestExecutionRecorder testExecutionRecorder)

@@ -130,7 +130,7 @@ module MicrosoftTestingPlatformEntryPoint =
         var testHost = TestInfrastructure.TestHost.LocateFrom(testAsset.TargetAssetPath, AssetName, tfm, rid: RID, verb: verb, buildConfiguration: compilationMode);
         TestHostResult testHostResult = await testHost.ExecuteAsync();
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
-        Assert.IsTrue(testHostResult.StandardOutput.Contains("Passed!"));
+        Assert.Contains("Passed!", testHostResult.StandardOutput);
 
         SL.Target coreCompile = binLog.FindChildrenRecursive<SL.Target>().Single(t => t.Name == "CoreCompile" && t.Children.Count > 0);
         SL.Task csc = coreCompile.FindChildrenRecursive<SL.Task>(t => t.Name == cscProcessName).Single();
@@ -147,7 +147,7 @@ module MicrosoftTestingPlatformEntryPoint =
         testHost = TestInfrastructure.TestHost.LocateFrom(testAsset.TargetAssetPath, AssetName, tfm, rid: RID, verb: verb, buildConfiguration: compilationMode);
         testHostResult = await testHost.ExecuteAsync();
         Assert.AreEqual(ExitCodes.Success, testHostResult.ExitCode);
-        Assert.IsTrue(testHostResult.StandardOutput.Contains("Passed!"));
+        Assert.Contains("Passed!", testHostResult.StandardOutput);
     }
 
     private const string CSharpSourceCode = """
@@ -226,8 +226,10 @@ internal sealed class DummyTestFramework : ITestFramework, IDataProducer
 
     public async Task ExecuteRequestAsync(ExecuteRequestContext context)
     {
-        await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid,
-            new TestNode() { Uid = "1", DisplayName = "DummyTest", Properties = new(PassedTestNodeStateProperty.CachedInstance) }));
+        var message = new TestNodeUpdateMessage(context.Request.Session.SessionUid,
+            new TestNode() { Uid = "1", DisplayName = "DummyTest" });
+        message.Properties.Add(PassedTestNodeStateProperty.CachedInstance);
+        await context.MessageBus.PublishAsync(this, message);
         context.Complete();
     }
 
@@ -334,11 +336,12 @@ Namespace Global.MyNamespaceRoot.Level1.Level2
     End Function
 
     Public Async Function ExecuteRequestAsync(context As TestFramework.ExecuteRequestContext) As Task Implements TestFramework.ITestFramework.ExecuteRequestAsync
-      Await context.MessageBus.PublishAsync(Me, New Messages.TestNodeUpdateMessage(context.Request.Session.SessionUid,
+      Dim message = New Messages.TestNodeUpdateMessage(context.Request.Session.SessionUid,
                                                                           New Messages.TestNode With {
                                                                           .Uid = "1",
-                                                                          .DisplayName = "DummyTest",
-                                                                          .Properties = New Messages.PropertyBag(Messages.PassedTestNodeStateProperty.CachedInstance)}))
+                                                                          .DisplayName = "DummyTest" })
+      message.Properties.Add(Messages.PassedTestNodeStateProperty.CachedInstance)
+      Await context.MessageBus.PublishAsync(Me, message)
       context.Complete()
     End Function
 
@@ -437,11 +440,11 @@ type DummyTestFramework() =
         member _.CreateTestSessionAsync _ = CreateTestSessionResult(IsSuccess = true) |> Task.FromResult
         member _.CloseTestSessionAsync _ = CloseTestSessionResult(IsSuccess = true) |> Task.FromResult
         member _.ExecuteRequestAsync context = task {
-            do! context.MessageBus.PublishAsync(
-                dataProducer,
-                TestNodeUpdateMessage(
-                    context.Request.Session.SessionUid,
-                    TestNode(Uid = "1", DisplayName = "DummyTest", Properties = PropertyBag(PassedTestNodeStateProperty.CachedInstance))))
+            let message = TestNodeUpdateMessage(
+                context.Request.Session.SessionUid,
+                TestNode(Uid = "1", DisplayName = "DummyTest"))
+            message.Properties.Add(PassedTestNodeStateProperty.CachedInstance)
+            do! context.MessageBus.PublishAsync(dataProducer, message)
             context.Complete()
             }
 

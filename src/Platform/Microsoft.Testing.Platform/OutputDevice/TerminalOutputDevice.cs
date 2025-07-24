@@ -43,6 +43,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
     private readonly ILoggerFactory _loggerFactory;
     private readonly IClock _clock;
     private readonly IStopPoliciesService _policiesService;
+    private readonly ITestApplicationCancellationTokenSource _testApplicationCancellationTokenSource;
     private readonly string? _longArchitecture;
     private readonly string? _shortArchitecture;
 
@@ -65,7 +66,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
         ITestApplicationModuleInfo testApplicationModuleInfo, ITestHostControllerInfo testHostControllerInfo, IAsyncMonitor asyncMonitor,
         IRuntimeFeature runtimeFeature, IEnvironment environment, IPlatformInformation platformInformation,
         ICommandLineOptions commandLineOptions, IFileLoggerInformation? fileLoggerInformation, ILoggerFactory loggerFactory, IClock clock,
-        IStopPoliciesService policiesService)
+        IStopPoliciesService policiesService, ITestApplicationCancellationTokenSource testApplicationCancellationTokenSource)
     {
         _console = console;
         _testHostControllerInfo = testHostControllerInfo;
@@ -78,6 +79,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
         _loggerFactory = loggerFactory;
         _clock = clock;
         _policiesService = policiesService;
+        _testApplicationCancellationTokenSource = testApplicationCancellationTokenSource;
 
         if (_runtimeFeature.IsDynamicCodeSupported)
         {
@@ -99,6 +101,8 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
         {
             _bannerDisplayed = true;
         }
+
+        _testApplicationCancellationTokenSource = testApplicationCancellationTokenSource;
     }
 
     public async Task InitializeAsync()
@@ -150,7 +154,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
                 : !_testHostControllerInfo.IsCurrentProcessTestHostController;
 
         // This is single exe run, don't show all the details of assemblies and their summaries.
-        _terminalTestReporter = new TerminalTestReporter(_assemblyName, _targetFramework, _shortArchitecture, _console, new()
+        _terminalTestReporter = new TerminalTestReporter(_assemblyName, _targetFramework, _shortArchitecture, _console, _testApplicationCancellationTokenSource, new()
         {
             ShowPassedTests = showPassed,
             MinimumExpectedTests = PlatformCommandLineProvider.GetMinimumExpectedTests(_commandLineOptions),
@@ -390,11 +394,11 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
         {
             case TestNodeUpdateMessage testNodeStateChanged:
 
-                TimeSpan duration = testNodeStateChanged.TestNode.Properties.SingleOrDefault<TimingProperty>()?.GlobalTiming.Duration ?? TimeSpan.Zero;
-                string? standardOutput = testNodeStateChanged.TestNode.Properties.SingleOrDefault<StandardOutputProperty>()?.StandardOutput;
-                string? standardError = testNodeStateChanged.TestNode.Properties.SingleOrDefault<StandardErrorProperty>()?.StandardError;
+                TimeSpan duration = testNodeStateChanged.Properties.SingleOrDefault<TimingProperty>()?.GlobalTiming.Duration ?? TimeSpan.Zero;
+                string? standardOutput = testNodeStateChanged.Properties.SingleOrDefault<StandardOutputProperty>()?.StandardOutput;
+                string? standardError = testNodeStateChanged.Properties.SingleOrDefault<StandardErrorProperty>()?.StandardError;
 
-                foreach (FileArtifactProperty artifact in testNodeStateChanged.TestNode.Properties.OfType<FileArtifactProperty>())
+                foreach (FileArtifactProperty artifact in testNodeStateChanged.Properties.OfType<FileArtifactProperty>())
                 {
                     bool isOutOfProcessArtifact = _firstCallTo_OnSessionStartingAsync;
                     _terminalTestReporter.ArtifactAdded(
@@ -403,7 +407,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
                         artifact.FileInfo.FullName);
                 }
 
-                switch (testNodeStateChanged.TestNode.Properties.SingleOrDefault<TestNodeStateProperty>())
+                switch (testNodeStateChanged.Properties.SingleOrDefault<TestNodeStateProperty>())
                 {
                     case InProgressTestNodeStateProperty:
                         _terminalTestReporter.TestInProgress(
