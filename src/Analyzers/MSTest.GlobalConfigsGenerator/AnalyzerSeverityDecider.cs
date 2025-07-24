@@ -118,6 +118,8 @@ internal static class AnalyzerSeverityDecider
         return rule.IsEnabledByDefault ? rule.DefaultSeverity : null;
     }
 
-    private static DiagnosticSeverity? DecideForModeNone(DiagnosticDescriptor _)
-        => null;
+    private static DiagnosticSeverity? DecideForModeNone(DiagnosticDescriptor rule)
+        // Even with 'None' mode, we still keep the rules that are errors by default.
+        // Such rules are likely to be critical and shouldn't be suppressed by MSTestAnalysisMode None.
+        => rule.DefaultSeverity == DiagnosticSeverity.Error ? DiagnosticSeverity.Error : null;
 }
