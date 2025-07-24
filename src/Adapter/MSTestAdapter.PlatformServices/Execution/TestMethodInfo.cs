@@ -394,6 +394,11 @@ public class TestMethodInfo : ITestMethod
         {
             try
             {
+                foreach ((MethodInfo method, TimeoutInfo? timeoutInfo) in Parent.Parent.GlobalTestInitializations)
+                {
+                    InvokeGlobalInitializeMethod(method, ref executionContext, timeoutInfo, timeoutTokenSource);
+                }
+
                 if (_classInstance != null && SetTestContext(_classInstance, result))
                 {
                     // For any failure after this point, we must run TestCleanup
@@ -716,11 +721,6 @@ public class TestMethodInfo : ITestMethod
                     testCleanupMethod = baseTestCleanupQueue.Dequeue();
                     testCleanupException = InvokeCleanupMethod(testCleanupMethod, _classInstance, ref executionContext, timeoutTokenSource);
                 }
-
-                foreach (MethodInfo globalTestCleanup in Parent.Parent.GlobalTestCleanups)
-                {
-                    InvokeGlobalCleanupMethod(globalTestCleanup, ref executionContext, timeoutTokenSource);
-                }
             }
             finally
             {
@@ -734,6 +734,11 @@ public class TestMethodInfo : ITestMethod
                 if (_classInstance is IDisposable classInstanceAsDisposable)
                 {
                     classInstanceAsDisposable.Dispose();
+                }
+
+                foreach ((MethodInfo method, TimeoutInfo? timeoutInfo) in Parent.Parent.GlobalTestCleanups)
+                {
+                    InvokeGlobalCleanupMethod(method, ref executionContext, timeoutInfo, timeoutTokenSource);
                 }
             }
         }
@@ -794,11 +799,6 @@ public class TestMethodInfo : ITestMethod
 
         try
         {
-            foreach (MethodInfo globalTestInitialize in Parent.Parent.GlobalTestInitializations)
-            {
-                InvokeGlobalInitializeMethod(globalTestInitialize, ref executionContext, timeoutTokenSource);
-            }
-
             // TestInitialize methods for base classes are called in reverse order of discovery
             // Grandparent -> Parent -> Child TestClass
             var baseTestInitializeStack = new Stack<MethodInfo>(Parent.BaseTestInitializeMethodsQueue);
@@ -906,7 +906,7 @@ public class TestMethodInfo : ITestMethod
         return result;
     }
 
-    private TestFailedException? InvokeGlobalInitializeMethod(MethodInfo methodInfo, ref ExecutionContext? executionContext, CancellationTokenSource? timeoutTokenSource)
+    private TestFailedException? InvokeGlobalInitializeMethod(MethodInfo methodInfo, ref ExecutionContext? executionContext, TimeoutInfo? timeoutInfo, CancellationTokenSource? timeoutTokenSource)
     {
         int originalThreadId = Environment.CurrentManagedThreadId;
         ExecutionContext? updatedExecutionContext = null;
@@ -922,7 +922,7 @@ public class TestMethodInfo : ITestMethod
                 }
             },
             TestContext!.Context.CancellationTokenSource,
-            timeoutInfo: null,
+            timeoutInfo: timeoutInfo,
             methodInfo,
             executionContext,
             Resource.TestInitializeWasCancelled,
@@ -978,7 +978,7 @@ public class TestMethodInfo : ITestMethod
         return result;
     }
 
-    private TestFailedException? InvokeGlobalCleanupMethod(MethodInfo methodInfo, ref ExecutionContext? executionContext, CancellationTokenSource? timeoutTokenSource)
+    private TestFailedException? InvokeGlobalCleanupMethod(MethodInfo methodInfo, ref ExecutionContext? executionContext, TimeoutInfo? timeoutInfo, CancellationTokenSource? timeoutTokenSource)
     {
         int originalThreadId = Environment.CurrentManagedThreadId;
         ExecutionContext? updatedExecutionContext = null;
@@ -994,7 +994,7 @@ public class TestMethodInfo : ITestMethod
                 }
             },
             TestContext!.Context.CancellationTokenSource,
-            timeoutInfo: null,
+            timeoutInfo: timeoutInfo,
             methodInfo,
             executionContext,
             Resource.TestCleanupWasCancelled,

@@ -423,20 +423,19 @@ internal sealed class TypeCache : MarshalByRefObject
                         }
 
                         if (methodInfo.IsPublic && methodInfo.IsStatic && !methodInfo.IsGenericMethod &&
-                            methodInfo.GetParameters() is { } parameters && parameters.Length == 1 && parameters[0].ParameterType == typeof(TestContext))
+                            methodInfo.GetParameters() is { } parameters && parameters.Length == 1 && parameters[0].ParameterType == typeof(TestContext) &&
+                            methodInfo.IsValidReturnType())
                         {
-                            // TODO: Consider before merging this PR.
-                            // Should we allow only a single method in an assembly? or allow multiple and document there is no order guarantee?
-                            bool isBeforeEveryTest = @this._reflectionHelper.IsAttributeDefined<BeforeEveryTestMethodAttribute>(methodInfo, inherit: true);
-                            bool isAfterEveryTest = @this._reflectionHelper.IsAttributeDefined<AfterEveryTestMethodAttribute>(methodInfo, inherit: true);
-                            if (isBeforeEveryTest)
+                            bool isGlobalTestInitialize = @this._reflectionHelper.IsAttributeDefined<GlobalTestInitializeAttribute>(methodInfo, inherit: true);
+                            bool isGlobalTestCleanup = @this._reflectionHelper.IsAttributeDefined<GlobalTestCleanupAttribute>(methodInfo, inherit: true);
+                            if (isGlobalTestInitialize)
                             {
-                                assemblyInfo.GlobalTestInitializations.Add(methodInfo);
+                                assemblyInfo.GlobalTestInitializations.Add((methodInfo, @this.TryGetTimeoutInfo(methodInfo, FixtureKind.TestInitialize)));
                             }
 
-                            if (isAfterEveryTest)
+                            if (isGlobalTestCleanup)
                             {
-                                assemblyInfo.GlobalTestCleanups.Add(methodInfo);
+                                assemblyInfo.GlobalTestCleanups.Add((methodInfo, @this.TryGetTimeoutInfo(methodInfo, FixtureKind.TestCleanup)));
                             }
                         }
                     }
