@@ -31,9 +31,6 @@ public sealed class IgnoreAttribute : ConditionBaseAttribute
         => IgnoreMessage = message;
 
     /// <inheritdoc />
-    public override string? IgnoreMessage { get; set; }
-
-    /// <inheritdoc />
     public override bool IsConditionMet => false;
 
     /// <inheritdoc />
