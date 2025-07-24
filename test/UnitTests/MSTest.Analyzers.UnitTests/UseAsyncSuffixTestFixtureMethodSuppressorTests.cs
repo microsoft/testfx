@@ -58,6 +58,37 @@ public class SomeClass
     }
 
     [TestMethod]
+    public async Task GlobalTestMethodsWithoutAsyncSuffix_DiagnosticIsSuppressed()
+    {
+        string code = @"
+using System.Threading.Tasks;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+[TestClass]
+public static class SomeClass
+{
+    [GlobalTestInitialize]
+    public static async Task [|GlobalTestInitialize|](TestContext context) { }
+
+    [GlobalTestCleanup]
+    public static async Task [|GlobalTestCleanup|](TestContext context) { }
+}
+";
+
+        // Verify issues are reported without suppressor
+        await new VerifyCS.Test
+        {
+            TestState = { Sources = { code } },
+        }.RunAsync();
+
+        // Verify issues are suppressed with suppressor
+        await new TestWithSuppressor
+        {
+            TestState = { Sources = { code } },
+        }.RunAsync();
+    }
+
+    [TestMethod]
     public async Task AsyncTestMethodWithSuffix_NoDiagnostic()
     {
         string code = """
@@ -85,6 +116,12 @@ public class SomeClass
 
                           [TestCleanup]
                           public async Task TestCleanupAsync() { }
+
+                          [GlobalTestInitialize]
+                          public static async Task GlobalTestInitializeAsync(TestContext context) { }
+
+                          [GlobalTestCleanup]
+                          public static async Task GlobalTestCleanupAsync(TestContext context) { }
                       }
 
                       """;
