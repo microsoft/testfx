@@ -33,8 +33,6 @@ This package provides the C# source generators for MSTest test framework.]]>
 
   <ItemGroup>
     <AdditionalFiles Include="BannedSymbols.txt" />
-    <AdditionalFiles Include="PublicAPI.Shipped.txt" />
-    <AdditionalFiles Include="PublicAPI.Unshipped.txt" />
   </ItemGroup>
 
   <ItemGroup>
