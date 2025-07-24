@@ -13,24 +13,12 @@
 
     <MSTestAnalysisMode>Recommended</MSTestAnalysisMode>
 
-    <!-- Arcade runner settings -->
-    <TestRunnerAdditionalArguments>$(TestRunnerAdditionalArguments) --diagnostic --diagnostic-output-directory $(RepoRoot)artifacts/log/$(Configuration) --diagnostic-output-fileprefix $(ModuleName) --diagnostic-verbosity trace</TestRunnerAdditionalArguments>
-    <TestRunnerAdditionalArguments Condition=" $([MSBuild]::GetTargetFrameworkIdentifier('$(TargetFramework)')) == '.NETCoreApp' ">$(TestRunnerAdditionalArguments) --crashdump</TestRunnerAdditionalArguments>
-    <TestRunnerAdditionalArguments>$(TestRunnerAdditionalArguments) --hangdump --hangdump-timeout 15m</TestRunnerAdditionalArguments>
-    <TestRunnerAdditionalArguments>$(TestRunnerAdditionalArguments) --report-azdo</TestRunnerAdditionalArguments>
-    <TestRunnerAdditionalArguments Condition=" '$(EnableCodeCoverage)' == 'True' ">$(TestRunnerAdditionalArguments) --coverage --coverage-settings $(RepoRoot)test/coverage.config --coverage-output $(ModuleName).coverage</TestRunnerAdditionalArguments>
-    <!-- /Arcade runner settings -->
-
-    <!-- dotnet test runner settings - most duplicate from Arcade to have parity -->
-    <_TestArchitecture>$(PlatformTarget)</_TestArchitecture>
-    <_TestArchitecture Condition="'$(PlatformTarget)' == '' or '$(PlatformTarget)' == 'AnyCpu'">x64</_TestArchitecture>
-
-    <_ResultFileNameNoExt>$(MSBuildProjectName)_$(TargetFramework)_$(_TestArchitecture)</_ResultFileNameNoExt>
-    <ResultsTrxPath>$(ArtifactsTestResultsDir)$(_ResultFileNameNoExt).trx</ResultsTrxPath>
-    <_TestResultTrxFileName>$([System.IO.Path]::GetFileName('$(ResultsTrxPath)'))</_TestResultTrxFileName>
-    <_TestResultDirectory>$([System.IO.Path]::GetDirectoryName('$(ResultsTrxPath)'))</_TestResultDirectory>
-    <TestingPlatformCommandLineArguments>$(TestingPlatformCommandLineArguments) --report-trx --report-trx-filename "$(_TestResultTrxFileName)" --results-directory "$(_TestResultDirectory)" --report-azdo $(TestRunnerAdditionalArguments)</TestingPlatformCommandLineArguments>
-    <!-- /dotnet test runner settings -->
+    <TestingPlatformCommandLineArguments>$(TestingPlatformCommandLineArguments) --diagnostic --diagnostic-output-directory $(RepoRoot)artifacts/log/$(Configuration) --diagnostic-output-fileprefix $(ModuleName) --diagnostic-verbosity trace</TestingPlatformCommandLineArguments>
+    <TestingPlatformCommandLineArguments Condition=" $([MSBuild]::GetTargetFrameworkIdentifier('$(TargetFramework)')) == '.NETCoreApp' ">$(TestingPlatformCommandLineArguments) --crashdump</TestingPlatformCommandLineArguments>
+    <TestingPlatformCommandLineArguments>$(TestingPlatformCommandLineArguments) --hangdump --hangdump-timeout 15m</TestingPlatformCommandLineArguments>
+    <TestingPlatformCommandLineArguments>$(TestingPlatformCommandLineArguments) --report-azdo</TestingPlatformCommandLineArguments>
+    <TestingPlatformCommandLineArguments Condition=" '$(EnableCodeCoverage)' == 'True' ">$(TestingPlatformCommandLineArguments) --coverage --coverage-settings $(RepoRoot)test/coverage.config --coverage-output $(ModuleName).coverage</TestingPlatformCommandLineArguments>
+    <TestingPlatformCommandLineArguments>$(TestingPlatformCommandLineArguments) --report-azdo</TestingPlatformCommandLineArguments>
   </PropertyGroup>
 
   <ItemGroup Condition=" '$(EnableMSTestRunner)' == 'true' OR '$(UseInternalTestFramework)' == 'true' ">
