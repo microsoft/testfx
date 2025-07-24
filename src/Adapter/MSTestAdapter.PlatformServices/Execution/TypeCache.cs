@@ -422,7 +422,7 @@ internal sealed class TypeCache : MarshalByRefObject
                             assemblyInfo.AssemblyCleanupMethodTimeoutMilliseconds = @this.TryGetTimeoutInfo(methodInfo, FixtureKind.AssemblyCleanup);
                         }
 
-                        if (methodInfo.IsPublic && methodInfo.IsStatic && !methodInfo.IsGenericMethod &&
+                        if (methodInfo is { IsPublic: true, IsStatic: true, IsGenericMethod: false, DeclaringType.IsGenericType: false, DeclaringType.IsPublic: true } &&
                             methodInfo.GetParameters() is { } parameters && parameters.Length == 1 && parameters[0].ParameterType == typeof(TestContext) &&
                             methodInfo.IsValidReturnType())
                         {
