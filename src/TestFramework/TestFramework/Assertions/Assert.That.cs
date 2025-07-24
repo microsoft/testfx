@@ -30,7 +30,7 @@ public sealed partial class Assert
 
         var sb = new StringBuilder();
         string expressionText = conditionExpression
-            ?? $"() => {CleanExpressionText(condition.Body.ToString())}";
+            ?? throw new ArgumentNullException(nameof(conditionExpression));
         sb.AppendLine(string.Format(CultureInfo.InvariantCulture, FrameworkMessages.AssertThatFailedFormat, expressionText));
         if (!string.IsNullOrWhiteSpace(message))
         {
