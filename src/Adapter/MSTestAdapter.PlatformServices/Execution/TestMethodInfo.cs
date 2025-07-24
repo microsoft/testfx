@@ -392,6 +392,10 @@ public class TestMethodInfo : ITestMethod
         {
             try
             {
+                // We invoke global test initialize methods before creating the test class instance.
+                // We consider the test class constructor as a "local" initialization.
+                // We want to invoke first the global initializations, then local ones, then test method.
+                // After that, we invoke local cleanups (including Dispose) and finally global cleanups at last.
                 foreach ((MethodInfo method, TimeoutInfo? timeoutInfo) in Parent.Parent.GlobalTestInitializations)
                 {
                     InvokeGlobalInitializeMethod(method, ref executionContext, timeoutInfo, timeoutTokenSource);
