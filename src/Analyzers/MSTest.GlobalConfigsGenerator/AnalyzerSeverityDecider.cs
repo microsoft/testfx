@@ -86,7 +86,8 @@ internal static class AnalyzerSeverityDecider
         if (rule.IsEnabledByDefault && rule.DefaultSeverity >= DiagnosticSeverity.Info)
         {
             // Recommended mode will elevate info to warning only if the rule is enabled by default.
-            return DiagnosticSeverity.Warning;
+            // In addition, if the rule is already error by default, we keep it as error. So, choose the max between warning and default severity.
+            return (DiagnosticSeverity)Math.Max((int)rule.DefaultSeverity, (int)DiagnosticSeverity.Warning);
         }
 
         if (rule.DefaultSeverity >= DiagnosticSeverity.Warning)
