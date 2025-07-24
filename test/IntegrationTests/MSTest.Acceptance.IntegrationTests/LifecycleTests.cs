@@ -24,53 +24,53 @@ public sealed class LifecycleTests : AcceptanceTestBase<LifecycleTests.TestAsset
         // - foreach test class
         //     - ClassInitialize
         //     - foreach test:
+        //         - BeforeEveryTestMethod
         //         - ctor
         //         - TestContext property setter
-        //         - BeforeEveryTestMethod
         //         - TestInitialize
         //         - TestMethod
         //         - TestCleanup
-        //         - AfterEveryTestMethod
         //         - Dispose
+        //         - AfterEveryTestMethod
         //     - ClassCleanup
         // - AssemblyCleanup
         testHostResult.AssertOutputContains("""
             AssemblyInitialize called.
             TestClass1.ClassInitialize called.
+            BeforeEveryTestMethod called for 'TestMethodParameterized (0)'.
             TestClass1 constructor called.
             TestContext property set for TestClass1.
-            BeforeEveryTestMethod called for 'TestMethodParameterized (0)'.
             TestClass1.TestInitialize for 'TestMethodParameterized (0)' is called.
             TestMethodParameterized called with: 0
             TestClass1.TestCleanup for 'TestMethodParameterized (0)' is called.
-            AfterEveryTestMethod called for 'TestMethodParameterized (0)'.
             TestClass1 disposed.
+            AfterEveryTestMethod called for 'TestMethodParameterized (0)'.
+            BeforeEveryTestMethod called for 'TestMethodParameterized (1)'.
             TestClass1 constructor called.
             TestContext property set for TestClass1.
-            BeforeEveryTestMethod called for 'TestMethodParameterized (1)'.
             TestClass1.TestInitialize for 'TestMethodParameterized (1)' is called.
             TestMethodParameterized called with: 1
             TestClass1.TestCleanup for 'TestMethodParameterized (1)' is called.
-            AfterEveryTestMethod called for 'TestMethodParameterized (1)'.
             TestClass1 disposed.
+            AfterEveryTestMethod called for 'TestMethodParameterized (1)'.
+            BeforeEveryTestMethod called for 'TestMethodNonParameterized'.
             TestClass1 constructor called.
             TestContext property set for TestClass1.
-            BeforeEveryTestMethod called for 'TestMethodNonParameterized'.
             TestClass1.TestInitialize for 'TestMethodNonParameterized' is called.
             TestMethodNonParameterized called
             TestClass1.TestCleanup for 'TestMethodNonParameterized' is called.
-            AfterEveryTestMethod called for 'TestMethodNonParameterized'.
             TestClass1 disposed.
+            AfterEveryTestMethod called for 'TestMethodNonParameterized'.
             TestClass1.ClassCleanup called.
             TestClass2.ClassInitialize called.
+            BeforeEveryTestMethod called for 'TestMethodFromTestClass2'.
             TestClass2 constructor called.
             TestContext property set for TestClass2.
-            BeforeEveryTestMethod called for 'TestMethodFromTestClass2'.
             TestClass2.TestInitialize for 'TestMethodFromTestClass2' is called.
             TestMethodFromTestClass2 called
             TestClass2.TestCleanup for 'TestMethodFromTestClass2' is called.
-            AfterEveryTestMethod called for 'TestMethodFromTestClass2'.
             TestClass2 disposed.
+            AfterEveryTestMethod called for 'TestMethodFromTestClass2'.
             TestClass2.ClassCleanup called.
             AssemblyCleanup called.
             """);
