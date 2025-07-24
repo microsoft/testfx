@@ -15,7 +15,6 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// logged at various levels such as Error, Information, Debug, and Warning. It checks if the respective log level is
 /// enabled before logging the message.
 /// </remarks>
-/// <param name="logger">The real logger.</param>
 [SuppressMessage("ApiDesign", "RS0030:Do not use banned APIs", Justification = "MTP logger bridge")]
 // Type is serializable to support serialization through AppDomains but ILogger is not so we handle it being null
 // when we are inside the AppDomain.
@@ -27,16 +26,12 @@ internal sealed class BridgedTraceLogger : IAdapterTraceLogger
     [NonSerialized]
     private readonly ILogger? _logger;
 
+    // This constructor is used when the logger is not available, e.g., in AppDomains.
     public BridgedTraceLogger()
-    {
-        // This constructor is used when the logger is not available, e.g., in AppDomains.
-        _logger = null;
-    }
+        => _logger = null;
 
     public BridgedTraceLogger(ILogger logger)
-    {
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    }
+        => _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     public bool IsInfoEnabled => _logger?.IsEnabled(LogLevel.Information) ?? false;
 
