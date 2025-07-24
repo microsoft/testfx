@@ -13,6 +13,8 @@ namespace Microsoft.Testing.Framework.SourceGeneration.UnitTests.Generators;
 [TestClass]
 public sealed class DynamicDataAttributeGenerationTests : TestBase
 {
+    public TestContext TestContext { get; set; }
+
     [TestMethod]
     public async Task DynamicDataAttribute_TakesDataFromProperty()
     {
@@ -47,7 +49,7 @@ public sealed class DynamicDataAttributeGenerationTests : TestBase
         SyntaxTree? testClassTree = generatorResult.GeneratedTrees.FirstOrDefault(r => r.FilePath.EndsWith("TestClass.g.cs", StringComparison.OrdinalIgnoreCase));
         testClassTree.Should().NotBeNull();
 
-        SourceText testClass = await testClassTree!.GetTextAsync();
+        SourceText testClass = await testClassTree!.GetTextAsync(TestContext.CancellationTokenSource.Token);
 
         testClass.Should().ContainSourceCode("""
                                 GetArguments = static () => {
@@ -99,7 +101,7 @@ public sealed class DynamicDataAttributeGenerationTests : TestBase
         SyntaxTree? testClassTree = generatorResult.GeneratedTrees.FirstOrDefault(r => r.FilePath.EndsWith("TestClass.g.cs", StringComparison.OrdinalIgnoreCase));
         testClassTree.Should().NotBeNull();
 
-        SourceText testClass = await testClassTree!.GetTextAsync();
+        SourceText testClass = await testClassTree!.GetTextAsync(TestContext.CancellationTokenSource.Token);
 
         testClass.Should().ContainSourceCode("""
                                 GetArguments = static () => {
