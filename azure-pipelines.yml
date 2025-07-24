@@ -115,13 +115,18 @@ stages:
           # Because the build step is using -ci flag, restore is done in a local .packages directory.
           # We need to pass NUGET_PACKAGES so that when dotnet test is doing evaluation phase on the projects, it can resolve .props/.targets from packages and import them.
           # Otherwise, props/targets are not imported. It's important that they are imported so that IsTestingPlatformApplication ends up being set.
-          - script: dotnet test -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig)\TestStep.binlog --no-progress
-            name: Test
-            displayName: Test
-            env:
-              DOTNET_ROOT: $(Build.SourcesDirectory)/.dotnet
-              NUGET_PACKAGES: $(Build.SourcesDirectory)/.packages
-              DOTNET_CLI_CONTEXT_VERBOSE: 1
+          # - script: dotnet test -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig)\TestStep.binlog --no-progress
+          #   name: Test
+          #   displayName: Test
+          #   env:
+          #     DOTNET_ROOT: $(Build.SourcesDirectory)/.dotnet
+          #     NUGET_PACKAGES: $(Build.SourcesDirectory)/.packages
+          #     DOTNET_CLI_CONTEXT_VERBOSE: 1
+          - script: Test.cmd
+              -configuration $(_BuildConfig)
+              -ci
+              -nobl
+              /bl:$(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig)\TestStep.binlog
 
           - task: PublishBuildArtifacts@1
             displayName: 'Publish Test Results folders'
@@ -193,13 +198,19 @@ stages:
           # Because the build step is using -ci flag, restore is done in a local .packages directory.
           # We need to pass NUGET_PACKAGES so that when dotnet test is doing evaluation phase on the projects, it can resolve .props/.targets from packages and import them.
           # Otherwise, props/targets are not imported. It's important that they are imported so that IsTestingPlatformApplication ends up being set.
-          - script: dotnet test --solution NonWindowsTests.slnf -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig)\TestStep.binlog --no-progress
+          # - script: dotnet test --solution NonWindowsTests.slnf -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig)\TestStep.binlog --no-progress
+          #   name: Test
+          #   displayName: Test
+          #   env:
+          #     DOTNET_ROOT: $(Build.SourcesDirectory)/.dotnet
+          #     NUGET_PACKAGES: $(Build.SourcesDirectory)/.packages
+          #     DOTNET_CLI_CONTEXT_VERBOSE: 1
+
+          - script: |
+              chmod +x ./test.sh
+              ./test.sh --configuration $(_BuildConfig) --ci --test --integrationTest --nobl /bl:$(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig)\TestStep.binlog
             name: Test
             displayName: Test
-            env:
-              DOTNET_ROOT: $(Build.SourcesDirectory)/.dotnet
-              NUGET_PACKAGES: $(Build.SourcesDirectory)/.packages
-              DOTNET_CLI_CONTEXT_VERBOSE: 1
 
           - task: PublishBuildArtifacts@1
             displayName: 'Publish Test Results folders'
@@ -257,13 +268,18 @@ stages:
           # Because the build step is using -ci flag, restore is done in a local .packages directory.
           # We need to pass NUGET_PACKAGES so that when dotnet test is doing evaluation phase on the projects, it can resolve .props/.targets from packages and import them.
           # Otherwise, props/targets are not imported. It's important that they are imported so that IsTestingPlatformApplication ends up being set.
-          - script: dotnet test --solution NonWindowsTests.slnf -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig)\TestStep.binlog --no-progress
+          # - script: dotnet test --solution NonWindowsTests.slnf -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig)\TestStep.binlog --no-progress
+          #   name: Test
+          #   displayName: Test
+          #   env:
+          #     DOTNET_ROOT: $(Build.SourcesDirectory)/.dotnet
+          #     NUGET_PACKAGES: $(Build.SourcesDirectory)/.packages
+          #     DOTNET_CLI_CONTEXT_VERBOSE: 1
+          - script: |
+              chmod +x ./test.sh
+              ./test.sh --configuration $(_BuildConfig) --ci --test --integrationTest --nobl /bl:$(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig)\TestStep.binlog
             name: Test
             displayName: Test
-            env:
-              DOTNET_ROOT: $(Build.SourcesDirectory)/.dotnet
-              NUGET_PACKAGES: $(Build.SourcesDirectory)/.packages
-              DOTNET_CLI_CONTEXT_VERBOSE: 1
 
           - task: PublishBuildArtifacts@1
             displayName: 'Publish Test Results folders'
