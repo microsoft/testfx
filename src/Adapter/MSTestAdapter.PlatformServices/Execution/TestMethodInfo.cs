@@ -382,8 +382,6 @@ public class TestMethodInfo : ITestMethod
 
         var result = new TestResult();
 
-        // TODO remove dry violation with TestMethodRunner
-        _classInstance = CreateTestClassInstance(result);
         bool isExceptionThrown = false;
         bool hasTestInitializePassed = false;
         Exception? testRunnerException = null;
@@ -398,6 +396,9 @@ public class TestMethodInfo : ITestMethod
                 {
                     InvokeGlobalInitializeMethod(method, ref executionContext, timeoutInfo, timeoutTokenSource);
                 }
+
+                // TODO remove dry violation with TestMethodRunner
+                _classInstance = CreateTestClassInstance(result);
 
                 if (_classInstance != null && SetTestContext(_classInstance, result))
                 {
