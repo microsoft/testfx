@@ -113,37 +113,41 @@ public class DummyTestFramework : ITestFramework, IDataProducer
 
     public async Task ExecuteRequestAsync(ExecuteRequestContext context)
     {
-        await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid, new TestNode()
+        var testNodeUpdateMessageInProgress1 = new TestNodeUpdateMessage(context.Request.Session.SessionUid, new TestNode()
         {
             Uid = "Class1.Test1",
             DisplayName = "Test1",
-            Properties = new PropertyBag(new InProgressTestNodeStateProperty()),
-        }));
+        });
+        testNodeUpdateMessageInProgress1.Properties.Add(new InProgressTestNodeStateProperty());
+        await context.MessageBus.PublishAsync(this, testNodeUpdateMessageInProgress1);
 
-        await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid, new TestNode()
+        var testNodeUpdateMessageInProgress2 = new TestNodeUpdateMessage(context.Request.Session.SessionUid, new TestNode()
         {
             Uid = "Class2.Test1",
             DisplayName = "Test1",
-            Properties = new PropertyBag(new InProgressTestNodeStateProperty()),
-        }));
+        });
+        testNodeUpdateMessageInProgress2.Properties.Add(new InProgressTestNodeStateProperty());
+        await context.MessageBus.PublishAsync(this, testNodeUpdateMessageInProgress2);
 
         Thread.Sleep(int.Parse(Environment.GetEnvironmentVariable("SLEEPTIMEMS1")!, CultureInfo.InvariantCulture));
 
-        await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid, new TestNode()
+        var testNodeUpdateMessagePassed1 = new TestNodeUpdateMessage(context.Request.Session.SessionUid, new TestNode()
         {
             Uid = "Class1.Test1",
             DisplayName = "Test1",
-            Properties = new PropertyBag(new PassedTestNodeStateProperty()),
-        }));
+        });
+        testNodeUpdateMessagePassed1.Properties.Add(new PassedTestNodeStateProperty());
+        await context.MessageBus.PublishAsync(this, testNodeUpdateMessagePassed1);
 
         Thread.Sleep(int.Parse(Environment.GetEnvironmentVariable("SLEEPTIMEMS2")!, CultureInfo.InvariantCulture));
 
-        await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid, new TestNode()
+        var testNodeUpdateMessagePassed2 = new TestNodeUpdateMessage(context.Request.Session.SessionUid, new TestNode()
         {
             Uid = "Class2.Test1",
             DisplayName = "Test1",
-            Properties = new PropertyBag(new PassedTestNodeStateProperty()),
-        }));
+        });
+        testNodeUpdateMessagePassed2.Properties.Add(new PassedTestNodeStateProperty());
+        await context.MessageBus.PublishAsync(this, testNodeUpdateMessagePassed2);
 
         context.Complete();
     }

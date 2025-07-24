@@ -114,8 +114,10 @@ internal sealed class DummyTestFramework : ITestFramework, IDataProducer
 
     public async Task ExecuteRequestAsync(ExecuteRequestContext context)
     {
-        await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid,
-            new TestNode() { Uid = "1", DisplayName = "DummyTest", Properties = new(PassedTestNodeStateProperty.CachedInstance) }));
+        var message = new TestNodeUpdateMessage(context.Request.Session.SessionUid,
+            new TestNode() { Uid = "1", DisplayName = "DummyTest" });
+        message.Properties.Add(PassedTestNodeStateProperty.CachedInstance);
+        await context.MessageBus.PublishAsync(this, message);
         context.Complete();
     }
 

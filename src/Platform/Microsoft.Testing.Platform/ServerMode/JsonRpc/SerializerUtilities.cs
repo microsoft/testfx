@@ -150,10 +150,11 @@ internal static class SerializerUtilities
             // Historically, both MTP and Test Explorer used to expect these properties to be part of the TestNode.
             // Starting with MTP v2, we are moving the property to its right location, to be on TestNodeUpdateMessage.
             // However, we still need to support what Test Explorer expects so we add the property back again to TestNode here as a hack.
-            TestNode testNode = ev.TestNode;
+            // We add the properties to a clone so that we don't modify the original TestNode instance.
+            TestNode testNode = ev.TestNode.CloneTestNode();
             foreach (IProperty prop in ev.Properties)
             {
-                if (prop is TimingProperty or StandardOutputProperty or StandardErrorProperty or FileArtifactProperty)
+                if (prop is TimingProperty or StandardOutputProperty or StandardErrorProperty or FileArtifactProperty or TestNodeStateProperty)
                 {
                     testNode.Properties.Add(prop);
                 }
@@ -162,7 +163,7 @@ internal static class SerializerUtilities
             // TODO: Fill in the node properties
             Dictionary<string, object?> values = new()
             {
-                [JsonRpcStrings.Node] = Serialize(ev.TestNode),
+                [JsonRpcStrings.Node] = Serialize(testNode),
                 [JsonRpcStrings.Parent] = ev.ParentTestNodeUid?.Value,
             };
 

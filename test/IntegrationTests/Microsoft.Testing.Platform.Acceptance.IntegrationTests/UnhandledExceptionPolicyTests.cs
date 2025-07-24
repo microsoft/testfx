@@ -221,12 +221,13 @@ public class DummyTestFramework : ITestFramework, IDataProducer
     public Task<CloseTestSessionResult> CloseTestSessionAsync(CloseTestSessionContext context) => Task.FromResult(new CloseTestSessionResult() { IsSuccess = true });
     public async Task ExecuteRequestAsync(ExecuteRequestContext context)
     {
-        await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid, new TestNode()
+        var message = new TestNodeUpdateMessage(context.Request.Session.SessionUid, new TestNode()
         {
             Uid = "Test1",
             DisplayName = "Test1",
-            Properties = new PropertyBag(new PassedTestNodeStateProperty())
-        }));
+        });
+        message.Properties.Add(new PassedTestNodeStateProperty());
+        await context.MessageBus.PublishAsync(this, message);
 
         if ( Environment.GetEnvironmentVariable("UNOBSERVEDTASKEXCEPTION") == "1")
         {

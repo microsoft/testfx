@@ -176,7 +176,7 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
         long? duration = null;
         string? reason = string.Empty;
         ExceptionMessage[]? exceptions = null;
-        TestNodeStateProperty? nodeState = testNodeUpdateMessage.TestNode.Properties.SingleOrDefault<TestNodeStateProperty>();
+        TestNodeStateProperty? nodeState = testNodeUpdateMessage.Properties.SingleOrDefault<TestNodeStateProperty>();
         if (nodeState is null)
         {
             return null;

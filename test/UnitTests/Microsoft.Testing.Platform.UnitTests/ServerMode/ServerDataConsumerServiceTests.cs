@@ -83,10 +83,8 @@ public sealed class ServerDataConsumerServiceTests : IDisposable
     [TestMethod]
     public void PopulateTestNodeStatistics_WithDuplicateDiscoveredEvents()
     {
-        PropertyBag properties = new(
-            DiscoveredTestNodeStateProperty.CachedInstance);
-
-        TestNodeUpdateMessage testNode = new(new SessionUid("1"), new TestNode { Uid = new TestNodeUid("test()"), DisplayName = string.Empty, Properties = properties });
+        TestNodeUpdateMessage testNode = new(new SessionUid("1"), new TestNode { Uid = new TestNodeUid("test()"), DisplayName = string.Empty });
+        testNode.Properties.Add(DiscoveredTestNodeStateProperty.CachedInstance);
 
         _service.PopulateTestNodeStatistics(testNode);
         _service.PopulateTestNodeStatistics(testNode);
@@ -100,16 +98,11 @@ public sealed class ServerDataConsumerServiceTests : IDisposable
     [TestMethod]
     public void PopulateTestNodeStatistics_WithDiscoveredAndPassedEventsForSameUid()
     {
-        PropertyBag properties = new(
-            DiscoveredTestNodeStateProperty.CachedInstance);
+        TestNodeUpdateMessage testNode = new(new SessionUid("1"), new TestNode { Uid = new TestNodeUid("test()"), DisplayName = string.Empty });
+        testNode.Properties.Add(DiscoveredTestNodeStateProperty.CachedInstance);
 
-        TestNodeUpdateMessage testNode = new(new SessionUid("1"), new TestNode { Uid = new TestNodeUid("test()"), DisplayName = string.Empty, Properties = properties });
-
-        PropertyBag otherProperties = new(
-            PassedTestNodeStateProperty.CachedInstance);
-
-        TestNodeUpdateMessage otherTestNode = new(new SessionUid("1"), new TestNode { Uid = new TestNodeUid("test()"), DisplayName = string.Empty, Properties = otherProperties });
-
+        TestNodeUpdateMessage otherTestNode = new(new SessionUid("1"), new TestNode { Uid = new TestNodeUid("test()"), DisplayName = string.Empty });
+        otherTestNode.Properties.Add(PassedTestNodeStateProperty.CachedInstance);
         _service.PopulateTestNodeStatistics(testNode);
         _service.PopulateTestNodeStatistics(otherTestNode);
 
@@ -122,10 +115,8 @@ public sealed class ServerDataConsumerServiceTests : IDisposable
     [TestMethod]
     public void PopulateTestNodeStatistics_WithDuplicatePassedEvents()
     {
-        PropertyBag properties = new(PassedTestNodeStateProperty.CachedInstance);
-
-        TestNodeUpdateMessage testNode = new(new SessionUid("1"), new TestNode { Uid = new TestNodeUid("test()"), DisplayName = string.Empty, Properties = properties });
-
+        TestNodeUpdateMessage testNode = new(new SessionUid("1"), new TestNode { Uid = new TestNodeUid("test()"), DisplayName = string.Empty });
+        testNode.Properties.Add(PassedTestNodeStateProperty.CachedInstance);
         _service.PopulateTestNodeStatistics(testNode);
         _service.PopulateTestNodeStatistics(testNode);
 
@@ -140,15 +131,11 @@ public sealed class ServerDataConsumerServiceTests : IDisposable
     [TestMethod]
     public void PopulateTestNodeStatistics_WithEventsForSameUid()
     {
-        PropertyBag properties = new(
-            new FailedTestNodeStateProperty("failed"));
+        TestNodeUpdateMessage testNode = new(new SessionUid("1"), new TestNode { Uid = new TestNodeUid("test()"), DisplayName = string.Empty });
+        testNode.Properties.Add(new FailedTestNodeStateProperty("failed"));
 
-        TestNodeUpdateMessage testNode = new(new SessionUid("1"), new TestNode { Uid = new TestNodeUid("test()"), DisplayName = string.Empty, Properties = properties });
-
-        PropertyBag otherProperties = new(
-            PassedTestNodeStateProperty.CachedInstance);
-
-        TestNodeUpdateMessage otherTestNode = new(new SessionUid(string.Empty), new TestNode { Uid = new TestNodeUid("test()"), DisplayName = string.Empty, Properties = otherProperties });
+        TestNodeUpdateMessage otherTestNode = new(new SessionUid(string.Empty), new TestNode { Uid = new TestNodeUid("test()"), DisplayName = string.Empty });
+        otherTestNode.Properties.Add(PassedTestNodeStateProperty.CachedInstance);
 
         _service.PopulateTestNodeStatistics(testNode);
         _service.PopulateTestNodeStatistics(otherTestNode);
@@ -164,16 +151,11 @@ public sealed class ServerDataConsumerServiceTests : IDisposable
     [TestMethod]
     public void PopulateTestNodeStatistics_WithEventsForDifferentUids()
     {
-        PropertyBag properties = new(
-            PassedTestNodeStateProperty.CachedInstance);
+        TestNodeUpdateMessage testNode = new(new SessionUid("1"), new TestNode { Uid = new TestNodeUid("test1()"), DisplayName = string.Empty });
+        testNode.Properties.Add(PassedTestNodeStateProperty.CachedInstance);
 
-        TestNodeUpdateMessage testNode = new(new SessionUid("1"), new TestNode { Uid = new TestNodeUid("test1()"), DisplayName = string.Empty, Properties = properties });
-
-        PropertyBag otherProperties = new(
-            new FailedTestNodeStateProperty("failed"));
-
-        TestNodeUpdateMessage otherTestNode = new(new SessionUid(string.Empty), new TestNode { Uid = new TestNodeUid("test2()"), DisplayName = string.Empty, Properties = otherProperties });
-
+        TestNodeUpdateMessage otherTestNode = new(new SessionUid(string.Empty), new TestNode { Uid = new TestNodeUid("test2()"), DisplayName = string.Empty });
+        otherTestNode.Properties.Add(new FailedTestNodeStateProperty("failed"));
         _service.PopulateTestNodeStatistics(testNode);
         _service.PopulateTestNodeStatistics(otherTestNode);
 

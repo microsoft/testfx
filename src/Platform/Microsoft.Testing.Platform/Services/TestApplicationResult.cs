@@ -61,7 +61,7 @@ internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, I
     public Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken)
     {
         var message = (TestNodeUpdateMessage)value;
-        TestNodeStateProperty? executionState = message.TestNode.Properties.SingleOrDefault<TestNodeStateProperty>();
+        TestNodeStateProperty? executionState = message.Properties.SingleOrDefault<TestNodeStateProperty>();
 
         if (executionState is null)
         {

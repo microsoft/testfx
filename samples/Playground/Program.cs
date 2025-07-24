@@ -100,12 +100,13 @@ internal sealed class DummyAdapter : ITestFramework, IDataProducer
         }
         catch (Exception e)
         {
-            await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(new SessionUid("1"), new Microsoft.Testing.Platform.Extensions.Messages.TestNode
+            var testNodeUpdateMessage = new TestNodeUpdateMessage(new SessionUid("1"), new Microsoft.Testing.Platform.Extensions.Messages.TestNode
             {
                 Uid = "2",
                 DisplayName = "Blah",
-                Properties = new PropertyBag(new FailedTestNodeStateProperty(e)),
-            }));
+            });
+            testNodeUpdateMessage.Properties.Add(new FailedTestNodeStateProperty(e));
+            await context.MessageBus.PublishAsync(this, testNodeUpdateMessage);
         }
 
         context.Complete();

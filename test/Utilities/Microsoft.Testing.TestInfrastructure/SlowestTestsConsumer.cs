@@ -27,7 +27,7 @@ public sealed class SlowestTestsConsumer : IDataConsumer, ITestSessionLifetimeHa
     public Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken)
     {
         if (value is not TestNodeUpdateMessage testNodeUpdatedMessage
-            || testNodeUpdatedMessage.TestNode.Properties.SingleOrDefault<PassedTestNodeStateProperty>() is null)
+            || testNodeUpdatedMessage.Properties.SingleOrDefault<PassedTestNodeStateProperty>() is null)
         {
             return Task.CompletedTask;
         }
