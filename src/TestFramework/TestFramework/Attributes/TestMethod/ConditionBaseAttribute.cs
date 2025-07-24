@@ -27,7 +27,7 @@ public abstract class ConditionBaseAttribute : Attribute
     /// <summary>
     /// Gets or sets the ignore message indicating the reason for ignoring the test method or test class.
     /// </summary>
-    public abstract string? IgnoreMessage { get; set; }
+    public string? IgnoreMessage { get; set; }
 
     /// <summary>
     /// Gets the group name for this attribute. This is relevant when multiple
