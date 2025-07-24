@@ -14,4 +14,5 @@ internal static class FrameworkConstants
     internal const string DoNotUseStringAssertReferenceEquals = "StringAssert.ReferenceEquals should not be used for Assertions. Please use StringAssert methods or Assert.AreSame & overloads instead.";
     internal const string DoNotUseCollectionAssertEquals = "CollectionAssert.Equals should not be used for Assertions. Please use CollectionAssert.AreEqual & overloads instead.";
     internal const string DoNotUseCollectionAssertReferenceEquals = "CollectionAssert.ReferenceEquals should not be used for Assertions. Please use CollectionAssert methods or Assert.AreSame & overloads instead.";
+    internal const string TestTimeoutAttributeObsoleteMessage = "The 'TestTimeout' attribute is obsolete and will be removed in v4. Consider removing the 'Timeout' attribute or use the 'Timeout' attribute with the 'int.MaxValue' for infinite timeout.";
 }

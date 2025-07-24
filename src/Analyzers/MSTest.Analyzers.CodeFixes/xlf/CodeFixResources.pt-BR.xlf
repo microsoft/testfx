@@ -49,7 +49,7 @@
       </trans-unit>
       <trans-unit id="PassCancellationTokenFix">
         <source>Pass 'TestContext.CancellationTokenSource.Token' argument to method call</source>
-        <target state="new">Pass 'TestContext.CancellationTokenSource.Token' argument to method call</target>
+        <target state="translated">Passe o argumento 'TestContext.CancellationTokenSource.Token' para a chamada do método</target>
         <note />
       </trans-unit>
       <trans-unit id="ReplaceDataTestMethodWithTestMethodTitle">
