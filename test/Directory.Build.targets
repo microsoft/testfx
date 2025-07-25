@@ -14,7 +14,7 @@
     <MSTestAnalysisMode>Recommended</MSTestAnalysisMode>
 
     <!-- Arcade runner settings -->
-    <TestRunnerAdditionalArguments>$(TestRunnerAdditionalArguments) --diagnostic --diagnostic-output-directory $(RepoRoot)artifacts/log/$(Configuration) --diagnostic-output-fileprefix $(ModuleName) --diagnostic-verbosity trace</TestRunnerAdditionalArguments>
+    <TestRunnerAdditionalArguments>$(TestRunnerAdditionalArguments) --diagnostic --diagnostic-output-directory $(RepoRoot)artifacts/log/$(Configuration) --diagnostic-file-prefix $(ModuleName) --diagnostic-verbosity trace</TestRunnerAdditionalArguments>
     <TestRunnerAdditionalArguments Condition=" $([MSBuild]::GetTargetFrameworkIdentifier('$(TargetFramework)')) == '.NETCoreApp' ">$(TestRunnerAdditionalArguments) --crashdump</TestRunnerAdditionalArguments>
     <TestRunnerAdditionalArguments>$(TestRunnerAdditionalArguments) --hangdump --hangdump-timeout 15m</TestRunnerAdditionalArguments>
     <TestRunnerAdditionalArguments Condition=" '$(EnableCodeCoverage)' == 'True' ">$(TestRunnerAdditionalArguments) --coverage --coverage-settings $(RepoRoot)test/coverage.config --coverage-output $(ModuleName).coverage</TestRunnerAdditionalArguments>
