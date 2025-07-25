@@ -8,7 +8,6 @@ using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.ServerMode;
 using Microsoft.Testing.Platform.Services;
-using Microsoft.Testing.Platform.TestHost;
 using Microsoft.TestPlatform.AdapterUtilities.ManagedNameUtilities;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
@@ -139,17 +138,16 @@ internal static class ObjectModelConverters
     /// <summary>
     /// Converts a VSTest <see cref="TestResult"/> to a Microsoft Testing Platform <see cref="TestNode"/>.
     /// </summary>
-    public static TestNodeUpdateMessage ToTestNodeUpdateMessage(
+    public static TestNode ToTestNode(
         this TestResult testResult,
         bool isTrxEnabled,
         bool useFullyQualifiedNameAsUid,
         INamedFeatureCapability? namedFeatureCapability,
         ICommandLineOptions commandLineOptions,
-        IClientInfo clientInfo,
-        SessionUid sessionUid)
+        IClientInfo clientInfo)
     {
         var testNode = testResult.TestCase.ToTestNode(isTrxEnabled, useFullyQualifiedNameAsUid, namedFeatureCapability, commandLineOptions, clientInfo, testResult.DisplayName);
-        var testNodeUpdateMessage = new TestNodeUpdateMessage(sessionUid, testNode);
+
         CopyCategoryAndTraits(testResult, testNode, isTrxEnabled);
 
         testNode.AddOutcome(testResult);
@@ -181,7 +179,7 @@ internal static class ObjectModelConverters
                     })]));
         }
 
-        testNodeUpdateMessage.Properties.Add(new TimingProperty(new(testResult.StartTime, testResult.EndTime, testResult.Duration), []));
+        testNode.Properties.Add(new TimingProperty(new(testResult.StartTime, testResult.EndTime, testResult.Duration), []));
 
         var standardErrorMessages = new List<string>();
         var standardOutputMessages = new List<string>();
@@ -215,21 +213,21 @@ internal static class ObjectModelConverters
         {
             foreach (UriDataAttachment attachment in attachmentSet.Attachments)
             {
-                testNodeUpdateMessage.Properties.Add(new FileArtifactProperty(new FileInfo(attachment.Uri.LocalPath), attachmentSet.DisplayName, attachment.Description));
+                testNode.Properties.Add(new FileArtifactProperty(new FileInfo(attachment.Uri.LocalPath), attachmentSet.DisplayName, attachment.Description));
             }
         }
 
         if (standardErrorMessages.Count > 0)
         {
-            testNodeUpdateMessage.Properties.Add(new StandardErrorProperty(string.Join(Environment.NewLine, standardErrorMessages)));
+            testNode.Properties.Add(new StandardErrorProperty(string.Join(Environment.NewLine, standardErrorMessages)));
         }
 
         if (standardOutputMessages.Count > 0)
         {
-            testNodeUpdateMessage.Properties.Add(new StandardOutputProperty(string.Join(Environment.NewLine, standardOutputMessages)));
+            testNode.Properties.Add(new StandardOutputProperty(string.Join(Environment.NewLine, standardOutputMessages)));
         }
 
-        return testNodeUpdateMessage;
+        return testNode;
     }
 
     private static void AddOutcome(this TestNode testNode, TestResult testResult)

@@ -240,13 +240,12 @@ internal sealed class ThreadPoolTestNodeRunner : IDisposable
         finally
         {
             timesheet.RecordStop();
+            platformTestNode.Properties.Add(new TimingProperty(new TimingInfo(timesheet.StartTime, timesheet.StopTime, timesheet.Duration)));
         }
 
         if (!skipPublishResult)
         {
-            var testNodeUpdateMessage = new TestNodeUpdateMessage(_sessionUid, platformTestNode, parentTestNodeUid?.ToPlatformTestNodeUid());
-            testNodeUpdateMessage.Properties.Add(new TimingProperty(new TimingInfo(timesheet.StartTime, timesheet.StopTime, timesheet.Duration)));
-            await _publishDataAsync(testNodeUpdateMessage).ConfigureAwait(false);
+            await _publishDataAsync(new TestNodeUpdateMessage(_sessionUid, platformTestNode, parentTestNodeUid?.ToPlatformTestNodeUid())).ConfigureAwait(false);
         }
 
         return Result.Ok();
