@@ -1140,4 +1140,60 @@ public partial class AssertTests : TestContainer
         public override int GetHashCode()
             => Id.GetHashCode() + 1234;
     }
+
+    // Tests for enhanced string comparison messages
+    public void AreEqualStringDifferenceShouldShowIndex()
+    {
+        Exception ex = VerifyThrows(() => Assert.AreEqual("aaaa", "aaab"));
+        Verify(ex.Message.Contains("differ at index 3"));
+    }
+
+    public void AreEqualStringDifferenceShouldShowStringLengths()
+    {
+        Exception ex = VerifyThrows(() => Assert.AreEqual("aaaa", "aaab"));
+        Verify(ex.Message.Contains("String lengths are both 4"));
+    }
+
+    public void AreEqualStringDifferentLengthsShouldShowLengthDifference()
+    {
+        Exception ex = VerifyThrows(() => Assert.AreEqual("aaaa", "aaaab"));
+        Verify(ex.Message.Contains("Expected string length 4 but was 5"));
+    }
+
+    public void AreEqualStringDifferenceShouldShowExpectedAndActual()
+    {
+        Exception ex = VerifyThrows(() => Assert.AreEqual("aaaa", "aaab"));
+        Verify(ex.Message.Contains("Expected: \"aaaa\""));
+        Verify(ex.Message.Contains("But was:  \"aaab\""));
+    }
+
+    public void AreEqualStringDifferenceShouldShowCaretPointer()
+    {
+        Exception ex = VerifyThrows(() => Assert.AreEqual("aaaa", "aaab"));
+        Verify(ex.Message.Contains("---^"));
+    }
+
+    public void AreEqualStringDifferenceAtBeginning()
+    {
+        Exception ex = VerifyThrows(() => Assert.AreEqual("baaa", "aaaa"));
+        Verify(ex.Message.Contains("differ at index 0"));
+        Verify(ex.Message.Contains("^"));
+    }
+
+    public void AreEqualStringWithSpecialCharactersShouldEscape()
+    {
+        Exception ex = VerifyThrows(() => Assert.AreEqual("aa\ta", "aa a"));
+        Verify(ex.Message.Contains("\\t"));
+    }
+
+    public void AreEqualLongStringsShouldTruncateAndShowContext()
+    {
+        string expected = new string('a', 100) + "b" + new string('c', 100);
+        string actual = new string('a', 100) + "d" + new string('c', 100);
+        
+        Exception ex = VerifyThrows(() => Assert.AreEqual(expected, actual));
+        Verify(ex.Message.Contains("differ at index 100"));
+        // Should show context around the difference, not the full 201 character strings
+        Verify(!ex.Message.Contains(new string('a', 50))); // Should not show excessive context
+    }
 }

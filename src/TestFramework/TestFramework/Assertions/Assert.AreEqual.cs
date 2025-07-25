@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.ComponentModel;
+using System.Text;
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -694,24 +695,189 @@ public sealed partial class Assert
     private static bool AreEqualFailing(long expected, long actual, long delta)
         => Math.Abs(expected - actual) > delta;
 
+    private static string FormatStringComparisonMessage(string? expected, string? actual, string userMessage)
+    {
+        // Handle null cases
+        if (expected is null && actual is null)
+        {
+            return string.Format(
+                CultureInfo.CurrentCulture,
+                FrameworkMessages.AreEqualFailMsg,
+                userMessage,
+                ReplaceNulls(expected),
+                ReplaceNulls(actual));
+        }
+
+        if (expected is null || actual is null)
+        {
+            return string.Format(
+                CultureInfo.CurrentCulture,
+                FrameworkMessages.AreEqualFailMsg,
+                userMessage,
+                ReplaceNulls(expected),
+                ReplaceNulls(actual));
+        }
+
+        // Find the first difference
+        int diffIndex = FindFirstStringDifference(expected, actual);
+        
+        if (diffIndex == -1)
+        {
+            // Strings are equal - should not happen in practice but handle gracefully
+            return string.Format(
+                CultureInfo.CurrentCulture,
+                FrameworkMessages.AreEqualFailMsg,
+                userMessage,
+                ReplaceNulls(expected),
+                ReplaceNulls(actual));
+        }
+
+        // Format the enhanced string comparison message
+        return FormatStringDifferenceMessage(expected, actual, diffIndex, userMessage);
+    }
+
+    private static int FindFirstStringDifference(string expected, string actual)
+    {
+        int minLength = Math.Min(expected.Length, actual.Length);
+        
+        for (int i = 0; i < minLength; i++)
+        {
+            if (expected[i] != actual[i])
+            {
+                return i;
+            }
+        }
+
+        // If we reach here, one string is a prefix of the other
+        return expected.Length != actual.Length ? minLength : -1;
+    }
+
+    private static string FormatStringDifferenceMessage(string expected, string actual, int diffIndex, string userMessage)
+    {
+        // Create a message similar to NUnit and XUnit
+        string lengthInfo = expected.Length == actual.Length
+            ? $"String lengths are both {expected.Length}."
+            : $"Expected string length {expected.Length} but was {actual.Length}.";
+
+        string diffInfo = $"Strings differ at index {diffIndex}.";
+
+        // Create contextual preview around the difference
+        const int contextLength = 20; // Show up to 20 characters of context on each side
+        var (expectedPreview, actualPreview, caretPosition) = CreateStringPreviews(expected, actual, diffIndex, contextLength);
+
+        return string.Format(
+            CultureInfo.CurrentCulture,
+            FrameworkMessages.AreEqualStringDiffFailMsg,
+            userMessage,
+            lengthInfo,
+            diffInfo,
+            expectedPreview,
+            actualPreview,
+            new string('-', caretPosition) + "^");
+    }
+
+    private static (string expectedPreview, string actualPreview, int caretPosition) CreateStringPreviews(
+        string expected, string actual, int diffIndex, int contextLength)
+    {
+        // Calculate start position to show context before the difference
+        int startPos = Math.Max(0, diffIndex - contextLength / 2);
+        
+        // For very long strings, prefer showing context before the difference
+        if (diffIndex > contextLength && startPos == 0)
+        {
+            startPos = Math.Max(0, diffIndex - contextLength + 5); // Leave some space for the difference
+        }
+
+        // Calculate end position
+        int maxEndPos = Math.Max(expected.Length, actual.Length);
+        int endPos = Math.Min(maxEndPos, startPos + contextLength);
+
+        // Create previews
+        string expectedPreview = CreateStringPreview(expected, startPos, endPos);
+        string actualPreview = CreateStringPreview(actual, startPos, endPos);
+
+        // Calculate caret position (where to place the ^ marker)
+        int caretPosition = Math.Max(0, diffIndex - startPos);
+
+        return (expectedPreview, actualPreview, caretPosition);
+    }
+
+    private static string CreateStringPreview(string str, int startPos, int endPos)
+    {
+        if (startPos >= str.Length)
+        {
+            return string.Empty;
+        }
+
+        int actualStart = Math.Min(startPos, str.Length);
+        int actualEnd = Math.Min(endPos, str.Length);
+        
+        string preview = str.Substring(actualStart, actualEnd - actualStart);
+        
+        // Replace non-printable characters and ensure ASCII-only display
+        var result = new StringBuilder();
+        foreach (char c in preview)
+        {
+            if (c >= 32 && c <= 126) // Printable ASCII
+            {
+                result.Append(c);
+            }
+            else if (c == '\t')
+            {
+                result.Append("\\t");
+            }
+            else if (c == '\n')
+            {
+                result.Append("\\n");
+            }
+            else if (c == '\r')
+            {
+                result.Append("\\r");
+            }
+            else if (c == '\0')
+            {
+                result.Append("\\0");
+            }
+            else
+            {
+                // Show Unicode characters as escape sequences to avoid UTF-8 console issues
+                result.Append($"\\u{(int)c:X4}");
+            }
+        }
+
+        return result.ToString();
+    }
+
     [DoesNotReturn]
     private static void ThrowAssertAreEqualFailed(object? expected, object? actual, string userMessage)
     {
-        string finalMessage = actual != null && expected != null && !actual.GetType().Equals(expected.GetType())
-            ? string.Format(
+        string finalMessage;
+        
+        if (actual != null && expected != null && !actual.GetType().Equals(expected.GetType()))
+        {
+            finalMessage = string.Format(
                 CultureInfo.CurrentCulture,
                 FrameworkMessages.AreEqualDifferentTypesFailMsg,
                 userMessage,
                 ReplaceNulls(expected),
                 expected.GetType().FullName,
                 ReplaceNulls(actual),
-                actual.GetType().FullName)
-            : string.Format(
+                actual.GetType().FullName);
+        }
+        else if (expected is string expectedString && actual is string actualString)
+        {
+            finalMessage = FormatStringComparisonMessage(expectedString, actualString, userMessage);
+        }
+        else
+        {
+            finalMessage = string.Format(
                 CultureInfo.CurrentCulture,
                 FrameworkMessages.AreEqualFailMsg,
                 userMessage,
                 ReplaceNulls(expected),
                 ReplaceNulls(actual));
+        }
+        
         ThrowAssertFailed("Assert.AreEqual", finalMessage);
     }
 
