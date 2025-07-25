@@ -1,0 +1,100 @@
+# Template for test stages
+parameters:
+- name: stageName
+  type: string
+- name: displayName
+  type: string
+- name: dependsOn
+  type: string
+  default: BuildAndPack
+- name: os
+  type: string
+  values:
+  - Windows
+  - Linux
+  - macOS
+- name: skipTests
+  type: boolean
+  default: false
+- name: windowsPool
+  type: object
+  default:
+    name: NetCore-Public
+    demands: ImageOverride -equals windows.vs2022preview.amd64.open
+- name: linuxPool
+  type: object
+  default:
+    name: NetCore-Public
+    demands: ImageOverride -equals build.ubuntu.2004.amd64.open
+- name: macOSPool
+  type: object
+  default:
+    name: Azure Pipelines
+    vmImage: macos-latest
+    os: macOS
+- name: solutionFile
+  type: string
+  default: ''
+
+stages:
+- stage: ${{ parameters.stageName }}
+  displayName: ${{ parameters.displayName }}
+  dependsOn: ${{ parameters.dependsOn }}
+  jobs:
+  - template: /eng/common/templates/jobs/jobs.yml
+    parameters:
+      enableMicrobuild: true
+      enablePublishBuildArtifacts: true
+      enablePublishTestResults: true
+      testResultsFormat: 'vstest'
+      enablePublishBuildAssets: false
+      enablePublishUsingPipelines: false
+      enableTelemetry: true
+      jobs:
+      - ${{ if eq(parameters.os, 'Windows') }}:
+        - template: /eng/test-job-template.yml
+          parameters:
+            os: Windows
+            configuration: Debug
+            skipTests: ${{ parameters.skipTests }}
+            pool: ${{ parameters.windowsPool }}
+            platformSpecificSteps:
+            - template: /eng/windows-setup-steps.yml
+        - template: /eng/test-job-template.yml
+          parameters:
+            os: Windows
+            configuration: Release
+            skipTests: ${{ parameters.skipTests }}
+            pool: ${{ parameters.windowsPool }}
+            platformSpecificSteps:
+            - template: /eng/windows-setup-steps.yml
+      - ${{ if eq(parameters.os, 'Linux') }}:
+        - template: /eng/test-job-template.yml
+          parameters:
+            os: Linux
+            configuration: Debug
+            skipTests: ${{ parameters.skipTests }}
+            pool: ${{ parameters.linuxPool }}
+            solutionFile: ${{ parameters.solutionFile }}
+        - template: /eng/test-job-template.yml
+          parameters:
+            os: Linux
+            configuration: Release
+            skipTests: ${{ parameters.skipTests }}
+            pool: ${{ parameters.linuxPool }}
+            solutionFile: ${{ parameters.solutionFile }}
+      - ${{ if eq(parameters.os, 'macOS') }}:
+        - template: /eng/test-job-template.yml
+          parameters:
+            os: macOS
+            configuration: Debug
+            skipTests: ${{ parameters.skipTests }}
+            pool: ${{ parameters.macOSPool }}
+            solutionFile: ${{ parameters.solutionFile }}
+        - template: /eng/test-job-template.yml
+          parameters:
+            os: macOS
+            configuration: Release
+            skipTests: ${{ parameters.skipTests }}
+            pool: ${{ parameters.macOSPool }}
+            solutionFile: ${{ parameters.solutionFile }}

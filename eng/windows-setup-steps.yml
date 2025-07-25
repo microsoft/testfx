@@ -1,0 +1,35 @@
+# Template for Windows-specific setup steps
+steps:
+- task: PowerShell@2
+  displayName: 'Install Windows SDK'
+  inputs:
+    targetType: filePath
+    filePath: './eng/install-windows-sdk.ps1'
+    failOnStderr: true
+    showWarnings: true
+
+- task: PowerShell@2
+  displayName: 'Install procdump'
+  inputs:
+    targetType: filePath
+    filePath: ./eng/install-procdump.ps1
+    failOnStderr: true
+    showWarnings: true
+
+- task: PowerShell@2
+  displayName: 'Enable local dumps'
+  inputs:
+    targetType: 'inline'
+    script: |
+      New-Item -Path $(Build.SourcesDirectory)\artifacts\CrashDumps -ItemType Directory -Force
+      Get-ChildItem "HKLM:\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps"
+      New-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps" -Name "DumpFolder" -Value "$(Build.SourcesDirectory)\artifacts\CrashDumps" -PropertyType ExpandString -Force
+      New-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps" -Name "DumpCount" -Value 10 -PropertyType DWord -Force
+
+- task: PowerShell@2
+  displayName: 'Install Access Database Engine'
+  inputs:
+    targetType: filePath
+    filePath: ./eng/install-access-database-engine.ps1
+    failOnStderr: true
+    showWarnings: true
