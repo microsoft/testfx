@@ -753,12 +753,11 @@ public sealed partial class Assert
 
     private static string FormatStringDifferenceMessage(string expected, string actual, int diffIndex, string userMessage)
     {
-        // Create a message similar to NUnit and XUnit
         string lengthInfo = expected.Length == actual.Length
-            ? $"String lengths are both {expected.Length}."
-            : $"Expected string length {expected.Length} but was {actual.Length}.";
+            ? string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AreEqualStringDiffLengthBothMsg, expected.Length)
+            : string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AreEqualStringDiffLengthDifferentMsg, expected.Length, actual.Length);
 
-        string diffInfo = $"Strings differ at index {diffIndex}.";
+        string diffInfo = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AreEqualStringDiffIndexMsg, diffIndex);
 
         // Create contextual preview around the difference
         const int contextLength = 20; // Show up to 20 characters of context on each side
@@ -789,10 +788,13 @@ public sealed partial class Assert
             ? maxPrefixLength + 1 + caretPosition // +1 for the opening quote
             : caretPosition;
 
+        // Format user message properly - add leading space if not empty, otherwise no extra formatting
+        string formattedUserMessage = string.IsNullOrEmpty(userMessage) ? string.Empty : $" {userMessage}";
+
         return string.Format(
             CultureInfo.CurrentCulture,
             FrameworkMessages.AreEqualStringDiffFailMsg,
-            userMessage,
+            formattedUserMessage,
             lengthInfo,
             diffInfo,
             expectedLine,
