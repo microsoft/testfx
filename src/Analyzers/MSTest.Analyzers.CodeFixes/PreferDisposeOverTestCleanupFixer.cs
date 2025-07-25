@@ -86,40 +86,37 @@ public sealed class PreferDisposeOverTestCleanupFixer : CodeFixProvider
         // Move the code from TestCleanup to Dispose method
         // For partial classes, we need to check all parts of the type, not just the current partial declaration
         MethodDeclarationSyntax? existingDisposeMethod = null;
-        if (semanticModel.GetDeclaredSymbol(containingType) is INamedTypeSymbol typeSymbol)
+        if (semanticModel.GetDeclaredSymbol(containingType, cancellationToken) is INamedTypeSymbol typeSymbol)
         {
             // Find existing Dispose method in any part of the partial class
             IMethodSymbol? existingDisposeSymbol = typeSymbol.GetMembers("Dispose")
                 .OfType<IMethodSymbol>()
                 .FirstOrDefault(m => m.IsDisposeImplementation(iDisposableSymbol));
 
-            if (existingDisposeSymbol != null)
+            if (existingDisposeSymbol is not null)
             {
                 // Find the syntax node for the existing Dispose method
-                var currentSyntaxTree = await document.GetSyntaxTreeAsync(cancellationToken).ConfigureAwait(false);
-                foreach (var syntaxRef in existingDisposeSymbol.DeclaringSyntaxReferences)
+                SyntaxTree? currentSyntaxTree = await document.GetSyntaxTreeAsync(cancellationToken).ConfigureAwait(false);
+                foreach (SyntaxReference syntaxRef in existingDisposeSymbol.DeclaringSyntaxReferences)
                 {
-                    if (syntaxRef.GetSyntax() is MethodDeclarationSyntax methodSyntax)
+                    // Check if the existing Dispose method is in the same document
+                    if (syntaxRef.SyntaxTree == currentSyntaxTree
+                        && await syntaxRef.GetSyntaxAsync(cancellationToken).ConfigureAwait(false) is MethodDeclarationSyntax methodSyntax)
                     {
-                        // Check if the existing Dispose method is in the same document
-                        if (syntaxRef.SyntaxTree == currentSyntaxTree)
-                        {
-                            existingDisposeMethod = methodSyntax;
-                            break;
-                        }
+                        existingDisposeMethod = methodSyntax;
+                        break;
                     }
                 }
             }
         }
 
         BlockSyntax? cleanupBody = testCleanupMethod.Body;
-
-        if (existingDisposeMethod != null)
+        if (existingDisposeMethod is not null)
         {
             // Append the TestCleanup body to the existing Dispose method
             StatementSyntax[]? cleanupStatements = cleanupBody?.Statements.ToArray();
             MethodDeclarationSyntax newDisposeMethod;
-            if (existingDisposeMethod.Body != null)
+            if (existingDisposeMethod.Body is not null)
             {
                 BlockSyntax newDisposeBody = existingDisposeMethod.Body.AddStatements(cleanupStatements ?? []);
                 newDisposeMethod = existingDisposeMethod.WithBody(newDisposeBody);

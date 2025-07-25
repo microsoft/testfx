@@ -161,7 +161,6 @@ public sealed class PreferDisposeOverTestCleanupAnalyzerTests
     [TestMethod]
     public async Task WhenTestClassHasTestCleanup_AndHasDisposeInAnotherPartial_Diagnostic()
     {
-        // This scenario should now work correctly after fixing the codefix
         string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
             using System;
