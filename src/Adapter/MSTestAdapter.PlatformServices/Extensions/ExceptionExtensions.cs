@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Diagnostics;
+
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -78,7 +80,7 @@ internal static class ExceptionExtensions
     /// <returns>StackTraceInformation for the exception.</returns>
     internal static StackTraceInformation? TryGetStackTraceInformation(this Exception exception)
         => !StringEx.IsNullOrEmpty(exception.StackTrace)
-            ? ExceptionHelper.CreateStackTraceInformation(exception.StackTrace)
+            ? new StackTraceInformation(exception.StackTrace, null, 0, 0)
             : null;
 
     /// <summary>

@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Diagnostics;
+
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -84,46 +86,7 @@ internal static class ExceptionHelper
             first = false;
         }
 
-        return CreateStackTraceInformation(result.ToString());
-    }
-
-    /// <summary>
-    /// Removes all stack frames that refer to Microsoft.VisualStudio.TestTools.UnitTesting.Assertion.
-    /// </summary>
-    /// <param name="stackTrace">
-    /// The stack Trace.
-    /// </param>
-    /// <returns>
-    /// The trimmed stack trace removing traces of the framework and adapter from the stack.
-    /// </returns>
-    internal static string TrimStackTrace(string stackTrace)
-    {
-        if (stackTrace.Length == 0)
-        {
-            return stackTrace;
-        }
-
-        StringBuilder result = new(stackTrace.Length);
-        string[] stackFrames = Regex.Split(stackTrace, Environment.NewLine);
-
-        foreach (string stackFrame in stackFrames)
-        {
-            if (StringEx.IsNullOrEmpty(stackFrame))
-            {
-                continue;
-            }
-
-            // Add the frame to the result if it does not refer to
-            // the assertion class in the test framework
-            bool hasReference = HasReferenceToUTF(stackFrame);
-            if (!hasReference)
-            {
-                result.Append(stackFrame);
-                result.Append(Environment.NewLine);
-            }
-        }
-
-        return result.ToString();
+        return new StackTraceInformation(result.ToString(), null, 0, 0);
     }
 
     /// <summary>
@@ -169,43 +132,5 @@ internal static class ExceptionHelper
         }
 
         return result.ToString();
-    }
-
-    /// <summary>
-    /// Create stack trace information.
-    /// </summary>
-    /// <param name="stackTraceString">
-    /// The stack Trace String.
-    /// </param>
-    /// <returns>
-    /// The <see cref="StackTraceInformation"/>.
-    /// </returns>
-    internal static StackTraceInformation? CreateStackTraceInformation(string stackTraceString)
-    {
-        string stackTrace = TrimStackTrace(stackTraceString);
-
-        return !StringEx.IsNullOrEmpty(stackTrace) ? new StackTraceInformation(stackTrace, null, 0, 0) : null;
-    }
-
-    /// <summary>
-    /// Returns whether the parameter stackFrame has reference to UTF.
-    /// </summary>
-    /// <param name="stackFrame">
-    /// The stack Frame.
-    /// </param>
-    /// <returns>
-    /// True if the framework or the adapter methods are in the stack frame.
-    /// </returns>
-    internal static bool HasReferenceToUTF(string stackFrame)
-    {
-        foreach (string type in TypesToBeExcluded)
-        {
-            if (stackFrame.IndexOf(type, StringComparison.Ordinal) > -1)
-            {
-                return true;
-            }
-        }
-
-        return false;
     }
 }
