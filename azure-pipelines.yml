@@ -1,3 +1,9 @@
+trigger:
+  branches:
+    include:
+    - main
+    - rel/*
+
 # Branch(es) that trigger(s) build(s) on PR
 pr:
   branches:
