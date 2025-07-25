@@ -773,32 +773,21 @@ public sealed partial class Assert
 
         // Calculate the maximum prefix length to align the caret properly
         int maxPrefixLength = Math.Max(expectedPrefix.Length, actualPrefix.Length);
-        
+
         // Pad shorter prefix to match the longer one for proper alignment
         string paddedExpectedPrefix = expectedPrefix.PadRight(maxPrefixLength);
         string paddedActualPrefix = actualPrefix.PadRight(maxPrefixLength);
-        
+
         // Build the formatted lines with proper alignment
         string expectedLine = paddedExpectedPrefix + $"\"{expectedPreview}\"";
         string actualLine = paddedActualPrefix + $"\"{actualPreview}\"";
-        
+
         // The caret should align under the difference in the string content
         // For localized prefixes with different lengths, we need to account for the longer prefix
         // to ensure proper alignment. But the caret position is relative to the string content.
-        int adjustedCaretPosition = caretPosition;
-        
-        // If the prefixes have different lengths, we need to ensure the caret aligns
-        // with the string content in the line that has the longer prefix
-        if (expectedPrefix.Length != actualPrefix.Length)
-        {
-            // Align caret to the longer prefix line
-            adjustedCaretPosition = maxPrefixLength + 1 + caretPosition; // +1 for the opening quote
-        }
-        else
-        {
-            // For same-length prefixes, maintain original behavior to pass existing tests
-            adjustedCaretPosition = caretPosition;
-        }
+        int adjustedCaretPosition = expectedPrefix.Length != actualPrefix.Length
+            ? maxPrefixLength + 1 + caretPosition // +1 for the opening quote
+            : caretPosition;
 
         return string.Format(
             CultureInfo.CurrentCulture,
