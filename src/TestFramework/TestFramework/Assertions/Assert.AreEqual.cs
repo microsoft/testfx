@@ -798,6 +798,12 @@ public sealed partial class Assert
 
         // Calculate caret position (where to place the ^ marker)
         int caretPosition = Math.Max(0, diffIndex - startPos);
+        
+        // Adjust caret position for leading ellipsis
+        if (startPos > 0)
+        {
+            caretPosition += 3; // Account for "..." ellipsis
+        }
 
         return (expectedPreview, actualPreview, caretPosition);
     }
@@ -816,6 +822,13 @@ public sealed partial class Assert
         
         // Replace non-printable characters and ensure ASCII-only display
         var result = new StringBuilder();
+        
+        // Add leading ellipsis if we're starting after the beginning
+        if (actualStart > 0)
+        {
+            result.Append("...");
+        }
+        
         foreach (char c in preview)
         {
             if (c >= 32 && c <= 126) // Printable ASCII
@@ -843,6 +856,12 @@ public sealed partial class Assert
                 // Show Unicode characters as escape sequences to avoid UTF-8 console issues
                 result.Append($"\\u{(int)c:X4}");
             }
+        }
+        
+        // Add trailing ellipsis if we're ending before the end
+        if (actualEnd < str.Length)
+        {
+            result.Append("...");
         }
 
         return result.ToString();

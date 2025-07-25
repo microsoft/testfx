@@ -115,7 +115,10 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {1} {2} Expected: "{3}" But was:  "{4}" {5} {0}.
+        ///   Looks up a localized string similar to {1} {2}
+        /// Expected: "{3}"
+        /// But was:  "{4}"
+        /// {5} {0}.
         /// </summary>
         internal static string AreEqualStringDiffFailMsg {
             get {

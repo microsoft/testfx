@@ -38,8 +38,14 @@
         <note></note>
       </trans-unit>
       <trans-unit id="AreEqualStringDiffFailMsg">
-        <source>{1} {2} Expected: "{3}" But was:  "{4}" {5} {0}</source>
-        <target state="new">{1} {2} Expected: "{3}" But was:  "{4}" {5} {0}</target>
+        <source>{1} {2}
+Expected: "{3}"
+But was:  "{4}"
+{5} {0}</source>
+        <target state="new">{1} {2}
+Expected: "{3}"
+But was:  "{4}"
+{5} {0}</target>
         <note></note>
       </trans-unit>
       <trans-unit id="AreNotEqualFailMsg">
