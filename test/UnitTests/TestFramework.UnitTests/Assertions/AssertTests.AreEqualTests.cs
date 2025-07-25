@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using FluentAssertions;
+
 using TestFramework.ForTestingMSTest;
 
 namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests;
@@ -1144,7 +1146,7 @@ public partial class AssertTests : TestContainer
     public void AreEqualStringDifferenceShouldDifference()
     {
         Exception ex = VerifyThrows(() => Assert.AreEqual("aaaa", "aaab"));
-        Verify(ex.Message == """
+        ex.Message.Should().Be("""
             String lengths are both 4. Strings differ at index 3.
             Expected: "aaaa"
             But was:  "aaab"
@@ -1155,7 +1157,7 @@ public partial class AssertTests : TestContainer
     public void AreEqualStringDifferenceAtBeginning()
     {
         Exception ex = VerifyThrows(() => Assert.AreEqual("baaa", "aaaa"));
-        Verify(ex.Message == """
+        ex.Message.Should().Be("""
             String lengths are both 4. Strings differ at index 0.
             Expected: "baaa"
             But was:  "aaaa"
@@ -1166,7 +1168,7 @@ public partial class AssertTests : TestContainer
     public void AreEqualStringWithSpecialCharactersShouldEscape()
     {
         Exception ex = VerifyThrows(() => Assert.AreEqual("aa\ta", "aa a"));
-        Verify(ex.Message == """
+        ex.Message.Should().Be("""
             String lengths are both 4. Strings differ at index 2.
             Expected: "aa\ta"
             But was:  "aa a"
@@ -1180,7 +1182,7 @@ public partial class AssertTests : TestContainer
         string actual = new string('a', 100) + "d" + new string('c', 100);
 
         Exception ex = VerifyThrows(() => Assert.AreEqual(expected, actual));
-        Verify(ex.Message == """
+        ex.Message.Should().Be("""
             String lengths are both 201. Strings differ at index 100.
             Expected: "...aaaaabccccc..."
             But was:  "...aaaaadccccc..."
@@ -1191,7 +1193,7 @@ public partial class AssertTests : TestContainer
     public void AreEqualStringWithCultureShouldUseEnhancedMessage()
     {
         Exception ex = VerifyThrows(() => Assert.AreEqual("aaaa", "aaab", false, CultureInfo.InvariantCulture));
-        Verify(ex.Message == """
+        ex.Message.Should().Be("""
             String lengths are both 4. Strings differ at index 3.
             Expected: "aaaa"
             But was:  "aaab"
