@@ -1165,6 +1165,8 @@ public partial class AssertTests : TestContainer
         Exception ex = VerifyThrows(() => Assert.AreEqual("aaaa", "aaab"));
         Verify(ex.Message.Contains("Expected: \"aaaa\""));
         Verify(ex.Message.Contains("But was:  \"aaab\""));
+        // Verify they are on separate lines by checking for newline between them
+        Verify(ex.Message.Contains("Expected: \"aaaa\"\nBut was:  \"aaab\""));
     }
 
     public void AreEqualStringDifferenceShouldShowCaretPointer()
@@ -1202,5 +1204,24 @@ public partial class AssertTests : TestContainer
         Exception ex = VerifyThrows(() => Assert.AreEqual("aaaa", "aaab", false, CultureInfo.InvariantCulture));
         Verify(ex.Message.Contains("differ at index 3"));
         Verify(ex.Message.Contains("String lengths are both 4"));
+    }
+
+    public void AreEqualLongStringWithDifferenceFarFromStart()
+    {
+        // Create a 200-character string with difference at position 90
+        string expected = new string('a', 90) + "x" + new string('b', 109);
+        string actual = new string('a', 90) + "y" + new string('b', 109);
+        
+        Exception ex = VerifyThrows(() => Assert.AreEqual(expected, actual));
+        Verify(ex.Message.Contains("differ at index 90"));
+        Verify(ex.Message.Contains("String lengths are both 200"));
+        
+        // Should use ellipsis and not show all 90 'a' characters
+        Verify(!ex.Message.Contains(new string('a', 50))); // Should not show excessive leading context
+        Verify(ex.Message.Contains("...")); // Should show ellipsis indicating truncation
+        
+        // Should show contextual preview around the difference
+        Verify(ex.Message.Contains("x")); // Expected character at difference
+        Verify(ex.Message.Contains("y")); // Actual character at difference
     }
 }
