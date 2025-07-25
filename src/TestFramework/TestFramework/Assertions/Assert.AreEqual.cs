@@ -720,7 +720,7 @@ public sealed partial class Assert
 
         // Find the first difference
         int diffIndex = FindFirstStringDifference(expected, actual);
-        
+
         if (diffIndex == -1)
         {
             // Strings are equal - should not happen in practice but handle gracefully
@@ -739,7 +739,7 @@ public sealed partial class Assert
     private static int FindFirstStringDifference(string expected, string actual)
     {
         int minLength = Math.Min(expected.Length, actual.Length);
-        
+
         for (int i = 0; i < minLength; i++)
         {
             if (expected[i] != actual[i])
@@ -763,7 +763,10 @@ public sealed partial class Assert
 
         // Create contextual preview around the difference
         const int contextLength = 20; // Show up to 20 characters of context on each side
-        var (expectedPreview, actualPreview, caretPosition) = CreateStringPreviews(expected, actual, diffIndex, contextLength);
+        Tuple<string, string, int> tuple = CreateStringPreviews(expected, actual, diffIndex, contextLength);
+        string expectedPreview = tuple.Item1;
+        string actualPreview = tuple.Item2;
+        int caretPosition = tuple.Item3;
 
         return string.Format(
             CultureInfo.CurrentCulture,
@@ -776,12 +779,12 @@ public sealed partial class Assert
             new string('-', caretPosition) + "^");
     }
 
-    private static (string expectedPreview, string actualPreview, int caretPosition) CreateStringPreviews(
+    private static Tuple<string, string, int> CreateStringPreviews(
         string expected, string actual, int diffIndex, int contextLength)
     {
         // Calculate start position to show context before the difference
-        int startPos = Math.Max(0, diffIndex - contextLength / 2);
-        
+        int startPos = Math.Max(0, diffIndex - (contextLength / 2));
+
         // For very long strings, prefer showing context before the difference
         if (diffIndex > contextLength && startPos == 0)
         {
@@ -798,14 +801,14 @@ public sealed partial class Assert
 
         // Calculate caret position (where to place the ^ marker)
         int caretPosition = Math.Max(0, diffIndex - startPos);
-        
+
         // Adjust caret position for leading ellipsis
         if (startPos > 0)
         {
             caretPosition += 3; // Account for "..." ellipsis
         }
 
-        return (expectedPreview, actualPreview, caretPosition);
+        return new(expectedPreview, actualPreview, caretPosition);
     }
 
     private static string CreateStringPreview(string str, int startPos, int endPos)
@@ -817,21 +820,21 @@ public sealed partial class Assert
 
         int actualStart = Math.Min(startPos, str.Length);
         int actualEnd = Math.Min(endPos, str.Length);
-        
+
         string preview = str.Substring(actualStart, actualEnd - actualStart);
-        
+
         // Replace non-printable characters and ensure ASCII-only display
         var result = new StringBuilder();
-        
+
         // Add leading ellipsis if we're starting after the beginning
         if (actualStart > 0)
         {
             result.Append("...");
         }
-        
+
         foreach (char c in preview)
         {
-            if (c >= 32 && c <= 126) // Printable ASCII
+            if (c is >= (char)32 and <= (char)126) // Printable ASCII
             {
                 result.Append(c);
             }
@@ -854,10 +857,14 @@ public sealed partial class Assert
             else
             {
                 // Show Unicode characters as escape sequences to avoid UTF-8 console issues
+#if NET
+                result.Append(CultureInfo.InvariantCulture, $"\\u{(int)c:X4}");
+#else
                 result.Append($"\\u{(int)c:X4}");
+#endif
             }
         }
-        
+
         // Add trailing ellipsis if we're ending before the end
         if (actualEnd < str.Length)
         {
@@ -870,33 +877,23 @@ public sealed partial class Assert
     [DoesNotReturn]
     private static void ThrowAssertAreEqualFailed(object? expected, object? actual, string userMessage)
     {
-        string finalMessage;
-        
-        if (actual != null && expected != null && !actual.GetType().Equals(expected.GetType()))
-        {
-            finalMessage = string.Format(
+        string finalMessage = actual != null && expected != null && !actual.GetType().Equals(expected.GetType())
+            ? string.Format(
                 CultureInfo.CurrentCulture,
                 FrameworkMessages.AreEqualDifferentTypesFailMsg,
                 userMessage,
                 ReplaceNulls(expected),
                 expected.GetType().FullName,
                 ReplaceNulls(actual),
-                actual.GetType().FullName);
-        }
-        else if (expected is string expectedString && actual is string actualString)
-        {
-            finalMessage = FormatStringComparisonMessage(expectedString, actualString, userMessage);
-        }
-        else
-        {
-            finalMessage = string.Format(
-                CultureInfo.CurrentCulture,
-                FrameworkMessages.AreEqualFailMsg,
-                userMessage,
-                ReplaceNulls(expected),
-                ReplaceNulls(actual));
-        }
-        
+                actual.GetType().FullName)
+            : expected is string expectedString && actual is string actualString
+                ? FormatStringComparisonMessage(expectedString, actualString, userMessage)
+                : string.Format(
+                    CultureInfo.CurrentCulture,
+                    FrameworkMessages.AreEqualFailMsg,
+                    userMessage,
+                    ReplaceNulls(expected),
+                    ReplaceNulls(actual));
         ThrowAssertFailed("Assert.AreEqual", finalMessage);
     }
 
@@ -918,7 +915,7 @@ public sealed partial class Assert
     private static void ThrowAssertAreEqualFailed(string? expected, string? actual, bool ignoreCase, CultureInfo culture, string userMessage)
     {
         string finalMessage;
-        
+
         // If the user requested to match case, and the difference between expected/actual is casing only, then we use a different message.
         if (!ignoreCase && CompareInternal(expected, actual, ignoreCase: true, culture) == 0)
         {
