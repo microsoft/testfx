@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Diagnostics;
-
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -14,12 +12,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 /// </summary>
 internal static class ExceptionHelper
 {
-    /// <summary>
-    /// Gets the types whose methods should be ignored in the reported call stacks.
-    /// This is used to remove our stack that the user will not care about.
-    /// </summary>
-    private static readonly List<string> TypesToBeExcluded = [typeof(Assert).Namespace!, "Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter"];
-
     /// <summary>
     /// Gets the stack trace for an exception, including all stack traces for inner
     /// exceptions.
