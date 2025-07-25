@@ -31,14 +31,14 @@ Options:
     --diagnostic
         Enable the diagnostic logging. The default log level is 'Trace'.
         The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag
-    --diagnostic-filelogger-synchronouswrite
+    --diagnostic-synchronous-write
         Force the built-in file logger to write the log synchronously.
         Useful for scenario where you don't want to lose any log (i.e. in case of crash).
         Note that this is slowing down the test execution.
     --diagnostic-output-directory
         Output directory of the diagnostic logging.
         If not specified the file will be generated inside the default 'TestResults' directory.
-    --diagnostic-output-fileprefix
+    --diagnostic-file-prefix
         Prefix for the log file name that will replace '[log]_.'
     --diagnostic-verbosity
         Define the level of the verbosity for the --diagnostic.
