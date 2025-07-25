@@ -694,6 +694,204 @@ public sealed partial class Assert
     private static bool AreEqualFailing(long expected, long actual, long delta)
         => Math.Abs(expected - actual) > delta;
 
+    private static string FormatStringComparisonMessage(string? expected, string? actual, string userMessage)
+    {
+        // Handle null cases
+        if (expected is null && actual is null)
+        {
+            return string.Format(
+                CultureInfo.CurrentCulture,
+                FrameworkMessages.AreEqualFailMsg,
+                userMessage,
+                ReplaceNulls(expected),
+                ReplaceNulls(actual));
+        }
+
+        if (expected is null || actual is null)
+        {
+            return string.Format(
+                CultureInfo.CurrentCulture,
+                FrameworkMessages.AreEqualFailMsg,
+                userMessage,
+                ReplaceNulls(expected),
+                ReplaceNulls(actual));
+        }
+
+        // Find the first difference
+        int diffIndex = FindFirstStringDifference(expected, actual);
+
+        if (diffIndex == -1)
+        {
+            // Strings are equal - should not happen in practice but handle gracefully
+            return string.Format(
+                CultureInfo.CurrentCulture,
+                FrameworkMessages.AreEqualFailMsg,
+                userMessage,
+                ReplaceNulls(expected),
+                ReplaceNulls(actual));
+        }
+
+        // Format the enhanced string comparison message
+        return FormatStringDifferenceMessage(expected, actual, diffIndex, userMessage);
+    }
+
+    private static int FindFirstStringDifference(string expected, string actual)
+    {
+        int minLength = Math.Min(expected.Length, actual.Length);
+
+        for (int i = 0; i < minLength; i++)
+        {
+            if (expected[i] != actual[i])
+            {
+                return i;
+            }
+        }
+
+        // If we reach here, one string is a prefix of the other
+        return expected.Length != actual.Length ? minLength : -1;
+    }
+
+    private static string FormatStringDifferenceMessage(string expected, string actual, int diffIndex, string userMessage)
+    {
+        string lengthInfo = expected.Length == actual.Length
+            ? string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AreEqualStringDiffLengthBothMsg, expected.Length, diffIndex)
+            : string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AreEqualStringDiffLengthDifferentMsg, expected.Length, actual.Length);
+
+        // Create contextual preview around the difference
+        const int contextLength = 20; // Show up to 20 characters of context on each side
+        Tuple<string, string, int> tuple = CreateStringPreviews(expected, actual, diffIndex, contextLength);
+        string expectedPreview = tuple.Item1;
+        string actualPreview = tuple.Item2;
+        int caretPosition = tuple.Item3;
+
+        // Get localized prefixes
+        string expectedPrefix = FrameworkMessages.AreEqualStringDiffExpectedPrefix;
+        string actualPrefix = FrameworkMessages.AreEqualStringDiffActualPrefix;
+
+        // Calculate the maximum prefix length to align the caret properly
+        int maxPrefixLength = Math.Max(expectedPrefix.Length, actualPrefix.Length);
+
+        // Pad shorter prefix to match the longer one for proper alignment
+        string paddedExpectedPrefix = expectedPrefix.PadRight(maxPrefixLength);
+        string paddedActualPrefix = actualPrefix.PadRight(maxPrefixLength);
+
+        // Build the formatted lines with proper alignment
+        string expectedLine = paddedExpectedPrefix + $"\"{expectedPreview}\"";
+        string actualLine = paddedActualPrefix + $"\"{actualPreview}\"";
+
+        // The caret should align under the difference in the string content
+        // For localized prefixes with different lengths, we need to account for the longer prefix
+        // to ensure proper alignment. But the caret position is relative to the string content.
+        int adjustedCaretPosition = maxPrefixLength + 1 + caretPosition; // +1 for the opening quote
+
+        // Format user message properly - add leading space if not empty, otherwise no extra formatting
+        string formattedUserMessage = string.IsNullOrEmpty(userMessage) ? string.Empty : $" {userMessage}";
+
+        return string.Format(
+            CultureInfo.CurrentCulture,
+            FrameworkMessages.AreEqualStringDiffFailMsg,
+            lengthInfo,
+            formattedUserMessage,
+            expectedLine,
+            actualLine,
+            new string('-', adjustedCaretPosition) + "^");
+    }
+
+    private static Tuple<string, string, int> CreateStringPreviews(
+        string expected, string actual, int diffIndex, int contextLength)
+    {
+        // Calculate start position to show context before the difference
+        int startPos = Math.Max(0, diffIndex - (contextLength / 2));
+
+        // For very long strings, prefer showing context before the difference
+        if (diffIndex > contextLength && startPos == 0)
+        {
+            startPos = Math.Max(0, diffIndex - contextLength + 5); // Leave some space for the difference
+        }
+
+        // Calculate end position
+        int maxEndPos = Math.Max(expected.Length, actual.Length);
+        int endPos = Math.Min(maxEndPos, startPos + contextLength);
+
+        // Create previews
+        string expectedPreview = CreateStringPreview(expected, startPos, endPos);
+        string actualPreview = CreateStringPreview(actual, startPos, endPos);
+
+        // Calculate caret position (where to place the ^ marker)
+        int caretPosition = Math.Max(0, diffIndex - startPos);
+
+        // Adjust caret position for leading ellipsis
+        if (startPos > 0)
+        {
+            caretPosition += 3; // Account for "..." ellipsis
+        }
+
+        return new(expectedPreview, actualPreview, caretPosition);
+    }
+
+    private static string CreateStringPreview(string str, int startPos, int endPos)
+    {
+        if (startPos >= str.Length)
+        {
+            return string.Empty;
+        }
+
+        int actualStart = Math.Min(startPos, str.Length);
+        int actualEnd = Math.Min(endPos, str.Length);
+
+        string preview = str.Substring(actualStart, actualEnd - actualStart);
+
+        // Replace non-printable characters and ensure ASCII-only display
+        var result = new StringBuilder();
+
+        // Add leading ellipsis if we're starting after the beginning
+        if (actualStart > 0)
+        {
+            result.Append("...");
+        }
+
+        foreach (char c in preview)
+        {
+            if (c is >= (char)32 and <= (char)126) // Printable ASCII
+            {
+                result.Append(c);
+            }
+            else if (c == '\t')
+            {
+                result.Append("\\t");
+            }
+            else if (c == '\n')
+            {
+                result.Append("\\n");
+            }
+            else if (c == '\r')
+            {
+                result.Append("\\r");
+            }
+            else if (c == '\0')
+            {
+                result.Append("\\0");
+            }
+            else
+            {
+                // Show Unicode characters as escape sequences to avoid UTF-8 console issues
+#if NET
+                result.Append(CultureInfo.InvariantCulture, $"\\u{(int)c:X4}");
+#else
+                result.Append($"\\u{(int)c:X4}");
+#endif
+            }
+        }
+
+        // Add trailing ellipsis if we're ending before the end
+        if (actualEnd < str.Length)
+        {
+            result.Append("...");
+        }
+
+        return result.ToString();
+    }
+
     [DoesNotReturn]
     private static void ThrowAssertAreEqualFailed(object? expected, object? actual, string userMessage)
     {
@@ -706,12 +904,14 @@ public sealed partial class Assert
                 expected.GetType().FullName,
                 ReplaceNulls(actual),
                 actual.GetType().FullName)
-            : string.Format(
-                CultureInfo.CurrentCulture,
-                FrameworkMessages.AreEqualFailMsg,
-                userMessage,
-                ReplaceNulls(expected),
-                ReplaceNulls(actual));
+            : expected is string expectedString && actual is string actualString
+                ? FormatStringComparisonMessage(expectedString, actualString, userMessage)
+                : string.Format(
+                    CultureInfo.CurrentCulture,
+                    FrameworkMessages.AreEqualFailMsg,
+                    userMessage,
+                    ReplaceNulls(expected),
+                    ReplaceNulls(actual));
         ThrowAssertFailed("Assert.AreEqual", finalMessage);
     }
 
@@ -732,20 +932,23 @@ public sealed partial class Assert
     [DoesNotReturn]
     private static void ThrowAssertAreEqualFailed(string? expected, string? actual, bool ignoreCase, CultureInfo culture, string userMessage)
     {
+        string finalMessage;
+
         // If the user requested to match case, and the difference between expected/actual is casing only, then we use a different message.
-        string finalMessage = !ignoreCase && CompareInternal(expected, actual, ignoreCase: true, culture) == 0
-            ? string.Format(
+        if (!ignoreCase && CompareInternal(expected, actual, ignoreCase: true, culture) == 0)
+        {
+            finalMessage = string.Format(
                 CultureInfo.CurrentCulture,
                 FrameworkMessages.AreEqualCaseFailMsg,
                 userMessage,
                 ReplaceNulls(expected),
-                ReplaceNulls(actual))
-            : string.Format(
-                CultureInfo.CurrentCulture,
-                FrameworkMessages.AreEqualFailMsg,
-                userMessage,
-                ReplaceNulls(expected),
                 ReplaceNulls(actual));
+        }
+        else
+        {
+            // Use enhanced string comparison for string-specific failures
+            finalMessage = FormatStringComparisonMessage(expected, actual, userMessage);
+        }
 
         ThrowAssertFailed("Assert.AreEqual", finalMessage);
     }

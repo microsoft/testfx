@@ -37,6 +37,37 @@
         <target state="translated">Se esperaba:&lt;{1} ({2})&gt;, pero es:&lt;{3} ({4})&gt;. {0}</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="AreEqualStringDiffFailMsg">
+        <source>{0}{1}
+{2}
+{3}
+{4}</source>
+        <target state="new">{0}{1}
+{2}
+{3}
+{4}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEqualStringDiffExpectedPrefix">
+        <source>Expected: </source>
+        <target state="new">Esperado: </target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="AreEqualStringDiffActualPrefix">
+        <source>But was:  </source>
+        <target state="new">Pero fue: </target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="AreEqualStringDiffLengthBothMsg">
+        <source>String lengths are both {0} but differ at index {1}.</source>
+        <target state="new">String lengths are both {0} but differ at index {1}.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEqualStringDiffLengthDifferentMsg">
+        <source>Expected string length {0} but was {1}.</source>
+        <target state="new">Expected string length {0} but was {1}.</target>
+        <note></note>
+      </trans-unit>
       <trans-unit id="AreNotEqualFailMsg">
         <source>Expected any value except:&lt;{1}&gt;. Actual:&lt;{2}&gt;. {0}</source>
         <target state="translated">Se esperaba cualquier valor excepto &lt;{1}&gt;, pero es &lt;{2}&gt;. {0}</target>
