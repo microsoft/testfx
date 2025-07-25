@@ -136,14 +136,24 @@ public sealed class PreferDisposeOverTestCleanupFixer : CodeFixProvider
                 newDisposeMethod = existingDisposeMethod.WithBody(cleanupBody);
             }
 
-            // Update the dispose document
-            DocumentEditor disposeEditor = await DocumentEditor.CreateAsync(disposeDocument, cancellationToken).ConfigureAwait(false);
-            disposeEditor.ReplaceNode(existingDisposeMethod, newDisposeMethod);
-            solution = solution.WithDocumentSyntaxRoot(disposeDocument.Id, disposeEditor.GetChangedRoot());
+            if (disposeDocument.Id == document.Id)
+            {
+                // Both methods are in the same document, use single editor
+                editor.ReplaceNode(existingDisposeMethod, newDisposeMethod);
+                editor.RemoveNode(testCleanupMethod);
+                solution = solution.WithDocumentSyntaxRoot(document.Id, editor.GetChangedRoot());
+            }
+            else
+            {
+                // Methods are in different documents, use separate editors
+                DocumentEditor disposeEditor = await DocumentEditor.CreateAsync(disposeDocument, cancellationToken).ConfigureAwait(false);
+                disposeEditor.ReplaceNode(existingDisposeMethod, newDisposeMethod);
+                solution = solution.WithDocumentSyntaxRoot(disposeDocument.Id, disposeEditor.GetChangedRoot());
 
-            // Remove the TestCleanup method from the current document
-            editor.RemoveNode(testCleanupMethod);
-            solution = solution.WithDocumentSyntaxRoot(document.Id, editor.GetChangedRoot());
+                // Remove the TestCleanup method from the current document
+                editor.RemoveNode(testCleanupMethod);
+                solution = solution.WithDocumentSyntaxRoot(document.Id, editor.GetChangedRoot());
+            }
         }
         else
         {
