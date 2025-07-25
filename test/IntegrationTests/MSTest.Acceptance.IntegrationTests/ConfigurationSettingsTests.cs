@@ -208,13 +208,13 @@ public sealed class ConfigurationSettingsTests : AcceptanceTestBase<Configuratio
 {
   "mstest": {
     "timeout": {
-      "assemblyInitialize": 300,
-      "assemblyCleanup": 300,
-      "classInitialize": 200,
-      "classCleanup": 200,
-      "testInitialize": 100,
-      "testCleanup": 100,
-      "test": 60,
+      "assemblyInitialize": 300000,
+      "assemblyCleanup": 300000,
+      "classInitialize": 200000,
+      "classCleanup": 200000,
+      "testInitialize": 100000,
+      "testCleanup": 100000,
+      "test": 60000,
       "useCooperativeCancellation": true
     },
     "parallelism": {
