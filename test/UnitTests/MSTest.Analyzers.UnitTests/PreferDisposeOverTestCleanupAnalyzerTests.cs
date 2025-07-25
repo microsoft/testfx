@@ -161,7 +161,7 @@ public sealed class PreferDisposeOverTestCleanupAnalyzerTests
     [TestMethod]
     public async Task WhenTestClassHasTestCleanup_AndHasDisposeInAnotherPartial_Diagnostic()
     {
-        // This scenario is currently broken. The test is to document the current behavior
+        // This scenario should now work correctly after fixing the codefix
         string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
             using System;
@@ -194,19 +194,144 @@ public sealed class PreferDisposeOverTestCleanupAnalyzerTests
                 public void Dispose()
                 {
                     int x = 1;
+                    int y = 1;
                 }
             }
             
             [TestClass]
-            public partial class MyTestClass : IDisposable
+            public partial class MyTestClass
             {
-                public void {|CS0111:Dispose|}()
-                {
-                    int y = 1;
-                }
             }
             """;
         await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenTestClassHasTestCleanup_AndHasDisposeInAnotherPartialInDifferentFile_Diagnostic()
+    {
+        var test = new VerifyCS.Test
+        {
+            TestState =
+            {
+                Sources =
+                {
+                    @"
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System;
+
+public partial class MyTestClass : IDisposable
+{
+    public void Dispose()
+    {
+        int x = 1;
+    }
+}",
+                    @"
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+[TestClass]
+public partial class MyTestClass
+{
+    [TestCleanup]
+    public void [|MyTestCleanup|]()
+    {
+        int y = 1;
+    }
+}",
+                },
+            },
+            FixedState =
+            {
+                Sources =
+                {
+                    @"
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System;
+
+public partial class MyTestClass : IDisposable
+{
+    public void Dispose()
+    {
+        int x = 1;
+        int y = 1;
+    }
+}",
+                    @"
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+[TestClass]
+public partial class MyTestClass
+{
+}",
+                },
+            },
+        };
+
+        await test.RunAsync();
+    }
+
+    [TestMethod]
+    public async Task WhenTestClassHasTestCleanup_AndHasDisposeInAnotherPartialInDifferentFile_ReversedOrder_Diagnostic()
+    {
+        var test = new VerifyCS.Test
+        {
+            TestState =
+            {
+                Sources =
+                {
+                    @"
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+[TestClass]
+public partial class MyTestClass
+{
+    [TestCleanup]
+    public void [|MyTestCleanup|]()
+    {
+        int y = 1;
+    }
+}",
+                    @"
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System;
+
+public partial class MyTestClass : IDisposable
+{
+    public void Dispose()
+    {
+        int x = 1;
+    }
+}",
+                },
+            },
+            FixedState =
+            {
+                Sources =
+                {
+                    @"
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+[TestClass]
+public partial class MyTestClass
+{
+}",
+                    @"
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System;
+
+public partial class MyTestClass : IDisposable
+{
+    public void Dispose()
+    {
+        int x = 1;
+        int y = 1;
+    }
+}",
+                },
+            },
+        };
+
+        await test.RunAsync();
     }
 
     [TestMethod]
