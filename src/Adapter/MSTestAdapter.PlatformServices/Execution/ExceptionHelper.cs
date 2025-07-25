@@ -112,16 +112,16 @@ internal static class ExceptionHelper
         {
             int index = remaining.IndexOf(newLine);
             ReadOnlySpan<char> line;
-            
+
             if (index >= 0)
             {
-                line = remaining.Slice(0, index);
-                remaining = remaining.Slice(index + newLine.Length);
+                line = remaining[..index];
+                remaining = remaining[(index + newLine.Length)..];
             }
             else
             {
                 line = remaining;
-                remaining = ReadOnlySpan<char>.Empty;
+                remaining = [];
             }
 
             if (line.IsEmpty)
