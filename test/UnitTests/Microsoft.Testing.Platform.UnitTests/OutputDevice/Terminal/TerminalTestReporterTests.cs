@@ -596,4 +596,95 @@ public sealed class TerminalTestReporterTests
 
         public override string? StackTrace { get; }
     }
+
+    [TestMethod]
+    public void TestDisplayNames_WithEscapeCharacters_AreNormalized()
+    {
+        string targetFramework = "net8.0";
+        string architecture = "x64";
+        string assembly = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\work\assembly.dll" : "/mnt/work/assembly.dll";
+
+        var stringBuilderConsole = new StringBuilderConsole();
+        var terminalReporter = new TerminalTestReporter(assembly, targetFramework, architecture, stringBuilderConsole, new CTRLPlusCCancellationTokenSource(), new TerminalTestReporterOptions
+        {
+            ShowPassedTests = () => true,
+            UseAnsi = false,
+            ShowProgress = () => false,
+        });
+
+        DateTimeOffset startTime = DateTimeOffset.MinValue;
+        DateTimeOffset endTime = DateTimeOffset.MaxValue;
+        terminalReporter.TestExecutionStarted(startTime, 1, isDiscovery: false);
+
+        terminalReporter.AssemblyRunStarted();
+
+        // Test display names with various escape characters
+        terminalReporter.TestCompleted(testNodeUid: "Test1", "Hello(\nWorld)", TestOutcome.Passed, TimeSpan.FromSeconds(1),
+            informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null, standardOutput: null, errorOutput: null);
+        terminalReporter.TestCompleted(testNodeUid: "Test2", "Tab\tSeparated", TestOutcome.Failed, TimeSpan.FromSeconds(1),
+            informativeMessage: null, errorMessage: "Test failed", exception: null, expected: null, actual: null, standardOutput: null, errorOutput: null);
+        terminalReporter.TestCompleted(testNodeUid: "Test3", "Carriage\rReturn", TestOutcome.Skipped, TimeSpan.FromSeconds(1),
+            informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null, standardOutput: null, errorOutput: null);
+        terminalReporter.TestCompleted(testNodeUid: "Test4", "Escape\x001bCharacter", TestOutcome.Passed, TimeSpan.FromSeconds(1),
+            informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null, standardOutput: null, errorOutput: null);
+
+        terminalReporter.AssemblyRunCompleted();
+        terminalReporter.TestExecutionCompleted(endTime);
+
+        string output = stringBuilderConsole.Output;
+
+        // Verify that escape characters are replaced with their Unicode control pictures
+        Assert.IsTrue(output.Contains("Hello(␊World)"), "Newline should be replaced with ␊");
+        Assert.IsTrue(output.Contains("Tab␉Separated"), "Tab should be replaced with ␉");
+        Assert.IsTrue(output.Contains("Carriage␍Return"), "Carriage return should be replaced with ␍");
+        Assert.IsTrue(output.Contains("Escape␛Character"), "Escape should be replaced with ␛");
+
+        // Verify that literal escape characters are not present
+        Assert.IsFalse(output.Contains("Hello(\nWorld)"), "Literal newline should not be present");
+        Assert.IsFalse(output.Contains("Tab\tSeparated"), "Literal tab should not be present");
+        Assert.IsFalse(output.Contains("Carriage\rReturn"), "Literal carriage return should not be present");
+        Assert.IsFalse(output.Contains("Escape\x001bCharacter"), "Literal escape should not be present");
+    }
+
+    [TestMethod]
+    public void TestDiscovery_WithEscapeCharacters_AreNormalized()
+    {
+        string targetFramework = "net8.0";
+        string architecture = "x64";
+        string assembly = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\work\assembly.dll" : "/mnt/work/assembly.dll";
+
+        var stringBuilderConsole = new StringBuilderConsole();
+        var terminalReporter = new TerminalTestReporter(assembly, targetFramework, architecture, stringBuilderConsole, new CTRLPlusCCancellationTokenSource(), new TerminalTestReporterOptions
+        {
+            ShowPassedTests = () => true,
+            UseAnsi = false,
+            ShowProgress = () => false,
+        });
+
+        DateTimeOffset startTime = DateTimeOffset.MinValue;
+        DateTimeOffset endTime = DateTimeOffset.MaxValue;
+        terminalReporter.TestExecutionStarted(startTime, 1, isDiscovery: true);
+
+        terminalReporter.AssemblyRunStarted();
+
+        // Test discovery with escape characters in display names
+        terminalReporter.TestDiscovered("Test\nWith\nNewlines");
+        terminalReporter.TestDiscovered("Test\tWith\tTabs");
+        terminalReporter.TestDiscovered("Test\rWith\rCarriageReturns");
+
+        terminalReporter.AssemblyRunCompleted();
+        terminalReporter.TestExecutionCompleted(endTime);
+
+        string output = stringBuilderConsole.Output;
+
+        // Verify that escape characters are replaced with their Unicode control pictures in discovery output
+        Assert.IsTrue(output.Contains("Test␊With␊Newlines"), "Newlines should be replaced with ␊ in discovery");
+        Assert.IsTrue(output.Contains("Test␉With␉Tabs"), "Tabs should be replaced with ␉ in discovery");
+        Assert.IsTrue(output.Contains("Test␍With␍CarriageReturns"), "Carriage returns should be replaced with ␍ in discovery");
+
+        // Verify that literal escape characters are not present
+        Assert.IsFalse(output.Contains("Test\nWith\nNewlines"), "Literal newlines should not be present in discovery");
+        Assert.IsFalse(output.Contains("Test\tWith\tTabs"), "Literal tabs should not be present in discovery");
+        Assert.IsFalse(output.Contains("Test\rWith\rCarriageReturns"), "Literal carriage returns should not be present in discovery");
+    }
 }

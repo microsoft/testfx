@@ -426,7 +426,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
         terminal.Append(outcomeText);
         terminal.ResetColor();
         terminal.Append(' ');
-        terminal.Append(displayName);
+        terminal.Append(NormalizeTestDisplayName(displayName));
         terminal.SetColor(TerminalColor.DarkGray);
         terminal.Append(' ');
         AppendLongDuration(terminal, duration);
@@ -645,9 +645,41 @@ internal sealed partial class TerminalTestReporter : IDisposable
     }
 
     private static string? NormalizeSpecialCharacters(string? text)
-        => text?.Replace('\0', '\x2400')
-            // escape char
-            .Replace('\x001b', '\x241b');
+        => text?.Replace('\0', '\x2400')        // NULL → ␀
+            .Replace('\x0001', '\x2401')        // START OF HEADING → ␁
+            .Replace('\x0002', '\x2402')        // START OF TEXT → ␂
+            .Replace('\x0003', '\x2403')        // END OF TEXT → ␃
+            .Replace('\x0004', '\x2404')        // END OF TRANSMISSION → ␄
+            .Replace('\x0005', '\x2405')        // ENQUIRY → ␅
+            .Replace('\x0006', '\x2406')        // ACKNOWLEDGE → ␆
+            .Replace('\x0007', '\x2407')        // BELL → ␇
+            .Replace('\x0008', '\x2408')        // BACKSPACE → ␈
+            .Replace('\t', '\x2409')            // TAB → ␉
+            .Replace('\n', '\x240A')            // LINE FEED → ␊
+            .Replace('\x000B', '\x240B')        // VERTICAL TAB → ␋
+            .Replace('\x000C', '\x240C')        // FORM FEED → ␌
+            .Replace('\r', '\x240D')            // CARRIAGE RETURN → ␍
+            .Replace('\x000E', '\x240E')        // SHIFT OUT → ␎
+            .Replace('\x000F', '\x240F')        // SHIFT IN → ␏
+            .Replace('\x0010', '\x2410')        // DATA LINK ESCAPE → ␐
+            .Replace('\x0011', '\x2411')        // DEVICE CONTROL ONE → ␑
+            .Replace('\x0012', '\x2412')        // DEVICE CONTROL TWO → ␒
+            .Replace('\x0013', '\x2413')        // DEVICE CONTROL THREE → ␓
+            .Replace('\x0014', '\x2414')        // DEVICE CONTROL FOUR → ␔
+            .Replace('\x0015', '\x2415')        // NEGATIVE ACKNOWLEDGE → ␕
+            .Replace('\x0016', '\x2416')        // SYNCHRONOUS IDLE → ␖
+            .Replace('\x0017', '\x2417')        // END OF TRANSMISSION BLOCK → ␗
+            .Replace('\x0018', '\x2418')        // CANCEL → ␘
+            .Replace('\x0019', '\x2419')        // END OF MEDIUM → ␙
+            .Replace('\x001A', '\x241A')        // SUBSTITUTE → ␚
+            .Replace('\x001B', '\x241B')        // ESCAPE → ␛
+            .Replace('\x001C', '\x241C')        // FILE SEPARATOR → ␜
+            .Replace('\x001D', '\x241D')        // GROUP SEPARATOR → ␝
+            .Replace('\x001E', '\x241E')        // RECORD SEPARATOR → ␞
+            .Replace('\x001F', '\x241F');       // UNIT SEPARATOR → ␟
+
+    private static string NormalizeTestDisplayName(string displayName)
+        => NormalizeSpecialCharacters(displayName) ?? displayName;
 
     /// <summary>
     /// Appends a long duration in human readable format such as 1h 23m 500ms.
@@ -781,7 +813,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
             asm.TotalTests++;
         }
 
-        asm.DiscoveredTestDisplayNames.Add(displayName);
+        asm.DiscoveredTestDisplayNames.Add(NormalizeTestDisplayName(displayName));
 
         _terminalWithProgress.UpdateWorker(asm.SlotIndex);
     }
@@ -865,7 +897,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
         {
             asm.TestNodeResultsState ??= new(Interlocked.Increment(ref _counter));
             asm.TestNodeResultsState.AddRunningTestNode(
-                Interlocked.Increment(ref _counter), testNodeUid, displayName, CreateStopwatch());
+                Interlocked.Increment(ref _counter), testNodeUid, NormalizeTestDisplayName(displayName), CreateStopwatch());
         }
 
         _terminalWithProgress.UpdateWorker(asm.SlotIndex);
