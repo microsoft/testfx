@@ -274,7 +274,7 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
             return new PipeNameDescription($"testingplatform.pipe.{name.Replace('\\', '.')}", false);
         }
 
-        string directoryId = Path.Combine(Path.GetTempPath(), name);
+        string directoryId = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), name);
         Directory.CreateDirectory(directoryId);
         return new PipeNameDescription(
             !Directory.Exists(directoryId)
