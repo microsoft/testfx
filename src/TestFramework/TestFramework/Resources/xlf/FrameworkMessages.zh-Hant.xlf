@@ -41,11 +41,11 @@
         <source>{1} {2}
 {3}
 {4}
-{5} {0}</source>
+{5}{0}</source>
         <target state="new">{1} {2}
 {3}
 {4}
-{5} {0}</target>
+{5}{0}</target>
         <note></note>
       </trans-unit>
       <trans-unit id="AreEqualStringDiffExpectedPrefix">
@@ -56,6 +56,21 @@
       <trans-unit id="AreEqualStringDiffActualPrefix">
         <source>But was:  </source>
         <target state="new">但實際為: </target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="AreEqualStringDiffLengthBothMsg">
+        <source>String lengths are both {0}.</source>
+        <target state="new">String lengths are both {0}.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="AreEqualStringDiffLengthDifferentMsg">
+        <source>Expected string length {0} but was {1}.</source>
+        <target state="new">Expected string length {0} but was {1}.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="AreEqualStringDiffIndexMsg">
+        <source>Strings differ at index {0}.</source>
+        <target state="new">Strings differ at index {0}.</target>
         <note></note>
       </trans-unit>
       <trans-unit id="AreNotEqualFailMsg">
