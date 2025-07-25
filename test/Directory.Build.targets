@@ -18,7 +18,6 @@
     <TestingPlatformCommandLineArguments>$(TestingPlatformCommandLineArguments) --hangdump --hangdump-timeout 15m</TestingPlatformCommandLineArguments>
     <TestingPlatformCommandLineArguments>$(TestingPlatformCommandLineArguments) --report-azdo</TestingPlatformCommandLineArguments>
     <TestingPlatformCommandLineArguments Condition=" '$(EnableCodeCoverage)' == 'True' ">$(TestingPlatformCommandLineArguments) --coverage --coverage-settings $(RepoRoot)test/coverage.config --coverage-output $(ModuleName).coverage</TestingPlatformCommandLineArguments>
-    <TestingPlatformCommandLineArguments>$(TestingPlatformCommandLineArguments) --report-azdo</TestingPlatformCommandLineArguments>
   </PropertyGroup>
 
   <ItemGroup Condition=" '$(EnableMSTestRunner)' == 'true' OR '$(UseInternalTestFramework)' == 'true' ">
