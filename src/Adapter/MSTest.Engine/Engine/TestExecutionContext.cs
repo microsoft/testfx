@@ -6,21 +6,22 @@ using Microsoft.Testing.Framework.Configurations;
 using Microsoft.Testing.Framework.Helpers;
 using Microsoft.Testing.Platform.Extensions.Messages;
 
+using PlatformTestNode = Microsoft.Testing.Platform.Extensions.Messages.TestNode;
+
 namespace Microsoft.Testing.Framework;
 
 internal sealed class TestExecutionContext : ITestExecutionContext
 {
     private readonly CancellationTokenSource _cancellationTokenSource;
-    private readonly TestNodeUpdateMessage? _testNodeUpdateMessage;
-
+    private readonly PlatformTestNode _platformTestNode;
     private readonly ITrxReportCapability? _trxReportCapability;
     private readonly CancellationToken _originalCancellationToken;
 
-    public TestExecutionContext(IConfiguration configuration, TestNode testNode, TestNodeUpdateMessage? testNodeUpdateMessage,
+    public TestExecutionContext(IConfiguration configuration, TestNode testNode, PlatformTestNode platformTestNode,
         ITrxReportCapability? trxReportCapability, CancellationToken cancellationToken)
     {
         Configuration = configuration;
-        _testNodeUpdateMessage = testNodeUpdateMessage;
+        _platformTestNode = platformTestNode;
         _trxReportCapability = trxReportCapability;
         TestInfo = new TestInfo(testNode);
         _cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
@@ -44,9 +45,9 @@ internal sealed class TestExecutionContext : ITestExecutionContext
 
     public void ReportException(Exception exception, CancellationToken? timeoutCancellationToken = null)
     {
-        if (_trxReportCapability is not null && _trxReportCapability.IsSupported && _testNodeUpdateMessage is not null)
+        if (_trxReportCapability is not null && _trxReportCapability.IsSupported)
         {
-            AddTrxExceptionInformation(_testNodeUpdateMessage.Properties, exception);
+            AddTrxExceptionInformation(_platformTestNode.Properties, exception);
         }
 
         TestNodeStateProperty executionState = exception switch
@@ -64,9 +65,9 @@ internal sealed class TestExecutionContext : ITestExecutionContext
         };
 
         // TODO: We need to be able to modify the execution state of a test node
-        if (_testNodeUpdateMessage is not null && !_testNodeUpdateMessage.Properties.Any<TestNodeStateProperty>())
+        if (!_platformTestNode.Properties.Any<TestNodeStateProperty>())
         {
-            _testNodeUpdateMessage.Properties.Add(executionState);
+            _platformTestNode.Properties.Add(executionState);
         }
     }
 

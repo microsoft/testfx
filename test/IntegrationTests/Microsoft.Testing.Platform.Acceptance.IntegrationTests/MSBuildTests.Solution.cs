@@ -136,15 +136,10 @@ public class DummyTestFramework : ITestFramework, IDataProducer
 
     public async Task ExecuteRequestAsync(ExecuteRequestContext context)
     {
-        var message1 = new TestNodeUpdateMessage(context.Request.Session.SessionUid,
-            new TestNode() { Uid = "1", DisplayName = "Test1" });
-        message1.Properties.Add(DiscoveredTestNodeStateProperty.CachedInstance);
-        await context.MessageBus.PublishAsync(this, message1);
-
-        var message2 = new TestNodeUpdateMessage(context.Request.Session.SessionUid,
-            new TestNode() { Uid = "1", DisplayName = "Test1" });
-        message2.Properties.Add(PassedTestNodeStateProperty.CachedInstance);
-        await context.MessageBus.PublishAsync(this, message2);
+        await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid,
+    new TestNode() { Uid = "1", DisplayName = "Test1", Properties = new(DiscoveredTestNodeStateProperty.CachedInstance) }));
+        await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid,
+    new TestNode() { Uid = "1", DisplayName = "Test1", Properties = new(PassedTestNodeStateProperty.CachedInstance) }));
 
         context.Complete();
     }

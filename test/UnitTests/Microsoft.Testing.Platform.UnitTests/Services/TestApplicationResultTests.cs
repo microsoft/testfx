@@ -20,15 +20,14 @@ public sealed class TestApplicationResultTests
     [TestMethod]
     public async Task GetProcessExitCodeAsync_If_All_Skipped_Returns_ZeroTestsRan()
     {
-        var updateMessage = new TestNodeUpdateMessage(
+        await _testApplicationResult.ConsumeAsync(new DummyProducer(), new TestNodeUpdateMessage(
             default,
             new TestNode
             {
                 Uid = new TestNodeUid("id"),
                 DisplayName = "DisplayName",
-            });
-        updateMessage.Properties.Add(SkippedTestNodeStateProperty.CachedInstance);
-        await _testApplicationResult.ConsumeAsync(new DummyProducer(), updateMessage, CancellationToken.None);
+                Properties = new PropertyBag(SkippedTestNodeStateProperty.CachedInstance),
+            }), CancellationToken.None);
 
         Assert.AreEqual(ExitCodes.ZeroTests, _testApplicationResult.GetProcessExitCode());
     }
@@ -52,15 +51,14 @@ public sealed class TestApplicationResultTests
     [DynamicData(nameof(FailedState))]
     public async Task GetProcessExitCodeAsync_If_Failed_Tests_Returns_AtLeastOneTestFailed(TestNodeStateProperty testNodeStateProperty)
     {
-        var updateMessage = new TestNodeUpdateMessage(
+        await _testApplicationResult.ConsumeAsync(new DummyProducer(), new TestNodeUpdateMessage(
             default,
             new TestNode
             {
                 Uid = new TestNodeUid("id"),
                 DisplayName = "DisplayName",
-            });
-        updateMessage.Properties.Add(testNodeStateProperty);
-        await _testApplicationResult.ConsumeAsync(new DummyProducer(), updateMessage, CancellationToken.None);
+                Properties = new PropertyBag(testNodeStateProperty),
+            }), CancellationToken.None);
 
         Assert.AreEqual(ExitCodes.AtLeastOneTestFailed, _testApplicationResult.GetProcessExitCode());
     }
@@ -97,15 +95,14 @@ public sealed class TestApplicationResultTests
     public async Task GetProcessExitCodeAsync_If_TestAdapter_Returns_TestAdapterTestSessionFailure()
     {
         await _testApplicationResult.SetTestAdapterTestSessionFailureAsync("Adapter error", CancellationToken.None);
-        var updateMessage = new TestNodeUpdateMessage(
+        await _testApplicationResult.ConsumeAsync(new DummyProducer(), new TestNodeUpdateMessage(
             default,
             new TestNode
             {
                 Uid = new TestNodeUid("id"),
                 DisplayName = "DisplayName",
-            });
-        updateMessage.Properties.Add(PassedTestNodeStateProperty.CachedInstance);
-        await _testApplicationResult.ConsumeAsync(new DummyProducer(), updateMessage, CancellationToken.None);
+                Properties = new PropertyBag(PassedTestNodeStateProperty.CachedInstance),
+            }), CancellationToken.None);
 
         Assert.AreEqual(ExitCodes.TestAdapterTestSessionFailure, _testApplicationResult.GetProcessExitCode());
     }
@@ -119,25 +116,23 @@ public sealed class TestApplicationResultTests
                 new CommandLineOption(PlatformCommandLineProvider.MinimumExpectedTestsOptionKey, ["2"]),
                 new Mock<IEnvironment>().Object, new Mock<IStopPoliciesService>().Object);
 
-        var updateMessage = new TestNodeUpdateMessage(
+        await testApplicationResult.ConsumeAsync(new DummyProducer(), new TestNodeUpdateMessage(
             default,
             new TestNode
             {
                 Uid = new TestNodeUid("id"),
                 DisplayName = "DisplayName",
-            });
-        updateMessage.Properties.Add(PassedTestNodeStateProperty.CachedInstance);
-        await testApplicationResult.ConsumeAsync(new DummyProducer(), updateMessage, CancellationToken.None);
+                Properties = new PropertyBag(PassedTestNodeStateProperty.CachedInstance),
+            }), CancellationToken.None);
 
-        var updateMessage2 = new TestNodeUpdateMessage(
+        await testApplicationResult.ConsumeAsync(new DummyProducer(), new TestNodeUpdateMessage(
             default,
             new TestNode
             {
                 Uid = new TestNodeUid("id"),
                 DisplayName = "DisplayName",
-            });
-        updateMessage2.Properties.Add(InProgressTestNodeStateProperty.CachedInstance);
-        await testApplicationResult.ConsumeAsync(new DummyProducer(), updateMessage2, CancellationToken.None);
+                Properties = new PropertyBag(InProgressTestNodeStateProperty.CachedInstance),
+            }), CancellationToken.None);
 
         Assert.AreEqual(ExitCodes.MinimumExpectedTestsPolicyViolation, testApplicationResult.GetProcessExitCode());
     }
@@ -171,15 +166,14 @@ public sealed class TestApplicationResultTests
                 new CommandLineOption(PlatformCommandLineProvider.DiscoverTestsOptionKey, []),
                 new Mock<IEnvironment>().Object, new Mock<IStopPoliciesService>().Object);
 
-        var updateMessage = new TestNodeUpdateMessage(
+        await testApplicationResult.ConsumeAsync(new DummyProducer(), new TestNodeUpdateMessage(
             default,
             new TestNode
             {
                 Uid = new TestNodeUid("id"),
                 DisplayName = "DisplayName",
-            });
-        updateMessage.Properties.Add(DiscoveredTestNodeStateProperty.CachedInstance);
-        await testApplicationResult.ConsumeAsync(new DummyProducer(), updateMessage, CancellationToken.None);
+                Properties = new PropertyBag(DiscoveredTestNodeStateProperty.CachedInstance),
+            }), CancellationToken.None);
 
         Assert.AreEqual(ExitCodes.Success, testApplicationResult.GetProcessExitCode());
     }

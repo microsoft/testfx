@@ -81,7 +81,7 @@ internal sealed class MSBuildConsumer : IDataConsumer, ITestSessionLifetimeHandl
 
                 TestFileLocationProperty? testFileLocationProperty = testNodeStateChanged.TestNode.Properties.SingleOrDefault<TestFileLocationProperty>();
 
-                switch (testNodeStateChanged.Properties.SingleOrDefault<TestNodeStateProperty>())
+                switch (testNodeStateChanged.TestNode.Properties.SingleOrDefault<TestNodeStateProperty>())
                 {
                     case ErrorTestNodeStateProperty errorState:
                         await HandleFailuresAsync(

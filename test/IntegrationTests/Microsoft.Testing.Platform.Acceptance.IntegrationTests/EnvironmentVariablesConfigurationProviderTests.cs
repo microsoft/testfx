@@ -114,13 +114,12 @@ public class DummyTestFramework : ITestFramework, IDataProducer
             throw new InvalidOperationException();
         }
 
-        var testNodeUpdateMessage = new TestNodeUpdateMessage(context.Request.Session.SessionUid, new TestNode() 
+        await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid, new TestNode() 
         {
             Uid = "Test1",
             DisplayName = "Test1",
-        });
-        testNodeUpdateMessage.Properties.Add(new PassedTestNodeStateProperty());
-        await context.MessageBus.PublishAsync(this, testNodeUpdateMessage);
+            Properties = new PropertyBag(new PassedTestNodeStateProperty()),
+        }));
 
         context.Complete();
     }

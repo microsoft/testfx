@@ -120,7 +120,7 @@ internal sealed class AzureDevOpsReporter :
             return;
         }
 
-        TestNodeStateProperty? nodeState = nodeUpdateMessage.Properties.SingleOrDefault<TestNodeStateProperty>();
+        TestNodeStateProperty? nodeState = nodeUpdateMessage.TestNode.Properties.SingleOrDefault<TestNodeStateProperty>();
 
         switch (nodeState)
         {

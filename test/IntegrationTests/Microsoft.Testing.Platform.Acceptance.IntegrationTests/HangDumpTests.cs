@@ -206,23 +206,21 @@ public class DummyTestFramework : ITestFramework, IDataProducer
 
         Thread.Sleep(int.Parse(Environment.GetEnvironmentVariable("SLEEPTIMEMS1")!, CultureInfo.InvariantCulture));
 
-        var testNodeUpdateMessage1 = new TestNodeUpdateMessage(context.Request.Session.SessionUid, new TestNode()
+        await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid, new TestNode()
         {
             Uid = "Test1",
             DisplayName = "Test1",
-        });
-        testNodeUpdateMessage1.Properties.Add(new PassedTestNodeStateProperty());
-        await context.MessageBus.PublishAsync(this, testNodeUpdateMessage1);
+            Properties = new PropertyBag(new PassedTestNodeStateProperty()),
+        }));
 
         Thread.Sleep(int.Parse(Environment.GetEnvironmentVariable("SLEEPTIMEMS2")!, CultureInfo.InvariantCulture));
 
-        var testNodeUpdateMessage2 = new TestNodeUpdateMessage(context.Request.Session.SessionUid, new TestNode()
+        await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid, new TestNode()
         {
             Uid = "Test2",
             DisplayName = "Test2",
-        });
-        testNodeUpdateMessage2.Properties.Add(new PassedTestNodeStateProperty());
-        await context.MessageBus.PublishAsync(this, testNodeUpdateMessage2);
+            Properties = new PropertyBag(new PassedTestNodeStateProperty()),
+        }));
 
         context.Complete();
     }

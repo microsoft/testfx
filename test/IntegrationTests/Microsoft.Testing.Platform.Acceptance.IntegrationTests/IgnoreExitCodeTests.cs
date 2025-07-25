@@ -67,13 +67,12 @@ public class DummyTestFramework : ITestFramework, IDataProducer
 
     public async Task ExecuteRequestAsync(ExecuteRequestContext context)
     {
-        var testNodeUpdateMessage = new TestNodeUpdateMessage(context.Request.Session.SessionUid, new TestNode()
+        await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid, new TestNode()
         {
             Uid = "Test1",
             DisplayName = "Test1",
-        });
-        testNodeUpdateMessage.Properties.Add(new FailedTestNodeStateProperty());
-        await context.MessageBus.PublishAsync(this, testNodeUpdateMessage);
+            Properties = new PropertyBag(new FailedTestNodeStateProperty()),
+        }));
 
         context.Complete();
     }

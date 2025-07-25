@@ -269,33 +269,25 @@ public class DummyTestFramework : ITestFramework, IDataProducer
 
         if (!excludeUid0)
         {
-            var testNodeUpdateMessageDiscover0 = new TestNodeUpdateMessage(context.Request.Session.SessionUid,
-                new TestNode() { Uid = "0", DisplayName = "Test1" });
-            testNodeUpdateMessageDiscover0.Properties.Add(DiscoveredTestNodeStateProperty.CachedInstance);
-            await context.MessageBus.PublishAsync(this, testNodeUpdateMessageDiscover0);
+            await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid,
+                new TestNode() { Uid = "0", DisplayName = "Test1", Properties = new(DiscoveredTestNodeStateProperty.CachedInstance) }));
         }
 
         if (!isDiscovery && !excludeUid0)
         {
-            var testNodeUpdateMessagePassed0 = new TestNodeUpdateMessage(context.Request.Session.SessionUid,
-                new TestNode() { Uid = "0", DisplayName = "Test1" });
-            testNodeUpdateMessagePassed0.Properties.Add(PassedTestNodeStateProperty.CachedInstance);
-            await context.MessageBus.PublishAsync(this, testNodeUpdateMessagePassed0);
+            await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid,
+                new TestNode() { Uid = "0", DisplayName = "Test1", Properties = new(PassedTestNodeStateProperty.CachedInstance) }));
         }
 
         if (!_sp.GetCommandLineOptions().TryGetOptionArgumentList("--treenode-filter", out _) && !excludeUid1)
         {
-            var testNodeUpdateMessageDiscover1 = new TestNodeUpdateMessage(context.Request.Session.SessionUid,
-                new TestNode() { Uid = "1", DisplayName = "Test2" });
-            testNodeUpdateMessageDiscover1.Properties.Add(DiscoveredTestNodeStateProperty.CachedInstance);
-            await context.MessageBus.PublishAsync(this, testNodeUpdateMessageDiscover1);
+            await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid,
+                new TestNode() { Uid = "1", DisplayName = "Test2", Properties = new(DiscoveredTestNodeStateProperty.CachedInstance) }));
 
             if (!isDiscovery)
             {
-                var testNodeUpdateMessagePassed1 = new TestNodeUpdateMessage(context.Request.Session.SessionUid,
-                    new TestNode() { Uid = "1", DisplayName = "Test2" });
-                testNodeUpdateMessagePassed1.Properties.Add(PassedTestNodeStateProperty.CachedInstance);
-                await context.MessageBus.PublishAsync(this, testNodeUpdateMessagePassed1);
+                await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid,
+                    new TestNode() { Uid = "1", DisplayName = "Test2", Properties = new(PassedTestNodeStateProperty.CachedInstance) }));
             }
         }
 
@@ -355,11 +347,9 @@ internal class DummyTestFramework : ITestFramework, IDataProducer
     {
         Task.Run(async() =>
         {
-            var testNodeUpdateMessage = new TestNodeUpdateMessage(
+            await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(
                 context.Request.Session.SessionUid,
-                new TestNode() { Uid = "0", DisplayName = "Test" });
-            testNodeUpdateMessage.Properties.Add(PassedTestNodeStateProperty.CachedInstance);
-            await context.MessageBus.PublishAsync(this, testNodeUpdateMessage);
+                new TestNode() { Uid = "0", DisplayName = "Test", Properties = new(PassedTestNodeStateProperty.CachedInstance) }));
 
             Thread.Sleep(3_000);
 

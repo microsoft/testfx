@@ -404,27 +404,19 @@ public class DummyTestFramework : ITestFramework, IDataProducer
 
     public async Task ExecuteRequestAsync(ExecuteRequestContext context)
     {
-        var message1 = new TestNodeUpdateMessage(context.Request.Session.SessionUid,
-            new TestNode { Uid = "1", DisplayName = "Test1" });
-        message1.Properties.Add(DiscoveredTestNodeStateProperty.CachedInstance);
-        await context.MessageBus.PublishAsync(this, message1);
+        await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid,
+            new TestNode { Uid = "1", DisplayName = "Test1", Properties = new(DiscoveredTestNodeStateProperty.CachedInstance) }));
 
-        var message2 = new TestNodeUpdateMessage(context.Request.Session.SessionUid,
-            new TestNode { Uid = "1", DisplayName = "Test1" });
-        message2.Properties.Add(PassedTestNodeStateProperty.CachedInstance);
-        await context.MessageBus.PublishAsync(this, message2);
+        await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid,
+            new TestNode { Uid = "1", DisplayName = "Test1", Properties = new(PassedTestNodeStateProperty.CachedInstance) }));
 
         if (!_sp.GetCommandLineOptions().TryGetOptionArgumentList("--treenode-filter", out _))
         {
-            var message3 = new TestNodeUpdateMessage(context.Request.Session.SessionUid,
-                new TestNode { Uid = "2", DisplayName = "Test2" });
-            message3.Properties.Add(DiscoveredTestNodeStateProperty.CachedInstance);
-            await context.MessageBus.PublishAsync(this, message3);
+            await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid,
+                new TestNode { Uid = "2", DisplayName = "Test2", Properties = new(DiscoveredTestNodeStateProperty.CachedInstance) }));
 
-            var message4 = new TestNodeUpdateMessage(context.Request.Session.SessionUid,
-                new TestNode { Uid = "2", DisplayName = "Test2" });
-            message4.Properties.Add($AssertValue$ ? PassedTestNodeStateProperty.CachedInstance : new FailedTestNodeStateProperty("FAILED: Expected 'true', but got 'false'."));
-            await context.MessageBus.PublishAsync(this, message4);
+            await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid,
+                new TestNode { Uid = "2", DisplayName = "Test2", Properties = new($AssertValue$ ? PassedTestNodeStateProperty.CachedInstance : new FailedTestNodeStateProperty("FAILED: Expected 'true', but got 'false'.")) }));
         }
 
        context.Complete();

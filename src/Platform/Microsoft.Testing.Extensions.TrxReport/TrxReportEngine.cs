@@ -464,7 +464,7 @@ internal sealed partial class TrxReportEngine
             unitTestResult.SetAttributeValue("testType", UnitTestTypeGuid);
 
             string outcome = "Passed";
-            TestNodeStateProperty? testState = nodeMessage.Properties.SingleOrDefault<TestNodeStateProperty>();
+            TestNodeStateProperty? testState = testNode.Properties.SingleOrDefault<TestNodeStateProperty>();
             if (testState is { } state
                 && TestNodePropertiesCategories.WellKnownTestNodeTestRunOutcomeFailedProperties.Contains(testState.GetType()))
             {
@@ -488,7 +488,7 @@ internal sealed partial class TrxReportEngine
             // i.e. https://github.com/dotnet/runtime/blob/main/src/libraries/System.Private.Xml/src/System/Xml/Core/XmlEncodedRawTextWriter.cs#L890
             var output = new XElement("Output");
 
-            TrxMessagesProperty? trxMessages = nodeMessage.Properties.SingleOrDefault<TrxMessagesProperty>();
+            TrxMessagesProperty? trxMessages = testNode.Properties.SingleOrDefault<TrxMessagesProperty>();
             IEnumerable<string?>? nonErrorMessages = trxMessages?.Messages.Where(x => x is not StandardErrorTrxMessage and not DebugOrTraceTrxMessage).Select(x => x.Message);
             if (nonErrorMessages?.Any() == true)
             {
@@ -507,7 +507,7 @@ internal sealed partial class TrxReportEngine
                 output.Add(new XElement("DebugTrace", RemoveInvalidXmlChar(string.Join(Environment.NewLine, debugOrTraceMessages))));
             }
 
-            TrxExceptionProperty? trxException = nodeMessage.Properties.SingleOrDefault<TrxExceptionProperty>();
+            TrxExceptionProperty? trxException = testNode.Properties.SingleOrDefault<TrxExceptionProperty>();
             if (trxException?.Message is not null || trxException?.StackTrace is not null)
             {
                 XElement errorInfoElement = new("ErrorInfo");

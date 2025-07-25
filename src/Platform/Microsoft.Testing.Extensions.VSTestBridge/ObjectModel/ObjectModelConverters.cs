@@ -152,13 +152,13 @@ internal static class ObjectModelConverters
         var testNodeUpdateMessage = new TestNodeUpdateMessage(sessionUid, testNode);
         CopyCategoryAndTraits(testResult, testNode, isTrxEnabled);
 
-        testNodeUpdateMessage.AddOutcome(testResult);
+        testNode.AddOutcome(testResult);
 
         if (isTrxEnabled)
         {
             if (!RoslynString.IsNullOrEmpty(testResult.ErrorMessage) || !RoslynString.IsNullOrEmpty(testResult.ErrorStackTrace))
             {
-                testNodeUpdateMessage.Properties.Add(new TrxExceptionProperty(testResult.ErrorMessage, testResult.ErrorStackTrace));
+                testNode.Properties.Add(new TrxExceptionProperty(testResult.ErrorMessage, testResult.ErrorStackTrace));
             }
 
             if (TryParseFullyQualifiedType(testResult.TestCase.FullyQualifiedName, out string? fullyQualifiedType))
@@ -170,7 +170,7 @@ internal static class ObjectModelConverters
                 throw new InvalidOperationException("Unable to parse fully qualified type name from test case: " + testResult.TestCase.FullyQualifiedName);
             }
 
-            testNodeUpdateMessage.Properties.Add(new TrxMessagesProperty([.. testResult.Messages
+            testNode.Properties.Add(new TrxMessagesProperty([.. testResult.Messages
                 .Select(msg =>
                     msg.Category switch
                     {
@@ -232,26 +232,26 @@ internal static class ObjectModelConverters
         return testNodeUpdateMessage;
     }
 
-    private static void AddOutcome(this TestNodeUpdateMessage testNodeUpdateMessage, TestResult testResult)
+    private static void AddOutcome(this TestNode testNode, TestResult testResult)
     {
         switch (testResult.Outcome)
         {
             case TestOutcome.Passed:
-                testNodeUpdateMessage.Properties.Add(PassedTestNodeStateProperty.CachedInstance);
+                testNode.Properties.Add(PassedTestNodeStateProperty.CachedInstance);
                 break;
 
             case TestOutcome.NotFound:
-                testNodeUpdateMessage.Properties.Add(new ErrorTestNodeStateProperty(new VSTestException(testResult.ErrorMessage ?? "Not found", testResult.ErrorStackTrace)));
+                testNode.Properties.Add(new ErrorTestNodeStateProperty(new VSTestException(testResult.ErrorMessage ?? "Not found", testResult.ErrorStackTrace)));
                 break;
 
             case TestOutcome.Failed:
-                testNodeUpdateMessage.Properties.Add(new FailedTestNodeStateProperty(new VSTestException(testResult.ErrorMessage, testResult.ErrorStackTrace)));
+                testNode.Properties.Add(new FailedTestNodeStateProperty(new VSTestException(testResult.ErrorMessage, testResult.ErrorStackTrace)));
                 break;
 
             // It seems that NUnit inconclusive tests are reported as None which should be considered as Skipped.
             case TestOutcome.None:
             case TestOutcome.Skipped:
-                testNodeUpdateMessage.Properties.Add(testResult.ErrorMessage is null
+                testNode.Properties.Add(testResult.ErrorMessage is null
                     ? SkippedTestNodeStateProperty.CachedInstance
                     : new SkippedTestNodeStateProperty(testResult.ErrorMessage));
                 break;

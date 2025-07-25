@@ -407,7 +407,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
                         artifact.FileInfo.FullName);
                 }
 
-                switch (testNodeStateChanged.Properties.SingleOrDefault<TestNodeStateProperty>())
+                switch (testNodeStateChanged.TestNode.Properties.SingleOrDefault<TestNodeStateProperty>())
                 {
                     case InProgressTestNodeStateProperty:
                         _terminalTestReporter.TestInProgress(

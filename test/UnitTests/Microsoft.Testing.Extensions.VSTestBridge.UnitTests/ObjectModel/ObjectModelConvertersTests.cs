@@ -66,7 +66,8 @@ public sealed class ObjectModelConvertersTests
             ErrorStackTrace = "SomeStackTrace",
         };
         var testNodeUpdateMessage = testResult.ToTestNodeUpdateMessage(isTrxEnabled: false, useFullyQualifiedNameAsUid: false, null, new ConsoleCommandLineOptions(), ClientInfo, new SessionUid("SessionUid"));
-        FailedTestNodeStateProperty[] failedTestNodeStateProperties = [.. testNodeUpdateMessage.Properties.OfType<FailedTestNodeStateProperty>()];
+        TestNode testNode = testNodeUpdateMessage.TestNode;
+        FailedTestNodeStateProperty[] failedTestNodeStateProperties = [.. testNode.Properties.OfType<FailedTestNodeStateProperty>()];
         Assert.HasCount(1, failedTestNodeStateProperties);
         Assert.IsTrue(failedTestNodeStateProperties[0].Exception is VSTestException);
         Assert.AreEqual(testResult.ErrorStackTrace, failedTestNodeStateProperties[0].Exception!.StackTrace);
@@ -131,7 +132,7 @@ public sealed class ObjectModelConvertersTests
 
         var testNodeUpdateMessage = testResult.ToTestNodeUpdateMessage(isTrxEnabled: true, useFullyQualifiedNameAsUid: false, null, new ConsoleCommandLineOptions(), ClientInfo, new SessionUid("SessionUid"));
         TestNode testNode = testNodeUpdateMessage.TestNode;
-        Assert.AreEqual(0, testNodeUpdateMessage.Properties.OfType<TrxExceptionProperty>()?.Length);
+        Assert.AreEqual(0, testNode.Properties.OfType<TrxExceptionProperty>()?.Length);
         Assert.AreEqual("assembly.class", testNode.Properties.Single<TrxFullyQualifiedTypeNameProperty>().FullyQualifiedTypeName);
     }
 
@@ -173,7 +174,8 @@ public sealed class ObjectModelConvertersTests
             ErrorStackTrace = "SomeStackTrace",
         };
         var testNodeUpdateMessage = testResult.ToTestNodeUpdateMessage(isTrxEnabled: false, useFullyQualifiedNameAsUid: false, null, new ConsoleCommandLineOptions(), ClientInfo, new SessionUid("SessionUid"));
-        ErrorTestNodeStateProperty[] errorTestNodeStateProperties = [.. testNodeUpdateMessage.Properties.OfType<ErrorTestNodeStateProperty>()];
+        TestNode testNode = testNodeUpdateMessage.TestNode;
+        ErrorTestNodeStateProperty[] errorTestNodeStateProperties = [.. testNode.Properties.OfType<ErrorTestNodeStateProperty>()];
         Assert.HasCount(1, errorTestNodeStateProperties);
         Assert.IsTrue(errorTestNodeStateProperties[0].Exception is VSTestException);
         Assert.AreEqual(testResult.ErrorStackTrace, errorTestNodeStateProperties[0].Exception!.StackTrace);
@@ -188,7 +190,8 @@ public sealed class ObjectModelConvertersTests
             Outcome = TestOutcome.Skipped,
         };
         var testNodeUpdateMessage = testResult.ToTestNodeUpdateMessage(isTrxEnabled: false, useFullyQualifiedNameAsUid: false, null, new ConsoleCommandLineOptions(), ClientInfo, new SessionUid("SessionUid"));
-        SkippedTestNodeStateProperty[] skipTestNodeStateProperties = [.. testNodeUpdateMessage.Properties.OfType<SkippedTestNodeStateProperty>()];
+        TestNode testNode = testNodeUpdateMessage.TestNode;
+        SkippedTestNodeStateProperty[] skipTestNodeStateProperties = [.. testNode.Properties.OfType<SkippedTestNodeStateProperty>()];
         Assert.HasCount(1, skipTestNodeStateProperties);
     }
 
@@ -200,7 +203,8 @@ public sealed class ObjectModelConvertersTests
             Outcome = TestOutcome.None,
         };
         var testNodeUpdateMessage = testResult.ToTestNodeUpdateMessage(isTrxEnabled: false, useFullyQualifiedNameAsUid: false, null, new ConsoleCommandLineOptions(), ClientInfo, new SessionUid("SessionUid"));
-        SkippedTestNodeStateProperty[] skipTestNodeStateProperties = [.. testNodeUpdateMessage.Properties.OfType<SkippedTestNodeStateProperty>()];
+        TestNode testNode = testNodeUpdateMessage.TestNode;
+        SkippedTestNodeStateProperty[] skipTestNodeStateProperties = [.. testNode.Properties.OfType<SkippedTestNodeStateProperty>()];
         Assert.HasCount(1, skipTestNodeStateProperties);
     }
 
@@ -212,7 +216,8 @@ public sealed class ObjectModelConvertersTests
             Outcome = TestOutcome.Passed,
         };
         var testNodeUpdateMessage = testResult.ToTestNodeUpdateMessage(isTrxEnabled: false, useFullyQualifiedNameAsUid: false, null, new ConsoleCommandLineOptions(), ClientInfo, new SessionUid("SessionUid"));
-        PassedTestNodeStateProperty[] passedTestNodeStateProperties = [.. testNodeUpdateMessage.Properties.OfType<PassedTestNodeStateProperty>()];
+        TestNode testNode = testNodeUpdateMessage.TestNode;
+        PassedTestNodeStateProperty[] passedTestNodeStateProperties = [.. testNode.Properties.OfType<PassedTestNodeStateProperty>()];
         Assert.HasCount(1, passedTestNodeStateProperties);
     }
 
