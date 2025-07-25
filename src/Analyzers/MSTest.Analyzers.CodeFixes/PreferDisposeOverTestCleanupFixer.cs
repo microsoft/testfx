@@ -84,9 +84,33 @@ public sealed class PreferDisposeOverTestCleanupFixer : CodeFixProvider
         INamedTypeSymbol? iDisposableSymbol = semanticModel.Compilation.GetTypeByMetadataName(WellKnownTypeNames.SystemIDisposable);
 
         // Move the code from TestCleanup to Dispose method
-        MethodDeclarationSyntax? existingDisposeMethod = containingType.Members
-            .OfType<MethodDeclarationSyntax>()
-            .FirstOrDefault(m => semanticModel.GetDeclaredSymbol(m) is IMethodSymbol methodSymbol && methodSymbol.IsDisposeImplementation(iDisposableSymbol));
+        // For partial classes, we need to check all parts of the type, not just the current partial declaration
+        MethodDeclarationSyntax? existingDisposeMethod = null;
+        if (semanticModel.GetDeclaredSymbol(containingType) is INamedTypeSymbol typeSymbol)
+        {
+            // Find existing Dispose method in any part of the partial class
+            IMethodSymbol? existingDisposeSymbol = typeSymbol.GetMembers("Dispose")
+                .OfType<IMethodSymbol>()
+                .FirstOrDefault(m => m.IsDisposeImplementation(iDisposableSymbol));
+
+            if (existingDisposeSymbol != null)
+            {
+                // Find the syntax node for the existing Dispose method
+                var currentSyntaxTree = await document.GetSyntaxTreeAsync(cancellationToken).ConfigureAwait(false);
+                foreach (var syntaxRef in existingDisposeSymbol.DeclaringSyntaxReferences)
+                {
+                    if (syntaxRef.GetSyntax() is MethodDeclarationSyntax methodSyntax)
+                    {
+                        // Check if the existing Dispose method is in the same document
+                        if (syntaxRef.SyntaxTree == currentSyntaxTree)
+                        {
+                            existingDisposeMethod = methodSyntax;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
 
         BlockSyntax? cleanupBody = testCleanupMethod.Body;
 
