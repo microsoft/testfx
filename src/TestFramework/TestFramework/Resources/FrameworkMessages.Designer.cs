@@ -115,6 +115,15 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {1} {2} Expected: "{3}" But was:  "{4}" {5} {0}.
+        /// </summary>
+        internal static string AreEqualStringDiffFailMsg {
+            get {
+                return ResourceManager.GetString("AreEqualStringDiffFailMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Expected:&lt;{1}&gt;. Actual:&lt;{2}&gt;. {0}.
         /// </summary>
         internal static string AreEqualFailMsg {
