@@ -10,15 +10,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 /// A service to log any trace messages from the adapter that would be shown in *.TpTrace files.
 /// </summary>
 [Serializable]
-internal sealed class AdapterTraceLogger : IAdapterTraceLogger
+public sealed class AdapterTraceLogger : IAdapterTraceLogger
 {
+    /// <inheritdoc />
     public bool IsInfoEnabled => EqtTrace.IsInfoEnabled;
 
-    /// <summary>
-    /// Log an error in a given format.
-    /// </summary>
-    /// <param name="format"> The format. </param>
-    /// <param name="args"> The args. </param>
+    /// <inheritdoc />
     public void LogError(string format, params object?[] args)
     {
 #if !WINDOWS_UWP && !WIN_UI
@@ -33,11 +30,7 @@ internal sealed class AdapterTraceLogger : IAdapterTraceLogger
 #endif
     }
 
-    /// <summary>
-    /// Log a warning in a given format.
-    /// </summary>
-    /// <param name="format"> The format. </param>
-    /// <param name="args"> The args. </param>
+    /// <inheritdoc />
     public void LogWarning(string format, params object?[] args)
     {
 #if !WINDOWS_UWP && !WIN_UI
@@ -52,11 +45,7 @@ internal sealed class AdapterTraceLogger : IAdapterTraceLogger
 #endif
     }
 
-    /// <summary>
-    /// Log an information message in a given format.
-    /// </summary>
-    /// <param name="format"> The format. </param>
-    /// <param name="args"> The args. </param>
+    /// <inheritdoc />
     public void LogInfo(string format, params object?[] args)
     {
 #if !WINDOWS_UWP && !WIN_UI
@@ -71,6 +60,7 @@ internal sealed class AdapterTraceLogger : IAdapterTraceLogger
 #endif
     }
 
+    /// <inheritdoc />
     public void LogVerbose(string format, params object?[] args)
     {
 #if !WINDOWS_UWP && !WIN_UI
