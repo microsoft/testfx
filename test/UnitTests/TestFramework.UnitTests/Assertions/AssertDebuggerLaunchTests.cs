@@ -25,6 +25,54 @@ public class AssertDebuggerLaunchTests : TestContainer
         Verify(!DebuggerLaunchSettings.IsEnabled);
     }
 
+    public void DebuggerLaunchViaTestRunParameters()
+    {
+        // Arrange - Simulate TestContext with TestRunParameters
+        var mockTestContext = CreateMockTestContext(new Dictionary<string, string>
+        {
+            ["MSTest.LaunchDebuggerOnFailure"] = "true"
+        });
+
+        DebuggerLaunchSettings.RegisterTestContext(mockTestContext);
+
+        // Act & Assert
+        Verify(DebuggerLaunchSettings.IsEnabled);
+        Verify(DebuggerLaunchSettings.ShouldLaunchForCurrentTest());
+    }
+
+    public void DebuggerLaunchViaTestRunParametersWithFilter()
+    {
+        // Arrange - Simulate TestContext with TestRunParameters including filter
+        var mockTestContext = CreateMockTestContext(new Dictionary<string, string>
+        {
+            ["MSTest.LaunchDebuggerOnFailure"] = "true",
+            ["MSTest.LaunchDebuggerTestFilter"] = "FlakyTest"
+        });
+
+        DebuggerLaunchSettings.RegisterTestContext(mockTestContext);
+
+        // Act & Assert
+        Verify(DebuggerLaunchSettings.IsEnabled);
+        Verify(DebuggerLaunchSettings.TestNameFilter == "FlakyTest");
+        Verify(DebuggerLaunchSettings.ShouldLaunchForCurrentTest());
+    }
+
+    public void TestRunParametersTakePrecedenceOverEnvironmentVariables()
+    {
+        // Arrange - Set environment variable to disabled but TestRunParameters to enabled
+        Environment.SetEnvironmentVariable("MSTEST_LAUNCH_DEBUGGER_ON_FAILURE", "0");
+        
+        var mockTestContext = CreateMockTestContext(new Dictionary<string, string>
+        {
+            ["MSTest.LaunchDebuggerOnFailure"] = "true"
+        });
+
+        DebuggerLaunchSettings.RegisterTestContext(mockTestContext);
+
+        // Act & Assert
+        Verify(DebuggerLaunchSettings.IsEnabled); // TestRunParameters should take precedence
+    }
+
     public void DebuggerLaunchCanBeEnabledProgrammatically()
     {
         // Arrange
@@ -45,6 +93,36 @@ public class AssertDebuggerLaunchTests : TestContainer
         Verify(DebuggerLaunchSettings.IsEnabled);
         Verify(DebuggerLaunchSettings.TestNameFilter == testFilter);
         Verify(DebuggerLaunchSettings.ShouldLaunchForCurrentTest());
+    }
+
+    private static TestContext CreateMockTestContext(Dictionary<string, string> properties)
+    {
+        // Create a simple mock TestContext for testing
+        // In a real implementation, this would be provided by the test framework
+        return new MockTestContext(properties);
+    }
+
+    private class MockTestContext : TestContext
+    {
+        private readonly System.Collections.IDictionary _properties;
+
+        public MockTestContext(Dictionary<string, string> properties)
+        {
+            _properties = new System.Collections.Hashtable();
+            foreach (var kvp in properties)
+            {
+                _properties[kvp.Key] = kvp.Value;
+            }
+        }
+
+        public override System.Collections.IDictionary Properties => _properties;
+
+        // Implement abstract members with minimal functionality for testing
+        public override void WriteLine(string message) { }
+        public override void WriteLine(string format, params object?[] args) { }
+        public override void Write(string message) { }
+        public override void Write(string format, params object?[] args) { }
+        public override void DisplayMessage(MessageLevel messageLevel, string message) { }
     }
 
     public void DebuggerLaunchFallsBackToEnvironmentVariable()

@@ -74,6 +74,46 @@ internal static class DebuggerLaunchSettings
     }
 
     /// <summary>
+    /// Thread-local storage for TestRunParameters to support runsettings integration.
+    /// </summary>
+    private static readonly ThreadLocal<Dictionary<string, string>?> ThreadLocalTestRunParameters = new();
+
+    /// <summary>
+    /// Registers TestRunParameters from the current TestContext for the current thread.
+    /// This should be called by the test framework when a test starts.
+    /// </summary>
+    /// <param name="testContext">The current test context containing TestRunParameters.</param>
+    public static void RegisterTestContext(TestContext testContext)
+    {
+        if (testContext?.Properties is null)
+        {
+            return;
+        }
+
+        var testRunParameters = new Dictionary<string, string>();
+        
+        // Extract TestRunParameters from TestContext.Properties
+        foreach (System.Collections.DictionaryEntry property in testContext.Properties)
+        {
+            if (property.Key is string key && property.Value is string value)
+            {
+                testRunParameters[key] = value;
+            }
+        }
+
+        ThreadLocalTestRunParameters.Value = testRunParameters;
+    }
+
+    /// <summary>
+    /// Clears the TestRunParameters for the current thread.
+    /// This should be called when a test completes.
+    /// </summary>
+    public static void UnregisterTestContext()
+    {
+        ThreadLocalTestRunParameters.Value = null;
+    }
+
+    /// <summary>
     /// Allows setting the configuration programmatically (primarily for testing).
     /// </summary>
     /// <param name="enabled">Whether debugger launch is enabled.</param>
@@ -85,12 +125,13 @@ internal static class DebuggerLaunchSettings
     }
 
     /// <summary>
-    /// Resets the cached configuration values.
+    /// Resets the cached configuration values and clears thread-local storage.
     /// </summary>
     internal static void Reset()
     {
         _isEnabled = null;
         _testNameFilter = null;
+        ThreadLocalTestRunParameters.Value = null;
     }
 
     private static bool ReadFromConfiguration()
@@ -145,9 +186,15 @@ internal static class DebuggerLaunchSettings
 
     private static string? GetTestRunParameter(string parameterName)
     {
-        // This is a simplified approach. In a real implementation, we would need
-        // access to the current TestContext or a global registry of test run parameters.
-        // For now, this will be enhanced when we have proper integration with the test runner.
+        // Try to get from thread-local TestRunParameters first
+        var testRunParameters = ThreadLocalTestRunParameters.Value;
+        if (testRunParameters is not null && testRunParameters.TryGetValue(parameterName, out string? value))
+        {
+            return value;
+        }
+
+        // Future enhancement: Could also check for other sources of TestRunParameters
+        // such as a global registry set by the test runner
         return null;
     }
 }
