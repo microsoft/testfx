@@ -621,7 +621,7 @@ public sealed class TerminalTestReporterTests
         // Test display names with various escape characters
         terminalReporter.TestCompleted(testNodeUid: "Test1", "Hello(\nWorld)", TestOutcome.Passed, TimeSpan.FromSeconds(1),
             informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null, standardOutput: null, errorOutput: null);
-        terminalReporter.TestCompleted(testNodeUid: "Test2", "Tab\tSeparated", TestOutcome.Failed, TimeSpan.FromSeconds(1),
+        terminalReporter.TestCompleted(testNodeUid: "Test2", "Tab\tSeparated", TestOutcome.Fail, TimeSpan.FromSeconds(1),
             informativeMessage: null, errorMessage: "Test failed", exception: null, expected: null, actual: null, standardOutput: null, errorOutput: null);
         terminalReporter.TestCompleted(testNodeUid: "Test3", "Carriage\rReturn", TestOutcome.Skipped, TimeSpan.FromSeconds(1),
             informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null, standardOutput: null, errorOutput: null);
@@ -634,16 +634,16 @@ public sealed class TerminalTestReporterTests
         string output = stringBuilderConsole.Output;
 
         // Verify that escape characters are replaced with their Unicode control pictures
-        Assert.IsTrue(output.Contains("Hello(␊World)"), "Newline should be replaced with ␊");
-        Assert.IsTrue(output.Contains("Tab␉Separated"), "Tab should be replaced with ␉");
-        Assert.IsTrue(output.Contains("Carriage␍Return"), "Carriage return should be replaced with ␍");
-        Assert.IsTrue(output.Contains("Escape␛Character"), "Escape should be replaced with ␛");
+        Assert.Contains("Hello(␊World)", output, "Newline should be replaced with ␊");
+        Assert.Contains("Tab␉Separated", output, "Tab should be replaced with ␉");
+        Assert.Contains("Carriage␍Return", output, "Carriage return should be replaced with ␍");
+        Assert.Contains("Escape␛Character", output, "Escape should be replaced with ␛");
 
         // Verify that literal escape characters are not present
-        Assert.IsFalse(output.Contains("Hello(\nWorld)"), "Literal newline should not be present");
-        Assert.IsFalse(output.Contains("Tab\tSeparated"), "Literal tab should not be present");
-        Assert.IsFalse(output.Contains("Carriage\rReturn"), "Literal carriage return should not be present");
-        Assert.IsFalse(output.Contains("Escape\x001bCharacter"), "Literal escape should not be present");
+        Assert.DoesNotContain("Hello(\nWorld)", output, "Literal newline should not be present");
+        Assert.DoesNotContain("Tab\tSeparated", output, "Literal tab should not be present");
+        Assert.DoesNotContain("Carriage\rReturn", output, "Literal carriage return should not be present");
+        Assert.DoesNotContain("Escape\x001bCharacter", output, "Literal escape should not be present");
     }
 
     [TestMethod]
@@ -678,13 +678,13 @@ public sealed class TerminalTestReporterTests
         string output = stringBuilderConsole.Output;
 
         // Verify that escape characters are replaced with their Unicode control pictures in discovery output
-        Assert.IsTrue(output.Contains("Test␊With␊Newlines"), "Newlines should be replaced with ␊ in discovery");
-        Assert.IsTrue(output.Contains("Test␉With␉Tabs"), "Tabs should be replaced with ␉ in discovery");
-        Assert.IsTrue(output.Contains("Test␍With␍CarriageReturns"), "Carriage returns should be replaced with ␍ in discovery");
+        Assert.Contains("Test␊With␊Newlines", output, "Newlines should be replaced with ␊ in discovery");
+        Assert.Contains("Test␉With␉Tabs", output, "Tabs should be replaced with ␉ in discovery");
+        Assert.Contains("Test␍With␍CarriageReturns", output, "Carriage returns should be replaced with ␍ in discovery");
 
         // Verify that literal escape characters are not present
-        Assert.IsFalse(output.Contains("Test\nWith\nNewlines"), "Literal newlines should not be present in discovery");
-        Assert.IsFalse(output.Contains("Test\tWith\tTabs"), "Literal tabs should not be present in discovery");
-        Assert.IsFalse(output.Contains("Test\rWith\rCarriageReturns"), "Literal carriage returns should not be present in discovery");
+        Assert.DoesNotContain("Test\nWith\nNewlines", output, "Literal newlines should not be present in discovery");
+        Assert.DoesNotContain("Test\tWith\tTabs", output, "Literal tabs should not be present in discovery");
+        Assert.DoesNotContain("Test\rWith\rCarriageReturns", output, "Literal carriage returns should not be present in discovery");
     }
 }
