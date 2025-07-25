@@ -104,21 +104,36 @@ internal static class ExceptionHelper
         }
 
         StringBuilder result = new(stackTrace.Length);
-        string[] stackFrames = Regex.Split(stackTrace, Environment.NewLine);
+        ReadOnlySpan<char> remaining = stackTrace.AsSpan();
+        ReadOnlySpan<char> newLine = Environment.NewLine.AsSpan();
 
-        foreach (string stackFrame in stackFrames)
+        while (!remaining.IsEmpty)
         {
-            if (StringEx.IsNullOrEmpty(stackFrame))
+            int index = remaining.IndexOf(newLine);
+            ReadOnlySpan<char> line;
+            
+            if (index >= 0)
+            {
+                line = remaining.Slice(0, index);
+                remaining = remaining.Slice(index + newLine.Length);
+            }
+            else
+            {
+                line = remaining;
+                remaining = ReadOnlySpan<char>.Empty;
+            }
+
+            if (line.IsEmpty)
             {
                 continue;
             }
 
             // Add the frame to the result if it does not refer to
             // the assertion class in the test framework
-            bool hasReference = HasReferenceToUTF(stackFrame);
+            bool hasReference = HasReferenceToUTF(line);
             if (!hasReference)
             {
-                result.Append(stackFrame);
+                result.Append(line);
                 result.Append(Environment.NewLine);
             }
         }
@@ -201,6 +216,28 @@ internal static class ExceptionHelper
         foreach (string type in TypesToBeExcluded)
         {
             if (stackFrame.IndexOf(type, StringComparison.Ordinal) > -1)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Returns whether the parameter stackFrame has reference to UTF.
+    /// </summary>
+    /// <param name="stackFrame">
+    /// The stack Frame.
+    /// </param>
+    /// <returns>
+    /// True if the framework or the adapter methods are in the stack frame.
+    /// </returns>
+    internal static bool HasReferenceToUTF(ReadOnlySpan<char> stackFrame)
+    {
+        foreach (string type in TypesToBeExcluded)
+        {
+            if (stackFrame.IndexOf(type.AsSpan(), StringComparison.Ordinal) > -1)
             {
                 return true;
             }
