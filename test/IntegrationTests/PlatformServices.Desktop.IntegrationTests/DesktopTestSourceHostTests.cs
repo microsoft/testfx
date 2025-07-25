@@ -74,7 +74,8 @@ public class DesktopTestSourceHostTests : TestContainer
             GetTestAssemblyPath("DesktopTestProjectx86Debug"),
             GetMockedIRunSettings(runSettingsXml).Object,
             null,
-            new Mock<IAdapterTraceLogger>().Object);
+            // Cannot use mock of IAdapterTraceLogger here because of AppDomain serialization
+            new AdapterTraceLogger());
         _testSourceHost.SetupHost();
 
         var asm = Assembly.LoadFrom(sampleProjectPath);
@@ -88,7 +89,8 @@ public class DesktopTestSourceHostTests : TestContainer
     public void DisposeShouldUnloadChildAppDomain()
     {
         string testSourceHandler = GetTestAssemblyPath("DesktopTestProjectx86Debug");
-        _testSourceHost = new TestSourceHost(testSourceHandler, null, null, new Mock<IAdapterTraceLogger>().Object);
+        // Cannot use mock of IAdapterTraceLogger here because of AppDomain serialization
+        _testSourceHost = new TestSourceHost(testSourceHandler, null, null, new AdapterTraceLogger());
         _testSourceHost.SetupHost();
 
         // Check that child appdomain was indeed created

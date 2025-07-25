@@ -86,7 +86,7 @@ internal static class AppDomainUtilities
                 (AssemblyLoadWorker)CreateInstance(
                 appDomain,
                 typeof(AssemblyLoadWorker),
-                null);
+                [logger]);
 
             string targetFramework = assemblyLoadWorker.GetTargetFrameworkVersionStringFromPath(testSourcePath, out string? errorMessage);
             if (errorMessage is not null)

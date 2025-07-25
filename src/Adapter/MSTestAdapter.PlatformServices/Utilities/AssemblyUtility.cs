@@ -217,7 +217,7 @@ internal class AssemblyUtility
                 [GetResolutionPaths(), _logger]);
 
             // This has to be Load, otherwise Serialization of argument types will not work correctly.
-            var worker = (AssemblyLoadWorker)AppDomainUtilities.CreateInstance(appDomain, typeof(AssemblyLoadWorker), null);
+            var worker = (AssemblyLoadWorker)AppDomainUtilities.CreateInstance(appDomain, typeof(AssemblyLoadWorker), [_logger]);
             _logger.LogInfo("AssemblyDependencyFinder.GetDependentAssemblies: loaded the worker.");
 
             IReadOnlyCollection<string> allDependencies = worker.GetFullPathToDependentAssemblies(assemblyPath, out warnings);
