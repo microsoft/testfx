@@ -1,4 +1,4 @@
-# Template for test stages
+# Template for test stages using matrix strategy
 parameters:
 - name: stageName
   type: string
@@ -16,22 +16,8 @@ parameters:
 - name: skipTests
   type: boolean
   default: false
-- name: windowsPool
+- name: pool
   type: object
-  default:
-    name: NetCore-Public
-    demands: ImageOverride -equals windows.vs2022preview.amd64.open
-- name: linuxPool
-  type: object
-  default:
-    name: NetCore-Public
-    demands: ImageOverride -equals build.ubuntu.2004.amd64.open
-- name: macOSPool
-  type: object
-  default:
-    name: Azure Pipelines
-    vmImage: macos-latest
-    os: macOS
 - name: solutionFile
   type: string
   default: ''
@@ -51,50 +37,112 @@ stages:
       enablePublishUsingPipelines: false
       enableTelemetry: true
       jobs:
-      - ${{ if eq(parameters.os, 'Windows') }}:
-        - template: /eng/test-job-template.yml
-          parameters:
-            os: Windows
-            configuration: Debug
-            skipTests: ${{ parameters.skipTests }}
-            pool: ${{ parameters.windowsPool }}
-            platformSpecificSteps:
-            - template: /eng/windows-setup-steps.yml
-        - template: /eng/test-job-template.yml
-          parameters:
-            os: Windows
-            configuration: Release
-            skipTests: ${{ parameters.skipTests }}
-            pool: ${{ parameters.windowsPool }}
-            platformSpecificSteps:
-            - template: /eng/windows-setup-steps.yml
-      - ${{ if eq(parameters.os, 'Linux') }}:
-        - template: /eng/test-job-template.yml
-          parameters:
-            os: Linux
-            configuration: Debug
-            skipTests: ${{ parameters.skipTests }}
-            pool: ${{ parameters.linuxPool }}
-            solutionFile: ${{ parameters.solutionFile }}
-        - template: /eng/test-job-template.yml
-          parameters:
-            os: Linux
-            configuration: Release
-            skipTests: ${{ parameters.skipTests }}
-            pool: ${{ parameters.linuxPool }}
-            solutionFile: ${{ parameters.solutionFile }}
-      - ${{ if eq(parameters.os, 'macOS') }}:
-        - template: /eng/test-job-template.yml
-          parameters:
-            os: macOS
-            configuration: Debug
-            skipTests: ${{ parameters.skipTests }}
-            pool: ${{ parameters.macOSPool }}
-            solutionFile: ${{ parameters.solutionFile }}
-        - template: /eng/test-job-template.yml
-          parameters:
-            os: macOS
-            configuration: Release
-            skipTests: ${{ parameters.skipTests }}
-            pool: ${{ parameters.macOSPool }}
-            solutionFile: ${{ parameters.solutionFile }}
+      - job: ${{ parameters.os }}_Tests
+        displayName: ${{ parameters.os }} Tests
+        timeoutInMinutes: 90
+        condition: ne('${{ parameters.skipTests }}', 'True')
+        pool: ${{ parameters.pool }}
+        strategy:
+          matrix:
+            Debug:
+              _BuildConfig: Debug
+            Release:
+              _BuildConfig: Release
+        steps:
+        - task: DownloadBuildArtifacts@0
+          displayName: 'Download NuGet packages'
+          inputs:
+            buildType: 'current'
+            downloadType: 'single'
+            artifactName: 'NuGetPackages'
+            downloadPath: '$(System.DefaultWorkingDirectory)'
+
+        - task: CopyFiles@2
+          displayName: 'Copy packages to expected location'
+          inputs:
+            SourceFolder: '$(System.DefaultWorkingDirectory)/NuGetPackages'
+            Contents: '**'
+            TargetFolder: '$(Build.SourcesDirectory)/artifacts/packages/Release'
+
+        # Platform-specific setup steps
+        - ${{ if eq(parameters.os, 'Windows') }}:
+          - template: /eng/windows-setup-steps.yml
+
+        # Build test projects only
+        - ${{ if eq(parameters.os, 'Windows') }}:
+          - script: eng\common\CIBuild.cmd
+              -configuration $(_BuildConfig)
+              -prepareMachine
+              /p:Publish=false
+              /p:ProductsToBuild=tests
+              /p:Test=false
+              /p:FastAcceptanceTest=true
+            name: Build
+            displayName: Build Test Projects
+        - ${{ else }}:
+          - script: eng/common/cibuild.sh
+              -configuration $(_BuildConfig)
+              -prepareMachine
+              /p:ProductsToBuild=tests
+              /p:Test=false
+              /p:Publish=false
+              /p:NonWindowsBuild=true
+              /p:FastAcceptanceTest=true
+            displayName: Build Test Projects
+
+        # Run tests
+        - ${{ if eq(parameters.os, 'Windows') }}:
+          - script: dotnet test -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig)\TestStep.binlog --no-progress
+            name: Test
+            displayName: Test
+            env:
+              DOTNET_ROOT: $(Build.SourcesDirectory)/.dotnet
+              NUGET_PACKAGES: $(Build.SourcesDirectory)/.packages
+              DOTNET_CLI_CONTEXT_VERBOSE: 1
+        - ${{ else }}:
+          - script: dotnet test --solution ${{ parameters.solutionFile }} -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig)\TestStep.binlog --no-progress
+            name: Test
+            displayName: Test
+            env:
+              DOTNET_ROOT: $(Build.SourcesDirectory)/.dotnet
+              NUGET_PACKAGES: $(Build.SourcesDirectory)/.packages
+              DOTNET_CLI_CONTEXT_VERBOSE: 1
+
+        - task: PublishBuildArtifacts@1
+          displayName: 'Publish Test Results folders'
+          inputs:
+            PathtoPublish: '$(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)'
+            ArtifactName: TestResults_${{ parameters.os }}_$(_BuildConfig)_Attempt$(System.JobAttempt)
+          condition: always()
+
+        - task: CopyFiles@2
+          displayName: 'Copy binlogs'
+          inputs:
+            SourceFolder: '$(Build.SourcesDirectory)/artifacts/tmp/$(_BuildConfig)/testsuite'
+            Contents: |
+              **/*.binlog
+            TargetFolder: '$(Build.ArtifactStagingDirectory)/binlogs'
+          condition: always()
+
+        - task: PublishBuildArtifacts@1
+          displayName: 'Publish integration tests binlogs'
+          inputs:
+            PathtoPublish: '$(Build.ArtifactStagingDirectory)/binlogs'
+            ArtifactName: Integration_Tests_${{ parameters.os }}_$(_BuildConfig)_Binlogs
+          condition: always()
+
+        # Windows-specific additional steps
+        - ${{ if eq(parameters.os, 'Windows') }}:
+          - script: dotnet msbuild -restore
+              eng/CodeCoverage.proj
+              /p:Configuration=$(_BuildConfig)
+              /bl:$(BUILD.SOURCESDIRECTORY)\artifacts\log\$(_BuildConfig)\CodeCoverage.binlog
+            displayName: Upload coverage to codecov.io
+            condition: and(succeeded(), eq(variables._BuildConfig, 'Debug'))
+
+          - task: PublishBuildArtifacts@1
+            displayName: 'Publish local dumps'
+            inputs:
+              PathtoPublish: '$(Build.SourcesDirectory)/artifacts/CrashDumps'
+              ArtifactName: TestResults_${{ parameters.os }}_$(_BuildConfig)
+            condition: failed()

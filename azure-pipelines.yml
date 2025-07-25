@@ -108,6 +108,9 @@ stages:
     displayName: Test Windows
     os: Windows
     skipTests: ${{ parameters.SkipTests }}
+    pool:
+      name: NetCore-Public
+      demands: ImageOverride -equals windows.vs2022preview.amd64.open
 
 - template: /eng/test-stage-template.yml
   parameters:
@@ -116,6 +119,9 @@ stages:
     os: Linux
     skipTests: ${{ parameters.SkipTests }}
     solutionFile: NonWindowsTests.slnf
+    pool:
+      name: NetCore-Public
+      demands: ImageOverride -equals build.ubuntu.2004.amd64.open
 
 - template: /eng/test-stage-template.yml
   parameters:
@@ -124,3 +130,7 @@ stages:
     os: macOS
     skipTests: ${{ parameters.SkipTests }}
     solutionFile: NonWindowsTests.slnf
+    pool:
+      name: Azure Pipelines
+      vmImage: macos-latest
+      os: macOS
