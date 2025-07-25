@@ -93,8 +93,9 @@ internal sealed class TestCaseDiscoverySinkAdapter : ITestCaseDiscoverySink
 
         // Publish node state change to Microsoft Testing Platform
         var testNode = discoveredTest.ToTestNode(_isTrxEnabled, _adapterExtension.UseFullyQualifiedNameAsTestNodeUid, _namedFeatureCapability, _commandLineOptions, _clientInfo);
+        testNode.Properties.Add(DiscoveredTestNodeStateProperty.CachedInstance);
         var testNodeChange = new TestNodeUpdateMessage(_session.SessionUid, testNode);
-        testNodeChange.Properties.Add(DiscoveredTestNodeStateProperty.CachedInstance);
+
         _messageBus.PublishAsync(_adapterExtension, testNodeChange).Await();
     }
 }

@@ -165,14 +165,13 @@ internal sealed class TestFrameworkEngine : IDataProducer
             await testNodesVisitor.VisitAsync(async (testNode, parentTestNodeUid) =>
             {
                 PlatformTestNode progressNode = testNode.ToPlatformTestNode();
-                var testNodeUpdateMessage = new TestNodeUpdateMessage(request.Session.SessionUid, progressNode,
-                    parentTestNodeUid?.ToPlatformTestNodeUid());
                 if (testNode is IActionableTestNode)
                 {
-                    testNodeUpdateMessage.Properties.Add(DiscoveredTestNodeStateProperty.CachedInstance);
+                    progressNode.Properties.Add(DiscoveredTestNodeStateProperty.CachedInstance);
                 }
 
-                await messageBus.PublishAsync(this, testNodeUpdateMessage).ConfigureAwait(false);
+                await messageBus.PublishAsync(this, new TestNodeUpdateMessage(request.Session.SessionUid, progressNode,
+                    parentTestNodeUid?.ToPlatformTestNodeUid())).ConfigureAwait(false);
             }).ConfigureAwait(false);
 
             if (testNodesVisitor.DuplicatedNodes.Length > 0)

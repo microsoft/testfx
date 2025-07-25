@@ -114,7 +114,7 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
                         break;
                 }
 
-                foreach (FileArtifactProperty artifact in testNodeUpdateMessage.Properties.OfType<FileArtifactProperty>())
+                foreach (FileArtifactProperty artifact in testNodeUpdateMessage.TestNode.Properties.OfType<FileArtifactProperty>())
                 {
                     FileArtifactMessages testFileArtifactMessages = new(
                         ExecutionId,
@@ -176,14 +176,14 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
         long? duration = null;
         string? reason = string.Empty;
         ExceptionMessage[]? exceptions = null;
-        TestNodeStateProperty? nodeState = testNodeUpdateMessage.Properties.SingleOrDefault<TestNodeStateProperty>();
+        TestNodeStateProperty? nodeState = testNodeUpdateMessage.TestNode.Properties.SingleOrDefault<TestNodeStateProperty>();
         if (nodeState is null)
         {
             return null;
         }
 
-        string? standardOutput = testNodeUpdateMessage.Properties.SingleOrDefault<StandardOutputProperty>()?.StandardOutput;
-        string? standardError = testNodeUpdateMessage.Properties.SingleOrDefault<StandardErrorProperty>()?.StandardError;
+        string? standardOutput = testNodeUpdateMessage.TestNode.Properties.SingleOrDefault<StandardOutputProperty>()?.StandardOutput;
+        string? standardError = testNodeUpdateMessage.TestNode.Properties.SingleOrDefault<StandardErrorProperty>()?.StandardError;
 
         switch (nodeState)
         {
@@ -193,7 +193,7 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
 
             case PassedTestNodeStateProperty:
                 state = TestStates.Passed;
-                duration = testNodeUpdateMessage.Properties.SingleOrDefault<TimingProperty>()?.GlobalTiming.Duration.Ticks;
+                duration = testNodeUpdateMessage.TestNode.Properties.SingleOrDefault<TimingProperty>()?.GlobalTiming.Duration.Ticks;
                 reason = nodeState.Explanation;
                 break;
 
@@ -204,28 +204,28 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
 
             case FailedTestNodeStateProperty failedTestNodeStateProperty:
                 state = TestStates.Failed;
-                duration = testNodeUpdateMessage.Properties.SingleOrDefault<TimingProperty>()?.GlobalTiming.Duration.Ticks;
+                duration = testNodeUpdateMessage.TestNode.Properties.SingleOrDefault<TimingProperty>()?.GlobalTiming.Duration.Ticks;
                 reason = nodeState.Explanation;
                 exceptions = FlattenToExceptionMessages(reason, failedTestNodeStateProperty.Exception);
                 break;
 
             case ErrorTestNodeStateProperty errorTestNodeStateProperty:
                 state = TestStates.Error;
-                duration = testNodeUpdateMessage.Properties.SingleOrDefault<TimingProperty>()?.GlobalTiming.Duration.Ticks;
+                duration = testNodeUpdateMessage.TestNode.Properties.SingleOrDefault<TimingProperty>()?.GlobalTiming.Duration.Ticks;
                 reason = nodeState.Explanation;
                 exceptions = FlattenToExceptionMessages(reason, errorTestNodeStateProperty.Exception);
                 break;
 
             case TimeoutTestNodeStateProperty timeoutTestNodeStateProperty:
                 state = TestStates.Timeout;
-                duration = testNodeUpdateMessage.Properties.SingleOrDefault<TimingProperty>()?.GlobalTiming.Duration.Ticks;
+                duration = testNodeUpdateMessage.TestNode.Properties.SingleOrDefault<TimingProperty>()?.GlobalTiming.Duration.Ticks;
                 reason = nodeState.Explanation;
                 exceptions = FlattenToExceptionMessages(reason, timeoutTestNodeStateProperty.Exception);
                 break;
 
             case CancelledTestNodeStateProperty cancelledTestNodeStateProperty:
                 state = TestStates.Cancelled;
-                duration = testNodeUpdateMessage.Properties.SingleOrDefault<TimingProperty>()?.GlobalTiming.Duration.Ticks;
+                duration = testNodeUpdateMessage.TestNode.Properties.SingleOrDefault<TimingProperty>()?.GlobalTiming.Duration.Ticks;
                 reason = nodeState.Explanation;
                 exceptions = FlattenToExceptionMessages(reason, cancelledTestNodeStateProperty.Exception);
                 break;

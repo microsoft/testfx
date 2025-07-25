@@ -313,47 +313,35 @@ public class DummyTestFramework : ITestFramework, IDataProducer
 
         if (TestMethod1(fail, resultDir, crash))
         {
-            var message1 = new TestNodeUpdateMessage(context.Request.Session.SessionUid,
-                new TestNode() { Uid = "1", DisplayName = "TestMethod1" });
-            message1.Properties.Add(PassedTestNodeStateProperty.CachedInstance);
-            await context.MessageBus.PublishAsync(this, message1);
+            await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid,
+                new TestNode() { Uid = "1", DisplayName = "TestMethod1", Properties = new(PassedTestNodeStateProperty.CachedInstance) }));
         }
         else
         {
-            var message2 = new TestNodeUpdateMessage(context.Request.Session.SessionUid,
-                new TestNode() { Uid = "1", DisplayName = "TestMethod1" });
-            message2.Properties.Add(new FailedTestNodeStateProperty());
-            await context.MessageBus.PublishAsync(this, message2);
+            await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid,
+                new TestNode() { Uid = "1", DisplayName = "TestMethod1", Properties = new(new FailedTestNodeStateProperty()) }));
         }
 
         if (TestMethod2(fail, resultDir))
         {
-            var message3 = new TestNodeUpdateMessage(context.Request.Session.SessionUid,
-                new TestNode() { Uid = "2", DisplayName = "TestMethod2" });
-            message3.Properties.Add(PassedTestNodeStateProperty.CachedInstance);
-            await context.MessageBus.PublishAsync(this, message3);
+            await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid,
+                new TestNode() { Uid = "2", DisplayName = "TestMethod2", Properties = new(PassedTestNodeStateProperty.CachedInstance) }));
         }
         else
         {
-            var message4 = new TestNodeUpdateMessage(context.Request.Session.SessionUid,
-                new TestNode() { Uid = "2", DisplayName = "TestMethod2" });
-            message4.Properties.Add(new FailedTestNodeStateProperty());
-            await context.MessageBus.PublishAsync(this, message4);
+            await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid,
+                new TestNode() { Uid = "2", DisplayName = "TestMethod2", Properties = new(new FailedTestNodeStateProperty()) }));
         }
 
         if (TestMethod3(fail, resultDir))
         {
-            var message5 = new TestNodeUpdateMessage(context.Request.Session.SessionUid,
-                new TestNode() { Uid = "3", DisplayName = "TestMethod3" });
-            message5.Properties.Add(PassedTestNodeStateProperty.CachedInstance);
-            await context.MessageBus.PublishAsync(this, message5);
+            await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid,
+                new TestNode() { Uid = "3", DisplayName = "TestMethod3", Properties = new(PassedTestNodeStateProperty.CachedInstance) }));
         }
         else
         {
-            var message6 = new TestNodeUpdateMessage(context.Request.Session.SessionUid,
-                new TestNode() { Uid = "3", DisplayName = "TestMethod3" });
-            message6.Properties.Add(new FailedTestNodeStateProperty());
-            await context.MessageBus.PublishAsync(this, message6);
+            await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid,
+                new TestNode() { Uid = "3", DisplayName = "TestMethod3", Properties = new(new FailedTestNodeStateProperty()) }));
         }
         
         context.Complete();

@@ -163,7 +163,7 @@ internal sealed class HangDumpActivityIndicator : IDataConsumer, ITestSessionLif
             return;
         }
 
-        TestNodeStateProperty? state = nodeChangedMessage.Properties.SingleOrDefault<TestNodeStateProperty>();
+        TestNodeStateProperty? state = nodeChangedMessage.TestNode.Properties.SingleOrDefault<TestNodeStateProperty>();
         if (state is InProgressTestNodeStateProperty)
         {
             if (_traceLevelEnabled)

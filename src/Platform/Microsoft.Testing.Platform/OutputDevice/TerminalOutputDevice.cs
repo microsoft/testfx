@@ -394,11 +394,11 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
         {
             case TestNodeUpdateMessage testNodeStateChanged:
 
-                TimeSpan duration = testNodeStateChanged.Properties.SingleOrDefault<TimingProperty>()?.GlobalTiming.Duration ?? TimeSpan.Zero;
-                string? standardOutput = testNodeStateChanged.Properties.SingleOrDefault<StandardOutputProperty>()?.StandardOutput;
-                string? standardError = testNodeStateChanged.Properties.SingleOrDefault<StandardErrorProperty>()?.StandardError;
+                TimeSpan duration = testNodeStateChanged.TestNode.Properties.SingleOrDefault<TimingProperty>()?.GlobalTiming.Duration ?? TimeSpan.Zero;
+                string? standardOutput = testNodeStateChanged.TestNode.Properties.SingleOrDefault<StandardOutputProperty>()?.StandardOutput;
+                string? standardError = testNodeStateChanged.TestNode.Properties.SingleOrDefault<StandardErrorProperty>()?.StandardError;
 
-                foreach (FileArtifactProperty artifact in testNodeStateChanged.Properties.OfType<FileArtifactProperty>())
+                foreach (FileArtifactProperty artifact in testNodeStateChanged.TestNode.Properties.OfType<FileArtifactProperty>())
                 {
                     bool isOutOfProcessArtifact = _firstCallTo_OnSessionStartingAsync;
                     _terminalTestReporter.ArtifactAdded(
@@ -407,7 +407,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
                         artifact.FileInfo.FullName);
                 }
 
-                switch (testNodeStateChanged.Properties.SingleOrDefault<TestNodeStateProperty>())
+                switch (testNodeStateChanged.TestNode.Properties.SingleOrDefault<TestNodeStateProperty>())
                 {
                     case InProgressTestNodeStateProperty:
                         _terminalTestReporter.TestInProgress(

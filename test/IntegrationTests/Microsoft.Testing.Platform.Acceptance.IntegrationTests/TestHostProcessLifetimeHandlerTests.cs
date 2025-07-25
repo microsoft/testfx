@@ -119,13 +119,12 @@ public class DummyTestFramework : ITestFramework, IDataProducer
 
     public async Task ExecuteRequestAsync(ExecuteRequestContext context)
     {
-        var message = new TestNodeUpdateMessage(context.Request.Session.SessionUid, new TestNode() 
+        await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid, new TestNode() 
         {
             Uid = "Test1",
             DisplayName = "Test1",
-        });
-        message.Properties.Add(new PassedTestNodeStateProperty());
-        await context.MessageBus.PublishAsync(this, message);
+            Properties = new PropertyBag(new PassedTestNodeStateProperty()),
+        }));
 
         context.Complete();
     }
