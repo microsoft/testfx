@@ -1,13 +1,13 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Diagnostics;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests;
 
 /// <summary>
 /// Integration tests for the debugger launch functionality.
-/// These tests verify the complete flow of environment variable checking and debugger launch behavior.
+/// These tests verify the complete flow of configuration reading and debugger launch behavior.
 /// </summary>
 public class DebuggerLaunchIntegrationTests : TestContainer
 {
@@ -15,16 +15,43 @@ public class DebuggerLaunchIntegrationTests : TestContainer
     {
         if (disposing)
         {
-            // Clean up environment variables after each test
+            // Clean up environment variables and settings after each test
+            DebuggerLaunchSettings.Reset();
             Environment.SetEnvironmentVariable("MSTEST_LAUNCH_DEBUGGER_ON_FAILURE", null);
             Environment.SetEnvironmentVariable("MSTEST_LAUNCH_DEBUGGER_TEST_FILTER", null);
         }
         base.Dispose(disposing);
     }
 
-    public void ShouldLaunchDebuggerReturnsFalseWhenEnvironmentVariableNotSet()
+    public void DebuggerLaunchViaConfigurationSettings()
     {
         // Arrange
+        DebuggerLaunchSettings.SetConfiguration(enabled: true);
+
+        // Act
+        bool shouldLaunch = GetShouldLaunchDebuggerOnFailureResult();
+
+        // Assert
+        Verify(shouldLaunch);
+    }
+
+    public void DebuggerLaunchViaEnvironmentVariableFallback()
+    {
+        // Arrange
+        DebuggerLaunchSettings.Reset();
+        Environment.SetEnvironmentVariable("MSTEST_LAUNCH_DEBUGGER_ON_FAILURE", "1");
+
+        // Act
+        bool shouldLaunch = GetShouldLaunchDebuggerOnFailureResult();
+
+        // Assert
+        Verify(shouldLaunch);
+    }
+
+    public void DebuggerLaunchDisabledByDefault()
+    {
+        // Arrange
+        DebuggerLaunchSettings.Reset();
         Environment.SetEnvironmentVariable("MSTEST_LAUNCH_DEBUGGER_ON_FAILURE", null);
 
         // Act
@@ -34,49 +61,23 @@ public class DebuggerLaunchIntegrationTests : TestContainer
         Verify(!shouldLaunch);
     }
 
-    public void ShouldLaunchDebuggerReturnsFalseWhenEnvironmentVariableSetToZero()
+    public void ConfigurationTakesPrecedenceOverEnvironmentVariable()
     {
-        // Arrange
+        // Arrange - set env var to disabled but config to enabled
         Environment.SetEnvironmentVariable("MSTEST_LAUNCH_DEBUGGER_ON_FAILURE", "0");
+        DebuggerLaunchSettings.SetConfiguration(enabled: true);
 
         // Act
         bool shouldLaunch = GetShouldLaunchDebuggerOnFailureResult();
 
         // Assert
-        Verify(!shouldLaunch);
-    }
-
-    public void ShouldLaunchDebuggerReturnsTrueWhenEnvironmentVariableSetToOne()
-    {
-        // Arrange
-        Environment.SetEnvironmentVariable("MSTEST_LAUNCH_DEBUGGER_ON_FAILURE", "1");
-
-        // Act
-        bool shouldLaunch = GetShouldLaunchDebuggerOnFailureResult();
-
-        // Assert
-        Verify(shouldLaunch);
-    }
-
-    public void ShouldLaunchDebuggerReturnsTrueWhenFilterIsSetButNoTestContext()
-    {
-        // Arrange
-        Environment.SetEnvironmentVariable("MSTEST_LAUNCH_DEBUGGER_ON_FAILURE", "1");
-        Environment.SetEnvironmentVariable("MSTEST_LAUNCH_DEBUGGER_TEST_FILTER", "SomeTestName");
-
-        // Act
-        bool shouldLaunch = GetShouldLaunchDebuggerOnFailureResult();
-
-        // Assert
-        // Should return true because we can't determine test name context in this case
-        // and default to launching debugger when enabled
-        Verify(shouldLaunch);
+        Verify(shouldLaunch); // Configuration should take precedence
     }
 
     public void AssertFailPreservesOriginalExceptionType()
     {
         // Arrange
-        Environment.SetEnvironmentVariable("MSTEST_LAUNCH_DEBUGGER_ON_FAILURE", "0");
+        DebuggerLaunchSettings.SetConfiguration(enabled: false);
 
         // Act & Assert
         Exception ex = VerifyThrows(() => Assert.Fail("Test failure message"));
@@ -87,7 +88,7 @@ public class DebuggerLaunchIntegrationTests : TestContainer
     public void AssertAreEqualPreservesOriginalExceptionType()
     {
         // Arrange
-        Environment.SetEnvironmentVariable("MSTEST_LAUNCH_DEBUGGER_ON_FAILURE", "0");
+        DebuggerLaunchSettings.SetConfiguration(enabled: false);
 
         // Act & Assert
         Exception ex = VerifyThrows(() => Assert.AreEqual(10, 5, "Values should be equal"));
@@ -99,7 +100,7 @@ public class DebuggerLaunchIntegrationTests : TestContainer
     public void VariousAssertMethodsAllUseThrowAssertFailedPath()
     {
         // Test that different assertion methods all go through the same debugger launch logic
-        Environment.SetEnvironmentVariable("MSTEST_LAUNCH_DEBUGGER_ON_FAILURE", "0");
+        DebuggerLaunchSettings.SetConfiguration(enabled: false);
 
         // All these should throw AssertFailedException without launching debugger
         Exception ex1 = VerifyThrows(() => Assert.IsTrue(false));
@@ -114,28 +115,20 @@ public class DebuggerLaunchIntegrationTests : TestContainer
     }
 
     /// <summary>
-    /// This method replicates the logic from Assert.ShouldLaunchDebuggerOnFailure
-    /// since that method is private. This allows us to test the logic without
-    /// needing to expose internal implementation details.
+    /// This method uses reflection to access the private ShouldLaunchDebuggerOnFailure method
+    /// in the Assert class to test the complete integration.
     /// </summary>
     private static bool GetShouldLaunchDebuggerOnFailureResult()
     {
-        // Check if debugger launch is enabled
-        string? launchDebugger = Environment.GetEnvironmentVariable("MSTEST_LAUNCH_DEBUGGER_ON_FAILURE");
-        if (launchDebugger != "1")
+        var method = typeof(Assert).GetMethod("ShouldLaunchDebuggerOnFailure", 
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+        
+        if (method == null)
         {
-            return false;
+            throw new InvalidOperationException("Could not find ShouldLaunchDebuggerOnFailure method");
         }
 
-        // Check if there's a test name filter
-        string? testNameFilter = Environment.GetEnvironmentVariable("MSTEST_LAUNCH_DEBUGGER_TEST_FILTER");
-        if (string.IsNullOrWhiteSpace(testNameFilter))
-        {
-            return true; // No filter means launch for all failures
-        }
-
-        // For now, we return true when filter is set but we can't determine test name
-        // This matches the current implementation in Assert.cs
-        return true;
+        var result = method.Invoke(null, null);
+        return result is bool && (bool)result;
     }
 }

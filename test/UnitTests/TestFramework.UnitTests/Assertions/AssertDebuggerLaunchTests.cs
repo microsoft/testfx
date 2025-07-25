@@ -1,53 +1,89 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Diagnostics;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests;
 
 public class AssertDebuggerLaunchTests : TestContainer
 {
-    public void DebuggerLaunchIsNotCalledWhenEnvironmentVariableIsNotSet()
+    public void Cleanup()
     {
-        // Arrange
+        // Reset settings after each test
+        DebuggerLaunchSettings.Reset();
+        Environment.SetEnvironmentVariable("MSTEST_LAUNCH_DEBUGGER_ON_FAILURE", null);
+        Environment.SetEnvironmentVariable("MSTEST_LAUNCH_DEBUGGER_TEST_FILTER", null);
+    }
+
+    public void DebuggerLaunchIsNotEnabledByDefault()
+    {
+        // Arrange - ensure clean state
+        DebuggerLaunchSettings.Reset();
         Environment.SetEnvironmentVariable("MSTEST_LAUNCH_DEBUGGER_ON_FAILURE", null);
         
         // Act & Assert
-        string? launchDebugger = Environment.GetEnvironmentVariable("MSTEST_LAUNCH_DEBUGGER_ON_FAILURE");
-        Verify(launchDebugger != "1");
+        Verify(!DebuggerLaunchSettings.IsEnabled);
     }
 
-    public void DebuggerLaunchIsNotCalledWhenEnvironmentVariableIsSetToFalse()
+    public void DebuggerLaunchCanBeEnabledProgrammatically()
     {
         // Arrange
-        Environment.SetEnvironmentVariable("MSTEST_LAUNCH_DEBUGGER_ON_FAILURE", "0");
+        DebuggerLaunchSettings.SetConfiguration(enabled: true);
         
         // Act & Assert
-        string? launchDebugger = Environment.GetEnvironmentVariable("MSTEST_LAUNCH_DEBUGGER_ON_FAILURE");
-        Verify(launchDebugger != "1");
-        
-        // Cleanup
-        Environment.SetEnvironmentVariable("MSTEST_LAUNCH_DEBUGGER_ON_FAILURE", null);
+        Verify(DebuggerLaunchSettings.IsEnabled);
+        Verify(DebuggerLaunchSettings.ShouldLaunchForCurrentTest());
     }
 
-    public void DebuggerLaunchShouldBeCalledWhenEnvironmentVariableIsSetToOne()
-    {
-        // Arrange
-        Environment.SetEnvironmentVariable("MSTEST_LAUNCH_DEBUGGER_ON_FAILURE", "1");
-        
-        // Act & Assert
-        string? launchDebugger = Environment.GetEnvironmentVariable("MSTEST_LAUNCH_DEBUGGER_ON_FAILURE");
-        Verify(launchDebugger == "1");
-        
-        // Cleanup
-        Environment.SetEnvironmentVariable("MSTEST_LAUNCH_DEBUGGER_ON_FAILURE", null);
-    }
-
-    public void TestFilterEnvironmentVariableIsProperlyRead()
+    public void DebuggerLaunchCanBeEnabledWithTestFilter()
     {
         // Arrange
         const string testFilter = "MyTestMethod";
-        Environment.SetEnvironmentVariable("MSTEST_LAUNCH_DEBUGGER_TEST_FILTER", testFilter);
+        DebuggerLaunchSettings.SetConfiguration(enabled: true, testNameFilter: testFilter);
+        
+        // Act & Assert
+        Verify(DebuggerLaunchSettings.IsEnabled);
+        Verify(DebuggerLaunchSettings.TestNameFilter == testFilter);
+        Verify(DebuggerLaunchSettings.ShouldLaunchForCurrentTest());
+    }
+
+    public void DebuggerLaunchFallsBackToEnvironmentVariable()
+    {
+        // Arrange
+        DebuggerLaunchSettings.Reset();
+        Environment.SetEnvironmentVariable("MSTEST_LAUNCH_DEBUGGER_ON_FAILURE", "1");
+        
+        try
+        {
+            // Act
+            var shouldLaunch = Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Instance.GetType()
+                .GetMethod("ShouldLaunchDebuggerOnFailure", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)
+                ?.Invoke(null, null);
+            
+            // Assert
+            Verify(shouldLaunch is bool && (bool)shouldLaunch);
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("MSTEST_LAUNCH_DEBUGGER_ON_FAILURE", null);
+        }
+    }
+
+    public void DebuggerLaunchIsDisabledWhenEnvironmentVariableIsNotSet()
+    {
+        // Arrange
+        DebuggerLaunchSettings.Reset();
+        Environment.SetEnvironmentVariable("MSTEST_LAUNCH_DEBUGGER_ON_FAILURE", null);
+        
+        // Act
+        var shouldLaunch = Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Instance.GetType()
+            .GetMethod("ShouldLaunchDebuggerOnFailure", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)
+            ?.Invoke(null, null);
+        
+        // Assert
+        Verify(shouldLaunch is bool && !(bool)shouldLaunch);
+    }
+}
         
         // Act
         string? actualFilter = Environment.GetEnvironmentVariable("MSTEST_LAUNCH_DEBUGGER_TEST_FILTER");

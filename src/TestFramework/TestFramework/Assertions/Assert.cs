@@ -89,24 +89,15 @@ public sealed partial class Assert
     /// <returns>True if debugger should be launched, false otherwise.</returns>
     private static bool ShouldLaunchDebuggerOnFailure()
     {
-        // Check if debugger launch is enabled
+        // Check runsettings/testconfig first, then fall back to environment variables
+        if (DebuggerLaunchSettings.IsEnabled)
+        {
+            return DebuggerLaunchSettings.ShouldLaunchForCurrentTest();
+        }
+
+        // Fallback to environment variable for backward compatibility
         string? launchDebugger = Environment.GetEnvironmentVariable("MSTEST_LAUNCH_DEBUGGER_ON_FAILURE");
-        if (launchDebugger != "1")
-        {
-            return false;
-        }
-
-        // Check if there's a test name filter
-        string? testNameFilter = Environment.GetEnvironmentVariable("MSTEST_LAUNCH_DEBUGGER_TEST_FILTER");
-        if (string.IsNullOrWhiteSpace(testNameFilter))
-        {
-            return true; // No filter means launch for all failures
-        }
-
-        // Get current test context to check test name
-        // For now, we'll launch for all failures when filter is set but we can't determine test name
-        // This could be enhanced in the future to access TestContext.Current or similar
-        return true;
+        return launchDebugger == "1";
     }
 
     /// <summary>
