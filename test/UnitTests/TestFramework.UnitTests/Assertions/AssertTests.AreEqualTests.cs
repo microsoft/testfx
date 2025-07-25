@@ -1092,6 +1092,11 @@ public partial class AssertTests : TestContainer
         Verify(ex.Message == "Assert.AreNotEqual failed. Expected a difference greater than <2> between expected value <NaN> and actual value <NaN>. ");
     }
 
+    public void AreEqual_Collection_Equal()
+    {
+        Assert.AreEqual(new List<int>(), new List<int>());
+    }
+
     private class TypeOverridesEquals
     {
         public override bool Equals(object? obj) => true;

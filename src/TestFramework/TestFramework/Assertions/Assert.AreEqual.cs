@@ -3,6 +3,8 @@
 
 using System.ComponentModel;
 
+using static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert;
+
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 /// <summary>
@@ -1185,5 +1187,67 @@ public sealed partial class Assert
             ReplaceNulls(notExpected),
             ReplaceNulls(actual));
         ThrowAssertFailed("Assert.AreNotEqual", finalMessage);
+    }
+
+    /// <summary>
+    /// Verifies that two collections are equal by comparing their elements.
+    /// </summary>
+    /// <param name="expected">The collection that contains the expected elements.</param>
+    /// <param name="actual">The collection that contains the actual elements to compare against the expected collection.</param>
+    /// <param name="message">An optional message to include in the exception if the assertion fails.</param>
+    public static void AreEqual(IEnumerable? expected, IEnumerable? actual, string message = "")
+        => AreEqual(expected?.Cast<object>(), actual?.Cast<object>(), EqualityComparer<object>.Default, message);
+
+    /// <summary>
+    /// Verifies that two collections are equal using a specified equality comparer.
+    /// </summary>
+    /// <remarks>The method uses the provided <paramref name="equalityComparer"/> to compare elements of the
+    /// collections. If the collections are not equal, an <see cref="AssertFailedException"/> is thrown with the
+    /// specified <paramref name="message"/>.</remarks>
+    /// <param name="expected">The expected collection to compare against.</param>
+    /// <param name="actual">The actual collection to compare.</param>
+    /// <param name="equalityComparer">The equality comparer used to determine equality between elements.</param>
+    /// <param name="message">An optional message to include in the exception if the assertion fails.</param>
+    public static void AreEqual(IEnumerable? expected, IEnumerable? actual, IEqualityComparer equalityComparer, string message = "")
+        => AreEqual(expected?.Cast<object>(), actual?.Cast<object>(), new EqualityComparerWrapper(equalityComparer), message);
+
+    /// <summary>
+    /// Verifies that two collections are equal by comparing their elements.
+    /// </summary>
+    /// <remarks>The comparison checks for equality of elements in the same order. If the collections are not
+    /// equal, an exception is thrown with details about the mismatch.</remarks>
+    /// <typeparam name="T">The type of elements in the collections.</typeparam>
+    /// <param name="expected">The collection expected to match the actual collection.</param>
+    /// <param name="actual">The collection to compare against the expected collection.</param>
+    /// <param name="message">An optional message to include in the exception if the assertion fails.</param>
+    public static void AreEqual<T>(IEnumerable<T>? expected, IEnumerable<T>? actual, string message = "")
+        => AreEqual(expected, actual, EqualityComparer<T>.Default, message);
+
+    /// <summary>
+    /// Verifies that two collections are equal by comparing their elements using a specified equality comparer.
+    /// </summary>
+    /// <remarks>The method checks for equality of the collections by comparing each element using the
+    /// provided <paramref name="equalityComparer"/>. If the collections are not equal, an <see
+    /// cref="AssertFailedException"/> is thrown with the specified <paramref name="message"/>.</remarks>
+    /// <typeparam name="T">The type of elements in the collections.</typeparam>
+    /// <param name="expected">The collection expected to match the actual collection. Can be <see langword="null"/>.</param>
+    /// <param name="actual">The collection to compare against the expected collection. Can be <see langword="null"/>.</param>
+    /// <param name="equalityComparer">The equality comparer used to compare elements of the collections.</param>
+    /// <param name="message">An optional message to include in the exception if the assertion fails.</param>
+    public static void AreEqual<T>(IEnumerable<T>? expected, IEnumerable<T>? actual, IEqualityComparer<T> equalityComparer, string message = "")
+    {
+        string reason = string.Empty;
+        if (!AreCollectionsEqual(expected, actual, equalityComparer, ref reason))
+        {
+            string finalMessage = ConstructFinalMessage(reason, message);
+            ThrowAssertFailed("Assert.AreEqual", finalMessage);
+        }
+    }
+
+    private sealed class EqualityComparerWrapper(IEqualityComparer equalityComparer) : IEqualityComparer<object>
+    {
+        bool IEqualityComparer<object>.Equals(object? x, object? y) => equalityComparer.Equals(x, y);
+
+        int IEqualityComparer<object>.GetHashCode(object obj) => equalityComparer.GetHashCode(obj);
     }
 }

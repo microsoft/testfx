@@ -800,7 +800,7 @@ public sealed class CollectionAssert
     public static void AreEqual(ICollection? expected, ICollection? actual, string? message)
     {
         string reason = string.Empty;
-        if (!AreCollectionsEqual(expected, actual, new ObjectComparer(), ref reason))
+        if (!AreCollectionsEqual(expected?.Cast<object>(), actual?.Cast<object>(), EqualityComparer<object>.Default, ref reason))
         {
             string finalMessage = ConstructFinalMessage(reason, message);
             Assert.ThrowAssertFailed("CollectionAssert.AreEqual", finalMessage);
@@ -854,7 +854,7 @@ public sealed class CollectionAssert
     public static void AreNotEqual(ICollection? notExpected, ICollection? actual, string? message)
     {
         string reason = string.Empty;
-        if (AreCollectionsEqual(notExpected, actual, new ObjectComparer(), ref reason))
+        if (AreCollectionsEqual(notExpected?.Cast<object>(), actual?.Cast<object>(), EqualityComparer<object>.Default, ref reason))
         {
             string finalMessage = ConstructFinalMessage(reason, message);
             Assert.ThrowAssertFailed("CollectionAssert.AreNotEqual", finalMessage);
@@ -912,7 +912,7 @@ public sealed class CollectionAssert
     public static void AreEqual(ICollection? expected, ICollection? actual, [NotNull] IComparer? comparer, string? message)
     {
         string reason = string.Empty;
-        if (!AreCollectionsEqual(expected, actual, comparer, ref reason))
+        if (!AreCollectionsEqual(expected?.Cast<object>(), actual?.Cast<object>(), new ComparerEqualityComparer(comparer), ref reason))
         {
             string finalMessage = ConstructFinalMessage(reason, message);
             Assert.ThrowAssertFailed("CollectionAssert.AreEqual", finalMessage);
@@ -970,7 +970,7 @@ public sealed class CollectionAssert
     public static void AreNotEqual(ICollection? notExpected, ICollection? actual, [NotNull] IComparer? comparer, string? message)
     {
         string reason = string.Empty;
-        if (AreCollectionsEqual(notExpected, actual, comparer, ref reason))
+        if (AreCollectionsEqual(notExpected?.Cast<object>(), actual?.Cast<object>(), new ComparerEqualityComparer(comparer), ref reason))
         {
             string finalMessage = ConstructFinalMessage(reason, message);
             Assert.ThrowAssertFailed("CollectionAssert.AreNotEqual", finalMessage);
@@ -1147,7 +1147,7 @@ public sealed class CollectionAssert
     }
 #pragma warning restore CS8714
 
-    private static bool AreCollectionsEqual(ICollection? expected, ICollection? actual, [NotNull] IComparer? comparer,
+    internal static bool AreCollectionsEqual<T>(IEnumerable<T>? expected, IEnumerable<T>? actual, [NotNull] IEqualityComparer<T> comparer,
         ref string reason)
     {
         Assert.CheckParameterNotNull(comparer, "Assert.AreCollectionsEqual", "comparer", string.Empty);
@@ -1160,21 +1160,21 @@ public sealed class CollectionAssert
         return CompareIEnumerable(expected, actual, comparer, ref reason);
     }
 
-    private static bool CompareIEnumerable(IEnumerable? expected, IEnumerable? actual, IComparer comparer, ref string reason)
+    private static bool CompareIEnumerable<T>(IEnumerable<T>? expected, IEnumerable<T>? actual, IEqualityComparer<T> comparer, ref string reason)
     {
         if ((expected == null) || (actual == null))
         {
             return false;
         }
 
-        var stack = new Stack<Tuple<IEnumerator, IEnumerator, int>>();
+        var stack = new Stack<Tuple<IEnumerator<T>, IEnumerator<T>, int>>();
         stack.Push(new(expected.GetEnumerator(), actual.GetEnumerator(), 0));
 
         while (stack.Count > 0)
         {
-            Tuple<IEnumerator, IEnumerator, int> cur = stack.Pop();
-            IEnumerator expectedEnum = cur.Item1;
-            IEnumerator actualEnum = cur.Item2;
+            Tuple<IEnumerator<T>, IEnumerator<T>, int> cur = stack.Pop();
+            IEnumerator<T> expectedEnum = cur.Item1;
+            IEnumerator<T> actualEnum = cur.Item2;
             int position = cur.Item3;
 
             while (expectedEnum.MoveNext())
@@ -1185,18 +1185,18 @@ public sealed class CollectionAssert
                     return false;
                 }
 
-                object? curExpected = expectedEnum.Current;
-                object? curActual = actualEnum.Current;
-                if (comparer.Compare(curExpected, curActual) == 0)
+                T? curExpected = expectedEnum.Current;
+                T? curActual = actualEnum.Current;
+                if (comparer.Equals(curExpected, curActual))
                 {
                     position++;
                 }
-                else if (curExpected is IEnumerable curExpectedEnum && curActual is IEnumerable curActualEnum)
+                else if (curExpected is IEnumerable<T> curExpectedEnum && curActual is IEnumerable<T> curActualEnum)
                 {
                     stack.Push(new(expectedEnum, actualEnum, position + 1));
                     stack.Push(new(curExpectedEnum.GetEnumerator(), curActualEnum.GetEnumerator(), 0));
                 }
-                else if (comparer.Compare(curExpected, curActual) != 0)
+                else if (!comparer.Equals(curExpected, curActual))
                 {
                     reason = string.Format(
                         CultureInfo.CurrentCulture,
@@ -1219,7 +1219,7 @@ public sealed class CollectionAssert
         return true;
     }
 
-    private static string ConstructFinalMessage(
+    internal static string ConstructFinalMessage(
         string reason,
         string? message)
     {
@@ -1229,12 +1229,19 @@ public sealed class CollectionAssert
             : string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CollectionEqualReason, userMessage, reason);
     }
 
-    /// <summary>
-    /// compares the objects using object.Equals.
-    /// </summary>
-    private sealed class ObjectComparer : IComparer
+    private sealed class ComparerEqualityComparer : IEqualityComparer<object>
     {
-        int IComparer.Compare(object? x, object? y) => Equals(x, y) ? 0 : -1;
+        private readonly IComparer _comparer;
+
+        public ComparerEqualityComparer([NotNull] IComparer? comparer)
+        {
+            Assert.CheckParameterNotNull(comparer, "Assert.AreCollectionsEqual", "comparer", string.Empty);
+            _comparer = comparer;
+        }
+
+        bool IEqualityComparer<object>.Equals(object? x, object? y) => _comparer.Compare(x, y) == 0;
+
+        int IEqualityComparer<object>.GetHashCode(object? obj) => obj?.GetHashCode() ?? 0;
     }
     #endregion
 
