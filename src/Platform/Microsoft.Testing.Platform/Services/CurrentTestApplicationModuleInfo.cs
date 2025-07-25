@@ -9,7 +9,13 @@ internal sealed class CurrentTestApplicationModuleInfo(IEnvironment environment,
 {
     private readonly IEnvironment _environment = environment;
     private readonly IProcessHandler _process = process;
+    private ICommandLineArgumentsProvider? _commandLineArgumentsProvider;
     private static readonly string[] MuxerExec = ["exec"];
+
+    internal void SetCommandLineArgumentsProvider(ICommandLineArgumentsProvider? commandLineArgumentsProvider)
+    {
+        _commandLineArgumentsProvider = commandLineArgumentsProvider;
+    }
 
     public bool IsCurrentTestApplicationHostDotnetMuxer
     {
@@ -102,7 +108,7 @@ internal sealed class CurrentTestApplicationModuleInfo(IEnvironment environment,
         bool isDotnetMuxer = IsCurrentTestApplicationHostDotnetMuxer;
         bool isAppHost = IsAppHostOrSingleFileOrNativeAot;
         bool isMonoMuxer = IsCurrentTestApplicationHostMonoMuxer;
-        string[] commandLineArguments = _environment.GetCommandLineArgs();
+        string[] commandLineArguments = _commandLineArgumentsProvider?.GetOriginalCommandLineArguments() ?? _environment.GetCommandLineArgs();
         IEnumerable<string> arguments = (isAppHost, isDotnetMuxer, isMonoMuxer) switch
         {
             // When executable

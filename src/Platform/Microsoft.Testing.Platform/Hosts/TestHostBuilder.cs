@@ -56,7 +56,8 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
         ApplicationLoggingState loggingState,
         TestApplicationOptions testApplicationOptions,
         IUnhandledExceptionsHandler unhandledExceptionsHandler,
-        DateTimeOffset createBuilderStart)
+        DateTimeOffset createBuilderStart,
+        string[] originalCommandLineArguments)
     {
         // ============= SETUP COMMON SERVICE USED IN ALL MODES ===============//
         ApplicationStateGuard.Ensure(TestFramework is not null);
@@ -93,6 +94,15 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
         serviceProvider.TryAddService(processHandler);
         serviceProvider.TryAddService(_fileSystem);
         serviceProvider.TryAddService(_testApplicationModuleInfo);
+        
+        // Register the original command line arguments service and configure the module info to use it
+        CommandLineArgumentsProvider commandLineArgumentsProvider = new(originalCommandLineArguments);
+        serviceProvider.TryAddService<ICommandLineArgumentsProvider>(commandLineArgumentsProvider);
+        if (_testApplicationModuleInfo is CurrentTestApplicationModuleInfo currentModuleInfo)
+        {
+            currentModuleInfo.SetCommandLineArgumentsProvider(commandLineArgumentsProvider);
+        }
+        
         TestHostControllerInfo testHostControllerInfo = new(loggingState.CommandLineParseResult);
         serviceProvider.TryAddService(testHostControllerInfo);
 
