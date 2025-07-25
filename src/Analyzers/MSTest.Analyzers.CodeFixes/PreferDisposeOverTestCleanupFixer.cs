@@ -112,6 +112,7 @@ public sealed class PreferDisposeOverTestCleanupFixer : CodeFixProvider
                                 break;
                             }
                         }
+
                         break;
                     }
                 }
