@@ -237,8 +237,8 @@ public partial class MyTestClass
     {
         int y = 1;
     }
-}"
-                }
+}",
+                },
             },
             FixedState =
             {
@@ -262,9 +262,9 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 [TestClass]
 public partial class MyTestClass
 {
-}"
-                }
-            }
+}",
+                },
+            },
         };
 
         await test.RunAsync();
@@ -301,8 +301,8 @@ public partial class MyTestClass : IDisposable
     {
         int x = 1;
     }
-}"
-                }
+}",
+                },
             },
             FixedState =
             {
@@ -326,9 +326,9 @@ public partial class MyTestClass : IDisposable
         int x = 1;
         int y = 1;
     }
-}"
-                }
-            }
+}",
+                },
+            },
         };
 
         await test.RunAsync();
