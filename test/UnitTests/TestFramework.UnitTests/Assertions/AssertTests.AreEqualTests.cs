@@ -1196,4 +1196,11 @@ public partial class AssertTests : TestContainer
         // Should show context around the difference, not the full 201 character strings
         Verify(!ex.Message.Contains(new string('a', 50))); // Should not show excessive context
     }
+
+    public void AreEqualStringWithCultureShouldUseEnhancedMessage()
+    {
+        Exception ex = VerifyThrows(() => Assert.AreEqual("aaaa", "aaab", false, CultureInfo.InvariantCulture));
+        Verify(ex.Message.Contains("differ at index 3"));
+        Verify(ex.Message.Contains("String lengths are both 4"));
+    }
 }

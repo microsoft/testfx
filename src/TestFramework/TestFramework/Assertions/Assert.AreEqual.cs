@@ -898,20 +898,23 @@ public sealed partial class Assert
     [DoesNotReturn]
     private static void ThrowAssertAreEqualFailed(string? expected, string? actual, bool ignoreCase, CultureInfo culture, string userMessage)
     {
+        string finalMessage;
+        
         // If the user requested to match case, and the difference between expected/actual is casing only, then we use a different message.
-        string finalMessage = !ignoreCase && CompareInternal(expected, actual, ignoreCase: true, culture) == 0
-            ? string.Format(
+        if (!ignoreCase && CompareInternal(expected, actual, ignoreCase: true, culture) == 0)
+        {
+            finalMessage = string.Format(
                 CultureInfo.CurrentCulture,
                 FrameworkMessages.AreEqualCaseFailMsg,
                 userMessage,
                 ReplaceNulls(expected),
-                ReplaceNulls(actual))
-            : string.Format(
-                CultureInfo.CurrentCulture,
-                FrameworkMessages.AreEqualFailMsg,
-                userMessage,
-                ReplaceNulls(expected),
                 ReplaceNulls(actual));
+        }
+        else
+        {
+            // Use enhanced string comparison for string-specific failures
+            finalMessage = FormatStringComparisonMessage(expected, actual, userMessage);
+        }
 
         ThrowAssertFailed("Assert.AreEqual", finalMessage);
     }
