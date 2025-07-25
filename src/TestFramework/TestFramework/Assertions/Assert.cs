@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Diagnostics;
+
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 /// <summary>
@@ -70,8 +72,42 @@ public sealed partial class Assert
     /// </param>
     [DoesNotReturn]
     internal static void ThrowAssertFailed(string assertionName, string? message)
-        => throw new AssertFailedException(
+    {
+        // Check if debugger launch on failure is enabled via environment variable
+        if (ShouldLaunchDebuggerOnFailure())
+        {
+            Debugger.Launch();
+        }
+        
+        throw new AssertFailedException(
             string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AssertionFailed, assertionName, ReplaceNulls(message)));
+    }
+
+    /// <summary>
+    /// Determines whether the debugger should be launched on test failure based on configuration.
+    /// </summary>
+    /// <returns>True if debugger should be launched, false otherwise.</returns>
+    private static bool ShouldLaunchDebuggerOnFailure()
+    {
+        // Check if debugger launch is enabled
+        string? launchDebugger = Environment.GetEnvironmentVariable("MSTEST_LAUNCH_DEBUGGER_ON_FAILURE");
+        if (launchDebugger != "1")
+        {
+            return false;
+        }
+
+        // Check if there's a test name filter
+        string? testNameFilter = Environment.GetEnvironmentVariable("MSTEST_LAUNCH_DEBUGGER_TEST_FILTER");
+        if (string.IsNullOrWhiteSpace(testNameFilter))
+        {
+            return true; // No filter means launch for all failures
+        }
+
+        // Get current test context to check test name
+        // For now, we'll launch for all failures when filter is set but we can't determine test name
+        // This could be enhanced in the future to access TestContext.Current or similar
+        return true;
+    }
 
     /// <summary>
     /// Builds the formatted message using the given user format message and parameters.
