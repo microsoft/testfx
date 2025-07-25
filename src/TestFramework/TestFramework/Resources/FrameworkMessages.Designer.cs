@@ -19,7 +19,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "18.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class FrameworkMessages {
@@ -115,23 +115,11 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {1} {2}
-        /// Expected: "{3}"
-        /// But was:  "{4}"
-        /// {5} {0}.
+        ///   Looks up a localized string similar to Expected:&lt;{1}&gt;. Actual:&lt;{2}&gt;. {0}.
         /// </summary>
-        internal static string AreEqualStringDiffFailMsg {
+        internal static string AreEqualFailMsg {
             get {
-                return ResourceManager.GetString("AreEqualStringDiffFailMsg", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Expected: .
-        /// </summary>
-        internal static string AreEqualStringDiffExpectedPrefix {
-            get {
-                return ResourceManager.GetString("AreEqualStringDiffExpectedPrefix", resourceCulture);
+                return ResourceManager.GetString("AreEqualFailMsg", resourceCulture);
             }
         }
         
@@ -145,11 +133,41 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Expected:&lt;{1}&gt;. Actual:&lt;{2}&gt;. {0}.
+        ///   Looks up a localized string similar to Expected: .
         /// </summary>
-        internal static string AreEqualFailMsg {
+        internal static string AreEqualStringDiffExpectedPrefix {
             get {
-                return ResourceManager.GetString("AreEqualFailMsg", resourceCulture);
+                return ResourceManager.GetString("AreEqualStringDiffExpectedPrefix", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0}{1}
+        ///{2}
+        ///{3}
+        ///{4}.
+        /// </summary>
+        internal static string AreEqualStringDiffFailMsg {
+            get {
+                return ResourceManager.GetString("AreEqualStringDiffFailMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to String lengths are both {0} but differ at index {1}..
+        /// </summary>
+        internal static string AreEqualStringDiffLengthBothMsg {
+            get {
+                return ResourceManager.GetString("AreEqualStringDiffLengthBothMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Expected string length {0} but was {1}..
+        /// </summary>
+        internal static string AreEqualStringDiffLengthDifferentMsg {
+            get {
+                return ResourceManager.GetString("AreEqualStringDiffLengthDifferentMsg", resourceCulture);
             }
         }
         
