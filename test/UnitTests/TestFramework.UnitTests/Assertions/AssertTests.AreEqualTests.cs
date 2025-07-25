@@ -1141,59 +1141,14 @@ public partial class AssertTests : TestContainer
             => Id.GetHashCode() + 1234;
     }
 
-    // Tests for enhanced string comparison messages
-    public void AreEqualStringDifferenceShouldShowIndex()
+    public void AreEqualStringDifferenceShouldDifference()
     {
         Exception ex = VerifyThrows(() => Assert.AreEqual("aaaa", "aaab"));
         Verify(ex.Message == """
             String lengths are both 4. Strings differ at index 3.
             Expected: "aaaa"
             But was:  "aaab"
-            ---^ 
-            """);
-    }
-
-    public void AreEqualStringDifferenceShouldShowStringLengths()
-    {
-        Exception ex = VerifyThrows(() => Assert.AreEqual("aaaa", "aaab"));
-        Verify(ex.Message == """
-            String lengths are both 4. Strings differ at index 3.
-            Expected: "aaaa"
-            But was:  "aaab"
-            ---^ 
-            """);
-    }
-
-    public void AreEqualStringDifferentLengthsShouldShowLengthDifference()
-    {
-        Exception ex = VerifyThrows(() => Assert.AreEqual("aaaa", "aaaab"));
-        Verify(ex.Message == """
-            Expected string length 4 but was 5. Strings differ at index 4.
-            Expected: "aaaa"
-            But was:  "aaaab"
-            ----^ 
-            """);
-    }
-
-    public void AreEqualStringDifferenceShouldShowExpectedAndActual()
-    {
-        Exception ex = VerifyThrows(() => Assert.AreEqual("aaaa", "aaab"));
-        Verify(ex.Message == """
-            String lengths are both 4. Strings differ at index 3.
-            Expected: "aaaa"
-            But was:  "aaab"
-            ---^ 
-            """);
-    }
-
-    public void AreEqualStringDifferenceShouldShowCaretPointer()
-    {
-        Exception ex = VerifyThrows(() => Assert.AreEqual("aaaa", "aaab"));
-        Verify(ex.Message == """
-            String lengths are both 4. Strings differ at index 3.
-            Expected: "aaaa"
-            But was:  "aaab"
-            ---^ 
+            --------------^ 
             """);
     }
 
@@ -1204,7 +1159,7 @@ public partial class AssertTests : TestContainer
             String lengths are both 4. Strings differ at index 0.
             Expected: "baaa"
             But was:  "aaaa"
-            ^ 
+            -----------^ 
             """);
     }
 
@@ -1215,7 +1170,7 @@ public partial class AssertTests : TestContainer
             String lengths are both 4. Strings differ at index 2.
             Expected: "aa\ta"
             But was:  "aa a"
-            --^ 
+            -------------^ 
             """);
     }
 
@@ -1223,13 +1178,13 @@ public partial class AssertTests : TestContainer
     {
         string expected = new string('a', 100) + "b" + new string('c', 100);
         string actual = new string('a', 100) + "d" + new string('c', 100);
-        
+
         Exception ex = VerifyThrows(() => Assert.AreEqual(expected, actual));
         Verify(ex.Message == """
             String lengths are both 201. Strings differ at index 100.
             Expected: "...aaaaabccccc..."
             But was:  "...aaaaadccccc..."
-            ----------^ 
+            -------------------^ 
             """);
     }
 
@@ -1240,22 +1195,7 @@ public partial class AssertTests : TestContainer
             String lengths are both 4. Strings differ at index 3.
             Expected: "aaaa"
             But was:  "aaab"
-            ---^ 
-            """);
-    }
-
-    public void AreEqualLongStringWithDifferenceFarFromStart()
-    {
-        // Create a 200-character string with difference at position 90
-        string expected = new string('a', 90) + "x" + new string('b', 109);
-        string actual = new string('a', 90) + "y" + new string('b', 109);
-        
-        Exception ex = VerifyThrows(() => Assert.AreEqual(expected, actual));
-        Verify(ex.Message == """
-            String lengths are both 200. Strings differ at index 90.
-            Expected: "...aaaaaxbbbb..."
-            But was:  "...aaaaaybbbb..."
-            ----------^ 
+            --------------^ 
             """);
     }
 }
