@@ -667,7 +667,7 @@ public sealed class TerminalTestReporterTests
 
         // Verify that the literal control character is not present (unless it's printable in the output)
         string originalDisplayName = $"Test{controlChar}Name";
-        if (controlChar != '\t' && controlChar != '\n' && controlChar != '\r')
+        if (controlChar is not '\t' and not '\n' and not '\r')
         {
             Assert.DoesNotContain(originalDisplayName, output, $"Literal {charName} should not be present");
         }
@@ -742,7 +742,7 @@ public sealed class TerminalTestReporterTests
 
         // Verify that the literal control character is not present (unless it's printable in the output)
         string originalDisplayName = $"Test{controlChar}Name";
-        if (controlChar != '\t' && controlChar != '\n' && controlChar != '\r')
+        if (controlChar is not '\t' and not '\n' and not '\r')
         {
             Assert.DoesNotContain(originalDisplayName, output, $"Literal {charName} should not be present in discovery");
         }
