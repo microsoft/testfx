@@ -140,9 +140,15 @@
   </data>
   <data name="AreEqualStringDiffFailMsg" xml:space="preserve">
     <value>{1} {2}
-Expected: "{3}"
-But was:  "{4}"
+{3}
+{4}
 {5} {0}</value>
+  </data>
+  <data name="AreEqualStringDiffExpectedPrefix" xml:space="preserve">
+    <value>Expected: </value>
+  </data>
+  <data name="AreEqualStringDiffActualPrefix" xml:space="preserve">
+    <value>But was:  </value>
   </data>
   <data name="AreNotEqualFailMsg" xml:space="preserve">
     <value>Expected any value except:&lt;{1}&gt;. Actual:&lt;{2}&gt;. {0}</value>
