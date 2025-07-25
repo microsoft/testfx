@@ -34,4 +34,22 @@
     <ProjectToBuild Include="$(RepoRoot)Microsoft.Testing.Platform.slnf" />
   </ItemGroup>
 
+  <!-- When building tests only -->
+  <ItemGroup Condition=" '$(ProductsToBuild)' == 'tests' ">
+    <!-- Unit Tests -->
+    <ProjectToBuild Include="$(RepoRoot)test/UnitTests/**/*.csproj" />
+    <!-- Integration Tests -->
+    <ProjectToBuild Include="$(RepoRoot)test/IntegrationTests/MSTest.Acceptance.IntegrationTests/MSTest.Acceptance.IntegrationTests.csproj" />
+    <ProjectToBuild Include="$(RepoRoot)test/IntegrationTests/Microsoft.Testing.Platform.Acceptance.IntegrationTests/Microsoft.Testing.Platform.Acceptance.IntegrationTests.csproj" />
+    <ProjectToBuild Include="$(RepoRoot)test/IntegrationTests/MSTest.IntegrationTests/MSTest.IntegrationTests.csproj" />
+    <ProjectToBuild Include="$(RepoRoot)test/IntegrationTests/PlatformServices.Desktop.IntegrationTests/PlatformServices.Desktop.IntegrationTests.csproj" />
+    <ProjectToBuild Include="$(RepoRoot)test/IntegrationTests/MSTest.VstestConsoleWrapper.IntegrationTests/MSTest.VstestConsoleWrapper.IntegrationTests.csproj" />
+    <!-- Test Utilities -->
+    <ProjectToBuild Include="$(RepoRoot)test/Utilities/Microsoft.Testing.TestInfrastructure/Microsoft.Testing.TestInfrastructure.csproj" />
+    <ProjectToBuild Include="$(RepoRoot)test/Utilities/TestFramework.ForTestingMSTest/TestFramework.ForTestingMSTest.csproj" />
+    <ProjectToBuild Include="$(RepoRoot)test/Utilities/Automation.CLI/Automation.CLI.csproj" />
+    <!-- Performance Tests -->
+    <ProjectToBuild Include="$(RepoRoot)test/Performance/MSTest.Performance.Runner/MSTest.Performance.Runner.csproj" />
+  </ItemGroup>
+
 </Project>
