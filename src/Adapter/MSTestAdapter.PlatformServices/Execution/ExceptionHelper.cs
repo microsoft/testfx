@@ -104,6 +104,7 @@ internal static class ExceptionHelper
         }
 
         StringBuilder result = new(stackTrace.Length);
+#if NET6_0_OR_GREATER
         ReadOnlySpan<char> remaining = stackTrace.AsSpan();
         ReadOnlySpan<char> newLine = Environment.NewLine.AsSpan();
 
@@ -137,6 +138,26 @@ internal static class ExceptionHelper
                 result.Append(Environment.NewLine);
             }
         }
+#else
+        string[] stackFrames = Regex.Split(stackTrace, Environment.NewLine);
+
+        foreach (string stackFrame in stackFrames)
+        {
+            if (StringEx.IsNullOrEmpty(stackFrame))
+            {
+                continue;
+            }
+
+            // Add the frame to the result if it does not refer to
+            // the assertion class in the test framework
+            bool hasReference = HasReferenceToUTF(stackFrame);
+            if (!hasReference)
+            {
+                result.Append(stackFrame);
+                result.Append(Environment.NewLine);
+            }
+        }
+#endif
 
         return result.ToString();
     }
@@ -224,6 +245,7 @@ internal static class ExceptionHelper
         return false;
     }
 
+#if NET6_0_OR_GREATER
     /// <summary>
     /// Returns whether the parameter stackFrame has reference to UTF.
     /// </summary>
@@ -245,4 +267,5 @@ internal static class ExceptionHelper
 
         return false;
     }
+#endif
 }

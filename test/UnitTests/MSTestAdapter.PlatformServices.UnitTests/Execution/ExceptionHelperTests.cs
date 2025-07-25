@@ -86,6 +86,7 @@ public class ExceptionHelperTests : TestContainer
         Verify(!result);
     }
 
+#if NET6_0_OR_GREATER
     public void HasReferenceToUTFSpanVersionShouldReturnTrueForUnitTestingFramework()
     {
         ReadOnlySpan<char> frame = "   at Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreEqual()".AsSpan();
@@ -101,4 +102,5 @@ public class ExceptionHelperTests : TestContainer
         
         Verify(!result);
     }
+#endif
 }
