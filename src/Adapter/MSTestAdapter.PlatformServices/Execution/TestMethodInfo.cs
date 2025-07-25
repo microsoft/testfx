@@ -382,8 +382,6 @@ public class TestMethodInfo : ITestMethod
 
         var result = new TestResult();
 
-        // TODO remove dry violation with TestMethodRunner
-        _classInstance = CreateTestClassInstance(result);
         bool isExceptionThrown = false;
         bool hasTestInitializePassed = false;
         Exception? testRunnerException = null;
@@ -394,6 +392,18 @@ public class TestMethodInfo : ITestMethod
         {
             try
             {
+                // We invoke global test initialize methods before creating the test class instance.
+                // We consider the test class constructor as a "local" initialization.
+                // We want to invoke first the global initializations, then local ones, then test method.
+                // After that, we invoke local cleanups (including Dispose) and finally global cleanups at last.
+                foreach ((MethodInfo method, TimeoutInfo? timeoutInfo) in Parent.Parent.GlobalTestInitializations)
+                {
+                    InvokeGlobalInitializeMethod(method, ref executionContext, timeoutInfo, timeoutTokenSource);
+                }
+
+                // TODO remove dry violation with TestMethodRunner
+                _classInstance = CreateTestClassInstance(result);
+
                 if (_classInstance != null && SetTestContext(_classInstance, result))
                 {
                     // For any failure after this point, we must run TestCleanup
@@ -730,6 +740,11 @@ public class TestMethodInfo : ITestMethod
                 {
                     classInstanceAsDisposable.Dispose();
                 }
+
+                foreach ((MethodInfo method, TimeoutInfo? timeoutInfo) in Parent.Parent.GlobalTestCleanups)
+                {
+                    InvokeGlobalCleanupMethod(method, ref executionContext, timeoutInfo, timeoutTokenSource);
+                }
             }
         }
         catch (Exception ex)
@@ -896,6 +911,39 @@ public class TestMethodInfo : ITestMethod
         return result;
     }
 
+    private TestFailedException? InvokeGlobalInitializeMethod(MethodInfo methodInfo, ref ExecutionContext? executionContext, TimeoutInfo? timeoutInfo, CancellationTokenSource? timeoutTokenSource)
+    {
+        int originalThreadId = Environment.CurrentManagedThreadId;
+        ExecutionContext? updatedExecutionContext = null;
+        TestFailedException? result = FixtureMethodRunner.RunWithTimeoutAndCancellation(
+            () =>
+            {
+                methodInfo.InvokeAsSynchronousTask(null, [TestContext]);
+                if (originalThreadId != Environment.CurrentManagedThreadId)
+                {
+                    // We ended up running on a different thread, because of use of non-cooperative timeout.
+                    // Re-capture the execution context.
+                    updatedExecutionContext = ExecutionContext.Capture();
+                }
+            },
+            TestContext!.Context.CancellationTokenSource,
+            timeoutInfo: timeoutInfo,
+            methodInfo,
+            executionContext,
+            Resource.TestInitializeWasCancelled,
+            Resource.TestInitializeTimedOut,
+            timeoutTokenSource is null
+                ? null
+                : (timeoutTokenSource, TimeoutInfo.Timeout));
+
+        if (updatedExecutionContext != null)
+        {
+            executionContext = updatedExecutionContext;
+        }
+
+        return result;
+    }
+
     private TestFailedException? InvokeCleanupMethod(MethodInfo methodInfo, object classInstance, ref ExecutionContext? executionContext, CancellationTokenSource? timeoutTokenSource)
     {
         TimeoutInfo? timeout = null;
@@ -919,6 +967,39 @@ public class TestMethodInfo : ITestMethod
             },
             TestContext!.Context.CancellationTokenSource,
             timeout,
+            methodInfo,
+            executionContext,
+            Resource.TestCleanupWasCancelled,
+            Resource.TestCleanupTimedOut,
+            timeoutTokenSource is null
+                ? null
+                : (timeoutTokenSource, TimeoutInfo.Timeout));
+
+        if (updatedExecutionContext != null)
+        {
+            executionContext = updatedExecutionContext;
+        }
+
+        return result;
+    }
+
+    private TestFailedException? InvokeGlobalCleanupMethod(MethodInfo methodInfo, ref ExecutionContext? executionContext, TimeoutInfo? timeoutInfo, CancellationTokenSource? timeoutTokenSource)
+    {
+        int originalThreadId = Environment.CurrentManagedThreadId;
+        ExecutionContext? updatedExecutionContext = null;
+        TestFailedException? result = FixtureMethodRunner.RunWithTimeoutAndCancellation(
+            () =>
+            {
+                methodInfo.InvokeAsSynchronousTask(null, [TestContext]);
+                if (originalThreadId != Environment.CurrentManagedThreadId)
+                {
+                    // We ended up running on a different thread, because of use of non-cooperative timeout.
+                    // Re-capture the execution context.
+                    updatedExecutionContext = ExecutionContext.Capture();
+                }
+            },
+            TestContext!.Context.CancellationTokenSource,
+            timeoutInfo: timeoutInfo,
             methodInfo,
             executionContext,
             Resource.TestCleanupWasCancelled,

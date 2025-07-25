@@ -27,6 +27,8 @@ internal static class WellKnownTypeNames
     public const string MicrosoftVisualStudioTestToolsUnitTestingDynamicDataSourceType = "Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataSourceType";
     public const string MicrosoftVisualStudioTestToolsUnitTestingExpectedExceptionAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.ExpectedExceptionAttribute";
     public const string MicrosoftVisualStudioTestToolsUnitTestingExpectedExceptionBaseAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.ExpectedExceptionBaseAttribute";
+    public const string MicrosoftVisualStudioTestToolsUnitTestingGlobalTestCleanupAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.GlobalTestCleanupAttribute";
+    public const string MicrosoftVisualStudioTestToolsUnitTestingGlobalTestInitializeAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.GlobalTestInitializeAttribute";
     public const string MicrosoftVisualStudioTestToolsUnitTestingIgnoreAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.IgnoreAttribute";
     public const string MicrosoftVisualStudioTestToolsUnitTestingInheritanceBehavior = "Microsoft.VisualStudio.TestTools.UnitTesting.InheritanceBehavior";
     public const string MicrosoftVisualStudioTestToolsUnitTestingOwnerAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.OwnerAttribute";

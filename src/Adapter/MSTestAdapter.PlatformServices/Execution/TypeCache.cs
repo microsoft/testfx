@@ -421,6 +421,23 @@ internal sealed class TypeCache : MarshalByRefObject
                             assemblyInfo.AssemblyCleanupMethod = methodInfo;
                             assemblyInfo.AssemblyCleanupMethodTimeoutMilliseconds = @this.TryGetTimeoutInfo(methodInfo, FixtureKind.AssemblyCleanup);
                         }
+
+                        if (methodInfo is { IsPublic: true, IsStatic: true, IsGenericMethod: false, DeclaringType.IsGenericType: false, DeclaringType.IsPublic: true } &&
+                            methodInfo.GetParameters() is { } parameters && parameters.Length == 1 && parameters[0].ParameterType == typeof(TestContext) &&
+                            methodInfo.IsValidReturnType())
+                        {
+                            bool isGlobalTestInitialize = @this._reflectionHelper.IsAttributeDefined<GlobalTestInitializeAttribute>(methodInfo, inherit: true);
+                            bool isGlobalTestCleanup = @this._reflectionHelper.IsAttributeDefined<GlobalTestCleanupAttribute>(methodInfo, inherit: true);
+                            if (isGlobalTestInitialize)
+                            {
+                                assemblyInfo.GlobalTestInitializations.Add((methodInfo, @this.TryGetTimeoutInfo(methodInfo, FixtureKind.TestInitialize)));
+                            }
+
+                            if (isGlobalTestCleanup)
+                            {
+                                assemblyInfo.GlobalTestCleanups.Add((methodInfo, @this.TryGetTimeoutInfo(methodInfo, FixtureKind.TestCleanup)));
+                            }
+                        }
                     }
                 }
 
