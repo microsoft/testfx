@@ -69,7 +69,7 @@ public sealed class PreferDisposeOverTestCleanupFixer : CodeFixProvider
         methodDeclaration.ReturnType is PredefinedTypeSyntax predefinedType &&
                predefinedType.Keyword.IsKind(SyntaxKind.VoidKeyword);
 
-    private static async Task<Document> AddDisposeAndBaseClassAsync(
+    private static async Task<Solution> AddDisposeAndBaseClassAsync(
         Document document,
         MethodDeclarationSyntax testCleanupMethod,
         TypeDeclarationSyntax containingType,
@@ -85,6 +85,7 @@ public sealed class PreferDisposeOverTestCleanupFixer : CodeFixProvider
 
         // Move the code from TestCleanup to Dispose method
         // For partial classes, we need to check all parts of the type, not just the current partial declaration
+        Document? disposeDocument = null;
         MethodDeclarationSyntax? existingDisposeMethod = null;
         if (semanticModel.GetDeclaredSymbol(containingType, cancellationToken) is INamedTypeSymbol typeSymbol)
         {
@@ -96,14 +97,21 @@ public sealed class PreferDisposeOverTestCleanupFixer : CodeFixProvider
             if (existingDisposeSymbol is not null)
             {
                 // Find the syntax node for the existing Dispose method
-                SyntaxTree? currentSyntaxTree = await document.GetSyntaxTreeAsync(cancellationToken).ConfigureAwait(false);
                 foreach (SyntaxReference syntaxRef in existingDisposeSymbol.DeclaringSyntaxReferences)
                 {
-                    // Check if the existing Dispose method is in the same document
-                    if (syntaxRef.SyntaxTree == currentSyntaxTree
-                        && await syntaxRef.GetSyntaxAsync(cancellationToken).ConfigureAwait(false) is MethodDeclarationSyntax methodSyntax)
+                    if (await syntaxRef.GetSyntaxAsync(cancellationToken).ConfigureAwait(false) is MethodDeclarationSyntax methodSyntax)
                     {
                         existingDisposeMethod = methodSyntax;
+                        // Find the document containing the Dispose method
+                        foreach (Document projectDocument in document.Project.Documents)
+                        {
+                            SyntaxTree? docSyntaxTree = await projectDocument.GetSyntaxTreeAsync(cancellationToken).ConfigureAwait(false);
+                            if (docSyntaxTree == syntaxRef.SyntaxTree)
+                            {
+                                disposeDocument = projectDocument;
+                                break;
+                            }
+                        }
                         break;
                     }
                 }
@@ -111,7 +119,9 @@ public sealed class PreferDisposeOverTestCleanupFixer : CodeFixProvider
         }
 
         BlockSyntax? cleanupBody = testCleanupMethod.Body;
-        if (existingDisposeMethod is not null)
+        Solution solution = document.Project.Solution;
+
+        if (existingDisposeMethod is not null && disposeDocument is not null)
         {
             // Append the TestCleanup body to the existing Dispose method
             StatementSyntax[]? cleanupStatements = cleanupBody?.Statements.ToArray();
@@ -126,8 +136,14 @@ public sealed class PreferDisposeOverTestCleanupFixer : CodeFixProvider
                 newDisposeMethod = existingDisposeMethod.WithBody(cleanupBody);
             }
 
-            editor.ReplaceNode(existingDisposeMethod, newDisposeMethod);
+            // Update the dispose document
+            DocumentEditor disposeEditor = await DocumentEditor.CreateAsync(disposeDocument, cancellationToken).ConfigureAwait(false);
+            disposeEditor.ReplaceNode(existingDisposeMethod, newDisposeMethod);
+            solution = solution.WithDocumentSyntaxRoot(disposeDocument.Id, disposeEditor.GetChangedRoot());
+
+            // Remove the TestCleanup method from the current document
             editor.RemoveNode(testCleanupMethod);
+            solution = solution.WithDocumentSyntaxRoot(document.Id, editor.GetChangedRoot());
         }
         else
         {
@@ -143,9 +159,10 @@ public sealed class PreferDisposeOverTestCleanupFixer : CodeFixProvider
             }
 
             editor.ReplaceNode(containingType, newParent);
+            solution = solution.WithDocumentSyntaxRoot(document.Id, editor.GetChangedRoot());
         }
 
-        return editor.GetChangedDocument();
+        return solution;
     }
 
     private static bool ImplementsIDisposable(TypeDeclarationSyntax typeDeclaration, INamedTypeSymbol iDisposableSymbol, SemanticModel semanticModel)
