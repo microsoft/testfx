@@ -274,7 +274,9 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
             return new PipeNameDescription($"testingplatform.pipe.{name.Replace('\\', '.')}", false);
         }
 
-        string directoryId = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), name);
+#pragma warning disable RS0030 // Do not use banned APIs - We are using IEnvironment, but we still need the enum from the Environment class in BCL. This is safe.
+        string directoryId = Path.Combine(_environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), name);
+#pragma warning disable RS0030 // Do not use banned APIs
         Directory.CreateDirectory(directoryId);
         return new PipeNameDescription(
             !Directory.Exists(directoryId)
