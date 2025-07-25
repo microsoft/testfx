@@ -597,8 +597,41 @@ public sealed class TerminalTestReporterTests
         public override string? StackTrace { get; }
     }
 
+    // Test data for all C0 control characters (U+0000-U+001F) that are normalized
+    [DataRow('\x0000', '\x2400', "NULL")]
+    [DataRow('\x0001', '\x2401', "START OF HEADING")]
+    [DataRow('\x0002', '\x2402', "START OF TEXT")]
+    [DataRow('\x0003', '\x2403', "END OF TEXT")]
+    [DataRow('\x0004', '\x2404', "END OF TRANSMISSION")]
+    [DataRow('\x0005', '\x2405', "ENQUIRY")]
+    [DataRow('\x0006', '\x2406', "ACKNOWLEDGE")]
+    [DataRow('\x0007', '\x2407', "BELL")]
+    [DataRow('\x0008', '\x2408', "BACKSPACE")]
+    [DataRow('\t', '\x2409', "TAB")]
+    [DataRow('\n', '\x240A', "LINE FEED")]
+    [DataRow('\x000B', '\x240B', "VERTICAL TAB")]
+    [DataRow('\x000C', '\x240C', "FORM FEED")]
+    [DataRow('\r', '\x240D', "CARRIAGE RETURN")]
+    [DataRow('\x000E', '\x240E', "SHIFT OUT")]
+    [DataRow('\x000F', '\x240F', "SHIFT IN")]
+    [DataRow('\x0010', '\x2410', "DATA LINK ESCAPE")]
+    [DataRow('\x0011', '\x2411', "DEVICE CONTROL ONE")]
+    [DataRow('\x0012', '\x2412', "DEVICE CONTROL TWO")]
+    [DataRow('\x0013', '\x2413', "DEVICE CONTROL THREE")]
+    [DataRow('\x0014', '\x2414', "DEVICE CONTROL FOUR")]
+    [DataRow('\x0015', '\x2415', "NEGATIVE ACKNOWLEDGE")]
+    [DataRow('\x0016', '\x2416', "SYNCHRONOUS IDLE")]
+    [DataRow('\x0017', '\x2417', "END OF TRANSMISSION BLOCK")]
+    [DataRow('\x0018', '\x2418', "CANCEL")]
+    [DataRow('\x0019', '\x2419', "END OF MEDIUM")]
+    [DataRow('\x001A', '\x241A', "SUBSTITUTE")]
+    [DataRow('\x001B', '\x241B', "ESCAPE")]
+    [DataRow('\x001C', '\x241C', "FILE SEPARATOR")]
+    [DataRow('\x001D', '\x241D', "GROUP SEPARATOR")]
+    [DataRow('\x001E', '\x241E', "RECORD SEPARATOR")]
+    [DataRow('\x001F', '\x241F', "UNIT SEPARATOR")]
     [TestMethod]
-    public void TestDisplayNames_WithEscapeCharacters_AreNormalized()
+    public void TestDisplayNames_WithControlCharacters_AreNormalized(char controlChar, char expectedChar, string charName)
     {
         string targetFramework = "net8.0";
         string architecture = "x64";
@@ -618,14 +651,9 @@ public sealed class TerminalTestReporterTests
 
         terminalReporter.AssemblyRunStarted();
 
-        // Test display names with various escape characters
-        terminalReporter.TestCompleted(testNodeUid: "Test1", "Hello(\nWorld)", TestOutcome.Passed, TimeSpan.FromSeconds(1),
-            informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null, standardOutput: null, errorOutput: null);
-        terminalReporter.TestCompleted(testNodeUid: "Test2", "Tab\tSeparated", TestOutcome.Fail, TimeSpan.FromSeconds(1),
-            informativeMessage: null, errorMessage: "Test failed", exception: null, expected: null, actual: null, standardOutput: null, errorOutput: null);
-        terminalReporter.TestCompleted(testNodeUid: "Test3", "Carriage\rReturn", TestOutcome.Skipped, TimeSpan.FromSeconds(1),
-            informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null, standardOutput: null, errorOutput: null);
-        terminalReporter.TestCompleted(testNodeUid: "Test4", "Escape\x001bCharacter", TestOutcome.Passed, TimeSpan.FromSeconds(1),
+        // Test display name with the specific control character
+        string testDisplayName = $"Test{controlChar}Name";
+        terminalReporter.TestCompleted(testNodeUid: "Test1", testDisplayName, TestOutcome.Passed, TimeSpan.FromSeconds(1),
             informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null, standardOutput: null, errorOutput: null);
 
         terminalReporter.AssemblyRunCompleted();
@@ -633,21 +661,53 @@ public sealed class TerminalTestReporterTests
 
         string output = stringBuilderConsole.Output;
 
-        // Verify that escape characters are replaced with their Unicode control pictures
-        Assert.Contains("Hello(␊World)", output, "Newline should be replaced with ␊");
-        Assert.Contains("Tab␉Separated", output, "Tab should be replaced with ␉");
-        Assert.Contains("Carriage␍Return", output, "Carriage return should be replaced with ␍");
-        Assert.Contains("Escape␛Character", output, "Escape should be replaced with ␛");
+        // Verify that the control character is replaced with its Unicode control picture
+        string expectedDisplayName = $"Test{expectedChar}Name";
+        Assert.Contains(expectedDisplayName, output, $"{charName} should be replaced with {expectedChar}");
 
-        // Verify that literal escape characters are not present
-        Assert.DoesNotContain("Hello(\nWorld)", output, "Literal newline should not be present");
-        Assert.DoesNotContain("Tab\tSeparated", output, "Literal tab should not be present");
-        Assert.DoesNotContain("Carriage\rReturn", output, "Literal carriage return should not be present");
-        Assert.DoesNotContain("Escape\x001bCharacter", output, "Literal escape should not be present");
+        // Verify that the literal control character is not present (unless it's printable in the output)
+        string originalDisplayName = $"Test{controlChar}Name";
+        if (controlChar != '\t' && controlChar != '\n' && controlChar != '\r')
+        {
+            Assert.DoesNotContain(originalDisplayName, output, $"Literal {charName} should not be present");
+        }
     }
 
+    // Test data for all C0 control characters (U+0000-U+001F) that are normalized
+    [DataRow('\x0000', '\x2400', "NULL")]
+    [DataRow('\x0001', '\x2401', "START OF HEADING")]
+    [DataRow('\x0002', '\x2402', "START OF TEXT")]
+    [DataRow('\x0003', '\x2403', "END OF TEXT")]
+    [DataRow('\x0004', '\x2404', "END OF TRANSMISSION")]
+    [DataRow('\x0005', '\x2405', "ENQUIRY")]
+    [DataRow('\x0006', '\x2406', "ACKNOWLEDGE")]
+    [DataRow('\x0007', '\x2407', "BELL")]
+    [DataRow('\x0008', '\x2408', "BACKSPACE")]
+    [DataRow('\t', '\x2409', "TAB")]
+    [DataRow('\n', '\x240A', "LINE FEED")]
+    [DataRow('\x000B', '\x240B', "VERTICAL TAB")]
+    [DataRow('\x000C', '\x240C', "FORM FEED")]
+    [DataRow('\r', '\x240D', "CARRIAGE RETURN")]
+    [DataRow('\x000E', '\x240E', "SHIFT OUT")]
+    [DataRow('\x000F', '\x240F', "SHIFT IN")]
+    [DataRow('\x0010', '\x2410', "DATA LINK ESCAPE")]
+    [DataRow('\x0011', '\x2411', "DEVICE CONTROL ONE")]
+    [DataRow('\x0012', '\x2412', "DEVICE CONTROL TWO")]
+    [DataRow('\x0013', '\x2413', "DEVICE CONTROL THREE")]
+    [DataRow('\x0014', '\x2414', "DEVICE CONTROL FOUR")]
+    [DataRow('\x0015', '\x2415', "NEGATIVE ACKNOWLEDGE")]
+    [DataRow('\x0016', '\x2416', "SYNCHRONOUS IDLE")]
+    [DataRow('\x0017', '\x2417', "END OF TRANSMISSION BLOCK")]
+    [DataRow('\x0018', '\x2418', "CANCEL")]
+    [DataRow('\x0019', '\x2419', "END OF MEDIUM")]
+    [DataRow('\x001A', '\x241A', "SUBSTITUTE")]
+    [DataRow('\x001B', '\x241B', "ESCAPE")]
+    [DataRow('\x001C', '\x241C', "FILE SEPARATOR")]
+    [DataRow('\x001D', '\x241D', "GROUP SEPARATOR")]
+    [DataRow('\x001E', '\x241E', "RECORD SEPARATOR")]
+    [DataRow('\x001F', '\x241F', "UNIT SEPARATOR")]
     [TestMethod]
-    public void TestDiscovery_WithEscapeCharacters_AreNormalized()
+    public void TestDiscovery_WithControlCharacters_AreNormalized(char controlChar, char expectedChar, string charName)
     {
         string targetFramework = "net8.0";
         string architecture = "x64";
@@ -667,24 +727,24 @@ public sealed class TerminalTestReporterTests
 
         terminalReporter.AssemblyRunStarted();
 
-        // Test discovery with escape characters in display names
-        terminalReporter.TestDiscovered("Test\nWith\nNewlines");
-        terminalReporter.TestDiscovered("Test\tWith\tTabs");
-        terminalReporter.TestDiscovered("Test\rWith\rCarriageReturns");
+        // Test discovery with the specific control character
+        string testDisplayName = $"Test{controlChar}Name";
+        terminalReporter.TestDiscovered(testDisplayName);
 
         terminalReporter.AssemblyRunCompleted();
         terminalReporter.TestExecutionCompleted(endTime);
 
         string output = stringBuilderConsole.Output;
 
-        // Verify that escape characters are replaced with their Unicode control pictures in discovery output
-        Assert.Contains("Test␊With␊Newlines", output, "Newlines should be replaced with ␊ in discovery");
-        Assert.Contains("Test␉With␉Tabs", output, "Tabs should be replaced with ␉ in discovery");
-        Assert.Contains("Test␍With␍CarriageReturns", output, "Carriage returns should be replaced with ␍ in discovery");
+        // Verify that the control character is replaced with its Unicode control picture
+        string expectedDisplayName = $"Test{expectedChar}Name";
+        Assert.Contains(expectedDisplayName, output, $"{charName} should be replaced with {expectedChar} in discovery");
 
-        // Verify that literal escape characters are not present
-        Assert.DoesNotContain("Test\nWith\nNewlines", output, "Literal newlines should not be present in discovery");
-        Assert.DoesNotContain("Test\tWith\tTabs", output, "Literal tabs should not be present in discovery");
-        Assert.DoesNotContain("Test\rWith\rCarriageReturns", output, "Literal carriage returns should not be present in discovery");
+        // Verify that the literal control character is not present (unless it's printable in the output)
+        string originalDisplayName = $"Test{controlChar}Name";
+        if (controlChar != '\t' && controlChar != '\n' && controlChar != '\r')
+        {
+            Assert.DoesNotContain(originalDisplayName, output, $"Literal {charName} should not be present in discovery");
+        }
     }
 }
