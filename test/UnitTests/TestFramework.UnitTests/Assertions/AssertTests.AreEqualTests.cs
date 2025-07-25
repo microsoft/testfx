@@ -1145,47 +1145,78 @@ public partial class AssertTests : TestContainer
     public void AreEqualStringDifferenceShouldShowIndex()
     {
         Exception ex = VerifyThrows(() => Assert.AreEqual("aaaa", "aaab"));
-        Verify(ex.Message.Contains("differ at index 3"));
+        Verify(ex.Message == """
+            String lengths are both 4. Strings differ at index 3.
+            Expected: "aaaa"
+            But was:  "aaab"
+            ---^ 
+            """);
     }
 
     public void AreEqualStringDifferenceShouldShowStringLengths()
     {
         Exception ex = VerifyThrows(() => Assert.AreEqual("aaaa", "aaab"));
-        Verify(ex.Message.Contains("String lengths are both 4"));
+        Verify(ex.Message == """
+            String lengths are both 4. Strings differ at index 3.
+            Expected: "aaaa"
+            But was:  "aaab"
+            ---^ 
+            """);
     }
 
     public void AreEqualStringDifferentLengthsShouldShowLengthDifference()
     {
         Exception ex = VerifyThrows(() => Assert.AreEqual("aaaa", "aaaab"));
-        Verify(ex.Message.Contains("Expected string length 4 but was 5"));
+        Verify(ex.Message == """
+            Expected string length 4 but was 5. Strings differ at index 4.
+            Expected: "aaaa"
+            But was:  "aaaab"
+            ----^ 
+            """);
     }
 
     public void AreEqualStringDifferenceShouldShowExpectedAndActual()
     {
         Exception ex = VerifyThrows(() => Assert.AreEqual("aaaa", "aaab"));
-        Verify(ex.Message.Contains("Expected: \"aaaa\""));
-        Verify(ex.Message.Contains("But was:  \"aaab\""));
-        // Verify they are on separate lines by checking for newline between them
-        Verify(ex.Message.Contains("Expected: \"aaaa\"\nBut was:  \"aaab\""));
+        Verify(ex.Message == """
+            String lengths are both 4. Strings differ at index 3.
+            Expected: "aaaa"
+            But was:  "aaab"
+            ---^ 
+            """);
     }
 
     public void AreEqualStringDifferenceShouldShowCaretPointer()
     {
         Exception ex = VerifyThrows(() => Assert.AreEqual("aaaa", "aaab"));
-        Verify(ex.Message.Contains("---^"));
+        Verify(ex.Message == """
+            String lengths are both 4. Strings differ at index 3.
+            Expected: "aaaa"
+            But was:  "aaab"
+            ---^ 
+            """);
     }
 
     public void AreEqualStringDifferenceAtBeginning()
     {
         Exception ex = VerifyThrows(() => Assert.AreEqual("baaa", "aaaa"));
-        Verify(ex.Message.Contains("differ at index 0"));
-        Verify(ex.Message.Contains("^"));
+        Verify(ex.Message == """
+            String lengths are both 4. Strings differ at index 0.
+            Expected: "baaa"
+            But was:  "aaaa"
+            ^ 
+            """);
     }
 
     public void AreEqualStringWithSpecialCharactersShouldEscape()
     {
         Exception ex = VerifyThrows(() => Assert.AreEqual("aa\ta", "aa a"));
-        Verify(ex.Message.Contains("\\t"));
+        Verify(ex.Message == """
+            String lengths are both 4. Strings differ at index 2.
+            Expected: "aa\ta"
+            But was:  "aa a"
+            --^ 
+            """);
     }
 
     public void AreEqualLongStringsShouldTruncateAndShowContext()
@@ -1194,16 +1225,23 @@ public partial class AssertTests : TestContainer
         string actual = new string('a', 100) + "d" + new string('c', 100);
         
         Exception ex = VerifyThrows(() => Assert.AreEqual(expected, actual));
-        Verify(ex.Message.Contains("differ at index 100"));
-        // Should show context around the difference, not the full 201 character strings
-        Verify(!ex.Message.Contains(new string('a', 50))); // Should not show excessive context
+        Verify(ex.Message == """
+            String lengths are both 201. Strings differ at index 100.
+            Expected: "...aaaaabccccc..."
+            But was:  "...aaaaadccccc..."
+            ----------^ 
+            """);
     }
 
     public void AreEqualStringWithCultureShouldUseEnhancedMessage()
     {
         Exception ex = VerifyThrows(() => Assert.AreEqual("aaaa", "aaab", false, CultureInfo.InvariantCulture));
-        Verify(ex.Message.Contains("differ at index 3"));
-        Verify(ex.Message.Contains("String lengths are both 4"));
+        Verify(ex.Message == """
+            String lengths are both 4. Strings differ at index 3.
+            Expected: "aaaa"
+            But was:  "aaab"
+            ---^ 
+            """);
     }
 
     public void AreEqualLongStringWithDifferenceFarFromStart()
@@ -1213,15 +1251,11 @@ public partial class AssertTests : TestContainer
         string actual = new string('a', 90) + "y" + new string('b', 109);
         
         Exception ex = VerifyThrows(() => Assert.AreEqual(expected, actual));
-        Verify(ex.Message.Contains("differ at index 90"));
-        Verify(ex.Message.Contains("String lengths are both 200"));
-        
-        // Should use ellipsis and not show all 90 'a' characters
-        Verify(!ex.Message.Contains(new string('a', 50))); // Should not show excessive leading context
-        Verify(ex.Message.Contains("...")); // Should show ellipsis indicating truncation
-        
-        // Should show contextual preview around the difference
-        Verify(ex.Message.Contains("x")); // Expected character at difference
-        Verify(ex.Message.Contains("y")); // Actual character at difference
+        Verify(ex.Message == """
+            String lengths are both 200. Strings differ at index 90.
+            Expected: "...aaaaaxbbbb..."
+            But was:  "...aaaaaybbbb..."
+            ----------^ 
+            """);
     }
 }
