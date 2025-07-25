@@ -17,6 +17,8 @@ public class MSTestAdapterSettingsTests : TestContainer
 
 #pragma warning restore SA1649 // File name must match first type name
 {
+    private readonly Mock<IAdapterTraceLogger> _mockLogger = new();
+
     protected override void Dispose(bool disposing)
     {
         if (!IsDisposed)
@@ -34,7 +36,7 @@ public class MSTestAdapterSettingsTests : TestContainer
         string? baseDirectory = null;
         string expectedResult = @"C:\MsTest\Adapter";
 
-        var adapterSettings = new TestableMSTestAdapterSettings
+        var adapterSettings = new TestableMSTestAdapterSettings(_mockLogger.Object)
         {
             DoesDirectoryExistSetter = _ => true,
         };
@@ -51,7 +53,7 @@ public class MSTestAdapterSettingsTests : TestContainer
         string? baseDirectory = null;
         string expectedResult = @"C:\foo\unitTesting\MsTest\Adapter";
 
-        var adapterSettings = new TestableMSTestAdapterSettings
+        var adapterSettings = new TestableMSTestAdapterSettings(_mockLogger.Object)
         {
             ExpandEnvironmentVariablesSetter = str => str.Replace("%temp%", "C:\\foo"),
             DoesDirectoryExistSetter = _ => true,
@@ -69,7 +71,7 @@ public class MSTestAdapterSettingsTests : TestContainer
         string baseDirectory = @"C:\unitTesting";
         string expectedResult = @"C:\unitTesting\MsTest\Adapter";
 
-        var adapterSettings = new TestableMSTestAdapterSettings
+        var adapterSettings = new TestableMSTestAdapterSettings(_mockLogger.Object)
         {
             DoesDirectoryExistSetter = _ => true,
         };
@@ -86,7 +88,7 @@ public class MSTestAdapterSettingsTests : TestContainer
         string baseDirectory = @"C:\unitTesting";
         string expectedResult = @"C:\unitTesting\MsTest\Adapter";
 
-        var adapterSettings = new TestableMSTestAdapterSettings
+        var adapterSettings = new TestableMSTestAdapterSettings(_mockLogger.Object)
         {
             DoesDirectoryExistSetter = _ => true,
         };
@@ -109,7 +111,7 @@ public class MSTestAdapterSettingsTests : TestContainer
         string currentDrive = currentDirectory.Split('\\').First() + "\\";
         string expectedResult = Path.Combine(currentDrive, @"MsTest\Adapter");
 
-        var adapterSettings = new TestableMSTestAdapterSettings
+        var adapterSettings = new TestableMSTestAdapterSettings(_mockLogger.Object)
         {
             DoesDirectoryExistSetter = _ => true,
         };
@@ -127,7 +129,7 @@ public class MSTestAdapterSettingsTests : TestContainer
 
         string expectedResult = path;
 
-        var adapterSettings = new TestableMSTestAdapterSettings
+        var adapterSettings = new TestableMSTestAdapterSettings(_mockLogger.Object)
         {
             DoesDirectoryExistSetter = _ => true,
         };
@@ -143,7 +145,7 @@ public class MSTestAdapterSettingsTests : TestContainer
         string path = @"Z:\Program Files (x86)\MsTest\Adapter";
         string baseDirectory = @"C:\unitTesting";
 
-        string? result = new TestableMSTestAdapterSettings().ResolveEnvironmentVariableAndReturnFullPathIfExist(path, baseDirectory);
+        string? result = new TestableMSTestAdapterSettings(_mockLogger.Object).ResolveEnvironmentVariableAndReturnFullPathIfExist(path, baseDirectory);
 
         Verify(result is null);
     }
@@ -162,7 +164,7 @@ public class MSTestAdapterSettingsTests : TestContainer
             new RecursiveDirectoryPath(@"C:\foo\unitTesting\MsTest\Adapter", false),
         ];
 
-        var adapterSettings = new TestableMSTestAdapterSettings(expectedResult)
+        var adapterSettings = new TestableMSTestAdapterSettings(expectedResult, _mockLogger.Object)
         {
             ExpandEnvironmentVariablesSetter = str => str.Replace("%temp%", "C:\\foo"),
             DoesDirectoryExistSetter = _ => true,
@@ -373,11 +375,14 @@ public class MSTestAdapterSettingsTests : TestContainer
 
 internal class TestableMSTestAdapterSettings : MSTestAdapterSettings
 {
-    public TestableMSTestAdapterSettings()
+    public TestableMSTestAdapterSettings(IAdapterTraceLogger logger)
+        : base(logger)
     {
     }
 
-    public TestableMSTestAdapterSettings(List<RecursiveDirectoryPath> expectedResult) => SearchDirectories.AddRange(expectedResult);
+    public TestableMSTestAdapterSettings(List<RecursiveDirectoryPath> expectedResult, IAdapterTraceLogger logger)
+        : base(logger)
+        => SearchDirectories.AddRange(expectedResult);
 
     public Func<string, bool>? DoesDirectoryExistSetter { get; set; }
 

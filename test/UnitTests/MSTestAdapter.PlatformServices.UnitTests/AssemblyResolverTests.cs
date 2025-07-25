@@ -3,6 +3,9 @@
 
 #if NETFRAMEWORK
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
+
+using Moq;
 
 using TestFramework.ForTestingMSTest;
 
@@ -24,7 +27,7 @@ public class AssemblyResolverTests : TestContainer
             @"C:\unitTesting\b",
         ];
 
-        TestableAssemblyResolver assemblyResolver = new([@"c:\dummy"])
+        TestableAssemblyResolver assemblyResolver = new([@"c:\dummy"], new Mock<IAdapterTraceLogger>().Object)
         {
             DoesDirectoryExistSetter = (str) => true,
             GetDirectoriesSetter = (str) =>
@@ -69,7 +72,7 @@ public class AssemblyResolverTests : TestContainer
         [
             @"c:\dummy",
         ];
-        TestableAssemblyResolver assemblyResolver = new(dummyDirectories);
+        TestableAssemblyResolver assemblyResolver = new(dummyDirectories, new Mock<IAdapterTraceLogger>().Object);
 
         // Adding search directory with recursive property true/false
         assemblyResolver.AddSearchDirectoriesFromRunSetting(recursiveDirectoryPath);
@@ -147,7 +150,7 @@ public class AssemblyResolverTests : TestContainer
     {
         Assembly currentAssembly = typeof(AssemblyResolverTests).Assembly;
         string currentAssemblyPath = Path.GetDirectoryName(currentAssembly.Location);
-        var assemblyResolver = new TestableAssemblyResolver([currentAssemblyPath]);
+        var assemblyResolver = new TestableAssemblyResolver([currentAssemblyPath], new Mock<IAdapterTraceLogger>().Object);
 
         bool isAssemblyLoaded = false;
         bool isAssemblyReflectionOnlyLoaded = false;
@@ -187,8 +190,8 @@ public class AssemblyResolverTests : TestContainer
 
 internal class TestableAssemblyResolver : AssemblyResolver
 {
-    public TestableAssemblyResolver(IList<string> directories)
-        : base(directories)
+    public TestableAssemblyResolver(IList<string> directories, IAdapterTraceLogger logger)
+        : base(directories, logger)
     {
     }
 

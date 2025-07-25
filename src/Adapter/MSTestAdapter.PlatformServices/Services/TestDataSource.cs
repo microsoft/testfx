@@ -25,6 +25,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 /// </remarks>
 internal sealed class TestDataSource : ITestDataSource
 {
+    [SuppressMessage("Style", "IDE0052:Remove unread private members", Justification = "Used in other TFM")]
+    private readonly IAdapterTraceLogger _logger;
+
+    public TestDataSource(IAdapterTraceLogger logger) => _logger = logger;
+
     /// <summary>
     /// Gets the test data from custom test data source and sets dbconnection in testContext object.
     /// </summary>
@@ -48,7 +53,7 @@ internal sealed class TestDataSource : ITestDataSource
         List<TestResult> dataRowResults = [];
 
         // Connect to data source.
-        TestDataConnectionFactory factory = new();
+        TestDataConnectionFactory factory = new(_logger);
 
         GetConnectionProperties(testMethodInfo.GetAttributes<DataSourceAttribute>()[0], out string providerNameInvariant, out string? connectionString, out string? tableName, out DataAccessMethod dataAccessMethod);
 

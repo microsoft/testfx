@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
 
 using Moq;
@@ -14,7 +15,7 @@ public class FileUtilityTests : TestContainer
     private readonly Mock<FileUtility> _fileUtility;
 
     public FileUtilityTests()
-        => _fileUtility = new Mock<FileUtility>
+        => _fileUtility = new Mock<FileUtility>(new Mock<IAdapterTraceLogger>().Object)
         {
             CallBase = true,
         };

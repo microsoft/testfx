@@ -3,6 +3,9 @@
 
 #if !NETFRAMEWORK
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
+
+using Moq;
 
 using TestFramework.ForTestingMSTest;
 
@@ -12,7 +15,7 @@ public class FileOperationsTests : TestContainer
 {
     private readonly FileOperations _fileOperations;
 
-    public FileOperationsTests() => _fileOperations = new FileOperations();
+    public FileOperationsTests() => _fileOperations = new FileOperations(new Mock<IAdapterTraceLogger>().Object);
 
     public void LoadAssemblyShouldThrowExceptionIfTheFileNameHasInvalidCharacters()
     {
