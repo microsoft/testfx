@@ -156,7 +156,6 @@ Built-in command line providers:
         Arity: 0
         Hidden: False
         Description: Enable the diagnostic logging\. The default log level is 'Trace'\.
-        The file will be written in the output directory with the name log_\[yyMMddHHmmssfff\]\.diag      
       --diagnostic-file-prefix
         Arity: 1
         Hidden: False
