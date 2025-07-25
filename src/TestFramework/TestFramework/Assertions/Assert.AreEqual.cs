@@ -754,10 +754,8 @@ public sealed partial class Assert
     private static string FormatStringDifferenceMessage(string expected, string actual, int diffIndex, string userMessage)
     {
         string lengthInfo = expected.Length == actual.Length
-            ? string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AreEqualStringDiffLengthBothMsg, expected.Length)
+            ? string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AreEqualStringDiffLengthBothMsg, expected.Length, diffIndex)
             : string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AreEqualStringDiffLengthDifferentMsg, expected.Length, actual.Length);
-
-        string diffInfo = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AreEqualStringDiffIndexMsg, diffIndex);
 
         // Create contextual preview around the difference
         const int contextLength = 20; // Show up to 20 characters of context on each side
@@ -784,9 +782,7 @@ public sealed partial class Assert
         // The caret should align under the difference in the string content
         // For localized prefixes with different lengths, we need to account for the longer prefix
         // to ensure proper alignment. But the caret position is relative to the string content.
-        int adjustedCaretPosition = expectedPrefix.Length != actualPrefix.Length
-            ? maxPrefixLength + 1 + caretPosition // +1 for the opening quote
-            : caretPosition;
+        int adjustedCaretPosition = maxPrefixLength + 1 + caretPosition; // +1 for the opening quote
 
         // Format user message properly - add leading space if not empty, otherwise no extra formatting
         string formattedUserMessage = string.IsNullOrEmpty(userMessage) ? string.Empty : $" {userMessage}";
@@ -794,9 +790,8 @@ public sealed partial class Assert
         return string.Format(
             CultureInfo.CurrentCulture,
             FrameworkMessages.AreEqualStringDiffFailMsg,
-            formattedUserMessage,
             lengthInfo,
-            diffInfo,
+            formattedUserMessage,
             expectedLine,
             actualLine,
             new string('-', adjustedCaretPosition) + "^");

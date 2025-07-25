@@ -38,15 +38,15 @@
         <note></note>
       </trans-unit>
       <trans-unit id="AreEqualStringDiffFailMsg">
-        <source>{1} {2}
+        <source>{0}{1}
+{2}
 {3}
-{4}
-{5}{0}</source>
-        <target state="new">{1} {2}
+{4}</source>
+        <target state="new">{0}{1}
+{2}
 {3}
-{4}
-{5}{0}</target>
-        <note></note>
+{4}</target>
+        <note />
       </trans-unit>
       <trans-unit id="AreEqualStringDiffExpectedPrefix">
         <source>Expected: </source>
@@ -59,18 +59,13 @@
         <note></note>
       </trans-unit>
       <trans-unit id="AreEqualStringDiffLengthBothMsg">
-        <source>String lengths are both {0}.</source>
-        <target state="new">String lengths are both {0}.</target>
-        <note></note>
+        <source>String lengths are both {0} but differ at index {1}.</source>
+        <target state="new">String lengths are both {0} but differ at index {1}.</target>
+        <note />
       </trans-unit>
       <trans-unit id="AreEqualStringDiffLengthDifferentMsg">
         <source>Expected string length {0} but was {1}.</source>
         <target state="new">Expected string length {0} but was {1}.</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="AreEqualStringDiffIndexMsg">
-        <source>Strings differ at index {0}.</source>
-        <target state="new">Strings differ at index {0}.</target>
         <note></note>
       </trans-unit>
       <trans-unit id="AreNotEqualFailMsg">

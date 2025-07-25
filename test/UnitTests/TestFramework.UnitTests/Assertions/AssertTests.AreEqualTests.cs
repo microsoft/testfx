@@ -1143,25 +1143,25 @@ public partial class AssertTests : TestContainer
             => Id.GetHashCode() + 1234;
     }
 
-    public void AreEqualStringDifferenceShouldDifference()
-    {
-        Exception ex = VerifyThrows(() => Assert.AreEqual("aaaa", "aaab"));
-        ex.Message.Should().Be("""
-            String lengths are both 4. Strings differ at index 3.
-            Expected: "aaaa"
-            But was:  "aaab"
-            --------------^ 
-            """);
-    }
-
     public void AreEqualStringDifferenceAtBeginning()
     {
         Exception ex = VerifyThrows(() => Assert.AreEqual("baaa", "aaaa"));
         ex.Message.Should().Be("""
-            String lengths are both 4. Strings differ at index 0.
+            Assert.AreEqual failed. String lengths are both 4 but differ at index 0.
             Expected: "baaa"
             But was:  "aaaa"
-            -----------^ 
+            -----------^
+            """);
+    }
+
+    public void AreEqualStringDifferenceAtEnd()
+    {
+        Exception ex = VerifyThrows(() => Assert.AreEqual("aaaa", "aaab"));
+        ex.Message.Should().Be("""
+            Assert.AreEqual failed. String lengths are both 4 but differ at index 3.
+            Expected: "aaaa"
+            But was:  "aaab"
+            --------------^
             """);
     }
 
@@ -1169,10 +1169,10 @@ public partial class AssertTests : TestContainer
     {
         Exception ex = VerifyThrows(() => Assert.AreEqual("aa\ta", "aa a"));
         ex.Message.Should().Be("""
-            String lengths are both 4. Strings differ at index 2.
+            Assert.AreEqual failed. String lengths are both 4 but differ at index 2.
             Expected: "aa\ta"
             But was:  "aa a"
-            -------------^ 
+            -------------^
             """);
     }
 
@@ -1183,10 +1183,10 @@ public partial class AssertTests : TestContainer
 
         Exception ex = VerifyThrows(() => Assert.AreEqual(expected, actual));
         ex.Message.Should().Be("""
-            String lengths are both 201. Strings differ at index 100.
-            Expected: "...aaaaabccccc..."
-            But was:  "...aaaaadccccc..."
-            -------------------^ 
+            Assert.AreEqual failed. String lengths are both 201 but differ at index 100.
+            Expected: "...aaaaaaaaaabccccccccc..."
+            But was:  "...aaaaaaaaaadccccccccc..."
+            ------------------------^
             """);
     }
 
@@ -1194,10 +1194,32 @@ public partial class AssertTests : TestContainer
     {
         Exception ex = VerifyThrows(() => Assert.AreEqual("aaaa", "aaab", false, CultureInfo.InvariantCulture));
         ex.Message.Should().Be("""
-            String lengths are both 4. Strings differ at index 3.
+            Assert.AreEqual failed. String lengths are both 4 but differ at index 3.
             Expected: "aaaa"
             But was:  "aaab"
-            --------------^ 
+            --------------^
+            """);
+    }
+
+    public void AreEqualStringWithDifferentLength()
+    {
+        Exception ex = VerifyThrows(() => Assert.AreEqual("aaaa", "aaa"));
+        ex.Message.Should().Be("""
+            Assert.AreEqual failed. Expected string length 4 but was 3.
+            Expected: "aaaa"
+            But was:  "aaa"
+            --------------^
+            """);
+    }
+
+    public void AreEqualStringWithUserMessage()
+    {
+        Exception ex = VerifyThrows(() => Assert.AreEqual("aaaa", "aaab", "My custom message"));
+        ex.Message.Should().Be("""
+            Assert.AreEqual failed. String lengths are both 4 but differ at index 3. My custom message
+            Expected: "aaaa"
+            But was:  "aaab"
+            --------------^
             """);
     }
 }
