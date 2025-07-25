@@ -129,6 +129,7 @@ stages:
               /bl:$(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig)\TestStep.binlog
             env:
               DOTNET_ROOT: $(Build.SourcesDirectory)/.dotnet
+              TESTINGPLATFORM_DEFAULT_HANG_TIMEOUT: 20m
 
           - task: PublishBuildArtifacts@1
             displayName: 'Publish Test Results folders'
