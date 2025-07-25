@@ -108,7 +108,45 @@ internal sealed class CurrentTestApplicationModuleInfo(IEnvironment environment,
         bool isDotnetMuxer = IsCurrentTestApplicationHostDotnetMuxer;
         bool isAppHost = IsAppHostOrSingleFileOrNativeAot;
         bool isMonoMuxer = IsCurrentTestApplicationHostMonoMuxer;
-        string[] commandLineArguments = _commandLineArgumentsProvider?.GetOriginalCommandLineArguments() ?? _environment.GetCommandLineArgs();
+        
+        string[] environmentArgs = _environment.GetCommandLineArgs();
+        string[] commandLineArguments;
+        
+        if (_commandLineArgumentsProvider is not null)
+        {
+            string[] customArgs = _commandLineArgumentsProvider.GetOriginalCommandLineArguments();
+            
+            if (isDotnetMuxer && environmentArgs.Length >= 2)
+            {
+                // For dotnet scenarios, we need to preserve the assembly path from environment
+                // and combine it with the custom arguments
+                // Environment: ["dotnet", "MyTest.dll"]
+                // Custom: ["--retry-failed-tests", "1"]
+                // Result: ["dotnet", "MyTest.dll", "--retry-failed-tests", "1"]
+                commandLineArguments = environmentArgs.Take(2).Concat(customArgs).ToArray();
+            }
+            else
+            {
+                // For executable scenarios, use custom args but preserve the executable name from environment
+                // Environment: ["MyTest.exe"]
+                // Custom: ["--retry-failed-tests", "1"]
+                // Result: ["MyTest.exe", "--retry-failed-tests", "1"]
+                if (environmentArgs.Length >= 1)
+                {
+                    commandLineArguments = environmentArgs.Take(1).Concat(customArgs).ToArray();
+                }
+                else
+                {
+                    commandLineArguments = customArgs;
+                }
+            }
+        }
+        else
+        {
+            // Fallback to original behavior when no custom args are provided
+            commandLineArguments = environmentArgs;
+        }
+        
         IEnumerable<string> arguments = (isAppHost, isDotnetMuxer, isMonoMuxer) switch
         {
             // When executable
