@@ -204,4 +204,75 @@ public sealed partial class Assert
     }
 
     #endregion
+
+    #region Collection Helpers
+
+    /// <summary>
+    /// Helper method to compare collections for equality.
+    /// </summary>
+    /// <param name="expected">The expected collection.</param>
+    /// <param name="actual">The actual collection.</param>
+    /// <param name="comparer">The comparer to use for element comparison.</param>
+    /// <param name="failureReason">The reason for failure if collections are not equal.</param>
+    /// <returns>True if collections are equal, false otherwise.</returns>
+    internal static bool AreCollectionsEqual<T>(IEnumerable? expected, IEnumerable? actual, IEqualityComparer<T> comparer, out string failureReason)
+    {
+        failureReason = string.Empty;
+
+        if (ReferenceEquals(expected, actual))
+        {
+            return true;
+        }
+
+        if (expected is null && actual is null)
+        {
+            return true;
+        }
+
+        if (expected is null || actual is null)
+        {
+            failureReason = "One collection is null while the other is not.";
+            return false;
+        }
+
+        var expectedList = expected.Cast<T>().ToList();
+        var actualList = actual.Cast<T>().ToList();
+
+        if (expectedList.Count != actualList.Count)
+        {
+            failureReason = "Collections have different counts.";
+            return false;
+        }
+
+        for (int i = 0; i < expectedList.Count; i++)
+        {
+            if (!comparer.Equals(expectedList[i], actualList[i]))
+            {
+                failureReason = $"Elements at index {i} are different.";
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    /// Adapter to convert IComparer to IEqualityComparer.
+    /// </summary>
+    /// <typeparam name="T">The type of objects to compare.</typeparam>
+    internal sealed class ComparerAdapter<T> : IEqualityComparer<T>
+    {
+        private readonly IComparer _comparer;
+
+        public ComparerAdapter(IComparer comparer)
+        {
+            _comparer = comparer ?? throw new ArgumentNullException(nameof(comparer));
+        }
+
+        public bool Equals(T? x, T? y) => _comparer.Compare(x, y) == 0;
+
+        public int GetHashCode(T obj) => obj?.GetHashCode() ?? 0;
+    }
+
+    #endregion
 }

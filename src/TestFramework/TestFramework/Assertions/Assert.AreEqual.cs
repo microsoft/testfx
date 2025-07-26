@@ -2117,4 +2117,326 @@ public sealed partial class Assert
             ReplaceNulls(actual));
         ThrowAssertFailed("Assert.AreNotEqual", finalMessage);
     }
+
+    #region Collection AreEqual
+
+    /// <summary>
+    /// Tests whether the two collections are equal and throws an exception if the two
+    /// collections are not equal. Elements are compared by their order and equality.
+    /// </summary>
+    /// <param name="expected">
+    /// The first collection to compare. This is the collection the test expects.
+    /// </param>
+    /// <param name="actual">
+    /// The second collection to compare. This is the collection produced by the
+    /// code under test.
+    /// </param>
+    /// <exception cref="AssertFailedException">
+    /// <paramref name="expected"/> and <paramref name="actual"/> nullabilities don't match,
+    /// or they do not have the same count of elements,
+    /// or at least one of the elements don't match.
+    /// </exception>
+    public static void AreEqual(IEnumerable? expected, IEnumerable? actual)
+        => AreEqual(expected, actual, string.Empty, null);
+
+    /// <summary>
+    /// Tests whether the two collections are equal and throws an exception if the two
+    /// collections are not equal. Elements are compared by their order and equality.
+    /// </summary>
+    /// <param name="expected">
+    /// The first collection to compare. This is the collection the test expects.
+    /// </param>
+    /// <param name="actual">
+    /// The second collection to compare. This is the collection produced by the
+    /// code under test.
+    /// </param>
+    /// <param name="message">
+    /// The message to include in the exception when an element was found
+    /// in one of the collections but not the other. The message is shown
+    /// in test results.
+    /// </param>
+    /// <exception cref="AssertFailedException">
+    /// <paramref name="expected"/> and <paramref name="actual"/> nullabilities don't match,
+    /// or they do not have the same count of elements,
+    /// or at least one of the elements don't match.
+    /// </exception>
+    public static void AreEqual(IEnumerable? expected, IEnumerable? actual, string? message)
+        => AreEqual(expected, actual, message, null);
+
+    /// <summary>
+    /// Tests whether the two collections are equal and throws an exception if the two
+    /// collections are not equal. Elements are compared by their order and equality.
+    /// </summary>
+    /// <param name="expected">
+    /// The first collection to compare. This is the collection the test expects.
+    /// </param>
+    /// <param name="actual">
+    /// The second collection to compare. This is the collection produced by the
+    /// code under test.
+    /// </param>
+    /// <param name="message">
+    /// The message to include in the exception when an element was found
+    /// in one of the collections but not the other. The message is shown
+    /// in test results.
+    /// </param>
+    /// <param name="parameters">
+    /// An array of parameters to use when formatting <paramref name="message"/>.
+    /// </param>
+    /// <exception cref="AssertFailedException">
+    /// <paramref name="expected"/> and <paramref name="actual"/> nullabilities don't match,
+    /// or they do not have the same count of elements,
+    /// or at least one of the elements don't match.
+    /// </exception>
+    public static void AreEqual(IEnumerable? expected, IEnumerable? actual, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters)
+    {
+        if (!AreCollectionsEqual(expected, actual, EqualityComparer<object>.Default, out string failureReason))
+        {
+            string userMessage = BuildUserMessage(message, parameters);
+            string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AreEqualFailMsg, userMessage, expected, actual);
+            ThrowAssertFailed("Assert.AreEqual", finalMessage);
+        }
+    }
+
+    /// <summary>
+    /// Tests whether the two collections are equal and throws an exception if the two
+    /// collections are not equal. Elements are compared by their order and equality.
+    /// </summary>
+    /// <param name="expected">
+    /// The first collection to compare. This is the collection the test expects.
+    /// </param>
+    /// <param name="actual">
+    /// The second collection to compare. This is the collection produced by the
+    /// code under test.
+    /// </param>
+    /// <param name="comparer">
+    /// The compare implementation to use when comparing elements of the collection.
+    /// </param>
+    /// <exception cref="AssertFailedException">
+    /// <paramref name="expected"/> and <paramref name="actual"/> nullabilities don't match,
+    /// or they do not have the same count of elements,
+    /// or at least one of the elements don't match.
+    /// </exception>
+    public static void AreEqual(IEnumerable? expected, IEnumerable? actual, IComparer comparer)
+        => AreEqual(expected, actual, comparer, string.Empty, null);
+
+    /// <summary>
+    /// Tests whether the two collections are equal and throws an exception if the two
+    /// collections are not equal. Elements are compared by their order and equality.
+    /// </summary>
+    /// <param name="expected">
+    /// The first collection to compare. This is the collection the test expects.
+    /// </param>
+    /// <param name="actual">
+    /// The second collection to compare. This is the collection produced by the
+    /// code under test.
+    /// </param>
+    /// <param name="comparer">
+    /// The compare implementation to use when comparing elements of the collection.
+    /// </param>
+    /// <param name="message">
+    /// The message to include in the exception when an element was found
+    /// in one of the collections but not the other. The message is shown
+    /// in test results.
+    /// </param>
+    /// <exception cref="AssertFailedException">
+    /// <paramref name="expected"/> and <paramref name="actual"/> nullabilities don't match,
+    /// or they do not have the same count of elements,
+    /// or at least one of the elements don't match.
+    /// </exception>
+    public static void AreEqual(IEnumerable? expected, IEnumerable? actual, IComparer comparer, string? message)
+        => AreEqual(expected, actual, comparer, message, null);
+
+    /// <summary>
+    /// Tests whether the two collections are equal and throws an exception if the two
+    /// collections are not equal. Elements are compared by their order and equality.
+    /// </summary>
+    /// <param name="expected">
+    /// The first collection to compare. This is the collection the test expects.
+    /// </param>
+    /// <param name="actual">
+    /// The second collection to compare. This is the collection produced by the
+    /// code under test.
+    /// </param>
+    /// <param name="comparer">
+    /// The compare implementation to use when comparing elements of the collection.
+    /// </param>
+    /// <param name="message">
+    /// The message to include in the exception when an element was found
+    /// in one of the collections but not the other. The message is shown
+    /// in test results.
+    /// </param>
+    /// <param name="parameters">
+    /// An array of parameters to use when formatting <paramref name="message"/>.
+    /// </param>
+    /// <exception cref="AssertFailedException">
+    /// <paramref name="expected"/> and <paramref name="actual"/> nullabilities don't match,
+    /// or they do not have the same count of elements,
+    /// or at least one of the elements don't match.
+    /// </exception>
+    public static void AreEqual(IEnumerable? expected, IEnumerable? actual, IComparer comparer, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters)
+    {
+        CheckParameterNotNull(comparer, "Assert.AreEqual", "comparer", string.Empty);
+        if (!AreCollectionsEqual(expected, actual, new ComparerAdapter<object>(comparer), out string failureReason))
+        {
+            string userMessage = BuildUserMessage(message, parameters);
+            string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AreEqualFailMsg, userMessage, expected, actual);
+            ThrowAssertFailed("Assert.AreEqual", finalMessage);
+        }
+    }
+
+    /// <summary>
+    /// Tests whether the two collections are not equal and throws an exception if the two
+    /// collections are equal. Elements are compared by their order and equality.
+    /// </summary>
+    /// <param name="notExpected">
+    /// The first collection to compare. This is the collection the test expects not to
+    /// match <paramref name="actual"/>.
+    /// </param>
+    /// <param name="actual">
+    /// The second collection to compare. This is the collection produced by the
+    /// code under test.
+    /// </param>
+    /// <exception cref="AssertFailedException">
+    /// <paramref name="notExpected"/> and <paramref name="actual"/> are equal.
+    /// </exception>
+    public static void AreNotEqual(IEnumerable? notExpected, IEnumerable? actual)
+        => AreNotEqual(notExpected, actual, string.Empty, null);
+
+    /// <summary>
+    /// Tests whether the two collections are not equal and throws an exception if the two
+    /// collections are equal. Elements are compared by their order and equality.
+    /// </summary>
+    /// <param name="notExpected">
+    /// The first collection to compare. This is the collection the test expects not to
+    /// match <paramref name="actual"/>.
+    /// </param>
+    /// <param name="actual">
+    /// The second collection to compare. This is the collection produced by the
+    /// code under test.
+    /// </param>
+    /// <param name="message">
+    /// The message to include in the exception when the two collections are equal.
+    /// The message is shown in test results.
+    /// </param>
+    /// <exception cref="AssertFailedException">
+    /// <paramref name="notExpected"/> and <paramref name="actual"/> are equal.
+    /// </exception>
+    public static void AreNotEqual(IEnumerable? notExpected, IEnumerable? actual, string? message)
+        => AreNotEqual(notExpected, actual, message, null);
+
+    /// <summary>
+    /// Tests whether the two collections are not equal and throws an exception if the two
+    /// collections are equal. Elements are compared by their order and equality.
+    /// </summary>
+    /// <param name="notExpected">
+    /// The first collection to compare. This is the collection the test expects not to
+    /// match <paramref name="actual"/>.
+    /// </param>
+    /// <param name="actual">
+    /// The second collection to compare. This is the collection produced by the
+    /// code under test.
+    /// </param>
+    /// <param name="message">
+    /// The message to include in the exception when the two collections are equal.
+    /// The message is shown in test results.
+    /// </param>
+    /// <param name="parameters">
+    /// An array of parameters to use when formatting <paramref name="message"/>.
+    /// </param>
+    /// <exception cref="AssertFailedException">
+    /// <paramref name="notExpected"/> and <paramref name="actual"/> are equal.
+    /// </exception>
+    public static void AreNotEqual(IEnumerable? notExpected, IEnumerable? actual, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters)
+    {
+        if (AreCollectionsEqual(notExpected, actual, EqualityComparer<object>.Default, out _))
+        {
+            string userMessage = BuildUserMessage(message, parameters);
+            string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AreNotEqualFailMsg, userMessage, notExpected, actual);
+            ThrowAssertFailed("Assert.AreNotEqual", finalMessage);
+        }
+    }
+
+    /// <summary>
+    /// Tests whether the two collections are not equal and throws an exception if the two
+    /// collections are equal. Elements are compared by their order and equality.
+    /// </summary>
+    /// <param name="notExpected">
+    /// The first collection to compare. This is the collection the test expects not to
+    /// match <paramref name="actual"/>.
+    /// </param>
+    /// <param name="actual">
+    /// The second collection to compare. This is the collection produced by the
+    /// code under test.
+    /// </param>
+    /// <param name="comparer">
+    /// The compare implementation to use when comparing elements of the collection.
+    /// </param>
+    /// <exception cref="AssertFailedException">
+    /// <paramref name="notExpected"/> and <paramref name="actual"/> are equal.
+    /// </exception>
+    public static void AreNotEqual(IEnumerable? notExpected, IEnumerable? actual, IComparer comparer)
+        => AreNotEqual(notExpected, actual, comparer, string.Empty, null);
+
+    /// <summary>
+    /// Tests whether the two collections are not equal and throws an exception if the two
+    /// collections are equal. Elements are compared by their order and equality.
+    /// </summary>
+    /// <param name="notExpected">
+    /// The first collection to compare. This is the collection the test expects not to
+    /// match <paramref name="actual"/>.
+    /// </param>
+    /// <param name="actual">
+    /// The second collection to compare. This is the collection produced by the
+    /// code under test.
+    /// </param>
+    /// <param name="comparer">
+    /// The compare implementation to use when comparing elements of the collection.
+    /// </param>
+    /// <param name="message">
+    /// The message to include in the exception when the two collections are equal.
+    /// The message is shown in test results.
+    /// </param>
+    /// <exception cref="AssertFailedException">
+    /// <paramref name="notExpected"/> and <paramref name="actual"/> are equal.
+    /// </exception>
+    public static void AreNotEqual(IEnumerable? notExpected, IEnumerable? actual, IComparer comparer, string? message)
+        => AreNotEqual(notExpected, actual, comparer, message, null);
+
+    /// <summary>
+    /// Tests whether the two collections are not equal and throws an exception if the two
+    /// collections are equal. Elements are compared by their order and equality.
+    /// </summary>
+    /// <param name="notExpected">
+    /// The first collection to compare. This is the collection the test expects not to
+    /// match <paramref name="actual"/>.
+    /// </param>
+    /// <param name="actual">
+    /// The second collection to compare. This is the collection produced by the
+    /// code under test.
+    /// </param>
+    /// <param name="comparer">
+    /// The compare implementation to use when comparing elements of the collection.
+    /// </param>
+    /// <param name="message">
+    /// The message to include in the exception when the two collections are equal.
+    /// The message is shown in test results.
+    /// </param>
+    /// <param name="parameters">
+    /// An array of parameters to use when formatting <paramref name="message"/>.
+    /// </param>
+    /// <exception cref="AssertFailedException">
+    /// <paramref name="notExpected"/> and <paramref name="actual"/> are equal.
+    /// </exception>
+    public static void AreNotEqual(IEnumerable? notExpected, IEnumerable? actual, IComparer comparer, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters)
+    {
+        CheckParameterNotNull(comparer, "Assert.AreNotEqual", "comparer", string.Empty);
+        if (AreCollectionsEqual(notExpected, actual, new ComparerAdapter<object>(comparer), out _))
+        {
+            string userMessage = BuildUserMessage(message, parameters);
+            string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AreNotEqualFailMsg, userMessage, notExpected, actual);
+            ThrowAssertFailed("Assert.AreNotEqual", finalMessage);
+        }
+    }
+
+    #endregion // Collection AreEqual
 }
