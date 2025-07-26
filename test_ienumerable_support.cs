@@ -87,6 +87,26 @@ namespace IEnumerableTest
             Console.WriteLine("AreNotEqual tests passed!");
         }
         
+        public static void TestAreEquivalentWithIEnumerable()
+        {
+            // Test with LINQ results (order doesn't matter for AreEquivalent)
+            IEnumerable<int> expected = new[] { 3, 1, 2 }.Where(x => x > 0);
+            IEnumerable<int> actual = Enumerable.Range(1, 3); // [1, 2, 3]
+            CollectionAssert.AreEquivalent(expected, actual);
+            
+            Console.WriteLine("AreEquivalent tests passed!");
+        }
+        
+        public static void TestAreNotEquivalentWithIEnumerable()
+        {
+            // Test with LINQ results
+            IEnumerable<int> notExpected = new[] { 1, 2, 3 }.Where(x => x > 0);
+            IEnumerable<int> actual = new[] { 1, 2, 3, 4 }.Where(x => x > 0); // different element count
+            CollectionAssert.AreNotEquivalent(notExpected, actual);
+            
+            Console.WriteLine("AreNotEquivalent tests passed!");
+        }
+        
         public static void Main()
         {
             TestContainsWithIEnumerable();
@@ -97,6 +117,8 @@ namespace IEnumerableTest
             TestAllItemsAreInstancesOfTypeWithIEnumerable();
             TestAreEqualWithIEnumerable();
             TestAreNotEqualWithIEnumerable();
+            TestAreEquivalentWithIEnumerable();
+            TestAreNotEquivalentWithIEnumerable();
             
             Console.WriteLine("All IEnumerable tests passed!");
         }
