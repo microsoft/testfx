@@ -615,8 +615,51 @@ public sealed class CollectionAssert
     /// or <paramref name="subset"/> contains at least one element not contained in
     /// <paramref name="superset"/>.
     /// </exception>
-    public static void IsSubsetOf([NotNull] ICollection? subset, [NotNull] ICollection? superset)
+    public static void IsSubsetOf([NotNull] IEnumerable? subset, [NotNull] IEnumerable? superset)
         => IsSubsetOf(subset, superset, string.Empty, null);
+
+    /// <summary>
+    /// Tests whether one collection is a subset of another collection and
+    /// throws an exception if any element in the subset is not also in the
+    /// superset.
+    /// </summary>
+    /// <param name="subset">
+    /// The collection expected to be a subset of <paramref name="superset"/>.
+    /// </param>
+    /// <param name="superset">
+    /// The collection expected to be a superset of <paramref name="subset"/>.
+    /// </param>
+    /// <exception cref="AssertFailedException">
+    /// <paramref name="subset"/> is null, or <paramref name="superset"/> is null,
+    /// or <paramref name="subset"/> contains at least one element not contained in
+    /// <paramref name="superset"/>.
+    /// </exception>
+    public static void IsSubsetOf([NotNull] ICollection? subset, [NotNull] ICollection? superset)
+        => IsSubsetOf((IEnumerable?)subset, (IEnumerable?)superset, string.Empty, null);
+
+    /// <summary>
+    /// Tests whether one collection is a subset of another collection and
+    /// throws an exception if any element in the subset is not also in the
+    /// superset.
+    /// </summary>
+    /// <param name="subset">
+    /// The collection expected to be a subset of <paramref name="superset"/>.
+    /// </param>
+    /// <param name="superset">
+    /// The collection expected to be a superset of <paramref name="subset"/>.
+    /// </param>
+    /// <param name="message">
+    /// The message to include in the exception when an element in
+    /// <paramref name="subset"/> is not found in <paramref name="superset"/>.
+    /// The message is shown in test results.
+    /// </param>
+    /// <exception cref="AssertFailedException">
+    /// <paramref name="subset"/> is null, or <paramref name="superset"/> is null,
+    /// or <paramref name="subset"/> contains at least one element not contained in
+    /// <paramref name="superset"/>.
+    /// </exception>
+    public static void IsSubsetOf([NotNull] IEnumerable? subset, [NotNull] IEnumerable? superset, string? message)
+        => IsSubsetOf(subset, superset, message, null);
 
     /// <summary>
     /// Tests whether one collection is a subset of another collection and
@@ -640,7 +683,42 @@ public sealed class CollectionAssert
     /// <paramref name="superset"/>.
     /// </exception>
     public static void IsSubsetOf([NotNull] ICollection? subset, [NotNull] ICollection? superset, string? message)
-        => IsSubsetOf(subset, superset, message, null);
+        => IsSubsetOf((IEnumerable?)subset, (IEnumerable?)superset, message, null);
+
+    /// <summary>
+    /// Tests whether one collection is a subset of another collection and
+    /// throws an exception if any element in the subset is not also in the
+    /// superset.
+    /// </summary>
+    /// <param name="subset">
+    /// The collection expected to be a subset of <paramref name="superset"/>.
+    /// </param>
+    /// <param name="superset">
+    /// The collection expected to be a superset of <paramref name="subset"/>.
+    /// </param>
+    /// <param name="message">
+    /// The message to include in the exception when an element in
+    /// <paramref name="subset"/> is not found in <paramref name="superset"/>.
+    /// The message is shown in test results.
+    /// </param>
+    /// <param name="parameters">
+    /// An array of parameters to use when formatting <paramref name="message"/>.
+    /// </param>
+    /// <exception cref="AssertFailedException">
+    /// <paramref name="subset"/> is null, or <paramref name="superset"/> is null,
+    /// or <paramref name="subset"/> contains at least one element not contained in
+    /// <paramref name="superset"/>.
+    /// </exception>
+    public static void IsSubsetOf([NotNull] IEnumerable? subset, [NotNull] IEnumerable? superset, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message,
+        params object?[]? parameters)
+    {
+        Assert.CheckParameterNotNull(subset, "CollectionAssert.IsSubsetOf", "subset", string.Empty);
+        Assert.CheckParameterNotNull(superset, "CollectionAssert.IsSubsetOf", "superset", string.Empty);
+        if (!IsSubsetOfHelper(subset, superset))
+        {
+            Assert.ThrowAssertFailed("CollectionAssert.IsSubsetOf", Assert.BuildUserMessage(message, parameters));
+        }
+    }
 
     /// <summary>
     /// Tests whether one collection is a subset of another collection and
@@ -668,14 +746,25 @@ public sealed class CollectionAssert
     /// </exception>
     public static void IsSubsetOf([NotNull] ICollection? subset, [NotNull] ICollection? superset, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message,
         params object?[]? parameters)
-    {
-        Assert.CheckParameterNotNull(subset, "CollectionAssert.IsSubsetOf", "subset", string.Empty);
-        Assert.CheckParameterNotNull(superset, "CollectionAssert.IsSubsetOf", "superset", string.Empty);
-        if (!IsSubsetOfHelper(subset, superset))
-        {
-            Assert.ThrowAssertFailed("CollectionAssert.IsSubsetOf", Assert.BuildUserMessage(message, parameters));
-        }
-    }
+        => IsSubsetOf((IEnumerable?)subset, (IEnumerable?)superset, message, parameters);
+
+    /// <summary>
+    /// Tests whether one collection is not a subset of another collection and
+    /// throws an exception if all elements in the subset are also in the
+    /// superset.
+    /// </summary>
+    /// <param name="subset">
+    /// The collection expected not to be a subset of <paramref name="superset"/>.
+    /// </param>
+    /// <param name="superset">
+    /// The collection expected not to be a superset of <paramref name="subset"/>.
+    /// </param>
+    /// <exception cref="AssertFailedException">
+    /// <paramref name="subset"/> is null, or <paramref name="superset"/> is null,
+    /// or all elements of <paramref name="subset"/> are contained in <paramref name="superset"/>.
+    /// </exception>
+    public static void IsNotSubsetOf([NotNull] IEnumerable? subset, [NotNull] IEnumerable? superset)
+        => IsNotSubsetOf(subset, superset, string.Empty, null);
 
     /// <summary>
     /// Tests whether one collection is not a subset of another collection and
@@ -693,7 +782,30 @@ public sealed class CollectionAssert
     /// or all elements of <paramref name="subset"/> are contained in <paramref name="superset"/>.
     /// </exception>
     public static void IsNotSubsetOf([NotNull] ICollection? subset, [NotNull] ICollection? superset)
-        => IsNotSubsetOf(subset, superset, string.Empty, null);
+        => IsNotSubsetOf((IEnumerable?)subset, (IEnumerable?)superset, string.Empty, null);
+
+    /// <summary>
+    /// Tests whether one collection is not a subset of another collection and
+    /// throws an exception if all elements in the subset are also in the
+    /// superset.
+    /// </summary>
+    /// <param name="subset">
+    /// The collection expected not to be a subset of <paramref name="superset"/>.
+    /// </param>
+    /// <param name="superset">
+    /// The collection expected not to be a superset of <paramref name="subset"/>.
+    /// </param>
+    /// <param name="message">
+    /// The message to include in the exception when every element in
+    /// <paramref name="subset"/> is also found in <paramref name="superset"/>.
+    /// The message is shown in test results.
+    /// </param>
+    /// <exception cref="AssertFailedException">
+    /// <paramref name="subset"/> is null, or <paramref name="superset"/> is null,
+    /// or all elements of <paramref name="subset"/> are contained in <paramref name="superset"/>.
+    /// </exception>
+    public static void IsNotSubsetOf([NotNull] IEnumerable? subset, [NotNull] IEnumerable? superset, string? message)
+        => IsNotSubsetOf(subset, superset, message, null);
 
     /// <summary>
     /// Tests whether one collection is not a subset of another collection and
@@ -716,7 +828,41 @@ public sealed class CollectionAssert
     /// or all elements of <paramref name="subset"/> are contained in <paramref name="superset"/>.
     /// </exception>
     public static void IsNotSubsetOf([NotNull] ICollection? subset, [NotNull] ICollection? superset, string? message)
-        => IsNotSubsetOf(subset, superset, message, null);
+        => IsNotSubsetOf((IEnumerable?)subset, (IEnumerable?)superset, message, null);
+
+    /// <summary>
+    /// Tests whether one collection is not a subset of another collection and
+    /// throws an exception if all elements in the subset are also in the
+    /// superset.
+    /// </summary>
+    /// <param name="subset">
+    /// The collection expected not to be a subset of <paramref name="superset"/>.
+    /// </param>
+    /// <param name="superset">
+    /// The collection expected not to be a superset of <paramref name="subset"/>.
+    /// </param>
+    /// <param name="message">
+    /// The message to include in the exception when every element in
+    /// <paramref name="subset"/> is also found in <paramref name="superset"/>.
+    /// The message is shown in test results.
+    /// </param>
+    /// <param name="parameters">
+    /// An array of parameters to use when formatting <paramref name="message"/>.
+    /// </param>
+    /// <exception cref="AssertFailedException">
+    /// <paramref name="subset"/> is null, or <paramref name="superset"/> is null,
+    /// or all elements of <paramref name="subset"/> are contained in <paramref name="superset"/>.
+    /// </exception>
+    public static void IsNotSubsetOf([NotNull] IEnumerable? subset, [NotNull] IEnumerable? superset, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message,
+        params object?[]? parameters)
+    {
+        Assert.CheckParameterNotNull(subset, "CollectionAssert.IsNotSubsetOf", "subset", string.Empty);
+        Assert.CheckParameterNotNull(superset, "CollectionAssert.IsNotSubsetOf", "superset", string.Empty);
+        if (IsSubsetOfHelper(subset, superset))
+        {
+            Assert.ThrowAssertFailed("CollectionAssert.IsNotSubsetOf", Assert.BuildUserMessage(message, parameters));
+        }
+    }
 
     /// <summary>
     /// Tests whether one collection is not a subset of another collection and
@@ -743,14 +889,7 @@ public sealed class CollectionAssert
     /// </exception>
     public static void IsNotSubsetOf([NotNull] ICollection? subset, [NotNull] ICollection? superset, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message,
         params object?[]? parameters)
-    {
-        Assert.CheckParameterNotNull(subset, "CollectionAssert.IsNotSubsetOf", "subset", string.Empty);
-        Assert.CheckParameterNotNull(superset, "CollectionAssert.IsNotSubsetOf", "superset", string.Empty);
-        if (IsSubsetOfHelper(subset, superset))
-        {
-            Assert.ThrowAssertFailed("CollectionAssert.IsNotSubsetOf", Assert.BuildUserMessage(message, parameters));
-        }
-    }
+        => IsNotSubsetOf((IEnumerable?)subset, (IEnumerable?)superset, message, parameters);
 
     #endregion
 
@@ -1236,8 +1375,54 @@ public sealed class CollectionAssert
     /// or some elements of <paramref name="collection"/> do not inherit/implement
     /// <paramref name="expectedType"/>.
     /// </exception>
-    public static void AllItemsAreInstancesOfType([NotNull] ICollection? collection, [NotNull] Type? expectedType)
+    public static void AllItemsAreInstancesOfType([NotNull] IEnumerable? collection, [NotNull] Type? expectedType)
         => AllItemsAreInstancesOfType(collection, expectedType, string.Empty, null);
+
+    /// <summary>
+    /// Tests whether all elements in the specified collection are instances
+    /// of the expected type and throws an exception if the expected type is
+    /// not in the inheritance hierarchy of one or more of the elements.
+    /// </summary>
+    /// <param name="collection">
+    /// The collection containing elements the test expects to be of the
+    /// specified type.
+    /// </param>
+    /// <param name="expectedType">
+    /// The expected type of each element of <paramref name="collection"/>.
+    /// </param>
+    /// <exception cref="AssertFailedException">
+    /// <paramref name="collection"/> is null or, <paramref name="expectedType"/> is null,
+    /// or some elements of <paramref name="collection"/> do not inherit/implement
+    /// <paramref name="expectedType"/>.
+    /// </exception>
+    public static void AllItemsAreInstancesOfType([NotNull] ICollection? collection, [NotNull] Type? expectedType)
+        => AllItemsAreInstancesOfType((IEnumerable?)collection, expectedType, string.Empty, null);
+
+    /// <summary>
+    /// Tests whether all elements in the specified collection are instances
+    /// of the expected type and throws an exception if the expected type is
+    /// not in the inheritance hierarchy of one or more of the elements.
+    /// </summary>
+    /// <param name="collection">
+    /// The collection containing elements the test expects to be of the
+    /// specified type.
+    /// </param>
+    /// <param name="expectedType">
+    /// The expected type of each element of <paramref name="collection"/>.
+    /// </param>
+    /// <param name="message">
+    /// The message to include in the exception when an element in
+    /// <paramref name="collection"/> is not an instance of
+    /// <paramref name="expectedType"/>. The message is shown in test results.
+    /// </param>
+    /// <exception cref="AssertFailedException">
+    /// <paramref name="collection"/> is null or, <paramref name="expectedType"/> is null,
+    /// or some elements of <paramref name="collection"/> do not inherit/implement
+    /// <paramref name="expectedType"/>.
+    /// </exception>
+    public static void AllItemsAreInstancesOfType([NotNull] IEnumerable? collection, [NotNull] Type? expectedType,
+        string? message)
+        => AllItemsAreInstancesOfType(collection, expectedType, message, null);
 
     /// <summary>
     /// Tests whether all elements in the specified collection are instances
@@ -1263,7 +1448,59 @@ public sealed class CollectionAssert
     /// </exception>
     public static void AllItemsAreInstancesOfType([NotNull] ICollection? collection, [NotNull] Type? expectedType,
         string? message)
-        => AllItemsAreInstancesOfType(collection, expectedType, message, null);
+        => AllItemsAreInstancesOfType((IEnumerable?)collection, expectedType, message, null);
+
+    /// <summary>
+    /// Tests whether all elements in the specified collection are instances
+    /// of the expected type and throws an exception if the expected type is
+    /// not in the inheritance hierarchy of one or more of the elements.
+    /// </summary>
+    /// <param name="collection">
+    /// The collection containing elements the test expects to be of the
+    /// specified type.
+    /// </param>
+    /// <param name="expectedType">
+    /// The expected type of each element of <paramref name="collection"/>.
+    /// </param>
+    /// <param name="message">
+    /// The message to include in the exception when an element in
+    /// <paramref name="collection"/> is not an instance of
+    /// <paramref name="expectedType"/>. The message is shown in test results.
+    /// </param>
+    /// <param name="parameters">
+    /// An array of parameters to use when formatting <paramref name="message"/>.
+    /// </param>
+    /// <exception cref="AssertFailedException">
+    /// <paramref name="collection"/> is null or, <paramref name="expectedType"/> is null,
+    /// or some elements of <paramref name="collection"/> do not inherit/implement
+    /// <paramref name="expectedType"/>.
+    /// </exception>
+    public static void AllItemsAreInstancesOfType(
+        [NotNull] IEnumerable? collection, [NotNull] Type? expectedType, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters)
+    {
+        Assert.CheckParameterNotNull(collection, "CollectionAssert.AllItemsAreInstancesOfType", "collection", string.Empty);
+        Assert.CheckParameterNotNull(expectedType, "CollectionAssert.AllItemsAreInstancesOfType", "expectedType", string.Empty);
+        int i = 0;
+        foreach (object? element in collection)
+        {
+            if (expectedType.GetTypeInfo() is { } expectedTypeInfo
+                && element?.GetType().GetTypeInfo() is { } elementTypeInfo
+                && !expectedTypeInfo.IsAssignableFrom(elementTypeInfo))
+            {
+                string userMessage = Assert.BuildUserMessage(message, parameters);
+                string finalMessage = string.Format(
+                    CultureInfo.CurrentCulture,
+                    FrameworkMessages.ElementTypesAtIndexDontMatch,
+                    userMessage,
+                    i,
+                    expectedType.ToString(),
+                    element.GetType().ToString());
+                Assert.ThrowAssertFailed("CollectionAssert.AllItemsAreInstancesOfType", finalMessage);
+            }
+
+            i++;
+        }
+    }
 
     /// <summary>
     /// Tests whether all elements in the specified collection are instances
@@ -1292,30 +1529,7 @@ public sealed class CollectionAssert
     /// </exception>
     public static void AllItemsAreInstancesOfType(
         [NotNull] ICollection? collection, [NotNull] Type? expectedType, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters)
-    {
-        Assert.CheckParameterNotNull(collection, "CollectionAssert.AllItemsAreInstancesOfType", "collection", string.Empty);
-        Assert.CheckParameterNotNull(expectedType, "CollectionAssert.AllItemsAreInstancesOfType", "expectedType", string.Empty);
-        int i = 0;
-        foreach (object? element in collection)
-        {
-            if (expectedType.GetTypeInfo() is { } expectedTypeInfo
-                && element?.GetType().GetTypeInfo() is { } elementTypeInfo
-                && !expectedTypeInfo.IsAssignableFrom(elementTypeInfo))
-            {
-                string userMessage = Assert.BuildUserMessage(message, parameters);
-                string finalMessage = string.Format(
-                    CultureInfo.CurrentCulture,
-                    FrameworkMessages.ElementTypesAtIndexDontMatch,
-                    userMessage,
-                    i,
-                    expectedType.ToString(),
-                    element.GetType().ToString());
-                Assert.ThrowAssertFailed("CollectionAssert.AllItemsAreInstancesOfType", finalMessage);
-            }
-
-            i++;
-        }
-    }
+        => AllItemsAreInstancesOfType((IEnumerable?)collection, expectedType, message, parameters);
 
     #endregion
 
@@ -1339,8 +1553,29 @@ public sealed class CollectionAssert
     /// Thrown if <paramref name="expected"/> is not equal to
     /// <paramref name="actual"/>.
     /// </exception>
-    public static void AreEqual(ICollection? expected, ICollection? actual)
+    public static void AreEqual(IEnumerable? expected, IEnumerable? actual)
         => AreEqual(expected, actual, string.Empty, null);
+
+    /// <summary>
+    /// Tests whether the specified collections are equal and throws an exception
+    /// if the two collections are not equal. Equality is defined as having the same
+    /// elements in the same order and quantity. Whether two elements are the same
+    /// is checked using <see cref="object.Equals(object, object)" /> method.
+    /// Different references to the same value are considered equal.
+    /// </summary>
+    /// <param name="expected">
+    /// The first collection to compare. This is the collection the tests expects.
+    /// </param>
+    /// <param name="actual">
+    /// The second collection to compare. This is the collection produced by the
+    /// code under test.
+    /// </param>
+    /// <exception cref="AssertFailedException">
+    /// Thrown if <paramref name="expected"/> is not equal to
+    /// <paramref name="actual"/>.
+    /// </exception>
+    public static void AreEqual(ICollection? expected, ICollection? actual)
+        => AreEqual((IEnumerable?)expected, (IEnumerable?)actual, string.Empty, null);
 
     /// <summary>
     /// Tests whether the specified collections are equal and throws an exception
@@ -1691,7 +1926,7 @@ public sealed class CollectionAssert
     /// True if <paramref name="subset"/> is a subset of
     /// <paramref name="superset"/>, false otherwise.
     /// </returns>
-    internal static bool IsSubsetOfHelper(ICollection subset, ICollection superset)
+    internal static bool IsSubsetOfHelper(IEnumerable subset, IEnumerable superset)
     {
         // $ CONSIDER: The current algorithm counts the number of occurrences of each
         // $ CONSIDER: element in each collection and then compares the count, resulting
@@ -1841,7 +2076,7 @@ public sealed class CollectionAssert
     }
 #pragma warning restore CS8714
 
-    private static bool AreCollectionsEqual(ICollection? expected, ICollection? actual, [NotNull] IComparer? comparer,
+    private static bool AreCollectionsEqual(IEnumerable? expected, IEnumerable? actual, [NotNull] IComparer? comparer,
         ref string reason)
     {
         Assert.CheckParameterNotNull(comparer, "Assert.AreCollectionsEqual", "comparer", string.Empty);
