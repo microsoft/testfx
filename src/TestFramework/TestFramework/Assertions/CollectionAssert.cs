@@ -61,8 +61,47 @@ public sealed class CollectionAssert
     /// <paramref name="collection"/> is null, or <paramref name="collection"/> does not contain
     /// element <paramref name="element"/>.
     /// </exception>
-    public static void Contains([NotNull] ICollection? collection, object? element)
+    public static void Contains([NotNull] IEnumerable? collection, object? element)
         => Contains(collection, element, string.Empty, null);
+
+    /// <summary>
+    /// Tests whether the specified collection contains the specified element
+    /// and throws an exception if the element is not in the collection.
+    /// </summary>
+    /// <param name="collection">
+    /// The collection in which to search for the element.
+    /// </param>
+    /// <param name="element">
+    /// The element that is expected to be in the collection.
+    /// </param>
+    /// <exception cref="AssertFailedException">
+    /// <paramref name="collection"/> is null, or <paramref name="collection"/> does not contain
+    /// element <paramref name="element"/>.
+    /// </exception>
+    public static void Contains([NotNull] ICollection? collection, object? element)
+        => Contains((IEnumerable?)collection, element, string.Empty, null);
+
+    /// <summary>
+    /// Tests whether the specified collection contains the specified element
+    /// and throws an exception if the element is not in the collection.
+    /// </summary>
+    /// <param name="collection">
+    /// The collection in which to search for the element.
+    /// </param>
+    /// <param name="element">
+    /// The element that is expected to be in the collection.
+    /// </param>
+    /// <param name="message">
+    /// The message to include in the exception when <paramref name="element"/>
+    /// is not in <paramref name="collection"/>. The message is shown in
+    /// test results.
+    /// </param>
+    /// <exception cref="AssertFailedException">
+    /// <paramref name="collection"/> is null, or <paramref name="collection"/> does not contain
+    /// element <paramref name="element"/>.
+    /// </exception>
+    public static void Contains([NotNull] IEnumerable? collection, object? element, string? message)
+        => Contains(collection, element, message, null);
 
     /// <summary>
     /// Tests whether the specified collection contains the specified element
@@ -84,7 +123,45 @@ public sealed class CollectionAssert
     /// element <paramref name="element"/>.
     /// </exception>
     public static void Contains([NotNull] ICollection? collection, object? element, string? message)
-        => Contains(collection, element, message, null);
+        => Contains((IEnumerable?)collection, element, message, null);
+
+    /// <summary>
+    /// Tests whether the specified collection contains the specified element
+    /// and throws an exception if the element is not in the collection.
+    /// </summary>
+    /// <param name="collection">
+    /// The collection in which to search for the element.
+    /// </param>
+    /// <param name="element">
+    /// The element that is expected to be in the collection.
+    /// </param>
+    /// <param name="message">
+    /// The message to include in the exception when <paramref name="element"/>
+    /// is not in <paramref name="collection"/>. The message is shown in
+    /// test results.
+    /// </param>
+    /// <param name="parameters">
+    /// An array of parameters to use when formatting <paramref name="message"/>.
+    /// </param>
+    /// <exception cref="AssertFailedException">
+    /// <paramref name="collection"/> is null, or <paramref name="collection"/> does not contain
+    /// element <paramref name="element"/>.
+    /// </exception>
+    public static void Contains([NotNull] IEnumerable? collection, object? element, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message,
+        params object?[]? parameters)
+    {
+        Assert.CheckParameterNotNull(collection, "CollectionAssert.Contains", "collection", string.Empty);
+
+        foreach (object? current in collection)
+        {
+            if (object.Equals(current, element))
+            {
+                return;
+            }
+        }
+
+        Assert.ThrowAssertFailed("CollectionAssert.Contains", Assert.BuildUserMessage(message, parameters));
+    }
 
     /// <summary>
     /// Tests whether the specified collection contains the specified element
@@ -110,19 +187,24 @@ public sealed class CollectionAssert
     /// </exception>
     public static void Contains([NotNull] ICollection? collection, object? element, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message,
         params object?[]? parameters)
-    {
-        Assert.CheckParameterNotNull(collection, "CollectionAssert.Contains", "collection", string.Empty);
+        => Contains((IEnumerable?)collection, element, message, parameters);
 
-        foreach (object? current in collection)
-        {
-            if (object.Equals(current, element))
-            {
-                return;
-            }
-        }
-
-        Assert.ThrowAssertFailed("CollectionAssert.Contains", Assert.BuildUserMessage(message, parameters));
-    }
+    /// <summary>
+    /// Tests whether the specified collection does not contain the specified
+    /// element and throws an exception if the element is in the collection.
+    /// </summary>
+    /// <param name="collection">
+    /// The collection in which to search for the element.
+    /// </param>
+    /// <param name="element">
+    /// The element that is expected not to be in the collection.
+    /// </param>
+    /// <exception cref="AssertFailedException">
+    /// <paramref name="collection"/> is null, or <paramref name="collection"/> contains
+    /// element <paramref name="element"/>.
+    /// </exception>
+    public static void DoesNotContain([NotNull] IEnumerable? collection, object? element)
+        => DoesNotContain(collection, element, string.Empty, null);
 
     /// <summary>
     /// Tests whether the specified collection does not contain the specified
@@ -139,7 +221,29 @@ public sealed class CollectionAssert
     /// element <paramref name="element"/>.
     /// </exception>
     public static void DoesNotContain([NotNull] ICollection? collection, object? element)
-        => DoesNotContain(collection, element, string.Empty, null);
+        => DoesNotContain((IEnumerable?)collection, element, string.Empty, null);
+
+    /// <summary>
+    /// Tests whether the specified collection does not contain the specified
+    /// element and throws an exception if the element is in the collection.
+    /// </summary>
+    /// <param name="collection">
+    /// The collection in which to search for the element.
+    /// </param>
+    /// <param name="element">
+    /// The element that is expected not to be in the collection.
+    /// </param>
+    /// <param name="message">
+    /// The message to include in the exception when <paramref name="element"/>
+    /// is in <paramref name="collection"/>. The message is shown in test
+    /// results.
+    /// </param>
+    /// <exception cref="AssertFailedException">
+    /// <paramref name="collection"/> is null, or <paramref name="collection"/> contains
+    /// element <paramref name="element"/>.
+    /// </exception>
+    public static void DoesNotContain([NotNull] IEnumerable? collection, object? element, string? message)
+        => DoesNotContain(collection, element, message, null);
 
     /// <summary>
     /// Tests whether the specified collection does not contain the specified
@@ -161,7 +265,43 @@ public sealed class CollectionAssert
     /// element <paramref name="element"/>.
     /// </exception>
     public static void DoesNotContain([NotNull] ICollection? collection, object? element, string? message)
-        => DoesNotContain(collection, element, message, null);
+        => DoesNotContain((IEnumerable?)collection, element, message, null);
+
+    /// <summary>
+    /// Tests whether the specified collection does not contain the specified
+    /// element and throws an exception if the element is in the collection.
+    /// </summary>
+    /// <param name="collection">
+    /// The collection in which to search for the element.
+    /// </param>
+    /// <param name="element">
+    /// The element that is expected not to be in the collection.
+    /// </param>
+    /// <param name="message">
+    /// The message to include in the exception when <paramref name="element"/>
+    /// is in <paramref name="collection"/>. The message is shown in test
+    /// results.
+    /// </param>
+    /// <param name="parameters">
+    /// An array of parameters to use when formatting <paramref name="message"/>.
+    /// </param>
+    /// <exception cref="AssertFailedException">
+    /// <paramref name="collection"/> is null, or <paramref name="collection"/> contains
+    /// element <paramref name="element"/>.
+    /// </exception>
+    public static void DoesNotContain([NotNull] IEnumerable? collection, object? element, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message,
+        params object?[]? parameters)
+    {
+        Assert.CheckParameterNotNull(collection, "CollectionAssert.DoesNotContain", "collection", string.Empty);
+
+        foreach (object? current in collection)
+        {
+            if (object.Equals(current, element))
+            {
+                Assert.ThrowAssertFailed("CollectionAssert.DoesNotContain", Assert.BuildUserMessage(message, parameters));
+            }
+        }
+    }
 
     /// <summary>
     /// Tests whether the specified collection does not contain the specified
@@ -187,17 +327,20 @@ public sealed class CollectionAssert
     /// </exception>
     public static void DoesNotContain([NotNull] ICollection? collection, object? element, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message,
         params object?[]? parameters)
-    {
-        Assert.CheckParameterNotNull(collection, "CollectionAssert.DoesNotContain", "collection", string.Empty);
+        => DoesNotContain((IEnumerable?)collection, element, message, parameters);
 
-        foreach (object? current in collection)
-        {
-            if (object.Equals(current, element))
-            {
-                Assert.ThrowAssertFailed("CollectionAssert.DoesNotContain", Assert.BuildUserMessage(message, parameters));
-            }
-        }
-    }
+    /// <summary>
+    /// Tests whether all items in the specified collection are non-null and throws
+    /// an exception if any element is null.
+    /// </summary>
+    /// <param name="collection">
+    /// The collection in which to search for null elements.
+    /// </param>
+    /// <exception cref="AssertFailedException">
+    /// <paramref name="collection"/> is null, or <paramref name="collection"/> contains a null element.
+    /// </exception>
+    public static void AllItemsAreNotNull([NotNull] IEnumerable? collection)
+        => AllItemsAreNotNull(collection, string.Empty, null);
 
     /// <summary>
     /// Tests whether all items in the specified collection are non-null and throws
@@ -210,7 +353,24 @@ public sealed class CollectionAssert
     /// <paramref name="collection"/> is null, or <paramref name="collection"/> contains a null element.
     /// </exception>
     public static void AllItemsAreNotNull([NotNull] ICollection? collection)
-        => AllItemsAreNotNull(collection, string.Empty, null);
+        => AllItemsAreNotNull((IEnumerable?)collection, string.Empty, null);
+
+    /// <summary>
+    /// Tests whether all items in the specified collection are non-null and throws
+    /// an exception if any element is null.
+    /// </summary>
+    /// <param name="collection">
+    /// The collection in which to search for null elements.
+    /// </param>
+    /// <param name="message">
+    /// The message to include in the exception when <paramref name="collection"/>
+    /// contains a null element. The message is shown in test results.
+    /// </param>
+    /// <exception cref="AssertFailedException">
+    /// <paramref name="collection"/> is null, or <paramref name="collection"/> contains a null element.
+    /// </exception>
+    public static void AllItemsAreNotNull([NotNull] IEnumerable? collection, string? message)
+        => AllItemsAreNotNull(collection, message, null);
 
     /// <summary>
     /// Tests whether all items in the specified collection are non-null and throws
@@ -227,7 +387,37 @@ public sealed class CollectionAssert
     /// <paramref name="collection"/> is null, or <paramref name="collection"/> contains a null element.
     /// </exception>
     public static void AllItemsAreNotNull([NotNull] ICollection? collection, string? message)
-        => AllItemsAreNotNull(collection, message, null);
+        => AllItemsAreNotNull((IEnumerable?)collection, message, null);
+
+    /// <summary>
+    /// Tests whether all items in the specified collection are non-null and throws
+    /// an exception if any element is null.
+    /// </summary>
+    /// <param name="collection">
+    /// The collection in which to search for null elements.
+    /// </param>
+    /// <param name="message">
+    /// The message to include in the exception when <paramref name="collection"/>
+    /// contains a null element. The message is shown in test results.
+    /// </param>
+    /// <param name="parameters">
+    /// An array of parameters to use when formatting <paramref name="message"/>.
+    /// </param>
+    /// <exception cref="AssertFailedException">
+    /// <paramref name="collection"/> is null, or <paramref name="collection"/> contains a null element.
+    /// </exception>
+    public static void AllItemsAreNotNull([NotNull] IEnumerable? collection, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message,
+        params object?[]? parameters)
+    {
+        Assert.CheckParameterNotNull(collection, "CollectionAssert.AllItemsAreNotNull", "collection", string.Empty);
+        foreach (object? current in collection)
+        {
+            if (current == null)
+            {
+                Assert.ThrowAssertFailed("CollectionAssert.AllItemsAreNotNull", Assert.BuildUserMessage(message, parameters));
+            }
+        }
+    }
 
     /// <summary>
     /// Tests whether all items in the specified collection are non-null and throws
@@ -248,16 +438,21 @@ public sealed class CollectionAssert
     /// </exception>
     public static void AllItemsAreNotNull([NotNull] ICollection? collection, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message,
         params object?[]? parameters)
-    {
-        Assert.CheckParameterNotNull(collection, "CollectionAssert.AllItemsAreNotNull", "collection", string.Empty);
-        foreach (object? current in collection)
-        {
-            if (current == null)
-            {
-                Assert.ThrowAssertFailed("CollectionAssert.AllItemsAreNotNull", Assert.BuildUserMessage(message, parameters));
-            }
-        }
-    }
+        => AllItemsAreNotNull((IEnumerable?)collection, message, parameters);
+
+    /// <summary>
+    /// Tests whether all items in the specified collection are unique or not and
+    /// throws if any two elements in the collection are equal.
+    /// </summary>
+    /// <param name="collection">
+    /// The collection in which to search for duplicate elements.
+    /// </param>
+    /// <exception cref="AssertFailedException">
+    /// <paramref name="collection"/> is null, or <paramref name="collection"/> contains at least one duplicate
+    /// element.
+    /// </exception>
+    public static void AllItemsAreUnique([NotNull] IEnumerable? collection)
+        => AllItemsAreUnique(collection, string.Empty, null);
 
     /// <summary>
     /// Tests whether all items in the specified collection are unique or not and
@@ -271,7 +466,26 @@ public sealed class CollectionAssert
     /// element.
     /// </exception>
     public static void AllItemsAreUnique([NotNull] ICollection? collection)
-        => AllItemsAreUnique(collection, string.Empty, null);
+        => AllItemsAreUnique((IEnumerable?)collection, string.Empty, null);
+
+    /// <summary>
+    /// Tests whether all items in the specified collection are unique or not and
+    /// throws if any two elements in the collection are equal.
+    /// </summary>
+    /// <param name="collection">
+    /// The collection in which to search for duplicate elements.
+    /// </param>
+    /// <param name="message">
+    /// The message to include in the exception when <paramref name="collection"/>
+    /// contains at least one duplicate element. The message is shown in
+    /// test results.
+    /// </param>
+    /// <exception cref="AssertFailedException">
+    /// <paramref name="collection"/> is null, or <paramref name="collection"/> contains at least one duplicate
+    /// element.
+    /// </exception>
+    public static void AllItemsAreUnique([NotNull] IEnumerable? collection, string? message)
+        => AllItemsAreUnique(collection, message, null);
 
     /// <summary>
     /// Tests whether all items in the specified collection are unique or not and
@@ -290,7 +504,7 @@ public sealed class CollectionAssert
     /// element.
     /// </exception>
     public static void AllItemsAreUnique([NotNull] ICollection? collection, string? message)
-        => AllItemsAreUnique(collection, message, null);
+        => AllItemsAreUnique((IEnumerable?)collection, message, null);
 
     /// <summary>
     /// Tests whether all items in the specified collection are unique or not and
@@ -311,7 +525,7 @@ public sealed class CollectionAssert
     /// <paramref name="collection"/> is null, or <paramref name="collection"/> contains at least one duplicate
     /// element.
     /// </exception>
-    public static void AllItemsAreUnique([NotNull] ICollection? collection, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message,
+    public static void AllItemsAreUnique([NotNull] IEnumerable? collection, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message,
         params object?[]? parameters)
     {
         Assert.CheckParameterNotNull(collection, "CollectionAssert.AllItemsAreUnique", "collection", string.Empty);
@@ -357,6 +571,29 @@ public sealed class CollectionAssert
             }
         }
     }
+
+    /// <summary>
+    /// Tests whether all items in the specified collection are unique or not and
+    /// throws if any two elements in the collection are equal.
+    /// </summary>
+    /// <param name="collection">
+    /// The collection in which to search for duplicate elements.
+    /// </param>
+    /// <param name="message">
+    /// The message to include in the exception when <paramref name="collection"/>
+    /// contains at least one duplicate element. The message is shown in
+    /// test results.
+    /// </param>
+    /// <param name="parameters">
+    /// An array of parameters to use when formatting <paramref name="message"/>.
+    /// </param>
+    /// <exception cref="AssertFailedException">
+    /// <paramref name="collection"/> is null, or <paramref name="collection"/> contains at least one duplicate
+    /// element.
+    /// </exception>
+    public static void AllItemsAreUnique([NotNull] ICollection? collection, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message,
+        params object?[]? parameters)
+        => AllItemsAreUnique((IEnumerable?)collection, message, parameters);
 
     #endregion
 
