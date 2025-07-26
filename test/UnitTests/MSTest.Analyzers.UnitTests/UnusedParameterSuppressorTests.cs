@@ -25,7 +25,7 @@ public sealed class UnusedParameterSuppressorTests
             public class SomeClass
             {
                 [AssemblyInitialize]
-                public static void Initialize(TestContext [|context|])
+                public static void Initialize(TestContext {|#0:context|})
                 {
                     // TestContext parameter is unused but required by MSTest
                 }
@@ -36,12 +36,26 @@ public sealed class UnusedParameterSuppressorTests
         await new VerifyCS.Test
         {
             TestState = { Sources = { code } },
+            ExpectedDiagnostics =
+            {
+                VerifyCS.Diagnostic(WarnForUnusedParameters.Rule)
+                    .WithLocation(0)
+                    .WithArguments("context")
+                    .WithIsSuppressed(false),
+            },
         }.RunAsync();
 
         // Verify issue is suppressed with suppressor
         await new TestWithSuppressor
         {
             TestState = { Sources = { code } },
+            ExpectedDiagnostics =
+            {
+                VerifyCS.Diagnostic(WarnForUnusedParameters.Rule)
+                    .WithLocation(0)
+                    .WithArguments("context")
+                    .WithIsSuppressed(true),
+            },
         }.RunAsync();
     }
 
@@ -55,7 +69,7 @@ public sealed class UnusedParameterSuppressorTests
             public class SomeClass
             {
                 [ClassInitialize]
-                public static void Initialize(TestContext [|context|])
+                public static void Initialize(TestContext {|#0:context|})
                 {
                     // TestContext parameter is unused but required by MSTest
                 }
@@ -66,12 +80,26 @@ public sealed class UnusedParameterSuppressorTests
         await new VerifyCS.Test
         {
             TestState = { Sources = { code } },
+            ExpectedDiagnostics =
+            {
+                VerifyCS.Diagnostic(WarnForUnusedParameters.Rule)
+                    .WithLocation(0)
+                    .WithArguments("context")
+                    .WithIsSuppressed(false),
+            },
         }.RunAsync();
 
         // Verify issue is suppressed with suppressor
         await new TestWithSuppressor
         {
             TestState = { Sources = { code } },
+            ExpectedDiagnostics =
+            {
+                VerifyCS.Diagnostic(WarnForUnusedParameters.Rule)
+                    .WithLocation(0)
+                    .WithArguments("context")
+                    .WithIsSuppressed(true),
+            },
         }.RunAsync();
     }
 
@@ -85,7 +113,7 @@ public sealed class UnusedParameterSuppressorTests
             public class SomeClass
             {
                 [TestMethod]
-                public void TestMethod(int [|unusedParam|])
+                public void TestMethod(int {|#0:unusedParam|})
                 {
                     // This should not be suppressed
                 }
@@ -96,12 +124,26 @@ public sealed class UnusedParameterSuppressorTests
         await new VerifyCS.Test
         {
             TestState = { Sources = { code } },
+            ExpectedDiagnostics =
+            {
+                VerifyCS.Diagnostic(WarnForUnusedParameters.Rule)
+                    .WithLocation(0)
+                    .WithArguments("unusedParam")
+                    .WithIsSuppressed(false),
+            },
         }.RunAsync();
 
         // Verify issue is still reported with suppressor (not suppressed)
         await new TestWithSuppressor
         {
             TestState = { Sources = { code } },
+            ExpectedDiagnostics =
+            {
+                VerifyCS.Diagnostic(WarnForUnusedParameters.Rule)
+                    .WithLocation(0)
+                    .WithArguments("unusedParam")
+                    .WithIsSuppressed(false),
+            },
         }.RunAsync();
     }
 
@@ -114,7 +156,7 @@ public sealed class UnusedParameterSuppressorTests
             [TestClass]
             public class SomeClass
             {
-                public void RegularMethod(TestContext [|context|])
+                public void RegularMethod(TestContext {|#0:context|})
                 {
                     // This should not be suppressed as it's not AssemblyInitialize or ClassInitialize
                 }
@@ -125,12 +167,26 @@ public sealed class UnusedParameterSuppressorTests
         await new VerifyCS.Test
         {
             TestState = { Sources = { code } },
+            ExpectedDiagnostics =
+            {
+                VerifyCS.Diagnostic(WarnForUnusedParameters.Rule)
+                    .WithLocation(0)
+                    .WithArguments("context")
+                    .WithIsSuppressed(false),
+            },
         }.RunAsync();
 
         // Verify issue is still reported with suppressor (not suppressed)
         await new TestWithSuppressor
         {
             TestState = { Sources = { code } },
+            ExpectedDiagnostics =
+            {
+                VerifyCS.Diagnostic(WarnForUnusedParameters.Rule)
+                    .WithLocation(0)
+                    .WithArguments("context")
+                    .WithIsSuppressed(false),
+            },
         }.RunAsync();
     }
 
