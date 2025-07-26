@@ -48,12 +48,55 @@ namespace IEnumerableTest
             Console.WriteLine("AllItemsAreUnique tests passed!");
         }
         
+        public static void TestIsSubsetOfWithIEnumerable()
+        {
+            // Test with LINQ results
+            IEnumerable<int> subset = new[] { 1, 2, 3 }.Where(x => x < 4);
+            IEnumerable<int> superset = Enumerable.Range(1, 10);
+            CollectionAssert.IsSubsetOf(subset, superset);
+            
+            Console.WriteLine("IsSubsetOf tests passed!");
+        }
+        
+        public static void TestAllItemsAreInstancesOfTypeWithIEnumerable()
+        {
+            // Test with LINQ result
+            IEnumerable<string> strings = new[] { "a", "b", "c" }.Where(x => x.Length > 0);
+            CollectionAssert.AllItemsAreInstancesOfType(strings, typeof(string));
+            
+            Console.WriteLine("AllItemsAreInstancesOfType tests passed!");
+        }
+        
+        public static void TestAreEqualWithIEnumerable()
+        {
+            // Test with LINQ results
+            IEnumerable<int> expected = new[] { 1, 2, 3 }.Where(x => x > 0);
+            IEnumerable<int> actual = Enumerable.Range(1, 3);
+            CollectionAssert.AreEqual(expected, actual);
+            
+            Console.WriteLine("AreEqual tests passed!");
+        }
+        
+        public static void TestAreNotEqualWithIEnumerable()
+        {
+            // Test with LINQ results
+            IEnumerable<int> notExpected = new[] { 1, 2, 3 }.Where(x => x > 0);
+            IEnumerable<int> actual = Enumerable.Range(2, 3); // [2, 3, 4]
+            CollectionAssert.AreNotEqual(notExpected, actual);
+            
+            Console.WriteLine("AreNotEqual tests passed!");
+        }
+        
         public static void Main()
         {
             TestContainsWithIEnumerable();
             TestDoesNotContainWithIEnumerable();
             TestAllItemsAreNotNullWithIEnumerable();
             TestAllItemsAreUniqueWithIEnumerable();
+            TestIsSubsetOfWithIEnumerable();
+            TestAllItemsAreInstancesOfTypeWithIEnumerable();
+            TestAreEqualWithIEnumerable();
+            TestAreNotEqualWithIEnumerable();
             
             Console.WriteLine("All IEnumerable tests passed!");
         }
