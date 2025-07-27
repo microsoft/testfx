@@ -1356,5 +1356,32 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("FlowTestContextCancellationTokenTitle", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Assert.Throws methods should contain only a single statement or expression. Multiple statements can be misleading - if the first statement throws, subsequent statements are never executed; if it doesn't throw, it should be moved outside the Assert.Throws.
+        /// </summary>
+        internal static string AssertThrowsShouldContainSingleStatementDescription {
+            get {
+                return ResourceManager.GetString("AssertThrowsShouldContainSingleStatementDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Assert.Throws should contain only a single statement/expression.
+        /// </summary>
+        internal static string AssertThrowsShouldContainSingleStatementMessageFormat {
+            get {
+                return ResourceManager.GetString("AssertThrowsShouldContainSingleStatementMessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Assert.Throws should contain only a single statement/expression.
+        /// </summary>
+        internal static string AssertThrowsShouldContainSingleStatementTitle {
+            get {
+                return ResourceManager.GetString("AssertThrowsShouldContainSingleStatementTitle", resourceCulture);
+            }
+        }
     }
 }

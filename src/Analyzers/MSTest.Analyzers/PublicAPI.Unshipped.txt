@@ -1,4 +1,8 @@
 #nullable enable
+MSTest.Analyzers.AssertThrowsShouldContainSingleStatementAnalyzer
+MSTest.Analyzers.AssertThrowsShouldContainSingleStatementAnalyzer.AssertThrowsShouldContainSingleStatementAnalyzer() -> void
+override MSTest.Analyzers.AssertThrowsShouldContainSingleStatementAnalyzer.Initialize(Microsoft.CodeAnalysis.Diagnostics.AnalysisContext! context) -> void
+override MSTest.Analyzers.AssertThrowsShouldContainSingleStatementAnalyzer.SupportedDiagnostics.get -> System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.DiagnosticDescriptor!>
 MSTest.Analyzers.FlowTestContextCancellationTokenAnalyzer
 MSTest.Analyzers.FlowTestContextCancellationTokenAnalyzer.FlowTestContextCancellationTokenAnalyzer() -> void
 override MSTest.Analyzers.FlowTestContextCancellationTokenAnalyzer.Initialize(Microsoft.CodeAnalysis.Diagnostics.AnalysisContext! context) -> void
