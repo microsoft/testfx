@@ -237,4 +237,68 @@ public sealed class AssertThrowsShouldContainSingleStatementAnalyzerTests
 
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
+
+    [TestMethod]
+    public async Task WhenAssertThrowsWithExpressionBody_NoDiagnostic()
+    {
+        string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    // Expression-bodied lambda - should NOT be flagged
+                    Assert.Throws<Exception>(() => DoSomething());
+                    Assert.ThrowsExactly<Exception>(() => DoSomething());
+                    
+                    // Expression-bodied with method chain - should NOT be flagged
+                    Assert.Throws<Exception>(() => "test".ToUpper().ToLower());
+                }
+
+                private static void DoSomething() => throw new Exception();
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertThrowsWithEmptyStatements_NoDiagnostic()
+    {
+        string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    // Single statement with empty statements - should NOT be flagged
+                    Assert.Throws<Exception>(() =>
+                    {
+                        DoSomething();
+                        ; // empty statement
+                    });
+                    
+                    // Multiple non-empty statements - should be flagged
+                    [|Assert.Throws<Exception>(() =>
+                    {
+                        DoSomething();
+                        DoSomething();
+                        ; // empty statement
+                    })|];
+                }
+
+                private static void DoSomething() => throw new Exception();
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
 }

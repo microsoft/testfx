@@ -67,26 +67,38 @@ internal sealed class AssertThrowsShouldContainSingleStatementAnalyzer : Diagnos
             return;
         }
 
-        // Find the action parameter (lambda expression)
+        // Find the action parameter (lambda expression) - it's typically the first parameter
         foreach (var argument in operation.Arguments)
         {
-            if (argument.Parameter?.Name is "action" || 
-                (argument.Parameter?.Name is null && argument.Value is IAnonymousFunctionOperation))
+            if (argument.Value is IAnonymousFunctionOperation lambdaOperation)
             {
-                if (argument.Value is IAnonymousFunctionOperation lambdaOperation)
+                // Check if this parameter is likely the action parameter by checking its type
+                if (IsActionParameter(argument.Parameter))
                 {
                     AnalyzeLambdaBody(context, lambdaOperation, operation);
+                    break;
                 }
-                break;
             }
         }
+    }
+
+    private static bool IsActionParameter(IParameterSymbol? parameter)
+    {
+        if (parameter is null)
+        {
+            return false;
+        }
+
+        // The action parameter is typically named "action" or is a delegate type
+        return parameter.Name == "action" || 
+               parameter.Type.TypeKind == TypeKind.Delegate;
     }
 
     private static void AnalyzeLambdaBody(OperationAnalysisContext context, IAnonymousFunctionOperation lambdaOperation, IInvocationOperation invocationOperation)
     {
         if (lambdaOperation.Body is IBlockOperation blockOperation)
         {
-            // Count non-empty statements (excluding implicit return statements)
+            // Count meaningful statements (excluding implicit return statements and empty statements)
             int statementCount = 0;
             foreach (var statement in blockOperation.Operations)
             {
@@ -96,14 +108,21 @@ internal sealed class AssertThrowsShouldContainSingleStatementAnalyzer : Diagnos
                     continue;
                 }
                 
+                // Skip empty statements
+                if (statement is IEmptyOperation)
+                {
+                    continue;
+                }
+                
                 statementCount++;
             }
 
-            // Flag if there are multiple statements
+            // Flag if there are multiple meaningful statements
             if (statementCount > 1)
             {
                 context.ReportDiagnostic(invocationOperation.CreateDiagnostic(Rule));
             }
         }
+        // For expression-bodied lambdas (not block lambdas), they always have a single expression, so no need to flag
     }
 }
