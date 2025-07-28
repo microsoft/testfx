@@ -47,7 +47,7 @@ public sealed class StringAssertToAssertAnalyzerTests
 
         await VerifyCS.VerifyCodeFixAsync(
             code,
-            // /0/Test0.cs(11,9): info MSTEST0045: Use 'Assert.Contains' instead of 'StringAssert.Contains'
+            // /0/Test0.cs(11,9): info MSTEST0046: Use 'Assert.Contains' instead of 'StringAssert.Contains'
             VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("Contains", "Contains"),
             fixedCode);
     }
@@ -89,7 +89,7 @@ public sealed class StringAssertToAssertAnalyzerTests
 
         await VerifyCS.VerifyCodeFixAsync(
             code,
-            // /0/Test0.cs(11,9): info MSTEST0045: Use 'Assert.StartsWith' instead of 'StringAssert.StartsWith'
+            // /0/Test0.cs(11,9): info MSTEST0046: Use 'Assert.StartsWith' instead of 'StringAssert.StartsWith'
             VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("StartsWith", "StartsWith"),
             fixedCode);
     }
@@ -131,7 +131,7 @@ public sealed class StringAssertToAssertAnalyzerTests
 
         await VerifyCS.VerifyCodeFixAsync(
             code,
-            // /0/Test0.cs(11,9): info MSTEST0045: Use 'Assert.EndsWith' instead of 'StringAssert.EndsWith'
+            // /0/Test0.cs(11,9): info MSTEST0046: Use 'Assert.EndsWith' instead of 'StringAssert.EndsWith'
             VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("EndsWith", "EndsWith"),
             fixedCode);
     }
@@ -175,7 +175,7 @@ public sealed class StringAssertToAssertAnalyzerTests
 
         await VerifyCS.VerifyCodeFixAsync(
             code,
-            // /0/Test0.cs(12,9): info MSTEST0045: Use 'Assert.MatchesRegex' instead of 'StringAssert.Matches'
+            // /0/Test0.cs(12,9): info MSTEST0046: Use 'Assert.MatchesRegex' instead of 'StringAssert.Matches'
             VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("MatchesRegex", "Matches"),
             fixedCode);
     }
@@ -219,7 +219,7 @@ public sealed class StringAssertToAssertAnalyzerTests
 
         await VerifyCS.VerifyCodeFixAsync(
             code,
-            // /0/Test0.cs(12,9): info MSTEST0045: Use 'Assert.DoesNotMatchRegex' instead of 'StringAssert.DoesNotMatch'
+            // /0/Test0.cs(12,9): info MSTEST0046: Use 'Assert.DoesNotMatchRegex' instead of 'StringAssert.DoesNotMatch'
             VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("DoesNotMatchRegex", "DoesNotMatch"),
             fixedCode);
     }
@@ -261,7 +261,7 @@ public sealed class StringAssertToAssertAnalyzerTests
 
         await VerifyCS.VerifyCodeFixAsync(
             code,
-            // /0/Test0.cs(11,9): info MSTEST0045: Use 'Assert.Contains' instead of 'StringAssert.Contains'
+            // /0/Test0.cs(11,9): info MSTEST0046: Use 'Assert.Contains' instead of 'StringAssert.Contains'
             VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("Contains", "Contains"),
             fixedCode);
     }
