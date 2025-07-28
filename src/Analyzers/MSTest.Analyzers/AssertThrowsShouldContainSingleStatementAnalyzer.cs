@@ -17,7 +17,7 @@ namespace MSTest.Analyzers;
 /// MSTEST0050: Assert.Throws should contain only a single statement/expression.
 /// </summary>
 [DiagnosticAnalyzer(LanguageNames.CSharp, LanguageNames.VisualBasic)]
-internal sealed class AssertThrowsShouldContainSingleStatementAnalyzer : DiagnosticAnalyzer
+public sealed class AssertThrowsShouldContainSingleStatementAnalyzer : DiagnosticAnalyzer
 {
     private static readonly LocalizableResourceString Title = new(nameof(Resources.AssertThrowsShouldContainSingleStatementTitle), Resources.ResourceManager, typeof(Resources));
     private static readonly LocalizableResourceString MessageFormat = new(nameof(Resources.AssertThrowsShouldContainSingleStatementMessageFormat), Resources.ResourceManager, typeof(Resources));
@@ -32,9 +32,11 @@ internal sealed class AssertThrowsShouldContainSingleStatementAnalyzer : Diagnos
         DiagnosticSeverity.Info,
         isEnabledByDefault: true);
 
+    /// <inheritdoc />
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
         = ImmutableArray.Create(Rule);
 
+    /// <inheritdoc />
     public override void Initialize(AnalysisContext context)
     {
         context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
