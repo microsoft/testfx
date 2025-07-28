@@ -576,10 +576,8 @@ public class TestMethodInfoTests : TestContainer
         Verify(exception.Outcome == UTF.UnitTestOutcome.Failed);
         Verify(exception.InnerException!.GetType() == typeof(ArgumentException));
         Verify(exception.InnerException.InnerException!.GetType() == typeof(InvalidOperationException));
-#if DEBUG
         Verify(exception.StackTraceInformation!.ErrorStackTrace.StartsWith(
-    "   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<TestMethodInfoInvokeWhenTestThrowsReturnsExpectedResult>b__", StringComparison.Ordinal));
-#endif
+            "   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<TestMethodInfoInvokeWhenTestThrowsReturnsExpectedResult>b__", StringComparison.Ordinal));
     }
 
     public async Task TestInitialize_WhenTestReturnsTaskFromException_DisplayProperException()

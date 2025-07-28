@@ -24,10 +24,17 @@ public sealed class TestApplication : ITestApplication
     private readonly IHost _host;
     private static UnhandledExceptionHandler? s_unhandledExceptionHandler;
 
-    static TestApplication() =>
+    static TestApplication()
+    {
         // Capture system console soon as possible to avoid any other code from changing it.
         // This is important for the console display system to work properly.
         _ = new SystemConsole();
+
+        // Enable portable PDBs for stack traces to match VSTest behavior
+        // This ensures stack traces are available in release builds when using portable PDBs
+        // See: https://github.com/dotnet/designs/blob/master/accepted/2020/diagnostics/debugging-with-symbols-and-sources.md#stack-traces
+        AppContext.SetSwitch("Switch.System.Diagnostics.IgnorePortablePDBsInStackTraces", false);
+    }
 
     internal TestApplication(IHost host) => _host = host;
 
