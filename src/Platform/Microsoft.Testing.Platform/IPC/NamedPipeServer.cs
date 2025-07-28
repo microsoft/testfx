@@ -36,7 +36,7 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
         ILogger logger,
         ITask task,
         CancellationToken cancellationToken)
-        : this(GetPipeName(name), callback, environment, logger, task, cancellationToken)
+        : this(GetPipeName(name, environment), callback, environment, logger, task, cancellationToken)
     {
     }
 
@@ -267,7 +267,7 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
         }
     }
 
-    public static PipeNameDescription GetPipeName(string name)
+    public static PipeNameDescription GetPipeName(string name, IEnvironment environment)
     {
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
@@ -275,7 +275,7 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
         }
 
 #pragma warning disable RS0030 // Do not use banned APIs - We are using IEnvironment, but we still need the enum from the Environment class in BCL. This is safe.
-        string directoryId = Path.Combine(_environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), name);
+        string directoryId = Path.Combine(environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData, Environment.SpecialFolderOption.None), name);
 #pragma warning disable RS0030 // Do not use banned APIs
         Directory.CreateDirectory(directoryId);
         return new PipeNameDescription(
