@@ -53,6 +53,7 @@ public sealed partial class Assert
     /// The assertion failure message.
     /// </param>
     [DoesNotReturn]
+    [StackTraceHidden]
     internal static void ThrowAssertFailed(string assertionName, string? message)
         => throw new AssertFailedException(
             string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AssertionFailed, assertionName, ReplaceNulls(message)));

@@ -359,7 +359,7 @@ public class TestClassInfoTests : TestContainer
             exception.Message
             == "Class Initialization method Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestClassInfoTests+DummyTestClass.ClassInitializeMethod threw exception. Microsoft.VisualStudio.TestTools.UnitTesting.AssertFailedException: Assert.Fail failed. Test failure.");
 #if DEBUG
-        Verify(exception.StackTraceInformation!.ErrorStackTrace.StartsWith(
+        Verify(exception.StackTraceInformation!.ErrorStackTrace.Contains(
     "   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestClassInfoTests.<>c.<RunClassInitializeShouldThrowTestFailedExceptionOnAssertionFailure>", StringComparison.Ordinal));
 #endif
         Verify(exception.InnerException!.GetType() == typeof(AssertFailedException));
@@ -378,7 +378,7 @@ public class TestClassInfoTests : TestContainer
             exception.Message
             == "Class Initialization method Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestClassInfoTests+DummyTestClass.ClassInitializeMethod threw exception. Microsoft.VisualStudio.TestTools.UnitTesting.AssertInconclusiveException: Assert.Inconclusive failed. Test Inconclusive.");
 #if DEBUG
-        Verify(exception.StackTraceInformation!.ErrorStackTrace.StartsWith(
+        Verify(exception.StackTraceInformation!.ErrorStackTrace.Contains(
     "   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestClassInfoTests.<>c.<RunClassInitializeShouldThrowTestFailedExceptionWithInconclusiveOnAssertInconclusive>", StringComparison.Ordinal));
 #endif
         Verify(exception.InnerException!.GetType() == typeof(AssertInconclusiveException));
