@@ -284,13 +284,13 @@
     <value>Invalid configuration for provider '{0}' (UID: {1}). Error: {2}</value>
   </data>
   <data name="CommandLineOptionExpectsAtLeastArguments" xml:space="preserve">
-    <value>Option '--{0}' from provider '{1}' (UID: {2}) expects at least {3} arguments</value>
+    <value>Option '--{0}' from provider '{1}' (UID: {2}) expects at least {3} arguments. Command: {4}</value>
   </data>
   <data name="CommandLineOptionExpectsAtMostArguments" xml:space="preserve">
-    <value>Option '--{0}' from provider '{1}' (UID: {2}) expects at most {3} arguments</value>
+    <value>Option '--{0}' from provider '{1}' (UID: {2}) expects at most {3} arguments. Command: {4}</value>
   </data>
   <data name="CommandLineOptionExpectsNoArguments" xml:space="preserve">
-    <value>Option '--{0}' from provider '{1}' (UID: {2}) expects no arguments</value>
+    <value>Option '--{0}' from provider '{1}' (UID: {2}) expects no arguments. Command: {3}</value>
   </data>
   <data name="CommandLineOptionIsUsingReservedPrefix" xml:space="preserve">
     <value>Option `--{0}` from provider '{1}' (UID: {2}) is using the reserved prefix '--internal'</value>

@@ -88,17 +88,17 @@
         <note />
       </trans-unit>
       <trans-unit id="CommandLineOptionExpectsAtLeastArguments">
-        <source>Option '--{0}' from provider '{1}' (UID: {2}) expects at least {3} arguments</source>
+        <source>Option '--{0}' from provider '{1}' (UID: {2}) expects at least {3} arguments. Command: {4}</source>
         <target state="translated">プロバイダー '{1}' (UID:{2}) のオプション '-- {0}' には、少なくとも {3} 引数が必要です</target>
         <note />
       </trans-unit>
       <trans-unit id="CommandLineOptionExpectsAtMostArguments">
-        <source>Option '--{0}' from provider '{1}' (UID: {2}) expects at most {3} arguments</source>
+        <source>Option '--{0}' from provider '{1}' (UID: {2}) expects at most {3} arguments. Command: {4}</source>
         <target state="translated">プロバイダー '{1}' (UID:{2}) のオプション '-- {0}' には、最大 {3} 引数が必要です</target>
         <note />
       </trans-unit>
       <trans-unit id="CommandLineOptionExpectsNoArguments">
-        <source>Option '--{0}' from provider '{1}' (UID: {2}) expects no arguments</source>
+        <source>Option '--{0}' from provider '{1}' (UID: {2}) expects no arguments. Command: {3}</source>
         <target state="translated">プロバイダー '{1}' のオプション '--{0}' (UID:{2}) には引数が必要ありません</target>
         <note />
       </trans-unit>

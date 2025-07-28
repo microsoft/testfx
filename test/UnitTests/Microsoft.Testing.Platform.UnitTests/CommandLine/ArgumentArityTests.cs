@@ -36,7 +36,7 @@ public sealed class ArgumentArityTests
 
         // Assert
         Assert.IsFalse(result.IsValid);
-        Assert.AreEqual("Option '--zeroArgumentsOption' from provider 'Microsoft Testing Platform command line provider' (UID: PlatformCommandLineProvider) expects no arguments", result.ErrorMessage, StringComparer.Ordinal);
+        Assert.AreEqual("Option '--zeroArgumentsOption' from provider 'Microsoft Testing Platform command line provider' (UID: PlatformCommandLineProvider) expects no arguments. Command: --zeroArgumentsOption arg", result.ErrorMessage, StringComparer.Ordinal);
     }
 
     [TestMethod]
@@ -52,7 +52,7 @@ public sealed class ArgumentArityTests
 
         // Assert
         Assert.IsFalse(result.IsValid);
-        Assert.AreEqual("Option '--exactlyOneArgumentsOption' from provider 'Microsoft Testing Platform command line provider' (UID: PlatformCommandLineProvider) expects at most 1 arguments", result.ErrorMessage);
+        Assert.AreEqual("Option '--exactlyOneArgumentsOption' from provider 'Microsoft Testing Platform command line provider' (UID: PlatformCommandLineProvider) expects at most 1 arguments. Command: --exactlyOneArgumentsOption arg1 arg2", result.ErrorMessage);
     }
 
     [TestMethod]
@@ -68,7 +68,7 @@ public sealed class ArgumentArityTests
 
         // Assert
         Assert.IsFalse(result.IsValid);
-        Assert.AreEqual("Option '--exactlyOneArgumentsOption' from provider 'Microsoft Testing Platform command line provider' (UID: PlatformCommandLineProvider) expects at least 1 arguments", result.ErrorMessage);
+        Assert.AreEqual("Option '--exactlyOneArgumentsOption' from provider 'Microsoft Testing Platform command line provider' (UID: PlatformCommandLineProvider) expects at least 1 arguments. Command: --exactlyOneArgumentsOption", result.ErrorMessage);
     }
 
     [TestMethod]
@@ -84,7 +84,7 @@ public sealed class ArgumentArityTests
 
         // Assert
         Assert.IsFalse(result.IsValid);
-        Assert.AreEqual("Option '--zeroOrOneArgumentsOption' from provider 'Microsoft Testing Platform command line provider' (UID: PlatformCommandLineProvider) expects at most 1 arguments", result.ErrorMessage);
+        Assert.AreEqual("Option '--zeroOrOneArgumentsOption' from provider 'Microsoft Testing Platform command line provider' (UID: PlatformCommandLineProvider) expects at most 1 arguments. Command: --zeroOrOneArgumentsOption arg1 --zeroOrOneArgumentsOption arg2", result.ErrorMessage);
     }
 
     [TestMethod]
@@ -100,7 +100,7 @@ public sealed class ArgumentArityTests
 
         // Assert
         Assert.IsFalse(result.IsValid);
-        Assert.AreEqual("Option '--oneOrMoreArgumentsOption' from provider 'Microsoft Testing Platform command line provider' (UID: PlatformCommandLineProvider) expects at least 1 arguments", result.ErrorMessage);
+        Assert.AreEqual("Option '--oneOrMoreArgumentsOption' from provider 'Microsoft Testing Platform command line provider' (UID: PlatformCommandLineProvider) expects at least 1 arguments. Command: --oneOrMoreArgumentsOption", result.ErrorMessage);
     }
 
     [TestMethod]

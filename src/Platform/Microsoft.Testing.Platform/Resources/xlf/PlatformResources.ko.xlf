@@ -88,17 +88,17 @@
         <note />
       </trans-unit>
       <trans-unit id="CommandLineOptionExpectsAtLeastArguments">
-        <source>Option '--{0}' from provider '{1}' (UID: {2}) expects at least {3} arguments</source>
+        <source>Option '--{0}' from provider '{1}' (UID: {2}) expects at least {3} arguments. Command: {4}</source>
         <target state="translated">공급자 '{1}'(UID: {2})의 옵션 '--{0}'에는 최소 {3}개의 인수가 필요합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="CommandLineOptionExpectsAtMostArguments">
-        <source>Option '--{0}' from provider '{1}' (UID: {2}) expects at most {3} arguments</source>
+        <source>Option '--{0}' from provider '{1}' (UID: {2}) expects at most {3} arguments. Command: {4}</source>
         <target state="translated">공급자 '{1}'(UID: {2})의 옵션 '--{0}'에는 최대 {3}개의 인수가 필요합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="CommandLineOptionExpectsNoArguments">
-        <source>Option '--{0}' from provider '{1}' (UID: {2}) expects no arguments</source>
+        <source>Option '--{0}' from provider '{1}' (UID: {2}) expects no arguments. Command: {3}</source>
         <target state="translated">공급자 '{1}'(UID: {2})의 옵션 '--{0}'에 인수가 필요하지 않습니다.</target>
         <note />
       </trans-unit>
