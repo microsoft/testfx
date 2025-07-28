@@ -42,9 +42,9 @@ variables:
 
 stages:
 
-# Stage 1: Windows builds all products, runs unit tests, publishes packages, and runs integration tests
-- stage: BuildPackAndIntegrationTests
-  displayName: Windows Build, Unit Tests, Pack, and Integration Tests
+# Stage 1: Build and Unit Tests (3 parallel jobs)
+- stage: BuildAndUnitTests
+  displayName: Build and Unit Tests
   jobs:
   - template: /eng/common/templates/jobs/jobs.yml
     parameters:
@@ -56,8 +56,9 @@ stages:
       enablePublishUsingPipelines: true
       enableTelemetry: true
       jobs:
-      - job: Windows_BuildAndPack
-        displayName: Windows Build, Unit Tests, and Pack
+      # Windows: Full build + unit tests + pack and stage artifacts
+      - job: Windows_BuildPackAndUnitTests
+        displayName: Windows Build, Pack, and Unit Tests
         timeoutInMinutes: 90
         condition: ne('${{ parameters.SkipTests }}', 'True')
         pool:
@@ -118,10 +119,113 @@ stages:
             ArtifactName: UnitTestResults_Windows_$(_BuildConfig)_Attempt$(System.JobAttempt)
           condition: always()
 
-      # Integration tests on Windows (depends on Windows build)
-      - job: Windows_IntegrationTests_MSTest
-        displayName: Windows Integration Tests (MSTest)
-        dependsOn: Windows_BuildAndPack
+      # Linux: Unit tests only (parallel)
+      - job: Linux_UnitTests
+        displayName: Linux Unit Tests
+        timeoutInMinutes: 90
+        condition: ne('${{ parameters.SkipTests }}', 'True')
+        pool:
+          name: NetCore-Public
+          demands: ImageOverride -equals build.ubuntu.2004.amd64.open
+        strategy:
+          matrix:
+            Debug:
+              _BuildConfig: Debug
+            Release:
+              _BuildConfig: Release
+        steps:
+        # Build and run MSTest unit tests
+        - script: eng/common/cibuild.sh
+            -configuration $(_BuildConfig)
+            -prepareMachine
+            /p:ProductsToBuild=mstest-unit-tests
+            /p:Test=true
+            /p:Publish=false
+            /p:NonWindowsBuild=true
+            /p:FastAcceptanceTest=true
+          displayName: Build and Test MSTest Unit Tests
+
+        # Build and run Testing Platform unit tests
+        - script: eng/common/cibuild.sh
+            -configuration $(_BuildConfig)
+            -prepareMachine
+            /p:ProductsToBuild=testing-platform-unit-tests
+            /p:Test=true
+            /p:Publish=false
+            /p:NonWindowsBuild=true
+            /p:FastAcceptanceTest=true
+          displayName: Build and Test Testing Platform Unit Tests
+
+        - task: PublishBuildArtifacts@1
+          displayName: 'Publish Unit Test Results'
+          inputs:
+            PathtoPublish: '$(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)'
+            ArtifactName: UnitTestResults_Linux_$(_BuildConfig)_Attempt$(System.JobAttempt)
+          condition: always()
+
+      # macOS: Unit tests only (parallel)
+      - job: MacOS_UnitTests
+        displayName: macOS Unit Tests
+        timeoutInMinutes: 90
+        condition: ne('${{ parameters.SkipTests }}', 'True')
+        pool:
+          name: Azure Pipelines
+          vmImage: macos-latest
+          os: macOS
+        strategy:
+          matrix:
+            Debug:
+              _BuildConfig: Debug
+            Release:
+              _BuildConfig: Release
+        steps:
+        # Build and run MSTest unit tests
+        - script: eng/common/cibuild.sh
+            -configuration $(_BuildConfig)
+            -prepareMachine
+            /p:ProductsToBuild=mstest-unit-tests
+            /p:Test=true
+            /p:Publish=false
+            /p:NonWindowsBuild=true
+            /p:FastAcceptanceTest=true
+          displayName: Build and Test MSTest Unit Tests
+
+        # Build and run Testing Platform unit tests
+        - script: eng/common/cibuild.sh
+            -configuration $(_BuildConfig)
+            -prepareMachine
+            /p:ProductsToBuild=testing-platform-unit-tests
+            /p:Test=true
+            /p:Publish=false
+            /p:NonWindowsBuild=true
+            /p:FastAcceptanceTest=true
+          displayName: Build and Test Testing Platform Unit Tests
+
+        - task: PublishBuildArtifacts@1
+          displayName: 'Publish Unit Test Results'
+          inputs:
+            PathtoPublish: '$(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)'
+            ArtifactName: UnitTestResults_macOS_$(_BuildConfig)_Attempt$(System.JobAttempt)
+          condition: always()
+
+# Stage 2: Integration Tests (depends on Stage 1 completion)
+- stage: IntegrationTests
+  displayName: Integration Tests
+  dependsOn: BuildAndUnitTests
+  jobs:
+  - template: /eng/common/templates/jobs/jobs.yml
+    parameters:
+      enableMicrobuild: true
+      enablePublishBuildArtifacts: true
+      enablePublishTestResults: true
+      testResultsFormat: 'vstest'
+      enablePublishBuildAssets: false
+      enablePublishUsingPipelines: false
+      enableTelemetry: true
+      jobs:
+      # Windows Integration Tests
+      - job: Windows_IntegrationTests
+        displayName: Windows Integration Tests
         timeoutInMinutes: 90
         condition: ne('${{ parameters.SkipTests }}', 'True')
         pool:
@@ -148,6 +252,8 @@ stages:
             Contents: '**'
             TargetFolder: '$(Build.SourcesDirectory)/artifacts/packages/Release'
         - template: /eng/windows-setup-steps.yml
+
+        # Build and run MSTest integration tests
         - script: eng\common\CIBuild.cmd
             -configuration $(_BuildConfig)
             -prepareMachine
@@ -155,51 +261,15 @@ stages:
             /p:ProductsToBuild=mstest-integration-tests
             /p:Test=false
             /p:FastAcceptanceTest=true
-          name: Build
-          displayName: Build Integration Test Projects
-        - script: dotnet test -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig)\TestStep.binlog --no-progress
-          name: Test
-          displayName: Test
+          displayName: Build MSTest Integration Tests
+        - script: dotnet test test/IntegrationTests/MSTest.Acceptance.IntegrationTests test/IntegrationTests/MSTest.IntegrationTests test/IntegrationTests/PlatformServices.Desktop.IntegrationTests test/IntegrationTests/MSTest.VstestConsoleWrapper.IntegrationTests -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig)\MSTestIntegrationTests.binlog --no-progress
+          displayName: Run MSTest Integration Tests
           env:
             DOTNET_ROOT: $(Build.SourcesDirectory)/.dotnet
             NUGET_PACKAGES: $(Build.SourcesDirectory)/.packages
             DOTNET_CLI_CONTEXT_VERBOSE: 1
-        - task: PublishBuildArtifacts@1
-          displayName: 'Publish Test Results folders'
-          inputs:
-            PathtoPublish: '$(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)'
-            ArtifactName: IntegrationTestResults_Windows_MSTest_$(_BuildConfig)_Attempt$(System.JobAttempt)
-          condition: always()
 
-      - job: Windows_IntegrationTests_MTP
-        displayName: Windows Integration Tests (Testing Platform)
-        dependsOn: Windows_BuildAndPack
-        timeoutInMinutes: 90
-        condition: ne('${{ parameters.SkipTests }}', 'True')
-        pool:
-          name: NetCore-Public
-          demands: ImageOverride -equals windows.vs2022preview.amd64.open
-        strategy:
-          matrix:
-            Debug:
-              _BuildConfig: Debug
-            Release:
-              _BuildConfig: Release
-        steps:
-        - task: DownloadBuildArtifacts@0
-          displayName: 'Download NuGet packages'
-          inputs:
-            buildType: 'current'
-            downloadType: 'single'
-            artifactName: 'NuGetPackages'
-            downloadPath: '$(System.DefaultWorkingDirectory)'
-        - task: CopyFiles@2
-          displayName: 'Copy packages to expected location'
-          inputs:
-            SourceFolder: '$(System.DefaultWorkingDirectory)/NuGetPackages'
-            Contents: '**'
-            TargetFolder: '$(Build.SourcesDirectory)/artifacts/packages/Release'
-        - template: /eng/windows-setup-steps.yml
+        # Build and run Testing Platform integration tests
         - script: eng\common\CIBuild.cmd
             -configuration $(_BuildConfig)
             -prepareMachine
@@ -207,26 +277,24 @@ stages:
             /p:ProductsToBuild=testing-platform-integration-tests
             /p:Test=false
             /p:FastAcceptanceTest=true
-          name: Build
-          displayName: Build Integration Test Projects
-        - script: dotnet test -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig)\TestStep.binlog --no-progress
-          name: Test
-          displayName: Test
+          displayName: Build Testing Platform Integration Tests
+        - script: dotnet test test/IntegrationTests/Microsoft.Testing.Platform.Acceptance.IntegrationTests -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig)\MTPIntegrationTests.binlog --no-progress
+          displayName: Run Testing Platform Integration Tests
           env:
             DOTNET_ROOT: $(Build.SourcesDirectory)/.dotnet
             NUGET_PACKAGES: $(Build.SourcesDirectory)/.packages
             DOTNET_CLI_CONTEXT_VERBOSE: 1
+
         - task: PublishBuildArtifacts@1
-          displayName: 'Publish Test Results folders'
+          displayName: 'Publish Integration Test Results'
           inputs:
             PathtoPublish: '$(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)'
-            ArtifactName: IntegrationTestResults_Windows_MTP_$(_BuildConfig)_Attempt$(System.JobAttempt)
+            ArtifactName: IntegrationTestResults_Windows_$(_BuildConfig)_Attempt$(System.JobAttempt)
           condition: always()
 
-      # Integration tests on Linux (depends on Windows build)
-      - job: Linux_IntegrationTests_MSTest
-        displayName: Linux Integration Tests (MSTest)
-        dependsOn: Windows_BuildAndPack
+      # Linux Integration Tests
+      - job: Linux_IntegrationTests
+        displayName: Linux Integration Tests
         timeoutInMinutes: 90
         condition: ne('${{ parameters.SkipTests }}', 'True')
         pool:
@@ -252,6 +320,8 @@ stages:
             SourceFolder: '$(System.DefaultWorkingDirectory)/NuGetPackages'
             Contents: '**'
             TargetFolder: '$(Build.SourcesDirectory)/artifacts/packages/Release'
+
+        # Build and run MSTest integration tests
         - script: eng/common/cibuild.sh
             -configuration $(_BuildConfig)
             -prepareMachine
@@ -260,49 +330,15 @@ stages:
             /p:Publish=false
             /p:NonWindowsBuild=true
             /p:FastAcceptanceTest=true
-          displayName: Build Integration Test Projects
-        - script: dotnet test --solution NonWindowsTests.slnf -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig)\TestStep.binlog --no-progress
-          name: Test
-          displayName: Test
+          displayName: Build MSTest Integration Tests
+        - script: dotnet test test/IntegrationTests/MSTest.Acceptance.IntegrationTests test/IntegrationTests/MSTest.IntegrationTests test/IntegrationTests/PlatformServices.Desktop.IntegrationTests test/IntegrationTests/MSTest.VstestConsoleWrapper.IntegrationTests -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig)\MSTestIntegrationTests.binlog --no-progress
+          displayName: Run MSTest Integration Tests
           env:
             DOTNET_ROOT: $(Build.SourcesDirectory)/.dotnet
             NUGET_PACKAGES: $(Build.SourcesDirectory)/.packages
             DOTNET_CLI_CONTEXT_VERBOSE: 1
-        - task: PublishBuildArtifacts@1
-          displayName: 'Publish Test Results folders'
-          inputs:
-            PathtoPublish: '$(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)'
-            ArtifactName: IntegrationTestResults_Linux_MSTest_$(_BuildConfig)_Attempt$(System.JobAttempt)
-          condition: always()
 
-      - job: Linux_IntegrationTests_MTP
-        displayName: Linux Integration Tests (Testing Platform)
-        dependsOn: Windows_BuildAndPack
-        timeoutInMinutes: 90
-        condition: ne('${{ parameters.SkipTests }}', 'True')
-        pool:
-          name: NetCore-Public
-          demands: ImageOverride -equals build.ubuntu.2004.amd64.open
-        strategy:
-          matrix:
-            Debug:
-              _BuildConfig: Debug
-            Release:
-              _BuildConfig: Release
-        steps:
-        - task: DownloadBuildArtifacts@0
-          displayName: 'Download NuGet packages'
-          inputs:
-            buildType: 'current'
-            downloadType: 'single'
-            artifactName: 'NuGetPackages'
-            downloadPath: '$(System.DefaultWorkingDirectory)'
-        - task: CopyFiles@2
-          displayName: 'Copy packages to expected location'
-          inputs:
-            SourceFolder: '$(System.DefaultWorkingDirectory)/NuGetPackages'
-            Contents: '**'
-            TargetFolder: '$(Build.SourcesDirectory)/artifacts/packages/Release'
+        # Build and run Testing Platform integration tests
         - script: eng/common/cibuild.sh
             -configuration $(_BuildConfig)
             -prepareMachine
@@ -311,25 +347,24 @@ stages:
             /p:Publish=false
             /p:NonWindowsBuild=true
             /p:FastAcceptanceTest=true
-          displayName: Build Integration Test Projects
-        - script: dotnet test --solution NonWindowsTests.slnf -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig)\TestStep.binlog --no-progress
-          name: Test
-          displayName: Test
+          displayName: Build Testing Platform Integration Tests
+        - script: dotnet test test/IntegrationTests/Microsoft.Testing.Platform.Acceptance.IntegrationTests -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig)\MTPIntegrationTests.binlog --no-progress
+          displayName: Run Testing Platform Integration Tests
           env:
             DOTNET_ROOT: $(Build.SourcesDirectory)/.dotnet
             NUGET_PACKAGES: $(Build.SourcesDirectory)/.packages
             DOTNET_CLI_CONTEXT_VERBOSE: 1
+
         - task: PublishBuildArtifacts@1
-          displayName: 'Publish Test Results folders'
+          displayName: 'Publish Integration Test Results'
           inputs:
             PathtoPublish: '$(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)'
-            ArtifactName: IntegrationTestResults_Linux_MTP_$(_BuildConfig)_Attempt$(System.JobAttempt)
+            ArtifactName: IntegrationTestResults_Linux_$(_BuildConfig)_Attempt$(System.JobAttempt)
           condition: always()
 
-      # Integration tests on macOS (depends on Windows build)
-      - job: MacOS_IntegrationTests_MSTest
-        displayName: macOS Integration Tests (MSTest)
-        dependsOn: Windows_BuildAndPack
+      # macOS Integration Tests
+      - job: MacOS_IntegrationTests
+        displayName: macOS Integration Tests
         timeoutInMinutes: 90
         condition: ne('${{ parameters.SkipTests }}', 'True')
         pool:
@@ -356,6 +391,8 @@ stages:
             SourceFolder: '$(System.DefaultWorkingDirectory)/NuGetPackages'
             Contents: '**'
             TargetFolder: '$(Build.SourcesDirectory)/artifacts/packages/Release'
+
+        # Build and run MSTest integration tests
         - script: eng/common/cibuild.sh
             -configuration $(_BuildConfig)
             -prepareMachine
@@ -364,50 +401,15 @@ stages:
             /p:Publish=false
             /p:NonWindowsBuild=true
             /p:FastAcceptanceTest=true
-          displayName: Build Integration Test Projects
-        - script: dotnet test --solution NonWindowsTests.slnf -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig)\TestStep.binlog --no-progress
-          name: Test
-          displayName: Test
+          displayName: Build MSTest Integration Tests
+        - script: dotnet test test/IntegrationTests/MSTest.Acceptance.IntegrationTests test/IntegrationTests/MSTest.IntegrationTests test/IntegrationTests/PlatformServices.Desktop.IntegrationTests test/IntegrationTests/MSTest.VstestConsoleWrapper.IntegrationTests -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig)\MSTestIntegrationTests.binlog --no-progress
+          displayName: Run MSTest Integration Tests
           env:
             DOTNET_ROOT: $(Build.SourcesDirectory)/.dotnet
             NUGET_PACKAGES: $(Build.SourcesDirectory)/.packages
             DOTNET_CLI_CONTEXT_VERBOSE: 1
-        - task: PublishBuildArtifacts@1
-          displayName: 'Publish Test Results folders'
-          inputs:
-            PathtoPublish: '$(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)'
-            ArtifactName: IntegrationTestResults_macOS_MSTest_$(_BuildConfig)_Attempt$(System.JobAttempt)
-          condition: always()
 
-      - job: MacOS_IntegrationTests_MTP
-        displayName: macOS Integration Tests (Testing Platform)
-        dependsOn: Windows_BuildAndPack
-        timeoutInMinutes: 90
-        condition: ne('${{ parameters.SkipTests }}', 'True')
-        pool:
-          name: Azure Pipelines
-          vmImage: macos-latest
-          os: macOS
-        strategy:
-          matrix:
-            Debug:
-              _BuildConfig: Debug
-            Release:
-              _BuildConfig: Release
-        steps:
-        - task: DownloadBuildArtifacts@0
-          displayName: 'Download NuGet packages'
-          inputs:
-            buildType: 'current'
-            downloadType: 'single'
-            artifactName: 'NuGetPackages'
-            downloadPath: '$(System.DefaultWorkingDirectory)'
-        - task: CopyFiles@2
-          displayName: 'Copy packages to expected location'
-          inputs:
-            SourceFolder: '$(System.DefaultWorkingDirectory)/NuGetPackages'
-            Contents: '**'
-            TargetFolder: '$(Build.SourcesDirectory)/artifacts/packages/Release'
+        # Build and run Testing Platform integration tests
         - script: eng/common/cibuild.sh
             -configuration $(_BuildConfig)
             -prepareMachine
@@ -416,65 +418,17 @@ stages:
             /p:Publish=false
             /p:NonWindowsBuild=true
             /p:FastAcceptanceTest=true
-          displayName: Build Integration Test Projects
-        - script: dotnet test --solution NonWindowsTests.slnf -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig)\TestStep.binlog --no-progress
-          name: Test
-          displayName: Test
+          displayName: Build Testing Platform Integration Tests
+        - script: dotnet test test/IntegrationTests/Microsoft.Testing.Platform.Acceptance.IntegrationTests -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig)\MTPIntegrationTests.binlog --no-progress
+          displayName: Run Testing Platform Integration Tests
           env:
             DOTNET_ROOT: $(Build.SourcesDirectory)/.dotnet
             NUGET_PACKAGES: $(Build.SourcesDirectory)/.packages
             DOTNET_CLI_CONTEXT_VERBOSE: 1
+
         - task: PublishBuildArtifacts@1
-          displayName: 'Publish Test Results folders'
+          displayName: 'Publish Integration Test Results'
           inputs:
             PathtoPublish: '$(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)'
-            ArtifactName: IntegrationTestResults_macOS_MTP_$(_BuildConfig)_Attempt$(System.JobAttempt)
+            ArtifactName: IntegrationTestResults_macOS_$(_BuildConfig)_Attempt$(System.JobAttempt)
           condition: always()
-
-# Stage 2: Linux Unit Tests (parallel, no dependency)
-- template: /eng/unit-test-stage-template.yml
-  parameters:
-    stageName: UnitTestsLinux
-    displayName: Unit Tests Linux (MSTest)
-    os: Linux
-    skipTests: ${{ parameters.SkipTests }}
-    productFilter: mstest-unit-tests
-    pool:
-      name: NetCore-Public
-      demands: ImageOverride -equals build.ubuntu.2004.amd64.open
-
-- template: /eng/unit-test-stage-template.yml
-  parameters:
-    stageName: UnitTestsLinuxMTP
-    displayName: Unit Tests Linux (Testing Platform)
-    os: Linux
-    skipTests: ${{ parameters.SkipTests }}
-    productFilter: testing-platform-unit-tests
-    pool:
-      name: NetCore-Public
-      demands: ImageOverride -equals build.ubuntu.2004.amd64.open
-
-# Stage 3: macOS Unit Tests (parallel, no dependency)  
-- template: /eng/unit-test-stage-template.yml
-  parameters:
-    stageName: UnitTestsMacOS
-    displayName: Unit Tests macOS (MSTest)
-    os: macOS
-    skipTests: ${{ parameters.SkipTests }}
-    productFilter: mstest-unit-tests
-    pool:
-      name: Azure Pipelines
-      vmImage: macos-latest
-      os: macOS
-
-- template: /eng/unit-test-stage-template.yml
-  parameters:
-    stageName: UnitTestsMacOSMTP
-    displayName: Unit Tests macOS (Testing Platform)
-    os: macOS
-    skipTests: ${{ parameters.SkipTests }}
-    productFilter: testing-platform-unit-tests
-    pool:
-      name: Azure Pipelines
-      vmImage: macos-latest
-      os: macOS
