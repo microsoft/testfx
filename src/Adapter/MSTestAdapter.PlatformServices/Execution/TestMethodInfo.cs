@@ -410,6 +410,12 @@ public class TestMethodInfo : ITestMethod
                 }
                 else
                 {
+                    // The whole ExecuteInternalAsync method is already running on the execution context we got after class init.
+                    // However, if the global test initialize call above is using a non-cooperative timeout, it will
+                    // need to capture the execution context from the thread running it (after it has finished).
+                    // This is the case when executionContext is not null (this code path).
+                    // In this case, we want to ensure the constructor and setting TestContext are both run on the correct execution context.
+                    // Also we re-capture the execution context in case constructor or TestContext setter modifies an async local value.
                     ExecutionContext updatedExecutionContext = executionContext;
                     ExecutionContextHelpers.RunOnContext(executionContext, () =>
                     {
