@@ -243,7 +243,6 @@ public abstract partial class CLITestBase
                        test.Equals(f.DisplayName, StringComparison.Ordinal));
             Assert.IsNotNull(testFound, "Test '{0}' does not appear in failed tests list.", test);
 
-#if DEBUG
             if (!validateStackTraceInfo)
             {
                 continue;
@@ -259,7 +258,6 @@ public abstract partial class CLITestBase
                 Assert.IsNotNull(testFound.ErrorStackTrace);
                 Assert.Contains(testMethodName, testFound.ErrorStackTrace, $"No stack trace for failed test: {test}");
             }
-#endif
         }
     }
 
