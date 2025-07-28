@@ -103,6 +103,11 @@ public sealed partial class Assert
             }
         }
 
+        public AssertThrowsExactlyInterpolatedStringHandler(int literalLength, int formattedCount, Func<object?> action, out bool shouldAppend)
+            : this(literalLength, formattedCount, (Action)(() => _ = action()), out shouldAppend)
+        {
+        }
+
         internal TException ComputeAssertion()
         {
             if (_state.FailAction is not null)

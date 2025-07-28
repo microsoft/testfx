@@ -26,6 +26,10 @@ internal sealed class TestAssemblyInfo
     internal TestAssemblyInfo(Assembly assembly)
         => Assembly = assembly;
 
+    internal List<(MethodInfo Method, TimeoutInfo? TimeoutInfo)> GlobalTestInitializations { get; } = [];
+
+    internal List<(MethodInfo Method, TimeoutInfo? TimeoutInfo)> GlobalTestCleanups { get; } = [];
+
     /// <summary>
     /// Gets or sets <c>AssemblyInitialize</c> method for the assembly.
     /// </summary>

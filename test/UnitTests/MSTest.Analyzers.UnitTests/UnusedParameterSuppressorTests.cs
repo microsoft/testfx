@@ -104,6 +104,66 @@ public sealed class UnusedParameterSuppressorTests
     }
 
     [TestMethod]
+    public async Task GlobalTestInitializeWithUnusedTestContext_DiagnosticIsSuppressed()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public static class SomeClass
+            {
+                [GlobalTestInitialize]
+                public static void Initialize(TestContext [|context|])
+                {
+                    // TestContext parameter is unused but required by MSTest
+                }
+            }
+            """;
+
+        // Verify issue is reported without suppressor
+        await new VerifyCS.Test
+        {
+            TestState = { Sources = { code } },
+        }.RunAsync();
+
+        // Verify issue is suppressed with suppressor
+        await new TestWithSuppressor
+        {
+            TestState = { Sources = { code } },
+        }.RunAsync();
+    }
+
+    [TestMethod]
+    public async Task GlobalTestCleanupWithUnusedTestContext_DiagnosticIsSuppressed()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public static class SomeClass
+            {
+                [GlobalTestCleanup]
+                public static void Cleanup(TestContext [|context|])
+                {
+                    // TestContext parameter is unused but required by MSTest
+                }
+            }
+            """;
+
+        // Verify issue is reported without suppressor
+        await new VerifyCS.Test
+        {
+            TestState = { Sources = { code } },
+        }.RunAsync();
+
+        // Verify issue is suppressed with suppressor
+        await new TestWithSuppressor
+        {
+            TestState = { Sources = { code } },
+        }.RunAsync();
+    }
+
+    [TestMethod]
     public async Task TestMethodWithUnusedParameter_DiagnosticIsNotSuppressed()
     {
         string code = """
