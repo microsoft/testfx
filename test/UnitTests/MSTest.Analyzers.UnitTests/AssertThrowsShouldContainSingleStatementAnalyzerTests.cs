@@ -1,8 +1,9 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using VerifyCS = MSTest.Analyzers.Test.CSharpCodeVerifier<
-    MSTest.Analyzers.AssertThrowsShouldContainSingleStatementAnalyzer>;
+using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
+    MSTest.Analyzers.AssertThrowsShouldContainSingleStatementAnalyzer,
+    Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider>;
 
 namespace MSTest.Analyzers.Test;
 

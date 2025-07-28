@@ -10,7 +10,7 @@ MSTEST0045 | Usage | Info | UseCooperativeCancellationForTimeoutAnalyzer, [Docum
 MSTEST0046 | Usage | Info | StringAssertToAssertAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0046)
 MSTEST0048 | Usage | Warning | TestContextPropertyUsageAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0047)
 MSTEST0049 | Usage | Info | FlowTestContextCancellationTokenAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0049)
-MSTEST0050 | Usage | Warning | AssertThrowsShouldContainSingleStatementAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0050)
+MSTEST0050 | Usage | Info | AssertThrowsShouldContainSingleStatementAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0050)
 
 ### Changed Rules
 

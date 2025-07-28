@@ -64,7 +64,7 @@ The type declaring these methods should also respect the following rules:
 -The class shouldn't be 'static'
 -The class should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</source>
-        <target state="translated">'[AssemblyInitialize]' でマークされたメソッドを有効にするには、次のレイアウトに従う必要があります: 
+        <target state="translated">'[AssemblyInitialize]' でマークされたメソッドを有効にするには、次のレイアウトに従う必要があります:
 - ジェネリック クラスで宣言することはできません
 - 'public' である必要があります
 - 'static' である必要があります
@@ -90,6 +90,21 @@ The type declaring these methods should also respect the following rules:
       <trans-unit id="AssemblyInitializeShouldBeValidTitle">
         <source>AssemblyInitialize methods should have valid layout</source>
         <target state="translated">AssemblyInitialize メソッドには有効なレイアウトが必要です</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AssertThrowsShouldContainSingleStatementDescription">
+        <source>Assert.Throws methods should contain only a single statement or expression. Multiple statements can be misleading - if the first statement throws, subsequent statements are never executed; if it doesn't throw, it should be moved outside the Assert.Throws.</source>
+        <target state="new">Assert.Throws methods should contain only a single statement or expression. Multiple statements can be misleading - if the first statement throws, subsequent statements are never executed; if it doesn't throw, it should be moved outside the Assert.Throws.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AssertThrowsShouldContainSingleStatementMessageFormat">
+        <source>Assert.Throws should contain only a single statement/expression</source>
+        <target state="new">Assert.Throws should contain only a single statement/expression</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AssertThrowsShouldContainSingleStatementTitle">
+        <source>Assert.Throws should contain only a single statement/expression</source>
+        <target state="new">Assert.Throws should contain only a single statement/expression</target>
         <note />
       </trans-unit>
       <trans-unit id="AssertionArgsShouldAvoidConditionalAccessMessageFormat">
@@ -639,7 +654,7 @@ The type declaring these methods should also respect the following rules:
 -The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
 -The class shouldn't be 'static'
 -If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute).</source>
-        <target state="translated">'[TestCleanup]' でマークされたメソッドを有効にするには、次のレイアウトに従う必要があります: 
+        <target state="translated">'[TestCleanup]' でマークされたメソッドを有効にするには、次のレイアウトに従う必要があります:
 - 'public' である必要があります
 - 'abstract' にすることはできません
 - 'async void' にすることはできません
@@ -698,7 +713,7 @@ The type declaring these methods should also respect the following rules:
 -The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
 -The class shouldn't be 'static'
 -If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute).</source>
-        <target state="translated">'[TestInitialize]' でマークされたメソッドを有効にするには、次のレイアウトに従う必要があります: 
+        <target state="translated">'[TestInitialize]' でマークされたメソッドを有効にするには、次のレイアウトに従う必要があります:
 - 'public' である必要があります
 - 'abstract' にすることはできません
 - 'async void' にすることはできません
@@ -900,20 +915,5 @@ The type declaring these methods should also respect the following rules:
         <note />
       </trans-unit>
     </body>
-      <trans-unit id="AssertThrowsShouldContainSingleStatementDescription">
-        <source>Assert.Throws methods should contain only a single statement or expression. Multiple statements can be misleading - if the first statement throws, subsequent statements are never executed; if it doesn't throw, it should be moved outside the Assert.Throws.</source>
-        <target state="new">Assert.Throws methods should contain only a single statement or expression. Multiple statements can be misleading - if the first statement throws, subsequent statements are never executed; if it doesn't throw, it should be moved outside the Assert.Throws.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="AssertThrowsShouldContainSingleStatementMessageFormat">
-        <source>Assert.Throws should contain only a single statement/expression</source>
-        <target state="new">Assert.Throws should contain only a single statement/expression</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="AssertThrowsShouldContainSingleStatementTitle">
-        <source>Assert.Throws should contain only a single statement/expression</source>
-        <target state="new">Assert.Throws should contain only a single statement/expression</target>
-        <note />
-      </trans-unit>
   </file>
 </xliff>

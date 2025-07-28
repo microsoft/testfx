@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Immutable;
@@ -29,7 +29,7 @@ internal sealed class AssertThrowsShouldContainSingleStatementAnalyzer : Diagnos
         MessageFormat,
         Description,
         Category.Usage,
-        DiagnosticSeverity.Warning,
+        DiagnosticSeverity.Info,
         isEnabledByDefault: true);
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
@@ -55,7 +55,7 @@ internal sealed class AssertThrowsShouldContainSingleStatementAnalyzer : Diagnos
     {
         var operation = (IInvocationOperation)context.Operation;
         IMethodSymbol targetMethod = operation.TargetMethod;
-        
+
         if (!SymbolEqualityComparer.Default.Equals(targetMethod.ContainingType, assertTypeSymbol))
         {
             return;
@@ -68,14 +68,15 @@ internal sealed class AssertThrowsShouldContainSingleStatementAnalyzer : Diagnos
         }
 
         // Find the action parameter (lambda expression) - it's typically the first parameter
-        foreach (var argument in operation.Arguments)
+        foreach (IArgumentOperation argument in operation.Arguments)
         {
-            if (argument.Value is IAnonymousFunctionOperation lambdaOperation)
+            if (argument.Value is IDelegateCreationOperation delegateCreation
+                && delegateCreation.Target is IAnonymousFunctionOperation delegateLambda)
             {
                 // Check if this parameter is likely the action parameter by checking its type
                 if (IsActionParameter(argument.Parameter))
                 {
-                    AnalyzeLambdaBody(context, lambdaOperation, operation);
+                    AnalyzeLambdaBody(context, delegateLambda, operation);
                     break;
                 }
             }
@@ -90,7 +91,7 @@ internal sealed class AssertThrowsShouldContainSingleStatementAnalyzer : Diagnos
         }
 
         // The action parameter is typically named "action" or is a delegate type
-        return parameter.Name == "action" || 
+        return parameter.Name == "action" ||
                parameter.Type.TypeKind == TypeKind.Delegate;
     }
 
@@ -100,20 +101,20 @@ internal sealed class AssertThrowsShouldContainSingleStatementAnalyzer : Diagnos
         {
             // Count meaningful statements (excluding implicit return statements and empty statements)
             int statementCount = 0;
-            foreach (var statement in blockOperation.Operations)
+            foreach (IOperation statement in blockOperation.Operations)
             {
                 // Skip implicit return statements (they don't represent user code)
                 if (statement is IReturnOperation returnOp && returnOp.IsImplicit)
                 {
                     continue;
                 }
-                
+
                 // Skip empty statements
                 if (statement is IEmptyOperation)
                 {
                     continue;
                 }
-                
+
                 statementCount++;
             }
 
@@ -123,6 +124,7 @@ internal sealed class AssertThrowsShouldContainSingleStatementAnalyzer : Diagnos
                 context.ReportDiagnostic(invocationOperation.CreateDiagnostic(Rule));
             }
         }
+
         // For expression-bodied lambdas (not block lambdas), they always have a single expression, so no need to flag
     }
 }
