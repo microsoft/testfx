@@ -48,7 +48,17 @@ namespace MSTest.Analyzers;
 /// </item>
 /// <item>
 /// <description>
+/// <code>Assert.IsFalse(myString.[StartsWith|EndsWith|Contains]("..."))</code>
+/// </description>
+/// </item>
+/// <item>
+/// <description>
 /// <code>Assert.IsTrue(myCollection.Contains(...))</code>
+/// </description>
+/// </item>
+/// <item>
+/// <description>
+/// <code>Assert.IsFalse(myCollection.Contains(...))</code>
 /// </description>
 /// </item>
 /// <item>
@@ -518,8 +528,7 @@ internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
         StringMethodCheckStatus stringMethodStatus = RecognizeStringMethodCheck(conditionArgument, out SyntaxNode? stringExpr, out SyntaxNode? substringExpr);
         if (stringMethodStatus != StringMethodCheckStatus.Unknown)
         {
-            // For string methods, we only suggest when the condition is positive (IsTrue)
-            // Assert.IsFalse(str.StartsWith(...)) could suggest Assert.DoesNotStartWith, but that's less common
+            // Handle both IsTrue and IsFalse cases with string methods
             if (isTrueInvocation)
             {
                 string properAssertMethod = stringMethodStatus switch
@@ -541,26 +550,67 @@ internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
                     "IsTrue"));
                 return;
             }
-        }
-
-        // Check for collection method patterns: myCollection.Contains(...)
-        CollectionCheckStatus collectionMethodStatus = RecognizeCollectionMethodCheck(conditionArgument, out SyntaxNode? collectionExpr, out SyntaxNode? itemExpr);
-        if (collectionMethodStatus != CollectionCheckStatus.Unknown)
-        {
-            if (isTrueInvocation && collectionMethodStatus == CollectionCheckStatus.Contains)
+            else
             {
-                string properAssertMethod = "Contains";
+                // For IsFalse with string methods, suggest the negative assertions
+                string properAssertMethod = stringMethodStatus switch
+                {
+                    StringMethodCheckStatus.StartsWith => "DoesNotStartWith",
+                    StringMethodCheckStatus.EndsWith => "DoesNotEndWith",
+                    StringMethodCheckStatus.Contains => "DoesNotContain",
+                    _ => throw new InvalidOperationException("Unexpected StringMethodCheckStatus value."),
+                };
 
                 ImmutableDictionary<string, string?>.Builder properties = ImmutableDictionary.CreateBuilder<string, string?>();
                 properties.Add(ProperAssertMethodNameKey, properAssertMethod);
                 properties.Add(CodeFixModeKey, CodeFixModeAddArgument);
                 context.ReportDiagnostic(context.Operation.CreateDiagnostic(
                     Rule,
-                    additionalLocations: ImmutableArray.Create(conditionArgument.Syntax.GetLocation(), itemExpr!.GetLocation(), collectionExpr!.GetLocation()),
+                    additionalLocations: ImmutableArray.Create(conditionArgument.Syntax.GetLocation(), substringExpr!.GetLocation(), stringExpr!.GetLocation()),
                     properties: properties.ToImmutable(),
                     properAssertMethod,
-                    "IsTrue"));
+                    "IsFalse"));
                 return;
+            }
+        }
+
+        // Check for collection method patterns: myCollection.Contains(...)
+        CollectionCheckStatus collectionMethodStatus = RecognizeCollectionMethodCheck(conditionArgument, out SyntaxNode? collectionExpr, out SyntaxNode? itemExpr);
+        if (collectionMethodStatus != CollectionCheckStatus.Unknown)
+        {
+            if (collectionMethodStatus == CollectionCheckStatus.Contains)
+            {
+                if (isTrueInvocation)
+                {
+                    string properAssertMethod = "Contains";
+
+                    ImmutableDictionary<string, string?>.Builder properties = ImmutableDictionary.CreateBuilder<string, string?>();
+                    properties.Add(ProperAssertMethodNameKey, properAssertMethod);
+                    properties.Add(CodeFixModeKey, CodeFixModeAddArgument);
+                    context.ReportDiagnostic(context.Operation.CreateDiagnostic(
+                        Rule,
+                        additionalLocations: ImmutableArray.Create(conditionArgument.Syntax.GetLocation(), itemExpr!.GetLocation(), collectionExpr!.GetLocation()),
+                        properties: properties.ToImmutable(),
+                        properAssertMethod,
+                        "IsTrue"));
+                    return;
+                }
+                else
+                {
+                    // For IsFalse with collection Contains, suggest DoesNotContain
+                    string properAssertMethod = "DoesNotContain";
+
+                    ImmutableDictionary<string, string?>.Builder properties = ImmutableDictionary.CreateBuilder<string, string?>();
+                    properties.Add(ProperAssertMethodNameKey, properAssertMethod);
+                    properties.Add(CodeFixModeKey, CodeFixModeAddArgument);
+                    context.ReportDiagnostic(context.Operation.CreateDiagnostic(
+                        Rule,
+                        additionalLocations: ImmutableArray.Create(conditionArgument.Syntax.GetLocation(), itemExpr!.GetLocation(), collectionExpr!.GetLocation()),
+                        properties: properties.ToImmutable(),
+                        properAssertMethod,
+                        "IsFalse"));
+                    return;
+                }
             }
         }
 
