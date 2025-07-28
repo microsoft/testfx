@@ -103,6 +103,11 @@ public sealed partial class Assert
             }
         }
 
+        public AssertThrowsExactlyInterpolatedStringHandler(int literalLength, int formattedCount, Func<object?> action, out bool shouldAppend)
+            : this(literalLength, formattedCount, (Action)(() => _ = action()), out shouldAppend)
+        {
+        }
+
         internal TException ComputeAssertion()
         {
             if (_state.FailAction is not null)
@@ -296,6 +301,13 @@ public sealed partial class Assert
     /// <inheritdoc cref="ThrowsExactly{TException}(Action, string, object[])" />
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
     public static TException ThrowsExactly<TException>(Action action, [InterpolatedStringHandlerArgument(nameof(action))] ref AssertThrowsExactlyInterpolatedStringHandler<TException> message)
+#pragma warning restore IDE0060 // Remove unused parameter
+        where TException : Exception
+        => message.ComputeAssertion();
+
+    /// <inheritdoc cref="ThrowsExactly{TException}(Action, string, object[])" />
+#pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
+    public static TException ThrowsExactly<TException>(Func<object?> action, [InterpolatedStringHandlerArgument(nameof(action))] ref AssertThrowsExactlyInterpolatedStringHandler<TException> message)
 #pragma warning restore IDE0060 // Remove unused parameter
         where TException : Exception
         => message.ComputeAssertion();
