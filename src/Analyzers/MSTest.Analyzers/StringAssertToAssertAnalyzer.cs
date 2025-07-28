@@ -14,7 +14,7 @@ using MSTest.Analyzers.Helpers;
 namespace MSTest.Analyzers;
 
 /// <summary>
-/// MSTEST0045: Use 'Assert' instead of 'StringAssert'.
+/// MSTEST0046: Use 'Assert' instead of 'StringAssert'.
 /// </summary>
 /// <remarks>
 /// The analyzer captures StringAssert method calls and suggests using equivalent Assert methods:

@@ -26,22 +26,22 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 public class SomeClass
 {
     [AssemblyInitialize]
-    public static async Task [|AssemblyInitialize|]() { }
+    public static async Task {|#0:AssemblyInitialize|}() { }
 
     [AssemblyCleanup]
-    public static async Task [|AssemblyCleanup|]() { }
+    public static async Task {|#1:AssemblyCleanup|}() { }
 
     [ClassInitialize]
-    public static async Task [|ClassInitialize|]() { }
+    public static async Task {|#2:ClassInitialize|}() { }
 
     [ClassCleanup]
-    public static async Task [|ClassCleanup|]() { }
+    public static async Task {|#3:ClassCleanup|}() { }
 
     [TestInitialize]
-    public async Task [|TestInitialize|]() { }
+    public async Task {|#4:TestInitialize|}() { }
 
     [TestCleanup]
-    public async Task [|TestCleanup|]() { }
+    public async Task {|#5:TestCleanup|}() { }
 }
 ";
 
@@ -49,11 +49,53 @@ public class SomeClass
         await new VerifyCS.Test
         {
             TestState = { Sources = { code } },
+            ExpectedDiagnostics =
+            {
+                VerifyCS.Diagnostic(WarnForMissingAsyncSuffix.Rule)
+                    .WithLocation(0)
+                    .WithIsSuppressed(false),
+                VerifyCS.Diagnostic(WarnForMissingAsyncSuffix.Rule)
+                    .WithLocation(1)
+                    .WithIsSuppressed(false),
+                VerifyCS.Diagnostic(WarnForMissingAsyncSuffix.Rule)
+                    .WithLocation(2)
+                    .WithIsSuppressed(false),
+                VerifyCS.Diagnostic(WarnForMissingAsyncSuffix.Rule)
+                    .WithLocation(3)
+                    .WithIsSuppressed(false),
+                VerifyCS.Diagnostic(WarnForMissingAsyncSuffix.Rule)
+                    .WithLocation(4)
+                    .WithIsSuppressed(false),
+                VerifyCS.Diagnostic(WarnForMissingAsyncSuffix.Rule)
+                    .WithLocation(5)
+                    .WithIsSuppressed(false),
+            },
         }.RunAsync();
 
         await new TestWithSuppressor
         {
             TestState = { Sources = { code } },
+            ExpectedDiagnostics =
+            {
+                VerifyCS.Diagnostic(WarnForMissingAsyncSuffix.Rule)
+                    .WithLocation(0)
+                    .WithIsSuppressed(true),
+                VerifyCS.Diagnostic(WarnForMissingAsyncSuffix.Rule)
+                    .WithLocation(1)
+                    .WithIsSuppressed(true),
+                VerifyCS.Diagnostic(WarnForMissingAsyncSuffix.Rule)
+                    .WithLocation(2)
+                    .WithIsSuppressed(true),
+                VerifyCS.Diagnostic(WarnForMissingAsyncSuffix.Rule)
+                    .WithLocation(3)
+                    .WithIsSuppressed(true),
+                VerifyCS.Diagnostic(WarnForMissingAsyncSuffix.Rule)
+                    .WithLocation(4)
+                    .WithIsSuppressed(true),
+                VerifyCS.Diagnostic(WarnForMissingAsyncSuffix.Rule)
+                    .WithLocation(5)
+                    .WithIsSuppressed(true),
+            },
         }.RunAsync();
     }
 
@@ -61,33 +103,31 @@ public class SomeClass
     public async Task AsyncTestMethodWithSuffix_NoDiagnostic()
     {
         string code = """
+            using System.Threading.Tasks;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-                      using System.Threading.Tasks;
-                      using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [TestClass]
+            public class SomeClass
+            {
+                [AssemblyInitialize]
+                public static async Task AssemblyInitializeAsync() { }
 
-                      [TestClass]
-                      public class SomeClass
-                      {
-                          [AssemblyInitialize]
-                          public static async Task AssemblyInitializeAsync() { }
+                [AssemblyCleanup]
+                public static async Task AssemblyCleanupAsync() { }
 
-                          [AssemblyCleanup]
-                          public static async Task AssemblyCleanupAsync() { }
+                [ClassInitialize]
+                public static async Task ClassInitializeAsync() { }
 
-                          [ClassInitialize]
-                          public static async Task ClassInitializeAsync() { }
+                [ClassCleanup]
+                public static async Task ClassCleanupAsync() { }
 
-                          [ClassCleanup]
-                          public static async Task ClassCleanupAsync() { }
+                [TestInitialize]
+                public async Task TestInitializeAsync() { }
 
-                          [TestInitialize]
-                          public async Task TestInitializeAsync() { }
-
-                          [TestCleanup]
-                          public async Task TestCleanupAsync() { }
-                      }
-
-                      """;
+                [TestCleanup]
+                public async Task TestCleanupAsync() { }
+            }
+            """;
 
         await new VerifyCS.Test
         {
