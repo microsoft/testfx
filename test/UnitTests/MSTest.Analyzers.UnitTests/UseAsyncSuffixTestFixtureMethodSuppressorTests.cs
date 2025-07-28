@@ -110,23 +110,40 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 public static class SomeClass
 {
     [GlobalTestInitialize]
-    public static async Task [|GlobalTestInitialize|](TestContext context) { }
+    public static async Task {|#0:GlobalTestInitialize|}(TestContext context) { }
 
     [GlobalTestCleanup]
-    public static async Task [|GlobalTestCleanup|](TestContext context) { }
+    public static async Task {|#1:GlobalTestCleanup|}(TestContext context) { }
 }
 ";
 
-        // Verify issues are reported without suppressor
+        // Verify issues Are reported
         await new VerifyCS.Test
         {
             TestState = { Sources = { code } },
+            ExpectedDiagnostics =
+            {
+                VerifyCS.Diagnostic(WarnForMissingAsyncSuffix.Rule)
+                    .WithLocation(0)
+                    .WithIsSuppressed(false),
+                VerifyCS.Diagnostic(WarnForMissingAsyncSuffix.Rule)
+                    .WithLocation(1)
+                    .WithIsSuppressed(false),
+            },
         }.RunAsync();
 
-        // Verify issues are suppressed with suppressor
         await new TestWithSuppressor
         {
             TestState = { Sources = { code } },
+            ExpectedDiagnostics =
+            {
+                VerifyCS.Diagnostic(WarnForMissingAsyncSuffix.Rule)
+                    .WithLocation(0)
+                    .WithIsSuppressed(true),
+                VerifyCS.Diagnostic(WarnForMissingAsyncSuffix.Rule)
+                    .WithLocation(1)
+                    .WithIsSuppressed(true),
+            },
         }.RunAsync();
     }
 
@@ -157,6 +174,12 @@ public static class SomeClass
 
                 [TestCleanup]
                 public async Task TestCleanupAsync() { }
+
+                [GlobalTestInitialize]
+                public static async Task GlobalTestInitializeAsync(TestContext context) { }
+
+                [GlobalTestCleanup]
+                public static async Task GlobalTestCleanupAsync(TestContext context) { }
             }
             """;
 
