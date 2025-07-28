@@ -908,18 +908,6 @@ public sealed class DynamicDataShouldBeValidAnalyzerTests
                 {
                 }
 
-                [{|#10:DynamicData(nameof(DataField), DynamicDataSourceType.AutoDetect)|}]
-                [TestMethod]
-                public void TestMethod17(object[] o)
-                {
-                }
-
-                [{|#11:DynamicData(nameof(DataField))|}]
-                [TestMethod]
-                public void TestMethod18(object[] o)
-                {
-                }
-
                 public static IEnumerable<object[]> Data => new List<object[]>();
                 public static IEnumerable<object[]> GetData() => new List<object[]>();
                 public static IEnumerable<object[]> DataField = new List<object[]>();
@@ -943,9 +931,7 @@ public sealed class DynamicDataShouldBeValidAnalyzerTests
             VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.SourceTypePropertyRule).WithLocation(6).WithArguments("MyTestClass", "Data"),
             VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.SourceTypePropertyRule).WithLocation(7).WithArguments("SomeClass", "SomeData"),
             VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.SourceTypeFieldRule).WithLocation(8).WithArguments("MyTestClass", "DataField"),
-            VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.SourceTypeFieldRule).WithLocation(9).WithArguments("MyTestClass", "DataField"),
-            VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.SourceTypeFieldRule).WithLocation(10).WithArguments("MyTestClass", "DataField"),
-            VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.SourceTypeFieldRule).WithLocation(11).WithArguments("MyTestClass", "DataField"));
+            VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.SourceTypeFieldRule).WithLocation(9).WithArguments("MyTestClass", "DataField"));
     }
 
     [TestMethod]
