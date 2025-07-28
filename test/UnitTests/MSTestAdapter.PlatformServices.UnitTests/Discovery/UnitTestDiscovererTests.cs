@@ -110,13 +110,66 @@ public class UnitTestDiscovererTests : TestContainer
 
         _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(settingsXml);
 
-        // Act
+        // Act & Assert
         MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object, null);
 
-        _unitTestDiscoverer.DiscoverTestsInSource(Source, _mockMessageLogger.Object, _mockTestCaseDiscoverySink.Object, _mockDiscoveryContext.Object);
-
-        // Assert.
+        bool exceptionThrown = false;
+        try
+        {
+            _unitTestDiscoverer.DiscoverTestsInSource(Source, _mockMessageLogger.Object, _mockTestCaseDiscoverySink.Object, _mockDiscoveryContext.Object);
+        }
+        catch (AdapterSettingsException ex)
+        {
+            exceptionThrown = true;
+            // Verify the exception message contains expected information
+            if (!ex.Message.Contains("[MSTest][Discovery][DummyAssembly.dll]"))
+            {
+                throw new InvalidOperationException("Exception message should contain source name");
+            }
+            if (!ex.Message.Contains("File does not exist"))
+            {
+                throw new InvalidOperationException("Exception message should contain warning details");
+            }
+        }
+        
+        if (!exceptionThrown)
+        {
+            throw new InvalidOperationException("Expected AdapterSettingsException to be thrown");
+        }
+        
+        // Verify error message was still sent to logger
         _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Error, It.IsAny<string>()), Times.Once);
+    }
+
+    public void DiscoverTestsInSourceShouldNotThrowWhenTreatDiscoveryWarningsAsErrorsIsFalse()
+    {
+        // Setup mocks.
+        _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.GetFullFilePath(Source))
+            .Returns(Source);
+        _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.DoesFileExist(Source))
+            .Returns(false);
+
+        string settingsXml =
+            """
+            <?xml version="1.0" encoding="utf-8"?>
+            <RunSettings>
+              <MSTestV2>
+                <TreatDiscoveryWarningsAsErrors>False</TreatDiscoveryWarningsAsErrors>
+              </MSTestV2>
+            </RunSettings>
+            """;
+
+        _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(settingsXml);
+
+        // Act & Assert
+        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object, null);
+
+        // Should not throw an exception
+        _unitTestDiscoverer.DiscoverTestsInSource(Source, _mockMessageLogger.Object, _mockTestCaseDiscoverySink.Object, _mockDiscoveryContext.Object);
+        
+        // Verify warning message was sent to logger (not error)
+        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, It.IsAny<string>()), Times.Once);
+        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Error, It.IsAny<string>()), Times.Never);
     }
 
     public void DiscoverTestsInSourceShouldSendBackTestCasesDiscovered()

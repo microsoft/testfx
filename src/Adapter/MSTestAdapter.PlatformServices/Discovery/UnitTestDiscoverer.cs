@@ -71,6 +71,15 @@ internal class UnitTestDiscoverer
             logger.SendMessage(treatDiscoveryWarningsAsErrors ? TestMessageLevel.Error : TestMessageLevel.Warning, message);
         }
 
+        // Throw exception if TreatDiscoveryWarningsAsErrors is enabled and there are warnings
+        if (treatDiscoveryWarningsAsErrors && warnings.Count > 0)
+        {
+            string errorMessage = warnings.Count == 1
+                ? string.Format(CultureInfo.CurrentCulture, Resource.DiscoveryWarning, source, warnings[0])
+                : string.Format(CultureInfo.CurrentCulture, "Discovery failed for source '{0}' with {1} warnings. First warning: {2}", source, warnings.Count, warnings[0]);
+            throw new AdapterSettingsException(errorMessage);
+        }
+
         // No tests found => nothing to do
         if (testElements == null || testElements.Count == 0)
         {
