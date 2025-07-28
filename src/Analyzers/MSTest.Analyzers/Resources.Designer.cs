@@ -646,6 +646,70 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to When calling async methods that have overloads accepting a CancellationToken parameter, prefer using the overload with TestContext.CancellationTokenSource.Token to enable cooperative cancellation and respect test timeouts..
+        /// </summary>
+        internal static string FlowTestContextCancellationTokenDescription {
+            get {
+                return ResourceManager.GetString("FlowTestContextCancellationTokenDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Consider using the overload that accepts a CancellationToken and pass &apos;TestContext.CancellationTokenSource.Token&apos;.
+        /// </summary>
+        internal static string FlowTestContextCancellationTokenMessageFormat {
+            get {
+                return ResourceManager.GetString("FlowTestContextCancellationTokenMessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Flow TestContext.CancellationToken to async operations.
+        /// </summary>
+        internal static string FlowTestContextCancellationTokenTitle {
+            get {
+                return ResourceManager.GetString("FlowTestContextCancellationTokenTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Methods marked with &apos;[GlobalTestInitialize]&apos; or &apos;[GlobalTestCleanup]&apos; should follow the following layout to be valid:
+        ///-it can&apos;t be declared on a generic class
+        ///-it should be &apos;public&apos;
+        ///-it should be &apos;static&apos;
+        ///-it should not be &apos;async void&apos;
+        ///-it should not be a special method (finalizer, operator...).
+        ///-it should not be generic
+        ///-it should take one parameter of type &apos;TestContext&apos;
+        ///-return type should be &apos;void&apos;, &apos;Task&apos; or &apos;ValueTask&apos;
+        ///
+        ///The type declaring these methods should also respect the following rules: [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string GlobalTestFixtureShouldBeValidDescription {
+            get {
+                return ResourceManager.GetString("GlobalTestFixtureShouldBeValidDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Global test fixture method &apos;{0}&apos; signature is invalid.
+        /// </summary>
+        internal static string GlobalTestFixtureShouldBeValidMessageFormat {
+            get {
+                return ResourceManager.GetString("GlobalTestFixtureShouldBeValidMessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to GlobalTestInitialize and GlobalTestCleanup methods should have valid layout.
+        /// </summary>
+        internal static string GlobalTestFixtureShouldBeValidTitle {
+            get {
+                return ResourceManager.GetString("GlobalTestFixtureShouldBeValidTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Use &apos;Assert.Fail&apos; instead of an always-failing &apos;Assert.{0}&apos; assert.
         /// </summary>
         internal static string PreferAssertFailOverAlwaysFalseConditionsMessageFormat {
@@ -945,6 +1009,33 @@ namespace MSTest.Analyzers {
         internal static string TestCleanupShouldBeValidTitle {
             get {
                 return ResourceManager.GetString("TestCleanupShouldBeValidTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Some TestContext properties are only available during test execution and cannot be accessed in assembly initialize, class initialize, class cleanup, or assembly cleanup methods..
+        /// </summary>
+        internal static string TestContextPropertyUsageDescription {
+            get {
+                return ResourceManager.GetString("TestContextPropertyUsageDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to TestContext property &apos;{0}&apos; cannot be accessed in &apos;{1}&apos; method.
+        /// </summary>
+        internal static string TestContextPropertyUsageMessageFormat {
+            get {
+                return ResourceManager.GetString("TestContextPropertyUsageMessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to TestContext property cannot be accessed in this context.
+        /// </summary>
+        internal static string TestContextPropertyUsageTitle {
+            get {
+                return ResourceManager.GetString("TestContextPropertyUsageTitle", resourceCulture);
             }
         }
         
@@ -1318,60 +1409,6 @@ namespace MSTest.Analyzers {
         internal static string UseRetryWithTestMethodTitle {
             get {
                 return ResourceManager.GetString("UseRetryWithTestMethodTitle", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to TestContext property cannot be accessed in this context.
-        /// </summary>
-        internal static string TestContextPropertyUsageTitle {
-            get {
-                return ResourceManager.GetString("TestContextPropertyUsageTitle", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to TestContext property '{0}' cannot be accessed in '{1}' method.
-        /// </summary>
-        internal static string TestContextPropertyUsageMessageFormat {
-            get {
-                return ResourceManager.GetString("TestContextPropertyUsageMessageFormat", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Some TestContext properties are only available during test execution and cannot be accessed in assembly initialize, class initialize, class cleanup, or assembly cleanup methods.
-        /// </summary>
-        internal static string TestContextPropertyUsageDescription {
-            get {
-                return ResourceManager.GetString("TestContextPropertyUsageDescription", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to When calling async methods that have overloads accepting a CancellationToken parameter, prefer using the overload with TestContext.CancellationTokenSource.Token to enable cooperative cancellation and respect test timeouts.
-        /// </summary>
-        internal static string FlowTestContextCancellationTokenDescription {
-            get {
-                return ResourceManager.GetString("FlowTestContextCancellationTokenDescription", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Consider using the overload that accepts a CancellationToken and pass 'TestContext.CancellationTokenSource.Token'.
-        /// </summary>
-        internal static string FlowTestContextCancellationTokenMessageFormat {
-            get {
-                return ResourceManager.GetString("FlowTestContextCancellationTokenMessageFormat", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Flow TestContext.CancellationToken to async operations.
-        /// </summary>
-        internal static string FlowTestContextCancellationTokenTitle {
-            get {
-                return ResourceManager.GetString("FlowTestContextCancellationTokenTitle", resourceCulture);
             }
         }
     }
