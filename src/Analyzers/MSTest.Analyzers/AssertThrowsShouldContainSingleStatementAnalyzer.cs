@@ -14,7 +14,7 @@ using MSTest.Analyzers.Helpers;
 namespace MSTest.Analyzers;
 
 /// <summary>
-/// MSTEST0050: Assert.Throws should contain only a single statement/expression.
+/// MSTEST0051: Assert.Throws should contain only a single statement/expression.
 /// </summary>
 [DiagnosticAnalyzer(LanguageNames.CSharp, LanguageNames.VisualBasic)]
 public sealed class AssertThrowsShouldContainSingleStatementAnalyzer : DiagnosticAnalyzer
