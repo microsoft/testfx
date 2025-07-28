@@ -402,14 +402,37 @@ public class TestMethodInfo : ITestMethod
                 }
 
                 // TODO remove dry violation with TestMethodRunner
-                _classInstance = CreateTestClassInstance(result);
+                bool setTestContextSucessful = false;
+                if (executionContext is null)
+                {
+                    _classInstance = CreateTestClassInstance(result);
+                    setTestContextSucessful = _classInstance != null && SetTestContext(_classInstance, result);
+                }
+                else
+                {
+                    ExecutionContext updatedExecutionContext = executionContext;
+                    ExecutionContextHelpers.RunOnContext(executionContext, () =>
+                    {
+                        try
+                        {
+                            _classInstance = CreateTestClassInstance(result);
+                            setTestContextSucessful = _classInstance != null && SetTestContext(_classInstance, result);
+                        }
+                        finally
+                        {
+                            updatedExecutionContext = ExecutionContext.Capture() ?? executionContext;
+                        }
+                    });
 
-                if (_classInstance != null && SetTestContext(_classInstance, result))
+                    executionContext = updatedExecutionContext;
+                }
+
+                if (setTestContextSucessful)
                 {
                     // For any failure after this point, we must run TestCleanup
                     _isTestContextSet = true;
 
-                    if (RunTestInitializeMethod(_classInstance, result, ref executionContext, timeoutTokenSource))
+                    if (RunTestInitializeMethod(_classInstance!, result, ref executionContext, timeoutTokenSource))
                     {
                         hasTestInitializePassed = true;
 
