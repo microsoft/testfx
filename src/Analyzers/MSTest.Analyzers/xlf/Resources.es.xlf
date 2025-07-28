@@ -407,9 +407,19 @@ El tipo que declara estos métodos también debe respetar las reglas siguientes:
         <target state="translated">'[DynamicData]' solo debe establecerse en un método de prueba</target>
         <note />
       </trans-unit>
+      <trans-unit id="DynamicDataShouldBeValidMessageFormat_SourceTypeField">
+        <source>'[DynamicData]' member '{0}.{1}' is a field so you should use 'DynamicDataSourceType.AutoDetect' or 'DynamicDataSourceType.Field' (auto detect is the default when not specified explicitly, and is recommended)</source>
+        <target state="new">'[DynamicData]' member '{0}.{1}' is a field so you should use 'DynamicDataSourceType.AutoDetect' or 'DynamicDataSourceType.Field' (auto detect is the default when not specified explicitly, and is recommended)</target>
+        <note />
+      </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_SourceTypeMethod">
         <source>'[DynamicData]' member '{0}.{1}' is a method so you should use 'DynamicDataSourceType.AutoDetect' or 'DynamicDataSourceType.Method' (auto detect is the default when not specified explicitly, and is recommended)</source>
         <target state="translated">'[DynamicData]' miembro '{0}.{1}' es un método, por lo que debe usar 'DynamicDataSourceType.AutoDetect' o 'DynamicDataSourceType.Method' (la detección automática es el valor predeterminado cuando no se especifica explícitamente y se recomienda)</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DynamicDataShouldBeValidMessageFormat_SourceTypeNotPropertyMethodOrField">
+        <source>'[DynamicData]' member '{0}.{1}' is not a property, method, or field. Only properties, methods, and fields are supported.</source>
+        <target state="new">'[DynamicData]' member '{0}.{1}' is not a property, method, or field. Only properties, methods, and fields are supported.</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_SourceTypeNotPropertyOrMethod">
