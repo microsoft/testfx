@@ -641,5 +641,28 @@ The type declaring these methods should also respect the following rules:
   </data>
   <data name="AssertThrowsShouldContainSingleStatementDescription" xml:space="preserve">
     <value>Assert.Throws methods should contain only a single statement or expression. Multiple statements can be misleading - if the first statement throws, subsequent statements are never executed; if it doesn't throw, it should be moved outside the Assert.Throws.</value>
+  <data name="GlobalTestFixtureShouldBeValidTitle" xml:space="preserve">
+    <value>GlobalTestInitialize and GlobalTestCleanup methods should have valid layout</value>
+  </data>
+  <data name="GlobalTestFixtureShouldBeValidMessageFormat" xml:space="preserve">
+    <value>Global test fixture method '{0}' signature is invalid</value>
+  </data>
+  <data name="GlobalTestFixtureShouldBeValidDescription" xml:space="preserve">
+    <value>Methods marked with '[GlobalTestInitialize]' or '[GlobalTestCleanup]' should follow the following layout to be valid:
+-it can't be declared on a generic class
+-it should be 'public'
+-it should be 'static'
+-it should not be 'async void'
+-it should not be a special method (finalizer, operator...).
+-it should not be generic
+-it should take one parameter of type 'TestContext'
+-return type should be 'void', 'Task' or 'ValueTask'
+
+The type declaring these methods should also respect the following rules:
+-The type should be a class
+-The class should be 'public'
+-The class shouldn't be 'static'
+-The class should be marked with '[TestClass]' (or a derived attribute)
+-the class should not be generic.</value>
   </data>
 </root>
