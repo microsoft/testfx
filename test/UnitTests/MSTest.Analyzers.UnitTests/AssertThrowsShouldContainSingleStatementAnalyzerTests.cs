@@ -66,6 +66,7 @@ public sealed class AssertThrowsShouldContainSingleStatementAnalyzerTests
     {
         string code = """
             using System;
+            using System.Threading.Tasks;
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
@@ -80,6 +81,34 @@ public sealed class AssertThrowsShouldContainSingleStatementAnalyzerTests
                         var value = 42;
                         Console.WriteLine(value);
                         DoSomething();
+                    })|];
+
+                    // Multiple statements with ThrowsExactly - should be flagged
+                    [|Assert.ThrowsExactly<Exception>(() =>
+                    {
+                        var value = 42;
+                        Console.WriteLine(value);
+                        DoSomething();
+                    })|];
+                }
+
+                [TestMethod]
+                public async Task MyAsyncTestMethod()
+                {
+                    // Multiple statements with ThrowsAsync - should be flagged
+                    [|Assert.ThrowsAsync<Exception>(() =>
+                    {
+                        var value = 42;
+                        Console.WriteLine(value);
+                        return Task.CompletedTask;
+                    })|];
+
+                    // Multiple statements with ThrowsExactlyAsync - should be flagged
+                    [|Assert.ThrowsExactlyAsync<Exception>(() =>
+                    {
+                        var value = 42;
+                        Console.WriteLine(value);
+                        return Task.CompletedTask;
                     })|];
                 }
 
@@ -137,38 +166,6 @@ public sealed class AssertThrowsShouldContainSingleStatementAnalyzerTests
                 }
 
                 private static void DoSomething() => throw new Exception();
-            }
-            """;
-
-        await VerifyCS.VerifyAnalyzerAsync(code);
-    }
-
-    [TestMethod]
-    public async Task WhenAssertThrowsContainsSingleExpressionStatement_NoDiagnostic()
-    {
-        string code = """
-            using System;
-            using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-            [TestClass]
-            public class MyTestClass
-            {
-                [TestMethod]
-                public void MyTestMethod()
-                {
-                    // Single expression statement - should NOT be flagged
-                    Assert.Throws<Exception>(() => { DoSomething(); });
-
-                    // Single variable declaration and usage - should be flagged as it's multiple statements
-                    [|Assert.Throws<Exception>(() =>
-                    {
-                        var value = 42;
-                        DoSomething(value);
-                    })|];
-                }
-
-                private static void DoSomething() => throw new Exception();
-                private static void DoSomething(int value) => throw new Exception();
             }
             """;
 
@@ -285,13 +282,64 @@ public sealed class AssertThrowsShouldContainSingleStatementAnalyzerTests
                         DoSomething();
                         ; // empty statement
                     });
-                    
+                }
+
+                private static void DoSomething() => throw new Exception();
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertThrowsWithMultipleNonEmptyStatements_Diagnostic()
+    {
+        string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
                     // Multiple non-empty statements - should be flagged
                     [|Assert.Throws<Exception>(() =>
                     {
                         DoSomething();
                         DoSomething();
                         ; // empty statement
+                    })|];
+                }
+
+                private static void DoSomething() => throw new Exception();
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertThrowsContainsMultipleStatementsOnSameLine_Diagnostic()
+    {
+        string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    // Multiple statements on same line - should be flagged (shows we count statements, not lines)
+                    [|Assert.Throws<Exception>(() => { DoSomething(); DoSomething(); })|];
+
+                    // Multiple statements on same line in block - should be flagged
+                    [|Assert.Throws<Exception>(() =>
+                    {
+                        DoSomething(); DoSomething();
                     })|];
                 }
 
