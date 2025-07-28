@@ -801,15 +801,15 @@ public sealed partial class Assert
         string expected, string actual, int diffIndex, int contextLength)
     {
         int maxLength = Math.Max(expected.Length, actual.Length);
-        
+
         // For shorter strings, show the full strings but still apply character escaping
         if (maxLength <= contextLength)
         {
-            var expectedResult = CreateStringPreviewWithCaretInfo(expected, 0, expected.Length, diffIndex);
-            var actualResult = CreateStringPreviewWithCaretInfo(actual, 0, actual.Length, diffIndex);
-            
+            var expectedShortResult = CreateStringPreviewWithCaretInfo(expected, 0, expected.Length, diffIndex);
+            var actualShortResult = CreateStringPreviewWithCaretInfo(actual, 0, actual.Length, diffIndex);
+
             // Use the caret position from the expected string as reference
-            return new(expectedResult.Item1, actualResult.Item1, expectedResult.Item2);
+            return new(expectedShortResult.Item1, actualShortResult.Item1, expectedShortResult.Item2);
         }
 
         // Calculate optimal start position to maximize context around the difference
@@ -839,7 +839,6 @@ public sealed partial class Assert
 
         int actualStart = Math.Min(startPos, str.Length);
         int actualEnd = Math.Min(endPos, str.Length);
-        
         string preview = str.Substring(actualStart, actualEnd - actualStart);
         var result = new StringBuilder();
         int originalCaretPos = Math.Max(0, diffIndex - actualStart);
