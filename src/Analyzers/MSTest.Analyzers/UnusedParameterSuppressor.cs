@@ -38,6 +38,9 @@ public sealed class UnusedParameterSuppressor : DiagnosticSuppressor
             return;
         }
 
+        INamedTypeSymbol? globalTestInitializeAttributeSymbol = context.Compilation.GetTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingGlobalTestInitializeAttribute);
+        INamedTypeSymbol? globalTestCleanupAttributeSymbol = context.Compilation.GetTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingGlobalTestCleanupAttribute);
+
         foreach (Diagnostic diagnostic in context.ReportedDiagnostics)
         {
             // The diagnostic is reported on the parameter
@@ -57,7 +60,9 @@ public sealed class UnusedParameterSuppressor : DiagnosticSuppressor
                 && parameter.ContainingSymbol is IMethodSymbol method
                 && method.GetAttributes().Any(attr =>
                     SymbolEqualityComparer.Default.Equals(attr.AttributeClass, assemblyInitializeAttributeSymbol) ||
-                    SymbolEqualityComparer.Default.Equals(attr.AttributeClass, classInitializeAttributeSymbol)))
+                    SymbolEqualityComparer.Default.Equals(attr.AttributeClass, classInitializeAttributeSymbol) ||
+                    SymbolEqualityComparer.Default.Equals(attr.AttributeClass, globalTestInitializeAttributeSymbol) ||
+                    SymbolEqualityComparer.Default.Equals(attr.AttributeClass, globalTestCleanupAttributeSymbol)))
             {
                 context.ReportSuppression(Suppression.Create(Rule, diagnostic));
             }

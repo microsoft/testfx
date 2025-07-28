@@ -4,6 +4,10 @@ Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertThrowsExactlyInterpola
 Microsoft.VisualStudio.TestTools.UnitTesting.CIConditionAttribute
 Microsoft.VisualStudio.TestTools.UnitTesting.CIConditionAttribute.CIConditionAttribute(Microsoft.VisualStudio.TestTools.UnitTesting.ConditionMode mode) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.ConditionBaseAttribute.Mode.get -> Microsoft.VisualStudio.TestTools.UnitTesting.ConditionMode
+Microsoft.VisualStudio.TestTools.UnitTesting.GlobalTestCleanupAttribute
+Microsoft.VisualStudio.TestTools.UnitTesting.GlobalTestCleanupAttribute.GlobalTestCleanupAttribute() -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.GlobalTestInitializeAttribute
+Microsoft.VisualStudio.TestTools.UnitTesting.GlobalTestInitializeAttribute.GlobalTestInitializeAttribute() -> void
 override Microsoft.VisualStudio.TestTools.UnitTesting.CIConditionAttribute.GroupName.get -> string!
 override Microsoft.VisualStudio.TestTools.UnitTesting.CIConditionAttribute.IgnoreMessage.get -> string?
 override Microsoft.VisualStudio.TestTools.UnitTesting.CIConditionAttribute.IgnoreMessage.set -> void
