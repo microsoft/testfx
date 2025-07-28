@@ -261,6 +261,67 @@ public class DynamicDataAttributeTests : TestContainer
         dynamicDataAttribute.GetData(testMethodInfo);
     }
 
+    public void GetDataShouldReadDataFromField()
+    {
+        MethodInfo methodInfo = _dummyTestClass.GetType().GetTypeInfo().GetDeclaredMethod("TestMethod1")!;
+        _dynamicDataAttribute = new DynamicDataAttribute("ReusableTestDataField", DynamicDataSourceType.Field);
+        IEnumerable<object[]> data = _dynamicDataAttribute.GetData(methodInfo);
+        Verify(data is not null);
+        Verify(data.ToList().Count == 2);
+    }
+
+    public void GetDataShouldReadDataFromFieldInDifferentClass()
+    {
+        MethodInfo methodInfo = _dummyTestClass.GetType().GetTypeInfo().GetDeclaredMethod("TestMethod1")!;
+        _dynamicDataAttribute = new DynamicDataAttribute("ReusableTestDataField2", typeof(DummyTestClass2), DynamicDataSourceType.Field);
+        IEnumerable<object[]> data = _dynamicDataAttribute.GetData(methodInfo);
+        Verify(data is not null);
+        Verify(data.ToList().Count == 2);
+    }
+
+    public void GetDataShouldReadDataFromFieldInAutoDetectMode()
+    {
+        MethodInfo methodInfo = _dummyTestClass.GetType().GetTypeInfo().GetDeclaredMethod("TestMethod1")!;
+        _dynamicDataAttribute = new DynamicDataAttribute("ReusableTestDataField");
+        IEnumerable<object[]> data = _dynamicDataAttribute.GetData(methodInfo);
+        Verify(data is not null);
+        Verify(data.ToList().Count == 2);
+    }
+
+    public void GetDataShouldThrowExceptionIfFieldReturnsNull() =>
+        VerifyThrows<ArgumentNullException>(() =>
+        {
+            MethodInfo methodInfo = _dummyTestClass.GetType().GetTypeInfo().GetDeclaredMethod("TestMethod1")!;
+            _dynamicDataAttribute = new DynamicDataAttribute("NullField", typeof(DummyTestClass), DynamicDataSourceType.Field);
+            _dynamicDataAttribute.GetData(methodInfo);
+        });
+
+    public void GetDataShouldNotThrowExceptionIfFieldReturnsEmpty()
+    {
+        MethodInfo methodInfo = _dummyTestClass.GetType().GetTypeInfo().GetDeclaredMethod("TestMethod1")!;
+        _dynamicDataAttribute = new DynamicDataAttribute("EmptyField", typeof(DummyTestClass), DynamicDataSourceType.Field);
+        IEnumerable<object[]> data = _dynamicDataAttribute.GetData(methodInfo);
+        // The callers in AssemblyEnumerator and TestMethodRunner are responsible
+        // for throwing an exception if data is empty and ConsiderEmptyDataSourceAsInconclusive is false.
+        Verify(!data.Any());
+    }
+
+    public void GetDataShouldThrowExceptionIfFieldDoesNotReturnCorrectType() =>
+        VerifyThrows<ArgumentNullException>(() =>
+        {
+            MethodInfo methodInfo = _dummyTestClass.GetType().GetTypeInfo().GetDeclaredMethod("TestMethod1")!;
+            _dynamicDataAttribute = new DynamicDataAttribute("WrongDataTypeField", typeof(DummyTestClass), DynamicDataSourceType.Field);
+            _dynamicDataAttribute.GetData(methodInfo);
+        });
+
+    public void GetDataShouldThrowExceptionIfFieldIsNotStatic() =>
+        VerifyThrows<NotSupportedException>(() =>
+        {
+            MethodInfo methodInfo = _dummyTestClass.GetType().GetTypeInfo().GetDeclaredMethod("TestMethod1")!;
+            _dynamicDataAttribute = new DynamicDataAttribute("NonStaticField", typeof(DummyTestClass), DynamicDataSourceType.Field);
+            _dynamicDataAttribute.GetData(methodInfo);
+        });
+
     /// <summary>
     /// The dummy test class.
     /// </summary>
@@ -287,6 +348,32 @@ public class DynamicDataAttributeTests : TestContainer
         /// expected data type of <see cref="IEnumerable{T}"/>.
         /// </summary>
         public static string WrongDataTypeProperty => "Dummy";
+
+        /// <summary>
+        /// The reusable test data field.
+        /// </summary>
+        public static IEnumerable<object[]> ReusableTestDataField = [[1, 2, 3], [4, 5, 6]];
+
+        /// <summary>
+        /// The null test data field.
+        /// </summary>
+        public static IEnumerable<object[]> NullField = null!;
+
+        /// <summary>
+        /// The empty test data field.
+        /// </summary>
+        public static IEnumerable<object[]> EmptyField = [];
+
+        /// <summary>
+        /// The wrong test data field i.e. Field returning something other than
+        /// expected data type of <see cref="IEnumerable{T}"/>.
+        /// </summary>
+        public static string WrongDataTypeField = "Dummy";
+
+        /// <summary>
+        /// Non-static field that should cause an error.
+        /// </summary>
+        public IEnumerable<object[]> NonStaticField = [[1, 2, 3]];
 
         /// <summary>
         /// The reusable test data method.
@@ -452,6 +539,11 @@ public class DynamicDataAttributeTests : TestContainer
         /// The <see cref="IEnumerable"/>.
         /// </returns>
         public static IEnumerable<object[]> ReusableTestDataMethod2() => [[1, 2, 3], [4, 5, 6]];
+
+        /// <summary>
+        /// The reusable test data field.
+        /// </summary>
+        public static IEnumerable<object[]> ReusableTestDataField2 = [[1, 2, 3], [4, 5, 6]];
 
         /// <summary>
         /// The custom display name method.
