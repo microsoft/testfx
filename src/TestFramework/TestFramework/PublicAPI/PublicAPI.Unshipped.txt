@@ -9,11 +9,14 @@ Microsoft.VisualStudio.TestTools.UnitTesting.GlobalTestInitializeAttribute
 Microsoft.VisualStudio.TestTools.UnitTesting.GlobalTestInitializeAttribute.GlobalTestInitializeAttribute() -> void
 override Microsoft.VisualStudio.TestTools.UnitTesting.CIConditionAttribute.GroupName.get -> string!
 override Microsoft.VisualStudio.TestTools.UnitTesting.CIConditionAttribute.IgnoreMessage.get -> string?
+override Microsoft.VisualStudio.TestTools.UnitTesting.CIConditionAttribute.IgnoreMessage.set -> void
 override Microsoft.VisualStudio.TestTools.UnitTesting.CIConditionAttribute.ShouldRun.get -> bool
 Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataAttribute.DynamicDataAttribute(string! dynamicDataSourceName, params object?[]! dynamicDataSourceArguments) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataAttribute.DynamicDataAttribute(string! dynamicDataSourceName, System.Type! dynamicDataDeclaringType, params object?[]! dynamicDataSourceArguments) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.TestDataRow<T>.TestCategories.get -> System.Collections.Generic.IList<string!>?
 Microsoft.VisualStudio.TestTools.UnitTesting.TestDataRow<T>.TestCategories.set -> void
+override Microsoft.VisualStudio.TestTools.UnitTesting.IgnoreAttribute.IgnoreMessage.set -> void
+override Microsoft.VisualStudio.TestTools.UnitTesting.OSConditionAttribute.IgnoreMessage.set -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ContainsSingle<T>(System.Func<T, bool>! predicate, System.Collections.Generic.IEnumerable<T>! collection, string! message = "") -> T
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.DoesNotEndWith(string? substring, string? value, string! message = "") -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.DoesNotEndWith(string? substring, string? value, System.StringComparison comparisonType, string! message = "") -> void
@@ -45,3 +48,6 @@ static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.Equals(obje
 static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.ReferenceEquals(object? objA, object? objB) -> bool
 static Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert.Equals(object? objA, object? objB) -> bool
 static Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert.ReferenceEquals(object? objA, object? objB) -> bool
+*REMOVED*abstract Microsoft.VisualStudio.TestTools.UnitTesting.ConditionBaseAttribute.IgnoreMessage.get -> string?
+virtual Microsoft.VisualStudio.TestTools.UnitTesting.ConditionBaseAttribute.IgnoreMessage.get -> string?
+virtual Microsoft.VisualStudio.TestTools.UnitTesting.ConditionBaseAttribute.IgnoreMessage.set -> void

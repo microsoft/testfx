@@ -434,17 +434,17 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="FlowTestContextCancellationTokenDescription">
         <source>When calling async methods that have overloads accepting a CancellationToken parameter, prefer using the overload with TestContext.CancellationTokenSource.Token to enable cooperative cancellation and respect test timeouts.</source>
-        <target state="new">When calling async methods that have overloads accepting a CancellationToken parameter, prefer using the overload with TestContext.CancellationTokenSource.Token to enable cooperative cancellation and respect test timeouts.</target>
+        <target state="translated">在调用包含接受 CancellationToken 参数的重载的异步方法时，建议使用 TestContext.CancellationTokenSource.Token 的重载，以启用协作取消并遵守测试超时。</target>
         <note />
       </trans-unit>
       <trans-unit id="FlowTestContextCancellationTokenMessageFormat">
         <source>Consider using the overload that accepts a CancellationToken and pass 'TestContext.CancellationTokenSource.Token'</source>
-        <target state="new">Consider using the overload that accepts a CancellationToken and pass 'TestContext.CancellationTokenSource.Token'</target>
+        <target state="translated">请考虑使用接受 CancellationToken 的重载，并传递 'TestContext.CancellationTokenSource.Token'</target>
         <note />
       </trans-unit>
       <trans-unit id="FlowTestContextCancellationTokenTitle">
         <source>Flow TestContext.CancellationToken to async operations</source>
-        <target state="new">Flow TestContext.CancellationToken to async operations</target>
+        <target state="translated">将 TestContext.CancellationToken 传递给异步操作</target>
         <note />
       </trans-unit>
       <trans-unit id="GlobalTestFixtureShouldBeValidDescription">
@@ -931,17 +931,17 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="TestContextPropertyUsageTitle">
         <source>TestContext property cannot be accessed in this context</source>
-        <target state="new">TestContext property cannot be accessed in this context</target>
+        <target state="translated">无法在此上下文中访问 TestContext 属性</target>
         <note />
       </trans-unit>
       <trans-unit id="TestContextPropertyUsageMessageFormat">
         <source>TestContext property '{0}' cannot be accessed in '{1}' method</source>
-        <target state="new">TestContext property '{0}' cannot be accessed in '{1}' method</target>
+        <target state="translated">无法在 ‘{1}’ 方法中访问 TestContext 属性 ‘{0}’</target>
         <note />
       </trans-unit>
       <trans-unit id="TestContextPropertyUsageDescription">
         <source>Some TestContext properties are only available during test execution and cannot be accessed in assembly initialize, class initialize, class cleanup, or assembly cleanup methods.</source>
-        <target state="new">Some TestContext properties are only available during test execution and cannot be accessed in assembly initialize, class initialize, class cleanup, or assembly cleanup methods.</target>
+        <target state="translated">一些 TestContext 属性仅在测试执行期间可用，并且无法在程序集初始化、类初始化、类清理或程序集清理方法中访问。</target>
         <note />
       </trans-unit>
     </body>

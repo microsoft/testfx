@@ -434,17 +434,17 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
       </trans-unit>
       <trans-unit id="FlowTestContextCancellationTokenDescription">
         <source>When calling async methods that have overloads accepting a CancellationToken parameter, prefer using the overload with TestContext.CancellationTokenSource.Token to enable cooperative cancellation and respect test timeouts.</source>
-        <target state="new">When calling async methods that have overloads accepting a CancellationToken parameter, prefer using the overload with TestContext.CancellationTokenSource.Token to enable cooperative cancellation and respect test timeouts.</target>
+        <target state="translated">Při volání asynchronních metod, které mají přetížení akceptující parametr CancellationToken, upřednostňujte použití přetížení s TestContext.CancellationTokenSource.Token, aby se umožnilo kooperativní rušení a dodržování časových limitů testů.</target>
         <note />
       </trans-unit>
       <trans-unit id="FlowTestContextCancellationTokenMessageFormat">
         <source>Consider using the overload that accepts a CancellationToken and pass 'TestContext.CancellationTokenSource.Token'</source>
-        <target state="new">Consider using the overload that accepts a CancellationToken and pass 'TestContext.CancellationTokenSource.Token'</target>
+        <target state="translated">Zvažte použití přetížení, které přijímá CancellationToken a předejte TestContext.CancellationTokenSource.Token.</target>
         <note />
       </trans-unit>
       <trans-unit id="FlowTestContextCancellationTokenTitle">
         <source>Flow TestContext.CancellationToken to async operations</source>
-        <target state="new">Flow TestContext.CancellationToken to async operations</target>
+        <target state="translated">Přenesení TestContext.CancellationToken do asynchronních operací</target>
         <note />
       </trans-unit>
       <trans-unit id="GlobalTestFixtureShouldBeValidDescription">
@@ -931,17 +931,17 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
       </trans-unit>
       <trans-unit id="TestContextPropertyUsageTitle">
         <source>TestContext property cannot be accessed in this context</source>
-        <target state="new">TestContext property cannot be accessed in this context</target>
+        <target state="translated">Vlastnost TestContext není v tomto kontextu přístupná</target>
         <note />
       </trans-unit>
       <trans-unit id="TestContextPropertyUsageMessageFormat">
         <source>TestContext property '{0}' cannot be accessed in '{1}' method</source>
-        <target state="new">TestContext property '{0}' cannot be accessed in '{1}' method</target>
+        <target state="translated">Vlastnost TestContext {0} není přístupná v metodě {1}</target>
         <note />
       </trans-unit>
       <trans-unit id="TestContextPropertyUsageDescription">
         <source>Some TestContext properties are only available during test execution and cannot be accessed in assembly initialize, class initialize, class cleanup, or assembly cleanup methods.</source>
-        <target state="new">Some TestContext properties are only available during test execution and cannot be accessed in assembly initialize, class initialize, class cleanup, or assembly cleanup methods.</target>
+        <target state="translated">Některé vlastnosti TestContext jsou k dispozici pouze během provádění testu a nelze k nim přistupovat v metodách inicializace sestavení, inicializace třídy, vyčištění třídy nebo vyčištění sestavení.</target>
         <note />
       </trans-unit>
     </body>

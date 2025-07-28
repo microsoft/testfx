@@ -52,11 +52,6 @@ This package provides MSBuild integration of the platform, its extensions and co
   </Target>
 
   <ItemGroup>
-    <AdditionalFiles Include="PublicAPI.Shipped.txt" />
-    <AdditionalFiles Include="PublicAPI.Unshipped.txt" />
-  </ItemGroup>
-
-  <ItemGroup>
     <Compile Include="..\Microsoft.Testing.Extensions.MSBuild\MSBuildConstants.cs" Link="MSBuildConstants.cs" />
     <Compile Include="..\Microsoft.Testing.Extensions.MSBuild\Serializers\FailedTestInfoRequestSerializer.cs" Link="Serializers/FailedTestInfoRequestSerializer.cs" />
     <Compile Include="..\Microsoft.Testing.Extensions.MSBuild\Serializers\ModuleInfoRequestSerializer.cs" Link="Serializers/ModuleInfoRequestSerializer.cs" />

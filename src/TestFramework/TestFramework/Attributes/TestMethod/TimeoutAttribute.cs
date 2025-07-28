@@ -23,6 +23,11 @@ public sealed class TimeoutAttribute : Attribute
     /// <param name="timeout">
     /// The timeout.
     /// </param>
+#if NET6_0_OR_GREATER
+    [Obsolete(FrameworkConstants.TestTimeoutAttributeObsoleteMessage, error: false, DiagnosticId = "MSTESTOBS")]
+#else
+    [Obsolete(FrameworkConstants.TestTimeoutAttributeObsoleteMessage, error: false)]
+#endif
     public TimeoutAttribute(TestTimeout timeout) => Timeout = (int)timeout;
 
     /// <summary>

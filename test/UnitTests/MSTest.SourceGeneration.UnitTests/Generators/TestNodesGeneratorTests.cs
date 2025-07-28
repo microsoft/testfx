@@ -13,6 +13,8 @@ namespace Microsoft.Testing.Framework.SourceGeneration.UnitTests.Generators;
 [TestClass]
 public sealed class TestNodesGeneratorTests : TestBase
 {
+    public TestContext TestContext { get; set; }
+
     [DataRow("class", "public")]
     [DataRow("class", "internal")]
     [DataRow("record", "public")]
@@ -44,7 +46,7 @@ public sealed class TestNodesGeneratorTests : TestBase
         generatorResult.AssertSuccessfulGeneration();
         generatorResult.GeneratedTrees.Should().HaveCount(3);
 
-        SourceText myTypeSource = await generatorResult.RunResult.GeneratedTrees[0].GetTextAsync();
+        SourceText myTypeSource = await generatorResult.RunResult.GeneratedTrees[0].GetTextAsync(TestContext.CancellationTokenSource.Token);
         myTypeSource.Should().ContainSourceCode("""
                     public static readonly MSTF::TestNode TestNode = new MSTF::TestNode
                     {
@@ -89,7 +91,7 @@ public sealed class TestNodesGeneratorTests : TestBase
                     };
             """);
 
-        SourceText rootSource = await generatorResult.RunResult.GeneratedTrees[1].GetTextAsync();
+        SourceText rootSource = await generatorResult.RunResult.GeneratedTrees[1].GetTextAsync(TestContext.CancellationTokenSource.Token);
         rootSource.Should().ContainSourceCode("""
                         MSTF::TestNode root = new MSTF::TestNode
                         {
@@ -223,7 +225,7 @@ public sealed class TestNodesGeneratorTests : TestBase
         generatorResult.AssertSuccessfulGeneration();
         generatorResult.GeneratedTrees.Should().HaveCount(3);
 
-        SourceText myTypeSource = await generatorResult.RunResult.GeneratedTrees[0].GetTextAsync();
+        SourceText myTypeSource = await generatorResult.RunResult.GeneratedTrees[0].GetTextAsync(TestContext.CancellationTokenSource.Token);
         myTypeSource.Should().ContainSourceCode("""
                     public static readonly MSTF::TestNode TestNode = new MSTF::TestNode
                     {
@@ -330,7 +332,7 @@ public sealed class TestNodesGeneratorTests : TestBase
         generatorResult.AssertSuccessfulGeneration();
         generatorResult.GeneratedTrees.Should().HaveCount(4);
 
-        SourceText myBaseClassSource = await generatorResult.GeneratedTrees[0].GetTextAsync();
+        SourceText myBaseClassSource = await generatorResult.GeneratedTrees[0].GetTextAsync(TestContext.CancellationTokenSource.Token);
         myBaseClassSource.Should().ContainSourceCode("""
                     public static readonly MSTF::TestNode TestNode = new MSTF::TestNode
                     {
@@ -375,7 +377,7 @@ public sealed class TestNodesGeneratorTests : TestBase
                     };
             """);
 
-        SourceText myTypeSource = await generatorResult.GeneratedTrees[1].GetTextAsync();
+        SourceText myTypeSource = await generatorResult.GeneratedTrees[1].GetTextAsync(TestContext.CancellationTokenSource.Token);
         myTypeSource.Should().ContainSourceCode("""
                     public static readonly MSTF::TestNode TestNode = new MSTF::TestNode
                     {
@@ -488,7 +490,7 @@ public sealed class TestNodesGeneratorTests : TestBase
         generatorResult.AssertSuccessfulGeneration();
         generatorResult.RunResult.GeneratedTrees.Should().HaveCount(3);
 
-        SourceText testClass = await generatorResult.GeneratedTrees[0].GetTextAsync();
+        SourceText testClass = await generatorResult.GeneratedTrees[0].GetTextAsync(TestContext.CancellationTokenSource.Token);
 
         testClass.Should().ContainSourceCode(
             "public static readonly MSTF::TestNode TestNode = new MSTF::TestNode",
@@ -533,7 +535,7 @@ public sealed class TestNodesGeneratorTests : TestBase
         SyntaxTree? testClassTree = generatorResult.GeneratedTrees.FirstOrDefault(r => r.FilePath.EndsWith("TestSubClass.g.cs", StringComparison.OrdinalIgnoreCase));
         testClassTree.Should().NotBeNull();
 
-        SourceText testClass = await testClassTree!.GetTextAsync();
+        SourceText testClass = await testClassTree!.GetTextAsync(TestContext.CancellationTokenSource.Token);
         testClass.Should().ContainSourceCode("""
                             new MSTF::InternalUnsafeAsyncActionTestNode
                             {
@@ -589,7 +591,7 @@ public sealed class TestNodesGeneratorTests : TestBase
         generatorResult.AssertSuccessfulGeneration();
         generatorResult.RunResult.GeneratedTrees.Should().HaveCount(3);
 
-        SourceText myTypeSource = await generatorResult.GeneratedTrees[0].GetTextAsync();
+        SourceText myTypeSource = await generatorResult.GeneratedTrees[0].GetTextAsync(TestContext.CancellationTokenSource.Token);
         myTypeSource.Should().ContainSourceCode("""
                 public static readonly MSTF::TestNode TestNode = new MSTF::TestNode
                 {
@@ -601,7 +603,7 @@ public sealed class TestNodesGeneratorTests : TestBase
                     },
             """);
 
-        SourceText rootSource = await generatorResult.GeneratedTrees[1].GetTextAsync();
+        SourceText rootSource = await generatorResult.GeneratedTrees[1].GetTextAsync(TestContext.CancellationTokenSource.Token);
         rootSource.Should().ContainSourceCode("""
                     MSTF::TestNode root = new MSTF::TestNode
                     {
@@ -666,7 +668,7 @@ public sealed class TestNodesGeneratorTests : TestBase
         generatorResult.AssertSuccessfulGeneration();
         generatorResult.GeneratedTrees.Should().HaveCount(4);
 
-        SourceText rootSource = await generatorResult.RunResult.GeneratedTrees[2].GetTextAsync();
+        SourceText rootSource = await generatorResult.RunResult.GeneratedTrees[2].GetTextAsync(TestContext.CancellationTokenSource.Token);
         rootSource.Should().ContainSourceCode("""
                         ColGen::List<MSTF::TestNode> namespace1Tests = new();
                         namespace1Tests.Add(MyNamespace_MyType1.TestNode);
@@ -728,7 +730,7 @@ public sealed class TestNodesGeneratorTests : TestBase
         generatorResult.AssertSuccessfulGeneration();
         generatorResult.GeneratedTrees.Should().HaveCount(2);
 
-        SourceText myTypeSource = await generatorResult.RunResult.GeneratedTrees[0].GetTextAsync();
+        SourceText myTypeSource = await generatorResult.RunResult.GeneratedTrees[0].GetTextAsync(TestContext.CancellationTokenSource.Token);
 
         // The test node for the type should not have a test node for the InitializeAsync method.
         myTypeSource.Should().NotContain("StableUid = \"TestAssembly.MyNamespace.MyType.InitializeAsync\"");
@@ -786,7 +788,7 @@ public sealed class TestNodesGeneratorTests : TestBase
         generatorResult.AssertSuccessfulGeneration();
         generatorResult.GeneratedTrees.Should().HaveCount(2);
 
-        SourceText myTypeSource = await generatorResult.RunResult.GeneratedTrees[0].GetTextAsync();
+        SourceText myTypeSource = await generatorResult.RunResult.GeneratedTrees[0].GetTextAsync(TestContext.CancellationTokenSource.Token);
 
         // The test node for the type should not have a test node for the CleanupAsync method.
         myTypeSource.Should().NotContain("StableUid = \"TestAssembly.MyNamespace.MyType.CleanupAsync\"");
@@ -851,7 +853,7 @@ public sealed class TestNodesGeneratorTests : TestBase
         generatorResult.AssertSuccessfulGeneration();
         generatorResult.GeneratedTrees.Should().HaveCount(2);
 
-        SourceText myTypeSource = await generatorResult.RunResult.GeneratedTrees[0].GetTextAsync();
+        SourceText myTypeSource = await generatorResult.RunResult.GeneratedTrees[0].GetTextAsync(TestContext.CancellationTokenSource.Token);
 
         // The test node for the type should not have a test node for the Dispose method.
         myTypeSource.Should().NotContain("StableUid = \"TestAssembly.MyNamespace.MyType.Dispose\"");
@@ -909,7 +911,7 @@ public sealed class TestNodesGeneratorTests : TestBase
         generatorResult.AssertSuccessfulGeneration();
         generatorResult.GeneratedTrees.Should().HaveCount(2);
 
-        SourceText myTypeSource = await generatorResult.RunResult.GeneratedTrees[0].GetTextAsync();
+        SourceText myTypeSource = await generatorResult.RunResult.GeneratedTrees[0].GetTextAsync(TestContext.CancellationTokenSource.Token);
 
         // The test node for the type should not have a test node for the DisposeAsync method.
         myTypeSource.Should().NotContain("StableUid = \"TestAssembly.MyNamespace.MyType.DisposeAsync\"");
@@ -971,7 +973,7 @@ public sealed class TestNodesGeneratorTests : TestBase
         generatorResult.AssertSuccessfulGeneration();
         generatorResult.GeneratedTrees.Should().HaveCount(2);
 
-        SourceText myTypeSource = await generatorResult.RunResult.GeneratedTrees[0].GetTextAsync();
+        SourceText myTypeSource = await generatorResult.RunResult.GeneratedTrees[0].GetTextAsync(TestContext.CancellationTokenSource.Token);
 
         // The body of the test node for the method should call only DisposeAsync after calling the test method.
         myTypeSource.Should().ContainSourceCode("""
@@ -1046,21 +1048,21 @@ public sealed class TestNodesGeneratorTests : TestBase
         generatorResult.AssertSuccessfulGeneration();
         generatorResult.GeneratedTrees.Should().HaveCount(4);
 
-        SourceText myClass1Source = await generatorResult.RunResult.GeneratedTrees[0].GetTextAsync();
+        SourceText myClass1Source = await generatorResult.RunResult.GeneratedTrees[0].GetTextAsync(TestContext.CancellationTokenSource.Token);
         myClass1Source.Should().ContainSourceCode("""
                             new MSTF::InternalUnsafeAsyncActionTestNode
                             {
                                 StableUid = "TestAssembly.MyNamespace.MyClass1.TestMethod()",
             """);
 
-        SourceText myClass2Source = await generatorResult.RunResult.GeneratedTrees[1].GetTextAsync();
+        SourceText myClass2Source = await generatorResult.RunResult.GeneratedTrees[1].GetTextAsync(TestContext.CancellationTokenSource.Token);
         myClass2Source.Should().ContainSourceCode("""
                             new MSTF::InternalUnsafeAsyncActionTestNode
                             {
                                 StableUid = "TestAssembly.MyNamespace.MyClass2.TestMethod()",
             """);
 
-        SourceText myClass3Source = await generatorResult.RunResult.GeneratedTrees[2].GetTextAsync();
+        SourceText myClass3Source = await generatorResult.RunResult.GeneratedTrees[2].GetTextAsync(TestContext.CancellationTokenSource.Token);
         myClass3Source.Should().ContainSourceCode("""
                             new MSTF::InternalUnsafeAsyncActionTestNode
                             {
@@ -1116,7 +1118,7 @@ public sealed class TestNodesGeneratorTests : TestBase
         generatorResult.AssertFailedGeneration("*error CS0619: 'MyType.TestMethod4()' is obsolete*");
         generatorResult.GeneratedTrees.Should().HaveCount(3);
 
-        SourceText myTypeSource = await generatorResult.RunResult.GeneratedTrees[0].GetTextAsync();
+        SourceText myTypeSource = await generatorResult.RunResult.GeneratedTrees[0].GetTextAsync(TestContext.CancellationTokenSource.Token);
         myTypeSource.Should().ContainSourceCode("""
             #pragma warning disable CS0612 // Type or member is obsolete
                                         await instance.TestMethod1();
@@ -1200,7 +1202,7 @@ public sealed class TestNodesGeneratorTests : TestBase
         generatorResult.AssertSuccessfulGeneration();
         generatorResult.GeneratedTrees.Should().HaveCount(3);
 
-        SourceText myTypeSource = await generatorResult.RunResult.GeneratedTrees[0].GetTextAsync();
+        SourceText myTypeSource = await generatorResult.RunResult.GeneratedTrees[0].GetTextAsync(TestContext.CancellationTokenSource.Token);
         myTypeSource.Should().ContainSourceCode("""
                 public static class MyNamespace_MyType
                 {

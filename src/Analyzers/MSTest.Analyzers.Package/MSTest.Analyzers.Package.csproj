@@ -22,11 +22,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <AdditionalFiles Include="PublicAPI.Shipped.txt" />
-    <AdditionalFiles Include="PublicAPI.Unshipped.txt" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\MSTest.Analyzers.CodeFixes\MSTest.Analyzers.CodeFixes.csproj" />
     <ProjectReference Include="..\MSTest.Analyzers\MSTest.Analyzers.csproj" />
   </ItemGroup>

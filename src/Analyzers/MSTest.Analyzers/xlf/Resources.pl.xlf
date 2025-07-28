@@ -434,17 +434,17 @@ Typ deklarujący te metody powinien również przestrzegać następujących regu
       </trans-unit>
       <trans-unit id="FlowTestContextCancellationTokenDescription">
         <source>When calling async methods that have overloads accepting a CancellationToken parameter, prefer using the overload with TestContext.CancellationTokenSource.Token to enable cooperative cancellation and respect test timeouts.</source>
-        <target state="new">When calling async methods that have overloads accepting a CancellationToken parameter, prefer using the overload with TestContext.CancellationTokenSource.Token to enable cooperative cancellation and respect test timeouts.</target>
+        <target state="translated">W przypadku wywoływania metod asynchronicznych, które mają przeciążenia akceptujące parametr CancellationToken, preferuj użycie przeciążenia z elementem TestContext.CancellationTokenSource.Token, aby umożliwić współpracujące anulowanie i uwzględnić limity czasu testu.</target>
         <note />
       </trans-unit>
       <trans-unit id="FlowTestContextCancellationTokenMessageFormat">
         <source>Consider using the overload that accepts a CancellationToken and pass 'TestContext.CancellationTokenSource.Token'</source>
-        <target state="new">Consider using the overload that accepts a CancellationToken and pass 'TestContext.CancellationTokenSource.Token'</target>
+        <target state="translated">Rozważ użycie przeciążenia akceptującego parametr CancellationToken i przekazanie elementu „TestContext.CancellationTokenSource.Token”</target>
         <note />
       </trans-unit>
       <trans-unit id="FlowTestContextCancellationTokenTitle">
         <source>Flow TestContext.CancellationToken to async operations</source>
-        <target state="new">Flow TestContext.CancellationToken to async operations</target>
+        <target state="translated">Przekaż TestContext.CancellationToken do operacji asynchronicznych</target>
         <note />
       </trans-unit>
       <trans-unit id="GlobalTestFixtureShouldBeValidDescription">
@@ -931,17 +931,17 @@ Typ deklarujący te metody powinien również przestrzegać następujących regu
       </trans-unit>
       <trans-unit id="TestContextPropertyUsageTitle">
         <source>TestContext property cannot be accessed in this context</source>
-        <target state="new">TestContext property cannot be accessed in this context</target>
+        <target state="translated">W tym kontekście nie można uzyskać dostępu do właściwości TestContext</target>
         <note />
       </trans-unit>
       <trans-unit id="TestContextPropertyUsageMessageFormat">
         <source>TestContext property '{0}' cannot be accessed in '{1}' method</source>
-        <target state="new">TestContext property '{0}' cannot be accessed in '{1}' method</target>
+        <target state="translated">Nie można uzyskać dostępu do właściwości TestContext „{0}” w metodzie „{1}”</target>
         <note />
       </trans-unit>
       <trans-unit id="TestContextPropertyUsageDescription">
         <source>Some TestContext properties are only available during test execution and cannot be accessed in assembly initialize, class initialize, class cleanup, or assembly cleanup methods.</source>
-        <target state="new">Some TestContext properties are only available during test execution and cannot be accessed in assembly initialize, class initialize, class cleanup, or assembly cleanup methods.</target>
+        <target state="translated">Niektóre właściwości TestContext są dostępne tylko podczas wykonywania testu i nie można uzyskać do nich dostępu w metodach inicjowania, inicjowania klasy, oczyszczania klasy ani oczyszczania zestawów.</target>
         <note />
       </trans-unit>
     </body>
