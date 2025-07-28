@@ -800,58 +800,68 @@ public sealed partial class Assert
     private static Tuple<string, string, int> CreateStringPreviews(
         string expected, string actual, int diffIndex, int contextLength)
     {
-        // Calculate start position to show context before the difference
-        int startPos = Math.Max(0, diffIndex - (contextLength / 2));
-
-        // For very long strings, prefer showing context before the difference
-        if (diffIndex > contextLength && startPos == 0)
+        int maxLength = Math.Max(expected.Length, actual.Length);
+        
+        // For shorter strings, show the full strings but still apply character escaping
+        if (maxLength <= contextLength)
         {
-            startPos = Math.Max(0, diffIndex - contextLength + 5); // Leave some space for the difference
+            var expectedResult = CreateStringPreviewWithCaretInfo(expected, 0, expected.Length, diffIndex);
+            var actualResult = CreateStringPreviewWithCaretInfo(actual, 0, actual.Length, diffIndex);
+            
+            // Use the caret position from the expected string as reference
+            return new(expectedResult.Item1, actualResult.Item1, expectedResult.Item2);
         }
+
+        // Calculate optimal start position to maximize context around the difference
+        // Position the difference at 75% within the window for better context
+        int preferredStart = diffIndex - (int)(contextLength * 0.75);
+        int startPos = Math.Max(0, Math.Min(preferredStart, maxLength - contextLength));
 
         // Calculate end position
-        int maxEndPos = Math.Max(expected.Length, actual.Length);
-        int endPos = Math.Min(maxEndPos, startPos + contextLength);
+        int endPos = Math.Min(maxLength, startPos + contextLength);
 
-        // Create previews
-        string expectedPreview = CreateStringPreview(expected, startPos, endPos);
-        string actualPreview = CreateStringPreview(actual, startPos, endPos);
+        // Create previews and track character position changes for caret alignment
+        var expectedResult = CreateStringPreviewWithCaretInfo(expected, startPos, endPos, diffIndex);
+        var actualResult = CreateStringPreviewWithCaretInfo(actual, startPos, endPos, diffIndex);
 
-        // Calculate caret position (where to place the ^ marker)
-        int caretPosition = Math.Max(0, diffIndex - startPos);
+        // Use the caret position from the expected string as reference
+        int caretPosition = expectedResult.Item2;
 
-        // Adjust caret position for leading ellipsis
-        if (startPos > 0)
-        {
-            caretPosition += 3; // Account for "..." ellipsis
-        }
-
-        return new(expectedPreview, actualPreview, caretPosition);
+        return new(expectedResult.Item1, actualResult.Item1, caretPosition);
     }
 
-    private static string CreateStringPreview(string str, int startPos, int endPos)
+    private static Tuple<string, int> CreateStringPreviewWithCaretInfo(string str, int startPos, int endPos, int diffIndex)
     {
         if (startPos >= str.Length)
         {
-            return string.Empty;
+            return new(string.Empty, 0);
         }
 
         int actualStart = Math.Min(startPos, str.Length);
         int actualEnd = Math.Min(endPos, str.Length);
-
+        
         string preview = str.Substring(actualStart, actualEnd - actualStart);
-
-        // Replace non-printable characters and ensure ASCII-only display
         var result = new StringBuilder();
+        int originalCaretPos = Math.Max(0, diffIndex - actualStart);
+        int adjustedCaretPos = 0;
 
-        // Add leading ellipsis if we're starting after the beginning
-        if (actualStart > 0)
+        // Only add leading ellipsis if we're masking 4 or more characters
+        if (actualStart >= 4)
         {
             result.Append("...");
+            adjustedCaretPos += 3;
         }
 
-        foreach (char c in preview)
+        // Process each character and track caret position adjustments
+        for (int i = 0; i < preview.Length; i++)
         {
+            char c = preview[i];
+            
+            if (i == originalCaretPos)
+            {
+                adjustedCaretPos = result.Length;
+            }
+
             if (c is >= (char)32 and <= (char)126) // Printable ASCII
             {
                 result.Append(c);
@@ -872,24 +882,40 @@ public sealed partial class Assert
             {
                 result.Append("\\0");
             }
-            else
+            else if (char.IsControl(c))
             {
-                // Show Unicode characters as escape sequences to avoid UTF-8 console issues
+                // Only escape control characters, keep printable Unicode
 #if NET
                 result.Append(CultureInfo.InvariantCulture, $"\\u{(int)c:X4}");
 #else
                 result.Append($"\\u{(int)c:X4}");
 #endif
             }
+            else
+            {
+                // Keep Unicode characters (like emojis) as-is
+                result.Append(c);
+            }
         }
 
-        // Add trailing ellipsis if we're ending before the end
-        if (actualEnd < str.Length)
+        // Handle caret position if it's at the end
+        if (originalCaretPos >= preview.Length)
+        {
+            adjustedCaretPos = result.Length;
+        }
+
+        // Only add trailing ellipsis if we're masking 4 or more characters
+        if (str.Length - actualEnd >= 4)
         {
             result.Append("...");
         }
 
-        return result.ToString();
+        return new(result.ToString(), adjustedCaretPos);
+    }
+
+    private static string CreateStringPreview(string str, int startPos, int endPos)
+    {
+        return CreateStringPreviewWithCaretInfo(str, startPos, endPos, -1).Item1;
     }
 
     [DoesNotReturn]
