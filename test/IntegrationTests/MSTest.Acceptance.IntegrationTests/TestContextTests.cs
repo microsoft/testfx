@@ -283,7 +283,7 @@ public class TestContextDataFromDynamicData
     }
 
     [TestMethod]
-    [DynamicData(nameof(GetData), DynamicDataSourceType.Method)]
+    [DynamicData(nameof(GetData))]
     public void Test(int i, string s)
     {
         AssertTestContextData();

@@ -82,7 +82,7 @@ public sealed class DynamicDataAttributeGenerationTests : TestBase
                 [TestClass]
                 public class TestClass
                 {
-                    [DynamicData(nameof(Data), DynamicDataSourceType.Method)]        
+                    [DynamicData(nameof(Data))]        
                     [TestMethod]
                     public void TestMethod(int expected, int actualPlus1)
                         => Assert.AreEqual(expected, actualPlus1 - 1);

@@ -7,58 +7,24 @@ internal static class DynamicDataOperations
 {
     private const BindingFlags DeclaredOnlyLookup = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly;
 
-    public static IEnumerable<object[]> GetData(Type? dynamicDataDeclaringType, DynamicDataSourceType dynamicDataSourceType, string dynamicDataSourceName, object?[] dynamicDataSourceArguments, MethodInfo methodInfo)
+    public static IEnumerable<object[]> GetData(Type? dynamicDataDeclaringType, string dynamicDataSourceName, object?[] dynamicDataSourceArguments, MethodInfo methodInfo)
     {
         // Check if the declaring type of test data is passed in. If not, default to test method's class type.
         dynamicDataDeclaringType ??= methodInfo.DeclaringType;
         DebugEx.Assert(dynamicDataDeclaringType is not null, "Declaring type of test data cannot be null.");
 
-        object? obj = null;
-
-        switch (dynamicDataSourceType)
-        {
-            case DynamicDataSourceType.AutoDetect:
-#pragma warning disable IDE0045 // Convert to conditional expression - it becomes less readable.
-                if (GetPropertyConsideringInheritance(dynamicDataDeclaringType, dynamicDataSourceName) is { } dynamicDataPropertyInfo)
-                {
-                    obj = GetDataFromProperty(dynamicDataPropertyInfo);
-                }
-                else if (GetMethodConsideringInheritance(dynamicDataDeclaringType, dynamicDataSourceName) is { } dynamicDataMethodInfo)
-                {
-                    obj = GetDataFromMethod(dynamicDataMethodInfo, dynamicDataSourceArguments);
-                }
-                else
-                {
-                    throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, FrameworkMessages.DynamicDataSourceShouldExistAndBeValid, dynamicDataSourceName, dynamicDataDeclaringType.FullName));
-                }
-#pragma warning restore IDE0045 // Convert to conditional expression
-
-                break;
-            case DynamicDataSourceType.Property:
-                PropertyInfo property = GetPropertyConsideringInheritance(dynamicDataDeclaringType, dynamicDataSourceName)
-                    ?? throw new ArgumentNullException($"{DynamicDataSourceType.Property} {dynamicDataSourceName}");
-
-                obj = GetDataFromProperty(property);
-                break;
-
-            case DynamicDataSourceType.Method:
-                MethodInfo method = GetMethodConsideringInheritance(dynamicDataDeclaringType, dynamicDataSourceName)
-                    ?? throw new ArgumentNullException($"{DynamicDataSourceType.Method} {dynamicDataSourceName}");
-
-                obj = GetDataFromMethod(method, dynamicDataSourceArguments);
-                break;
-        }
-
-        if (obj == null)
-        {
-            throw new ArgumentNullException(
+        object? obj =
+            (GetPropertyConsideringInheritance(dynamicDataDeclaringType, dynamicDataSourceName) is { } dynamicDataPropertyInfo
+                ? GetDataFromProperty(dynamicDataPropertyInfo)
+                : GetMethodConsideringInheritance(dynamicDataDeclaringType, dynamicDataSourceName) is { } dynamicDataMethodInfo
+                    ? GetDataFromMethod(dynamicDataMethodInfo, dynamicDataSourceArguments)
+                    : throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, FrameworkMessages.DynamicDataSourceShouldExistAndBeValid, dynamicDataSourceName, dynamicDataDeclaringType.FullName)))
+            ?? throw new ArgumentNullException(
                 string.Format(
                     CultureInfo.InvariantCulture,
                     FrameworkMessages.DynamicDataValueNull,
                     dynamicDataSourceName,
                     dynamicDataDeclaringType.FullName));
-        }
-
         if (!TryGetData(obj, out IEnumerable<object[]>? data))
         {
             throw new ArgumentNullException(

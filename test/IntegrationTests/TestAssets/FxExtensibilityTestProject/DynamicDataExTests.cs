@@ -31,7 +31,7 @@ public class DynamicDataExTests
 
     // Method ReusableTestDataMethod can be used as data source for test data with data driven test case.
     [TestMethod]
-    [DynamicData("ReusableTestDataMethod", DynamicDataSourceType.Method)]
+    [DynamicData("ReusableTestDataMethod")]
     public void DynamicDataTestMethod2(string a, int b, bool c)
     {
         Assert.AreEqual("string", a);
@@ -41,7 +41,7 @@ public class DynamicDataExTests
 
     [TestMethod]
     [DynamicData("ReusableTestDataProperty")]
-    [DynamicData("ReusableTestDataMethod", DynamicDataSourceType.Method)]
+    [DynamicData("ReusableTestDataMethod")]
     public void DynamicDataTestMethod3(string a, int b, bool c)
     {
         Assert.AreEqual("string", a);
@@ -59,7 +59,7 @@ public class DynamicDataExTests
     }
 
     [TestMethod]
-    [DynamicData("EmptyTestDataMethod", DynamicDataSourceType.Method)]
+    [DynamicData("EmptyTestDataMethod")]
     public void DynamicEmptyDataTestMethod2(string a, int b, bool c)
     {
         Assert.AreEqual("string", a);
@@ -69,7 +69,7 @@ public class DynamicDataExTests
 
     [TestMethod]
     [DynamicData("EmptyTestDataProperty")]
-    [DynamicData("EmptyTestDataMethod", DynamicDataSourceType.Method)]
+    [DynamicData("EmptyTestDataMethod")]
     public void DynamicEmptyDataTestMethod3(string a, int b, bool c)
     {
         Assert.AreEqual("string", a);

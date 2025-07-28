@@ -15,7 +15,7 @@ public sealed class DisableExpansionTests
     }
 
     [TestMethod(UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Fold)]
-    [DynamicData(nameof(MethodSource), DynamicDataSourceType.Method)]
+    [DynamicData(nameof(MethodSource))]
     public void TestMethodSourceOnCurrentType(int a, string s)
     {
     }
@@ -27,7 +27,7 @@ public sealed class DisableExpansionTests
     }
 
     [TestMethod(UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Fold)]
-    [DynamicData(nameof(MethodSource), typeof(DataSourceHelper), DynamicDataSourceType.Method)]
+    [DynamicData(nameof(MethodSource), typeof(DataSourceHelper))]
     public void TestMethodSourceOnDifferentType(int a, string s)
     {
     }

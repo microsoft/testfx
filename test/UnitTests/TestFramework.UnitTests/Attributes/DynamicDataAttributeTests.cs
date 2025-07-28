@@ -46,7 +46,7 @@ public class DynamicDataAttributeTests : TestContainer
     public void GetDataShouldReadDataFromMethod()
     {
         MethodInfo methodInfo = _dummyTestClass.GetType().GetTypeInfo().GetDeclaredMethod("TestMethod2")!;
-        _dynamicDataAttribute = new DynamicDataAttribute("ReusableTestDataMethod", DynamicDataSourceType.Method);
+        _dynamicDataAttribute = new DynamicDataAttribute("ReusableTestDataMethod");
         IEnumerable<object[]> data = _dynamicDataAttribute.GetData(methodInfo);
         Verify(data is not null);
         Verify(data.ToList().Count == 2);
@@ -55,7 +55,7 @@ public class DynamicDataAttributeTests : TestContainer
     public void GetDataShouldReadDataFromMethodInDifferentClass()
     {
         MethodInfo methodInfo = _dummyTestClass.GetType().GetTypeInfo().GetDeclaredMethod("TestMethod2")!;
-        _dynamicDataAttribute = new DynamicDataAttribute("ReusableTestDataMethod2", typeof(DummyTestClass2), DynamicDataSourceType.Method);
+        _dynamicDataAttribute = new DynamicDataAttribute("ReusableTestDataMethod2", typeof(DummyTestClass2));
         IEnumerable<object[]> data = _dynamicDataAttribute.GetData(methodInfo);
         Verify(data is not null);
         Verify(data.ToList().Count == 2);
@@ -235,7 +235,7 @@ public class DynamicDataAttributeTests : TestContainer
         var dynamicDataAttribute = new DynamicDataAttribute(nameof(TestClassTupleData.DataWithTuple), typeof(TestClassTupleData));
         dynamicDataAttribute.GetData(testMethodInfo);
 
-        dynamicDataAttribute = new DynamicDataAttribute(nameof(TestClassTupleData.GetDataWithTuple), typeof(TestClassTupleData), DynamicDataSourceType.Method);
+        dynamicDataAttribute = new DynamicDataAttribute(nameof(TestClassTupleData.GetDataWithTuple), typeof(TestClassTupleData));
         dynamicDataAttribute.GetData(testMethodInfo);
     }
 
@@ -245,7 +245,7 @@ public class DynamicDataAttributeTests : TestContainer
         var dynamicDataAttribute = new DynamicDataAttribute(nameof(TestClassTupleData.DataWithValueTuple), typeof(TestClassTupleData));
         dynamicDataAttribute.GetData(testMethodInfo);
 
-        dynamicDataAttribute = new DynamicDataAttribute(nameof(TestClassTupleData.GetDataWithValueTuple), typeof(TestClassTupleData), DynamicDataSourceType.Method);
+        dynamicDataAttribute = new DynamicDataAttribute(nameof(TestClassTupleData.GetDataWithValueTuple), typeof(TestClassTupleData));
         dynamicDataAttribute.GetData(testMethodInfo);
     }
 
@@ -255,7 +255,7 @@ public class DynamicDataAttributeTests : TestContainer
         var dynamicDataAttribute = new DynamicDataAttribute(nameof(TestClassTupleData.DataWithValueTupleWithTupleSyntax), typeof(TestClassTupleData));
         dynamicDataAttribute.GetData(testMethodInfo);
 
-        dynamicDataAttribute = new DynamicDataAttribute(nameof(TestClassTupleData.GetDataWithValueTupleWithTupleSyntax), typeof(TestClassTupleData), DynamicDataSourceType.Method);
+        dynamicDataAttribute = new DynamicDataAttribute(nameof(TestClassTupleData.GetDataWithValueTupleWithTupleSyntax), typeof(TestClassTupleData));
         dynamicDataAttribute.GetData(testMethodInfo);
     }
 

@@ -47,3 +47,7 @@ static Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert.ReferenceEquals
 *REMOVED*abstract Microsoft.VisualStudio.TestTools.UnitTesting.ConditionBaseAttribute.IgnoreMessage.get -> string?
 virtual Microsoft.VisualStudio.TestTools.UnitTesting.ConditionBaseAttribute.IgnoreMessage.get -> string?
 virtual Microsoft.VisualStudio.TestTools.UnitTesting.ConditionBaseAttribute.IgnoreMessage.set -> void
+*REMOVED*Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataSourceType
+*REMOVED*Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataSourceType.AutoDetect = 2 -> Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataSourceType
+*REMOVED*Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataSourceType.Method = 1 -> Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataSourceType
+*REMOVED*Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataSourceType.Property = 0 -> Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataSourceType

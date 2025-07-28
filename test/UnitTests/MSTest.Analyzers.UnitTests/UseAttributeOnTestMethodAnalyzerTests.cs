@@ -36,7 +36,7 @@ public sealed class UseAttributeOnTestMethodAnalyzerTests
             .Where(tuples => !tuples.tuple1.AttributeUsageExample.Equals(tuples.tuple2.AttributeUsageExample, StringComparison.Ordinal))
             .Select(tuples => (tuples.tuple1.Rule, tuples.tuple1.AttributeUsageExample, tuples.tuple2.Rule, tuples.tuple2.AttributeUsageExample));
 
-    [DynamicData(nameof(GetAttributeUsageExamples), DynamicDataSourceType.Method)]
+    [DynamicData(nameof(GetAttributeUsageExamples))]
     [TestMethod]
     public async Task WhenMethodIsMarkedWithTestMethodAndTestAttributes_NoDiagnosticAsync(string attributeUsageExample)
     {
@@ -57,7 +57,7 @@ public sealed class UseAttributeOnTestMethodAnalyzerTests
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
-    [DynamicData(nameof(GetAttributeUsageExampleAndRuleTuples), DynamicDataSourceType.Method)]
+    [DynamicData(nameof(GetAttributeUsageExampleAndRuleTuples))]
     [TestMethod]
     public async Task WhenMethodIsMarkedWithTestAttributeButNotWithTestMethod_DiagnosticAsync(DiagnosticDescriptor rule, string attributeUsageExample)
     {
@@ -91,7 +91,7 @@ public sealed class UseAttributeOnTestMethodAnalyzerTests
         await VerifyCS.VerifyCodeFixAsync(code, VerifyCS.Diagnostic(rule).WithLocation(0), fixedCode);
     }
 
-    [DynamicData(nameof(GetAttributeUsageExampleAndRuleTuplesForTwoAttributes), DynamicDataSourceType.Method)]
+    [DynamicData(nameof(GetAttributeUsageExampleAndRuleTuplesForTwoAttributes))]
     [TestMethod]
     public async Task WhenMethodIsMarkedWithMultipleTestAttributesButNotWithTestMethod_DiagnosticOnEachAttributeAsync(
         DiagnosticDescriptor rule1,
@@ -131,7 +131,7 @@ public sealed class UseAttributeOnTestMethodAnalyzerTests
         await VerifyCS.VerifyCodeFixAsync(code, [VerifyCS.Diagnostic(rule1).WithLocation(0), VerifyCS.Diagnostic(rule2).WithLocation(1)], fixedCode);
     }
 
-    [DynamicData(nameof(GetAttributeUsageExamples), DynamicDataSourceType.Method)]
+    [DynamicData(nameof(GetAttributeUsageExamples))]
     [TestMethod]
     public async Task WhenMethodIsMarkedWithTestAttributeAndCustomTestMethod_NoDiagnosticAsync(string attributeUsageExample)
     {
