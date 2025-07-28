@@ -1074,7 +1074,8 @@ public sealed class DynamicDataShouldBeValidAnalyzerTests
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(code,
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
             VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.SourceTypeFieldRule).WithLocation(0).WithArguments("MyTestClass", "DataField"),
             VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.SourceTypeFieldRule).WithLocation(1).WithArguments("MyTestClass", "DataField"),
             VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.SourceTypePropertyRule).WithLocation(2).WithArguments("MyTestClass", "Data"),

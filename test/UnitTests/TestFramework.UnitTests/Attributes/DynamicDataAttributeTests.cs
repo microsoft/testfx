@@ -326,6 +326,7 @@ public class DynamicDataAttributeTests : TestContainer
     /// The dummy test class.
     /// </summary>
     [TestClass]
+    [SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1401:Fields should be private", Justification = "Test use case")]
     internal class DummyTestClass
     {
         /// <summary>
@@ -525,6 +526,8 @@ public class DynamicDataAttributeTests : TestContainer
         private static string GetDynamicDataDisplayNamePrivate(MethodInfo methodInfo, object[] data) => throw new InvalidOperationException();
     }
 
+    [SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1401:Fields should be private", Justification = "For testing the use case")]
+    [SuppressMessage("Usage", "CA2211:Non-constant fields should not be visible", Justification = "For testing the use case")]
     public class DummyTestClass2
     {
         /// <summary>

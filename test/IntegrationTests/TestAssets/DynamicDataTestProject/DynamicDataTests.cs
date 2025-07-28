@@ -274,10 +274,10 @@ public class DynamicDataTests : DynamicDataTestsBase
     }
 
     // Test field support - static field for dynamic data
-    private static IEnumerable<object[]> FieldTestData = new[]
+    private static readonly IEnumerable<object[]> FieldTestData = new[]
     {
-        new object[] { "field", 5 },
-        new object[] { "test", 4 }
+        ["field", 5],
+        new object[] { "test", 4 },
     };
 
     [DataTestMethod]
