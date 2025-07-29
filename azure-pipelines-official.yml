@@ -4,7 +4,6 @@ trigger:
     include:
     - main
     - rel/*
-    - dev/v4
     exclude:
     - rel/2.*
     - rel/3.0.*
