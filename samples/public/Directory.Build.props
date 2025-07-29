@@ -5,8 +5,8 @@
     <CodeCoverageVersion>17.14.2</CodeCoverageVersion>
     <MSTestVersion>3.10.0</MSTestVersion>
     <MSTestAOTVersion>1.0.0-alpha.25379.8</MSTestAOTVersion>
-    <PlaywrightVersion>1.50.0</PlaywrightVersion>
-    <TestingPlatformVersion>1.7.0</TestingPlatformVersion>
+    <PlaywrightVersion>1.54.0</PlaywrightVersion>
+    <TestingPlatformVersion>1.8.0</TestingPlatformVersion>
     <VSTestVersion>17.13.0</VSTestVersion>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
     <NoWarn>$(NoWarn);SA0001;EnableGenerateDocumentationFile</NoWarn>
