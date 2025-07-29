@@ -2,9 +2,12 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using FluentAssertions;
+
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
+
 using Moq;
+
 using TestFramework.ForTestingMSTest;
 
 using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -31,27 +34,28 @@ public class TestAssemblyInfoTests : TestContainer
 
     public void TestAssemblyInfoAssemblyInitializeMethodThrowsForMultipleAssemblyInitializeMethods()
     {
-        void Action()
+        Action action = () =>
         {
             _testAssemblyInfo.AssemblyInitializeMethod = _dummyMethodInfo;
             _testAssemblyInfo.AssemblyInitializeMethod = _dummyMethodInfo;
-        }
+        };
 
-        Action.Should().Throw<TypeInspectionException>();
+        action.Should().Throw<TypeInspectionException>();
     }
 
     public void TestAssemblyInfoAssemblyCleanupMethodThrowsForMultipleAssemblyCleanupMethods()
     {
-        void Action()
+        Action action = () =>
         {
             _testAssemblyInfo.AssemblyCleanupMethod = _dummyMethodInfo;
             _testAssemblyInfo.AssemblyCleanupMethod = _dummyMethodInfo;
-        }
+        };
 
-        Action.Should().Throw<TypeInspectionException>();
+        action.Should().Throw<TypeInspectionException>();
     }
 
-    public void TestAssemblyHasExecutableCleanupMethodShouldReturnFalseIfAssemblyHasNoCleanupMethod() => !_testAssemblyInfo.HasExecutableCleanupMethod.Should().BeTrue();
+    public void TestAssemblyHasExecutableCleanupMethodShouldReturnFalseIfAssemblyHasNoCleanupMethod()
+        => _testAssemblyInfo.HasExecutableCleanupMethod.Should().BeFalse();
 
     public void TestAssemblyHasExecutableCleanupMethodShouldReturnTrueEvenIfAssemblyInitializationThrewAnException()
     {
@@ -143,9 +147,9 @@ public class TestAssemblyInfoTests : TestContainer
 
         TestFailedException exception = VerifyThrows<TestFailedException>(() => _testAssemblyInfo.RunAssemblyInitialize(_testContext));
         exception.Outcome.Should().Be(UTF.UnitTestOutcome.Failed);
-        
-            exception.Message
-           .Should().Be("Assembly Initialization method Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestAssemblyInfoTests+DummyTestClass.AssemblyInitializeMethod threw exception. Microsoft.VisualStudio.TestTools.UnitTesting.AssertFailedException: Assert.Fail failed. Test failure. Aborting test execution.");
+
+        exception.Message
+       .Should().Be("Assembly Initialization method Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestAssemblyInfoTests+DummyTestClass.AssemblyInitializeMethod threw exception. Microsoft.VisualStudio.TestTools.UnitTesting.AssertFailedException: Assert.Fail failed. Test failure. Aborting test execution.");
 #if DEBUG
         Verify(exception.StackTraceInformation!.ErrorStackTrace.StartsWith(
     "   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestAssemblyInfoTests.<>c.<RunAssemblyInitializeShouldThrowTestFailedExceptionOnAssertionFailure>", StringComparison.Ordinal));
@@ -160,9 +164,9 @@ public class TestAssemblyInfoTests : TestContainer
 
         TestFailedException exception = VerifyThrows<TestFailedException>(() => _testAssemblyInfo.RunAssemblyInitialize(_testContext));
         exception.Outcome.Should().Be(UTF.UnitTestOutcome.Inconclusive);
-        
-            exception.Message
-           .Should().Be("Assembly Initialization method Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestAssemblyInfoTests+DummyTestClass.AssemblyInitializeMethod threw exception. Microsoft.VisualStudio.TestTools.UnitTesting.AssertInconclusiveException: Assert.Inconclusive failed. Test Inconclusive. Aborting test execution.");
+
+        exception.Message
+       .Should().Be("Assembly Initialization method Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestAssemblyInfoTests+DummyTestClass.AssemblyInitializeMethod threw exception. Microsoft.VisualStudio.TestTools.UnitTesting.AssertInconclusiveException: Assert.Inconclusive failed. Test Inconclusive. Aborting test execution.");
 #if DEBUG
         Verify(exception.StackTraceInformation!.ErrorStackTrace.StartsWith(
             "   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestAssemblyInfoTests.<>c.<RunAssemblyInitializeShouldThrowTestFailedExceptionWithInconclusiveOnAssertInconclusive>", StringComparison.Ordinal));
@@ -178,9 +182,9 @@ public class TestAssemblyInfoTests : TestContainer
         TestFailedException exception = VerifyThrows<TestFailedException>(() => _testAssemblyInfo.RunAssemblyInitialize(_testContext));
 
         exception.Outcome.Should().Be(UTF.UnitTestOutcome.Failed);
-        
-            exception.Message
-           .Should().Be("Assembly Initialization method Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestAssemblyInfoTests+DummyTestClass.AssemblyInitializeMethod threw exception. System.ArgumentException: Some actualErrorMessage message. Aborting test execution.");
+
+        exception.Message
+       .Should().Be("Assembly Initialization method Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestAssemblyInfoTests+DummyTestClass.AssemblyInitializeMethod threw exception. System.ArgumentException: Some actualErrorMessage message. Aborting test execution.");
 #if DEBUG
         Verify(exception.StackTraceInformation!.ErrorStackTrace.StartsWith(
     "   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestAssemblyInfoTests.<>c.<RunAssemblyInitializeShouldThrowTestFailedExceptionWithNonAssertExceptions>", StringComparison.Ordinal));
@@ -201,9 +205,9 @@ public class TestAssemblyInfoTests : TestContainer
         TestFailedException exception = VerifyThrows<TestFailedException>(() => _testAssemblyInfo.RunAssemblyInitialize(_testContext));
 
         exception.Outcome.Should().Be(UTF.UnitTestOutcome.Failed);
-        
-            exception.Message
-           .Should().Be("Assembly Initialization method Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestAssemblyInfoTests+DummyTestClass.AssemblyInitializeMethod threw exception. System.InvalidOperationException: I fail.. Aborting test execution.");
+
+        exception.Message
+       .Should().Be("Assembly Initialization method Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestAssemblyInfoTests+DummyTestClass.AssemblyInitializeMethod threw exception. System.InvalidOperationException: I fail.. Aborting test execution.");
 #if DEBUG
         Verify(exception.StackTraceInformation!.ErrorStackTrace.StartsWith(
             "   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestAssemblyInfoTests.FailingStaticHelper..cctor()", StringComparison.Ordinal));

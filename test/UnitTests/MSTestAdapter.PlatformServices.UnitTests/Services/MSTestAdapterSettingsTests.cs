@@ -177,8 +177,8 @@ public class MSTestAdapterSettingsTests : TestContainer
         for (int i = 0; i < 2; i++)
         {
             string.Equals(result[i].DirectoryPath, expectedResult[i].DirectoryPath, StringComparison.OrdinalIgnoreCase));
-            Verify(result[i].IncludeSubDirectories.Should().Be(expectedResult[i].IncludeSubDirectories);
-        }
+        Verify(result[i].IncludeSubDirectories.Should().Be(expectedResult[i].IncludeSubDirectories);
+    }
     }
 
     #endregion

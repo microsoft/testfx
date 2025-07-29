@@ -24,7 +24,7 @@ public class FileUtilityTests : TestContainer
     public void ReplaceInvalidFileNameCharactersShouldReturnFileNameIfItHasNoInvalidChars()
     {
         string fileName = "galaxy";
-        Verify(fileName == FileUtility.ReplaceInvalidFileNameCharacters(fileName));
+        FileUtility.ReplaceInvalidFileNameCharacters(fileName).Should().Be(fileName);
     }
 
     public void ReplaceInvalidFileNameCharactersShouldReplaceInvalidChars()

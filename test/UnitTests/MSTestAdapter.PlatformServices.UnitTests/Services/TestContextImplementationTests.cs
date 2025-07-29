@@ -8,9 +8,12 @@ using System.Data.Common;
 #endif
 
 using FluentAssertions;
+
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
+
 using Moq;
+
 using TestFramework.ForTestingMSTest;
 
 using ITestMethod = Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ObjectModel.ITestMethod;
