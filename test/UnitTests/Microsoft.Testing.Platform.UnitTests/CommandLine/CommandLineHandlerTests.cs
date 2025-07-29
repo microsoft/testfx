@@ -7,10 +7,7 @@ using Microsoft.Testing.Platform.Extensions.OutputDevice;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.Services;
-
 using Moq;
-
-using FluentAssertions;
 
 namespace Microsoft.Testing.Platform.UnitTests;
 

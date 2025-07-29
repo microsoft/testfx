@@ -3,10 +3,7 @@
 
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
-
 using Moq;
-
-using FluentAssertions;
 
 namespace Microsoft.Testing.Platform.UnitTests;
 

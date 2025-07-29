@@ -10,10 +10,7 @@ using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Services;
-
 using Moq;
-
-using FluentAssertions;
 
 namespace Microsoft.Testing.Platform.UnitTests;
 
