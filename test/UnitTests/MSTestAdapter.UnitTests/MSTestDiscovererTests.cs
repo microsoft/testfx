@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using FluentAssertions;
+
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
@@ -50,22 +52,22 @@ public class MSTestDiscovererTests : TestContainer
     public void MSTestDiscovererHasMSTestAdapterAsExecutorUri()
     {
         DefaultExecutorUriAttribute attribute = typeof(MSTestDiscoverer).GetCustomAttributes<DefaultExecutorUriAttribute>().First();
-        Verify(attribute is not null);
-        Verify(attribute.ExecutorUri == "executor://MSTestAdapter/v2");
+        attribute.Should().NotBeNull();
+        attribute.ExecutorUri.Should().Be("executor://MSTestAdapter/v2");
     }
 
     public void MSTestDiscovererHasXapAsFileExtension()
     {
         IEnumerable<FileExtensionAttribute> attributes = typeof(MSTestDiscoverer).GetCustomAttributes<FileExtensionAttribute>();
-        Verify(attributes is not null);
-        Verify(attributes.Count(attribute => attribute.FileExtension == ".xap") == 1);
+        attributes.Should().NotBeNull();
+        attributes.Count(attribute => attribute.FileExtension == ".xap").Should().Be(1);
     }
 
     public void MSTestDiscovererHasAppxAsFileExtension()
     {
         IEnumerable<FileExtensionAttribute> attributes = typeof(MSTestDiscoverer).GetCustomAttributes<FileExtensionAttribute>();
-        Verify(attributes is not null);
-        Verify(attributes.Count(attribute => attribute.FileExtension == ".appx") == 1);
+        attributes.Should().NotBeNull();
+        attributes.Count(attribute => attribute.FileExtension == ".appx").Should().Be(1);
     }
 
     public void MSTestDiscovererHasDllAsFileExtension()
@@ -84,20 +86,20 @@ public class MSTestDiscovererTests : TestContainer
 
     public void DiscoverTestsShouldThrowIfSourcesIsNull()
     {
-        void A() => _discoverer.DiscoverTests(null!, _mockDiscoveryContext.Object, _mockMessageLogger.Object, _mockTestCaseDiscoverySink.Object);
-        VerifyThrows<ArgumentNullException>(A);
+        Action act = () => _discoverer.DiscoverTests(null!, _mockDiscoveryContext.Object, _mockMessageLogger.Object, _mockTestCaseDiscoverySink.Object);
+        act.Should().Throw<ArgumentNullException>();
     }
 
     public void DiscoverTestsShouldThrowIfDiscoverySinkIsNull()
     {
-        void A() => _discoverer.DiscoverTests(new List<string>(), _mockDiscoveryContext.Object, _mockMessageLogger.Object, null!);
-        VerifyThrows<ArgumentNullException>(A);
+        Action act = () => _discoverer.DiscoverTests(new List<string>(), _mockDiscoveryContext.Object, _mockMessageLogger.Object, null!);
+        act.Should().Throw<ArgumentNullException>();
     }
 
     public void DiscoverTestsShouldThrowIfLoggerIsNull()
     {
-        void A() => _discoverer.DiscoverTests(new List<string>(), _mockDiscoveryContext.Object, null!, _mockTestCaseDiscoverySink.Object);
-        VerifyThrows<ArgumentNullException>(A);
+        Action act = () => _discoverer.DiscoverTests(new List<string>(), _mockDiscoveryContext.Object, null!, _mockTestCaseDiscoverySink.Object);
+        act.Should().Throw<ArgumentNullException>();
     }
 
     public void DiscoverTestsShouldThrowIfSourcesAreNotValid()
