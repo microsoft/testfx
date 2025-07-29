@@ -426,8 +426,8 @@ internal sealed class TypeCache : MarshalByRefObject
                             methodInfo.GetParameters() is { } parameters && parameters.Length == 1 && parameters[0].ParameterType == typeof(TestContext) &&
                             methodInfo.IsValidReturnType())
                         {
-                            bool isGlobalTestInitialize = @this._reflectionHelper.IsAttributeDefined<GlobalTestInitializeAttribute>(methodInfo, inherit: true);
-                            bool isGlobalTestCleanup = @this._reflectionHelper.IsAttributeDefined<GlobalTestCleanupAttribute>(methodInfo, inherit: true);
+                            bool isGlobalTestInitialize = @this._reflectionHelper.IsAttributeDefined<GlobalTestInitializeAttribute>(methodInfo);
+                            bool isGlobalTestCleanup = @this._reflectionHelper.IsAttributeDefined<GlobalTestCleanupAttribute>(methodInfo);
                             if (isGlobalTestInitialize)
                             {
                                 assemblyInfo.GlobalTestInitializations.Add((methodInfo, @this.TryGetTimeoutInfo(methodInfo, FixtureKind.TestInitialize)));

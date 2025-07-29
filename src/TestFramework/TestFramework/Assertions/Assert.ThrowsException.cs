@@ -303,6 +303,13 @@ public sealed partial class Assert
         where TException : Exception
         => message.ComputeAssertion();
 
+    /// <inheritdoc cref="ThrowsExactly{TException}(Action, string)" />
+#pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
+    public static TException ThrowsExactly<TException>(Func<object?> action, [InterpolatedStringHandlerArgument(nameof(action))] ref AssertThrowsExactlyInterpolatedStringHandler<TException> message)
+#pragma warning restore IDE0060 // Remove unused parameter
+        where TException : Exception
+        => message.ComputeAssertion();
+
     private static TException ThrowsException<TException>(Action action, bool isStrictType, string message, [CallerMemberName] string assertMethodName = "")
         where TException : Exception
     {
