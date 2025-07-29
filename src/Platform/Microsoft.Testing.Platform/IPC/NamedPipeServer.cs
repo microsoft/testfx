@@ -267,6 +267,14 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
         }
     }
 
+    // For compatibility only.
+    // Old versions of MTP used to have this overload without IEnvironment.
+    // Extensions (e.g, TRX) calls into this overload.
+    // If core MTP is updated, but old version of TRX is still used, it will try to call this overload at runtime.
+    // Without it, MissingMethodException will be thrown at runtime.
+    public static PipeNameDescription GetPipeName(string name)
+        => GetPipeName(name, new SystemEnvironment());
+
     public static PipeNameDescription GetPipeName(string name, IEnvironment environment)
     {
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))

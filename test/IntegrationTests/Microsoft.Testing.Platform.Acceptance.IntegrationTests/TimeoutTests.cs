@@ -47,7 +47,7 @@ public class TimeoutTests : AcceptanceTestBase<TimeoutTests.TestAssetFixture>
         TestHostResult testHostResult = await testHost.ExecuteAsync("--timeout 1s");
 
         testHostResult.AssertExitCodeIsNot(ExitCodes.Success);
-        testHostResult.StandardOutput.Contains("Canceling the test session");
+        testHostResult.AssertOutputContains("Canceling the test session");
     }
 
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
@@ -58,9 +58,7 @@ public class TimeoutTests : AcceptanceTestBase<TimeoutTests.TestAssetFixture>
         TestHostResult testHostResult = await testHost.ExecuteAsync("--timeout 12.5s");
 
         testHostResult.AssertExitCodeIs(ExitCodes.ZeroTests);
-
-        string output = testHostResult.StandardOutput;
-        Assert.IsFalse(output.Contains("Canceling the test session"));
+        testHostResult.AssertOutputDoesNotContain("Canceling the test session");
     }
 
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
@@ -71,9 +69,7 @@ public class TimeoutTests : AcceptanceTestBase<TimeoutTests.TestAssetFixture>
         TestHostResult testHostResult = await testHost.ExecuteAsync("--timeout 1m");
 
         testHostResult.AssertExitCodeIs(ExitCodes.ZeroTests);
-
-        string output = testHostResult.StandardOutput;
-        Assert.IsFalse(output.Contains("Canceling the test session"));
+        testHostResult.AssertOutputDoesNotContain("Canceling the test session");
     }
 
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
@@ -84,9 +80,7 @@ public class TimeoutTests : AcceptanceTestBase<TimeoutTests.TestAssetFixture>
         TestHostResult testHostResult = await testHost.ExecuteAsync("--timeout 1h");
 
         testHostResult.AssertExitCodeIs(ExitCodes.ZeroTests);
-
-        string output = testHostResult.StandardOutput;
-        Assert.IsFalse(output.Contains("Canceling the test session"));
+        testHostResult.AssertOutputDoesNotContain("Canceling the test session");
     }
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
