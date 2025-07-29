@@ -12,7 +12,7 @@
     <CentralPackageTransitivePinningEnabled>false</CentralPackageTransitivePinningEnabled>
   </PropertyGroup>
   <PropertyGroup Label="Product dependencies">
-    <AspireHostingTestingVersion>9.0.0</AspireHostingTestingVersion>
+    <AspireHostingTestingVersion>9.4.0</AspireHostingTestingVersion>
     <MicrosoftBuildVersion>17.11.4</MicrosoftBuildVersion>
     <MicrosoftCodeAnalysisVersion>3.11.0</MicrosoftCodeAnalysisVersion>
     <MicrosoftCodeAnalysisVersionForTests>4.10.0</MicrosoftCodeAnalysisVersionForTests>
@@ -22,7 +22,7 @@
     <MicrosoftNETCoreUniversalWindowsPlatformVersion>6.2.14</MicrosoftNETCoreUniversalWindowsPlatformVersion>
     <!-- Test Platform, .NET Test SDK and Object Model  -->
     <MicrosoftNETTestSdkVersion>17.13.0</MicrosoftNETTestSdkVersion>
-    <MicrosoftPlaywrightVersion>1.50.0</MicrosoftPlaywrightVersion>
+    <MicrosoftPlaywrightVersion>1.54.0</MicrosoftPlaywrightVersion>
     <MicrosoftTestingExtensionsFakesVersion>17.14.1</MicrosoftTestingExtensionsFakesVersion>
     <MicrosoftTestingInternalFrameworkVersion>1.5.0-preview.24577.4</MicrosoftTestingInternalFrameworkVersion>
     <SystemThreadingTasksExtensionsVersion>4.5.4</SystemThreadingTasksExtensionsVersion>

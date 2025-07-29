@@ -10,8 +10,6 @@ pr:
     include:
     - main
     - rel/*
-    # TODO: Cleanup after done with this branch.
-    - dev/v4
   paths:
     exclude:
       - .github/*
@@ -24,6 +22,7 @@ pr:
       - README.md
       - SECURITY.md
       - src/**/*.xlf
+      - azure-pipelines-official.yml
 
 parameters:
 # This option should be used with caution. This is useful for unblocking circular deps issue with testanywhere
