@@ -44,7 +44,7 @@ public class MSTestAdapterSettingsTests : TestContainer
         string? result = adapterSettings.ResolveEnvironmentVariableAndReturnFullPathIfExist(path, baseDirectory);
 
         result.Should().NotBeNull();
-        Verify(string.Equals(result, expectedResult, StringComparison.OrdinalIgnoreCase));
+        result.Should().BeEquivalentTo(expectedResult, StringComparison.OrdinalIgnoreCase);
     }
 
     public void ResolveEnvironmentVariableShouldResolvePathWithAnEnvironmentVariable()
@@ -62,7 +62,7 @@ public class MSTestAdapterSettingsTests : TestContainer
         string? result = adapterSettings.ResolveEnvironmentVariableAndReturnFullPathIfExist(path, baseDirectory);
 
         result.Should().NotBeNull();
-        Verify(string.Equals(result, expectedResult, StringComparison.OrdinalIgnoreCase));
+        result.Should().BeEquivalentTo(expectedResult, StringComparison.OrdinalIgnoreCase);
     }
 
     public void ResolveEnvironmentVariableShouldResolvePathWhenPassedRelativePathWithoutDot()
@@ -79,7 +79,7 @@ public class MSTestAdapterSettingsTests : TestContainer
         string? result = adapterSettings.ResolveEnvironmentVariableAndReturnFullPathIfExist(path, baseDirectory);
 
         result.Should().NotBeNull();
-        Verify(string.Equals(result, expectedResult, StringComparison.OrdinalIgnoreCase));
+        result.Should().BeEquivalentTo(expectedResult, StringComparison.OrdinalIgnoreCase);
     }
 
     public void ResolveEnvironmentVariableShouldResolvePathWhenPassedRelativePathWithDot()
@@ -96,7 +96,7 @@ public class MSTestAdapterSettingsTests : TestContainer
         string? result = adapterSettings.ResolveEnvironmentVariableAndReturnFullPathIfExist(path, baseDirectory);
 
         result.Should().NotBeNull();
-        Verify(string.Equals(result, expectedResult, StringComparison.OrdinalIgnoreCase));
+        result.Should().BeEquivalentTo(expectedResult, StringComparison.OrdinalIgnoreCase);
     }
 
     public void ResolveEnvironmentVariableShouldResolvePathWhenPassedRelativePath()
@@ -119,7 +119,7 @@ public class MSTestAdapterSettingsTests : TestContainer
         string? result = adapterSettings.ResolveEnvironmentVariableAndReturnFullPathIfExist(path, baseDirectory);
 
         result.Should().NotBeNull();
-        Verify(string.Equals(result, expectedResult, StringComparison.OrdinalIgnoreCase));
+        result.Should().BeEquivalentTo(expectedResult, StringComparison.OrdinalIgnoreCase);
     }
 
     public void ResolveEnvironmentVariableShouldResolvePathWhenPassedNetworkPath()
@@ -137,7 +137,7 @@ public class MSTestAdapterSettingsTests : TestContainer
         string? result = adapterSettings.ResolveEnvironmentVariableAndReturnFullPathIfExist(path, baseDirectory);
 
         result.Should().NotBeNull();
-        Verify(string.Equals(result, expectedResult, StringComparison.OrdinalIgnoreCase));
+        result.Should().BeEquivalentTo(expectedResult, StringComparison.OrdinalIgnoreCase);
     }
 
     public void ResolveEnvironmentVariableShouldReturnFalseForInvalidPath()

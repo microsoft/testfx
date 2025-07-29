@@ -31,7 +31,7 @@ public class TestDataRowTests : TestContainer
         testDataRow.TestCategories.Should().Be(testCategories);
         testDataRow.TestCategories.Count.Should().Be(2);
         testDataRow.TestCategories.Contains("Category1"));
-        Verify(testDataRow.TestCategories.Contains("Category2"));
+        testDataRow.TestCategories.Should().Contain("Category2");
     }
 
     public void TestDataRowShouldImplementITestDataRowForTestCategories()
@@ -46,7 +46,7 @@ public class TestDataRowTests : TestContainer
         Verify(dataRow.TestCategories.Should().NotBe(null);
         dataRow.TestCategories.Count.Should().Be(2);
         dataRow.TestCategories.Contains("Integration"));
-        Verify(dataRow.TestCategories.Contains("Unit"));
+        dataRow.TestCategories.Should().Contain("Unit");
     }
 
     public void TestDataRowShouldAllowNullTestCategories()

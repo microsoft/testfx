@@ -1024,7 +1024,7 @@ public class TypeCacheTests : TestContainer
         testMethodInfo.TimeoutInfo.Timeout.Should().Be(0);
         _typeCache.ClassInfoCache.First().Should().Be(testMethodInfo.Parent);
         testMethodInfo.Executor.Should().NotBeNull();
-        testMethodInfo.Executor is DerivedTestMethodAttribute.Should().BeTrue();
+        testMethodInfo.Executor.Should().BeOfType<DerivedTestMethodAttribute>();
     }
 
     public void GetTestMethodInfoShouldSetTestContextWithCustomProperty()

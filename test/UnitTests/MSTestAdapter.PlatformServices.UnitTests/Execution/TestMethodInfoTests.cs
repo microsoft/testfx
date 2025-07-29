@@ -193,7 +193,7 @@ public class TestMethodInfoTests : TestContainer
 
         TestResult result = await method.InvokeAsync(null);
 
-        Verify(result.TestContextMessages!.Contains("TestContext"));
+        result.TestContextMessages!.Should().Contain("TestContext");
     }
 
     public async Task TestMethodInfoInvokeShouldClearTestContextMessagesAfterReporting()
@@ -211,13 +211,13 @@ public class TestMethodInfoTests : TestContainer
 
         TestResult result = await method.InvokeAsync(null);
 
-        Verify(result.TestContextMessages!.Contains("TestContext"));
+        result.TestContextMessages!.Should().Contain("TestContext");
 
         DummyTestClass.TestMethodBody = o => _testContextImplementation.WriteLine("SeaShore");
 
         result = await method.InvokeAsync(null);
 
-        Verify(result.TestContextMessages!.Contains("SeaShore"));
+        result.TestContextMessages!.Should().Contain("SeaShore");
     }
 
     public async Task Invoke_WhenTestMethodThrowsMissingMethodException_TestOutcomeIsFailedAndExceptionIsPreserved()
@@ -245,8 +245,8 @@ public class TestMethodInfoTests : TestContainer
         TestResult result = await method.InvokeAsync(null);
 
         result.Outcome.Should().Be(UTF.UnitTestOutcome.Failed);
-        result.TestFailureException is TestFailedException.Should().BeTrue();
-        result.TestFailureException.InnerException is MissingMethodException.Should().BeTrue();
+        result.TestFailureException.Should().BeOfType<TestFailedException>();
+        result.TestFailureException.InnerException.Should().BeOfType<MissingMethodException>();
     }
 
     #endregion
@@ -356,7 +356,7 @@ public class TestMethodInfoTests : TestContainer
         };
 
         TestResult result = await method.InvokeAsync(null);
-        Verify(result.ResultFiles!.Contains("C:\\temp.txt"));
+        result.ResultFiles!.Should().Contain("C:\\temp.txt");
     }
 
     public async Task TestMethodInfoInvoke_WhenCtorHasOneParameterOfTypeTestContext_SetsItToTestContext()
@@ -526,7 +526,7 @@ public class TestMethodInfoTests : TestContainer
                                         "classTestInitializeCalled",
                                     };
         result.Outcome.Should().Be(UTF.UnitTestOutcome.Passed);
-        Verify(expectedCallOrder.SequenceEqual(callOrder));
+        expectedCallOrder.Should().BeEquivalentTo(callOrder));
     }
 
     public async Task TestMethodInfoInvokeShouldNotThrowIfTestInitializeIsNull()
@@ -550,7 +550,7 @@ public class TestMethodInfoTests : TestContainer
     public async Task TestMethodInfoInvokeWhenTestThrowsReturnsExpectedResult()
     {
         // Arrange.
-        DummyTestClass.TestInitializeMethodBody = classInstance => throw new ArgumentException("Some exception message", new InvalidOperationException("Inner exception message"));
+        DummyTestClass.TestInitializeMethodBody = classInstance => throw new ArgumentException("Some exception message");
         _testClassInfo.TestInitializeMethod = typeof(DummyTestClass).GetMethod("DummyTestInitializeMethod")!;
         string errorMessage = string.Format(
             CultureInfo.InvariantCulture,
@@ -808,12 +808,12 @@ public class TestMethodInfoTests : TestContainer
                                     };
 
         result.Outcome.Should().Be(UTF.UnitTestOutcome.Passed);
-        Verify(expectedCallOrder.SequenceEqual(callOrder));
+        expectedCallOrder.Should().BeEquivalentTo(callOrder));
     }
 
     public async Task TestMethodInfoInvokeWhenTestCleanupThrowsReturnsExpectedResult()
     {
-        DummyTestClass.TestCleanupMethodBody = classInstance => throw new ArgumentException("Some exception message", new InvalidOperationException("Inner exception message"));
+        DummyTestClass.TestCleanupMethodBody = classInstance => throw new ArgumentException("Some exception message");
         _testClassInfo.TestCleanupMethod = typeof(DummyTestClass).GetMethod("DummyTestCleanupMethod")!;
 
         string expectedErrorMessage = string.Format(
@@ -948,7 +948,7 @@ public class TestMethodInfoTests : TestContainer
 
         result.Outcome.Should().Be(UTF.UnitTestOutcome.Inconclusive);
         exception.Should().NotBeNull();
-        Verify(exception.Message.Contains("Microsoft.VisualStudio.TestTools.UnitTesting.AssertInconclusiveException"));
+        exception.Message.Should().Contain("Microsoft.VisualStudio.TestTools.UnitTesting.AssertInconclusiveException");
     }
 
     public async Task TestMethodInfoInvokeShouldSetMoreImportantOutcomeIfTestCleanupIsInconclusiveButTestMethodFails()
@@ -1098,7 +1098,7 @@ public class TestMethodInfoTests : TestContainer
 
         await _testMethodInfo.InvokeAsync(null);
 
-        !testCleanupCalled.Should().BeTrue();
+        testCleanupCalled.Should().BeFalse();
     }
 
     public async Task TestMethodInfoInvokeShouldSetResultAsPassedIfExpectedExceptionIsThrown()
@@ -1918,13 +1918,13 @@ public class TestMethodInfoTests : TestContainer
     {
         private class MyExpectedException1Attribute : ExpectedExceptionBaseAttribute
         {
-            protected internal override void Verify(Exception exception) => throw new NotImplementedException();
+            protected internal override void Exception exception) => throw new NotImplementedException(.Should().BeTrue();
         }
 
         [AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
         public class MyExpectedException2Attribute : ExpectedExceptionBaseAttribute
         {
-            protected internal override void Verify(Exception exception) => throw new NotImplementedException();
+            protected internal override void Exception exception) => throw new NotImplementedException(.Should().BeTrue();
         }
 
         [ExpectedException(typeof(Exception))]

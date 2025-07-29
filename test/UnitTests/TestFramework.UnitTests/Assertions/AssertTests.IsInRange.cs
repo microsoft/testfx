@@ -56,7 +56,7 @@ public partial class AssertTests : TestContainer
 
         // Act & Assert
         Exception ex = VerifyThrows(() => Assert.IsInRange(minValue, maxValue, value));
-        Verify(ex.Message.Contains("Value '3' is not within the expected range [5, 10]"));
+        ex.Message.Should().Contain("Value '3' is not within the expected range [5, 10]");
     }
 
     public void IsInRange_WithValueAboveRange_ThrowsAssertFailedException()
@@ -68,7 +68,7 @@ public partial class AssertTests : TestContainer
 
         // Act & Assert
         Exception ex = VerifyThrows(() => Assert.IsInRange(minValue, maxValue, value));
-        Verify(ex.Message.Contains("Value '8' is not within the expected range [1, 5]"));
+        ex.Message.Should().Contain("Value '8' is not within the expected range [1, 5]");
     }
 
     public void IsInRange_WithCustomMessage_IncludesCustomMessage()
@@ -116,7 +116,7 @@ public partial class AssertTests : TestContainer
         // Act & Assert
         Assert.IsInRange(minValue, maxValue, valueInRange);
         Exception ex = VerifyThrows(() => Assert.IsInRange(minValue, maxValue, valueOutOfRange));
-        Verify(ex.Message.Contains("Value '6' is not within the expected range [1.5, 5.5]"));
+        ex.Message.Should().Contain("Value '6' is not within the expected range [1.5, 5.5]");
     }
 
     public void IsInRange_WithDateTimeValues_WorksCorrectly()

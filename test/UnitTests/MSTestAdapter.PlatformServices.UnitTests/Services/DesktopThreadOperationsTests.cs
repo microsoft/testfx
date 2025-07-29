@@ -37,7 +37,7 @@ public class DesktopThreadOperationsTests : TestContainer
         bool result = _asyncOperations.Execute(() => Thread.Sleep(10000), 100000, cancellationTokenSource.Token);
 
         // validate
-        !result, "The execution failed to abort".Should().BeTrue();
+        result, "The execution failed to abort".Should().BeFalse();
     }
 
     public void TokenCancelShouldAbortIfAlreadyCanceled()
@@ -50,7 +50,7 @@ public class DesktopThreadOperationsTests : TestContainer
         bool result = _asyncOperations.Execute(() => Thread.Sleep(10000), 100000, cancellationTokenSource.Token);
 
         // validate
-        !result, "The execution failed to abort".Should().BeTrue();
+        result, "The execution failed to abort".Should().BeFalse();
     }
 }
 #endif

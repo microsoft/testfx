@@ -501,7 +501,7 @@ public class TestClassInfoTests : TestContainer
         // Assert
         classCleanupException.Should().NotBeNull();
         Verify(classCleanupException.Message.StartsWith("Class Cleanup method DummyTestClass.ClassCleanupMethod failed.", StringComparison.Ordinal));
-        Verify(classCleanupException.Message.Contains("Error Message: Assert.Fail failed. Test Failure."));
+        classCleanupException.Message.Should().Contain("Error Message: Assert.Fail failed. Test Failure.");
 #if DEBUG
         Verify(
     classCleanupException.Message.Contains(
@@ -523,7 +523,7 @@ public class TestClassInfoTests : TestContainer
         // Assert
         classCleanupException.Should().NotBeNull();
         Verify(classCleanupException.Message.StartsWith("Class Cleanup method DummyTestClass.ClassCleanupMethod failed.", StringComparison.Ordinal));
-        Verify(classCleanupException.Message.Contains("Error Message: Assert.Inconclusive failed. Test Inconclusive."));
+        classCleanupException.Message.Should().Contain("Error Message: Assert.Inconclusive failed. Test Inconclusive.");
 #if DEBUG
         Verify(
             classCleanupException.Message.Contains($"{typeof(TestClassInfoTests).FullName}.<>c.<{nameof(this.RunClassCleanupShouldReturnAssertInconclusiveExceptionDetails)}>"),
@@ -544,7 +544,7 @@ public class TestClassInfoTests : TestContainer
         // Assert
         classCleanupException.Should().NotBeNull();
         Verify(classCleanupException.Message.StartsWith("Class Cleanup method DummyTestClass.ClassCleanupMethod failed.", StringComparison.Ordinal));
-        Verify(classCleanupException.Message.Contains("Error Message: System.ArgumentException: Argument Exception. Stack Trace:"));
+        classCleanupException.Message.Should().Contain("Error Message: System.ArgumentException: Argument Exception. Stack Trace:");
         Verify(classCleanupException.Message.Contains($"{typeof(TestClassInfoTests).FullName}.<>c.<{nameof(this.RunClassCleanupShouldReturnExceptionDetailsOfNonAssertExceptions)}>"));
     }
 
@@ -563,7 +563,7 @@ public class TestClassInfoTests : TestContainer
         // Assert
         classCleanupException.Should().NotBeNull();
         Verify(classCleanupException.Message.StartsWith("Class Cleanup method DummyBaseTestClass.CleanupClassMethod failed.", StringComparison.Ordinal));
-        Verify(classCleanupException.Message.Contains("Error Message: System.ArgumentException: Argument Exception. Stack Trace:"));
+        classCleanupException.Message.Should().Contain("Error Message: System.ArgumentException: Argument Exception. Stack Trace:");
         Verify(classCleanupException.Message.Contains($"{typeof(TestClassInfoTests).FullName}.<>c.<{nameof(this.RunBaseClassCleanupWithNoDerivedClassCleanupShouldReturnExceptionDetailsOfNonAssertExceptions)}>"));
     }
 

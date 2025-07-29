@@ -16,11 +16,11 @@ public class DesktopTestSourceTests : TestContainer
 
     public DesktopTestSourceTests() => _testSource = new TestSource();
 
-    public void ValidSourceExtensionsShouldContainDllExtensions() => Verify(_testSource.ValidSourceExtensions.Contains(".dll"));
+    public void ValidSourceExtensionsShouldContainDllExtensions() => _testSource.ValidSourceExtensions.Should().Contain(".dll");
 
     public void ValidSourceExtensionsShouldContainExeExtensions() => Verify(_testSource.ValidSourceExtensions.ToList().Contains(".exe"));
 
-    public void ValidSourceExtensionsShouldContainAppxExtensions() => Verify(_testSource.ValidSourceExtensions.Contains(".appx"));
+    public void ValidSourceExtensionsShouldContainAppxExtensions() => _testSource.ValidSourceExtensions.Should().Contain(".appx");
 
     public void IsAssemblyReferencedShouldReturnTrueIfAssemblyNameIsNull() => Verify(_testSource.IsAssemblyReferenced(null!, "DummySource"));
 

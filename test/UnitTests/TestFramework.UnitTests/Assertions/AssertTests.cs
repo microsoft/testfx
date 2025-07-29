@@ -10,13 +10,13 @@ public partial class AssertTests
     #region Instance tests
     public void InstanceShouldReturnAnInstanceOfAssert() => Assert.Instance.Should().NotBeNull();
 
-    public void InstanceShouldCacheAssertInstance() => ReferenceEquals(Assert.Instance, Assert.Instance));
+    public void InstanceShouldCacheAssertInstance() => ReferenceEquals(Assert.Instance, Assert.Instance).Should().BeTrue();
     #endregion
 
     #region ReplaceNullChars tests
     public void ReplaceNullCharsShouldReturnStringIfNullOrEmpty()
     {
-        Verify(Assert.ReplaceNullChars(null).Should().Be(null);
+        Assert.ReplaceNullChars(null).Should().BeNull();
         Assert.ReplaceNullChars(string.Empty).Should().Be(string.Empty);
     }
 
@@ -45,20 +45,22 @@ public partial class AssertTests
     public void ObsoleteEqualsMethodThrowsAssertFailedException()
     {
 #pragma warning disable CS0618 // Type or member is obsolete
-        Exception ex = VerifyThrows(() => Assert.Equals("test", "test"));
+        Action act = () => Assert.Equals("test", "test");
 #pragma warning restore CS0618 // Type or member is obsolete
-        ex is AssertFailedException.Should().BeTrue();
-        Verify(ex.Message.Contains("Assert.Equals should not be used for Assertions"));
+        Exception ex = act.Should().Throw<Exception>().Which;
+        ex.Should().BeOfType<AssertFailedException>();
+        ex.Message.Should().Contain("Assert.Equals should not be used for Assertions");
     }
 
     public void ObsoleteReferenceEqualsMethodThrowsAssertFailedException()
     {
         object obj = new();
 #pragma warning disable CS0618 // Type or member is obsolete
-        Exception ex = VerifyThrows(() => Assert.ReferenceEquals(obj, obj));
+        Action act = () => Assert.ReferenceEquals(obj, obj);
 #pragma warning restore CS0618 // Type or member is obsolete
-        ex is AssertFailedException.Should().BeTrue();
-        Verify(ex.Message.Contains("Assert.ReferenceEquals should not be used for Assertions"));
+        Exception ex = act.Should().Throw<Exception>().Which;
+        ex.Should().BeOfType<AssertFailedException>();
+        ex.Message.Should().Contain("Assert.ReferenceEquals should not be used for Assertions");
     }
 #endif
     #endregion

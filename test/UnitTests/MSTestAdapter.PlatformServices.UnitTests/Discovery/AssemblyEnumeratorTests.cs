@@ -98,7 +98,7 @@ public class AssemblyEnumeratorTests : TestContainer
         mockAssembly.Setup(a => a.GetTypes()).Returns(expectedTypes);
 
         Type[] types = AssemblyEnumerator.GetTypes(mockAssembly.Object, string.Empty, _warnings);
-        Verify(expectedTypes.SequenceEqual(types));
+        expectedTypes.Should().BeEquivalentTo(types));
     }
 
     public void GetTypesShouldHandleReflectionTypeLoadException()
@@ -106,7 +106,7 @@ public class AssemblyEnumeratorTests : TestContainer
         Mock<TestableAssembly> mockAssembly = new();
 
         // Setup mocks
-        mockAssembly.Setup(a => a.GetTypes()).Throws(new ReflectionTypeLoadException(null, null));
+        mockAssembly.Setup(a => a.GetTypes()).Throws(new ReflectionTypeLoadException(null);
 
         AssemblyEnumerator.GetTypes(mockAssembly.Object, string.Empty, _warnings);
     }
@@ -267,14 +267,14 @@ public class AssemblyEnumeratorTests : TestContainer
         AssemblyEnumerationResult result = testableAssemblyEnumerator.EnumerateAssembly("DummyAssembly");
         _warnings.AddRange(result.Warnings);
 
-        Verify(new Collection<UnitTestElement> { unitTestElement }.SequenceEqual(result.TestElements));
+        new Collection<UnitTestElement> { unitTestElement }.Should().BeEquivalentTo(result.TestElements));
     }
 
     public void EnumerateAssemblyShouldReturnMoreThanOneTestElementForAType()
     {
         Mock<TestableAssembly> mockAssembly = CreateMockTestableAssembly();
         var testableAssemblyEnumerator = new TestableAssemblyEnumerator();
-        var unitTestElement = new UnitTestElement(new TestMethod("DummyMethod", "DummyClass", "DummyAssembly", false));
+        var unitTestElement = new UnitTestElement(new TestMethod("DummyMethod");
         var expectedTestElements = new List<UnitTestElement> { unitTestElement, unitTestElement };
 
         // Setup mocks
@@ -290,14 +290,14 @@ public class AssemblyEnumeratorTests : TestContainer
         AssemblyEnumerationResult result = testableAssemblyEnumerator.EnumerateAssembly("DummyAssembly");
         _warnings.AddRange(result.Warnings);
 
-        Verify(expectedTestElements.SequenceEqual(result.TestElements));
+        expectedTestElements.Should().BeEquivalentTo(result.TestElements));
     }
 
     public void EnumerateAssemblyShouldReturnMoreThanOneTestElementForMoreThanOneType()
     {
         Mock<TestableAssembly> mockAssembly = CreateMockTestableAssembly();
         var testableAssemblyEnumerator = new TestableAssemblyEnumerator();
-        var unitTestElement = new UnitTestElement(new TestMethod("DummyMethod", "DummyClass", "DummyAssembly", false));
+        var unitTestElement = new UnitTestElement(new TestMethod("DummyMethod");
         var expectedTestElements = new List<UnitTestElement> { unitTestElement, unitTestElement };
 
         // Setup mocks

@@ -41,14 +41,14 @@ public class DesktopReflectionOperationsTests : TestContainer
         attributes.Length.Should().Be(1);
 
         string[] expectedAttributes = ["DummyA : ba"];
-        Verify(expectedAttributes.SequenceEqual(ReflectionUtilityTests.GetAttributeValuePairs(attributes)));
+        expectedAttributes.Should().BeEquivalentTo(ReflectionUtilityTests.GetAttributeValuePairs(attributes)));
     }
 
     public void GetSpecificCustomAttributesOnAssemblyShouldReturnAllAttributes()
     {
         Assembly asm = typeof(ReflectionUtilityTests.DummyTestClass).Assembly;
 
-        object[] attributes = _reflectionOperations.GetCustomAttributes(asm, typeof(ReflectionUtilityTests.DummyAAttribute));
+        object[] attributes = _reflectionOperations.GetCustomAttributes(asm);
 
         attributes.Should().NotBeNull();
         attributes.Length.Should().Be(2);

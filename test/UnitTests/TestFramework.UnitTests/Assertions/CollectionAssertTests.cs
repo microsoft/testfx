@@ -376,7 +376,7 @@ public class CollectionAssertTests : TestContainer
         ICollection? collection1 = GetCollection();
         ICollection? collection2 = GetMatchingSuperSet();
         Exception ex = VerifyThrows(() => CollectionAssert.AreEquivalent(collection1, collection2, "message"));
-        Verify(ex.Message.Contains("message"));
+        ex.Message.Should().Contain("message");
     }
 
     public void CollectionAssertAreEquivalent_FailWhenNotEquivalent_WithMessageAndParams()
@@ -384,7 +384,7 @@ public class CollectionAssertTests : TestContainer
         ICollection? collection1 = GetCollection();
         ICollection? collection2 = GetMatchingSuperSet();
         Exception ex = VerifyThrows(() => CollectionAssert.AreEquivalent(collection1, collection2, "message format {0} {1}", 1, 2));
-        Verify(ex.Message.Contains("message"));
+        ex.Message.Should().Contain("message");
     }
 
     public void CollectionAssertAreEquivalent_WithInsensitiveCaseComparer_DoesNotThrow()
@@ -399,7 +399,7 @@ public class CollectionAssertTests : TestContainer
         ICollection? collection1 = GetCollection();
         ICollection? collection2 = GetLettersCaseMismatchingSuperSet();
         Exception ex = VerifyThrows(() => CollectionAssert.AreEquivalent(collection1?.Cast<string>(), collection2?.Cast<string>(), new CaseInsensitiveEqualityComparer(), "message"));
-        Verify(ex.Message.Contains("message"));
+        ex.Message.Should().Contain("message");
     }
 
     public void CollectionAssertAreEquivalent_FailsWithInsensitiveCaseComparer_WithMessageAndParams()
@@ -407,7 +407,7 @@ public class CollectionAssertTests : TestContainer
         ICollection? collection1 = GetCollection();
         ICollection? collection2 = GetLettersCaseMismatchingSuperSet();
         Exception ex = VerifyThrows(() => CollectionAssert.AreEquivalent(collection1?.Cast<string>(), collection2?.Cast<string>(), new CaseInsensitiveEqualityComparer(), "message format {0} {1}", 1, 2));
-        Verify(ex.Message.Contains("message"));
+        ex.Message.Should().Contain("message");
     }
 
     public void CollectionAssertAreNotEquivalent_SameItemsWithDifferentOrder_DoesNotThrow()
@@ -422,7 +422,7 @@ public class CollectionAssertTests : TestContainer
         ICollection? collection1 = GetReversedMatchingSuperSet();
         ICollection? collection2 = GetMatchingSuperSet();
         Exception ex = VerifyThrows(() => CollectionAssert.AreNotEquivalent(collection1, collection2, "message"));
-        Verify(ex.Message.Contains("message"));
+        ex.Message.Should().Contain("message");
     }
 
     public void CollectionAssertAreNotEquivalent_FailWhenNotEquivalent_WithMessageAndParams()
@@ -430,7 +430,7 @@ public class CollectionAssertTests : TestContainer
         ICollection? collection1 = GetReversedMatchingSuperSet();
         ICollection? collection2 = GetMatchingSuperSet();
         Exception ex = VerifyThrows(() => CollectionAssert.AreNotEquivalent(collection1, collection2, "message format {0} {1}", 1, 2));
-        Verify(ex.Message.Contains("message"));
+        ex.Message.Should().Contain("message");
     }
 
     public void CollectionAssertAreNotEquivalent_WithInsensitiveCaseComparer_DoesNotThrow()
@@ -445,7 +445,7 @@ public class CollectionAssertTests : TestContainer
         ICollection? collection1 = GetMatchingSuperSet();
         ICollection? collection2 = GetLettersCaseMismatchingSuperSet();
         Exception ex = VerifyThrows(() => CollectionAssert.AreNotEquivalent(collection1?.Cast<string>(), collection2?.Cast<string>(), new CaseInsensitiveNotEqualityComparer(), "message"));
-        Verify(ex.Message.Contains("message"));
+        ex.Message.Should().Contain("message");
     }
 
     public void CollectionAssertAreNotEquivalent_FailsWithInsensitiveCaseComparer_WithMessageAndParams()
@@ -453,13 +453,13 @@ public class CollectionAssertTests : TestContainer
         ICollection? collection1 = GetMatchingSuperSet();
         ICollection? collection2 = GetLettersCaseMismatchingSuperSet();
         Exception ex = VerifyThrows(() => CollectionAssert.AreNotEquivalent(collection1?.Cast<string>(), collection2?.Cast<string>(), new CaseInsensitiveNotEqualityComparer(), "message format {0} {1}", 1, 2));
-        Verify(ex.Message.Contains("message"));
+        ex.Message.Should().Contain("message");
     }
 
     public void CollectionAssertAreNotEquivalent_FailsWithTwoNullsAndComparer_WithMessageAndParams()
     {
         Exception ex = VerifyThrows(() => CollectionAssert.AreNotEquivalent(null, null, new CaseInsensitiveNotEqualityComparer(), "message format {0} {1}", 1, 2));
-        Verify(ex.Message.Contains("message"));
+        ex.Message.Should().Contain("message");
     }
 
     public void CollectionAssertAreEqualWithoutUserMessage_FailsWithGoodMessage()
@@ -571,8 +571,8 @@ public class CollectionAssertTests : TestContainer
 #pragma warning disable CS0618 // Type or member is obsolete
         Exception ex = VerifyThrows(() => CollectionAssert.Equals("test", "test"));
 #pragma warning restore CS0618 // Type or member is obsolete
-        ex is AssertFailedException.Should().BeTrue();
-        Verify(ex.Message.Contains("CollectionAssert.Equals should not be used for Assertions"));
+        ex.Should().BeOfType<AssertFailedException>();
+        ex.Message.Should().Contain("CollectionAssert.Equals should not be used for Assertions");
     }
 
     public void ObsoleteReferenceEqualsMethodThrowsAssertFailedException()
@@ -581,8 +581,8 @@ public class CollectionAssertTests : TestContainer
 #pragma warning disable CS0618 // Type or member is obsolete
         Exception ex = VerifyThrows(() => CollectionAssert.ReferenceEquals(obj, obj));
 #pragma warning restore CS0618 // Type or member is obsolete
-        ex is AssertFailedException.Should().BeTrue();
-        Verify(ex.Message.Contains("CollectionAssert.ReferenceEquals should not be used for Assertions"));
+        ex.Should().BeOfType<AssertFailedException>();
+        ex.Message.Should().Contain("CollectionAssert.ReferenceEquals should not be used for Assertions");
     }
 #endif
     #endregion

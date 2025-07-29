@@ -194,43 +194,43 @@ public class DynamicDataAttributeTests : TestContainer
         string?[] data2 = ["value1", null, "value2"];
 
         string? displayName = _dynamicDataAttribute.GetDisplayName(_testMethodInfo, data);
-        Verify(displayName == "TestMethod1 (\"value1\",\"value2\",null)");
+        displayName == "TestMethod1 (\"value1\",\"value2\",null)".Should().BeTrue();
 
         displayName = _dynamicDataAttribute.GetDisplayName(_testMethodInfo, data1);
-        Verify(displayName == "TestMethod1 (null,\"value1\",\"value2\")");
+        displayName == "TestMethod1 (null,\"value1\",\"value2\")".Should().BeTrue();
 
         displayName = _dynamicDataAttribute.GetDisplayName(_testMethodInfo, data2);
-        Verify(displayName == "TestMethod1 (\"value1\",null,\"value2\")");
+        displayName == "TestMethod1 (\"value1\",null,\"value2\")".Should().BeTrue();
     }
 
     public void GetDisplayNameForArrayOfMultipleItems()
     {
         string? displayName = _dynamicDataAttribute.GetDisplayName(_testMethodInfo, [new[] { "a", "b", "c" }]);
-        Verify(displayName == "TestMethod1 ([\"a\",\"b\",\"c\"])");
+        displayName == "TestMethod1 ([\"a\",\"b\",\"c\"])".Should().BeTrue();
     }
 
     public void GetDisplayNameForMultipleArraysOfOneItem()
     {
         string? displayName = _dynamicDataAttribute.GetDisplayName(_testMethodInfo, [new[] { "a" }, new[] { "1" }]);
-        Verify(displayName == "TestMethod1 ([\"a\"],[\"1\"])");
+        displayName == "TestMethod1 ([\"a\"],[\"1\"])".Should().BeTrue();
     }
 
     public void GetDisplayNameForMultipleArraysOfMultipleItems()
     {
         string? displayName = _dynamicDataAttribute.GetDisplayName(_testMethodInfo, [new[] { "a", "b", "c" }, new[] { "1", "2", "3" }]);
-        Verify(displayName == "TestMethod1 ([\"a\",\"b\",\"c\"],[\"1\",\"2\",\"3\"])");
+        displayName == "TestMethod1 ([\"a\",\"b\",\"c\"],[\"1\",\"2\",\"3\"])".Should().BeTrue();
     }
 
     public void GetDisplayNameForMultipleArraysOfMultipleItemsValueTypes()
     {
         string? displayName = _dynamicDataAttribute.GetDisplayName(_testMethodInfo, [new[] { 1, 2, 3 }, new[] { 4, 5, 6 }]);
-        Verify(displayName == "TestMethod1 ([1,2,3],[4,5,6])");
+        displayName == "TestMethod1 ([1,2,3],[4,5,6])".Should().BeTrue();
     }
 
     public void GetDisplayNameForMultipleArraysOfArraysOfMultipleItems()
     {
         string? displayName = _dynamicDataAttribute.GetDisplayName(_testMethodInfo, [new[] { ["a", "b", "c"], ["d", "e", "f"], new[] { "gh", "ij", "kl" } }, new[] { 'm', 'n', 'o' }, new[] { ["1", "2", "3"], ["4", "5", "6"], new[] { "7", "8", "9" } }]);
-        Verify(displayName == "TestMethod1 ([[\"a\",\"b\",\"c\"],[\"d\",\"e\",\"f\"],[\"gh\",\"ij\",\"kl\"]],['m','n','o'],[[\"1\",\"2\",\"3\"],[\"4\",\"5\",\"6\"],[\"7\",\"8\",\"9\"]])");
+        displayName == "TestMethod1 ([[\"a\",\"b\",\"c\"],[\"d\",\"e\",\"f\"],[\"gh\",\"ij\",\"kl\"]],['m','n','o'],[[\"1\",\"2\",\"3\"],[\"4\",\"5\",\"6\"],[\"7\",\"8\",\"9\"]])".Should().BeTrue();
     }
 
     public void DynamicDataSource_WithTuple_Works()

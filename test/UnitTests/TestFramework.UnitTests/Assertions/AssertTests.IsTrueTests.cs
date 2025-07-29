@@ -71,7 +71,7 @@ public partial class AssertTests
         DummyClassTrackingToStringCalls o = new();
         DateTime dateTime = DateTime.Now;
         Exception ex = await VerifyThrowsAsync(async () => Assert.IsFalse(nullBool, $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}"));
-        Verify(ex.Message == $"Assert.IsFalse failed. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
+        ex.Message.Should().Be($"Assert.IsFalse failed. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
     }
 
     public async Task IsFalseNullableBooleanInterpolatedStringMessageShouldFailWithTrue()
@@ -80,7 +80,7 @@ public partial class AssertTests
         DummyClassTrackingToStringCalls o = new();
         DateTime dateTime = DateTime.Now;
         Exception ex = await VerifyThrowsAsync(async () => Assert.IsFalse(nullBool, $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}"));
-        Verify(ex.Message == $"Assert.IsFalse failed. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
+        ex.Message.Should().Be($"Assert.IsFalse failed. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
     }
 
     public void IsFalseNullableBooleanInterpolatedStringMessageShouldNotFailWithFalse()
@@ -94,7 +94,7 @@ public partial class AssertTests
         DummyClassTrackingToStringCalls o = new();
         DateTime dateTime = DateTime.Now;
         Exception ex = await VerifyThrowsAsync(async () => Assert.IsFalse(true, $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}"));
-        Verify(ex.Message == $"Assert.IsFalse failed. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
+        ex.Message.Should().Be($"Assert.IsFalse failed. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
     }
 
     public void IsFalseBooleanInterpolatedStringMessageShouldNotFailWithFalse()
@@ -193,7 +193,7 @@ public partial class AssertTests
         DummyClassTrackingToStringCalls o = new();
         DateTime dateTime = DateTime.Now;
         Exception ex = await VerifyThrowsAsync(async () => Assert.IsTrue(nullBool, $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}"));
-        Verify(ex.Message == $"Assert.IsTrue failed. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
+        ex.Message.Should().Be($"Assert.IsTrue failed. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
     }
 
     public async Task IsTrueNullableBooleanInterpolatedStringMessageShouldFailWithFalse()
@@ -202,7 +202,7 @@ public partial class AssertTests
         DummyClassTrackingToStringCalls o = new();
         DateTime dateTime = DateTime.Now;
         Exception ex = await VerifyThrowsAsync(async () => Assert.IsTrue(nullBool, $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}"));
-        Verify(ex.Message == $"Assert.IsTrue failed. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
+        ex.Message.Should().Be($"Assert.IsTrue failed. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
     }
 
     public void IsTrueNullableBooleanInterpolatedStringMessageShouldNotFailWithTrue()
@@ -216,7 +216,7 @@ public partial class AssertTests
         DummyClassTrackingToStringCalls o = new();
         DateTime dateTime = DateTime.Now;
         Exception ex = await VerifyThrowsAsync(async () => Assert.IsTrue(false, $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}"));
-        Verify(ex.Message == $"Assert.IsTrue failed. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
+        ex.Message.Should().Be($"Assert.IsTrue failed. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
     }
 
     public void IsTrueBooleanInterpolatedStringMessageShouldNotFailWithTrue()

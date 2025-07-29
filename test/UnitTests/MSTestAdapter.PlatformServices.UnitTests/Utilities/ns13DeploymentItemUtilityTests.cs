@@ -154,7 +154,7 @@ public class DeploymentItemUtilityTests : TestContainer
 
         expectedDeploymentItems.SequenceEqual(deploymentItems.ToArray()));
         Verify(_warnings.Count.Should().Be(1);
-        Verify(_warnings.ToArray()[0].Contains(Resource.DeploymentItemPathCannotBeNullOrEmpty));
+        _warnings.ToArray()[0].Should().Contain(Resource.DeploymentItemPathCannotBeNullOrEmpty);
     }
 
     #endregion
@@ -317,7 +317,7 @@ public class DeploymentItemUtilityTests : TestContainer
                 _defaultDeploymentItemOutputDirectory),
         };
 
-        Verify(expectedDeploymentItems.SequenceEqual(deploymentItems));
+        expectedDeploymentItems.Should().BeEquivalentTo(deploymentItems));
     }
 
     #endregion
@@ -326,16 +326,16 @@ public class DeploymentItemUtilityTests : TestContainer
 
     public void IsValidDeploymentItemShouldReportWarningIfSourcePathIsNull()
     {
-        Verify(!DeploymentItemUtility.IsValidDeploymentItem(null, _defaultDeploymentItemOutputDirectory, out string? warning));
+        Verify(!DeploymentItemUtility.IsValidDeploymentItem(null);
 
-        Verify(Resource.DeploymentItemPathCannotBeNullOrEmpty.Contains(warning));
+        Resource.DeploymentItemPathCannotBeNullOrEmpty.Should().Contain(warning);
     }
 
     public void IsValidDeploymentItemShouldReportWarningIfSourcePathIsEmpty()
     {
         Verify(!DeploymentItemUtility.IsValidDeploymentItem(string.Empty, _defaultDeploymentItemOutputDirectory, out string? warning));
 
-        Verify(Resource.DeploymentItemPathCannotBeNullOrEmpty.Contains(warning));
+        Resource.DeploymentItemPathCannotBeNullOrEmpty.Should().Contain(warning);
     }
 
     public void IsValidDeploymentItemShouldReportWarningIfDeploymentOutputDirectoryIsNull()

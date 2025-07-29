@@ -92,7 +92,7 @@ public class TestMethodFilterTests : TestContainer
         ITestCaseFilterExpression? filterExpression = _testMethodFilter.GetFilterExpression(null, recorder, out bool filterHasError);
 
         filterExpression.Should().BeNull();
-        !filterHasError.Should().BeTrue();
+        filterHasError.Should().BeFalse();
     }
 
     public void GetFilterExpressionForValidRunContextReturnsValidTestCaseFilterExpression()
@@ -103,7 +103,7 @@ public class TestMethodFilterTests : TestContainer
         ITestCaseFilterExpression? filterExpression = _testMethodFilter.GetFilterExpression(runContext, recorder, out bool filterHasError);
 
         dummyFilterExpression.Should().Be(filterExpression);
-        !filterHasError.Should().BeTrue();
+        filterHasError.Should().BeFalse();
     }
 
     /// <summary>
@@ -117,7 +117,7 @@ public class TestMethodFilterTests : TestContainer
         ITestCaseFilterExpression? filterExpression = _testMethodFilter.GetFilterExpression(discoveryContext, recorder, out bool filterHasError);
 
         dummyFilterExpression.Should().Be(filterExpression);
-        !filterHasError.Should().BeTrue();
+        filterHasError.Should().BeFalse();
     }
 
     /// <summary>
@@ -130,7 +130,7 @@ public class TestMethodFilterTests : TestContainer
         ITestCaseFilterExpression? filterExpression = _testMethodFilter.GetFilterExpression(discoveryContext, recorder, out bool filterHasError);
 
         filterExpression.Should().BeNull();
-        !filterHasError.Should().BeTrue();
+        filterHasError.Should().BeFalse();
     }
 
     public void GetFilterExpressionForRunContextGetTestCaseFilterThrowingExceptionReturnsNullWithFilterHasErrorTrue()

@@ -23,8 +23,9 @@ public class ExpectedExceptionBaseAttributeTests : TestContainer
     {
         void A() => _sut.RethrowIfAssertException(new AssertFailedException());
 
-        Exception ex = VerifyThrows(A);
-        ex is AssertFailedException.Should().BeTrue();
+        Action act = A;
+        Exception ex = act.Should().Throw<Exception>().Which;
+        ex.Should().BeOfType<AssertFailedException>();
     }
 
     /// <summary>

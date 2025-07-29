@@ -145,7 +145,7 @@ public class TestContextImplementationTests : TestContainer
         _testContextImplementation = new TestContextImplementation(_testMethod.Object, new ThreadSafeStringWriter(null!, "test"), _properties);
 
         ArgumentException exception = VerifyThrows<ArgumentException>(() => _testContextImplementation.AddResultFile(null!));
-        Verify(exception.Message.Contains(Resource.Common_CannotBeNullOrEmpty));
+        exception.Message.Should().Contain(Resource.Common_CannotBeNullOrEmpty);
     }
 
     public void AddResultFileShouldThrowIfFileNameIsEmpty()
@@ -153,7 +153,7 @@ public class TestContextImplementationTests : TestContainer
         _testContextImplementation = new TestContextImplementation(_testMethod.Object, new ThreadSafeStringWriter(null!, "test"), _properties);
 
         ArgumentException exception = VerifyThrows<ArgumentException>(() => _testContextImplementation.AddResultFile(string.Empty));
-        Verify(exception.Message.Contains(Resource.Common_CannotBeNullOrEmpty));
+        exception.Message.Should().Contain(Resource.Common_CannotBeNullOrEmpty);
     }
 
     public void AddResultFileShouldAddFileToResultsFiles()
@@ -185,7 +185,7 @@ public class TestContextImplementationTests : TestContainer
         var stringWriter = new ThreadSafeStringWriter(null!, "test");
         _testContextImplementation = new TestContextImplementation(_testMethod.Object, stringWriter, _properties);
         _testContextImplementation.Write("{0} Testing write", 1);
-        Verify(stringWriter.ToString().Contains("1 Testing write"));
+        stringWriter.ToString().Should().Contain("1 Testing write");
     }
 
     public void WriteShouldWriteToStringWriterForNullCharacters()
@@ -193,7 +193,7 @@ public class TestContextImplementationTests : TestContainer
         var stringWriter = new ThreadSafeStringWriter(null!, "test");
         _testContextImplementation = new TestContextImplementation(_testMethod.Object, stringWriter, _properties);
         _testContextImplementation.Write("{0} Testing \0 write \0", 1);
-        Verify(stringWriter.ToString().Contains("1 Testing \\0 write \\0"));
+        stringWriter.ToString().Should().Contain("1 Testing \\0 write \\0");
     }
 
     public void WriteShouldNotThrowIfStringWriterIsDisposed()
@@ -212,7 +212,7 @@ public class TestContextImplementationTests : TestContainer
         var stringWriter = new ThreadSafeStringWriter(null!, "test");
         _testContextImplementation = new TestContextImplementation(_testMethod.Object, stringWriter, _properties);
         _testContextImplementation.Write("1 Testing write");
-        Verify(stringWriter.ToString().Contains("1 Testing write"));
+        stringWriter.ToString().Should().Contain("1 Testing write");
     }
 
     public void WriteWithMessageShouldWriteToStringWriterForNullCharacters()
@@ -220,7 +220,7 @@ public class TestContextImplementationTests : TestContainer
         var stringWriter = new ThreadSafeStringWriter(null!, "test");
         _testContextImplementation = new TestContextImplementation(_testMethod.Object, stringWriter, _properties);
         _testContextImplementation.Write("1 Testing \0 write \0");
-        Verify(stringWriter.ToString().Contains("1 Testing \\0 write \\0"));
+        stringWriter.ToString().Should().Contain("1 Testing \\0 write \\0");
     }
 
     public void WriteWithMessageShouldNotThrowIfStringWriterIsDisposed()
@@ -250,7 +250,7 @@ public class TestContextImplementationTests : TestContainer
 
         _testContextImplementation.WriteLine("{0} Testing write", 1);
 
-        Verify(stringWriter.ToString().Contains("1 Testing write"));
+        stringWriter.ToString().Should().Contain("1 Testing write");
     }
 
     public void WriteLineShouldWriteToStringWriterForNullCharacters()
@@ -260,7 +260,7 @@ public class TestContextImplementationTests : TestContainer
 
         _testContextImplementation.WriteLine("{0} Testing \0 write \0", 1);
 
-        Verify(stringWriter.ToString().Contains("1 Testing \\0 write \\0"));
+        stringWriter.ToString().Should().Contain("1 Testing \\0 write \\0");
     }
 
     public void WriteLineShouldNotThrowIfStringWriterIsDisposed()
@@ -283,7 +283,7 @@ public class TestContextImplementationTests : TestContainer
 
         _testContextImplementation.WriteLine("1 Testing write");
 
-        Verify(stringWriter.ToString().Contains("1 Testing write"));
+        stringWriter.ToString().Should().Contain("1 Testing write");
     }
 
     public void WriteLineWithMessageShouldWriteToStringWriterForNullCharacters()
@@ -293,7 +293,7 @@ public class TestContextImplementationTests : TestContainer
 
         _testContextImplementation.WriteLine("1 Testing \0 write \0");
 
-        Verify(stringWriter.ToString().Contains("1 Testing \\0 write \\0"));
+        stringWriter.ToString().Should().Contain("1 Testing \\0 write \\0");
     }
 
     public void WriteLineWithMessageShouldNotThrowIfStringWriterIsDisposed()
@@ -316,8 +316,8 @@ public class TestContextImplementationTests : TestContainer
         _testContextImplementation.WriteLine("1 Testing write");
         _testContextImplementation.WriteLine("2 Its a happy day");
 
-        Verify(_testContextImplementation.GetDiagnosticMessages()!.Contains("1 Testing write"));
-        Verify(_testContextImplementation.GetDiagnosticMessages()!.Contains("2 Its a happy day"));
+        _testContextImplementation.GetDiagnosticMessages()!.Should().Contain("1 Testing write");
+        _testContextImplementation.GetDiagnosticMessages()!.Should().Contain("2 Its a happy day");
     }
 
     public void ClearDiagnosticMessagesShouldClearMessagesFromWriteLine()

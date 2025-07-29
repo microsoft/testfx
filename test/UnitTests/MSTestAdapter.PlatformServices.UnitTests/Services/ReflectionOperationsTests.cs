@@ -172,14 +172,14 @@ public class ReflectionOperationsTests : TestContainer
         attributes.Length.Should().Be(2);
 
         string[] expectedAttributes = ["DummyA : a", "DummyA : ba"];
-        Verify(expectedAttributes.SequenceEqual(GetAttributeValuePairs(attributes)));
+        expectedAttributes.Should().BeEquivalentTo(GetAttributeValuePairs(attributes)));
     }
 
     public void GetSpecificCustomAttributesOnAssemblyShouldReturnAllAttributes()
     {
         Assembly asm = typeof(DummyTestClass).Assembly;
 
-        object[] attributes = _reflectionOperations.GetCustomAttributes(asm, typeof(DummyAAttribute));
+        object[] attributes = _reflectionOperations.GetCustomAttributes(asm);
 
         attributes.Should().NotBeNull();
         attributes.Length.Should().Be(2);

@@ -15,7 +15,7 @@ public partial class AssertTests : TestContainer
     public void AreNotEqualShouldFailWhenNotEqualTypeWithMessage()
     {
         Exception ex = VerifyThrows(() => Assert.AreNotEqual(1, 1, "A Message"));
-        Verify(ex.Message.Contains("A Message"));
+        ex.Message.Should().Contain("A Message");
     }
 
     public void AreNotEqualShouldFailWhenNotEqualString() =>
@@ -24,7 +24,7 @@ public partial class AssertTests : TestContainer
     public void AreNotEqualShouldFailWhenNotEqualStringWithMessage()
     {
         Exception ex = VerifyThrows(() => Assert.AreNotEqual("A", "A", "A Message"));
-        Verify(ex.Message.Contains("A Message"));
+        ex.Message.Should().Contain("A Message");
     }
 
     [SuppressMessage("Globalization", "CA1304:Specify CultureInfo", Justification = "Testing the API without the culture")]
@@ -37,7 +37,7 @@ public partial class AssertTests : TestContainer
     public void AreNotEqualShouldFailWhenNotEqualIntWithMessage()
     {
         Exception ex = VerifyThrows(() => Assert.AreNotEqual(1, 1, "A Message"));
-        Verify(ex.Message.Contains("A Message"));
+        ex.Message.Should().Contain("A Message");
     }
 
     public void AreNotEqualShouldFailWhenNotEqualLong() =>
@@ -46,7 +46,7 @@ public partial class AssertTests : TestContainer
     public void AreNotEqualShouldFailWhenNotEqualLongWithMessage()
     {
         Exception ex = VerifyThrows(() => Assert.AreNotEqual(1L, 1L, "A Message"));
-        Verify(ex.Message.Contains("A Message"));
+        ex.Message.Should().Contain("A Message");
     }
 
     public void AreNotEqualShouldFailWhenNotEqualLongWithDelta() =>
@@ -58,7 +58,7 @@ public partial class AssertTests : TestContainer
     public void AreNotEqualShouldFailWhenNotEqualDecimalWithMessage()
     {
         Exception ex = VerifyThrows(() => Assert.AreNotEqual(0.1M, 0.1M, "A Message"));
-        Verify(ex.Message.Contains("A Message"));
+        ex.Message.Should().Contain("A Message");
     }
 
     public void AreNotEqualShouldFailWhenNotEqualDecimalWithDelta() =>
@@ -70,7 +70,7 @@ public partial class AssertTests : TestContainer
     public void AreNotEqualShouldFailWhenNotEqualDoubleWithMessage()
     {
         Exception ex = VerifyThrows(() => Assert.AreNotEqual(0.1, 0.1, "A Message"));
-        Verify(ex.Message.Contains("A Message"));
+        ex.Message.Should().Contain("A Message");
     }
 
     public void AreNotEqualShouldFailWhenNotEqualDoubleWithDelta() =>
@@ -82,7 +82,7 @@ public partial class AssertTests : TestContainer
     public void AreNotEqualShouldFailWhenFloatDoubleWithMessage()
     {
         Exception ex = VerifyThrows(() => Assert.AreNotEqual(100E-2, 100E-2, "A Message"));
-        Verify(ex.Message.Contains("A Message"));
+        ex.Message.Should().Contain("A Message");
     }
 
     public void AreNotEqualShouldFailWhenNotEqualFloatWithDelta() =>
@@ -94,7 +94,7 @@ public partial class AssertTests : TestContainer
     public void AreEqualShouldFailWhenNotEqualTypeWithMessage()
     {
         Exception ex = VerifyThrows(() => Assert.AreEqual(null, "string", "A Message"));
-        Verify(ex.Message.Contains("A Message"));
+        ex.Message.Should().Contain("A Message");
     }
 
     public void AreEqual_WithTurkishCultureAndIgnoreCase_Throws()
@@ -141,7 +141,7 @@ public partial class AssertTests : TestContainer
     public void AreEqualShouldFailWhenNotEqualStringWithMessage()
     {
         Exception ex = VerifyThrows(() => Assert.AreEqual("A", "a", "A Message"));
-        Verify(ex.Message.Contains("A Message"));
+        ex.Message.Should().Contain("A Message");
     }
 
     [SuppressMessage("Globalization", "CA1304:Specify CultureInfo", Justification = "Testing the API without the culture")]
@@ -154,7 +154,7 @@ public partial class AssertTests : TestContainer
     public void AreEqualShouldFailWhenNotEqualIntWithMessage()
     {
         Exception ex = VerifyThrows(() => Assert.AreEqual(1, 2, "A Message"));
-        Verify(ex.Message.Contains("A Message"));
+        ex.Message.Should().Contain("A Message");
     }
 
     public void AreEqualShouldFailWhenNotEqualLong() =>
@@ -163,7 +163,7 @@ public partial class AssertTests : TestContainer
     public void AreEqualShouldFailWhenNotEqualLongWithMessage()
     {
         Exception ex = VerifyThrows(() => Assert.AreEqual(1L, 2L, "A Message"));
-        Verify(ex.Message.Contains("A Message"));
+        ex.Message.Should().Contain("A Message");
     }
 
     public void AreEqualShouldFailWhenNotEqualLongWithDelta() =>
@@ -175,7 +175,7 @@ public partial class AssertTests : TestContainer
     public void AreEqualShouldFailWhenNotEqualDoubleWithMessage()
     {
         Exception ex = VerifyThrows(() => Assert.AreEqual(0.1, 0.2, "A Message"));
-        Verify(ex.Message.Contains("A Message"));
+        ex.Message.Should().Contain("A Message");
     }
 
     public void AreEqualShouldFailWhenNotEqualDoubleWithDelta() =>
@@ -190,7 +190,7 @@ public partial class AssertTests : TestContainer
     public void AreEqualShouldFailWhenNotEqualDecimalWithMessage()
     {
         Exception ex = VerifyThrows(() => Assert.AreEqual(0.1M, 0.2M, "A Message"));
-        Verify(ex.Message.Contains("A Message"));
+        ex.Message.Should().Contain("A Message");
     }
 
     public void AreEqualShouldFailWhenNotEqualDecimalWithDelta() =>
@@ -202,7 +202,7 @@ public partial class AssertTests : TestContainer
     public void AreEqualShouldFailWhenFloatDoubleWithMessage()
     {
         Exception ex = VerifyThrows(() => Assert.AreEqual(100E-2, 200E-2, "A Message"));
-        Verify(ex.Message.Contains("A Message"));
+        ex.Message.Should().Contain("A Message");
     }
 
     public void AreEqualShouldFailWhenNotEqualFloatWithDelta() =>
@@ -280,7 +280,7 @@ public partial class AssertTests : TestContainer
         DummyClassTrackingToStringCalls o = new();
         DateTime dateTime = DateTime.Now;
         Exception ex = await VerifyThrowsAsync(async () => Assert.AreEqual(0, 1, $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}"));
-        Verify(ex.Message == $"Assert.AreEqual failed. Expected:<0>. Actual:<1>. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
+        ex.Message.Should().Be($"Assert.AreEqual failed. Expected:<0>. Actual:<1>. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
         o.WasToStringCalled.Should().BeTrue();
     }
 
@@ -296,7 +296,7 @@ public partial class AssertTests : TestContainer
         DummyClassTrackingToStringCalls o = new();
         DateTime dateTime = DateTime.Now;
         Exception ex = await VerifyThrowsAsync(async () => Assert.AreNotEqual(0, 0, $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}"));
-        Verify(ex.Message == $"Assert.AreNotEqual failed. Expected any value except:<0>. Actual:<0>. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
+        ex.Message.Should().Be($"Assert.AreNotEqual failed. Expected any value except:<0>. Actual:<0>. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
         o.WasToStringCalled.Should().BeTrue();
     }
 
@@ -312,7 +312,7 @@ public partial class AssertTests : TestContainer
         DummyClassTrackingToStringCalls o = new();
         DateTime dateTime = DateTime.Now;
         Exception ex = await VerifyThrowsAsync(async () => Assert.AreEqual(1.0f, 1.1f, 0.001f, $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}"));
-        Verify(ex.Message == $"Assert.AreEqual failed. Expected a difference no greater than <0.001> between expected value <1> and actual value <1.1>. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
+        ex.Message.Should().Be($"Assert.AreEqual failed. Expected a difference no greater than <0.001> between expected value <1> and actual value <1.1>. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
         o.WasToStringCalled.Should().BeTrue();
     }
 
@@ -328,7 +328,7 @@ public partial class AssertTests : TestContainer
         DummyClassTrackingToStringCalls o = new();
         DateTime dateTime = DateTime.Now;
         Exception ex = await VerifyThrowsAsync(async () => Assert.AreNotEqual(1.0f, 1.1f, 0.2f, $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}"));
-        Verify(ex.Message == $"Assert.AreNotEqual failed. Expected a difference greater than <0.2> between expected value <1> and actual value <1.1>. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
+        ex.Message.Should().Be($"Assert.AreNotEqual failed. Expected a difference greater than <0.2> between expected value <1> and actual value <1.1>. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
         o.WasToStringCalled.Should().BeTrue();
     }
 
@@ -344,7 +344,7 @@ public partial class AssertTests : TestContainer
         DummyClassTrackingToStringCalls o = new();
         DateTime dateTime = DateTime.Now;
         Exception ex = await VerifyThrowsAsync(async () => Assert.AreEqual(1.0m, 1.1m, 0.001m, $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}"));
-        Verify(ex.Message == $"Assert.AreEqual failed. Expected a difference no greater than <0.001> between expected value <1.0> and actual value <1.1>. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
+        ex.Message.Should().Be($"Assert.AreEqual failed. Expected a difference no greater than <0.001> between expected value <1.0> and actual value <1.1>. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
         o.WasToStringCalled.Should().BeTrue();
     }
 
@@ -360,7 +360,7 @@ public partial class AssertTests : TestContainer
         DummyClassTrackingToStringCalls o = new();
         DateTime dateTime = DateTime.Now;
         Exception ex = await VerifyThrowsAsync(async () => Assert.AreNotEqual(1.0m, 1.1m, 0.2m, $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}"));
-        Verify(ex.Message == $"Assert.AreNotEqual failed. Expected a difference greater than <0.2> between expected value <1.0> and actual value <1.1>. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
+        ex.Message.Should().Be($"Assert.AreNotEqual failed. Expected a difference greater than <0.2> between expected value <1.0> and actual value <1.1>. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
         o.WasToStringCalled.Should().BeTrue();
     }
 
@@ -376,7 +376,7 @@ public partial class AssertTests : TestContainer
         DummyClassTrackingToStringCalls o = new();
         DateTime dateTime = DateTime.Now;
         Exception ex = await VerifyThrowsAsync(async () => Assert.AreEqual(1L, 2L, 0L, $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}"));
-        Verify(ex.Message == $"Assert.AreEqual failed. Expected a difference no greater than <0> between expected value <1> and actual value <2>. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
+        ex.Message.Should().Be($"Assert.AreEqual failed. Expected a difference no greater than <0> between expected value <1> and actual value <2>. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
         o.WasToStringCalled.Should().BeTrue();
     }
 
@@ -392,7 +392,7 @@ public partial class AssertTests : TestContainer
         DummyClassTrackingToStringCalls o = new();
         DateTime dateTime = DateTime.Now;
         Exception ex = await VerifyThrowsAsync(async () => Assert.AreNotEqual(1L, 2L, 1L, $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}"));
-        Verify(ex.Message == $"Assert.AreNotEqual failed. Expected a difference greater than <1> between expected value <1> and actual value <2>. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
+        ex.Message.Should().Be($"Assert.AreNotEqual failed. Expected a difference greater than <1> between expected value <1> and actual value <2>. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
         o.WasToStringCalled.Should().BeTrue();
     }
 
@@ -408,7 +408,7 @@ public partial class AssertTests : TestContainer
         DummyClassTrackingToStringCalls o = new();
         DateTime dateTime = DateTime.Now;
         Exception ex = await VerifyThrowsAsync(async () => Assert.AreEqual(1.0d, 1.1d, 0.001d, $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}"));
-        Verify(ex.Message == $"Assert.AreEqual failed. Expected a difference no greater than <0.001> between expected value <1> and actual value <1.1>. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
+        ex.Message.Should().Be($"Assert.AreEqual failed. Expected a difference no greater than <0.001> between expected value <1> and actual value <1.1>. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
         o.WasToStringCalled.Should().BeTrue();
     }
 
@@ -424,7 +424,7 @@ public partial class AssertTests : TestContainer
         DummyClassTrackingToStringCalls o = new();
         DateTime dateTime = DateTime.Now;
         Exception ex = await VerifyThrowsAsync(async () => Assert.AreNotEqual(1.0d, 1.1d, 0.2d, $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}"));
-        Verify(ex.Message == $"Assert.AreNotEqual failed. Expected a difference greater than <0.2> between expected value <1> and actual value <1.1>. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
+        ex.Message.Should().Be($"Assert.AreNotEqual failed. Expected a difference greater than <0.2> between expected value <1> and actual value <1.1>. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
         o.WasToStringCalled.Should().BeTrue();
     }
 

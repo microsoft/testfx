@@ -449,8 +449,8 @@ public class MethodInfoExtensionsTests : TestContainer
 
         public void PublicMethodWithParameters(int x, int y)
         {
-            Verify((object)x is not null);
-            Verify((object)y is not null);
+            (object)x is not null.Should().BeTrue();
+            (object)y is not null.Should().BeTrue();
         }
     }
 

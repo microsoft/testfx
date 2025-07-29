@@ -11,7 +11,7 @@ public partial class AssertTests
     public void InconclusiveDoesNotThrowWhenMessageContainsInvalidStringFormatCompositeAndNoArgumentsPassed()
     {
         Exception ex = VerifyThrows<AssertInconclusiveException>(() => Assert.Inconclusive("{"));
-        Verify(ex.Message.Contains("Assert.Inconclusive failed. {"));
+        ex.Message.Should().Contain("Assert.Inconclusive failed. {");
     }
 
     // See https://github.com/dotnet/sdk/issues/25373

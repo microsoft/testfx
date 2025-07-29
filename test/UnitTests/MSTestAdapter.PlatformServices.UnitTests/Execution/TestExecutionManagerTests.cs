@@ -161,7 +161,7 @@ public class TestExecutionManagerTests : TestContainer
         expectedTestCaseStartList.SequenceEqual(_frameworkHandle.TestCaseStartList));
         Verify(expectedTestCaseEndList.SequenceEqual(_frameworkHandle.TestCaseEndList));
         Verify(expectedResultList[0].Should().Be(_frameworkHandle.ResultsList[0]);
-        Verify(_frameworkHandle.ResultsList[1].Contains(expectedResultList[1]));
+        _frameworkHandle.ResultsList[1].Should().Contain(expectedResultList[1]);
     }
 
     public async Task RunTestsForCancellationTokenCanceledSetToTrueShouldSendZeroResults()
@@ -361,9 +361,9 @@ public class TestExecutionManagerTests : TestContainer
 
         await _testExecutionManager.RunTestsAsync(sources, _runContext, _frameworkHandle, _cancellationToken);
 
-        Verify(_frameworkHandle.TestCaseStartList.Contains("PassingTest"));
-        Verify(_frameworkHandle.TestCaseEndList.Contains("PassingTest:Passed"));
-        Verify(_frameworkHandle.ResultsList.Contains("PassingTest  Passed"));
+        _frameworkHandle.TestCaseStartList.Should().Contain("PassingTest");
+        _frameworkHandle.TestCaseEndList.Should().Contain("PassingTest:Passed");
+        _frameworkHandle.ResultsList.Should().Contain("PassingTest  Passed");
     }
 
     [SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "This is currently ignored and that's why we marked it as private")]

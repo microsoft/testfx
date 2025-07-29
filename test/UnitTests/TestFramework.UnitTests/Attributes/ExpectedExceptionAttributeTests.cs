@@ -19,7 +19,8 @@ public class ExpectedExceptionAttributeTests : TestContainer
     {
         static void A() => _ = new ExpectedExceptionAttribute(null!, "Dummy");
 
-        Exception ex = VerifyThrows(A);
+        Action act = A;
+        Exception ex = act.Should().Throw<Exception>().Which;
         ex is ArgumentNullException.Should().BeTrue();
     }
 

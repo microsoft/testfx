@@ -408,7 +408,7 @@ public class MSTestSettingsTests : TestContainer
 
         AdapterSettingsException exception = VerifyThrows<AdapterSettingsException>(() => MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object));
 
-        Verify(exception.Message.Contains("Invalid value 'GoneFishing' specified for 'Workers'. The value should be a non-negative integer."));
+        exception.Message.Should().Contain("Invalid value 'GoneFishing' specified for 'Workers'. The value should be a non-negative integer.");
     }
 
     public void GetSettingsShouldThrowIfParallelizationWorkersIsNegative()
@@ -425,7 +425,7 @@ public class MSTestSettingsTests : TestContainer
             """;
 
         AdapterSettingsException exception = VerifyThrows<AdapterSettingsException>(() => MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object));
-        Verify(exception.Message.Contains("Invalid value '-1' specified for 'Workers'. The value should be a non-negative integer."));
+        exception.Message.Should().Contain("Invalid value '-1' specified for 'Workers'. The value should be a non-negative integer.");
     }
 
     public void ParallelizationWorkersShouldBeConsumedFromRunSettingsWhenSpecified()
@@ -533,7 +533,7 @@ public class MSTestSettingsTests : TestContainer
             """;
 
         AdapterSettingsException exception = VerifyThrows<AdapterSettingsException>(() => MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object));
-        Verify(exception.Message.Contains("Invalid value 'JustParallelizeWillYou' specified for 'Scope'. Supported scopes are ClassLevel, MethodLevel."));
+        exception.Message.Should().Contain("Invalid value 'JustParallelizeWillYou' specified for 'Scope'. Supported scopes are ClassLevel, MethodLevel.");
     }
 
     public void ParallelizationScopeShouldBeConsumedFromRunSettingsWhenSpecified()
@@ -568,7 +568,7 @@ public class MSTestSettingsTests : TestContainer
             """;
 
         AdapterSettingsException exception = VerifyThrows<AdapterSettingsException>(() => MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object));
-        Verify(exception.Message.Contains("MSTestAdapter encountered an unexpected element 'Hola' in its settings 'Parallelize'. Remove this element and try again."));
+        exception.Message.Should().Contain("MSTestAdapter encountered an unexpected element 'Hola' in its settings 'Parallelize'. Remove this element and try again.");
     }
 
     public void GetSettingsShouldBeAbleToReadAfterParallelizationSettings()
@@ -883,7 +883,7 @@ public class MSTestSettingsTests : TestContainer
         MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsName, _mockMessageLogger.Object);
 
         // Assert.
-        !outOfScopeCall.Should().BeTrue();
+        outOfScopeCall.Should().BeFalse();
     }
 
     public void GetSettingsShouldWorkIfThereAreCommentsInTheXML()

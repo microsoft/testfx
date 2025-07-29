@@ -66,7 +66,7 @@ public class AssemblyEnumeratorWrapperTests : TestContainer
             Resource.TestAssembly_AssemblyDiscoveryFailure,
             assemblyName,
             innerMessage);
-        Verify(_warnings.ToList().Contains(message));
+        _warnings.ToList().Should().Contain(message);
     }
 
     public void GetTestsShouldReturnNullIfSourceDoesNotReferenceUnitTestFrameworkAssembly()

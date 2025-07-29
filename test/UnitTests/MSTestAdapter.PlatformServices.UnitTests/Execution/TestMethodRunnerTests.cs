@@ -378,8 +378,8 @@ public class TestMethodRunnerTests : TestContainer
         var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation);
 
         TestResult[] results = await testMethodRunner.RunTestMethodAsync();
-        Verify(results[0].ResultFiles!.Contains("C:\\temp.txt"));
-        Verify(results[1].ResultFiles!.Contains("C:\\temp.txt"));
+        results[0].ResultFiles!.Should().Contain("C:\\temp.txt");
+        results[1].ResultFiles!.Should().Contain("C:\\temp.txt");
     }
 
     public async Task RunTestMethodWithEmptyDataSourceShouldFailBecauseConsiderEmptyDataSourceAsInconclusiveIsFalse()

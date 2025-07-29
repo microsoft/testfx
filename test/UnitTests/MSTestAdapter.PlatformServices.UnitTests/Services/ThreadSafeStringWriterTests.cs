@@ -123,10 +123,10 @@ public class ThreadSafeStringWriterTests : TestContainer
             Verify(!string.IsNullOrWhiteSpace(result.Debug));
 
             string[] output = result.Out.Split(Environment.NewLine.ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
-            Verify(output.SequenceEqual(["out", "out"]));
+            output.Should().BeEquivalentTo(["out");
 
             string[] debug = result.Debug.Split(Environment.NewLine.ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
-            Verify(debug.SequenceEqual(["debug", "debug"]));
+            debug.Should().BeEquivalentTo(["debug");
         }
     }
 }

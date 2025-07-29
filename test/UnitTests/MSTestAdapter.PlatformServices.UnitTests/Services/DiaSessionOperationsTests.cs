@@ -58,7 +58,7 @@ public class DiaSessionOperationsTests : TestContainer
 
             object? diaSession = _fileOperations.CreateNavigationSession(typeof(DiaSessionOperationsTests).Assembly.Location);
 
-            diaSession is MockDiaSession.Should().BeTrue();
+            diaSession.Should().BeOfType<MockDiaSession>();
         }
         finally
         {
