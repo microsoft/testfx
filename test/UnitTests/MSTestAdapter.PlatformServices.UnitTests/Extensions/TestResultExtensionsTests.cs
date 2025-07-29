@@ -10,6 +10,8 @@ using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
 using VSTestTestOutcome = Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome;
 using VSTestTestResultMessage = Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResultMessage;
 
+using FluentAssertions;
+
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions;
 
 public class TestResultExtensionsTests : TestContainer
@@ -19,7 +21,7 @@ public class TestResultExtensionsTests : TestContainer
         var result = new TestResult { TestFailureException = new Exception() };
         var convertedResult = result.ToTestResult(new(), default, default, string.Empty, new());
 
-        Verify(convertedResult.Outcome == VSTestTestOutcome.Failed);
+        convertedResult.Outcome.Should().Be(VSTestTestOutcome.Failed);
     }
 
     public void ToUnitTestResultsForTestResultWithExceptionConvertsToUnitTestResultsWithInconclusiveOutcome()
@@ -27,7 +29,7 @@ public class TestResultExtensionsTests : TestContainer
         var result = new TestResult { TestFailureException = new Exception(), Outcome = UTF.UnitTestOutcome.Inconclusive };
         var convertedResult = result.ToTestResult(new(), default, default, string.Empty, new());
 
-        Verify(convertedResult.Outcome == VSTestTestOutcome.Skipped);
+        convertedResult.Outcome.Should().Be(VSTestTestOutcome.Skipped);
     }
 
     public void ToUnitTestResultsForTestResultShouldSetLoggingDataForConvertedUnitTestResults()
@@ -45,16 +47,16 @@ public class TestResultExtensionsTests : TestContainer
 
         var convertedResult = result.ToTestResult(new() { DisplayName = result.DisplayName }, default, default, string.Empty, new());
         VSTestTestResultMessage[] stdOutMessages = [.. convertedResult.Messages.Where(m => m.Category == VSTestTestResultMessage.StandardOutCategory)];
-        Verify(stdOutMessages[0].Text == "logOutput");
+        stdOutMessages[0].Text.Should().Be("logOutput");
         Verify(convertedResult.Messages.Single(m => m.Category == VSTestTestResultMessage.StandardErrorCategory).Text == "logError");
         Verify(convertedResult.DisplayName == "displayName (Data Row 1)");
-        Verify(stdOutMessages[1].Text == """
+        stdOutMessages[1].Text.Should().Be("""
 
 
             Debug Trace:
             debugTrace
             """);
-        Verify(timespan == convertedResult.Duration);
+        timespan.Should().Be(convertedResult.Duration);
     }
 
     public void ToUnitTestResultsForTestResultShouldSetStandardOut()
@@ -125,7 +127,7 @@ public class TestResultExtensionsTests : TestContainer
 
         var convertedResult = result.ToTestResult(new(), default, default, string.Empty, new());
 
-        Verify(timespan == convertedResult.Duration);
+        timespan.Should().Be(convertedResult.Duration);
     }
 
     public void ToUnitTestResultsForTestResultShouldSetDisplayName()
@@ -137,7 +139,7 @@ public class TestResultExtensionsTests : TestContainer
 
         var convertedResult = result.ToTestResult(new(), default, default, string.Empty, new());
 
-        Verify(convertedResult.DisplayName == "displayName");
+        convertedResult.DisplayName.Should().Be("displayName");
     }
 
     public void ToUnitTestResultsForTestResultShouldSetDataRowIndex()
@@ -180,6 +182,6 @@ public class TestResultExtensionsTests : TestContainer
 
         var result = new TestResult { ResultFiles = [resultFile] };
         var convertedResult = result.ToTestResult(new(), default, default, string.Empty, new());
-        Verify(convertedResult.Attachments[0].Attachments[0].Description == resultFile);
+        convertedResult.Attachments[0].Attachments[0].Description.Should().Be(resultFile);
     }
 }

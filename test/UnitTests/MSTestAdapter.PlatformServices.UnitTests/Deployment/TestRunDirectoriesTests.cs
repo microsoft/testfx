@@ -5,15 +5,17 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deploym
 
 using TestFramework.ForTestingMSTest;
 
+using FluentAssertions;
+
 namespace MSTestAdapter.PlatformServices.Tests.Deployment;
 
 public class TestRunDirectoriesTests : TestContainer
 {
     private readonly TestRunDirectories _testRunDirectories = new(@"C:\temp");
 
-    public void InDirectoryShouldReturnCorrectDirectory() => Verify(_testRunDirectories.InDirectory == @"C:\temp\In");
+    public void InDirectoryShouldReturnCorrectDirectory() => _testRunDirectories.InDirectory.Should().Be(@"C:\temp\In");
 
-    public void OutDirectoryShouldReturnCorrectDirectory() => Verify(_testRunDirectories.OutDirectory == @"C:\temp\Out");
+    public void OutDirectoryShouldReturnCorrectDirectory() => _testRunDirectories.OutDirectory.Should().Be(@"C:\temp\Out");
 
-    public void InMachineNameDirectoryShouldReturnMachineSpecificDeploymentDirectory() => Verify(Path.Combine(@"C:\temp\In", Environment.MachineName) == _testRunDirectories.InMachineNameDirectory);
+    public void InMachineNameDirectoryShouldReturnMachineSpecificDeploymentDirectory() => Path.Combine(@"C:\temp\In", Environment.MachineName).Should().Be(_testRunDirectories.InMachineNameDirectory);
 }

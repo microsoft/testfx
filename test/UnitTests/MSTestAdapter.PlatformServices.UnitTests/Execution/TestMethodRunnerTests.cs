@@ -15,6 +15,8 @@ using TestFramework.ForTestingMSTest;
 
 using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
 
+using FluentAssertions;
+
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution;
 
 public class TestMethodRunnerTests : TestContainer
@@ -82,7 +84,7 @@ public class TestMethodRunnerTests : TestContainer
         var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation);
 
         TestResult[] results = await testMethodRunner.ExecuteAsync(string.Empty, string.Empty, string.Empty, string.Empty);
-        Verify(results[0].Outcome == UTF.UnitTestOutcome.Failed);
+        results[0].Outcome.Should().Be(UTF.UnitTestOutcome.Failed);
         Verify(results[0].ExceptionMessage!.StartsWith(
             """
             An unhandled exception was thrown by the 'Execute' method. Please report this error to the author of the attribute 'Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute'.
@@ -97,7 +99,7 @@ public class TestMethodRunnerTests : TestContainer
         var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation);
 
         TestResult[] results = await testMethodRunner.ExecuteAsync(string.Empty, string.Empty, string.Empty, string.Empty);
-        Verify(results[0].Outcome == UTF.UnitTestOutcome.Passed);
+        results[0].Outcome.Should().Be(UTF.UnitTestOutcome.Passed);
     }
 
     public async Task ExecuteShouldNotFillInDebugAndTraceLogsIfDebugTraceDisabled()
@@ -109,7 +111,7 @@ public class TestMethodRunnerTests : TestContainer
         _testablePlatformServiceProvider.MockTraceListener.Setup(tl => tl.GetWriter()).Returns(writer);
 
         TestResult[] results = await testMethodRunner.ExecuteAsync(string.Empty, string.Empty, string.Empty, string.Empty);
-        Verify(results[0].DebugTrace == string.Empty);
+        results[0].DebugTrace.Should().Be(string.Empty);
     }
 
     public async Task ExecuteShouldNotFillInDebugAndTraceLogsFromRunningTestMethod()
@@ -132,7 +134,7 @@ public class TestMethodRunnerTests : TestContainer
 
         TestResult[] results = await testMethodRunner.ExecuteAsync(string.Empty, string.Empty, string.Empty, string.Empty);
 
-        Verify(results[0].DebugTrace == string.Empty);
+        results[0].DebugTrace.Should().Be(string.Empty);
     }
 
     public async Task RunTestMethodForTestThrowingExceptionShouldReturnTestResultWithFailedOutcome()
@@ -141,7 +143,7 @@ public class TestMethodRunnerTests : TestContainer
         var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation);
 
         TestResult[] results = await testMethodRunner.RunTestMethodAsync();
-        Verify(results[0].Outcome == UTF.UnitTestOutcome.Failed);
+        results[0].Outcome.Should().Be(UTF.UnitTestOutcome.Failed);
         Verify(results[0].ExceptionMessage!.StartsWith(
             """
             An unhandled exception was thrown by the 'Execute' method. Please report this error to the author of the attribute 'Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute'.
@@ -165,10 +167,10 @@ public class TestMethodRunnerTests : TestContainer
         var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation);
 
         TestResult[] results = await testMethodRunner.ExecuteAsync(string.Empty, string.Empty, string.Empty, string.Empty);
-        Verify(results.Length == 2);
+        results.Length.Should().Be(2);
 
-        Verify(results[0].Outcome == UTF.UnitTestOutcome.Passed);
-        Verify(results[1].Outcome == UTF.UnitTestOutcome.Failed);
+        results[0].Outcome.Should().Be(UTF.UnitTestOutcome.Passed);
+        results[1].Outcome.Should().Be(UTF.UnitTestOutcome.Failed);
     }
 
     public async Task RunTestMethodForPassingTestThrowingExceptionShouldReturnTestResultWithPassedOutcome()
@@ -177,7 +179,7 @@ public class TestMethodRunnerTests : TestContainer
         var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation);
 
         TestResult[] results = await testMethodRunner.ExecuteAsync(string.Empty, string.Empty, string.Empty, string.Empty);
-        Verify(results[0].Outcome == UTF.UnitTestOutcome.Passed);
+        results[0].Outcome.Should().Be(UTF.UnitTestOutcome.Passed);
     }
 
     public async Task RunTestMethodForFailingTestThrowingExceptionShouldReturnTestResultWithFailedOutcome()
@@ -186,7 +188,7 @@ public class TestMethodRunnerTests : TestContainer
         var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation);
 
         TestResult[] results = await testMethodRunner.ExecuteAsync(string.Empty, string.Empty, string.Empty, string.Empty);
-        Verify(results[0].Outcome == UTF.UnitTestOutcome.Failed);
+        results[0].Outcome.Should().Be(UTF.UnitTestOutcome.Failed);
     }
 
     public async Task RunTestMethodShouldGiveTestResultAsPassedWhenTestMethodPasses()
@@ -197,7 +199,7 @@ public class TestMethodRunnerTests : TestContainer
         TestResult[] results = await testMethodRunner.RunTestMethodAsync();
 
         // Since data is not provided, tests run normally giving passed as outcome.
-        Verify(results[0].Outcome == UTF.UnitTestOutcome.Passed);
+        results[0].Outcome.Should().Be(UTF.UnitTestOutcome.Passed);
     }
 
     public async Task RunTestMethodShouldGiveTestResultAsFailedWhenTestMethodFails()
@@ -208,7 +210,7 @@ public class TestMethodRunnerTests : TestContainer
         TestResult[] results = await testMethodRunner.RunTestMethodAsync();
 
         // Since data is not provided, tests run normally giving passed as outcome.
-        Verify(results[0].Outcome == UTF.UnitTestOutcome.Failed);
+        results[0].Outcome.Should().Be(UTF.UnitTestOutcome.Failed);
     }
 
     public async Task RunTestMethodShouldRunDataDrivenTestsWhenDataIsProvidedUsingDataSourceAttribute()
@@ -228,9 +230,9 @@ public class TestMethodRunnerTests : TestContainer
         TestResult[] results = await testMethodRunner.RunTestMethodAsync();
 
         // check for outcome
-        Verify(results[0].Outcome == UTF.UnitTestOutcome.Passed);
-        Verify(results[1].Outcome == UTF.UnitTestOutcome.Passed);
-        Verify(results[2].Outcome == UTF.UnitTestOutcome.Passed);
+        results[0].Outcome.Should().Be(UTF.UnitTestOutcome.Passed);
+        results[1].Outcome.Should().Be(UTF.UnitTestOutcome.Passed);
+        results[2].Outcome.Should().Be(UTF.UnitTestOutcome.Passed);
     }
 
     public async Task RunTestMethodShouldRunDataDrivenTestsWhenDataIsProvidedUsingDataRowAttribute()
@@ -255,7 +257,7 @@ public class TestMethodRunnerTests : TestContainer
         _testablePlatformServiceProvider.MockReflectionOperations.Setup(ro => ro.GetCustomAttributes(_methodInfo, It.IsAny<Type>(), It.IsAny<bool>())).Returns(attributes);
 
         TestResult[] results = await testMethodRunner.RunTestMethodAsync();
-        Verify(results[0].Outcome == UTF.UnitTestOutcome.Inconclusive);
+        results[0].Outcome.Should().Be(UTF.UnitTestOutcome.Inconclusive);
     }
 
     public async Task RunTestMethodShouldSetDataRowIndexForDataDrivenTestsWhenDataIsProvidedUsingDataSourceAttribute()
@@ -274,9 +276,9 @@ public class TestMethodRunnerTests : TestContainer
         TestResult[] results = await testMethodRunner.RunTestMethodAsync();
 
         // check for datarowIndex
-        Verify(results[0].DatarowIndex == 0);
-        Verify(results[1].DatarowIndex == 1);
-        Verify(results[2].DatarowIndex == 2);
+        results[0].DatarowIndex.Should().Be(0);
+        results[1].DatarowIndex.Should().Be(1);
+        results[2].DatarowIndex.Should().Be(2);
     }
 
     public async Task RunTestMethodShouldRunOnlyDataSourceTestsWhenBothDataSourceAndDataRowAreProvided()
@@ -301,9 +303,9 @@ public class TestMethodRunnerTests : TestContainer
         TestResult[] results = await testMethodRunner.RunTestMethodAsync();
 
         // check for datarowIndex as only DataSource Tests are Run
-        Verify(results[0].DatarowIndex == 0);
-        Verify(results[1].DatarowIndex == 1);
-        Verify(results[2].DatarowIndex == 2);
+        results[0].DatarowIndex.Should().Be(0);
+        results[1].DatarowIndex.Should().Be(1);
+        results[2].DatarowIndex.Should().Be(2);
     }
 
     public async Task RunTestMethodShouldFillInDisplayNameWithDataRowDisplayNameIfProvidedForDataDrivenTests()
@@ -327,8 +329,8 @@ public class TestMethodRunnerTests : TestContainer
 
         TestResult[] results = await testMethodRunner.RunTestMethodAsync();
 
-        Verify(results.Length == 1);
-        Verify(results[0].DisplayName == "DataRowTestDisplayName");
+        results.Length.Should().Be(1);
+        results[0].DisplayName.Should().Be("DataRowTestDisplayName");
     }
 
     public async Task RunTestMethodShouldFillInDisplayNameWithDataRowArgumentsIfNoDisplayNameIsProvidedForDataDrivenTests()
@@ -351,7 +353,7 @@ public class TestMethodRunnerTests : TestContainer
 
         TestResult[] results = await testMethodRunner.RunTestMethodAsync();
 
-        Verify(results.Length == 1);
+        results.Length.Should().Be(1);
         Verify(results[0].DisplayName is "dummyTestName (2,\"DummyString\")" or "DummyTestMethod (2,DummyString)", $"Display name: {results[0].DisplayName}");
     }
 
@@ -416,7 +418,7 @@ public class TestMethodRunnerTests : TestContainer
             if (considerEmptyAsInconclusive)
             {
                 TestResult[] results = await testMethodRunner.RunTestMethodAsync();
-                Verify(results[0].Outcome == UTF.UnitTestOutcome.Inconclusive);
+                results[0].Outcome.Should().Be(UTF.UnitTestOutcome.Inconclusive);
             }
             else
             {

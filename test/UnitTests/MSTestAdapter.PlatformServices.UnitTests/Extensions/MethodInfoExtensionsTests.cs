@@ -10,6 +10,8 @@ using TestFramework.ForTestingMSTest;
 
 using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
 
+using FluentAssertions;
+
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions;
 
 public class MethodInfoExtensionsTests : TestContainer
@@ -245,13 +247,13 @@ public class MethodInfoExtensionsTests : TestContainer
     public void HasCorrectTimeoutShouldReturnFalseForMethodsWithInvalidTimeoutAttribute()
     {
         var timeoutAttribute = new TimeoutAttribute(-11);
-        Verify(!timeoutAttribute.HasCorrectTimeout);
+        !timeoutAttribute.HasCorrectTimeout.Should().BeTrue();
     }
 
     public void HasCorrectTimeoutShouldReturnTrueForMethodsWithTimeoutAttribute()
     {
         var timeoutAttribute = new TimeoutAttribute(11);
-        Verify(timeoutAttribute.HasCorrectTimeout);
+        timeoutAttribute.HasCorrectTimeout.Should().BeTrue();
     }
 
     #endregion
@@ -314,8 +316,8 @@ public class MethodInfoExtensionsTests : TestContainer
         DummyTestClass2.DummyAsyncMethodBody = (x, y) => Task.Run(
             () =>
             {
-                Verify(x == 10);
-                Verify(y == 20);
+                x.Should().Be(10);
+                y.Should().Be(20);
                 testMethodCalled = true;
             });
 
@@ -324,7 +326,7 @@ public class MethodInfoExtensionsTests : TestContainer
 
         dummyAsyncMethod.InvokeAsSynchronousTask(dummyTestClass, 10, 20);
 
-        Verify(testMethodCalled);
+        testMethodCalled.Should().BeTrue();
     }
 
     public void MethodInfoInvokeAsSynchronousTaskExecutesAMethodWhichDoesNotReturnATask()
@@ -332,8 +334,8 @@ public class MethodInfoExtensionsTests : TestContainer
         bool testMethodCalled = false;
         DummyTestClass2.DummyMethodBody = (x, y) =>
         {
-            Verify(x == 10);
-            Verify(y == 20);
+            x.Should().Be(10);
+            y.Should().Be(20);
             testMethodCalled = true;
             return true;
         };
@@ -343,7 +345,7 @@ public class MethodInfoExtensionsTests : TestContainer
 
         dummyMethod.InvokeAsSynchronousTask(dummyTestClass, 10, 20);
 
-        Verify(testMethodCalled);
+        testMethodCalled.Should().BeTrue();
     }
 
     public void InvokeAsSynchronousShouldThrowIfParametersWereExpectedButWereNotProvided()
@@ -357,7 +359,7 @@ public class MethodInfoExtensionsTests : TestContainer
         }
         catch (TestFailedException ex)
         {
-            Verify(ex.Outcome == UTF.UnitTestOutcome.Error);
+            ex.Outcome.Should().Be(UTF.UnitTestOutcome.Error);
             Verify(ex.TryGetMessage() == string.Format(CultureInfo.InvariantCulture, Resource.CannotRunTestMethodNoDataError, "Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions.MethodInfoExtensionsTests+DummyTestClass2", "PublicMethodWithParameters"));
         }
     }
@@ -382,7 +384,7 @@ public class MethodInfoExtensionsTests : TestContainer
         }
         catch (TestFailedException ex)
         {
-            Verify(ex.Outcome == UTF.UnitTestOutcome.Error);
+            ex.Outcome.Should().Be(UTF.UnitTestOutcome.Error);
 
             // Error in English is:
             //    Cannot run test method 'Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions.MethodInfoExtensionsTests+DummyTestClass2.PublicMethodWithParameters': Test data doesn't match method parameters. Either the count or types are different.
@@ -405,7 +407,7 @@ public class MethodInfoExtensionsTests : TestContainer
         }
         catch (TestFailedException ex)
         {
-            Verify(ex.Outcome == UTF.UnitTestOutcome.Error);
+            ex.Outcome.Should().Be(UTF.UnitTestOutcome.Error);
 
             // Error in English is:
             //    Cannot run test method 'Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions.MethodInfoExtensionsTests+DummyTestClass2.PublicMethodWithParameters': Test data doesn't match method parameters. Either the count or types are different.

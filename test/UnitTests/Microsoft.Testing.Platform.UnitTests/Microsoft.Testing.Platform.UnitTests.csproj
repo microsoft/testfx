@@ -14,6 +14,7 @@
   <!-- end netstandard2.0 polyfill -->
 
   <ItemGroup>
+    <PackageReference Include="AwesomeAssertions" />
     <PackageReference Include="Moq" />
   </ItemGroup>
 

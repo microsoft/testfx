@@ -8,6 +8,8 @@ using Moq;
 
 using TestFramework.ForTestingMSTest;
 
+using FluentAssertions;
+
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery;
 
 public class TestMethodValidatorTests : TestContainer
@@ -65,7 +67,7 @@ public class TestMethodValidatorTests : TestContainer
         _mockMethodInfo.Setup(mi => mi.ReturnType).Returns(typeof(void));
         _testMethodValidator.IsValidTestMethod(_mockMethodInfo.Object, _type, _warnings);
 
-        Verify(_warnings.Count == 0);
+        _warnings.Count.Should().Be(0);
     }
 
     public void IsValidTestMethodShouldReturnFalseForNonPublicMethods()

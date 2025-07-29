@@ -7,6 +7,8 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
 
 using TestFramework.ForTestingMSTest;
 
+using FluentAssertions;
+
 namespace MSTestAdapter.PlatformServices.UnitTests.Services;
 
 #pragma warning disable SA1649 // File name must match first type name
@@ -27,16 +29,16 @@ public class DesktopSettingsProviderTests : TestContainer
         // so passing 'null' source will also suffice.
         IDictionary<string, object> properties = _settingsProvider.GetProperties(null);
 
-        Verify(properties is not null);
-        Verify(properties.Count > 0);
+        properties.Should().NotBeNull();
+        properties.Count > 0.Should().BeTrue();
     }
 
     public void SettingsShouldReturnDefaultSettingsIfNotInitialized()
     {
         MSTestAdapterSettings settings = MSTestSettingsProvider.Settings;
 
-        Verify(settings is not null);
-        Verify(settings.DeploymentEnabled);
+        settings.Should().NotBeNull();
+        settings.DeploymentEnabled.Should().BeTrue();
     }
 
     public void SettingsShouldReturnInitializedSettings()
@@ -51,7 +53,7 @@ public class DesktopSettingsProviderTests : TestContainer
         var reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
         reader.Read();
         _settingsProvider.Load(reader);
-        Verify(!MSTestSettingsProvider.Settings.DeploymentEnabled);
+        !MSTestSettingsProvider.Settings.DeploymentEnabled.Should().BeTrue();
     }
 
     public void LoadShouldThrowIfReaderIsNull() =>
@@ -69,12 +71,12 @@ public class DesktopSettingsProviderTests : TestContainer
         var reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
         reader.Read();
         _settingsProvider.Load(reader);
-        Verify(!MSTestSettingsProvider.Settings.DeploymentEnabled);
+        !MSTestSettingsProvider.Settings.DeploymentEnabled.Should().BeTrue();
     }
 
     public void LoadShouldReadAndFillInSettingsFromIConfiguration()
     {
-        Verify(MSTestSettingsProvider.Settings.DeploymentEnabled);
+        MSTestSettingsProvider.Settings.DeploymentEnabled.Should().BeTrue();
 
         MSTestSettingsProvider.Load(new MockConfiguration(
             new Dictionary<string, string?>()
@@ -82,7 +84,7 @@ public class DesktopSettingsProviderTests : TestContainer
                 ["mstest:deployment:enabled"] = "false",
             }, null));
 
-        Verify(!MSTestSettingsProvider.Settings.DeploymentEnabled);
+        !MSTestSettingsProvider.Settings.DeploymentEnabled.Should().BeTrue();
     }
 
     private sealed class MockConfiguration : IConfiguration

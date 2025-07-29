@@ -15,6 +15,8 @@ using MSTestAdapter.PlatformServices.UnitTests.Utilities;
 
 using TestFramework.ForTestingMSTest;
 
+using FluentAssertions;
+
 namespace MSTestAdapter.PlatformServices.Tests.Services;
 
 public class TestDeploymentTests : TestContainer
@@ -296,7 +298,7 @@ public class TestDeploymentTests : TestContainer
             [TestContext.TestLogsDirLabel] = applicationBaseDirectory,
 #pragma warning restore CS0618 // Type or member is obsolete
         };
-        Verify(properties is not null);
+        properties.Should().NotBeNull();
         Verify(expectedProperties.SequenceEqual(properties));
     }
 
@@ -331,7 +333,7 @@ public class TestDeploymentTests : TestContainer
 #pragma warning restore CS0618 // Type or member is obsolete
         };
 
-        Verify(properties is not null);
+        properties.Should().NotBeNull();
         Verify(expectedProperties.SequenceEqual(properties));
     }
 
@@ -366,7 +368,7 @@ public class TestDeploymentTests : TestContainer
 #pragma warning restore CS0618 // Type or member is obsolete
         };
 
-        Verify(properties is not null);
+        properties.Should().NotBeNull();
         Verify(expectedProperties.SequenceEqual(properties));
     }
 

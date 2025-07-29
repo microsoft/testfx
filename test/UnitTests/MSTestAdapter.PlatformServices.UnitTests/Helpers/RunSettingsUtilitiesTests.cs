@@ -6,6 +6,8 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
 using TestFramework.ForTestingMSTest;
 
+using FluentAssertions;
+
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Helpers;
 
 public class RunSettingsUtilitiesTests : TestContainer
@@ -13,7 +15,7 @@ public class RunSettingsUtilitiesTests : TestContainer
     public void GetTestRunParametersReturnsNullOnNullRunSettings()
     {
         Dictionary<string, object>? trp = RunSettingsUtilities.GetTestRunParameters(null);
-        Verify(trp is null);
+        trp.Should().BeNull();
     }
 
     public void GetTestRunParametersReturnsNullWhenNoTestRunParameters()
@@ -31,7 +33,7 @@ public class RunSettingsUtilitiesTests : TestContainer
             """;
 
         Dictionary<string, object>? trp = RunSettingsUtilities.GetTestRunParameters(settingsXml);
-        Verify(trp is null);
+        trp.Should().BeNull();
     }
 
     public void GetTestRunParametersReturnsEmptyDictionaryForEmptyTestRunParametersNode()
@@ -51,8 +53,8 @@ public class RunSettingsUtilitiesTests : TestContainer
             """;
 
         Dictionary<string, object>? trp = RunSettingsUtilities.GetTestRunParameters(settingsXml);
-        Verify(trp is not null);
-        Verify(trp.Count == 0);
+        trp.Should().NotBeNull();
+        trp.Count.Should().Be(0);
     }
 
     public void GetTestRunParametersReturns1EntryOn1TestRunParameter()
@@ -73,8 +75,8 @@ public class RunSettingsUtilitiesTests : TestContainer
             """;
 
         Dictionary<string, object>? trp = RunSettingsUtilities.GetTestRunParameters(settingsXml);
-        Verify(trp is not null);
-        Verify(trp.Count == 1);
+        trp.Should().NotBeNull();
+        trp.Count.Should().Be(1);
 
         // Verify Parameter Values.
         Verify(trp.ContainsKey("webAppUrl"));
@@ -101,8 +103,8 @@ public class RunSettingsUtilitiesTests : TestContainer
             """;
 
         Dictionary<string, object>? trp = RunSettingsUtilities.GetTestRunParameters(settingsXml);
-        Verify(trp is not null);
-        Verify(trp.Count == 3);
+        trp.Should().NotBeNull();
+        trp.Count.Should().Be(3);
 
         // Verify Parameter Values.
         Verify(trp.ContainsKey("webAppUrl"));
@@ -172,7 +174,7 @@ public class RunSettingsUtilitiesTests : TestContainer
             """;
 
         Dictionary<string, object>? trp = RunSettingsUtilities.GetTestRunParameters(settingsXml);
-        Verify(trp is not null);
-        Verify(trp.Count == 0);
+        trp.Should().NotBeNull();
+        trp.Count.Should().Be(0);
     }
 }

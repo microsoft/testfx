@@ -10,6 +10,8 @@ using Moq;
 
 using TestFramework.ForTestingMSTest;
 
+using FluentAssertions;
+
 namespace MSTestAdapter.PlatformServices.UnitTests;
 
 #pragma warning disable SA1649 // File name must match first type name
@@ -41,7 +43,7 @@ public class MSTestAdapterSettingsTests : TestContainer
 
         string? result = adapterSettings.ResolveEnvironmentVariableAndReturnFullPathIfExist(path, baseDirectory);
 
-        Verify(result is not null);
+        result.Should().NotBeNull();
         Verify(string.Equals(result, expectedResult, StringComparison.OrdinalIgnoreCase));
     }
 
@@ -59,7 +61,7 @@ public class MSTestAdapterSettingsTests : TestContainer
 
         string? result = adapterSettings.ResolveEnvironmentVariableAndReturnFullPathIfExist(path, baseDirectory);
 
-        Verify(result is not null);
+        result.Should().NotBeNull();
         Verify(string.Equals(result, expectedResult, StringComparison.OrdinalIgnoreCase));
     }
 
@@ -76,7 +78,7 @@ public class MSTestAdapterSettingsTests : TestContainer
 
         string? result = adapterSettings.ResolveEnvironmentVariableAndReturnFullPathIfExist(path, baseDirectory);
 
-        Verify(result is not null);
+        result.Should().NotBeNull();
         Verify(string.Equals(result, expectedResult, StringComparison.OrdinalIgnoreCase));
     }
 
@@ -93,7 +95,7 @@ public class MSTestAdapterSettingsTests : TestContainer
 
         string? result = adapterSettings.ResolveEnvironmentVariableAndReturnFullPathIfExist(path, baseDirectory);
 
-        Verify(result is not null);
+        result.Should().NotBeNull();
         Verify(string.Equals(result, expectedResult, StringComparison.OrdinalIgnoreCase));
     }
 
@@ -116,7 +118,7 @@ public class MSTestAdapterSettingsTests : TestContainer
 
         string? result = adapterSettings.ResolveEnvironmentVariableAndReturnFullPathIfExist(path, baseDirectory);
 
-        Verify(result is not null);
+        result.Should().NotBeNull();
         Verify(string.Equals(result, expectedResult, StringComparison.OrdinalIgnoreCase));
     }
 
@@ -134,7 +136,7 @@ public class MSTestAdapterSettingsTests : TestContainer
 
         string? result = adapterSettings.ResolveEnvironmentVariableAndReturnFullPathIfExist(path, baseDirectory);
 
-        Verify(result is not null);
+        result.Should().NotBeNull();
         Verify(string.Equals(result, expectedResult, StringComparison.OrdinalIgnoreCase));
     }
 
@@ -145,7 +147,7 @@ public class MSTestAdapterSettingsTests : TestContainer
 
         string? result = new TestableMSTestAdapterSettings().ResolveEnvironmentVariableAndReturnFullPathIfExist(path, baseDirectory);
 
-        Verify(result is null);
+        result.Should().BeNull();
     }
 
     #endregion
@@ -169,13 +171,13 @@ public class MSTestAdapterSettingsTests : TestContainer
         };
 
         IList<RecursiveDirectoryPath> result = adapterSettings.GetDirectoryListWithRecursiveProperty(baseDirectory);
-        Verify(result is not null);
-        Verify(result.Count == 2);
+        result.Should().NotBeNull();
+        result.Count.Should().Be(2);
 
         for (int i = 0; i < 2; i++)
         {
-            Verify(string.Equals(result[i].DirectoryPath, expectedResult[i].DirectoryPath, StringComparison.OrdinalIgnoreCase));
-            Verify(result[i].IncludeSubDirectories == expectedResult[i].IncludeSubDirectories);
+            string.Equals(result[i].DirectoryPath, expectedResult[i].DirectoryPath, StringComparison.OrdinalIgnoreCase));
+            Verify(result[i].IncludeSubDirectories.Should().Be(expectedResult[i].IncludeSubDirectories);
         }
     }
 
@@ -225,7 +227,7 @@ public class MSTestAdapterSettingsTests : TestContainer
 
         void ShouldThrowException() => MSTestAdapterSettings.ToSettings(reader);
 
-        VerifyThrows<SettingsException>(ShouldThrowException);
+        ShouldThrowException.Should().Throw<SettingsException>();
     }
 
     #endregion
@@ -243,7 +245,7 @@ public class MSTestAdapterSettingsTests : TestContainer
         var reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
         reader.Read();
         var adapterSettings = MSTestAdapterSettings.ToSettings(reader);
-        Verify(adapterSettings.DeploymentEnabled);
+        adapterSettings.DeploymentEnabled.Should().BeTrue();
     }
 
     public void DeploymentEnabledShouldBeConsumedFromRunSettingsWhenSpecified()
@@ -258,7 +260,7 @@ public class MSTestAdapterSettingsTests : TestContainer
         var reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
         reader.Read();
         var adapterSettings = MSTestAdapterSettings.ToSettings(reader);
-        Verify(!adapterSettings.DeploymentEnabled);
+        !adapterSettings.DeploymentEnabled.Should().BeTrue();
     }
 
     #endregion
@@ -276,7 +278,7 @@ public class MSTestAdapterSettingsTests : TestContainer
         var reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
         reader.Read();
         var adapterSettings = MSTestAdapterSettings.ToSettings(reader);
-        Verify(adapterSettings.DeployTestSourceDependencies);
+        adapterSettings.DeployTestSourceDependencies.Should().BeTrue();
     }
 
     public void DeployTestSourceDependenciesWhenFalse()
@@ -291,7 +293,7 @@ public class MSTestAdapterSettingsTests : TestContainer
         var reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
         reader.Read();
         var adapterSettings = MSTestAdapterSettings.ToSettings(reader);
-        Verify(!adapterSettings.DeployTestSourceDependencies);
+        !adapterSettings.DeployTestSourceDependencies.Should().BeTrue();
     }
 
     public void DeployTestSourceDependenciesWhenTrue()
@@ -306,7 +308,7 @@ public class MSTestAdapterSettingsTests : TestContainer
         var reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
         reader.Read();
         var adapterSettings = MSTestAdapterSettings.ToSettings(reader);
-        Verify(adapterSettings.DeployTestSourceDependencies);
+        adapterSettings.DeployTestSourceDependencies.Should().BeTrue();
     }
 
     #endregion
@@ -335,9 +337,9 @@ public class MSTestAdapterSettingsTests : TestContainer
         var settings = MSTestAdapterSettings.ToSettings(mockConfig.Object);
 
         // Assert
-        Verify(settings.DeploymentEnabled);
-        Verify(settings.DeployTestSourceDependencies);
-        Verify(!settings.DeleteDeploymentDirectoryAfterTestRunIsComplete);
+        settings.DeploymentEnabled.Should().BeTrue();
+        settings.DeployTestSourceDependencies.Should().BeTrue();
+        !settings.DeleteDeploymentDirectoryAfterTestRunIsComplete.Should().BeTrue();
     }
 
     public void IsAppDomainCreationDisabled_ShouldPreferJsonConfigurationOverSettingsXml()
@@ -365,7 +367,7 @@ public class MSTestAdapterSettingsTests : TestContainer
         bool result = MSTestAdapterSettings.IsAppDomainCreationDisabled(settingsXml);
 
         // Assert
-        Verify(result);
+        result.Should().BeTrue();
     }
 
     #endregion

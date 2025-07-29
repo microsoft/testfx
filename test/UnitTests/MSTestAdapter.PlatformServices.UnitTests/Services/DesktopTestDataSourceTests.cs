@@ -13,6 +13,8 @@ using TestFramework.ForTestingMSTest;
 
 using ITestMethod = Microsoft.VisualStudio.TestTools.UnitTesting.ITestMethod;
 
+using FluentAssertions;
+
 namespace MSTestAdapter.PlatformServices.UnitTests.Services;
 
 public class DesktopTestDataSourceTests : TestContainer
@@ -70,13 +72,13 @@ public class DesktopTestDataSourceTests : TestContainer
         [TestMethod]
         public void PassingTest()
         {
-            Verify(TestContext.DataRow!["adapter"].ToString() == "v1");
-            Verify(TestContext.DataRow["targetPlatform"].ToString() == "x86");
+            TestContext.DataRow!["adapter"].ToString().Should().Be("v1");
+            TestContext.DataRow["targetPlatform"].ToString().Should().Be("x86");
             TestContext.AddResultFile("C:\\temp.txt");
         }
 
         [TestMethod]
-        public void FailingTest() => Verify(TestContext.DataRow!["configuration"].ToString() == "Release");
+        public void FailingTest() => TestContext.DataRow!["configuration"].ToString().Should().Be("Release");
     }
 
     #endregion

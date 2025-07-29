@@ -13,6 +13,8 @@ using Moq;
 
 using TestFramework.ForTestingMSTest;
 
+using FluentAssertions;
+
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery;
 
 public class UnitTestDiscovererTests : TestContainer

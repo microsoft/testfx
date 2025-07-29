@@ -6,6 +6,8 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
 using TestFramework.ForTestingMSTest;
 
+using FluentAssertions;
+
 namespace MSTestAdapter.PlatformServices.UnitTests;
 
 public class AssemblyResolverTests : TestContainer
@@ -50,7 +52,7 @@ public class AssemblyResolverTests : TestContainer
         assemblyResolver.AddSubdirectories(path, searchDirectories);
 
         // Assert.
-        Verify(searchDirectories.Count == 4);
+        searchDirectories.Count.Should().Be(4);
 
         Verify(resultDirectories.SequenceEqual(searchDirectories, StringComparer.OrdinalIgnoreCase));
     }
@@ -98,7 +100,7 @@ public class AssemblyResolverTests : TestContainer
                 {
                     // First time SearchAssemblyInTheFollowingLocation should get call with one directory which is in
                     // m_searchDirectories variable
-                    Verify(listPath.Count == 1);
+                    listPath.Count.Should().Be(1);
                     Verify(string.Equals(listPath[0], dummyDirectories[0], StringComparison.OrdinalIgnoreCase));
                     count++;
                 }
@@ -106,7 +108,7 @@ public class AssemblyResolverTests : TestContainer
                 {
                     // Second time SearchAssemblyInTheFollowingLocation should get call with directory C:\unitTesting
                     // and with all its sub directory, as its isRecursive property is true
-                    Verify(listPath.Count == 3);
+                    listPath.Count.Should().Be(3);
                     Verify(string.Equals(listPath[0], @"C:\unitTesting", StringComparison.OrdinalIgnoreCase));
                     Verify(string.Equals(listPath[1], @"C:\unitTesting\a", StringComparison.OrdinalIgnoreCase));
                     Verify(string.Equals(listPath[2], @"C:\unitTesting\b", StringComparison.OrdinalIgnoreCase));
@@ -116,14 +118,14 @@ public class AssemblyResolverTests : TestContainer
                 {
                     // Third time SearchAssemblyInTheFollowingLocation should get call with directory C:\FunctionalTesting
                     // as its isRecursive property is false
-                    Verify(listPath.Count == 1);
+                    listPath.Count.Should().Be(1);
                     Verify(string.Equals(listPath[0], @"C:\FunctionalTesting", StringComparison.OrdinalIgnoreCase));
                     count++;
                 }
                 else if (count == 3)
                 {
                     // call will come here when we will call onResolve second time.
-                    Verify(listPath.Count == 5);
+                    listPath.Count.Should().Be(5);
                     Verify(string.Equals(listPath[0], dummyDirectories[0], StringComparison.OrdinalIgnoreCase));
                     Verify(string.Equals(listPath[1], @"C:\unitTesting", StringComparison.OrdinalIgnoreCase));
                     Verify(string.Equals(listPath[2], @"C:\unitTesting\a", StringComparison.OrdinalIgnoreCase));
@@ -170,8 +172,8 @@ public class AssemblyResolverTests : TestContainer
         // Simulate loading the assembly in default context first.
         assemblyResolver.OnResolve(null, new ResolveEventArgs(currentAssembly.FullName));
 
-        Verify(isAssemblyLoaded);
-        Verify(!isAssemblyReflectionOnlyLoaded);
+        isAssemblyLoaded.Should().BeTrue();
+        !isAssemblyReflectionOnlyLoaded.Should().BeTrue();
 
         // Reset.
         isAssemblyLoaded = false;
@@ -180,8 +182,8 @@ public class AssemblyResolverTests : TestContainer
         assemblyResolver.ReflectionOnlyOnResolve(null!, new ResolveEventArgs(currentAssembly.FullName));
 
         // The below assertions ensure that a cached version is not returned out because it actually Reflection only loads the assembly.
-        Verify(!isAssemblyLoaded);
-        Verify(isAssemblyReflectionOnlyLoaded);
+        !isAssemblyLoaded.Should().BeTrue();
+        isAssemblyReflectionOnlyLoaded.Should().BeTrue();
     }
 }
 

@@ -6,6 +6,8 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
 using TestFramework.ForTestingMSTest;
 
+using FluentAssertions;
+
 namespace MSTestAdapter.PlatformServices.Tests.Services;
 #pragma warning disable SA1649 // SA1649FileNameMustMatchTypeName
 
@@ -19,8 +21,8 @@ public class TestSourceHostTests : TestContainer
     {
         var type = _testSourceHost.CreateInstanceForType(typeof(DummyType), null) as DummyType;
 
-        Verify(type is not null);
-        Verify(type.IsDefaultConstructorCalled);
+        type.Should().NotBeNull();
+        type.IsDefaultConstructorCalled.Should().BeTrue();
     }
 }
 

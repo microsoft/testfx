@@ -10,6 +10,8 @@ using Moq;
 
 using TestFramework.ForTestingMSTest;
 
+using FluentAssertions;
+
 namespace MSTestAdapter.PlatformServices.Tests.Utilities;
 
 #pragma warning disable SA1649 // File name must match first type name
@@ -45,8 +47,8 @@ public class DeploymentItemUtilityTests : TestContainer
             .Returns([]);
         IList<DeploymentItem> deploymentItems = _deploymentItemUtility.GetClassLevelDeploymentItems(typeof(DeploymentItemUtilityTests), _warnings);
 
-        Verify(deploymentItems is not null);
-        Verify(deploymentItems.Count == 0);
+        deploymentItems.Should().NotBeNull();
+        deploymentItems.Count.Should().Be(0);
     }
 
     public void GetClassLevelDeploymentItemsShouldReturnADeploymentItem()
@@ -150,8 +152,8 @@ public class DeploymentItemUtilityTests : TestContainer
                 _defaultDeploymentItemOutputDirectory),
         };
 
-        Verify(expectedDeploymentItems.SequenceEqual(deploymentItems.ToArray()));
-        Verify(_warnings.Count == 1);
+        expectedDeploymentItems.SequenceEqual(deploymentItems.ToArray()));
+        Verify(_warnings.Count.Should().Be(1);
         Verify(_warnings.ToArray()[0].Contains(Resource.DeploymentItemPathCannotBeNullOrEmpty));
     }
 
@@ -385,7 +387,7 @@ public class DeploymentItemUtilityTests : TestContainer
     {
         Verify(DeploymentItemUtility.IsValidDeploymentItem(_defaultDeploymentItemPath, _defaultDeploymentItemOutputDirectory, out string? warning));
 
-        Verify(warning is null);
+        warning.Should().BeNull();
     }
     #endregion
 

@@ -7,6 +7,8 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
 using TestFramework.ForTestingMSTest;
 
+using FluentAssertions;
+
 namespace MSTestAdapter.PlatformServices.UnitTests.Services;
 #pragma warning disable SA1649 // SA1649FileNameMustMatchTypeName
 
@@ -17,7 +19,7 @@ public class TraceListenerTests : TestContainer
         StringWriter writer = new(new StringBuilder("DummyTrace"));
         var traceListener = new TraceListenerWrapper(writer);
         TextWriter? returnedWriter = traceListener.GetWriter();
-        Verify(returnedWriter?.ToString() == "DummyTrace");
+        returnedWriter?.ToString().Should().Be("DummyTrace");
     }
 
     public void DisposeShouldDisposeCorrespondingTextWriter()
@@ -28,7 +30,7 @@ public class TraceListenerTests : TestContainer
 
         // Trying to write after disposing textWriter should throw exception
         void ShouldThrowException() => writer.WriteLine("Try to write something");
-        VerifyThrows<ObjectDisposedException>(ShouldThrowException);
+        ShouldThrowException.Should().Throw<ObjectDisposedException>();
     }
 }
 

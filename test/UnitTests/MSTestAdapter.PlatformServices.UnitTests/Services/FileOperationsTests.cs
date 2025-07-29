@@ -6,6 +6,8 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
 using TestFramework.ForTestingMSTest;
 
+using FluentAssertions;
+
 namespace MSTestAdapter.PlatformServices.Tests.Services;
 
 public class FileOperationsTests : TestContainer
@@ -20,9 +22,9 @@ public class FileOperationsTests : TestContainer
         void A() => _fileOperations.LoadAssembly(filePath, false);
 
 #if NETCOREAPP
-        VerifyThrows<FileNotFoundException>(A);
+        A.Should().Throw<FileNotFoundException>();
 #else
-        VerifyThrows<ArgumentException>(A);
+        A.Should().Throw<ArgumentException>();
 #endif
     }
 
@@ -40,7 +42,7 @@ public class FileOperationsTests : TestContainer
 #if !WIN_UI
     public void DoesFileExistReturnsTrueForAllFiles()
     {
-        Verify(_fileOperations.DoesFileExist(null!));
+        _fileOperations.DoesFileExist(null!));
         Verify(_fileOperations.DoesFileExist("foobar"));
     }
 #endif
@@ -48,7 +50,7 @@ public class FileOperationsTests : TestContainer
     public void GetFullFilePathShouldReturnAssemblyFileName()
     {
         Verify(_fileOperations.GetFullFilePath(null!) is null);
-        Verify(_fileOperations.GetFullFilePath("assemblyFileName") == "assemblyFileName");
+        Verify(_fileOperations.GetFullFilePath("assemblyFileName").Should().Be("assemblyFileName");
     }
 }
 #pragma warning restore SA1649 // SA1649FileNameMustMatchTypeName

@@ -7,6 +7,8 @@ using Moq;
 
 using TestFramework.ForTestingMSTest;
 
+using FluentAssertions;
+
 namespace MSTestAdapter.PlatformServices.Tests.Utilities;
 
 public class FileUtilityTests : TestContainer
@@ -28,7 +30,7 @@ public class FileUtilityTests : TestContainer
     public void ReplaceInvalidFileNameCharactersShouldReplaceInvalidChars()
     {
         string fileName = "galaxy<>far:far?away";
-        Verify(FileUtility.ReplaceInvalidFileNameCharacters(fileName) == "galaxy__far_far_away");
+        FileUtility.ReplaceInvalidFileNameCharacters(fileName).Should().Be("galaxy__far_far_away");
     }
 
     #region AddFilesFromDirectory tests

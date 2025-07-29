@@ -10,6 +10,8 @@ using Moq;
 
 using TestFramework.ForTestingMSTest;
 
+using FluentAssertions;
+
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests;
 
 public class ReflectHelperTests : TestContainer
@@ -277,8 +279,8 @@ public class ReflectHelperTests : TestContainer
         TestClassAttribute[] inheritedAttributes = [.. rh.GetAttributes<TestClassAttribute>(typeof(object), inherit: true)];
         TestClassAttribute[] nonInheritedAttributes = [.. rh.GetAttributes<TestClassAttribute>(typeof(object), inherit: false)];
 
-        Verify(inheritedAttributes.Length == 2);
-        Verify(nonInheritedAttributes.Length == 1);
+        inheritedAttributes.Length.Should().Be(2);
+        nonInheritedAttributes.Length.Should().Be(1);
     }
 
     internal class AttributeMockingHelper

@@ -13,6 +13,8 @@ using Moq;
 
 using TestFramework.ForTestingMSTest;
 
+using FluentAssertions;
+
 namespace MSTestAdapter.PlatformServices.UnitTests;
 
 public class DesktopTestSourceHostTests : TestContainer
@@ -29,12 +31,12 @@ public class DesktopTestSourceHostTests : TestContainer
         // Assert
         if (!string.IsNullOrWhiteSpace(VSInstallationUtilities.PathToPublicAssemblies))
         {
-            Verify(result.Contains(VSInstallationUtilities.PathToPublicAssemblies!));
+            result.Should().Contain(VSInstallationUtilities.PathToPublicAssemblies!);
         }
 
         if (!string.IsNullOrWhiteSpace(VSInstallationUtilities.PathToPrivateAssemblies))
         {
-            Verify(result.Contains(VSInstallationUtilities.PathToPrivateAssemblies!));
+            result.Should().Contain(VSInstallationUtilities.PathToPrivateAssemblies!);
         }
     }
 
@@ -48,8 +50,8 @@ public class DesktopTestSourceHostTests : TestContainer
         List<string> result = sut.GetResolutionPaths("DummyAssembly.dll", isPortableMode: true);
 
         // Assert
-        Verify(!result.Contains(VSInstallationUtilities.PathToPublicAssemblies!));
-        Verify(!result.Contains(VSInstallationUtilities.PathToPrivateAssemblies!));
+        !result.Should().Contain(VSInstallationUtilities.PathToPublicAssemblies!);
+        !result.Should().Contain(VSInstallationUtilities.PathToPrivateAssemblies!);
     }
 
     public void GetResolutionPathsShouldAddAdapterFolderPath()
@@ -93,7 +95,7 @@ public class DesktopTestSourceHostTests : TestContainer
         }
 
         // Assert
-        Verify(currentAppDomainId != newAppDomainId);
+        currentAppDomainId.Should().NotBe(newAppDomainId);
     }
 
     public void SetupHostShouldSetChildDomainsAppBaseToTestSourceLocation()
@@ -111,7 +113,7 @@ public class DesktopTestSourceHostTests : TestContainer
             var expectedObject = sourceHost.Object.CreateInstanceForType(typeof(DummyClass), null) as DummyClass;
 
             // Assert
-            Verify(Path.GetDirectoryName(typeof(DesktopTestSourceHostTests).Assembly.Location) == expectedObject?.AppDomainAppBase);
+            Path.GetDirectoryName(typeof(DesktopTestSourceHostTests).Assembly.Location).Should().Be(expectedObject?.AppDomainAppBase);
         }
         finally
         {
@@ -145,7 +147,7 @@ public class DesktopTestSourceHostTests : TestContainer
             var expectedObject = sourceHost.CreateInstanceForType(typeof(DummyClass), null) as DummyClass;
 
             // Assert
-            Verify(Path.GetDirectoryName(typeof(DesktopTestSourceHostTests).Assembly.Location) == expectedObject?.AppDomainAppBase);
+            Path.GetDirectoryName(typeof(DesktopTestSourceHostTests).Assembly.Location).Should().Be(expectedObject?.AppDomainAppBase);
         }
         finally
         {
@@ -214,7 +216,7 @@ public class DesktopTestSourceHostTests : TestContainer
         {
             // Act
             testSourceHost.Object.SetupHost();
-            Verify(testSourceHost.Object.AppDomain is null);
+            testSourceHost.Object.AppDomain.Should().BeNull();
         }
         finally
         {
@@ -245,7 +247,7 @@ public class DesktopTestSourceHostTests : TestContainer
         {
             // Act
             testSourceHost.Object.SetupHost();
-            Verify(testSourceHost.Object.AppDomain is not null);
+            testSourceHost.Object.AppDomain.Should().NotBeNull();
         }
         finally
         {

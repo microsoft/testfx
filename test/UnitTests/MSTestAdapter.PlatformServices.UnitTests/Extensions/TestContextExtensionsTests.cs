@@ -8,6 +8,8 @@ using Moq;
 
 using TestFramework.ForTestingMSTest;
 
+using FluentAssertions;
+
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions;
 
 public class TestContextExtensionsTests : TestContainer
@@ -18,7 +20,7 @@ public class TestContextExtensionsTests : TestContainer
 
         mockTestContext.Setup(tc => tc.GetDiagnosticMessages()).Returns("foo");
 
-        Verify(mockTestContext.Object.GetAndClearDiagnosticMessages() == "foo");
+        mockTestContext.Object.GetAndClearDiagnosticMessages().Should().Be("foo");
     }
 
     public void GetAndClearDiagnosticMessagesShouldClearContextMessages()
@@ -32,6 +34,6 @@ public class TestContextExtensionsTests : TestContainer
         mockTestContext.Object.GetAndClearDiagnosticMessages();
         message = "bar";
 
-        Verify(mockTestContext.Object.GetAndClearDiagnosticMessages() == "bar");
+        mockTestContext.Object.GetAndClearDiagnosticMessages().Should().Be("bar");
     }
 }

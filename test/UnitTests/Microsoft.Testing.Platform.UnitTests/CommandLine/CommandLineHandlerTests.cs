@@ -10,6 +10,8 @@ using Microsoft.Testing.Platform.Services;
 
 using Moq;
 
+using FluentAssertions;
+
 namespace Microsoft.Testing.Platform.UnitTests;
 
 [TestClass]

@@ -6,6 +6,8 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
 using TestFramework.ForTestingMSTest;
 
+using FluentAssertions;
+
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution;
 
 public class TestCaseDiscoverySinkTests : TestContainer
@@ -16,16 +18,16 @@ public class TestCaseDiscoverySinkTests : TestContainer
 
     public void TestCaseDiscoverySinkConstructorShouldInitializeTests()
     {
-        Verify(_testCaseDiscoverySink.Tests is not null);
-        Verify(_testCaseDiscoverySink.Tests.Count == 0);
+        _testCaseDiscoverySink.Tests.Should().NotBeNull();
+        _testCaseDiscoverySink.Tests.Count.Should().Be(0);
     }
 
     public void SendTestCaseShouldNotAddTestIfTestCaseIsNull()
     {
         _testCaseDiscoverySink.SendTestCase(null);
 
-        Verify(_testCaseDiscoverySink.Tests is not null);
-        Verify(_testCaseDiscoverySink.Tests.Count == 0);
+        _testCaseDiscoverySink.Tests.Should().NotBeNull();
+        _testCaseDiscoverySink.Tests.Count.Should().Be(0);
     }
 
     public void SendTestCaseShouldAddTheTestCaseToTests()
@@ -33,8 +35,8 @@ public class TestCaseDiscoverySinkTests : TestContainer
         TestCase tc = new("TAttribute", new Uri("executor://TestExecutorUri"), "A");
         _testCaseDiscoverySink.SendTestCase(tc);
 
-        Verify(_testCaseDiscoverySink.Tests is not null);
-        Verify(_testCaseDiscoverySink.Tests.Count == 1);
+        _testCaseDiscoverySink.Tests.Should().NotBeNull();
+        _testCaseDiscoverySink.Tests.Count.Should().Be(1);
         Verify(tc == _testCaseDiscoverySink.Tests.ToArray()[0]);
     }
 }

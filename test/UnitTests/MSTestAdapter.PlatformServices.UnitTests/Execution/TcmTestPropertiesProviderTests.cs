@@ -7,6 +7,8 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
 using TestFramework.ForTestingMSTest;
 
+using FluentAssertions;
+
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution;
 
 public class TcmTestPropertiesProviderTests : TestContainer
@@ -33,7 +35,7 @@ public class TcmTestPropertiesProviderTests : TestContainer
     public void GetTcmPropertiesShouldReturnEmptyDictionaryIfTestCaseIsNull()
     {
         IDictionary<TestProperty, object?> tcmProperties = TcmTestPropertiesProvider.GetTcmProperties(null);
-        Verify(tcmProperties.Count == 0);
+        tcmProperties.Count.Should().Be(0);
     }
 
     public void GetTcmPropertiesShouldReturnEmptyDictionaryIfTestCaseIdIsZero()
@@ -60,7 +62,7 @@ public class TcmTestPropertiesProviderTests : TestContainer
         SetTestCaseProperties(testCase, propertiesValue);
 
         IDictionary<TestProperty, object?> tcmProperties = TcmTestPropertiesProvider.GetTcmProperties(testCase);
-        Verify(tcmProperties.Count == 0);
+        tcmProperties.Count.Should().Be(0);
     }
 
     public void GetTcmPropertiesShouldGetAllPropertiesFromTestCase()

@@ -7,6 +7,8 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
 using TestFramework.ForTestingMSTest;
 
+using FluentAssertions;
+
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions;
 
 public class TestCaseExtensionsTests : TestContainer
@@ -25,12 +27,12 @@ public class TestCaseExtensionsTests : TestContainer
 
         var resultUnitTestElement = testCase.ToUnitTestElement(testCase.Source);
 
-        Verify(resultUnitTestElement.Priority == 2);
-        Verify(testCategories == resultUnitTestElement.TestCategory);
-        Verify(resultUnitTestElement.DisplayName == "DummyDisplayName");
-        Verify(resultUnitTestElement.TestMethod.Name == "DummyMethod");
-        Verify(resultUnitTestElement.TestMethod.FullClassName == "DummyClassName");
-        Verify(resultUnitTestElement.TestMethod.DeclaringClassFullName is null);
+        resultUnitTestElement.Priority.Should().Be(2);
+        testCategories.Should().Be(resultUnitTestElement.TestCategory);
+        resultUnitTestElement.DisplayName.Should().Be("DummyDisplayName");
+        resultUnitTestElement.TestMethod.Name.Should().Be("DummyMethod");
+        resultUnitTestElement.TestMethod.FullClassName.Should().Be("DummyClassName");
+        resultUnitTestElement.TestMethod.DeclaringClassFullName.Should().BeNull();
     }
 
     public void ToUnitTestElementForTestCaseWithNoPropertiesShouldReturnUnitTestElementWithDefaultFields()
@@ -41,8 +43,8 @@ public class TestCaseExtensionsTests : TestContainer
         var resultUnitTestElement = testCase.ToUnitTestElement(testCase.Source);
 
         // These are set for testCase by default by ObjectModel.
-        Verify(resultUnitTestElement.Priority == 0);
-        Verify(resultUnitTestElement.TestCategory is null);
+        resultUnitTestElement.Priority.Should().Be(0);
+        resultUnitTestElement.TestCategory.Should().BeNull();
     }
 
     public void ToUnitTestElementShouldAddDeclaringClassNameToTestElementWhenAvailable()
@@ -53,7 +55,7 @@ public class TestCaseExtensionsTests : TestContainer
 
         var resultUnitTestElement = testCase.ToUnitTestElement(testCase.Source);
 
-        Verify(resultUnitTestElement.TestMethod.FullClassName == "DummyClassName");
-        Verify(resultUnitTestElement.TestMethod.DeclaringClassFullName == "DummyDeclaringClassName");
+        resultUnitTestElement.TestMethod.FullClassName.Should().Be("DummyClassName");
+        resultUnitTestElement.TestMethod.DeclaringClassFullName.Should().Be("DummyDeclaringClassName");
     }
 }

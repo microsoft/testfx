@@ -6,6 +6,8 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
 using TestFramework.ForTestingMSTest;
 
+using FluentAssertions;
+
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution;
 
 public class ThreadSafeStringWriterTests : TestContainer
@@ -77,12 +79,12 @@ public class ThreadSafeStringWriterTests : TestContainer
                 Verify(!string.IsNullOrWhiteSpace(task2Output));
 
                 string[] task1Split = task1Output.Split(Environment.NewLine.ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
-                Verify(task1Split.SequenceEqual(Enumerable.Repeat("content1", 8)));
+                task1Split.SequenceEqual(Enumerable.Repeat("content1", 8)));
                 string[] task2Split = task2Output.Split(Environment.NewLine.ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
                 Verify(task2Split.SequenceEqual(Enumerable.Repeat("content2", 8)));
             }
         }
-        while (exception != null && currentAttempt++ < 3);
+        while (exception.Should().NotBe(null && currentAttempt++ < 3);
     }
 
     public void ThreadSafeStringWriterWritesLinesIntoDifferentWritesSeparately()

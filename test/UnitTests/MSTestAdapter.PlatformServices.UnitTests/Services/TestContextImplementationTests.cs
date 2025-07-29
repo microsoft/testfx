@@ -16,6 +16,8 @@ using TestFramework.ForTestingMSTest;
 using ITestMethod = Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ObjectModel.ITestMethod;
 using UnitTestOutcome = Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome;
 
+using FluentAssertions;
+
 namespace MSTestAdapter.PlatformServices.UnitTests.Services;
 
 public class TestContextImplementationTests : TestContainer
@@ -36,7 +38,7 @@ public class TestContextImplementationTests : TestContainer
     {
         _testContextImplementation = new TestContextImplementation(_testMethod.Object, new ThreadSafeStringWriter(null!, "test"), _properties);
 
-        Verify(_testContextImplementation.Properties is not null);
+        _testContextImplementation.Properties.Should().NotBeNull();
     }
 
     public void TestContextConstructorShouldInitializeDefaultProperties()
@@ -46,7 +48,7 @@ public class TestContextImplementationTests : TestContainer
 
         _testContextImplementation = new TestContextImplementation(_testMethod.Object, new ThreadSafeStringWriter(null!, "test"), _properties);
 
-        Verify(_testContextImplementation.Properties is not null);
+        _testContextImplementation.Properties.Should().NotBeNull();
 
         Verify(_testContextImplementation.Properties["FullyQualifiedTestClassName"]!.Equals("A.C.M"));
         Verify(_testContextImplementation.Properties["TestName"]!.Equals("M"));
@@ -56,7 +58,7 @@ public class TestContextImplementationTests : TestContainer
     {
         _testContextImplementation = new TestContextImplementation(_testMethod.Object, new ThreadSafeStringWriter(null!, "test"), _properties);
 
-        Verify(_testContextImplementation.CurrentTestOutcome == UnitTestOutcome.Failed);
+        _testContextImplementation.CurrentTestOutcome.Should().Be(UnitTestOutcome.Failed);
     }
 
     public void CurrentTestOutcomeShouldReturnOutcomeSet()
@@ -65,7 +67,7 @@ public class TestContextImplementationTests : TestContainer
 
         _testContextImplementation.SetOutcome(UnitTestOutcome.InProgress);
 
-        Verify(_testContextImplementation.CurrentTestOutcome == UnitTestOutcome.InProgress);
+        _testContextImplementation.CurrentTestOutcome.Should().Be(UnitTestOutcome.InProgress);
     }
 
     public void FullyQualifiedTestClassNameShouldReturnTestMethodsFullClassName()
@@ -74,7 +76,7 @@ public class TestContextImplementationTests : TestContainer
 
         _testContextImplementation = new TestContextImplementation(_testMethod.Object, new ThreadSafeStringWriter(null!, "test"), _properties);
 
-        Verify(_testContextImplementation.FullyQualifiedTestClassName == "A.C.M");
+        _testContextImplementation.FullyQualifiedTestClassName.Should().Be("A.C.M");
     }
 
     public void TestNameShouldReturnTestMethodsName()
@@ -83,7 +85,7 @@ public class TestContextImplementationTests : TestContainer
 
         _testContextImplementation = new TestContextImplementation(_testMethod.Object, new ThreadSafeStringWriter(null!, "test"), _properties);
 
-        Verify(_testContextImplementation.TestName == "M");
+        _testContextImplementation.TestName.Should().Be("M");
     }
 
     public void PropertiesShouldReturnPropertiesPassedToTestContext()
@@ -96,8 +98,8 @@ public class TestContextImplementationTests : TestContainer
 
         _testContextImplementation = new TestContextImplementation(_testMethod.Object, new ThreadSafeStringWriter(null!, "test"), _properties);
 
-        Verify(_testContextImplementation.Properties[property1.Key] == property1.Value);
-        Verify(_testContextImplementation.Properties[property2.Key] == property2.Value);
+        _testContextImplementation.Properties[property1.Key].Should().Be(property1.Value);
+        _testContextImplementation.Properties[property2.Key].Should().Be(property2.Value);
     }
 
     public void ContextShouldReturnTestContextObject()
@@ -106,8 +108,8 @@ public class TestContextImplementationTests : TestContainer
 
         _testContextImplementation = new TestContextImplementation(_testMethod.Object, new ThreadSafeStringWriter(null!, "test"), _properties);
 
-        Verify(_testContextImplementation.Context is not null);
-        Verify(_testContextImplementation.Context.TestName == "M");
+        _testContextImplementation.Context.Should().NotBeNull();
+        _testContextImplementation.Context.TestName.Should().Be("M");
     }
 
     public void TryGetPropertyValueShouldReturnTrueIfPropertyIsPresent()
@@ -125,7 +127,7 @@ public class TestContextImplementationTests : TestContainer
         _testContextImplementation = new TestContextImplementation(_testMethod.Object, new ThreadSafeStringWriter(null!, "test"), _properties);
 
         Verify(!_testContextImplementation.TryGetPropertyValue("Random", out object? propValue));
-        Verify(propValue is null);
+        propValue.Should().BeNull();
     }
 
     public void AddPropertyShouldAddPropertiesToThePropertyBag()
@@ -161,7 +163,7 @@ public class TestContextImplementationTests : TestContainer
 
         IList<string>? resultsFiles = _testContextImplementation.GetResultFiles();
 
-        Verify(resultsFiles!.Contains("C:\\temp.txt"));
+        resultsFiles!.Should().Contain("C:\\temp.txt");
     }
 
     public void AddResultFileShouldAddMultipleFilesToResultsFiles()
@@ -173,8 +175,8 @@ public class TestContextImplementationTests : TestContainer
 
         IList<string>? resultsFiles = _testContextImplementation.GetResultFiles();
 
-        Verify(resultsFiles!.Contains("C:\\files\\file1.txt"));
-        Verify(resultsFiles.Contains("C:\\files\\files2.html"));
+        resultsFiles!.Should().Contain("C:\\files\\file1.txt");
+        resultsFiles.Should().Contain("C:\\files\\files2.html");
     }
 
     public void WriteShouldWriteToStringWriter()
@@ -327,7 +329,7 @@ public class TestContextImplementationTests : TestContainer
 
         _testContextImplementation.ClearDiagnosticMessages();
 
-        Verify(stringWriter.ToString() == string.Empty);
+        stringWriter.ToString().Should().Be(string.Empty);
     }
 
 #if NET462
@@ -361,8 +363,8 @@ public class TestContextImplementationTests : TestContainer
 
         _testContextImplementation.SetDataConnection(connection);
 
-        Verify(_testContextImplementation.DataConnection!.ConnectionString
-            == "Dsn=Excel Files;dbq=.\\data.xls;defaultdir=.; driverid=790;maxbuffersize=2048;pagetimeout=5");
+        _testContextImplementation.DataConnection!.ConnectionString
+           .Should().Be("Dsn=Excel Files;dbq=.\\data.xls;defaultdir=.; driverid=790;maxbuffersize=2048;pagetimeout=5");
     }
 #endif
 
@@ -373,7 +375,7 @@ public class TestContextImplementationTests : TestContainer
 
         IList<string>? resultFiles = _testContextImplementation.GetResultFiles();
 
-        Verify(resultFiles is null);
+        resultFiles.Should().BeNull();
     }
 
     public void GetResultFilesShouldReturnListOfAddedResultFiles()
@@ -385,9 +387,9 @@ public class TestContextImplementationTests : TestContainer
 
         IList<string>? resultFiles = _testContextImplementation.GetResultFiles();
 
-        Verify(resultFiles!.Count > 0, "GetResultFiles returned added elements");
-        Verify(resultFiles.Contains("C:\\files\\myfile.txt"));
-        Verify(resultFiles.Contains("C:\\files\\myfile2.txt"));
+        resultFiles!.Count > 0, "GetResultFiles returned added elements".Should().BeTrue();
+        resultFiles.Should().Contain("C:\\files\\myfile.txt");
+        resultFiles.Should().Contain("C:\\files\\myfile2.txt");
     }
 #endif
 

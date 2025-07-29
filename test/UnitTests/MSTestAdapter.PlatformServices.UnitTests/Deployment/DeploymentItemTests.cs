@@ -6,6 +6,8 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deploym
 
 using TestFramework.ForTestingMSTest;
 
+using FluentAssertions;
+
 namespace MSTestAdapter.PlatformServices.Tests.Deployment;
 
 public class DeploymentItemTests : TestContainer

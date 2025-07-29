@@ -5,6 +5,8 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 
 using TestFramework.ForTestingMSTest;
 
+using FluentAssertions;
+
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.UnitTests.Helpers;
 
 public class TestDataSourceHelpersTests : TestContainer
@@ -31,16 +33,16 @@ public class TestDataSourceHelpersTests : TestContainer
             out IList<string>? testCategories);
 
         // Assert
-        Verify(result);
-        Verify(extractedData != null);
-        Verify(extractedData.Length == 1);
-        Verify((string?)extractedData[0] == "test_value");
-        Verify(ignoreMessage == "ignore_message");
-        Verify(displayName == "display_name");
-        Verify(testCategories != null);
-        Verify(testCategories.Count == 2);
-        Verify(testCategories.Contains("Category1"));
-        Verify(testCategories.Contains("Category2"));
+        result);
+        Verify(extractedData.Should().NotBe(null);
+        extractedData.Length.Should().Be(1);
+        (string?)extractedData[0].Should().Be("test_value");
+        ignoreMessage.Should().Be("ignore_message");
+        displayName.Should().Be("display_name");
+        testCategories.Should().NotBe(null);
+        testCategories.Count.Should().Be(2);
+        testCategories.Should().Contain("Category1");
+        testCategories.Should().Contain("Category2");
     }
 
     public void TryHandleITestDataRow_WithTestDataRowNullCategories_ShouldReturnNullCategories()
@@ -60,8 +62,8 @@ public class TestDataSourceHelpersTests : TestContainer
             out IList<string>? testCategories);
 
         // Assert
-        Verify(result);
-        Verify(testCategories == null);
+        result);
+        Verify(testCategories.Should().Be(null);
     }
 
     public void TryHandleITestDataRow_WithNonTestDataRow_ShouldReturnFalseAndNullCategories()
@@ -80,11 +82,11 @@ public class TestDataSourceHelpersTests : TestContainer
             out IList<string>? testCategories);
 
         // Assert
-        Verify(!result);
-        Verify(extractedData == dataArray);
-        Verify(ignoreMessage == null);
-        Verify(displayName == null);
-        Verify(testCategories == null);
+        !result);
+        extractedData.Should().Be(dataArray);
+        ignoreMessage.Should().Be(null);
+        displayName.Should().Be(null);
+        testCategories.Should().Be(null);
     }
 
     public void TryHandleITestDataRow_BackwardCompatibilityOverload_ShouldWork()
@@ -108,11 +110,11 @@ public class TestDataSourceHelpersTests : TestContainer
             out string? displayName);
 
         // Assert - should work without TestCategories parameter
-        Verify(result);
-        Verify(extractedData != null);
-        Verify(extractedData.Length == 1);
-        Verify((string?)extractedData[0] == "test_value");
-        Verify(ignoreMessage == "ignore_message");
-        Verify(displayName == "display_name");
+        result.Should().BeTrue();
+        Verify(extractedData.Should().NotBe(null);
+        extractedData.Length.Should().Be(1);
+        (string?)extractedData[0].Should().Be("test_value");
+        ignoreMessage.Should().Be("ignore_message");
+        displayName.Should().Be("display_name");
     }
 }

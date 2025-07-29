@@ -7,6 +7,8 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
 using TestFramework.ForTestingMSTest;
 
+using FluentAssertions;
+
 namespace MSTestAdapter.PlatformServices.UnitTests.Services;
 #pragma warning disable SA1649 // SA1649FileNameMustMatchTypeName
 
@@ -22,7 +24,7 @@ public class TraceListenerManagerTests : TestContainer
         traceListenerManager.Add(traceListener);
         int newCount = Trace.Listeners.Count;
 
-        Verify(originalCount + 1 == newCount);
+        originalCount + 1.Should().Be(newCount);
         Verify(Trace.Listeners.Contains(traceListener));
     }
 
@@ -39,8 +41,8 @@ public class TraceListenerManagerTests : TestContainer
         traceListenerManager.Remove(traceListener);
         int countAfterRemoving = Trace.Listeners.Count;
 
-        Verify(originalCount + 1 == countAfterAdding);
-        Verify(countAfterAdding - 1 == countAfterRemoving);
+        originalCount + 1.Should().Be(countAfterAdding);
+        countAfterAdding - 1.Should().Be(countAfterRemoving);
         Verify(!Trace.Listeners.Contains(traceListener));
     }
 

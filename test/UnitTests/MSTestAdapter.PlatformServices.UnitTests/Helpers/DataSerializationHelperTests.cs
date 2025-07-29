@@ -5,6 +5,8 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 
 using TestFramework.ForTestingMSTest;
 
+using FluentAssertions;
+
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests;
 
 public class DataSerializationHelperTests : TestContainer
@@ -15,7 +17,7 @@ public class DataSerializationHelperTests : TestContainer
 
         object?[]? actual = DataSerializationHelper.Deserialize(DataSerializationHelper.Serialize([source]));
 
-        Verify(actual!.Length == 1);
+        actual!.Length.Should().Be(1);
         Verify(actual[0]!.GetType() == typeof(DateTimeOffset));
         Verify(actual[0]!.Equals(source));
     }
@@ -26,7 +28,7 @@ public class DataSerializationHelperTests : TestContainer
 
         object?[]? actual = DataSerializationHelper.Deserialize(DataSerializationHelper.Serialize([source]));
 
-        Verify(actual!.Length == 1);
+        actual!.Length.Should().Be(1);
         Verify(actual[0]!.GetType() == typeof(DateTime));
         Verify(actual[0]!.Equals(source));
         Verify(((DateTime)actual[0]!).Kind.Equals(source.Kind));
@@ -38,7 +40,7 @@ public class DataSerializationHelperTests : TestContainer
 
         object?[]? actual = DataSerializationHelper.Deserialize(DataSerializationHelper.Serialize([source]));
 
-        Verify(actual!.Length == 1);
+        actual!.Length.Should().Be(1);
         Verify(actual[0]!.GetType() == typeof(DateTime));
         Verify(actual[0]!.Equals(source));
         Verify(((DateTime)actual[0]!).Kind.Equals(source.Kind));
@@ -50,7 +52,7 @@ public class DataSerializationHelperTests : TestContainer
 
         object?[]? actual = DataSerializationHelper.Deserialize(DataSerializationHelper.Serialize([source]));
 
-        Verify(actual!.Length == 1);
+        actual!.Length.Should().Be(1);
         Verify(actual[0]!.GetType() == typeof(DateTime));
         Verify(actual[0]!.Equals(source));
         Verify(((DateTime)actual[0]!).Kind.Equals(source.Kind));
@@ -63,7 +65,7 @@ public class DataSerializationHelperTests : TestContainer
 
         object?[]? actual = DataSerializationHelper.Deserialize(DataSerializationHelper.Serialize([source]));
 
-        Verify(actual!.Length == 1);
+        actual!.Length.Should().Be(1);
         Verify(actual[0]!.GetType() == typeof(DateOnly));
         Verify(actual[0]!.Equals(source));
     }
@@ -74,7 +76,7 @@ public class DataSerializationHelperTests : TestContainer
 
         object?[]? actual = DataSerializationHelper.Deserialize(DataSerializationHelper.Serialize([source]));
 
-        Verify(actual!.Length == 1);
+        actual!.Length.Should().Be(1);
         Verify(actual[0]!.GetType() == typeof(TimeOnly));
         Verify(actual[0]!.Equals(source));
     }

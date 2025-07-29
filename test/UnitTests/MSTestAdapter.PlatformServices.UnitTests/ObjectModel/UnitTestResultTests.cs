@@ -14,6 +14,8 @@ using TestFramework.ForTestingMSTest;
 using UnitTestOutcome = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestOutcome;
 using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
 
+using FluentAssertions;
+
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.ObjectModel;
 
 public class UnitTestResultTests : TestContainer
@@ -24,8 +26,8 @@ public class UnitTestResultTests : TestContainer
     {
         UnitTestResult result = new(UnitTestOutcome.Error, "DummyMessage");
 
-        Verify(result.Outcome == UnitTestOutcome.Error);
-        Verify(result.ErrorMessage == "DummyMessage");
+        result.Outcome.Should().Be(UnitTestOutcome.Error);
+        result.ErrorMessage.Should().Be("DummyMessage");
     }
 
     public void UnitTestResultConstructorWithTestFailedExceptionShouldSetRequiredFields()
@@ -35,12 +37,12 @@ public class UnitTestResultTests : TestContainer
 
         UnitTestResult result = new(ex);
 
-        Verify(result.Outcome == UnitTestOutcome.Error);
-        Verify(result.ErrorMessage == "DummyMessage");
-        Verify(result.ErrorStackTrace == "trace");
-        Verify(result.ErrorFilePath == "filePath");
-        Verify(result.ErrorLineNumber == 2);
-        Verify(result.ErrorColumnNumber == 3);
+        result.Outcome.Should().Be(UnitTestOutcome.Error);
+        result.ErrorMessage.Should().Be("DummyMessage");
+        result.ErrorStackTrace.Should().Be("trace");
+        result.ErrorFilePath.Should().Be("filePath");
+        result.ErrorLineNumber.Should().Be(2);
+        result.ErrorColumnNumber.Should().Be(3);
     }
 
     public void UniTestHelperToTestOutcomeForUnitTestOutcomePassedShouldReturnTestOutcomePassed()
@@ -56,7 +58,7 @@ public class UnitTestResultTests : TestContainer
         MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object)!;
 
         var resultOutcome = UnitTestOutcomeHelper.ToTestOutcome(UTF.UnitTestOutcome.Passed, adapterSettings);
-        Verify(resultOutcome == TestOutcome.Passed);
+        resultOutcome.Should().Be(TestOutcome.Passed);
     }
 
     public void UniTestHelperToTestOutcomeForUnitTestOutcomeFailedShouldReturnTestOutcomeFailed()
@@ -72,7 +74,7 @@ public class UnitTestResultTests : TestContainer
         MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object)!;
 
         var resultOutcome = UnitTestOutcomeHelper.ToTestOutcome(UTF.UnitTestOutcome.Failed, adapterSettings);
-        Verify(resultOutcome == TestOutcome.Failed);
+        resultOutcome.Should().Be(TestOutcome.Failed);
     }
 
     public void UniTestHelperToTestOutcomeForUnitTestOutcomeErrorShouldReturnTestOutcomeFailed()
@@ -88,7 +90,7 @@ public class UnitTestResultTests : TestContainer
         MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object)!;
 
         var resultOutcome = UnitTestOutcomeHelper.ToTestOutcome(UTF.UnitTestOutcome.Error, adapterSettings);
-        Verify(resultOutcome == TestOutcome.Failed);
+        resultOutcome.Should().Be(TestOutcome.Failed);
     }
 
     public void UnitTestHelperToTestOutcomeForUnitTestOutcomeNotRunnableShouldReturnTestOutComeNoneWhenSpecifiedInAdapterSettings()
@@ -105,7 +107,7 @@ public class UnitTestResultTests : TestContainer
         MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object)!;
 
         var resultOutcome = UnitTestOutcomeHelper.ToTestOutcome(UTF.UnitTestOutcome.NotRunnable, adapterSettings);
-        Verify(resultOutcome == TestOutcome.None);
+        resultOutcome.Should().Be(TestOutcome.None);
     }
 
     public void UnitTestHelperToTestOutcomeForUnitTestOutcomeNotRunnableShouldReturnTestOutcomeFailedByDefault()
@@ -121,7 +123,7 @@ public class UnitTestResultTests : TestContainer
         MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object)!;
 
         var resultOutcome = UnitTestOutcomeHelper.ToTestOutcome(UTF.UnitTestOutcome.NotRunnable, adapterSettings);
-        Verify(resultOutcome == TestOutcome.Failed);
+        resultOutcome.Should().Be(TestOutcome.Failed);
     }
 
     public void UniTestHelperToTestOutcomeForUnitTestOutcomeTimeoutShouldReturnTestOutcomeFailed()
@@ -137,7 +139,7 @@ public class UnitTestResultTests : TestContainer
         MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object)!;
 
         var resultOutcome = UnitTestOutcomeHelper.ToTestOutcome(UTF.UnitTestOutcome.Timeout, adapterSettings);
-        Verify(resultOutcome == TestOutcome.Failed);
+        resultOutcome.Should().Be(TestOutcome.Failed);
     }
 
     public void UniTestHelperToTestOutcomeForUnitTestOutcomeIgnoredShouldReturnTestOutcomeSkipped()
@@ -153,7 +155,7 @@ public class UnitTestResultTests : TestContainer
         MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object)!;
 
         var resultOutcome = UnitTestOutcomeHelper.ToTestOutcome(UTF.UnitTestOutcome.Ignored, adapterSettings);
-        Verify(resultOutcome == TestOutcome.Skipped);
+        resultOutcome.Should().Be(TestOutcome.Skipped);
     }
 
     public void UniTestHelperToTestOutcomeForUnitTestOutcomeInconclusiveShouldReturnTestOutcomeSkipped()
@@ -169,7 +171,7 @@ public class UnitTestResultTests : TestContainer
         MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object)!;
 
         var resultOutcome = UnitTestOutcomeHelper.ToTestOutcome(UTF.UnitTestOutcome.Inconclusive, adapterSettings);
-        Verify(resultOutcome == TestOutcome.Skipped);
+        resultOutcome.Should().Be(TestOutcome.Skipped);
     }
 
     public void UniTestHelperToTestOutcomeForUnitTestOutcomeInconclusiveShouldReturnTestOutcomeFailedWhenSpecifiedSo()
@@ -186,7 +188,7 @@ public class UnitTestResultTests : TestContainer
         MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object)!;
 
         var resultOutcome = UnitTestOutcomeHelper.ToTestOutcome(UTF.UnitTestOutcome.Inconclusive, adapterSettings);
-        Verify(resultOutcome == TestOutcome.Failed);
+        resultOutcome.Should().Be(TestOutcome.Failed);
     }
 
     public void UniTestHelperToTestOutcomeForUnitTestOutcomeNotFoundShouldReturnTestOutcomeNotFound()
@@ -202,7 +204,7 @@ public class UnitTestResultTests : TestContainer
         MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object)!;
 
         var resultOutcome = UnitTestOutcomeHelper.ToTestOutcome(UTF.UnitTestOutcome.NotFound, adapterSettings);
-        Verify(resultOutcome == TestOutcome.NotFound);
+        resultOutcome.Should().Be(TestOutcome.NotFound);
     }
 
     public void UniTestHelperToTestOutcomeForUnitTestOutcomeInProgressShouldReturnTestOutcomeNone()
@@ -218,7 +220,7 @@ public class UnitTestResultTests : TestContainer
         MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object)!;
 
         var resultOutcome = UnitTestOutcomeHelper.ToTestOutcome(UTF.UnitTestOutcome.InProgress, adapterSettings);
-        Verify(resultOutcome == TestOutcome.None);
+        resultOutcome.Should().Be(TestOutcome.None);
     }
 
     public void UniTestHelperToTestOutcomeForUnitTestOutcomeNotRunnableShouldReturnTestOutcomeFailedWhenSpecifiedSo()
@@ -234,6 +236,6 @@ public class UnitTestResultTests : TestContainer
 
         MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object)!;
         var resultOutcome = UnitTestOutcomeHelper.ToTestOutcome(UTF.UnitTestOutcome.NotRunnable, adapterSettings);
-        Verify(resultOutcome == TestOutcome.Failed);
+        resultOutcome.Should().Be(TestOutcome.Failed);
     }
 }

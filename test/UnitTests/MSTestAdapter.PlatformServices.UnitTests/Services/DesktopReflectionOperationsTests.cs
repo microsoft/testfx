@@ -8,6 +8,8 @@ using MSTestAdapter.PlatformServices.UnitTests.Utilities;
 
 using TestFramework.ForTestingMSTest;
 
+using FluentAssertions;
+
 namespace MSTestAdapter.PlatformServices.UnitTests.Services;
 
 public class DesktopReflectionOperationsTests : TestContainer
@@ -22,8 +24,8 @@ public class DesktopReflectionOperationsTests : TestContainer
 
         object[] attributes = _reflectionOperations.GetCustomAttributes(methodInfo, false);
 
-        Verify(attributes is not null);
-        Verify(attributes.Length == 2);
+        attributes.Should().NotBeNull();
+        attributes.Length.Should().Be(2);
 
         string[] expectedAttributes = ["DummyA : base", "DummySingleA : base"];
         Verify(expectedAttributes.SequenceEqual(ReflectionUtilityTests.GetAttributeValuePairs(attributes)));
@@ -35,8 +37,8 @@ public class DesktopReflectionOperationsTests : TestContainer
 
         object[] attributes = _reflectionOperations.GetCustomAttributes(type, false);
 
-        Verify(attributes is not null);
-        Verify(attributes.Length == 1);
+        attributes.Should().NotBeNull();
+        attributes.Length.Should().Be(1);
 
         string[] expectedAttributes = ["DummyA : ba"];
         Verify(expectedAttributes.SequenceEqual(ReflectionUtilityTests.GetAttributeValuePairs(attributes)));
@@ -48,8 +50,8 @@ public class DesktopReflectionOperationsTests : TestContainer
 
         object[] attributes = _reflectionOperations.GetCustomAttributes(asm, typeof(ReflectionUtilityTests.DummyAAttribute));
 
-        Verify(attributes is not null);
-        Verify(attributes.Length == 2);
+        attributes.Should().NotBeNull();
+        attributes.Length.Should().Be(2);
 
         string[] expectedAttributes = ["DummyA : a1", "DummyA : a2"];
         Verify(expectedAttributes.SequenceEqual(ReflectionUtilityTests.GetAttributeValuePairs(attributes)));

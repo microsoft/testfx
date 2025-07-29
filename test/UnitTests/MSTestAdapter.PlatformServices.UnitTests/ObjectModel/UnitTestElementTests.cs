@@ -9,6 +9,8 @@ using Polyfills;
 
 using TestFramework.ForTestingMSTest;
 
+using FluentAssertions;
+
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.ObjectModel;
 
 public class UnitTestElementTests : TestContainer
@@ -35,28 +37,28 @@ public class UnitTestElementTests : TestContainer
     {
         var testCase = _unitTestElement.ToTestCase();
 
-        Verify(testCase.FullyQualifiedName == "C.M");
+        testCase.FullyQualifiedName.Should().Be("C.M");
     }
 
     public void ToTestCaseShouldSetExecutorUri()
     {
         var testCase = _unitTestElement.ToTestCase();
 
-        Verify(testCase.ExecutorUri == EngineConstants.ExecutorUri);
+        testCase.ExecutorUri.Should().Be(EngineConstants.ExecutorUri);
     }
 
     public void ToTestCaseShouldSetAssemblyName()
     {
         var testCase = _unitTestElement.ToTestCase();
 
-        Verify(testCase.Source == "A");
+        testCase.Source.Should().Be("A");
     }
 
     public void ToTestCaseShouldSetDisplayName()
     {
         var testCase = _unitTestElement.ToTestCase();
 
-        Verify(testCase.DisplayName == "M");
+        testCase.DisplayName.Should().Be("M");
     }
 
     public void ToTestCaseShouldSetDisplayNameIfPresent()
@@ -64,14 +66,14 @@ public class UnitTestElementTests : TestContainer
         _unitTestElement.DisplayName = "Display Name";
         var testCase = _unitTestElement.ToTestCase();
 
-        Verify(testCase.DisplayName == "Display Name");
+        testCase.DisplayName.Should().Be("Display Name");
     }
 
     public void ToTestCaseShouldSetTestClassNameProperty()
     {
         var testCase = _unitTestElement.ToTestCase();
 
-        Verify((testCase.GetPropertyValue(EngineConstants.TestClassNameProperty) as string) == "C");
+        (testCase.GetPropertyValue(EngineConstants.TestClassNameProperty) as string).Should().Be("C");
     }
 
     public void ToTestCaseShouldSetDeclaringClassNameIfPresent()
@@ -84,7 +86,7 @@ public class UnitTestElementTests : TestContainer
         _testMethod.DeclaringClassFullName = "DC";
         testCase = _unitTestElement.ToTestCase();
 
-        Verify((testCase.GetPropertyValue(EngineConstants.DeclaringClassNameProperty) as string) == "DC");
+        (testCase.GetPropertyValue(EngineConstants.DeclaringClassNameProperty) as string).Should().Be("DC");
     }
 
     public void ToTestCaseShouldSetTestCategoryIfPresent()
@@ -110,12 +112,12 @@ public class UnitTestElementTests : TestContainer
         _unitTestElement.Priority = null;
         var testCase = _unitTestElement.ToTestCase();
 
-        Verify((int)testCase.GetPropertyValue(EngineConstants.PriorityProperty)! == 0);
+        (int)testCase.GetPropertyValue(EngineConstants.PriorityProperty)!.Should().Be(0);
 
         _unitTestElement.Priority = 1;
         testCase = _unitTestElement.ToTestCase();
 
-        Verify((int)testCase.GetPropertyValue(EngineConstants.PriorityProperty)! == 1);
+        (int)testCase.GetPropertyValue(EngineConstants.PriorityProperty)!.Should().Be(1);
     }
 
     public void ToTestCaseShouldSetTraitsIfPresent()
@@ -124,16 +126,16 @@ public class UnitTestElementTests : TestContainer
         var testCase = _unitTestElement.ToTestCase();
 
 #pragma warning disable CA1827 // Do not use Count() or LongCount() when Any() can be used
-        Verify(testCase.Traits.Count() == 0);
+        testCase.Traits.Count().Should().Be(0);
 #pragma warning restore CA1827 // Do not use Count() or LongCount() when Any() can be used
 
         var trait = new Trait("trait", "value");
         _unitTestElement.Traits = [trait];
         testCase = _unitTestElement.ToTestCase();
 
-        Verify(testCase.Traits.Count() == 1);
-        Verify(testCase.Traits.ToArray()[0].Name == "trait");
-        Verify(testCase.Traits.ToArray()[0].Value == "value");
+        testCase.Traits.Count().Should().Be(1);
+        testCase.Traits.ToArray()[0].Name.Should().Be("trait");
+        testCase.Traits.ToArray()[0].Value.Should().Be("value");
     }
 
     public void ToTestCaseShouldSetPropertiesIfPresent()
@@ -144,8 +146,8 @@ public class UnitTestElementTests : TestContainer
 
         var testCase = _unitTestElement.ToTestCase();
 
-        Verify((testCase.GetPropertyValue(EngineConstants.CssIterationProperty) as string) == "12");
-        Verify((testCase.GetPropertyValue(EngineConstants.CssProjectStructureProperty) as string) == "ProjectStructure");
+        (testCase.GetPropertyValue(EngineConstants.CssIterationProperty) as string).Should().Be("12");
+        (testCase.GetPropertyValue(EngineConstants.CssProjectStructureProperty) as string).Should().Be("ProjectStructure");
         Verify(new string[] { "2312", "22332" }.SequenceEqual((string[])testCase.GetPropertyValue(EngineConstants.WorkItemIdsProperty)!));
     }
 
@@ -175,7 +177,7 @@ public class UnitTestElementTests : TestContainer
         {
             var testCase = new UnitTestElement(new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", null, TestIdGenerationStrategy.Legacy) { DataType = dataType }).ToTestCase();
             var expectedTestCase = new TestCase(testCase.FullyQualifiedName, testCase.ExecutorUri, testCase.Source);
-            Verify(expectedTestCase.Id == testCase.Id);
+            expectedTestCase.Id.Should().Be(testCase.Id);
             Verify(testCase.GetPropertyValue(EngineConstants.TestIdGenerationStrategyProperty)!.Equals((int)TestIdGenerationStrategy.Legacy));
         }
 #pragma warning restore CA2263 // Prefer generic overload when type is known
@@ -191,11 +193,11 @@ public class UnitTestElementTests : TestContainer
             var expectedTestCase = new TestCase(testCase.FullyQualifiedName, testCase.ExecutorUri, testCase.Source);
             if (dataType == DynamicDataType.None)
             {
-                Verify(expectedTestCase.Id == testCase.Id);
+                expectedTestCase.Id.Should().Be(testCase.Id);
             }
             else
             {
-                Verify(expectedTestCase.Id != testCase.Id);
+                expectedTestCase.Id.Should().NotBe(testCase.Id);
             }
 
             Verify(testCase.GetPropertyValue(EngineConstants.TestIdGenerationStrategyProperty)!.Equals((int)TestIdGenerationStrategy.DisplayName));
@@ -210,7 +212,7 @@ public class UnitTestElementTests : TestContainer
         {
             var testCase = new UnitTestElement(new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", null, TestIdGenerationStrategy.FullyQualified) { DataType = dataType }).ToTestCase();
             var expectedTestCase = new TestCase(testCase.FullyQualifiedName, testCase.ExecutorUri, testCase.Source);
-            Verify(expectedTestCase.Id != testCase.Id);
+            expectedTestCase.Id.Should().NotBe(testCase.Id);
             Verify(testCase.GetPropertyValue(EngineConstants.TestIdGenerationStrategyProperty)!.Equals((int)TestIdGenerationStrategy.FullyQualified));
         }
 #pragma warning restore CA2263 // Prefer generic overload when type is known

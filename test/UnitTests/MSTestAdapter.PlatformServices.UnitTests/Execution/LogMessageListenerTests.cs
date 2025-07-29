@@ -12,6 +12,8 @@ using TestFramework.ForTestingMSTest;
 
 using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
 
+using FluentAssertions;
+
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution;
 
 public class LogMessageListenerTests : TestContainer
@@ -38,7 +40,7 @@ public class LogMessageListenerTests : TestContainer
         using var logMessageListener = new LogMessageListener(false);
         UTF.Logging.Logger.LogMessage("sample log {0}", 123);
 
-        Verify("sample log 123" + Environment.NewLine == logMessageListener.StandardOutput);
+        "sample log 123" + Environment.NewLine.Should().Be(logMessageListener.StandardOutput);
     }
 
     public void NoTraceListenerOperationShouldBePerformedIfDebugTraceIsNotEnabled()

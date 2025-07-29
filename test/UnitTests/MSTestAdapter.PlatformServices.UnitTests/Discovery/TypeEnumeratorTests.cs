@@ -12,6 +12,8 @@ using Moq;
 
 using TestFramework.ForTestingMSTest;
 
+using FluentAssertions;
+
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery;
 
 public partial class TypeEnumeratorTests : TestContainer
@@ -64,8 +66,8 @@ public partial class TypeEnumeratorTests : TestContainer
 
         ICollection<MSTest.TestAdapter.ObjectModel.UnitTestElement>? tests = typeEnumerator.Enumerate(_warnings);
 
-        Verify(tests is not null);
-        Verify(tests.Count == 0);
+        tests.Should().NotBeNull();
+        tests.Count.Should().Be(0);
     }
 
     #endregion
@@ -79,7 +81,7 @@ public partial class TypeEnumeratorTests : TestContainer
 
         ICollection<MSTest.TestAdapter.ObjectModel.UnitTestElement>? tests = typeEnumerator.Enumerate(_warnings);
 
-        Verify(tests is not null);
+        tests.Should().NotBeNull();
 
         // DummyBaseTestClass declares BaseTestMethod directly so it should always be discovered.
         Verify(tests.Any(t => t.TestMethod.Name == "BaseTestMethod"));
@@ -92,7 +94,7 @@ public partial class TypeEnumeratorTests : TestContainer
 
         ICollection<MSTest.TestAdapter.ObjectModel.UnitTestElement>? tests = typeEnumerator.Enumerate(_warnings);
 
-        Verify(tests is not null);
+        tests.Should().NotBeNull();
 
         // DummyDerivedTestClass inherits DummyBaseTestClass from same assembly. BestTestMethod from DummyBaseTestClass should be discovered.
         Verify(tests.Any(t => t.TestMethod.Name == "BaseTestMethod"));
@@ -123,7 +125,7 @@ public partial class TypeEnumeratorTests : TestContainer
 
         ICollection<MSTest.TestAdapter.ObjectModel.UnitTestElement>? tests = typeEnumerator.Enumerate(_warnings);
 
-        Verify(tests is not null);
+        tests.Should().NotBeNull();
 
         // DummyDerivedFromRemoteTestClass inherits DummyRemoteBaseTestClass from different assembly. BestTestMethod from DummyRemoteBaseTestClass should be discovered by default.
         Verify(tests.Any(t => t.TestMethod.Name == "BaseTestMethod"));
@@ -153,7 +155,7 @@ public partial class TypeEnumeratorTests : TestContainer
 
         ICollection<MSTest.TestAdapter.ObjectModel.UnitTestElement>? tests = typeEnumerator.Enumerate(_warnings);
 
-        Verify(tests is not null);
+        tests.Should().NotBeNull();
 
         // DummyDerivedFromRemoteTestClass inherits DummyRemoteBaseTestClass from different assembly.
         // BestTestMethod from DummyRemoteBaseTestClass should be discovered when RunSettings MSTestV2 specifies EnableBaseClassTestMethodsFromOtherAssemblies = true.
@@ -184,7 +186,7 @@ public partial class TypeEnumeratorTests : TestContainer
 
         ICollection<MSTest.TestAdapter.ObjectModel.UnitTestElement>? tests = typeEnumerator.Enumerate(_warnings);
 
-        Verify(tests is not null);
+        tests.Should().NotBeNull();
 
         // DummyDerivedFromRemoteTestClass inherits DummyRemoteBaseTestClass from different assembly.
         // BestTestMethod from DummyRemoteBaseTestClass should not be discovered when RunSettings MSTestV2 specifies EnableBaseClassTestMethodsFromOtherAssemblies = false.
@@ -198,7 +200,7 @@ public partial class TypeEnumeratorTests : TestContainer
 
         ICollection<MSTest.TestAdapter.ObjectModel.UnitTestElement>? tests = typeEnumerator.Enumerate(_warnings);
 
-        Verify(tests is not null);
+        tests.Should().NotBeNull();
 
         // DummyHidingTestClass declares BaseTestMethod directly so it should always be discovered.
         Verify(tests.Count(t => t.TestMethod.Name == "BaseTestMethod") == 1);
@@ -217,7 +219,7 @@ public partial class TypeEnumeratorTests : TestContainer
 
         ICollection<MSTest.TestAdapter.ObjectModel.UnitTestElement>? tests = typeEnumerator.Enumerate(_warnings);
 
-        Verify(tests is not null);
+        tests.Should().NotBeNull();
 
         // DummyOverridingTestClass inherits BaseTestMethod so it should be discovered.
         Verify(tests.Count(t => t.TestMethod.Name == "BaseTestMethod") == 1);
@@ -240,7 +242,7 @@ public partial class TypeEnumeratorTests : TestContainer
 
         ICollection<MSTest.TestAdapter.ObjectModel.UnitTestElement>? tests = typeEnumerator.Enumerate(_warnings);
 
-        Verify(tests is not null);
+        tests.Should().NotBeNull();
 
         // DummySecondHidingTestClass hides BaseTestMethod so it should be discovered.
         Verify(tests.Count(t => t.TestMethod.Name == "BaseTestMethod") == 1);
@@ -269,11 +271,11 @@ public partial class TypeEnumeratorTests : TestContainer
 
         MSTest.TestAdapter.ObjectModel.UnitTestElement testElement = typeEnumerator.GetTestFromMethod(typeof(DummyTestClass).GetMethod("MethodWithVoidReturnType")!, true, _warnings);
 
-        Verify(testElement is not null);
-        Verify(testElement.TestMethod.Name == "MethodWithVoidReturnType");
-        Verify(typeof(DummyTestClass).FullName == testElement.TestMethod.FullClassName);
-        Verify(testElement.TestMethod.AssemblyName == "DummyAssemblyName");
-        Verify(!testElement.TestMethod.IsAsync);
+        testElement.Should().NotBeNull();
+        testElement.TestMethod.Name.Should().Be("MethodWithVoidReturnType");
+        typeof(DummyTestClass).FullName.Should().Be(testElement.TestMethod.FullClassName);
+        testElement.TestMethod.AssemblyName.Should().Be("DummyAssemblyName");
+        !testElement.TestMethod.IsAsync.Should().BeTrue();
     }
 
     public void GetTestFromMethodShouldInitializeAsyncTypeNameCorrectly()
@@ -286,8 +288,8 @@ public partial class TypeEnumeratorTests : TestContainer
 
         string? expectedAsyncTaskName = methodInfo.GetCustomAttribute<AsyncStateMachineAttribute>()!.StateMachineType.FullName;
 
-        Verify(testElement is not null);
-        Verify(expectedAsyncTaskName == testElement.AsyncTypeName);
+        testElement.Should().NotBeNull();
+        expectedAsyncTaskName.Should().Be(testElement.AsyncTypeName);
     }
 
     public void GetTestFromMethodShouldSetTestCategory()
@@ -300,7 +302,7 @@ public partial class TypeEnumeratorTests : TestContainer
 
         MSTest.TestAdapter.ObjectModel.UnitTestElement testElement = typeEnumerator.GetTestFromMethod(methodInfo, true, _warnings);
 
-        Verify(testElement is not null);
+        testElement.Should().NotBeNull();
         Verify(testCategories.SequenceEqual(testElement.TestCategory));
     }
 
@@ -313,8 +315,8 @@ public partial class TypeEnumeratorTests : TestContainer
 
         MSTest.TestAdapter.ObjectModel.UnitTestElement testElement = typeEnumerator.GetTestFromMethod(methodInfo, true, _warnings);
 
-        Verify(testElement is not null);
-        Verify(testElement.DoNotParallelize);
+        testElement.Should().NotBeNull();
+        testElement.DoNotParallelize.Should().BeTrue();
     }
 
     public void GetTestFromMethodShouldFillTraitsWithTestProperties()
@@ -330,12 +332,12 @@ public partial class TypeEnumeratorTests : TestContainer
 
         MSTest.TestAdapter.ObjectModel.UnitTestElement testElement = typeEnumerator.GetTestFromMethod(methodInfo, true, _warnings);
 
-        Verify(testElement is not null);
-        Verify(testElement.Traits!.Length == 2);
-        Verify(testElement.Traits[0].Name == "foo");
-        Verify(testElement.Traits[0].Value == "bar");
-        Verify(testElement.Traits[1].Name == "fooprime");
-        Verify(testElement.Traits[1].Value == "barprime");
+        testElement.Should().NotBeNull();
+        testElement.Traits!.Length.Should().Be(2);
+        testElement.Traits[0].Name.Should().Be("foo");
+        testElement.Traits[0].Value.Should().Be("bar");
+        testElement.Traits[1].Name.Should().Be("fooprime");
+        testElement.Traits[1].Value.Should().Be("barprime");
     }
 
     public void GetTestFromMethodShouldFillTraitsWithTestOwnerPropertyIfPresent()
@@ -352,14 +354,14 @@ public partial class TypeEnumeratorTests : TestContainer
 
         MSTest.TestAdapter.ObjectModel.UnitTestElement testElement = typeEnumerator.GetTestFromMethod(methodInfo, true, _warnings);
 
-        Verify(testElement is not null);
-        Verify(testElement.Traits!.Length == 3);
-        Verify(testElement.Traits[0].Name == "foo");
-        Verify(testElement.Traits[0].Value == "bar");
-        Verify(testElement.Traits[1].Name == "fooprime");
-        Verify(testElement.Traits[1].Value == "barprime");
-        Verify(testElement.Traits[2].Name == "Owner");
-        Verify(testElement.Traits[2].Value == "mike");
+        testElement.Should().NotBeNull();
+        testElement.Traits!.Length.Should().Be(3);
+        testElement.Traits[0].Name.Should().Be("foo");
+        testElement.Traits[0].Value.Should().Be("bar");
+        testElement.Traits[1].Name.Should().Be("fooprime");
+        testElement.Traits[1].Value.Should().Be("barprime");
+        testElement.Traits[2].Name.Should().Be("Owner");
+        testElement.Traits[2].Value.Should().Be("mike");
     }
 
     public void GetTestFromMethodShouldFillTraitsWithTestPriorityPropertyIfPresent()
@@ -371,14 +373,14 @@ public partial class TypeEnumeratorTests : TestContainer
 
         MSTest.TestAdapter.ObjectModel.UnitTestElement testElement = typeEnumerator.GetTestFromMethod(methodInfo, true, _warnings);
 
-        Verify(testElement is not null);
-        Verify(testElement.Traits!.Length == 3);
-        Verify(testElement.Traits[0].Name == "foo");
-        Verify(testElement.Traits[0].Value == "bar");
-        Verify(testElement.Traits[1].Name == "fooprime");
-        Verify(testElement.Traits[1].Value == "barprime");
-        Verify(testElement.Traits[2].Name == "Priority");
-        Verify(testElement.Traits[2].Value == "1");
+        testElement.Should().NotBeNull();
+        testElement.Traits!.Length.Should().Be(3);
+        testElement.Traits[0].Name.Should().Be("foo");
+        testElement.Traits[0].Value.Should().Be("bar");
+        testElement.Traits[1].Name.Should().Be("fooprime");
+        testElement.Traits[1].Value.Should().Be("barprime");
+        testElement.Traits[2].Name.Should().Be("Priority");
+        testElement.Traits[2].Value.Should().Be("1");
     }
 
     public void GetTestFromMethodShouldSetPriority()
@@ -390,8 +392,8 @@ public partial class TypeEnumeratorTests : TestContainer
 
         MSTest.TestAdapter.ObjectModel.UnitTestElement testElement = typeEnumerator.GetTestFromMethod(methodInfo, true, _warnings);
 
-        Verify(testElement is not null);
-        Verify(testElement.Priority == 1);
+        testElement.Should().NotBeNull();
+        testElement.Priority.Should().Be(1);
     }
 
     public void GetTestFromMethodShouldSetDescription()
@@ -403,7 +405,7 @@ public partial class TypeEnumeratorTests : TestContainer
 
         MSTest.TestAdapter.ObjectModel.UnitTestElement testElement = typeEnumerator.GetTestFromMethod(methodInfo, true, _warnings);
 
-        Verify(testElement.Traits is not null);
+        testElement.Traits.Should().NotBeNull();
         Verify(testElement.Traits.Any(t => t.Name == "Description" && t.Value == "Dummy description"));
     }
 
@@ -427,7 +429,7 @@ public partial class TypeEnumeratorTests : TestContainer
 
         MSTest.TestAdapter.ObjectModel.UnitTestElement testElement = typeEnumerator.GetTestFromMethod(methodInfo, true, _warnings);
 
-        Verify(testElement.WorkItemIds is null);
+        testElement.WorkItemIds.Should().BeNull();
     }
 
     public void GetTestFromMethodShouldSetCssIteration()
@@ -439,7 +441,7 @@ public partial class TypeEnumeratorTests : TestContainer
 
         MSTest.TestAdapter.ObjectModel.UnitTestElement testElement = typeEnumerator.GetTestFromMethod(methodInfo, true, _warnings);
 
-        Verify(testElement.CssIteration == "234");
+        testElement.CssIteration.Should().Be("234");
     }
 
     public void GetTestFromMethodShouldSetCssProjectStructure()
@@ -451,7 +453,7 @@ public partial class TypeEnumeratorTests : TestContainer
 
         MSTest.TestAdapter.ObjectModel.UnitTestElement testElement = typeEnumerator.GetTestFromMethod(methodInfo, true, _warnings);
 
-        Verify(testElement.CssProjectStructure == "ProjectStructure123");
+        testElement.CssProjectStructure.Should().Be("ProjectStructure123");
     }
 
     public void GetTestFromMethodShouldSetDeploymentItemsToNullIfNotPresent()
@@ -467,8 +469,8 @@ public partial class TypeEnumeratorTests : TestContainer
 
         MSTest.TestAdapter.ObjectModel.UnitTestElement testElement = typeEnumerator.GetTestFromMethod(methodInfo, true, _warnings);
 
-        Verify(testElement is not null);
-        Verify(testElement.DeploymentItems is null);
+        testElement.Should().NotBeNull();
+        testElement.DeploymentItems.Should().BeNull();
     }
 
     public void GetTestFromMethodShouldSetDeploymentItems()
@@ -484,8 +486,8 @@ public partial class TypeEnumeratorTests : TestContainer
 
         MSTest.TestAdapter.ObjectModel.UnitTestElement testElement = typeEnumerator.GetTestFromMethod(methodInfo, true, _warnings);
 
-        Verify(testElement is not null);
-        Verify(testElement.DeploymentItems is not null);
+        testElement.Should().NotBeNull();
+        testElement.DeploymentItems.Should().NotBeNull();
         Verify(deploymentItems.SequenceEqual(testElement.DeploymentItems));
     }
 
@@ -503,8 +505,8 @@ public partial class TypeEnumeratorTests : TestContainer
 
         MSTest.TestAdapter.ObjectModel.UnitTestElement testElement = typeEnumerator.GetTestFromMethod(methodInfo, isMethodFromSameAssembly, _warnings);
 
-        Verify(testElement is not null);
-        Verify(otherAssemblyName == testElement.TestMethod.DeclaringAssemblyName);
+        testElement.Should().NotBeNull();
+        otherAssemblyName.Should().Be(testElement.TestMethod.DeclaringAssemblyName);
     }
 
     public void GetTestFromMethodShouldSetDisplayNameToTestMethodNameIfDisplayNameIsNotPresent()
@@ -516,8 +518,8 @@ public partial class TypeEnumeratorTests : TestContainer
 
         MSTest.TestAdapter.ObjectModel.UnitTestElement testElement = typeEnumerator.GetTestFromMethod(methodInfo, true, _warnings);
 
-        Verify(testElement is not null);
-        Verify(testElement.DisplayName == "MethodWithVoidReturnType");
+        testElement.Should().NotBeNull();
+        testElement.DisplayName.Should().Be("MethodWithVoidReturnType");
     }
 
     public void GetTestFromMethodShouldSetDisplayNameFromTestMethodAttribute()
@@ -529,8 +531,8 @@ public partial class TypeEnumeratorTests : TestContainer
 
         MSTest.TestAdapter.ObjectModel.UnitTestElement testElement = typeEnumerator.GetTestFromMethod(methodInfo, true, _warnings);
 
-        Verify(testElement is not null);
-        Verify(testElement.DisplayName == "Test method display name.");
+        testElement.Should().NotBeNull();
+        testElement.DisplayName.Should().Be("Test method display name.");
     }
 
     public void GetTestFromMethodShouldSetDisplayNameFromDataTestMethodAttribute()
@@ -542,8 +544,8 @@ public partial class TypeEnumeratorTests : TestContainer
 
         MSTest.TestAdapter.ObjectModel.UnitTestElement testElement = typeEnumerator.GetTestFromMethod(methodInfo, true, _warnings);
 
-        Verify(testElement is not null);
-        Verify(testElement.DisplayName == "Test method display name.");
+        testElement.Should().NotBeNull();
+        testElement.DisplayName.Should().Be("Test method display name.");
     }
 
     #endregion

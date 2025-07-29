@@ -9,6 +9,8 @@ using Moq;
 
 using TestFramework.ForTestingMSTest;
 
+using FluentAssertions;
+
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests;
 
 public class PlatformServiceProviderTests : TestContainer
@@ -32,7 +34,7 @@ public class PlatformServiceProviderTests : TestContainer
         Verify(PlatformServiceProvider.Instance.GetType() == typeof(TestablePlatformServiceProvider));
     }
 
-    public void TestSourceShouldReturnANonNullInstance() => Verify(PlatformServiceProvider.Instance is not null);
+    public void TestSourceShouldReturnANonNullInstance() => PlatformServiceProvider.Instance.Should().NotBeNull();
 
     public void TestSourceShouldReturnAValidTestSource() => Verify(PlatformServiceProvider.Instance.TestSource.GetType() == typeof(TestSource));
 
@@ -40,8 +42,8 @@ public class PlatformServiceProviderTests : TestContainer
     {
         PlatformServices.Interface.ITestSource testSourceInstance = PlatformServiceProvider.Instance.TestSource;
 
-        Verify(testSourceInstance is not null);
-        Verify(testSourceInstance == PlatformServiceProvider.Instance.TestSource);
+        testSourceInstance.Should().NotBeNull();
+        testSourceInstance.Should().Be(PlatformServiceProvider.Instance.TestSource);
     }
 
     public void ReflectionOperationsShouldReturnAValidInstance() => Verify(PlatformServiceProvider.Instance.ReflectionOperations.GetType() == typeof(ReflectionOperations2));
@@ -50,8 +52,8 @@ public class PlatformServiceProviderTests : TestContainer
     {
         PlatformServices.Interface.IReflectionOperations reflectionOperationsInstance = PlatformServiceProvider.Instance.ReflectionOperations;
 
-        Verify(reflectionOperationsInstance is not null);
-        Verify(reflectionOperationsInstance == PlatformServiceProvider.Instance.ReflectionOperations);
+        reflectionOperationsInstance.Should().NotBeNull();
+        reflectionOperationsInstance.Should().Be(PlatformServiceProvider.Instance.ReflectionOperations);
     }
 
     public void GetTestContextShouldReturnAValidTestContext()
@@ -66,8 +68,8 @@ public class PlatformServiceProviderTests : TestContainer
         PlatformServices.Interface.ITestContext testContext = PlatformServiceProvider.Instance.GetTestContext(testMethod.Object, properties, null!, default);
 
         // Assert.
-        Verify(testContext.Context.FullyQualifiedTestClassName == "A.C.M");
-        Verify(testContext.Context.TestName == "M");
+        testContext.Context.FullyQualifiedTestClassName.Should().Be("A.C.M");
+        testContext.Context.TestName.Should().Be("M");
         Verify(testContext.Context.Properties.Contains(properties.ToArray()[0].Key));
         Verify(((IDictionary<string, object>)testContext.Context.Properties).Contains(properties.ToArray()[0]!));
     }

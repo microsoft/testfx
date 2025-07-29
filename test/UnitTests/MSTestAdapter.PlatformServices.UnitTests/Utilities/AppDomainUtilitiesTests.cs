@@ -6,6 +6,8 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utiliti
 
 using TestFramework.ForTestingMSTest;
 
+using FluentAssertions;
+
 namespace MSTestAdapter.PlatformServices.UnitTests.Utilities;
 
 public class AppDomainUtilitiesTests : TestContainer
@@ -40,7 +42,7 @@ public class AppDomainUtilitiesTests : TestContainer
         AppDomainUtilities.SetConfigurationFile(setup, configFile);
 
         // Assert Config file being set.
-        Verify(configFile == setup.ConfigurationFile);
+        configFile.Should().Be(setup.ConfigurationFile);
 
         // Assert Config Bytes.
         string expectedRedir =
@@ -67,7 +69,7 @@ public class AppDomainUtilitiesTests : TestContainer
         AppDomainUtilities.SetConfigurationFile(setup, null);
 
         // Assert Config file being set.
-        Verify(AppDomain.CurrentDomain.SetupInformation.ConfigurationFile == setup.ConfigurationFile);
+        AppDomain.CurrentDomain.SetupInformation.ConfigurationFile.Should().Be(setup.ConfigurationFile);
 
         Verify(setup.GetConfigurationBytes() is null);
     }
@@ -78,8 +80,8 @@ public class AppDomainUtilitiesTests : TestContainer
 
         Version version = AppDomainUtilities.GetTargetFrameworkVersionFromVersionString(".NETPortable,Version=v4.5,Profile=Profile259");
 
-        Verify(expected.Major == version.Major);
-        Verify(expected.Minor == version.Minor);
+        expected.Major.Should().Be(version.Major);
+        expected.Minor.Should().Be(version.Minor);
     }
 
     public void GetTargetFrameworkVersionFromVersionStringShouldReturnCorrectVersion()
@@ -88,8 +90,8 @@ public class AppDomainUtilitiesTests : TestContainer
 
         Version version = AppDomainUtilities.GetTargetFrameworkVersionFromVersionString(".NETFramework,Version=v4.5");
 
-        Verify(expected.Major == version.Major);
-        Verify(expected.Minor == version.Minor);
+        expected.Major.Should().Be(version.Major);
+        expected.Minor.Should().Be(version.Minor);
     }
 
     #region Testable Implementations

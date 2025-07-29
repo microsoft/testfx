@@ -6,6 +6,8 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utiliti
 
 using TestFramework.ForTestingMSTest;
 
+using FluentAssertions;
+
 namespace MSTestAdapter.PlatformServices.UnitTests.Utilities;
 
 #pragma warning disable SA1649 // File name must match first type name
@@ -18,8 +20,8 @@ public class ReflectionUtilityTests : TestContainer
 
         List<Attribute> attributes = ReflectionUtility.GetCustomAttributes(asm, typeof(DummyAAttribute));
 
-        Verify(attributes is not null);
-        Verify(attributes.Count == 2);
+        attributes.Should().NotBeNull();
+        attributes.Count.Should().Be(2);
 
         string[] expectedAttributes = ["DummyA : a1", "DummyA : a2"];
         Verify(expectedAttributes.SequenceEqual(GetAttributeValuePairs(attributes)));

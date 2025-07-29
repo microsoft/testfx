@@ -9,6 +9,8 @@ using Moq;
 
 using TestFramework.ForTestingMSTest;
 
+using FluentAssertions;
+
 namespace MSTestAdapter.PlatformServices.UnitTests.Deployment;
 
 public class AssemblyLoadWorkerTests : TestContainer
@@ -34,7 +36,7 @@ public class AssemblyLoadWorkerTests : TestContainer
 
         // Assert.
         string utfAssembly = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Microsoft.VisualStudio.QualityTools.UnitTestFramework.dll");
-        Verify(dependentAssemblies.Contains(utfAssembly));
+        dependentAssemblies.Should().Contain(utfAssembly);
     }
 
     public void GetFullPathToDependentAssembliesShouldReturnV1FrameworkReferencedInADependency()
@@ -93,7 +95,7 @@ public class AssemblyLoadWorkerTests : TestContainer
 
         // Assert.
         string utfAssembly = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Microsoft.VisualStudio.QualityTools.UnitTestFramework.dll");
-        Verify(dependentAssemblies.Contains(utfAssembly));
+        dependentAssemblies.Should().Contain(utfAssembly);
     }
 
     #region Testable Implementations

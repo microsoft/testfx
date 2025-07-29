@@ -11,6 +11,8 @@ using Moq;
 
 using TestFramework.ForTestingMSTest;
 
+using FluentAssertions;
+
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests;
 
 public class RunConfigurationSettingsTests : TestContainer
@@ -51,7 +53,7 @@ public class RunConfigurationSettingsTests : TestContainer
             """;
 
         RunConfigurationSettings configurationSettings = RunConfigurationSettings.GetSettings(runSettingsXml, RunConfigurationSettings.SettingsName)!;
-        Verify(configurationSettings.CollectSourceInformation);
+        configurationSettings.CollectSourceInformation.Should().BeTrue();
     }
 
     public void CollectSourceInformationShouldBeConsumedFromRunSettingsWhenSpecified()
@@ -68,7 +70,7 @@ public class RunConfigurationSettingsTests : TestContainer
             """;
 
         RunConfigurationSettings configurationSettings = RunConfigurationSettings.GetSettings(runSettingsXml, RunConfigurationSettings.SettingsName)!;
-        Verify(!configurationSettings.CollectSourceInformation);
+        !configurationSettings.CollectSourceInformation.Should().BeTrue();
     }
 
     #endregion
@@ -80,10 +82,10 @@ public class RunConfigurationSettingsTests : TestContainer
         MSTestSettings.Reset();
         RunConfigurationSettings settings = MSTestSettings.RunConfigurationSettings;
 
-        Verify(settings is not null);
+        settings.Should().NotBeNull();
 
         // Validating the default value of a random setting.
-        Verify(settings.CollectSourceInformation);
+        settings.CollectSourceInformation.Should().BeTrue();
     }
 
     #endregion
@@ -95,7 +97,7 @@ public class RunConfigurationSettingsTests : TestContainer
         MSTestSettings.PopulateSettings(null, _mockMessageLogger.Object, null);
 
         RunConfigurationSettings settings = MSTestSettings.RunConfigurationSettings;
-        Verify(settings.CollectSourceInformation);
+        settings.CollectSourceInformation.Should().BeTrue();
     }
 
     public void PopulateSettingsShouldInitializeDefaultSettingsWhenRunSettingsIsNull()
@@ -103,7 +105,7 @@ public class RunConfigurationSettingsTests : TestContainer
         MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object, null);
 
         RunConfigurationSettings settings = MSTestSettings.RunConfigurationSettings;
-        Verify(settings.CollectSourceInformation);
+        settings.CollectSourceInformation.Should().BeTrue();
     }
 
     public void PopulateSettingsShouldInitializeDefaultSettingsWhenRunSettingsXmlIsEmpty()
@@ -112,7 +114,7 @@ public class RunConfigurationSettingsTests : TestContainer
         MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object, null);
 
         RunConfigurationSettings settings = MSTestSettings.RunConfigurationSettings;
-        Verify(settings.CollectSourceInformation);
+        settings.CollectSourceInformation.Should().BeTrue();
     }
 
     public void PopulateSettingsShouldInitializeSettingsToDefaultIfNotSpecified()
@@ -131,10 +133,10 @@ public class RunConfigurationSettingsTests : TestContainer
         MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object, null);
 
         RunConfigurationSettings settings = MSTestSettings.RunConfigurationSettings;
-        Verify(settings is not null);
+        settings.Should().NotBeNull();
 
         // Validating the default value of a random setting.
-        Verify(settings.CollectSourceInformation);
+        settings.CollectSourceInformation.Should().BeTrue();
     }
 
     public void PopulateSettingsShouldInitializeSettingsFromRunConfigurationSection()
@@ -154,10 +156,10 @@ public class RunConfigurationSettingsTests : TestContainer
         MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object, null);
 
         RunConfigurationSettings settings = MSTestSettings.RunConfigurationSettings;
-        Verify(settings is not null);
+        settings.Should().NotBeNull();
 
         // Validating the default value of a random setting.
-        Verify(!settings.CollectSourceInformation);
+        !settings.CollectSourceInformation.Should().BeTrue();
     }
 
     #endregion
@@ -182,9 +184,9 @@ public class RunConfigurationSettingsTests : TestContainer
         RunConfigurationSettings.SetRunConfigurationSettingsFromConfig(mockConfig.Object, settings);
 
         // Assert
-        Verify(settings is not null);
-        Verify(settings.CollectSourceInformation);
-        Verify(settings.ExecutionApartmentState == ApartmentState.STA);
+        settings.Should().NotBeNull();
+        settings.CollectSourceInformation);
+        Verify(settings.ExecutionApartmentState.Should().Be(ApartmentState.STA);
     }
 
     #endregion

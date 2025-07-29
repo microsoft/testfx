@@ -11,6 +11,8 @@ using Microsoft.Testing.Platform.Telemetry;
 
 using Moq;
 
+using FluentAssertions;
+
 namespace Microsoft.Testing.Platform.UnitTests;
 
 [TestClass]

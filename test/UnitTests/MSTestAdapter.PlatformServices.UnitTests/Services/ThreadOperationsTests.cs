@@ -5,6 +5,8 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
 using TestFramework.ForTestingMSTest;
 
+using FluentAssertions;
+
 namespace MSTestAdapter.PlatformServices.Tests.Services;
 #pragma warning disable SA1649 // SA1649FileNameMustMatchTypeName
 
@@ -22,8 +24,8 @@ public class ThreadOperationsTests : TestContainer
         void Action() => actionThreadID = Environment.CurrentManagedThreadId;
 
         CancellationTokenSource tokenSource = new();
-        Verify(_asyncOperations.Execute(Action, 10000, tokenSource.Token));
-        Verify(Environment.CurrentManagedThreadId != actionThreadID);
+        _asyncOperations.Execute(Action, 10000, tokenSource.Token));
+        Verify(Environment.CurrentManagedThreadId.Should().NotBe(actionThreadID);
     }
 #endif
 

@@ -10,6 +10,8 @@ using Moq;
 
 using TestFramework.ForTestingMSTest;
 
+using FluentAssertions;
+
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery;
 
 public class AssemblyEnumeratorWrapperTests : TestContainer
@@ -54,7 +56,7 @@ public class AssemblyEnumeratorWrapperTests : TestContainer
         Verify(_testableAssemblyEnumeratorWrapper.GetTests(assemblyName, null, out _warnings) is null);
 
         // Also validate that we give a warning when this happens.
-        Verify(_warnings is not null);
+        _warnings.Should().NotBeNull();
         string innerMessage = string.Format(
             CultureInfo.CurrentCulture,
             Resource.TestAssembly_FileDoesNotExist,
@@ -86,7 +88,7 @@ public class AssemblyEnumeratorWrapperTests : TestContainer
 
         ICollection<MSTest.TestAdapter.ObjectModel.UnitTestElement>? tests = _testableAssemblyEnumeratorWrapper.GetTests(assemblyName, null, out _warnings);
 
-        Verify(tests is not null);
+        tests.Should().NotBeNull();
 
         // Validate if the current test is enumerated in this list.
         Verify(tests.Any(t => t.TestMethod.Name == "ValidTestMethod"));
