@@ -24,7 +24,7 @@ public class TraceListenerManagerTests : TestContainer
         traceListenerManager.Add(traceListener);
         int newCount = Trace.Listeners.Count;
 
-        originalCount + 1.Should().Be(newCount);
+        newCount.Should().Be(originalCount + 1);
         Verify(Trace.Listeners.Contains(traceListener));
     }
 
@@ -41,8 +41,8 @@ public class TraceListenerManagerTests : TestContainer
         traceListenerManager.Remove(traceListener);
         int countAfterRemoving = Trace.Listeners.Count;
 
-        originalCount + 1.Should().Be(countAfterAdding);
-        countAfterAdding - 1.Should().Be(countAfterRemoving);
+        countAfterAdding.Should().Be(originalCount + 1);
+        countAfterRemoving.Should().Be(countAfterAdding - 1);
         Verify(!Trace.Listeners.Contains(traceListener));
     }
 
