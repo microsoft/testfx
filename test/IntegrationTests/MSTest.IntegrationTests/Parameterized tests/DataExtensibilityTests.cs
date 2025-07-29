@@ -10,6 +10,7 @@ using TestResult = Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult;
 
 namespace MSTest.IntegrationTests;
 
+[TestClass]
 public class DataExtensibilityTests : CLITestBase
 {
     private const string TestAssetName = "FxExtensibilityTestProject";
@@ -19,7 +20,7 @@ public class DataExtensibilityTests : CLITestBase
          - Ignored tests are discovered during discovery
          - Ignored tests are not expanded (DataRow, DataSource, etc)
      */
-
+    [TestMethod]
     public async Task CustomTestDataSourceTests()
     {
         // Arrange
@@ -33,6 +34,7 @@ public class DataExtensibilityTests : CLITestBase
         VerifyE2E.ContainsTestsPassed(testResults, "CustomTestDataSourceTestMethod1 (1,2,3)", "CustomTestDataSourceTestMethod1 (4,5,6)");
     }
 
+    [TestMethod]
     public async Task CustomEmptyTestDataSourceTests()
     {
         // Arrange
@@ -46,6 +48,7 @@ public class DataExtensibilityTests : CLITestBase
         VerifyE2E.ContainsTestsFailed(testResults, [null!]);
     }
 
+    [TestMethod]
     public async Task AssertExtensibilityTests()
     {
         // Arrange
@@ -59,6 +62,7 @@ public class DataExtensibilityTests : CLITestBase
         VerifyE2E.ContainsTestsFailed(testResults, "BasicFailingAssertExtensionTest", "ChainedFailingAssertExtensionTest");
     }
 
+    [TestMethod]
     public async Task ExecuteCustomTestExtensibilityTests()
     {
         // Arrange
@@ -86,6 +90,7 @@ public class DataExtensibilityTests : CLITestBase
             "CustomTestClass1 - Execution number 3");
     }
 
+    [TestMethod]
     public async Task ExecuteCustomTestExtensibilityWithTestDataTests()
     {
         // Arrange
@@ -112,6 +117,7 @@ public class DataExtensibilityTests : CLITestBase
             "CustomTestMethod2 (\"C\")");
     }
 
+    [TestMethod]
     public async Task WhenUsingCustomITestDataSourceWithExpansionDisabled_RespectSetting()
     {
         // Arrange
@@ -122,7 +128,7 @@ public class DataExtensibilityTests : CLITestBase
         ImmutableArray<TestResult> testResults = await RunTestsAsync(testCases);
 
         // Assert
-        Verify(testCases.Length == 1);
+        Assert.HasCount(1, testCases);
 
         VerifyE2E.TestsPassed(
             testResults,

@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using FluentAssertions;
-
 using Microsoft.MSTestV2.CLIAutomation;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
@@ -10,15 +8,18 @@ using TestResult = Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult;
 
 namespace MSTest.IntegrationTests;
 
+[TestClass]
 public class OutputTests : CLITestBase
 {
     private const string TestAssetName = "OutputTestProject";
 
-#pragma warning disable IDE0051 // Remove unused private members - test is failing in CI.
-    private async Task OutputIsNotMixedWhenTestsRunInParallel() => await ValidateOutputForClassAsync("UnitTest1");
+    [TestMethod]
+    [Ignore("Fails on CI.")]
+    public async Task OutputIsNotMixedWhenTestsRunInParallel() => await ValidateOutputForClassAsync("UnitTest1");
 
-    private async Task OutputIsNotMixedWhenAsyncTestsRunInParallel() => await ValidateOutputForClassAsync("UnitTest2");
-#pragma warning restore IDE0051 // Remove unused private members
+    [TestMethod]
+    [Ignore("Fails on CI.")]
+    public async Task OutputIsNotMixedWhenAsyncTestsRunInParallel() => await ValidateOutputForClassAsync("UnitTest2");
 
     private static async Task ValidateOutputForClassAsync(string className)
     {
@@ -30,18 +31,18 @@ public class OutputTests : CLITestBase
 
         // Act
         var testCases = DiscoverTests(assemblyPath).Where(tc => tc.FullyQualifiedName.Contains(className)).ToList();
-        testCases.Should().HaveCount(3);
-        testCases.Should().NotContainNulls();
+        Assert.HasCount(3, testCases);
+        CollectionAssert.AllItemsAreNotNull(testCases, "All test cases should be non-null.");
 
         System.Collections.Immutable.ImmutableArray<TestResult> testResults = await RunTestsAsync(testCases);
-        testResults.Should().HaveCount(3);
-        testResults.Should().NotContainNulls();
+        Assert.HasCount(3, testResults);
+        CollectionAssert.AllItemsAreNotNull(testResults, "All test results should be non-null.");
 
         // Assert
         // Ensure that some tests are running in parallel, because otherwise the output just works correctly.
         DateTimeOffset firstEnd = testResults.Min(t => t.EndTime);
         bool someStartedBeforeFirstEnded = testResults.Where(t => t.EndTime != firstEnd).Any(t => firstEnd > t.StartTime);
-        someStartedBeforeFirstEnded.Should().BeTrue("Tests must run in parallel, but there were no other tests that started, before the first one ended.");
+        Assert.IsTrue(someStartedBeforeFirstEnded, "Tests must run in parallel, but there were no other tests that started, before the first one ended.");
 
         ValidateOutputsAreNotMixed(testResults, "TestMethod1", ["TestMethod2", "TestMethod3"]);
         ValidateOutputsAreNotMixed(testResults, "TestMethod2", ["TestMethod1", "TestMethod3"]);
@@ -75,22 +76,21 @@ public class OutputTests : CLITestBase
         TestResult testMethod = testResults.Single(t => t.DisplayName == methodName);
 
         // Test method {methodName} was not found.
-        testMethod.Should().NotBeNull();
-        TestResultMessage message = testMethod.Messages.SingleOrDefault(messageFilter);
+        TestResultMessage? message = testMethod.Messages.SingleOrDefault(messageFilter);
 
         // Message for {testMethod.DisplayName} was not found. All messages: { string.Join(Environment.NewLine, testMethod.Messages.Select(m => $"{m.Category} - {m.Text}")) }
-        message.Should().NotBeNull();
-        message.Text.Should().Contain(methodName);
-        message.Text.Should().Contain("TestInitialize");
-        message.Text.Should().Contain("TestCleanup");
-        message.Text.Should().NotContainAny(shouldNotContain);
+        Assert.IsNotNull(message);
+        Assert.IsNotNull(message.Text);
+        Assert.Contains(methodName, message.Text);
+        Assert.Contains("TestInitialize", message.Text);
+        Assert.Contains("TestCleanup", message.Text);
+        Assert.IsFalse(shouldNotContain.Any(message.Text.Contains));
     }
 
     private static void ValidateInitializeAndCleanup(IEnumerable<TestResult> testResults, Func<TestResultMessage, bool> messageFilter)
     {
         // It is not deterministic where the class initialize and class cleanup will run, so we look at all tests, to make sure it is includes somewhere.
         string output = string.Join(Environment.NewLine, testResults.SelectMany(r => r.Messages).Where(messageFilter).Select(m => m.Text));
-        output.Should().NotBeNull();
         var failureMessageBuilder = new StringBuilder();
         foreach (TestResult testResult in testResults)
         {
@@ -105,7 +105,7 @@ public class OutputTests : CLITestBase
         }
 
         string becauseMessage = failureMessageBuilder.ToString();
-        output.Should().Contain("ClassInitialize", because: becauseMessage);
-        output.Should().Contain("ClassCleanup", because: becauseMessage);
+        Assert.Contains("ClassInitialize", output, becauseMessage);
+        Assert.Contains("ClassCleanup", output, becauseMessage);
     }
 }

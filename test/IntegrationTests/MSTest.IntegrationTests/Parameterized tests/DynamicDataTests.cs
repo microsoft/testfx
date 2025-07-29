@@ -10,10 +10,12 @@ using TestResult = Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult;
 
 namespace MSTest.IntegrationTests;
 
+[TestClass]
 public class DynamicDataTests : CLITestBase
 {
     private const string TestAssetName = "DynamicDataTestProject";
 
+    [TestMethod]
     public async Task ExecuteDynamicDataTests()
     {
         // Arrange
@@ -84,6 +86,7 @@ public class DynamicDataTests : CLITestBase
         VerifyE2E.FailedTestCount(testResults, 0);
     }
 
+    [TestMethod]
     public async Task ExecuteDynamicDataTestsWithCategoryFilter()
     {
         // Arrange
@@ -102,6 +105,7 @@ public class DynamicDataTests : CLITestBase
         VerifyE2E.FailedTestCount(testResults, 0);
     }
 
+    [TestMethod]
     public async Task ExecuteNonExpandableDynamicDataTests()
     {
         // Arrange
@@ -112,7 +116,7 @@ public class DynamicDataTests : CLITestBase
         ImmutableArray<TestResult> testResults = await RunTestsAsync(testCases);
 
         // Assert
-        Verify(testCases.Length == 6);
+        Assert.HasCount(6, testCases);
 
         VerifyE2E.TestsPassed(
             testResults,

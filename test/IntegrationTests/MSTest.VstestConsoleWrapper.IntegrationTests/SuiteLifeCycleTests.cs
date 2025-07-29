@@ -1,155 +1,34 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using FluentAssertions;
-
 using Microsoft.MSTestV2.CLIAutomation;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel;
+
+using TestResult = Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult;
 
 namespace MSTest.VstestConsoleWrapper.IntegrationTests;
 
+[TestClass]
 public class SuiteLifeCycleTests : CLITestBase
 {
     private const string TestAssetName = "SuiteLifeCycleTestProject";
     private static readonly string[] WindowsLineReturn = ["\r\n"];
 
-    public void ValidateTestRunLifecycle_net6() => ValidateTestRunLifecycle("net6.0");
-
-    public void ValidateTestRunLifecycle_net462() => ValidateTestRunLifecycle("net462");
-
-    public void ValidateInheritanceBehavior()
-    {
-        InvokeVsTestForExecution(
-            [TestAssetName],
-            testCaseFilter: "FullyQualifiedName~LifecycleInheritance",
-            targetFramework: "net462");
-
-        RunEventsHandler.PassedTests.Should().HaveCount(10);
-
-        Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult testMethod1 = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.EndsWith("TestClassDerived_EndOfClass.TestMethod", StringComparison.Ordinal));
-        testMethod1.Messages[0].Text.Should().Be(
-            """
-            Console: AssemblyInit was called
-            TestClassBaseEndOfClass: ClassInitialize
-            TestClassDerived_EndOfClass: TestMethod
-            TestClassBaseEndOfClass: ClassCleanup
-
-            """);
-
-        Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult testMethod2 = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.EndsWith("TestClassDerived_EndOfAssembly.TestMethod", StringComparison.Ordinal));
-        testMethod2.Messages[0].Text.Should().Be(
-            """
-            TestClassBaseEndOfAssembly: ClassInitialize
-            TestClassDerived_EndOfAssembly: TestMethod
-
-            """);
-
-        Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult testMethod3 = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.EndsWith("TestClassDerivedEndOfClass_EndOfClassEndOfClass.TestMethod", StringComparison.Ordinal));
-        testMethod3.Messages[0].Text.Should().Be(
-            """
-            TestClassBaseEndOfClass: ClassInitialize
-            TestClassIntermediateEndOfClassBaseEndOfClass: ClassInitialize
-            TestClassDerivedEndOfClass_EndOfClassEndOfClass: TestMethod
-            TestClassDerivedEndOfClass_EndOfClassEndOfClass: ClassCleanup
-            TestClassIntermediateEndOfClassBaseEndOfClass: ClassCleanup
-            TestClassBaseEndOfClass: ClassCleanup
-
-            """);
-
-        Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult testMethod4 = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.EndsWith("TestClassDerived_EndOfClassEndOfClass.TestMethod", StringComparison.Ordinal));
-        testMethod4.Messages[0].Text.Should().Be(
-            """
-            TestClassBaseEndOfClass: ClassInitialize
-            TestClassIntermediateEndOfClassBaseEndOfClass: ClassInitialize
-            TestClassDerived_EndOfClassEndOfClass: TestMethod
-            TestClassIntermediateEndOfClassBaseEndOfClass: ClassCleanup
-            TestClassBaseEndOfClass: ClassCleanup
-
-            """);
-
-        Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult testMethod5 = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.EndsWith("TestClassDerivedEndOfClass_EndOfClassEndOfAssembly.TestMethod", StringComparison.Ordinal));
-        testMethod5.Messages[0].Text.Should().Be(
-            """
-            TestClassBaseEndOfAssembly: ClassInitialize
-            TestClassIntermediateEndOfClassBaseEndOfAssembly: ClassInitialize
-            TestClassDerivedEndOfClass_EndOfClassEndOfAssembly: TestMethod
-            TestClassDerivedEndOfClass_EndOfClassEndOfAssembly: ClassCleanup
-            TestClassIntermediateEndOfClassBaseEndOfAssembly: ClassCleanup
-            TestClassBaseEndOfAssembly: ClassCleanup
-
-            """);
-
-        Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult testMethod6 = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.EndsWith("TestClassDerived_EndOfClassEndOfAssembly.TestMethod", StringComparison.Ordinal));
-        testMethod6.Messages[0].Text.Should().Be(
-            """
-            TestClassBaseEndOfAssembly: ClassInitialize
-            TestClassIntermediateEndOfClassBaseEndOfAssembly: ClassInitialize
-            TestClassDerived_EndOfClassEndOfAssembly: TestMethod
-            TestClassIntermediateEndOfClassBaseEndOfAssembly: ClassCleanup
-            TestClassBaseEndOfAssembly: ClassCleanup
-
-            """);
-
-        Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult testMethod7 = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.EndsWith("TestClassDerivedEndOfClass_EndOfAssemblyEndOfClass.TestMethod", StringComparison.Ordinal));
-        testMethod7.Messages[0].Text.Should().Be(
-            """
-            TestClassBaseEndOfClass: ClassInitialize
-            TestClassIntermediateEndOfAssemblyBaseEndOfClass: ClassInitialize
-            TestClassDerivedEndOfClass_EndOfAssemblyEndOfClass: TestMethod
-            TestClassDerivedEndOfClass_EndOfAssemblyEndOfClass: ClassCleanup
-            TestClassIntermediateEndOfAssemblyBaseEndOfClass: ClassCleanup
-            TestClassBaseEndOfClass: ClassCleanup
-
-            """);
-
-        Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult testMethod8 = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.EndsWith("TestClassDerived_EndOfAssemblyEndOfClass.TestMethod", StringComparison.Ordinal));
-        testMethod8.Messages[0].Text.Should().Be(
-            """
-            TestClassBaseEndOfClass: ClassInitialize
-            TestClassIntermediateEndOfAssemblyBaseEndOfClass: ClassInitialize
-            TestClassDerived_EndOfAssemblyEndOfClass: TestMethod
-            TestClassIntermediateEndOfAssemblyBaseEndOfClass: ClassCleanup
-            TestClassBaseEndOfClass: ClassCleanup
-
-            """);
-
-        Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult testMethod9 = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.EndsWith("TestClassDerivedEndOfClass_EndOfAssemblyEndOfAssembly.TestMethod", StringComparison.Ordinal));
-        testMethod9.Messages[0].Text.Should().Be(
-            """
-            TestClassBaseEndOfAssembly: ClassInitialize
-            TestClassIntermediateEndOfAssemblyBaseEndOfAssembly: ClassInitialize
-            TestClassDerivedEndOfClass_EndOfAssemblyEndOfAssembly: TestMethod
-            TestClassDerivedEndOfClass_EndOfAssemblyEndOfAssembly: ClassCleanup
-            TestClassIntermediateEndOfAssemblyBaseEndOfAssembly: ClassCleanup
-            TestClassBaseEndOfAssembly: ClassCleanup
-
-            """);
-
-        Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult testMethod10 = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.EndsWith("TestClassDerived_EndOfAssemblyEndOfAssembly.TestMethod", StringComparison.Ordinal));
-        testMethod10.Messages[0].Text.Should().Be(
-            """
-            TestClassBaseEndOfAssembly: ClassInitialize
-            TestClassIntermediateEndOfAssemblyBaseEndOfAssembly: ClassInitialize
-            TestClassDerived_EndOfAssemblyEndOfAssembly: TestMethod
-            TestClassIntermediateEndOfAssemblyBaseEndOfAssembly: ClassCleanup
-            TestClassBaseEndOfAssembly: ClassCleanup
-            TestClassBaseEndOfAssembly: ClassCleanup
-            Console: AssemblyCleanup was called
-
-            """);
-    }
-
-    private void ValidateTestRunLifecycle(string targetFramework)
+    [TestMethod]
+    [DataRow("net462")]
+    [DataRow("netcoreapp3.1")]
+    public void ValidateTestRunLifecycle(string targetFramework)
     {
         InvokeVsTestForExecution(
             [TestAssetName],
             testCaseFilter: "FullyQualifiedName~SuiteLifeCycleTestProject",
             targetFramework: targetFramework);
-        RunEventsHandler.PassedTests.Should().HaveCount(27);  // The inherit class tests are called twice.
+        Assert.HasCount(27, RunEventsHandler.PassedTests);  // The inherit class tests are called twice.
 
-        Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult caseClassCleanup = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.Contains("LifeCycleClassCleanup.TestMethod"));
-        caseClassCleanup.Outcome.Should().Be(Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome.Passed);
-        caseClassCleanup.Messages.Should().HaveCount(3);
-        caseClassCleanup.Messages[0].Text.Should().Be(
+        TestResult caseClassCleanup = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.Contains("LifeCycleClassCleanup.TestMethod"));
+        Assert.AreEqual(TestOutcome.Passed, caseClassCleanup.Outcome);
+        Assert.HasCount(3, caseClassCleanup.Messages);
+        Assert.AreEqual(
             $"""
             Console: AssemblyInit was called
             Console: LifeCycleClassCleanup.ClassInitialize was called
@@ -161,8 +40,9 @@ public class SuiteLifeCycleTests : CLITestBase
                 ? "Console: LifeCycleClassCleanup.DisposeAsync was called\r\nConsole: LifeCycleClassCleanup.Dispose was called"
                 : "Console: LifeCycleClassCleanup.Dispose was called")}
 
-            """);
-        caseClassCleanup.Messages[1].Text.Should().Be(
+            """,
+            caseClassCleanup.Messages[0].Text);
+        Assert.AreEqual(
             $"""
 
 
@@ -179,8 +59,9 @@ public class SuiteLifeCycleTests : CLITestBase
                     + GenerateTraceDebugPrefixedMessage("LifeCycleClassCleanup.Dispose was called")
                 : GenerateTraceDebugPrefixedMessage("LifeCycleClassCleanup.Dispose was called"))}
 
-            """);
-        caseClassCleanup.Messages[2].Text.Should().Be(
+            """,
+            caseClassCleanup.Messages[1].Text);
+        Assert.AreEqual(
             $"""
 
 
@@ -195,15 +76,16 @@ public class SuiteLifeCycleTests : CLITestBase
                 ? "LifeCycleClassCleanup.DisposeAsync was called\r\nLifeCycleClassCleanup.Dispose was called"
                 : "LifeCycleClassCleanup.Dispose was called")}
 
-            """);
+            """,
+            caseClassCleanup.Messages[2].Text);
 
-        Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult caseClassCleanupEndOfAssembly = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.Contains("LifeCycleClassCleanupEndOfAssembly.TestMethod"));
-        caseClassCleanupEndOfAssembly.Outcome.Should().Be(Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome.Passed);
+        TestResult caseClassCleanupEndOfAssembly = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.Contains("LifeCycleClassCleanupEndOfAssembly.TestMethod"));
+        Assert.AreEqual(TestOutcome.Passed, caseClassCleanupEndOfAssembly.Outcome);
 
         // We don't see "LifeCycleClassCleanupEndOfAssembly.ClassCleanup was called" because it will be attached to the
         // latest test run.
-        caseClassCleanupEndOfAssembly.Messages.Should().HaveCount(3);
-        caseClassCleanupEndOfAssembly.Messages[0].Text.Should().Be(
+        Assert.HasCount(3, caseClassCleanupEndOfAssembly.Messages);
+        Assert.AreEqual(
             $"""
             Console: LifeCycleClassCleanupEndOfAssembly.ClassInitialize was called
             Console: LifeCycleClassCleanupEndOfAssembly.ctor was called
@@ -214,8 +96,9 @@ public class SuiteLifeCycleTests : CLITestBase
                 ? "Console: LifeCycleClassCleanupEndOfAssembly.DisposeAsync was called\r\nConsole: LifeCycleClassCleanupEndOfAssembly.Dispose was called"
                 : "Console: LifeCycleClassCleanupEndOfAssembly.Dispose was called")}
 
-            """);
-        caseClassCleanupEndOfAssembly.Messages[1].Text.Should().Be(
+            """,
+            caseClassCleanupEndOfAssembly.Messages[0].Text);
+        Assert.AreEqual(
             $"""
 
 
@@ -231,8 +114,9 @@ public class SuiteLifeCycleTests : CLITestBase
                     + GenerateTraceDebugPrefixedMessage("LifeCycleClassCleanupEndOfAssembly.Dispose was called")
                 : GenerateTraceDebugPrefixedMessage("LifeCycleClassCleanupEndOfAssembly.Dispose was called"))}
 
-            """);
-        caseClassCleanupEndOfAssembly.Messages[2].Text.Should().Be(
+            """,
+            caseClassCleanupEndOfAssembly.Messages[1].Text);
+        Assert.AreEqual(
             $"""
 
 
@@ -246,12 +130,13 @@ public class SuiteLifeCycleTests : CLITestBase
                 ? "LifeCycleClassCleanupEndOfAssembly.DisposeAsync was called\r\nLifeCycleClassCleanupEndOfAssembly.Dispose was called"
                 : "LifeCycleClassCleanupEndOfAssembly.Dispose was called")}
 
-            """);
+            """,
+            caseClassCleanupEndOfAssembly.Messages[2].Text);
 
-        Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult caseClassCleanupEndOfClass = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.Contains("LifeCycleClassCleanupEndOfClass.TestMethod"));
-        caseClassCleanupEndOfClass.Outcome.Should().Be(Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome.Passed);
-        caseClassCleanupEndOfClass.Messages.Should().HaveCount(3);
-        caseClassCleanupEndOfClass.Messages[0].Text.Should().Be(
+        TestResult caseClassCleanupEndOfClass = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.Contains("LifeCycleClassCleanupEndOfClass.TestMethod"));
+        Assert.AreEqual(TestOutcome.Passed, caseClassCleanupEndOfClass.Outcome);
+        Assert.HasCount(3, caseClassCleanupEndOfClass.Messages);
+        Assert.AreEqual(
             $"""
             Console: LifeCycleClassCleanupEndOfClass.ClassInitialize was called
             Console: LifeCycleClassCleanupEndOfClass.ctor was called
@@ -263,8 +148,9 @@ public class SuiteLifeCycleTests : CLITestBase
                 : "Console: LifeCycleClassCleanupEndOfClass.Dispose was called")}
             Console: LifeCycleClassCleanupEndOfClass.ClassCleanup was called
 
-            """);
-        caseClassCleanupEndOfClass.Messages[1].Text.Should().Be(
+            """,
+            caseClassCleanupEndOfClass.Messages[0].Text);
+        Assert.AreEqual(
             $"""
 
 
@@ -281,8 +167,9 @@ public class SuiteLifeCycleTests : CLITestBase
                 : GenerateTraceDebugPrefixedMessage("LifeCycleClassCleanupEndOfClass.Dispose was called"))}
             {GenerateTraceDebugPrefixedMessage("LifeCycleClassCleanupEndOfClass.ClassCleanup was called")}
 
-            """);
-        caseClassCleanupEndOfClass.Messages[2].Text.Should().Be(
+            """,
+            caseClassCleanupEndOfClass.Messages[1].Text);
+        Assert.AreEqual(
             $"""
 
 
@@ -297,12 +184,13 @@ public class SuiteLifeCycleTests : CLITestBase
                 : "LifeCycleClassCleanupEndOfClass.Dispose was called")}
             LifeCycleClassCleanupEndOfClass.ClassCleanup was called
 
-            """);
+            """,
+            caseClassCleanupEndOfClass.Messages[2].Text);
 
-        Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult caseClassInitializeAndCleanupBeforeEachDerivedClass = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.Contains("LifeCycleClassInitializeAndCleanupBeforeEachDerivedClass.TestMethod"));
-        caseClassInitializeAndCleanupBeforeEachDerivedClass.Outcome.Should().Be(Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome.Passed);
-        caseClassInitializeAndCleanupBeforeEachDerivedClass.Messages.Should().HaveCount(3);
-        caseClassInitializeAndCleanupBeforeEachDerivedClass.Messages[0].Text.Should().Be(
+        TestResult caseClassInitializeAndCleanupBeforeEachDerivedClass = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.Contains("LifeCycleClassInitializeAndCleanupBeforeEachDerivedClass.TestMethod"));
+        Assert.AreEqual(TestOutcome.Passed, caseClassInitializeAndCleanupBeforeEachDerivedClass.Outcome);
+        Assert.HasCount(3, caseClassInitializeAndCleanupBeforeEachDerivedClass.Messages);
+        Assert.AreEqual(
             $"""
             Console: LifeCycleClassInitializeAndCleanupBeforeEachDerivedClass.ClassInitialize was called
             Console: LifeCycleClassInitializeAndCleanupBeforeEachDerivedClass.ctor was called
@@ -313,8 +201,9 @@ public class SuiteLifeCycleTests : CLITestBase
                 ? "Console: LifeCycleClassInitializeAndCleanupBeforeEachDerivedClass.DisposeAsync was called\r\nConsole: LifeCycleClassInitializeAndCleanupBeforeEachDerivedClass.Dispose was called"
                 : "Console: LifeCycleClassInitializeAndCleanupBeforeEachDerivedClass.Dispose was called")}
 
-            """);
-        caseClassInitializeAndCleanupBeforeEachDerivedClass.Messages[1].Text.Should().Be(
+            """,
+            caseClassInitializeAndCleanupBeforeEachDerivedClass.Messages[0].Text);
+        Assert.AreEqual(
             $"""
 
 
@@ -330,8 +219,9 @@ public class SuiteLifeCycleTests : CLITestBase
                     + GenerateTraceDebugPrefixedMessage("LifeCycleClassInitializeAndCleanupBeforeEachDerivedClass.Dispose was called")
                 : GenerateTraceDebugPrefixedMessage("LifeCycleClassInitializeAndCleanupBeforeEachDerivedClass.Dispose was called"))}
 
-            """);
-        caseClassInitializeAndCleanupBeforeEachDerivedClass.Messages[2].Text.Should().Be(
+            """,
+            caseClassInitializeAndCleanupBeforeEachDerivedClass.Messages[1].Text);
+        Assert.AreEqual(
             $"""
 
 
@@ -345,12 +235,13 @@ public class SuiteLifeCycleTests : CLITestBase
                 ? "LifeCycleClassInitializeAndCleanupBeforeEachDerivedClass.DisposeAsync was called\r\nLifeCycleClassInitializeAndCleanupBeforeEachDerivedClass.Dispose was called"
                 : "LifeCycleClassInitializeAndCleanupBeforeEachDerivedClass.Dispose was called")}
 
-            """);
+            """,
+            caseClassInitializeAndCleanupBeforeEachDerivedClass.Messages[2].Text);
 
-        Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult caseClassInitializeAndCleanupNone = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.Contains("LifeCycleClassInitializeAndCleanupNone.TestMethod"));
-        caseClassInitializeAndCleanupNone.Outcome.Should().Be(Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome.Passed);
-        caseClassInitializeAndCleanupNone.Messages.Should().HaveCount(3);
-        caseClassInitializeAndCleanupNone.Messages[0].Text.Should().Be(
+        TestResult caseClassInitializeAndCleanupNone = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.Contains("LifeCycleClassInitializeAndCleanupNone.TestMethod"));
+        Assert.AreEqual(TestOutcome.Passed, caseClassInitializeAndCleanupNone.Outcome);
+        Assert.HasCount(3, caseClassInitializeAndCleanupNone.Messages);
+        Assert.AreEqual(
             $"""
             Console: LifeCycleClassInitializeAndCleanupNone.ClassInitialize was called
             Console: LifeCycleClassInitializeAndCleanupNone.ctor was called
@@ -361,8 +252,9 @@ public class SuiteLifeCycleTests : CLITestBase
                 ? "Console: LifeCycleClassInitializeAndCleanupNone.DisposeAsync was called\r\nConsole: LifeCycleClassInitializeAndCleanupNone.Dispose was called"
                 : "Console: LifeCycleClassInitializeAndCleanupNone.Dispose was called")}
 
-            """);
-        caseClassInitializeAndCleanupNone.Messages[1].Text.Should().Be(
+            """,
+            caseClassInitializeAndCleanupNone.Messages[0].Text);
+        Assert.AreEqual(
             $"""
 
 
@@ -378,8 +270,9 @@ public class SuiteLifeCycleTests : CLITestBase
                     + GenerateTraceDebugPrefixedMessage("LifeCycleClassInitializeAndCleanupNone.Dispose was called")
                 : GenerateTraceDebugPrefixedMessage("LifeCycleClassInitializeAndCleanupNone.Dispose was called"))}
 
-            """);
-        caseClassInitializeAndCleanupNone.Messages[2].Text.Should().Be(
+            """,
+            caseClassInitializeAndCleanupNone.Messages[1].Text);
+        Assert.AreEqual(
             $"""
 
 
@@ -393,12 +286,13 @@ public class SuiteLifeCycleTests : CLITestBase
                 ? "LifeCycleClassInitializeAndCleanupNone.DisposeAsync was called\r\nLifeCycleClassInitializeAndCleanupNone.Dispose was called"
                 : "LifeCycleClassInitializeAndCleanupNone.Dispose was called")}
 
-            """);
+            """,
+            caseClassInitializeAndCleanupNone.Messages[2].Text);
 
-        Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult caseClassInitializeBeforeEachDerivedClassAndClassCleanupNone = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.Contains("LifeCycleClassInitializeBeforeEachDerivedClassAndClassCleanupNone"));
-        caseClassInitializeBeforeEachDerivedClassAndClassCleanupNone.Outcome.Should().Be(Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome.Passed);
-        caseClassInitializeBeforeEachDerivedClassAndClassCleanupNone.Messages.Should().HaveCount(3);
-        caseClassInitializeBeforeEachDerivedClassAndClassCleanupNone.Messages[0].Text.Should().Be(
+        TestResult caseClassInitializeBeforeEachDerivedClassAndClassCleanupNone = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.Contains("LifeCycleClassInitializeBeforeEachDerivedClassAndClassCleanupNone"));
+        Assert.AreEqual(TestOutcome.Passed, caseClassInitializeBeforeEachDerivedClassAndClassCleanupNone.Outcome);
+        Assert.HasCount(3, caseClassInitializeBeforeEachDerivedClassAndClassCleanupNone.Messages);
+        Assert.AreEqual(
             $"""
             Console: LifeCycleClassInitializeBeforeEachDerivedClassAndClassCleanupNone.ClassInitialize was called
             Console: LifeCycleClassInitializeBeforeEachDerivedClassAndClassCleanupNone.ctor was called
@@ -409,8 +303,9 @@ public class SuiteLifeCycleTests : CLITestBase
                 ? "Console: LifeCycleClassInitializeBeforeEachDerivedClassAndClassCleanupNone.DisposeAsync was called\r\nConsole: LifeCycleClassInitializeBeforeEachDerivedClassAndClassCleanupNone.Dispose was called"
                 : "Console: LifeCycleClassInitializeBeforeEachDerivedClassAndClassCleanupNone.Dispose was called")}
 
-            """);
-        caseClassInitializeBeforeEachDerivedClassAndClassCleanupNone.Messages[1].Text.Should().Be(
+            """,
+            caseClassInitializeBeforeEachDerivedClassAndClassCleanupNone.Messages[0].Text);
+        Assert.AreEqual(
             $"""
 
 
@@ -426,8 +321,9 @@ public class SuiteLifeCycleTests : CLITestBase
                     + GenerateTraceDebugPrefixedMessage("LifeCycleClassInitializeBeforeEachDerivedClassAndClassCleanupNone.Dispose was called")
                 : GenerateTraceDebugPrefixedMessage("LifeCycleClassInitializeBeforeEachDerivedClassAndClassCleanupNone.Dispose was called"))}
 
-            """);
-        caseClassInitializeBeforeEachDerivedClassAndClassCleanupNone.Messages[2].Text.Should().Be(
+            """,
+            caseClassInitializeBeforeEachDerivedClassAndClassCleanupNone.Messages[1].Text);
+        Assert.AreEqual(
             $"""
 
 
@@ -441,12 +337,13 @@ public class SuiteLifeCycleTests : CLITestBase
                 ? "LifeCycleClassInitializeBeforeEachDerivedClassAndClassCleanupNone.DisposeAsync was called\r\nLifeCycleClassInitializeBeforeEachDerivedClassAndClassCleanupNone.Dispose was called"
                 : "LifeCycleClassInitializeBeforeEachDerivedClassAndClassCleanupNone.Dispose was called")}
 
-            """);
+            """,
+            caseClassInitializeBeforeEachDerivedClassAndClassCleanupNone.Messages[2].Text);
 
-        Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult caseClassInitializeNoneAndClassCleanupBeforeEachDerivedClass = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.Contains("LifeCycleClassInitializeNoneAndClassCleanupBeforeEachDerivedClass"));
-        caseClassInitializeNoneAndClassCleanupBeforeEachDerivedClass.Outcome.Should().Be(Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome.Passed);
-        caseClassInitializeNoneAndClassCleanupBeforeEachDerivedClass.Messages.Should().HaveCount(3);
-        caseClassInitializeNoneAndClassCleanupBeforeEachDerivedClass.Messages[0].Text.Should().Be(
+        TestResult caseClassInitializeNoneAndClassCleanupBeforeEachDerivedClass = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.Contains("LifeCycleClassInitializeNoneAndClassCleanupBeforeEachDerivedClass"));
+        Assert.AreEqual(TestOutcome.Passed, caseClassInitializeNoneAndClassCleanupBeforeEachDerivedClass.Outcome);
+        Assert.HasCount(3, caseClassInitializeNoneAndClassCleanupBeforeEachDerivedClass.Messages);
+        Assert.AreEqual(
             $"""
             Console: LifeCycleClassInitializeNoneAndClassCleanupBeforeEachDerivedClass.ClassInitialize was called
             Console: LifeCycleClassInitializeNoneAndClassCleanupBeforeEachDerivedClass.ctor was called
@@ -457,8 +354,9 @@ public class SuiteLifeCycleTests : CLITestBase
                 ? "Console: LifeCycleClassInitializeNoneAndClassCleanupBeforeEachDerivedClass.DisposeAsync was called\r\nConsole: LifeCycleClassInitializeNoneAndClassCleanupBeforeEachDerivedClass.Dispose was called"
                 : "Console: LifeCycleClassInitializeNoneAndClassCleanupBeforeEachDerivedClass.Dispose was called")}
 
-            """);
-        caseClassInitializeNoneAndClassCleanupBeforeEachDerivedClass.Messages[1].Text.Should().Be(
+            """,
+            caseClassInitializeNoneAndClassCleanupBeforeEachDerivedClass.Messages[0].Text);
+        Assert.AreEqual(
             $"""
 
 
@@ -474,8 +372,9 @@ public class SuiteLifeCycleTests : CLITestBase
                     + GenerateTraceDebugPrefixedMessage("LifeCycleClassInitializeNoneAndClassCleanupBeforeEachDerivedClass.Dispose was called")
                 : GenerateTraceDebugPrefixedMessage("LifeCycleClassInitializeNoneAndClassCleanupBeforeEachDerivedClass.Dispose was called"))}
 
-            """);
-        caseClassInitializeNoneAndClassCleanupBeforeEachDerivedClass.Messages[2].Text.Should().Be(
+            """,
+            caseClassInitializeNoneAndClassCleanupBeforeEachDerivedClass.Messages[1].Text);
+        Assert.AreEqual(
             $"""
 
 
@@ -489,12 +388,13 @@ public class SuiteLifeCycleTests : CLITestBase
                 ? "LifeCycleClassInitializeNoneAndClassCleanupBeforeEachDerivedClass.DisposeAsync was called\r\nLifeCycleClassInitializeNoneAndClassCleanupBeforeEachDerivedClass.Dispose was called"
                 : "LifeCycleClassInitializeNoneAndClassCleanupBeforeEachDerivedClass.Dispose was called")}
 
-            """);
+            """,
+            caseClassInitializeNoneAndClassCleanupBeforeEachDerivedClass.Messages[2].Text);
 
-        Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult caseDerivedClassInitializeAndCleanupBeforeEachDerivedClass = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.Contains("LifeCycleDerivedClassInitializeAndCleanupBeforeEachDerivedClass.DerivedClassTestMethod"));
-        caseDerivedClassInitializeAndCleanupBeforeEachDerivedClass.Outcome.Should().Be(Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome.Passed);
-        caseDerivedClassInitializeAndCleanupBeforeEachDerivedClass.Messages.Should().HaveCount(3);
-        caseDerivedClassInitializeAndCleanupBeforeEachDerivedClass.Messages[0].Text.Should().Be(
+        TestResult caseDerivedClassInitializeAndCleanupBeforeEachDerivedClass = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.Contains("LifeCycleDerivedClassInitializeAndCleanupBeforeEachDerivedClass.DerivedClassTestMethod"));
+        Assert.AreEqual(TestOutcome.Passed, caseDerivedClassInitializeAndCleanupBeforeEachDerivedClass.Outcome);
+        Assert.HasCount(3, caseDerivedClassInitializeAndCleanupBeforeEachDerivedClass.Messages);
+        Assert.AreEqual(
             $"""
             Console: LifeCycleClassInitializeAndCleanupBeforeEachDerivedClass.ClassInitialize was called
             Console: LifeCycleDerivedClassInitializeAndCleanupBeforeEachDerivedClass.ClassInitialize was called
@@ -509,8 +409,9 @@ public class SuiteLifeCycleTests : CLITestBase
                 ? "Console: LifeCycleClassInitializeAndCleanupBeforeEachDerivedClass.DisposeAsync was called\r\nConsole: LifeCycleClassInitializeAndCleanupBeforeEachDerivedClass.Dispose was called"
                 : "Console: LifeCycleClassInitializeAndCleanupBeforeEachDerivedClass.Dispose was called")}
 
-            """);
-        caseDerivedClassInitializeAndCleanupBeforeEachDerivedClass.Messages[1].Text.Should().Be(
+            """,
+            caseDerivedClassInitializeAndCleanupBeforeEachDerivedClass.Messages[0].Text);
+        Assert.AreEqual(
             $"""
 
 
@@ -530,8 +431,9 @@ public class SuiteLifeCycleTests : CLITestBase
                     + GenerateTraceDebugPrefixedMessage("LifeCycleClassInitializeAndCleanupBeforeEachDerivedClass.Dispose was called")
                 : GenerateTraceDebugPrefixedMessage("LifeCycleClassInitializeAndCleanupBeforeEachDerivedClass.Dispose was called"))}
 
-            """);
-        caseDerivedClassInitializeAndCleanupBeforeEachDerivedClass.Messages[2].Text.Should().Be(
+            """,
+            caseDerivedClassInitializeAndCleanupBeforeEachDerivedClass.Messages[1].Text);
+        Assert.AreEqual(
             $"""
 
 
@@ -549,13 +451,14 @@ public class SuiteLifeCycleTests : CLITestBase
                 ? "LifeCycleClassInitializeAndCleanupBeforeEachDerivedClass.DisposeAsync was called\r\nLifeCycleClassInitializeAndCleanupBeforeEachDerivedClass.Dispose was called"
                 : "LifeCycleClassInitializeAndCleanupBeforeEachDerivedClass.Dispose was called")}
 
-            """);
+            """,
+            caseDerivedClassInitializeAndCleanupBeforeEachDerivedClass.Messages[2].Text);
 
         // Test the parent test method.
-        Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult caseDerivedClassInitializeAndCleanupBeforeEachDerivedClassParentTestMethod = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.Contains("LifeCycleDerivedClassInitializeAndCleanupBeforeEachDerivedClass.TestMethod"));
-        caseDerivedClassInitializeAndCleanupBeforeEachDerivedClassParentTestMethod.Outcome.Should().Be(Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome.Passed);
-        caseDerivedClassInitializeAndCleanupBeforeEachDerivedClassParentTestMethod.Messages.Should().HaveCount(3);
-        caseDerivedClassInitializeAndCleanupBeforeEachDerivedClassParentTestMethod.Messages[0].Text.Should().Be(
+        TestResult caseDerivedClassInitializeAndCleanupBeforeEachDerivedClassParentTestMethod = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.Contains("LifeCycleDerivedClassInitializeAndCleanupBeforeEachDerivedClass.TestMethod"));
+        Assert.AreEqual(TestOutcome.Passed, caseDerivedClassInitializeAndCleanupBeforeEachDerivedClassParentTestMethod.Outcome);
+        Assert.HasCount(3, caseDerivedClassInitializeAndCleanupBeforeEachDerivedClassParentTestMethod.Messages);
+        Assert.AreEqual(
             $"""
             Console: LifeCycleClassInitializeAndCleanupBeforeEachDerivedClass.ctor was called
             Console: LifeCycleDerivedClassInitializeAndCleanupBeforeEachDerivedClass.ctor was called
@@ -568,8 +471,9 @@ public class SuiteLifeCycleTests : CLITestBase
                 ? "Console: LifeCycleClassInitializeAndCleanupBeforeEachDerivedClass.DisposeAsync was called\r\nConsole: LifeCycleClassInitializeAndCleanupBeforeEachDerivedClass.Dispose was called"
                 : "Console: LifeCycleClassInitializeAndCleanupBeforeEachDerivedClass.Dispose was called")}
 
-            """);
-        caseDerivedClassInitializeAndCleanupBeforeEachDerivedClassParentTestMethod.Messages[1].Text.Should().Be(
+            """,
+            caseDerivedClassInitializeAndCleanupBeforeEachDerivedClassParentTestMethod.Messages[0].Text);
+        Assert.AreEqual(
             $"""
 
 
@@ -587,8 +491,9 @@ public class SuiteLifeCycleTests : CLITestBase
                     + GenerateTraceDebugPrefixedMessage("LifeCycleClassInitializeAndCleanupBeforeEachDerivedClass.Dispose was called")
                 : GenerateTraceDebugPrefixedMessage("LifeCycleClassInitializeAndCleanupBeforeEachDerivedClass.Dispose was called"))}
 
-            """);
-        caseDerivedClassInitializeAndCleanupBeforeEachDerivedClassParentTestMethod.Messages[2].Text.Should().Be(
+            """,
+            caseDerivedClassInitializeAndCleanupBeforeEachDerivedClassParentTestMethod.Messages[1].Text);
+        Assert.AreEqual(
             $"""
 
 
@@ -604,12 +509,13 @@ public class SuiteLifeCycleTests : CLITestBase
                 ? "LifeCycleClassInitializeAndCleanupBeforeEachDerivedClass.DisposeAsync was called\r\nLifeCycleClassInitializeAndCleanupBeforeEachDerivedClass.Dispose was called"
                 : "LifeCycleClassInitializeAndCleanupBeforeEachDerivedClass.Dispose was called")}
 
-            """);
+            """,
+            caseDerivedClassInitializeAndCleanupBeforeEachDerivedClassParentTestMethod.Messages[2].Text);
 
-        Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult caseDerivedClassInitializeAndCleanupNone = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.Contains("LifeCycleDerivedClassInitializeAndCleanupNone.DerivedClassTestMethod"));
-        caseDerivedClassInitializeAndCleanupNone.Outcome.Should().Be(Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome.Passed);
-        caseDerivedClassInitializeAndCleanupNone.Messages.Should().HaveCount(3);
-        caseDerivedClassInitializeAndCleanupNone.Messages[0].Text.Should().Be(
+        TestResult caseDerivedClassInitializeAndCleanupNone = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.Contains("LifeCycleDerivedClassInitializeAndCleanupNone.DerivedClassTestMethod"));
+        Assert.AreEqual(TestOutcome.Passed, caseDerivedClassInitializeAndCleanupNone.Outcome);
+        Assert.HasCount(3, caseDerivedClassInitializeAndCleanupNone.Messages);
+        Assert.AreEqual(
             $"""
             Console: LifeCycleDerivedClassInitializeAndCleanupNone.ClassInitialize was called
             Console: LifeCycleClassInitializeAndCleanupNone.ctor was called
@@ -623,8 +529,9 @@ public class SuiteLifeCycleTests : CLITestBase
                 ? "Console: LifeCycleClassInitializeAndCleanupNone.DisposeAsync was called\r\nConsole: LifeCycleClassInitializeAndCleanupNone.Dispose was called"
                 : "Console: LifeCycleClassInitializeAndCleanupNone.Dispose was called")}
 
-            """);
-        caseDerivedClassInitializeAndCleanupNone.Messages[1].Text.Should().Be(
+            """,
+            caseDerivedClassInitializeAndCleanupNone.Messages[0].Text);
+        Assert.AreEqual(
             $"""
 
 
@@ -643,8 +550,9 @@ public class SuiteLifeCycleTests : CLITestBase
                     + GenerateTraceDebugPrefixedMessage("LifeCycleClassInitializeAndCleanupNone.Dispose was called")
                 : GenerateTraceDebugPrefixedMessage("LifeCycleClassInitializeAndCleanupNone.Dispose was called"))}
 
-            """);
-        caseDerivedClassInitializeAndCleanupNone.Messages[2].Text.Should().Be(
+            """,
+            caseDerivedClassInitializeAndCleanupNone.Messages[1].Text);
+        Assert.AreEqual(
             $"""
 
 
@@ -661,13 +569,14 @@ public class SuiteLifeCycleTests : CLITestBase
                 ? "LifeCycleClassInitializeAndCleanupNone.DisposeAsync was called\r\nLifeCycleClassInitializeAndCleanupNone.Dispose was called"
                 : "LifeCycleClassInitializeAndCleanupNone.Dispose was called")}
 
-            """);
+            """,
+            caseDerivedClassInitializeAndCleanupNone.Messages[2].Text);
 
         // Test the parent test method.
-        Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult caseDerivedClassInitializeAndCleanupNoneParentTestMethod = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.Contains("LifeCycleDerivedClassInitializeAndCleanupNone.TestMethod"));
-        caseDerivedClassInitializeAndCleanupNoneParentTestMethod.Outcome.Should().Be(Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome.Passed);
-        caseDerivedClassInitializeAndCleanupNoneParentTestMethod.Messages.Should().HaveCount(3);
-        caseDerivedClassInitializeAndCleanupNoneParentTestMethod.Messages[0].Text.Should().Be(
+        TestResult caseDerivedClassInitializeAndCleanupNoneParentTestMethod = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.Contains("LifeCycleDerivedClassInitializeAndCleanupNone.TestMethod"));
+        Assert.AreEqual(TestOutcome.Passed, caseDerivedClassInitializeAndCleanupNoneParentTestMethod.Outcome);
+        Assert.HasCount(3, caseDerivedClassInitializeAndCleanupNoneParentTestMethod.Messages);
+        Assert.AreEqual(
             $"""
             Console: LifeCycleClassInitializeAndCleanupNone.ctor was called
             Console: LifeCycleDerivedClassInitializeAndCleanupNone.ctor was called
@@ -680,8 +589,9 @@ public class SuiteLifeCycleTests : CLITestBase
                 ? "Console: LifeCycleClassInitializeAndCleanupNone.DisposeAsync was called\r\nConsole: LifeCycleClassInitializeAndCleanupNone.Dispose was called"
                 : "Console: LifeCycleClassInitializeAndCleanupNone.Dispose was called")}
 
-            """);
-        caseDerivedClassInitializeAndCleanupNoneParentTestMethod.Messages[1].Text.Should().Be(
+            """,
+            caseDerivedClassInitializeAndCleanupNoneParentTestMethod.Messages[0].Text);
+        Assert.AreEqual(
             $"""
 
 
@@ -699,8 +609,9 @@ public class SuiteLifeCycleTests : CLITestBase
                     + GenerateTraceDebugPrefixedMessage("LifeCycleClassInitializeAndCleanupNone.Dispose was called")
                 : GenerateTraceDebugPrefixedMessage("LifeCycleClassInitializeAndCleanupNone.Dispose was called"))}
 
-            """);
-        caseDerivedClassInitializeAndCleanupNoneParentTestMethod.Messages[2].Text.Should().Be(
+            """,
+            caseDerivedClassInitializeAndCleanupNoneParentTestMethod.Messages[1].Text);
+        Assert.AreEqual(
             $"""
 
 
@@ -716,12 +627,13 @@ public class SuiteLifeCycleTests : CLITestBase
                 ? "LifeCycleClassInitializeAndCleanupNone.DisposeAsync was called\r\nLifeCycleClassInitializeAndCleanupNone.Dispose was called"
                 : "LifeCycleClassInitializeAndCleanupNone.Dispose was called")}
 
-            """);
+            """,
+            caseDerivedClassInitializeAndCleanupNoneParentTestMethod.Messages[2].Text);
 
-        Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult caseDerivedClassInitializeBeforeEachDerivedClassAndClassCleanupNone = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.Contains("LifeCycleDerivedClassInitializeBeforeEachDerivedClassAndClassCleanupNone.DerivedClassTestMethod"));
-        caseDerivedClassInitializeBeforeEachDerivedClassAndClassCleanupNone.Outcome.Should().Be(Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome.Passed);
-        caseDerivedClassInitializeBeforeEachDerivedClassAndClassCleanupNone.Messages.Should().HaveCount(3);
-        caseDerivedClassInitializeBeforeEachDerivedClassAndClassCleanupNone.Messages[0].Text.Should().Be(
+        TestResult caseDerivedClassInitializeBeforeEachDerivedClassAndClassCleanupNone = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.Contains("LifeCycleDerivedClassInitializeBeforeEachDerivedClassAndClassCleanupNone.DerivedClassTestMethod"));
+        Assert.AreEqual(TestOutcome.Passed, caseDerivedClassInitializeBeforeEachDerivedClassAndClassCleanupNone.Outcome);
+        Assert.HasCount(3, caseDerivedClassInitializeBeforeEachDerivedClassAndClassCleanupNone.Messages);
+        Assert.AreEqual(
             $"""
             Console: LifeCycleClassInitializeBeforeEachDerivedClassAndClassCleanupNone.ClassInitialize was called
             Console: LifeCycleDerivedClassInitializeBeforeEachDerivedClassAndClassCleanupNone.ClassInitialize was called
@@ -736,8 +648,9 @@ public class SuiteLifeCycleTests : CLITestBase
                 ? "Console: LifeCycleClassInitializeBeforeEachDerivedClassAndClassCleanupNone.DisposeAsync was called\r\nConsole: LifeCycleClassInitializeBeforeEachDerivedClassAndClassCleanupNone.Dispose was called"
                 : "Console: LifeCycleClassInitializeBeforeEachDerivedClassAndClassCleanupNone.Dispose was called")}
 
-            """);
-        caseDerivedClassInitializeBeforeEachDerivedClassAndClassCleanupNone.Messages[1].Text.Should().Be(
+            """,
+            caseDerivedClassInitializeBeforeEachDerivedClassAndClassCleanupNone.Messages[0].Text);
+        Assert.AreEqual(
             $"""
 
 
@@ -757,8 +670,9 @@ public class SuiteLifeCycleTests : CLITestBase
                     + GenerateTraceDebugPrefixedMessage("LifeCycleClassInitializeBeforeEachDerivedClassAndClassCleanupNone.Dispose was called")
                 : GenerateTraceDebugPrefixedMessage("LifeCycleClassInitializeBeforeEachDerivedClassAndClassCleanupNone.Dispose was called"))}
 
-            """);
-        caseDerivedClassInitializeBeforeEachDerivedClassAndClassCleanupNone.Messages[2].Text.Should().Be(
+            """,
+            caseDerivedClassInitializeBeforeEachDerivedClassAndClassCleanupNone.Messages[1].Text);
+        Assert.AreEqual(
             $"""
 
 
@@ -776,13 +690,14 @@ public class SuiteLifeCycleTests : CLITestBase
                 ? "LifeCycleClassInitializeBeforeEachDerivedClassAndClassCleanupNone.DisposeAsync was called\r\nLifeCycleClassInitializeBeforeEachDerivedClassAndClassCleanupNone.Dispose was called"
                 : "LifeCycleClassInitializeBeforeEachDerivedClassAndClassCleanupNone.Dispose was called")}
 
-            """);
+            """,
+            caseDerivedClassInitializeBeforeEachDerivedClassAndClassCleanupNone.Messages[2].Text);
 
         // Test the parent test method.
-        Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult caseDerivedClassInitializeBeforeEachDerivedClassAndClassCleanupNoneParentTestMethod = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.Contains("LifeCycleDerivedClassInitializeBeforeEachDerivedClassAndClassCleanupNone.TestMethod"));
-        caseDerivedClassInitializeBeforeEachDerivedClassAndClassCleanupNoneParentTestMethod.Outcome.Should().Be(Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome.Passed);
-        caseDerivedClassInitializeBeforeEachDerivedClassAndClassCleanupNoneParentTestMethod.Messages.Should().HaveCount(3);
-        caseDerivedClassInitializeBeforeEachDerivedClassAndClassCleanupNoneParentTestMethod.Messages[0].Text.Should().Be(
+        TestResult caseDerivedClassInitializeBeforeEachDerivedClassAndClassCleanupNoneParentTestMethod = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.Contains("LifeCycleDerivedClassInitializeBeforeEachDerivedClassAndClassCleanupNone.TestMethod"));
+        Assert.AreEqual(TestOutcome.Passed, caseDerivedClassInitializeBeforeEachDerivedClassAndClassCleanupNoneParentTestMethod.Outcome);
+        Assert.HasCount(3, caseDerivedClassInitializeBeforeEachDerivedClassAndClassCleanupNoneParentTestMethod.Messages);
+        Assert.AreEqual(
             $"""
             Console: LifeCycleClassInitializeBeforeEachDerivedClassAndClassCleanupNone.ctor was called
             Console: LifeCycleDerivedClassInitializeBeforeEachDerivedClassAndClassCleanupNone.ctor was called
@@ -795,8 +710,9 @@ public class SuiteLifeCycleTests : CLITestBase
                 ? "Console: LifeCycleClassInitializeBeforeEachDerivedClassAndClassCleanupNone.DisposeAsync was called\r\nConsole: LifeCycleClassInitializeBeforeEachDerivedClassAndClassCleanupNone.Dispose was called"
                 : "Console: LifeCycleClassInitializeBeforeEachDerivedClassAndClassCleanupNone.Dispose was called")}
 
-            """);
-        caseDerivedClassInitializeBeforeEachDerivedClassAndClassCleanupNoneParentTestMethod.Messages[1].Text.Should().Be(
+            """,
+            caseDerivedClassInitializeBeforeEachDerivedClassAndClassCleanupNoneParentTestMethod.Messages[0].Text);
+        Assert.AreEqual(
             $"""
 
 
@@ -814,8 +730,9 @@ public class SuiteLifeCycleTests : CLITestBase
                     + GenerateTraceDebugPrefixedMessage("LifeCycleClassInitializeBeforeEachDerivedClassAndClassCleanupNone.Dispose was called")
                 : GenerateTraceDebugPrefixedMessage("LifeCycleClassInitializeBeforeEachDerivedClassAndClassCleanupNone.Dispose was called"))}
 
-            """);
-        caseDerivedClassInitializeBeforeEachDerivedClassAndClassCleanupNoneParentTestMethod.Messages[2].Text.Should().Be(
+            """,
+            caseDerivedClassInitializeBeforeEachDerivedClassAndClassCleanupNoneParentTestMethod.Messages[1].Text);
+        Assert.AreEqual(
             $"""
 
 
@@ -831,12 +748,13 @@ public class SuiteLifeCycleTests : CLITestBase
                 ? "LifeCycleClassInitializeBeforeEachDerivedClassAndClassCleanupNone.DisposeAsync was called\r\nLifeCycleClassInitializeBeforeEachDerivedClassAndClassCleanupNone.Dispose was called"
                 : "LifeCycleClassInitializeBeforeEachDerivedClassAndClassCleanupNone.Dispose was called")}
 
-            """);
+            """,
+            caseDerivedClassInitializeBeforeEachDerivedClassAndClassCleanupNoneParentTestMethod.Messages[2].Text);
 
-        Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult caseDerivedClassInitializeNoneAndClassCleanupBeforeEachDerivedClass = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.Contains("LifeCycleDerivedClassInitializeNoneAndClassCleanupBeforeEachDerivedClass.DerivedClassTestMethod"));
-        caseDerivedClassInitializeNoneAndClassCleanupBeforeEachDerivedClass.Outcome.Should().Be(Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome.Passed);
-        caseDerivedClassInitializeNoneAndClassCleanupBeforeEachDerivedClass.Messages.Should().HaveCount(3);
-        caseDerivedClassInitializeNoneAndClassCleanupBeforeEachDerivedClass.Messages[0].Text.Should().Be(
+        TestResult caseDerivedClassInitializeNoneAndClassCleanupBeforeEachDerivedClass = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.Contains("LifeCycleDerivedClassInitializeNoneAndClassCleanupBeforeEachDerivedClass.DerivedClassTestMethod"));
+        Assert.AreEqual(TestOutcome.Passed, caseDerivedClassInitializeNoneAndClassCleanupBeforeEachDerivedClass.Outcome);
+        Assert.HasCount(3, caseDerivedClassInitializeNoneAndClassCleanupBeforeEachDerivedClass.Messages);
+        Assert.AreEqual(
             $"""
             Console: LifeCycleDerivedClassInitializeNoneAndClassCleanupBeforeEachDerivedClass.ClassInitialize was called
             Console: LifeCycleClassInitializeNoneAndClassCleanupBeforeEachDerivedClass.ctor was called
@@ -850,8 +768,9 @@ public class SuiteLifeCycleTests : CLITestBase
                 ? "Console: LifeCycleClassInitializeNoneAndClassCleanupBeforeEachDerivedClass.DisposeAsync was called\r\nConsole: LifeCycleClassInitializeNoneAndClassCleanupBeforeEachDerivedClass.Dispose was called"
                 : "Console: LifeCycleClassInitializeNoneAndClassCleanupBeforeEachDerivedClass.Dispose was called")}
 
-            """);
-        caseDerivedClassInitializeNoneAndClassCleanupBeforeEachDerivedClass.Messages[1].Text.Should().Be(
+            """,
+            caseDerivedClassInitializeNoneAndClassCleanupBeforeEachDerivedClass.Messages[0].Text);
+        Assert.AreEqual(
             $"""
 
 
@@ -870,8 +789,9 @@ public class SuiteLifeCycleTests : CLITestBase
                     + GenerateTraceDebugPrefixedMessage("LifeCycleClassInitializeNoneAndClassCleanupBeforeEachDerivedClass.Dispose was called")
                 : GenerateTraceDebugPrefixedMessage("LifeCycleClassInitializeNoneAndClassCleanupBeforeEachDerivedClass.Dispose was called"))}
 
-            """);
-        caseDerivedClassInitializeNoneAndClassCleanupBeforeEachDerivedClass.Messages[2].Text.Should().Be(
+            """,
+            caseDerivedClassInitializeNoneAndClassCleanupBeforeEachDerivedClass.Messages[1].Text);
+        Assert.AreEqual(
             $"""
 
 
@@ -888,12 +808,13 @@ public class SuiteLifeCycleTests : CLITestBase
                 ? "LifeCycleClassInitializeNoneAndClassCleanupBeforeEachDerivedClass.DisposeAsync was called\r\nLifeCycleClassInitializeNoneAndClassCleanupBeforeEachDerivedClass.Dispose was called"
                 : "LifeCycleClassInitializeNoneAndClassCleanupBeforeEachDerivedClass.Dispose was called")}
 
-            """);
+            """,
+            caseDerivedClassInitializeNoneAndClassCleanupBeforeEachDerivedClass.Messages[2].Text);
 
-        Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult caseClassCleanupEndOfAssemblyAndBeforeEachDerivedClass = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.Contains("LifeCycleClassCleanupEndOfAssemblyAndBeforeEachDerivedClass.TestMethod"));
-        caseClassCleanupEndOfAssemblyAndBeforeEachDerivedClass.Outcome.Should().Be(Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome.Passed);
-        caseClassCleanupEndOfAssemblyAndBeforeEachDerivedClass.Messages.Should().HaveCount(3);
-        caseClassCleanupEndOfAssemblyAndBeforeEachDerivedClass.Messages[0].Text.Should().Be(
+        TestResult caseClassCleanupEndOfAssemblyAndBeforeEachDerivedClass = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.Contains("LifeCycleClassCleanupEndOfAssemblyAndBeforeEachDerivedClass.TestMethod"));
+        Assert.AreEqual(TestOutcome.Passed, caseClassCleanupEndOfAssemblyAndBeforeEachDerivedClass.Outcome);
+        Assert.HasCount(3, caseClassCleanupEndOfAssemblyAndBeforeEachDerivedClass.Messages);
+        Assert.AreEqual(
             $"""
             Console: LifeCycleClassCleanupEndOfAssemblyAndBeforeEachDerivedClass.ClassInitialize was called
             Console: LifeCycleClassCleanupEndOfAssemblyAndBeforeEachDerivedClass.ctor was called
@@ -904,8 +825,9 @@ public class SuiteLifeCycleTests : CLITestBase
                 ? "Console: LifeCycleClassCleanupEndOfAssemblyAndBeforeEachDerivedClass.DisposeAsync was called\r\nConsole: LifeCycleClassCleanupEndOfAssemblyAndBeforeEachDerivedClass.Dispose was called"
                 : "Console: LifeCycleClassCleanupEndOfAssemblyAndBeforeEachDerivedClass.Dispose was called")}
 
-            """);
-        caseClassCleanupEndOfAssemblyAndBeforeEachDerivedClass.Messages[1].Text.Should().Be(
+            """,
+            caseClassCleanupEndOfAssemblyAndBeforeEachDerivedClass.Messages[0].Text);
+        Assert.AreEqual(
             $"""
 
 
@@ -921,8 +843,9 @@ public class SuiteLifeCycleTests : CLITestBase
                     + GenerateTraceDebugPrefixedMessage("LifeCycleClassCleanupEndOfAssemblyAndBeforeEachDerivedClass.Dispose was called")
                 : GenerateTraceDebugPrefixedMessage("LifeCycleClassCleanupEndOfAssemblyAndBeforeEachDerivedClass.Dispose was called"))}
 
-            """);
-        caseClassCleanupEndOfAssemblyAndBeforeEachDerivedClass.Messages[2].Text.Should().Be(
+            """,
+            caseClassCleanupEndOfAssemblyAndBeforeEachDerivedClass.Messages[1].Text);
+        Assert.AreEqual(
             $"""
 
 
@@ -936,12 +859,13 @@ public class SuiteLifeCycleTests : CLITestBase
                 ? "LifeCycleClassCleanupEndOfAssemblyAndBeforeEachDerivedClass.DisposeAsync was called\r\nLifeCycleClassCleanupEndOfAssemblyAndBeforeEachDerivedClass.Dispose was called"
                 : "LifeCycleClassCleanupEndOfAssemblyAndBeforeEachDerivedClass.Dispose was called")}
 
-            """);
+            """,
+            caseClassCleanupEndOfAssemblyAndBeforeEachDerivedClass.Messages[2].Text);
 
-        Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult caseClassCleanupEndOfAssemblyAndNone = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.Contains("LifeCycleClassCleanupEndOfAssemblyAndNone.TestMethod"));
-        caseClassCleanupEndOfAssemblyAndNone.Outcome.Should().Be(Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome.Passed);
-        caseClassCleanupEndOfAssemblyAndNone.Messages.Should().HaveCount(3);
-        caseClassCleanupEndOfAssemblyAndNone.Messages[0].Text.Should().Be(
+        TestResult caseClassCleanupEndOfAssemblyAndNone = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.Contains("LifeCycleClassCleanupEndOfAssemblyAndNone.TestMethod"));
+        Assert.AreEqual(TestOutcome.Passed, caseClassCleanupEndOfAssemblyAndNone.Outcome);
+        Assert.HasCount(3, caseClassCleanupEndOfAssemblyAndNone.Messages);
+        Assert.AreEqual(
             $"""
             Console: LifeCycleClassCleanupEndOfAssemblyAndNone.ClassInitialize was called
             Console: LifeCycleClassCleanupEndOfAssemblyAndNone.ctor was called
@@ -952,8 +876,9 @@ public class SuiteLifeCycleTests : CLITestBase
                 ? "Console: LifeCycleClassCleanupEndOfAssemblyAndNone.DisposeAsync was called\r\nConsole: LifeCycleClassCleanupEndOfAssemblyAndNone.Dispose was called"
                 : "Console: LifeCycleClassCleanupEndOfAssemblyAndNone.Dispose was called")}
 
-            """);
-        caseClassCleanupEndOfAssemblyAndNone.Messages[1].Text.Should().Be(
+            """,
+            caseClassCleanupEndOfAssemblyAndNone.Messages[0].Text);
+        Assert.AreEqual(
             $"""
 
 
@@ -969,8 +894,9 @@ public class SuiteLifeCycleTests : CLITestBase
                     + GenerateTraceDebugPrefixedMessage("LifeCycleClassCleanupEndOfAssemblyAndNone.Dispose was called")
                 : GenerateTraceDebugPrefixedMessage("LifeCycleClassCleanupEndOfAssemblyAndNone.Dispose was called"))}
 
-            """);
-        caseClassCleanupEndOfAssemblyAndNone.Messages[2].Text.Should().Be(
+            """,
+            caseClassCleanupEndOfAssemblyAndNone.Messages[1].Text);
+        Assert.AreEqual(
             $"""
 
 
@@ -984,12 +910,13 @@ public class SuiteLifeCycleTests : CLITestBase
                 ? "LifeCycleClassCleanupEndOfAssemblyAndNone.DisposeAsync was called\r\nLifeCycleClassCleanupEndOfAssemblyAndNone.Dispose was called"
                 : "LifeCycleClassCleanupEndOfAssemblyAndNone.Dispose was called")}
 
-            """);
+            """,
+            caseClassCleanupEndOfAssemblyAndNone.Messages[2].Text);
 
-        Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult caseClassCleanupEndOfClassAndBeforeEachDerivedClass = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.Contains("LifeCycleClassCleanupEndOfClassAndBeforeEachDerivedClass.TestMethod"));
-        caseClassCleanupEndOfClassAndBeforeEachDerivedClass.Outcome.Should().Be(Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome.Passed);
-        caseClassCleanupEndOfClassAndBeforeEachDerivedClass.Messages.Should().HaveCount(3);
-        caseClassCleanupEndOfClassAndBeforeEachDerivedClass.Messages[0].Text.Should().Be(
+        TestResult caseClassCleanupEndOfClassAndBeforeEachDerivedClass = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.Contains("LifeCycleClassCleanupEndOfClassAndBeforeEachDerivedClass.TestMethod"));
+        Assert.AreEqual(TestOutcome.Passed, caseClassCleanupEndOfClassAndBeforeEachDerivedClass.Outcome);
+        Assert.HasCount(3, caseClassCleanupEndOfClassAndBeforeEachDerivedClass.Messages);
+        Assert.AreEqual(
             $"""
             Console: LifeCycleClassCleanupEndOfClassAndBeforeEachDerivedClass.ClassInitialize was called
             Console: LifeCycleClassCleanupEndOfClassAndBeforeEachDerivedClass.ctor was called
@@ -1001,8 +928,9 @@ public class SuiteLifeCycleTests : CLITestBase
                 : "Console: LifeCycleClassCleanupEndOfClassAndBeforeEachDerivedClass.Dispose was called")}
             Console: LifeCycleClassCleanupEndOfClassAndBeforeEachDerivedClass.ClassCleanup was called
 
-            """);
-        caseClassCleanupEndOfClassAndBeforeEachDerivedClass.Messages[1].Text.Should().Be(
+            """,
+            caseClassCleanupEndOfClassAndBeforeEachDerivedClass.Messages[0].Text);
+        Assert.AreEqual(
             $"""
 
 
@@ -1019,8 +947,9 @@ public class SuiteLifeCycleTests : CLITestBase
                 : GenerateTraceDebugPrefixedMessage("LifeCycleClassCleanupEndOfClassAndBeforeEachDerivedClass.Dispose was called"))}
             {GenerateTraceDebugPrefixedMessage("LifeCycleClassCleanupEndOfClassAndBeforeEachDerivedClass.ClassCleanup was called")}
 
-            """);
-        caseClassCleanupEndOfClassAndBeforeEachDerivedClass.Messages[2].Text.Should().Be(
+            """,
+            caseClassCleanupEndOfClassAndBeforeEachDerivedClass.Messages[1].Text);
+        Assert.AreEqual(
             $"""
 
 
@@ -1035,12 +964,13 @@ public class SuiteLifeCycleTests : CLITestBase
                 : "LifeCycleClassCleanupEndOfClassAndBeforeEachDerivedClass.Dispose was called")}
             LifeCycleClassCleanupEndOfClassAndBeforeEachDerivedClass.ClassCleanup was called
 
-            """);
+            """,
+            caseClassCleanupEndOfClassAndBeforeEachDerivedClass.Messages[2].Text);
 
-        Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult caseClassCleanupEndOfClassAndNone = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.Contains("LifeCycleClassCleanupEndOfClassAndNone.TestMethod"));
-        caseClassCleanupEndOfClassAndNone.Outcome.Should().Be(Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome.Passed);
-        caseClassCleanupEndOfClassAndNone.Messages.Should().HaveCount(3);
-        caseClassCleanupEndOfClassAndNone.Messages[0].Text.Should().Be(
+        TestResult caseClassCleanupEndOfClassAndNone = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.Contains("LifeCycleClassCleanupEndOfClassAndNone.TestMethod"));
+        Assert.AreEqual(TestOutcome.Passed, caseClassCleanupEndOfClassAndNone.Outcome);
+        Assert.HasCount(3, caseClassCleanupEndOfClassAndNone.Messages);
+        Assert.AreEqual(
             $"""
             Console: LifeCycleClassCleanupEndOfClassAndNone.ClassInitialize was called
             Console: LifeCycleClassCleanupEndOfClassAndNone.ctor was called
@@ -1052,8 +982,9 @@ public class SuiteLifeCycleTests : CLITestBase
                 : "Console: LifeCycleClassCleanupEndOfClassAndNone.Dispose was called")}
             Console: LifeCycleClassCleanupEndOfClassAndNone.ClassCleanup was called
 
-            """);
-        caseClassCleanupEndOfClassAndNone.Messages[1].Text.Should().Be(
+            """,
+            caseClassCleanupEndOfClassAndNone.Messages[0].Text);
+        Assert.AreEqual(
             $"""
 
 
@@ -1070,8 +1001,9 @@ public class SuiteLifeCycleTests : CLITestBase
                 : GenerateTraceDebugPrefixedMessage("LifeCycleClassCleanupEndOfClassAndNone.Dispose was called"))}
             {GenerateTraceDebugPrefixedMessage("LifeCycleClassCleanupEndOfClassAndNone.ClassCleanup was called")}
 
-            """);
-        caseClassCleanupEndOfClassAndNone.Messages[2].Text.Should().Be(
+            """,
+            caseClassCleanupEndOfClassAndNone.Messages[1].Text);
+        Assert.AreEqual(
             $"""
 
 
@@ -1086,12 +1018,13 @@ public class SuiteLifeCycleTests : CLITestBase
                 : "LifeCycleClassCleanupEndOfClassAndNone.Dispose was called")}
             LifeCycleClassCleanupEndOfClassAndNone.ClassCleanup was called
 
-            """);
+            """,
+            caseClassCleanupEndOfClassAndNone.Messages[2].Text);
 
-        Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult caseDerivedClassCleanupEndOfAssemblyAndBeforeEachDerivedClass = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.Contains("LifeCycleDerivedClassCleanupEndOfAssemblyAndBeforeEachDerivedClass.DerivedClassTestMethod"));
-        caseDerivedClassCleanupEndOfAssemblyAndBeforeEachDerivedClass.Outcome.Should().Be(Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome.Passed);
-        caseDerivedClassCleanupEndOfAssemblyAndBeforeEachDerivedClass.Messages.Should().HaveCount(3);
-        caseDerivedClassCleanupEndOfAssemblyAndBeforeEachDerivedClass.Messages[0].Text.Should().Be(
+        TestResult caseDerivedClassCleanupEndOfAssemblyAndBeforeEachDerivedClass = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.Contains("LifeCycleDerivedClassCleanupEndOfAssemblyAndBeforeEachDerivedClass.DerivedClassTestMethod"));
+        Assert.AreEqual(TestOutcome.Passed, caseDerivedClassCleanupEndOfAssemblyAndBeforeEachDerivedClass.Outcome);
+        Assert.HasCount(3, caseDerivedClassCleanupEndOfAssemblyAndBeforeEachDerivedClass.Messages);
+        Assert.AreEqual(
             $"""
             Console: LifeCycleDerivedClassCleanupEndOfAssemblyAndBeforeEachDerivedClass.ClassInitialize was called
             Console: LifeCycleClassCleanupEndOfAssemblyAndBeforeEachDerivedClass.ctor was called
@@ -1105,8 +1038,9 @@ public class SuiteLifeCycleTests : CLITestBase
                 ? "Console: LifeCycleClassCleanupEndOfAssemblyAndBeforeEachDerivedClass.DisposeAsync was called\r\nConsole: LifeCycleClassCleanupEndOfAssemblyAndBeforeEachDerivedClass.Dispose was called"
                 : "Console: LifeCycleClassCleanupEndOfAssemblyAndBeforeEachDerivedClass.Dispose was called")}
 
-            """);
-        caseDerivedClassCleanupEndOfAssemblyAndBeforeEachDerivedClass.Messages[1].Text.Should().Be(
+            """,
+            caseDerivedClassCleanupEndOfAssemblyAndBeforeEachDerivedClass.Messages[0].Text);
+        Assert.AreEqual(
             $"""
 
 
@@ -1125,8 +1059,9 @@ public class SuiteLifeCycleTests : CLITestBase
                     + GenerateTraceDebugPrefixedMessage("LifeCycleClassCleanupEndOfAssemblyAndBeforeEachDerivedClass.Dispose was called")
                 : GenerateTraceDebugPrefixedMessage("LifeCycleClassCleanupEndOfAssemblyAndBeforeEachDerivedClass.Dispose was called"))}
 
-            """);
-        caseDerivedClassCleanupEndOfAssemblyAndBeforeEachDerivedClass.Messages[2].Text.Should().Be(
+            """,
+            caseDerivedClassCleanupEndOfAssemblyAndBeforeEachDerivedClass.Messages[1].Text);
+        Assert.AreEqual(
             $"""
 
 
@@ -1143,12 +1078,13 @@ public class SuiteLifeCycleTests : CLITestBase
                 ? "LifeCycleClassCleanupEndOfAssemblyAndBeforeEachDerivedClass.DisposeAsync was called\r\nLifeCycleClassCleanupEndOfAssemblyAndBeforeEachDerivedClass.Dispose was called"
                 : "LifeCycleClassCleanupEndOfAssemblyAndBeforeEachDerivedClass.Dispose was called")}
 
-            """);
+            """,
+            caseDerivedClassCleanupEndOfAssemblyAndBeforeEachDerivedClass.Messages[2].Text);
 
-        Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult caseDerivedClassCleanupEndOfAssemblyAndNone = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.Contains("LifeCycleDerivedClassCleanupEndOfAssemblyAndNone.DerivedClassTestMethod"));
-        caseDerivedClassCleanupEndOfAssemblyAndNone.Outcome.Should().Be(Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome.Passed);
-        caseDerivedClassCleanupEndOfAssemblyAndNone.Messages.Should().HaveCount(3);
-        caseDerivedClassCleanupEndOfAssemblyAndNone.Messages[0].Text.Should().Be(
+        TestResult caseDerivedClassCleanupEndOfAssemblyAndNone = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.Contains("LifeCycleDerivedClassCleanupEndOfAssemblyAndNone.DerivedClassTestMethod"));
+        Assert.AreEqual(TestOutcome.Passed, caseDerivedClassCleanupEndOfAssemblyAndNone.Outcome);
+        Assert.HasCount(3, caseDerivedClassCleanupEndOfAssemblyAndNone.Messages);
+        Assert.AreEqual(
             $"""
             Console: LifeCycleDerivedClassCleanupEndOfAssemblyAndNone.ClassInitialize was called
             Console: LifeCycleClassCleanupEndOfAssemblyAndNone.ctor was called
@@ -1162,8 +1098,9 @@ public class SuiteLifeCycleTests : CLITestBase
                 ? "Console: LifeCycleClassCleanupEndOfAssemblyAndNone.DisposeAsync was called\r\nConsole: LifeCycleClassCleanupEndOfAssemblyAndNone.Dispose was called"
                 : "Console: LifeCycleClassCleanupEndOfAssemblyAndNone.Dispose was called")}
 
-            """);
-        caseDerivedClassCleanupEndOfAssemblyAndNone.Messages[1].Text.Should().Be(
+            """,
+            caseDerivedClassCleanupEndOfAssemblyAndNone.Messages[0].Text);
+        Assert.AreEqual(
             $"""
 
 
@@ -1182,8 +1119,9 @@ public class SuiteLifeCycleTests : CLITestBase
                     + GenerateTraceDebugPrefixedMessage("LifeCycleClassCleanupEndOfAssemblyAndNone.Dispose was called")
                 : GenerateTraceDebugPrefixedMessage("LifeCycleClassCleanupEndOfAssemblyAndNone.Dispose was called"))}
 
-            """);
-        caseDerivedClassCleanupEndOfAssemblyAndNone.Messages[2].Text.Should().Be(
+            """,
+            caseDerivedClassCleanupEndOfAssemblyAndNone.Messages[1].Text);
+        Assert.AreEqual(
             $"""
 
 
@@ -1200,11 +1138,12 @@ public class SuiteLifeCycleTests : CLITestBase
                 ? "LifeCycleClassCleanupEndOfAssemblyAndNone.DisposeAsync was called\r\nLifeCycleClassCleanupEndOfAssemblyAndNone.Dispose was called"
                 : "LifeCycleClassCleanupEndOfAssemblyAndNone.Dispose was called")}
 
-            """);
-        Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult caseDerivedClassCleanupEndOfClassAndBeforeEachDerivedClass = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.Contains("LifeCycleDerivedClassCleanupEndOfClassAndBeforeEachDerivedClass.DerivedClassTestMethod"));
-        caseDerivedClassCleanupEndOfClassAndBeforeEachDerivedClass.Outcome.Should().Be(Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome.Passed);
-        caseDerivedClassCleanupEndOfClassAndBeforeEachDerivedClass.Messages.Should().HaveCount(3);
-        caseDerivedClassCleanupEndOfClassAndBeforeEachDerivedClass.Messages[0].Text.Should().Be(
+            """,
+            caseDerivedClassCleanupEndOfAssemblyAndNone.Messages[2].Text);
+        TestResult caseDerivedClassCleanupEndOfClassAndBeforeEachDerivedClass = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.Contains("LifeCycleDerivedClassCleanupEndOfClassAndBeforeEachDerivedClass.DerivedClassTestMethod"));
+        Assert.AreEqual(TestOutcome.Passed, caseDerivedClassCleanupEndOfClassAndBeforeEachDerivedClass.Outcome);
+        Assert.HasCount(3, caseDerivedClassCleanupEndOfClassAndBeforeEachDerivedClass.Messages);
+        Assert.AreEqual(
             $"""
             Console: LifeCycleDerivedClassCleanupEndOfClassAndBeforeEachDerivedClass.ClassInitialize was called
             Console: LifeCycleClassCleanupEndOfClassAndBeforeEachDerivedClass.ctor was called
@@ -1218,8 +1157,9 @@ public class SuiteLifeCycleTests : CLITestBase
                 ? "Console: LifeCycleClassCleanupEndOfClassAndBeforeEachDerivedClass.DisposeAsync was called\r\nConsole: LifeCycleClassCleanupEndOfClassAndBeforeEachDerivedClass.Dispose was called"
                 : "Console: LifeCycleClassCleanupEndOfClassAndBeforeEachDerivedClass.Dispose was called")}
 
-            """);
-        caseDerivedClassCleanupEndOfClassAndBeforeEachDerivedClass.Messages[1].Text.Should().Be(
+            """,
+            caseDerivedClassCleanupEndOfClassAndBeforeEachDerivedClass.Messages[0].Text);
+        Assert.AreEqual(
             $"""
 
 
@@ -1238,8 +1178,9 @@ public class SuiteLifeCycleTests : CLITestBase
                     + GenerateTraceDebugPrefixedMessage("LifeCycleClassCleanupEndOfClassAndBeforeEachDerivedClass.Dispose was called")
                 : GenerateTraceDebugPrefixedMessage("LifeCycleClassCleanupEndOfClassAndBeforeEachDerivedClass.Dispose was called"))}
 
-            """);
-        caseDerivedClassCleanupEndOfClassAndBeforeEachDerivedClass.Messages[2].Text.Should().Be(
+            """,
+            caseDerivedClassCleanupEndOfClassAndBeforeEachDerivedClass.Messages[1].Text);
+        Assert.AreEqual(
             $"""
 
 
@@ -1256,12 +1197,13 @@ public class SuiteLifeCycleTests : CLITestBase
                 ? "LifeCycleClassCleanupEndOfClassAndBeforeEachDerivedClass.DisposeAsync was called\r\nLifeCycleClassCleanupEndOfClassAndBeforeEachDerivedClass.Dispose was called"
                 : "LifeCycleClassCleanupEndOfClassAndBeforeEachDerivedClass.Dispose was called")}
 
-            """);
+            """,
+            caseDerivedClassCleanupEndOfClassAndBeforeEachDerivedClass.Messages[2].Text);
 
-        Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult caseDerivedClassCleanupEndOfClassAndNone = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.Contains("LifeCycleDerivedClassCleanupEndOfClassAndNone.DerivedClassTestMethod"));
-        caseDerivedClassCleanupEndOfClassAndNone.Outcome.Should().Be(Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome.Passed);
-        caseDerivedClassCleanupEndOfClassAndNone.Messages.Should().HaveCount(3);
-        caseDerivedClassCleanupEndOfClassAndNone.Messages[0].Text.Should().Be(
+        TestResult caseDerivedClassCleanupEndOfClassAndNone = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.Contains("LifeCycleDerivedClassCleanupEndOfClassAndNone.DerivedClassTestMethod"));
+        Assert.AreEqual(TestOutcome.Passed, caseDerivedClassCleanupEndOfClassAndNone.Outcome);
+        Assert.HasCount(3, caseDerivedClassCleanupEndOfClassAndNone.Messages);
+        Assert.AreEqual(
             $"""
             Console: LifeCycleDerivedClassCleanupEndOfClassAndNone.ClassInitialize was called
             Console: LifeCycleClassCleanupEndOfClassAndNone.ctor was called
@@ -1275,8 +1217,9 @@ public class SuiteLifeCycleTests : CLITestBase
                 ? "Console: LifeCycleClassCleanupEndOfClassAndNone.DisposeAsync was called\r\nConsole: LifeCycleClassCleanupEndOfClassAndNone.Dispose was called"
                 : "Console: LifeCycleClassCleanupEndOfClassAndNone.Dispose was called")}
 
-            """);
-        caseDerivedClassCleanupEndOfClassAndNone.Messages[1].Text.Should().Be(
+            """,
+            caseDerivedClassCleanupEndOfClassAndNone.Messages[0].Text);
+        Assert.AreEqual(
             $"""
 
 
@@ -1295,8 +1238,9 @@ public class SuiteLifeCycleTests : CLITestBase
                     + GenerateTraceDebugPrefixedMessage("LifeCycleClassCleanupEndOfClassAndNone.Dispose was called")
                 : GenerateTraceDebugPrefixedMessage("LifeCycleClassCleanupEndOfClassAndNone.Dispose was called"))}
 
-            """);
-        caseDerivedClassCleanupEndOfClassAndNone.Messages[2].Text.Should().Be(
+            """,
+            caseDerivedClassCleanupEndOfClassAndNone.Messages[1].Text);
+        Assert.AreEqual(
             $"""
 
 
@@ -1313,12 +1257,13 @@ public class SuiteLifeCycleTests : CLITestBase
                 ? "LifeCycleClassCleanupEndOfClassAndNone.DisposeAsync was called\r\nLifeCycleClassCleanupEndOfClassAndNone.Dispose was called"
                 : "LifeCycleClassCleanupEndOfClassAndNone.Dispose was called")}
 
-            """);
+            """,
+            caseDerivedClassCleanupEndOfClassAndNone.Messages[2].Text);
 
-        Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult caseDerivedClassCleanupEndOfAssemblyAndBeforeEachDerivedClassParentTestMethod = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.Contains("LifeCycleDerivedClassCleanupEndOfAssemblyAndBeforeEachDerivedClass.TestMethod"));
-        caseDerivedClassCleanupEndOfAssemblyAndBeforeEachDerivedClassParentTestMethod.Outcome.Should().Be(Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome.Passed);
-        caseDerivedClassCleanupEndOfAssemblyAndBeforeEachDerivedClassParentTestMethod.Messages.Should().HaveCount(3);
-        caseDerivedClassCleanupEndOfAssemblyAndBeforeEachDerivedClassParentTestMethod.Messages[0].Text.Should().Be(
+        TestResult caseDerivedClassCleanupEndOfAssemblyAndBeforeEachDerivedClassParentTestMethod = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.Contains("LifeCycleDerivedClassCleanupEndOfAssemblyAndBeforeEachDerivedClass.TestMethod"));
+        Assert.AreEqual(TestOutcome.Passed, caseDerivedClassCleanupEndOfAssemblyAndBeforeEachDerivedClassParentTestMethod.Outcome);
+        Assert.HasCount(3, caseDerivedClassCleanupEndOfAssemblyAndBeforeEachDerivedClassParentTestMethod.Messages);
+        Assert.AreEqual(
             $"""
             Console: LifeCycleClassCleanupEndOfAssemblyAndBeforeEachDerivedClass.ctor was called
             Console: LifeCycleDerivedClassCleanupEndOfAssemblyAndBeforeEachDerivedClass.ctor was called
@@ -1331,8 +1276,9 @@ public class SuiteLifeCycleTests : CLITestBase
                 ? "Console: LifeCycleClassCleanupEndOfAssemblyAndBeforeEachDerivedClass.DisposeAsync was called\r\nConsole: LifeCycleClassCleanupEndOfAssemblyAndBeforeEachDerivedClass.Dispose was called"
                 : "Console: LifeCycleClassCleanupEndOfAssemblyAndBeforeEachDerivedClass.Dispose was called")}
 
-            """);
-        caseDerivedClassCleanupEndOfAssemblyAndBeforeEachDerivedClassParentTestMethod.Messages[1].Text.Should().Be(
+            """,
+            caseDerivedClassCleanupEndOfAssemblyAndBeforeEachDerivedClassParentTestMethod.Messages[0].Text);
+        Assert.AreEqual(
             $"""
 
 
@@ -1350,8 +1296,9 @@ public class SuiteLifeCycleTests : CLITestBase
                     + GenerateTraceDebugPrefixedMessage("LifeCycleClassCleanupEndOfAssemblyAndBeforeEachDerivedClass.Dispose was called")
                 : GenerateTraceDebugPrefixedMessage("LifeCycleClassCleanupEndOfAssemblyAndBeforeEachDerivedClass.Dispose was called"))}
 
-            """);
-        caseDerivedClassCleanupEndOfAssemblyAndBeforeEachDerivedClassParentTestMethod.Messages[2].Text.Should().Be(
+            """,
+            caseDerivedClassCleanupEndOfAssemblyAndBeforeEachDerivedClassParentTestMethod.Messages[1].Text);
+        Assert.AreEqual(
             $"""
 
 
@@ -1367,12 +1314,13 @@ public class SuiteLifeCycleTests : CLITestBase
                 ? "LifeCycleClassCleanupEndOfAssemblyAndBeforeEachDerivedClass.DisposeAsync was called\r\nLifeCycleClassCleanupEndOfAssemblyAndBeforeEachDerivedClass.Dispose was called"
                 : "LifeCycleClassCleanupEndOfAssemblyAndBeforeEachDerivedClass.Dispose was called")}
 
-            """);
+            """,
+            caseDerivedClassCleanupEndOfAssemblyAndBeforeEachDerivedClassParentTestMethod.Messages[2].Text);
 
-        Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult caseDerivedClassCleanupEndOfAssemblyAndNoneParentTestMethod = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.Contains("LifeCycleDerivedClassCleanupEndOfAssemblyAndNone.TestMethod"));
-        caseDerivedClassCleanupEndOfAssemblyAndNoneParentTestMethod.Outcome.Should().Be(Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome.Passed);
-        caseDerivedClassCleanupEndOfAssemblyAndNoneParentTestMethod.Messages.Should().HaveCount(3);
-        caseDerivedClassCleanupEndOfAssemblyAndNoneParentTestMethod.Messages[0].Text.Should().Be(
+        TestResult caseDerivedClassCleanupEndOfAssemblyAndNoneParentTestMethod = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.Contains("LifeCycleDerivedClassCleanupEndOfAssemblyAndNone.TestMethod"));
+        Assert.AreEqual(TestOutcome.Passed, caseDerivedClassCleanupEndOfAssemblyAndNoneParentTestMethod.Outcome);
+        Assert.HasCount(3, caseDerivedClassCleanupEndOfAssemblyAndNoneParentTestMethod.Messages);
+        Assert.AreEqual(
             $"""
             Console: LifeCycleClassCleanupEndOfAssemblyAndNone.ctor was called
             Console: LifeCycleDerivedClassCleanupEndOfAssemblyAndNone.ctor was called
@@ -1385,8 +1333,9 @@ public class SuiteLifeCycleTests : CLITestBase
                 ? "Console: LifeCycleClassCleanupEndOfAssemblyAndNone.DisposeAsync was called\r\nConsole: LifeCycleClassCleanupEndOfAssemblyAndNone.Dispose was called"
                 : "Console: LifeCycleClassCleanupEndOfAssemblyAndNone.Dispose was called")}
 
-            """);
-        caseDerivedClassCleanupEndOfAssemblyAndNoneParentTestMethod.Messages[1].Text.Should().Be(
+            """,
+            caseDerivedClassCleanupEndOfAssemblyAndNoneParentTestMethod.Messages[0].Text);
+        Assert.AreEqual(
             $"""
 
 
@@ -1404,8 +1353,9 @@ public class SuiteLifeCycleTests : CLITestBase
                     + GenerateTraceDebugPrefixedMessage("LifeCycleClassCleanupEndOfAssemblyAndNone.Dispose was called")
                 : GenerateTraceDebugPrefixedMessage("LifeCycleClassCleanupEndOfAssemblyAndNone.Dispose was called"))}
 
-            """);
-        caseDerivedClassCleanupEndOfAssemblyAndNoneParentTestMethod.Messages[2].Text.Should().Be(
+            """,
+            caseDerivedClassCleanupEndOfAssemblyAndNoneParentTestMethod.Messages[1].Text);
+        Assert.AreEqual(
             $"""
 
 
@@ -1421,11 +1371,12 @@ public class SuiteLifeCycleTests : CLITestBase
                 ? "LifeCycleClassCleanupEndOfAssemblyAndNone.DisposeAsync was called\r\nLifeCycleClassCleanupEndOfAssemblyAndNone.Dispose was called"
                 : "LifeCycleClassCleanupEndOfAssemblyAndNone.Dispose was called")}
 
-            """);
-        Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult caseDerivedClassCleanupEndOfClassAndBeforeEachDerivedClassParentTestMethod = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.Contains("LifeCycleDerivedClassCleanupEndOfClassAndBeforeEachDerivedClass.TestMethod"));
-        caseDerivedClassCleanupEndOfClassAndBeforeEachDerivedClassParentTestMethod.Outcome.Should().Be(Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome.Passed);
-        caseDerivedClassCleanupEndOfClassAndBeforeEachDerivedClassParentTestMethod.Messages.Should().HaveCount(3);
-        caseDerivedClassCleanupEndOfClassAndBeforeEachDerivedClassParentTestMethod.Messages[0].Text.Should().Be(
+            """,
+            caseDerivedClassCleanupEndOfAssemblyAndNoneParentTestMethod.Messages[2].Text);
+        TestResult caseDerivedClassCleanupEndOfClassAndBeforeEachDerivedClassParentTestMethod = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.Contains("LifeCycleDerivedClassCleanupEndOfClassAndBeforeEachDerivedClass.TestMethod"));
+        Assert.AreEqual(TestOutcome.Passed, caseDerivedClassCleanupEndOfClassAndBeforeEachDerivedClassParentTestMethod.Outcome);
+        Assert.HasCount(3, caseDerivedClassCleanupEndOfClassAndBeforeEachDerivedClassParentTestMethod.Messages);
+        Assert.AreEqual(
             $"""
             Console: LifeCycleClassCleanupEndOfClassAndBeforeEachDerivedClass.ctor was called
             Console: LifeCycleDerivedClassCleanupEndOfClassAndBeforeEachDerivedClass.ctor was called
@@ -1440,8 +1391,9 @@ public class SuiteLifeCycleTests : CLITestBase
             Console: LifeCycleDerivedClassCleanupEndOfClassAndBeforeEachDerivedClass.ClassCleanup was called
             Console: LifeCycleClassCleanupEndOfClassAndBeforeEachDerivedClass.ClassCleanup was called
 
-            """);
-        caseDerivedClassCleanupEndOfClassAndBeforeEachDerivedClassParentTestMethod.Messages[1].Text.Should().Be(
+            """,
+            caseDerivedClassCleanupEndOfClassAndBeforeEachDerivedClassParentTestMethod.Messages[0].Text);
+        Assert.AreEqual(
             $"""
 
 
@@ -1461,8 +1413,9 @@ public class SuiteLifeCycleTests : CLITestBase
             {GenerateTraceDebugPrefixedMessage("LifeCycleDerivedClassCleanupEndOfClassAndBeforeEachDerivedClass.ClassCleanup was called")}
             {GenerateTraceDebugPrefixedMessage("LifeCycleClassCleanupEndOfClassAndBeforeEachDerivedClass.ClassCleanup was called")}
 
-            """);
-        caseDerivedClassCleanupEndOfClassAndBeforeEachDerivedClassParentTestMethod.Messages[2].Text.Should().Be(
+            """,
+            caseDerivedClassCleanupEndOfClassAndBeforeEachDerivedClassParentTestMethod.Messages[1].Text);
+        Assert.AreEqual(
             $"""
 
 
@@ -1480,12 +1433,13 @@ public class SuiteLifeCycleTests : CLITestBase
             LifeCycleDerivedClassCleanupEndOfClassAndBeforeEachDerivedClass.ClassCleanup was called
             LifeCycleClassCleanupEndOfClassAndBeforeEachDerivedClass.ClassCleanup was called
 
-            """);
+            """,
+            caseDerivedClassCleanupEndOfClassAndBeforeEachDerivedClassParentTestMethod.Messages[2].Text);
 
-        Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult caseDerivedClassCleanupEndOfClassAndNoneParentTestMethod = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.Contains("LifeCycleDerivedClassCleanupEndOfClassAndNone.TestMethod"));
-        caseDerivedClassCleanupEndOfClassAndNoneParentTestMethod.Outcome.Should().Be(Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome.Passed);
-        caseDerivedClassCleanupEndOfClassAndNoneParentTestMethod.Messages.Should().HaveCount(3);
-        caseDerivedClassCleanupEndOfClassAndNoneParentTestMethod.Messages[0].Text.Should().Be(
+        TestResult caseDerivedClassCleanupEndOfClassAndNoneParentTestMethod = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.Contains("LifeCycleDerivedClassCleanupEndOfClassAndNone.TestMethod"));
+        Assert.AreEqual(TestOutcome.Passed, caseDerivedClassCleanupEndOfClassAndNoneParentTestMethod.Outcome);
+        Assert.HasCount(3, caseDerivedClassCleanupEndOfClassAndNoneParentTestMethod.Messages);
+        Assert.AreEqual(
             $"""
             Console: LifeCycleClassCleanupEndOfClassAndNone.ctor was called
             Console: LifeCycleDerivedClassCleanupEndOfClassAndNone.ctor was called
@@ -1498,8 +1452,9 @@ public class SuiteLifeCycleTests : CLITestBase
                 ? "Console: LifeCycleClassCleanupEndOfClassAndNone.DisposeAsync was called\r\nConsole: LifeCycleClassCleanupEndOfClassAndNone.Dispose was called"
                 : "Console: LifeCycleClassCleanupEndOfClassAndNone.Dispose was called")}
 
-            """);
-        caseDerivedClassCleanupEndOfClassAndNoneParentTestMethod.Messages[1].Text.Should().Be(
+            """,
+            caseDerivedClassCleanupEndOfClassAndNoneParentTestMethod.Messages[0].Text);
+        Assert.AreEqual(
             $"""
 
 
@@ -1517,8 +1472,9 @@ public class SuiteLifeCycleTests : CLITestBase
                     + GenerateTraceDebugPrefixedMessage("LifeCycleClassCleanupEndOfClassAndNone.Dispose was called")
                 : GenerateTraceDebugPrefixedMessage("LifeCycleClassCleanupEndOfClassAndNone.Dispose was called"))}
 
-            """);
-        caseDerivedClassCleanupEndOfClassAndNoneParentTestMethod.Messages[2].Text.Should().Be(
+            """,
+            caseDerivedClassCleanupEndOfClassAndNoneParentTestMethod.Messages[1].Text);
+        Assert.AreEqual(
             $"""
 
 
@@ -1534,14 +1490,15 @@ public class SuiteLifeCycleTests : CLITestBase
                 ? "LifeCycleClassCleanupEndOfClassAndNone.DisposeAsync was called\r\nLifeCycleClassCleanupEndOfClassAndNone.Dispose was called"
                 : "LifeCycleClassCleanupEndOfClassAndNone.Dispose was called")}
 
-            """);
+            """,
+            caseDerivedClassCleanupEndOfClassAndNoneParentTestMethod.Messages[2].Text);
 
         // Test the parent test method.
         // We are seeing all the ClassCleanup EndOfAssembly (or nothing set - as it's the default) being reported
         // here as this is the last test to run.
-        Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult caseDerivedClassInitializeNoneAndClassCleanupBeforeEachDerivedClassParentTestMethod = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.Contains("LifeCycleDerivedClassInitializeNoneAndClassCleanupBeforeEachDerivedClass.TestMethod"));
-        caseDerivedClassInitializeNoneAndClassCleanupBeforeEachDerivedClassParentTestMethod.Outcome.Should().Be(Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome.Passed);
-        caseDerivedClassInitializeNoneAndClassCleanupBeforeEachDerivedClassParentTestMethod.Messages.Should().HaveCount(3);
+        TestResult caseDerivedClassInitializeNoneAndClassCleanupBeforeEachDerivedClassParentTestMethod = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.Contains("LifeCycleDerivedClassInitializeNoneAndClassCleanupBeforeEachDerivedClass.TestMethod"));
+        Assert.AreEqual(TestOutcome.Passed, caseDerivedClassInitializeNoneAndClassCleanupBeforeEachDerivedClassParentTestMethod.Outcome);
+        Assert.HasCount(3, caseDerivedClassInitializeNoneAndClassCleanupBeforeEachDerivedClassParentTestMethod.Messages);
 
         // Locally, netfx calls seems to be respecting the order of the cleanup while it is not stable for netcore.
         // But local order is not the same on various machines. I am not sure whether we should be committing to a
@@ -1560,9 +1517,7 @@ public class SuiteLifeCycleTests : CLITestBase
                 : "Console: LifeCycleClassInitializeNoneAndClassCleanupBeforeEachDerivedClass.Dispose was called")}
 
             """;
-        caseDerivedClassInitializeNoneAndClassCleanupBeforeEachDerivedClassParentTestMethod
-            .Messages[0].Text
-            .Should().StartWith(expectedStart);
+        Assert.StartsWith(expectedStart, caseDerivedClassInitializeNoneAndClassCleanupBeforeEachDerivedClassParentTestMethod.Messages[0].Text);
 
         string[] expectedRemainingMessages =
             """
@@ -1588,11 +1543,12 @@ public class SuiteLifeCycleTests : CLITestBase
 
             """
             .Split(WindowsLineReturn, StringSplitOptions.None);
-        caseDerivedClassInitializeNoneAndClassCleanupBeforeEachDerivedClassParentTestMethod
-            .Messages[0].Text!
-            .Substring(expectedStart.Length)
-            .Split(WindowsLineReturn, StringSplitOptions.None)
-            .Should().BeEquivalentTo(expectedRemainingMessages);
+        CollectionAssert.AreEquivalent(
+            expectedRemainingMessages,
+            caseDerivedClassInitializeNoneAndClassCleanupBeforeEachDerivedClassParentTestMethod
+                .Messages[0].Text!
+                .Substring(expectedStart.Length)
+                .Split(WindowsLineReturn, StringSplitOptions.None));
 
         expectedStart =
             $"""
@@ -1613,9 +1569,7 @@ public class SuiteLifeCycleTests : CLITestBase
                 : GenerateTraceDebugPrefixedMessage("LifeCycleClassInitializeNoneAndClassCleanupBeforeEachDerivedClass.Dispose was called"))}
 
             """;
-        caseDerivedClassInitializeNoneAndClassCleanupBeforeEachDerivedClassParentTestMethod
-            .Messages[1].Text
-            .Should().StartWith(expectedStart);
+        Assert.StartsWith(expectedStart, caseDerivedClassInitializeNoneAndClassCleanupBeforeEachDerivedClassParentTestMethod.Messages[1].Text);
 
         expectedRemainingMessages =
             $"""
@@ -1641,11 +1595,12 @@ public class SuiteLifeCycleTests : CLITestBase
 
             """
             .Split(["\r\n"], StringSplitOptions.None);
-        caseDerivedClassInitializeNoneAndClassCleanupBeforeEachDerivedClassParentTestMethod
-            .Messages[1].Text!
-            .Substring(expectedStart.Length)
-            .Split(["\r\n"], StringSplitOptions.None)
-            .Should().BeEquivalentTo(expectedRemainingMessages);
+        CollectionAssert.AreEquivalent(
+            expectedRemainingMessages,
+            caseDerivedClassInitializeNoneAndClassCleanupBeforeEachDerivedClassParentTestMethod
+                .Messages[1].Text!
+                .Substring(expectedStart.Length)
+                .Split(["\r\n"], StringSplitOptions.None));
 
         expectedStart =
             $"""
@@ -1664,9 +1619,7 @@ public class SuiteLifeCycleTests : CLITestBase
                 : "LifeCycleClassInitializeNoneAndClassCleanupBeforeEachDerivedClass.Dispose was called")}
 
             """;
-        caseDerivedClassInitializeNoneAndClassCleanupBeforeEachDerivedClassParentTestMethod
-            .Messages[2].Text
-            .Should().StartWith(expectedStart);
+        Assert.StartsWith(expectedStart, caseDerivedClassInitializeNoneAndClassCleanupBeforeEachDerivedClassParentTestMethod.Messages[2].Text);
 
         expectedRemainingMessages =
             """
@@ -1692,11 +1645,145 @@ public class SuiteLifeCycleTests : CLITestBase
 
             """
             .Split(["\r\n"], StringSplitOptions.None);
-        caseDerivedClassInitializeNoneAndClassCleanupBeforeEachDerivedClassParentTestMethod
-            .Messages[2].Text!
-            .Substring(expectedStart.Length)
-            .Split(["\r\n"], StringSplitOptions.None)
-            .Should().BeEquivalentTo(expectedRemainingMessages);
+        CollectionAssert.AreEquivalent(
+            expectedRemainingMessages,
+            caseDerivedClassInitializeNoneAndClassCleanupBeforeEachDerivedClassParentTestMethod
+                .Messages[2].Text!
+                .Substring(expectedStart.Length)
+                .Split(["\r\n"], StringSplitOptions.None));
+    }
+
+    [TestMethod]
+    public void ValidateInheritanceBehavior()
+    {
+        InvokeVsTestForExecution(
+            [TestAssetName],
+            testCaseFilter: "FullyQualifiedName~LifecycleInheritance",
+            targetFramework: "net462");
+
+        Assert.HasCount(10, RunEventsHandler.PassedTests);
+
+        TestResult testMethod1 = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.EndsWith("TestClassDerived_EndOfClass.TestMethod", StringComparison.Ordinal));
+        Assert.AreEqual(
+            """
+            Console: AssemblyInit was called
+            TestClassBaseEndOfClass: ClassInitialize
+            TestClassDerived_EndOfClass: TestMethod
+            TestClassBaseEndOfClass: ClassCleanup
+
+            """,
+            testMethod1.Messages[0].Text);
+
+        TestResult testMethod2 = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.EndsWith("TestClassDerived_EndOfAssembly.TestMethod", StringComparison.Ordinal));
+        Assert.AreEqual(
+            """
+            TestClassBaseEndOfAssembly: ClassInitialize
+            TestClassDerived_EndOfAssembly: TestMethod
+
+            """,
+            testMethod2.Messages[0].Text);
+
+        TestResult testMethod3 = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.EndsWith("TestClassDerivedEndOfClass_EndOfClassEndOfClass.TestMethod", StringComparison.Ordinal));
+        Assert.AreEqual(
+            """
+            TestClassBaseEndOfClass: ClassInitialize
+            TestClassIntermediateEndOfClassBaseEndOfClass: ClassInitialize
+            TestClassDerivedEndOfClass_EndOfClassEndOfClass: TestMethod
+            TestClassDerivedEndOfClass_EndOfClassEndOfClass: ClassCleanup
+            TestClassIntermediateEndOfClassBaseEndOfClass: ClassCleanup
+            TestClassBaseEndOfClass: ClassCleanup
+
+            """,
+            testMethod3.Messages[0].Text);
+
+        TestResult testMethod4 = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.EndsWith("TestClassDerived_EndOfClassEndOfClass.TestMethod", StringComparison.Ordinal));
+        Assert.AreEqual(
+            """
+            TestClassBaseEndOfClass: ClassInitialize
+            TestClassIntermediateEndOfClassBaseEndOfClass: ClassInitialize
+            TestClassDerived_EndOfClassEndOfClass: TestMethod
+            TestClassIntermediateEndOfClassBaseEndOfClass: ClassCleanup
+            TestClassBaseEndOfClass: ClassCleanup
+
+            """,
+            testMethod4.Messages[0].Text);
+
+        TestResult testMethod5 = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.EndsWith("TestClassDerivedEndOfClass_EndOfClassEndOfAssembly.TestMethod", StringComparison.Ordinal));
+        Assert.AreEqual(
+            """
+            TestClassBaseEndOfAssembly: ClassInitialize
+            TestClassIntermediateEndOfClassBaseEndOfAssembly: ClassInitialize
+            TestClassDerivedEndOfClass_EndOfClassEndOfAssembly: TestMethod
+            TestClassDerivedEndOfClass_EndOfClassEndOfAssembly: ClassCleanup
+            TestClassIntermediateEndOfClassBaseEndOfAssembly: ClassCleanup
+            TestClassBaseEndOfAssembly: ClassCleanup
+
+            """,
+            testMethod5.Messages[0].Text);
+
+        TestResult testMethod6 = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.EndsWith("TestClassDerived_EndOfClassEndOfAssembly.TestMethod", StringComparison.Ordinal));
+        Assert.AreEqual(
+            """
+            TestClassBaseEndOfAssembly: ClassInitialize
+            TestClassIntermediateEndOfClassBaseEndOfAssembly: ClassInitialize
+            TestClassDerived_EndOfClassEndOfAssembly: TestMethod
+            TestClassIntermediateEndOfClassBaseEndOfAssembly: ClassCleanup
+            TestClassBaseEndOfAssembly: ClassCleanup
+
+            """,
+            testMethod6.Messages[0].Text);
+
+        TestResult testMethod7 = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.EndsWith("TestClassDerivedEndOfClass_EndOfAssemblyEndOfClass.TestMethod", StringComparison.Ordinal));
+        Assert.AreEqual(
+            """
+            TestClassBaseEndOfClass: ClassInitialize
+            TestClassIntermediateEndOfAssemblyBaseEndOfClass: ClassInitialize
+            TestClassDerivedEndOfClass_EndOfAssemblyEndOfClass: TestMethod
+            TestClassDerivedEndOfClass_EndOfAssemblyEndOfClass: ClassCleanup
+            TestClassIntermediateEndOfAssemblyBaseEndOfClass: ClassCleanup
+            TestClassBaseEndOfClass: ClassCleanup
+
+            """,
+            testMethod7.Messages[0].Text);
+
+        TestResult testMethod8 = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.EndsWith("TestClassDerived_EndOfAssemblyEndOfClass.TestMethod", StringComparison.Ordinal));
+        Assert.AreEqual(
+            """
+            TestClassBaseEndOfClass: ClassInitialize
+            TestClassIntermediateEndOfAssemblyBaseEndOfClass: ClassInitialize
+            TestClassDerived_EndOfAssemblyEndOfClass: TestMethod
+            TestClassIntermediateEndOfAssemblyBaseEndOfClass: ClassCleanup
+            TestClassBaseEndOfClass: ClassCleanup
+
+            """,
+            testMethod8.Messages[0].Text);
+
+        TestResult testMethod9 = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.EndsWith("TestClassDerivedEndOfClass_EndOfAssemblyEndOfAssembly.TestMethod", StringComparison.Ordinal));
+        Assert.AreEqual(
+            """
+            TestClassBaseEndOfAssembly: ClassInitialize
+            TestClassIntermediateEndOfAssemblyBaseEndOfAssembly: ClassInitialize
+            TestClassDerivedEndOfClass_EndOfAssemblyEndOfAssembly: TestMethod
+            TestClassDerivedEndOfClass_EndOfAssemblyEndOfAssembly: ClassCleanup
+            TestClassIntermediateEndOfAssemblyBaseEndOfAssembly: ClassCleanup
+            TestClassBaseEndOfAssembly: ClassCleanup
+
+            """,
+            testMethod9.Messages[0].Text);
+
+        TestResult testMethod10 = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.EndsWith("TestClassDerived_EndOfAssemblyEndOfAssembly.TestMethod", StringComparison.Ordinal));
+        Assert.AreEqual(
+            """
+            TestClassBaseEndOfAssembly: ClassInitialize
+            TestClassIntermediateEndOfAssemblyBaseEndOfAssembly: ClassInitialize
+            TestClassDerived_EndOfAssemblyEndOfAssembly: TestMethod
+            TestClassIntermediateEndOfAssemblyBaseEndOfAssembly: ClassCleanup
+            TestClassBaseEndOfAssembly: ClassCleanup
+            TestClassBaseEndOfAssembly: ClassCleanup
+            Console: AssemblyCleanup was called
+
+            """,
+            testMethod10.Messages[0].Text);
     }
 
     private static string GenerateTraceDebugPrefixedMessage(string message)
