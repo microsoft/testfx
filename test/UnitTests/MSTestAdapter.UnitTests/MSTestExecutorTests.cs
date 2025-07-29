@@ -10,6 +10,8 @@ using Moq;
 
 using TestFramework.ForTestingMSTest;
 
+using FluentAssertions;
+
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests;
 
 public class MSTestExecutorTests : TestContainer
@@ -33,7 +35,7 @@ public class MSTestExecutorTests : TestContainer
 
         var extensionUriString = (ExtensionUriAttribute)testExecutor.GetType().GetCustomAttributes(typeof(ExtensionUriAttribute), false).Single();
 
-        Verify(extensionUriString.ExtensionUri == EngineConstants.ExecutorUriString);
+        extensionUriString.ExtensionUri.Should().Be(EngineConstants.ExecutorUriString);
     }
 
     public async Task RunTestsShouldNotExecuteTestsIfTestSettingsIsGiven()
@@ -140,7 +142,7 @@ public class MSTestExecutorTests : TestContainer
         _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
         await _mstestExecutor.RunTestsAsync(sources, _mockRunContext.Object, _mockFrameworkHandle.Object, null);
 
-        Verify(MSTestSettings.RunConfigurationSettings.CollectSourceInformation);
+        MSTestSettings.RunConfigurationSettings.CollectSourceInformation.Should().BeTrue();
     }
 
     public async Task RunTestsWithSourcesShouldSetCollectSourceInformationAsFalseIfSpecifiedInRunSettings()
@@ -158,6 +160,6 @@ public class MSTestExecutorTests : TestContainer
         _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
         await _mstestExecutor.RunTestsAsync(sources, _mockRunContext.Object, _mockFrameworkHandle.Object, null);
 
-        Verify(!MSTestSettings.RunConfigurationSettings.CollectSourceInformation);
+        !MSTestSettings.RunConfigurationSettings.CollectSourceInformation.Should().BeTrue();
     }
 }

@@ -3,6 +3,8 @@
 
 using TestFramework.ForTestingMSTest;
 
+using FluentAssertions;
+
 namespace UnitTestFramework.Tests;
 
 /// <summary>
@@ -22,7 +24,7 @@ public class ExpectedExceptionBaseAttributeTests : TestContainer
         void A() => _sut.RethrowIfAssertException(new AssertFailedException());
 
         Exception ex = VerifyThrows(A);
-        Verify(ex is AssertFailedException);
+        ex is AssertFailedException.Should().BeTrue();
     }
 
     /// <summary>
@@ -38,7 +40,7 @@ public class ExpectedExceptionBaseAttributeTests : TestContainer
 
         string result = _sut.GetNoExceptionMessage();
 
-        Verify(expected == result);
+        expected.Should().Be(result);
     }
 
     public void VerifyEmptyMessageIsGettingSetInVariableNoExceptionMessage()

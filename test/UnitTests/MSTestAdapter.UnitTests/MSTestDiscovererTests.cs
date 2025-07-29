@@ -73,14 +73,14 @@ public class MSTestDiscovererTests : TestContainer
     public void MSTestDiscovererHasDllAsFileExtension()
     {
         IEnumerable<FileExtensionAttribute> attributes = typeof(MSTestDiscoverer).GetCustomAttributes<FileExtensionAttribute>();
-        Verify(attributes is not null);
+        attributes.Should().NotBeNull();
         Verify(attributes.Count(attribute => attribute.FileExtension == ".dll") == 1);
     }
 
     public void MSTestDiscovererHasExeAsFileExtension()
     {
         IEnumerable<FileExtensionAttribute> attributes = typeof(MSTestDiscoverer).GetCustomAttributes<FileExtensionAttribute>();
-        Verify(attributes is not null);
+        attributes.Should().NotBeNull();
         Verify(attributes.Count(attribute => attribute.FileExtension == ".exe") == 1);
     }
 
@@ -109,7 +109,7 @@ public class MSTestDiscovererTests : TestContainer
             .Returns(new List<string> { });
 
         void A() => _discoverer.DiscoverTests(new List<string>(), _mockDiscoveryContext.Object, _mockMessageLogger.Object, _mockTestCaseDiscoverySink.Object);
-        VerifyThrows<NotSupportedException>(A);
+        A.Should().Throw<NotSupportedException>();
     }
 
     public void DiscoverTestsShouldNotThrowIfDiscoveryContextIsNull()

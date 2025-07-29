@@ -3,6 +3,8 @@
 
 using TestFramework.ForTestingMSTest;
 
+using FluentAssertions;
+
 namespace UnitTestFramework.Tests;
 
 /// <summary>
@@ -18,7 +20,7 @@ public class ExpectedExceptionAttributeTests : TestContainer
         static void A() => _ = new ExpectedExceptionAttribute(null!, "Dummy");
 
         Exception ex = VerifyThrows(A);
-        Verify(ex is ArgumentNullException);
+        ex is ArgumentNullException.Should().BeTrue();
     }
 
     /// <summary>
@@ -38,7 +40,7 @@ public class ExpectedExceptionAttributeTests : TestContainer
         Exception ex = new("Dummy Exception");
         string actualMessage = UtfHelper.GetExceptionMsg(ex);
         string expectedMessage = "System.Exception: Dummy Exception";
-        Verify(expectedMessage == actualMessage);
+        expectedMessage.Should().Be(actualMessage);
     }
 
     public void GetExceptionMsgShouldReturnInnerExceptionMessageAsWellIfPresent()
@@ -47,7 +49,7 @@ public class ExpectedExceptionAttributeTests : TestContainer
         Exception ex = new("Dummy Exception", innerException);
         string actualMessage = UtfHelper.GetExceptionMsg(ex);
         string expectedMessage = "System.Exception: Dummy Exception ---> System.DivideByZeroException: Attempted to divide by zero.";
-        Verify(expectedMessage == actualMessage);
+        expectedMessage.Should().Be(actualMessage);
     }
 
     public void GetExceptionMsgShouldReturnInnerExceptionMessageRecursivelyIfPresent()
@@ -57,7 +59,7 @@ public class ExpectedExceptionAttributeTests : TestContainer
         Exception ex = new("FirstLevelException", innerException);
         string actualMessage = UtfHelper.GetExceptionMsg(ex);
         string expectedMessage = "System.Exception: FirstLevelException ---> System.DivideByZeroException: SecondLevel Exception ---> System.IndexOutOfRangeException: ThirdLevelException";
-        Verify(expectedMessage == actualMessage);
+        expectedMessage.Should().Be(actualMessage);
     }
 }
 

@@ -3,13 +3,15 @@
 
 using TestFramework.ForTestingMSTest;
 
+using FluentAssertions;
+
 namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.Assertions;
 
 public class StringAssertTests : TestContainer
 {
-    public void InstanceShouldReturnAnInstanceOfStringAssert() => Verify(StringAssert.Instance is not null);
+    public void InstanceShouldReturnAnInstanceOfStringAssert() => StringAssert.Instance.Should().NotBeNull();
 
-    public void InstanceShouldCacheStringAssertInstance() => Verify(StringAssert.Instance == StringAssert.Instance);
+    public void InstanceShouldCacheStringAssertInstance() => StringAssert.Instance.Should().Be(StringAssert.Instance);
 
     public void StringAssertContains()
     {
@@ -83,7 +85,7 @@ public class StringAssertTests : TestContainer
     public void StringAssertContainsFailsIfMessageIsInvalidStringFormatComposite()
     {
         Exception ex = VerifyThrows(() => StringAssert.Contains("a", "b", "message {{0}", "arg"));
-        Verify(ex is FormatException);
+        ex is FormatException.Should().BeTrue();
     }
 
     public void StringAssertContainsNullabilitiesPostConditions()
@@ -319,7 +321,7 @@ public class StringAssertTests : TestContainer
 #pragma warning disable CS0618 // Type or member is obsolete
         Exception ex = VerifyThrows(() => StringAssert.Equals("test", "test"));
 #pragma warning restore CS0618 // Type or member is obsolete
-        Verify(ex is AssertFailedException);
+        ex is AssertFailedException.Should().BeTrue();
         Verify(ex.Message.Contains("StringAssert.Equals should not be used for Assertions"));
     }
 
@@ -329,7 +331,7 @@ public class StringAssertTests : TestContainer
 #pragma warning disable CS0618 // Type or member is obsolete
         Exception ex = VerifyThrows(() => StringAssert.ReferenceEquals(obj, obj));
 #pragma warning restore CS0618 // Type or member is obsolete
-        Verify(ex is AssertFailedException);
+        ex is AssertFailedException.Should().BeTrue();
         Verify(ex.Message.Contains("StringAssert.ReferenceEquals should not be used for Assertions"));
     }
 #endif

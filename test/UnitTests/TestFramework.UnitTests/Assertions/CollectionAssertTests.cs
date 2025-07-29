@@ -5,13 +5,15 @@ using System.Collections.ObjectModel;
 
 using TestFramework.ForTestingMSTest;
 
+using FluentAssertions;
+
 namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.Assertions;
 
 public class CollectionAssertTests : TestContainer
 {
-    public void InstanceShouldReturnAnInstanceOfCollectionAssert() => Verify(CollectionAssert.Instance is not null);
+    public void InstanceShouldReturnAnInstanceOfCollectionAssert() => CollectionAssert.Instance.Should().NotBeNull();
 
-    public void InstanceShouldCacheCollectionAssertInstance() => Verify(CollectionAssert.Instance == CollectionAssert.Instance);
+    public void InstanceShouldCacheCollectionAssertInstance() => CollectionAssert.Instance.Should().Be(CollectionAssert.Instance);
 
     public void CollectionAssertContainsNullabilityPostConditions()
     {
@@ -569,7 +571,7 @@ public class CollectionAssertTests : TestContainer
 #pragma warning disable CS0618 // Type or member is obsolete
         Exception ex = VerifyThrows(() => CollectionAssert.Equals("test", "test"));
 #pragma warning restore CS0618 // Type or member is obsolete
-        Verify(ex is AssertFailedException);
+        ex is AssertFailedException.Should().BeTrue();
         Verify(ex.Message.Contains("CollectionAssert.Equals should not be used for Assertions"));
     }
 
@@ -579,7 +581,7 @@ public class CollectionAssertTests : TestContainer
 #pragma warning disable CS0618 // Type or member is obsolete
         Exception ex = VerifyThrows(() => CollectionAssert.ReferenceEquals(obj, obj));
 #pragma warning restore CS0618 // Type or member is obsolete
-        Verify(ex is AssertFailedException);
+        ex is AssertFailedException.Should().BeTrue();
         Verify(ex.Message.Contains("CollectionAssert.ReferenceEquals should not be used for Assertions"));
     }
 #endif

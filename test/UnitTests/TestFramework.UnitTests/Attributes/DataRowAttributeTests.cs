@@ -5,6 +5,8 @@ using Moq;
 
 using TestFramework.ForTestingMSTest;
 
+using FluentAssertions;
+
 namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.Attributes;
 
 public class DataRowAttributeTests : TestContainer
@@ -58,7 +60,7 @@ public class DataRowAttributeTests : TestContainer
         // Fixes https://github.com/microsoft/testfx/issues/1180
         var dataRow = new DataRowAttribute(new[] { "a" }, new[] { "b" });
 
-        Verify(dataRow.Data.Length == 2);
+        dataRow.Data.Length.Should().Be(2);
         Verify(dataRow.Data[0] is string[] array1 && array1.SequenceEqual(["a"]));
         Verify(dataRow.Data[1] is string[] array2 && array2.SequenceEqual(["b"]));
     }
@@ -104,7 +106,7 @@ public class DataRowAttributeTests : TestContainer
         string?[] data = ["First", "Second", null];
 
         string? displayName = dataRowAttribute.GetDisplayName(testMethodInfo, data);
-        Verify(displayName == "DataRowTestWithDisplayName");
+        displayName.Should().Be("DataRowTestWithDisplayName");
     }
 
     public void GetDisplayNameForArrayOfOneItem()
@@ -131,7 +133,7 @@ public class DataRowAttributeTests : TestContainer
         string? displayName = dataRow.GetDisplayName(methodInfoMock.Object, dataRow.Data);
 
         // Assert
-        Verify(displayName == "Overridden DisplayName");
+        displayName.Should().Be("Overridden DisplayName");
     }
 
     public void GetDisplayNameForArrayOfMultipleItems()

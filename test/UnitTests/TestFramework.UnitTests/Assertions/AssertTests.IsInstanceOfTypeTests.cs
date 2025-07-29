@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using FluentAssertions;
+
 namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests;
 
 [SuppressMessage("Usage", "CA2263:Prefer generic overload when type is known", Justification = "We want to test also the non-generic API")]
@@ -9,19 +11,19 @@ public partial class AssertTests
     public void InstanceOfTypeShouldFailWhenValueIsNull()
     {
         Exception ex = VerifyThrows<AssertFailedException>(() => Assert.IsInstanceOfType(null, typeof(AssertTests)));
-        Verify(ex.Message == "Assert.IsInstanceOfType failed. ");
+        ex.Message.Should().Be("Assert.IsInstanceOfType failed. ");
     }
 
     public void InstanceOfTypeShouldFailWhenTypeIsNull()
     {
         Exception ex = VerifyThrows<AssertFailedException>(() => Assert.IsInstanceOfType(5, null));
-        Verify(ex.Message == "Assert.IsInstanceOfType failed. ");
+        ex.Message.Should().Be("Assert.IsInstanceOfType failed. ");
     }
 
     public void InstanceOfTypeShouldFailWhenTypeIsMismatched()
     {
         Exception ex = VerifyThrows<AssertFailedException>(() => Assert.IsInstanceOfType(5, typeof(string)));
-        Verify(ex.Message == "Assert.IsInstanceOfType failed.  Expected type:<System.String>. Actual type:<System.Int32>.");
+        ex.Message.Should().Be("Assert.IsInstanceOfType failed.  Expected type:<System.String>. Actual type:<System.Int32>.");
     }
 
     public void InstanceOfTypeShouldPassOnSameInstance() => Assert.IsInstanceOfType(5, typeof(int));
@@ -31,19 +33,19 @@ public partial class AssertTests
     public void InstanceOfType_WithStringMessage_ShouldFailWhenValueIsNull()
     {
         Exception ex = VerifyThrows<AssertFailedException>(() => Assert.IsInstanceOfType(null, typeof(AssertTests), "User-provided message"));
-        Verify(ex.Message == "Assert.IsInstanceOfType failed. User-provided message");
+        ex.Message.Should().Be("Assert.IsInstanceOfType failed. User-provided message");
     }
 
     public void InstanceOfType_WithStringMessage_ShouldFailWhenTypeIsNull()
     {
         Exception ex = VerifyThrows<AssertFailedException>(() => Assert.IsInstanceOfType(5, null, "User-provided message"));
-        Verify(ex.Message == "Assert.IsInstanceOfType failed. User-provided message");
+        ex.Message.Should().Be("Assert.IsInstanceOfType failed. User-provided message");
     }
 
     public void InstanceOfType_WithStringMessage_ShouldFailWhenTypeIsMismatched()
     {
         Exception ex = VerifyThrows<AssertFailedException>(() => Assert.IsInstanceOfType(5, typeof(string), "User-provided message"));
-        Verify(ex.Message == "Assert.IsInstanceOfType failed. User-provided message Expected type:<System.String>. Actual type:<System.Int32>.");
+        ex.Message.Should().Be("Assert.IsInstanceOfType failed. User-provided message Expected type:<System.String>. Actual type:<System.Int32>.");
     }
 
     public void InstanceOfType_WithStringMessage_ShouldPassWhenTypeIsCorrect()
@@ -55,30 +57,30 @@ public partial class AssertTests
         DateTime dateTime = DateTime.Now;
         Exception ex = await VerifyThrowsAsync<AssertFailedException>(async () => Assert.IsInstanceOfType(null, typeof(AssertTests), $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}"));
         Verify(ex.Message == $"Assert.IsInstanceOfType failed. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
-        Verify(o.WasToStringCalled);
+        o.WasToStringCalled.Should().BeTrue();
     }
 
     public void InstanceOfType_WithInterpolatedString_ShouldFailWhenTypeIsNull()
     {
         DummyClassTrackingToStringCalls o = new();
         Exception ex = VerifyThrows<AssertFailedException>(() => Assert.IsInstanceOfType(5, null, $"User-provided message {o}"));
-        Verify(ex.Message == "Assert.IsInstanceOfType failed. User-provided message DummyClassTrackingToStringCalls");
-        Verify(o.WasToStringCalled);
+        ex.Message.Should().Be("Assert.IsInstanceOfType failed. User-provided message DummyClassTrackingToStringCalls");
+        o.WasToStringCalled.Should().BeTrue();
     }
 
     public void InstanceOfType_WithInterpolatedString_ShouldFailWhenTypeIsMismatched()
     {
         DummyClassTrackingToStringCalls o = new();
         Exception ex = VerifyThrows<AssertFailedException>(() => Assert.IsInstanceOfType(5, typeof(string), $"User-provided message {o}"));
-        Verify(ex.Message == "Assert.IsInstanceOfType failed. User-provided message DummyClassTrackingToStringCalls Expected type:<System.String>. Actual type:<System.Int32>.");
-        Verify(o.WasToStringCalled);
+        ex.Message.Should().Be("Assert.IsInstanceOfType failed. User-provided message DummyClassTrackingToStringCalls Expected type:<System.String>. Actual type:<System.Int32>.");
+        o.WasToStringCalled.Should().BeTrue();
     }
 
     public void InstanceOfType_WithInterpolatedString_ShouldPassWhenTypeIsCorrect()
     {
         DummyClassTrackingToStringCalls o = new();
         Assert.IsInstanceOfType(5, typeof(int), $"User-provided message {o}");
-        Verify(!o.WasToStringCalled);
+        !o.WasToStringCalled.Should().BeTrue();
     }
 
     public void InstanceNotOfTypeShouldFailWhenValueIsNull() => Assert.IsNotInstanceOfType(null, typeof(object));
@@ -93,26 +95,26 @@ public partial class AssertTests
     public void IsInstanceOfTypeUsingGenericType_WhenValueIsNull_Fails()
     {
         Exception ex = VerifyThrows<AssertFailedException>(() => Assert.IsInstanceOfType<AssertTests>(null));
-        Verify(ex.Message == "Assert.IsInstanceOfType failed. ");
+        ex.Message.Should().Be("Assert.IsInstanceOfType failed. ");
     }
 
     public void IsInstanceOfTypeUsingGenericType_WhenTypeMismatch_Fails()
     {
         Exception ex = VerifyThrows<AssertFailedException>(() => Assert.IsInstanceOfType<string>(5));
-        Verify(ex.Message == "Assert.IsInstanceOfType failed.  Expected type:<System.String>. Actual type:<System.Int32>.");
+        ex.Message.Should().Be("Assert.IsInstanceOfType failed.  Expected type:<System.String>. Actual type:<System.Int32>.");
     }
 
     public void IsInstanceOfTypeUsingGenericTypeWithOutParameter_WhenValueIsNull_Fails()
     {
         AssertTests? assertTests = null;
         VerifyThrows<AssertFailedException>(() => Assert.IsInstanceOfType<AssertTests>(null, out assertTests));
-        Verify(assertTests is null);
+        assertTests.Should().BeNull();
     }
 
     public void IsInstanceOfTypeUsingGenericTypeWithOutParameter_WhenTypeMismatch_Fails()
     {
         Exception ex = VerifyThrows<AssertFailedException>(() => Assert.IsInstanceOfType<string>(5, out _));
-        Verify(ex.Message == "Assert.IsInstanceOfType failed.  Expected type:<System.String>. Actual type:<System.Int32>.");
+        ex.Message.Should().Be("Assert.IsInstanceOfType failed.  Expected type:<System.String>. Actual type:<System.Int32>.");
     }
 
     public void IsInstanceOfTypeUsingGenericType_OnSameInstance_DoesNotThrow() => Assert.IsInstanceOfType<int>(5);
@@ -120,14 +122,14 @@ public partial class AssertTests
     public void IsInstanceOfTypeUsingGenericTypeWithOutParameter_OnSameInstance_DoesNotThrow()
     {
         Assert.IsInstanceOfType<int>(5, out int instance);
-        Verify(instance == 5);
+        instance.Should().Be(5);
     }
 
     public void IsInstanceOfTypeUsingGenericTypeWithOutParameter_OnSameInstanceReferenceType_DoesNotThrow()
     {
         object testInstance = new AssertTests();
         Assert.IsInstanceOfType<AssertTests>(testInstance, out AssertTests instance);
-        Verify(testInstance == instance);
+        testInstance.Should().Be(instance);
     }
 
     public void IsInstanceOfTypeUsingGenericType_OnHigherInstance_DoesNotThrow() => Assert.IsInstanceOfType<object>(5);
@@ -136,7 +138,7 @@ public partial class AssertTests
     {
         object testInstance = new AssertTests();
         Assert.IsInstanceOfType<object>(testInstance, out object instance);
-        Verify(instance == testInstance);
+        instance.Should().Be(testInstance);
     }
 
     public void IsNotInstanceOfTypeUsingGenericType_WhenValueIsNull_DoesNotThrow() => Assert.IsNotInstanceOfType<object>(null);

@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using FluentAssertions;
+
 namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests;
 
 public partial class AssertTests
@@ -9,14 +11,14 @@ public partial class AssertTests
     {
         bool? nullBool = null;
         Exception ex = VerifyThrows(() => Assert.IsFalse(nullBool));
-        Verify(ex.Message == "Assert.IsFalse failed. ");
+        ex.Message.Should().Be("Assert.IsFalse failed. ");
     }
 
     public void IsFalseNullableBooleanShouldFailWithTrue()
     {
         bool? nullBool = true;
         Exception ex = VerifyThrows(() => Assert.IsFalse(nullBool));
-        Verify(ex.Message == "Assert.IsFalse failed. ");
+        ex.Message.Should().Be("Assert.IsFalse failed. ");
     }
 
     public void IsFalseNullableBooleanShouldNotFailWithFalse()
@@ -28,7 +30,7 @@ public partial class AssertTests
     public void IsFalseBooleanShouldFailWithTrue()
     {
         Exception ex = VerifyThrows(() => Assert.IsFalse(true));
-        Verify(ex.Message == "Assert.IsFalse failed. ");
+        ex.Message.Should().Be("Assert.IsFalse failed. ");
     }
 
     public void IsFalseBooleanShouldNotFailWithFalse()
@@ -38,14 +40,14 @@ public partial class AssertTests
     {
         bool? nullBool = null;
         Exception ex = VerifyThrows(() => Assert.IsFalse(nullBool, "User-provided message"));
-        Verify(ex.Message == "Assert.IsFalse failed. User-provided message");
+        ex.Message.Should().Be("Assert.IsFalse failed. User-provided message");
     }
 
     public void IsFalseNullableBooleanStringMessageShouldFailWithTrue()
     {
         bool? nullBool = true;
         Exception ex = VerifyThrows(() => Assert.IsFalse(nullBool, "User-provided message"));
-        Verify(ex.Message == "Assert.IsFalse failed. User-provided message");
+        ex.Message.Should().Be("Assert.IsFalse failed. User-provided message");
     }
 
     public void IsFalseNullableBooleanStringMessageShouldNotFailWithFalse()
@@ -57,7 +59,7 @@ public partial class AssertTests
     public void IsFalseBooleanStringMessageShouldFailWithTrue()
     {
         Exception ex = VerifyThrows(() => Assert.IsFalse(true, "User-provided message"));
-        Verify(ex.Message == "Assert.IsFalse failed. User-provided message");
+        ex.Message.Should().Be("Assert.IsFalse failed. User-provided message");
     }
 
     public void IsFalseBooleanStringMessageShouldNotFailWithFalse()
@@ -102,14 +104,14 @@ public partial class AssertTests
     {
         bool? nullBool = null;
         Exception ex = VerifyThrows(() => Assert.IsFalse(nullBool, "User-provided message. Input: {0}", nullBool));
-        Verify(ex.Message == "Assert.IsFalse failed. User-provided message. Input: ");
+        ex.Message.Should().Be("Assert.IsFalse failed. User-provided message. Input: ");
     }
 
     public void IsFalseNullableBooleanMessageArgsShouldFailWithTrue()
     {
         bool? nullBool = true;
         Exception ex = VerifyThrows(() => Assert.IsFalse(nullBool, "User-provided message. Input: {0}", nullBool));
-        Verify(ex.Message == "Assert.IsFalse failed. User-provided message. Input: True");
+        ex.Message.Should().Be("Assert.IsFalse failed. User-provided message. Input: True");
     }
 
     public void IsFalseNullableBooleanMessageArgsShouldNotFailWithFalse()
@@ -121,7 +123,7 @@ public partial class AssertTests
     public void IsFalseBooleanMessageArgsShouldFailWithTrue()
     {
         Exception ex = VerifyThrows(() => Assert.IsFalse(true, "User-provided message. Input: {0}", true));
-        Verify(ex.Message == "Assert.IsFalse failed. User-provided message. Input: True");
+        ex.Message.Should().Be("Assert.IsFalse failed. User-provided message. Input: True");
     }
 
     public void IsFalseBooleanMessageArgsShouldNotFailWithFalse()
@@ -131,14 +133,14 @@ public partial class AssertTests
     {
         bool? nullBool = null;
         Exception ex = VerifyThrows(() => Assert.IsTrue(nullBool));
-        Verify(ex.Message == "Assert.IsTrue failed. ");
+        ex.Message.Should().Be("Assert.IsTrue failed. ");
     }
 
     public void IsTrueNullableBooleanShouldFailWithFalse()
     {
         bool? nullBool = false;
         Exception ex = VerifyThrows(() => Assert.IsTrue(nullBool));
-        Verify(ex.Message == "Assert.IsTrue failed. ");
+        ex.Message.Should().Be("Assert.IsTrue failed. ");
     }
 
     public void IsTrueNullableBooleanShouldNotFailWithTrue()
@@ -150,7 +152,7 @@ public partial class AssertTests
     public void IsTrueBooleanShouldFailWithFalse()
     {
         Exception ex = VerifyThrows(() => Assert.IsTrue(false));
-        Verify(ex.Message == "Assert.IsTrue failed. ");
+        ex.Message.Should().Be("Assert.IsTrue failed. ");
     }
 
     public void IsTrueBooleanShouldNotFailWithTrue()
@@ -160,14 +162,14 @@ public partial class AssertTests
     {
         bool? nullBool = null;
         Exception ex = VerifyThrows(() => Assert.IsTrue(nullBool, "User-provided message"));
-        Verify(ex.Message == "Assert.IsTrue failed. User-provided message");
+        ex.Message.Should().Be("Assert.IsTrue failed. User-provided message");
     }
 
     public void IsTrueNullableBooleanStringMessageShouldFailWithFalse()
     {
         bool? nullBool = false;
         Exception ex = VerifyThrows(() => Assert.IsTrue(nullBool, "User-provided message"));
-        Verify(ex.Message == "Assert.IsTrue failed. User-provided message");
+        ex.Message.Should().Be("Assert.IsTrue failed. User-provided message");
     }
 
     public void IsTrueNullableBooleanStringMessageShouldNotFailWithTrue()
@@ -179,7 +181,7 @@ public partial class AssertTests
     public void IsTrueBooleanStringMessageShouldFailWithFalse()
     {
         Exception ex = VerifyThrows(() => Assert.IsTrue(false, "User-provided message"));
-        Verify(ex.Message == "Assert.IsTrue failed. User-provided message");
+        ex.Message.Should().Be("Assert.IsTrue failed. User-provided message");
     }
 
     public void IsTrueBooleanStringMessageShouldNotFailWithTrue()
@@ -224,14 +226,14 @@ public partial class AssertTests
     {
         bool? nullBool = null;
         Exception ex = VerifyThrows(() => Assert.IsTrue(nullBool, "User-provided message. Input: {0}", nullBool));
-        Verify(ex.Message == "Assert.IsTrue failed. User-provided message. Input: ");
+        ex.Message.Should().Be("Assert.IsTrue failed. User-provided message. Input: ");
     }
 
     public void IsTrueNullableBooleanMessageArgsShouldFailWithFalse()
     {
         bool? nullBool = false;
         Exception ex = VerifyThrows(() => Assert.IsTrue(nullBool, "User-provided message. Input: {0}", nullBool));
-        Verify(ex.Message == "Assert.IsTrue failed. User-provided message. Input: False");
+        ex.Message.Should().Be("Assert.IsTrue failed. User-provided message. Input: False");
     }
 
     public void IsTrueNullableBooleanMessageArgsShouldNotFailWithTrue()
@@ -243,7 +245,7 @@ public partial class AssertTests
     public void IsTrueBooleanMessageArgsShouldFailWithFalse()
     {
         Exception ex = VerifyThrows(() => Assert.IsTrue(false, "User-provided message. Input: {0}", false));
-        Verify(ex.Message == "Assert.IsTrue failed. User-provided message. Input: False");
+        ex.Message.Should().Be("Assert.IsTrue failed. User-provided message. Input: False");
     }
 
     public void IsTrueBooleanMessageArgsShouldNotFailWithTrue()

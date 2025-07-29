@@ -3,6 +3,8 @@
 
 using TestFramework.ForTestingMSTest;
 
+using FluentAssertions;
+
 namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests;
 
 public class TestDataRowTests : TestContainer
@@ -12,10 +14,10 @@ public class TestDataRowTests : TestContainer
         string value = "test_value";
         var testDataRow = new TestDataRow<string>(value);
 
-        Verify(testDataRow.Value == value);
-        Verify(testDataRow.IgnoreMessage == null);
-        Verify(testDataRow.DisplayName == null);
-        Verify(testDataRow.TestCategories == null);
+        testDataRow.Value.Should().Be(value);
+        testDataRow.IgnoreMessage.Should().Be(null);
+        testDataRow.DisplayName.Should().Be(null);
+        testDataRow.TestCategories.Should().Be(null);
     }
 
     public void TestDataRowShouldAllowSettingTestCategories()
@@ -26,9 +28,9 @@ public class TestDataRowTests : TestContainer
 
         testDataRow.TestCategories = testCategories;
 
-        Verify(testDataRow.TestCategories == testCategories);
-        Verify(testDataRow.TestCategories.Count == 2);
-        Verify(testDataRow.TestCategories.Contains("Category1"));
+        testDataRow.TestCategories.Should().Be(testCategories);
+        testDataRow.TestCategories.Count.Should().Be(2);
+        testDataRow.TestCategories.Contains("Category1"));
         Verify(testDataRow.TestCategories.Contains("Category2"));
     }
 
@@ -41,9 +43,9 @@ public class TestDataRowTests : TestContainer
 
         ITestDataRow dataRow = testDataRow;
 
-        Verify(dataRow.TestCategories != null);
-        Verify(dataRow.TestCategories.Count == 2);
-        Verify(dataRow.TestCategories.Contains("Integration"));
+        Verify(dataRow.TestCategories.Should().NotBe(null);
+        dataRow.TestCategories.Count.Should().Be(2);
+        dataRow.TestCategories.Contains("Integration"));
         Verify(dataRow.TestCategories.Contains("Unit"));
     }
 
@@ -55,10 +57,10 @@ public class TestDataRowTests : TestContainer
             TestCategories = null,
         };
 
-        Verify(testDataRow.TestCategories == null);
+        testDataRow.TestCategories.Should().Be(null);
 
         ITestDataRow dataRow = testDataRow;
-        Verify(dataRow.TestCategories == null);
+        dataRow.TestCategories.Should().Be(null);
     }
 
     public void TestDataRowShouldAllowEmptyTestCategories()
@@ -69,11 +71,11 @@ public class TestDataRowTests : TestContainer
 
         testDataRow.TestCategories = emptyCategories;
 
-        Verify(testDataRow.TestCategories == emptyCategories);
-        Verify(testDataRow.TestCategories.Count == 0);
+        testDataRow.TestCategories.Should().Be(emptyCategories);
+        testDataRow.TestCategories.Count.Should().Be(0);
 
         ITestDataRow dataRow = testDataRow;
-        Verify(dataRow.TestCategories != null);
-        Verify(dataRow.TestCategories.Count == 0);
+        Verify(dataRow.TestCategories.Should().NotBe(null);
+        dataRow.TestCategories.Count.Should().Be(0);
     }
 }

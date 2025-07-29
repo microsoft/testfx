@@ -3,6 +3,8 @@
 
 using TestFramework.ForTestingMSTest;
 
+using FluentAssertions;
+
 namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.Attributes;
 
 public class DynamicDataAttributeTests : TestContainer
@@ -32,8 +34,8 @@ public class DynamicDataAttributeTests : TestContainer
         MethodInfo methodInfo = _dummyTestClass.GetType().GetTypeInfo().GetDeclaredMethod("TestMethod1")!;
         _dynamicDataAttribute = new DynamicDataAttribute("ReusableTestDataProperty");
         IEnumerable<object[]> data = _dynamicDataAttribute.GetData(methodInfo);
-        Verify(data is not null);
-        Verify(data.ToList().Count == 2);
+        data.Should().NotBeNull();
+        data.ToList().Count.Should().Be(2);
     }
 
     public void GetDataShouldReadDataFromPropertyInDifferentClass()
@@ -41,8 +43,8 @@ public class DynamicDataAttributeTests : TestContainer
         MethodInfo methodInfo = _dummyTestClass.GetType().GetTypeInfo().GetDeclaredMethod("TestMethod1")!;
         _dynamicDataAttribute = new DynamicDataAttribute("ReusableTestDataProperty2", typeof(DummyTestClass2));
         IEnumerable<object[]> data = _dynamicDataAttribute.GetData(methodInfo);
-        Verify(data is not null);
-        Verify(data.ToList().Count == 2);
+        data.Should().NotBeNull();
+        data.ToList().Count.Should().Be(2);
     }
 
     public void GetDataShouldReadDataFromMethod()
@@ -50,8 +52,8 @@ public class DynamicDataAttributeTests : TestContainer
         MethodInfo methodInfo = _dummyTestClass.GetType().GetTypeInfo().GetDeclaredMethod("TestMethod2")!;
         _dynamicDataAttribute = new DynamicDataAttribute("ReusableTestDataMethod", DynamicDataSourceType.Method);
         IEnumerable<object[]> data = _dynamicDataAttribute.GetData(methodInfo);
-        Verify(data is not null);
-        Verify(data.ToList().Count == 2);
+        data.Should().NotBeNull();
+        data.ToList().Count.Should().Be(2);
     }
 
     public void GetDataShouldReadDataFromMethodInDifferentClass()
@@ -59,8 +61,8 @@ public class DynamicDataAttributeTests : TestContainer
         MethodInfo methodInfo = _dummyTestClass.GetType().GetTypeInfo().GetDeclaredMethod("TestMethod2")!;
         _dynamicDataAttribute = new DynamicDataAttribute("ReusableTestDataMethod2", typeof(DummyTestClass2), DynamicDataSourceType.Method);
         IEnumerable<object[]> data = _dynamicDataAttribute.GetData(methodInfo);
-        Verify(data is not null);
-        Verify(data.ToList().Count == 2);
+        data.Should().NotBeNull();
+        data.ToList().Count.Should().Be(2);
     }
 
     public void GetDataShouldThrowExceptionIfPropertyReturnsNull() =>
@@ -103,7 +105,7 @@ public class DynamicDataAttributeTests : TestContainer
 
         _dynamicDataAttribute.DynamicDataDisplayName = "GetCustomDynamicDataDisplayName";
         string? displayName = _dynamicDataAttribute.GetDisplayName(_testMethodInfo, data);
-        Verify(displayName == "DynamicDataTestWithDisplayName TestMethod1 with 3 parameters");
+        displayName.Should().Be("DynamicDataTestWithDisplayName TestMethod1 with 3 parameters");
     }
 
     public void GetDisplayNameShouldReturnDisplayNameWithDynamicDataDisplayNameInDifferentClass()
@@ -113,7 +115,7 @@ public class DynamicDataAttributeTests : TestContainer
         _dynamicDataAttribute.DynamicDataDisplayName = "GetCustomDynamicDataDisplayName2";
         _dynamicDataAttribute.DynamicDataDisplayNameDeclaringType = typeof(DummyTestClass2);
         string? displayName = _dynamicDataAttribute.GetDisplayName(_testMethodInfo, data);
-        Verify(displayName == "DynamicDataTestWithDisplayName TestMethod1 with 3 parameters");
+        displayName.Should().Be("DynamicDataTestWithDisplayName TestMethod1 with 3 parameters");
     }
 
     public void GetDisplayNameShouldThrowExceptionWithDynamicDataDisplayNameMethodMissingParameters() =>
@@ -182,7 +184,7 @@ public class DynamicDataAttributeTests : TestContainer
     public void GetDisplayNameShouldReturnEmptyStringIfDataIsNull()
     {
         string? displayName = _dynamicDataAttribute.GetDisplayName(_testMethodInfo, null);
-        Verify(displayName is null);
+        displayName.Should().BeNull();
     }
 
     public void GetDisplayNameHandlesNullValues()
