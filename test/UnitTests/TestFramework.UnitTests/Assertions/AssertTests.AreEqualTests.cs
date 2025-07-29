@@ -213,8 +213,9 @@ public partial class AssertTests : TestContainer
 
     public void AreEqualTwoObjectsDifferentTypeShouldFail()
     {
-        AssertFailedException ex = VerifyThrows<AssertFailedException>(() => Assert.AreEqual(new object(), 1));
-        Verify(ex.Message.Contains("Assert.AreEqual failed. Expected:<System.Object (System.Object)>. Actual:<1 (System.Int32)>."));
+        Action act = () => Assert.AreEqual(new object(), 1);
+        AssertFailedException ex = act.Should().Throw<AssertFailedException>().Which;
+        ex.Message.Should().Contain("Assert.AreEqual failed. Expected:<System.Object (System.Object)>. Actual:<1 (System.Int32)>.");
     }
 
     public void AreEqualWithTypeOverridingEqualsShouldWork()

@@ -326,7 +326,7 @@ public class DeploymentItemUtilityTests : TestContainer
 
     public void IsValidDeploymentItemShouldReportWarningIfSourcePathIsNull()
     {
-        Verify(!DeploymentItemUtility.IsValidDeploymentItem(null);
+        !DeploymentItemUtility.IsValidDeploymentItem(null.Should().BeTrue();
 
         Resource.DeploymentItemPathCannotBeNullOrEmpty.Should().Contain(warning);
     }
