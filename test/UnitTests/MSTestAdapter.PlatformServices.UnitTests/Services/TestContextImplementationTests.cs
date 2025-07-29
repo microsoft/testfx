@@ -4,19 +4,17 @@
 #if NET462
 using System.Data;
 using System.Data.Common;
+
 #endif
 
+using FluentAssertions;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
-
 using Moq;
-
 using TestFramework.ForTestingMSTest;
 
 using ITestMethod = Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ObjectModel.ITestMethod;
 using UnitTestOutcome = Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome;
-
-using FluentAssertions;
 
 namespace MSTestAdapter.PlatformServices.UnitTests.Services;
 

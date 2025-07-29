@@ -3,12 +3,12 @@
 
 using System.Collections.Immutable;
 
+using FluentAssertions;
+
 using Microsoft.MSTestV2.CLIAutomation;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
 using TestResult = Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult;
-
-using FluentAssertions;
 
 namespace MSTest.IntegrationTests;
 

@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using FluentAssertions;
+
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Extensions;
@@ -8,8 +10,6 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Extensi
 using TestFramework.ForTestingMSTest;
 
 using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
-
-using FluentAssertions;
 
 namespace MSTestAdapter.PlatformServices.Tests.Extensions;
 
@@ -83,9 +83,9 @@ public class ExceptionExtensionsTests : TestContainer
 
         StackTraceInformation? stackTraceInformation = exception.TryGetStackTraceInformation();
 
-        stackTraceInformation!.ErrorStackTrace.StartsWith("   at A()", StringComparison.Ordinal));
+        stackTraceInformation!.ErrorStackTrace.Should().StartsWith("   at A()", StringComparison.Ordinal);
         stackTraceInformation.ErrorFilePath.Should().BeNull();
-        Verify(stackTraceInformation.ErrorLineNumber.Should().Be(0);
+        stackTraceInformation.ErrorLineNumber.Should().Be(0);
     }
 
     public void TryGetStackTraceInformationShouldThrowIfStackTraceThrows()
@@ -156,7 +156,7 @@ public class ExceptionExtensionsTests : TestContainer
         var exception = new InvalidOperationException();
         Exception actual = exception.GetRealException();
 
-        actual is InvalidOperationException.Should().BeTrue();
+        actual.Should().BeOfType<InvalidOperationException>();
     }
 
     public void GetRealExceptionGetsTheInnerExceptionWhenTheExceptionIsTargetInvocation()
@@ -164,7 +164,7 @@ public class ExceptionExtensionsTests : TestContainer
         var exception = new TargetInvocationException(new InvalidOperationException());
         Exception actual = exception.GetRealException();
 
-        actual is InvalidOperationException.Should().BeTrue();
+        actual.Should().BeOfType<InvalidOperationException>();
     }
 
     public void GetRealExceptionGetsTheTargetInvocationExceptionWhenTargetInvocationIsProvidedWithNullInnerException()
@@ -172,7 +172,7 @@ public class ExceptionExtensionsTests : TestContainer
         var exception = new TargetInvocationException(null);
         Exception actual = exception.GetRealException();
 
-        actual is TargetInvocationException.Should().BeTrue();
+        actual.Should().BeOfType<TargetInvocationException>();
     }
 
     public void GetRealExceptionGetsTheInnerMostRealException()
@@ -180,7 +180,7 @@ public class ExceptionExtensionsTests : TestContainer
         var exception = new TargetInvocationException(new TargetInvocationException(new TargetInvocationException(new InvalidOperationException())));
         Exception actual = exception.GetRealException();
 
-        actual is InvalidOperationException.Should().BeTrue();
+        actual.Should().BeOfType<InvalidOperationException>();
     }
 
     public void GetRealExceptionGetsTheInnerMostTargetInvocationException()
@@ -197,7 +197,7 @@ public class ExceptionExtensionsTests : TestContainer
         var exception = new TypeInitializationException("some type", new InvalidOperationException());
         Exception actual = exception.GetRealException();
 
-        actual is InvalidOperationException.Should().BeTrue();
+        actual.Should().BeOfType<InvalidOperationException>();
     }
 
     public void GetRealExceptionGetsTheTypeInitializationExceptionWhenTypeInitializationIsProvidedWithNullInnerException()
@@ -205,7 +205,7 @@ public class ExceptionExtensionsTests : TestContainer
         var exception = new TypeInitializationException("some type", null);
         Exception actual = exception.GetRealException();
 
-        actual is TypeInitializationException.Should().BeTrue();
+        actual.Should().BeOfType<TypeInitializationException>();
     }
 
     public void GetRealExceptionGetsTheInnerMostRealExceptionOfTypeInitialization()
@@ -213,7 +213,7 @@ public class ExceptionExtensionsTests : TestContainer
         var exception = new TypeInitializationException("some type", new TypeInitializationException("some type", new TypeInitializationException("some type", new InvalidOperationException())));
         Exception actual = exception.GetRealException();
 
-        actual is InvalidOperationException.Should().BeTrue();
+        actual.Should().BeOfType<InvalidOperationException>();
     }
 
     public void GetRealExceptionGetsTheInnerMostTypeInitializationException()
