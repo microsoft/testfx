@@ -238,7 +238,7 @@ public class UnitTest4
 
         foreach (string doesNotContainElement in doesNotContain)
         {
-            Assert.IsFalse(output.Contains(doesNotContainElement), $"Expected to not find '{doesNotContainElement}' for analysisMode {mode}");
+            Assert.DoesNotContain(doesNotContainElement, output, $"Expected to not find '{doesNotContainElement}' for analysisMode {mode}");
         }
     }
 }
