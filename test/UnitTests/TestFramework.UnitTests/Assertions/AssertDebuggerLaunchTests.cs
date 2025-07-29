@@ -25,31 +25,20 @@ public class AssertDebuggerLaunchTests : TestContainer
         Verify(!DebuggerLaunchSettings.IsEnabled);
     }
 
-    public void DebuggerLaunchViaTestRunParameters()
+    public void DebuggerLaunchViaMSTestSettings()
     {
-        // Arrange - Simulate TestContext with TestRunParameters
-        var mockTestContext = CreateMockTestContext(new Dictionary<string, string>
-        {
-            ["MSTest.LaunchDebuggerOnFailure"] = "true"
-        });
-
-        DebuggerLaunchSettings.RegisterTestContext(mockTestContext);
+        // Arrange - Simulate MSTestSettings configuration
+        DebuggerLaunchSettings.SetConfiguration(enabled: true);
 
         // Act & Assert
         Verify(DebuggerLaunchSettings.IsEnabled);
         Verify(DebuggerLaunchSettings.ShouldLaunchForCurrentTest());
     }
 
-    public void DebuggerLaunchViaTestRunParametersWithFilter()
+    public void DebuggerLaunchViaMSTestSettingsWithFilter()
     {
-        // Arrange - Simulate TestContext with TestRunParameters including filter
-        var mockTestContext = CreateMockTestContext(new Dictionary<string, string>
-        {
-            ["MSTest.LaunchDebuggerOnFailure"] = "true",
-            ["MSTest.LaunchDebuggerTestFilter"] = "FlakyTest"
-        });
-
-        DebuggerLaunchSettings.RegisterTestContext(mockTestContext);
+        // Arrange - Simulate MSTestSettings configuration including filter
+        DebuggerLaunchSettings.SetConfiguration(enabled: true, testNameFilter: "FlakyTest");
 
         // Act & Assert
         Verify(DebuggerLaunchSettings.IsEnabled);
@@ -57,20 +46,14 @@ public class AssertDebuggerLaunchTests : TestContainer
         Verify(DebuggerLaunchSettings.ShouldLaunchForCurrentTest());
     }
 
-    public void TestRunParametersTakePrecedenceOverEnvironmentVariables()
+    public void MSTestSettingsTakePrecedenceOverEnvironmentVariables()
     {
-        // Arrange - Set environment variable to disabled but TestRunParameters to enabled
+        // Arrange - Set environment variable to disabled but MSTestSettings to enabled
         Environment.SetEnvironmentVariable("MSTEST_LAUNCH_DEBUGGER_ON_FAILURE", "0");
-        
-        var mockTestContext = CreateMockTestContext(new Dictionary<string, string>
-        {
-            ["MSTest.LaunchDebuggerOnFailure"] = "true"
-        });
-
-        DebuggerLaunchSettings.RegisterTestContext(mockTestContext);
+        DebuggerLaunchSettings.SetConfiguration(enabled: true);
 
         // Act & Assert
-        Verify(DebuggerLaunchSettings.IsEnabled); // TestRunParameters should take precedence
+        Verify(DebuggerLaunchSettings.IsEnabled); // MSTestSettings should take precedence
     }
 
     public void DebuggerLaunchCanBeEnabledProgrammatically()
@@ -95,36 +78,6 @@ public class AssertDebuggerLaunchTests : TestContainer
         Verify(DebuggerLaunchSettings.ShouldLaunchForCurrentTest());
     }
 
-    private static TestContext CreateMockTestContext(Dictionary<string, string> properties)
-    {
-        // Create a simple mock TestContext for testing
-        // In a real implementation, this would be provided by the test framework
-        return new MockTestContext(properties);
-    }
-
-    private class MockTestContext : TestContext
-    {
-        private readonly System.Collections.IDictionary _properties;
-
-        public MockTestContext(Dictionary<string, string> properties)
-        {
-            _properties = new System.Collections.Hashtable();
-            foreach (var kvp in properties)
-            {
-                _properties[kvp.Key] = kvp.Value;
-            }
-        }
-
-        public override System.Collections.IDictionary Properties => _properties;
-
-        // Implement abstract members with minimal functionality for testing
-        public override void WriteLine(string message) { }
-        public override void WriteLine(string format, params object?[] args) { }
-        public override void Write(string message) { }
-        public override void Write(string format, params object?[] args) { }
-        public override void DisplayMessage(MessageLevel messageLevel, string message) { }
-    }
-
     public void DebuggerLaunchFallsBackToEnvironmentVariable()
     {
         // Arrange
@@ -133,13 +86,8 @@ public class AssertDebuggerLaunchTests : TestContainer
         
         try
         {
-            // Act
-            var shouldLaunch = Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Instance.GetType()
-                .GetMethod("ShouldLaunchDebuggerOnFailure", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)
-                ?.Invoke(null, null);
-            
-            // Assert
-            Verify(shouldLaunch is bool && (bool)shouldLaunch);
+            // Act & Assert
+            Verify(DebuggerLaunchSettings.IsEnabled);
         }
         finally
         {
@@ -153,24 +101,8 @@ public class AssertDebuggerLaunchTests : TestContainer
         DebuggerLaunchSettings.Reset();
         Environment.SetEnvironmentVariable("MSTEST_LAUNCH_DEBUGGER_ON_FAILURE", null);
         
-        // Act
-        var shouldLaunch = Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Instance.GetType()
-            .GetMethod("ShouldLaunchDebuggerOnFailure", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)
-            ?.Invoke(null, null);
-        
-        // Assert
-        Verify(shouldLaunch is bool && !(bool)shouldLaunch);
-    }
-}
-        
-        // Act
-        string? actualFilter = Environment.GetEnvironmentVariable("MSTEST_LAUNCH_DEBUGGER_TEST_FILTER");
-        
-        // Assert
-        Verify(actualFilter == testFilter);
-        
-        // Cleanup
-        Environment.SetEnvironmentVariable("MSTEST_LAUNCH_DEBUGGER_TEST_FILTER", null);
+        // Act & Assert
+        Verify(!DebuggerLaunchSettings.IsEnabled);
     }
 
     public void AssertFailWithDebuggerLaunchDisabledShouldThrowAssertFailedException()
@@ -198,4 +130,5 @@ public class AssertDebuggerLaunchTests : TestContainer
         // Cleanup
         Environment.SetEnvironmentVariable("MSTEST_LAUNCH_DEBUGGER_ON_FAILURE", null);
     }
+}
 }
