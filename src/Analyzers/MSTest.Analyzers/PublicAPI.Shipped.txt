@@ -31,6 +31,10 @@ MSTest.Analyzers.DuplicateDataRowAnalyzer
 MSTest.Analyzers.DuplicateDataRowAnalyzer.DuplicateDataRowAnalyzer() -> void
 MSTest.Analyzers.DynamicDataShouldBeValidAnalyzer
 MSTest.Analyzers.DynamicDataShouldBeValidAnalyzer.DynamicDataShouldBeValidAnalyzer() -> void
+MSTest.Analyzers.FlowTestContextCancellationTokenAnalyzer
+MSTest.Analyzers.FlowTestContextCancellationTokenAnalyzer.FlowTestContextCancellationTokenAnalyzer() -> void
+MSTest.Analyzers.GlobalTestFixtureShouldBeValidAnalyzer
+MSTest.Analyzers.GlobalTestFixtureShouldBeValidAnalyzer.GlobalTestFixtureShouldBeValidAnalyzer() -> void
 MSTest.Analyzers.NonNullableReferenceNotInitializedSuppressor
 MSTest.Analyzers.NonNullableReferenceNotInitializedSuppressor.NonNullableReferenceNotInitializedSuppressor() -> void
 MSTest.Analyzers.PreferAssertFailOverAlwaysFalseConditionsAnalyzer
@@ -43,6 +47,8 @@ MSTest.Analyzers.PreferTestCleanupOverDisposeAnalyzer
 MSTest.Analyzers.PreferTestCleanupOverDisposeAnalyzer.PreferTestCleanupOverDisposeAnalyzer() -> void
 MSTest.Analyzers.PreferTestInitializeOverConstructorAnalyzer
 MSTest.Analyzers.PreferTestInitializeOverConstructorAnalyzer.PreferTestInitializeOverConstructorAnalyzer() -> void
+MSTest.Analyzers.PreferTestMethodOverDataTestMethodAnalyzer
+MSTest.Analyzers.PreferTestMethodOverDataTestMethodAnalyzer.PreferTestMethodOverDataTestMethodAnalyzer() -> void
 MSTest.Analyzers.PublicMethodShouldBeTestMethodAnalyzer
 MSTest.Analyzers.PublicMethodShouldBeTestMethodAnalyzer.PublicMethodShouldBeTestMethodAnalyzer() -> void
 MSTest.Analyzers.PublicTypeShouldBeTestClassAnalyzer
@@ -55,6 +61,8 @@ MSTest.Analyzers.TestClassShouldHaveTestMethodAnalyzer
 MSTest.Analyzers.TestClassShouldHaveTestMethodAnalyzer.TestClassShouldHaveTestMethodAnalyzer() -> void
 MSTest.Analyzers.TestCleanupShouldBeValidAnalyzer
 MSTest.Analyzers.TestCleanupShouldBeValidAnalyzer.TestCleanupShouldBeValidAnalyzer() -> void
+MSTest.Analyzers.TestContextPropertyUsageAnalyzer
+MSTest.Analyzers.TestContextPropertyUsageAnalyzer.TestContextPropertyUsageAnalyzer() -> void
 MSTest.Analyzers.TestContextShouldBeValidAnalyzer
 MSTest.Analyzers.TestContextShouldBeValidAnalyzer.TestContextShouldBeValidAnalyzer() -> void
 MSTest.Analyzers.TestInitializeShouldBeValidAnalyzer
@@ -65,6 +73,8 @@ MSTest.Analyzers.TestMethodShouldNotBeIgnoredAnalyzer
 MSTest.Analyzers.TestMethodShouldNotBeIgnoredAnalyzer.TestMethodShouldNotBeIgnoredAnalyzer() -> void
 MSTest.Analyzers.TypeContainingTestMethodShouldBeATestClassAnalyzer
 MSTest.Analyzers.TypeContainingTestMethodShouldBeATestClassAnalyzer.TypeContainingTestMethodShouldBeATestClassAnalyzer() -> void
+MSTest.Analyzers.UnusedParameterSuppressor
+MSTest.Analyzers.UnusedParameterSuppressor.UnusedParameterSuppressor() -> void
 MSTest.Analyzers.UseAsyncSuffixTestFixtureMethodSuppressor
 MSTest.Analyzers.UseAsyncSuffixTestFixtureMethodSuppressor.UseAsyncSuffixTestFixtureMethodSuppressor() -> void
 MSTest.Analyzers.UseAsyncSuffixTestMethodSuppressor
@@ -75,6 +85,8 @@ MSTest.Analyzers.UseClassCleanupBehaviorEndOfClassAnalyzer
 MSTest.Analyzers.UseClassCleanupBehaviorEndOfClassAnalyzer.UseClassCleanupBehaviorEndOfClassAnalyzer() -> void
 MSTest.Analyzers.UseConditionBaseWithTestClassAnalyzer
 MSTest.Analyzers.UseConditionBaseWithTestClassAnalyzer.UseConditionBaseWithTestClassAnalyzer() -> void
+MSTest.Analyzers.UseCooperativeCancellationForTimeoutAnalyzer
+MSTest.Analyzers.UseCooperativeCancellationForTimeoutAnalyzer.UseCooperativeCancellationForTimeoutAnalyzer() -> void
 MSTest.Analyzers.UseDeploymentItemWithTestMethodOrTestClassAnalyzer
 MSTest.Analyzers.UseDeploymentItemWithTestMethodOrTestClassAnalyzer.UseDeploymentItemWithTestMethodOrTestClassAnalyzer() -> void
 MSTest.Analyzers.UseParallelizeAttributeAnalyzer
@@ -113,6 +125,10 @@ override MSTest.Analyzers.DuplicateDataRowAnalyzer.Initialize(Microsoft.CodeAnal
 override MSTest.Analyzers.DuplicateDataRowAnalyzer.SupportedDiagnostics.get -> System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.DiagnosticDescriptor!>
 override MSTest.Analyzers.DynamicDataShouldBeValidAnalyzer.Initialize(Microsoft.CodeAnalysis.Diagnostics.AnalysisContext! context) -> void
 override MSTest.Analyzers.DynamicDataShouldBeValidAnalyzer.SupportedDiagnostics.get -> System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.DiagnosticDescriptor!>
+override MSTest.Analyzers.FlowTestContextCancellationTokenAnalyzer.Initialize(Microsoft.CodeAnalysis.Diagnostics.AnalysisContext! context) -> void
+override MSTest.Analyzers.FlowTestContextCancellationTokenAnalyzer.SupportedDiagnostics.get -> System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.DiagnosticDescriptor!>
+override MSTest.Analyzers.GlobalTestFixtureShouldBeValidAnalyzer.Initialize(Microsoft.CodeAnalysis.Diagnostics.AnalysisContext! context) -> void
+override MSTest.Analyzers.GlobalTestFixtureShouldBeValidAnalyzer.SupportedDiagnostics.get -> System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.DiagnosticDescriptor!>
 override MSTest.Analyzers.NonNullableReferenceNotInitializedSuppressor.ReportSuppressions(Microsoft.CodeAnalysis.Diagnostics.SuppressionAnalysisContext context) -> void
 override MSTest.Analyzers.NonNullableReferenceNotInitializedSuppressor.SupportedSuppressions.get -> System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.SuppressionDescriptor!>
 override MSTest.Analyzers.PreferAssertFailOverAlwaysFalseConditionsAnalyzer.Initialize(Microsoft.CodeAnalysis.Diagnostics.AnalysisContext! context) -> void
@@ -125,6 +141,8 @@ override MSTest.Analyzers.PreferTestCleanupOverDisposeAnalyzer.Initialize(Micros
 override MSTest.Analyzers.PreferTestCleanupOverDisposeAnalyzer.SupportedDiagnostics.get -> System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.DiagnosticDescriptor!>
 override MSTest.Analyzers.PreferTestInitializeOverConstructorAnalyzer.Initialize(Microsoft.CodeAnalysis.Diagnostics.AnalysisContext! context) -> void
 override MSTest.Analyzers.PreferTestInitializeOverConstructorAnalyzer.SupportedDiagnostics.get -> System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.DiagnosticDescriptor!>
+override MSTest.Analyzers.PreferTestMethodOverDataTestMethodAnalyzer.Initialize(Microsoft.CodeAnalysis.Diagnostics.AnalysisContext! context) -> void
+override MSTest.Analyzers.PreferTestMethodOverDataTestMethodAnalyzer.SupportedDiagnostics.get -> System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.DiagnosticDescriptor!>
 override MSTest.Analyzers.PublicMethodShouldBeTestMethodAnalyzer.Initialize(Microsoft.CodeAnalysis.Diagnostics.AnalysisContext! context) -> void
 override MSTest.Analyzers.PublicMethodShouldBeTestMethodAnalyzer.SupportedDiagnostics.get -> System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.DiagnosticDescriptor!>
 override MSTest.Analyzers.PublicTypeShouldBeTestClassAnalyzer.Initialize(Microsoft.CodeAnalysis.Diagnostics.AnalysisContext! context) -> void
@@ -137,6 +155,8 @@ override MSTest.Analyzers.TestClassShouldHaveTestMethodAnalyzer.Initialize(Micro
 override MSTest.Analyzers.TestClassShouldHaveTestMethodAnalyzer.SupportedDiagnostics.get -> System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.DiagnosticDescriptor!>
 override MSTest.Analyzers.TestCleanupShouldBeValidAnalyzer.Initialize(Microsoft.CodeAnalysis.Diagnostics.AnalysisContext! context) -> void
 override MSTest.Analyzers.TestCleanupShouldBeValidAnalyzer.SupportedDiagnostics.get -> System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.DiagnosticDescriptor!>
+override MSTest.Analyzers.TestContextPropertyUsageAnalyzer.Initialize(Microsoft.CodeAnalysis.Diagnostics.AnalysisContext! context) -> void
+override MSTest.Analyzers.TestContextPropertyUsageAnalyzer.SupportedDiagnostics.get -> System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.DiagnosticDescriptor!>
 override MSTest.Analyzers.TestContextShouldBeValidAnalyzer.Initialize(Microsoft.CodeAnalysis.Diagnostics.AnalysisContext! context) -> void
 override MSTest.Analyzers.TestContextShouldBeValidAnalyzer.SupportedDiagnostics.get -> System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.DiagnosticDescriptor!>
 override MSTest.Analyzers.TestInitializeShouldBeValidAnalyzer.Initialize(Microsoft.CodeAnalysis.Diagnostics.AnalysisContext! context) -> void
@@ -147,6 +167,8 @@ override MSTest.Analyzers.TestMethodShouldNotBeIgnoredAnalyzer.Initialize(Micros
 override MSTest.Analyzers.TestMethodShouldNotBeIgnoredAnalyzer.SupportedDiagnostics.get -> System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.DiagnosticDescriptor!>
 override MSTest.Analyzers.TypeContainingTestMethodShouldBeATestClassAnalyzer.Initialize(Microsoft.CodeAnalysis.Diagnostics.AnalysisContext! context) -> void
 override MSTest.Analyzers.TypeContainingTestMethodShouldBeATestClassAnalyzer.SupportedDiagnostics.get -> System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.DiagnosticDescriptor!>
+override MSTest.Analyzers.UnusedParameterSuppressor.ReportSuppressions(Microsoft.CodeAnalysis.Diagnostics.SuppressionAnalysisContext context) -> void
+override MSTest.Analyzers.UnusedParameterSuppressor.SupportedSuppressions.get -> System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.SuppressionDescriptor!>
 override MSTest.Analyzers.UseAsyncSuffixTestFixtureMethodSuppressor.ReportSuppressions(Microsoft.CodeAnalysis.Diagnostics.SuppressionAnalysisContext context) -> void
 override MSTest.Analyzers.UseAsyncSuffixTestFixtureMethodSuppressor.SupportedSuppressions.get -> System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.SuppressionDescriptor!>
 override MSTest.Analyzers.UseAsyncSuffixTestMethodSuppressor.ReportSuppressions(Microsoft.CodeAnalysis.Diagnostics.SuppressionAnalysisContext context) -> void
@@ -157,6 +179,8 @@ override MSTest.Analyzers.UseClassCleanupBehaviorEndOfClassAnalyzer.Initialize(M
 override MSTest.Analyzers.UseClassCleanupBehaviorEndOfClassAnalyzer.SupportedDiagnostics.get -> System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.DiagnosticDescriptor!>
 override MSTest.Analyzers.UseConditionBaseWithTestClassAnalyzer.Initialize(Microsoft.CodeAnalysis.Diagnostics.AnalysisContext! context) -> void
 override MSTest.Analyzers.UseConditionBaseWithTestClassAnalyzer.SupportedDiagnostics.get -> System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.DiagnosticDescriptor!>
+override MSTest.Analyzers.UseCooperativeCancellationForTimeoutAnalyzer.Initialize(Microsoft.CodeAnalysis.Diagnostics.AnalysisContext! context) -> void
+override MSTest.Analyzers.UseCooperativeCancellationForTimeoutAnalyzer.SupportedDiagnostics.get -> System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.DiagnosticDescriptor!>
 override MSTest.Analyzers.UseDeploymentItemWithTestMethodOrTestClassAnalyzer.Initialize(Microsoft.CodeAnalysis.Diagnostics.AnalysisContext! context) -> void
 override MSTest.Analyzers.UseDeploymentItemWithTestMethodOrTestClassAnalyzer.SupportedDiagnostics.get -> System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.DiagnosticDescriptor!>
 override MSTest.Analyzers.UseParallelizeAttributeAnalyzer.Initialize(Microsoft.CodeAnalysis.Diagnostics.AnalysisContext! context) -> void
