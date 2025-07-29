@@ -1,7 +1,7 @@
 <Project>
 
   <PropertyGroup>
-    <AspireTestingVersion>9.0.0</AspireTestingVersion>
+    <AspireTestingVersion>9.4.0</AspireTestingVersion>
     <CodeCoverageVersion>17.14.2</CodeCoverageVersion>
     <MSTestVersion>3.10.0</MSTestVersion>
     <MSTestAOTVersion>1.0.0-alpha.25379.8</MSTestAOTVersion>
