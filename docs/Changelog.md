@@ -832,9 +832,6 @@ See full log [of v3.5.2...v3.6.0](https://github.com/microsoft/testfx/compare/v3
 
 See full log [of v3.5.1...v3.5.2](https://github.com/microsoft/testfx/compare/v3.5.1...v3.5.2)
 
-### Fixed
-
-
 ### Artifacts
 
 * MSTest: [3.5.2](https://www.nuget.org/packages/MSTest/3.5.2)
@@ -2600,4 +2597,3 @@ Initial release.
 
 * MSTest.TestFramework: [1.1.11](https://www.nuget.org/packages/MSTest.TestFramework/1.1.11)
 * MSTest.TestAdapter: [1.1.11](https://www.nuget.org/packages/MSTest.TestAdapter/1.1.11)
-
