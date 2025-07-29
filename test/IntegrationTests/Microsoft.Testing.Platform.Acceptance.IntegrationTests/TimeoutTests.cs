@@ -60,7 +60,7 @@ public class TimeoutTests : AcceptanceTestBase<TimeoutTests.TestAssetFixture>
         testHostResult.AssertExitCodeIs(ExitCodes.ZeroTests);
 
         string output = testHostResult.StandardOutput;
-        Assert.IsFalse(output.Contains("Canceling the test session"));
+        Assert.DoesNotContain("Canceling the test session", output);
     }
 
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
@@ -73,7 +73,7 @@ public class TimeoutTests : AcceptanceTestBase<TimeoutTests.TestAssetFixture>
         testHostResult.AssertExitCodeIs(ExitCodes.ZeroTests);
 
         string output = testHostResult.StandardOutput;
-        Assert.IsFalse(output.Contains("Canceling the test session"));
+        Assert.DoesNotContain("Canceling the test session", output);
     }
 
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
@@ -86,7 +86,7 @@ public class TimeoutTests : AcceptanceTestBase<TimeoutTests.TestAssetFixture>
         testHostResult.AssertExitCodeIs(ExitCodes.ZeroTests);
 
         string output = testHostResult.StandardOutput;
-        Assert.IsFalse(output.Contains("Canceling the test session"));
+        Assert.DoesNotContain("Canceling the test session", output);
     }
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
