@@ -149,6 +149,8 @@ extends:
                   /bl:$(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig)\TestStep.binlog
                 name: Test
                 displayName: Test
+                env:
+                  TESTINGPLATFORM_DEFAULT_HANG_TIMEOUT: 5m
 
               - task: CopyFiles@2
                 displayName: 'Copy binlogs'
@@ -217,6 +219,8 @@ extends:
                   ./test.sh --configuration $(_BuildConfig) --ci --test --integrationTest --nobl /bl:$(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig)\TestStep.binlog
                 name: Test
                 displayName: Tests
+                env:
+                  TESTINGPLATFORM_DEFAULT_HANG_TIMEOUT: 5m
 
               - task: 1ES.PublishBuildArtifacts@1
                 displayName: 'Publish Test Results folders'

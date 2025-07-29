@@ -42,6 +42,9 @@ public sealed class UseAsyncSuffixTestFixtureMethodSuppressor : DiagnosticSuppre
             return;
         }
 
+        INamedTypeSymbol? globalTestInitializeAttributeSymbol = context.Compilation.GetTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingGlobalTestInitializeAttribute);
+        INamedTypeSymbol? globalTestCleanupAttributeSymbol = context.Compilation.GetTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingGlobalTestCleanupAttribute);
+
         foreach (Diagnostic diagnostic in context.ReportedDiagnostics)
         {
             // The diagnostic is reported on the test method
@@ -62,7 +65,9 @@ public sealed class UseAsyncSuffixTestFixtureMethodSuppressor : DiagnosticSuppre
                     || SymbolEqualityComparer.Default.Equals(attr.AttributeClass, classInitializeAttributeSymbol)
                     || SymbolEqualityComparer.Default.Equals(attr.AttributeClass, classCleanupAttributeSymbol)
                     || SymbolEqualityComparer.Default.Equals(attr.AttributeClass, testInitializeAttributeSymbol)
-                    || SymbolEqualityComparer.Default.Equals(attr.AttributeClass, testCleanupAttributeSymbol)))
+                    || SymbolEqualityComparer.Default.Equals(attr.AttributeClass, testCleanupAttributeSymbol)
+                    || SymbolEqualityComparer.Default.Equals(attr.AttributeClass, globalTestInitializeAttributeSymbol)
+                    || SymbolEqualityComparer.Default.Equals(attr.AttributeClass, globalTestCleanupAttributeSymbol)))
             {
                 context.ReportSuppression(Suppression.Create(Rule, diagnostic));
             }

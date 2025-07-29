@@ -56,7 +56,7 @@ public static class TrxReportExtensions
 
         builder.CommandLine.AddProvider(() => commandLine);
 
-        PipeNameDescription pipeNameDescription = NamedPipeServer.GetPipeName(Guid.NewGuid().ToString("N"));
+        PipeNameDescription pipeNameDescription = NamedPipeServer.GetPipeName(Guid.NewGuid().ToString("N"), new SystemEnvironment());
         var compositeLifeTimeHandler =
             new CompositeExtensionFactory<TrxProcessLifetimeHandler>(serviceProvider =>
             {
