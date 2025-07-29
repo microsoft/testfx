@@ -8,6 +8,8 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
 using TestResult = Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult;
 
+using FluentAssertions;
+
 namespace MSTest.IntegrationTests;
 
 public class DataExtensibilityTests : CLITestBase
@@ -122,7 +124,7 @@ public class DataExtensibilityTests : CLITestBase
         ImmutableArray<TestResult> testResults = await RunTestsAsync(testCases);
 
         // Assert
-        Verify(testCases.Length == 1);
+        testCases.Length.Should().Be(1);
 
         VerifyE2E.TestsPassed(
             testResults,

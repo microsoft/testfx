@@ -74,14 +74,14 @@ public class MSTestDiscovererTests : TestContainer
     {
         IEnumerable<FileExtensionAttribute> attributes = typeof(MSTestDiscoverer).GetCustomAttributes<FileExtensionAttribute>();
         attributes.Should().NotBeNull();
-        Verify(attributes.Count(attribute => attribute.FileExtension == ".dll") == 1);
+        attributes.Count(attribute => attribute.FileExtension == ".dll").Should().Be(1);
     }
 
     public void MSTestDiscovererHasExeAsFileExtension()
     {
         IEnumerable<FileExtensionAttribute> attributes = typeof(MSTestDiscoverer).GetCustomAttributes<FileExtensionAttribute>();
         attributes.Should().NotBeNull();
-        Verify(attributes.Count(attribute => attribute.FileExtension == ".exe") == 1);
+        attributes.Count(attribute => attribute.FileExtension == ".exe").Should().Be(1);
     }
 
     public void DiscoverTestsShouldThrowIfSourcesIsNull()

@@ -18,7 +18,7 @@ public class StringAssertTests : TestContainer
         string actual = "The quick brown fox jumps over the lazy dog.";
         string notInString = "I'm not in the string above";
         Exception ex = VerifyThrows(() => StringAssert.Contains(actual, notInString));
-        Verify(ex.Message.Contains("StringAssert.Contains failed"));
+        ex.Message.Should().Contain("StringAssert.Contains failed");
     }
 
     public void StringAssertStartsWith()
@@ -26,7 +26,7 @@ public class StringAssertTests : TestContainer
         string actual = "The quick brown fox jumps over the lazy dog.";
         string notInString = "I'm not in the string above";
         Exception ex = VerifyThrows(() => StringAssert.StartsWith(actual, notInString));
-        Verify(ex.Message.Contains("StringAssert.StartsWith failed"));
+        ex.Message.Should().Contain("StringAssert.StartsWith failed");
     }
 
     public void StringAssertEndsWith()
@@ -34,7 +34,7 @@ public class StringAssertTests : TestContainer
         string actual = "The quick brown fox jumps over the lazy dog.";
         string notInString = "I'm not in the string above";
         Exception ex = VerifyThrows(() => StringAssert.EndsWith(actual, notInString));
-        Verify(ex.Message.Contains("StringAssert.EndsWith failed"));
+        ex.Message.Should().Contain("StringAssert.EndsWith failed"));
     }
 
     public void StringAssertDoesNotMatch()
@@ -42,7 +42,7 @@ public class StringAssertTests : TestContainer
         string actual = "The quick brown fox jumps over the lazy dog.";
         Regex doesMatch = new("quick brown fox");
         Exception ex = VerifyThrows(() => StringAssert.DoesNotMatch(actual, doesMatch));
-        Verify(ex.Message.Contains("StringAssert.DoesNotMatch failed"));
+        ex.Message.Should().Contain("StringAssert.DoesNotMatch failed"));
     }
 
     public void StringAssertContainsIgnoreCase_DoesNotThrow()
@@ -70,14 +70,14 @@ public class StringAssertTests : TestContainer
     public void StringAssertContainsDoesNotThrowFormatException()
     {
         Exception ex = VerifyThrows(() => StringAssert.Contains(":-{", "x"));
-        Verify(ex.Message.Contains("StringAssert.Contains failed"));
+        ex.Message.Should().Contain("StringAssert.Contains failed"));
     }
 
     // See https://github.com/dotnet/sdk/issues/25373
     public void StringAssertContainsDoesNotThrowFormatExceptionWithArguments()
     {
         Exception ex = VerifyThrows(() => StringAssert.Contains("{", "x", "message {0}", "arg"));
-        Verify(ex.Message.Contains("StringAssert.Contains failed"));
+        ex.Message.Should().Contain("StringAssert.Contains failed"));
     }
 
     // See https://github.com/dotnet/sdk/issues/25373
@@ -322,7 +322,7 @@ public class StringAssertTests : TestContainer
         Exception ex = VerifyThrows(() => StringAssert.Equals("test", "test"));
 #pragma warning restore CS0618 // Type or member is obsolete
         ex is AssertFailedException.Should().BeTrue();
-        Verify(ex.Message.Contains("StringAssert.Equals should not be used for Assertions"));
+        ex.Message.Should().Contain("StringAssert.Equals should not be used for Assertions"));
     }
 
     public void ObsoleteReferenceEqualsMethodThrowsAssertFailedException()
@@ -332,7 +332,7 @@ public class StringAssertTests : TestContainer
         Exception ex = VerifyThrows(() => StringAssert.ReferenceEquals(obj, obj));
 #pragma warning restore CS0618 // Type or member is obsolete
         ex is AssertFailedException.Should().BeTrue();
-        Verify(ex.Message.Contains("StringAssert.ReferenceEquals should not be used for Assertions"));
+        ex.Message.Should().Contain("StringAssert.ReferenceEquals should not be used for Assertions"));
     }
 #endif
     #endregion

@@ -8,6 +8,8 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
 using TestResult = Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult;
 
+using FluentAssertions;
+
 namespace MSTest.IntegrationTests;
 
 public class DynamicDataTests : CLITestBase
@@ -112,7 +114,7 @@ public class DynamicDataTests : CLITestBase
         ImmutableArray<TestResult> testResults = await RunTestsAsync(testCases);
 
         // Assert
-        Verify(testCases.Length == 6);
+        testCases.Length.Should().Be(6);
 
         VerifyE2E.TestsPassed(
             testResults,
