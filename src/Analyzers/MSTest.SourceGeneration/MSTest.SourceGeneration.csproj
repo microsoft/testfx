@@ -3,8 +3,6 @@
   <PropertyGroup>
     <!-- C# Source generators have to target netstandard -->
     <TargetFrameworks>netstandard2.0</TargetFrameworks>
-    <!-- Generates a package at build -->
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <!-- Do not include the generator as a lib dependency -->
     <IncludeBuildOutput>false</IncludeBuildOutput>
     <NoWarn>NU5128</NoWarn>
