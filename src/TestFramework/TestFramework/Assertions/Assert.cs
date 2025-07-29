@@ -89,15 +89,7 @@ public sealed partial class Assert
     /// <returns>True if debugger should be launched, false otherwise.</returns>
     private static bool ShouldLaunchDebuggerOnFailure()
     {
-        // Check runsettings/testconfig first, then fall back to environment variables
-        if (DebuggerLaunchSettings.IsEnabled)
-        {
-            return DebuggerLaunchSettings.ShouldLaunchForCurrentTest();
-        }
-
-        // Fallback to environment variable for backward compatibility
-        string? launchDebugger = Environment.GetEnvironmentVariable("MSTEST_LAUNCH_DEBUGGER_ON_FAILURE");
-        return launchDebugger == "1";
+        return DebuggerLaunchSettings.ShouldLaunchForCurrentTest();
     }
 
     /// <summary>
