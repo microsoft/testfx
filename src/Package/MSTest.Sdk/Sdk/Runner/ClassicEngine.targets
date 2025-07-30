@@ -68,10 +68,9 @@
     <PackageReference Include="Microsoft.Testing.Extensions.CrashDump" Sdk="MSTest"
                       Version="$(MicrosoftTestingExtensionsCrashDumpVersion)" VersionOverride="$(MicrosoftTestingExtensionsCrashDumpVersion)"
                       Condition=" '$(EnableMicrosoftTestingExtensionsCrashDump)' == 'true' " />
-    <!-- TODO: Uncomment once we have CC version available for MTP v2 -->
-    <!--<PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" Sdk="MSTest"
+    <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" Sdk="MSTest"
                       Version="$(MicrosoftTestingExtensionsCodeCoverageVersion)" VersionOverride="$(MicrosoftTestingExtensionsCodeCoverageVersion)"
-                      Condition=" '$(EnableMicrosoftTestingExtensionsCodeCoverage)' == 'true' " />-->
+                      Condition=" '$(EnableMicrosoftTestingExtensionsCodeCoverage)' == 'true' " />
     <PackageReference Include="Microsoft.Testing.Extensions.HangDump" Sdk="MSTest"
                       Version="$(MicrosoftTestingExtensionsHangDumpVersion)" VersionOverride="$(MicrosoftTestingExtensionsHangDumpVersion)"
                       Condition=" '$(EnableMicrosoftTestingExtensionsHangDump)' == 'true' " />
