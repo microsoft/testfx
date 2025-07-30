@@ -464,32 +464,32 @@ The type declaring these methods should also respect the following rules:
 -The class shouldn't be 'static'
 -The class should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</source>
-        <target state="new">Methods marked with '[GlobalTestInitialize]' or '[GlobalTestCleanup]' should follow the following layout to be valid:
--it can't be declared on a generic class
--it should be 'public'
--it should be 'static'
--it should not be 'async void'
--it should not be a special method (finalizer, operator...).
--it should not be generic
--it should take one parameter of type 'TestContext'
--return type should be 'void', 'Task' or 'ValueTask'
+        <target state="translated">‘[GlobalTestInitialize]’ veya ‘[GlobalTestCleanup]’ ile işaretlenmiş yöntemlerin geçerli olabilmesi için şu düzeni izlemesi gerekir:
+-genel bir sınıfta tanımlanamaz
+-'public' olmalıdır
+-'static' olmalıdır
+-'async void' olmamalıdır
+-özel bir metot (sonlandırıcı, işleç...) olmamalıdır.
+- genel olmamalıdır
+- 'TestContext' türünden bir parametre almalıdır
+- dönüş türü 'void', 'Task' veya 'ValueTask' olmalıdır
 
-The type declaring these methods should also respect the following rules:
--The type should be a class
--The class should be 'public'
--The class shouldn't be 'static'
--The class should be marked with '[TestClass]' (or a derived attribute)
--the class should not be generic.</target>
+Bu metotları bildiren türün ayrıca aşağıdaki kurallara uyması gerekir:
+-Tür bir sınıf olmalıdır
+-Sınıf ‘public’ olmalıdır
+-Sınıf 'static' olmamalıdır
+-Sınıf '[TestClass]' (veya türetilmiş bir öznitelik) ile işaretlenmelidir
+-sınıf genel olmamalıdır.</target>
         <note />
       </trans-unit>
       <trans-unit id="GlobalTestFixtureShouldBeValidMessageFormat">
         <source>Global test fixture method '{0}' signature is invalid</source>
-        <target state="new">Global test fixture method '{0}' signature is invalid</target>
+        <target state="translated">Global test düzeni yöntemi ‘{0}’ imzası geçersiz</target>
         <note />
       </trans-unit>
       <trans-unit id="GlobalTestFixtureShouldBeValidTitle">
         <source>GlobalTestInitialize and GlobalTestCleanup methods should have valid layout</source>
-        <target state="new">GlobalTestInitialize and GlobalTestCleanup methods should have valid layout</target>
+        <target state="translated">GlobalTestInitialize ve GlobalTestCleanup yöntemleri geçerli bir düzene sahip olmalıdır</target>
         <note />
       </trans-unit>
       <trans-unit id="PreferAssertFailOverAlwaysFalseConditionsMessageFormat">
