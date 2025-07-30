@@ -1,12 +1,11 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using AwesomeAssertions.Execution;
-
 using Microsoft.MSTestV2.CLIAutomation;
 
 namespace MSTest.VstestConsoleWrapper.IntegrationTests;
 
+[TestClass]
 public class ParallelExecutionTests : CLITestBase
 {
     private const string ClassParallelTestAssetName = "ParallelClassesTestProject";
@@ -15,6 +14,7 @@ public class ParallelExecutionTests : CLITestBase
     private const int TestMethodWaitTimeInMS = 1000;
     private const int OverheadTimeInMS = 4000;
 
+    [TestMethod]
     public async Task AllMethodsShouldRunInParallel()
     {
         const int maxAttempts = 10;
@@ -31,7 +31,7 @@ public class ParallelExecutionTests : CLITestBase
             }
 
             // Timer validation sometimes get flacky. So retrying the test if it fails.
-            catch (AssertionFailedException ex) when (i != maxAttempts && ex.Message.Contains("Test Run was expected to not exceed"))
+            catch (AssertFailedException ex) when (i != maxAttempts && ex.Message.Contains("Test Run was expected to not exceed"))
             {
                 await Task.Delay(2000);
             }
@@ -48,6 +48,7 @@ public class ParallelExecutionTests : CLITestBase
             "ParallelMethodsTestProject.UnitTest2.SimpleTest22");
     }
 
+    [TestMethod]
     public void AllClassesShouldRunInParallel()
     {
         InvokeVsTestForExecution([ClassParallelTestAssetName]);
@@ -70,6 +71,7 @@ public class ParallelExecutionTests : CLITestBase
             "ParallelClassesTestProject.UnitTest3.SimpleTest32");
     }
 
+    [TestMethod]
     public void NothingShouldRunInParallel()
     {
         const string RunSetting =

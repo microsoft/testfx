@@ -5,6 +5,7 @@ using Microsoft.MSTestV2.CLIAutomation;
 
 namespace MSTest.IntegrationTests;
 
+[TestClass]
 public class TestCategoriesFromTestDataRowTests : CLITestBase
 {
     private const string TestAssetName = "TestCategoriesFromTestDataRowProject";
@@ -19,10 +20,10 @@ public class TestCategoriesFromTestDataRowTests : CLITestBase
         System.Collections.Immutable.ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestCase> testCases = DiscoverTests(assemblyPath, "TestCategory~Integration");
 
         // Assert - Should discover the test that has Integration category from TestDataRow
-        Assert.AreEqual(1, testCases.Length, "Should discover exactly 1 test with Integration category");
+        Assert.HasCount(1, testCases, "Should discover exactly 1 test with Integration category");
 
         Microsoft.VisualStudio.TestPlatform.ObjectModel.TestCase integrationTest = testCases[0];
-        Assert.IsTrue(integrationTest.DisplayName.Contains("Integration and Slow"), "Should be the test with Integration and Slow categories");
+        Assert.Contains("Integration and Slow", integrationTest.DisplayName, "Should be the test with Integration and Slow categories");
     }
 
     [TestMethod]
@@ -35,10 +36,10 @@ public class TestCategoriesFromTestDataRowTests : CLITestBase
         System.Collections.Immutable.ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestCase> testCases = DiscoverTests(assemblyPath, "TestCategory~Unit");
 
         // Assert - Should discover the test that has Unit category from TestDataRow
-        Assert.AreEqual(1, testCases.Length, "Should discover exactly 1 test with Unit category");
+        Assert.HasCount(1, testCases, "Should discover exactly 1 test with Unit category");
 
         Microsoft.VisualStudio.TestPlatform.ObjectModel.TestCase unitTest = testCases[0];
-        Assert.IsTrue(unitTest.DisplayName.Contains("Unit and Fast"), "Should be the test with Unit and Fast categories");
+        Assert.Contains("Unit and Fast", unitTest.DisplayName, "Should be the test with Unit and Fast categories");
     }
 
     [TestMethod]
@@ -54,14 +55,14 @@ public class TestCategoriesFromTestDataRowTests : CLITestBase
         System.Collections.Immutable.ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestCase> dataLevelTests = DiscoverTests(assemblyPath, "TestCategory~DataLevel");
 
         // Assert - The same test should be found by both filters since categories are merged
-        Assert.AreEqual(1, methodLevelTests.Length, "Should discover exactly 1 test with MethodLevel category");
-        Assert.AreEqual(1, dataLevelTests.Length, "Should discover exactly 1 test with DataLevel category");
+        Assert.HasCount(1, methodLevelTests, "Should discover exactly 1 test with MethodLevel category");
+        Assert.HasCount(1, dataLevelTests, "Should discover exactly 1 test with DataLevel category");
 
         Microsoft.VisualStudio.TestPlatform.ObjectModel.TestCase methodTest = methodLevelTests[0];
         Microsoft.VisualStudio.TestPlatform.ObjectModel.TestCase dataTest = dataLevelTests[0];
 
         Assert.AreEqual(methodTest.FullyQualifiedName, dataTest.FullyQualifiedName, "Both filters should find the same test");
-        Assert.IsTrue(methodTest.DisplayName.Contains("method and data categories"), "Should be the test with combined categories");
+        Assert.Contains("method and data categories", methodTest.DisplayName, "Should be the test with combined categories");
     }
 
     [TestMethod]

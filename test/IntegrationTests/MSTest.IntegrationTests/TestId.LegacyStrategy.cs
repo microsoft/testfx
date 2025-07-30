@@ -1,16 +1,16 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using AwesomeAssertions;
-
 using Microsoft.MSTestV2.CLIAutomation;
 
 namespace MSTest.IntegrationTests;
 
+[TestClass]
 public partial class TestId : CLITestBase
 {
     private const string LegacyStrategyDll = "TestIdProject.LegacyStrategy";
 
+    [TestMethod]
     public async Task TestIdUniqueness_DataRowArray_LegacyStrategy()
     {
         // Arrange
@@ -30,9 +30,10 @@ public partial class TestId : CLITestBase
             "DataRowArraysTests (0,System.Int32[])");
 
         // We cannot assert the expected ID as it is path dependent
-        testResults.Select(x => x.TestCase.Id.ToString()).Distinct().Should().ContainSingle();
+        Assert.ContainsSingle(testResults.Select(x => x.TestCase.Id.ToString()).Distinct());
     }
 
+    [TestMethod]
     public async Task TestIdUniqueness_DataRowString_LegacyStrategy()
     {
         // Arrange
@@ -53,9 +54,10 @@ public partial class TestId : CLITestBase
             "DataRowStringTests (  )");
 
         // We cannot assert the expected ID as it is path dependent
-        testResults.Select(x => x.TestCase.Id.ToString()).Distinct().Should().ContainSingle();
+        Assert.ContainsSingle(testResults.Select(x => x.TestCase.Id.ToString()).Distinct());
     }
 
+    [TestMethod]
     public async Task TestIdUniqueness_DynamicDataArrays_LegacyStrategy()
     {
         // Arrange
@@ -75,9 +77,10 @@ public partial class TestId : CLITestBase
             "DynamicDataArraysTests (0,System.Int32[])");
 
         // We cannot assert the expected ID as it is path dependent
-        testResults.Select(x => x.TestCase.Id.ToString()).Distinct().Should().ContainSingle();
+        Assert.ContainsSingle(testResults.Select(x => x.TestCase.Id.ToString()).Distinct());
     }
 
+    [TestMethod]
     public async Task TestIdUniqueness_DynamicDataTuple_LegacyStrategy()
     {
         // Arrange
@@ -96,9 +99,10 @@ public partial class TestId : CLITestBase
             "DynamicDataTuplesTests ((1, text, False))");
 
         // We cannot assert the expected ID as it is path dependent
-        testResults.Select(x => x.TestCase.Id.ToString()).Distinct().Should().ContainSingle();
+        Assert.ContainsSingle(testResults.Select(x => x.TestCase.Id.ToString()).Distinct());
     }
 
+    [TestMethod]
     public async Task TestIdUniqueness_DynamicDataGenericCollections_LegacyStrategy()
     {
         // Arrange
@@ -119,9 +123,10 @@ public partial class TestId : CLITestBase
             "DynamicDataGenericCollectionsTests (System.Collections.Generic.List`1[System.Int32],System.Collections.Generic.List`1[System.String],System.Collections.Generic.List`1[System.Boolean])");
 
         // We cannot assert the expected ID as it is path dependent
-        testResults.Select(x => x.TestCase.Id.ToString()).Distinct().Should().ContainSingle();
+        Assert.ContainsSingle(testResults.Select(x => x.TestCase.Id.ToString()).Distinct());
     }
 
+    [TestMethod]
     public async Task TestIdUniqueness_TestDataSourceArrays_LegacyStrategy()
     {
         // Arrange
@@ -141,9 +146,10 @@ public partial class TestId : CLITestBase
             "Custom name");
 
         // We cannot assert the expected ID as it is path dependent
-        testResults.Select(x => x.TestCase.Id.ToString()).Distinct().Should().ContainSingle();
+        Assert.ContainsSingle(testResults.Select(x => x.TestCase.Id.ToString()).Distinct());
     }
 
+    [TestMethod]
     public async Task TestIdUniqueness_TestDataSourceTuples_LegacyStrategy()
     {
         // Arrange
@@ -162,9 +168,10 @@ public partial class TestId : CLITestBase
             "Custom name");
 
         // We cannot assert the expected ID as it is path dependent
-        testResults.Select(x => x.TestCase.Id.ToString()).Distinct().Should().ContainSingle();
+        Assert.ContainsSingle(testResults.Select(x => x.TestCase.Id.ToString()).Distinct());
     }
 
+    [TestMethod]
     public async Task TestIdUniqueness_TestDataSourceGenericCollections_LegacyStrategy()
     {
         // Arrange
@@ -185,6 +192,6 @@ public partial class TestId : CLITestBase
             "Custom name");
 
         // We cannot assert the expected ID as it is path dependent
-        testResults.Select(x => x.TestCase.Id.ToString()).Distinct().Should().ContainSingle();
+        Assert.ContainsSingle(testResults.Select(x => x.TestCase.Id.ToString()).Distinct());
     }
 }

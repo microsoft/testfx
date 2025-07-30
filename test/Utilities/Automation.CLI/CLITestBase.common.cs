@@ -1,13 +1,11 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using AwesomeAssertions;
-
-using TestFramework.ForTestingMSTest;
+using Assert = Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
 
 namespace Microsoft.MSTestV2.CLIAutomation;
 
-public partial class CLITestBase : TestContainer
+public abstract partial class CLITestBase
 {
     private const string Configuration =
 #if DEBUG
@@ -45,7 +43,7 @@ public partial class CLITestBase : TestContainer
         string assemblyLocation = Assembly.GetExecutingAssembly().Location;
 
         string artifactsBinFolder = Path.GetFullPath(Path.Combine(assemblyLocation, @"..\..\..\.."));
-        Directory.Exists(artifactsBinFolder).Should().BeTrue();
+        Assert.IsTrue(Directory.Exists(artifactsBinFolder));
 
         return artifactsBinFolder;
     }
@@ -55,7 +53,7 @@ public partial class CLITestBase : TestContainer
         string assemblyLocation = Assembly.GetExecutingAssembly().Location;
 
         string artifactsFolder = Path.GetFullPath(Path.Combine(assemblyLocation, @"..\..\..\..\.."));
-        Directory.Exists(artifactsFolder).Should().BeTrue();
+        Assert.IsTrue(Directory.Exists(artifactsFolder));
 
         string testResultsFolder = Path.Combine(artifactsFolder, "TestResults", Configuration);
         Directory.CreateDirectory(testResultsFolder);
@@ -68,7 +66,7 @@ public partial class CLITestBase : TestContainer
         configuration ??= Configuration;
         targetFramework ??= DefaultTargetFramework;
         string assetPath = Path.GetFullPath(Path.Combine(GetArtifactsBinFolderPath(), assetName, configuration, targetFramework, assetName + ".dll"));
-        File.Exists(assetPath).Should().BeTrue($"asset '{assetPath}' should exist");
+        Assert.IsTrue(File.Exists(assetPath), $"asset '{assetPath}' should exist");
 
         return assetPath;
     }
