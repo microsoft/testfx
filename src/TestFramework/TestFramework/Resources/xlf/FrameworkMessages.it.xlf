@@ -52,6 +52,21 @@
         <target state="translated">Non passare tipi valore a AreSame(). I valori convertiti in Object non saranno mai uguali. Usare AreEqual(). {0}</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="AssertThatDetailsPrefix">
+        <source>Details:</source>
+        <target state="new">Details:</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AssertThatFailedFormat">
+        <source>Assert.That({0}) failed.</source>
+        <target state="new">Assert.That({0}) failed.</target>
+        <note>{0} is the user code expression</note>
+      </trans-unit>
+      <trans-unit id="AssertThatMessageFormat">
+        <source>Message: {0}</source>
+        <target state="new">Message: {0}</target>
+        <note>{0} user provided message</note>
+      </trans-unit>
       <trans-unit id="BothCollectionsEmpty">
         <source>Both collections are empty. {0}</source>
         <target state="translated">Le raccolte sono entrambe vuote. {0}</target>
@@ -71,6 +86,11 @@
         <source>Both collections contain the same elements. {0}</source>
         <target state="translated">Le raccolte contengono entrambe gli stessi elementi. {0}</target>
         <note></note>
+      </trans-unit>
+      <trans-unit id="CallerArgumentExpressionSingleParameterMessage">
+        <source>'{0}' expression: '{1}'.</source>
+        <target state="new">'{0}' expression: '{1}'.</target>
+        <note>Example: "'value' expression: 'new object()'", where 'value' is the parameter name of an assertion method, and 'new object()' is the expression the user passed to the assert method.</note>
       </trans-unit>
       <trans-unit id="CollectionEqualReason">
         <source>{0}. {1}</source>
@@ -174,6 +194,11 @@ Effettivo: {2}</target>
       <trans-unit id="HasCountFailMsg">
         <source>Expected collection of size {1}. Actual: {2}. {0}</source>
         <target state="translated">Prevista raccolta di dimensioni {1}. Effettivo: {2}. {0}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="InvalidAccessToTestContextProperty">
+        <source>The property 'TestContext.{0}' is related to current test is not available during assembly or class fixtures.</source>
+        <target state="new">The property 'TestContext.{0}' is related to current test is not available during assembly or class fixtures.</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidGitHubUrl">

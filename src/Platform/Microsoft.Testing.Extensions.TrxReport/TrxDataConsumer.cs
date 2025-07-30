@@ -17,7 +17,6 @@ using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.Services;
-using Microsoft.Testing.Platform.TestHost;
 
 namespace Microsoft.Testing.Extensions.TrxReport.Abstractions;
 
@@ -166,8 +165,9 @@ internal sealed class TrxReportGenerator :
         return Task.CompletedTask;
     }
 
-    public async Task OnTestSessionStartingAsync(SessionUid _, CancellationToken cancellationToken)
+    public async Task OnTestSessionStartingAsync(ITestSessionContext testSessionContext)
     {
+        CancellationToken cancellationToken = testSessionContext.CancellationToken;
         if (!_isEnabled || cancellationToken.IsCancellationRequested)
         {
             return;
@@ -209,8 +209,9 @@ TrxReportGeneratorCommandLine.IsTrxReportEnabled: {_commandLineOptionsService.Is
         _testStartTime = _clock.UtcNow;
     }
 
-    public async Task OnTestSessionFinishingAsync(SessionUid sessionUid, CancellationToken cancellationToken)
+    public async Task OnTestSessionFinishingAsync(ITestSessionContext testSessionContext)
     {
+        CancellationToken cancellationToken = testSessionContext.CancellationToken;
         if (!_isEnabled || cancellationToken.IsCancellationRequested)
         {
             return;
@@ -220,7 +221,7 @@ TrxReportGeneratorCommandLine.IsTrxReportEnabled: {_commandLineOptionsService.Is
         {
             if (!_adapterSupportTrxCapability)
             {
-                await _outputDisplay.DisplayAsync(this, new WarningMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.TrxReportFrameworkDoesNotSupportTrxReportCapability, _testFramework.DisplayName, _testFramework.Uid))).ConfigureAwait(false);
+                await _outputDisplay.DisplayAsync(this, new WarningMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.TrxReportFrameworkDoesNotSupportTrxReportCapability, _testFramework.DisplayName, _testFramework.Uid)), testSessionContext.CancellationToken).ConfigureAwait(false);
             }
 
             ApplicationStateGuard.Ensure(_testStartTime is not null);
@@ -232,7 +233,7 @@ TrxReportGeneratorCommandLine.IsTrxReportEnabled: {_commandLineOptionsService.Is
             (string reportFileName, string? warning) = await trxReportGeneratorEngine.GenerateReportAsync().ConfigureAwait(false);
             if (warning is not null)
             {
-                await _outputDisplay.DisplayAsync(this, new WarningMessageOutputDeviceData(warning)).ConfigureAwait(false);
+                await _outputDisplay.DisplayAsync(this, new WarningMessageOutputDeviceData(warning), testSessionContext.CancellationToken).ConfigureAwait(false);
             }
 
             if (
@@ -242,7 +243,7 @@ TrxReportGeneratorCommandLine.IsTrxReportEnabled: {_commandLineOptionsService.Is
                 !_commandLineOptionsService.IsOptionSet(CrashDumpCommandLineOptions.CrashDumpOptionName))
             {
                 // In server mode we report the trx in-process
-                await _messageBus.PublishAsync(this, new SessionFileArtifact(sessionUid, new FileInfo(reportFileName), ExtensionResources.TrxReportArtifactDisplayName, ExtensionResources.TrxReportArtifactDescription)).ConfigureAwait(false);
+                await _messageBus.PublishAsync(this, new SessionFileArtifact(testSessionContext.SessionUid, new FileInfo(reportFileName), ExtensionResources.TrxReportArtifactDisplayName, ExtensionResources.TrxReportArtifactDescription)).ConfigureAwait(false);
             }
             else
             {

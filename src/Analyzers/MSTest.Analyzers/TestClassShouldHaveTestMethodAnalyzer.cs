@@ -22,7 +22,8 @@ public sealed class TestClassShouldHaveTestMethodAnalyzer : DiagnosticAnalyzer
     private static readonly LocalizableResourceString Description = new(nameof(Resources.TestClassShouldHaveTestMethodDescription), Resources.ResourceManager, typeof(Resources));
     private static readonly LocalizableResourceString MessageFormat = new(nameof(Resources.TestClassShouldHaveTestMethodMessageFormat), Resources.ResourceManager, typeof(Resources));
 
-    internal static readonly DiagnosticDescriptor TestClassShouldHaveTestMethodRule = DiagnosticDescriptorHelper.Create(
+    /// <inheritdoc cref="Resources.TestClassShouldHaveTestMethodTitle" />
+    public static readonly DiagnosticDescriptor TestClassShouldHaveTestMethodRule = DiagnosticDescriptorHelper.Create(
         DiagnosticIds.TestClassShouldHaveTestMethodRuleId,
         Title,
         MessageFormat,
@@ -48,15 +49,17 @@ public sealed class TestClassShouldHaveTestMethodAnalyzer : DiagnosticAnalyzer
                 INamedTypeSymbol? testMethodAttributeSymbol = context.Compilation.GetTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestMethodAttribute);
                 INamedTypeSymbol? assemblyInitializationAttributeSymbol = context.Compilation.GetTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingAssemblyInitializeAttribute);
                 INamedTypeSymbol? assemblyCleanupAttributeSymbol = context.Compilation.GetTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingAssemblyCleanupAttribute);
+                INamedTypeSymbol? globalTestInitializeAttributeSymbol = context.Compilation.GetTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingGlobalTestInitializeAttribute);
+                INamedTypeSymbol? globalTestCleanupAttributeSymbol = context.Compilation.GetTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingGlobalTestCleanupAttribute);
                 context.RegisterSymbolAction(
-                    context => AnalyzeSymbol(context, testClassAttributeSymbol, testMethodAttributeSymbol, assemblyInitializationAttributeSymbol, assemblyCleanupAttributeSymbol),
+                    context => AnalyzeSymbol(context, testClassAttributeSymbol, testMethodAttributeSymbol, assemblyInitializationAttributeSymbol, assemblyCleanupAttributeSymbol, globalTestInitializeAttributeSymbol, globalTestCleanupAttributeSymbol),
                     SymbolKind.NamedType);
             }
         });
     }
 
     private static void AnalyzeSymbol(SymbolAnalysisContext context, INamedTypeSymbol testClassAttributeSymbol, INamedTypeSymbol? testMethodAttributeSymbol,
-        INamedTypeSymbol? assemblyInitializationAttributeSymbol, INamedTypeSymbol? assemblyCleanupAttributeSymbol)
+        INamedTypeSymbol? assemblyInitializationAttributeSymbol, INamedTypeSymbol? assemblyCleanupAttributeSymbol, INamedTypeSymbol? globalTestInitializeAttributeSymbol, INamedTypeSymbol? globalTestCleanupAttributeSymbol)
     {
         var classSymbol = (INamedTypeSymbol)context.Symbol;
 
@@ -91,7 +94,9 @@ public sealed class TestClassShouldHaveTestMethodAnalyzer : DiagnosticAnalyzer
                     }
 
                     if (SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, assemblyInitializationAttributeSymbol)
-                        || SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, assemblyCleanupAttributeSymbol))
+                        || SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, assemblyCleanupAttributeSymbol)
+                        || SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, globalTestInitializeAttributeSymbol)
+                        || SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, globalTestCleanupAttributeSymbol))
                     {
                         hasAssemblyAttribute = true;
                     }

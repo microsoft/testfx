@@ -72,13 +72,10 @@ internal static class TestCaseExtensions
     {
         string? testClassName = testCase.GetPropertyValue(EngineConstants.TestClassNameProperty) as string;
         string name = testCase.GetTestName(testClassName);
-        var testIdGenerationStrategy = (TestIdGenerationStrategy)testCase.GetPropertyValue(
-            EngineConstants.TestIdGenerationStrategyProperty,
-            (int)TestIdGenerationStrategy.FullyQualified);
 
         TestMethod testMethod = testCase.ContainsManagedMethodAndType()
-            ? new(testCase.GetManagedType(), testCase.GetManagedMethod(), testCase.GetHierarchy()!, name, testClassName!, source, testCase.DisplayName, testIdGenerationStrategy)
-            : new(name, testClassName!, source, testCase.DisplayName, testIdGenerationStrategy);
+            ? new(testCase.GetManagedType(), testCase.GetManagedMethod(), testCase.GetHierarchy()!, name, testClassName!, source, testCase.DisplayName, testCase.GetPropertyValue<string>(EngineConstants.ParameterTypesProperty, null))
+            : new(name, testClassName!, source, testCase.DisplayName);
         var dataType = (DynamicDataType)testCase.GetPropertyValue(EngineConstants.TestDynamicDataTypeProperty, (int)DynamicDataType.None);
         if (dataType != DynamicDataType.None)
         {
@@ -86,6 +83,7 @@ internal static class TestCaseExtensions
 
             testMethod.DataType = dataType;
             testMethod.SerializedData = data;
+            testMethod.TestCaseIndex = testCase.GetPropertyValue<int>(EngineConstants.TestCaseIndexProperty, 0);
             if (UnitTestDiscoverer.TryGetActualData(testCase, out object?[]? actualData))
             {
                 testMethod.ActualData = actualData;
@@ -103,24 +101,13 @@ internal static class TestCaseExtensions
         {
             TestCategory = testCase.GetPropertyValue(EngineConstants.TestCategoryProperty) as string[],
             Priority = testCase.GetPropertyValue(EngineConstants.PriorityProperty) as int?,
+            UnfoldingStrategy = (TestDataSourceUnfoldingStrategy)testCase.GetPropertyValue(EngineConstants.UnfoldingStrategy, (int)TestDataSourceUnfoldingStrategy.Auto),
             DisplayName = testCase.DisplayName,
         };
 
         if (testCase.Traits.Any())
         {
             testElement.Traits = [.. testCase.Traits];
-        }
-
-        string? cssIteration = testCase.GetPropertyValue<string>(EngineConstants.CssIterationProperty, null);
-        if (!StringEx.IsNullOrWhiteSpace(cssIteration))
-        {
-            testElement.CssIteration = cssIteration;
-        }
-
-        string? cssProjectStructure = testCase.GetPropertyValue<string>(EngineConstants.CssProjectStructureProperty, null);
-        if (!StringEx.IsNullOrWhiteSpace(cssProjectStructure))
-        {
-            testElement.CssProjectStructure = cssProjectStructure;
         }
 
         string[]? workItemIds = testCase.GetPropertyValue<string[]>(EngineConstants.WorkItemIdsProperty, null);

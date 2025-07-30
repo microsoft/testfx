@@ -447,6 +447,51 @@ The type declaring these methods should also respect the following rules:
         <target state="translated">将 TestContext.CancellationToken 传递给异步操作</target>
         <note />
       </trans-unit>
+      <trans-unit id="GlobalTestFixtureShouldBeValidDescription">
+        <source>Methods marked with '[GlobalTestInitialize]' or '[GlobalTestCleanup]' should follow the following layout to be valid:
+-it can't be declared on a generic class
+-it should be 'public'
+-it should be 'static'
+-it should not be 'async void'
+-it should not be a special method (finalizer, operator...).
+-it should not be generic
+-it should take one parameter of type 'TestContext'
+-return type should be 'void', 'Task' or 'ValueTask'
+
+The type declaring these methods should also respect the following rules:
+-The type should be a class
+-The class should be 'public'
+-The class shouldn't be 'static'
+-The class should be marked with '[TestClass]' (or a derived attribute)
+-the class should not be generic.</source>
+        <target state="translated">标记有 "[GlobalTestInitialize]" 或 "[GlobalTestCleanup]" 的方法应遵循以下布局才会有效:
+- 不能在泛型类上声明它
+- 它应为 "public"
+- 它应为 "static"
+- 它不应为 "async void"
+- 它不应是特殊方法(终结器、运算符...)。
+- 它不应是泛型的
+- 它应采用 "TestContext" 类型的一个参数
+- 返回类型应为 "void"、"Task" 或 "ValueTask"
+
+声明这些方法的类型还应遵循以下规则:
+- 类型应为类
+- 类应该为 "public"
+- 类不应为 "static"
+- 应使用 "[TestClass]"（或派生属性）标记类
+- 类不应是泛型的。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="GlobalTestFixtureShouldBeValidMessageFormat">
+        <source>Global test fixture method '{0}' signature is invalid</source>
+        <target state="translated">全局测试固定例程方法 "{0}" 签名无效</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="GlobalTestFixtureShouldBeValidTitle">
+        <source>GlobalTestInitialize and GlobalTestCleanup methods should have valid layout</source>
+        <target state="translated">GlobalTestInitialize 和 GlobalTestCleanup 方法应具有有效的布局</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PreferAssertFailOverAlwaysFalseConditionsMessageFormat">
         <source>Use 'Assert.Fail' instead of an always-failing 'Assert.{0}' assert</source>
         <target state="translated">使用 “Assert.Fail” 而不是始终失败的 “Assert.{0}” 断言</target>

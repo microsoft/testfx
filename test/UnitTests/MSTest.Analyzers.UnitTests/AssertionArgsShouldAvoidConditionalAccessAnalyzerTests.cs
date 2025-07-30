@@ -685,7 +685,7 @@ public sealed class AssertionArgsShouldAvoidConditionalAccessAnalyzerTests
         string fixedCode = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
             using System.Collections.Generic;
-            
+
             public class MyClass
             {
                 public MyClass A { get; set; }
@@ -697,7 +697,7 @@ public sealed class AssertionArgsShouldAvoidConditionalAccessAnalyzerTests
 
                 public bool MyBool { get; set; }
             }
-            
+
             [TestClass]
             public class MyTestClass
             {
@@ -733,15 +733,14 @@ public sealed class AssertionArgsShouldAvoidConditionalAccessAnalyzerTests
     public async Task WhenUsingConditionalsAccess_In_Message_NoDiagnostic()
     {
         string code = """
-            #nullable enable
             using System.Text.RegularExpressions;
             using Microsoft.VisualStudio.TestTools.UnitTesting;
             using System.Collections.Generic;
 
             public class A
             {
-                public string? S { get; set; }
-                public Regex? R { get; set; }
+                public string S { get; set; }
+                public Regex R { get; set; }
             }
 
             [TestClass]

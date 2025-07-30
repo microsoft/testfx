@@ -53,7 +53,7 @@ internal class TypeValidator
         // gives us a better performance.
         // It would be possible to use non-caching reflection here if we knew that we are only doing discovery that won't be followed by run,
         // but the difference is quite small, and we don't expect a huge amount of non-test classes in the assembly.
-        if (!type.IsClass || !_reflectHelper.IsAttributeDefined<TestClassAttribute>(type, inherit: false))
+        if (!type.IsClass || !_reflectHelper.IsAttributeDefined<TestClassAttribute>(type))
         {
             return false;
         }

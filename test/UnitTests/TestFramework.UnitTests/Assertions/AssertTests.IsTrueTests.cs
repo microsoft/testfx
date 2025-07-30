@@ -9,14 +9,14 @@ public partial class AssertTests
     {
         bool? nullBool = null;
         Exception ex = VerifyThrows(() => Assert.IsFalse(nullBool));
-        Verify(ex.Message == "Assert.IsFalse failed. ");
+        Verify(ex.Message == "Assert.IsFalse failed. 'condition' expression: 'nullBool'.");
     }
 
     public void IsFalseNullableBooleanShouldFailWithTrue()
     {
         bool? nullBool = true;
         Exception ex = VerifyThrows(() => Assert.IsFalse(nullBool));
-        Verify(ex.Message == "Assert.IsFalse failed. ");
+        Verify(ex.Message == "Assert.IsFalse failed. 'condition' expression: 'nullBool'.");
     }
 
     public void IsFalseNullableBooleanShouldNotFailWithFalse()
@@ -28,7 +28,7 @@ public partial class AssertTests
     public void IsFalseBooleanShouldFailWithTrue()
     {
         Exception ex = VerifyThrows(() => Assert.IsFalse(true));
-        Verify(ex.Message == "Assert.IsFalse failed. ");
+        Verify(ex.Message == "Assert.IsFalse failed. 'condition' expression: 'true'.");
     }
 
     public void IsFalseBooleanShouldNotFailWithFalse()
@@ -38,14 +38,14 @@ public partial class AssertTests
     {
         bool? nullBool = null;
         Exception ex = VerifyThrows(() => Assert.IsFalse(nullBool, "User-provided message"));
-        Verify(ex.Message == "Assert.IsFalse failed. User-provided message");
+        Verify(ex.Message == "Assert.IsFalse failed. 'condition' expression: 'nullBool'. User-provided message");
     }
 
     public void IsFalseNullableBooleanStringMessageShouldFailWithTrue()
     {
         bool? nullBool = true;
         Exception ex = VerifyThrows(() => Assert.IsFalse(nullBool, "User-provided message"));
-        Verify(ex.Message == "Assert.IsFalse failed. User-provided message");
+        Verify(ex.Message == "Assert.IsFalse failed. 'condition' expression: 'nullBool'. User-provided message");
     }
 
     public void IsFalseNullableBooleanStringMessageShouldNotFailWithFalse()
@@ -57,7 +57,7 @@ public partial class AssertTests
     public void IsFalseBooleanStringMessageShouldFailWithTrue()
     {
         Exception ex = VerifyThrows(() => Assert.IsFalse(true, "User-provided message"));
-        Verify(ex.Message == "Assert.IsFalse failed. User-provided message");
+        Verify(ex.Message == "Assert.IsFalse failed. 'condition' expression: 'true'. User-provided message");
     }
 
     public void IsFalseBooleanStringMessageShouldNotFailWithFalse()
@@ -69,7 +69,7 @@ public partial class AssertTests
         DummyClassTrackingToStringCalls o = new();
         DateTime dateTime = DateTime.Now;
         Exception ex = await VerifyThrowsAsync(async () => Assert.IsFalse(nullBool, $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}"));
-        Verify(ex.Message == $"Assert.IsFalse failed. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
+        Verify(ex.Message == $"Assert.IsFalse failed. 'condition' expression: 'nullBool'. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
     }
 
     public async Task IsFalseNullableBooleanInterpolatedStringMessageShouldFailWithTrue()
@@ -78,7 +78,7 @@ public partial class AssertTests
         DummyClassTrackingToStringCalls o = new();
         DateTime dateTime = DateTime.Now;
         Exception ex = await VerifyThrowsAsync(async () => Assert.IsFalse(nullBool, $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}"));
-        Verify(ex.Message == $"Assert.IsFalse failed. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
+        Verify(ex.Message == $"Assert.IsFalse failed. 'condition' expression: 'nullBool'. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
     }
 
     public void IsFalseNullableBooleanInterpolatedStringMessageShouldNotFailWithFalse()
@@ -92,53 +92,24 @@ public partial class AssertTests
         DummyClassTrackingToStringCalls o = new();
         DateTime dateTime = DateTime.Now;
         Exception ex = await VerifyThrowsAsync(async () => Assert.IsFalse(true, $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}"));
-        Verify(ex.Message == $"Assert.IsFalse failed. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
+        Verify(ex.Message == $"Assert.IsFalse failed. 'condition' expression: 'true'. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
     }
 
     public void IsFalseBooleanInterpolatedStringMessageShouldNotFailWithFalse()
         => Assert.IsFalse(false, $"User-provided message. Input: {false}");
 
-    public void IsFalseNullableBooleanMessageArgsShouldFailWithNull()
-    {
-        bool? nullBool = null;
-        Exception ex = VerifyThrows(() => Assert.IsFalse(nullBool, "User-provided message. Input: {0}", nullBool));
-        Verify(ex.Message == "Assert.IsFalse failed. User-provided message. Input: ");
-    }
-
-    public void IsFalseNullableBooleanMessageArgsShouldFailWithTrue()
-    {
-        bool? nullBool = true;
-        Exception ex = VerifyThrows(() => Assert.IsFalse(nullBool, "User-provided message. Input: {0}", nullBool));
-        Verify(ex.Message == "Assert.IsFalse failed. User-provided message. Input: True");
-    }
-
-    public void IsFalseNullableBooleanMessageArgsShouldNotFailWithFalse()
-    {
-        bool? nullBool = false;
-        Assert.IsFalse(nullBool, "User-provided message. Input: {0}", nullBool);
-    }
-
-    public void IsFalseBooleanMessageArgsShouldFailWithTrue()
-    {
-        Exception ex = VerifyThrows(() => Assert.IsFalse(true, "User-provided message. Input: {0}", true));
-        Verify(ex.Message == "Assert.IsFalse failed. User-provided message. Input: True");
-    }
-
-    public void IsFalseBooleanMessageArgsShouldNotFailWithFalse()
-        => Assert.IsFalse(false, "User-provided message. Input: {0}", false);
-
     public void IsTrueNullableBooleanShouldFailWithNull()
     {
         bool? nullBool = null;
         Exception ex = VerifyThrows(() => Assert.IsTrue(nullBool));
-        Verify(ex.Message == "Assert.IsTrue failed. ");
+        Verify(ex.Message == "Assert.IsTrue failed. 'condition' expression: 'nullBool'.");
     }
 
     public void IsTrueNullableBooleanShouldFailWithFalse()
     {
         bool? nullBool = false;
         Exception ex = VerifyThrows(() => Assert.IsTrue(nullBool));
-        Verify(ex.Message == "Assert.IsTrue failed. ");
+        Verify(ex.Message == "Assert.IsTrue failed. 'condition' expression: 'nullBool'.");
     }
 
     public void IsTrueNullableBooleanShouldNotFailWithTrue()
@@ -150,7 +121,7 @@ public partial class AssertTests
     public void IsTrueBooleanShouldFailWithFalse()
     {
         Exception ex = VerifyThrows(() => Assert.IsTrue(false));
-        Verify(ex.Message == "Assert.IsTrue failed. ");
+        Verify(ex.Message == "Assert.IsTrue failed. 'condition' expression: 'false'.");
     }
 
     public void IsTrueBooleanShouldNotFailWithTrue()
@@ -160,14 +131,14 @@ public partial class AssertTests
     {
         bool? nullBool = null;
         Exception ex = VerifyThrows(() => Assert.IsTrue(nullBool, "User-provided message"));
-        Verify(ex.Message == "Assert.IsTrue failed. User-provided message");
+        Verify(ex.Message == "Assert.IsTrue failed. 'condition' expression: 'nullBool'. User-provided message");
     }
 
     public void IsTrueNullableBooleanStringMessageShouldFailWithFalse()
     {
         bool? nullBool = false;
         Exception ex = VerifyThrows(() => Assert.IsTrue(nullBool, "User-provided message"));
-        Verify(ex.Message == "Assert.IsTrue failed. User-provided message");
+        Verify(ex.Message == "Assert.IsTrue failed. 'condition' expression: 'nullBool'. User-provided message");
     }
 
     public void IsTrueNullableBooleanStringMessageShouldNotFailWithTrue()
@@ -179,7 +150,7 @@ public partial class AssertTests
     public void IsTrueBooleanStringMessageShouldFailWithFalse()
     {
         Exception ex = VerifyThrows(() => Assert.IsTrue(false, "User-provided message"));
-        Verify(ex.Message == "Assert.IsTrue failed. User-provided message");
+        Verify(ex.Message == "Assert.IsTrue failed. 'condition' expression: 'false'. User-provided message");
     }
 
     public void IsTrueBooleanStringMessageShouldNotFailWithTrue()
@@ -191,7 +162,7 @@ public partial class AssertTests
         DummyClassTrackingToStringCalls o = new();
         DateTime dateTime = DateTime.Now;
         Exception ex = await VerifyThrowsAsync(async () => Assert.IsTrue(nullBool, $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}"));
-        Verify(ex.Message == $"Assert.IsTrue failed. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
+        Verify(ex.Message == $"Assert.IsTrue failed. 'condition' expression: 'nullBool'. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
     }
 
     public async Task IsTrueNullableBooleanInterpolatedStringMessageShouldFailWithFalse()
@@ -200,7 +171,7 @@ public partial class AssertTests
         DummyClassTrackingToStringCalls o = new();
         DateTime dateTime = DateTime.Now;
         Exception ex = await VerifyThrowsAsync(async () => Assert.IsTrue(nullBool, $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}"));
-        Verify(ex.Message == $"Assert.IsTrue failed. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
+        Verify(ex.Message == $"Assert.IsTrue failed. 'condition' expression: 'nullBool'. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
     }
 
     public void IsTrueNullableBooleanInterpolatedStringMessageShouldNotFailWithTrue()
@@ -214,38 +185,9 @@ public partial class AssertTests
         DummyClassTrackingToStringCalls o = new();
         DateTime dateTime = DateTime.Now;
         Exception ex = await VerifyThrowsAsync(async () => Assert.IsTrue(false, $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}"));
-        Verify(ex.Message == $"Assert.IsTrue failed. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
+        Verify(ex.Message == $"Assert.IsTrue failed. 'condition' expression: 'false'. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
     }
 
     public void IsTrueBooleanInterpolatedStringMessageShouldNotFailWithTrue()
         => Assert.IsTrue(true, $"User-provided message. Input: {true}");
-
-    public void IsTrueNullableBooleanMessageArgsShouldFailWithNull()
-    {
-        bool? nullBool = null;
-        Exception ex = VerifyThrows(() => Assert.IsTrue(nullBool, "User-provided message. Input: {0}", nullBool));
-        Verify(ex.Message == "Assert.IsTrue failed. User-provided message. Input: ");
-    }
-
-    public void IsTrueNullableBooleanMessageArgsShouldFailWithFalse()
-    {
-        bool? nullBool = false;
-        Exception ex = VerifyThrows(() => Assert.IsTrue(nullBool, "User-provided message. Input: {0}", nullBool));
-        Verify(ex.Message == "Assert.IsTrue failed. User-provided message. Input: False");
-    }
-
-    public void IsTrueNullableBooleanMessageArgsShouldNotFailWithTrue()
-    {
-        bool? nullBool = true;
-        Assert.IsTrue(nullBool, "User-provided message. Input: {0}", nullBool);
-    }
-
-    public void IsTrueBooleanMessageArgsShouldFailWithFalse()
-    {
-        Exception ex = VerifyThrows(() => Assert.IsTrue(false, "User-provided message. Input: {0}", false));
-        Verify(ex.Message == "Assert.IsTrue failed. User-provided message. Input: False");
-    }
-
-    public void IsTrueBooleanMessageArgsShouldNotFailWithTrue()
-        => Assert.IsTrue(true, "User-provided message. Input: {0}", true);
 }

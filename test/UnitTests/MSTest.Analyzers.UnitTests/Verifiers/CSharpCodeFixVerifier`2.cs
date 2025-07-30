@@ -30,7 +30,11 @@ public static partial class CSharpCodeFixVerifier<TAnalyzer, TCodeFix>
         => CSharpCodeFixVerifier<TAnalyzer, TCodeFix, DefaultVerifier>.Diagnostic(descriptor);
 
     /// <inheritdoc cref="CodeFixVerifier{TAnalyzer, TCodeFix, TTest, TVerifier}.VerifyAnalyzerAsync(string, DiagnosticResult[])"/>
-    public static async Task VerifyAnalyzerAsync([StringSyntax("C#-test")] string source, params DiagnosticResult[] expected)
+    public static async Task VerifyAnalyzerAsync(
+#if !NETFRAMEWORK // not using StringSyntax in .NET Framework as it's not available, until we can resolve the issues with Polyfill and IVTs. https://github.com/SimonCropp/Polyfill/issues/379
+        [StringSyntax("C#-test")]
+#endif
+        string source, params DiagnosticResult[] expected)
     {
         var test = new Test
         {
@@ -42,15 +46,41 @@ public static partial class CSharpCodeFixVerifier<TAnalyzer, TCodeFix>
     }
 
     /// <inheritdoc cref="CodeFixVerifier{TAnalyzer, TCodeFix, TTest, TVerifier}.VerifyCodeFixAsync(string, string)"/>
-    public static async Task VerifyCodeFixAsync([StringSyntax("C#-test")] string source, [StringSyntax("C#-test")] string fixedSource)
+    public static async Task VerifyCodeFixAsync(
+#if !NETFRAMEWORK
+        [StringSyntax("C#-test")]
+#endif
+        string source,
+#if !NETFRAMEWORK
+        [StringSyntax("C#-test")]
+#endif
+        string fixedSource)
         => await VerifyCodeFixAsync(source, DiagnosticResult.EmptyDiagnosticResults, fixedSource);
 
     /// <inheritdoc cref="CodeFixVerifier{TAnalyzer, TCodeFix, TTest, TVerifier}.VerifyCodeFixAsync(string, DiagnosticResult, string)"/>
-    public static async Task VerifyCodeFixAsync([StringSyntax("C#-test")] string source, DiagnosticResult expected, [StringSyntax("C#-test")] string fixedSource)
+    public static async Task VerifyCodeFixAsync(
+#if !NETFRAMEWORK
+        [StringSyntax("C#-test")]
+#endif
+        string source,
+        DiagnosticResult expected,
+#if !NETFRAMEWORK
+        [StringSyntax("C#-test")]
+#endif
+        string fixedSource)
         => await VerifyCodeFixAsync(source, [expected], fixedSource);
 
     /// <inheritdoc cref="CodeFixVerifier{TAnalyzer, TCodeFix, TTest, TVerifier}.VerifyCodeFixAsync(string, DiagnosticResult[], string)"/>
-    public static async Task VerifyCodeFixAsync([StringSyntax("C#-test")] string source, DiagnosticResult[] expected, [StringSyntax("C#-test")] string fixedSource)
+    public static async Task VerifyCodeFixAsync(
+#if !NETFRAMEWORK
+        [StringSyntax("C#-test")]
+#endif
+        string source,
+        DiagnosticResult[] expected,
+#if !NETFRAMEWORK
+        [StringSyntax("C#-test")]
+#endif
+        string fixedSource)
     {
         var test = new Test
         {

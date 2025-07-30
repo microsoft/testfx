@@ -24,13 +24,6 @@ public partial class AssertTests
     #region BuildUserMessage tests
 
     // See https://github.com/dotnet/sdk/issues/25373
-    public void BuildUserMessageThrowsWhenMessageContainsInvalidStringFormatComposite()
-    {
-        Exception ex = VerifyThrows(() => Assert.BuildUserMessage("{", "arg"));
-        Verify(ex is FormatException);
-    }
-
-    // See https://github.com/dotnet/sdk/issues/25373
     public void BuildUserMessageDoesNotThrowWhenMessageContainsInvalidStringFormatCompositeAndNoArgumentsPassed()
     {
         string message = Assert.BuildUserMessage("{");

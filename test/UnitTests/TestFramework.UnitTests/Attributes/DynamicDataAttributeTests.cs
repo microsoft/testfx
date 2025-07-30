@@ -16,8 +16,6 @@ public class DynamicDataAttributeTests : TestContainer
         _dummyTestClass = new DummyTestClass();
         _testMethodInfo = _dummyTestClass.GetType().GetTypeInfo().GetDeclaredMethod("TestMethod1")!;
         _dynamicDataAttribute = new DynamicDataAttribute("ReusableTestDataProperty");
-
-        DynamicDataAttribute.TestIdGenerationStrategy = TestIdGenerationStrategy.FullyQualified;
     }
 
     public void GetDataShouldThrowExceptionIfInvalidPropertyNameIsSpecifiedOrPropertyDoesNotExist()

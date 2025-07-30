@@ -20,12 +20,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 /// <summary>
 /// Extension methods for TestResult.
 /// </summary>
-#if NET6_0_OR_GREATER
-[Obsolete(FrameworkConstants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
-#else
-[Obsolete(FrameworkConstants.PublicTypeObsoleteMessage)]
-#endif
-public static class TestResultExtensions
+internal static class TestResultExtensions
 {
     /// <summary>
     /// Convert parameter unitTestResult to testResult.

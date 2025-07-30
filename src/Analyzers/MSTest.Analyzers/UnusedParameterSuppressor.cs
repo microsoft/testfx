@@ -22,7 +22,8 @@ public sealed class UnusedParameterSuppressor : DiagnosticSuppressor
     // https://learn.microsoft.com/dotnet/fundamentals/code-analysis/style-rules/ide0060
     private const string SuppressedDiagnosticId = "IDE0060";
 
-    internal static readonly SuppressionDescriptor Rule =
+    /// <inheritdoc cref="Resources.UnusedParameterSuppressorJustification"/>
+    public static readonly SuppressionDescriptor Rule =
         new(DiagnosticIds.UnusedParameterSuppressorRuleId, SuppressedDiagnosticId, Resources.UnusedParameterSuppressorJustification);
 
     /// <inheritdoc />
@@ -37,6 +38,9 @@ public sealed class UnusedParameterSuppressor : DiagnosticSuppressor
         {
             return;
         }
+
+        INamedTypeSymbol? globalTestInitializeAttributeSymbol = context.Compilation.GetTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingGlobalTestInitializeAttribute);
+        INamedTypeSymbol? globalTestCleanupAttributeSymbol = context.Compilation.GetTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingGlobalTestCleanupAttribute);
 
         foreach (Diagnostic diagnostic in context.ReportedDiagnostics)
         {
@@ -57,7 +61,9 @@ public sealed class UnusedParameterSuppressor : DiagnosticSuppressor
                 && parameter.ContainingSymbol is IMethodSymbol method
                 && method.GetAttributes().Any(attr =>
                     SymbolEqualityComparer.Default.Equals(attr.AttributeClass, assemblyInitializeAttributeSymbol) ||
-                    SymbolEqualityComparer.Default.Equals(attr.AttributeClass, classInitializeAttributeSymbol)))
+                    SymbolEqualityComparer.Default.Equals(attr.AttributeClass, classInitializeAttributeSymbol) ||
+                    SymbolEqualityComparer.Default.Equals(attr.AttributeClass, globalTestInitializeAttributeSymbol) ||
+                    SymbolEqualityComparer.Default.Equals(attr.AttributeClass, globalTestCleanupAttributeSymbol)))
             {
                 context.ReportSuppression(Suppression.Create(Rule, diagnostic));
             }

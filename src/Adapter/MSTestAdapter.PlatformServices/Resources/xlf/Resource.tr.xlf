@@ -561,7 +561,7 @@ Hata: {1}</target>
         <note />
       </trans-unit>
       <trans-unit id="UTA_TestMethodThrows">
-        <source>Test method {0}.{1} threw exception: 
+        <source>Test method {0}.{1} threw exception:
 {2}</source>
         <target state="translated">{0}.{1} test metodu özel durum oluşturdu: 
 {2}</target>

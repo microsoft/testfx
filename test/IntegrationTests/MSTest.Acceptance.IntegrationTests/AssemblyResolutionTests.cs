@@ -69,7 +69,7 @@ public sealed class AssemblyResolutionTests : AcceptanceTestBase<AssemblyResolut
         {
             VSSolution solution = CreateTestAsset();
             DotnetMuxerResult result = await DotnetCli.RunAsync($"build -nodeReuse:false {solution.SolutionFile} -c Release", AcceptanceFixture.NuGetGlobalPackagesFolder.Path);
-            Assert.AreEqual(0, result.ExitCode);
+            result.AssertExitCodeIs(0);
 
             TestHost = TestHost.LocateFrom(solution.Projects.Skip(1).Single().FolderPath, TestProjectName, TargetFramework);
             MainDllFolder = MoveMainDllToDifferentTempDirectory();

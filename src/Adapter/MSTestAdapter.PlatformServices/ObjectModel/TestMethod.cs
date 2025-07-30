@@ -4,24 +4,17 @@
 using System.Collections.ObjectModel;
 
 using Microsoft.TestPlatform.AdapterUtilities;
-
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using ITestMethod = Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ObjectModel.ITestMethod;
-using TestIdGenerationStrategy = Microsoft.VisualStudio.TestTools.UnitTesting.TestIdGenerationStrategy;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 
 /// <summary>
 /// TestMethod contains information about a unit test method that needs to be executed.
 /// </summary>
-#if NET6_0_OR_GREATER
-[Obsolete(FrameworkConstants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
-#else
-[Obsolete(FrameworkConstants.PublicTypeObsoleteMessage)]
-#endif
 [Serializable]
-public sealed class TestMethod : ITestMethod
+internal sealed class TestMethod : ITestMethod
 {
     /// <summary>
     /// Number of elements in <see cref="Hierarchy"/>.
@@ -40,25 +33,25 @@ public sealed class TestMethod : ITestMethod
 #pragma warning disable IDE0060 // Remove unused parameter - Public API :/
     public TestMethod(string name, string fullClassName, string assemblyName, bool isAsync)
 #pragma warning restore IDE0060 // Remove unused parameter
-        : this(null, null, null, name, fullClassName, assemblyName, null, TestIdGenerationStrategy.FullyQualified)
+        : this(null, null, null, name, fullClassName, assemblyName, null, null)
     {
     }
 
-    internal TestMethod(string name, string fullClassName, string assemblyName, string? displayName,
-        TestIdGenerationStrategy testIdGenerationStrategy)
-        : this(null, null, null, name, fullClassName, assemblyName, displayName, testIdGenerationStrategy)
+    internal TestMethod(string name, string fullClassName, string assemblyName, string? displayName)
+        : this(null, null, null, name, fullClassName, assemblyName, displayName, null)
     {
     }
 
     internal TestMethod(string? managedTypeName, string? managedMethodName, string?[]? hierarchyValues, string name,
-        string fullClassName, string assemblyName, string? displayName,
-        TestIdGenerationStrategy testIdGenerationStrategy)
+        string fullClassName, string assemblyName, string? displayName, string? parameterTypes)
     {
         Guard.NotNullOrWhiteSpace(assemblyName);
 
         Name = name;
         DisplayName = displayName ?? name;
         FullClassName = fullClassName;
+        ParameterTypes = parameterTypes;
+
         AssemblyName = assemblyName;
 
         if (hierarchyValues is null)
@@ -73,7 +66,6 @@ public sealed class TestMethod : ITestMethod
         _hierarchy = new ReadOnlyCollection<string?>(hierarchyValues);
         ManagedTypeName = managedTypeName;
         ManagedMethodName = managedMethodName;
-        TestIdGenerationStrategy = testIdGenerationStrategy;
     }
 
     /// <inheritdoc />
@@ -81,6 +73,8 @@ public sealed class TestMethod : ITestMethod
 
     /// <inheritdoc />
     public string FullClassName { get; }
+
+    public string? ParameterTypes { get; }
 
     /// <summary>
     /// Gets or sets the declaring assembly full name. This will be used while getting navigation data.
@@ -119,9 +113,6 @@ public sealed class TestMethod : ITestMethod
     public string AssemblyName { get; private set; }
 
     /// <inheritdoc />
-    public bool IsAsync => false; // TODO: Remove this property. We can't remove now as it's public and breaking change.
-
-    /// <inheritdoc />
     public string? ManagedTypeName { get; }
 
     /// <inheritdoc />
@@ -134,9 +125,6 @@ public sealed class TestMethod : ITestMethod
     /// <inheritdoc />
     public IReadOnlyCollection<string?> Hierarchy => _hierarchy;
 
-    /// <inheritdoc />
-    public TestIdGenerationStrategy TestIdGenerationStrategy { get; }
-
     /// <summary>
     /// Gets or sets type of dynamic data if any.
     /// </summary>
@@ -146,6 +134,8 @@ public sealed class TestMethod : ITestMethod
     /// Gets or sets the serialized data.
     /// </summary>
     internal string?[]? SerializedData { get; set; }
+
+    internal int TestCaseIndex { get; set; }
 
     // This holds user types that may not be serializable.
     // If app domains are enabled, we have no choice other than losing the original data.

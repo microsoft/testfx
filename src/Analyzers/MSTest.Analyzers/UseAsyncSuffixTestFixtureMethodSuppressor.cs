@@ -22,7 +22,8 @@ public sealed class UseAsyncSuffixTestFixtureMethodSuppressor : DiagnosticSuppre
     // https://github.com/microsoft/vs-threading/blob/main/doc/analyzers/VSTHRD200.md
     private const string SuppressedDiagnosticId = "VSTHRD200";
 
-    internal static readonly SuppressionDescriptor Rule =
+    /// <inheritdoc cref="Resources.UseAsyncSuffixTestFixtureMethodSuppressorJustification" />
+    public static readonly SuppressionDescriptor Rule =
         new(DiagnosticIds.UseAsyncSuffixTestFixtureMethodSuppressorRuleId, SuppressedDiagnosticId, Resources.UseAsyncSuffixTestFixtureMethodSuppressorJustification);
 
     /// <inheritdoc />
@@ -40,6 +41,9 @@ public sealed class UseAsyncSuffixTestFixtureMethodSuppressor : DiagnosticSuppre
         {
             return;
         }
+
+        INamedTypeSymbol? globalTestInitializeAttributeSymbol = context.Compilation.GetTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingGlobalTestInitializeAttribute);
+        INamedTypeSymbol? globalTestCleanupAttributeSymbol = context.Compilation.GetTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingGlobalTestCleanupAttribute);
 
         foreach (Diagnostic diagnostic in context.ReportedDiagnostics)
         {
@@ -61,7 +65,9 @@ public sealed class UseAsyncSuffixTestFixtureMethodSuppressor : DiagnosticSuppre
                     || SymbolEqualityComparer.Default.Equals(attr.AttributeClass, classInitializeAttributeSymbol)
                     || SymbolEqualityComparer.Default.Equals(attr.AttributeClass, classCleanupAttributeSymbol)
                     || SymbolEqualityComparer.Default.Equals(attr.AttributeClass, testInitializeAttributeSymbol)
-                    || SymbolEqualityComparer.Default.Equals(attr.AttributeClass, testCleanupAttributeSymbol)))
+                    || SymbolEqualityComparer.Default.Equals(attr.AttributeClass, testCleanupAttributeSymbol)
+                    || SymbolEqualityComparer.Default.Equals(attr.AttributeClass, globalTestInitializeAttributeSymbol)
+                    || SymbolEqualityComparer.Default.Equals(attr.AttributeClass, globalTestCleanupAttributeSymbol)))
             {
                 context.ReportSuppression(Suppression.Create(Rule, diagnostic));
             }

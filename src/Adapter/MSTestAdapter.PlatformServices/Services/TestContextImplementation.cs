@@ -20,12 +20,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 /// The virtual string properties of the TestContext are retrieved from the property dictionary
 /// like GetProperty&lt;string&gt;("TestName") or GetProperty&lt;string&gt;("FullyQualifiedTestClassName").
 /// </summary>
-#if NET6_0_OR_GREATER
-[Obsolete(FrameworkConstants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
-#else
-[Obsolete(FrameworkConstants.PublicTypeObsoleteMessage)]
-#endif
-public class TestContextImplementation : TestContext, ITestContext, IDisposable
+internal sealed class TestContextImplementation : TestContext, ITestContext, IDisposable
 {
     private static readonly AsyncLocal<TestContextImplementation?> CurrentTestContextAsyncLocal = new();
 
@@ -33,10 +28,6 @@ public class TestContextImplementation : TestContext, ITestContext, IDisposable
     /// List of result files associated with the test.
     /// </summary>
     private readonly List<string> _testResultFiles;
-
-    // This should be removed. Don't rely on it.
-    // We only keep it for public constructor, but we don't pass it by the adapter.
-    private readonly StringWriter? _stringWriter;
 
     /// <summary>
     /// Properties.
@@ -75,11 +66,12 @@ public class TestContextImplementation : TestContext, ITestContext, IDisposable
     /// Initializes a new instance of the <see cref="TestContextImplementation"/> class.
     /// </summary>
     /// <param name="testMethod">The test method.</param>
+    /// <param name="testClassFullName">The test class full name.</param>
     /// <param name="properties">Properties/configuration passed in.</param>
     /// <param name="messageLogger">The message logger to use.</param>
     /// <param name="testRunCancellationToken">The global test run cancellation token.</param>
-    internal TestContextImplementation(ITestMethod? testMethod, IDictionary<string, object?> properties, IMessageLogger messageLogger, TestRunCancellationToken? testRunCancellationToken)
-        : this(testMethod, null!, properties)
+    internal TestContextImplementation(ITestMethod? testMethod, string? testClassFullName, IDictionary<string, object?> properties, IMessageLogger messageLogger, TestRunCancellationToken? testRunCancellationToken)
+        : this(testMethod, testClassFullName, properties)
     {
         _messageLogger = messageLogger;
         _cancellationTokenRegistration = testRunCancellationToken?.Register(CancelDelegate, this);
@@ -89,23 +81,24 @@ public class TestContextImplementation : TestContext, ITestContext, IDisposable
     /// Initializes a new instance of the <see cref="TestContextImplementation"/> class.
     /// </summary>
     /// <param name="testMethod">The test method.</param>
-    /// <param name="stringWriter">The writer where diagnostic messages are written to.</param>
+    /// <param name="testClassFullName">The test class full name.</param>
     /// <param name="properties">Properties/configuration passed in.</param>
-    public TestContextImplementation(ITestMethod? testMethod, StringWriter stringWriter, IDictionary<string, object?> properties)
+    internal TestContextImplementation(ITestMethod? testMethod, string? testClassFullName, IDictionary<string, object?> properties)
     {
         // testMethod can be null when running ForceCleanup (done when reaching --maximum-failed-tests.
         DebugEx.Assert(properties != null, "properties is not null");
 
-        _stringWriter = stringWriter;
-        _properties = testMethod is null
-            ? new Dictionary<string, object?>(properties)
-            : new Dictionary<string, object?>(properties)
-            {
-                [FullyQualifiedTestClassNameLabel] = testMethod.FullClassName,
-                [ManagedTypeLabel] = testMethod.ManagedTypeName,
-                [ManagedMethodLabel] = testMethod.ManagedMethodName,
-                [TestNameLabel] = testMethod.Name,
-            };
+        _properties = new Dictionary<string, object?>(properties);
+        testClassFullName ??= testMethod?.FullClassName;
+        if (testClassFullName is not null)
+        {
+            _properties.Add(FullyQualifiedTestClassNameLabel, testClassFullName);
+        }
+
+        if (testMethod is not null)
+        {
+            _properties.Add(TestNameLabel, testMethod.Name);
+        }
 
         _testResultFiles = [];
     }
@@ -126,38 +119,7 @@ public class TestContextImplementation : TestContext, ITestContext, IDisposable
 #endif
 
     /// <inheritdoc/>
-    public override IDictionary Properties => _properties;
-
-#if !WINDOWS_UWP && !WIN_UI
-    /// <inheritdoc/>
-    public override string? TestRunDirectory => base.TestRunDirectory;
-
-    /// <inheritdoc/>
-    public override string? DeploymentDirectory => base.DeploymentDirectory;
-
-    /// <inheritdoc/>
-    public override string? ResultsDirectory => base.ResultsDirectory;
-
-    /// <inheritdoc/>
-    public override string? TestRunResultsDirectory => base.TestRunResultsDirectory;
-
-    /// <inheritdoc/>
-    public override string? TestResultsDirectory => base.TestResultsDirectory;
-
-    /// <inheritdoc/>
-    public override string FullyQualifiedTestClassName => base.FullyQualifiedTestClassName!;
-
-#if NETFRAMEWORK
-    /// <inheritdoc/>
-    public override string ManagedType => base.ManagedType!;
-
-    /// <inheritdoc/>
-    public override string ManagedMethod => base.ManagedMethod!;
-#endif
-
-    /// <inheritdoc/>
-    public override string TestName => base.TestName!;
-#endif
+    public override IDictionary<string, object?> Properties => _properties;
 
     /// <summary>
     /// Gets the inner test context object.
@@ -184,7 +146,6 @@ public class TestContextImplementation : TestContext, ITestContext, IDisposable
     {
         string? msg = message?.Replace("\0", "\\0");
         GetTestContextMessagesStringBuilder().Append(msg);
-        _stringWriter?.Write(msg);
     }
 
     /// <summary>
@@ -197,7 +158,6 @@ public class TestContextImplementation : TestContext, ITestContext, IDisposable
     {
         string message = string.Format(CultureInfo.CurrentCulture, format.Replace("\0", "\\0"), args);
         GetTestContextMessagesStringBuilder().Append(message);
-        _stringWriter?.Write(message);
     }
 
     /// <summary>
@@ -209,7 +169,6 @@ public class TestContextImplementation : TestContext, ITestContext, IDisposable
     {
         string? msg = message?.Replace("\0", "\\0");
         GetTestContextMessagesStringBuilder().AppendLine(msg);
-        _stringWriter?.Write(msg);
     }
 
     /// <summary>
@@ -222,7 +181,6 @@ public class TestContextImplementation : TestContext, ITestContext, IDisposable
     {
         string message = string.Format(CultureInfo.CurrentCulture, format.Replace("\0", "\\0"), args);
         GetTestContextMessagesStringBuilder().AppendLine(message);
-        _stringWriter?.Write(message);
     }
 
     /// <summary>
@@ -320,10 +278,7 @@ public class TestContextImplementation : TestContext, ITestContext, IDisposable
     /// Clears the previous testContext writeline messages.
     /// </summary>
     public void ClearDiagnosticMessages()
-    {
-        _testContextMessageStringBuilder?.Clear();
-        (_stringWriter as ThreadSafeStringWriter)?.ToStringAndClear();
-    }
+        => _testContextMessageStringBuilder?.Clear();
 
     /// <inheritdoc/>
     public void SetDisplayName(string? displayName)
@@ -345,7 +300,7 @@ public class TestContextImplementation : TestContext, ITestContext, IDisposable
     /// The dispose pattern.
     /// </summary>
     /// <param name="disposing">Whether to dispose managed state.</param>
-    protected virtual void Dispose(bool disposing)
+    private void Dispose(bool disposing)
     {
         if (!_isDisposed)
         {

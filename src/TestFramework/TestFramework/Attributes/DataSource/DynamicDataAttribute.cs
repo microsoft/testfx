@@ -31,8 +31,8 @@ public enum DynamicDataSourceType
 /// <summary>
 /// Attribute to define dynamic data for a test method.
 /// </summary>
-[AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
-public sealed class DynamicDataAttribute : Attribute, ITestDataSource, ITestDataSourceEmptyDataSourceExceptionInfo, ITestDataSourceUnfoldingCapability, ITestDataSourceIgnoreCapability
+[AttributeUsage(AttributeTargets.Method, AllowMultiple = true, Inherited = false)]
+public sealed class DynamicDataAttribute : Attribute, ITestDataSource, ITestDataSourceEmptyDataSourceExceptionInfo, ITestDataSourceIgnoreCapability
 {
     private readonly string _dynamicDataSourceName;
     private readonly DynamicDataSourceType _dynamicDataSourceType;
@@ -136,8 +136,6 @@ public sealed class DynamicDataAttribute : Attribute, ITestDataSource, ITestData
         _dynamicDataSourceArguments = dynamicDataSourceArguments;
     }
 
-    internal static TestIdGenerationStrategy TestIdGenerationStrategy { get; set; }
-
     /// <summary>
     /// Gets or sets the name of method used to customize the display name in test results.
     /// </summary>
@@ -147,9 +145,6 @@ public sealed class DynamicDataAttribute : Attribute, ITestDataSource, ITestData
     /// Gets or sets the declaring type used to customize the display name in test results.
     /// </summary>
     public Type? DynamicDataDisplayNameDeclaringType { get; set; }
-
-    /// <inheritdoc />
-    public TestDataSourceUnfoldingStrategy UnfoldingStrategy { get; set; } = TestDataSourceUnfoldingStrategy.Auto;
 
     /// <summary>
     /// Gets or sets a reason to ignore this dynamic data source. Setting the property to non-null value will ignore the dynamic data source.
@@ -165,7 +160,7 @@ public sealed class DynamicDataAttribute : Attribute, ITestDataSource, ITestData
     {
         if (DynamicDataDisplayName == null)
         {
-            return TestDataSourceUtilities.ComputeDefaultDisplayName(methodInfo, data, TestIdGenerationStrategy);
+            return TestDataSourceUtilities.ComputeDefaultDisplayName(methodInfo, data);
         }
 
         Type? dynamicDisplayNameDeclaringType = DynamicDataDisplayNameDeclaringType ?? methodInfo.DeclaringType;

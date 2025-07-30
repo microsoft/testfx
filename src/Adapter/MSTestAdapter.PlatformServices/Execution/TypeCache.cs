@@ -303,7 +303,7 @@ internal sealed class TypeCache : MarshalByRefObject
 
         TestAssemblyInfo assemblyInfo = GetAssemblyInfo(classType.Assembly);
 
-        TestClassAttribute? testClassAttribute = ReflectHelper.Instance.GetFirstAttributeOrDefault<TestClassAttribute>(classType, inherit: false);
+        TestClassAttribute? testClassAttribute = ReflectHelper.Instance.GetFirstAttributeOrDefault<TestClassAttribute>(classType);
         DebugEx.Assert(testClassAttribute is not null, "testClassAttribute is null");
         var classInfo = new TestClassInfo(classType, constructor, isParameterLessConstructor, testClassAttribute, assemblyInfo);
 
@@ -355,7 +355,7 @@ internal sealed class TypeCache : MarshalByRefObject
 
     private TimeoutInfo? TryGetTimeoutInfo(MethodInfo methodInfo, FixtureKind fixtureKind)
     {
-        TimeoutAttribute? timeoutAttribute = _reflectionHelper.GetFirstAttributeOrDefault<TimeoutAttribute>(methodInfo, inherit: false);
+        TimeoutAttribute? timeoutAttribute = _reflectionHelper.GetFirstAttributeOrDefault<TimeoutAttribute>(methodInfo);
         if (timeoutAttribute != null)
         {
             if (!timeoutAttribute.HasCorrectTimeout)
@@ -385,14 +385,14 @@ internal sealed class TypeCache : MarshalByRefObject
             {
                 var assemblyInfo = new TestAssemblyInfo(assembly);
 
-                Type[] types = AssemblyEnumerator.GetTypes(assembly, assembly.FullName!, null);
+                Type[] types = AssemblyEnumerator.GetTypes(assembly);
 
                 foreach (Type t in types)
                 {
                     try
                     {
                         // Only examine classes which are TestClass or derives from TestClass attribute
-                        if (!@this._reflectionHelper.IsAttributeDefined<TestClassAttribute>(t, inherit: false))
+                        if (!@this._reflectionHelper.IsAttributeDefined<TestClassAttribute>(t))
                         {
                             continue;
                         }
@@ -421,6 +421,23 @@ internal sealed class TypeCache : MarshalByRefObject
                             assemblyInfo.AssemblyCleanupMethod = methodInfo;
                             assemblyInfo.AssemblyCleanupMethodTimeoutMilliseconds = @this.TryGetTimeoutInfo(methodInfo, FixtureKind.AssemblyCleanup);
                         }
+
+                        if (methodInfo is { IsPublic: true, IsStatic: true, IsGenericMethod: false, DeclaringType.IsGenericType: false, DeclaringType.IsPublic: true } &&
+                            methodInfo.GetParameters() is { } parameters && parameters.Length == 1 && parameters[0].ParameterType == typeof(TestContext) &&
+                            methodInfo.IsValidReturnType())
+                        {
+                            bool isGlobalTestInitialize = @this._reflectionHelper.IsAttributeDefined<GlobalTestInitializeAttribute>(methodInfo);
+                            bool isGlobalTestCleanup = @this._reflectionHelper.IsAttributeDefined<GlobalTestCleanupAttribute>(methodInfo);
+                            if (isGlobalTestInitialize)
+                            {
+                                assemblyInfo.GlobalTestInitializations.Add((methodInfo, @this.TryGetTimeoutInfo(methodInfo, FixtureKind.TestInitialize)));
+                            }
+
+                            if (isGlobalTestCleanup)
+                            {
+                                assemblyInfo.GlobalTestCleanups.Add((methodInfo, @this.TryGetTimeoutInfo(methodInfo, FixtureKind.TestCleanup)));
+                            }
+                        }
                     }
                 }
 
@@ -441,7 +458,7 @@ internal sealed class TypeCache : MarshalByRefObject
         // {
         //    return false;
         // }
-        if (!_reflectionHelper.IsAttributeDefined<TInitializeAttribute>(methodInfo, false))
+        if (!_reflectionHelper.IsAttributeDefined<TInitializeAttribute>(methodInfo))
         {
             return false;
         }
@@ -469,7 +486,7 @@ internal sealed class TypeCache : MarshalByRefObject
         // {
         //    return false;
         // }
-        if (!_reflectionHelper.IsAttributeDefined<TCleanupAttribute>(methodInfo, false))
+        if (!_reflectionHelper.IsAttributeDefined<TCleanupAttribute>(methodInfo))
         {
             return false;
         }
@@ -507,20 +524,6 @@ internal sealed class TypeCache : MarshalByRefObject
         if (cleanupMethod is not null)
         {
             classInfo.BaseClassCleanupMethods.Add(cleanupMethod);
-
-#pragma warning disable CS0618 // Type or member is obsolete
-            classInfo.BaseClassCleanupMethodsStack.Push(cleanupMethod);
-#pragma warning restore CS0618 // Type or member is obsolete
-        }
-
-        if (initMethod is not null || cleanupMethod is not null)
-        {
-#pragma warning disable CS0618 // Type or member is obsolete - kept in case someone is using it
-            classInfo.BaseClassInitAndCleanupMethods.Enqueue(
-                new Tuple<MethodInfo?, MethodInfo?>(
-                    initMethod,
-                    initAndCleanupMethods.LastOrDefault()));
-#pragma warning restore CS0618 // Type or member is obsolete
         }
 
         initAndCleanupMethods = new MethodInfo[2];
@@ -551,7 +554,7 @@ internal sealed class TypeCache : MarshalByRefObject
 
             if (isBase)
             {
-                if (_reflectionHelper.GetFirstAttributeOrDefault<ClassInitializeAttribute>(methodInfo, inherit: true)?
+                if (_reflectionHelper.GetFirstAttributeOrDefault<ClassInitializeAttribute>(methodInfo)?
                         .InheritanceBehavior == InheritanceBehavior.BeforeEachDerivedClass)
                 {
                     initAndCleanupMethods[0] = methodInfo;
@@ -573,7 +576,7 @@ internal sealed class TypeCache : MarshalByRefObject
 
             if (isBase)
             {
-                if (_reflectionHelper.GetFirstAttributeOrDefault<ClassCleanupAttribute>(methodInfo, inherit: true)?
+                if (_reflectionHelper.GetFirstAttributeOrDefault<ClassCleanupAttribute>(methodInfo)?
                         .InheritanceBehavior == InheritanceBehavior.BeforeEachDerivedClass)
                 {
                     initAndCleanupMethods[1] = methodInfo;
@@ -600,8 +603,8 @@ internal sealed class TypeCache : MarshalByRefObject
         bool isBase,
         Dictionary<string, string?> instanceMethods)
     {
-        bool hasTestInitialize = _reflectionHelper.IsAttributeDefined<TestInitializeAttribute>(methodInfo, inherit: false);
-        bool hasTestCleanup = _reflectionHelper.IsAttributeDefined<TestCleanupAttribute>(methodInfo, inherit: false);
+        bool hasTestInitialize = _reflectionHelper.IsAttributeDefined<TestInitializeAttribute>(methodInfo);
+        bool hasTestCleanup = _reflectionHelper.IsAttributeDefined<TestCleanupAttribute>(methodInfo);
 
         if (!hasTestCleanup && !hasTestInitialize)
         {
@@ -779,10 +782,10 @@ internal sealed class TypeCache : MarshalByRefObject
         DebugEx.Assert(testMethodInfo != null, "testMethodInfo is Null");
         DebugEx.Assert(testMethodInfo.MethodInfo != null, "testMethodInfo.TestMethod is Null");
 
-        IEnumerable<TestPropertyAttribute> attributes = _reflectionHelper.GetAttributes<TestPropertyAttribute>(testMethodInfo.MethodInfo, inherit: true);
+        IEnumerable<TestPropertyAttribute> attributes = _reflectionHelper.GetAttributes<TestPropertyAttribute>(testMethodInfo.MethodInfo);
         DebugEx.Assert(attributes != null, "attributes is null");
 
-        attributes = attributes.Concat(_reflectionHelper.GetAttributes<TestPropertyAttribute>(testMethodInfo.Parent.ClassType, inherit: true));
+        attributes = attributes.Concat(_reflectionHelper.GetAttributes<TestPropertyAttribute>(testMethodInfo.Parent.ClassType));
 
         foreach (TestPropertyAttribute attribute in attributes)
         {

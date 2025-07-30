@@ -6,7 +6,7 @@ using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.IPC.Models;
 using Microsoft.Testing.Platform.OutputDevice.Terminal;
 using Microsoft.Testing.Platform.ServerMode;
-using Microsoft.Testing.Platform.TestHost;
+using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Platform.IPC;
 
@@ -256,25 +256,25 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
 
     public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 
-    public async Task OnTestSessionStartingAsync(SessionUid sessionUid, CancellationToken cancellationToken)
+    public async Task OnTestSessionStartingAsync(ITestSessionContext testSessionContext)
     {
         RoslynDebug.Assert(_dotnetTestConnection is not null);
 
         TestSessionEvent sessionStartEvent = new(
             SessionEventTypes.TestSessionStart,
-            sessionUid.Value,
+            testSessionContext.SessionUid.Value,
             ExecutionId);
 
         await _dotnetTestConnection.SendMessageAsync(sessionStartEvent).ConfigureAwait(false);
     }
 
-    public async Task OnTestSessionFinishingAsync(SessionUid sessionUid, CancellationToken cancellationToken)
+    public async Task OnTestSessionFinishingAsync(ITestSessionContext testSessionContext)
     {
         RoslynDebug.Assert(_dotnetTestConnection is not null);
 
         TestSessionEvent sessionEndEvent = new(
             SessionEventTypes.TestSessionEnd,
-            sessionUid.Value,
+            testSessionContext.SessionUid.Value,
             ExecutionId);
 
         await _dotnetTestConnection.SendMessageAsync(sessionEndEvent).ConfigureAwait(false);

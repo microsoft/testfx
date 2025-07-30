@@ -4,8 +4,9 @@
     <TargetFramework>$(NetFrameworkMinimum)</TargetFramework>
     <IsPackable>false</IsPackable>
     <NoWarn>$(NoWarn),1685</NoWarn>
-    <UseInternalTestFramework>true</UseInternalTestFramework>
     <OutputType>Exe</OutputType>
+    <EnableMSTestRunner>true</EnableMSTestRunner>
+    <UseMSTestFromSource>true</UseMSTestFromSource>
   </PropertyGroup>
 
   <ItemGroup>
@@ -13,14 +14,14 @@
     <Compile Include="$(RepoRoot)test\Utilities\Automation.CLI\RunConfiguration.cs" Link="Utilities\RunConfiguration.cs" />
     <Compile Include="$(RepoRoot)test\Utilities\Automation.CLI\XmlRunSettingsUtilities.cs" Link="Utilities\XmlRunSettingsUtilities.cs" />
   </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="AwesomeAssertions" />
-  </ItemGroup>
-
+  
   <ItemGroup>
     <ProjectReference Include="$(RepoRoot)src\Adapter\MSTest.TestAdapter\MSTest.TestAdapter.csproj" />
-    <ProjectReference Include="$(RepoRoot)src\Analyzers\MSTest.Internal.Analyzers\MSTest.Internal.Analyzers.csproj">
+    <ProjectReference Include="$(RepoRoot)src\Analyzers\MSTest.Analyzers\MSTest.Analyzers.csproj">
+      <OutputItemType>Analyzer</OutputItemType>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="$(RepoRoot)src\Analyzers\MSTest.Analyzers.CodeFixes\MSTest.Analyzers.CodeFixes.csproj">
       <OutputItemType>Analyzer</OutputItemType>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>

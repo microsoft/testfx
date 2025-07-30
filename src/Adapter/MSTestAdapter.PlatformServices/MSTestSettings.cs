@@ -17,12 +17,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 /// Adapter Settings for the run.
 /// </summary>
 [Serializable]
-#if NET6_0_OR_GREATER
-[Obsolete(FrameworkConstants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
-#else
-[Obsolete(FrameworkConstants.PublicTypeObsoleteMessage)]
-#endif
-public class MSTestSettings
+internal sealed class MSTestSettings
 {
     /// <summary>
     /// The settings name.
@@ -54,7 +49,7 @@ public class MSTestSettings
         CaptureDebugTraces = true;
         MapInconclusiveToFailed = false;
         MapNotRunnableToFailed = true;
-        TreatDiscoveryWarningsAsErrors = false;
+        TreatDiscoveryWarningsAsErrors = true;
         EnableBaseClassTestMethodsFromOtherAssemblies = true;
         ForcedLegacyMode = false;
         TestSettingsFile = null;
@@ -127,11 +122,6 @@ public class MSTestSettings
     /// Gets a value indicating whether to enable discovery of test methods from base classes in a different assembly from the inheriting test class.
     /// </summary>
     public bool EnableBaseClassTestMethodsFromOtherAssemblies { get; private set; }
-
-    /// <summary>
-    /// Gets a value indicating where class cleanup should occur.
-    /// </summary>
-    public ClassCleanupBehavior? ClassCleanupLifecycle { get; private set; }
 
     /// <summary>
     /// Gets the number of threads/workers to be used for parallelization.
@@ -227,7 +217,6 @@ public class MSTestSettings
         CurrentSettings.AssemblyCleanupTimeout = settings.AssemblyCleanupTimeout;
         CurrentSettings.AssemblyInitializeTimeout = settings.AssemblyInitializeTimeout;
         CurrentSettings.CaptureDebugTraces = settings.CaptureDebugTraces;
-        CurrentSettings.ClassCleanupLifecycle = settings.ClassCleanupLifecycle;
         CurrentSettings.ClassCleanupTimeout = settings.ClassCleanupTimeout;
         CurrentSettings.ClassInitializeTimeout = settings.ClassInitializeTimeout;
         CurrentSettings.ConsiderEmptyDataSourceAsInconclusive = settings.ConsiderEmptyDataSourceAsInconclusive;
@@ -248,15 +237,6 @@ public class MSTestSettings
         CurrentSettings.TreatClassAndAssemblyCleanupWarningsAsErrors = settings.TreatClassAndAssemblyCleanupWarningsAsErrors;
         CurrentSettings.TreatDiscoveryWarningsAsErrors = settings.TreatDiscoveryWarningsAsErrors;
     }
-
-    /// <summary>
-    /// Populate adapter settings from the context.
-    /// </summary>
-    /// <param name="context">
-    /// The discovery context that contains the runsettings.
-    /// </param>
-    [Obsolete("this function will be removed in v4.0.0")]
-    public static void PopulateSettings(IDiscoveryContext? context) => PopulateSettings(context, null, null);
 
 #if !WINDOWS_UWP
     private static bool IsRunSettingsFileHasMSTestSettings(string? runSettingsXml)
@@ -304,7 +284,7 @@ public class MSTestSettings
 
         // This will contain default adapter settings
         var settings = new MSTestSettings();
-        var runConfigurationSettings = RunConfigurationSettings.PopulateSettings(context);
+        var runConfigurationSettings = RunConfigurationSettings.PopulateSettings(context?.RunSettings?.SettingsXml);
 
         // We have runsettings, but we don't have testconfig.
         // Just use runsettings.
@@ -423,7 +403,7 @@ public class MSTestSettings
         //     <CaptureTraceOutput>true</CaptureTraceOutput>
         //     <MapInconclusiveToFailed>false</MapInconclusiveToFailed>
         //     <MapNotRunnableToFailed>false</MapNotRunnableToFailed>
-        //     <TreatDiscoveryWarningsAsErrors>false</TreatDiscoveryWarningsAsErrors>
+        //     <TreatDiscoveryWarningsAsErrors>true</TreatDiscoveryWarningsAsErrors>
         //     <EnableBaseClassTestMethodsFromOtherAssemblies>false</EnableBaseClassTestMethodsFromOtherAssemblies>
         //     <TestTimeout>5000</TestTimeout>
         //     <TreatClassAndAssemblyCleanupWarningsAsErrors>false</TreatClassAndAssemblyCleanupWarningsAsErrors>
@@ -481,21 +461,6 @@ public class MSTestSettings
                             {
                                 logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, value, "EnableBaseClassTestMethodsFromOtherAssemblies"));
                             }
-
-                            break;
-                        }
-
-                    case "CLASSCLEANUPLIFECYCLE":
-                        {
-                            string value = reader.ReadInnerXml();
-                            settings.ClassCleanupLifecycle = TryParseEnum(value, out ClassCleanupBehavior lifecycle)
-                                ? lifecycle
-                                : throw new AdapterSettingsException(
-                                    string.Format(
-                                        CultureInfo.CurrentCulture,
-                                        Resource.InvalidClassCleanupLifecycleValue,
-                                        value,
-                                        string.Join(", ", Enum.GetNames<ClassCleanupBehavior>())));
 
                             break;
                         }
@@ -969,20 +934,6 @@ public class MSTestSettings
         ParseIntegerSetting(configuration, "timeout:classCleanup", logger, value => settings.ClassCleanupTimeout = value);
         ParseIntegerSetting(configuration, "timeout:testInitialize", logger, value => settings.TestInitializeTimeout = value);
         ParseIntegerSetting(configuration, "timeout:testCleanup", logger, value => settings.TestCleanupTimeout = value);
-
-        if (configuration["mstest:classCleanupLifecycle"] is string classCleanupLifecycle)
-        {
-            if (!TryParseEnum(classCleanupLifecycle, out ClassCleanupBehavior lifecycle))
-            {
-                throw new AdapterSettingsException(string.Format(
-                    CultureInfo.CurrentCulture,
-                    Resource.InvalidClassCleanupLifecycleValue,
-                    classCleanupLifecycle,
-                    string.Join(", ", Enum.GetNames<ClassCleanupBehavior>())));
-            }
-
-            settings.ClassCleanupLifecycle = lifecycle;
-        }
 
         if (configuration["mstest:parallelism:workers"] is string workers)
         {

@@ -47,7 +47,7 @@ public class TrxTests
         XDocument xml = memoryStream.TrxContent;
         AssertTrxOutcome(xml, "Completed");
         string trxContent = xml.ToString();
-        Assert.IsFalse(trxContent.Contains(@"className="));
+        Assert.DoesNotContain(@"className=", trxContent);
     }
 
     [TestMethod]
@@ -237,7 +237,7 @@ public class TrxTests
         using MemoryFileStream memoryStream = new();
         PropertyBag propertyBag = new(
             new FailedTestNodeStateProperty("test failed"),
-            new TrxMessagesProperty([new("error message")]));
+            new TrxMessagesProperty([new StandardOutputTrxMessage("error message")]));
         TrxReportEngine trxReportEngine = GenerateTrxReportEngine(0, 1, propertyBag, memoryStream);
 
         // Act
@@ -267,7 +267,7 @@ public class TrxTests
         using MemoryFileStream memoryStream = new();
         PropertyBag propertyBag = new(
             new FailedTestNodeStateProperty("test failed"),
-            new TrxMessagesProperty([new("base trx message"), new StandardErrorTrxMessage("stderr trx message"), new StandardOutputTrxMessage("stdout trx message"), new DebugOrTraceTrxMessage("debug trx message")]));
+            new TrxMessagesProperty([new StandardErrorTrxMessage("stderr trx message"), new StandardOutputTrxMessage("stdout trx message"), new DebugOrTraceTrxMessage("debug trx message")]));
         TrxReportEngine trxReportEngine = GenerateTrxReportEngine(0, 1, propertyBag, memoryStream);
 
         // Act
@@ -283,8 +283,7 @@ public class TrxTests
         string trxContentsPattern = @"
     <UnitTestResult .* testName=""TestMethod"" .* outcome=""Failed"" .*>
       <Output>
-        <StdOut>base trx message
-stdout trx message</StdOut>
+        <StdOut>stdout trx message</StdOut>
         <StdErr>stderr trx message</StdErr>
         <DebugTrace>debug trx message</DebugTrace>
       </Output>
@@ -527,7 +526,7 @@ stdout trx message</StdOut>
         AssertTrxOutcome(xml, "Completed");
         string trxContent = xml.ToString();
         string trxContentsPattern = @"
-    <UnitTest name=""TestMethod"" storage=""testapppath"" id=""b1e0b10f-442a-7875-e431-96fc1c27316b"" priority=""5"">
+    <UnitTest name=""TestMethod"" storage=""testapppath"" id=""39697f97-07bd-1f42-c69a-32f372f41ef4"" priority=""5"">
       <Execution id="".+?"" />
       <Owners>
         <Owner name=""ValueOfOwner"" />
@@ -545,7 +544,7 @@ stdout trx message</StdOut>
       <TestMethod codeBase=""TestAppPath"" adapterTypeName=""executor:///"" name=""TestMethod"" />
     </UnitTest>
  ";
-        Assert.IsTrue(Regex.IsMatch(trxContent, trxContentsPattern));
+        Assert.IsTrue(Regex.IsMatch(trxContent, trxContentsPattern), trxContent);
     }
 
     private static void AssertTrxOutcome(XDocument xml, string expectedOutcome)

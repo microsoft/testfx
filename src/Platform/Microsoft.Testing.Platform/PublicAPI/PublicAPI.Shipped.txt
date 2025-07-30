@@ -93,7 +93,7 @@ Microsoft.Testing.Platform.Builder.ITestApplicationBuilder.BuildAsync() -> Syste
 Microsoft.Testing.Platform.Builder.ITestApplicationBuilder.CommandLine.get -> Microsoft.Testing.Platform.CommandLine.ICommandLineManager!
 Microsoft.Testing.Platform.Builder.ITestApplicationBuilder.Configuration.get -> Microsoft.Testing.Platform.Configurations.IConfigurationManager!
 Microsoft.Testing.Platform.Builder.ITestApplicationBuilder.Logging.get -> Microsoft.Testing.Platform.Logging.ILoggingManager!
-Microsoft.Testing.Platform.Builder.ITestApplicationBuilder.RegisterTestFramework(System.Func<System.IServiceProvider!, Microsoft.Testing.Platform.Capabilities.TestFramework.ITestFrameworkCapabilities!>! capabilitiesFactory, System.Func<Microsoft.Testing.Platform.Capabilities.TestFramework.ITestFrameworkCapabilities!, System.IServiceProvider!, Microsoft.Testing.Platform.Extensions.TestFramework.ITestFramework!>! adapterFactory) -> Microsoft.Testing.Platform.Builder.ITestApplicationBuilder!
+Microsoft.Testing.Platform.Builder.ITestApplicationBuilder.RegisterTestFramework(System.Func<System.IServiceProvider!, Microsoft.Testing.Platform.Capabilities.TestFramework.ITestFrameworkCapabilities!>! capabilitiesFactory, System.Func<Microsoft.Testing.Platform.Capabilities.TestFramework.ITestFrameworkCapabilities!, System.IServiceProvider!, Microsoft.Testing.Platform.Extensions.TestFramework.ITestFramework!>! frameworkFactory) -> Microsoft.Testing.Platform.Builder.ITestApplicationBuilder!
 Microsoft.Testing.Platform.Builder.ITestApplicationBuilder.TestHost.get -> Microsoft.Testing.Platform.TestHost.ITestHostManager!
 Microsoft.Testing.Platform.Builder.ITestApplicationBuilder.TestHostControllers.get -> Microsoft.Testing.Platform.TestHostControllers.ITestHostControllersManager!
 Microsoft.Testing.Platform.Builder.TestApplication
@@ -358,6 +358,7 @@ Microsoft.Testing.Platform.Extensions.TestHost.IDataConsumer.DataTypesConsumed.g
 Microsoft.Testing.Platform.Extensions.TestHost.ITestApplicationLifecycleCallbacks
 Microsoft.Testing.Platform.Extensions.TestHost.ITestApplicationLifecycleCallbacks.AfterRunAsync(int exitCode, System.Threading.CancellationToken cancellation) -> System.Threading.Tasks.Task!
 Microsoft.Testing.Platform.Extensions.TestHost.ITestApplicationLifecycleCallbacks.BeforeRunAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+Microsoft.Testing.Platform.Extensions.TestHost.ITestHostApplicationLifetime
 Microsoft.Testing.Platform.Extensions.TestHost.ITestHostExtension
 Microsoft.Testing.Platform.Extensions.TestHost.ITestSessionLifetimeHandler
 Microsoft.Testing.Platform.Extensions.TestHost.ITestSessionLifetimeHandler.OnTestSessionFinishingAsync(Microsoft.Testing.Platform.TestHost.SessionUid sessionUid, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
@@ -463,6 +464,7 @@ Microsoft.Testing.Platform.TestHost.ITestHostManager
 Microsoft.Testing.Platform.TestHost.ITestHostManager.AddDataConsumer(System.Func<System.IServiceProvider!, Microsoft.Testing.Platform.Extensions.TestHost.IDataConsumer!>! dataConsumerFactory) -> void
 Microsoft.Testing.Platform.TestHost.ITestHostManager.AddDataConsumer<T>(Microsoft.Testing.Platform.Extensions.CompositeExtensionFactory<T!>! compositeServiceFactory) -> void
 Microsoft.Testing.Platform.TestHost.ITestHostManager.AddTestApplicationLifecycleCallbacks(System.Func<System.IServiceProvider!, Microsoft.Testing.Platform.Extensions.TestHost.ITestApplicationLifecycleCallbacks!>! testApplicationLifecycleCallbacks) -> void
+Microsoft.Testing.Platform.TestHost.ITestHostManager.AddTestHostApplicationLifetime(System.Func<System.IServiceProvider!, Microsoft.Testing.Platform.Extensions.TestHost.ITestHostApplicationLifetime!>! testHostApplicationLifetimeFactory) -> void
 Microsoft.Testing.Platform.TestHost.ITestHostManager.AddTestSessionLifetimeHandle(System.Func<System.IServiceProvider!, Microsoft.Testing.Platform.Extensions.TestHost.ITestSessionLifetimeHandler!>! testSessionLifetimeHandleFactory) -> void
 Microsoft.Testing.Platform.TestHost.ITestHostManager.AddTestSessionLifetimeHandle<T>(Microsoft.Testing.Platform.Extensions.CompositeExtensionFactory<T!>! compositeServiceFactory) -> void
 Microsoft.Testing.Platform.TestHost.SessionUid

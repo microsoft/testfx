@@ -47,7 +47,7 @@ internal sealed class GeneratorTester
                 Assembly.GetAssembly(typeof(TestClassAttribute))!.Location
             ]);
 
-    public static ImmutableArray<MetadataReference>? Net60MetadataReferences { get; set; }
+    public static ImmutableArray<MetadataReference>? Net80MetadataReferences { get; set; }
 
     public async Task<GeneratorCompilationResult> CompileAndExecuteAsync(string source, CancellationToken cancellationToken)
         => await CompileAndExecuteAsync([source], cancellationToken);
@@ -57,15 +57,15 @@ internal sealed class GeneratorTester
         // Cache the resolution in local and try to fire the finalizers
         // In CI sometime we have a crash for http connection and the suspect is
         // this call below that connects to nuget.org
-        if (Net60MetadataReferences is null)
+        if (Net80MetadataReferences is null)
         {
             await Lock.WaitAsync(cancellationToken);
             try
             {
-                if (Net60MetadataReferences is null)
+                if (Net80MetadataReferences is null)
                 {
-                    Net60MetadataReferences =
-                        await ReferenceAssemblies.Net.Net60.ResolveAsync(LanguageNames.CSharp, cancellationToken);
+                    Net80MetadataReferences =
+                        await ReferenceAssemblies.Net.Net80.ResolveAsync(LanguageNames.CSharp, cancellationToken);
 
                     GC.Collect();
                     GC.WaitForPendingFinalizers();
@@ -78,7 +78,7 @@ internal sealed class GeneratorTester
             }
         }
 
-        MetadataReference[] metadataReferences = [.. Net60MetadataReferences.Value, .. _additionalReferences.Select(loc => MetadataReference.CreateFromFile(loc))];
+        MetadataReference[] metadataReferences = [.. Net80MetadataReferences.Value, .. _additionalReferences.Select(loc => MetadataReference.CreateFromFile(loc))];
 
         var compilation = CSharpCompilation.Create(
             "TestAssembly",

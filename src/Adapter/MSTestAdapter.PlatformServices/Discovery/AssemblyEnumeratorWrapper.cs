@@ -3,6 +3,7 @@
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -21,11 +22,8 @@ internal sealed class AssemblyEnumeratorWrapper
     /// <summary>
     /// Gets test elements from an assembly.
     /// </summary>
-    /// <param name="assemblyFileName"> The assembly file name. </param>
-    /// <param name="runSettings"> The run Settings. </param>
-    /// <param name="warnings"> Contains warnings if any, that need to be passed back to the caller. </param>
     /// <returns> A collection of test elements. </returns>
-    internal ICollection<UnitTestElement>? GetTests(string? assemblyFileName, IRunSettings? runSettings, out List<string> warnings)
+    internal static ICollection<UnitTestElement>? GetTests(string? assemblyFileName, IRunSettings? runSettings, ITestSourceHandler testSourceHandler, out List<string> warnings)
     {
         warnings = [];
 
@@ -36,65 +34,42 @@ internal sealed class AssemblyEnumeratorWrapper
 
         string fullFilePath = PlatformServiceProvider.Instance.FileOperations.GetFullFilePath(assemblyFileName);
 
+        if (!PlatformServiceProvider.Instance.FileOperations.DoesFileExist(fullFilePath))
+        {
+            string message = string.Format(CultureInfo.CurrentCulture, Resource.TestAssembly_FileDoesNotExist, fullFilePath);
+            throw new FileNotFoundException(message);
+        }
+
+        if (!testSourceHandler.IsAssemblyReferenced(UnitTestFrameworkAssemblyName, fullFilePath))
+        {
+            return null;
+        }
+
         try
         {
-            if (!PlatformServiceProvider.Instance.FileOperations.DoesFileExist(fullFilePath))
-            {
-                string message = string.Format(CultureInfo.CurrentCulture, Resource.TestAssembly_FileDoesNotExist, fullFilePath);
-                throw new FileNotFoundException(message);
-            }
-
-            if (!PlatformServiceProvider.Instance.TestSource.IsAssemblyReferenced(UnitTestFrameworkAssemblyName, fullFilePath))
-            {
-                return null;
-            }
-
             // Load the assembly in isolation if required.
             AssemblyEnumerationResult result = GetTestsInIsolation(fullFilePath, runSettings);
             warnings.AddRange(result.Warnings);
             return result.TestElements;
         }
-        catch (FileNotFoundException ex)
-        {
-            string message = string.Format(CultureInfo.CurrentCulture, Resource.TestAssembly_AssemblyDiscoveryFailure, fullFilePath, ex.Message);
-            PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning($"{nameof(AssemblyEnumeratorWrapper)}.{nameof(this.GetTests)}: {Resource.TestAssembly_AssemblyDiscoveryFailure}", fullFilePath, ex);
-            warnings.Add(message);
-
-            return null;
-        }
         catch (ReflectionTypeLoadException ex)
         {
-            string message = string.Format(CultureInfo.CurrentCulture, Resource.TestAssembly_AssemblyDiscoveryFailure, fullFilePath, ex.Message);
-            PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning($"{nameof(AssemblyEnumeratorWrapper)}.{nameof(this.GetTests)}: {Resource.TestAssembly_AssemblyDiscoveryFailure}", fullFilePath, ex);
-            PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning(Resource.ExceptionsThrown);
-            warnings.Add(message);
-
             if (ex.LoaderExceptions != null)
             {
+                if (ex.LoaderExceptions.Length == 1 && ex.LoaderExceptions[0] is { } singleLoaderException)
+                {
+                    // This exception might be more clear than the ReflectionTypeLoadException, so we throw it.
+                    throw singleLoaderException;
+                }
+
+                // If we have multiple loader exceptions, we log them all as errors, and then throw the original exception.
                 foreach (Exception? loaderEx in ex.LoaderExceptions)
                 {
-                    PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning("{0}", loaderEx);
+                    PlatformServiceProvider.Instance.AdapterTraceLogger.LogError("{0}", loaderEx);
                 }
             }
 
-            return null;
-        }
-        catch (BadImageFormatException)
-        {
-            // Ignore BadImageFormatException when loading native dll in managed adapter.
-            return null;
-        }
-        catch (Exception ex)
-        {
-            // Catch all exceptions, if discoverer fails to load the dll then let caller continue with other sources.
-            // Discover test doesn't work if there is a managed C++ project in solution
-            // Assembly.Load() fails to load the managed cpp executable, with FileLoadException. It can load the dll
-            // successfully though. This is known CLR issue.
-            PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning($"{nameof(AssemblyEnumeratorWrapper)}.{nameof(this.GetTests)}: {Resource.TestAssembly_AssemblyDiscoveryFailure}", fullFilePath, ex);
-            string message = ex is FileNotFoundException fileNotFoundEx ? fileNotFoundEx.Message : string.Format(CultureInfo.CurrentCulture, Resource.TestAssembly_AssemblyDiscoveryFailure, fullFilePath, ex.Message);
-
-            warnings.Add(message);
-            return null;
+            throw;
         }
     }
 

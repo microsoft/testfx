@@ -447,6 +447,51 @@ Anche il tipo che dichiara questi metodi deve rispettare le regole seguenti:
         <target state="translated">Flusso da TestContext.CancellationToken a operazioni asincrone</target>
         <note />
       </trans-unit>
+      <trans-unit id="GlobalTestFixtureShouldBeValidDescription">
+        <source>Methods marked with '[GlobalTestInitialize]' or '[GlobalTestCleanup]' should follow the following layout to be valid:
+-it can't be declared on a generic class
+-it should be 'public'
+-it should be 'static'
+-it should not be 'async void'
+-it should not be a special method (finalizer, operator...).
+-it should not be generic
+-it should take one parameter of type 'TestContext'
+-return type should be 'void', 'Task' or 'ValueTask'
+
+The type declaring these methods should also respect the following rules:
+-The type should be a class
+-The class should be 'public'
+-The class shouldn't be 'static'
+-The class should be marked with '[TestClass]' (or a derived attribute)
+-the class should not be generic.</source>
+        <target state="translated">I metodi contrassegnati con ‘[GlobalTestInitialize]’ o ‘[GlobalTestCleanup]’ devono seguire il layout seguente per essere validi:
+- Non può essere dichiarato in una classe generica
+- Deve essere 'public'
+- Deve essere 'static'
+- Non deve essere 'async void'
+- Non deve essere un metodo speciale (finalizzatore, operatore...).
+- Non deve essere generico
+- Deve accettare un parametro di tipo 'TestContext'
+- Il tipo restituito deve essere 'void', 'Task' o 'ValueTask'
+
+Anche il tipo che dichiara questi metodi deve rispettare le regole seguenti:
+- Il tipo deve essere una classe
+- La classe deve essere 'public'
+- La classe non deve essere 'static'
+- La classe deve essere contrassegnata con '[TestClass]' (o un attributo derivato)
+- La classe non deve essere generica.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="GlobalTestFixtureShouldBeValidMessageFormat">
+        <source>Global test fixture method '{0}' signature is invalid</source>
+        <target state="translated">La firma del metodo di fixture di test globale '{0}' non è valida</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="GlobalTestFixtureShouldBeValidTitle">
+        <source>GlobalTestInitialize and GlobalTestCleanup methods should have valid layout</source>
+        <target state="translated">I metodi GlobalTestInitialize e GlobalTestCleanup devono avere un layout valido</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PreferAssertFailOverAlwaysFalseConditionsMessageFormat">
         <source>Use 'Assert.Fail' instead of an always-failing 'Assert.{0}' assert</source>
         <target state="translated">Usare 'Assert.Fail' invece di un'asserzione 'Assert.{0}' che ha sempre esito negativo.</target>

@@ -15,12 +15,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 /// <summary>
 /// Defines TestAssembly Info object.
 /// </summary>
-#if NET6_0_OR_GREATER
-[Obsolete(FrameworkConstants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
-#else
-[Obsolete(FrameworkConstants.PublicTypeObsoleteMessage)]
-#endif
-public class TestAssemblyInfo
+internal sealed class TestAssemblyInfo
 {
     private readonly Lock _assemblyInfoExecuteSyncObject = new();
 
@@ -31,8 +26,12 @@ public class TestAssemblyInfo
     internal TestAssemblyInfo(Assembly assembly)
         => Assembly = assembly;
 
+    internal List<(MethodInfo Method, TimeoutInfo? TimeoutInfo)> GlobalTestInitializations { get; } = [];
+
+    internal List<(MethodInfo Method, TimeoutInfo? TimeoutInfo)> GlobalTestCleanups { get; } = [];
+
     /// <summary>
-    /// Gets <c>AssemblyInitialize</c> method for the assembly.
+    /// Gets or sets <c>AssemblyInitialize</c> method for the assembly.
     /// </summary>
     public MethodInfo? AssemblyInitializeMethod
     {
@@ -61,7 +60,7 @@ public class TestAssemblyInfo
     internal TimeoutInfo? AssemblyCleanupMethodTimeoutMilliseconds { get; set; }
 
     /// <summary>
-    /// Gets <c>AssemblyCleanup</c> method for the assembly.
+    /// Gets or sets <c>AssemblyCleanup</c> method for the assembly.
     /// </summary>
     public MethodInfo? AssemblyCleanupMethod
     {
@@ -80,12 +79,12 @@ public class TestAssemblyInfo
     }
 
     /// <summary>
-    /// Gets a value indicating whether <c>AssemblyInitialize</c> has been executed.
+    /// Gets or sets a value indicating whether <c>AssemblyInitialize</c> has been executed.
     /// </summary>
     public bool IsAssemblyInitializeExecuted { get; internal set; }
 
     /// <summary>
-    /// Gets the assembly initialization exception.
+    /// Gets or sets the assembly initialization exception.
     /// </summary>
     public Exception? AssemblyInitializationException { get; internal set; }
 
@@ -207,66 +206,6 @@ public class TestAssemblyInfo
         AssemblyInitializationException = testFailedException;
 
         throw testFailedException;
-    }
-
-    /// <summary>
-    /// Run assembly cleanup methods.
-    /// </summary>
-    /// <returns>
-    /// Any exception that can be thrown as part of a assembly cleanup as warning messages.
-    /// </returns>
-    [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
-    public string? RunAssemblyCleanup()
-    {
-        if (AssemblyCleanupMethod == null)
-        {
-            return null;
-        }
-
-        lock (_assemblyInfoExecuteSyncObject)
-        {
-            try
-            {
-                AssemblyCleanupException = FixtureMethodRunner.RunWithTimeoutAndCancellation(
-                     () =>
-                     {
-                         AssemblyCleanupMethod.InvokeAsSynchronousTask(null);
-                         ExecutionContext = ExecutionContext.Capture();
-                     },
-                     new CancellationTokenSource(),
-                     AssemblyCleanupMethodTimeoutMilliseconds,
-                     AssemblyCleanupMethod,
-                     ExecutionContext,
-                     Resource.AssemblyCleanupWasCancelled,
-                     Resource.AssemblyCleanupTimedOut);
-            }
-            catch (Exception ex)
-            {
-                AssemblyCleanupException = ex;
-            }
-        }
-
-        // If assemblyCleanup was successful, then don't do anything
-        if (AssemblyCleanupException is null)
-        {
-            return null;
-        }
-
-        Exception realException = AssemblyCleanupException.GetRealException();
-
-        // special case AssertFailedException to trim off part of the stack trace
-        string errorMessage = realException is AssertFailedException or AssertInconclusiveException
-            ? realException.Message
-            : realException.GetFormattedExceptionMessage();
-
-        DebugEx.Assert(AssemblyCleanupMethod.DeclaringType?.Name is not null, "AssemblyCleanupMethod.DeclaringType.Name is null");
-        return string.Format(
-            CultureInfo.CurrentCulture,
-            Resource.UTA_AssemblyCleanupMethodWasUnsuccesful,
-            AssemblyCleanupMethod.DeclaringType.Name,
-            AssemblyCleanupMethod.Name,
-            errorMessage,
-            realException.GetStackTraceInformation()?.ErrorStackTrace);
     }
 
     /// <summary>

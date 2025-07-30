@@ -4,7 +4,6 @@ trigger:
     include:
     - main
     - rel/*
-    - dev/v4
     exclude:
     - rel/2.*
     - rel/3.0.*
@@ -91,8 +90,7 @@ extends:
           enablePublishTestResults: true
           testResultsFormat: 'vstest'
           enablePublishBuildAssets: true
-          # For final version build, don't publish to internal feeds.
-          isAssetlessBuild:  ${{ parameters.isRTM }}
+          enablePublishUsingPipelines: true
           enableTelemetry: true
           jobs:
           - job: Windows
@@ -149,6 +147,9 @@ extends:
                   /bl:$(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig)\TestStep.binlog
                 name: Test
                 displayName: Test
+                env:
+                  TESTINGPLATFORM_DEFAULT_HANG_TIMEOUT: 5m
+                  DOTNET_ROOT: $(Build.SourcesDirectory)/.dotnet
 
               - task: CopyFiles@2
                 displayName: 'Copy binlogs'
@@ -214,9 +215,12 @@ extends:
               # -ci is allowing to import some environment variables and some required configurations
               - script: |
                   chmod +x ./test.sh
-                  ./test.sh --configuration $(_BuildConfig) --ci --test --integrationTest --nobl /bl:$(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig)\TestStep.binlog
+                  ./test.sh --configuration $(_BuildConfig) --ci --test --integrationTest --nobl /bl:$(BUILD.SOURCESDIRECTORY)/artifacts/TestResults/$(_BuildConfig)/TestStep.binlog
                 name: Test
                 displayName: Tests
+                env:
+                  TESTINGPLATFORM_DEFAULT_HANG_TIMEOUT: 5m
+                  DOTNET_ROOT: $(Build.SourcesDirectory)/.dotnet
 
               - task: 1ES.PublishBuildArtifacts@1
                 displayName: 'Publish Test Results folders'
@@ -233,6 +237,4 @@ extends:
             LclSource: lclFilesfromPackage
             LclPackageId: 'LCL-JUNO-PROD-TESTFX'
 
-    # For stable versions avoid publishing them to internal feeds.
-    - ${{ if eq(parameters.isRTM, False) }}:
-      - template: eng\common\templates-official\post-build\post-build.yml@self
+    - template: eng\common\templates-official\post-build\post-build.yml@self

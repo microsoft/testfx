@@ -54,7 +54,7 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
             Debugger.Launch();
         }
 
-        _pipeNameDescription = NamedPipeServer.GetPipeName(Guid.NewGuid().ToString("N"));
+        _pipeNameDescription = NamedPipeServer.GetPipeName(Guid.NewGuid().ToString("N"), new SystemEnvironment());
     }
 
     internal InvokeTestingPlatformTask(IFileSystem fileSystem) => _fileSystem = fileSystem;
@@ -139,11 +139,6 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
     /// Gets or sets the testing platform command line arguments.
     /// </summary>
     public ITaskItem? TestingPlatformCommandLineArguments { get; set; }
-
-    /// <summary>
-    /// Gets or sets the VSTestCLI run settings.
-    /// </summary>
-    public ITaskItem[]? VSTestCLIRunSettings { get; set; }
 
     private bool IsNetCoreApp => TargetFrameworkIdentifier.ItemSpec == ".NETCoreApp";
 
@@ -294,14 +289,6 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
         if (!string.IsNullOrEmpty(TestingPlatformCommandLineArguments?.ItemSpec))
         {
             builder.AppendTextUnquoted($" {TestingPlatformCommandLineArguments!.ItemSpec} ");
-        }
-
-        if (VSTestCLIRunSettings?.Length > 0)
-        {
-            foreach (ITaskItem taskItem in VSTestCLIRunSettings)
-            {
-                builder.AppendTextUnquoted($" {taskItem.ItemSpec}");
-            }
         }
 
         return builder.ToString();

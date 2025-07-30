@@ -26,22 +26,6 @@ public sealed partial class Assert
     public static Assert Instance { get; } = new Assert();
 
     /// <summary>
-    /// Gets the singleton instance of the Assert functionality.
-    /// </summary>
-    /// <remarks>
-    /// Users can use this to plug-in custom assertions through C# extension methods.
-    /// For instance, the signature of a custom assertion provider could be "public static void IsOfType&lt;T&gt;(this Assert assert, object obj)"
-    /// Users could then use a syntax similar to the default assertions which in this case is "Assert.That.IsOfType&lt;Dog&gt;(animal);"
-    /// More documentation is at "https://github.com/Microsoft/testfx/docs/README.md".
-    /// </remarks>
-#if NET6_0_OR_GREATER
-    [Obsolete(FrameworkConstants.ThatPropertyObsoleteMessage, DiagnosticId = "MSTESTOBS")]
-#else
-    [Obsolete(FrameworkConstants.ThatPropertyObsoleteMessage)]
-#endif
-    public static Assert That => Instance;
-
-    /// <summary>
     /// Replaces null characters ('\0') with "\\0".
     /// </summary>
     /// <param name="input">
@@ -69,6 +53,7 @@ public sealed partial class Assert
     /// The assertion failure message.
     /// </param>
     [DoesNotReturn]
+    [StackTraceHidden]
     internal static void ThrowAssertFailed(string assertionName, string? message)
         => throw new AssertFailedException(
             string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AssertionFailed, assertionName, ReplaceNulls(message)));
@@ -79,20 +64,33 @@ public sealed partial class Assert
     /// <param name="format">
     /// A composite format string.
     /// </param>
-    /// <param name="parameters">
-    /// An object array that contains zero or more objects to format.
-    /// </param>
     /// <returns>
     /// The formatted string based on format and parameters.
     /// </returns>
-    internal static string BuildUserMessage(string? format, params object?[]? parameters)
+    internal static string BuildUserMessage(string? format)
         => format is null
-            ? ReplaceNulls(format)
-            : format.Length == 0
-                ? string.Empty
-                : parameters == null || parameters.Length == 0
-                    ? ReplaceNulls(format)
-                    : string.Format(CultureInfo.CurrentCulture, ReplaceNulls(format), parameters);
+            ? FrameworkMessages.Common_NullInMessages.ToString()
+            : ReplaceNullChars(format);
+
+    private static string BuildUserMessageForSingleExpression(string? format, string callerArgExpression, string parameterName)
+    {
+        string userMessage = BuildUserMessage(format);
+        if (string.IsNullOrEmpty(callerArgExpression))
+        {
+            return userMessage;
+        }
+
+        string callerArgMessagePart = string.Format(CultureInfo.InvariantCulture, FrameworkMessages.CallerArgumentExpressionSingleParameterMessage, parameterName, callerArgExpression);
+        return string.IsNullOrEmpty(userMessage)
+            ? callerArgMessagePart
+            : $"{callerArgMessagePart} {userMessage}";
+    }
+
+    private static string BuildUserMessageForConditionExpression(string? format, string conditionExpression)
+        => BuildUserMessageForSingleExpression(format, conditionExpression, "condition");
+
+    private static string BuildUserMessageForValueExpression(string? format, string conditionExpression)
+        => BuildUserMessageForSingleExpression(format, conditionExpression, "value");
 
     /// <summary>
     /// Checks the parameter for valid conditions.
@@ -109,15 +107,11 @@ public sealed partial class Assert
     /// <param name="message">
     /// message for the invalid parameter exception.
     /// </param>
-    /// <param name="parameters">
-    /// The parameters.
-    /// </param>
-    internal static void CheckParameterNotNull([NotNull] object? param, string assertionName, string parameterName,
-        [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters)
+    internal static void CheckParameterNotNull([NotNull] object? param, string assertionName, string parameterName, string? message)
     {
         if (param == null)
         {
-            string userMessage = BuildUserMessage(message, parameters);
+            string userMessage = BuildUserMessage(message);
             string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.NullParameterToAssert, parameterName, userMessage);
             ThrowAssertFailed(assertionName, finalMessage);
         }

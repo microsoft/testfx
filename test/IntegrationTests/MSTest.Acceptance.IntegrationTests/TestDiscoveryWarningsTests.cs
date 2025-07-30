@@ -18,13 +18,14 @@ public class TestDiscoveryWarningsTests : AcceptanceTestBase<TestDiscoveryWarnin
     public async Task DiscoverTests_ShowsWarningsForTestsThatFailedToDiscover(string currentTfm)
     {
         var testHost = TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, currentTfm);
+        bool isNetFx = currentTfm.StartsWith("net4", StringComparison.OrdinalIgnoreCase);
 
-        if (currentTfm.StartsWith("net4", StringComparison.OrdinalIgnoreCase))
+        if (isNetFx)
         {
             // .NET Framework will isolate the run into appdomain, there we did not write the warnings out
             // so before running the discovery, we want to ensure that the tests do run in appdomain.
             // We check for appdomain directly in the test, so if tests fail we did not run in appdomain.
-            TestHostResult testHostSuccessResult = await testHost.ExecuteAsync();
+            TestHostResult testHostSuccessResult = await testHost.ExecuteAsync("--settings AppDomainEnabled.runsettings");
 
             testHostSuccessResult.AssertExitCodeIs(ExitCodes.Success);
         }
@@ -36,7 +37,14 @@ public class TestDiscoveryWarningsTests : AcceptanceTestBase<TestDiscoveryWarnin
         TestHostResult testHostResult = await testHost.ExecuteAsync("--list-tests");
 
         testHostResult.AssertExitCodeIsNot(ExitCodes.Success);
-        testHostResult.AssertOutputContains("System.IO.FileNotFoundException: Could not load file or assembly 'TestDiscoveryWarningsBaseClass");
+        if (isNetFx)
+        {
+            testHostResult.AssertStandardErrorContains("Could not load file or assembly 'TestDiscoveryWarningsBaseClass, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null' or one of its dependencies. The system cannot find the file specified.");
+        }
+        else
+        {
+            testHostResult.AssertStandardErrorContains("Could not load file or assembly 'TestDiscoveryWarningsBaseClass, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null'. The system cannot find the file specified.");
+        }
     }
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
@@ -74,7 +82,22 @@ public class TestDiscoveryWarningsTests : AcceptanceTestBase<TestDiscoveryWarnin
     <PackageReference Include="MSTest.TestFramework" Version="$MSTestVersion$" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="AppDomainEnabled.runsettings">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>
+
+#file AppDomainEnabled.runsettings
+<?xml version="1.0" encoding="utf-8" ?>
+<RunSettings>
+    <RunConfiguration>
+        <DisableAppDomain>false</DisableAppDomain>
+    </RunConfiguration>
+</RunSettings>
+
 
 #file UnitTest1.cs
 

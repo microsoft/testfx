@@ -10,7 +10,7 @@ internal static class DiagnosticIds
     public const string TestMethodShouldBeValidRuleId = "MSTEST0003";
     public const string PublicTypeShouldBeTestClassRuleId = "MSTEST0004";
     public const string TestContextShouldBeValidRuleId = "MSTEST0005";
-    public const string AvoidExpectedExceptionAttributeRuleId = "MSTEST0006";
+    // public const string AvoidExpectedExceptionAttributeRuleId = "MSTEST0006"; - // Don't remove this commented out line, and don't reuse this ID.
     public const string UseAttributeOnTestMethodRuleId = "MSTEST0007";
     public const string TestInitializeShouldBeValidRuleId = "MSTEST0008";
     public const string TestCleanupShouldBeValidRuleId = "MSTEST0009";
@@ -38,7 +38,7 @@ internal static class DiagnosticIds
     public const string DoNotUseSystemDescriptionAttributeRuleId = "MSTEST0031";
     public const string ReviewAlwaysTrueAssertConditionAnalyzerRuleId = "MSTEST0032";
     public const string NonNullableReferenceNotInitializedSuppressorRuleId = "MSTEST0033";
-    public const string UseClassCleanupBehaviorEndOfClassRuleId = "MSTEST0034";
+    // public const string UseClassCleanupBehaviorEndOfClassRuleId = "MSTEST0034"; - // Don't remove this commented out line, and don't reuse this ID.
     public const string UseDeploymentItemWithTestMethodOrTestClassRuleId = "MSTEST0035";
     public const string DoNotUseShadowingRuleId = "MSTEST0036";
     public const string UseProperAssertMethodsRuleId = "MSTEST0037";
@@ -54,4 +54,5 @@ internal static class DiagnosticIds
     public const string UnusedParameterSuppressorRuleId = "MSTEST0047";
     public const string TestContextPropertyUsageRuleId = "MSTEST0048";
     public const string FlowTestContextCancellationTokenRuleId = "MSTEST0049";
+    public const string GlobalTestFixtureShouldBeValidRuleId = "MSTEST0050";
 }

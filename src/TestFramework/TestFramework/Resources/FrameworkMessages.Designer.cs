@@ -19,7 +19,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "18.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class FrameworkMessages {
@@ -160,6 +160,33 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Details:.
+        /// </summary>
+        internal static string AssertThatDetailsPrefix {
+            get {
+                return ResourceManager.GetString("AssertThatDetailsPrefix", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Assert.That({0}) failed..
+        /// </summary>
+        internal static string AssertThatFailedFormat {
+            get {
+                return ResourceManager.GetString("AssertThatFailedFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Message: {0}.
+        /// </summary>
+        internal static string AssertThatMessageFormat {
+            get {
+                return ResourceManager.GetString("AssertThatMessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Both collections are empty. {0}.
         /// </summary>
         internal static string BothCollectionsEmpty {
@@ -192,6 +219,15 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         internal static string BothSameElements {
             get {
                 return ResourceManager.GetString("BothSameElements", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &apos;{0}&apos; expression: &apos;{1}&apos;..
+        /// </summary>
+        internal static string CallerArgumentExpressionSingleParameterMessage {
+            get {
+                return ResourceManager.GetString("CallerArgumentExpressionSingleParameterMessage", resourceCulture);
             }
         }
         
@@ -482,6 +518,15 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         internal static string HasCountFailMsg {
             get {
                 return ResourceManager.GetString("HasCountFailMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The property &apos;TestContext.{0}&apos; is related to current test is not available during assembly or class fixtures..
+        /// </summary>
+        internal static string InvalidAccessToTestContextProperty {
+            get {
+                return ResourceManager.GetString("InvalidAccessToTestContextProperty", resourceCulture);
             }
         }
         

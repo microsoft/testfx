@@ -24,7 +24,7 @@ public static partial class CSharpCodeFixVerifier<TAnalyzer, TCodeFix>
             TestState.AdditionalReferences.Add(MetadataReference.CreateFromFile(typeof(ValueTask<>).Assembly.Location));
             TestState.AdditionalReferences.Add(MetadataReference.CreateFromFile(typeof(IAsyncDisposable).Assembly.Location));
 #else
-            ReferenceAssemblies = ReferenceAssemblies.Net.Net60;
+            ReferenceAssemblies = ReferenceAssemblies.Net.Net80;
 #endif
             TestState.AdditionalReferences.Add(MetadataReference.CreateFromFile(typeof(ParallelizeAttribute).Assembly.Location));
             TestState.AdditionalReferences.Add(MetadataReference.CreateFromFile(typeof(TestContext).Assembly.Location));

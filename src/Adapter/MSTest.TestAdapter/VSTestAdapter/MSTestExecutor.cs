@@ -15,12 +15,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 /// Contains the execution logic for this adapter.
 /// </summary>
 [ExtensionUri(EngineConstants.ExecutorUriString)]
-#if NET6_0_OR_GREATER
-[Obsolete(FrameworkConstants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
-#else
-[Obsolete(FrameworkConstants.PublicTypeObsoleteMessage)]
-#endif
-public class MSTestExecutor : ITestExecutor
+internal sealed class MSTestExecutor : ITestExecutor
 {
     private readonly CancellationToken _cancellationToken;
 
@@ -45,9 +40,9 @@ public class MSTestExecutor : ITestExecutor
     }
 
     /// <summary>
-    /// Gets or sets the ms test execution manager.
+    /// Gets the ms test execution manager.
     /// </summary>
-    public TestExecutionManager TestExecutionManager { get; protected set; }
+    internal TestExecutionManager TestExecutionManager { get; }
 
 #pragma warning disable CA2255 // The 'ModuleInitializer' attribute should not be used in libraries
     [ModuleInitializer]
@@ -93,7 +88,7 @@ public class MSTestExecutor : ITestExecutor
         Guard.NotNull(frameworkHandle);
         Guard.NotNullOrEmpty(tests);
 
-        if (!MSTestDiscovererHelpers.InitializeDiscovery(from test in tests select test.Source, runContext, frameworkHandle, configuration))
+        if (!MSTestDiscovererHelpers.InitializeDiscovery(from test in tests select test.Source, runContext, frameworkHandle, configuration, new TestSourceHandler()))
         {
             return;
         }
@@ -106,13 +101,15 @@ public class MSTestExecutor : ITestExecutor
         PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("MSTestExecutor.RunTests: Running tests from sources.");
         Guard.NotNull(frameworkHandle);
         Guard.NotNullOrEmpty(sources);
-        if (!MSTestDiscovererHelpers.InitializeDiscovery(sources, runContext, frameworkHandle, configuration))
+
+        TestSourceHandler testSourceHandler = new();
+        if (!MSTestDiscovererHelpers.InitializeDiscovery(sources, runContext, frameworkHandle, configuration, testSourceHandler))
         {
             return;
         }
 
-        sources = PlatformServiceProvider.Instance.TestSource.GetTestSources(sources);
-        await RunTestsFromRightContextAsync(frameworkHandle, async testRunToken => await TestExecutionManager.RunTestsAsync(sources, runContext, frameworkHandle, testRunToken).ConfigureAwait(false)).ConfigureAwait(false);
+        sources = testSourceHandler.GetTestSources(sources);
+        await RunTestsFromRightContextAsync(frameworkHandle, async testRunToken => await TestExecutionManager.RunTestsAsync(sources, runContext, frameworkHandle, testSourceHandler, testRunToken).ConfigureAwait(false)).ConfigureAwait(false);
     }
 
     /// <summary>

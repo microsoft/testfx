@@ -88,23 +88,6 @@ public partial class AssertTests : TestContainer
             .And.Contain(customMessage);
     }
 
-    public void IsInRange_WithMessage_FormatsMessage()
-    {
-        // Arrange
-        int minValue = 1;
-        int maxValue = 5;
-        int value = 10;
-        string message = "Test with parameter: TestValue";
-
-        // Act
-        Action action = () => Assert.IsInRange(minValue, maxValue, value, message);
-
-        // Assert
-        action.Should().ThrowExactly<AssertFailedException>()
-            .And.Message.Should().Contain("Value '10' is not within the expected range [1, 5]")
-            .And.Contain("Test with parameter: TestValue");
-    }
-
     public void IsInRange_WithDoubleValues_WorksCorrectly()
     {
         // Arrange

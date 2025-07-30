@@ -15,16 +15,15 @@ internal static class MSTestDiscovererHelpers
     /// Verifies if the sources are valid for the target platform.
     /// </summary>
     /// <param name="sources">The test sources.</param>
+    /// <param name="testSourceHandler">The test source.</param>
     /// <remarks>Sources cannot be null.</remarks>
     /// <returns>True if the source has a valid extension for the current platform.</returns>
-    internal static bool AreValidSources(IEnumerable<string> sources)
-        => sources.Any(source =>
-            PlatformServiceProvider.Instance.TestSource.ValidSourceExtensions.Any(extension =>
-                string.Equals(Path.GetExtension(source), extension, StringComparison.OrdinalIgnoreCase)));
+    internal static bool AreValidSources(IEnumerable<string> sources, ITestSourceHandler testSourceHandler)
+        => sources.Any(source => testSourceHandler.ValidSourceExtensions.Any(extension => string.Equals(Path.GetExtension(source), extension, StringComparison.OrdinalIgnoreCase)));
 
-    internal static bool InitializeDiscovery(IEnumerable<string> sources, IDiscoveryContext? discoveryContext, IMessageLogger messageLogger, IConfiguration? configuration)
+    internal static bool InitializeDiscovery(IEnumerable<string> sources, IDiscoveryContext? discoveryContext, IMessageLogger messageLogger, IConfiguration? configuration, ITestSourceHandler testSourceHandler)
     {
-        if (!AreValidSources(sources))
+        if (!AreValidSources(sources, testSourceHandler))
         {
             throw new NotSupportedException(Resource.SourcesNotSupported);
         }

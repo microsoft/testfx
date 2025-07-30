@@ -36,7 +36,7 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
         ILogger logger,
         ITask task,
         CancellationToken cancellationToken)
-        : this(GetPipeName(name), callback, environment, logger, task, cancellationToken)
+        : this(GetPipeName(name, environment), callback, environment, logger, task, cancellationToken)
     {
     }
 
@@ -267,14 +267,24 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
         }
     }
 
+    // For compatibility only.
+    // Old versions of MTP used to have this overload without IEnvironment.
+    // Extensions (e.g, TRX) calls into this overload.
+    // If core MTP is updated, but old version of TRX is still used, it will try to call this overload at runtime.
+    // Without it, MissingMethodException will be thrown at runtime.
     public static PipeNameDescription GetPipeName(string name)
+        => GetPipeName(name, new SystemEnvironment());
+
+    public static PipeNameDescription GetPipeName(string name, IEnvironment environment)
     {
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
             return new PipeNameDescription($"testingplatform.pipe.{name.Replace('\\', '.')}", false);
         }
 
-        string directoryId = Path.Combine(Path.GetTempPath(), name);
+#pragma warning disable RS0030 // Do not use banned APIs - We are using IEnvironment, but we still need the enum from the Environment class in BCL. This is safe.
+        string directoryId = Path.Combine(environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData, Environment.SpecialFolderOption.None), name);
+#pragma warning disable RS0030 // Do not use banned APIs
         Directory.CreateDirectory(directoryId);
         return new PipeNameDescription(
             !Directory.Exists(directoryId)

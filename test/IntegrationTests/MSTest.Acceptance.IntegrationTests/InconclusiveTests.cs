@@ -85,7 +85,7 @@ public sealed class InconclusiveTests : AcceptanceTestBase<InconclusiveTests.Tes
         }
         else
         {
-            testHostResult.AssertOutputDoesNotContain("TestInitialize called");
+            testHostResult.AssertOutputDoesNotContain("TestCleanup called");
         }
 
         if (inconclusiveStep >= Lifecycle.ClassInitialize)
@@ -97,14 +97,7 @@ public sealed class InconclusiveTests : AcceptanceTestBase<InconclusiveTests.Tes
             testHostResult.AssertOutputDoesNotContain("ClassCleanup called");
         }
 
-        if (inconclusiveStep is Lifecycle.AssemblyCleanup or <= Lifecycle.TestCleanup)
-        {
-            testHostResult.AssertOutputContains("AssemblyCleanup called");
-        }
-        else
-        {
-            testHostResult.AssertOutputDoesNotContain("AssemblyCleanup called");
-        }
+        testHostResult.AssertOutputContains("AssemblyCleanup called");
     }
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)

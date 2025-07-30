@@ -6,16 +6,16 @@
         "3.1.32",
         "6.0.36",
         "7.0.20",
-        "8.0.14",
-        "9.0.3"
+        "8.0.18",
+        "9.0.7"
       ],
       "dotnet/x86": [
         "3.1.32",
         "6.0.36",
-        "9.0.3"
+        "9.0.7"
       ],
       "aspnetcore": [
-        "9.0.3"
+        "9.0.7"
       ]
     },
     "vs": {
@@ -33,7 +33,7 @@
     "rollForward": "latestFeature"
   },
   "msbuild-sdks": {
-    "Microsoft.DotNet.Arcade.Sdk": "10.0.0-beta.25374.3",
+    "Microsoft.DotNet.Arcade.Sdk": "10.0.0-beta.25379.3",
     "MSBuild.Sdk.Extras": "3.0.44"
   }
 }
