@@ -1,1 +1,2 @@
 #nullable enable
+Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataSourceType.Field = 3 -> Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataSourceType
