@@ -407,4 +407,22 @@ public class TestContextImplementationTests : TestContainer
         messageLoggerMock.Verify(x => x.SendMessage(TestMessageLevel.Warning, "WarningMessage"), Times.Once);
         messageLoggerMock.Verify(x => x.SendMessage(TestMessageLevel.Error, "ErrorMessage"), Times.Once);
     }
+
+    public void WritesFromBackgroundThreadShouldNotThrow()
+    {
+        var testContextImplementation = new TestContextImplementation(_testMethod.Object, _properties, new Mock<IMessageLogger>().Object, testRunCancellationToken: null);
+        var t = new Thread(() =>
+        {
+            for (int i = 0; i < 1000; i++)
+            {
+                testContextImplementation.WriteConsoleOut(new string('a', 100000000));
+                testContextImplementation.WriteConsoleErr(new string('b', 100000000));
+            }
+        });
+
+        t.Start();
+        _ = testContextImplementation.GetOut();
+        _ = testContextImplementation.GetErr();
+        t.Join();
+    }
 }
