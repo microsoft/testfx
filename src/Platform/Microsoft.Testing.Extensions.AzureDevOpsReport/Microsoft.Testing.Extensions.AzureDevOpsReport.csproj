@@ -2,10 +2,6 @@
 
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;$(MicrosoftTestingTargetFrameworks)</TargetFrameworks>
-
-    <!-- Stay on 1.0.0 alpha while we are dogfooding this extension to see if it is useful. -->
-    <VersionPrefix>1.0.0</VersionPrefix>
-    <PreReleaseVersionLabel>alpha</PreReleaseVersionLabel>
     <SuppressFinalPackageVersion>true</SuppressFinalPackageVersion>
   </PropertyGroup>
 
