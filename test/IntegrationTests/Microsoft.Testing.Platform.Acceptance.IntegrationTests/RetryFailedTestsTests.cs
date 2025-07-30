@@ -197,7 +197,7 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
             AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
             workingDirectory: AssetFixture.TargetAssetPath);
 
-        Assert.AreEqual(ExitCodes.Success, result.ExitCode);
+        result.AssertExitCodeIs(ExitCodes.Success);
 
         // File names are on the form: RetryFailedTests_tfm_architecture.log
         string[] logFilesFromInvokeTestingPlatformTask = Directory.GetFiles(resultDirectory, "RetryFailedTests_*_*.log");

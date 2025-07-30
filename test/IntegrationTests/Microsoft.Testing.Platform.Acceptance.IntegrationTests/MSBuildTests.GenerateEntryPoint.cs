@@ -26,7 +26,7 @@ public class MSBuildTests_EntryPoint : AcceptanceTestBase<NopAssetFixture>
         Assert.AreEqual("Target \"_GenerateTestingPlatformEntryPoint\" skipped, due to false condition; ( '$(GenerateTestingPlatformEntryPoint)' == 'true' ) was evaluated as ( 'False' == 'true' ).", ((SL.Message)generateTestingPlatformEntryPoint.Children[0]).Text);
         SL.Target includeGenerateTestingPlatformEntryPointIntoCompilation = binLog.FindChildrenRecursive<SL.Target>().Single(t => t.Name == "_IncludeGenerateTestingPlatformEntryPointIntoCompilation");
         Assert.IsEmpty(includeGenerateTestingPlatformEntryPointIntoCompilation.Children);
-        Assert.AreNotEqual(0, compilationResult.ExitCode);
+        compilationResult.AssertExitCodeIsNot(0);
     }
 
     [DynamicData(nameof(GetBuildMatrixTfmBuildVerbConfiguration), typeof(AcceptanceTestBase<NopAssetFixture>))]
