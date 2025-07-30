@@ -300,7 +300,7 @@ public sealed class FlowTestContextCancellationTokenAnalyzerTests
             }
             """;
 
-        // Codefix doesn't yet handle the addition of TestContext parameter.
+        // Codefix now adds TestContext parameter when missing.
         string fixedCode = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
             using System.Threading;
@@ -310,9 +310,9 @@ public sealed class FlowTestContextCancellationTokenAnalyzerTests
             public class MyTestClass
             {
                 [ClassCleanup]
-                public static async Task ClassCleanup()
+                public static async Task ClassCleanup(TestContext testContext)
                 {
-                    await Task.Delay(1000, {|CS0103:testContext|}.CancellationTokenSource.Token);
+                    await Task.Delay(1000, testContext.CancellationTokenSource.Token);
                 }
             }
             """;
@@ -355,10 +355,12 @@ public sealed class FlowTestContextCancellationTokenAnalyzerTests
             [TestClass]
             public class MyTestClass
             {
+                public TestContext TestContext { get; set; }
+
                 [TestMethod]
                 public async Task Test1()
                 {
-                    await Task.Delay(1000, {|CS0103:testContext|}.CancellationTokenSource.Token);
+                    await Task.Delay(1000, TestContext.CancellationTokenSource.Token);
                 }
 
                 [TestMethod]
@@ -366,7 +368,7 @@ public sealed class FlowTestContextCancellationTokenAnalyzerTests
                 [DataRow(1)]
                 public async Task Test2(int _)
                 {
-                    await Task.Delay(1000, {|CS0103:testContext|}.CancellationTokenSource.Token);
+                    await Task.Delay(1000, TestContext.CancellationTokenSource.Token);
                 }
             }
             """;
@@ -525,6 +527,98 @@ public sealed class FlowTestContextCancellationTokenAnalyzerTests
                 {
                     using var client = new HttpClient();
                     var response = await client.GetAsync("https://example.com", TestContext.CancellationTokenSource.Token);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenMultipleFixesInSameClassWithoutTestContext_ShouldAddPropertyOnce()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Threading;
+            using System.Threading.Tasks;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public async Task Test1()
+                {
+                    await [|Task.Delay(1000)|];
+                    await [|Task.Delay(2000)|];
+                }
+
+                [TestMethod]
+                public async Task Test2()
+                {
+                    await [|Task.Delay(3000)|];
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Threading;
+            using System.Threading.Tasks;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                public TestContext TestContext { get; set; }
+
+                [TestMethod]
+                public async Task Test1()
+                {
+                    await Task.Delay(1000, TestContext.CancellationTokenSource.Token);
+                    await Task.Delay(2000, TestContext.CancellationTokenSource.Token);
+                }
+
+                [TestMethod]
+                public async Task Test2()
+                {
+                    await Task.Delay(3000, TestContext.CancellationTokenSource.Token);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenInAssemblyCleanupWithoutTestContextParameter_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Threading;
+            using System.Threading.Tasks;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [AssemblyCleanup]
+                public static async Task AssemblyCleanup()
+                {
+                    await [|Task.Delay(1000)|];
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Threading;
+            using System.Threading.Tasks;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [AssemblyCleanup]
+                public static async Task AssemblyCleanup(TestContext testContext)
+                {
+                    await Task.Delay(1000, testContext.CancellationTokenSource.Token);
                 }
             }
             """;
