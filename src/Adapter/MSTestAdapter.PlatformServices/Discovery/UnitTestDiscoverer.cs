@@ -8,6 +8,7 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interfa
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 
@@ -56,17 +57,31 @@ internal class UnitTestDiscoverer
     {
         ICollection<UnitTestElement>? testElements = AssemblyEnumeratorWrapper.GetTests(source, discoveryContext?.RunSettings, _testSource, out List<string> warnings);
 
-        bool treatDiscoveryWarningsAsErrors = MSTestSettings.CurrentSettings.TreatDiscoveryWarningsAsErrors;
-
-        // log the warnings
-        foreach (string warning in warnings)
+        if (MSTestSettings.CurrentSettings.TreatDiscoveryWarningsAsErrors)
         {
-            PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo(
-                "MSTestDiscoverer: Warning during discovery from {0}. {1} ",
-                source,
-                warning);
-            string message = string.Format(CultureInfo.CurrentCulture, Resource.DiscoveryWarning, source, warning);
-            logger.SendMessage(treatDiscoveryWarningsAsErrors ? TestMessageLevel.Error : TestMessageLevel.Warning, message);
+            if (warnings.Count > 0)
+            {
+                throw new MSTestException(
+                        string.Format(
+                            CultureInfo.CurrentCulture,
+                            Resource.DiscoveryErrors,
+                            source,
+                            warnings.Count,
+                            string.Join(Environment.NewLine, warnings)));
+            }
+        }
+        else
+        {
+            // log the warnings
+            foreach (string warning in warnings)
+            {
+                PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo(
+                    "MSTestDiscoverer: Warning during discovery from {0}. {1} ",
+                    source,
+                    warning);
+                string message = string.Format(CultureInfo.CurrentCulture, Resource.DiscoveryWarning, source, warning);
+                logger.SendMessage(TestMessageLevel.Warning, message);
+            }
         }
 
         // No tests found => nothing to do

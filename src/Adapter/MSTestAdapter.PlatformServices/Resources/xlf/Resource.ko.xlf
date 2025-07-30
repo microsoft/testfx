@@ -177,6 +177,13 @@ but received {4} argument(s), with types '{5}'.</source>
         <target state="translated">배포 항목 '{0}'(출력 디렉터리 '{1}')</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="DiscoveryErrors">
+        <source>Discovery failed for source '{0}' with {1} errors:
+{2}</source>
+        <target state="new">Discovery failed for source '{0}' with {1} errors:
+{2}</target>
+        <note />
+      </trans-unit>
       <trans-unit id="DiscoveryWarning">
         <source>[MSTest][Discovery][{0}] {1}</source>
         <target state="translated">[MSTest][검색][{0}] {1}</target>
