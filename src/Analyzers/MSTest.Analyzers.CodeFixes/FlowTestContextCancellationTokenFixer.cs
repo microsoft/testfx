@@ -1,8 +1,11 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Composition;
+using System.Linq;
 
 using Analyzer.Utilities;
 
@@ -150,7 +153,7 @@ public sealed class FlowTestContextCancellationTokenFixer : CodeFixProvider
         return editor.GetChangedDocument();
     }
 
-    private static MethodDeclarationSyntax AddTestContextParameterToMethod(MethodDeclarationSyntax method)
+    internal static MethodDeclarationSyntax AddTestContextParameterToMethod(MethodDeclarationSyntax method)
     {
         // Create TestContext parameter
         var testContextParameter = SyntaxFactory.Parameter(SyntaxFactory.Identifier("testContext"))
@@ -158,10 +161,37 @@ public sealed class FlowTestContextCancellationTokenFixer : CodeFixProvider
 
         // Add the parameter to the method
         var updatedParameterList = method.ParameterList.Parameters.Count == 0
-            ? SyntaxFactory.ParameterList(SyntaxFactory.SingletonSeparatedList(testContextParameter))
-            : method.ParameterList.AddParameters(testContextParameter);
+            ? SyntaxFactory.SingletonSeparatedList(testContextParameter)
+            : method.ParameterList.Parameters.Add(testContextParameter);
 
         return method.WithParameterList(method.ParameterList.WithParameters(updatedParameterList));
+    }
+
+    internal static bool HasTestContextProperty(ClassDeclarationSyntax classDeclaration)
+    {
+        return classDeclaration.Members
+            .OfType<PropertyDeclarationSyntax>()
+            .Any(p => p.Identifier.ValueText.Equals(TestContextShouldBeValidAnalyzer.TestContextPropertyName, StringComparison.Ordinal) &&
+                      p.Type.ToString().Contains("TestContext"));
+    }
+
+    internal static ClassDeclarationSyntax AddTestContextProperty(ClassDeclarationSyntax classDeclaration)
+    {
+        // Create the TestContext property
+        PropertyDeclarationSyntax testContextProperty = SyntaxFactory.PropertyDeclaration(
+            SyntaxFactory.IdentifierName("TestContext"), 
+            TestContextShouldBeValidAnalyzer.TestContextPropertyName)
+            .WithModifiers(SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PublicKeyword)))
+            .WithAccessorList(SyntaxFactory.AccessorList(
+                SyntaxFactory.List(new[]
+                {
+                    SyntaxFactory.AccessorDeclaration(SyntaxKind.GetAccessorDeclaration)
+                        .WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken)),
+                    SyntaxFactory.AccessorDeclaration(SyntaxKind.SetAccessorDeclaration)
+                        .WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken))
+                })));
+
+        return classDeclaration.AddMembers(testContextProperty);
     }
 }
 
@@ -209,17 +239,19 @@ internal sealed class FlowTestContextCancellationTokenFixAllProvider : DocumentB
         }
 
         // Process each class
-        foreach ((ClassDeclarationSyntax containingClass, List<(InvocationExpressionSyntax invocation, string? testContextMemberName)> invocations) in diagnosticsByClass)
+        foreach (var classInvocationsPair in diagnosticsByClass)
         {
+            ClassDeclarationSyntax containingClass = classInvocationsPair.Key;
+            List<(InvocationExpressionSyntax invocation, string? testContextMemberName)> invocations = classInvocationsPair.Value;
             // Check if we need to add TestContext property to this class
             bool needsTestContextProperty = invocations.Any(inv => inv.testContextMemberName is null && !IsInStaticMethod(inv.invocation));
 
             ClassDeclarationSyntax updatedClass = containingClass;
 
             // Add TestContext property if needed
-            if (needsTestContextProperty && !HasTestContextProperty(containingClass))
+            if (needsTestContextProperty && !FlowTestContextCancellationTokenFixer.HasTestContextProperty(containingClass))
             {
-                updatedClass = AddTestContextProperty(updatedClass);
+                updatedClass = FlowTestContextCancellationTokenFixer.AddTestContextProperty(updatedClass);
                 editor.ReplaceNode(containingClass, updatedClass);
             }
 
@@ -244,7 +276,7 @@ internal sealed class FlowTestContextCancellationTokenFixAllProvider : DocumentB
                         testContextReference = "testContext";
                         if (containingMethod is not null)
                         {
-                            var updatedMethod = AddTestContextParameterToMethod(containingMethod);
+                            var updatedMethod = FlowTestContextCancellationTokenFixer.AddTestContextParameterToMethod(containingMethod);
                             editor.ReplaceNode(containingMethod, updatedMethod);
                         }
                     }
