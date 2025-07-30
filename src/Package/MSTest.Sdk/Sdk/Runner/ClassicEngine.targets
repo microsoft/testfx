@@ -34,6 +34,10 @@
     <EnableMicrosoftTestingExtensionsHangDump Condition=" '$(EnableMicrosoftTestingExtensionsHangDump)' != 'false' and '$(TestingExtensionsProfile)' == 'AllMicrosoft' " >true</EnableMicrosoftTestingExtensionsHangDump>
     <MicrosoftTestingExtensionsHangDumpVersion Condition=" '$(MicrosoftTestingExtensionsHangDumpVersion)' == '' " >$(MicrosoftTestingExtensionsCommonVersion)</MicrosoftTestingExtensionsHangDumpVersion>
 
+    <!-- AzDO -->
+    <EnableMicrosoftTestingExtensionsAzureDevOpsReport Condition=" '$(EnableMicrosoftTestingExtensionsAzureDevOpsReport)' != 'false' and '$(TestingExtensionsProfile)' == 'AllMicrosoft' " >true</EnableMicrosoftTestingExtensionsAzureDevOpsReport>
+    <MicrosoftTestingExtensionsAzureDevOpsReportVersion Condition=" '$(MicrosoftTestingExtensionsAzureDevOpsReportVersion)' == '' " >$(MicrosoftTestingExtensionsCommonVersion)</MicrosoftTestingExtensionsAzureDevOpsReportVersion>
+
     <!-- Fakes -->
     <EnableMicrosoftTestingExtensionsFakes Condition=" '$(EnableMicrosoftTestingExtensionsFakes)' != 'false' and '$(TestingExtensionsProfile)' == 'AllMicrosoft' " >true</EnableMicrosoftTestingExtensionsFakes>
     <MicrosoftTestingExtensionsFakesVersion Condition=" '$(MicrosoftTestingExtensionsFakesVersion)' == '' " >$(MicrosoftTestingExtensionsFakesVersion)</MicrosoftTestingExtensionsFakesVersion>
@@ -86,6 +90,9 @@
     <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Sdk="MSTest"
                       Version="$(MicrosoftTestingExtensionsTrxReportVersion)" VersionOverride="$(MicrosoftTestingExtensionsTrxReportVersion)"
                       Condition=" '$(EnableMicrosoftTestingExtensionsTrxReport)' == 'true' " />
+    <PackageReference Include="Microsoft.Testing.Extensions.AzureDevOpsReport" Sdk="MSTest"
+                      Version="$(MicrosoftTestingExtensionsAzureDevOpsReportVersion)" VersionOverride="$(MicrosoftTestingExtensionsAzureDevOpsReportVersion)"
+                      Condition=" '$(EnableMicrosoftTestingExtensionsAzureDevOpsReport)' == 'true' " />
   </ItemGroup>
 
   <Import Project="$(MSBuildThisFileDirectory)../Features/Aspire.targets" Condition=" '$(EnableAspireTesting)' == 'true' " />

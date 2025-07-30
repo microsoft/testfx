@@ -177,6 +177,11 @@ namespace MSTestSdkTest
               "<EnableMicrosoftTestingExtensionsHangDump>true</EnableMicrosoftTestingExtensionsHangDump>",
               "--hangdump",
               "--crashdump");
+
+            yield return new(buildConfig.MultiTfm, buildConfig.BuildConfiguration,
+              "<EnableMicrosoftTestingExtensionsAzDoReport>true</EnableMicrosoftTestingExtensionsAzDoReport>",
+              "--report-azdo",
+              "--crashdump");
         }
     }
 
@@ -223,7 +228,7 @@ namespace MSTestSdkTest
         foreach (string tfm in multiTfm.Split(";"))
         {
             var testHost = TestHost.LocateFrom(testAsset.TargetAssetPath, AssetName, tfm, buildConfiguration: buildConfiguration);
-            TestHostResult testHostResult = await testHost.ExecuteAsync(command: "--coverage --retry-failed-tests 3 --report-trx --crashdump --hangdump");
+            TestHostResult testHostResult = await testHost.ExecuteAsync(command: "--coverage --retry-failed-tests 3 --report-trx --crashdump --hangdump --report-azdo");
             testHostResult.AssertOutputContainsSummary(0, 1, 0);
         }
     }
