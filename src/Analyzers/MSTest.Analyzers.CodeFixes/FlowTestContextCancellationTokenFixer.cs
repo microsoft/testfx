@@ -54,9 +54,46 @@ public sealed class FlowTestContextCancellationTokenFixer : CodeFixProvider
         context.RegisterCodeFix(
             CodeAction.Create(
                 title: CodeFixResources.PassCancellationTokenFix,
-                createChangedDocument: c => AddCancellationTokenParameterAsync(context.Document, invocationExpression, testContextMemberName, c),
+                createChangedDocument: c => ApplyFixWithTestContextAsync(context.Document, invocationExpression, testContextMemberName, c),
                 equivalenceKey: "AddTestContextCancellationToken"),
             diagnostic);
+    }
+
+    private static async Task<Document> ApplyFixWithTestContextAsync(
+        Document document,
+        InvocationExpressionSyntax invocationExpression,
+        string? testContextMemberName,
+        CancellationToken cancellationToken)
+    {
+        // For individual fixes, we need to ensure TestContext is available
+        // This handles the case where a single fix is applied (not FixAll)
+        DocumentEditor editor = await DocumentEditor.CreateAsync(document, cancellationToken).ConfigureAwait(false);
+
+        ClassDeclarationSyntax? containingClass = invocationExpression.FirstAncestorOrSelf<ClassDeclarationSyntax>();
+        MethodDeclarationSyntax? containingMethod = invocationExpression.FirstAncestorOrSelf<MethodDeclarationSyntax>();
+
+        // Check if we need to add TestContext property or parameter
+        if (testContextMemberName is null)
+        {
+            if (containingMethod?.Modifiers.Any(SyntaxKind.StaticKeyword) == true)
+            {
+                // For static methods, add TestContext parameter
+                if (containingMethod is not null)
+                {
+                    var updatedMethod = AddTestContextParameterToMethod(containingMethod);
+                    editor.ReplaceNode(containingMethod, updatedMethod);
+                }
+            }
+            else if (containingClass is not null && !HasTestContextProperty(containingClass))
+            {
+                // For instance methods, add TestContext property if it doesn't exist
+                var updatedClass = AddTestContextProperty(containingClass);
+                editor.ReplaceNode(containingClass, updatedClass);
+            }
+        }
+
+        // Apply the cancellation token fix
+        return await AddCancellationTokenParameterAsync(editor.GetChangedDocument(), invocationExpression, testContextMemberName, cancellationToken).ConfigureAwait(false);
     }
 
     internal static async Task<Document> AddCancellationTokenParameterAsync(
@@ -69,7 +106,6 @@ public sealed class FlowTestContextCancellationTokenFixer : CodeFixProvider
 
         // Find the containing method to determine the context
         MethodDeclarationSyntax? containingMethod = invocationExpression.FirstAncestorOrSelf<MethodDeclarationSyntax>();
-        ClassDeclarationSyntax? containingClass = invocationExpression.FirstAncestorOrSelf<ClassDeclarationSyntax>();
 
         string testContextReference;
 
@@ -93,7 +129,7 @@ public sealed class FlowTestContextCancellationTokenFixer : CodeFixProvider
             }
             else
             {
-                // For instance methods, reference TestContext property (will be added by FixAllProvider)
+                // For instance methods, assume TestContext property exists or will be added by FixAllProvider
                 testContextReference = TestContextShouldBeValidAnalyzer.TestContextPropertyName;
             }
         }
@@ -112,6 +148,20 @@ public sealed class FlowTestContextCancellationTokenFixer : CodeFixProvider
         InvocationExpressionSyntax newInvocation = invocationExpression.WithArgumentList(currentArguments.WithArguments(newArguments));
         editor.ReplaceNode(invocationExpression, newInvocation);
         return editor.GetChangedDocument();
+    }
+
+    private static MethodDeclarationSyntax AddTestContextParameterToMethod(MethodDeclarationSyntax method)
+    {
+        // Create TestContext parameter
+        var testContextParameter = SyntaxFactory.Parameter(SyntaxFactory.Identifier("testContext"))
+            .WithType(SyntaxFactory.IdentifierName("TestContext"));
+
+        // Add the parameter to the method
+        var updatedParameterList = method.ParameterList.Parameters.Count == 0
+            ? SyntaxFactory.ParameterList(SyntaxFactory.SingletonSeparatedList(testContextParameter))
+            : method.ParameterList.AddParameters(testContextParameter);
+
+        return method.WithParameterList(method.ParameterList.WithParameters(updatedParameterList));
     }
 }
 
@@ -228,45 +278,5 @@ internal sealed class FlowTestContextCancellationTokenFixAllProvider : DocumentB
     {
         MethodDeclarationSyntax? method = invocation.FirstAncestorOrSelf<MethodDeclarationSyntax>();
         return method?.Modifiers.Any(SyntaxKind.StaticKeyword) == true;
-    }
-
-    private static bool HasTestContextProperty(ClassDeclarationSyntax classDeclaration)
-    {
-        return classDeclaration.Members
-            .OfType<PropertyDeclarationSyntax>()
-            .Any(prop => prop.Identifier.ValueText == TestContextShouldBeValidAnalyzer.TestContextPropertyName);
-    }
-
-    private static ClassDeclarationSyntax AddTestContextProperty(ClassDeclarationSyntax classDeclaration)
-    {
-        // Create TestContext property: public TestContext TestContext { get; set; }
-        PropertyDeclarationSyntax testContextProperty = SyntaxFactory.PropertyDeclaration(
-                SyntaxFactory.IdentifierName("TestContext"),
-                SyntaxFactory.Identifier(TestContextShouldBeValidAnalyzer.TestContextPropertyName))
-            .WithModifiers(SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PublicKeyword)))
-            .WithAccessorList(SyntaxFactory.AccessorList(
-                SyntaxFactory.List(
-                [
-                    SyntaxFactory.AccessorDeclaration(SyntaxKind.GetAccessorDeclaration)
-                        .WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken)),
-                    SyntaxFactory.AccessorDeclaration(SyntaxKind.SetAccessorDeclaration)
-                        .WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken))
-                ])));
-
-        return classDeclaration.AddMembers(testContextProperty);
-    }
-
-    private static MethodDeclarationSyntax AddTestContextParameterToMethod(MethodDeclarationSyntax method)
-    {
-        // Create TestContext parameter
-        var testContextParameter = SyntaxFactory.Parameter(SyntaxFactory.Identifier("testContext"))
-            .WithType(SyntaxFactory.IdentifierName("TestContext"));
-
-        // Add the parameter to the method
-        var updatedParameterList = method.ParameterList.Parameters.Count == 0
-            ? SyntaxFactory.ParameterList(SyntaxFactory.SingletonSeparatedList(testContextParameter))
-            : method.ParameterList.AddParameters(testContextParameter);
-
-        return method.WithParameterList(method.ParameterList.WithParameters(updatedParameterList));
     }
 }
