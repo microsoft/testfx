@@ -27,6 +27,27 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 #endif
 public class TestContextImplementation : TestContext, ITestContext, IDisposable
 {
+    internal sealed class SynchronizedStringBuilder
+    {
+        private readonly StringBuilder _builder = new();
+
+        [MethodImpl(MethodImplOptions.Synchronized)]
+        internal void Append(char value)
+            => _builder.Append(value);
+
+        [MethodImpl(MethodImplOptions.Synchronized)]
+        internal void Append(string? value)
+            => _builder.Append(value);
+
+        [MethodImpl(MethodImplOptions.Synchronized)]
+        internal void Append(char[] buffer, int index, int count)
+            => _builder.Append(buffer, index, count);
+
+        [MethodImpl(MethodImplOptions.Synchronized)]
+        public override string ToString()
+            => _builder.ToString();
+    }
+
     private static readonly AsyncLocal<TestContextImplementation?> CurrentTestContextAsyncLocal = new();
 
     /// <summary>
@@ -45,9 +66,9 @@ public class TestContextImplementation : TestContext, ITestContext, IDisposable
     private readonly IMessageLogger? _messageLogger;
     private readonly CancellationTokenRegistration? _cancellationTokenRegistration;
 
-    private StringBuilder? _stdOutStringBuilder;
-    private StringBuilder? _stdErrStringBuilder;
-    private StringBuilder? _traceStringBuilder;
+    private SynchronizedStringBuilder? _stdOutStringBuilder;
+    private SynchronizedStringBuilder? _stdErrStringBuilder;
+    private SynchronizedStringBuilder? _traceStringBuilder;
     private StringBuilder? _testContextMessageStringBuilder;
 
     private bool _isDisposed;
@@ -394,21 +415,21 @@ public class TestContextImplementation : TestContext, ITestContext, IDisposable
     internal void WriteTrace(string? value)
         => GetTraceStringBuilder().Append(value);
 
-    private StringBuilder GetOutStringBuilder()
+    private SynchronizedStringBuilder GetOutStringBuilder()
     {
-        _ = _stdOutStringBuilder ?? Interlocked.CompareExchange(ref _stdOutStringBuilder, new StringBuilder(), null)!;
+        _ = _stdOutStringBuilder ?? Interlocked.CompareExchange(ref _stdOutStringBuilder, new SynchronizedStringBuilder(), null)!;
         return _stdOutStringBuilder;
     }
 
-    private StringBuilder GetErrStringBuilder()
+    private SynchronizedStringBuilder GetErrStringBuilder()
     {
-        _ = _stdErrStringBuilder ?? Interlocked.CompareExchange(ref _stdErrStringBuilder, new StringBuilder(), null)!;
+        _ = _stdErrStringBuilder ?? Interlocked.CompareExchange(ref _stdErrStringBuilder, new SynchronizedStringBuilder(), null)!;
         return _stdErrStringBuilder;
     }
 
-    private StringBuilder GetTraceStringBuilder()
+    private SynchronizedStringBuilder GetTraceStringBuilder()
     {
-        _ = _traceStringBuilder ?? Interlocked.CompareExchange(ref _traceStringBuilder, new StringBuilder(), null)!;
+        _ = _traceStringBuilder ?? Interlocked.CompareExchange(ref _traceStringBuilder, new SynchronizedStringBuilder(), null)!;
         return _traceStringBuilder;
     }
 
