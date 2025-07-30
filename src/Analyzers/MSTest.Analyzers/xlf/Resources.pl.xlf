@@ -92,21 +92,6 @@ Typ deklarujący te metody powinien również przestrzegać następujących regu
         <target state="translated">Metody AssemblyInitialize powinny mieć prawidłowy układ</target>
         <note />
       </trans-unit>
-      <trans-unit id="AssertThrowsShouldContainSingleStatementDescription">
-        <source>Assert.Throws methods should contain only a single statement or expression. Multiple statements can be misleading - if the first statement throws, subsequent statements are never executed; if it doesn't throw, it should be moved outside the Assert.Throws.</source>
-        <target state="new">Assert.Throws methods should contain only a single statement or expression. Multiple statements can be misleading - if the first statement throws, subsequent statements are never executed; if it doesn't throw, it should be moved outside the Assert.Throws.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="AssertThrowsShouldContainSingleStatementMessageFormat">
-        <source>Assert.Throws should contain only a single statement/expression</source>
-        <target state="new">Assert.Throws should contain only a single statement/expression</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="AssertThrowsShouldContainSingleStatementTitle">
-        <source>Assert.Throws should contain only a single statement/expression</source>
-        <target state="new">Assert.Throws should contain only a single statement/expression</target>
-        <note />
-      </trans-unit>
       <trans-unit id="AssertionArgsShouldAvoidConditionalAccessMessageFormat">
         <source>Prefer adding an additional assertion that checks for null</source>
         <target state="translated">Preferuj dodawanie dodatkowej asercji, która sprawdza pod kątem wartości null</target>
@@ -957,6 +942,21 @@ Typ deklarujący te metody powinien również przestrzegać następujących regu
       <trans-unit id="TestContextPropertyUsageDescription">
         <source>Some TestContext properties are only available during test execution and cannot be accessed in assembly initialize, class initialize, class cleanup, or assembly cleanup methods.</source>
         <target state="translated">Niektóre właściwości TestContext są dostępne tylko podczas wykonywania testu i nie można uzyskać do nich dostępu w metodach inicjowania, inicjowania klasy, oczyszczania klasy ani oczyszczania zestawów.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AssertThrowsShouldContainSingleStatementDescription">
+        <source>Assert.Throws methods should contain only a single statement or expression. Multiple statements can be misleading - if the first statement throws, subsequent statements are never executed; if it doesn't throw, it should be moved outside the Assert.Throws.</source>
+        <target state="new">Assert.Throws methods should contain only a single statement or expression. Multiple statements can be misleading - if the first statement throws, subsequent statements are never executed; if it doesn't throw, it should be moved outside the Assert.Throws.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AssertThrowsShouldContainSingleStatementMessageFormat">
+        <source>Assert.Throws should contain only a single statement/expression</source>
+        <target state="new">Assert.Throws should contain only a single statement/expression</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AssertThrowsShouldContainSingleStatementTitle">
+        <source>Assert.Throws should contain only a single statement/expression</source>
+        <target state="new">Assert.Throws should contain only a single statement/expression</target>
         <note />
       </trans-unit>
     </body>
