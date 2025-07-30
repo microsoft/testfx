@@ -54,7 +54,7 @@ public class AssemblyResolverTests : TestContainer
         // Assert.
         searchDirectories.Count.Should().Be(4);
 
-        resultDirectories.Should().BeEquivalentTo(searchDirectories, options => options.Using<string>(ctx => ctx.Subject.Should().BeEquivalentTo(ctx.Expectation, StringComparison.OrdinalIgnoreCase)).WhenTypeIs<string>());
+        resultDirectories.Should().Equal(searchDirectories);
     }
 
     public void OnResolveShouldAddSearchDirectoryListOnANeedToBasis()
@@ -101,7 +101,7 @@ public class AssemblyResolverTests : TestContainer
                     // First time SearchAssemblyInTheFollowingLocation should get call with one directory which is in
                     // m_searchDirectories variable
                     listPath.Count.Should().Be(1);
-                    listPath[0].Should().BeEquivalentTo(dummyDirectories[0], StringComparison.OrdinalIgnoreCase);
+                    listPath[0].Should().Be(dummyDirectories[0], StringComparison.OrdinalIgnoreCase);
                     count++;
                 }
                 else if (count == 1)
@@ -109,9 +109,9 @@ public class AssemblyResolverTests : TestContainer
                     // Second time SearchAssemblyInTheFollowingLocation should get call with directory C:\unitTesting
                     // and with all its sub directory, as its isRecursive property is true
                     listPath.Count.Should().Be(3);
-                    listPath[0].Should().BeEquivalentTo(@"C:\unitTesting", StringComparison.OrdinalIgnoreCase);
-                    listPath[1].Should().BeEquivalentTo(@"C:\unitTesting\a", StringComparison.OrdinalIgnoreCase);
-                    listPath[2].Should().BeEquivalentTo(@"C:\unitTesting\b", StringComparison.OrdinalIgnoreCase);
+                    listPath[0].Should().Be(@"C:\unitTesting", StringComparison.OrdinalIgnoreCase);
+                    listPath[1].Should().Be(@"C:\unitTesting\a", StringComparison.OrdinalIgnoreCase);
+                    listPath[2].Should().Be(@"C:\unitTesting\b", StringComparison.OrdinalIgnoreCase);
                     count++;
                 }
                 else if (count == 2)
@@ -119,18 +119,18 @@ public class AssemblyResolverTests : TestContainer
                     // Third time SearchAssemblyInTheFollowingLocation should get call with directory C:\FunctionalTesting
                     // as its isRecursive property is false
                     listPath.Count.Should().Be(1);
-                    listPath[0].Should().BeEquivalentTo(@"C:\FunctionalTesting", StringComparison.OrdinalIgnoreCase);
+                    listPath[0].Should().Be(@"C:\FunctionalTesting", StringComparison.OrdinalIgnoreCase);
                     count++;
                 }
                 else if (count == 3)
                 {
                     // call will come here when we will call onResolve second time.
                     listPath.Count.Should().Be(5);
-                    listPath[0].Should().BeEquivalentTo(dummyDirectories[0], StringComparison.OrdinalIgnoreCase);
-                    listPath[1].Should().BeEquivalentTo(@"C:\unitTesting", StringComparison.OrdinalIgnoreCase);
-                    listPath[2].Should().BeEquivalentTo(@"C:\unitTesting\a", StringComparison.OrdinalIgnoreCase);
-                    listPath[3].Should().BeEquivalentTo(@"C:\unitTesting\b", StringComparison.OrdinalIgnoreCase);
-                    listPath[4].Should().BeEquivalentTo(@"C:\FunctionalTesting", StringComparison.OrdinalIgnoreCase);
+                    listPath[0].Should().Be(dummyDirectories[0], StringComparison.OrdinalIgnoreCase);
+                    listPath[1].Should().Be(@"C:\unitTesting", StringComparison.OrdinalIgnoreCase);
+                    listPath[2].Should().Be(@"C:\unitTesting\a", StringComparison.OrdinalIgnoreCase);
+                    listPath[3].Should().Be(@"C:\unitTesting\b", StringComparison.OrdinalIgnoreCase);
+                    listPath[4].Should().Be(@"C:\FunctionalTesting", StringComparison.OrdinalIgnoreCase);
                     count++;
                 }
 
