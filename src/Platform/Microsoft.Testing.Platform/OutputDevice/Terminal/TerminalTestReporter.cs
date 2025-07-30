@@ -426,7 +426,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
         terminal.Append(outcomeText);
         terminal.ResetColor();
         terminal.Append(' ');
-        terminal.Append(NormalizeTestDisplayName(displayName));
+        terminal.Append(NormalizeSpecialCharacters(displayName, true));
         terminal.SetColor(TerminalColor.DarkGray);
         terminal.Append(' ');
         AppendLongDuration(terminal, duration);
@@ -644,6 +644,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
         _terminalWithProgress.RemoveWorker(assemblyRun.SlotIndex);
     }
 
+    [return: NotNullIfNotNull(nameof(text))]
     private static string? NormalizeSpecialCharacters(string? text, bool normalizeWhitespaceCharacters)
     {
         string? normalized = text?
@@ -687,9 +688,6 @@ internal sealed partial class TerminalTestReporter : IDisposable
 
         return normalized;
     }
-
-    private static string NormalizeTestDisplayName(string displayName)
-        => NormalizeSpecialCharacters(displayName, true) ?? displayName;
 
     /// <summary>
     /// Appends a long duration in human readable format such as 1h 23m 500ms.
@@ -823,7 +821,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
             asm.TotalTests++;
         }
 
-        asm.DiscoveredTestDisplayNames.Add(NormalizeTestDisplayName(displayName));
+        asm.DiscoveredTestDisplayNames.Add(NormalizeSpecialCharacters(displayName, true));
 
         _terminalWithProgress.UpdateWorker(asm.SlotIndex);
     }
