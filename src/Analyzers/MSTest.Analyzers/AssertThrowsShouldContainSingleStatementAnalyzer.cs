@@ -10,6 +10,7 @@ using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Operations;
 
 using MSTest.Analyzers.Helpers;
+using MSTest.Analyzers.RoslynAnalyzerHelpers;
 
 namespace MSTest.Analyzers;
 
@@ -58,13 +59,8 @@ public sealed class AssertThrowsShouldContainSingleStatementAnalyzer : Diagnosti
         var operation = (IInvocationOperation)context.Operation;
         IMethodSymbol targetMethod = operation.TargetMethod;
 
-        if (!SymbolEqualityComparer.Default.Equals(targetMethod.ContainingType, assertTypeSymbol))
-        {
-            return;
-        }
-
-        // Check if it's one of the Assert.Throws methods
-        if (targetMethod.Name is not ("Throws" or "ThrowsExactly" or "ThrowsAsync" or "ThrowsExactlyAsync"))
+        if (!SymbolEqualityComparer.Default.Equals(targetMethod.ContainingType, assertTypeSymbol) ||
+            !targetMethod.Name.StartsWith("Throws", StringComparison.Ordinal))
         {
             return;
         }
@@ -72,61 +68,46 @@ public sealed class AssertThrowsShouldContainSingleStatementAnalyzer : Diagnosti
         // Find the action parameter (lambda expression) - it's typically the first parameter
         foreach (IArgumentOperation argument in operation.Arguments)
         {
-            if (argument.Value is IDelegateCreationOperation delegateCreation
-                && delegateCreation.Target is IAnonymousFunctionOperation delegateLambda)
+            if (argument.Parameter?.Ordinal == 0)
             {
-                // Check if this parameter is likely the action parameter by checking its type
-                if (IsActionParameter(argument.Parameter))
-                {
-                    AnalyzeLambdaBody(context, delegateLambda, operation);
-                    break;
-                }
+                AnalyzeActionArgument(context, argument.Value.WalkDownConversion(), operation);
+                break;
             }
         }
     }
 
-    private static bool IsActionParameter(IParameterSymbol? parameter)
+    private static void AnalyzeActionArgument(OperationAnalysisContext context, IOperation argumentValueOperation, IInvocationOperation invocationOperation)
     {
-        if (parameter is null)
+        if (argumentValueOperation is not IDelegateCreationOperation delegateCreation ||
+            delegateCreation.Target is not IAnonymousFunctionOperation lambdaOperation ||
+            lambdaOperation.Body is not IBlockOperation blockOperation)
         {
-            return false;
+            return;
         }
 
-        // The action parameter is typically named "action" or is a delegate type
-        return parameter.Name == "action" ||
-               parameter.Type.TypeKind == TypeKind.Delegate;
-    }
-
-    private static void AnalyzeLambdaBody(OperationAnalysisContext context, IAnonymousFunctionOperation lambdaOperation, IInvocationOperation invocationOperation)
-    {
-        if (lambdaOperation.Body is IBlockOperation blockOperation)
+        // Count meaningful statements (excluding implicit return statements and empty statements)
+        int statementCount = 0;
+        foreach (IOperation statement in blockOperation.Operations)
         {
-            // Count meaningful statements (excluding implicit return statements and empty statements)
-            int statementCount = 0;
-            foreach (IOperation statement in blockOperation.Operations)
+            // Skip implicit return statements (they don't represent user code)
+            if (statement is IReturnOperation returnOp && returnOp.IsImplicit)
             {
-                // Skip implicit return statements (they don't represent user code)
-                if (statement is IReturnOperation returnOp && returnOp.IsImplicit)
-                {
-                    continue;
-                }
-
-                // Skip empty statements
-                if (statement is IEmptyOperation)
-                {
-                    continue;
-                }
-
-                statementCount++;
+                continue;
             }
 
-            // Flag if there are multiple meaningful statements
-            if (statementCount > 1)
+            // Skip empty statements
+            if (statement is IEmptyOperation)
             {
-                context.ReportDiagnostic(invocationOperation.CreateDiagnostic(Rule));
+                continue;
             }
+
+            statementCount++;
         }
 
-        // For expression-bodied lambdas (not block lambdas), they always have a single expression, so no need to flag
+        // Flag if there are multiple meaningful statements
+        if (statementCount > 1)
+        {
+            context.ReportDiagnostic(invocationOperation.CreateDiagnostic(Rule));
+        }
     }
 }
