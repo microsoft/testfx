@@ -1,0 +1,4 @@
+is_global = true
+
+# RS0016: Only enable if API files are present
+dotnet_public_api_analyzer.require_api_files = true
