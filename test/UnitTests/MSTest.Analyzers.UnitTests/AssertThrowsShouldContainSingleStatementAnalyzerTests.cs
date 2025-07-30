@@ -5,13 +5,17 @@ using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
     MSTest.Analyzers.AssertThrowsShouldContainSingleStatementAnalyzer,
     Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider>;
 
+using VerifyVB = MSTest.Analyzers.Test.VisualBasicCodeFixVerifier<
+    MSTest.Analyzers.AssertThrowsShouldContainSingleStatementAnalyzer,
+    Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider>;
+
 namespace MSTest.Analyzers.Test;
 
 [TestClass]
 public sealed class AssertThrowsShouldContainSingleStatementAnalyzerTests
 {
     [TestMethod]
-    public async Task WhenAssertThrowsContainsMultipleStatements_Diagnostic()
+    public async Task WhenAssertThrowsContainsMultipleStatements_CSharp_Diagnostic()
     {
         string code = """
             using System;
@@ -63,7 +67,52 @@ public sealed class AssertThrowsShouldContainSingleStatementAnalyzerTests
     }
 
     [TestMethod]
-    public async Task WhenAssertThrowsContainsMultipleStatementsWithVariableDeclarations_Diagnostic()
+    public async Task WhenAssertThrowsContainsMultipleStatements_VB_Diagnostic()
+    {
+        string code = """
+            Imports System
+            Imports System.Threading.Tasks
+            Imports Microsoft.VisualStudio.TestTools.UnitTesting
+
+            <TestClass>
+            Public Class MyTestClass
+                <TestMethod>
+                Public Sub MyTestMethod()
+                    ' Multiple statements in Assert.Throws - should be flagged
+                    [|Assert.Throws(Of Exception)(Sub()
+                        Console.WriteLine("First")
+                        Console.WriteLine("Second")
+                    End Sub)|]
+
+                    ' Multiple statements in Assert.ThrowsExactly - should be flagged
+                    [|Assert.ThrowsExactly(Of Exception)(Sub()
+                        Console.WriteLine("First")
+                        Console.WriteLine("Second")
+                    End Sub)|]
+                End Sub
+
+                <TestMethod>
+                Public Async Function MyAsyncTestMethod() As Task
+                    ' Multiple statements in Assert.ThrowsAsync - should be flagged
+                    [|Assert.ThrowsAsync(Of Exception)(Function()
+                        Console.WriteLine("First")
+                        Return Task.CompletedTask
+                    End Function)|]
+
+                    ' Multiple statements in Assert.ThrowsExactlyAsync - should be flagged
+                    [|Assert.ThrowsExactlyAsync(Of Exception)(Function()
+                        Console.WriteLine("First")
+                        Return Task.CompletedTask
+                    End Function)|]
+                End Function
+            End Class
+            """;
+
+        await VerifyVB.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertThrowsContainsMultipleStatementsWithVariableDeclarations_CSharp_Diagnostic()
     {
         string code = """
             using System;
@@ -121,7 +170,60 @@ public sealed class AssertThrowsShouldContainSingleStatementAnalyzerTests
     }
 
     [TestMethod]
-    public async Task WhenAssertThrowsContainsSingleStatement_NoDiagnostic()
+    public async Task WhenAssertThrowsContainsMultipleStatementsWithVariableDeclarations_VB_Diagnostic()
+    {
+        string code = """
+            Imports System
+            Imports System.Threading.Tasks
+            Imports Microsoft.VisualStudio.TestTools.UnitTesting
+
+            <TestClass>
+            Public Class MyTestClass
+                <TestMethod>
+                Public Sub MyTestMethod()
+                    ' Multiple statements including variable declarations - should be flagged
+                    [|Assert.Throws(Of Exception)(Sub()
+                        Dim value As Integer = 42
+                        Console.WriteLine(value)
+                        DoSomething()
+                    End Sub)|]
+
+                    ' Multiple statements with ThrowsExactly - should be flagged
+                    [|Assert.ThrowsExactly(Of Exception)(Sub()
+                        Dim value As Integer = 42
+                        Console.WriteLine(value)
+                        DoSomething()
+                    End Sub)|]
+                End Sub
+
+                <TestMethod>
+                Public Async Function MyAsyncTestMethod() As Task
+                    ' Multiple statements with ThrowsAsync - should be flagged
+                    [|Assert.ThrowsAsync(Of Exception)(Function()
+                        Dim value As Integer = 42
+                        Console.WriteLine(value)
+                        Return Task.CompletedTask
+                    End Function)|]
+
+                    ' Multiple statements with ThrowsExactlyAsync - should be flagged
+                    [|Assert.ThrowsExactlyAsync(Of Exception)(Function()
+                        Dim value As Integer = 42
+                        Console.WriteLine(value)
+                        Return Task.CompletedTask
+                    End Function)|]
+                End Function
+
+                Private Shared Sub DoSomething()
+                    Throw New Exception()
+                End Sub
+            End Class
+            """;
+
+        await VerifyVB.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertThrowsContainsSingleStatement_CSharp_NoDiagnostic()
     {
         string code = """
             using System;
@@ -174,7 +276,57 @@ public sealed class AssertThrowsShouldContainSingleStatementAnalyzerTests
     }
 
     [TestMethod]
-    public async Task WhenUsingOtherAssertMethods_NoDiagnostic()
+    public async Task WhenAssertThrowsContainsSingleStatement_VB_NoDiagnostic()
+    {
+        string code = """
+            Imports System
+            Imports System.Threading.Tasks
+            Imports Microsoft.VisualStudio.TestTools.UnitTesting
+
+            <TestClass>
+            Public Class MyTestClass
+                <TestMethod>
+                Public Sub MyTestMethod()
+                    ' Single statement - should NOT be flagged
+                    Assert.Throws(Of Exception)(Sub() Console.WriteLine("Only one"))
+
+                    ' Single expression - should NOT be flagged
+                    Assert.Throws(Of Exception)(Sub() DoSomething())
+
+                    ' Single statement in block - should NOT be flagged
+                    Assert.Throws(Of Exception)(Sub()
+                        DoSomething()
+                    End Sub)
+
+                    ' Single statement with ThrowsExactly - should NOT be flagged
+                    Assert.ThrowsExactly(Of Exception)(Sub() DoSomething())
+                End Sub
+
+                <TestMethod>
+                Public Async Function MyAsyncTestMethod() As Task
+                    ' Single async statement - should NOT be flagged
+                    Await Assert.ThrowsAsync(Of Exception)(Function() Task.CompletedTask)
+
+                    ' Single async statement in block - should NOT be flagged
+                    Await Assert.ThrowsAsync(Of Exception)(Function()
+                        Return Task.CompletedTask
+                    End Function)
+
+                    ' Single async statement with ThrowsExactlyAsync - should NOT be flagged
+                    Await Assert.ThrowsExactlyAsync(Of Exception)(Function() Task.CompletedTask)
+                End Function
+
+                Private Shared Sub DoSomething()
+                    Throw New Exception()
+                End Sub
+            End Class
+            """;
+
+        await VerifyVB.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenUsingOtherAssertMethods_CSharp_NoDiagnostic()
     {
         string code = """
             using System;
@@ -206,7 +358,36 @@ public sealed class AssertThrowsShouldContainSingleStatementAnalyzerTests
     }
 
     [TestMethod]
-    public async Task WhenAssertThrowsHasMessageParameter_StillAnalyzes()
+    public async Task WhenUsingOtherAssertMethods_VB_NoDiagnostic()
+    {
+        string code = """
+            Imports System
+            Imports Microsoft.VisualStudio.TestTools.UnitTesting
+
+            <TestClass>
+            Public Class MyTestClass
+                <TestMethod>
+                Public Sub MyTestMethod()
+                    ' Other Assert methods should not be flagged even with multiple statements
+                    Assert.IsTrue(true)
+                    Assert.AreEqual(1, 1)
+                    Assert.IsNotNull("test")
+
+                    ' Non-Assert.Throws methods should not be analyzed
+                    Dim action As new Action(Sub()
+                        Console.WriteLine("First")
+                        Console.WriteLine("Second")
+                    End Sub)
+                    action()
+                End Sub
+            End Class
+            """;
+
+        await VerifyVB.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertThrowsHasMessageParameter_CSharp_StillAnalyzes()
     {
         string code = """
             using System;
@@ -237,7 +418,37 @@ public sealed class AssertThrowsShouldContainSingleStatementAnalyzerTests
     }
 
     [TestMethod]
-    public async Task WhenAssertThrowsWithExpressionBody_NoDiagnostic()
+    public async Task WhenAssertThrowsHasMessageParameter_VB_StillAnalyzes()
+    {
+        string code = """
+            Imports System
+            Imports Microsoft.VisualStudio.TestTools.UnitTesting
+
+            <TestClass>
+            Public Class MyTestClass
+                <TestMethod>
+                Public Sub MyTestMethod()
+                    ' Multiple statements with message parameter - should be flagged
+                    [|Assert.Throws(Of Exception)(Sub()
+                        Console.WriteLine("First")
+                        Console.WriteLine("Second")
+                    End Sub, "Custom message")|]
+
+                    ' Single statement with message parameter - should NOT be flagged
+                    Assert.Throws(Of Exception)(Sub() DoSomething(), "Custom message")
+                End Sub
+
+                Private Shared Sub DoSomething()
+                    Throw New Exception()
+                End Sub
+            End Class
+            """;
+
+        await VerifyVB.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertThrowsWithExpressionBody_CSharp_NoDiagnostic()
     {
         string code = """
             using System;
@@ -265,7 +476,35 @@ public sealed class AssertThrowsShouldContainSingleStatementAnalyzerTests
     }
 
     [TestMethod]
-    public async Task WhenAssertThrowsWithEmptyStatements_NoDiagnostic()
+    public async Task WhenAssertThrowsWithExpressionBody_VB_NoDiagnostic()
+    {
+        string code = """
+            Imports System
+            Imports Microsoft.VisualStudio.TestTools.UnitTesting
+
+            <TestClass>
+            Public Class MyTestClass
+                <TestMethod>
+                Public Sub MyTestMethod()
+                    ' Expression-bodied lambda - should NOT be flagged
+                    Assert.Throws(Of Exception)(Sub() DoSomething())
+                    Assert.ThrowsExactly(Of Exception)(Sub() DoSomething())
+                    
+                    ' Expression-bodied with method chain - should NOT be flagged
+                    Assert.Throws(Of Exception)(Function() "test".ToUpper().ToLower())
+                End Sub
+
+                Private Shared Sub DoSomething()
+                    Throw New Exception()
+                End Sub
+            End Class
+            """;
+
+        await VerifyVB.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertThrowsWithEmptyStatements_CSharp_NoDiagnostic()
     {
         string code = """
             using System;
@@ -293,7 +532,7 @@ public sealed class AssertThrowsShouldContainSingleStatementAnalyzerTests
     }
 
     [TestMethod]
-    public async Task WhenAssertThrowsWithMultipleNonEmptyStatements_Diagnostic()
+    public async Task WhenAssertThrowsWithMultipleNonEmptyStatements_CSharp_Diagnostic()
     {
         string code = """
             using System;
@@ -322,7 +561,7 @@ public sealed class AssertThrowsShouldContainSingleStatementAnalyzerTests
     }
 
     [TestMethod]
-    public async Task WhenAssertThrowsContainsMultipleStatementsOnSameLine_Diagnostic()
+    public async Task WhenAssertThrowsContainsMultipleStatementsOnSameLine_CSharp_Diagnostic()
     {
         string code = """
             using System;

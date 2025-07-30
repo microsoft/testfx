@@ -90,7 +90,7 @@ public sealed class AssertThrowsShouldContainSingleStatementAnalyzer : Diagnosti
         foreach (IOperation statement in blockOperation.Operations)
         {
             // Skip implicit return statements (they don't represent user code)
-            if (statement is IReturnOperation returnOp && returnOp.IsImplicit)
+            if (statement is IReturnOperation { IsImplicit: true })
             {
                 continue;
             }
