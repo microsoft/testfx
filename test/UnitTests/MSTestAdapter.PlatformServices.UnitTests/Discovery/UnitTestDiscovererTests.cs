@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using FluentAssertions;
+
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
@@ -105,10 +107,97 @@ public class UnitTestDiscovererTests : TestContainer
             ih => ih.CreateInstanceForType(It.IsAny<Type>(), It.IsAny<object[]>()))
             .Returns(new AssemblyEnumerator());
 
+        _mockRunSettings.Setup(rs => rs.SettingsXml)
+            .Returns("""
+            <?xml version="1.0" encoding="utf-8"?>
+            <RunSettings>
+              <MSTestV2>
+                <TreatDiscoveryWarningsAsErrors>False</TreatDiscoveryWarningsAsErrors>
+              </MSTestV2>
+            </RunSettings>
+            """);
+        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object, null);
+
+        // Act
         _unitTestDiscoverer.DiscoverTestsInSource(Source, _mockMessageLogger.Object, _mockTestCaseDiscoverySink.Object, _mockDiscoveryContext.Object);
 
         // Assert.
         _mockTestCaseDiscoverySink.Verify(ds => ds.SendTestCase(It.IsAny<TestCase>()), Times.AtLeastOnce);
+    }
+
+    public void DiscoverTestsInSourceShouldThrowWhenTreatDiscoveryWarningsAsErrorsIsTrue()
+    {
+        // Setup mocks.
+        _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.GetFullFilePath(Source))
+            .Returns(Source);
+        _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.DoesFileExist(Source))
+            .Returns(true);
+        _mockTestSourceHandler.Setup(
+            tsv => tsv.IsAssemblyReferenced(It.IsAny<AssemblyName>(), Source)).Returns(true);
+        _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly(Source, It.IsAny<bool>()))
+            .Returns(Assembly.GetExecutingAssembly());
+        _testablePlatformServiceProvider.MockTestSourceHost.Setup(
+            ih => ih.CreateInstanceForType(It.IsAny<Type>(), It.IsAny<object[]>()))
+            .Returns(new AssemblyEnumerator());
+
+        string settingsXml =
+            """
+            <?xml version="1.0" encoding="utf-8"?>
+            <RunSettings>
+              <MSTestV2>
+                <TreatDiscoveryWarningsAsErrors>True</TreatDiscoveryWarningsAsErrors>
+              </MSTestV2>
+            </RunSettings>
+            """;
+
+        _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(settingsXml);
+        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object, null);
+
+        // Act
+        Action action = () => _unitTestDiscoverer.DiscoverTestsInSource(Source, _mockMessageLogger.Object, _mockTestCaseDiscoverySink.Object, _mockDiscoveryContext.Object);
+
+        // Assert
+        action.Should().Throw<MSTestException>()
+            .WithMessage($"*{Source}*");
+
+        // Verify warning message was sent to logger (not error)
+        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, It.IsAny<string>()), Times.Never);
+        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Error, It.IsAny<string>()), Times.Never);
+    }
+
+    public void DiscoverTestsInSourceShouldNotThrowWhenTreatDiscoveryWarningsAsErrorsIsFalse()
+    {
+        // Setup mocks.
+        _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.GetFullFilePath(Source))
+            .Returns(Source);
+        _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.DoesFileExist(Source))
+            .Returns(true);
+        _mockTestSourceHandler.Setup(
+            tsv => tsv.IsAssemblyReferenced(It.IsAny<AssemblyName>(), Source)).Returns(true);
+        _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly(Source, It.IsAny<bool>()))
+            .Returns(Assembly.GetExecutingAssembly());
+        _testablePlatformServiceProvider.MockTestSourceHost.Setup(
+            ih => ih.CreateInstanceForType(It.IsAny<Type>(), It.IsAny<object[]>()))
+            .Returns(new AssemblyEnumerator());
+
+        _mockRunSettings.Setup(rs => rs.SettingsXml)
+            .Returns("""
+            <?xml version="1.0" encoding="utf-8"?>
+            <RunSettings>
+              <MSTestV2>
+                <TreatDiscoveryWarningsAsErrors>False</TreatDiscoveryWarningsAsErrors>
+              </MSTestV2>
+            </RunSettings>
+            """);
+        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object, null);
+
+        // Act & Assert
+        // Should not throw an exception
+        _unitTestDiscoverer.DiscoverTestsInSource(Source, _mockMessageLogger.Object, _mockTestCaseDiscoverySink.Object, _mockDiscoveryContext.Object);
+
+        // Verify warning message was sent to logger (not error)
+        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, It.IsAny<string>()), Times.AtLeastOnce);
+        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Error, It.IsAny<string>()), Times.Never);
     }
 
     public void SendTestCasesShouldNotSendAnyTestCasesIfThereAreNoTestElements()

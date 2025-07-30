@@ -487,4 +487,8 @@ Error: {1}</value>
   <data name="VersionMismatchBetweenAdapterAndFramework" xml:space="preserve">
     <value>'MSTest.TestAdapter' and 'MSTest.TestFramework' must have the same version. Found 'MSTest.TestAdapter' version '{0}' and 'MSTest.TestFramework' version '{1}'. Please make sure that the versions of  'MSTest.TestAdapter' and 'MSTest.TestFramework' NuGet packages have the same version.</value>
   </data>
+  <data name="DiscoveryErrors" xml:space="preserve">
+    <value>Discovery failed for source '{0}' with {1} errors:
+{2}</value>
+  </data>
 </root>

@@ -361,6 +361,16 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Discovery failed for source &apos;{0}&apos; with {1} errors:
+        ///{2}.
+        /// </summary>
+        internal static string DiscoveryErrors {
+            get {
+                return ResourceManager.GetString("DiscoveryErrors", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to [MSTest][Discovery][{0}] {1}.
         /// </summary>
         internal static string DiscoveryWarning {

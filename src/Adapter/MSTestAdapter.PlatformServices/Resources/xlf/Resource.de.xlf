@@ -177,6 +177,13 @@ aber empfing {4} Argument(e) mit den Typen „{5}“.</target>
         <target state="translated">Bereitstellungselement "{0}" (Ausgabeverzeichnis "{1}")</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="DiscoveryErrors">
+        <source>Discovery failed for source '{0}' with {1} errors:
+{2}</source>
+        <target state="new">Discovery failed for source '{0}' with {1} errors:
+{2}</target>
+        <note />
+      </trans-unit>
       <trans-unit id="DiscoveryWarning">
         <source>[MSTest][Discovery][{0}] {1}</source>
         <target state="translated">[MSTest][Discovery][{0}] {1}</target>
