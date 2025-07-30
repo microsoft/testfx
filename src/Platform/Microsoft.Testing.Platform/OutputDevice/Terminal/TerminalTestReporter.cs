@@ -905,7 +905,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
         {
             asm.TestNodeResultsState ??= new(Interlocked.Increment(ref _counter));
             asm.TestNodeResultsState.AddRunningTestNode(
-                Interlocked.Increment(ref _counter), testNodeUid, NormalizeTestDisplayName(displayName), CreateStopwatch());
+                Interlocked.Increment(ref _counter), testNodeUid, NormalizeSpecialCharacters(displayName, true), CreateStopwatch());
         }
 
         _terminalWithProgress.UpdateWorker(asm.SlotIndex);
