@@ -22,7 +22,7 @@ public class AssemblyLoadWorkerTests : TestContainer
             GetReferencedAssembliesSetter = () => [v1AssemblyName],
         };
 
-        var mockAssemblyUtility = new Mock<IAssemblyUtility>();
+        var mockAssemblyUtility = new Mock<IAssemblyUtility>(MockBehavior.Loose);
         mockAssemblyUtility.Setup(au => au.ReflectionOnlyLoadFrom(It.IsAny<string>())).Returns(testableAssembly);
         mockAssemblyUtility.Setup(au => au.ReflectionOnlyLoad(It.IsAny<string>()))
             .Returns(new TestableAssembly(v1AssemblyName.Name));
@@ -53,7 +53,7 @@ public class AssemblyLoadWorkerTests : TestContainer
             GetReferencedAssembliesSetter = () => [dependentAssemblyName],
         };
 
-        var mockAssemblyUtility = new Mock<IAssemblyUtility>();
+        var mockAssemblyUtility = new Mock<IAssemblyUtility>(MockBehavior.Loose);
         mockAssemblyUtility.Setup(au => au.ReflectionOnlyLoadFrom(It.IsAny<string>()))
             .Returns(
                 (string assemblyPath) =>

@@ -22,8 +22,8 @@ public class DesktopTestDataSourceTests : TestContainer
 
     public DesktopTestDataSourceTests()
     {
-        _mockTestMethodInfo = new Mock<ITestMethod>();
-        _mockTestContext = new Mock<ITestContext>();
+        _mockTestMethodInfo = new Mock<ITestMethod>(MockBehavior.Loose);
+        _mockTestContext = new Mock<ITestContext>(MockBehavior.Loose);
     }
 
     public void GetDataShouldReadDataFromGivenDataSource()

@@ -34,6 +34,7 @@
     <PackageVersion Include="Microsoft.CodeAnalysis.BannedApiAnalyzers" Version="$(MicrosoftCodeAnalysisBannedApiAnalyzersVersion)" />
     <PackageVersion Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" Version="$(MicrosoftCodeAnalysisPublicApiAnalyzersVersion)" />
     <PackageVersion Include="Microsoft.VisualStudio.Threading.Analyzers" Version="17.14.15" />
+    <PackageVersion Include="Moq.Analyzers" Version="0.3.0" />
     <PackageVersion Include="StyleCop.Analyzers" Version="1.2.0-beta.556" />
   </ItemGroup>
   <ItemGroup Label="Product dependencies">
@@ -65,7 +66,6 @@
     <PackageVersion Include="Microsoft.CodeAnalysis.VisualBasic.Analyzer.Testing" Version="$(MicrosoftCodeAnalysisAnalyzerTestingVersion)" />
     <PackageVersion Include="Microsoft.CodeAnalysis.VisualBasic.CodeFix.Testing" Version="$(MicrosoftCodeAnalysisAnalyzerTestingVersion)" />
     <PackageVersion Include="Microsoft.CodeAnalysis.VisualBasic.CodeRefactoring.Testing" Version="$(MicrosoftCodeAnalysisAnalyzerTestingVersion)" />
-
     <PackageVersion Include="Microsoft.Extensions.FileSystemGlobbing" Version="9.0.4" />
     <PackageVersion Include="Microsoft.TestPlatform" Version="$(MicrosoftNETTestSdkVersion)" />
     <!-- Pinned to 4.18.4 for security -->

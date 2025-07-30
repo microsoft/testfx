@@ -14,7 +14,7 @@ public class FileUtilityTests : TestContainer
     private readonly Mock<FileUtility> _fileUtility;
 
     public FileUtilityTests()
-        => _fileUtility = new Mock<FileUtility>
+        => _fileUtility = new Mock<FileUtility>(MockBehavior.Loose)
         {
             CallBase = true,
         };

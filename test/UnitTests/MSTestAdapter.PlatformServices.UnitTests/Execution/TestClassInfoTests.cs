@@ -76,7 +76,7 @@ public class TestClassInfoTests : TestContainer
             _testClassAttribute,
             _testAssemblyInfo);
 
-        var testContext = new Mock<TestContext>();
+        var testContext = new Mock<TestContext>(MockBehavior.Loose);
         testContext.SetupGet(x => x.CancellationTokenSource).Returns(new CancellationTokenSource());
         _testContext = testContext.Object;
 

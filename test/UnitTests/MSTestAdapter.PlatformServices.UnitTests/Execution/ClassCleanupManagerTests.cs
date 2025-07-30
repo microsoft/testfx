@@ -15,7 +15,7 @@ public class ClassCleanupManagerTests : TestContainer
 {
     public void AssemblyCleanupRunsAfterAllTestsFinishEvenIfWeScheduleTheSameTestMultipleTime()
     {
-        ReflectHelper reflectHelper = Mock.Of<ReflectHelper>();
+        ReflectHelper reflectHelper = Mock.Of<ReflectHelper>(MockBehavior.Loose);
         MethodInfo methodInfo = typeof(FakeTestClass).GetMethod(nameof(FakeTestClass.FakeTestMethod), BindingFlags.Instance | BindingFlags.NonPublic)!;
         MethodInfo classCleanupMethodInfo = typeof(FakeTestClass).GetMethod(nameof(FakeTestClass.FakeClassCleanupMethod), BindingFlags.Instance | BindingFlags.NonPublic)!;
         // Full class name must agree between unitTestElement.TestMethod.FullClassName and testMethod.FullClassName;

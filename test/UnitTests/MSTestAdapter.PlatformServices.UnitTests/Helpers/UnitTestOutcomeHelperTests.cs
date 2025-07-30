@@ -25,7 +25,7 @@ public class UnitTestOutcomeHelperTests : TestContainer
               </MSTestV2>
             </RunSettings>
             """;
-        var mockMessageLogger = new Mock<IMessageLogger>();
+        var mockMessageLogger = new Mock<IMessageLogger>(MockBehavior.Loose);
         _adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, mockMessageLogger.Object)!;
     }
 

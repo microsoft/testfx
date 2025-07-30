@@ -28,9 +28,9 @@ public class MSTestSettingsTests : TestContainer
     public MSTestSettingsTests()
     {
         _testablePlatformServiceProvider = new TestablePlatformServiceProvider();
-        _mockDiscoveryContext = new Mock<IDiscoveryContext>();
-        _mockRunSettings = new Mock<IRunSettings>();
-        _mockMessageLogger = new Mock<IMessageLogger>();
+        _mockDiscoveryContext = new Mock<IDiscoveryContext>(MockBehavior.Loose);
+        _mockRunSettings = new Mock<IRunSettings>(MockBehavior.Loose);
+        _mockMessageLogger = new Mock<IMessageLogger>(MockBehavior.Loose);
         PlatformServiceProvider.Instance = _testablePlatformServiceProvider;
     }
 
@@ -1270,7 +1270,7 @@ public class MSTestSettingsTests : TestContainer
             { "mstest:enableBaseClassTestMethodsFromOtherAssemblies", "3" },
         };
 
-        var mockConfig = new Mock<IConfiguration>();
+        var mockConfig = new Mock<IConfiguration>(MockBehavior.Loose);
         mockConfig.Setup(config => config[It.IsAny<string>()])
                   .Returns((string key) => configDictionary.TryGetValue(key, out string? value) ? value : null);
 
@@ -1322,7 +1322,7 @@ public class MSTestSettingsTests : TestContainer
             { "mstest:output:captureTrace", "true" },
         };
 
-        var mockConfig = new Mock<IConfiguration>();
+        var mockConfig = new Mock<IConfiguration>(MockBehavior.Loose);
         mockConfig.Setup(config => config[It.IsAny<string>()])
                   .Returns((string key) => configDictionary.TryGetValue(key, out string? value) ? value : null);
 
@@ -1370,7 +1370,7 @@ public class MSTestSettingsTests : TestContainer
             { "mstest:parallelism:scope", "class" },
         };
 
-        var mockConfig = new Mock<IConfiguration>();
+        var mockConfig = new Mock<IConfiguration>(MockBehavior.Loose);
         mockConfig.Setup(config => config[It.IsAny<string>()])
                   .Returns((string key) => configDictionary.TryGetValue(key, out string? value) ? value : null);
 
@@ -1390,7 +1390,7 @@ public class MSTestSettingsTests : TestContainer
         // Arrange - setting up valid configuration values
         var configDictionary = new Dictionary<string, string> { { "mstest:parallelism:scope", "method" } };
 
-        var mockConfig = new Mock<IConfiguration>();
+        var mockConfig = new Mock<IConfiguration>(MockBehavior.Loose);
         mockConfig.Setup(config => config[It.IsAny<string>()])
             .Returns((string key) => configDictionary.TryGetValue(key, out string? value) ? value : null);
 

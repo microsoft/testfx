@@ -22,7 +22,7 @@ public class ReflectHelperTests : TestContainer
     public ReflectHelperTests()
     {
         _reflectHelper = new();
-        _method = new Mock<MethodInfo>();
+        _method = new Mock<MethodInfo>(MockBehavior.Loose);
         _method.Setup(x => x.MemberType).Returns(MemberTypes.Method);
 
         _testablePlatformServiceProvider = new TestablePlatformServiceProvider();
@@ -143,7 +143,7 @@ public class ReflectHelperTests : TestContainer
     public void IsAttributeDefinedShouldReturnTrueIfSpecifiedAttributeIsDefinedOnAMember()
     {
         var rh = new ReflectHelper();
-        var mockMemberInfo = new Mock<MemberInfo>();
+        var mockMemberInfo = new Mock<MemberInfo>(MockBehavior.Loose);
         var attributes = new Attribute[] { new TestMethodAttribute() };
 
         _testablePlatformServiceProvider.MockReflectionOperations.
@@ -156,7 +156,7 @@ public class ReflectHelperTests : TestContainer
     public void IsAttributeDefinedShouldReturnFalseIfSpecifiedAttributeIsNotDefinedOnAMember()
     {
         var rh = new ReflectHelper();
-        var mockMemberInfo = new Mock<MemberInfo>();
+        var mockMemberInfo = new Mock<MemberInfo>(MockBehavior.Loose);
         var attributes = new Attribute[] { new TestClassAttribute() };
 
         _testablePlatformServiceProvider.MockReflectionOperations.
@@ -173,7 +173,7 @@ public class ReflectHelperTests : TestContainer
         // Not using mocks here because for some reason a dictionary match of the mock is not returning true in the product code.
         MethodInfo memberInfo = typeof(ReflectHelperTests).GetMethod("IsAttributeDefinedShouldReturnFromCache")!;
 
-        // new Mock<MemberInfo>();
+        // new Mock<MemberInfo>(MockBehavior.Loose);
         var attributes = new Attribute[] { new TestMethodAttribute() };
 
         _testablePlatformServiceProvider.MockReflectionOperations.
@@ -193,7 +193,7 @@ public class ReflectHelperTests : TestContainer
     public void HasAttributeDerivedFromShouldReturnTrueIfSpecifiedAttributeIsDefinedOnAMember()
     {
         var rh = new ReflectHelper();
-        var mockMemberInfo = new Mock<MemberInfo>();
+        var mockMemberInfo = new Mock<MemberInfo>(MockBehavior.Loose);
         var attributes = new Attribute[] { new TestableExtendedTestMethod() };
 
         _testablePlatformServiceProvider.MockReflectionOperations.
@@ -206,7 +206,7 @@ public class ReflectHelperTests : TestContainer
     public void HasAttributeDerivedFromShouldReturnFalseIfSpecifiedAttributeIsNotDefinedOnAMember()
     {
         var rh = new ReflectHelper();
-        var mockMemberInfo = new Mock<MemberInfo>();
+        var mockMemberInfo = new Mock<MemberInfo>(MockBehavior.Loose);
         var attributes = new Attribute[] { new TestableExtendedTestMethod() };
 
         _testablePlatformServiceProvider.MockReflectionOperations.
@@ -223,7 +223,7 @@ public class ReflectHelperTests : TestContainer
         // Not using mocks here because for some reason a dictionary match of the mock is not returning true in the product code.
         MethodInfo memberInfo = typeof(ReflectHelperTests).GetMethod("HasAttributeDerivedFromShouldReturnFromCache")!;
 
-        // new Mock<MemberInfo>();
+        // new Mock<MemberInfo>(MockBehavior.Loose);
         var attributes = new Attribute[] { new TestableExtendedTestMethod() };
 
         _testablePlatformServiceProvider.MockReflectionOperations.
@@ -243,7 +243,7 @@ public class ReflectHelperTests : TestContainer
     public void HasAttributeDerivedFromShouldReturnFalseQueryingProvidedAttributesExistenceIfGettingAllAttributesFail()
     {
         var rh = new ReflectHelper();
-        var mockMemberInfo = new Mock<MemberInfo>();
+        var mockMemberInfo = new Mock<MemberInfo>(MockBehavior.Loose);
         var attributes = new Attribute[] { new TestableExtendedTestMethod() };
 
         _testablePlatformServiceProvider.MockReflectionOperations.

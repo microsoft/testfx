@@ -55,7 +55,7 @@ public class TestExecutionManagerTests : TestContainer
         _runContext = new TestableRunContextTestExecutionTests(() => new TestableTestCaseFilterExpression(_ => true));
         _frameworkHandle = new TestableFrameworkHandle();
         _cancellationToken = new TestRunCancellationToken();
-        _mockMessageLogger = new Mock<IMessageLogger>();
+        _mockMessageLogger = new Mock<IMessageLogger>(MockBehavior.Loose);
 
         _testExecutionManager = new TestExecutionManager(
             new EnvironmentWrapper(),
@@ -1088,7 +1088,7 @@ internal sealed class TestableRunContextTestExecutionTests : IRunContext
     public TestableRunContextTestExecutionTests(Func<ITestCaseFilterExpression> getFilter)
     {
         _getFilter = getFilter;
-        MockRunSettings = new Mock<IRunSettings>();
+        MockRunSettings = new Mock<IRunSettings>(MockBehavior.Loose);
     }
 
     public Mock<IRunSettings> MockRunSettings { get; set; }

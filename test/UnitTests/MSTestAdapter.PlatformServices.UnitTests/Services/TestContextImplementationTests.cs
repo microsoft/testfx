@@ -28,7 +28,7 @@ public class TestContextImplementationTests : TestContainer
 
     public TestContextImplementationTests()
     {
-        _testMethod = new Mock<ITestMethod>();
+        _testMethod = new Mock<ITestMethod>(MockBehavior.Loose);
         _properties = new Dictionary<string, object?>();
     }
 
@@ -410,7 +410,7 @@ public class TestContextImplementationTests : TestContainer
 
     public void WritesFromBackgroundThreadShouldNotThrow()
     {
-        var testContextImplementation = new TestContextImplementation(_testMethod.Object, _properties, new Mock<IMessageLogger>().Object, testRunCancellationToken: null);
+        var testContextImplementation = new TestContextImplementation(_testMethod.Object, _properties, new Mock<IMessageLogger>(MockBehavior.Loose).Object, testRunCancellationToken: null);
         var t = new Thread(() =>
         {
             for (int i = 0; i < 100; i++)

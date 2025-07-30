@@ -111,7 +111,7 @@ public class DataRowAttributeTests : TestContainer
     {
         // Arrange
         var dataRow = new DataRowAttribute(["a"]);
-        var methodInfoMock = new Mock<MethodInfo>();
+        var methodInfoMock = new Mock<MethodInfo>(MockBehavior.Loose);
         methodInfoMock.SetupGet(x => x.Name).Returns("MyMethod");
 
         // Act
@@ -125,7 +125,7 @@ public class DataRowAttributeTests : TestContainer
     {
         // Arrange
         var dataRow = new DummyDataRowAttribute();
-        var methodInfoMock = new Mock<MethodInfo>();
+        var methodInfoMock = new Mock<MethodInfo>(MockBehavior.Loose);
 
         // Act
         string? displayName = dataRow.GetDisplayName(methodInfoMock.Object, dataRow.Data);
@@ -138,7 +138,7 @@ public class DataRowAttributeTests : TestContainer
     {
         // Arrange
         var dataRow = new DataRowAttribute(["a", "b", "c"]);
-        var methodInfoMock = new Mock<MethodInfo>();
+        var methodInfoMock = new Mock<MethodInfo>(MockBehavior.Loose);
         methodInfoMock.SetupGet(x => x.Name).Returns("MyMethod");
 
         // Act
@@ -152,7 +152,7 @@ public class DataRowAttributeTests : TestContainer
     {
         // Arrange
         var dataRow = new DataRowAttribute(new[] { "a" }, new[] { "1" });
-        var methodInfoMock = new Mock<MethodInfo>();
+        var methodInfoMock = new Mock<MethodInfo>(MockBehavior.Loose);
         methodInfoMock.SetupGet(x => x.Name).Returns("MyMethod");
 
         // Act
@@ -166,7 +166,7 @@ public class DataRowAttributeTests : TestContainer
     {
         // Arrange
         var dataRow = new DataRowAttribute(new[] { "a", "b", "c" }, new[] { "1", "2", "3" });
-        var methodInfoMock = new Mock<MethodInfo>();
+        var methodInfoMock = new Mock<MethodInfo>(MockBehavior.Loose);
         methodInfoMock.SetupGet(x => x.Name).Returns("MyMethod");
 
         // Act
@@ -180,7 +180,7 @@ public class DataRowAttributeTests : TestContainer
     {
         // Arrange
         var dataRow = new DataRowAttribute(new[] { 1, 2, 3 }, new[] { 4, 5, 6 });
-        var methodInfoMock = new Mock<MethodInfo>();
+        var methodInfoMock = new Mock<MethodInfo>(MockBehavior.Loose);
         methodInfoMock.SetupGet(x => x.Name).Returns("MyMethod");
 
         // Act
@@ -194,7 +194,7 @@ public class DataRowAttributeTests : TestContainer
     {
         // Arrange
         var dataRow = new DataRowAttribute(new[] { ["a", "b", "c"], ["d", "e", "f"], new[] { "gh", "ij", "kl" } }, new[] { 'm', 'n', 'o' }, new[] { ["1", "2", "3"], ["4", "5", "6"], new[] { "7", "8", "9" } });
-        var methodInfoMock = new Mock<MethodInfo>();
+        var methodInfoMock = new Mock<MethodInfo>(MockBehavior.Loose);
         methodInfoMock.SetupGet(x => x.Name).Returns("MyMethod");
 
         // Act

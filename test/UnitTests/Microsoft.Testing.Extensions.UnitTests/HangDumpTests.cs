@@ -16,7 +16,7 @@ public sealed class HangDumpTests
 {
     private HangDumpCommandLineProvider GetProvider()
     {
-        var testApplicationModuleInfo = new Mock<ITestApplicationModuleInfo>();
+        var testApplicationModuleInfo = new Mock<ITestApplicationModuleInfo>(MockBehavior.Loose);
         _ = testApplicationModuleInfo.Setup(x => x.GetCurrentTestApplicationFullPath()).Returns("FullPath");
         return new();
     }

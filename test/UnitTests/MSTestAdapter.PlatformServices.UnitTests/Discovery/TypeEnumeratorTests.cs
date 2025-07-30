@@ -26,15 +26,15 @@ public partial class TypeEnumeratorTests : TestContainer
 
     public TypeEnumeratorTests()
     {
-        _mockReflectHelper = new Mock<ReflectHelper>
+        _mockReflectHelper = new Mock<ReflectHelper>(MockBehavior.Loose)
         {
             CallBase = true,
         };
 
-        _mockTypeValidator = new Mock<TypeValidator>(MockBehavior.Default, _mockReflectHelper.Object);
-        _mockTestMethodValidator = new Mock<TestMethodValidator>(MockBehavior.Default, _mockReflectHelper.Object, false);
+        _mockTypeValidator = new Mock<TypeValidator>(MockBehavior.Loose, _mockReflectHelper.Object);
+        _mockTestMethodValidator = new Mock<TestMethodValidator>(MockBehavior.Loose, _mockReflectHelper.Object, false);
         _warnings = [];
-        _mockMessageLogger = new Mock<IMessageLogger>();
+        _mockMessageLogger = new Mock<IMessageLogger>(MockBehavior.Loose);
 
         _testablePlatformServiceProvider = new TestablePlatformServiceProvider();
         PlatformServiceProvider.Instance = _testablePlatformServiceProvider;
@@ -111,8 +111,8 @@ public partial class TypeEnumeratorTests : TestContainer
             </RunSettings>
             """;
 
-        var mockRunContext = new Mock<IRunContext>();
-        var mockRunSettings = new Mock<IRunSettings>();
+        var mockRunContext = new Mock<IRunContext>(MockBehavior.Loose);
+        var mockRunSettings = new Mock<IRunSettings>(MockBehavior.Loose);
         mockRunContext.Setup(dc => dc.RunSettings).Returns(mockRunSettings.Object);
         mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
 
@@ -142,8 +142,8 @@ public partial class TypeEnumeratorTests : TestContainer
             </RunSettings>
             """;
 
-        var mockRunContext = new Mock<IRunContext>();
-        var mockRunSettings = new Mock<IRunSettings>();
+        var mockRunContext = new Mock<IRunContext>(MockBehavior.Loose);
+        var mockRunSettings = new Mock<IRunSettings>(MockBehavior.Loose);
         mockRunContext.Setup(dc => dc.RunSettings).Returns(mockRunSettings.Object);
         mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
 
@@ -173,8 +173,8 @@ public partial class TypeEnumeratorTests : TestContainer
             </RunSettings>
             """;
 
-        var mockRunContext = new Mock<IRunContext>();
-        var mockRunSettings = new Mock<IRunSettings>();
+        var mockRunContext = new Mock<IRunContext>(MockBehavior.Loose);
+        var mockRunSettings = new Mock<IRunSettings>(MockBehavior.Loose);
         mockRunContext.Setup(dc => dc.RunSettings).Returns(mockRunSettings.Object);
         mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
 

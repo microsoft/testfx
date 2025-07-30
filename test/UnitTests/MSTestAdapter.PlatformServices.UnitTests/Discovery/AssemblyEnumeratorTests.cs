@@ -62,7 +62,7 @@ public class AssemblyEnumeratorTests : TestContainer
                 actualReader.Read();
                 actualReader.ReadInnerXml();
             });
-        var mockMessageLogger = new Mock<IMessageLogger>();
+        var mockMessageLogger = new Mock<IMessageLogger>(MockBehavior.Loose);
         MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsName, mockMessageLogger.Object)!;
 
         // Constructor has the side effect of populating the passed settings to MSTestSettings.CurrentSettings
@@ -78,7 +78,7 @@ public class AssemblyEnumeratorTests : TestContainer
 
     public void GetTypesShouldReturnEmptyArrayWhenNoDeclaredTypes()
     {
-        Mock<TestableAssembly> mockAssembly = new();
+        Mock<TestableAssembly> mockAssembly = new(MockBehavior.Loose);
 
         // Setup mocks
         mockAssembly.Setup(a => a.GetTypes()).Returns([]);
@@ -88,7 +88,7 @@ public class AssemblyEnumeratorTests : TestContainer
 
     public void GetTypesShouldReturnSetOfDefinedTypes()
     {
-        Mock<TestableAssembly> mockAssembly = new();
+        Mock<TestableAssembly> mockAssembly = new(MockBehavior.Loose);
 
         TypeInfo[] expectedTypes = [typeof(DummyTestClass).GetTypeInfo(), typeof(DummyTestClass).GetTypeInfo()];
 
@@ -101,7 +101,7 @@ public class AssemblyEnumeratorTests : TestContainer
 
     public void GetTypesShouldHandleReflectionTypeLoadException()
     {
-        Mock<TestableAssembly> mockAssembly = new();
+        Mock<TestableAssembly> mockAssembly = new(MockBehavior.Loose);
 
         // Setup mocks
         mockAssembly.Setup(a => a.GetTypes()).Throws(new ReflectionTypeLoadException(null, null));
@@ -111,7 +111,7 @@ public class AssemblyEnumeratorTests : TestContainer
 
     public void GetTypesShouldReturnReflectionTypeLoadExceptionTypesOnException()
     {
-        Mock<TestableAssembly> mockAssembly = new();
+        Mock<TestableAssembly> mockAssembly = new(MockBehavior.Loose);
         var reflectedTypes = new Type[] { typeof(DummyTestClass) };
 
         // Setup mocks
@@ -125,7 +125,7 @@ public class AssemblyEnumeratorTests : TestContainer
 
     public void GetTypesShouldLogWarningsWhenReflectionFailsWithLoaderExceptions()
     {
-        Mock<TestableAssembly> mockAssembly = new();
+        Mock<TestableAssembly> mockAssembly = new(MockBehavior.Loose);
         var exceptions = new Exception[] { new("DummyLoaderException") };
 
         // Setup mocks
@@ -389,7 +389,7 @@ public class AssemblyEnumeratorTests : TestContainer
 
     private static Mock<TestableAssembly> CreateMockTestableAssembly()
     {
-        var mockAssembly = new Mock<TestableAssembly>();
+        var mockAssembly = new Mock<TestableAssembly>(MockBehavior.Loose);
 
         // The mock must be configured with a return value for GetCustomAttributes for this attribute type, but the
         // actual return value is irrelevant for these tests.
@@ -436,7 +436,7 @@ internal sealed class TestableAssemblyEnumerator : AssemblyEnumerator
 {
     internal TestableAssemblyEnumerator()
     {
-        var reflectHelper = new Mock<ReflectHelper>();
+        var reflectHelper = new Mock<ReflectHelper>(MockBehavior.Loose);
         var typeValidator = new Mock<TypeValidator>(reflectHelper.Object);
         var testMethodValidator = new Mock<TestMethodValidator>(reflectHelper.Object, false);
         MockTypeEnumerator = new Mock<TypeEnumerator>(

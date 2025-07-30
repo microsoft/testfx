@@ -28,7 +28,7 @@ public sealed class UnitTestRunnerTests : TestContainer
     {
         _testRunParameters = [];
         _testablePlatformServiceProvider = new TestablePlatformServiceProvider();
-        _mockMessageLogger = new Mock<IMessageLogger>();
+        _mockMessageLogger = new Mock<IMessageLogger>(MockBehavior.Loose);
         PlatformServiceProvider.Instance = _testablePlatformServiceProvider;
 
         _unitTestRunner = new UnitTestRunner(GetSettingsWithDebugTrace(false)!, [], null);
@@ -282,7 +282,7 @@ public sealed class UnitTestRunnerTests : TestContainer
 
     public async Task RunSingleTestShouldCallAssemblyInitializeAndClassInitializeMethodsInOrder()
     {
-        var mockReflectHelper = new Mock<ReflectHelper>();
+        var mockReflectHelper = new Mock<ReflectHelper>(MockBehavior.Loose);
         _unitTestRunner = new UnitTestRunner(new MSTestSettings(), [], null, mockReflectHelper.Object);
 
         Type type = typeof(DummyTestClassWithInitializeMethods);

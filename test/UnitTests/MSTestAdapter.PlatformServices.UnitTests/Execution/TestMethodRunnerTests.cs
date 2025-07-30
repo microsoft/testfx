@@ -152,7 +152,7 @@ public class TestMethodRunnerTests : TestContainer
 
     public async Task RunTestMethodForMultipleResultsReturnMultipleResults()
     {
-        var testMethodAttributeMock = new Mock<TestMethodAttribute>();
+        var testMethodAttributeMock = new Mock<TestMethodAttribute>(MockBehavior.Loose);
         testMethodAttributeMock.Setup(_ => _.ExecuteAsync(It.IsAny<ITestMethod>())).Returns(Task.FromResult<TestResult[]>(
         [
             new TestResult { Outcome = UTF.UnitTestOutcome.Passed },

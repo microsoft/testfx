@@ -14,7 +14,7 @@ public class TestContextExtensionsTests : TestContainer
 {
     public void GetAndClearDiagnosticMessagesShouldReturnTestContextMessages()
     {
-        Mock<ITestContext> mockTestContext = new();
+        Mock<ITestContext> mockTestContext = new(MockBehavior.Loose);
 
         mockTestContext.Setup(tc => tc.GetDiagnosticMessages()).Returns("foo");
 
@@ -23,7 +23,7 @@ public class TestContextExtensionsTests : TestContainer
 
     public void GetAndClearDiagnosticMessagesShouldClearContextMessages()
     {
-        Mock<ITestContext> mockTestContext = new();
+        Mock<ITestContext> mockTestContext = new(MockBehavior.Loose);
         string message = "foobar";
         mockTestContext.Setup(tc => tc.GetDiagnosticMessages()).Returns(() => message);
         mockTestContext.Setup(tc => tc.ClearDiagnosticMessages()).Callback(() => message = string.Empty);

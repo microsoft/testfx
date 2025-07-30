@@ -28,9 +28,9 @@ public class TypeCacheTests : TestContainer
 
     public TypeCacheTests()
     {
-        _mockReflectHelper = new Mock<ReflectHelper>();
+        _mockReflectHelper = new Mock<ReflectHelper>(MockBehavior.Loose);
         _typeCache = new TypeCache(_mockReflectHelper.Object);
-        _mockMessageLogger = new Mock<IMessageLogger>();
+        _mockMessageLogger = new Mock<IMessageLogger>(MockBehavior.Loose);
 
         _testablePlatformServiceProvider = new TestablePlatformServiceProvider();
         PlatformServiceProvider.Instance = _testablePlatformServiceProvider;

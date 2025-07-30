@@ -34,11 +34,11 @@ public class UnitTestDiscovererTests : TestContainer
         _testablePlatformServiceProvider = new TestablePlatformServiceProvider();
         _unitTestDiscoverer = new UnitTestDiscoverer();
 
-        _mockMessageLogger = new Mock<IMessageLogger>();
-        _mockTestCaseDiscoverySink = new Mock<ITestCaseDiscoverySink>();
-        _mockRunSettings = new Mock<IRunSettings>();
+        _mockMessageLogger = new Mock<IMessageLogger>(MockBehavior.Loose);
+        _mockTestCaseDiscoverySink = new Mock<ITestCaseDiscoverySink>(MockBehavior.Loose);
+        _mockRunSettings = new Mock<IRunSettings>(MockBehavior.Loose);
 
-        _mockDiscoveryContext = new Mock<IDiscoveryContext>();
+        _mockDiscoveryContext = new Mock<IDiscoveryContext>(MockBehavior.Loose);
         _mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
 
         _test = new UnitTestElement(new TestMethod("M", "C", "A", false));

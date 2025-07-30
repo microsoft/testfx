@@ -18,7 +18,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.ObjectMode
 
 public class UnitTestResultTests : TestContainer
 {
-    private readonly Mock<IMessageLogger> _mockMessageLogger = new();
+    private readonly Mock<IMessageLogger> _mockMessageLogger = new(MockBehavior.Loose);
 
     public void UnitTestResultConstructorWithOutcomeAndErrorMessageShouldSetRequiredFields()
     {

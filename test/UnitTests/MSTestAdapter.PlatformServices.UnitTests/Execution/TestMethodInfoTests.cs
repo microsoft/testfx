@@ -341,9 +341,9 @@ public class TestMethodInfoTests : TestContainer
 
     public async Task TestMethodInfoInvokeShouldSetResultFilesIfTestContextHasAttachments()
     {
-        Mock<ITestContext> testContext = new();
+        Mock<ITestContext> testContext = new(MockBehavior.Loose);
         testContext.Setup(tc => tc.GetResultFiles()).Returns(["C:\\temp.txt"]);
-        var mockInnerContext = new Mock<TestContext>();
+        var mockInnerContext = new Mock<TestContext>(MockBehavior.Loose);
         testContext.SetupGet(tc => tc.Context).Returns(mockInnerContext.Object);
         mockInnerContext.SetupGet(tc => tc.CancellationTokenSource).Returns(new CancellationTokenSource());
 
