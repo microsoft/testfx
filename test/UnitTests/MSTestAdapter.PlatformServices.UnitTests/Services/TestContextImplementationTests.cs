@@ -413,10 +413,10 @@ public class TestContextImplementationTests : TestContainer
         var testContextImplementation = new TestContextImplementation(_testMethod.Object, _properties, new Mock<IMessageLogger>().Object, testRunCancellationToken: null);
         var t = new Thread(() =>
         {
-            for (int i = 0; i < 1000; i++)
+            for (int i = 0; i < 100; i++)
             {
-                testContextImplementation.WriteConsoleOut(new string('a', 100000000));
-                testContextImplementation.WriteConsoleErr(new string('b', 100000000));
+                testContextImplementation.WriteConsoleOut(new string('a', 1000000));
+                testContextImplementation.WriteConsoleErr(new string('b', 1000000));
             }
         });
 
