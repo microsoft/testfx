@@ -311,8 +311,7 @@ namespace MSTestSdkTest
                     $"publish -r {RID} -f net9.0 {testAsset.TargetAssetPath}",
                     AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
                     // We prefer to use the outer retry mechanism as we need some extra checks
-                    retryCount: 0,
-                    timeoutInSeconds: 180);
+                    retryCount: 0);
                 compilationResult.AssertOutputContains("Generating native code");
                 compilationResult.AssertOutputDoesNotContain("warning");
 
