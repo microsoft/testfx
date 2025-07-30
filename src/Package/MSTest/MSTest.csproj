@@ -47,8 +47,6 @@
     <ProjectReference Include="$(RepoRoot)src\TestFramework\TestFramework.Extensions\TestFramework.Extensions.csproj" />
     <ProjectReference Include="$(RepoRoot)src\Analyzers\MSTest.Analyzers.Package\MSTest.Analyzers.Package.csproj" />
     <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.TrxReport\Microsoft.Testing.Extensions.TrxReport.csproj" Condition=" '$(TargetFramework)' != '$(UwpMinimum)' " />
-
-    <!-- TODO: Add Microsoft.Testing.Extensions.CodeCoverage back once a new version for MTP v2 is released -->
   </ItemGroup>
 
   <ItemGroup>
@@ -61,6 +59,7 @@
     <!--      https://github.com/microsoft/vstest/issues/4098 -->
     <!--      https://github.com/microsoft/vstest/pull/4104 -->
     <PackageReference Include="Microsoft.NET.Test.Sdk" VersionOverride="$(MicrosoftNETTestSdkVersion)" Condition="'$(TargetFramework)' != '$(UwpMinimum)'" PrivateAssets="none" />
+    <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" />
   </ItemGroup>
 
   <!-- SDK bottom import -->
