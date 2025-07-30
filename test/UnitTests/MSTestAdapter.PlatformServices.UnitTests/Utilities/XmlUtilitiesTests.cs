@@ -7,8 +7,6 @@ using TestFramework.ForTestingMSTest;
 
 using static MSTestAdapter.PlatformServices.UnitTests.Utilities.AppDomainUtilitiesTests;
 
-using FluentAssertions;
-
 namespace MSTestAdapter.PlatformServices.UnitTests.Utilities;
 
 public class XmlUtilitiesTests : TestContainer

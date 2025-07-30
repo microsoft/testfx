@@ -14,8 +14,6 @@ using MSTestAdapter.PlatformServices.Tests.Utilities;
 
 using TestFramework.ForTestingMSTest;
 
-using FluentAssertions;
-
 namespace MSTestAdapter.PlatformServices.UnitTests.Services;
 
 public class DesktopTestDeploymentTests : TestContainer

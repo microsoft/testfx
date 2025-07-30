@@ -5,8 +5,6 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 
 using TestFramework.ForTestingMSTest;
 
-using FluentAssertions;
-
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests;
 
 public class DictionaryHelperTests : TestContainer

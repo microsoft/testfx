@@ -6,8 +6,6 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
 using TestFramework.ForTestingMSTest;
 
-using FluentAssertions;
-
 namespace MSTestAdapter.PlatformServices.UnitTests;
 
 public class VSInstallationUtilitiesTests : TestContainer
