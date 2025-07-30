@@ -805,8 +805,8 @@ public sealed partial class Assert
         // For shorter strings, show the full strings but still apply character escaping
         if (maxLength <= contextLength)
         {
-            var expectedShortResult = CreateStringPreviewWithCaretInfo(expected, 0, expected.Length, diffIndex);
-            var actualShortResult = CreateStringPreviewWithCaretInfo(actual, 0, actual.Length, diffIndex);
+            Tuple<string, int> expectedShortResult = CreateStringPreviewWithCaretInfo(expected, 0, expected.Length, diffIndex);
+            Tuple<string, int> actualShortResult = CreateStringPreviewWithCaretInfo(actual, 0, actual.Length, diffIndex);
 
             // Use the caret position from the expected string as reference
             return new(expectedShortResult.Item1, actualShortResult.Item1, expectedShortResult.Item2);
@@ -821,8 +821,8 @@ public sealed partial class Assert
         int endPos = Math.Min(maxLength, startPos + contextLength);
 
         // Create previews and track character position changes for caret alignment
-        var expectedResult = CreateStringPreviewWithCaretInfo(expected, startPos, endPos, diffIndex);
-        var actualResult = CreateStringPreviewWithCaretInfo(actual, startPos, endPos, diffIndex);
+        Tuple<string, int> expectedResult = CreateStringPreviewWithCaretInfo(expected, startPos, endPos, diffIndex);
+        Tuple<string, int> actualResult = CreateStringPreviewWithCaretInfo(actual, startPos, endPos, diffIndex);
 
         // Use the caret position from the expected string as reference
         int caretPosition = expectedResult.Item2;
@@ -855,7 +855,7 @@ public sealed partial class Assert
         for (int i = 0; i < preview.Length; i++)
         {
             char c = preview[i];
-            
+
             if (i == originalCaretPos)
             {
                 adjustedCaretPos = result.Length;
@@ -910,11 +910,6 @@ public sealed partial class Assert
         }
 
         return new(result.ToString(), adjustedCaretPos);
-    }
-
-    private static string CreateStringPreview(string str, int startPos, int endPos)
-    {
-        return CreateStringPreviewWithCaretInfo(str, startPos, endPos, -1).Item1;
     }
 
     [DoesNotReturn]
