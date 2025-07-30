@@ -25,15 +25,15 @@ Options:
     --diagnostic
         Enable the diagnostic logging. The default log level is 'Trace'.
         The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag
-    --diagnostic-filelogger-synchronouswrite
-        Force the built-in file logger to write the log synchronously.
-        Useful for scenario where you don't want to lose any log (i.e. in case of crash).
-        Note that this is slowing down the test execution.
+    --diagnostic-file-prefix
+        Prefix for the log file name that will replace '[log]_.'
     --diagnostic-output-directory
         Output directory of the diagnostic logging.
         If not specified the file will be generated inside the default 'TestResults' directory.
-    --diagnostic-output-fileprefix
-        Prefix for the log file name that will replace '[log]_.'
+    --diagnostic-synchronous-write
+        Force the built-in file logger to write the log synchronously.
+        Useful for scenario where you don't want to lose any log (i.e. in case of crash).
+        Note that this is slowing down the test execution.
     --diagnostic-verbosity
         Define the level of the verbosity for the --diagnostic.
         The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', and 'Critical'.
@@ -148,7 +148,7 @@ Built-in command line providers:
         Arity: 1
         Hidden: True
         Description: Specify the port of the client\.
-    --config-file
+      --config-file
         Arity: 1
         Hidden: False
         Description: Specifies a testconfig\.json file\.
@@ -157,21 +157,21 @@ Built-in command line providers:
         Hidden: False
         Description: Enable the diagnostic logging\. The default log level is 'Trace'\.
         The file will be written in the output directory with the name log_\[yyMMddHHmmssfff\]\.diag
-      --diagnostic-filelogger-synchronouswrite
-        Arity: 0
+      --diagnostic-file-prefix
+        Arity: 1
         Hidden: False
-        Description: Force the built-in file logger to write the log synchronously\.
-        Useful for scenario where you don't want to lose any log \(i\.e\. in case of crash\)\.
-        Note that this is slowing down the test execution\.
+        Description: Prefix for the log file name that will replace '\[log\]_\.'
       --diagnostic-output-directory
         Arity: 1
         Hidden: False
         Description: Output directory of the diagnostic logging.
         If not specified the file will be generated inside the default 'TestResults' directory\.
-      --diagnostic-output-fileprefix
-        Arity: 1
+      --diagnostic-synchronous-write
+        Arity: 0
         Hidden: False
-        Description: Prefix for the log file name that will replace '\[log\]_\.'
+        Description: Force the built-in file logger to write the log synchronously\.
+        Useful for scenario where you don't want to lose any log \(i\.e\. in case of crash\)\.
+        Note that this is slowing down the test execution\.
       --diagnostic-verbosity
         Arity: 1
         Hidden: False
@@ -282,15 +282,15 @@ Options:
     --diagnostic
         Enable the diagnostic logging. The default log level is 'Trace'.
         The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag
-    --diagnostic-filelogger-synchronouswrite
-        Force the built-in file logger to write the log synchronously.
-        Useful for scenario where you don't want to lose any log (i.e. in case of crash).
-        Note that this is slowing down the test execution.
+    --diagnostic-file-prefix
+        Prefix for the log file name that will replace '[log]_.'
     --diagnostic-output-directory
         Output directory of the diagnostic logging.
         If not specified the file will be generated inside the default 'TestResults' directory.
-    --diagnostic-output-fileprefix
-        Prefix for the log file name that will replace '[log]_.'
+    --diagnostic-synchronous-write
+        Force the built-in file logger to write the log synchronously.
+        Useful for scenario where you don't want to lose any log (i.e. in case of crash).
+        Note that this is slowing down the test execution.
     --diagnostic-verbosity
         Define the level of the verbosity for the --diagnostic.
         The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', and 'Critical'.
@@ -425,21 +425,21 @@ Built-in command line providers:
         Hidden: False
         Description: Enable the diagnostic logging. The default log level is 'Trace'.
         The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag
-      --diagnostic-filelogger-synchronouswrite
-        Arity: 0
+      --diagnostic-file-prefix
+        Arity: 1
         Hidden: False
-        Description: Force the built-in file logger to write the log synchronously.
-        Useful for scenario where you don't want to lose any log (i.e. in case of crash).
-        Note that this is slowing down the test execution.
+        Description: Prefix for the log file name that will replace '[log]_.'
       --diagnostic-output-directory
         Arity: 1
         Hidden: False
         Description: Output directory of the diagnostic logging.
         If not specified the file will be generated inside the default 'TestResults' directory.
-      --diagnostic-output-fileprefix
-        Arity: 1
+      --diagnostic-synchronous-write
+        Arity: 0
         Hidden: False
-        Description: Prefix for the log file name that will replace '[log]_.'
+        Description: Force the built-in file logger to write the log synchronously.
+        Useful for scenario where you don't want to lose any log (i.e. in case of crash).
+        Note that this is slowing down the test execution.
       --diagnostic-verbosity
         Arity: 1
         Hidden: False
