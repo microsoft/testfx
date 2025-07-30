@@ -536,11 +536,11 @@ internal sealed partial class TerminalTestReporter : IDisposable
         terminal.SetColor(TerminalColor.DarkGray);
         terminal.Append(SingleIndentation);
         terminal.AppendLine(PlatformResources.StandardOutput);
-        string? standardOutputWithoutSpecialChars = NormalizeSpecialCharacters(standardOutput);
+        string? standardOutputWithoutSpecialChars = NormalizeSpecialCharacters(standardOutput, false);
         AppendIndentedLine(terminal, standardOutputWithoutSpecialChars, DoubleIndentation);
         terminal.Append(SingleIndentation);
         terminal.AppendLine(PlatformResources.StandardError);
-        string? standardErrorWithoutSpecialChars = NormalizeSpecialCharacters(standardError);
+        string? standardErrorWithoutSpecialChars = NormalizeSpecialCharacters(standardError, false);
         AppendIndentedLine(terminal, standardErrorWithoutSpecialChars, DoubleIndentation);
         terminal.ResetColor();
     }
@@ -644,8 +644,10 @@ internal sealed partial class TerminalTestReporter : IDisposable
         _terminalWithProgress.RemoveWorker(assemblyRun.SlotIndex);
     }
 
-    private static string? NormalizeSpecialCharacters(string? text)
-        => text?.Replace('\0', '\x2400') // NULL → ␀
+    private static string? NormalizeSpecialCharacters(string? text, bool normalizeWhitespaceCharacters)
+    {
+        string? normalized = text?
+            .Replace('\0', '\x2400') // NULL → ␀
             .Replace('\x0001', '\x2401') // START OF HEADING → ␁
             .Replace('\x0002', '\x2402') // START OF TEXT → ␂
             .Replace('\x0003', '\x2403') // END OF TEXT → ␃
@@ -654,11 +656,8 @@ internal sealed partial class TerminalTestReporter : IDisposable
             .Replace('\x0006', '\x2406') // ACKNOWLEDGE → ␆
             .Replace('\x0007', '\x2407') // BELL → ␇
             .Replace('\x0008', '\x2408') // BACKSPACE → ␈
-            .Replace('\t', '\x2409') // TAB → ␉
-            .Replace('\n', '\x240A') // LINE FEED → ␊
             .Replace('\x000B', '\x240B') // VERTICAL TAB → ␋
             .Replace('\x000C', '\x240C') // FORM FEED → ␌
-            .Replace('\r', '\x240D') // CARRIAGE RETURN → ␍
             .Replace('\x000E', '\x240E') // SHIFT OUT → ␎
             .Replace('\x000F', '\x240F') // SHIFT IN → ␏
             .Replace('\x0010', '\x2410') // DATA LINK ESCAPE → ␐
@@ -678,8 +677,19 @@ internal sealed partial class TerminalTestReporter : IDisposable
             .Replace('\x001E', '\x241E') // RECORD SEPARATOR → ␞
             .Replace('\x001F', '\x241F'); // UNIT SEPARATOR → ␟
 
+        if (normalizeWhitespaceCharacters)
+        {
+            normalized = normalized?
+                .Replace('\t', '\x2409') // TAB → ␉
+                .Replace('\n', '\x240A') // LINE FEED → ␊
+                .Replace('\r', '\x240D'); // CARRIAGE RETURN → ␍
+        }
+
+        return normalized;
+    }
+
     private static string NormalizeTestDisplayName(string displayName)
-        => NormalizeSpecialCharacters(displayName) ?? displayName;
+        => NormalizeSpecialCharacters(displayName, true) ?? displayName;
 
     /// <summary>
     /// Appends a long duration in human readable format such as 1h 23m 500ms.
