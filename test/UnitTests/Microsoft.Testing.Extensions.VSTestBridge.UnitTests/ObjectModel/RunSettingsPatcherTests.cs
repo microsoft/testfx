@@ -14,8 +14,8 @@ namespace Microsoft.Testing.Extensions.VSTestBridge.UnitTests.ObjectModel;
 [TestClass]
 public class RunSettingsPatcherTests
 {
-    private readonly Mock<IConfiguration> _configuration = new();
-    private readonly Mock<ICommandLineOptions> _commandLineOptions = new();
+    private readonly Mock<IConfiguration> _configuration = new(MockBehavior.Loose);
+    private readonly Mock<ICommandLineOptions> _commandLineOptions = new(MockBehavior.Loose);
 
     [TestMethod]
     public void Patch_WhenNoRunSettingsProvided_CreateRunSettingsWithResultsDirectoryElement()

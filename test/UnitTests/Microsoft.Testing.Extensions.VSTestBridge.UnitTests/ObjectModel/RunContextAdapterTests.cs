@@ -13,8 +13,8 @@ namespace Microsoft.Testing.Extensions.VSTestBridge.UnitTests.ObjectModel;
 [TestClass]
 public class RunContextAdapterTests
 {
-    private readonly Mock<ICommandLineOptions> _commandLineOptions = new();
-    private readonly Mock<IRunSettings> _runSettings = new();
+    private readonly Mock<ICommandLineOptions> _commandLineOptions = new(MockBehavior.Loose);
+    private readonly Mock<IRunSettings> _runSettings = new(MockBehavior.Loose);
 
     [TestMethod]
     public void TestRunDirectory_IsNotNull_If_ResultsDirectory_Is_Provided()
