@@ -92,6 +92,21 @@ Typ deklarujący te metody powinien również przestrzegać następujących regu
         <target state="translated">Metody AssemblyInitialize powinny mieć prawidłowy układ</target>
         <note />
       </trans-unit>
+      <trans-unit id="AssertThrowsShouldContainSingleStatementDescription">
+        <source>Assert.Throws methods should contain only a single statement or expression. Multiple statements can be misleading - if the first statement throws, subsequent statements are never executed; if it doesn't throw, it should be moved outside the Assert.Throws.</source>
+        <target state="new">Assert.Throws methods should contain only a single statement or expression. Multiple statements can be misleading - if the first statement throws, subsequent statements are never executed; if it doesn't throw, it should be moved outside the Assert.Throws.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AssertThrowsShouldContainSingleStatementMessageFormat">
+        <source>Assert.Throws should contain only a single statement/expression</source>
+        <target state="new">Assert.Throws should contain only a single statement/expression</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AssertThrowsShouldContainSingleStatementTitle">
+        <source>Assert.Throws should contain only a single statement/expression</source>
+        <target state="new">Assert.Throws should contain only a single statement/expression</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AssertionArgsShouldAvoidConditionalAccessMessageFormat">
         <source>Prefer adding an additional assertion that checks for null</source>
         <target state="translated">Preferuj dodawanie dodatkowej asercji, która sprawdza pod kątem wartości null</target>
@@ -474,32 +489,32 @@ The type declaring these methods should also respect the following rules:
 -The class shouldn't be 'static'
 -The class should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</source>
-        <target state="new">Methods marked with '[GlobalTestInitialize]' or '[GlobalTestCleanup]' should follow the following layout to be valid:
--it can't be declared on a generic class
--it should be 'public'
--it should be 'static'
--it should not be 'async void'
--it should not be a special method (finalizer, operator...).
--it should not be generic
--it should take one parameter of type 'TestContext'
--return type should be 'void', 'Task' or 'ValueTask'
+        <target state="translated">Metody oznaczone znakiem „[GlobalTestInitialize]” lub „[GlobalTestCleanup]” powinny być zgodne z następującym układem, aby były prawidłowe:
+— nie może być zadeklarowana w klasie ogólnej
+— powinna być typu „public”
+— powinna mieć wartość „static”
+— nie powinna to być wartość „async void”
+— nie powinna to być metoda specjalna (finalizator, operator...).
+— nie powinna być ogólna
+— powinna przyjmować jeden parametr typu „TestContext”
+— zwracany typ powinien mieć wartość „void”, „Taks” lub „ValueTask”
 
-The type declaring these methods should also respect the following rules:
--The type should be a class
--The class should be 'public'
--The class shouldn't be 'static'
--The class should be marked with '[TestClass]' (or a derived attribute)
--the class should not be generic.</target>
+Typ deklarujący te metody powinien również przestrzegać następujących reguł:
+— typ powinien być klasą
+— klasa powinna być „publiczna”
+— klasa nie powinna mieć wartości „static”
+— klasa powinna być oznaczona „[TestClass]” (lub atrybutem pochodnym)
+— klasa nie powinna być ogólna.</target>
         <note />
       </trans-unit>
       <trans-unit id="GlobalTestFixtureShouldBeValidMessageFormat">
         <source>Global test fixture method '{0}' signature is invalid</source>
-        <target state="new">Global test fixture method '{0}' signature is invalid</target>
+        <target state="translated">Podpis globalnej metody warunków początkowych testu „{0}” jest nieprawidłowy</target>
         <note />
       </trans-unit>
       <trans-unit id="GlobalTestFixtureShouldBeValidTitle">
         <source>GlobalTestInitialize and GlobalTestCleanup methods should have valid layout</source>
-        <target state="new">GlobalTestInitialize and GlobalTestCleanup methods should have valid layout</target>
+        <target state="translated">Metody GlobalTestInitialize i GlobalTestCleanup powinny mieć prawidłowy układ</target>
         <note />
       </trans-unit>
       <trans-unit id="PreferAssertFailOverAlwaysFalseConditionsMessageFormat">

@@ -5,10 +5,12 @@ using Microsoft.MSTestV2.CLIAutomation;
 
 namespace MSTest.IntegrationTests;
 
+[TestClass]
 public class DiscoverInternalsTests : CLITestBase
 {
     private const string TestAsset = "DiscoverInternalsProject";
 
+    [TestMethod]
     public async Task InternalTestClassesAreDiscoveredWhenTheDiscoverInternalsAttributeIsPresent()
     {
         // Arrange
@@ -25,6 +27,7 @@ public class DiscoverInternalsTests : CLITestBase
             "NestedInternalClass_TestMethod1");
     }
 
+    [TestMethod]
     public void AnInternalTestClassDerivedFromAPublicAbstractGenericBaseClassForAnInternalTypeIsDiscovered()
     {
         // Arrange
@@ -39,6 +42,7 @@ public class DiscoverInternalsTests : CLITestBase
             "EqualityIsCaseInsensitive");
     }
 
+    [TestMethod]
     public async Task AnInternalTypeCanBeUsedInADynamicDataTestMethod()
     {
         string assemblyPath = Path.IsPathRooted(TestAsset) ? TestAsset : GetAssetFullPath(TestAsset);

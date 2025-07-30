@@ -639,6 +639,15 @@ The type declaring these methods should also respect the following rules:
   <data name="FlowTestContextCancellationTokenDescription" xml:space="preserve">
     <value>When calling async methods that have overloads accepting a CancellationToken parameter, prefer using the overload with TestContext.CancellationTokenSource.Token to enable cooperative cancellation and respect test timeouts.</value>
   </data>
+  <data name="AssertThrowsShouldContainSingleStatementTitle" xml:space="preserve">
+    <value>Assert.Throws should contain only a single statement/expression</value>
+  </data>
+  <data name="AssertThrowsShouldContainSingleStatementMessageFormat" xml:space="preserve">
+    <value>Assert.Throws should contain only a single statement/expression</value>
+  </data>
+  <data name="AssertThrowsShouldContainSingleStatementDescription" xml:space="preserve">
+    <value>Assert.Throws methods should contain only a single statement or expression. Multiple statements can be misleading - if the first statement throws, subsequent statements are never executed; if it doesn't throw, it should be moved outside the Assert.Throws.</value>
+  </data>
   <data name="GlobalTestFixtureShouldBeValidTitle" xml:space="preserve">
     <value>GlobalTestInitialize and GlobalTestCleanup methods should have valid layout</value>
   </data>

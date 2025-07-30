@@ -4,7 +4,6 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <IncludeBuildOutput>false</IncludeBuildOutput>
     <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
-    <GeneratePackageOnBuild Condition=" '$(OS)' == 'Windows_NT' ">true</GeneratePackageOnBuild>
   </PropertyGroup>
 
   <PropertyGroup>

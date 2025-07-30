@@ -3,8 +3,6 @@
 
 using System.Collections.Immutable;
 
-using FluentAssertions;
-
 using Microsoft.MSTestV2.CLIAutomation;
 
 namespace MSTest.IntegrationTests;
@@ -13,6 +11,7 @@ public partial class TestId : CLITestBase
 {
     private const string FullyQualifiedStrategyDll = "TestIdProject.FullyQualifiedStrategy";
 
+    [TestMethod]
     public async Task TestIdUniqueness_DataRowArray_FullyQualifiedStrategy()
     {
         // Arrange
@@ -31,9 +30,12 @@ public partial class TestId : CLITestBase
             "DataRowArraysTests (0,[0,0,0])");
 
         // We cannot assert the expected ID as it is path dependent
-        testResults.Select(x => x.TestCase.Id.ToString()).Should().OnlyHaveUniqueItems();
+        CollectionAssert.AllItemsAreUnique(
+            testResults.Select(x => x.TestCase.Id.ToString()).ToList(),
+            "Test IDs should be unique.");
     }
 
+    [TestMethod]
     public async Task TestIdUniqueness_DataRowString_FullyQualifiedStrategy()
     {
         // Arrange
@@ -53,9 +55,12 @@ public partial class TestId : CLITestBase
             "DataRowStringTests (\"  \")");
 
         // We cannot assert the expected ID as it is path dependent
-        testResults.Select(x => x.TestCase.Id.ToString()).Should().OnlyHaveUniqueItems();
+        CollectionAssert.AllItemsAreUnique(
+            testResults.Select(x => x.TestCase.Id.ToString()).ToList(),
+            "Test IDs should be unique.");
     }
 
+    [TestMethod]
     public async Task TestIdUniqueness_DynamicDataArrays_FullyQualifiedStrategy()
     {
         // Arrange
@@ -74,9 +79,12 @@ public partial class TestId : CLITestBase
             "DynamicDataArraysTests (0,[0,0,0])");
 
         // We cannot assert the expected ID as it is path dependent
-        testResults.Select(x => x.TestCase.Id.ToString()).Should().OnlyHaveUniqueItems();
+        CollectionAssert.AllItemsAreUnique(
+            testResults.Select(x => x.TestCase.Id.ToString()).ToList(),
+            "Test IDs should be unique.");
     }
 
+    [TestMethod]
     public async Task TestIdUniqueness_DynamicDataTuple_FullyQualifiedStrategy()
     {
         // Arrange
@@ -94,9 +102,12 @@ public partial class TestId : CLITestBase
             "DynamicDataTuplesTests ((1, text, False))");
 
         // We cannot assert the expected ID as it is path dependent
-        testResults.Select(x => x.TestCase.Id.ToString()).Should().OnlyHaveUniqueItems();
+        CollectionAssert.AllItemsAreUnique(
+            testResults.Select(x => x.TestCase.Id.ToString()).ToList(),
+            "Test IDs should be unique.");
     }
 
+    [TestMethod]
     public async Task TestIdUniqueness_DynamicDataGenericCollections_FullyQualifiedStrategy()
     {
         // Arrange
@@ -116,9 +127,12 @@ public partial class TestId : CLITestBase
             "DynamicDataGenericCollectionsTests (System.Collections.Generic.List`1[System.Int32],System.Collections.Generic.List`1[System.String],System.Collections.Generic.List`1[System.Boolean])");
 
         // We cannot assert the expected ID as it is path dependent
-        testResults.Select(x => x.TestCase.Id.ToString()).Should().OnlyHaveUniqueItems();
+        CollectionAssert.AllItemsAreUnique(
+            testResults.Select(x => x.TestCase.Id.ToString()).ToList(),
+            "Test IDs should be unique.");
     }
 
+    [TestMethod]
     public async Task TestIdUniqueness_TestDataSourceArrays_FullyQualifiedStrategy()
     {
         // Arrange
@@ -137,9 +151,12 @@ public partial class TestId : CLITestBase
             "Custom name");
 
         // We cannot assert the expected ID as it is path dependent
-        testResults.Select(x => x.TestCase.Id.ToString()).Should().OnlyHaveUniqueItems();
+        CollectionAssert.AllItemsAreUnique(
+            testResults.Select(x => x.TestCase.Id.ToString()).ToList(),
+            "Test IDs should be unique.");
     }
 
+    [TestMethod]
     public async Task TestIdUniqueness_TestDataSourceTuples_FullyQualifiedStrategy()
     {
         // Arrange
@@ -157,9 +174,12 @@ public partial class TestId : CLITestBase
             "Custom name");
 
         // We cannot assert the expected ID as it is path dependent
-        testResults.Select(x => x.TestCase.Id.ToString()).Should().OnlyHaveUniqueItems();
+        CollectionAssert.AllItemsAreUnique(
+            testResults.Select(x => x.TestCase.Id.ToString()).ToList(),
+            "Test IDs should be unique.");
     }
 
+    [TestMethod]
     public async Task TestIdUniqueness_TestDataSourceGenericCollections_FullyQualifiedStrategy()
     {
         // Arrange
@@ -179,6 +199,8 @@ public partial class TestId : CLITestBase
             "Custom name");
 
         // We cannot assert the expected ID as it is path dependent
-        testResults.Select(x => x.TestCase.Id.ToString()).Should().OnlyHaveUniqueItems();
+        CollectionAssert.AllItemsAreUnique(
+            testResults.Select(x => x.TestCase.Id.ToString()).ToList(),
+            "Test IDs should be unique.");
     }
 }
