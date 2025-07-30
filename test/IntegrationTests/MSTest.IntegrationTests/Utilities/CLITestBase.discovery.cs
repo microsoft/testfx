@@ -5,7 +5,7 @@ using System.Collections.Immutable;
 
 using DiscoveryAndExecutionTests.Utilities;
 
-using FluentAssertions;
+using AwesomeAssertions;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
