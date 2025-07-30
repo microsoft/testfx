@@ -1170,7 +1170,7 @@ public partial class AssertTests : TestContainer
         Exception ex = VerifyThrows(() => Assert.AreEqual("aa\ta", "aa a"));
         ex.Message.Should().Be("""
             Assert.AreEqual failed. String lengths are both 4 but differ at index 2.
-            Expected: "aa\\ta"
+            Expected: "aa\ta"
             But was:  "aa a"
             -------------^
             """);
@@ -1184,9 +1184,9 @@ public partial class AssertTests : TestContainer
         Exception ex = VerifyThrows(() => Assert.AreEqual(expected, actual));
         ex.Message.Should().Be("""
             Assert.AreEqual failed. String lengths are both 201 but differ at index 100.
-            Expected: "...aaabcccccccccccccccc"
-            But was:  "...aaadcccccccccccccccc"
-            ----------^
+            Expected: "...aaaaaaaaaaaaaaabcccc..."
+            But was:  "...aaaaaaaaaaaaaaadcccc..."
+            -----------------------------^
             """);
     }
 
@@ -1230,7 +1230,7 @@ public partial class AssertTests : TestContainer
             Assert.AreEqual failed. Expected string length 3 but was 4.
             Expected: "aaa"
             But was:  "aaab"
-            -------------^
+            --------------^
             """);
     }
 }
