@@ -35,6 +35,19 @@ public sealed class AssertThrowsShouldContainSingleStatementAnalyzerTests
                         Console.WriteLine("Second");
                     })|];
 
+                    // Multiple statements in Assert.Throws, wrapped in extra block syntax - should be flagged
+                    [|Assert.Throws<Exception>(() =>
+                    {
+                        {
+                            {
+                                Console.WriteLine("First");
+                            }
+                            {
+                                Console.WriteLine("Second");
+                            }
+                        }
+                    })|];
+
                     // Multiple statements in Assert.ThrowsExactly - should be flagged
                     [|Assert.ThrowsExactly<Exception>(() =>
                     {

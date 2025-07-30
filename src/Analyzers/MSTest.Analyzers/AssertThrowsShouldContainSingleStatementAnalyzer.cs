@@ -85,29 +85,38 @@ public sealed class AssertThrowsShouldContainSingleStatementAnalyzer : Diagnosti
             return;
         }
 
-        // Count meaningful statements (excluding implicit return statements and empty statements)
-        int statementCount = 0;
-        foreach (IOperation statement in blockOperation.Operations)
+        // Flag if there are multiple meaningful statements
+        if (CountStatements(blockOperation) > 1)
         {
-            // Skip implicit return statements (they don't represent user code)
-            if (statement is IReturnOperation { IsImplicit: true })
+            context.ReportDiagnostic(invocationOperation.CreateDiagnostic(Rule));
+        }
+    }
+
+    private static int CountStatements(IBlockOperation blockOperation)
+    {
+        int statementCount = 0;
+        foreach (IOperation operation in blockOperation.Operations)
+        {
+            // Skip implicit return/labeled operations.
+            // Implicit returns don't represent user code.
+            // Implicit labeled operations seem to be created for lambdas only under VB. But we don't do a language check.
+            // TODO: Should we bail-out for any implicit operation?
+            if (operation is IReturnOperation or ILabeledOperation && operation.IsImplicit)
             {
                 continue;
             }
 
             // Skip empty statements
-            if (statement is IEmptyOperation)
+            if (operation is IEmptyOperation)
             {
                 continue;
             }
 
-            statementCount++;
+            // If we have a nested block operation, we add the count of the statements within it. Otherwise,
+            // we increment by one.
+            statementCount += operation is IBlockOperation nestedBlock ? CountStatements(nestedBlock) : 1;
         }
 
-        // Flag if there are multiple meaningful statements
-        if (statementCount > 1)
-        {
-            context.ReportDiagnostic(invocationOperation.CreateDiagnostic(Rule));
-        }
+        return statementCount;
     }
 }
