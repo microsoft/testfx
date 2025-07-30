@@ -479,32 +479,32 @@ The type declaring these methods should also respect the following rules:
 -The class shouldn't be 'static'
 -The class should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</source>
-        <target state="new">Methods marked with '[GlobalTestInitialize]' or '[GlobalTestCleanup]' should follow the following layout to be valid:
--it can't be declared on a generic class
--it should be 'public'
--it should be 'static'
--it should not be 'async void'
--it should not be a special method (finalizer, operator...).
--it should not be generic
--it should take one parameter of type 'TestContext'
--return type should be 'void', 'Task' or 'ValueTask'
+        <target state="translated">'[GlobalTestInitialize]' 또는 '[GlobalTestCleanup]'으로 표시된 메서드는 다음 레이아웃을 따라야 유효합니다.
+- 제네릭 클래스에서 선언할 수 없습니다.
+- 'public'이어야 합니다. 
+- 'static'이어야 합니다.
+- 'async void'가 아니어야 합니다.
+- 특수 메서드(종료자, 연산자...)가 아니어야 합니다.
+- 제네릭이 아니어야 합니다.
+- 'TestContext' 형식의 매개 변수를 하나 사용해야 합니다.
+- 반환 형식은 'void', 'Task' 또는 'ValueTask'여야 합니다.
 
-The type declaring these methods should also respect the following rules:
--The type should be a class
--The class should be 'public'
--The class shouldn't be 'static'
--The class should be marked with '[TestClass]' (or a derived attribute)
--the class should not be generic.</target>
+이러한 메서드를 선언하는 형식은 다음 규칙도 준수해야 합니다.
+- 형식은 클래스여야 합니다.
+-클래스는 'public'이어야 합니다.
+- 클래스는 'static'이 되어서는 안 됩니다.
+- 클래스는 '[TestClass]'(또는 파생 특성)로 표시되어야 합니다.
+- 클래스는 제네릭이 아니어야 합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="GlobalTestFixtureShouldBeValidMessageFormat">
         <source>Global test fixture method '{0}' signature is invalid</source>
-        <target state="new">Global test fixture method '{0}' signature is invalid</target>
+        <target state="translated">전역 테스트 fixture 메서드 '{0}' 시그니처가 잘못되었습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="GlobalTestFixtureShouldBeValidTitle">
         <source>GlobalTestInitialize and GlobalTestCleanup methods should have valid layout</source>
-        <target state="new">GlobalTestInitialize and GlobalTestCleanup methods should have valid layout</target>
+        <target state="translated">GlobalTestInitialize 및 GlobalTestCleanup 메서드에는 유효한 레이아웃이 있어야 합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="PreferAssertFailOverAlwaysFalseConditionsMessageFormat">

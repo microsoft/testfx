@@ -47,7 +47,7 @@ public class TrxTests
         XDocument xml = memoryStream.TrxContent;
         AssertTrxOutcome(xml, "Completed");
         string trxContent = xml.ToString();
-        Assert.IsFalse(trxContent.Contains(@"className="));
+        Assert.DoesNotContain(@"className=", trxContent);
     }
 
     [TestMethod]

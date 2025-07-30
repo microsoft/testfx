@@ -40,8 +40,7 @@ public sealed class TestHost
     public async Task<TestHostResult> ExecuteAsync(
         string? command = null,
         Dictionary<string, string?>? environmentVariables = null,
-        bool disableTelemetry = true,
-        int timeoutSeconds = 10000)
+        bool disableTelemetry = true)
     {
         await s_maxOutstandingExecutions_semaphore.WaitAsync();
         try
@@ -93,8 +92,7 @@ public sealed class TestHost
                         $"{FullName} --no-ansi --no-progress {finalArguments}",
                         environmentVariables: environmentVariables,
                         workingDirectory: null,
-                        cleanDefaultEnvironmentVariableIfCustomAreProvided: true,
-                        timeoutInSeconds: timeoutSeconds);
+                        cleanDefaultEnvironmentVariableIfCustomAreProvided: true);
                     string fullCommand = command is not null ? $"{FullName} {command}" : FullName;
                     return new TestHostResult(fullCommand, exitCode, commandLine.StandardOutput, commandLine.StandardOutputLines, commandLine.ErrorOutput, commandLine.ErrorOutputLines);
                 });
