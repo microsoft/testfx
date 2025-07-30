@@ -16,7 +16,7 @@ public class SuiteLifeCycleTests : CLITestBase
 
     [TestMethod]
     [DataRow("net462")]
-    [DataRow("netcoreapp3.1")]
+    [DataRow("net6.0")]
     public void ValidateTestRunLifecycle(string targetFramework)
     {
         InvokeVsTestForExecution(
