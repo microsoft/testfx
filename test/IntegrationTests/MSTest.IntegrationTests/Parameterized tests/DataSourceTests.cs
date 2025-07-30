@@ -5,13 +5,15 @@ using Microsoft.MSTestV2.CLIAutomation;
 
 namespace MSTest.IntegrationTests;
 
+[TestClass]
 public class DataSourceTests : CLITestBase
 {
     private const string TestAssetName = "DataSourceTestProject";
 
-    // TODO @haplois | @evangelink: This test fails under CI - will be fixed in a future PR (Marked as private to ignore the test)
 #pragma warning disable IDE0051 // Remove unused private members
-    private async Task ExecuteCsvTestDataSourceTests()
+    [TestMethod]
+    [Ignore("This test is ignored because it fails under CI. It will be fixed in a future PR.")]
+    public async Task ExecuteCsvTestDataSourceTests()
 #pragma warning restore IDE0051 // Remove unused private members
     {
         // Arrange
