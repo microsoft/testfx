@@ -466,7 +466,7 @@ Error: {1}</value>
     <value>Method {0}.{1} has wrong signature. The method must be non-static, public, does not return a value and should not take any parameter. Additionally, if you are using async-await in method then return-type must be 'Task' or 'ValueTask'.</value>
   </data>
   <data name="UTA_TestMethodThrows" xml:space="preserve">
-    <value>Test method {0}.{1} threw exception: 
+    <value>Test method {0}.{1} threw exception:
 {2}</value>
   </data>
   <data name="UTA_TypeLoadError" xml:space="preserve">

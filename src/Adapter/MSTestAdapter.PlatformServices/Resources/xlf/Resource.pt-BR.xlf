@@ -561,7 +561,7 @@ Erro: {1}</target>
         <note />
       </trans-unit>
       <trans-unit id="UTA_TestMethodThrows">
-        <source>Test method {0}.{1} threw exception: 
+        <source>Test method {0}.{1} threw exception:
 {2}</source>
         <target state="translated">O método de teste {0}.{1} lançou a exceção: 
 {2}</target>
