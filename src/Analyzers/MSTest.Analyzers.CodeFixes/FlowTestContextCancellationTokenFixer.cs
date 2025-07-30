@@ -113,122 +113,22 @@ public sealed class FlowTestContextCancellationTokenFixer : CodeFixProvider
         editor.ReplaceNode(invocationExpression, newInvocation);
         return editor.GetChangedDocument();
     }
-
-    private static MethodDeclarationSyntax AddTestContextParameterToMethod(MethodDeclarationSyntax method)
-    {
-        // Create TestContext parameter
-        var testContextParameter = SyntaxFactory.Parameter(SyntaxFactory.Identifier("testContext"))
-            .WithType(SyntaxFactory.IdentifierName("TestContext"));
-
-        // Add the parameter to the method
-        var updatedParameterList = method.ParameterList.Parameters.Count == 0
-            ? SyntaxFactory.ParameterList(SyntaxFactory.SingletonSeparatedList(testContextParameter))
-            : method.ParameterList.AddParameters(testContextParameter);
-
-        return method.WithParameterList(method.ParameterList.WithParameters(updatedParameterList));
-    }
 }
 
 /// <summary>
 /// Custom FixAllProvider for <see cref="FlowTestContextCancellationTokenFixer"/> that can add TestContext property when needed.
+/// This ensures that when multiple fixes are applied to the same class, the TestContext property is added only once.
 /// </summary>
-internal sealed class FlowTestContextCancellationTokenFixAllProvider : FixAllProvider
+internal sealed class FlowTestContextCancellationTokenFixAllProvider : DocumentBasedFixAllProvider
 {
     public static readonly FlowTestContextCancellationTokenFixAllProvider Instance = new();
 
     private FlowTestContextCancellationTokenFixAllProvider() { }
 
-    public override async Task<CodeAction?> GetFixAsync(FixAllContext fixAllContext)
+    protected override async Task<Document?> FixAllAsync(FixAllContext fixAllContext, Document document, ImmutableArray<Diagnostic> diagnostics)
     {
-        var documentsAndDiagnosticsToFixMap = new Dictionary<Document, ImmutableArray<Diagnostic>>();
-        var progressTracker = fixAllContext.ProgressTracker;
-        progressTracker.Report(CodeFixResources.PassCancellationTokenFix);
-
-        // Collect diagnostics by document
-        switch (fixAllContext.Scope)
-        {
-            case FixAllScope.Document:
-                {
-                    ImmutableArray<Diagnostic> diagnostics = await fixAllContext.GetDocumentDiagnosticsAsync(fixAllContext.Document).ConfigureAwait(false);
-                    documentsAndDiagnosticsToFixMap.Add(fixAllContext.Document, diagnostics);
-                    break;
-                }
-
-            case FixAllScope.Project:
-                {
-                    Project project = fixAllContext.Project;
-                    ImmutableArray<Document> documentsToFix = project.Documents.ToImmutableArray();
-                    var tasks = documentsToFix.Select(async document =>
-                    {
-                        ImmutableArray<Diagnostic> diagnostics = await fixAllContext.GetDocumentDiagnosticsAsync(document).ConfigureAwait(false);
-                        return (document, diagnostics);
-                    });
-
-                    foreach ((Document document, ImmutableArray<Diagnostic> diagnostics) in await Task.WhenAll(tasks).ConfigureAwait(false))
-                    {
-                        if (diagnostics.Length > 0)
-                        {
-                            documentsAndDiagnosticsToFixMap.Add(document, diagnostics);
-                        }
-                    }
-
-                    break;
-                }
-
-            case FixAllScope.Solution:
-                {
-                    Solution solution = fixAllContext.Solution;
-                    var documentsToFix = solution.Projects.SelectMany(project => project.Documents).ToImmutableArray();
-                    var tasks = documentsToFix.Select(async document =>
-                    {
-                        ImmutableArray<Diagnostic> diagnostics = await fixAllContext.GetDocumentDiagnosticsAsync(document).ConfigureAwait(false);
-                        return (document, diagnostics);
-                    });
-
-                    foreach ((Document document, ImmutableArray<Diagnostic> diagnostics) in await Task.WhenAll(tasks).ConfigureAwait(false))
-                    {
-                        if (diagnostics.Length > 0)
-                        {
-                            documentsAndDiagnosticsToFixMap.Add(document, diagnostics);
-                        }
-                    }
-
-                    break;
-                }
-
-            default:
-                return null;
-        }
-
-        // Create code action to fix all documents
-        return CodeAction.Create(
-            CodeFixResources.PassCancellationTokenFix,
-            ct => FixAllAsync(documentsAndDiagnosticsToFixMap, ct),
-            nameof(FlowTestContextCancellationTokenFixAllProvider));
-    }
-
-    private static async Task<Solution> FixAllAsync(
-        Dictionary<Document, ImmutableArray<Diagnostic>> documentsAndDiagnosticsToFixMap,
-        CancellationToken cancellationToken)
-    {
-        Solution solution = documentsAndDiagnosticsToFixMap.First().Key.Project.Solution;
-
-        foreach ((Document document, ImmutableArray<Diagnostic> diagnostics) in documentsAndDiagnosticsToFixMap)
-        {
-            Document updatedDocument = await FixDocumentAsync(document, diagnostics, cancellationToken).ConfigureAwait(false);
-            solution = solution.WithDocumentSyntaxRoot(document.Id, await updatedDocument.GetSyntaxRootAsync(cancellationToken).ConfigureAwait(false));
-        }
-
-        return solution;
-    }
-
-    private static async Task<Document> FixDocumentAsync(
-        Document document,
-        ImmutableArray<Diagnostic> diagnostics,
-        CancellationToken cancellationToken)
-    {
-        SyntaxNode root = await document.GetRequiredSyntaxRootAsync(cancellationToken).ConfigureAwait(false);
-        DocumentEditor editor = await DocumentEditor.CreateAsync(document, cancellationToken).ConfigureAwait(false);
+        SyntaxNode root = await document.GetRequiredSyntaxRootAsync(fixAllContext.CancellationToken).ConfigureAwait(false);
+        DocumentEditor editor = await DocumentEditor.CreateAsync(document, fixAllContext.CancellationToken).ConfigureAwait(false);
 
         // Group diagnostics by containing class
         var diagnosticsByClass = new Dictionary<ClassDeclarationSyntax, List<(InvocationExpressionSyntax invocation, string? testContextMemberName)>>();
@@ -354,5 +254,19 @@ internal sealed class FlowTestContextCancellationTokenFixAllProvider : FixAllPro
                 ])));
 
         return classDeclaration.AddMembers(testContextProperty);
+    }
+
+    private static MethodDeclarationSyntax AddTestContextParameterToMethod(MethodDeclarationSyntax method)
+    {
+        // Create TestContext parameter
+        var testContextParameter = SyntaxFactory.Parameter(SyntaxFactory.Identifier("testContext"))
+            .WithType(SyntaxFactory.IdentifierName("TestContext"));
+
+        // Add the parameter to the method
+        var updatedParameterList = method.ParameterList.Parameters.Count == 0
+            ? SyntaxFactory.ParameterList(SyntaxFactory.SingletonSeparatedList(testContextParameter))
+            : method.ParameterList.AddParameters(testContextParameter);
+
+        return method.WithParameterList(method.ParameterList.WithParameters(updatedParameterList));
     }
 }
