@@ -19,7 +19,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "18.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class Resource {
@@ -1039,7 +1039,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Test method {0}.{1} threw exception: 
+        ///   Looks up a localized string similar to Test method {0}.{1} threw exception:
         ///{2}.
         /// </summary>
         internal static string UTA_TestMethodThrows {
@@ -1085,7 +1085,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to &apos;MSTest.TestAdapter&apos; and &apos;MSTest.TestFramework&apos; must have the same version. Found &apos;MSTest.TestAdapter&apos; version &apos;{0}&apos; and &apos;MSTest.TestFramework&apos; version &apos;{1}&apos;..
+        ///   Looks up a localized string similar to &apos;MSTest.TestAdapter&apos; and &apos;MSTest.TestFramework&apos; must have the same version. Found &apos;MSTest.TestAdapter&apos; version &apos;{0}&apos; and &apos;MSTest.TestFramework&apos; version &apos;{1}&apos;. Please make sure that the versions of  &apos;MSTest.TestAdapter&apos; and &apos;MSTest.TestFramework&apos; NuGet packages have the same version..
         /// </summary>
         internal static string VersionMismatchBetweenAdapterAndFramework {
             get {
