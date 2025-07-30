@@ -1,21 +1,19 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using FluentAssertions;
-
 using Microsoft.MSTestV2.CLIAutomation;
 
 namespace MSTest.VstestConsoleWrapper.IntegrationTests;
 
+[TestClass]
 public class TimeoutTests : CLITestBase
 {
     private const string TestAssetName = "TimeoutTestProject";
 
-    public void ValidateTimeoutTests_net462() => ValidateTimeoutTests("net462");
-
-    public void ValidateTimeoutTests_netcoreapp31() => ValidateTimeoutTests("net8.0");
-
-    private void ValidateTimeoutTests(string targetFramework)
+    [TestMethod]
+    [DataRow("net462")]
+    [DataRow("net8.0")]
+    public void ValidateTimeoutTests(string targetFramework)
     {
         InvokeVsTestForExecution([TestAssetName], testCaseFilter: "TimeoutTest|RegularTest", targetFramework: targetFramework);
 
@@ -42,6 +40,6 @@ public class TimeoutTests : CLITestBase
             GetAssetFullPath(TestAssetName, targetFramework: targetFramework),
             "..",
             "TimeoutTestOutput.txt");
-        File.Exists(timeoutFile).Should().BeTrue();
+        Assert.IsTrue(File.Exists(timeoutFile), $"Timeout output file not found: {timeoutFile}");
     }
 }
