@@ -179,7 +179,7 @@ namespace MSTestSdkTest
               "--crashdump");
 
             yield return new(buildConfig.MultiTfm, buildConfig.BuildConfiguration,
-              "<EnableMicrosoftTestingExtensionsAzDoReport>true</EnableMicrosoftTestingExtensionsAzDoReport>",
+              "<EnableMicrosoftTestingExtensionsAzureDevOpsReport>true</EnableMicrosoftTestingExtensionsAzureDevOpsReport>",
               "--report-azdo",
               "--crashdump");
         }
