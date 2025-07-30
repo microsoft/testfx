@@ -100,6 +100,54 @@ public class SomeClass
     }
 
     [TestMethod]
+    public async Task GlobalTestMethodsWithoutAsyncSuffix_DiagnosticIsSuppressed()
+    {
+        string code = @"
+using System.Threading.Tasks;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+[TestClass]
+public static class SomeClass
+{
+    [GlobalTestInitialize]
+    public static async Task {|#0:GlobalTestInitialize|}(TestContext context) { }
+
+    [GlobalTestCleanup]
+    public static async Task {|#1:GlobalTestCleanup|}(TestContext context) { }
+}
+";
+
+        // Verify issues Are reported
+        await new VerifyCS.Test
+        {
+            TestState = { Sources = { code } },
+            ExpectedDiagnostics =
+            {
+                VerifyCS.Diagnostic(WarnForMissingAsyncSuffix.Rule)
+                    .WithLocation(0)
+                    .WithIsSuppressed(false),
+                VerifyCS.Diagnostic(WarnForMissingAsyncSuffix.Rule)
+                    .WithLocation(1)
+                    .WithIsSuppressed(false),
+            },
+        }.RunAsync();
+
+        await new TestWithSuppressor
+        {
+            TestState = { Sources = { code } },
+            ExpectedDiagnostics =
+            {
+                VerifyCS.Diagnostic(WarnForMissingAsyncSuffix.Rule)
+                    .WithLocation(0)
+                    .WithIsSuppressed(true),
+                VerifyCS.Diagnostic(WarnForMissingAsyncSuffix.Rule)
+                    .WithLocation(1)
+                    .WithIsSuppressed(true),
+            },
+        }.RunAsync();
+    }
+
+    [TestMethod]
     public async Task AsyncTestMethodWithSuffix_NoDiagnostic()
     {
         string code = """
@@ -126,6 +174,12 @@ public class SomeClass
 
                 [TestCleanup]
                 public async Task TestCleanupAsync() { }
+
+                [GlobalTestInitialize]
+                public static async Task GlobalTestInitializeAsync(TestContext context) { }
+
+                [GlobalTestCleanup]
+                public static async Task GlobalTestCleanupAsync(TestContext context) { }
             }
             """;
 

@@ -356,4 +356,15 @@ Actual: {2}</value>
     <value>'{0}' expression: '{1}'.</value>
     <comment>Example: "'value' expression: 'new object()'", where 'value' is the parameter name of an assertion method, and 'new object()' is the expression the user passed to the assert method.</comment>
   </data>
+  <data name="AssertThatFailedFormat" xml:space="preserve">
+    <value>Assert.That({0}) failed.</value>
+    <comment>{0} is the user code expression</comment>
+  </data>
+  <data name="AssertThatMessageFormat" xml:space="preserve">
+    <value>Message: {0}</value>
+    <comment>{0} user provided message</comment>
+  </data>
+  <data name="AssertThatDetailsPrefix" xml:space="preserve">
+    <value>Details:</value>
+  </data>
 </root>

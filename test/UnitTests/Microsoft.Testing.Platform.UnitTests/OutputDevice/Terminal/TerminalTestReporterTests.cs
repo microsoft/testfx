@@ -35,7 +35,7 @@ public sealed class TerminalTestReporterTests
         Assert.Contains("    at Microsoft.Testing.Platform.UnitTests.TerminalTestReporterTests.AppendStackFrameFormatsStackTraceLineCorrectly()", terminal.Output);
 #endif
         // Line number without the respective file
-        Assert.IsFalse(terminal.Output.Contains(" :0"));
+        Assert.DoesNotContain(" :0", terminal.Output);
     }
 
     // Code with line when we have symbols
