@@ -1420,5 +1420,32 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("AssertThrowsShouldContainSingleStatementTitle", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Prefer using 'DynamicDataSourceType.AutoDetect' over explicit 'Property' or 'Method' values. AutoDetect is the default and recommended approach as it automatically determines the source type..
+        /// </summary>
+        internal static string PreferDynamicDataSourceTypeAutoDetectDescription {
+            get {
+                return ResourceManager.GetString("PreferDynamicDataSourceTypeAutoDetectDescription", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Remove 'DynamicDataSourceType.{0}' parameter to use the default 'AutoDetect' behavior.
+        /// </summary>
+        internal static string PreferDynamicDataSourceTypeAutoDetectMessageFormat {
+            get {
+                return ResourceManager.GetString("PreferDynamicDataSourceTypeAutoDetectMessageFormat", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Prefer 'DynamicDataSourceType.AutoDetect'.
+        /// </summary>
+        internal static string PreferDynamicDataSourceTypeAutoDetectTitle {
+            get {
+                return ResourceManager.GetString("PreferDynamicDataSourceTypeAutoDetectTitle", resourceCulture);
+            }
+        }
     }
 }
