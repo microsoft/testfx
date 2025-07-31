@@ -169,7 +169,8 @@ Inside Visual Studio, all projects can be built normally. All but acceptance tes
 
 ## Visual Studio version requirement
 
-NB: If working with Visual Studio, this project repository contains a Visual Studio solution file of extension type .slnx, which is the new XML-based solution file format in Visual Studio (i.e. TestFx.slnx). This solution file can only be opened or loaded successfully using Visual Studio 2022 17.13 or higher.
+
+If working with Visual Studio, this repository uses the new, modern, XML-based slnx solution file format (`TestFx.slnx`). This solution file can only be opened or loaded successfully using Visual Studio 2022 17.13 or higher.
 
 If you attempt to build using the `Build.cmd` script in the repository root or run `build.cmd -configuration release` in the terminal with a Visual Studio version other than Visual Studio 2022 17.13 or higher installed on your machine, you will encounter a build error as shown below.
 
