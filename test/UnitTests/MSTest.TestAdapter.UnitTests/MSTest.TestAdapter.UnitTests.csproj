@@ -15,7 +15,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="..\MSTestAdapter.PlatformServices.UnitTests\TestableImplementations\TestablePlatformServiceProvider.cs" Link="TestablePlatformServiceProvider.cs" />
+    <Compile Include="..\MSTest.PlatformServices.UnitTests\TestableImplementations\TestablePlatformServiceProvider.cs" Link="TestablePlatformServiceProvider.cs" />
   </ItemGroup>
 
   <ItemGroup>

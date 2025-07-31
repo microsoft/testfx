@@ -10,7 +10,7 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 
 using Moq;
 
-using MSTest.TestAdapter.UnitTests.TestableImplementations;
+using MSTest.PlatformServices.UnitTests;
 
 using TestFramework.ForTestingMSTest;
 
