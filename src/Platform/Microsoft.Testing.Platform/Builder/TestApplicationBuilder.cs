@@ -28,6 +28,7 @@ internal sealed class TestApplicationBuilder : ITestApplicationBuilder
     private readonly ApplicationLoggingState _loggingState;
     private readonly TestApplicationOptions _testApplicationOptions;
     private readonly IUnhandledExceptionsHandler _unhandledExceptionsHandler;
+    private readonly string[] _originalCommandLineArguments;
     private readonly TestHostBuilder _testHostBuilder;
     private IHost? _host;
     private Func<ITestFrameworkCapabilities, IServiceProvider, ITestFramework>? _testFrameworkFactory;
@@ -37,13 +38,15 @@ internal sealed class TestApplicationBuilder : ITestApplicationBuilder
         ApplicationLoggingState loggingState,
         DateTimeOffset createBuilderStart,
         TestApplicationOptions testApplicationOptions,
-        IUnhandledExceptionsHandler unhandledExceptionsHandler)
+        IUnhandledExceptionsHandler unhandledExceptionsHandler,
+        string[] originalCommandLineArguments)
     {
         _testHostBuilder = new TestHostBuilder(new SystemFileSystem(), new SystemRuntimeFeature(), new SystemEnvironment(), new SystemProcessHandler(), new CurrentTestApplicationModuleInfo(new SystemEnvironment(), new SystemProcessHandler()));
         _createBuilderStart = createBuilderStart;
         _loggingState = loggingState;
         _testApplicationOptions = testApplicationOptions;
         _unhandledExceptionsHandler = unhandledExceptionsHandler;
+        _originalCommandLineArguments = originalCommandLineArguments;
     }
 
     public ITestHostManager TestHost => _testHostBuilder.TestHost;
@@ -109,7 +112,7 @@ internal sealed class TestApplicationBuilder : ITestApplicationBuilder
             throw new InvalidOperationException(PlatformResources.TestApplicationBuilderApplicationAlreadyRegistered);
         }
 
-        _host = await _testHostBuilder.BuildAsync(_loggingState, _testApplicationOptions, _unhandledExceptionsHandler, _createBuilderStart).ConfigureAwait(false);
+        _host = await _testHostBuilder.BuildAsync(_loggingState, _testApplicationOptions, _unhandledExceptionsHandler, _createBuilderStart, _originalCommandLineArguments).ConfigureAwait(false);
 
         return new TestApplication(_host);
     }
