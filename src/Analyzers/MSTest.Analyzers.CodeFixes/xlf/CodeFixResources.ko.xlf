@@ -52,6 +52,11 @@
         <target state="translated">메서드 호출에 'TestContext.CancellationTokenSource.Token' 인수 전달</target>
         <note />
       </trans-unit>
+      <trans-unit id="RemoveDynamicDataSourceTypeFix">
+        <source>Remove 'DynamicDataSourceType' parameter to use default 'AutoDetect'</source>
+        <target state="new">Remove 'DynamicDataSourceType' parameter to use default 'AutoDetect'</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ReplaceDataTestMethodWithTestMethodTitle">
         <source>Replace 'DataTestMethod' with 'TestMethod'</source>
         <target state="translated">'DataTestMethod'를 'TestMethod'로 바꾸기</target>

@@ -147,6 +147,16 @@ Le type doit être une classe
         <target state="translated">Éviter « [ExpectedException] »</target>
         <note />
       </trans-unit>
+      <trans-unit id="AvoidExplicitDynamicDataSourceTypeMessageFormat">
+        <source>Remove the 'DynamicDataSourceType' argument to use the default auto detect behavior</source>
+        <target state="new">Remove the 'DynamicDataSourceType' argument to use the default auto detect behavior</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidExplicitDynamicDataSourceTypeTitle">
+        <source>Avoid passing an explicit 'DynamicDataSourceType' and use the default auto detect behavior</source>
+        <target state="new">Avoid passing an explicit 'DynamicDataSourceType' and use the default auto detect behavior</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AvoidUsingAssertsInAsyncVoidContextDescription">
         <source>Do not assert inside 'async void' methods, local functions, or lambdas. Exceptions that are thrown in this context will be unhandled exceptions. When using VSTest under .NET Framework, they will be silently swallowed. When using Microsoft.Testing.Platform or VSTest under modern .NET, they may crash the process.</source>
         <target state="translated">N’effectuez pas d’assertion dans les méthodes 'async void', les fonctions locales ou les expressions lambda. Les exceptions levées dans ce contexte seront des exceptions non gérées. Lors de l’utilisation de VSTest sous .NET Framework, ils sont silencieusement coupés. Quand vous utilisez Microsoft.Testing.Platform ou VSTest sous .NET moderne, ils peuvent bloquer le processus.</target>
