@@ -74,7 +74,7 @@ public sealed class FlowTestContextCancellationTokenAnalyzer : DiagnosticAnalyze
         IMethodSymbol method = invocationOperation.TargetMethod;
 
         // Check if we're in a context where a TestContext is already available or could be made available.
-        if (!HasOrCouldHaveTestContextInScope(context.ContainingSymbol, testContextSymbol, classCleanupAttributeSymbol, assemblyCleanupAttributeSymbol, testMethodAttributeSymbol, out string? testContextMemberNameInScope))
+        if (!HasOrCouldHaveTestContextInScope(context.ContainingSymbol, testContextSymbol, classCleanupAttributeSymbol, assemblyCleanupAttributeSymbol, testMethodAttributeSymbol, out string? testContextMemberNameInScope, out TestContextState? testContextState))
         {
             return;
         }
@@ -93,13 +93,7 @@ public sealed class FlowTestContextCancellationTokenAnalyzer : DiagnosticAnalyze
             invocationOperation.Arguments.FirstOrDefault(arg => SymbolEqualityComparer.Default.Equals(arg.Parameter, cancellationTokenParameter))?.ArgumentKind != ArgumentKind.Explicit)
         {
             // The called method has an optional CancellationToken parameter, but it was not explicitly provided.
-            ImmutableDictionary<string, string?> properties = ImmutableDictionary<string, string?>.Empty;
-            if (testContextMemberNameInScope is not null)
-            {
-                properties = properties.Add(TestContextMemberNamePropertyKey, testContextMemberNameInScope);
-            }
-
-            context.ReportDiagnostic(invocationOperation.Syntax.CreateDiagnostic(FlowTestContextCancellationTokenRule, properties: GetPropertiesBag(testContextMemberNameInScope)));
+            context.ReportDiagnostic(invocationOperation.Syntax.CreateDiagnostic(FlowTestContextCancellationTokenRule, properties: GetPropertiesBag(testContextMemberNameInScope, testContextState)));
             return;
         }
 
@@ -108,16 +102,15 @@ public sealed class FlowTestContextCancellationTokenAnalyzer : DiagnosticAnalyze
         if (cancellationTokenParameter is null &&
             HasOverloadWithCancellationToken(method, cancellationTokenSymbol))
         {
-            context.ReportDiagnostic(invocationOperation.Syntax.CreateDiagnostic(FlowTestContextCancellationTokenRule, properties: GetPropertiesBag(testContextMemberNameInScope)));
+            context.ReportDiagnostic(invocationOperation.Syntax.CreateDiagnostic(FlowTestContextCancellationTokenRule, properties: GetPropertiesBag(testContextMemberNameInScope, testContextState)));
         }
 
-        static ImmutableDictionary<string, string?> GetPropertiesBag(string? testContextMemberNameInScope)
+        static ImmutableDictionary<string, string?> GetPropertiesBag(string? testContextMemberNameInScope, TestContextState? testContextState)
         {
             ImmutableDictionary<string, string?> properties = ImmutableDictionary<string, string?>.Empty;
-            if (testContextMemberNameInScope is not null)
-            {
-                properties = properties.Add(TestContextMemberNamePropertyKey, testContextMemberNameInScope);
-            }
+            properties = testContextMemberNameInScope is not null
+                ? properties.Add(TestContextMemberNamePropertyKey, testContextMemberNameInScope)
+                : properties.Add(nameof(TestContextState), testContextState.ToString());
 
             return properties;
         }
@@ -151,9 +144,11 @@ public sealed class FlowTestContextCancellationTokenAnalyzer : DiagnosticAnalyze
         INamedTypeSymbol classCleanupAttributeSymbol,
         INamedTypeSymbol assemblyCleanupAttributeSymbol,
         INamedTypeSymbol testMethodAttributeSymbol,
-        out string? testContextMemberNameInScope)
+        out string? testContextMemberNameInScope,
+        [NotNullWhen(true)] out TestContextState? testContextState)
     {
         testContextMemberNameInScope = null;
+        testContextState = null;
 
         if (containingSymbol is not IMethodSymbol method)
         {
@@ -164,6 +159,7 @@ public sealed class FlowTestContextCancellationTokenAnalyzer : DiagnosticAnalyze
         if (method.Parameters.FirstOrDefault(p => testContextSymbol.Equals(p.Type, SymbolEqualityComparer.Default)) is { } testContextParameter)
         {
             testContextMemberNameInScope = testContextParameter.Name;
+            testContextState = TestContextState.InScope;
             return true;
         }
 
@@ -178,6 +174,7 @@ public sealed class FlowTestContextCancellationTokenAnalyzer : DiagnosticAnalyze
             testContextMemberNameInScope = testContextMember.Name.StartsWith('<') && testContextMember.Name.EndsWith(">P", StringComparison.Ordinal)
                 ? testContextMember.Name.Substring(1, testContextMember.Name.Length - 3)
                 : testContextMember.Name;
+            testContextState = TestContextState.InScope;
             return true;
         }
 
@@ -191,11 +188,13 @@ public sealed class FlowTestContextCancellationTokenAnalyzer : DiagnosticAnalyze
                 (classCleanupAttributeSymbol.Equals(attribute.AttributeClass, SymbolEqualityComparer.Default) ||
                 assemblyCleanupAttributeSymbol.Equals(attribute.AttributeClass, SymbolEqualityComparer.Default)))
             {
+                testContextState = TestContextState.CouldBeInScopeAsParameter;
                 return true;
             }
 
             if (attribute.AttributeClass?.Inherits(testMethodAttributeSymbol) == true)
             {
+                testContextState = TestContextState.CouldBeInScopeAsProperty;
                 return true;
             }
         }
@@ -227,5 +226,12 @@ public sealed class FlowTestContextCancellationTokenAnalyzer : DiagnosticAnalyze
         // Check if the last parameter is CancellationToken
         IParameterSymbol lastParam = candidateParams[candidateParams.Length - 1];
         return SymbolEqualityComparer.Default.Equals(lastParam.Type, cancellationTokenSymbol);
+    }
+
+    internal enum TestContextState
+    {
+        InScope,
+        CouldBeInScopeAsParameter,
+        CouldBeInScopeAsProperty,
     }
 }

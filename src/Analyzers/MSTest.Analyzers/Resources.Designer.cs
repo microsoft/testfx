@@ -592,6 +592,15 @@ namespace MSTest.Analyzers {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to &apos;[DynamicData]&apos; member &apos;{0}.{1}&apos; is a field so you should use &apos;DynamicDataSourceType.AutoDetect&apos; or &apos;DynamicDataSourceType.Field&apos; (auto detect is the default when not specified explicitly, and is recommended).
+        /// </summary>
+        internal static string DynamicDataShouldBeValidMessageFormat_SourceTypeField {
+            get {
+                return ResourceManager.GetString("DynamicDataShouldBeValidMessageFormat_SourceTypeField", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to &apos;[DynamicData]&apos; member &apos;{0}.{1}&apos; is not a property nor a method. Only properties and methods are supported..
         /// </summary>
         internal static string DynamicDataShouldBeValidMessageFormat_SourceTypeNotPropertyOrMethod {
@@ -600,6 +609,15 @@ namespace MSTest.Analyzers {
             }
         }
 
+        /// <summary>
+        ///   Looks up a localized string similar to &apos;[DynamicData]&apos; member &apos;{0}.{1}&apos; is not a property, method, or field. Only properties, methods, and fields are supported..
+        /// </summary>
+        internal static string DynamicDataShouldBeValidMessageFormat_SourceTypeNotPropertyMethodOrField {
+            get {
+                return ResourceManager.GetString("DynamicDataShouldBeValidMessageFormat_SourceTypeNotPropertyMethodOrField", resourceCulture);
+            }
+        }
+        
         /// <summary>
         ///   Looks up a localized string similar to &apos;[DynamicData]&apos; member &apos;{0}.{1}&apos; is a property so you should use &apos;DynamicDataSourceType.AutoDetect&apos; or &apos;DynamicDataSourceType.Property&apos; (auto detect is the default when not specified explicitly, and is recommended).
         /// </summary>

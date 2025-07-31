@@ -8,7 +8,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting.Internal;
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 /// <summary>
-/// Enum to specify whether the data is stored as property or in method.
+/// Enum to specify whether the data is stored as property, in method, or in field.
 /// </summary>
 public enum DynamicDataSourceType
 {
@@ -26,6 +26,11 @@ public enum DynamicDataSourceType
     /// The data source type is auto-detected.
     /// </summary>
     AutoDetect = 2,
+
+    /// <summary>
+    /// Data is declared as field.
+    /// </summary>
+    Field = 3,
 }
 
 /// <summary>
@@ -43,10 +48,10 @@ public sealed class DynamicDataAttribute : Attribute, ITestDataSource, ITestData
     /// Initializes a new instance of the <see cref="DynamicDataAttribute"/> class.
     /// </summary>
     /// <param name="dynamicDataSourceName">
-    /// The name of method or property having test data.
+    /// The name of method, property, or field having test data.
     /// </param>
     /// <param name="dynamicDataSourceType">
-    /// Specifies whether the data is stored as property or in method.
+    /// Specifies whether the data is stored as property, in method, or in field.
     /// </param>
     [EditorBrowsable(EditorBrowsableState.Never)]
     public DynamicDataAttribute(string dynamicDataSourceName, DynamicDataSourceType dynamicDataSourceType)
@@ -59,7 +64,7 @@ public sealed class DynamicDataAttribute : Attribute, ITestDataSource, ITestData
     /// Initializes a new instance of the <see cref="DynamicDataAttribute"/> class.
     /// </summary>
     /// <param name="dynamicDataSourceName">
-    /// The name of method or property having test data.
+    /// The name of method, property, or field having test data.
     /// </param>
     public DynamicDataAttribute(string dynamicDataSourceName)
     {
@@ -71,7 +76,7 @@ public sealed class DynamicDataAttribute : Attribute, ITestDataSource, ITestData
     /// Initializes a new instance of the <see cref="DynamicDataAttribute"/> class.
     /// </summary>
     /// <param name="dynamicDataSourceName">
-    /// The name of method or property having test data.
+    /// The name of method, property, or field having test data.
     /// </param>
     /// <param name="dynamicDataSourceArguments">
     /// Arguments to be passed to method referred to by <paramref name="dynamicDataSourceName"/>.
@@ -88,14 +93,14 @@ public sealed class DynamicDataAttribute : Attribute, ITestDataSource, ITestData
     /// from test method's class.
     /// </summary>
     /// <param name="dynamicDataSourceName">
-    /// The name of method or property having test data.
+    /// The name of method, property, or field having test data.
     /// </param>
     /// <param name="dynamicDataDeclaringType">
-    /// The declaring type of property or method having data. Useful in cases when declaring type is present in a class different from
+    /// The declaring type of property, method, or field having data. Useful in cases when declaring type is present in a class different from
     /// test method's class. If null, declaring type defaults to test method's class type.
     /// </param>
     /// <param name="dynamicDataSourceType">
-    /// Specifies whether the data is stored as property or in method.
+    /// Specifies whether the data is stored as property, in method, or in field.
     /// </param>
     [EditorBrowsable(EditorBrowsableState.Never)]
     public DynamicDataAttribute(string dynamicDataSourceName, Type dynamicDataDeclaringType, DynamicDataSourceType dynamicDataSourceType)
@@ -106,10 +111,10 @@ public sealed class DynamicDataAttribute : Attribute, ITestDataSource, ITestData
     /// from test method's class.
     /// </summary>
     /// <param name="dynamicDataSourceName">
-    /// The name of method or property having test data.
+    /// The name of method, property, or field having test data.
     /// </param>
     /// <param name="dynamicDataDeclaringType">
-    /// The declaring type of property or method having data. Useful in cases when declaring type is present in a class different from
+    /// The declaring type of property, method, or field having data. Useful in cases when declaring type is present in a class different from
     /// test method's class. If null, declaring type defaults to test method's class type.
     /// </param>
     public DynamicDataAttribute(string dynamicDataSourceName, Type dynamicDataDeclaringType)
@@ -120,10 +125,10 @@ public sealed class DynamicDataAttribute : Attribute, ITestDataSource, ITestData
     /// from test method's class.
     /// </summary>
     /// <param name="dynamicDataSourceName">
-    /// The name of method or property having test data.
+    /// The name of method, property, or field having test data.
     /// </param>
     /// <param name="dynamicDataDeclaringType">
-    /// The declaring type of property or method having data. Useful in cases when declaring type is present in a class different from
+    /// The declaring type of property, method, or field having data. Useful in cases when declaring type is present in a class different from
     /// test method's class. If null, declaring type defaults to test method's class type.
     /// </param>
     /// <param name="dynamicDataSourceArguments">
