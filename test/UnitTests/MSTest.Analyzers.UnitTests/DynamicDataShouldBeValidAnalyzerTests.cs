@@ -908,18 +908,6 @@ public sealed class DynamicDataShouldBeValidAnalyzerTests
                 {
                 }
 
-                [{|#10:DynamicData(nameof(DataField), DynamicDataSourceType.AutoDetect)|}]
-                [TestMethod]
-                public void TestMethod17(object[] o)
-                {
-                }
-
-                [{|#11:DynamicData(nameof(DataField))|}]
-                [TestMethod]
-                public void TestMethod18(object[] o)
-                {
-                }
-
                 public static IEnumerable<object[]> Data => new List<object[]>();
                 public static IEnumerable<object[]> GetData() => new List<object[]>();
                 public static IEnumerable<object[]> DataField = new List<object[]>();
@@ -942,10 +930,142 @@ public sealed class DynamicDataShouldBeValidAnalyzerTests
             VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.SourceTypePropertyRule).WithLocation(5).WithArguments("SomeClass", "SomeData"),
             VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.SourceTypePropertyRule).WithLocation(6).WithArguments("MyTestClass", "Data"),
             VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.SourceTypePropertyRule).WithLocation(7).WithArguments("SomeClass", "SomeData"),
-            VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.SourceTypeNotPropertyOrMethodRule).WithLocation(8).WithArguments("MyTestClass", "DataField"),
-            VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.SourceTypeNotPropertyOrMethodRule).WithLocation(9).WithArguments("MyTestClass", "DataField"),
-            VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.SourceTypeNotPropertyOrMethodRule).WithLocation(10).WithArguments("MyTestClass", "DataField"),
-            VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.SourceTypeNotPropertyOrMethodRule).WithLocation(11).WithArguments("MyTestClass", "DataField"));
+            VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.SourceTypeFieldRule).WithLocation(8).WithArguments("MyTestClass", "DataField"),
+            VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.SourceTypeFieldRule).WithLocation(9).WithArguments("MyTestClass", "DataField"));
+    }
+
+    [TestMethod]
+    public async Task WhenDataIsField_NoDiagnostic()
+    {
+        string code = """
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [DynamicData("DataField")]
+                [TestMethod]
+                public void TestMethod1Auto(object[] o)
+                {
+                }
+
+                [DynamicData("DataField", DynamicDataSourceType.Field)]
+                [TestMethod]
+                public void TestMethod1Field(object[] o)
+                {
+                }
+
+                [DynamicData("SomeDataField", typeof(SomeClass))]
+                [TestMethod]
+                public void TestMethod2Auto(object[] o)
+                {
+                }
+
+                [DynamicData("SomeDataField", typeof(SomeClass), DynamicDataSourceType.Field)]
+                [TestMethod]
+                public void TestMethod2Field(object[] o)
+                {
+                }
+
+                [DynamicData(dynamicDataSourceName: "DataField")]
+                [TestMethod]
+                public void TestMethod3Auto(object[] o)
+                {
+                }
+
+                [DynamicData(dynamicDataDeclaringType: typeof(SomeClass), dynamicDataSourceName: "SomeDataField")]
+                [TestMethod]
+                public void TestMethod4Auto(object[] o)
+                {
+                }
+
+                [DynamicData(dynamicDataDeclaringType: typeof(SomeClass), dynamicDataSourceName: "SomeDataField", dynamicDataSourceType: DynamicDataSourceType.Field)]
+                [TestMethod]
+                public void TestMethod4Field(object[] o)
+                {
+                }
+
+                public static IEnumerable<object[]> DataField = new[]
+                {
+                    new object[] { 1, 2 },
+                    new object[] { 3, 4 }
+                };
+            }
+
+            public class SomeClass
+            {
+                public static IEnumerable<object[]> SomeDataField = new[]
+                {
+                    new object[] { 1, 2 },
+                    new object[] { 3, 4 }
+                };
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenFieldMemberKindIsMixedUp_Diagnostic()
+    {
+        string code = """
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [{|#0:DynamicData("DataField", DynamicDataSourceType.Property)|}]
+                [TestMethod]
+                public void TestMethod1(object[] o)
+                {
+                }
+
+                [{|#1:DynamicData("DataField", DynamicDataSourceType.Method)|}]
+                [TestMethod]
+                public void TestMethod2(object[] o)
+                {
+                }
+
+                [{|#2:DynamicData("Data", DynamicDataSourceType.Field)|}]
+                [TestMethod]
+                public void TestMethod3(object[] o)
+                {
+                }
+
+                [{|#3:DynamicData("GetData", DynamicDataSourceType.Field)|}]
+                [TestMethod]
+                public void TestMethod4(object[] o)
+                {
+                }
+
+                public static IEnumerable<object[]> Data => new[]
+                {
+                    new object[] { 1, 2 },
+                    new object[] { 3, 4 }
+                };
+
+                public static IEnumerable<object[]> GetData() => new[]
+                {
+                    new object[] { 1, 2 },
+                    new object[] { 3, 4 }
+                };
+
+                public static IEnumerable<object[]> DataField = new[]
+                {
+                    new object[] { 1, 2 },
+                    new object[] { 3, 4 }
+                };
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.SourceTypeFieldRule).WithLocation(0).WithArguments("MyTestClass", "DataField"),
+            VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.SourceTypeFieldRule).WithLocation(1).WithArguments("MyTestClass", "DataField"),
+            VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.SourceTypePropertyRule).WithLocation(2).WithArguments("MyTestClass", "Data"),
+            VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.SourceTypeMethodRule).WithLocation(3).WithArguments("MyTestClass", "GetData"));
     }
 
     [TestMethod]
