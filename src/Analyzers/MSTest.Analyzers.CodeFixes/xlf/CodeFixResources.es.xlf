@@ -52,6 +52,11 @@
         <target state="translated">Pasa el argumento 'TestContext.CancellationTokenSource.Token' a la llamada de método</target>
         <note />
       </trans-unit>
+      <trans-unit id="RemoveDynamicDataSourceTypeFix">
+        <source>Remove 'DynamicDataSourceType' parameter to use default 'AutoDetect'</source>
+        <target state="new">Remove 'DynamicDataSourceType' parameter to use default 'AutoDetect'</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ReplaceDataTestMethodWithTestMethodTitle">
         <source>Replace 'DataTestMethod' with 'TestMethod'</source>
         <target state="translated">Reemplazar "DataTestMethod" por "TestMethod"</target>

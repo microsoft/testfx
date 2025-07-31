@@ -147,6 +147,16 @@ Der Typ, der diese Methoden deklariert, sollte auch die folgenden Regeln beachte
         <target state="translated">„[ExpectedException]“ vermeiden</target>
         <note />
       </trans-unit>
+      <trans-unit id="AvoidExplicitDynamicDataSourceTypeMessageFormat">
+        <source>Remove the 'DynamicDataSourceType' argument to use the default auto detect behavior</source>
+        <target state="new">Remove the 'DynamicDataSourceType' argument to use the default auto detect behavior</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidExplicitDynamicDataSourceTypeTitle">
+        <source>Avoid passing an explicit 'DynamicDataSourceType' and use the default auto detect behavior</source>
+        <target state="new">Avoid passing an explicit 'DynamicDataSourceType' and use the default auto detect behavior</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AvoidUsingAssertsInAsyncVoidContextDescription">
         <source>Do not assert inside 'async void' methods, local functions, or lambdas. Exceptions that are thrown in this context will be unhandled exceptions. When using VSTest under .NET Framework, they will be silently swallowed. When using Microsoft.Testing.Platform or VSTest under modern .NET, they may crash the process.</source>
         <target state="translated">Nicht innerhalb von "async void"-Methoden, lokalen Funktionen oder Lambdafunktionen bestätigen. Ausnahmen, die in diesem Kontext ausgelöst werden, werden nicht behandelt. Bei Verwendung von VSTest unter .NET Framework werden diese im Hintergrund verschlungen. Wenn Sie Microsoft.Testing.Platform oder VSTest unter modernem .NET verwenden, kann der Prozess abgestürzt werden.</target>
