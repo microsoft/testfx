@@ -52,7 +52,7 @@
       "test\\UnitTests\\MSTestAdapter.PlatformServices.UnitTests\\MSTestAdapter.PlatformServices.UnitTests.csproj",
       "test\\UnitTests\\MSTestAdapter.UnitTests\\MSTestAdapter.UnitTests.csproj",
       "test\\UnitTests\\MSTest.SelfRealExamples.UnitTests\\MSTest.SelfRealExamples.UnitTests.csproj",
-      "test\\UnitTests\\TestFramework.UnitTests\\TestFramework.UnitTests.csproj",
+      "test\\UnitTests\\MSTest.TestFramework.UnitTests\\MSTest.TestFramework.UnitTests.csproj",
       "test\\Utilities\\Automation.CLI\\Automation.CLI.csproj",
       "test\\Utilities\\Microsoft.Testing.TestInfrastructure\\Microsoft.Testing.TestInfrastructure.csproj",
       "test\\Utilities\\TestFramework.ForTestingMSTest\\TestFramework.ForTestingMSTest.csproj"

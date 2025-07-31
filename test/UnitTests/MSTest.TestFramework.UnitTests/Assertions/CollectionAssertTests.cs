@@ -5,7 +5,7 @@ using System.Collections.ObjectModel;
 
 using TestFramework.ForTestingMSTest;
 
-namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.Assertions;
+namespace MSTest.TestFramework.UnitTests.Assertions;
 
 public class CollectionAssertTests : TestContainer
 {

@@ -3,7 +3,7 @@
 
 using TestFramework.ForTestingMSTest;
 
-namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests;
+namespace MSTest.TestFramework.UnitTests;
 
 public sealed class TestResultTests : TestContainer
 {
