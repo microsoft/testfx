@@ -44,21 +44,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Update="Resources\FrameworkMessages.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>FrameworkMessages.resx</DependentUpon>
-    </Compile>
-    <EmbeddedResource Update="Resources\FrameworkMessages.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>FrameworkMessages.Designer.cs</LastGenOutput>
-      <CustomToolNamespace>Microsoft.VisualStudio.TestTools.UnitTesting</CustomToolNamespace>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-  </ItemGroup>
-
-  <ItemGroup>
     <Using Include="Polyfills" />
+    <Using Include="$(RootNamespace).Resources" />
   </ItemGroup>
 
 </Project>
