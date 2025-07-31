@@ -464,32 +464,32 @@ The type declaring these methods should also respect the following rules:
 -The class shouldn't be 'static'
 -The class should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</source>
-        <target state="new">Methods marked with '[GlobalTestInitialize]' or '[GlobalTestCleanup]' should follow the following layout to be valid:
--it can't be declared on a generic class
--it should be 'public'
--it should be 'static'
--it should not be 'async void'
--it should not be a special method (finalizer, operator...).
--it should not be generic
--it should take one parameter of type 'TestContext'
--return type should be 'void', 'Task' or 'ValueTask'
+        <target state="translated">Aby byly metody s označením [GlobalTestInitialize] nebo [GlobalTestCleanup] platné, musí se řídit následujícím rozložením:
+– Nesmí být deklarované pro obecnou třídu.
+– Musí být „public“.
+– Musí být „static“.
+– Nesmí být „async void“.
+– Nesmí být speciální metodou („finalizer“, „operator“...).
+– Nesmí být obecné.
+– Musí mít jeden parametr typu TestContext.
+– Návratový typ musí být „void“, „Task“ nebo „ValueTask“.
 
-The type declaring these methods should also respect the following rules:
--The type should be a class
--The class should be 'public'
--The class shouldn't be 'static'
--The class should be marked with '[TestClass]' (or a derived attribute)
--the class should not be generic.</target>
+Typ deklarující tyto metody by měl také respektovat následující pravidla: 
+– Typ by měl být třída.
+– Třída by měla být „public“.
+– Třída by neměla být „static“.
+– Třída by měla být označena atributem [TestClass] (nebo odvozeným atributem).
+– Třída by neměla být obecná.</target>
         <note />
       </trans-unit>
       <trans-unit id="GlobalTestFixtureShouldBeValidMessageFormat">
         <source>Global test fixture method '{0}' signature is invalid</source>
-        <target state="new">Global test fixture method '{0}' signature is invalid</target>
+        <target state="translated">Podpis metody globálního testovacího přípravku {0} je neplatný.</target>
         <note />
       </trans-unit>
       <trans-unit id="GlobalTestFixtureShouldBeValidTitle">
         <source>GlobalTestInitialize and GlobalTestCleanup methods should have valid layout</source>
-        <target state="new">GlobalTestInitialize and GlobalTestCleanup methods should have valid layout</target>
+        <target state="translated">Metody GlobalTestInitialize a GlobalTestCleanup by měly mít platné rozložení.</target>
         <note />
       </trans-unit>
       <trans-unit id="PreferAssertFailOverAlwaysFalseConditionsMessageFormat">
@@ -942,6 +942,21 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
       <trans-unit id="TestContextPropertyUsageDescription">
         <source>Some TestContext properties are only available during test execution and cannot be accessed in assembly initialize, class initialize, class cleanup, or assembly cleanup methods.</source>
         <target state="translated">Některé vlastnosti TestContext jsou k dispozici pouze během provádění testu a nelze k nim přistupovat v metodách inicializace sestavení, inicializace třídy, vyčištění třídy nebo vyčištění sestavení.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AssertThrowsShouldContainSingleStatementDescription">
+        <source>Assert.Throws methods should contain only a single statement or expression. Multiple statements can be misleading - if the first statement throws, subsequent statements are never executed; if it doesn't throw, it should be moved outside the Assert.Throws.</source>
+        <target state="new">Assert.Throws methods should contain only a single statement or expression. Multiple statements can be misleading - if the first statement throws, subsequent statements are never executed; if it doesn't throw, it should be moved outside the Assert.Throws.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AssertThrowsShouldContainSingleStatementMessageFormat">
+        <source>Assert.Throws should contain only a single statement/expression</source>
+        <target state="new">Assert.Throws should contain only a single statement/expression</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AssertThrowsShouldContainSingleStatementTitle">
+        <source>Assert.Throws should contain only a single statement/expression</source>
+        <target state="new">Assert.Throws should contain only a single statement/expression</target>
         <note />
       </trans-unit>
     </body>
