@@ -9,13 +9,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 /// <summary>
 /// A service to log any trace messages from the adapter that would be shown in *.TpTrace files.
 /// </summary>
-internal sealed class AdapterTraceLogger : IAdapterTraceLogger
+[Serializable]
+public sealed class AdapterTraceLogger : IAdapterTraceLogger
 {
-    /// <summary>
-    /// Log an error in a given format.
-    /// </summary>
-    /// <param name="format"> The format. </param>
-    /// <param name="args"> The args. </param>
+    /// <inheritdoc />
+    public bool IsInfoEnabled => EqtTrace.IsInfoEnabled;
+
+    /// <inheritdoc />
     public void LogError(string format, params object?[] args)
     {
 #if !WINDOWS_UWP && !WIN_UI
@@ -30,11 +30,7 @@ internal sealed class AdapterTraceLogger : IAdapterTraceLogger
 #endif
     }
 
-    /// <summary>
-    /// Log a warning in a given format.
-    /// </summary>
-    /// <param name="format"> The format. </param>
-    /// <param name="args"> The args. </param>
+    /// <inheritdoc />
     public void LogWarning(string format, params object?[] args)
     {
 #if !WINDOWS_UWP && !WIN_UI
@@ -49,11 +45,7 @@ internal sealed class AdapterTraceLogger : IAdapterTraceLogger
 #endif
     }
 
-    /// <summary>
-    /// Log an information message in a given format.
-    /// </summary>
-    /// <param name="format"> The format. </param>
-    /// <param name="args"> The args. </param>
+    /// <inheritdoc />
     public void LogInfo(string format, params object?[] args)
     {
 #if !WINDOWS_UWP && !WIN_UI
@@ -64,6 +56,21 @@ internal sealed class AdapterTraceLogger : IAdapterTraceLogger
 #else
 #pragma warning disable IDE0022 // Use expression body for method
         EqtTrace.InfoIf(EqtTrace.IsInfoEnabled, format, args);
+#pragma warning restore IDE0022 // Use expression body for method
+#endif
+    }
+
+    /// <inheritdoc />
+    public void LogVerbose(string format, params object?[] args)
+    {
+#if !WINDOWS_UWP && !WIN_UI
+        if (EqtTrace.IsVerboseEnabled)
+        {
+            EqtTrace.Verbose(PrependAdapterName(format), args);
+        }
+#else
+#pragma warning disable IDE0022 // Use expression body for method
+        EqtTrace.VerboseIf(EqtTrace.IsVerboseEnabled, format, args);
 #pragma warning restore IDE0022 // Use expression body for method
 #endif
     }

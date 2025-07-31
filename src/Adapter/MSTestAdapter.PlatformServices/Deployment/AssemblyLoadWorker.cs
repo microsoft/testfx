@@ -3,6 +3,7 @@
 
 #if NETFRAMEWORK
 
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -22,8 +23,8 @@ internal sealed class AssemblyLoadWorker : MarshalByRefObject
 {
     private readonly IAssemblyUtility _assemblyUtility;
 
-    public AssemblyLoadWorker()
-        : this(new AssemblyUtility())
+    public AssemblyLoadWorker(IAdapterTraceLogger logger)
+        : this(new AssemblyUtility(logger))
     {
     }
 

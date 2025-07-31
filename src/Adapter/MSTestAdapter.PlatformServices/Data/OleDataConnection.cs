@@ -5,6 +5,7 @@
 
 using System.Data.OleDb;
 
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Data;
@@ -16,8 +17,8 @@ internal sealed class OleDataConnection : TestDataConnectionSql
 {
     private readonly bool _isMSSql;
 
-    public OleDataConnection(string invariantProviderName, string connectionString, List<string> dataFolders)
-        : base(invariantProviderName, FixConnectionString(connectionString, dataFolders), dataFolders)
+    public OleDataConnection(string invariantProviderName, string connectionString, List<string> dataFolders, IAdapterTraceLogger logger)
+        : base(invariantProviderName, FixConnectionString(connectionString, dataFolders), dataFolders, logger)
     {
         // Need open connection to get Connection.Provider.
         DebugEx.Assert(IsOpen(), "The connection must be open!");

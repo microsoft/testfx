@@ -4,7 +4,7 @@
 #if !WINDOWS_UWP
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Extensions;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
@@ -13,8 +13,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
 internal class FileUtility
 {
     private readonly AssemblyUtility _assemblyUtility;
+    private readonly IAdapterTraceLogger _logger;
 
-    public FileUtility() => _assemblyUtility = new AssemblyUtility();
+    public FileUtility(IAdapterTraceLogger logger)
+    {
+        _assemblyUtility = new AssemblyUtility(logger);
+        _logger = logger;
+    }
 
     public virtual void CreateDirectoryIfNotExists(string directory)
     {
@@ -148,7 +153,7 @@ internal class FileUtility
         }
         catch (ArgumentException ex)
         {
-            EqtTrace.WarningIf(EqtTrace.IsWarningEnabled, "Error while trying to locate pdb for deployed assembly '{0}': {1}", destinationFile, ex);
+            _logger.LogWarning("Error while trying to locate pdb for deployed assembly '{0}': {1}", destinationFile, ex);
             return null;
         }
 
@@ -167,8 +172,7 @@ internal class FileUtility
         }
         else if (!string.Equals(pdbSource, value, StringComparison.OrdinalIgnoreCase))
         {
-            EqtTrace.WarningIf(
-                EqtTrace.IsWarningEnabled,
+            _logger.LogWarning(
                 "Conflict during copying PDBs for line number info: '{0}' and '{1}' are from different origins although they might be the same.",
                 pdbSource,
                 value);
@@ -232,7 +236,7 @@ internal class FileUtility
         }
         catch (Exception ex)
         {
-            EqtTrace.ErrorIf(EqtTrace.IsErrorEnabled, "DeploymentManager.DeleteDirectories failed for the directory '{0}': {1}", filePath, ex);
+            _logger.LogError("DeploymentManager.DeleteDirectories failed for the directory '{0}': {1}", filePath, ex);
         }
     }
 
@@ -253,26 +257,18 @@ internal class FileUtility
     /// <param name="path">path to symbols file.</param>
     /// <returns>Pdb file name or null if non-existent.</returns>
     [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
-    private static string? GetSymbolsFileName(string? path)
+    private string? GetSymbolsFileName(string? path)
     {
         if (StringEx.IsNullOrEmpty(path) || path.IndexOfAny(Path.GetInvalidPathChars()) != -1)
         {
-            if (EqtTrace.IsWarningEnabled)
-            {
-                EqtTrace.Warning("Path is either null or invalid. Path = '{0}'", path);
-            }
-
+            _logger.LogWarning("Path is either null or invalid. Path = '{0}'", path);
             return null;
         }
 
         string pdbFile = Path.ChangeExtension(path, ".pdb");
         if (File.Exists(pdbFile))
         {
-            if (EqtTrace.IsInfoEnabled)
-            {
-                EqtTrace.Info("Pdb file found for path '{0}'", path);
-            }
-
+            _logger.LogInfo("Pdb file found for path '{0}'", path);
             return pdbFile;
         }
 
