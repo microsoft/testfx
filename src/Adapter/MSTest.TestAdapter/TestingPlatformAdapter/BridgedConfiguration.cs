@@ -4,7 +4,7 @@
 #if !WINDOWS_UWP
 using Microsoft.Testing.Platform.Configurations;
 
-using PlatformServicesConfiguration = Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.IConfiguration;
+using PlatformServicesConfiguration = MSTest.PlatformServices.Interface.IConfiguration;
 
 namespace MSTest.TestAdapter;
 

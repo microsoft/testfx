@@ -1,12 +1,10 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
-using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
-using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
-using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
-
 using Moq;
+
+using MSTest.PlatformServices.Interface;
+using MSTest.PlatformServices.ObjectModel;
 
 using TestFramework.ForTestingMSTest;
 
@@ -262,7 +260,7 @@ public class TestClassInfoTests : TestContainer
 
     public void RunClassInitializeShouldSetClassInitializationExceptionOnException()
     {
-        DummyTestClass.ClassInitializeMethodBody = tc => UTF.Assert.Inconclusive("Test Inconclusive");
+        DummyTestClass.ClassInitializeMethodBody = tc => Assert.Inconclusive("Test Inconclusive");
         _testClassInfo.ClassInitializeMethod = typeof(DummyTestClass).GetMethod("ClassInitializeMethod")!;
 
         var exception = GetResultOrRunClassInitialize().TestFailureException as TestFailedException;
@@ -348,7 +346,7 @@ public class TestClassInfoTests : TestContainer
 
     public void RunClassInitializeShouldThrowTestFailedExceptionOnAssertionFailure()
     {
-        DummyTestClass.ClassInitializeMethodBody = tc => UTF.Assert.Fail("Test failure");
+        DummyTestClass.ClassInitializeMethodBody = tc => Assert.Fail("Test failure");
         _testClassInfo.ClassInitializeMethod = typeof(DummyTestClass).GetMethod("ClassInitializeMethod")!;
 
         var exception = GetResultOrRunClassInitialize().TestFailureException as TestFailedException;
@@ -367,7 +365,7 @@ public class TestClassInfoTests : TestContainer
 
     public void RunClassInitializeShouldThrowTestFailedExceptionWithInconclusiveOnAssertInconclusive()
     {
-        DummyTestClass.ClassInitializeMethodBody = tc => UTF.Assert.Inconclusive("Test Inconclusive");
+        DummyTestClass.ClassInitializeMethodBody = tc => Assert.Inconclusive("Test Inconclusive");
         _testClassInfo.ClassInitializeMethod = typeof(DummyTestClass).GetMethod("ClassInitializeMethod")!;
 
         var exception = GetResultOrRunClassInitialize().TestFailureException as TestFailedException;
@@ -489,7 +487,7 @@ public class TestClassInfoTests : TestContainer
     public void RunClassCleanupShouldReturnAssertFailureExceptionDetails()
     {
         // Arrange
-        DummyTestClass.ClassCleanupMethodBody = () => UTF.Assert.Fail("Test Failure");
+        DummyTestClass.ClassCleanupMethodBody = () => Assert.Fail("Test Failure");
         _testClassInfo.ClassCleanupMethod = typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.ClassCleanupMethod));
 
         // Act
@@ -511,7 +509,7 @@ public class TestClassInfoTests : TestContainer
     public void RunClassCleanupShouldReturnAssertInconclusiveExceptionDetails()
     {
         // Arrange
-        DummyTestClass.ClassCleanupMethodBody = () => UTF.Assert.Inconclusive("Test Inconclusive");
+        DummyTestClass.ClassCleanupMethodBody = () => Assert.Inconclusive("Test Inconclusive");
         _testClassInfo.ClassCleanupMethod = typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.ClassCleanupMethod));
 
         // Act
@@ -628,7 +626,7 @@ public class TestClassInfoTests : TestContainer
 
         public TestContext BaseTestContext { get; set; } = null!;
 
-        [ClassInitialize(UTF.InheritanceBehavior.BeforeEachDerivedClass)]
+        [ClassInitialize(InheritanceBehavior.BeforeEachDerivedClass)]
         public static void InitClassMethod(TestContext testContext) => ClassInitMethodBody?.Invoke(testContext);
 
         public static void ClassCleanupMethod() => CleanupClassMethodBody?.Invoke();
@@ -643,7 +641,7 @@ public class TestClassInfoTests : TestContainer
 
         public TestContext TestContext { get; set; } = null!;
 
-        [ClassInitialize(UTF.InheritanceBehavior.BeforeEachDerivedClass)]
+        [ClassInitialize(InheritanceBehavior.BeforeEachDerivedClass)]
         public static void InitBaseClassMethod(TestContext testContext) => ClassInitializeMethodBody?.Invoke(testContext);
 
         public static void CleanupClassMethod() => ClassCleanupMethodBody?.Invoke();

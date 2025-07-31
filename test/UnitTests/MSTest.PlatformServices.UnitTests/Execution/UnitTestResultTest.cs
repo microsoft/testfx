@@ -1,11 +1,11 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
+using MSTest.PlatformServices.ObjectModel;
 
 using TestFramework.ForTestingMSTest;
 
-using UnitTestOutcome = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestOutcome;
+using UnitTestOutcome = MSTest.PlatformServices.ObjectModel.UnitTestOutcome;
 
 namespace MSTest.PlatformServices.Execution.UnitTests;
 

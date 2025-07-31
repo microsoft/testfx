@@ -1,11 +1,9 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
-using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
-using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
-
 using Moq;
+
+using MSTest.PlatformServices.ObjectModel;
 
 using TestFramework.ForTestingMSTest;
 
@@ -130,7 +128,7 @@ public class TestAssemblyInfoTests : TestContainer
 
     public void RunAssemblyInitializeShouldSetAssemblyInitializationExceptionOnException()
     {
-        DummyTestClass.AssemblyInitializeMethodBody = _ => UTF.Assert.Inconclusive("Test Inconclusive");
+        DummyTestClass.AssemblyInitializeMethodBody = _ => Assert.Inconclusive("Test Inconclusive");
         _testAssemblyInfo.AssemblyInitializeMethod = typeof(DummyTestClass).GetMethod("AssemblyInitializeMethod")!;
 
         Exception exception = VerifyThrows(() => _testAssemblyInfo.RunAssemblyInitialize(_testContext));
@@ -140,7 +138,7 @@ public class TestAssemblyInfoTests : TestContainer
 
     public void RunAssemblyInitializeShouldThrowTestFailedExceptionOnAssertionFailure()
     {
-        DummyTestClass.AssemblyInitializeMethodBody = tc => UTF.Assert.Fail("Test failure");
+        DummyTestClass.AssemblyInitializeMethodBody = tc => Assert.Fail("Test failure");
         _testAssemblyInfo.AssemblyInitializeMethod = typeof(DummyTestClass).GetMethod("AssemblyInitializeMethod")!;
 
         TestFailedException exception = VerifyThrows<TestFailedException>(() => _testAssemblyInfo.RunAssemblyInitialize(_testContext));
@@ -157,7 +155,7 @@ public class TestAssemblyInfoTests : TestContainer
 
     public void RunAssemblyInitializeShouldThrowTestFailedExceptionWithInconclusiveOnAssertInconclusive()
     {
-        DummyTestClass.AssemblyInitializeMethodBody = tc => UTF.Assert.Inconclusive("Test Inconclusive");
+        DummyTestClass.AssemblyInitializeMethodBody = tc => Assert.Inconclusive("Test Inconclusive");
         _testAssemblyInfo.AssemblyInitializeMethod = typeof(DummyTestClass).GetMethod("AssemblyInitializeMethod")!;
 
         TestFailedException exception = VerifyThrows<TestFailedException>(() => _testAssemblyInfo.RunAssemblyInitialize(_testContext));
@@ -261,7 +259,7 @@ public class TestAssemblyInfoTests : TestContainer
 
     public void RunAssemblyCleanupShouldReturnAssertFailureExceptionDetails()
     {
-        DummyTestClass.AssemblyCleanupMethodBody = () => UTF.Assert.Fail("Test Failure.");
+        DummyTestClass.AssemblyCleanupMethodBody = () => Assert.Fail("Test Failure.");
 
         _testAssemblyInfo.AssemblyCleanupMethod = typeof(DummyTestClass).GetMethod("AssemblyCleanupMethod")!;
         string? actualErrorMessage = _testAssemblyInfo.ExecuteAssemblyCleanup(GetTestContext())?.Message;
@@ -273,7 +271,7 @@ public class TestAssemblyInfoTests : TestContainer
 
     public void RunAssemblyCleanupShouldReturnAssertInconclusiveExceptionDetails()
     {
-        DummyTestClass.AssemblyCleanupMethodBody = () => UTF.Assert.Inconclusive("Test Inconclusive.");
+        DummyTestClass.AssemblyCleanupMethodBody = () => Assert.Inconclusive("Test Inconclusive.");
 
         _testAssemblyInfo.AssemblyCleanupMethod = typeof(DummyTestClass).GetMethod("AssemblyCleanupMethod")!;
         string? actualErrorMessage = _testAssemblyInfo.ExecuteAssemblyCleanup(GetTestContext())?.Message;

@@ -6,7 +6,7 @@
       "samples\\Playground\\Playground.csproj",
       "src\\Adapter\\MSTest.Engine\\MSTest.Engine.csproj",
       "src\\Adapter\\MSTest.TestAdapter\\MSTest.TestAdapter.csproj",
-      "src\\Adapter\\MSTestAdapter.PlatformServices\\MSTestAdapter.PlatformServices.csproj",
+      "src\\Adapter\\MSTest.PlatformServices\\MSTest.PlatformServices.csproj",
       "src\\Analyzers\\MSTest.Analyzers.CodeFixes\\MSTest.Analyzers.CodeFixes.csproj",
       "src\\Analyzers\\MSTest.Analyzers.Package\\MSTest.Analyzers.Package.csproj",
       "src\\Analyzers\\MSTest.Analyzers\\MSTest.Analyzers.csproj",

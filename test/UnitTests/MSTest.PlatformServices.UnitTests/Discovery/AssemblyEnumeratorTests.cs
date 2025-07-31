@@ -3,15 +3,12 @@
 
 using System.Collections.ObjectModel;
 
-using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
-using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
-using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
-using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
-using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Resources;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 
 using Moq;
 
+using MSTest.PlatformServices.Helpers;
+using MSTest.PlatformServices.ObjectModel;
 using MSTest.PlatformServices.UnitTests;
 
 using TestFramework.ForTestingMSTest;

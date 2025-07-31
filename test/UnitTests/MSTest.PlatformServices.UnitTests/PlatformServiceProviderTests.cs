@@ -1,13 +1,9 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
-using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
-using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
-
 using Moq;
 
-using MSTest.PlatformServices.UnitTests;
+using MSTest.PlatformServices.Interface;
 
 using TestFramework.ForTestingMSTest;
 
@@ -49,7 +45,7 @@ public class PlatformServiceProviderTests : TestContainer
     public void GetTestContextShouldReturnAValidTestContext()
     {
         // Arrange.
-        var testMethod = new Mock<Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ObjectModel.ITestMethod>();
+        var testMethod = new Mock<Interface.ObjectModel.ITestMethod>();
         var properties = new Dictionary<string, object?> { { "prop", "value" } };
         testMethod.Setup(tm => tm.FullClassName).Returns("A.C.M");
         testMethod.Setup(tm => tm.Name).Returns("M");

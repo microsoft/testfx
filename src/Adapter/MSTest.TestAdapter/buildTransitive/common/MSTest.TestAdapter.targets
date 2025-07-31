@@ -30,8 +30,8 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Visible>False</Visible>
     </TestAdapterContent>
-    <TestAdapterContent Include="$(_TestAdapterPlatformServicesRoot)MSTestAdapter.PlatformServices.dll">
-      <Link>MSTestAdapter.PlatformServices.dll</Link>
+    <TestAdapterContent Include="$(_TestAdapterPlatformServicesRoot)MSTest.PlatformServices.dll">
+      <Link>MSTest.PlatformServices.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Visible>False</Visible>
     </TestAdapterContent>

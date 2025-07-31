@@ -9,7 +9,7 @@ using ExecutionScope = Microsoft.VisualStudio.TestTools.UnitTesting.ExecutionSco
 [assembly: ClassCleanupExecution(ClassCleanupBehavior.EndOfClass)]
 
 #if NETCOREAPP
-Console.WriteLine("Dynamic code supported: " + System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported);
+Console.WriteLine("Dynamic code supported: " + RuntimeFeature.IsDynamicCodeSupported);
 #endif
 
 ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);

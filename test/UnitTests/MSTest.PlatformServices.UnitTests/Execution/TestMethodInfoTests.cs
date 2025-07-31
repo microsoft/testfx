@@ -1,14 +1,10 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
-using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
-using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
-using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
-using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
-
 using Moq;
 
+using MSTest.PlatformServices.Interface;
+using MSTest.PlatformServices.ObjectModel;
 using MSTest.PlatformServices.UnitTests;
 
 using TestFramework.ForTestingMSTest;
@@ -119,7 +115,7 @@ public class TestMethodInfoTests : TestContainer
 
     public async Task TestMethodInfoInvokeAsyncShouldHandleAssertInconclusive()
     {
-        DummyTestClass.DummyAsyncTestMethodBody = () => Task.Run(() => UTF.Assert.Inconclusive());
+        DummyTestClass.DummyAsyncTestMethodBody = () => Task.Run(() => Assert.Inconclusive());
         MethodInfo asyncMethodInfo = typeof(DummyTestClass).GetMethod("DummyAsyncTestMethod")!;
 
         var method = new TestMethodInfo(
@@ -157,7 +153,7 @@ public class TestMethodInfoTests : TestContainer
 
     public async Task TestMethodInfoInvokeShouldHandleAssertInconclusive()
     {
-        DummyTestClass.TestMethodBody = d => UTF.Assert.Inconclusive();
+        DummyTestClass.TestMethodBody = d => Assert.Inconclusive();
         MethodInfo dummyMethodInfo = typeof(DummyTestClass).GetMethod("DummyTestMethod")!;
 
         var method = new TestMethodInfo(
@@ -617,7 +613,7 @@ public class TestMethodInfoTests : TestContainer
     public async Task TestMethodInfoInvokeWhenTestThrowsAssertFailReturnsExpectedResult()
     {
         // Arrange.
-        DummyTestClass.TestInitializeMethodBody = classInstance => UTF.Assert.Fail("dummyFailMessage");
+        DummyTestClass.TestInitializeMethodBody = classInstance => Assert.Fail("dummyFailMessage");
         _testClassInfo.TestInitializeMethod = typeof(DummyTestClass).GetMethod("DummyTestInitializeMethod")!;
         string errorMessage = string.Format(
             CultureInfo.InvariantCulture,
@@ -652,7 +648,7 @@ public class TestMethodInfoTests : TestContainer
     public async Task TestMethodInfoInvokeWhenTestThrowsAssertInconclusiveReturnsExpectedResult()
     {
         // Arrange.
-        DummyTestClass.TestInitializeMethodBody = classInstance => UTF.Assert.Inconclusive("dummyFailMessage");
+        DummyTestClass.TestInitializeMethodBody = classInstance => Assert.Inconclusive("dummyFailMessage");
         _testClassInfo.TestInitializeMethod = typeof(DummyTestClass).GetMethod("DummyTestInitializeMethod")!;
         string errorMessage = string.Format(
             CultureInfo.InvariantCulture,
@@ -836,7 +832,7 @@ public class TestMethodInfoTests : TestContainer
 
     public async Task TestMethodInfoInvokeWhenTestCleanupThrowsAssertInconclusiveReturnsExpectedResult()
     {
-        DummyTestClass.TestCleanupMethodBody = classInstance => UTF.Assert.Inconclusive("Test inconclusive");
+        DummyTestClass.TestCleanupMethodBody = classInstance => Assert.Inconclusive("Test inconclusive");
         _testClassInfo.TestCleanupMethod = typeof(DummyTestClass).GetMethod("DummyTestCleanupMethod")!;
 
         string expectedErrorMessage = string.Format(
@@ -863,7 +859,7 @@ public class TestMethodInfoTests : TestContainer
 
     public async Task TestMethodInfoInvokeWhenTestCleanupThrowsAssertFailedReturnsExpectedResult()
     {
-        DummyTestClass.TestCleanupMethodBody = classInstance => UTF.Assert.Fail("Test failed");
+        DummyTestClass.TestCleanupMethodBody = classInstance => Assert.Fail("Test failed");
         _testClassInfo.TestCleanupMethod = typeof(DummyTestClass).GetMethod("DummyTestCleanupMethod")!;
 
         string expectedErrorMessage = string.Format(

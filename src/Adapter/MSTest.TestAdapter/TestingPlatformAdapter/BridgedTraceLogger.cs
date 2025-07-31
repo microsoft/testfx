@@ -3,7 +3,8 @@
 
 #if !WINDOWS_UWP
 using Microsoft.Testing.Platform.Logging;
-using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
+
+using MSTest.PlatformServices.Interface;
 
 namespace MSTest.TestAdapter;
 

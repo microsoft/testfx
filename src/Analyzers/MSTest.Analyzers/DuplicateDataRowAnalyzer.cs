@@ -123,7 +123,7 @@ public sealed class DuplicateDataRowAnalyzer : DiagnosticAnalyzer
             // we compare `Value` or `Values`.
             if (typedConstant1.Kind == TypedConstantKind.Array)
             {
-                return TypedConstantArrayComparer.Instance.Equals(typedConstant1.Values, typedConstant2.Values);
+                return Instance.Equals(typedConstant1.Values, typedConstant2.Values);
             }
 
             if (typedConstant1.Kind == TypedConstantKind.Primitive)
@@ -143,7 +143,7 @@ public sealed class DuplicateDataRowAnalyzer : DiagnosticAnalyzer
             }
 
             // At this point, the type is matching and the kind is matching and is not array.
-            return object.Equals(typedConstant1.Value, typedConstant2.Value);
+            return Equals(typedConstant1.Value, typedConstant2.Value);
         }
 
         public int GetHashCode(ImmutableArray<TypedConstant> obj)

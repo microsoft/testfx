@@ -2,14 +2,14 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if NETFRAMEWORK
-using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
-using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
-using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 
 using Moq;
 
+using MSTest.PlatformServices;
+using MSTest.PlatformServices.Deployment;
+using MSTest.PlatformServices.Utilities;
 using MSTest.PlatformServices.Utilities.UnitTests;
 
 using TestFramework.ForTestingMSTest;

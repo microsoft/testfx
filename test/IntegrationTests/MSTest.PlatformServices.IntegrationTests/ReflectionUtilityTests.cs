@@ -3,7 +3,7 @@
 
 using AwesomeAssertions;
 
-using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
+using MSTest.PlatformServices.Utilities;
 
 using SampleFrameworkExtensions;
 

@@ -2,7 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if WIN_UI
-namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.AppContainer;
+namespace MSTest.PlatformServices.AppContainer;
 
 /// <summary>
 /// Provides package information about the application.

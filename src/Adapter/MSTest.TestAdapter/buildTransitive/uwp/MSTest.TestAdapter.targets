@@ -6,8 +6,8 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Visible>False</Visible>
     </TestAdapterContent>
-    <TestAdapterContent Include="$(MSBuildThisFileDirectory)MSTestAdapter.PlatformServices.dll">
-      <Link>MSTestAdapter.PlatformServices.dll</Link>
+    <TestAdapterContent Include="$(MSBuildThisFileDirectory)MSTest.PlatformServices.dll">
+      <Link>MSTest.PlatformServices.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Visible>False</Visible>
     </TestAdapterContent>
