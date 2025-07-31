@@ -5,7 +5,7 @@ using Moq;
 
 using TestFramework.ForTestingMSTest;
 
-namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.Attributes;
+namespace MSTest.TestFramework.UnitTests.Attributes;
 
 public class DataRowAttributeTests : TestContainer
 {
