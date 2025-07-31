@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Buffers;
+using System.Text;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Resources;
 using Microsoft.Testing.Platform.Services;
@@ -644,49 +646,50 @@ internal sealed partial class TerminalTestReporter : IDisposable
         _terminalWithProgress.RemoveWorker(assemblyRun.SlotIndex);
     }
 
+    // SearchValues for efficient detection of control characters
+    private static readonly SearchValues<char> AllControlChars = SearchValues.Create("\x0000\x0001\x0002\x0003\x0004\x0005\x0006\x0007\x0008\x0009\x000A\x000B\x000C\x000D\x000E\x000F\x0010\x0011\x0012\x0013\x0014\x0015\x0016\x0017\x0018\x0019\x001A\x001B\x001C\x001D\x001E\x001F");
+    private static readonly SearchValues<char> NonWhitespaceControlChars = SearchValues.Create("\x0000\x0001\x0002\x0003\x0004\x0005\x0006\x0007\x0008\x000B\x000C\x000E\x000F\x0010\x0011\x0012\x0013\x0014\x0015\x0016\x0017\x0018\x0019\x001A\x001B\x001C\x001D\x001E\x001F");
+
     [return: NotNullIfNotNull(nameof(text))]
     private static string? NormalizeSpecialCharacters(string? text, bool normalizeWhitespaceCharacters)
     {
-        string? normalized = text?
-            .Replace('\0', '\x2400') // NULL → ␀
-            .Replace('\x0001', '\x2401') // START OF HEADING → ␁
-            .Replace('\x0002', '\x2402') // START OF TEXT → ␂
-            .Replace('\x0003', '\x2403') // END OF TEXT → ␃
-            .Replace('\x0004', '\x2404') // END OF TRANSMISSION → ␄
-            .Replace('\x0005', '\x2405') // ENQUIRY → ␅
-            .Replace('\x0006', '\x2406') // ACKNOWLEDGE → ␆
-            .Replace('\x0007', '\x2407') // BELL → ␇
-            .Replace('\x0008', '\x2408') // BACKSPACE → ␈
-            .Replace('\x000B', '\x240B') // VERTICAL TAB → ␋
-            .Replace('\x000C', '\x240C') // FORM FEED → ␌
-            .Replace('\x000E', '\x240E') // SHIFT OUT → ␎
-            .Replace('\x000F', '\x240F') // SHIFT IN → ␏
-            .Replace('\x0010', '\x2410') // DATA LINK ESCAPE → ␐
-            .Replace('\x0011', '\x2411') // DEVICE CONTROL ONE → ␑
-            .Replace('\x0012', '\x2412') // DEVICE CONTROL TWO → ␒
-            .Replace('\x0013', '\x2413') // DEVICE CONTROL THREE → ␓
-            .Replace('\x0014', '\x2414') // DEVICE CONTROL FOUR → ␔
-            .Replace('\x0015', '\x2415') // NEGATIVE ACKNOWLEDGE → ␕
-            .Replace('\x0016', '\x2416') // SYNCHRONOUS IDLE → ␖
-            .Replace('\x0017', '\x2417') // END OF TRANSMISSION BLOCK → ␗
-            .Replace('\x0018', '\x2418') // CANCEL → ␘
-            .Replace('\x0019', '\x2419') // END OF MEDIUM → ␙
-            .Replace('\x001A', '\x241A') // SUBSTITUTE → ␚
-            .Replace('\x001B', '\x241B') // ESCAPE → ␛
-            .Replace('\x001C', '\x241C') // FILE SEPARATOR → ␜
-            .Replace('\x001D', '\x241D') // GROUP SEPARATOR → ␝
-            .Replace('\x001E', '\x241E') // RECORD SEPARATOR → ␞
-            .Replace('\x001F', '\x241F'); // UNIT SEPARATOR → ␟
-
-        if (normalizeWhitespaceCharacters)
+        if (text is null)
         {
-            normalized = normalized?
-                .Replace('\t', '\x2409') // TAB → ␉
-                .Replace('\n', '\x240A') // LINE FEED → ␊
-                .Replace('\r', '\x240D'); // CARRIAGE RETURN → ␍
+            return null;
         }
 
-        return normalized;
+        // Use SearchValues to efficiently check if we need to do any work
+        SearchValues<char> searchValues = normalizeWhitespaceCharacters ? AllControlChars : NonWhitespaceControlChars;
+        if (text.AsSpan().IndexOfAny(searchValues) == -1)
+        {
+            return text; // No control characters found, return original string
+        }
+
+        // Pre-allocate StringBuilder with known capacity
+        var sb = new StringBuilder(text.Length);
+
+        foreach (char c in text)
+        {
+            if (c <= '\x001F') // C0 control characters (U+0000-U+001F)
+            {
+                if (!normalizeWhitespaceCharacters && c is '\t' or '\n' or '\r')
+                {
+                    // Skip normalization for whitespace characters when not requested
+                    sb.Append(c);
+                }
+                else
+                {
+                    // Convert to Unicode control picture by setting bits to 0x2400 + char value
+                    sb.Append((char)(0x2400 + c));
+                }
+            }
+            else
+            {
+                sb.Append(c);
+            }
+        }
+
+        return sb.ToString();
     }
 
     /// <summary>
