@@ -1,11 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Composition;
-using System.Linq;
 
 using Analyzer.Utilities;
 
@@ -18,6 +15,8 @@ using Microsoft.CodeAnalysis.Editing;
 using Microsoft.CodeAnalysis.Text;
 
 using MSTest.Analyzers.Helpers;
+
+using Polyfills;
 
 namespace MSTest.Analyzers;
 
@@ -52,135 +51,122 @@ public sealed class FlowTestContextCancellationTokenFixer : CodeFixProvider
         }
 
         diagnostic.Properties.TryGetValue(FlowTestContextCancellationTokenAnalyzer.TestContextMemberNamePropertyKey, out string? testContextMemberName);
+        diagnostic.Properties.TryGetValue(nameof(FlowTestContextCancellationTokenAnalyzer.TestContextState), out string? testContextState);
 
         // Register a code action that will invoke the fix
         context.RegisterCodeFix(
             CodeAction.Create(
                 title: CodeFixResources.PassCancellationTokenFix,
-                createChangedDocument: c => ApplyFixWithTestContextAsync(context.Document, invocationExpression, testContextMemberName, c),
-                equivalenceKey: "AddTestContextCancellationToken"),
+                createChangedDocument: async c =>
+                {
+                    DocumentEditor editor = await DocumentEditor.CreateAsync(context.Document, context.CancellationToken).ConfigureAwait(false);
+                    return ApplyFix(editor, invocationExpression, testContextMemberName, testContextState, adjustedSymbols: null, c);
+                },
+                equivalenceKey: nameof(FlowTestContextCancellationTokenFixer)),
             diagnostic);
     }
 
-    private static async Task<Document> ApplyFixWithTestContextAsync(
-        Document document,
+    internal static Document ApplyFix(
+        DocumentEditor editor,
         InvocationExpressionSyntax invocationExpression,
         string? testContextMemberName,
+        string? testContextState,
+        HashSet<ISymbol>? adjustedSymbols,
         CancellationToken cancellationToken)
     {
-        // For individual fixes, we need to ensure TestContext is available
-        // This handles the case where a single fix is applied (not FixAll)
-        DocumentEditor editor = await DocumentEditor.CreateAsync(document, cancellationToken).ConfigureAwait(false);
-
-        ClassDeclarationSyntax? containingClass = invocationExpression.FirstAncestorOrSelf<ClassDeclarationSyntax>();
-        MethodDeclarationSyntax? containingMethod = invocationExpression.FirstAncestorOrSelf<MethodDeclarationSyntax>();
-
-        // Check if we need to add TestContext property or parameter
-        if (testContextMemberName is null)
+        if (testContextState == nameof(FlowTestContextCancellationTokenAnalyzer.TestContextState.CouldBeInScopeAsProperty))
         {
-            if (containingMethod?.Modifiers.Any(SyntaxKind.StaticKeyword) == true)
+            Debug.Assert(testContextMemberName is null, "TestContext member name should be null when state is CouldBeInScopeAsProperty");
+            AddCancellationTokenArgument(editor, invocationExpression, "TestContext");
+            TypeDeclarationSyntax? containingTypeDeclaration = invocationExpression.FirstAncestorOrSelf<TypeDeclarationSyntax>();
+            if (containingTypeDeclaration is not null)
             {
-                // For static methods, add TestContext parameter
-                if (containingMethod is not null)
+                // adjustedSymbols is null meaning we are only applying a single fix (in that case we add the property).
+                // If we are in fix all, we then verify if a previous fix has already added the property.
+                // We only add the property if it wasn't added by a previous fix.
+                // NOTE: We don't expect GetDeclaredSymbol to return null, but if it did (e.g, error scenario), we add the property.
+                if (adjustedSymbols is null ||
+                    editor.SemanticModel.GetDeclaredSymbol(containingTypeDeclaration, cancellationToken) is not { } symbol ||
+                    adjustedSymbols.Add(symbol))
                 {
-                    var updatedMethod = AddTestContextParameterToMethod(containingMethod);
-                    editor.ReplaceNode(containingMethod, updatedMethod);
+                    editor.ReplaceNode(containingTypeDeclaration, (containingTypeDeclaration, _) => AddTestContextProperty((TypeDeclarationSyntax)containingTypeDeclaration));
                 }
             }
-            else if (containingClass is not null && !HasTestContextProperty(containingClass))
-            {
-                // For instance methods, add TestContext property if it doesn't exist
-                var updatedClass = AddTestContextProperty(containingClass);
-                editor.ReplaceNode(containingClass, updatedClass);
-            }
         }
-
-        // Apply the cancellation token fix
-        return await AddCancellationTokenParameterAsync(editor.GetChangedDocument(), invocationExpression, testContextMemberName, cancellationToken).ConfigureAwait(false);
-    }
-
-    internal static async Task<Document> AddCancellationTokenParameterAsync(
-        Document document,
-        InvocationExpressionSyntax invocationExpression,
-        string? testContextMemberName,
-        CancellationToken cancellationToken)
-    {
-        DocumentEditor editor = await DocumentEditor.CreateAsync(document, cancellationToken).ConfigureAwait(false);
-
-        // Find the containing method to determine the context
-        MethodDeclarationSyntax? containingMethod = invocationExpression.FirstAncestorOrSelf<MethodDeclarationSyntax>();
-
-        string testContextReference;
-
-        if (testContextMemberName is not null)
+        else if (testContextState == nameof(FlowTestContextCancellationTokenAnalyzer.TestContextState.CouldBeInScopeAsParameter))
         {
-            // TestContext is already available in scope
-            testContextReference = testContextMemberName;
+            Debug.Assert(testContextMemberName is null, "TestContext member name should be null when state is CouldBeInScopeAsParameter");
+            AddCancellationTokenArgument(editor, invocationExpression, "testContext");
+            MethodDeclarationSyntax? containingMethodDeclaration = invocationExpression.FirstAncestorOrSelf<MethodDeclarationSyntax>();
+
+            if (containingMethodDeclaration is not null)
+            {
+                // adjustedSymbols is null meaning we are only applying a single fix (in that case we add the parameter).
+                // If we are in fix all, we then verify if a previous fix has already added the parameter.
+                // We only add the parameter if it wasn't added by a previous fix.
+                // NOTE: We don't expect GetDeclaredSymbol to return null, but if it did (e.g, error scenario), we add the property.
+                if (adjustedSymbols is null ||
+                    editor.SemanticModel.GetDeclaredSymbol(containingMethodDeclaration, cancellationToken) is not { } symbol ||
+                    adjustedSymbols.Add(symbol))
+                {
+                    editor.ReplaceNode(containingMethodDeclaration, (containingMethodDeclaration, _) => AddTestContextParameterToMethod((MethodDeclarationSyntax)containingMethodDeclaration));
+                }
+            }
         }
         else
         {
-            // TestContext is not in scope, we need to handle this case
-            if (containingMethod?.Modifiers.Any(SyntaxKind.StaticKeyword) == true)
-            {
-                // For static methods, add TestContext parameter and use it
-                testContextReference = "testContext";
-                if (containingMethod is not null)
-                {
-                    var updatedMethod = AddTestContextParameterToMethod(containingMethod);
-                    editor.ReplaceNode(containingMethod, updatedMethod);
-                }
-            }
-            else
-            {
-                // For instance methods, assume TestContext property exists or will be added by FixAllProvider
-                testContextReference = TestContextShouldBeValidAnalyzer.TestContextPropertyName;
-            }
+            Guard.NotNull(testContextMemberName);
+            AddCancellationTokenArgument(editor, invocationExpression, testContextMemberName);
         }
+
+        return editor.GetChangedDocument();
+    }
+
+    internal static void AddCancellationTokenArgument(
+        DocumentEditor editor,
+        InvocationExpressionSyntax invocationExpression,
+        string testContextMemberName)
+    {
+        // Find the containing method to determine the context
+        MethodDeclarationSyntax? containingMethod = invocationExpression.FirstAncestorOrSelf<MethodDeclarationSyntax>();
 
         // Create the TestContext.CancellationTokenSource.Token expression
         MemberAccessExpressionSyntax testContextExpression = SyntaxFactory.MemberAccessExpression(
             SyntaxKind.SimpleMemberAccessExpression,
             SyntaxFactory.MemberAccessExpression(
                 SyntaxKind.SimpleMemberAccessExpression,
-                SyntaxFactory.IdentifierName(testContextReference),
+                SyntaxFactory.IdentifierName(testContextMemberName),
                 SyntaxFactory.IdentifierName("CancellationTokenSource")),
             SyntaxFactory.IdentifierName("Token"));
 
-        ArgumentListSyntax currentArguments = invocationExpression.ArgumentList;
-        SeparatedSyntaxList<ArgumentSyntax> newArguments = currentArguments.Arguments.Add(SyntaxFactory.Argument(testContextExpression));
-        InvocationExpressionSyntax newInvocation = invocationExpression.WithArgumentList(currentArguments.WithArguments(newArguments));
-        editor.ReplaceNode(invocationExpression, newInvocation);
-        return editor.GetChangedDocument();
+        editor.ReplaceNode(invocationExpression, (node, _) =>
+        {
+            var invocationExpression = (InvocationExpressionSyntax)node;
+            ArgumentListSyntax currentArguments = invocationExpression.ArgumentList;
+            SeparatedSyntaxList<ArgumentSyntax> newArguments = currentArguments.Arguments.Add(SyntaxFactory.Argument(testContextExpression));
+            return invocationExpression.WithArgumentList(currentArguments.WithArguments(newArguments));
+        });
     }
 
     internal static MethodDeclarationSyntax AddTestContextParameterToMethod(MethodDeclarationSyntax method)
     {
         // Create TestContext parameter
-        var testContextParameter = SyntaxFactory.Parameter(SyntaxFactory.Identifier("testContext"))
+        ParameterSyntax testContextParameter = SyntaxFactory.Parameter(SyntaxFactory.Identifier("testContext"))
             .WithType(SyntaxFactory.IdentifierName("TestContext"));
 
         // Add the parameter to the method
-        var updatedParameterList = method.ParameterList.Parameters.Count == 0
+        SeparatedSyntaxList<ParameterSyntax> updatedParameterList = method.ParameterList.Parameters.Count == 0
             ? SyntaxFactory.SingletonSeparatedList(testContextParameter)
             : method.ParameterList.Parameters.Add(testContextParameter);
 
         return method.WithParameterList(method.ParameterList.WithParameters(updatedParameterList));
     }
 
-    internal static bool HasTestContextProperty(ClassDeclarationSyntax classDeclaration)
+    internal static TypeDeclarationSyntax AddTestContextProperty(TypeDeclarationSyntax typeDeclaration)
     {
-        return classDeclaration.Members
-            .OfType<PropertyDeclarationSyntax>()
-            .Any(p => p.Identifier.ValueText.Equals(TestContextShouldBeValidAnalyzer.TestContextPropertyName, StringComparison.Ordinal) &&
-                      p.Type.ToString().Contains("TestContext"));
-    }
-
-    internal static ClassDeclarationSyntax AddTestContextProperty(ClassDeclarationSyntax classDeclaration)
-    {
-        // Create the TestContext property
         PropertyDeclarationSyntax testContextProperty = SyntaxFactory.PropertyDeclaration(
-            SyntaxFactory.IdentifierName("TestContext"), 
-            TestContextShouldBeValidAnalyzer.TestContextPropertyName)
+            SyntaxFactory.IdentifierName("TestContext"),
+            "TestContext")
             .WithModifiers(SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PublicKeyword)))
             .WithAccessorList(SyntaxFactory.AccessorList(
                 SyntaxFactory.List(new[]
@@ -188,10 +174,10 @@ public sealed class FlowTestContextCancellationTokenFixer : CodeFixProvider
                     SyntaxFactory.AccessorDeclaration(SyntaxKind.GetAccessorDeclaration)
                         .WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken)),
                     SyntaxFactory.AccessorDeclaration(SyntaxKind.SetAccessorDeclaration)
-                        .WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken))
+                        .WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken)),
                 })));
 
-        return classDeclaration.AddMembers(testContextProperty);
+        return typeDeclaration.AddMembers(testContextProperty);
     }
 }
 
@@ -199,116 +185,79 @@ public sealed class FlowTestContextCancellationTokenFixer : CodeFixProvider
 /// Custom FixAllProvider for <see cref="FlowTestContextCancellationTokenFixer"/> that can add TestContext property when needed.
 /// This ensures that when multiple fixes are applied to the same class, the TestContext property is added only once.
 /// </summary>
-internal sealed class FlowTestContextCancellationTokenFixAllProvider : DocumentBasedFixAllProvider
+internal sealed class FlowTestContextCancellationTokenFixAllProvider : FixAllProvider
 {
     public static readonly FlowTestContextCancellationTokenFixAllProvider Instance = new();
 
-    private FlowTestContextCancellationTokenFixAllProvider() { }
-
-    protected override async Task<Document?> FixAllAsync(FixAllContext fixAllContext, Document document, ImmutableArray<Diagnostic> diagnostics)
+    private FlowTestContextCancellationTokenFixAllProvider()
     {
-        SyntaxNode root = await document.GetRequiredSyntaxRootAsync(fixAllContext.CancellationToken).ConfigureAwait(false);
-        DocumentEditor editor = await DocumentEditor.CreateAsync(document, fixAllContext.CancellationToken).ConfigureAwait(false);
+    }
 
-        // Group diagnostics by containing class
-        var diagnosticsByClass = new Dictionary<ClassDeclarationSyntax, List<(InvocationExpressionSyntax invocation, string? testContextMemberName)>>();
+    public override Task<CodeAction?> GetFixAsync(FixAllContext fixAllContext)
+        => Task.FromResult<CodeAction?>(new FixAllCodeAction(fixAllContext));
 
-        foreach (Diagnostic diagnostic in diagnostics)
+    private sealed class FixAllCodeAction : CodeAction
+    {
+        private readonly FixAllContext _fixAllContext;
+
+        public FixAllCodeAction(FixAllContext fixAllContext)
+            => _fixAllContext = fixAllContext;
+
+        public override string Title => CodeFixResources.PassCancellationTokenFix;
+
+        public override string? EquivalenceKey => nameof(FlowTestContextCancellationTokenFixer);
+
+        protected override async Task<Solution?> GetChangedSolutionAsync(CancellationToken cancellationToken)
         {
-            SyntaxNode node = root.FindNode(diagnostic.Location.SourceSpan, getInnermostNodeForTie: true);
-            if (node is not InvocationExpressionSyntax invocationExpression)
+            FixAllContext fixAllContext = _fixAllContext;
+            var editor = new SolutionEditor(fixAllContext.Solution);
+            var fixedSymbols = new HashSet<ISymbol>(SymbolEqualityComparer.Default);
+
+            if (fixAllContext.Scope == FixAllScope.Document)
             {
-                continue;
+                DocumentEditor documentEditor = await editor.GetDocumentEditorAsync(fixAllContext.Document!.Id, cancellationToken).ConfigureAwait(false);
+                foreach (Diagnostic diagnostic in await fixAllContext.GetDocumentDiagnosticsAsync(fixAllContext.Document!).ConfigureAwait(false))
+                {
+                    FixOneDiagnostic(documentEditor, diagnostic, fixedSymbols, cancellationToken);
+                }
+            }
+            else if (fixAllContext.Scope == FixAllScope.Project)
+            {
+                await FixAllInProjectAsync(fixAllContext, fixAllContext.Project, editor, fixedSymbols, cancellationToken).ConfigureAwait(false);
+            }
+            else if (fixAllContext.Scope == FixAllScope.Solution)
+            {
+                foreach (Project project in fixAllContext.Solution.Projects)
+                {
+                    await FixAllInProjectAsync(fixAllContext, project, editor, fixedSymbols, cancellationToken).ConfigureAwait(false);
+                }
             }
 
-            ClassDeclarationSyntax? containingClass = invocationExpression.FirstAncestorOrSelf<ClassDeclarationSyntax>();
-            if (containingClass is null)
+            return editor.GetChangedSolution();
+        }
+
+        private static async Task FixAllInProjectAsync(FixAllContext fixAllContext, Project project, SolutionEditor editor, HashSet<ISymbol> fixedSymbols, CancellationToken cancellationToken)
+        {
+            foreach (Diagnostic diagnostic in await fixAllContext.GetAllDiagnosticsAsync(project).ConfigureAwait(false))
             {
-                continue;
+                DocumentId documentId = editor.OriginalSolution.GetDocumentId(diagnostic.Location.SourceTree)!;
+                DocumentEditor documentEditor = await editor.GetDocumentEditorAsync(documentId, cancellationToken).ConfigureAwait(false);
+                FixOneDiagnostic(documentEditor, diagnostic, fixedSymbols, cancellationToken);
+            }
+        }
+
+        private static void FixOneDiagnostic(DocumentEditor documentEditor, Diagnostic diagnostic, HashSet<ISymbol> fixedSymbols, CancellationToken cancellationToken)
+        {
+            SyntaxNode node = documentEditor.OriginalRoot.FindNode(diagnostic.Location.SourceSpan, getInnermostNodeForTie: true);
+            if (node is not InvocationExpressionSyntax invocationExpression)
+            {
+                return;
             }
 
             diagnostic.Properties.TryGetValue(FlowTestContextCancellationTokenAnalyzer.TestContextMemberNamePropertyKey, out string? testContextMemberName);
+            diagnostic.Properties.TryGetValue(nameof(FlowTestContextCancellationTokenAnalyzer.TestContextState), out string? testContextState);
 
-            if (!diagnosticsByClass.TryGetValue(containingClass, out List<(InvocationExpressionSyntax, string?)>? invocations))
-            {
-                invocations = [];
-                diagnosticsByClass[containingClass] = invocations;
-            }
-
-            invocations.Add((invocationExpression, testContextMemberName));
+            FlowTestContextCancellationTokenFixer.ApplyFix(documentEditor, invocationExpression, testContextMemberName, testContextState, fixedSymbols, cancellationToken);
         }
-
-        // Process each class
-        foreach (var classInvocationsPair in diagnosticsByClass)
-        {
-            ClassDeclarationSyntax containingClass = classInvocationsPair.Key;
-            List<(InvocationExpressionSyntax invocation, string? testContextMemberName)> invocations = classInvocationsPair.Value;
-            // Check if we need to add TestContext property to this class
-            bool needsTestContextProperty = invocations.Any(inv => inv.testContextMemberName is null && !IsInStaticMethod(inv.invocation));
-
-            ClassDeclarationSyntax updatedClass = containingClass;
-
-            // Add TestContext property if needed
-            if (needsTestContextProperty && !FlowTestContextCancellationTokenFixer.HasTestContextProperty(containingClass))
-            {
-                updatedClass = FlowTestContextCancellationTokenFixer.AddTestContextProperty(updatedClass);
-                editor.ReplaceNode(containingClass, updatedClass);
-            }
-
-            // Process all invocations in this class
-            foreach ((InvocationExpressionSyntax invocation, string? testContextMemberName) in invocations)
-            {
-                // Create the TestContext reference
-                string testContextReference;
-                MethodDeclarationSyntax? containingMethod = invocation.FirstAncestorOrSelf<MethodDeclarationSyntax>();
-
-                if (testContextMemberName is not null)
-                {
-                    // TestContext is already available in scope
-                    testContextReference = testContextMemberName;
-                }
-                else
-                {
-                    // TestContext is not in scope, we need to handle this case
-                    if (containingMethod?.Modifiers.Any(SyntaxKind.StaticKeyword) == true)
-                    {
-                        // For static methods, add TestContext parameter and use it
-                        testContextReference = "testContext";
-                        if (containingMethod is not null)
-                        {
-                            var updatedMethod = FlowTestContextCancellationTokenFixer.AddTestContextParameterToMethod(containingMethod);
-                            editor.ReplaceNode(containingMethod, updatedMethod);
-                        }
-                    }
-                    else
-                    {
-                        // For instance methods, reference TestContext property
-                        testContextReference = TestContextShouldBeValidAnalyzer.TestContextPropertyName;
-                    }
-                }
-
-                // Create the TestContext.CancellationTokenSource.Token expression
-                MemberAccessExpressionSyntax testContextExpression = SyntaxFactory.MemberAccessExpression(
-                    SyntaxKind.SimpleMemberAccessExpression,
-                    SyntaxFactory.MemberAccessExpression(
-                        SyntaxKind.SimpleMemberAccessExpression,
-                        SyntaxFactory.IdentifierName(testContextReference),
-                        SyntaxFactory.IdentifierName("CancellationTokenSource")),
-                    SyntaxFactory.IdentifierName("Token"));
-
-                ArgumentListSyntax currentArguments = invocation.ArgumentList;
-                SeparatedSyntaxList<ArgumentSyntax> newArguments = currentArguments.Arguments.Add(SyntaxFactory.Argument(testContextExpression));
-                InvocationExpressionSyntax newInvocation = invocation.WithArgumentList(currentArguments.WithArguments(newArguments));
-                editor.ReplaceNode(invocation, newInvocation);
-            }
-        }
-
-        return editor.GetChangedDocument();
-    }
-
-    private static bool IsInStaticMethod(InvocationExpressionSyntax invocation)
-    {
-        MethodDeclarationSyntax? method = invocation.FirstAncestorOrSelf<MethodDeclarationSyntax>();
-        return method?.Modifiers.Any(SyntaxKind.StaticKeyword) == true;
     }
 }
