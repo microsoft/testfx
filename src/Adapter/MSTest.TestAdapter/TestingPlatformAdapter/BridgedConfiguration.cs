@@ -6,7 +6,7 @@ using Microsoft.Testing.Platform.Configurations;
 
 using PlatformServicesConfiguration = Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.IConfiguration;
 
-namespace Microsoft.VisualStudio.TestTools.UnitTesting;
+namespace MSTest.TestAdapter;
 
 [SuppressMessage("ApiDesign", "RS0030:Do not use banned APIs", Justification = "We can use MTP from this folder")]
 internal sealed class BridgedConfiguration : PlatformServicesConfiguration
