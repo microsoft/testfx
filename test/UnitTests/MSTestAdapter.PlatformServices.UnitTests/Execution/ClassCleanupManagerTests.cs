@@ -9,7 +9,7 @@ using Moq;
 
 using TestFramework.ForTestingMSTest;
 
-namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution;
+namespace MSTest.TestAdapter.UnitTests.Execution;
 
 public class ClassCleanupManagerTests : TestContainer
 {

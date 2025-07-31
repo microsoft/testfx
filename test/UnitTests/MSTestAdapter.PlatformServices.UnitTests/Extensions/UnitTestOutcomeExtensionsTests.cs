@@ -8,7 +8,7 @@ using TestFramework.ForTestingMSTest;
 using AdapterTestOutcome = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestOutcome;
 using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions;
+namespace MSTest.TestAdapter.UnitTests.Extensions;
 
 public class UnitTestOutcomeExtensionsTests : TestContainer
 {

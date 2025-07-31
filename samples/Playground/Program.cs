@@ -8,7 +8,9 @@ using Microsoft.Testing.Platform.Extensions.TestHostControllers;
 using Microsoft.Testing.Platform.Messages;
 #if NETCOREAPP
 using Microsoft.Testing.Platform.ServerMode.IntegrationTests.Messages.V100;
+
 using MSTest.Acceptance.IntegrationTests.Messages.V100;
+
 #endif
 using Microsoft.Testing.Platform.TestHost;
 using Microsoft.VisualStudio.TestTools.UnitTesting;

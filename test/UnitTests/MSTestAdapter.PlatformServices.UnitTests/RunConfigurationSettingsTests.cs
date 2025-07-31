@@ -3,15 +3,16 @@
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
-using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 
 using Moq;
 
+using MSTest.TestAdapter.UnitTests.TestableImplementations;
+
 using TestFramework.ForTestingMSTest;
 
-namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests;
+namespace MSTest.TestAdapter.UnitTests;
 
 public class RunConfigurationSettingsTests : TestContainer
 {

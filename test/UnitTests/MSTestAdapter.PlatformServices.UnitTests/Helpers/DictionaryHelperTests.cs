@@ -5,7 +5,7 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 
 using TestFramework.ForTestingMSTest;
 
-namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests;
+namespace MSTest.TestAdapter.UnitTests;
 
 public class DictionaryHelperTests : TestContainer
 {

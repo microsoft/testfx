@@ -8,7 +8,7 @@ using Moq;
 
 using TestFramework.ForTestingMSTest;
 
-namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions;
+namespace MSTest.TestAdapter.UnitTests.Extensions;
 
 public class TestContextExtensionsTests : TestContainer
 {

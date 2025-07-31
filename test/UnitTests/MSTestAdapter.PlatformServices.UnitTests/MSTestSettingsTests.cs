@@ -4,19 +4,19 @@
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
-using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Resources;
-using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 
 using Moq;
+
+using MSTest.TestAdapter.UnitTests.TestableImplementations;
 
 using TestFramework.ForTestingMSTest;
 
 using ExecutionScope = Microsoft.VisualStudio.TestTools.UnitTesting.ExecutionScope;
 #pragma warning disable CS0618 // Type or member is obsolete
 
-namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests;
+namespace MSTest.TestAdapter.UnitTests;
 
 public class MSTestSettingsTests : TestContainer
 {

@@ -6,7 +6,7 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
 using TestFramework.ForTestingMSTest;
 
-namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Helpers;
+namespace MSTest.TestAdapter.UnitTests.Helpers;
 
 public class RunSettingsUtilitiesTests : TestContainer
 {

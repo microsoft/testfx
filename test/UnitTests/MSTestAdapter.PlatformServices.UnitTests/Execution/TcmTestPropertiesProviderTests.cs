@@ -7,7 +7,7 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
 using TestFramework.ForTestingMSTest;
 
-namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution;
+namespace MSTest.TestAdapter.UnitTests.Execution;
 
 public class TcmTestPropertiesProviderTests : TestContainer
 {

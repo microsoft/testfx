@@ -9,7 +9,7 @@ using Polyfills;
 
 using TestFramework.ForTestingMSTest;
 
-namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.ObjectModel;
+namespace MSTest.TestAdapter.UnitTests.ObjectModel;
 
 public class UnitTestElementTests : TestContainer
 {

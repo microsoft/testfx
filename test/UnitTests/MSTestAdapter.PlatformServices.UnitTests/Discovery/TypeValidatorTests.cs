@@ -9,7 +9,7 @@ using Moq;
 
 using TestFramework.ForTestingMSTest;
 
-namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery;
+namespace MSTest.TestAdapter.UnitTests.Discovery;
 
 public class TypeValidatorTests : TestContainer
 {

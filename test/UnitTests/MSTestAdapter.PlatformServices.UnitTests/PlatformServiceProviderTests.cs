@@ -3,13 +3,15 @@
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
-using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 
 using Moq;
 
+using MSTest.TestAdapter.UnitTests.TestableImplementations;
+
 using TestFramework.ForTestingMSTest;
 
-namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests;
+namespace MSTest.TestAdapter.UnitTests;
 
 public class PlatformServiceProviderTests : TestContainer
 {
@@ -38,7 +40,7 @@ public class PlatformServiceProviderTests : TestContainer
 
     public void ReflectionOperationsShouldBeCached()
     {
-        PlatformServices.Interface.IReflectionOperations reflectionOperationsInstance = PlatformServiceProvider.Instance.ReflectionOperations;
+        IReflectionOperations reflectionOperationsInstance = PlatformServiceProvider.Instance.ReflectionOperations;
 
         Verify(reflectionOperationsInstance is not null);
         Verify(reflectionOperationsInstance == PlatformServiceProvider.Instance.ReflectionOperations);
@@ -53,7 +55,7 @@ public class PlatformServiceProviderTests : TestContainer
         testMethod.Setup(tm => tm.Name).Returns("M");
 
         // Act.
-        PlatformServices.Interface.ITestContext testContext = PlatformServiceProvider.Instance.GetTestContext(testMethod.Object, null, properties, null!, default);
+        ITestContext testContext = PlatformServiceProvider.Instance.GetTestContext(testMethod.Object, null, properties, null!, default);
 
         // Assert.
         Verify(testContext.Context.FullyQualifiedTestClassName == "A.C.M");

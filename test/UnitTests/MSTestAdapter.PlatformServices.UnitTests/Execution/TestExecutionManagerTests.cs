@@ -6,20 +6,21 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
-using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery;
-using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 
 using Moq;
 
+using MSTest.TestAdapter.UnitTests.Discovery;
+using MSTest.TestAdapter.UnitTests.TestableImplementations;
+
 using TestFramework.ForTestingMSTest;
 
 using ExecutionScope = Microsoft.VisualStudio.TestTools.UnitTesting.ExecutionScope;
 using TestResult = Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult;
 
-namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution;
+namespace MSTest.TestAdapter.UnitTests.Execution;
 
 public class TestExecutionManagerTests : TestContainer
 {
@@ -419,8 +420,8 @@ public class TestExecutionManagerTests : TestContainer
     public void SendTestResultsShouldFillInDataRowIndexIfTestIsDataDriven()
     {
         var testCase = new TestCase("DummyTest", new Uri("executor://testExecutor"), Assembly.GetExecutingAssembly().Location);
-        TestTools.UnitTesting.TestResult unitTestResult1 = new() { DatarowIndex = 0, DisplayName = "DummyTest" };
-        TestTools.UnitTesting.TestResult unitTestResult2 = new() { DatarowIndex = 1, DisplayName = "DummyTest" };
+        Microsoft.VisualStudio.TestTools.UnitTesting.TestResult unitTestResult1 = new() { DatarowIndex = 0, DisplayName = "DummyTest" };
+        Microsoft.VisualStudio.TestTools.UnitTesting.TestResult unitTestResult2 = new() { DatarowIndex = 1, DisplayName = "DummyTest" };
         _testExecutionManager.SendTestResults(testCase, [unitTestResult1, unitTestResult2], default, default, _frameworkHandle);
         Verify(_frameworkHandle.TestDisplayNameList[0] == "DummyTest (Data Row 0)");
         Verify(_frameworkHandle.TestDisplayNameList[1] == "DummyTest (Data Row 1)");
