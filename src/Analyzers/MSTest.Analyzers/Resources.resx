@@ -672,13 +672,10 @@ The type declaring these methods should also respect the following rules:
 -The class should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</value>
   </data>
-  <data name="PreferDynamicDataSourceTypeAutoDetectTitle" xml:space="preserve">
-    <value>Prefer 'DynamicDataSourceType.AutoDetect'</value>
+  <data name="AvoidExplicitDynamicDataSourceTypeTitle" xml:space="preserve">
+    <value>Avoid passing an explicit 'DynamicDataSourceType' and use the default auto detect behavior</value>
   </data>
-  <data name="PreferDynamicDataSourceTypeAutoDetectDescription" xml:space="preserve">
-    <value>Prefer using 'DynamicDataSourceType.AutoDetect' over explicit 'Property' or 'Method' values. AutoDetect is the default and recommended approach as it automatically determines the source type.</value>
-  </data>
-  <data name="PreferDynamicDataSourceTypeAutoDetectMessageFormat" xml:space="preserve">
-    <value>Remove 'DynamicDataSourceType.{0}' parameter to use the default 'AutoDetect' behavior</value>
+  <data name="AvoidExplicitDynamicDataSourceTypeMessageFormat" xml:space="preserve">
+    <value>Remove the 'DynamicDataSourceType' argument to use the default auto detect behavior</value>
   </data>
 </root>

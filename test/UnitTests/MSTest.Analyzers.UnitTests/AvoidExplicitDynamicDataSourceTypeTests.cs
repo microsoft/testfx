@@ -1,17 +1,17 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
-    MSTest.Analyzers.PreferDynamicDataSourceTypeAutoDetectAnalyzer,
-    MSTest.Analyzers.PreferDynamicDataSourceTypeAutoDetectFixer>;
+    MSTest.Analyzers.AvoidExplicitDynamicDataSourceTypeAnalyzer,
+    MSTest.Analyzers.AvoidExplicitDynamicDataSourceTypeFixer>;
 
 namespace MSTest.Analyzers.Test;
 
 [TestClass]
-public sealed class PreferDynamicDataSourceTypeAutoDetectAnalyzerTests
+public sealed class AvoidExplicitDynamicDataSourceTypeTests
 {
     [TestMethod]
-    public async Task WhenDynamicDataUsesAutoDetect_NoDiagnostic()
+    public async Task WhenDynamicDataUsesAutoDetectImplicitly_NoDiagnostic()
     {
         string code = """
             using System.Collections.Generic;
@@ -24,23 +24,60 @@ public sealed class PreferDynamicDataSourceTypeAutoDetectAnalyzerTests
                 [TestMethod]
                 public void TestMethod1(object[] o) { }
 
-                [DynamicData("Data", DynamicDataSourceType.AutoDetect)]
-                [TestMethod]
-                public void TestMethod2(object[] o) { }
 
                 [DynamicData("Data", typeof(MyTestClass))]
                 [TestMethod]
-                public void TestMethod3(object[] o) { }
-
-                [DynamicData("Data", typeof(MyTestClass), DynamicDataSourceType.AutoDetect)]
-                [TestMethod]
-                public void TestMethod4(object[] o) { }
+                public void TestMethod2(object[] o) { }
 
                 static IEnumerable<object[]> Data => new[] { new object[] { 1 } };
             }
             """;
 
         await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenDynamicDataUsesAutoDetectExplicitly_Diagnostic()
+    {
+        string code = """
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [[|DynamicData("Data", DynamicDataSourceType.AutoDetect)|]]
+                [TestMethod]
+                public void TestMethod1(object[] o) { }
+
+                [[|DynamicData("Data", typeof(MyTestClass), DynamicDataSourceType.AutoDetect)|]]
+                [TestMethod]
+                public void TestMethod2(object[] o) { }
+
+                static IEnumerable<object[]> Data => new[] { new object[] { 1 } };
+            }
+            """;
+
+        string fixedCode = """
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [DynamicData("Data")]
+                [TestMethod]
+                public void TestMethod1(object[] o) { }
+
+                [DynamicData("Data", typeof(MyTestClass))]
+                [TestMethod]
+                public void TestMethod2(object[] o) { }
+
+                static IEnumerable<object[]> Data => new[] { new object[] { 1 } };
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
     [TestMethod]
@@ -53,7 +90,7 @@ public sealed class PreferDynamicDataSourceTypeAutoDetectAnalyzerTests
             [TestClass]
             public class MyTestClass
             {
-                [DynamicData("Data", {|#0:DynamicDataSourceType.Property|})]
+                [[|DynamicData("Data", DynamicDataSourceType.Property)|]]
                 [TestMethod]
                 public void TestMethod1(object[] o) { }
 
@@ -76,8 +113,7 @@ public sealed class PreferDynamicDataSourceTypeAutoDetectAnalyzerTests
             }
             """;
 
-        var expected = VerifyCS.Diagnostic().WithLocation(0).WithArguments("Property");
-        await VerifyCS.VerifyCodeFixAsync(code, expected, fixedCode);
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
     [TestMethod]
@@ -90,7 +126,7 @@ public sealed class PreferDynamicDataSourceTypeAutoDetectAnalyzerTests
             [TestClass]
             public class MyTestClass
             {
-                [DynamicData("GetData", {|#0:DynamicDataSourceType.Method|})]
+                [[|DynamicData("GetData", DynamicDataSourceType.Method)|]]
                 [TestMethod]
                 public void TestMethod1(object[] o) { }
 
@@ -113,8 +149,7 @@ public sealed class PreferDynamicDataSourceTypeAutoDetectAnalyzerTests
             }
             """;
 
-        var expected = VerifyCS.Diagnostic().WithLocation(0).WithArguments("Method");
-        await VerifyCS.VerifyCodeFixAsync(code, expected, fixedCode);
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
     [TestMethod]
@@ -127,7 +162,7 @@ public sealed class PreferDynamicDataSourceTypeAutoDetectAnalyzerTests
             [TestClass]
             public class MyTestClass
             {
-                [DynamicData("Data", typeof(MyTestClass), {|#0:DynamicDataSourceType.Property|})]
+                [[|DynamicData("Data", typeof(MyTestClass), DynamicDataSourceType.Property)|]]
                 [TestMethod]
                 public void TestMethod1(object[] o) { }
 
@@ -150,8 +185,7 @@ public sealed class PreferDynamicDataSourceTypeAutoDetectAnalyzerTests
             }
             """;
 
-        var expected = VerifyCS.Diagnostic().WithLocation(0).WithArguments("Property");
-        await VerifyCS.VerifyCodeFixAsync(code, expected, fixedCode);
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
     [TestMethod]
@@ -164,7 +198,7 @@ public sealed class PreferDynamicDataSourceTypeAutoDetectAnalyzerTests
             [TestClass]
             public class MyTestClass
             {
-                [DynamicData("GetData", typeof(MyTestClass), {|#0:DynamicDataSourceType.Method|})]
+                [[|DynamicData("GetData", typeof(MyTestClass), DynamicDataSourceType.Method)|]]
                 [TestMethod]
                 public void TestMethod1(object[] o) { }
 
@@ -187,8 +221,7 @@ public sealed class PreferDynamicDataSourceTypeAutoDetectAnalyzerTests
             }
             """;
 
-        var expected = VerifyCS.Diagnostic().WithLocation(0).WithArguments("Method");
-        await VerifyCS.VerifyCodeFixAsync(code, expected, fixedCode);
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
     [TestMethod]
@@ -201,8 +234,8 @@ public sealed class PreferDynamicDataSourceTypeAutoDetectAnalyzerTests
             [TestClass]
             public class MyTestClass
             {
-                [DynamicData("Data", {|#0:DynamicDataSourceType.Property|})]
-                [DynamicData("GetData", {|#1:DynamicDataSourceType.Method|})]
+                [[|DynamicData("Data", DynamicDataSourceType.Property)|]]
+                [[|DynamicData("GetData", DynamicDataSourceType.Method)|]]
                 [TestMethod]
                 public void TestMethod1(object[] o) { }
 
@@ -228,8 +261,6 @@ public sealed class PreferDynamicDataSourceTypeAutoDetectAnalyzerTests
             }
             """;
 
-        var expected1 = VerifyCS.Diagnostic().WithLocation(0).WithArguments("Property");
-        var expected2 = VerifyCS.Diagnostic().WithLocation(1).WithArguments("Method");
-        await VerifyCS.VerifyCodeFixAsync(code, [expected1, expected2], fixedCode);
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 }

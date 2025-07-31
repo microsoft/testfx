@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Immutable;
@@ -13,24 +13,19 @@ using MSTest.Analyzers.Helpers;
 namespace MSTest.Analyzers;
 
 /// <summary>
-/// MSTEST0052: <inheritdoc cref="Resources.PreferDynamicDataSourceTypeAutoDetectTitle"/>.
+/// MSTEST0052: <inheritdoc cref="Resources.AvoidExplicitDynamicDataSourceTypeTitle"/>.
 /// </summary>
 [DiagnosticAnalyzer(LanguageNames.CSharp, LanguageNames.VisualBasic)]
-public sealed class PreferDynamicDataSourceTypeAutoDetectAnalyzer : DiagnosticAnalyzer
+public sealed class AvoidExplicitDynamicDataSourceTypeAnalyzer : DiagnosticAnalyzer
 {
-    private const int DynamicDataSourceTypeProperty = 0;
-    private const int DynamicDataSourceTypeMethod = 1;
-    private const int DynamicDataSourceTypeAutoDetect = 2;
-
-    private static readonly LocalizableResourceString Title = new(nameof(Resources.PreferDynamicDataSourceTypeAutoDetectTitle), Resources.ResourceManager, typeof(Resources));
-    private static readonly LocalizableResourceString Description = new(nameof(Resources.PreferDynamicDataSourceTypeAutoDetectDescription), Resources.ResourceManager, typeof(Resources));
-    private static readonly LocalizableResourceString MessageFormat = new(nameof(Resources.PreferDynamicDataSourceTypeAutoDetectMessageFormat), Resources.ResourceManager, typeof(Resources));
+    private static readonly LocalizableResourceString Title = new(nameof(Resources.AvoidExplicitDynamicDataSourceTypeTitle), Resources.ResourceManager, typeof(Resources));
+    private static readonly LocalizableResourceString MessageFormat = new(nameof(Resources.AvoidExplicitDynamicDataSourceTypeMessageFormat), Resources.ResourceManager, typeof(Resources));
 
     internal static readonly DiagnosticDescriptor PreferAutoDetectRule = DiagnosticDescriptorHelper.Create(
-        DiagnosticIds.PreferDynamicDataSourceTypeAutoDetectRuleId,
+        DiagnosticIds.AvoidExplicitDynamicDataSourceTypeRuleId,
         Title,
         MessageFormat,
-        Description,
+        null,
         Category.Usage,
         DiagnosticSeverity.Warning,
         isEnabledByDefault: true);
@@ -71,29 +66,10 @@ public sealed class PreferDynamicDataSourceTypeAutoDetectAnalyzer : DiagnosticAn
 
     private static void AnalyzeAttribute(SymbolAnalysisContext context, AttributeData attributeData, INamedTypeSymbol dynamicDataSourceTypeSymbol)
     {
-        if (attributeData.ApplicationSyntaxReference?.GetSyntax() is not { } attributeSyntax)
+        if (attributeData.ApplicationSyntaxReference?.GetSyntax(context.CancellationToken) is { } syntax &&
+            attributeData.AttributeConstructor?.Parameters.Any(p => dynamicDataSourceTypeSymbol.Equals(p.Type, SymbolEqualityComparer.Default)) == true)
         {
-            return;
-        }
-
-        // Check constructor arguments for explicit DynamicDataSourceType usage
-        foreach (TypedConstant argument in attributeData.ConstructorArguments)
-        {
-            if (argument.Type is null)
-            {
-                continue;
-            }
-
-            if (SymbolEqualityComparer.Default.Equals(argument.Type, dynamicDataSourceTypeSymbol)
-                && argument.Value is int dataSourceType)
-            {
-                // Flag usage of Property or Method (anything other than AutoDetect)
-                if (dataSourceType is DynamicDataSourceTypeProperty or DynamicDataSourceTypeMethod)
-                {
-                    string sourceTypeName = dataSourceType == DynamicDataSourceTypeProperty ? "Property" : "Method";
-                    context.ReportDiagnostic(attributeSyntax.CreateDiagnostic(PreferAutoDetectRule, sourceTypeName));
-                }
-            }
+            context.ReportDiagnostic(syntax.CreateDiagnostic(PreferAutoDetectRule));
         }
     }
 }
