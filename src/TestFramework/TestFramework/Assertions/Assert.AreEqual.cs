@@ -758,8 +758,8 @@ public sealed partial class Assert
             : string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AreEqualStringDiffLengthDifferentMsg, expected.Length, actual.Length);
 
         // Create contextual preview around the difference
-        const int contextLength = 20; // Show up to 20 characters of context on each side
-        Tuple<string, string, int> tuple = CreateStringPreviews(expected, actual, diffIndex, contextLength);
+        const int contextLength = 41; // Show up to 20 characters of context on each side
+        Tuple<string, string, int> tuple = StringPreviewHelper.CreateStringPreviews(expected, actual, diffIndex, contextLength);
         string expectedPreview = tuple.Item1;
         string actualPreview = tuple.Item2;
         int caretPosition = tuple.Item3;
@@ -795,121 +795,6 @@ public sealed partial class Assert
             expectedLine,
             actualLine,
             new string('-', adjustedCaretPosition) + "^");
-    }
-
-    private static Tuple<string, string, int> CreateStringPreviews(
-        string expected, string actual, int diffIndex, int contextLength)
-    {
-        int maxLength = Math.Max(expected.Length, actual.Length);
-
-        // For shorter strings, show the full strings but still apply character escaping
-        if (maxLength <= contextLength)
-        {
-            Tuple<string, int> expectedShortResult = CreateStringPreviewWithCaretInfo(expected, 0, expected.Length, diffIndex);
-            Tuple<string, int> actualShortResult = CreateStringPreviewWithCaretInfo(actual, 0, actual.Length, diffIndex);
-
-            // Use the caret position from the expected string as reference
-            return new(expectedShortResult.Item1, actualShortResult.Item1, expectedShortResult.Item2);
-        }
-
-        // Calculate optimal start position to maximize context around the difference
-        // Position the difference at 75% within the window for better context
-        int preferredStart = diffIndex - (int)(contextLength * 0.75);
-        int startPos = Math.Max(0, Math.Min(preferredStart, maxLength - contextLength));
-
-        // Calculate end position
-        int endPos = Math.Min(maxLength, startPos + contextLength);
-
-        // Create previews and track character position changes for caret alignment
-        Tuple<string, int> expectedResult = CreateStringPreviewWithCaretInfo(expected, startPos, endPos, diffIndex);
-        Tuple<string, int> actualResult = CreateStringPreviewWithCaretInfo(actual, startPos, endPos, diffIndex);
-
-        // Use the caret position from the expected string as reference
-        int caretPosition = expectedResult.Item2;
-
-        return new(expectedResult.Item1, actualResult.Item1, caretPosition);
-    }
-
-    private static Tuple<string, int> CreateStringPreviewWithCaretInfo(string str, int startPos, int endPos, int diffIndex)
-    {
-        if (startPos >= str.Length)
-        {
-            return new(string.Empty, 0);
-        }
-
-        int actualStart = Math.Min(startPos, str.Length);
-        int actualEnd = Math.Min(endPos, str.Length);
-        string preview = str.Substring(actualStart, actualEnd - actualStart);
-        var result = new StringBuilder();
-        int originalCaretPos = Math.Max(0, diffIndex - actualStart);
-        int adjustedCaretPos = 0;
-
-        // Only add leading ellipsis if we're masking 4 or more characters
-        if (actualStart >= 4)
-        {
-            result.Append("...");
-            adjustedCaretPos += 3;
-        }
-
-        // Process each character and track caret position adjustments
-        for (int i = 0; i < preview.Length; i++)
-        {
-            char c = preview[i];
-
-            if (i == originalCaretPos)
-            {
-                adjustedCaretPos = result.Length;
-            }
-
-            if (c is >= (char)32 and <= (char)126) // Printable ASCII
-            {
-                result.Append(c);
-            }
-            else if (c == '\t')
-            {
-                result.Append("\\t");
-            }
-            else if (c == '\n')
-            {
-                result.Append("\\n");
-            }
-            else if (c == '\r')
-            {
-                result.Append("\\r");
-            }
-            else if (c == '\0')
-            {
-                result.Append("\\0");
-            }
-            else if (char.IsControl(c))
-            {
-                // Only escape control characters, keep printable Unicode
-#if NET
-                result.Append(CultureInfo.InvariantCulture, $"\\u{(int)c:X4}");
-#else
-                result.Append($"\\u{(int)c:X4}");
-#endif
-            }
-            else
-            {
-                // Keep Unicode characters (like emojis) as-is
-                result.Append(c);
-            }
-        }
-
-        // Handle caret position if it's at the end
-        if (originalCaretPos >= preview.Length)
-        {
-            adjustedCaretPos = result.Length;
-        }
-
-        // Only add trailing ellipsis if we're masking 4 or more characters
-        if (str.Length - actualEnd >= 4)
-        {
-            result.Append("...");
-        }
-
-        return new(result.ToString(), adjustedCaretPos);
     }
 
     [DoesNotReturn]
@@ -2339,5 +2224,123 @@ public sealed partial class Assert
             ReplaceNulls(notExpected),
             ReplaceNulls(actual));
         ThrowAssertFailed("Assert.AreNotEqual", finalMessage);
+    }
+}
+
+internal static class StringPreviewHelper
+{
+    public static Tuple<string, string, int> CreateStringPreviews(string expected, string actual, int diffIndex, int fullPreviewLength)
+    {
+        int ellipsisLength = 3; // Length of the ellipsis "..."
+
+        if (fullPreviewLength % 2 == 0)
+        {
+            throw new ArgumentException($"{nameof(fullPreviewLength)} must be odd, but it was even.");
+        }
+
+        if (fullPreviewLength < 9)
+        {
+            // Too short context window has additional complication with ellipsis etc.
+            throw new ArgumentException($"{nameof(fullPreviewLength)} cannot be shorter than 9.");
+        }
+
+        // In case we want to instead count runes or text elements we can change it just here.
+        int expectedLength = expected.Length;
+        int actualLength = actual.Length;
+
+        if (diffIndex < 0 || diffIndex > Math.Min(expectedLength, actualLength)) // Not -1 here because the difference can be right after the end of the shorter string.
+        {
+            throw new ArgumentOutOfRangeException(nameof(diffIndex), "diffIndex must be within the bounds of both strings.");
+        }
+
+        int contextLength = (fullPreviewLength - 1) / 2;
+
+        // Diff index must point into the string, the start of the strings will always be shortened the same amount,
+        // because otherwise the diff would happen at the beginning of the string.
+        // So we just care about how far we are from the end of the string, so we can show the maximum amount of info to the user
+        // when diff is really close to the end.
+        string shorterString = expectedLength < actualLength ? expected : actual;
+        string longerString = expectedLength < actualLength ? actual : expected;
+        bool expectedIsShorter = expectedLength < actualLength;
+
+        int shorterStringLength = shorterString.Length;
+        int longerStringLength = longerString.Length;
+
+        // This tells us where the shorter string will be cut off.
+        int previewWindowEnd = diffIndex + contextLength;
+
+        // If the diff marker is closer to 0 than the possible preview, move it to end,
+        // to make the preview as big as possible.
+        int previewWindowBefore0 = (diffIndex - contextLength) * -1;
+        if (previewWindowBefore0 > 0)
+        {
+            previewWindowEnd += previewWindowBefore0;
+        }
+
+        // End marker will point to the end of the shorter string, but the end of the longer string will be replaced by ...
+        // make sure we don't point at the dots. To do this we need to make sure the strings are cut at the beginning, rather than preferring the maximum context shown.
+        bool markerPointsAtEllipsis = longerStringLength - shorterStringLength > ellipsisLength && shorterStringLength - diffIndex < ellipsisLength;
+        int ellipsisSpaceOrZero = markerPointsAtEllipsis ? ellipsisLength + 2 : 0;
+
+        int cutEnd = Math.Min(previewWindowEnd, shorterString.Length);
+        int cutStart = Math.Max(cutEnd - fullPreviewLength + ellipsisSpaceOrZero, 0);
+
+        // Preview of shorter string is cutStart to cutEnd.
+        string shorterStringPreview = shorterString.Substring(cutStart, cutEnd - cutStart);
+        // Preview of longer string is cutStart to cutStart + fullPreviewLength to show maximum context.
+        string longerStringPreview = longerString.Substring(cutStart, Math.Min(longerStringLength, cutStart + fullPreviewLength) - cutStart);
+
+        // We cut something from the start of the string, so we need to add ellipsis there.
+        // We know if one string is cut then both must be cut, otherwise the diff would be at the beginning of the string.
+        if (cutStart > 0)
+        {
+            shorterStringPreview = EllipsisStart(shorterStringPreview);
+            longerStringPreview = EllipsisStart(longerStringPreview);
+        }
+
+        // We cut something from the end of the string, so we need to add ellipsis there.
+        // We don't know if both strings are cut, so we need to check them separately.
+        if (cutEnd < shorterStringLength)
+        {
+            shorterStringPreview = EllipsisEnd(shorterStringPreview);
+        }
+
+        // We cut something from the end of the string, so we need to add ellipsis there.
+        if (cutStart + fullPreviewLength < longerStringLength)
+        {
+            longerStringPreview = EllipsisEnd(longerStringPreview);
+        }
+
+        string escapedShorterStringPreview = MakeControlCharactersVisible(shorterStringPreview);
+        string escapedLongerStringPreview = MakeControlCharactersVisible(longerStringPreview);
+
+        return new Tuple<string, string, int>(
+            expectedIsShorter ? escapedShorterStringPreview : escapedLongerStringPreview,
+            expectedIsShorter ? escapedLongerStringPreview : escapedShorterStringPreview,
+            diffIndex - cutStart);
+    }
+
+    private static string EllipsisEnd(string text)
+        => $"{text.Substring(0, text.Length - 3)}...";
+
+    private static string EllipsisStart(string text)
+        => $"...{text.Substring(3)}";
+
+    private static string MakeControlCharactersVisible(string text)
+    {
+        var stringBuilder = new StringBuilder(text.Length);
+        foreach (char ch in text)
+        {
+            if (char.IsControl(ch))
+            {
+                stringBuilder.Append((char)(0x2400 + ch));
+            }
+            else
+            {
+                stringBuilder.Append(ch);
+            }
+        }
+
+        return stringBuilder.ToString();
     }
 }
