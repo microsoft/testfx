@@ -540,7 +540,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
         AppendIndentedLine(terminal, standardOutputWithoutSpecialChars, DoubleIndentation);
         terminal.Append(SingleIndentation);
         terminal.AppendLine(PlatformResources.StandardError);
-        string? standardErrorWithoutSpecialChars = NormalizeSpecialCharacters(standardError, false);
+        string? standardErrorWithoutSpecialChars = NormalizeSpecialCharacters(standardError, normalizeWhitespaceCharacters: false);
         AppendIndentedLine(terminal, standardErrorWithoutSpecialChars, DoubleIndentation);
         terminal.ResetColor();
     }
