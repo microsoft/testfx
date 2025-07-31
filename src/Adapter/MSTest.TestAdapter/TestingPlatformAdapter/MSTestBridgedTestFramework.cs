@@ -10,7 +10,7 @@ using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 
-namespace Microsoft.VisualStudio.TestTools.UnitTesting;
+namespace MSTest.TestAdapter;
 
 [SuppressMessage("ApiDesign", "RS0030:Do not use banned APIs", Justification = "We can use MTP from this folder")]
 internal sealed class MSTestBridgedTestFramework : SynchronizedSingleSessionVSTestBridgedTestFramework

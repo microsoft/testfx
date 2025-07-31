@@ -7,6 +7,8 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 
+using MSTest.TestAdapter;
+
 [assembly: TestExtensionTypes(typeof(MSTestDiscoverer), typeof(MSTestExecutor))]
 
 #pragma warning disable RS0016 // Add public types and members to the declared API (type forwarding is not public API)

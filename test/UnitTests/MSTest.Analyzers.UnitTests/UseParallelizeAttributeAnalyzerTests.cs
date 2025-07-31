@@ -3,7 +3,8 @@
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Testing;
-using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
+
+using MSTest.TestAdapter;
 
 using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
     MSTest.Analyzers.UseParallelizeAttributeAnalyzer,

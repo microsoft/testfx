@@ -9,6 +9,8 @@ using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Services;
 
+using MSTest.TestAdapter;
+
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 /// <summary>
