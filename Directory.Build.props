@@ -5,6 +5,10 @@
 
   <PropertyGroup>
     <IsSourceProject Condition="$([MSBuild]::MakeRelative($(RepoRoot), $(MSBuildProjectFullPath)).StartsWith('src/')) OR $([MSBuild]::MakeRelative($(RepoRoot), $(MSBuildProjectFullPath)).StartsWith('src\'))">true</IsSourceProject>
+
+    <!-- We use Resx generator from Arcade. Enabling the one from MSBuild.Sdk.Extras (enabled by default) breaks Arcade -->
+    <!-- So we should disable it. -->
+    <ExtrasEnableEmbeddedResourceCodeGenerator>false</ExtrasEnableEmbeddedResourceCodeGenerator>
   </PropertyGroup>
 
   <!-- Language configuration -->
