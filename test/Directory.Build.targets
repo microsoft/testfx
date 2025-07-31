@@ -3,7 +3,7 @@
 
   <Import Project="../Directory.Build.targets" />
 
-  <PropertyGroup Condition=" '$(EnableMSTestRunner)' == 'true' OR '$(UseInternalTestFramework)' == 'true' ">
+  <PropertyGroup>
     <GenerateProgramFile>false</GenerateProgramFile>
     <GenerateTestingPlatformEntryPoint>false</GenerateTestingPlatformEntryPoint>
     <Architecture Condition=" '$(Architecture)' == '' ">$(PlatformTarget)</Architecture>
