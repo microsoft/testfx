@@ -12,7 +12,7 @@ using Moq;
 
 using TestFramework.ForTestingMSTest;
 
-namespace PlatformServices.Desktop.ComponentTests;
+namespace MSTest.PlatformServices.IntegrationTests;
 
 public class DesktopTestSourceHostTests : TestContainer
 {
