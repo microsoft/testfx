@@ -274,8 +274,11 @@ Actual: {2}</value>
   <data name="DynamicDataInvalidPropertyLayout" xml:space="preserve">
     <value>Dynamic data property '{0}' should be static and have a getter.</value>
   </data>
+  <data name="DynamicDataInvalidFieldLayout" xml:space="preserve">
+    <value>Dynamic data field '{0}' should be static.</value>
+  </data>
   <data name="DynamicDataSourceShouldExistAndBeValid" xml:space="preserve">
-    <value>The dynamic data source '{0}' in type '{1}' should exist and be a property or a method.</value>
+    <value>The dynamic data source '{0}' in type '{1}' should exist and be a property, a method, or a field.</value>
   </data>
   <data name="HasCountFailMsg" xml:space="preserve">
     <value>Expected collection of size {1}. Actual: {2}. {0}</value>
