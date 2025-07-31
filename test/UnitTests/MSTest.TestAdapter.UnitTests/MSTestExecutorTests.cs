@@ -10,7 +10,7 @@ using Moq;
 
 using TestFramework.ForTestingMSTest;
 
-namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests;
+namespace MSTest.TestAdapter.UnitTests;
 
 public class MSTestExecutorTests : TestContainer
 {
@@ -80,7 +80,7 @@ public class MSTestExecutorTests : TestContainer
 
         // Assert.
         _mockFrameworkHandle.Verify(fh => fh.RecordStart(tests[0]), Times.Never);
-        _mockFrameworkHandle.Verify(fh => fh.SendMessage(TestPlatform.ObjectModel.Logging.TestMessageLevel.Error, "Invalid value 'Pond' specified for 'Scope'. Supported scopes are ClassLevel, MethodLevel."), Times.Once);
+        _mockFrameworkHandle.Verify(fh => fh.SendMessage(Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging.TestMessageLevel.Error, "Invalid value 'Pond' specified for 'Scope'. Supported scopes are ClassLevel, MethodLevel."), Times.Once);
     }
 
     public async Task RunTestsWithSourcesShouldNotExecuteTestsIfTestSettingsIsGiven()
@@ -125,6 +125,6 @@ public class MSTestExecutorTests : TestContainer
 
         // Assert.
         _mockFrameworkHandle.Verify(fh => fh.RecordStart(It.IsAny<TestCase>()), Times.Never);
-        _mockFrameworkHandle.Verify(fh => fh.SendMessage(TestPlatform.ObjectModel.Logging.TestMessageLevel.Error, "Invalid value 'Pond' specified for 'Scope'. Supported scopes are ClassLevel, MethodLevel."), Times.Once);
+        _mockFrameworkHandle.Verify(fh => fh.SendMessage(Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging.TestMessageLevel.Error, "Invalid value 'Pond' specified for 'Scope'. Supported scopes are ClassLevel, MethodLevel."), Times.Once);
     }
 }

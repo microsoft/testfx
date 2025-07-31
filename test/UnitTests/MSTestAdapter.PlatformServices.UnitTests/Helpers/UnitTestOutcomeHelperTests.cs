@@ -10,7 +10,7 @@ using Moq;
 
 using TestFramework.ForTestingMSTest;
 
-namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Helpers;
+namespace MSTest.TestAdapter.UnitTests.Helpers;
 
 public class UnitTestOutcomeHelperTests : TestContainer
 {

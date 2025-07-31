@@ -4,14 +4,16 @@
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 
 using Moq;
 
+using ISettingsProvider = Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ISettingsProvider;
 using ITestDataSource = Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ITestDataSource;
 using ITestMethod = Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ObjectModel.ITestMethod;
 
-namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
+namespace MSTest.TestAdapter.UnitTests.TestableImplementations;
 
 internal class TestablePlatformServiceProvider : IPlatformServiceProvider
 {
@@ -68,7 +70,7 @@ internal class TestablePlatformServiceProvider : IPlatformServiceProvider
         return testContextImpl;
     }
 
-    public ITestSourceHost CreateTestSourceHost(string source, TestPlatform.ObjectModel.Adapter.IRunSettings? runSettings, TestPlatform.ObjectModel.Adapter.IFrameworkHandle? frameworkHandle) => MockTestSourceHost.Object;
+    public ITestSourceHost CreateTestSourceHost(string source, IRunSettings? runSettings, IFrameworkHandle? frameworkHandle) => MockTestSourceHost.Object;
 
     public void SetupMockReflectionOperations() => MockReflectionOperations = new Mock<IReflectionOperations2>();
 }

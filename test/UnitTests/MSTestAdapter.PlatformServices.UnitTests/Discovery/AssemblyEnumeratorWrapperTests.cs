@@ -3,15 +3,17 @@
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
-using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Resources;
-using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
 
 using Moq;
 
+using MSTest.TestAdapter.UnitTests.TestableImplementations;
+
 using TestFramework.ForTestingMSTest;
 
-namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery;
+namespace MSTest.TestAdapter.UnitTests.Discovery;
 
 public class AssemblyEnumeratorWrapperTests : TestContainer
 {
@@ -69,7 +71,7 @@ public class AssemblyEnumeratorWrapperTests : TestContainer
         // Setup mocks.
         SetupMocks(assemblyName, doesFileExist: true, isAssemblyReferenced: true);
 
-        ICollection<MSTest.TestAdapter.ObjectModel.UnitTestElement>? tests = AssemblyEnumeratorWrapper.GetTests(assemblyName, null, _mockTestSourceHandler.Object, out _);
+        ICollection<UnitTestElement>? tests = AssemblyEnumeratorWrapper.GetTests(assemblyName, null, _mockTestSourceHandler.Object, out _);
 
         Verify(tests is not null);
 

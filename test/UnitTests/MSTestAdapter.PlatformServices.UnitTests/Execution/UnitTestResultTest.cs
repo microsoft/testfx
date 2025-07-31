@@ -7,7 +7,7 @@ using TestFramework.ForTestingMSTest;
 
 using UnitTestOutcome = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestOutcome;
 
-namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution;
+namespace MSTest.TestAdapter.UnitTests.Execution;
 
 public class UnitTestResultTest : TestContainer
 {
@@ -22,7 +22,7 @@ public class UnitTestResultTest : TestContainer
     public void UnitTestResultConstructorWithTestFailedExceptionShouldSetRequiredFields()
     {
         var stackTrace = new StackTraceInformation("trace", "filePath", 2, 3);
-        TestFailedException ex = new(TestTools.UnitTesting.UnitTestOutcome.Error, "DummyMessage", stackTrace);
+        TestFailedException ex = new(Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome.Error, "DummyMessage", stackTrace);
 
         UnitTestResult result = new(ex);
 
