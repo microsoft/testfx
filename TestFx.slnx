@@ -78,7 +78,7 @@
     <Project Path="test/IntegrationTests/MSTest.Acceptance.IntegrationTests/MSTest.Acceptance.IntegrationTests.csproj" />
     <Project Path="test/IntegrationTests/MSTest.IntegrationTests/MSTest.IntegrationTests.csproj" />
     <Project Path="test/IntegrationTests/MSTest.VstestConsoleWrapper.IntegrationTests/MSTest.VstestConsoleWrapper.IntegrationTests.csproj" />
-    <Project Path="test/IntegrationTests/PlatformServices.Desktop.IntegrationTests/PlatformServices.Desktop.IntegrationTests.csproj" />
+    <Project Path="test/IntegrationTests/MSTest.PlatformServices.IntegrationTests/MSTest.PlatformServices.IntegrationTests.csproj" />
   </Folder>
   <Folder Name="/test/IntegrationTests/TestAssets/" Id="05959510-e531-ecb6-7089-da3b202e43db">
     <File Path="test/IntegrationTests/TestAssets/Directory.Build.targets" />
