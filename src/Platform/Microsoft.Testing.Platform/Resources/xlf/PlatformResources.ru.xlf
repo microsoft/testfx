@@ -88,17 +88,17 @@
         <note />
       </trans-unit>
       <trans-unit id="CommandLineOptionExpectsAtLeastArguments">
-        <source>Option '--{0}' from provider '{1}' (UID: {2}) expects at least {3} arguments</source>
+        <source>Option '--{0}' from provider '{1}' (UID: {2}) expects at least {3} arguments. Command: {4}</source>
         <target state="translated">Для параметра "--{0}" от поставщика "{1}" (UID: {2}) ожидается не менее {3} аргументов</target>
         <note />
       </trans-unit>
       <trans-unit id="CommandLineOptionExpectsAtMostArguments">
-        <source>Option '--{0}' from provider '{1}' (UID: {2}) expects at most {3} arguments</source>
+        <source>Option '--{0}' from provider '{1}' (UID: {2}) expects at most {3} arguments. Command: {4}</source>
         <target state="translated">Для параметра "--{0}" от поставщика "{1}" (UID: {2}) ожидается не более {3} аргументов</target>
         <note />
       </trans-unit>
       <trans-unit id="CommandLineOptionExpectsNoArguments">
-        <source>Option '--{0}' from provider '{1}' (UID: {2}) expects no arguments</source>
+        <source>Option '--{0}' from provider '{1}' (UID: {2}) expects no arguments. Command: {3}</source>
         <target state="translated">Для параметра "--{0}" от поставщика "{1}" (UID: {2}) не ожидается никаких аргументов</target>
         <note />
       </trans-unit>
