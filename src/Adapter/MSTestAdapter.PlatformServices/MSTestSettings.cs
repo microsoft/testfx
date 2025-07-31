@@ -70,6 +70,8 @@ public class MSTestSettings
         TreatClassAndAssemblyCleanupWarningsAsErrors = false;
         CooperativeCancellationTimeout = false;
         OrderTestsByNameInClass = false;
+        LaunchDebuggerOnFailure = false;
+        DebuggerLaunchTestFilter = null;
     }
 
     /// <summary>
@@ -214,6 +216,16 @@ public class MSTestSettings
     internal bool OrderTestsByNameInClass { get; private set; }
 
     /// <summary>
+    /// Gets a value indicating whether debugger should be launched on test failure.
+    /// </summary>
+    public bool LaunchDebuggerOnFailure { get; private set; }
+
+    /// <summary>
+    /// Gets the test name filter for debugger launch.
+    /// </summary>
+    public string? DebuggerLaunchTestFilter { get; private set; }
+
+    /// <summary>
     /// Populate settings based on existing settings object.
     /// </summary>
     /// <param name="settings">The existing settings object.</param>
@@ -241,6 +253,9 @@ public class MSTestSettings
         CurrentSettings.OrderTestsByNameInClass = settings.OrderTestsByNameInClass;
         CurrentSettings.ParallelizationScope = settings.ParallelizationScope;
         CurrentSettings.ParallelizationWorkers = settings.ParallelizationWorkers;
+        CurrentSettings.LaunchDebuggerOnFailure = settings.LaunchDebuggerOnFailure;
+        CurrentSettings.DebuggerLaunchTestFilter = settings.DebuggerLaunchTestFilter;
+        CurrentSettings.TestCleanupTimeout = settings.TestCleanupTimeout;
         CurrentSettings.TestCleanupTimeout = settings.TestCleanupTimeout;
         CurrentSettings.TestInitializeTimeout = settings.TestInitializeTimeout;
         CurrentSettings.TestSettingsFile = settings.TestSettingsFile;
@@ -341,6 +356,9 @@ public class MSTestSettings
 
         CurrentSettings = settings;
         RunConfigurationSettings = runConfigurationSettings;
+        
+        // Configure the debugger launch settings for the TestFramework
+        DebuggerLaunchSettings.SetConfiguration(settings.LaunchDebuggerOnFailure, settings.DebuggerLaunchTestFilter);
     }
 
     /// <summary>
@@ -405,6 +423,7 @@ public class MSTestSettings
     {
         CurrentSettings = null;
         RunConfigurationSettings = null;
+        DebuggerLaunchSettings.Reset();
     }
 
     /// <summary>
@@ -764,6 +783,32 @@ public class MSTestSettings
                             break;
                         }
 
+                    case "LAUNCHDEBUGGERONFAILURE":
+                        {
+                            string value = reader.ReadInnerXml();
+                            if (bool.TryParse(value, out result))
+                            {
+                                settings.LaunchDebuggerOnFailure = result;
+                            }
+                            else
+                            {
+                                logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, value, "LaunchDebuggerOnFailure"));
+                            }
+
+                            break;
+                        }
+
+                    case "DEBUGGERLAUNCH_TESTFILTER":
+                        {
+                            string value = reader.ReadInnerXml();
+                            if (!StringEx.IsNullOrEmpty(value))
+                            {
+                                settings.DebuggerLaunchTestFilter = value;
+                            }
+
+                            break;
+                        }
+
                     default:
                         {
                             PlatformServiceProvider.Instance.SettingsProvider.Load(reader.ReadSubtree());
@@ -960,6 +1005,12 @@ public class MSTestSettings
         ParseBooleanSetting(configuration, "execution:considerEmptyDataSourceAsInconclusive", logger, value => settings.ConsiderEmptyDataSourceAsInconclusive = value);
         ParseBooleanSetting(configuration, "execution:treatClassAndAssemblyCleanupWarningsAsErrors", logger, value => settings.TreatClassAndAssemblyCleanupWarningsAsErrors = value);
         ParseBooleanSetting(configuration, "execution:considerFixturesAsSpecialTests", logger, value => settings.ConsiderFixturesAsSpecialTests = value);
+        ParseBooleanSetting(configuration, "execution:launchDebuggerOnFailure", logger, value => settings.LaunchDebuggerOnFailure = value);
+
+        if (configuration["mstest:execution:debuggerLaunchTestFilter"] is string filterValue)
+        {
+            settings.DebuggerLaunchTestFilter = filterValue;
+        }
 
         ParseBooleanSetting(configuration, "timeout:useCooperativeCancellation", logger, value => settings.CooperativeCancellationTimeout = value);
         ParseIntegerSetting(configuration, "timeout:test", logger, value => settings.TestTimeout = value);
