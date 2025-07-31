@@ -11,14 +11,14 @@ namespace Microsoft.Testing.Platform.UnitTests;
 [TestClass]
 public sealed class LoggerFactoryTests
 {
-    private readonly Mock<ILogger> _mockLogger = new();
-    private readonly Mock<IMonitor> _mockMonitor = new();
-    private readonly Mock<IDisposableLoggerProvider> _mockLoggerProvider = new();
+    private readonly Mock<ILogger> _mockLogger = new(MockBehavior.Loose);
+    private readonly Mock<IMonitor> _mockMonitor = new(MockBehavior.Loose);
+    private readonly Mock<IDisposableLoggerProvider> _mockLoggerProvider = new(MockBehavior.Loose);
     private readonly ILoggerProvider[] _loggerProviders;
 
     public LoggerFactoryTests()
     {
-        _mockMonitor.Setup(x => x.Lock(It.IsAny<object>())).Returns(new Mock<IDisposable>().Object);
+        _mockMonitor.Setup(x => x.Lock(It.IsAny<object>())).Returns(new Mock<IDisposable>(MockBehavior.Loose).Object);
         _mockLoggerProvider.Setup(x => x.CreateLogger(It.IsAny<string>())).Returns(_mockLogger.Object);
 
         _loggerProviders =

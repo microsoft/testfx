@@ -39,7 +39,7 @@ public sealed class IPCTests
                             pipeNameDescription,
                             async _ => await Task.FromResult(VoidResponse.CachedInstance),
                             new SystemEnvironment(),
-                            new Mock<ILogger>().Object,
+                            new Mock<ILogger>(MockBehavior.Loose).Object,
                             new SystemTask(),
                             _testContext.CancellationTokenSource.Token);
 
@@ -128,7 +128,7 @@ public sealed class IPCTests
                 return Task.FromResult<IResponse>(VoidResponse.CachedInstance);
             },
             new SystemEnvironment(),
-            new Mock<ILogger>().Object,
+            new Mock<ILogger>(MockBehavior.Loose).Object,
             new SystemTask(),
             CancellationToken.None);
         singleConnectionNamedPipeServer.RegisterSerializer(new VoidResponseSerializer(), typeof(VoidResponse));
@@ -181,7 +181,7 @@ public sealed class IPCTests
                 pipeNameDescription,
                 async _ => await Task.FromResult(VoidResponse.CachedInstance),
                 new SystemEnvironment(),
-                new Mock<ILogger>().Object,
+                new Mock<ILogger>(MockBehavior.Loose).Object,
                 new SystemTask(),
                 maxNumberOfServerInstances: 3,
                 _testContext.CancellationTokenSource.Token));
@@ -192,7 +192,7 @@ public sealed class IPCTests
                 pipeNameDescription,
                 async _ => await Task.FromResult(VoidResponse.CachedInstance),
                 new SystemEnvironment(),
-                new Mock<ILogger>().Object,
+                new Mock<ILogger>(MockBehavior.Loose).Object,
                 new SystemTask(),
                 maxNumberOfServerInstances: 3,
                 _testContext.CancellationTokenSource.Token));

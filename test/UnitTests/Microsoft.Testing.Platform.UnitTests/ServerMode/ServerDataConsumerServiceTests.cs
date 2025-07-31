@@ -20,8 +20,8 @@ public sealed class ServerDataConsumerServiceTests : IDisposable
 {
     private readonly PerRequestServerDataConsumer _service;
     private readonly ServiceProvider _serviceProvider = new();
-    private readonly Mock<ITask> _task = new();
-    private readonly Mock<IServerTestHost> _serverTestHost = new();
+    private readonly Mock<ITask> _task = new(MockBehavior.Loose);
+    private readonly Mock<IServerTestHost> _serverTestHost = new(MockBehavior.Loose);
 
     private readonly Guid _runId = Guid.NewGuid();
 

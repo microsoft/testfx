@@ -15,8 +15,8 @@ namespace Microsoft.Testing.Platform.UnitTests;
 public sealed class AggregatedConfigurationTests
 {
     private const string ExpectedPath = "a/b/c";
-    private readonly Mock<ITestApplicationModuleInfo> _testApplicationModuleInfoMock = new();
-    private readonly Mock<IFileSystem> _fileSystemMock = new();
+    private readonly Mock<ITestApplicationModuleInfo> _testApplicationModuleInfoMock = new(MockBehavior.Loose);
+    private readonly Mock<IFileSystem> _fileSystemMock = new(MockBehavior.Loose);
 
     [TestMethod]
     [DataRow(PlatformConfigurationConstants.PlatformResultDirectory)]
@@ -41,7 +41,7 @@ public sealed class AggregatedConfigurationTests
     [DataRow(PlatformConfigurationConstants.PlatformTestHostWorkingDirectory)]
     public void IndexerTest_DirectoryNotSetButConfigurationProvidersPresent_DirectoryIsNull(string key)
     {
-        Mock<IConfigurationProvider> mockProvider = new();
+        Mock<IConfigurationProvider> mockProvider = new(MockBehavior.Loose);
 
         AggregatedConfiguration aggregatedConfiguration = new([mockProvider.Object], _testApplicationModuleInfoMock.Object, _fileSystemMock.Object, new(null, [], []));
         Assert.IsNull(aggregatedConfiguration[key]);
@@ -76,14 +76,14 @@ public sealed class AggregatedConfigurationTests
     [TestMethod]
     public async ValueTask CheckTestResultsDirectoryOverrideAndCreateItAsync_ResultsDirectoryIsNull_GetDirectoryFromCommandLineProvider()
     {
-        Mock<ITestApplicationModuleInfo> mockTestApplicationModuleInfo = new();
+        Mock<ITestApplicationModuleInfo> mockTestApplicationModuleInfo = new(MockBehavior.Loose);
         mockTestApplicationModuleInfo.Setup(x => x.GetCurrentTestApplicationFullPath()).Returns(ExpectedPath);
         mockTestApplicationModuleInfo.Setup(x => x.GetCurrentTestApplicationDirectory()).Returns(Path.GetDirectoryName(ExpectedPath) ?? AppContext.BaseDirectory);
 
-        Mock<IFileSystem> mockFileSystem = new();
+        Mock<IFileSystem> mockFileSystem = new(MockBehavior.Loose);
         mockFileSystem.Setup(x => x.CreateDirectory(It.IsAny<string>())).Returns((string path) => path);
 
-        Mock<IFileLoggerProvider> mockFileLogger = new();
+        Mock<IFileLoggerProvider> mockFileLogger = new(MockBehavior.Loose);
         mockFileLogger.Setup(x => x.CheckLogFolderAndMoveToTheNewIfNeededAsync(It.IsAny<string>())).Callback(() => { });
 
         AggregatedConfiguration aggregatedConfiguration = new([], mockTestApplicationModuleInfo.Object, mockFileSystem.Object, new(null, [new CommandLineParseOption("results-directory", [ExpectedPath])], []));
@@ -98,14 +98,14 @@ public sealed class AggregatedConfigurationTests
     [TestMethod]
     public async ValueTask CheckTestResultsDirectoryOverrideAndCreateItAsync_ResultsDirectoryIsNull_GetDirectoryFromStore()
     {
-        Mock<ITestApplicationModuleInfo> mockTestApplicationModuleInfo = new();
+        Mock<ITestApplicationModuleInfo> mockTestApplicationModuleInfo = new(MockBehavior.Loose);
         mockTestApplicationModuleInfo.Setup(x => x.GetCurrentTestApplicationFullPath()).Returns(ExpectedPath);
         mockTestApplicationModuleInfo.Setup(x => x.GetCurrentTestApplicationDirectory()).Returns(Path.GetDirectoryName(ExpectedPath) ?? AppContext.BaseDirectory);
 
-        Mock<IFileSystem> mockFileSystem = new();
+        Mock<IFileSystem> mockFileSystem = new(MockBehavior.Loose);
         mockFileSystem.Setup(x => x.CreateDirectory(It.IsAny<string>())).Returns((string path) => path);
 
-        Mock<IFileLoggerProvider> mockFileLogger = new();
+        Mock<IFileLoggerProvider> mockFileLogger = new(MockBehavior.Loose);
         mockFileLogger.Setup(x => x.CheckLogFolderAndMoveToTheNewIfNeededAsync(It.IsAny<string>())).Callback(() => { });
 
         AggregatedConfiguration aggregatedConfiguration = new([], mockTestApplicationModuleInfo.Object, mockFileSystem.Object, new(null, [new CommandLineParseOption("results-directory", [ExpectedPath])], []));
@@ -120,14 +120,14 @@ public sealed class AggregatedConfigurationTests
     [TestMethod]
     public async ValueTask CheckTestResultsDirectoryOverrideAndCreateItAsync_ResultsDirectoryIsNull_GetDefaultDirectory()
     {
-        Mock<ITestApplicationModuleInfo> mockTestApplicationModuleInfo = new();
+        Mock<ITestApplicationModuleInfo> mockTestApplicationModuleInfo = new(MockBehavior.Loose);
         mockTestApplicationModuleInfo.Setup(x => x.GetCurrentTestApplicationFullPath()).Returns(ExpectedPath);
         mockTestApplicationModuleInfo.Setup(x => x.GetCurrentTestApplicationDirectory()).Returns(Path.GetDirectoryName(ExpectedPath) ?? AppContext.BaseDirectory);
 
-        Mock<IFileSystem> mockFileSystem = new();
+        Mock<IFileSystem> mockFileSystem = new(MockBehavior.Loose);
         mockFileSystem.Setup(x => x.CreateDirectory(It.IsAny<string>())).Returns((string path) => path);
 
-        Mock<IFileLoggerProvider> mockFileLogger = new();
+        Mock<IFileLoggerProvider> mockFileLogger = new(MockBehavior.Loose);
         mockFileLogger.Setup(x => x.CheckLogFolderAndMoveToTheNewIfNeededAsync(It.IsAny<string>())).Callback(() => { });
 
         AggregatedConfiguration aggregatedConfiguration = new([], mockTestApplicationModuleInfo.Object, mockFileSystem.Object, new(null, [], []));

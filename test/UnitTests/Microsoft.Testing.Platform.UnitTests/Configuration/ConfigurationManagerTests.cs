@@ -22,7 +22,7 @@ public sealed class ConfigurationManagerTests
     [DynamicData(nameof(GetConfigurationValueFromJsonData))]
     public async ValueTask GetConfigurationValueFromJson(string jsonFileConfig, string key, string? result)
     {
-        Mock<IFileSystem> fileSystem = new();
+        Mock<IFileSystem> fileSystem = new(MockBehavior.Loose);
         fileSystem.Setup(x => x.ExistFile(It.IsAny<string>())).Returns(true);
         fileSystem.Setup(x => x.NewFileStream(It.IsAny<string>(), FileMode.Open, FileAccess.Read))
             .Returns(new MemoryFileStream(Encoding.UTF8.GetBytes(jsonFileConfig)));
@@ -53,7 +53,7 @@ public sealed class ConfigurationManagerTests
     [TestMethod]
     public async ValueTask InvalidJson_Fail()
     {
-        Mock<IFileSystem> fileSystem = new();
+        Mock<IFileSystem> fileSystem = new(MockBehavior.Loose);
         fileSystem.Setup(x => x.ExistFile(It.IsAny<string>())).Returns(true);
         fileSystem.Setup(x => x.NewFileStream(It.IsAny<string>(), FileMode.Open, FileAccess.Read)).Returns(() => new MemoryFileStream(Encoding.UTF8.GetBytes(string.Empty)));
         CurrentTestApplicationModuleInfo testApplicationModuleInfo = new(new SystemEnvironment(), new SystemProcessHandler());
@@ -75,15 +75,15 @@ public sealed class ConfigurationManagerTests
     {
         byte[] bytes = Encoding.UTF8.GetBytes(jsonFileConfig);
 
-        Mock<IFileSystem> fileSystem = new();
+        Mock<IFileSystem> fileSystem = new(MockBehavior.Loose);
         fileSystem.Setup(x => x.ExistFile(It.IsAny<string>())).Returns(true);
         fileSystem.Setup(x => x.NewFileStream(It.IsAny<string>(), FileMode.Open, FileAccess.Read))
             .Returns(() => new MemoryFileStream(bytes));
 
-        Mock<ILogger> loggerMock = new();
+        Mock<ILogger> loggerMock = new(MockBehavior.Loose);
         loggerMock.Setup(x => x.IsEnabled(LogLevel.Trace)).Returns(true);
 
-        Mock<IFileLoggerProvider> loggerProviderMock = new();
+        Mock<IFileLoggerProvider> loggerProviderMock = new(MockBehavior.Loose);
         loggerProviderMock.Setup(x => x.CreateLogger(It.IsAny<string>())).Returns(loggerMock.Object);
 
         CurrentTestApplicationModuleInfo testApplicationModuleInfo = new(new SystemEnvironment(), new SystemProcessHandler());
@@ -108,7 +108,7 @@ public sealed class ConfigurationManagerTests
     [TestMethod]
     public async ValueTask BuildAsync_ConfigurationSourcesNotEnabledAsync_ThrowsException()
     {
-        Mock<IConfigurationSource> mockConfigurationSource = new();
+        Mock<IConfigurationSource> mockConfigurationSource = new(MockBehavior.Loose);
         mockConfigurationSource.Setup(x => x.IsEnabledAsync()).ReturnsAsync(false);
 
         CurrentTestApplicationModuleInfo testApplicationModuleInfo = new(new SystemEnvironment(), new SystemProcessHandler());
@@ -123,7 +123,7 @@ public sealed class ConfigurationManagerTests
     [TestMethod]
     public async ValueTask BuildAsync_ConfigurationSourceIsAsyncInitializableExtension_InitializeAsyncIsCalled()
     {
-        Mock<IConfigurationProvider> mockConfigurationProvider = new();
+        Mock<IConfigurationProvider> mockConfigurationProvider = new(MockBehavior.Loose);
         mockConfigurationProvider.Setup(x => x.LoadAsync()).Callback(() => { });
 
         FakeConfigurationSource fakeConfigurationSource = new()

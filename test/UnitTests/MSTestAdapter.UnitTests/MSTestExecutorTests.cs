@@ -21,9 +21,9 @@ public class MSTestExecutorTests : TestContainer
 
     public MSTestExecutorTests()
     {
-        _mockRunContext = new Mock<IRunContext>();
-        _mockRunSettings = new Mock<IRunSettings>();
-        _mockFrameworkHandle = new Mock<IFrameworkHandle>();
+        _mockRunContext = new Mock<IRunContext>(MockBehavior.Loose);
+        _mockRunSettings = new Mock<IRunSettings>(MockBehavior.Loose);
+        _mockFrameworkHandle = new Mock<IFrameworkHandle>(MockBehavior.Loose);
         _mstestExecutor = new MSTestExecutor();
     }
 

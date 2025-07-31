@@ -32,7 +32,7 @@ public sealed class ArgumentArityTests
 
         // Act
         ValidationResult result = await CommandLineOptionsValidator.ValidateAsync(parseResult, _systemCommandLineOptionsProviders,
-            _extensionCommandLineOptionsProviders, new Mock<ICommandLineOptions>().Object);
+            _extensionCommandLineOptionsProviders, new Mock<ICommandLineOptions>(MockBehavior.Loose).Object);
 
         // Assert
         Assert.IsFalse(result.IsValid);
@@ -48,7 +48,7 @@ public sealed class ArgumentArityTests
 
         // Act
         ValidationResult result = await CommandLineOptionsValidator.ValidateAsync(parseResult, _systemCommandLineOptionsProviders,
-            _extensionCommandLineOptionsProviders, new Mock<ICommandLineOptions>().Object);
+            _extensionCommandLineOptionsProviders, new Mock<ICommandLineOptions>(MockBehavior.Loose).Object);
 
         // Assert
         Assert.IsFalse(result.IsValid);
@@ -64,7 +64,7 @@ public sealed class ArgumentArityTests
 
         // Act
         ValidationResult result = await CommandLineOptionsValidator.ValidateAsync(parseResult, _systemCommandLineOptionsProviders,
-            _extensionCommandLineOptionsProviders, new Mock<ICommandLineOptions>().Object);
+            _extensionCommandLineOptionsProviders, new Mock<ICommandLineOptions>(MockBehavior.Loose).Object);
 
         // Assert
         Assert.IsFalse(result.IsValid);
@@ -80,7 +80,7 @@ public sealed class ArgumentArityTests
 
         // Act
         ValidationResult result = await CommandLineOptionsValidator.ValidateAsync(parseResult, _systemCommandLineOptionsProviders,
-            _extensionCommandLineOptionsProviders, new Mock<ICommandLineOptions>().Object);
+            _extensionCommandLineOptionsProviders, new Mock<ICommandLineOptions>(MockBehavior.Loose).Object);
 
         // Assert
         Assert.IsFalse(result.IsValid);
@@ -96,7 +96,7 @@ public sealed class ArgumentArityTests
 
         // Act
         ValidationResult result = await CommandLineOptionsValidator.ValidateAsync(parseResult, _systemCommandLineOptionsProviders,
-            _extensionCommandLineOptionsProviders, new Mock<ICommandLineOptions>().Object);
+            _extensionCommandLineOptionsProviders, new Mock<ICommandLineOptions>(MockBehavior.Loose).Object);
 
         // Assert
         Assert.IsFalse(result.IsValid);
@@ -112,7 +112,7 @@ public sealed class ArgumentArityTests
 
         // Act
         ValidationResult result = await CommandLineOptionsValidator.ValidateAsync(parseResult, _systemCommandLineOptionsProviders,
-            _extensionCommandLineOptionsProviders, new Mock<ICommandLineOptions>().Object);
+            _extensionCommandLineOptionsProviders, new Mock<ICommandLineOptions>(MockBehavior.Loose).Object);
 
         // Assert
         Assert.IsTrue(result.IsValid);

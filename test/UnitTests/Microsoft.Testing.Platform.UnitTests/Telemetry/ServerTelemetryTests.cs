@@ -13,7 +13,7 @@ namespace Microsoft.Testing.Platform.UnitTests;
 public sealed class ServerTelemetryTests
 {
     private readonly ServerTelemetry _serverTelemetry;
-    private readonly Mock<IServerTestHost> _serverTestHost = new();
+    private readonly Mock<IServerTestHost> _serverTestHost = new(MockBehavior.Loose);
 
     public ServerTelemetryTests()
         => _serverTelemetry = new(_serverTestHost.Object);

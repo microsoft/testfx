@@ -15,9 +15,9 @@ namespace Microsoft.Testing.Platform.UnitTests;
 [TestClass]
 public sealed class CommandLineHandlerTests
 {
-    private readonly Mock<IPlatformOutputDevice> _outputDisplayMock = new();
-    private readonly Mock<ITestApplicationModuleInfo> _testApplicationModuleInfoMock = new();
-    private readonly Mock<IRuntimeFeature> _runtimeFeatureMock = new();
+    private readonly Mock<IPlatformOutputDevice> _outputDisplayMock = new(MockBehavior.Loose);
+    private readonly Mock<ITestApplicationModuleInfo> _testApplicationModuleInfoMock = new(MockBehavior.Loose);
+    private readonly Mock<IRuntimeFeature> _runtimeFeatureMock = new(MockBehavior.Loose);
     private readonly ICommandLineOptionsProvider[] _systemCommandLineOptionsProviders =
     [
         new PlatformCommandLineProvider()
@@ -34,7 +34,7 @@ public sealed class CommandLineHandlerTests
 
         // Act
         ValidationResult result = await CommandLineOptionsValidator.ValidateAsync(parseResult, _systemCommandLineOptionsProviders,
-            _extensionCommandLineOptionsProviders, new Mock<ICommandLineOptions>().Object);
+            _extensionCommandLineOptionsProviders, new Mock<ICommandLineOptions>(MockBehavior.Loose).Object);
 
         // Assert
         Assert.IsFalse(result.IsValid);
@@ -51,7 +51,7 @@ public sealed class CommandLineHandlerTests
 
         // Act
         ValidationResult result = await CommandLineOptionsValidator.ValidateAsync(parseResult, _systemCommandLineOptionsProviders,
-            _extensionCommandLineOptionsProviders, new Mock<ICommandLineOptions>().Object);
+            _extensionCommandLineOptionsProviders, new Mock<ICommandLineOptions>(MockBehavior.Loose).Object);
 
         // Assert
         Assert.IsTrue(result.IsValid);
@@ -71,7 +71,7 @@ public sealed class CommandLineHandlerTests
 
         // Act
         ValidationResult result = await CommandLineOptionsValidator.ValidateAsync(parseResult, _systemCommandLineOptionsProviders,
-            extensionCommandLineOptionsProviders, new Mock<ICommandLineOptions>().Object);
+            extensionCommandLineOptionsProviders, new Mock<ICommandLineOptions>(MockBehavior.Loose).Object);
 
         // Assert
         Assert.IsFalse(result.IsValid);
@@ -87,7 +87,7 @@ public sealed class CommandLineHandlerTests
 
         // Act
         ValidationResult result = await CommandLineOptionsValidator.ValidateAsync(parseResult, _systemCommandLineOptionsProviders,
-            _extensionCommandLineOptionsProviders, new Mock<ICommandLineOptions>().Object);
+            _extensionCommandLineOptionsProviders, new Mock<ICommandLineOptions>(MockBehavior.Loose).Object);
 
         // Assert
         Assert.IsFalse(result.IsValid);
@@ -103,7 +103,7 @@ public sealed class CommandLineHandlerTests
 
         // Act
         ValidationResult result = await CommandLineOptionsValidator.ValidateAsync(parseResult, _systemCommandLineOptionsProviders,
-            _extensionCommandLineOptionsProviders, new Mock<ICommandLineOptions>().Object);
+            _extensionCommandLineOptionsProviders, new Mock<ICommandLineOptions>(MockBehavior.Loose).Object);
 
         // Assert
         Assert.IsFalse(result.IsValid);
@@ -123,7 +123,7 @@ public sealed class CommandLineHandlerTests
 
         // Act
         ValidationResult result = await CommandLineOptionsValidator.ValidateAsync(parseResult, _systemCommandLineOptionsProviders,
-            extensionCommandLineProvider, new Mock<ICommandLineOptions>().Object);
+            extensionCommandLineProvider, new Mock<ICommandLineOptions>(MockBehavior.Loose).Object);
 
         // Assert
         Assert.IsFalse(result.IsValid);
@@ -143,7 +143,7 @@ public sealed class CommandLineHandlerTests
 
         // Act
         ValidationResult result = await CommandLineOptionsValidator.ValidateAsync(parseResult, _systemCommandLineOptionsProviders,
-            extensionCommandLineProvider, new Mock<ICommandLineOptions>().Object);
+            extensionCommandLineProvider, new Mock<ICommandLineOptions>(MockBehavior.Loose).Object);
 
         // Assert
         Assert.IsFalse(result.IsValid);
@@ -164,7 +164,7 @@ public sealed class CommandLineHandlerTests
 
         // Act
         ValidationResult result = await CommandLineOptionsValidator.ValidateAsync(parseResult, _systemCommandLineOptionsProviders,
-            extensionCommandLineProvider, new Mock<ICommandLineOptions>().Object);
+            extensionCommandLineProvider, new Mock<ICommandLineOptions>(MockBehavior.Loose).Object);
 
         // Assert
         Assert.IsFalse(result.IsValid);
@@ -184,7 +184,7 @@ public sealed class CommandLineHandlerTests
 
         // Act
         ValidationResult result = await CommandLineOptionsValidator.ValidateAsync(parseResult, _systemCommandLineOptionsProviders,
-            extensionCommandLineProvider, new Mock<ICommandLineOptions>().Object);
+            extensionCommandLineProvider, new Mock<ICommandLineOptions>(MockBehavior.Loose).Object);
 
         // Assert
         Assert.IsFalse(result.IsValid);

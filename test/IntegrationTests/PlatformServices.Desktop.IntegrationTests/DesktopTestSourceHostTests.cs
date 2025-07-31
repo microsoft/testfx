@@ -129,7 +129,7 @@ public class DesktopTestSourceHostTests : TestContainer
 
     private static Mock<IRunSettings> GetMockedIRunSettings(string runSettingsXml)
     {
-        var mockRunSettings = new Mock<IRunSettings>();
+        var mockRunSettings = new Mock<IRunSettings>(MockBehavior.Loose);
         mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
 
         StringReader stringReader = new(runSettingsXml);

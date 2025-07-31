@@ -16,7 +16,7 @@ public sealed class LoggerTests
 
     private const string Message = "Test";
     private readonly Exception _exception = new("TestException");
-    private readonly Mock<ILogger> _mockLogger = new();
+    private readonly Mock<ILogger> _mockLogger = new(MockBehavior.Loose);
 
     public LoggerTests()
     {
@@ -30,7 +30,7 @@ public sealed class LoggerTests
 
         Logger logger = new([_mockLogger.Object], logLevel);
 
-        Mock<ILoggerFactory> mockLoggerFactory = new();
+        Mock<ILoggerFactory> mockLoggerFactory = new(MockBehavior.Loose);
         mockLoggerFactory.Setup(x => x.CreateLogger(It.IsAny<string>())).Returns(logger);
         return new Logger<string>(mockLoggerFactory.Object);
     }

@@ -24,7 +24,7 @@ public sealed class ConfigurationExtensionsTests
     {
         string expectedPath = Path.Combine("a", "b", "c");
 
-        Mock<IConfiguration> configuration = new();
+        Mock<IConfiguration> configuration = new(MockBehavior.Loose);
         configuration
             .Setup(configuration => configuration[key])
             .Returns(expectedPath);
@@ -37,7 +37,7 @@ public sealed class ConfigurationExtensionsTests
     [DataRow(PlatformConfigurationConstants.PlatformCurrentWorkingDirectory)]
     public void ConfigurationExtensions_TestedMethod_ThrowsArgumentNullException(string key)
     {
-        Mock<IConfiguration> configuration = new();
+        Mock<IConfiguration> configuration = new(MockBehavior.Loose);
         configuration
             .Setup(configuration => configuration[key])
             .Returns(value: null);
