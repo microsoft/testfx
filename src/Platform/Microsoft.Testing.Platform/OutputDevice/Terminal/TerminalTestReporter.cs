@@ -1,9 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if NET8_0_OR_GREATER
-using System.Buffers;
-#endif
 using System.Text;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Resources;
@@ -650,8 +647,8 @@ internal sealed partial class TerminalTestReporter : IDisposable
 
     // SearchValues for efficient detection of control characters
 #if NET8_0_OR_GREATER
-    private static readonly SearchValues<char> AllControlChars = SearchValues.Create("\x0000\x0001\x0002\x0003\x0004\x0005\x0006\x0007\x0008\x0009\x000A\x000B\x000C\x000D\x000E\x000F\x0010\x0011\x0012\x0013\x0014\x0015\x0016\x0017\x0018\x0019\x001A\x001B\x001C\x001D\x001E\x001F");
-    private static readonly SearchValues<char> NonWhitespaceControlChars = SearchValues.Create("\x0000\x0001\x0002\x0003\x0004\x0005\x0006\x0007\x0008\x000B\x000C\x000E\x000F\x0010\x0011\x0012\x0013\x0014\x0015\x0016\x0017\x0018\x0019\x001A\x001B\x001C\x001D\x001E\x001F");
+    private static readonly System.Buffers.SearchValues<char> AllControlChars = System.Buffers.SearchValues.Create("\x0000\x0001\x0002\x0003\x0004\x0005\x0006\x0007\x0008\x0009\x000A\x000B\x000C\x000D\x000E\x000F\x0010\x0011\x0012\x0013\x0014\x0015\x0016\x0017\x0018\x0019\x001A\x001B\x001C\x001D\x001E\x001F");
+    private static readonly System.Buffers.SearchValues<char> NonWhitespaceControlChars = System.Buffers.SearchValues.Create("\x0000\x0001\x0002\x0003\x0004\x0005\x0006\x0007\x0008\x000B\x000C\x000E\x000F\x0010\x0011\x0012\x0013\x0014\x0015\x0016\x0017\x0018\x0019\x001A\x001B\x001C\x001D\x001E\x001F");
 #else
     private static readonly char[] AllControlChars = new char[] { '\x0000', '\x0001', '\x0002', '\x0003', '\x0004', '\x0005', '\x0006', '\x0007', '\x0008', '\x0009', '\x000A', '\x000B', '\x000C', '\x000D', '\x000E', '\x000F', '\x0010', '\x0011', '\x0012', '\x0013', '\x0014', '\x0015', '\x0016', '\x0017', '\x0018', '\x0019', '\x001A', '\x001B', '\x001C', '\x001D', '\x001E', '\x001F' };
     private static readonly char[] NonWhitespaceControlChars = new char[] { '\x0000', '\x0001', '\x0002', '\x0003', '\x0004', '\x0005', '\x0006', '\x0007', '\x0008', '\x000B', '\x000C', '\x000E', '\x000F', '\x0010', '\x0011', '\x0012', '\x0013', '\x0014', '\x0015', '\x0016', '\x0017', '\x0018', '\x0019', '\x001A', '\x001B', '\x001C', '\x001D', '\x001E', '\x001F' };
@@ -667,7 +664,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
 
 #if NET8_0_OR_GREATER
         // Use SearchValues to efficiently check if we need to do any work
-        SearchValues<char> searchValues = normalizeWhitespaceCharacters ? AllControlChars : NonWhitespaceControlChars;
+        System.Buffers.SearchValues<char> searchValues = normalizeWhitespaceCharacters ? AllControlChars : NonWhitespaceControlChars;
         if (text.AsSpan().IndexOfAny(searchValues) == -1)
         {
             return text; // No control characters found, return original string
