@@ -672,14 +672,14 @@ internal sealed partial class TerminalTestReporter : IDisposable
         {
             if (c <= '\x001F') // C0 control characters (U+0000-U+001F)
             {
-                if (!normalizeWhitespaceCharacters && c is '\t' or '\n' or '\r')
+                // Skip normalization for whitespace characters when not requested
+                if (!normalizeWhitespaceCharacters && (c == '\t' || c == '\n' || c == '\r'))
                 {
-                    // Skip normalization for whitespace characters when not requested
                     sb.Append(c);
                 }
                 else
                 {
-                    // Convert to Unicode control picture by setting bits to 0x2400 + char value
+                    // Convert to Unicode control picture using bit manipulation (0x2400 + char value)
                     sb.Append((char)(0x2400 + c));
                 }
             }
