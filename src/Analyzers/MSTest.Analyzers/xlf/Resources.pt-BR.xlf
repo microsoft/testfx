@@ -944,6 +944,21 @@ O tipo que declara esses métodos também deve respeitar as seguintes regras:
         <target state="translated">Algumas propriedades TestContext só estão disponíveis durante a execução do teste e não podem ser acessadas em métodos de inicialização de assembly, inicialização de classe, limpeza de classe ou limpeza de assembly.</target>
         <note />
       </trans-unit>
+      <trans-unit id="AssertThrowsShouldContainSingleStatementDescription">
+        <source>Assert.Throws methods should contain only a single statement or expression. Multiple statements can be misleading - if the first statement throws, subsequent statements are never executed; if it doesn't throw, it should be moved outside the Assert.Throws.</source>
+        <target state="new">Assert.Throws methods should contain only a single statement or expression. Multiple statements can be misleading - if the first statement throws, subsequent statements are never executed; if it doesn't throw, it should be moved outside the Assert.Throws.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AssertThrowsShouldContainSingleStatementMessageFormat">
+        <source>Assert.Throws should contain only a single statement/expression</source>
+        <target state="new">Assert.Throws should contain only a single statement/expression</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AssertThrowsShouldContainSingleStatementTitle">
+        <source>Assert.Throws should contain only a single statement/expression</source>
+        <target state="new">Assert.Throws should contain only a single statement/expression</target>
+        <note />
+      </trans-unit>
     </body>
   </file>
 </xliff>

@@ -4,7 +4,6 @@
   <Import Project="../Directory.Build.targets" />
 
   <PropertyGroup Condition=" '$(EnableMSTestRunner)' == 'true' OR '$(UseInternalTestFramework)' == 'true' ">
-    <UseMSTest Condition=" '$(UseMSTest)' == '' ">true</UseMSTest>
     <GenerateProgramFile>false</GenerateProgramFile>
     <GenerateTestingPlatformEntryPoint>false</GenerateTestingPlatformEntryPoint>
     <Architecture Condition=" '$(Architecture)' == '' ">$(PlatformTarget)</Architecture>
@@ -59,8 +58,7 @@
     <Using Include="Microsoft.Testing.Platform.Extensions" />
     <Using Include="Microsoft.Testing.TestInfrastructure"
            Condition="'$(UseInternalTestFramework)' != 'true'" />
-    <Using Include="Microsoft.VisualStudio.TestTools.UnitTesting"
-           Condition="'$(UseMSTest)' == 'true'" />
+    <Using Include="Microsoft.VisualStudio.TestTools.UnitTesting" />
   </ItemGroup>
 
   <ItemGroup Condition=" '$(EnableMSTestRunner)' == 'true' OR '$(UseInternalTestFramework)' == 'true' ">

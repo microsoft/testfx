@@ -16,3 +16,9 @@ MSTEST0032 | Usage | Warning | Usage | Info | ReviewAlwaysTrueAssertConditionAna
 MSTEST0035 | Usage | Warning | Usage | Info | UseDeploymentItemWithTestMethodOrTestClassAnalyzer
 MSTEST0037 | Usage | Warning | Usage | Info | UseProperAssertMethodsAnalyzer
 MSTEST0045 | Usage | Warning | Usage | Info | UseCooperativeCancellationForTimeoutAnalyzer
+
+### New Rules
+
+Rule ID | Category | Severity | Notes
+--------|----------|----------|-------
+MSTEST0051 | Usage | Info | AssertThrowsShouldContainSingleStatementAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0051)
