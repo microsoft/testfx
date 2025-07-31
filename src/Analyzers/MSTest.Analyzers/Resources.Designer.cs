@@ -10,8 +10,8 @@
 
 namespace MSTest.Analyzers {
     using System;
-
-
+    
+    
     /// <summary>
     ///   A strongly-typed resource class, for looking up localized strings, etc.
     /// </summary>
@@ -23,15 +23,15 @@ namespace MSTest.Analyzers {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class Resources {
-
+        
         private static global::System.Resources.ResourceManager resourceMan;
-
+        
         private static global::System.Globalization.CultureInfo resourceCulture;
-
+        
         [global::System.Diagnostics.CodeAnalysis.SuppressMessageAttribute("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
         internal Resources() {
         }
-
+        
         /// <summary>
         ///   Returns the cached ResourceManager instance used by this class.
         /// </summary>
@@ -45,7 +45,7 @@ namespace MSTest.Analyzers {
                 return resourceMan;
             }
         }
-
+        
         /// <summary>
         ///   Overrides the current thread's CurrentUICulture property for all
         ///   resource lookups using this strongly typed resource class.
@@ -59,7 +59,7 @@ namespace MSTest.Analyzers {
                 resourceCulture = value;
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Methods marked with &apos;[AssemblyCleanup]&apos; should follow the following layout to be valid:
         ///-it can&apos;t be declared on a generic class
@@ -78,7 +78,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("AssemblyCleanupShouldBeValidDescription", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to AssemblyCleanup method &apos;{0}&apos; signature is invalid.
         /// </summary>
@@ -87,7 +87,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("AssemblyCleanupShouldBeValidMessageFormat", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to AssemblyCleanup methods should have valid layout.
         /// </summary>
@@ -96,7 +96,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("AssemblyCleanupShouldBeValidTitle", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Methods marked with &apos;[AssemblyInitialize]&apos; should follow the following layout to be valid:
         ///-it can&apos;t be declared on a generic class
@@ -116,7 +116,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("AssemblyInitializeShouldBeValidDescription", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to AssemblyInitialize method &apos;{0}&apos; signature is invalid.
         /// </summary>
@@ -125,7 +125,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("AssemblyInitializeShouldBeValidMessageFormat", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to AssemblyInitialize methods should have valid layout.
         /// </summary>
@@ -134,7 +134,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("AssemblyInitializeShouldBeValidTitle", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Prefer adding an additional assertion that checks for null.
         /// </summary>
@@ -143,7 +143,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("AssertionArgsShouldAvoidConditionalAccessMessageFormat", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Avoid conditional access in assertions.
         /// </summary>
@@ -152,7 +152,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("AssertionArgsShouldAvoidConditionalAccessTitle", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to &apos;Assert.AreEqual&apos;, &apos;Assert.AreNotEqual&apos;, &apos;Assert.AreSame&apos; and &apos;Assert.AreNotSame&apos; expects the expected value to be passed first and the actual value to be passed as second argument..
         /// </summary>
@@ -161,7 +161,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("AssertionArgsShouldBePassedInCorrectOrderDescription", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Assertion arguments should be passed in the correct order. &apos;actual&apos; and &apos;expected&apos;/&apos;notExpected&apos; arguments have been swapped..
         /// </summary>
@@ -170,7 +170,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("AssertionArgsShouldBePassedInCorrectOrderMessageFormat", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Assertion arguments should be passed in the correct order.
         /// </summary>
@@ -179,7 +179,34 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("AssertionArgsShouldBePassedInCorrectOrderTitle", resourceCulture);
             }
         }
-
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Assert.Throws methods should contain only a single statement or expression. Multiple statements can be misleading - if the first statement throws, subsequent statements are never executed; if it doesn&apos;t throw, it should be moved outside the Assert.Throws..
+        /// </summary>
+        internal static string AssertThrowsShouldContainSingleStatementDescription {
+            get {
+                return ResourceManager.GetString("AssertThrowsShouldContainSingleStatementDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Assert.Throws should contain only a single statement/expression.
+        /// </summary>
+        internal static string AssertThrowsShouldContainSingleStatementMessageFormat {
+            get {
+                return ResourceManager.GetString("AssertThrowsShouldContainSingleStatementMessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Assert.Throws should contain only a single statement/expression.
+        /// </summary>
+        internal static string AssertThrowsShouldContainSingleStatementTitle {
+            get {
+                return ResourceManager.GetString("AssertThrowsShouldContainSingleStatementTitle", resourceCulture);
+            }
+        }
+        
         /// <summary>
         ///   Looks up a localized string similar to Use &apos;Assert.AreEqual&apos;/&apos;Assert.AreNotEqual&apos; instead of &apos;Assert.AreSame&apos;/&apos;Assert.AreNotSame&apos; when comparing value types. Passing a value type to &apos;Assert.AreSame&apos;/&apos;Assert.AreNotSame&apos; will be boxed (creating a new object). Because &apos;Assert.AreSame&apos;/&apos;Assert.AreNotSame&apos; does the comparison by reference, &apos;Assert.AreSame&apos; will fail when boxing happens, and &apos;Assert.AreNotSame&apos; will always pass..
         /// </summary>
@@ -188,7 +215,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("AvoidAssertAreSameWithValueTypesDescription", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Use &apos;{0}&apos; instead of &apos;{1}&apos; when comparing value types.
         /// </summary>
@@ -197,7 +224,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("AvoidAssertAreSameWithValueTypesMessageFormat", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Don&apos;t use &apos;Assert.AreSame&apos; or &apos;Assert.AreNotSame&apos; with value types.
         /// </summary>
@@ -206,7 +233,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("AvoidAssertAreSameWithValueTypesTitle", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Prefer &apos;Assert.ThrowsExactly&apos; or &apos;Assert.ThrowsExactlyAsync&apos; over &apos;[ExpectedException]&apos; as it ensures that only the expected call throws the expected exception. The assert APIs also provide more flexibility and allow you to assert extra properties of the exception..
         /// </summary>
@@ -215,7 +242,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("AvoidExpectedExceptionAttributeDescription", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Prefer &apos;Assert.ThrowsExactly/ThrowsExactlyAsync&apos; over &apos;[ExpectedException]&apos;.
         /// </summary>
@@ -224,7 +251,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("AvoidExpectedExceptionAttributeMessageFormat", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Avoid &apos;[ExpectedException]&apos;.
         /// </summary>
@@ -233,7 +260,25 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("AvoidExpectedExceptionAttributeTitle", resourceCulture);
             }
         }
-
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Remove the &apos;DynamicDataSourceType&apos; argument to use the default auto detect behavior.
+        /// </summary>
+        internal static string AvoidExplicitDynamicDataSourceTypeMessageFormat {
+            get {
+                return ResourceManager.GetString("AvoidExplicitDynamicDataSourceTypeMessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Avoid passing an explicit &apos;DynamicDataSourceType&apos; and use the default auto detect behavior.
+        /// </summary>
+        internal static string AvoidExplicitDynamicDataSourceTypeTitle {
+            get {
+                return ResourceManager.GetString("AvoidExplicitDynamicDataSourceTypeTitle", resourceCulture);
+            }
+        }
+        
         /// <summary>
         ///   Looks up a localized string similar to Do not assert inside &apos;async void&apos; methods, local functions, or lambdas. Exceptions that are thrown in this context will be unhandled exceptions. When using VSTest under .NET Framework, they will be silently swallowed. When using Microsoft.Testing.Platform or VSTest under modern .NET, they may crash the process..
         /// </summary>
@@ -242,7 +287,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("AvoidUsingAssertsInAsyncVoidContextDescription", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Do not assert inside &apos;async void&apos; methods, local functions, or lambdas because they may not fail the test.
         /// </summary>
@@ -251,7 +296,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("AvoidUsingAssertsInAsyncVoidContextMessageFormat", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Do not assert inside &apos;async void&apos; contexts.
         /// </summary>
@@ -260,7 +305,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("AvoidUsingAssertsInAsyncVoidContextTitle", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Methods marked with &apos;[ClassCleanup]&apos; should follow the following layout to be valid:
         ///-it can&apos;t be declared on a generic class without the &apos;InheritanceBehavior&apos; mode is set
@@ -278,7 +323,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("ClassCleanupShouldBeValidDescription", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to ClassCleanup method &apos;{0}&apos; signature is invalid.
         /// </summary>
@@ -287,7 +332,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("ClassCleanupShouldBeValidMessageFormat", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to ClassCleanup methods should have valid layout.
         /// </summary>
@@ -296,7 +341,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("ClassCleanupShouldBeValidTitle", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Methods marked with &apos;[ClassInitialize]&apos; should follow the following layout to be valid:
         ///-it can&apos;t be declared on a generic class without the &apos;InheritanceBehavior&apos; mode is set
@@ -314,7 +359,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("ClassInitializeShouldBeValidDescription", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to ClassInitialize method &apos;{0}&apos; signature is invalid.
         /// </summary>
@@ -323,7 +368,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("ClassInitializeShouldBeValidMessageFormat", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to ClassInitialize methods should have valid layout.
         /// </summary>
@@ -332,7 +377,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("ClassInitializeShouldBeValidTitle", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to DataRow entry should have the following layout to be valid:
         ///- should only be set on a test method;
@@ -344,7 +389,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("DataRowShouldBeValidDescription", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to DataRow argument count should match method parameter count (constructor arguments: {0}, method parameters: {1}).
         /// </summary>
@@ -353,7 +398,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("DataRowShouldBeValidMessageFormat_ArgumentCountMismatch", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to DataRow argument types do not match method parameter types. {0}.
         /// </summary>
@@ -362,7 +407,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("DataRowShouldBeValidMessageFormat_ArgumentTypeMismatch", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Found two conflicting types for generic parameter &apos;{0}&apos;. The conflicting types are &apos;{1}&apos; and &apos;{2}&apos;..
         /// </summary>
@@ -371,7 +416,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("DataRowShouldBeValidMessageFormat_GenericTypeArgumentConflictingTypes", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to The type of the generic parameter &apos;{0}&apos; could not be inferred..
         /// </summary>
@@ -380,7 +425,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("DataRowShouldBeValidMessageFormat_GenericTypeArgumentNotResolved", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to DataRow should only be set on a test method.
         /// </summary>
@@ -389,7 +434,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("DataRowShouldBeValidMessageFormat_OnTestMethod", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Parameter &apos;{0}&apos; expects type &apos;{1}&apos;, but the provided value has type &apos;{2}&apos;.
         /// </summary>
@@ -398,7 +443,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("DataRowShouldBeValidMessageFormat_ParameterMismatch", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to DataRow should be valid.
         /// </summary>
@@ -407,7 +452,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("DataRowShouldBeValidTitle", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Do not negate boolean assertions, instead use the opposite assertion.
         /// </summary>
@@ -416,7 +461,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("DoNotNegateBooleanAssertionMessageFormat", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Do not negate boolean assertions.
         /// </summary>
@@ -425,7 +470,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("DoNotNegateBooleanAssertionTitle", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Do not store TestContext in a static member.
         /// </summary>
@@ -434,7 +479,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("DoNotStoreStaticTestContextAnalyzerMessageFormat", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Do not store TestContext in a static member.
         /// </summary>
@@ -443,7 +488,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("DoNotStoreStaticTestContextAnalyzerTitle", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Shadowing test members could cause testing issues (such as NRE)..
         /// </summary>
@@ -452,7 +497,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("DoNotUseShadowingDescription", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Member &apos;{0}&apos; already exists in the base class.
         /// </summary>
@@ -461,7 +506,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("DoNotUseShadowingMessageFormat", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Do not use shadowing.
         /// </summary>
@@ -470,7 +515,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("DoNotUseShadowingTitle", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to &apos;System.ComponentModel.DescriptionAttribute&apos; has no effect in the context of tests and you likely wanted to use &apos;Microsoft.VisualStudio.TestTools.UnitTesting.DescriptionAttribute&apos; instead..
         /// </summary>
@@ -479,7 +524,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("DoNotUseSystemDescriptionAttributeDescription", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Did you mean to be using &apos;Microsoft.VisualStudio.TestTools.UnitTesting.DescriptionAttribute&apos;?.
         /// </summary>
@@ -488,7 +533,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("DoNotUseSystemDescriptionAttributeMessageFormat", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to &apos;System.ComponentModel.DescriptionAttribute&apos; has no effect on test methods.
         /// </summary>
@@ -497,7 +542,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("DoNotUseSystemDescriptionAttributeTitle", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Do not duplicate &apos;DataRow&apos; attributes. This is usually a copy/paste error. The attribute indices are &apos;{0}&apos; and &apos;{1}&apos;..
         /// </summary>
@@ -506,7 +551,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("DuplicateDataRowMessageFormat", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Avoid duplicated &apos;DataRow&apos; entries.
         /// </summary>
@@ -515,7 +560,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("DuplicateDataRowTitle", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to &apos;DynamicData&apos; entry should have the following layout to be valid:
         ///- should only be set on a test method;
@@ -527,7 +572,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("DynamicDataShouldBeValidDescription", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to &apos;[DynamicData]&apos; data member &apos;{0}.{1}&apos; signature is invalid.
         /// </summary>
@@ -536,7 +581,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("DynamicDataShouldBeValidMessageFormat_DataMemberSignature", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to &apos;[DynamicData]&apos; display name method &apos;{0}.{1}&apos; signature is invalid.
         /// </summary>
@@ -545,7 +590,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("DynamicDataShouldBeValidMessageFormat_DisplayMethodSignature", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to &apos;[DynamicData]&apos; member &apos;{0}.{1}&apos; should be a method.
         /// </summary>
@@ -554,7 +599,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("DynamicDataShouldBeValidMessageFormat_MemberMethod", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to &apos;[DynamicData]&apos; member &apos;{0}.{1}&apos; cannot be found.
         /// </summary>
@@ -563,7 +608,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("DynamicDataShouldBeValidMessageFormat_MemberNotFound", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to &apos;[DynamicData]&apos; referenced member &apos;{0}.{1}&apos; should return &apos;IEnumerable&lt;object[]&gt;&apos;, &apos;IEnumerable&lt;Tuple&gt;` or &apos;IEnumerable&lt;ValueTuple&gt;&apos;.
         /// </summary>
@@ -572,7 +617,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("DynamicDataShouldBeValidMessageFormat_MemberType", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to &apos;[DynamicData]&apos; should only be set on a test method.
         /// </summary>
@@ -581,7 +626,16 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("DynamicDataShouldBeValidMessageFormat_OnTestMethod", resourceCulture);
             }
         }
-
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &apos;[DynamicData]&apos; member &apos;{0}.{1}&apos; is a field so you should use &apos;DynamicDataSourceType.AutoDetect&apos; or &apos;DynamicDataSourceType.Field&apos; (auto detect is the default when not specified explicitly, and is recommended).
+        /// </summary>
+        internal static string DynamicDataShouldBeValidMessageFormat_SourceTypeField {
+            get {
+                return ResourceManager.GetString("DynamicDataShouldBeValidMessageFormat_SourceTypeField", resourceCulture);
+            }
+        }
+        
         /// <summary>
         ///   Looks up a localized string similar to &apos;[DynamicData]&apos; member &apos;{0}.{1}&apos; is a method so you should use &apos;DynamicDataSourceType.AutoDetect&apos; or &apos;DynamicDataSourceType.Method&apos; (auto detect is the default when not specified explicitly, and is recommended).
         /// </summary>
@@ -590,7 +644,16 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("DynamicDataShouldBeValidMessageFormat_SourceTypeMethod", resourceCulture);
             }
         }
-
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &apos;[DynamicData]&apos; member &apos;{0}.{1}&apos; is not a property, method, or field. Only properties, methods, and fields are supported..
+        /// </summary>
+        internal static string DynamicDataShouldBeValidMessageFormat_SourceTypeNotPropertyMethodOrField {
+            get {
+                return ResourceManager.GetString("DynamicDataShouldBeValidMessageFormat_SourceTypeNotPropertyMethodOrField", resourceCulture);
+            }
+        }
+        
         /// <summary>
         ///   Looks up a localized string similar to &apos;[DynamicData]&apos; member &apos;{0}.{1}&apos; is not a property nor a method. Only properties and methods are supported..
         /// </summary>
@@ -599,7 +662,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("DynamicDataShouldBeValidMessageFormat_SourceTypeNotPropertyOrMethod", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to &apos;[DynamicData]&apos; member &apos;{0}.{1}&apos; is a property so you should use &apos;DynamicDataSourceType.AutoDetect&apos; or &apos;DynamicDataSourceType.Property&apos; (auto detect is the default when not specified explicitly, and is recommended).
         /// </summary>
@@ -608,7 +671,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("DynamicDataShouldBeValidMessageFormat_SourceTypeProperty", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to &apos;[DynamicData]&apos; member &apos;{0}.{1}&apos; is found more than once.
         /// </summary>
@@ -617,7 +680,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("DynamicDataShouldBeValidMessageFormat_TooManyMembers", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to DynamicData should be valid.
         /// </summary>
@@ -626,7 +689,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("DynamicDataShouldBeValidTitle", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to When calling async methods that have overloads accepting a CancellationToken parameter, prefer using the overload with TestContext.CancellationTokenSource.Token to enable cooperative cancellation and respect test timeouts..
         /// </summary>
@@ -635,7 +698,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("FlowTestContextCancellationTokenDescription", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Consider using the overload that accepts a CancellationToken and pass &apos;TestContext.CancellationTokenSource.Token&apos;.
         /// </summary>
@@ -644,7 +707,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("FlowTestContextCancellationTokenMessageFormat", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Flow TestContext.CancellationToken to async operations.
         /// </summary>
@@ -653,7 +716,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("FlowTestContextCancellationTokenTitle", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Methods marked with &apos;[GlobalTestInitialize]&apos; or &apos;[GlobalTestCleanup]&apos; should follow the following layout to be valid:
         ///-it can&apos;t be declared on a generic class
@@ -672,7 +735,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("GlobalTestFixtureShouldBeValidDescription", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Global test fixture method &apos;{0}&apos; signature is invalid.
         /// </summary>
@@ -681,7 +744,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("GlobalTestFixtureShouldBeValidMessageFormat", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to GlobalTestInitialize and GlobalTestCleanup methods should have valid layout.
         /// </summary>
@@ -690,7 +753,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("GlobalTestFixtureShouldBeValidTitle", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Use &apos;Assert.Fail&apos; instead of an always-failing &apos;Assert.{0}&apos; assert.
         /// </summary>
@@ -699,7 +762,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("PreferAssertFailOverAlwaysFalseConditionsMessageFormat", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Use &apos;Assert.Fail&apos; instead of an always-failing assert.
         /// </summary>
@@ -708,7 +771,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("PreferAssertFailOverAlwaysFalseConditionsTitle", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Prefer constructors over TestInitialize methods.
         /// </summary>
@@ -717,7 +780,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("PreferConstructorOverTestInitializeMessageFormat", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Prefer constructors over TestInitialize methods.
         /// </summary>
@@ -726,7 +789,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("PreferConstructorOverTestInitializeTitle", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Prefer &apos;Dispose&apos; over TestCleanup methods.
         /// </summary>
@@ -735,7 +798,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("PreferDisposeOverTestCleanupMessageFormat", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Prefer &apos;Dispose&apos; over TestCleanup methods.
         /// </summary>
@@ -744,7 +807,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("PreferDisposeOverTestCleanupTitle", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Prefer TestCleanup over &apos;Dispose&apos; methods.
         /// </summary>
@@ -753,7 +816,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("PreferTestCleanupOverDisposeMessageFormat", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Prefer TestCleanup over &apos;Dispose&apos; methods.
         /// </summary>
@@ -762,7 +825,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("PreferTestCleanupOverDisposeTitle", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Prefer TestInitialize methods over constructors.
         /// </summary>
@@ -771,7 +834,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("PreferTestInitializeOverConstructorMessageFormat", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Prefer TestInitialize methods over constructors.
         /// </summary>
@@ -780,7 +843,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("PreferTestInitializeOverConstructorTitle", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to &apos;DataTestMethodAttribute&apos; is obsolete and provides no additional functionality over &apos;TestMethodAttribute&apos;. Use &apos;TestMethodAttribute&apos; for all test methods, including parameterized tests..
         /// </summary>
@@ -789,7 +852,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("PreferTestMethodOverDataTestMethodAnalyzerDescription", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to &apos;DataTestMethod&apos; is obsolete. Use &apos;TestMethod&apos; instead..
         /// </summary>
@@ -798,7 +861,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("PreferTestMethodOverDataTestMethodAnalyzerMessageFormat", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Prefer &apos;TestMethod&apos; over &apos;DataTestMethod&apos;.
         /// </summary>
@@ -807,7 +870,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("PreferTestMethodOverDataTestMethodAnalyzerTitle", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Public methods should be test methods (marked with `[TestMethod]`)..
         /// </summary>
@@ -816,7 +879,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("PublicMethodShouldBeTestMethodAnalyzerDescription", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Public method &apos;{0}&apos; should be a test method.
         /// </summary>
@@ -825,7 +888,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("PublicMethodShouldBeTestMethodAnalyzerFormat", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Public methods should be test methods.
         /// </summary>
@@ -834,7 +897,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("PublicMethodShouldBeTestMethodAnalyzerTitle", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to It&apos;s considered a good practice to have only test classes marked public in a test project..
         /// </summary>
@@ -843,7 +906,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("PublicTypeShouldBeTestClassDescription", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Public type &apos;{0}&apos; should be marked with &apos;[TestClass]&apos; or changed to &apos;internal&apos;.
         /// </summary>
@@ -852,7 +915,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("PublicTypeShouldBeTestClassMessageFormat", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Public types should be test classes.
         /// </summary>
@@ -861,7 +924,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("PublicTypeShouldBeTestClassTitle", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Review or remove the assertion as its condition is known to be always true.
         /// </summary>
@@ -870,7 +933,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("ReviewAlwaysTrueAssertConditionAnalyzerMessageFormat", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Assertion condition is always true.
         /// </summary>
@@ -879,7 +942,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("ReviewAlwaysTrueAssertConditionAnalyzerTitle", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Use &apos;Assert.{0}&apos; instead of &apos;StringAssert.{1}&apos;.
         /// </summary>
@@ -888,7 +951,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("StringAssertToAssertMessageFormat", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Use &apos;Assert&apos; instead of &apos;StringAssert&apos;.
         /// </summary>
@@ -897,7 +960,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("StringAssertToAssertTitle", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Test classes, classes marked with the &apos;[TestClass]&apos; attribute, should respect the following layout to be considered valid by MSTest:
         ///- it should be &apos;public&apos; (or &apos;internal&apos; if &apos;[assembly: DiscoverInternals]&apos; attribute is set)
@@ -909,7 +972,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("TestClassShouldBeValidDescription", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Test class &apos;{0}&apos; should be valid.
         /// </summary>
@@ -918,7 +981,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("TestClassShouldBeValidMessageFormat", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Test classes should have valid layout.
         /// </summary>
@@ -927,7 +990,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("TestClassShouldBeValidTitle", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Test class should have at least one test method or be &apos;static&apos; with method(s) marked by &apos;[AssemblyInitialize]&apos; and/or &apos;[AssemblyCleanup]&apos;..
         /// </summary>
@@ -936,7 +999,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("TestClassShouldHaveTestMethodDescription", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Test class &apos;{0}&apos; should have at least one test method or be &apos;static&apos; with method(s) marked by &apos;[AssemblyInitialize]&apos; and/or &apos;[AssemblyCleanup]&apos;.
         /// </summary>
@@ -945,7 +1008,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("TestClassShouldHaveTestMethodMessageFormat", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Test class should have test method.
         /// </summary>
@@ -954,7 +1017,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("TestClassShouldHaveTestMethodTitle", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Methods marked with &apos;[TestCleanup]&apos; should follow the following layout to be valid:
         ///-it should be &apos;public&apos;
@@ -975,7 +1038,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("TestCleanupShouldBeValidDescription", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to TestCleanup method &apos;{0}&apos; signature is invalid.
         /// </summary>
@@ -984,7 +1047,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("TestCleanupShouldBeValidMessageFormat", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to TestCleanup method should have valid layout.
         /// </summary>
@@ -993,7 +1056,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("TestCleanupShouldBeValidTitle", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Some TestContext properties are only available during test execution and cannot be accessed in assembly initialize, class initialize, class cleanup, or assembly cleanup methods..
         /// </summary>
@@ -1002,7 +1065,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("TestContextPropertyUsageDescription", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to TestContext property &apos;{0}&apos; cannot be accessed in &apos;{1}&apos; method.
         /// </summary>
@@ -1011,7 +1074,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("TestContextPropertyUsageMessageFormat", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to TestContext property cannot be accessed in this context.
         /// </summary>
@@ -1020,7 +1083,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("TestContextPropertyUsageTitle", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to &apos;TestContext&apos; should be a non-static field or property assigned in constructor or for a property set by MSTest, it should follow the layout:
         ///- it should be &apos;public&apos; regardless of whether &apos;[assembly: DiscoverInternals]&apos; attribute is set or not.
@@ -1032,7 +1095,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("TestContextShouldBeValidDescription", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Property &apos;TestContext&apos; should be valid.
         /// </summary>
@@ -1041,7 +1104,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("TestContextShouldBeValidMessageFormat", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Test context property should have valid layout.
         /// </summary>
@@ -1050,7 +1113,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("TestContextShouldBeValidTitle", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Methods marked with &apos;[TestInitialize]&apos; should follow the following layout to be valid:
         ///-it should be &apos;public&apos;
@@ -1071,7 +1134,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("TestInitializeShouldBeValidDescription", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to TestInitialize method &apos;{0}&apos; signature is invalid.
         /// </summary>
@@ -1080,7 +1143,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("TestInitializeShouldBeValidMessageFormat", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to TestInitialize method should have valid layout.
         /// </summary>
@@ -1089,7 +1152,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("TestInitializeShouldBeValidTitle", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Test methods, methods marked with the &apos;[TestMethod]&apos; attribute, should respect the following layout to be considered valid by MSTest:
         ///- it should be &apos;public&apos; (or &apos;internal&apos; if &apos;[assembly: DiscoverInternals]&apos; attribute is set)
@@ -1105,7 +1168,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("TestMethodShouldBeValidDescription", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Test method &apos;{0}&apos; signature is invalid.
         /// </summary>
@@ -1114,7 +1177,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("TestMethodShouldBeValidMessageFormat", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Test methods should have valid layout.
         /// </summary>
@@ -1123,7 +1186,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("TestMethodShouldBeValidTitle", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Test methods should not be ignored (marked with &apos;[Ignore]&apos;)..
         /// </summary>
@@ -1132,7 +1195,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("TestMethodShouldNotBeIgnoredAnalyzerDescription", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Test method &apos;{0}&apos; should not be ignored.
         /// </summary>
@@ -1141,7 +1204,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("TestMethodShouldNotBeIgnoredAnalyzerFormat", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Test method should not be ignored.
         /// </summary>
@@ -1150,7 +1213,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("TestMethodShouldNotBeIgnoredAnalyzerTitle", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Type containing &apos;[TestMethod]&apos; should be marked with &apos;[TestClass]&apos;, otherwise the test method will be silently ignored..
         /// </summary>
@@ -1159,7 +1222,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("TypeContainingTestMethodShouldBeATestClassDescription", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Type &apos;{0}&apos; contains test methods and should be marked with &apos;[TestClass]&apos;.
         /// </summary>
@@ -1168,7 +1231,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("TypeContainingTestMethodShouldBeATestClassMessageFormat", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Type containing &apos;[TestMethod]&apos; should be marked with &apos;[TestClass]&apos;.
         /// </summary>
@@ -1177,7 +1240,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("TypeContainingTestMethodShouldBeATestClassTitle", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to TestContext parameter is required by MSTest for AssemblyInitialize and ClassInitialize methods.
         /// </summary>
@@ -1186,7 +1249,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("UnusedParameterSuppressorJustification", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Asynchronous test fixture methods do not require the &apos;Async&apos; suffix.
         /// </summary>
@@ -1195,7 +1258,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("UseAsyncSuffixTestFixtureMethodSuppressorJustification", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Asynchronous test methods do not require the &apos;Async&apos; suffix.
         /// </summary>
@@ -1204,7 +1267,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("UseAsyncSuffixTestMethodSuppressorJustification", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to [{0}] can only be set on methods marked with [TestMethod].
         /// </summary>
@@ -1213,7 +1276,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("UseAttributeOnTestMethodAnalyzerMessageFormat", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to [{0}] can only be set on methods marked with [TestMethod].
         /// </summary>
@@ -1222,7 +1285,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("UseAttributeOnTestMethodAnalyzerTitle", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Without using  &apos;ClassCleanupBehavior.EndOfClass&apos;, the &apos;[ClassCleanup]&apos; will by default be run at the end of the assembly and not at the end of the class..
         /// </summary>
@@ -1231,7 +1294,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("UseClassCleanupBehaviorEndOfClassDescription", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Use &apos;ClassCleanupBehavior.EndOfClass&apos; with the &apos;[ClassCleanup]&apos;.
         /// </summary>
@@ -1240,7 +1303,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("UseClassCleanupBehaviorEndOfClassMessageFormat", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Use &apos;ClassCleanupBehavior.EndOfClass&apos; with the &apos;[ClassCleanup]&apos;.
         /// </summary>
@@ -1249,7 +1312,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("UseClassCleanupBehaviorEndOfClassTitle", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to The attribute &apos;{0}&apos; which derives from &apos;ConditionBaseAttribute&apos; should be used only on classes marked with `TestClassAttribute`.
         /// </summary>
@@ -1258,7 +1321,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("UseConditionBaseWithTestClassMessageFormat", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Use &apos;ConditionBaseAttribute&apos; on test classes.
         /// </summary>
@@ -1267,7 +1330,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("UseConditionBaseWithTestClassTitle", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Using &apos;[Timeout]&apos; without explicitly setting &apos;CooperativeCancellation = true&apos; is discouraged. In a future version, cooperative cancellation will become the default behavior. Set &apos;CooperativeCancellation = true&apos; to opt into the recommended behavior and avoid breaking changes..
         /// </summary>
@@ -1276,7 +1339,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("UseCooperativeCancellationForTimeoutDescription", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Use &apos;CooperativeCancellation = true&apos; with &apos;[Timeout]&apos; to enable cooperative cancellation behavior.
         /// </summary>
@@ -1285,7 +1348,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("UseCooperativeCancellationForTimeoutMessageFormat", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Use &apos;CooperativeCancellation = true&apos; with &apos;[Timeout]&apos;.
         /// </summary>
@@ -1294,7 +1357,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("UseCooperativeCancellationForTimeoutTitle", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to &apos;[DeploymentItem]&apos; can be specified only on test class or test method.
         /// </summary>
@@ -1303,7 +1366,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("UseDeploymentItemWithTestMethodOrTestClassMessageFormat", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to &apos;[DeploymentItem]&apos; can be specified only on test class or test method.
         /// </summary>
@@ -1312,7 +1375,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("UseDeploymentItemWithTestMethodOrTestClassTitle", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Use &apos;Assert.ThrowsExactly&apos; instead of &apos;Assert.ThrowsException&apos;.
         /// </summary>
@@ -1321,7 +1384,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("UseNewerAssertThrowsMessageFormat", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Use newer methods to assert exceptions.
         /// </summary>
@@ -1330,7 +1393,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("UseNewerAssertThrowsTitle", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to By default, MSTest runs tests within the same assembly sequentially, which can lead to severe performance limitations. It is recommended to enable assembly attribute &apos;[Parallelize]&apos; to run tests in parallel, or if the assembly is known to not be parallelizable, to use explicitly the assembly level attribute &apos;[DoNotParallelize]&apos;..
         /// </summary>
@@ -1339,7 +1402,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("UseParallelizeAttributeAnalyzerDescription", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Explicitly enable or disable tests parallelization.
         /// </summary>
@@ -1348,7 +1411,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("UseParallelizeAttributeAnalyzerMessageFormat", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Explicitly enable or disable tests parallelization.
         /// </summary>
@@ -1357,7 +1420,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("UseParallelizeAttributeAnalyzerTitle", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Use &apos;Assert.{0}&apos; instead of &apos;Assert.{1}&apos;.
         /// </summary>
@@ -1366,7 +1429,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("UseProperAssertMethodsMessageFormat", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Use proper &apos;Assert&apos; methods.
         /// </summary>
@@ -1375,7 +1438,7 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("UseProperAssertMethodsTitle", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to An attribute that derives from &apos;RetryBaseAttribute&apos; can be specified only on a test method.
         /// </summary>
@@ -1384,40 +1447,13 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("UseRetryWithTestMethodMessageFormat", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Use retry attribute on test method.
         /// </summary>
         internal static string UseRetryWithTestMethodTitle {
             get {
                 return ResourceManager.GetString("UseRetryWithTestMethodTitle", resourceCulture);
-            }
-        }
-
-        /// <summary>
-        ///   Looks up a localized string similar to Assert.Throws methods should contain only a single statement or expression. Multiple statements can be misleading - if the first statement throws, subsequent statements are never executed; if it doesn't throw, it should be moved outside the Assert.Throws.
-        /// </summary>
-        internal static string AssertThrowsShouldContainSingleStatementDescription {
-            get {
-                return ResourceManager.GetString("AssertThrowsShouldContainSingleStatementDescription", resourceCulture);
-            }
-        }
-
-        /// <summary>
-        ///   Looks up a localized string similar to Assert.Throws should contain only a single statement/expression.
-        /// </summary>
-        internal static string AssertThrowsShouldContainSingleStatementMessageFormat {
-            get {
-                return ResourceManager.GetString("AssertThrowsShouldContainSingleStatementMessageFormat", resourceCulture);
-            }
-        }
-
-        /// <summary>
-        ///   Looks up a localized string similar to Assert.Throws should contain only a single statement/expression.
-        /// </summary>
-        internal static string AssertThrowsShouldContainSingleStatementTitle {
-            get {
-                return ResourceManager.GetString("AssertThrowsShouldContainSingleStatementTitle", resourceCulture);
             }
         }
     }

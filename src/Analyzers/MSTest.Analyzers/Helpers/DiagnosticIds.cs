@@ -56,4 +56,5 @@ internal static class DiagnosticIds
     public const string FlowTestContextCancellationTokenRuleId = "MSTEST0049";
     public const string GlobalTestFixtureShouldBeValidRuleId = "MSTEST0050";
     public const string AssertThrowsShouldContainSingleStatementRuleId = "MSTEST0051";
+    public const string AvoidExplicitDynamicDataSourceTypeRuleId = "MSTEST0052";
 }

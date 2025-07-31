@@ -284,5 +284,14 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("UseProperAssertMethodsFix", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Remove 'DynamicDataSourceType' parameter to use default 'AutoDetect'.
+        /// </summary>
+        internal static string RemoveDynamicDataSourceTypeFix {
+            get {
+                return ResourceManager.GetString("RemoveDynamicDataSourceTypeFix", resourceCulture);
+            }
+        }
     }
 }

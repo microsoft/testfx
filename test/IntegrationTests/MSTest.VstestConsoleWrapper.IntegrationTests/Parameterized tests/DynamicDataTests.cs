@@ -73,7 +73,11 @@ public class DynamicDataTests : CLITestBase
             "MethodWithOverload (2,\"2\")",
             "DynamicDataTest_SimpleCollection (0)",
             "DynamicDataTest_SimpleCollection (2)",
-            "DynamicDataTest_SimpleCollection (4)");
+            "DynamicDataTest_SimpleCollection (4)",
+            "DynamicDataTest_SourceFieldExplicit (\"field\",5)",
+            "DynamicDataTest_SourceFieldExplicit (\"test\",4)",
+            "DynamicDataTest_SourceFieldAutoDetect (\"field\",5)",
+            "DynamicDataTest_SourceFieldAutoDetect (\"test\",4)");
 
         ValidateFailedTestsCount(0);
     }

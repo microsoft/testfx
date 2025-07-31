@@ -19,6 +19,7 @@ internal sealed class DynamicDataTestMethodArgumentsInfo : ITestMethodArgumentsI
     private const int DynamicDataSourceTypeProperty = 0;
     private const int DynamicDataSourceTypeMethod = 1;
     private const int DynamicDataSourceTypeAutoDetect = 2;
+    private const int DynamicDataSourceTypeField = 3;
 
     internal const string TestArgumentsEntryTypeName = "MSTF::InternalUnsafeTestArgumentsEntry";
     internal const string DynamicDataNameProviderTypeName = "MSTF::DynamicDataNameProvider";
@@ -94,6 +95,7 @@ internal sealed class DynamicDataTestMethodArgumentsInfo : ITestMethodArgumentsI
             {
                 DynamicDataSourceTypeProperty => SymbolKind.Property,
                 DynamicDataSourceTypeMethod => SymbolKind.Method,
+                DynamicDataSourceTypeField => SymbolKind.Field,
                 DynamicDataSourceTypeAutoDetect => null,
                 _ => throw ApplicationStateGuard.Unreachable(),
             };
@@ -102,33 +104,31 @@ internal sealed class DynamicDataTestMethodArgumentsInfo : ITestMethodArgumentsI
     private static DynamicDataTestMethodArgumentsInfo? TryBuildFromDynamicData(INamedTypeSymbol memberTypeSymbol, string memberName, SymbolKind? symbolKind,
     WellKnownTypes wellKnownTypes, IMethodSymbol testMethodSymbol)
     {
-        // Dynamic data only support Properties and Methods, but not fields.
+        // Dynamic data supports Properties, Methods, and Fields.
         // null is also possible and means "AutoDetect"
-        if (symbolKind is not (SymbolKind.Property or SymbolKind.Method or null))
+        if (symbolKind is not (SymbolKind.Property or SymbolKind.Method or SymbolKind.Field or null))
         {
             return null;
         }
 
         ISymbol? firstMatchingMember = memberTypeSymbol.GetAllMembers(memberName)
             .SelectMany(x => x)
-            // DynamicData does not have option to not specify the kind of member we are looking for at the moment.
-            // But the code below can easily handle searching for all kinds of supported members, and only
-            // take the kind into consideration when needed. If a ctor is added to DynamicData, or if we can tell if
-            // user specified the value explicitly or if it was taken from the default value, then `symbolKind` can be made nullable
-            // and only filtered below.
+            // DynamicData supports properties, methods, and fields.
             // .Where(s => s.IsStatic && (s.Kind is SymbolKind.Field or SymbolKind.Property or SymbolKind.Method))
             // .Where(s => symbolKind == null || s.Kind == symbolKind)
-            .Where(s => s.IsStatic && (s.Kind == symbolKind || (symbolKind is null && s.Kind is SymbolKind.Property or SymbolKind.Method)))
+            .Where(s => s.IsStatic && (s.Kind == symbolKind || (symbolKind is null && s.Kind is SymbolKind.Property or SymbolKind.Method or SymbolKind.Field)))
             .Select(s => s switch
             {
                 IPropertySymbol propertySymbol => (ISymbol)propertySymbol,
                 IMethodSymbol methodSymbol => methodSymbol,
+                IFieldSymbol fieldSymbol => fieldSymbol,
                 _ => throw ApplicationStateGuard.Unreachable(),
             })
             .OrderBy(tuple => tuple.Kind switch
             {
                 SymbolKind.Property => 1,
                 SymbolKind.Method => 2,
+                SymbolKind.Field => 3,
                 _ => throw ApplicationStateGuard.Unreachable(),
             })
             .FirstOrDefault();

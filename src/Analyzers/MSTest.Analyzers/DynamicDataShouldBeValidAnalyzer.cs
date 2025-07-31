@@ -21,6 +21,7 @@ public sealed class DynamicDataShouldBeValidAnalyzer : DiagnosticAnalyzer
     private const int DynamicDataSourceTypeProperty = 0;
     private const int DynamicDataSourceTypeMethod = 1;
     private const int DynamicDataSourceTypeAutoDetect = 2;
+    private const int DynamicDataSourceTypeField = 3;
 
     private static readonly LocalizableResourceString Title = new(nameof(Resources.DynamicDataShouldBeValidTitle), Resources.ResourceManager, typeof(Resources));
     private static readonly LocalizableResourceString Description = new(nameof(Resources.DynamicDataShouldBeValidDescription), Resources.ResourceManager, typeof(Resources));
@@ -47,8 +48,11 @@ public sealed class DynamicDataShouldBeValidAnalyzer : DiagnosticAnalyzer
     internal static readonly DiagnosticDescriptor SourceTypeMethodRule = NotTestMethodRule
         .WithMessage(new(nameof(Resources.DynamicDataShouldBeValidMessageFormat_SourceTypeMethod), Resources.ResourceManager, typeof(Resources)));
 
+    internal static readonly DiagnosticDescriptor SourceTypeFieldRule = NotTestMethodRule
+        .WithMessage(new(nameof(Resources.DynamicDataShouldBeValidMessageFormat_SourceTypeField), Resources.ResourceManager, typeof(Resources)));
+
     internal static readonly DiagnosticDescriptor SourceTypeNotPropertyOrMethodRule = NotTestMethodRule
-        .WithMessage(new(nameof(Resources.DynamicDataShouldBeValidMessageFormat_SourceTypeNotPropertyOrMethod), Resources.ResourceManager, typeof(Resources)));
+        .WithMessage(new(nameof(Resources.DynamicDataShouldBeValidMessageFormat_SourceTypeNotPropertyMethodOrField), Resources.ResourceManager, typeof(Resources)));
 
     internal static readonly DiagnosticDescriptor MemberMethodRule = NotTestMethodRule
         .WithMessage(new(nameof(Resources.DynamicDataShouldBeValidMessageFormat_MemberMethod), Resources.ResourceManager, typeof(Resources)));
@@ -253,6 +257,15 @@ public sealed class DynamicDataShouldBeValidAnalyzer : DiagnosticAnalyzer
                 if (dataSourceType is not (DynamicDataSourceTypeMethod or DynamicDataSourceTypeAutoDetect))
                 {
                     context.ReportDiagnostic(attributeSyntax.CreateDiagnostic(SourceTypeMethodRule, declaringType.Name, memberName));
+                    return;
+                }
+
+                break;
+            case SymbolKind.Field:
+                // If the member is a field and the data source type is not set to field or auto detect, report a diagnostic.
+                if (dataSourceType is not (DynamicDataSourceTypeField or DynamicDataSourceTypeAutoDetect))
+                {
+                    context.ReportDiagnostic(attributeSyntax.CreateDiagnostic(SourceTypeFieldRule, declaringType.Name, memberName));
                     return;
                 }
 
