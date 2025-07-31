@@ -2,11 +2,11 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.VisualStudio.TestPlatform;
-using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
-using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
-using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
-using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 
+using MSTest.PlatformServices;
+using MSTest.PlatformServices.Execution;
+using MSTest.PlatformServices.Extensions;
+using MSTest.PlatformServices.ObjectModel;
 using MSTest.TestAdapter;
 
 [assembly: TestExtensionTypes(typeof(MSTestDiscoverer), typeof(MSTestExecutor))]

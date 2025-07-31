@@ -3,7 +3,8 @@
 
 #if !WINDOWS_UWP
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
-using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
+
+using MSTest.PlatformServices;
 
 namespace MSTest.TestAdapter;
 
