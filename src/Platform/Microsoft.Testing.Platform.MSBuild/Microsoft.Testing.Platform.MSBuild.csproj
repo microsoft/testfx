@@ -58,10 +58,6 @@ This package provides MSBuild integration of the platform, its extensions and co
     <Compile Include="..\Microsoft.Testing.Extensions.MSBuild\Serializers\RunSummaryRequestSerializer.cs" Link="Serializers/RunSummaryRequestSerializer.cs" />
   </ItemGroup>
 
-  <ItemGroup>
-    <EmbeddedResource Update="Resources\MSBuildResources.resx" GenerateSource="true" />
-  </ItemGroup>
-
   <!-- Generates NuGet package layout inside artifacts to make it testable with simple imports -->
   <Target Name="ReproNugetPackageLayout" AfterTargets="Build" Condition=" '$(TargetFramework)' != '' ">
     <ItemGroup>
