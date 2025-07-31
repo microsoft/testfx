@@ -1,9 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
-using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
-
 using TestFramework.ForTestingMSTest;
 
 using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -24,7 +21,7 @@ public class TestResultExtensionsTests : TestContainer
 
     public void ToUnitTestResultsForTestResultWithExceptionConvertsToUnitTestResultsWithInconclusiveOutcome()
     {
-        var result = new TestResult { TestFailureException = new Exception(), Outcome = UTF.UnitTestOutcome.Inconclusive };
+        var result = new TestResult { TestFailureException = new Exception(), Outcome = UnitTestOutcome.Inconclusive };
         var convertedResult = result.ToTestResult(new(), default, default, string.Empty, new());
 
         Verify(convertedResult.Outcome == VSTestTestOutcome.Skipped);

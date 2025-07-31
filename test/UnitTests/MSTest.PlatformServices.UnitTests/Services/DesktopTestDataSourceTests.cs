@@ -4,10 +4,9 @@
 #if NETFRAMEWORK
 using System.Data;
 
-using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
-using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
-
 using Moq;
+
+using MSTest.PlatformServices.Interface;
 
 using TestFramework.ForTestingMSTest;
 

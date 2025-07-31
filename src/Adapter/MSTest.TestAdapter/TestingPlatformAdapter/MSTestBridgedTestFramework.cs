@@ -8,7 +8,8 @@ using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.Services;
-using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
+
+using MSTest.PlatformServices;
 
 namespace MSTest.TestAdapter;
 

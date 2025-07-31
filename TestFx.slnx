@@ -49,7 +49,7 @@
   <Folder Name="/src/2 - Adapter/" Id="f7cf448e-306d-5d9b-7166-fa7205a8989c">
     <Project Path="src/Adapter/MSTest.Engine/MSTest.Engine.csproj" />
     <Project Path="src/Adapter/MSTest.TestAdapter/MSTest.TestAdapter.csproj" />
-    <Project Path="src/Adapter/MSTestAdapter.PlatformServices/MSTestAdapter.PlatformServices.csproj" />
+    <Project Path="src/Adapter/MSTest.PlatformServices/MSTest.PlatformServices.csproj" />
   </Folder>
   <Folder Name="/src/3 - TestFramework/" Id="f28cc185-255f-b581-6ed3-c247f7096eb1">
     <Project Path="src/TestFramework/TestFramework.Extensions/TestFramework.Extensions.csproj" />

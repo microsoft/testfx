@@ -39,7 +39,7 @@
   <ItemGroup>
     <InternalsVisibleTo Include="DynamicProxyGenAssembly2" Key="$(MoqPublicKey)" />
     <InternalsVisibleTo Include="MSTest.TestAdapter" Key="$(VsPublicKey)" />
-    <InternalsVisibleTo Include="MSTestAdapter.PlatformServices" Key="$(VsPublicKey)" />
+    <InternalsVisibleTo Include="MSTest.PlatformServices" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="MSTest.TestAdapter.UnitTests" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="MSTest.TestFramework.Extensions" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="MSTest.TestFramework.UnitTests" Key="$(VsPublicKey)" />

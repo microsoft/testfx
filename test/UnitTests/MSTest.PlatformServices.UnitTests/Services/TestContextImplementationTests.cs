@@ -6,15 +6,13 @@ using System.Data;
 using System.Data.Common;
 #endif
 
-using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
-using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Resources;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 
 using Moq;
 
 using TestFramework.ForTestingMSTest;
 
-using ITestMethod = Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ObjectModel.ITestMethod;
+using ITestMethod = MSTest.PlatformServices.Interface.ObjectModel.ITestMethod;
 using UnitTestOutcome = Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome;
 
 namespace MSTest.PlatformServices.Services.UnitTests;

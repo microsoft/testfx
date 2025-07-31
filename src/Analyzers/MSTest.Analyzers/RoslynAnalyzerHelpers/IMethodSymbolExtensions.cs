@@ -4,8 +4,6 @@
 
 using Microsoft.CodeAnalysis;
 
-using MSTest.Analyzers.Helpers;
-
 namespace Analyzer.Utilities.Extensions;
 
 internal static class IMethodSymbolExtensions
