@@ -167,7 +167,7 @@ If you are working with Visual Studio, we recommend opening it through the `open
 
 Inside Visual Studio, all projects can be built normally. All but acceptance tests can be tested directly from Visual Studio. The acceptance tests will always use the version of the NuGet packages produced in the `artifacts/packages/shipping` folder so if you have made some changes and run these tests, it's likely that the changes will not be applied.
 
-## Common Build issues while loading project with Visual Studio
+## Visual Studio version requirement
 NB: If working with Visual Studio, this project repository contains a Visual Studio solution file of extension type .slnx, which is the new XML-based solution file format in Visual Studio (i.e. TestFx.slnx). This solution file can only be opened or loaded successfully using Visual Studio 2022 17.13 or higher.
 
 If you attempt to build using the `Build.cmd` script in the repository root or run `build.cmd -configuration release` in the terminal with a Visual Studio version other than Visual Studio 2022 17.13 or higher installed on your machine, you will encounter a build error as shown below.
