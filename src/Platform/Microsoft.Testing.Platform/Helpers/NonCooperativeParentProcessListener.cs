@@ -20,14 +20,13 @@ internal sealed class NonCooperativeParentProcessListener : IDisposable
 
     private void SubscribeToParentProcess()
     {
-        _commandLineOptions.TryGetOptionArgumentList(PlatformCommandLineProvider.ExitOnProcessExitOptionKey, out string[]? pid);
+        _commandLineOptions.TryGetOptionArgument(PlatformCommandLineProvider.ExitOnProcessExitOptionKey, out string? pid);
         ApplicationStateGuard.Ensure(pid is not null);
-        RoslynDebug.Assert(pid.Length == 1);
 
         try
         {
 #pragma warning disable CA1416 // Validate platform compatibility
-            _parentProcess = Process.GetProcessById(int.Parse(pid[0], CultureInfo.InvariantCulture));
+            _parentProcess = Process.GetProcessById(int.Parse(pid, CultureInfo.InvariantCulture));
             _parentProcess.EnableRaisingEvents = true;
             _parentProcess.Exited += ParentProcess_Exited;
 #pragma warning restore CA1416

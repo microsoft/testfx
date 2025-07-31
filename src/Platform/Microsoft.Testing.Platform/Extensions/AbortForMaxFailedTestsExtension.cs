@@ -26,8 +26,8 @@ internal sealed class AbortForMaxFailedTestsExtension : IDataConsumer
         IStopPoliciesService policiesService,
         ITestApplicationCancellationTokenSource testApplicationCancellationTokenSource)
     {
-        if (commandLineOptions.TryGetOptionArgumentList(MaxFailedTestsCommandLineOptionsProvider.MaxFailedTestsOptionKey, out string[]? args) &&
-            int.TryParse(args[0], out int maxFailedTests) &&
+        if (commandLineOptions.TryGetOptionArgument(MaxFailedTestsCommandLineOptionsProvider.MaxFailedTestsOptionKey, out string? args) &&
+            int.TryParse(args, out int maxFailedTests) &&
             maxFailedTests > 0)
         {
             _maxFailedTests = maxFailedTests;
