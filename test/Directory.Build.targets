@@ -58,6 +58,7 @@
     <Using Include="Microsoft.Testing.Platform.Extensions" />
     <Using Include="Microsoft.Testing.TestInfrastructure"
            Condition="'$(UseInternalTestFramework)' != 'true'" />
+    <Using Include="Microsoft.VisualStudio.TestTools.UnitTesting" />
   </ItemGroup>
 
   <ItemGroup Condition=" '$(EnableMSTestRunner)' == 'true' OR '$(UseInternalTestFramework)' == 'true' ">
