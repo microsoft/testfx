@@ -127,7 +127,7 @@
     <Project Path="test/UnitTests/MSTest.Engine.UnitTests/MSTest.Engine.UnitTests.csproj" />
     <Project Path="test/UnitTests/MSTest.SelfRealExamples.UnitTests/MSTest.SelfRealExamples.UnitTests.csproj" />
     <Project Path="test/UnitTests/MSTest.SourceGeneration.UnitTests/MSTest.SourceGeneration.UnitTests.csproj" />
-    <Project Path="test/UnitTests/MSTestAdapter.PlatformServices.UnitTests/MSTestAdapter.PlatformServices.UnitTests.csproj" />
+    <Project Path="test/UnitTests/MSTest.PlatformServices.UnitTests/MSTest.PlatformServices.UnitTests.csproj" />
     <Project Path="test/UnitTests/MSTest.TestAdapter.UnitTests/MSTest.TestAdapter.UnitTests.csproj" />
     <Project Path="test/UnitTests/MSTest.TestFramework.UnitTests/MSTest.TestFramework.UnitTests.csproj" />
   </Folder>
