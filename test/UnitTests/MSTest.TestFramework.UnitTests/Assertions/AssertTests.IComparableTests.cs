@@ -5,7 +5,7 @@ using AwesomeAssertions;
 
 using TestFramework.ForTestingMSTest;
 
-namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests;
+namespace MSTest.TestFramework.UnitTests;
 
 public partial class AssertTests : TestContainer
 {

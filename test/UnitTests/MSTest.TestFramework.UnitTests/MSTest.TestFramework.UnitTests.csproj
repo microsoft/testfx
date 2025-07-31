@@ -5,8 +5,6 @@
     <TargetFrameworks>$(NetStandardNetFrameworkHolder);net8.0;net9.0</TargetFrameworks>
     <TargetFrameworks Condition=" '$(OS)' == 'Windows_NT' ">$(TargetFrameworks);$(WinUiMinimum)</TargetFrameworks>
     <IsNetCoreApp Condition=" '$(TargetFramework)' == 'net8.0' OR '$(TargetFramework)' == 'net9.0' OR '$(TargetFramework)' == '$(WinUiMinimum)' ">true</IsNetCoreApp>
-    <RootNamespace>Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests</RootNamespace>
-    <AssemblyName>Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests</AssemblyName>
     <UseInternalTestFramework>true</UseInternalTestFramework>
     <OutputType>Exe</OutputType>
     <SuppressTfmSupportBuildWarnings>true</SuppressTfmSupportBuildWarnings>

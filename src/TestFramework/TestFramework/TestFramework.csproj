@@ -42,7 +42,7 @@
     <InternalsVisibleTo Include="MSTestAdapter.PlatformServices" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="MSTest.TestFramework.Extensions" Key="$(VsPublicKey)" />
-    <InternalsVisibleTo Include="Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests" Key="$(VsPublicKey)" />
+    <InternalsVisibleTo Include="MSTest.TestFramework.UnitTests" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="MSTestAdapter.PlatformServices.UnitTests" Key="$(VsPublicKey)" />
   </ItemGroup>
 
