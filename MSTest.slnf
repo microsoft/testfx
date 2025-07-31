@@ -50,7 +50,7 @@
       "test\\Performance\\MSTest.Performance.Runner\\MSTest.Performance.Runner.csproj",
       "test\\UnitTests\\MSTest.Analyzers.UnitTests\\MSTest.Analyzers.UnitTests.csproj",
       "test\\UnitTests\\MSTestAdapter.PlatformServices.UnitTests\\MSTestAdapter.PlatformServices.UnitTests.csproj",
-      "test\\UnitTests\\MSTestAdapter.UnitTests\\MSTestAdapter.UnitTests.csproj",
+      "test\\UnitTests\\MSTest.TestAdapter.UnitTests\\MSTest.TestAdapter.UnitTests.csproj",
       "test\\UnitTests\\MSTest.SelfRealExamples.UnitTests\\MSTest.SelfRealExamples.UnitTests.csproj",
       "test\\UnitTests\\MSTest.TestFramework.UnitTests\\MSTest.TestFramework.UnitTests.csproj",
       "test\\Utilities\\Automation.CLI\\Automation.CLI.csproj",

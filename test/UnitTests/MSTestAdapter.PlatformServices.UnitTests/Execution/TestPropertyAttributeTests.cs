@@ -6,13 +6,15 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
-using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
 using Moq;
 
+using MSTest.TestAdapter.UnitTests.TestableImplementations;
+
 using TestFramework.ForTestingMSTest;
 
-namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution;
+namespace MSTest.TestAdapter.UnitTests.Execution;
 
 public class TestPropertyAttributeTests : TestContainer
 {
@@ -60,7 +62,7 @@ public class TestPropertyAttributeTests : TestContainer
         Assert.IsTrue(testContext.TryGetPropertyValue("DummyTestClassBaseKey2", out object? value3));
         Assert.AreEqual("DummyTestClassBaseValue2", value3);
 
-        TestPlatform.ObjectModel.Trait[] traits = [.. ReflectHelper.Instance.GetTestPropertiesAsTraits(typeof(DummyTestClassBase).GetMethod(nameof(DummyTestClassBase.VirtualTestMethodInBaseAndDerived))!)];
+        Trait[] traits = [.. ReflectHelper.Instance.GetTestPropertiesAsTraits(typeof(DummyTestClassBase).GetMethod(nameof(DummyTestClassBase.VirtualTestMethodInBaseAndDerived))!)];
         Assert.AreEqual(3, traits.Length);
         Assert.AreEqual("TestMethodKeyFromBase", traits[0].Name);
         Assert.AreEqual("TestMethodValueFromBase", traits[0].Value);
@@ -99,7 +101,7 @@ public class TestPropertyAttributeTests : TestContainer
         Assert.IsTrue(testContext.TryGetPropertyValue("DummyTestClassBaseKey2", out object? value6));
         Assert.AreEqual("DummyTestClassBaseValue2", value6);
 
-        TestPlatform.ObjectModel.Trait[] traits = [.. ReflectHelper.Instance.GetTestPropertiesAsTraits(typeof(DummyTestClassDerived).GetMethod(nameof(DummyTestClassDerived.VirtualTestMethodInBaseAndDerived))!)];
+        Trait[] traits = [.. ReflectHelper.Instance.GetTestPropertiesAsTraits(typeof(DummyTestClassDerived).GetMethod(nameof(DummyTestClassDerived.VirtualTestMethodInBaseAndDerived))!)];
         Assert.AreEqual(6, traits.Length);
         Assert.AreEqual("DerivedMethod1Key", traits[0].Name);
         Assert.AreEqual("DerivedMethod1Value", traits[0].Value);
@@ -144,7 +146,7 @@ public class TestPropertyAttributeTests : TestContainer
         Assert.IsTrue(testContext.TryGetPropertyValue("DummyTestClassBaseKey2", out object? value6));
         Assert.AreEqual("DummyTestClassBaseValue2", value6);
 
-        TestPlatform.ObjectModel.Trait[] traits = [.. ReflectHelper.Instance.GetTestPropertiesAsTraits(typeof(DummyTestClassDerived).GetMethod(nameof(DummyTestClassDerived.VirtualTestMethodInDerivedButNotTestMethodInBase))!)];
+        Trait[] traits = [.. ReflectHelper.Instance.GetTestPropertiesAsTraits(typeof(DummyTestClassDerived).GetMethod(nameof(DummyTestClassDerived.VirtualTestMethodInDerivedButNotTestMethodInBase))!)];
         Assert.AreEqual(6, traits.Length);
         Assert.AreEqual("DerivedMethod2Key", traits[0].Name);
         Assert.AreEqual("DerivedMethod2Value", traits[0].Value);

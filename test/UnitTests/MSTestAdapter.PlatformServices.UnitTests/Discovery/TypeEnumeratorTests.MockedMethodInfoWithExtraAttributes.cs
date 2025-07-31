@@ -5,7 +5,7 @@
 using Polyfills;
 #endif
 
-namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery;
+namespace MSTest.TestAdapter.UnitTests.Discovery;
 
 public partial class TypeEnumeratorTests
 {

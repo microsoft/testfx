@@ -7,7 +7,7 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
 using TestFramework.ForTestingMSTest;
 
-namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions;
+namespace MSTest.TestAdapter.UnitTests.Extensions;
 
 public class TestCaseExtensionsTests : TestContainer
 {
