@@ -722,13 +722,8 @@ public sealed partial class Assert
 
         if (diffIndex == -1)
         {
-            // Strings are equal - should not happen in practice but handle gracefully
-            return string.Format(
-                CultureInfo.CurrentCulture,
-                FrameworkMessages.AreEqualFailMsg,
-                userMessage,
-                ReplaceNulls(expected),
-                ReplaceNulls(actual));
+            // Strings are equal - should not happen in practice, we call this method only when they are not equal.
+            ApplicationStateGuard.Unreachable();
         }
 
         // Format the enhanced string comparison message
