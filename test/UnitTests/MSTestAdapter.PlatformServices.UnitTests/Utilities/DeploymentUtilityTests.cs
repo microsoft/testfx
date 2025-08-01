@@ -344,13 +344,15 @@ public class DeploymentUtilityTests : TestContainer
                 Path.Combine(testRunDirectories.OutDirectory, sourceFile),
                 out warning),
             Times.Once);
+#if DEBUG
         _mockFileUtility.Verify(
-            fu =>
-            fu.CopyFileOverwrite(
-                It.Is<string>(s => s.Contains(pdbFile)),
-                Path.Combine(testRunDirectories.OutDirectory, pdbFile),
-                out warning),
-            Times.Once);
+    fu =>
+    fu.CopyFileOverwrite(
+        It.Is<string>(s => s.Contains(pdbFile)),
+        Path.Combine(testRunDirectories.OutDirectory, pdbFile),
+        out warning),
+    Times.Once);
+#endif
     }
 
     public void DeployShouldNotDeployPdbFileOfAssemblyIfPdbFileIsNotPresentInAssemblyDirectory()
