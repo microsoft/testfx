@@ -301,7 +301,6 @@ public class DeploymentUtilityTests : TestContainer
             Times.Once);
     }
 
-#if NET462
     public void DeployShouldDeployPdbWithSourceIfPdbFileIsPresentInSourceDirectory()
     {
         TestCase testCase = GetTestCaseAndTestRunDirectories(DefaultDeploymentItemPath, DefaultDeploymentItemOutputDirectory, out TestRunDirectories testRunDirectories);
@@ -310,12 +309,12 @@ public class DeploymentUtilityTests : TestContainer
         _mockFileUtility.Setup(fu => fu.DoesDirectoryExist(It.Is<string>(s => !s.EndsWith(".dll") && !s.EndsWith(".exe") && !s.EndsWith(".config"))))
             .Returns(true);
         _mockFileUtility.Setup(fu => fu.DoesFileExist(It.IsAny<string>())).Returns(true);
-        _mockAssemblyUtility.Setup(
-            au => au.GetFullPathToDependentAssemblies(It.IsAny<string>(), It.IsAny<string>(), out _warnings))
+#if NETFRAMEWORK
+        _mockAssemblyUtility.Setup(au => au.GetFullPathToDependentAssemblies(It.IsAny<string>(), It.IsAny<string>(), out _warnings))
             .Returns(Array.Empty<string>());
-        _mockAssemblyUtility.Setup(
-            au => au.GetSatelliteAssemblies(It.IsAny<string>()))
+        _mockAssemblyUtility.Setup(au => au.GetSatelliteAssemblies(It.IsAny<string>()))
             .Returns([]);
+#endif
         string? warning;
         _mockFileUtility.Setup(fu => fu.CopyFileOverwrite(It.IsAny<string>(), It.IsAny<string>(), out warning))
             .Returns(
@@ -324,6 +323,12 @@ public class DeploymentUtilityTests : TestContainer
                         z = string.Empty;
                         return y;
                     });
+
+        string sourceFile = Assembly.GetExecutingAssembly().GetName().Name + ".exe";
+        string pdbFile = Assembly.GetExecutingAssembly().GetName().Name + ".pdb";
+        _mockFileUtility.Setup(
+            fu => fu.DoesFileExist(Path.Combine(DefaultDeploymentItemPath, pdbFile)))
+            .Returns(true);
 
         // Act.
         Verify(
@@ -334,9 +339,7 @@ public class DeploymentUtilityTests : TestContainer
                 _mockTestExecutionRecorder.Object,
                 testRunDirectories));
 
-        // Assert.
-        string sourceFile = Assembly.GetExecutingAssembly().GetName().Name + ".exe";
-        string pdbFile = Assembly.GetExecutingAssembly().GetName().Name + ".pdb";
+        // Assert
         _mockFileUtility.Verify(
             fu =>
             fu.CopyFileOverwrite(
@@ -344,15 +347,13 @@ public class DeploymentUtilityTests : TestContainer
                 Path.Combine(testRunDirectories.OutDirectory, sourceFile),
                 out warning),
             Times.Once);
-#if DEBUG
         _mockFileUtility.Verify(
-    fu =>
-    fu.CopyFileOverwrite(
-        It.Is<string>(s => s.Contains(pdbFile)),
-        Path.Combine(testRunDirectories.OutDirectory, pdbFile),
-        out warning),
-    Times.Once);
-#endif
+            fu =>
+            fu.CopyFileOverwrite(
+                It.Is<string>(s => s.Contains(pdbFile)),
+                Path.Combine(testRunDirectories.OutDirectory, pdbFile),
+                out warning),
+            Times.Once);
     }
 
     public void DeployShouldNotDeployPdbFileOfAssemblyIfPdbFileIsNotPresentInAssemblyDirectory()
@@ -368,12 +369,12 @@ public class DeploymentUtilityTests : TestContainer
         _mockFileUtility.Setup(fu => fu.DoesDirectoryExist(It.Is<string>(s => !s.EndsWith(".dll") && !s.EndsWith(".exe") && !s.EndsWith(".config"))))
             .Returns(true);
         _mockFileUtility.Setup(fu => fu.DoesFileExist(It.IsAny<string>())).Returns(true);
-        _mockAssemblyUtility.Setup(
-            au => au.GetFullPathToDependentAssemblies(It.IsAny<string>(), It.IsAny<string>(), out _warnings))
+#if NETFRAMEWORK
+        _mockAssemblyUtility.Setup(au => au.GetFullPathToDependentAssemblies(It.IsAny<string>(), It.IsAny<string>(), out _warnings))
             .Returns([dependencyFile]);
-        _mockAssemblyUtility.Setup(
-            au => au.GetSatelliteAssemblies(It.IsAny<string>()))
+        _mockAssemblyUtility.Setup(au => au.GetSatelliteAssemblies(It.IsAny<string>()))
             .Returns([]);
+#endif
         string? warning;
         _mockFileUtility.Setup(fu => fu.CopyFileOverwrite(It.IsAny<string>(), It.IsAny<string>(), out warning))
             .Returns(
@@ -409,7 +410,6 @@ public class DeploymentUtilityTests : TestContainer
                 out warning),
             Times.Never);
     }
-#endif
 
     #endregion
 
