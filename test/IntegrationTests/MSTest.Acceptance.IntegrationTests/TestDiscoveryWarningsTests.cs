@@ -35,7 +35,7 @@ public class TestDiscoveryWarningsTests : AcceptanceTestBase<TestDiscoveryWarnin
 
         TestHostResult testHostResult = await testHost.ExecuteAsync("--list-tests");
 
-        testHostResult.AssertExitCodeIsNot(ExitCodes.Success);
+        testHostResult.AssertExitCodeIs(ExitCodes.Success);
         testHostResult.AssertOutputContains("System.IO.FileNotFoundException: Could not load file or assembly 'TestDiscoveryWarningsBaseClass");
     }
 
