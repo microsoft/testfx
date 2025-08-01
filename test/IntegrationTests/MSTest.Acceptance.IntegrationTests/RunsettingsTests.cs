@@ -54,7 +54,7 @@ public sealed class RunSettingsTests : AcceptanceTestBase<RunSettingsTests.TestA
     }
 
     [TestMethod]
-    [DynamicData(nameof(LocalizationTestCases), DynamicDataSourceType.Method)]
+    [DynamicData(nameof(LocalizationTestCases))]
     public async Task UnsupportedRunSettingsEntriesAreFlagged_Localization(string? testingPlatformUILanguage, string? dotnetCLILanguage, string? vsLang, string? expectedLocale)
     {
         var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent);
