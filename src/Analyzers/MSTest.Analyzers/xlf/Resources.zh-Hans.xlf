@@ -419,7 +419,7 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_SourceTypeField">
         <source>'[DynamicData]' member '{0}.{1}' is a field so you should use 'DynamicDataSourceType.AutoDetect' or 'DynamicDataSourceType.Field' (auto detect is the default when not specified explicitly, and is recommended)</source>
-        <target state="new">'[DynamicData]' member '{0}.{1}' is a field so you should use 'DynamicDataSourceType.AutoDetect' or 'DynamicDataSourceType.Field' (auto detect is the default when not specified explicitly, and is recommended)</target>
+        <target state="translated">"[DynamicData]" 成员“{0}.{1}”是字段，因此应使用 "DynamicDataSourceType.AutoDetect" 或 "DynamicDataSourceType.Field" (未显式指定时，默认为自动检测，建议使用此设置)</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_SourceTypeMethod">
@@ -429,7 +429,7 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_SourceTypeNotPropertyMethodOrField">
         <source>'[DynamicData]' member '{0}.{1}' is not a property, method, or field. Only properties, methods, and fields are supported.</source>
-        <target state="new">'[DynamicData]' member '{0}.{1}' is not a property, method, or field. Only properties, methods, and fields are supported.</target>
+        <target state="translated">"[DynamicData]" 成员“{0}.{1}”不是属性、方法或字段。仅支持属性、方法和字段。</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_SourceTypeNotPropertyOrMethod">
