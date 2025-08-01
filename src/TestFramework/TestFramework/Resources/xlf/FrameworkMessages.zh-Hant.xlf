@@ -144,7 +144,7 @@
       </trans-unit>
       <trans-unit id="DynamicDataSourceShouldExistAndBeValid">
         <source>The dynamic data source '{0}' in type '{1}' should exist and be a property, a method, or a field.</source>
-        <target state="needs-review-translation">類型 '{1}' 中的動態數據源 '{0}' 應該存在，而且必須是屬性或方法。</target>
+        <target state="new">The dynamic data source '{0}' in type '{1}' should exist and be a property, a method, or a field.</target>
         <note />
       </trans-unit>
       <trans-unit id="ElementNumbersDontMatch">
