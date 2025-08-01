@@ -1,5 +1,9 @@
 This is a .NET based repository that contains the MSTest testing framework and Microsoft.Testing.Platform (aka MTP) testing platform. Please follow these guidelines when contributing:
 
+## General guidelines
+
+- Let other developers discuss their comments to your PRs, don't do changes unless you are specifically tagged or mentioned as copilot.
+
 ## Code Standards
 
 You MUST follow all code-formatting and naming conventions defined in [`.editorconfig`](../.editorconfig).
