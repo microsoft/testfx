@@ -6,7 +6,9 @@ using Microsoft.Testing.Platform.Builder;
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-[assembly: Parallelize(Scope = Microsoft.VisualStudio.TestTools.UnitTesting.ExecutionScope.ClassLevel, Workers = 0)]
+using ExecutionScope = Microsoft.VisualStudio.TestTools.UnitTesting.ExecutionScope;
+
+[assembly: Parallelize(Scope = ExecutionScope.ClassLevel, Workers = 0)]
 
 ITestApplicationBuilder testApplicationBuilder = await TestApplication.CreateBuilderAsync(args);
 

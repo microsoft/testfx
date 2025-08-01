@@ -3,9 +3,10 @@
 
 #if !WINDOWS_UWP
 using Microsoft.Testing.Platform.Logging;
-using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 
-namespace Microsoft.VisualStudio.TestTools.UnitTesting;
+using MSTest.PlatformServices.Interface;
+
+namespace MSTest.TestAdapter;
 
 [SuppressMessage("ApiDesign", "RS0030:Do not use banned APIs", Justification = "MTP logger bridge")]
 internal sealed class BridgedTraceLogger : IAdapterTraceLogger

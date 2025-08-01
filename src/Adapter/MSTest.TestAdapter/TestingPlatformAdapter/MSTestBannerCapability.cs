@@ -5,7 +5,7 @@
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.Services;
 
-namespace Microsoft.VisualStudio.TestTools.UnitTesting;
+namespace MSTest.TestAdapter;
 
 [SuppressMessage("ApiDesign", "RS0030:Do not use banned APIs", Justification = "We can use MTP from this folder")]
 internal sealed class MSTestBannerCapability : IBannerMessageOwnerCapability
