@@ -50,12 +50,12 @@
       </trans-unit>
       <trans-unit id="AreEqualStringDiffExpectedPrefix">
         <source>Expected: </source>
-        <target state="new">Attendu : </target>
+        <target state="new">Expected: </target>
         <note></note>
       </trans-unit>
       <trans-unit id="AreEqualStringDiffActualPrefix">
         <source>But was:  </source>
-        <target state="new">Mais était : </target>
+        <target state="new">But was:  </target>
         <note></note>
       </trans-unit>
       <trans-unit id="AreEqualStringDiffLengthBothMsg">
