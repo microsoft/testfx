@@ -1,5 +1,12 @@
 <Project>
 
+  <ItemGroup>
+    <!-- Usually, GenerateSource="true" is enough for Arcade to do the generation. -->
+    <!-- However, MSBuild.Sdk.Extras can break us by explicitly setting Generator metadata -->
+    <!-- https://github.com/novotnyllc/MSBuildSdkExtras/blob/b58e1d25b530e02ce4d1b937ccf99082019cdc47/Source/MSBuild.Sdk.Extras/DefaultItems/Platforms/Common.props#L13-L21 -->
+    <EmbeddedResource Update="**\*.resx" GenerateSource="true" Generator="MSBuild:_GenerateResxSource" />
+  </ItemGroup>
+
   <Import Project="Sdk.targets" Sdk="Microsoft.DotNet.Arcade.Sdk" />
 
   <!-- Pack config -->
