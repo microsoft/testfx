@@ -14,17 +14,17 @@ using MSTest.Analyzers.Helpers;
 namespace MSTest.Analyzers;
 
 /// <summary>
-/// MSTEST0053: <inheritdoc cref="Resources.AvoidConsoleWriteInTestsTitle"/>.
+/// MSTEST0053: <inheritdoc cref="Resources.PreferTestContextWriteTitle"/>.
 /// </summary>
 [DiagnosticAnalyzer(LanguageNames.CSharp, LanguageNames.VisualBasic)]
-public sealed class AvoidConsoleWriteInTestsAnalyzer : DiagnosticAnalyzer
+public sealed class PreferTestContextWriteAnalyzer : DiagnosticAnalyzer
 {
-    private static readonly LocalizableResourceString Title = new(nameof(Resources.AvoidConsoleWriteInTestsTitle), Resources.ResourceManager, typeof(Resources));
-    private static readonly LocalizableResourceString MessageFormat = new(nameof(Resources.AvoidConsoleWriteInTestsMessageFormat), Resources.ResourceManager, typeof(Resources));
-    private static readonly LocalizableResourceString Description = new(nameof(Resources.AvoidConsoleWriteInTestsDescription), Resources.ResourceManager, typeof(Resources));
+    private static readonly LocalizableResourceString Title = new(nameof(Resources.PreferTestContextWriteTitle), Resources.ResourceManager, typeof(Resources));
+    private static readonly LocalizableResourceString MessageFormat = new(nameof(Resources.PreferTestContextWriteMessageFormat), Resources.ResourceManager, typeof(Resources));
+    private static readonly LocalizableResourceString Description = new(nameof(Resources.PreferTestContextWriteDescription), Resources.ResourceManager, typeof(Resources));
 
     internal static readonly DiagnosticDescriptor Rule = DiagnosticDescriptorHelper.Create(
-        DiagnosticIds.AvoidConsoleWriteInTestsRuleId,
+        DiagnosticIds.PreferTestContextWriteRuleId,
         Title,
         MessageFormat,
         Description,

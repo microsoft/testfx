@@ -157,32 +157,32 @@ O tipo que declara esses métodos também deve respeitar as seguintes regras:
         <target state="new">Avoid passing an explicit 'DynamicDataSourceType' and use the default auto detect behavior</target>
         <note />
       </trans-unit>
-      <trans-unit id="AvoidConsoleWriteInTestsDescription">
+      <trans-unit id="PreferTestContextWriteDescription">
         <source>Using 'Console.Write*', 'Trace.Write*', or 'Debug.Write*' methods in test methods can cause output to be lost or not properly captured by the test framework. Use 'TestContext.WriteLine' instead to ensure test output is properly captured and displayed.</source>
         <target state="new">Using 'Console.Write*', 'Trace.Write*', or 'Debug.Write*' methods in test methods can cause output to be lost or not properly captured by the test framework. Use 'TestContext.WriteLine' instead to ensure test output is properly captured and displayed.</target>
         <note />
       </trans-unit>
-      <trans-unit id="AvoidConsoleWriteInTestsMessageFormat">
+      <trans-unit id="PreferTestContextWriteMessageFormat">
         <source>Use 'TestContext.WriteLine' instead of '{0}.{1}' in test methods</source>
         <target state="new">Use 'TestContext.WriteLine' instead of '{0}.{1}' in test methods</target>
         <note />
       </trans-unit>
-      <trans-unit id="AvoidConsoleWriteInTestsTitle">
+      <trans-unit id="PreferTestContextWriteTitle">
         <source>Avoid 'Console.Write*', 'Trace.Write*', and 'Debug.Write*' in tests</source>
         <target state="new">Avoid 'Console.Write*', 'Trace.Write*', and 'Debug.Write*' in tests</target>
         <note />
       </trans-unit>
-      <trans-unit id="AvoidConsoleWriteInTestsDescription">
+      <trans-unit id="PreferTestContextWriteDescription">
         <source>Using 'Console.Write*', 'Trace.Write*', or 'Debug.Write*' methods in test methods can cause output to be lost or not properly captured by the test framework. Use 'TestContext.WriteLine' instead to ensure test output is properly captured and displayed.</source>
         <target state="new">Using 'Console.Write*', 'Trace.Write*', or 'Debug.Write*' methods in test methods can cause output to be lost or not properly captured by the test framework. Use 'TestContext.WriteLine' instead to ensure test output is properly captured and displayed.</target>
         <note />
       </trans-unit>
-      <trans-unit id="AvoidConsoleWriteInTestsMessageFormat">
+      <trans-unit id="PreferTestContextWriteMessageFormat">
         <source>Use 'TestContext.WriteLine' instead of '{0}.{1}' in test methods</source>
         <target state="new">Use 'TestContext.WriteLine' instead of '{0}.{1}' in test methods</target>
         <note />
       </trans-unit>
-      <trans-unit id="AvoidConsoleWriteInTestsTitle">
+      <trans-unit id="PreferTestContextWriteTitle">
         <source>Avoid 'Console.Write*', 'Trace.Write*', and 'Debug.Write*' in tests</source>
         <target state="new">Avoid 'Console.Write*', 'Trace.Write*', and 'Debug.Write*' in tests</target>
         <note />

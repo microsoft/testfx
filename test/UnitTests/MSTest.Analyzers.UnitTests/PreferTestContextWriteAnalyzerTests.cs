@@ -2,13 +2,13 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
-    MSTest.Analyzers.AvoidConsoleWriteInTestsAnalyzer,
+    MSTest.Analyzers.PreferTestContextWriteAnalyzer,
     Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider>;
 
 namespace MSTest.Analyzers.Test;
 
 [TestClass]
-public sealed class AvoidConsoleWriteInTestsAnalyzerTests
+public sealed class PreferTestContextWriteAnalyzerTests
 {
     [TestMethod]
     public async Task WhenConsoleWriteUsedInTestMethod_Diagnostic()
