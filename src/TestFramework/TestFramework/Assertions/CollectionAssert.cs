@@ -434,9 +434,23 @@ public sealed class CollectionAssert
     {
         Assert.CheckParameterNotNull(subset, "CollectionAssert.IsSubsetOf", "subset", string.Empty);
         Assert.CheckParameterNotNull(superset, "CollectionAssert.IsSubsetOf", "superset", string.Empty);
-        if (!IsSubsetOfHelper(subset, superset))
+        var isSubsetValue = IsSubsetOfHelper(subset, superset);
+        if (!isSubsetValue.isSubset)
         {
-            Assert.ThrowAssertFailed("CollectionAssert.IsSubsetOf", Assert.BuildUserMessage(message, parameters));
+            string returnedSubsetValueMessage = string.Empty;
+            foreach (object? item in isSubsetValue.nonSubsetValues)
+            {
+                returnedSubsetValueMessage = returnedSubsetValueMessage + " " + Convert.ToString(item) + ",";
+            }
+
+            // Remove the last trailing comma
+            if (!string.IsNullOrEmpty(returnedSubsetValueMessage))
+            {
+                returnedSubsetValueMessage = returnedSubsetValueMessage.TrimEnd(',').Trim();
+            }
+
+            returnedSubsetValueMessage = "values {" + returnedSubsetValueMessage.Trim() + "} is/are not a subset of the superset";
+            Assert.ThrowAssertFailed("CollectionAssert.IsSubsetOf", returnedSubsetValueMessage);
         }
     }
 
@@ -509,7 +523,8 @@ public sealed class CollectionAssert
     {
         Assert.CheckParameterNotNull(subset, "CollectionAssert.IsNotSubsetOf", "subset", string.Empty);
         Assert.CheckParameterNotNull(superset, "CollectionAssert.IsNotSubsetOf", "superset", string.Empty);
-        if (IsSubsetOfHelper(subset, superset))
+        var isSubsetValue = IsSubsetOfHelper(subset, superset);
+        if (isSubsetValue.isSubset)
         {
             Assert.ThrowAssertFailed("CollectionAssert.IsNotSubsetOf", Assert.BuildUserMessage(message, parameters));
         }
@@ -1454,7 +1469,7 @@ public sealed class CollectionAssert
     /// True if <paramref name="subset"/> is a subset of
     /// <paramref name="superset"/>, false otherwise.
     /// </returns>
-    internal static bool IsSubsetOfHelper(ICollection subset, ICollection superset)
+    internal static (bool isSubset, ICollection<object> nonSubsetValues) IsSubsetOfHelper(ICollection subset, ICollection superset)
     {
         // $ CONSIDER: The current algorithm counts the number of occurrences of each
         // $ CONSIDER: element in each collection and then compares the count, resulting
@@ -1462,13 +1477,23 @@ public sealed class CollectionAssert
         // $ CONSIDER: faster to sort both collections and do an element-by-element
         // $ CONSIDER: comparison, which should result in ~n*log(n) + m*log(m) + n.
 
+        List<object> nonSubsetValues = new List<object>();
+
         // Count the occurrences of each object in both collections.
         Dictionary<object, int> subsetElements = GetElementCounts(subset.Cast<object>(), EqualityComparer<object>.Default, out int subsetNulls);
         Dictionary<object, int> supersetElements = GetElementCounts(superset.Cast<object>(), EqualityComparer<object>.Default, out int supersetNulls);
 
+        bool isSubset = true;
+
+        // Check null counts first
         if (subsetNulls > supersetNulls)
         {
-            return false;
+            isSubset = false;
+            // Add the excess null values to non-subset collection
+            for (int i = 0; i < (subsetNulls - supersetNulls); i++)
+            {
+                nonSubsetValues.Add(null);
+            }
         }
 
         // Compare the counts of each object in the subset to the count of that object
@@ -1480,12 +1505,17 @@ public sealed class CollectionAssert
 
             if (subsetCount > supersetCount)
             {
-                return false;
+                isSubset = false;
+                // Add the excess occurrences to non-subset collection
+                int excessCount = subsetCount - supersetCount;
+                for (int i = 0; i < excessCount; i++)
+                {
+                    nonSubsetValues.Add(element);
+                }
             }
         }
 
-        // All the elements counts were OK.
-        return true;
+        return (isSubset, nonSubsetValues);
     }
 
 #pragma warning disable CS8714

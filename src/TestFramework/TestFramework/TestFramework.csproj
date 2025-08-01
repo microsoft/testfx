@@ -25,6 +25,7 @@
 
   <ItemGroup>
     <PackageReference Include="Polyfill" PrivateAssets="all" />
+    <PackageReference Include="System.ValueTuple" />
   </ItemGroup>
 
   <PropertyGroup>
