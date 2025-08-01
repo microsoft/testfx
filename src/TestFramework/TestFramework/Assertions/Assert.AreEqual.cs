@@ -758,8 +758,8 @@ public sealed partial class Assert
             : string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AreEqualStringDiffLengthDifferentMsg, expected.Length, actual.Length);
 
         // Create contextual preview around the difference
-        const int contextLength = 41; // Show up to 20 characters of context on each side
-        Tuple<string, string, int> tuple = StringPreviewHelper.CreateStringPreviews(expected, actual, diffIndex, contextLength);
+        const int ContextLength = 41; // Show up to 20 characters of context on each side
+        Tuple<string, string, int> tuple = StringPreviewHelper.CreateStringPreviews(expected, actual, diffIndex, ContextLength);
         string expectedPreview = tuple.Item1;
         string actualPreview = tuple.Item2;
         int caretPosition = tuple.Item3;
@@ -2229,19 +2229,20 @@ public sealed partial class Assert
 
 internal static class StringPreviewHelper
 {
+    private const int MinimumPreviewLength = 9; // Minimum context window to handle ellipsis complications
+    private const int EllipsisLength = 3; // Length of the ellipsis "..."
+
     public static Tuple<string, string, int> CreateStringPreviews(string expected, string actual, int diffIndex, int fullPreviewLength)
     {
-        int ellipsisLength = 3; // Length of the ellipsis "..."
-
         if (fullPreviewLength % 2 == 0)
         {
             throw new ArgumentException($"{nameof(fullPreviewLength)} must be odd, but it was even.");
         }
 
-        if (fullPreviewLength < 9)
+        if (fullPreviewLength < MinimumPreviewLength)
         {
             // Too short context window has additional complication with ellipsis etc.
-            throw new ArgumentException($"{nameof(fullPreviewLength)} cannot be shorter than 9.");
+            throw new ArgumentException($"{nameof(fullPreviewLength)} cannot be shorter than {MinimumPreviewLength}.");
         }
 
         // In case we want to instead count runes or text elements we can change it just here.
@@ -2267,26 +2268,31 @@ internal static class StringPreviewHelper
         int longerStringLength = longerString.Length;
 
         // This tells us where the shorter string will be cut off.
-        int previewWindowEnd = diffIndex + contextLength;
+        // Start with centering around the diffIndex, then adjust for boundaries
+        int leftLength = (fullPreviewLength - 1) / 2;
+        int cutStart = Math.Max(0, diffIndex - leftLength);
+        int cutEndShort = Math.Min(cutStart + fullPreviewLength, shorterStringLength);
+        int cutEndLong = Math.Min(cutStart + fullPreviewLength, longerStringLength);
 
-        // If the diff marker is closer to 0 than the possible preview, move it to end,
-        // to make the preview as big as possible.
-        int previewWindowBefore0 = (diffIndex - contextLength) * -1;
-        if (previewWindowBefore0 > 0)
+        // If we hit the end boundary, shift the window back to show more context
+        if (cutEndShort == shorterStringLength && cutStart > 0)
         {
-            previewWindowEnd += previewWindowBefore0;
+            int shift = Math.Min(cutStart, fullPreviewLength - (cutEndShort - cutStart));
+            cutStart -= shift;
         }
 
         // End marker will point to the end of the shorter string, but the end of the longer string will be replaced by ...
         // make sure we don't point at the dots. To do this we need to make sure the strings are cut at the beginning, rather than preferring the maximum context shown.
-        bool markerPointsAtEllipsis = longerStringLength - shorterStringLength > ellipsisLength && shorterStringLength - diffIndex < ellipsisLength;
-        int ellipsisSpaceOrZero = markerPointsAtEllipsis ? ellipsisLength + 2 : 0;
+        bool markerPointsAtEllipsis = longerStringLength - shorterStringLength > EllipsisLength && shorterStringLength - diffIndex < EllipsisLength;
+        int ellipsisSpaceOrZero = markerPointsAtEllipsis ? EllipsisLength + 2 : 0;
 
-        int cutEnd = Math.Min(previewWindowEnd, shorterString.Length);
-        int cutStart = Math.Max(cutEnd - fullPreviewLength + ellipsisSpaceOrZero, 0);
+        if (ellipsisSpaceOrZero > 0)
+        {
+            cutStart = Math.Max(cutEndShort - fullPreviewLength + ellipsisSpaceOrZero, 0);
+        }
 
-        // Preview of shorter string is cutStart to cutEnd.
-        string shorterStringPreview = shorterString.Substring(cutStart, cutEnd - cutStart);
+        // Preview of shorter string is cutStart to cutEndShort.
+        string shorterStringPreview = shorterString.Substring(cutStart, cutEndShort - cutStart);
         // Preview of longer string is cutStart to cutStart + fullPreviewLength to show maximum context.
         string longerStringPreview = longerString.Substring(cutStart, Math.Min(longerStringLength, cutStart + fullPreviewLength) - cutStart);
 
