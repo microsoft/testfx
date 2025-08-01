@@ -120,7 +120,7 @@ public class AssemblyEnumeratorTests : TestContainer
         Type[] types = AssemblyEnumerator.GetTypes(mockAssembly.Object, string.Empty, _warnings);
 
         Verify(types is not null);
-        Verify(reflectedTypes.Equals(types));
+        Verify(reflectedTypes.SequenceEqual(types));
     }
 
     public void GetTypesShouldLogWarningsWhenReflectionFailsWithLoaderExceptions()
