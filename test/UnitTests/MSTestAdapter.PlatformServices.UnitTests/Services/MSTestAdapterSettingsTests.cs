@@ -327,7 +327,7 @@ public class MSTestAdapterSettingsTests : TestContainer
             { "mstest:assemblyResolution:2:path", "C:\\project\\plugins" },
         };
 
-        var mockConfig = new Mock<IConfiguration>();
+        var mockConfig = new Mock<IConfiguration>(MockBehavior.Loose);
         mockConfig.Setup(config => config[It.IsAny<string>()])
                   .Returns((string key) => configDictionary.TryGetValue(key, out string? value) ? value : null);
 
@@ -356,7 +356,7 @@ public class MSTestAdapterSettingsTests : TestContainer
         {
             { "mstest:execution:disableAppDomain", "true" },
         };
-        var mockConfig = new Mock<IConfiguration>();
+        var mockConfig = new Mock<IConfiguration>(MockBehavior.Loose);
         mockConfig.Setup(config => config[It.IsAny<string>()])
                   .Returns((string key) => configDictionary.TryGetValue(key, out string? value) ? value : null);
 

@@ -23,9 +23,9 @@ public class RunConfigurationSettingsTests : TestContainer
     public RunConfigurationSettingsTests()
     {
         _testablePlatformServiceProvider = new TestablePlatformServiceProvider();
-        _mockDiscoveryContext = new Mock<IDiscoveryContext>();
-        _mockRunSettings = new Mock<IRunSettings>();
-        _mockMessageLogger = new Mock<IMessageLogger>();
+        _mockDiscoveryContext = new Mock<IDiscoveryContext>(MockBehavior.Loose);
+        _mockRunSettings = new Mock<IRunSettings>(MockBehavior.Loose);
+        _mockMessageLogger = new Mock<IMessageLogger>(MockBehavior.Loose);
 
         PlatformServiceProvider.Instance = _testablePlatformServiceProvider;
     }
@@ -172,7 +172,7 @@ public class RunConfigurationSettingsTests : TestContainer
             { "mstest:execution:executionApartmentState", "STA" },
         };
 
-        var mockConfig = new Mock<IConfiguration>();
+        var mockConfig = new Mock<IConfiguration>(MockBehavior.Loose);
         mockConfig.Setup(config => config[It.IsAny<string>()])
                   .Returns((string key) => configDictionary.TryGetValue(key, out string? value) ? value : null);
 

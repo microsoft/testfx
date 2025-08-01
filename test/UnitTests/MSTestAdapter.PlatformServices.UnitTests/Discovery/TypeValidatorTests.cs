@@ -25,7 +25,7 @@ public class TypeValidatorTests : TestContainer
 
     public TypeValidatorTests()
     {
-        _mockReflectHelper = new Mock<ReflectHelper>();
+        _mockReflectHelper = new Mock<ReflectHelper>(MockBehavior.Loose);
         _typeValidator = new TypeValidator(_mockReflectHelper.Object);
         _warnings = [];
     }

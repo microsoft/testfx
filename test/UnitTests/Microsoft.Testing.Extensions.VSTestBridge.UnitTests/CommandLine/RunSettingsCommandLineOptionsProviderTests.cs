@@ -60,7 +60,7 @@ public sealed class RunSettingsCommandLineOptionsProviderTests
         const string filePath = "file";
         var fileSystem = new Mock<IFileSystem>(MockBehavior.Strict);
         fileSystem.Setup(fs => fs.ExistFile(filePath)).Returns(true);
-        fileSystem.Setup(fs => fs.NewFileStream(filePath, FileMode.Open, FileAccess.Read)).Returns(new Mock<IFileStream>().Object);
+        fileSystem.Setup(fs => fs.NewFileStream(filePath, FileMode.Open, FileAccess.Read)).Returns(new Mock<IFileStream>(MockBehavior.Loose).Object);
 
         var provider = new RunSettingsCommandLineOptionsProvider(new TestExtension(), fileSystem.Object);
         CommandLineOption option = provider.GetCommandLineOptions().Single();

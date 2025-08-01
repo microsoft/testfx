@@ -18,22 +18,22 @@ public sealed class AppInsightsProviderTests
     [TestMethod]
     public void Platform_CancellationToken_Cancellation_Should_Exit_Gracefully()
     {
-        Mock<IEnvironment> environment = new();
-        Mock<IClock> clock = new();
-        Mock<IConfiguration> config = new();
-        Mock<ITelemetryInformation> telemetryInformation = new();
+        Mock<IEnvironment> environment = new(MockBehavior.Loose);
+        Mock<IClock> clock = new(MockBehavior.Loose);
+        Mock<IConfiguration> config = new(MockBehavior.Loose);
+        Mock<ITelemetryInformation> telemetryInformation = new(MockBehavior.Loose);
 
-        Mock<ILoggerFactory> loggerFactory = new();
-        loggerFactory.Setup(x => x.CreateLogger(It.IsAny<string>())).Returns(new Mock<ILogger>().Object);
+        Mock<ILoggerFactory> loggerFactory = new(MockBehavior.Loose);
+        loggerFactory.Setup(x => x.CreateLogger(It.IsAny<string>())).Returns(new Mock<ILogger>(MockBehavior.Loose).Object);
 
         ManualResetEvent loopInitialized = new(false);
         ManualResetEvent sample2Message = new(false);
         CancellationTokenSource cancellationTokenSource = new();
-        Mock<ITestApplicationCancellationTokenSource> testApplicationCancellationTokenSource = new();
+        Mock<ITestApplicationCancellationTokenSource> testApplicationCancellationTokenSource = new(MockBehavior.Loose);
         testApplicationCancellationTokenSource.Setup(x => x.CancellationToken).Returns(cancellationTokenSource.Token);
 
         List<string> events = [];
-        Mock<ITelemetryClient> testTelemetryClient = new();
+        Mock<ITelemetryClient> testTelemetryClient = new(MockBehavior.Loose);
         testTelemetryClient.Setup(x => x.TrackEvent(It.IsAny<string>(), It.IsAny<Dictionary<string, string>>(), It.IsAny<Dictionary<string, double>>()))
         .Callback((string eventName, Dictionary<string, string> properties, Dictionary<string, double> metrics) =>
         {
@@ -42,7 +42,7 @@ public sealed class AppInsightsProviderTests
             sample2Message.WaitOne();
         });
 
-        Mock<ITelemetryClientFactory> telemetryClientFactory = new();
+        Mock<ITelemetryClientFactory> telemetryClientFactory = new(MockBehavior.Loose);
         telemetryClientFactory.Setup(x => x.Create(It.IsAny<string?>(), It.IsAny<string>())).Returns(testTelemetryClient.Object);
 
         AppInsightsProvider appInsightsProvider = new(
@@ -86,21 +86,21 @@ public sealed class AppInsightsProviderTests
     [TestMethod]
     public void Timeout_During_Dispose_Should_Exit_Gracefully()
     {
-        Mock<IEnvironment> environment = new();
-        Mock<IClock> clock = new();
-        Mock<IConfiguration> config = new();
-        Mock<ITelemetryInformation> telemetryInformation = new();
+        Mock<IEnvironment> environment = new(MockBehavior.Loose);
+        Mock<IClock> clock = new(MockBehavior.Loose);
+        Mock<IConfiguration> config = new(MockBehavior.Loose);
+        Mock<ITelemetryInformation> telemetryInformation = new(MockBehavior.Loose);
 
-        Mock<ILoggerFactory> loggerFactory = new();
-        loggerFactory.Setup(x => x.CreateLogger(It.IsAny<string>())).Returns(new Mock<ILogger>().Object);
+        Mock<ILoggerFactory> loggerFactory = new(MockBehavior.Loose);
+        loggerFactory.Setup(x => x.CreateLogger(It.IsAny<string>())).Returns(new Mock<ILogger>(MockBehavior.Loose).Object);
 
         ManualResetEvent loopInitialized = new(false);
         CancellationTokenSource cancellationTokenSource = new();
-        Mock<ITestApplicationCancellationTokenSource> testApplicationCancellationTokenSource = new();
+        Mock<ITestApplicationCancellationTokenSource> testApplicationCancellationTokenSource = new(MockBehavior.Loose);
         testApplicationCancellationTokenSource.Setup(x => x.CancellationToken).Returns(cancellationTokenSource.Token);
 
         int calls = 0;
-        Mock<ITelemetryClient> testTelemetryClient = new();
+        Mock<ITelemetryClient> testTelemetryClient = new(MockBehavior.Loose);
         testTelemetryClient.Setup(x => x.TrackEvent(It.IsAny<string>(), It.IsAny<Dictionary<string, string>>(), It.IsAny<Dictionary<string, double>>()))
         .Callback((string eventName, Dictionary<string, string> properties, Dictionary<string, double> metrics) =>
         {
@@ -118,7 +118,7 @@ public sealed class AppInsightsProviderTests
             }
         });
 
-        Mock<ITelemetryClientFactory> telemetryClientFactory = new();
+        Mock<ITelemetryClientFactory> telemetryClientFactory = new(MockBehavior.Loose);
         telemetryClientFactory.Setup(x => x.Create(It.IsAny<string?>(), It.IsAny<string>())).Returns(testTelemetryClient.Object);
 
         AppInsightsProvider appInsightsProvider = new(

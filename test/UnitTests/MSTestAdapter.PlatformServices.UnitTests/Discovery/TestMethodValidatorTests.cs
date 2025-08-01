@@ -21,11 +21,11 @@ public class TestMethodValidatorTests : TestContainer
 
     public TestMethodValidatorTests()
     {
-        _mockReflectHelper = new Mock<ReflectHelper>();
+        _mockReflectHelper = new Mock<ReflectHelper>(MockBehavior.Loose);
         _testMethodValidator = new TestMethodValidator(_mockReflectHelper.Object, discoverInternals: false);
         _warnings = [];
 
-        _mockMethodInfo = new Mock<MethodInfo>();
+        _mockMethodInfo = new Mock<MethodInfo>(MockBehavior.Loose);
         _type = typeof(TestMethodValidatorTests);
     }
 

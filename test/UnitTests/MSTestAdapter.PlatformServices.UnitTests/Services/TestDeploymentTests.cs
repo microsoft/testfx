@@ -31,8 +31,8 @@ public class TestDeploymentTests : TestContainer
 
     public TestDeploymentTests()
     {
-        _mockReflectionUtility = new Mock<ReflectionUtility>();
-        _mockFileUtility = new Mock<FileUtility>();
+        _mockReflectionUtility = new Mock<ReflectionUtility>(MockBehavior.Loose);
+        _mockFileUtility = new Mock<FileUtility>(MockBehavior.Loose);
         _warnings = [];
 
         // Reset adapter settings.
@@ -113,10 +113,10 @@ public class TestDeploymentTests : TestContainer
         // Setup mocks.
         TestDeployment testDeployment = CreateAndSetupDeploymentRelatedUtilities(out TestRunDirectories testRunDirectories);
 
-        var mockRunContext = new Mock<IRunContext>();
+        var mockRunContext = new Mock<IRunContext>(MockBehavior.Loose);
         mockRunContext.Setup(rc => rc.TestRunDirectory).Returns(testRunDirectories.RootDeploymentDirectory);
 
-        Verify(testDeployment.Deploy(new List<TestCase> { testCase }, mockRunContext.Object, new Mock<IFrameworkHandle>().Object));
+        Verify(testDeployment.Deploy(new List<TestCase> { testCase }, mockRunContext.Object, new Mock<IFrameworkHandle>(MockBehavior.Loose).Object));
 
         testDeployment.Cleanup();
 
@@ -130,10 +130,10 @@ public class TestDeploymentTests : TestContainer
         // Setup mocks.
         TestDeployment testDeployment = CreateAndSetupDeploymentRelatedUtilities(out TestRunDirectories testRunDirectories);
 
-        var mockRunContext = new Mock<IRunContext>();
+        var mockRunContext = new Mock<IRunContext>(MockBehavior.Loose);
         mockRunContext.Setup(rc => rc.TestRunDirectory).Returns(testRunDirectories.RootDeploymentDirectory);
 
-        Verify(testDeployment.Deploy(new List<TestCase> { testCase }, mockRunContext.Object, new Mock<IFrameworkHandle>().Object));
+        Verify(testDeployment.Deploy(new List<TestCase> { testCase }, mockRunContext.Object, new Mock<IFrameworkHandle>(MockBehavior.Loose).Object));
 
         // Act.
         testDeployment.Cleanup();
@@ -154,10 +154,10 @@ public class TestDeploymentTests : TestContainer
         // Setup mocks.
         TestDeployment testDeployment = CreateAndSetupDeploymentRelatedUtilities(out TestRunDirectories testRunDirectories);
 
-        var mockRunContext = new Mock<IRunContext>();
+        var mockRunContext = new Mock<IRunContext>(MockBehavior.Loose);
         mockRunContext.Setup(rc => rc.TestRunDirectory).Returns(testRunDirectories.RootDeploymentDirectory);
 
-        Verify(testDeployment.Deploy(new List<TestCase> { testCase }, mockRunContext.Object, new Mock<IFrameworkHandle>().Object));
+        Verify(testDeployment.Deploy(new List<TestCase> { testCase }, mockRunContext.Object, new Mock<IFrameworkHandle>(MockBehavior.Loose).Object));
 
         // Act.
         Verify(testRunDirectories.OutDirectory == testDeployment.GetDeploymentDirectory());
@@ -267,7 +267,7 @@ public class TestDeploymentTests : TestContainer
         mstestSettingsProvider.Load(reader);
 
         // Deployment should happen
-        Verify(testDeployment.Deploy(new List<TestCase> { testCase }, null, new Mock<IFrameworkHandle>().Object));
+        Verify(testDeployment.Deploy(new List<TestCase> { testCase }, null, new Mock<IFrameworkHandle>(MockBehavior.Loose).Object));
 
         // Deployment directories should get created
         Verify(testDeployment.GetDeploymentDirectory() is not null);
@@ -308,10 +308,10 @@ public class TestDeploymentTests : TestContainer
         // Setup mocks.
         TestDeployment testDeployment = CreateAndSetupDeploymentRelatedUtilities(out TestRunDirectories testRunDirectories);
 
-        var mockRunContext = new Mock<IRunContext>();
+        var mockRunContext = new Mock<IRunContext>(MockBehavior.Loose);
         mockRunContext.Setup(rc => rc.TestRunDirectory).Returns(testRunDirectories.RootDeploymentDirectory);
 
-        Verify(testDeployment.Deploy(new List<TestCase> { testCase }, mockRunContext.Object, new Mock<IFrameworkHandle>().Object));
+        Verify(testDeployment.Deploy(new List<TestCase> { testCase }, mockRunContext.Object, new Mock<IFrameworkHandle>(MockBehavior.Loose).Object));
 
         // Act.
         IDictionary<string, object> properties = TestDeployment.GetDeploymentInformation(null);
@@ -343,10 +343,10 @@ public class TestDeploymentTests : TestContainer
         // Setup mocks.
         TestDeployment testDeployment = CreateAndSetupDeploymentRelatedUtilities(out TestRunDirectories testRunDirectories);
 
-        var mockRunContext = new Mock<IRunContext>();
+        var mockRunContext = new Mock<IRunContext>(MockBehavior.Loose);
         mockRunContext.Setup(rc => rc.TestRunDirectory).Returns(testRunDirectories.RootDeploymentDirectory);
 
-        Verify(testDeployment.Deploy(new List<TestCase> { testCase }, mockRunContext.Object, new Mock<IFrameworkHandle>().Object));
+        Verify(testDeployment.Deploy(new List<TestCase> { testCase }, mockRunContext.Object, new Mock<IFrameworkHandle>(MockBehavior.Loose).Object));
 
         // Act.
         IDictionary<string, object> properties = TestDeployment.GetDeploymentInformation(typeof(TestDeploymentTests).Assembly.Location);
@@ -412,7 +412,7 @@ public class TestDeploymentTests : TestContainer
 
         _mockFileUtility.Setup(fu => fu.DoesDirectoryExist(It.Is<string>(s => !s.EndsWith(".dll")))).Returns(true);
         _mockFileUtility.Setup(fu => fu.DoesFileExist(It.IsAny<string>())).Returns(true);
-        var mockAssemblyUtility = new Mock<AssemblyUtility>();
+        var mockAssemblyUtility = new Mock<AssemblyUtility>(MockBehavior.Loose);
 #if NET462
         mockAssemblyUtility.Setup(
            au => au.GetFullPathToDependentAssemblies(It.IsAny<string>(), It.IsAny<string>(), out _warnings))
