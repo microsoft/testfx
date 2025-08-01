@@ -510,6 +510,9 @@ The type declaring these methods should also respect the following rules:
   <data name="DynamicDataShouldBeValidMessageFormat_SourceTypeMethod" xml:space="preserve">
     <value>'[DynamicData]' member '{0}.{1}' is a method so you should use 'DynamicDataSourceType.AutoDetect' or 'DynamicDataSourceType.Method' (auto detect is the default when not specified explicitly, and is recommended)</value>
   </data>
+  <data name="DynamicDataShouldBeValidMessageFormat_SourceTypeField" xml:space="preserve">
+    <value>'[DynamicData]' member '{0}.{1}' is a field so you should use 'DynamicDataSourceType.AutoDetect' or 'DynamicDataSourceType.Field' (auto detect is the default when not specified explicitly, and is recommended)</value>
+  </data>
   <data name="DynamicDataShouldBeValidMessageFormat_DisplayMethodSignature" xml:space="preserve">
     <value>'[DynamicData]' display name method '{0}.{1}' signature is invalid</value>
   </data>
@@ -554,6 +557,9 @@ The type declaring these methods should also respect the following rules:
   </data>
   <data name="DynamicDataShouldBeValidMessageFormat_SourceTypeNotPropertyOrMethod" xml:space="preserve">
     <value>'[DynamicData]' member '{0}.{1}' is not a property nor a method. Only properties and methods are supported.</value>
+  </data>
+  <data name="DynamicDataShouldBeValidMessageFormat_SourceTypeNotPropertyMethodOrField" xml:space="preserve">
+    <value>'[DynamicData]' member '{0}.{1}' is not a property, method, or field. Only properties, methods, and fields are supported.</value>
   </data>
   <data name="UseNewerAssertThrowsTitle" xml:space="preserve">
     <value>Use newer methods to assert exceptions</value>
@@ -665,5 +671,11 @@ The type declaring these methods should also respect the following rules:
 -The class shouldn't be 'static'
 -The class should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</value>
+  </data>
+  <data name="AvoidExplicitDynamicDataSourceTypeTitle" xml:space="preserve">
+    <value>Avoid passing an explicit 'DynamicDataSourceType' and use the default auto detect behavior</value>
+  </data>
+  <data name="AvoidExplicitDynamicDataSourceTypeMessageFormat" xml:space="preserve">
+    <value>Remove the 'DynamicDataSourceType' argument to use the default auto detect behavior</value>
   </data>
 </root>
