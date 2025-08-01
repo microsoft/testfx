@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.ComponentModel;
+using System.Drawing;
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -2235,12 +2236,15 @@ internal static class StringPreviewHelper
 
         if (fullPreviewLength % 2 == 0)
         {
+            // Being odd makes it easier to calculate the context length, and center the marker, this is not user customizable.
             throw new ArgumentException($"{nameof(fullPreviewLength)} must be odd, but it was even.");
         }
 
+        // This is arbitrary number that is 2 times the size of the ellipsis,
+        // plus 3 chars to make it easier to check the tests are correct when part of string is masked.
+        // Preview length is not user customizable, just makes it harder to break the tests, and avoids few ifs we would need to write otherwise.
         if (fullPreviewLength < 9)
         {
-            // Too short context window has additional complication with ellipsis etc.
             throw new ArgumentException($"{nameof(fullPreviewLength)} cannot be shorter than 9.");
         }
 
@@ -2266,29 +2270,24 @@ internal static class StringPreviewHelper
         int shorterStringLength = shorterString.Length;
         int longerStringLength = longerString.Length;
 
-        // This tells us where the shorter string will be cut off.
-        int previewWindowEnd = diffIndex + contextLength;
-
-        // If the diff marker is closer to 0 than the possible preview, move it to end,
-        // to make the preview as big as possible.
-        int previewWindowBefore0 = (diffIndex - contextLength) * -1;
-        if (previewWindowBefore0 > 0)
-        {
-            previewWindowEnd += previewWindowBefore0;
-        }
-
         // End marker will point to the end of the shorter string, but the end of the longer string will be replaced by ...
         // make sure we don't point at the dots. To do this we need to make sure the strings are cut at the beginning, rather than preferring the maximum context shown.
         bool markerPointsAtEllipsis = longerStringLength - shorterStringLength > ellipsisLength && shorterStringLength - diffIndex < ellipsisLength;
         int ellipsisSpaceOrZero = markerPointsAtEllipsis ? ellipsisLength + 2 : 0;
 
-        int cutEnd = Math.Min(previewWindowEnd, shorterString.Length);
-        int cutStart = Math.Max(cutEnd - fullPreviewLength + ellipsisSpaceOrZero, 0);
+        // Find the end of the string that we will show, either then end of the shorter string, or the end of the preview window.
+        // Then calculate the start of the preview from that. This makes sure that if diff is close end of the string we show as much as we can.
+        int start = Math.Min(diffIndex + contextLength, shorterStringLength) - fullPreviewLength + ellipsisSpaceOrZero;
 
-        // Preview of shorter string is cutStart to cutEnd.
-        string shorterStringPreview = shorterString.Substring(cutStart, cutEnd - cutStart);
-        // Preview of longer string is cutStart to cutStart + fullPreviewLength to show maximum context.
-        string longerStringPreview = longerString.Substring(cutStart, Math.Min(longerStringLength, cutStart + fullPreviewLength) - cutStart);
+        // If the string is shorter than the preview, start cutting from 0, otherwise start cutting from the calculated start.
+        int cutStart = Math.Max(0, start);
+        // From here we need to handle longer and shorter string separately, because one of the can be shorter,
+        // and we want to show the maximum we can that fits in thew preview window.
+        int cutEndShort = Math.Min(cutStart + fullPreviewLength, shorterStringLength);
+        int cutEndLong = Math.Min(cutStart + fullPreviewLength, longerStringLength);
+
+        string shorterStringPreview = shorterString.Substring(cutStart, cutEndShort - cutStart);
+        string longerStringPreview = longerString.Substring(cutStart, cutEndLong - cutStart);
 
         // We cut something from the start of the string, so we need to add ellipsis there.
         // We know if one string is cut then both must be cut, otherwise the diff would be at the beginning of the string.
@@ -2300,13 +2299,13 @@ internal static class StringPreviewHelper
 
         // We cut something from the end of the string, so we need to add ellipsis there.
         // We don't know if both strings are cut, so we need to check them separately.
-        if (cutEnd < shorterStringLength)
+        if (cutEndShort < shorterStringLength)
         {
             shorterStringPreview = EllipsisEnd(shorterStringPreview);
         }
 
         // We cut something from the end of the string, so we need to add ellipsis there.
-        if (cutStart + fullPreviewLength < longerStringLength)
+        if (cutEndLong < longerStringLength)
         {
             longerStringPreview = EllipsisEnd(longerStringPreview);
         }

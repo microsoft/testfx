@@ -1266,7 +1266,7 @@ public partial class AssertTests : TestContainer
         string stringPreview = FormatStringPreview(StringPreviewHelper.CreateStringPreviews(DigitString(length, diffIndex), DigitString(length, diffIndex), diffIndex, preview));
         stringPreview.Should().Be("""
             "X12345..."
-            "X1234..."
+            "X12345..."
             _^
             """);
     }
