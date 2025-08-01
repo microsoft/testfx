@@ -557,7 +557,10 @@ internal sealed partial class TerminalTestReporter : IDisposable
         if (_targetFramework != null)
         {
             terminal.Append(_targetFramework);
-            terminal.Append('|');
+            if (_architecture != null)
+            {
+                terminal.Append('|');
+            }
         }
 
         if (_architecture != null)
