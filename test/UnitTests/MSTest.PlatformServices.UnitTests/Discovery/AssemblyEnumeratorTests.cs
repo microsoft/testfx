@@ -9,6 +9,7 @@ using Moq;
 
 using MSTest.PlatformServices.Helpers;
 using MSTest.PlatformServices.ObjectModel;
+using MSTest.PlatformServices.Resources;
 using MSTest.PlatformServices.UnitTests;
 
 using TestFramework.ForTestingMSTest;

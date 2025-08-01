@@ -8,6 +8,7 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 using Moq;
 
 using MSTest.PlatformServices.Deployment;
+using MSTest.PlatformServices.Resources;
 
 using TestFramework.ForTestingMSTest;
 

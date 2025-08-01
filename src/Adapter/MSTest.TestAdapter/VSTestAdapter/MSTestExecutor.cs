@@ -9,6 +9,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MSTest.PlatformServices;
 using MSTest.PlatformServices.Execution;
 using MSTest.PlatformServices.Interface;
+using MSTest.PlatformServices.Resources;
 
 namespace MSTest.TestAdapter;
 

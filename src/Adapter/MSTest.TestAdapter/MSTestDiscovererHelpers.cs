@@ -7,6 +7,7 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 using MSTest.PlatformServices;
 using MSTest.PlatformServices.Interface;
 using MSTest.PlatformServices.ObjectModel;
+using MSTest.PlatformServices.Resources;
 
 namespace MSTest.TestAdapter;
 

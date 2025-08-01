@@ -5,6 +5,8 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
 using Moq;
 
+using MSTest.PlatformServices.Resources;
+
 using TestFramework.ForTestingMSTest;
 
 namespace MSTest.PlatformServices.Utilities.UnitTests;

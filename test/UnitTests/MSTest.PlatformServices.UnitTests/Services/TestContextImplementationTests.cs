@@ -10,6 +10,8 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 
 using Moq;
 
+using MSTest.PlatformServices.Resources;
+
 using TestFramework.ForTestingMSTest;
 
 using ITestMethod = MSTest.PlatformServices.Interface.ObjectModel.ITestMethod;
