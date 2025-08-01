@@ -54,11 +54,11 @@ public sealed class DynamicDataShouldBeValidAnalyzer : DiagnosticAnalyzer
         .WithMessage(new(nameof(Resources.DynamicDataShouldBeValidMessageFormat_SourceTypeMethod), Resources.ResourceManager, typeof(Resources)));
 
     /// <inheritdoc cref="Resources.DynamicDataShouldBeValidMessageFormat_SourceTypeField"/>
-    internal static readonly DiagnosticDescriptor SourceTypeFieldRule = NotTestMethodRule
+    public static readonly DiagnosticDescriptor SourceTypeFieldRule = NotTestMethodRule
         .WithMessage(new(nameof(Resources.DynamicDataShouldBeValidMessageFormat_SourceTypeField), Resources.ResourceManager, typeof(Resources)));
 
     /// <inheritdoc cref="Resources.DynamicDataShouldBeValidMessageFormat_SourceTypeNotPropertyMethodOrField"/>
-    internal static readonly DiagnosticDescriptor SourceTypeNotPropertyOrMethodRule = NotTestMethodRule
+    public static readonly DiagnosticDescriptor SourceTypeNotPropertyOrMethodRule = NotTestMethodRule
         .WithMessage(new(nameof(Resources.DynamicDataShouldBeValidMessageFormat_SourceTypeNotPropertyMethodOrField), Resources.ResourceManager, typeof(Resources)));
 
     /// <inheritdoc cref="Resources.DynamicDataShouldBeValidMessageFormat_MemberMethod"/>
