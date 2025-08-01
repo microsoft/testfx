@@ -437,9 +437,10 @@ internal sealed class TestableAssemblyEnumerator : AssemblyEnumerator
     internal TestableAssemblyEnumerator()
     {
         var reflectHelper = new Mock<ReflectHelper>(MockBehavior.Loose);
-        var typeValidator = new Mock<TypeValidator>(reflectHelper.Object);
-        var testMethodValidator = new Mock<TestMethodValidator>(reflectHelper.Object, false);
+        var typeValidator = new Mock<TypeValidator>(MockBehavior.Loose, reflectHelper.Object);
+        var testMethodValidator = new Mock<TestMethodValidator>(MockBehavior.Loose, reflectHelper.Object, false);
         MockTypeEnumerator = new Mock<TypeEnumerator>(
+            MockBehavior.Loose,
             typeof(DummyTestClass),
             "DummyAssembly",
             reflectHelper.Object,
