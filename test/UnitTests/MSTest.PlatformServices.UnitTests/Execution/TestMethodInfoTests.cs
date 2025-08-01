@@ -5,6 +5,7 @@ using Moq;
 
 using MSTest.PlatformServices.Interface;
 using MSTest.PlatformServices.ObjectModel;
+using MSTest.PlatformServices.Resources;
 using MSTest.PlatformServices.UnitTests;
 
 using TestFramework.ForTestingMSTest;
