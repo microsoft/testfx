@@ -426,7 +426,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
         terminal.Append(outcomeText);
         terminal.ResetColor();
         terminal.Append(' ');
-        terminal.Append(displayName);
+        terminal.Append(NormalizeSpecialCharacters(displayName, true));
         terminal.SetColor(TerminalColor.DarkGray);
         terminal.Append(' ');
         AppendLongDuration(terminal, duration);
@@ -536,11 +536,11 @@ internal sealed partial class TerminalTestReporter : IDisposable
         terminal.SetColor(TerminalColor.DarkGray);
         terminal.Append(SingleIndentation);
         terminal.AppendLine(PlatformResources.StandardOutput);
-        string? standardOutputWithoutSpecialChars = NormalizeSpecialCharacters(standardOutput);
+        string? standardOutputWithoutSpecialChars = NormalizeSpecialCharacters(standardOutput, normalizeWhitespaceCharacters: false);
         AppendIndentedLine(terminal, standardOutputWithoutSpecialChars, DoubleIndentation);
         terminal.Append(SingleIndentation);
         terminal.AppendLine(PlatformResources.StandardError);
-        string? standardErrorWithoutSpecialChars = NormalizeSpecialCharacters(standardError);
+        string? standardErrorWithoutSpecialChars = NormalizeSpecialCharacters(standardError, normalizeWhitespaceCharacters: false);
         AppendIndentedLine(terminal, standardErrorWithoutSpecialChars, DoubleIndentation);
         terminal.ResetColor();
     }
@@ -644,10 +644,65 @@ internal sealed partial class TerminalTestReporter : IDisposable
         _terminalWithProgress.RemoveWorker(assemblyRun.SlotIndex);
     }
 
-    private static string? NormalizeSpecialCharacters(string? text)
-        => text?.Replace('\0', '\x2400')
-            // escape char
-            .Replace('\x001b', '\x241b');
+    // SearchValues for efficient detection of control characters
+#if NET8_0_OR_GREATER
+    private static readonly System.Buffers.SearchValues<char> AllControlChars = System.Buffers.SearchValues.Create("\x0000\x0001\x0002\x0003\x0004\x0005\x0006\x0007\x0008\x0009\x000A\x000B\x000C\x000D\x000E\x000F\x0010\x0011\x0012\x0013\x0014\x0015\x0016\x0017\x0018\x0019\x001A\x001B\x001C\x001D\x001E\x001F");
+    private static readonly System.Buffers.SearchValues<char> NonWhitespaceControlChars = System.Buffers.SearchValues.Create("\x0000\x0001\x0002\x0003\x0004\x0005\x0006\x0007\x0008\x000B\x000C\x000E\x000F\x0010\x0011\x0012\x0013\x0014\x0015\x0016\x0017\x0018\x0019\x001A\x001B\x001C\x001D\x001E\x001F");
+#else
+    private static readonly char[] AllControlChars = ['\x0000', '\x0001', '\x0002', '\x0003', '\x0004', '\x0005', '\x0006', '\x0007', '\x0008', '\x0009', '\x000A', '\x000B', '\x000C', '\x000D', '\x000E', '\x000F', '\x0010', '\x0011', '\x0012', '\x0013', '\x0014', '\x0015', '\x0016', '\x0017', '\x0018', '\x0019', '\x001A', '\x001B', '\x001C', '\x001D', '\x001E', '\x001F'];
+    private static readonly char[] NonWhitespaceControlChars = ['\x0000', '\x0001', '\x0002', '\x0003', '\x0004', '\x0005', '\x0006', '\x0007', '\x0008', '\x000B', '\x000C', '\x000E', '\x000F', '\x0010', '\x0011', '\x0012', '\x0013', '\x0014', '\x0015', '\x0016', '\x0017', '\x0018', '\x0019', '\x001A', '\x001B', '\x001C', '\x001D', '\x001E', '\x001F'];
+#endif
+
+    [return: NotNullIfNotNull(nameof(text))]
+    private static string? NormalizeSpecialCharacters(string? text, bool normalizeWhitespaceCharacters)
+    {
+        if (text is null)
+        {
+            return null;
+        }
+
+#if NET8_0_OR_GREATER
+        // Use SearchValues to efficiently check if we need to do any work
+        System.Buffers.SearchValues<char> searchValues = normalizeWhitespaceCharacters ? AllControlChars : NonWhitespaceControlChars;
+        if (text.AsSpan().IndexOfAny(searchValues) == -1)
+        {
+            return text; // No control characters found, return original string
+        }
+#else
+        // Use IndexOfAny to check if we need to do any work
+        char[] searchChars = normalizeWhitespaceCharacters ? AllControlChars : NonWhitespaceControlChars;
+        if (text.IndexOfAny(searchChars) == -1)
+        {
+            return text; // No control characters found, return original string
+        }
+#endif
+
+        // Pre-allocate StringBuilder with known capacity
+        var sb = new StringBuilder(text.Length);
+
+        foreach (char c in text)
+        {
+            if (c <= '\x001F') // C0 control characters (U+0000-U+001F)
+            {
+                // Skip normalization for whitespace characters when not requested
+                if (!normalizeWhitespaceCharacters && (c == '\t' || c == '\n' || c == '\r'))
+                {
+                    sb.Append(c);
+                }
+                else
+                {
+                    // Convert to Unicode control picture using bit manipulation (0x2400 + char value)
+                    sb.Append((char)(0x2400 + c));
+                }
+            }
+            else
+            {
+                sb.Append(c);
+            }
+        }
+
+        return sb.ToString();
+    }
 
     /// <summary>
     /// Appends a long duration in human readable format such as 1h 23m 500ms.
@@ -731,39 +786,27 @@ internal sealed partial class TerminalTestReporter : IDisposable
         => WriteErrorMessage(exception.ToString(), padding: null);
 
     public void WriteMessage(string text, SystemConsoleColor? color = null, int? padding = null)
-    {
-        if (color != null)
+        => _terminalWithProgress.WriteToTerminal(terminal =>
         {
-            _terminalWithProgress.WriteToTerminal(terminal =>
+            if (color is not null)
             {
                 terminal.SetColor(ToTerminalColor(color.ConsoleColor));
-                if (padding == null)
-                {
-                    terminal.AppendLine(text);
-                }
-                else
-                {
-                    AppendIndentedLine(terminal, text, new string(' ', padding.Value));
-                }
+            }
 
-                terminal.ResetColor();
-            });
-        }
-        else
-        {
-            _terminalWithProgress.WriteToTerminal(terminal =>
+            if (padding == null)
             {
-                if (padding == null)
-                {
-                    terminal.AppendLine(text);
-                }
-                else
-                {
-                    AppendIndentedLine(terminal, text, new string(' ', padding.Value));
-                }
-            });
-        }
-    }
+                terminal.AppendLine(text);
+            }
+            else
+            {
+                AppendIndentedLine(terminal, text, new string(' ', padding.Value));
+            }
+
+            if (color is not null)
+            {
+                terminal.ResetColor();
+            }
+        });
 
     internal void TestDiscovered(string displayName)
     {
@@ -781,7 +824,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
             asm.TotalTests++;
         }
 
-        asm.DiscoveredTestDisplayNames.Add(displayName);
+        asm.DiscoveredTestDisplayNames.Add(NormalizeSpecialCharacters(displayName, true));
 
         _terminalWithProgress.UpdateWorker(asm.SlotIndex);
     }
@@ -865,7 +908,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
         {
             asm.TestNodeResultsState ??= new(Interlocked.Increment(ref _counter));
             asm.TestNodeResultsState.AddRunningTestNode(
-                Interlocked.Increment(ref _counter), testNodeUid, displayName, CreateStopwatch());
+                Interlocked.Increment(ref _counter), testNodeUid, NormalizeSpecialCharacters(displayName, true), CreateStopwatch());
         }
 
         _terminalWithProgress.UpdateWorker(asm.SlotIndex);
