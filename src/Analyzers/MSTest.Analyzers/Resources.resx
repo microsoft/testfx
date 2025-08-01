@@ -678,4 +678,13 @@ The type declaring these methods should also respect the following rules:
   <data name="AvoidExplicitDynamicDataSourceTypeMessageFormat" xml:space="preserve">
     <value>Remove the 'DynamicDataSourceType' argument to use the default auto detect behavior</value>
   </data>
+  <data name="AvoidConsoleWriteInTestsTitle" xml:space="preserve">
+    <value>Avoid 'Console.Write*', 'Trace.Write*', and 'Debug.Write*' in tests</value>
+  </data>
+  <data name="AvoidConsoleWriteInTestsMessageFormat" xml:space="preserve">
+    <value>Use 'TestContext.WriteLine' instead of '{0}.{1}' in test methods</value>
+  </data>
+  <data name="AvoidConsoleWriteInTestsDescription" xml:space="preserve">
+    <value>Using 'Console.Write*', 'Trace.Write*', or 'Debug.Write*' methods in test methods can cause output to be lost or not properly captured by the test framework. Use 'TestContext.WriteLine' instead to ensure test output is properly captured and displayed.</value>
+  </data>
 </root>

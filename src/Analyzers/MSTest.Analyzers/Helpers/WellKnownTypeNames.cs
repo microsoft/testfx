@@ -47,7 +47,10 @@ internal static class WellKnownTypeNames
 
     public const string System = "System";
     public const string SystemCollectionsGenericIEnumerable1 = "System.Collections.Generic.IEnumerable`1";
+    public const string SystemConsole = "System.Console";
     public const string SystemDescriptionAttribute = "System.ComponentModel.DescriptionAttribute";
+    public const string SystemDiagnosticsDebug = "System.Diagnostics.Debug";
+    public const string SystemDiagnosticsTrace = "System.Diagnostics.Trace";
     public const string SystemFunc1 = "System.Func`1";
     public const string SystemIAsyncDisposable = "System.IAsyncDisposable";
     public const string SystemIDisposable = "System.IDisposable";
