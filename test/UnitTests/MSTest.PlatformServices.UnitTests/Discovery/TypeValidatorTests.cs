@@ -4,6 +4,7 @@
 using Moq;
 
 using MSTest.PlatformServices.Helpers;
+using MSTest.PlatformServices.Resources;
 
 using TestFramework.ForTestingMSTest;
 
