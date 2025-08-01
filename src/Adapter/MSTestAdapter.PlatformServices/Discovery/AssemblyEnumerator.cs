@@ -148,7 +148,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
             // We already logged a warning or error.
             // So don't return types that failed to load.
             // The intent of the catch is to gracefully run the types that we could load.
-            return [.. ex.Types.Where(t => t is not null)!];
+            return ex.Types is null ? [] : [.. ex.Types.Where(t => t is not null)!];
         }
     }
 
