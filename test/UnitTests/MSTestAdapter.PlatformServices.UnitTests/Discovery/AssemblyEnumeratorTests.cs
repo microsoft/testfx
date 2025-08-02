@@ -7,7 +7,7 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
-using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Resources;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 
@@ -120,7 +120,7 @@ public class AssemblyEnumeratorTests : TestContainer
         Type[] types = AssemblyEnumerator.GetTypes(mockAssembly.Object, string.Empty, _warnings);
 
         Verify(types is not null);
-        Verify(reflectedTypes.Equals(types));
+        Verify(reflectedTypes.SequenceEqual(types));
     }
 
     public void GetTypesShouldLogWarningsWhenReflectionFailsWithLoaderExceptions()

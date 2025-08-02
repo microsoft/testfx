@@ -147,6 +147,16 @@ Anche il tipo che dichiara questi metodi deve rispettare le regole seguenti:
         <target state="translated">Evita '[ExpectedException]'</target>
         <note />
       </trans-unit>
+      <trans-unit id="AvoidExplicitDynamicDataSourceTypeMessageFormat">
+        <source>Remove the 'DynamicDataSourceType' argument to use the default auto detect behavior</source>
+        <target state="new">Remove the 'DynamicDataSourceType' argument to use the default auto detect behavior</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidExplicitDynamicDataSourceTypeTitle">
+        <source>Avoid passing an explicit 'DynamicDataSourceType' and use the default auto detect behavior</source>
+        <target state="new">Avoid passing an explicit 'DynamicDataSourceType' and use the default auto detect behavior</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AvoidUsingAssertsInAsyncVoidContextDescription">
         <source>Do not assert inside 'async void' methods, local functions, or lambdas. Exceptions that are thrown in this context will be unhandled exceptions. When using VSTest under .NET Framework, they will be silently swallowed. When using Microsoft.Testing.Platform or VSTest under modern .NET, they may crash the process.</source>
         <target state="translated">Non dichiarare all'interno di metodi 'async void', funzioni locali o espressioni lambda. Le eccezioni generate in questo contesto saranno eccezioni non gestite. Quando si usa VSTest in .NET Framework, verranno eliminati automaticamente. Quando si usa Microsoft.Testing.Platform o VSTest nella versione moderna di .NET, è possibile che il processo venga arrestato in modo anomalo.</target>
@@ -407,9 +417,19 @@ Anche il tipo che dichiara questi metodi deve rispettare le regole seguenti:
         <target state="translated">'[DynamicData]' deve essere impostato solo su un metodo di test</target>
         <note />
       </trans-unit>
+      <trans-unit id="DynamicDataShouldBeValidMessageFormat_SourceTypeField">
+        <source>'[DynamicData]' member '{0}.{1}' is a field so you should use 'DynamicDataSourceType.AutoDetect' or 'DynamicDataSourceType.Field' (auto detect is the default when not specified explicitly, and is recommended)</source>
+        <target state="translated">Il membro di '[DynamicData]' '{0}.{1}' è un campo, quindi è necessario usare 'DynamicDataSourceType.AutoDetect' o 'DynamicDataSourceType.Field' (il rilevamento automatico è l'impostazione predefinita quando non è specificato esplicitamente ed è l'opzione consigliata)</target>
+        <note />
+      </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_SourceTypeMethod">
         <source>'[DynamicData]' member '{0}.{1}' is a method so you should use 'DynamicDataSourceType.AutoDetect' or 'DynamicDataSourceType.Method' (auto detect is the default when not specified explicitly, and is recommended)</source>
         <target state="translated">'[DynamicData]' membro '{0}.{1}' è un metodo, quindi è consigliabile usare 'DynamicDataSourceType.AutoDetect' o 'DynamicDataSourceType.Method'. Il rilevamento automatico è l'impostazione predefinita quando non è specificata in modo esplicito ed è consigliabile</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DynamicDataShouldBeValidMessageFormat_SourceTypeNotPropertyMethodOrField">
+        <source>'[DynamicData]' member '{0}.{1}' is not a property, method, or field. Only properties, methods, and fields are supported.</source>
+        <target state="translated">Il membro di '[DynamicData]' '{0}.{1}' non è una proprietà, un metodo o un campo. Sono supportati solo le proprietà, i metodi e i campi.</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_SourceTypeNotPropertyOrMethod">
@@ -946,17 +966,17 @@ Anche il tipo che dichiara questi metodi deve rispettare le regole seguenti:
       </trans-unit>
       <trans-unit id="AssertThrowsShouldContainSingleStatementDescription">
         <source>Assert.Throws methods should contain only a single statement or expression. Multiple statements can be misleading - if the first statement throws, subsequent statements are never executed; if it doesn't throw, it should be moved outside the Assert.Throws.</source>
-        <target state="new">Assert.Throws methods should contain only a single statement or expression. Multiple statements can be misleading - if the first statement throws, subsequent statements are never executed; if it doesn't throw, it should be moved outside the Assert.Throws.</target>
+        <target state="translated">I metodi Assert.Throws devono contenere solo una singola istruzione o espressione. Istruzioni multiple possono essere fuorvianti: se la prima istruzione genera, le istruzioni successive non vengono mai eseguite; se non genera, è necessario spostarla all'esterno di Assert.Throws.</target>
         <note />
       </trans-unit>
       <trans-unit id="AssertThrowsShouldContainSingleStatementMessageFormat">
         <source>Assert.Throws should contain only a single statement/expression</source>
-        <target state="new">Assert.Throws should contain only a single statement/expression</target>
+        <target state="translated">Assert.Throws deve contenere solo una singola istruzione/espressione</target>
         <note />
       </trans-unit>
       <trans-unit id="AssertThrowsShouldContainSingleStatementTitle">
         <source>Assert.Throws should contain only a single statement/expression</source>
-        <target state="new">Assert.Throws should contain only a single statement/expression</target>
+        <target state="translated">Assert.Throws deve contenere solo una singola istruzione/espressione</target>
         <note />
       </trans-unit>
     </body>

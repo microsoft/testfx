@@ -106,11 +106,6 @@ internal class AssemblyEnumerator : MarshalByRefObject
 
         foreach (Type type in types)
         {
-            if (type == null)
-            {
-                continue;
-            }
-
             List<UnitTestElement> testsInType = DiscoverTestsInType(assemblyFileName, type, warnings, discoverInternals,
                 dataSourcesUnfoldingStrategy, testIdGenerationStrategy, fixturesTests);
             tests.AddRange(testsInType);
@@ -150,7 +145,10 @@ internal class AssemblyEnumerator : MarshalByRefObject
                 }
             }
 
-            return ex.Types!;
+            // We already logged a warning or error.
+            // So don't return types that failed to load.
+            // The intent of the catch is to gracefully run the types that we could load.
+            return ex.Types is null ? [] : [.. ex.Types.Where(t => t is not null)!];
         }
     }
 

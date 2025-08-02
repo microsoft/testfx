@@ -27,6 +27,10 @@ internal static class DynamicDataOperations
                 {
                     obj = GetDataFromMethod(dynamicDataMethodInfo, dynamicDataSourceArguments);
                 }
+                else if (GetFieldConsideringInheritance(dynamicDataDeclaringType, dynamicDataSourceName) is { } dynamicDataFieldInfo)
+                {
+                    obj = GetDataFromField(dynamicDataFieldInfo);
+                }
                 else
                 {
                     throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, FrameworkMessages.DynamicDataSourceShouldExistAndBeValid, dynamicDataSourceName, dynamicDataDeclaringType.FullName));
@@ -46,6 +50,13 @@ internal static class DynamicDataOperations
                     ?? throw new ArgumentNullException($"{DynamicDataSourceType.Method} {dynamicDataSourceName}");
 
                 obj = GetDataFromMethod(method, dynamicDataSourceArguments);
+                break;
+
+            case DynamicDataSourceType.Field:
+                FieldInfo field = GetFieldConsideringInheritance(dynamicDataDeclaringType, dynamicDataSourceName)
+                    ?? throw new ArgumentNullException($"{DynamicDataSourceType.Field} {dynamicDataSourceName}");
+
+                obj = GetDataFromField(field);
                 break;
         }
 
@@ -101,6 +112,21 @@ internal static class DynamicDataOperations
         return method.Invoke(null, arguments.Length == 0 ? null : arguments);
     }
 
+    private static object? GetDataFromField(FieldInfo field)
+    {
+        if (!field.IsStatic)
+        {
+            throw new NotSupportedException(
+                string.Format(
+                    CultureInfo.InvariantCulture,
+                    FrameworkMessages.DynamicDataInvalidFieldLayout,
+                    field.DeclaringType?.FullName is { } typeFullName ? $"{typeFullName}.{field.Name}" : field.Name));
+        }
+
+        // Note: the field is static.
+        return field.GetValue(null);
+    }
+
     private static object? GetDataFromProperty(PropertyInfo property)
     {
         if (property.GetGetMethod(true) is not { IsStatic: true })
@@ -138,6 +164,24 @@ internal static class DynamicDataOperations
 
         data = null;
         return false;
+    }
+
+    private static FieldInfo? GetFieldConsideringInheritance(Type type, string fieldName)
+    {
+        // NOTE: Don't use GetRuntimeField. It considers inheritance only for instance fields.
+        Type? currentType = type;
+        while (currentType is not null)
+        {
+            FieldInfo? field = currentType.GetField(fieldName, DeclaredOnlyLookup);
+            if (field is not null)
+            {
+                return field;
+            }
+
+            currentType = currentType.BaseType;
+        }
+
+        return null;
     }
 
     private static PropertyInfo? GetPropertyConsideringInheritance(Type type, string propertyName)

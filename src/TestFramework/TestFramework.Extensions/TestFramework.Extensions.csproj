@@ -88,26 +88,13 @@
 
   <ItemGroup>
     <Using Include="Polyfills" />
+    <Using Include="$(RootNamespace).Resources" />
   </ItemGroup>
 
   <ItemGroup>
     <InternalsVisibleTo Include="Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="MSTestAdapter.PlatformServices.UnitTests" Key="$(VsPublicKey)" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Update="Resources\FrameworkExtensionsMessages.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>FrameworkExtensionsMessages.resx</DependentUpon>
-    </Compile>
-    <EmbeddedResource Update="Resources\FrameworkExtensionsMessages.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>FrameworkExtensionsMessages.Designer.cs</LastGenOutput>
-      <CustomToolNamespace>Microsoft.VisualStudio.TestTools.UnitTesting</CustomToolNamespace>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
   </ItemGroup>
 
   <!-- SDK bottom import -->

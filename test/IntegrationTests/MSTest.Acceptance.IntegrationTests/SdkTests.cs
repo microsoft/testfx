@@ -54,7 +54,7 @@ namespace MSTestSdkTest
 """;
 
     [TestMethod]
-    [DynamicData(nameof(GetBuildMatrixMultiTfmFoldedBuildConfiguration), typeof(AcceptanceTestBase<NopAssetFixture>), DynamicDataSourceType.Method)]
+    [DynamicData(nameof(GetBuildMatrixMultiTfmFoldedBuildConfiguration), typeof(AcceptanceTestBase<NopAssetFixture>))]
     public async Task RunTests_With_VSTest(string multiTfm, BuildConfiguration buildConfiguration)
     {
         using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
@@ -81,7 +81,7 @@ namespace MSTestSdkTest
     }
 
     [TestMethod]
-    [DynamicData(nameof(GetBuildMatrixMultiTfmFoldedBuildConfiguration), typeof(AcceptanceTestBase<NopAssetFixture>), DynamicDataSourceType.Method)]
+    [DynamicData(nameof(GetBuildMatrixMultiTfmFoldedBuildConfiguration), typeof(AcceptanceTestBase<NopAssetFixture>))]
     public async Task RunTests_With_MSTestRunner_DotnetTest(string multiTfm, BuildConfiguration buildConfiguration)
     {
         using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
@@ -108,7 +108,7 @@ namespace MSTestSdkTest
     }
 
     [TestMethod]
-    [DynamicData(nameof(GetBuildMatrixMultiTfmFoldedBuildConfiguration), typeof(AcceptanceTestBase<NopAssetFixture>), DynamicDataSourceType.Method)]
+    [DynamicData(nameof(GetBuildMatrixMultiTfmFoldedBuildConfiguration), typeof(AcceptanceTestBase<NopAssetFixture>))]
     public async Task RunTests_With_MSTestRunner_Standalone(string multiTfm, BuildConfiguration buildConfiguration)
     {
         using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
@@ -129,7 +129,7 @@ namespace MSTestSdkTest
     }
 
     [TestMethod]
-    [DynamicData(nameof(GetBuildMatrixMultiTfmFoldedBuildConfiguration), typeof(AcceptanceTestBase<NopAssetFixture>), DynamicDataSourceType.Method)]
+    [DynamicData(nameof(GetBuildMatrixMultiTfmFoldedBuildConfiguration), typeof(AcceptanceTestBase<NopAssetFixture>))]
     public async Task RunTests_With_CentralPackageManagement_Standalone(string multiTfm, BuildConfiguration buildConfiguration)
     {
         using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
@@ -186,7 +186,7 @@ namespace MSTestSdkTest
     }
 
     [TestMethod]
-    [DynamicData(nameof(RunTests_With_MSTestRunner_Standalone_Plus_Extensions_Data), DynamicDataSourceType.Method)]
+    [DynamicData(nameof(RunTests_With_MSTestRunner_Standalone_Plus_Extensions_Data))]
     public async Task RunTests_With_MSTestRunner_Standalone_Selectively_Enabled_Extensions(string multiTfm, BuildConfiguration buildConfiguration,
         string msbuildExtensionEnableFragment,
         string enableCommandLineArg,
@@ -213,7 +213,7 @@ namespace MSTestSdkTest
     }
 
     [TestMethod]
-    [DynamicData(nameof(GetBuildMatrixMultiTfmFoldedBuildConfiguration), typeof(AcceptanceTestBase<NopAssetFixture>), DynamicDataSourceType.Method)]
+    [DynamicData(nameof(GetBuildMatrixMultiTfmFoldedBuildConfiguration), typeof(AcceptanceTestBase<NopAssetFixture>))]
     public async Task RunTests_With_MSTestRunner_Standalone_EnableAll_Extensions(string multiTfm, BuildConfiguration buildConfiguration)
     {
         using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
@@ -243,7 +243,7 @@ namespace MSTestSdkTest
     }
 
     [TestMethod]
-    [DynamicData(nameof(RunTests_With_MSTestRunner_Standalone_Default_Extensions_Data), DynamicDataSourceType.Method)]
+    [DynamicData(nameof(RunTests_With_MSTestRunner_Standalone_Default_Extensions_Data))]
     public async Task RunTests_With_MSTestRunner_Standalone_Enable_Default_Extensions(string multiTfm, BuildConfiguration buildConfiguration, bool enableDefaultExtensions)
     {
         using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
@@ -271,7 +271,7 @@ namespace MSTestSdkTest
     }
 
     [TestMethod]
-    [DynamicData(nameof(GetBuildMatrixMultiTfmFoldedBuildConfiguration), typeof(AcceptanceTestBase<NopAssetFixture>), DynamicDataSourceType.Method)]
+    [DynamicData(nameof(GetBuildMatrixMultiTfmFoldedBuildConfiguration), typeof(AcceptanceTestBase<NopAssetFixture>))]
     public async Task Invalid_TestingProfile_Name_Should_Fail(string multiTfm, BuildConfiguration buildConfiguration)
     {
         using TestAsset testAsset = await TestAsset.GenerateAssetAsync(

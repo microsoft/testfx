@@ -34,3 +34,9 @@ Anytime you add a new localization resource, you MUST:
 - Tests for MTP and MSTest analyzers MUST use MSTest.
 - Unit tests for MSTest MUST use the internal test framework defined in [`TestFramework.ForTestingMSTest`](../test/Utilities/TestFramework.ForTestingMSTest).
 - All assertions must be written using FluentAssertions style of assertion.
+
+## Pull Request guidelines
+
+- Let other developers discuss their comments to your PRs, unless something sounds like a direct order to you, don't do changes.
+- Do the changes when you are specifically tagged or mentioned as copilot.
+- If you are unsure comment with the temperature and sentiment of the comment, so we know how to efficiently address you as a member of the team rather than having to tag you.
