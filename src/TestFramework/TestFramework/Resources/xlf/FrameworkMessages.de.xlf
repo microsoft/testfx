@@ -160,7 +160,7 @@
       </trans-unit>
       <trans-unit id="DynamicDataInvalidFieldLayout">
         <source>Dynamic data field '{0}' should be static.</source>
-        <target state="new">Dynamic data field '{0}' should be static.</target>
+        <target state="translated">Das dynamische Datenfeld „{0}“ sollte statisch sein.</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataInvalidMethodLayout">
@@ -175,7 +175,7 @@
       </trans-unit>
       <trans-unit id="DynamicDataSourceShouldExistAndBeValid">
         <source>The dynamic data source '{0}' in type '{1}' should exist and be a property, a method, or a field.</source>
-        <target state="new">The dynamic data source '{0}' in type '{1}' should exist and be a property, a method, or a field.</target>
+        <target state="translated">Die dynamische Datenquelle „{0}“ vom Typ „{1}“ sollte vorhanden sein und eine Eigenschaft, eine Methode oder ein Feld darstellen.</target>
         <note />
       </trans-unit>
       <trans-unit id="ElementNumbersDontMatch">
