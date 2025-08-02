@@ -966,17 +966,17 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="AssertThrowsShouldContainSingleStatementDescription">
         <source>Assert.Throws methods should contain only a single statement or expression. Multiple statements can be misleading - if the first statement throws, subsequent statements are never executed; if it doesn't throw, it should be moved outside the Assert.Throws.</source>
-        <target state="new">Assert.Throws methods should contain only a single statement or expression. Multiple statements can be misleading - if the first statement throws, subsequent statements are never executed; if it doesn't throw, it should be moved outside the Assert.Throws.</target>
+        <target state="translated">Assert.Throws 메서드는 단일 문 또는 식만 포함해야 합니다. 여러 문이 있을 경우 혼란을 줄 수 있습니다. 첫 번째 문이 예외를 발생시키면 후속 문은 실행되지 않으며, 예외가 발생하지 않는 경우에는 Assert.Throws 외부로 이동해야 합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="AssertThrowsShouldContainSingleStatementMessageFormat">
         <source>Assert.Throws should contain only a single statement/expression</source>
-        <target state="new">Assert.Throws should contain only a single statement/expression</target>
+        <target state="translated">Assert.Throws는 단일 문/식만 포함해야 합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="AssertThrowsShouldContainSingleStatementTitle">
         <source>Assert.Throws should contain only a single statement/expression</source>
-        <target state="new">Assert.Throws should contain only a single statement/expression</target>
+        <target state="translated">Assert.Throws는 단일 문/식만 포함해야 합니다.</target>
         <note />
       </trans-unit>
     </body>
