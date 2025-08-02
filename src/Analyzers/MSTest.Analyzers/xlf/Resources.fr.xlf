@@ -419,7 +419,7 @@ Le type doit être une classe
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_SourceTypeField">
         <source>'[DynamicData]' member '{0}.{1}' is a field so you should use 'DynamicDataSourceType.AutoDetect' or 'DynamicDataSourceType.Field' (auto detect is the default when not specified explicitly, and is recommended)</source>
-        <target state="new">'[DynamicData]' member '{0}.{1}' is a field so you should use 'DynamicDataSourceType.AutoDetect' or 'DynamicDataSourceType.Field' (auto detect is the default when not specified explicitly, and is recommended)</target>
+        <target state="translated">Le membre « [DynamicData] » « {0}.{1} » est un champ, vous devez donc utiliser « DynamicDataSourceType.AutoDetect » ou « DynamicDataSourceType.Field » (la détection automatique est la valeur par défaut lorsqu’elle n’est pas spécifiée explicitement et est recommandée)</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_SourceTypeMethod">
@@ -429,7 +429,7 @@ Le type doit être une classe
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_SourceTypeNotPropertyMethodOrField">
         <source>'[DynamicData]' member '{0}.{1}' is not a property, method, or field. Only properties, methods, and fields are supported.</source>
-        <target state="new">'[DynamicData]' member '{0}.{1}' is not a property, method, or field. Only properties, methods, and fields are supported.</target>
+        <target state="translated">Le membre « [Données dynamiques] » « {0}.{1} » n’est pas une propriété, une méthode ou un champ. Seules les propriétés, les méthodes et les champs sont pris en charge.</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_SourceTypeNotPropertyOrMethod">

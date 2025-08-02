@@ -966,17 +966,17 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
       </trans-unit>
       <trans-unit id="AssertThrowsShouldContainSingleStatementDescription">
         <source>Assert.Throws methods should contain only a single statement or expression. Multiple statements can be misleading - if the first statement throws, subsequent statements are never executed; if it doesn't throw, it should be moved outside the Assert.Throws.</source>
-        <target state="new">Assert.Throws methods should contain only a single statement or expression. Multiple statements can be misleading - if the first statement throws, subsequent statements are never executed; if it doesn't throw, it should be moved outside the Assert.Throws.</target>
+        <target state="translated">Metody Assert.Throws by měly obsahovat pouze jeden příkaz nebo výraz. Více příkazů může být zavádějící – pokud se vyvolá první příkaz, následující příkazy se nikdy neprovedou. Pokud se nevyvolá, měl by se přesunout mimo Assert.Throws.</target>
         <note />
       </trans-unit>
       <trans-unit id="AssertThrowsShouldContainSingleStatementMessageFormat">
         <source>Assert.Throws should contain only a single statement/expression</source>
-        <target state="new">Assert.Throws should contain only a single statement/expression</target>
+        <target state="translated">Parametr Assert.Throws by měl obsahovat jenom jeden příkaz nebo výraz</target>
         <note />
       </trans-unit>
       <trans-unit id="AssertThrowsShouldContainSingleStatementTitle">
         <source>Assert.Throws should contain only a single statement/expression</source>
-        <target state="new">Assert.Throws should contain only a single statement/expression</target>
+        <target state="translated">Parametr Assert.Throws by měl obsahovat jenom jeden příkaz nebo výraz</target>
         <note />
       </trans-unit>
     </body>
