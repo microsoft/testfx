@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using AwesomeAssertions;
+
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
@@ -575,10 +577,17 @@ public class TestMethodInfoTests : TestContainer
         Verify(exception is not null);
         Verify(errorMessage == exception.Message);
         Verify(exception.Outcome == UTF.UnitTestOutcome.Failed);
-        Verify(exception.InnerException!.GetType() == typeof(ArgumentException));
-        Verify(exception.InnerException.InnerException!.GetType() == typeof(InvalidOperationException));
-        Verify(exception.StackTraceInformation!.ErrorStackTrace.StartsWith(
-            "   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<TestMethodInfoInvokeWhenTestThrowsReturnsExpectedResult>b__", StringComparison.Ordinal));
+        if (exception.InnerException?.GetType() is { } innerType)
+        {
+            Verify(innerType == typeof(ArgumentException));
+            Verify(exception.InnerException.InnerException!.GetType() == typeof(InvalidOperationException));
+        }
+
+        if (exception.StackTraceInformation is { } stackTraceInfo)
+        {
+            Verify(stackTraceInfo.ErrorStackTrace.StartsWith(
+                "   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<TestMethodInfoInvokeWhenTestThrowsReturnsExpectedResult>b__", StringComparison.Ordinal));
+        }
     }
 
     public async Task TestInitialize_WhenTestReturnsTaskFromException_DisplayProperException()
@@ -602,8 +611,11 @@ public class TestMethodInfoTests : TestContainer
         var exception = result.TestFailureException as TestFailedException;
         Verify(exception is not null);
         Verify(exception.Outcome == UTF.UnitTestOutcome.Failed);
-        Verify(exception.InnerException!.GetType() == typeof(Exception));
-        Verify(exception.InnerException.InnerException!.GetType() == typeof(InvalidOperationException));
+        if (exception.InnerException?.GetType() is { } innerType)
+        {
+            Verify(innerType == typeof(Exception));
+            Verify(exception.InnerException.InnerException!.GetType() == typeof(InvalidOperationException));
+        }
 
         string expectedErrorMessage = string.Format(
             CultureInfo.InvariantCulture,
@@ -644,9 +656,16 @@ public class TestMethodInfoTests : TestContainer
         Verify(exception is not null);
         Verify(errorMessage == exception.Message);
         Verify(exception.Outcome == UTF.UnitTestOutcome.Failed);
-        Verify(exception.InnerException!.GetType() == typeof(AssertFailedException));
-        Verify(exception.StackTraceInformation!.ErrorStackTrace.StartsWith(
-            "   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<TestMethodInfoInvokeWhenTestThrowsAssertFailReturnsExpectedResult>b__", StringComparison.Ordinal));
+        if (exception.InnerException?.GetType() is { } innerType)
+        {
+            Verify(innerType == typeof(AssertFailedException));
+        }
+
+        if (exception.StackTraceInformation is { } stackTraceInfo)
+        {
+            stackTraceInfo.ErrorStackTrace.Should().Contain(
+                "   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<TestMethodInfoInvokeWhenTestThrowsAssertFailReturnsExpectedResult>b__");
+        }
     }
 
     public async Task TestMethodInfoInvokeWhenTestThrowsAssertInconclusiveReturnsExpectedResult()
@@ -678,9 +697,16 @@ public class TestMethodInfoTests : TestContainer
         Verify(exception is not null);
         Verify(errorMessage == exception.Message);
         Verify(exception.Outcome == UTF.UnitTestOutcome.Inconclusive);
-        Verify(exception.InnerException!.GetType() == typeof(AssertInconclusiveException));
-        Verify(exception.StackTraceInformation!.ErrorStackTrace.StartsWith(
-            "   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<TestMethodInfoInvokeWhenTestThrowsAssertInconclusiveReturnsExpectedResult>b__", StringComparison.Ordinal));
+        if (exception.InnerException?.GetType() is { } innerType)
+        {
+            Verify(innerType == typeof(AssertInconclusiveException));
+        }
+
+        if (exception.StackTraceInformation is { } stackTraceInfo)
+        {
+            stackTraceInfo.ErrorStackTrace.Should().Contain(
+                "   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<TestMethodInfoInvokeWhenTestThrowsAssertInconclusiveReturnsExpectedResult>b__");
+        }
     }
 
     #endregion
@@ -707,8 +733,11 @@ public class TestMethodInfoTests : TestContainer
         var exception = result.TestFailureException as TestFailedException;
         Verify(exception is not null);
         Verify(exception.Outcome == UTF.UnitTestOutcome.Failed);
-        Verify(exception.InnerException!.GetType() == typeof(Exception));
-        Verify(exception.InnerException.InnerException!.GetType() == typeof(InvalidOperationException));
+        if (exception.InnerException?.GetType() is { } innerType)
+        {
+            Verify(innerType == typeof(Exception));
+            Verify(exception.InnerException.InnerException!.GetType() == typeof(InvalidOperationException));
+        }
 
         string errorMessage = string.Format(
             CultureInfo.InvariantCulture,
@@ -824,10 +853,16 @@ public class TestMethodInfoTests : TestContainer
         Verify(exception is not null);
         Verify(exception.Outcome == UTF.UnitTestOutcome.Failed);
         Verify(expectedErrorMessage == exception.Message);
-        Verify(exception.InnerException!.GetType() == typeof(ArgumentException));
-        Verify(exception.InnerException.InnerException!.GetType() == typeof(InvalidOperationException));
-        Verify(exception.StackTraceInformation!.ErrorStackTrace.StartsWith(
-            "   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<TestMethodInfoInvokeWhenTestCleanupThrowsReturnsExpectedResult>b__", StringComparison.Ordinal));
+        if (exception.InnerException?.GetType() is { } innerType)
+        {
+            Verify(innerType == typeof(ArgumentException));
+        }
+
+        if (exception.StackTraceInformation is { } stackTraceInfo)
+        {
+            Verify(stackTraceInfo.ErrorStackTrace.StartsWith(
+                "   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<TestMethodInfoInvokeWhenTestCleanupThrowsReturnsExpectedResult>b__", StringComparison.Ordinal));
+        }
     }
 
     public async Task TestMethodInfoInvokeWhenTestCleanupThrowsAssertInconclusiveReturnsExpectedResult()
@@ -850,9 +885,15 @@ public class TestMethodInfoTests : TestContainer
         Verify(exception is not null);
         Verify(exception.Outcome == UTF.UnitTestOutcome.Inconclusive);
         Verify(expectedErrorMessage == exception.Message);
-        Verify(exception.InnerException!.GetType() == typeof(AssertInconclusiveException));
-        Verify(exception.StackTraceInformation!.ErrorStackTrace.StartsWith(
-            "   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<TestMethodInfoInvokeWhenTestCleanupThrowsAssertInconclusiveReturnsExpectedResult>b__", StringComparison.Ordinal));
+        if (exception.InnerException?.GetType() is { } innerType)
+        {
+            innerType.Should().Be<AssertInconclusiveException>();
+        }
+
+        if (exception.StackTraceInformation is { } stackTraceInfo)
+        {
+            stackTraceInfo.ErrorStackTrace.Should().Contain("   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<TestMethodInfoInvokeWhenTestCleanupThrowsAssertInconclusiveReturnsExpectedResult>b__");
+        }
     }
 
     public async Task TestMethodInfoInvokeWhenTestCleanupThrowsAssertFailedReturnsExpectedResult()
@@ -875,9 +916,16 @@ public class TestMethodInfoTests : TestContainer
         Verify(exception is not null);
         Verify(exception.Outcome == UTF.UnitTestOutcome.Failed);
         Verify(expectedErrorMessage == exception.Message);
-        Verify(exception.InnerException!.GetType() == typeof(AssertFailedException));
-        Verify(exception.StackTraceInformation!.ErrorStackTrace.StartsWith(
-            "   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<TestMethodInfoInvokeWhenTestCleanupThrowsAssertFailedReturnsExpectedResult>b__", StringComparison.Ordinal));
+        if (exception.InnerException?.GetType() is { } innerType)
+        {
+            Verify(innerType == typeof(AssertFailedException));
+        }
+
+        if (exception.StackTraceInformation is { } stackTraceInfo)
+        {
+            stackTraceInfo.ErrorStackTrace.Should().Contain(
+                "   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<TestMethodInfoInvokeWhenTestCleanupThrowsAssertFailedReturnsExpectedResult>b__");
+        }
     }
 
     public async Task TestMethodInfoInvokeShouldAppendErrorMessagesIfBothTestMethodAndTestCleanupThrows()
@@ -918,8 +966,11 @@ public class TestMethodInfoTests : TestContainer
 
         Verify(result.Outcome == UTF.UnitTestOutcome.Failed);
         Verify(exception is not null);
-        Verify(((TestFailedException)exception.InnerExceptions[0]).StackTraceInformation!.ErrorStackTrace.Contains("Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.DummyTestClass.DummyTestMethod()"));
-        Verify(((TestFailedException)exception.InnerExceptions[1]).StackTraceInformation!.ErrorStackTrace.Contains("Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.DummyTestClass.DummyTestCleanupMethod()"));
+        if (exception.InnerExceptions.Count >= 2)
+        {
+            Verify(((TestFailedException)exception.InnerExceptions[0]).StackTraceInformation!.ErrorStackTrace.Contains("Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.DummyTestClass.DummyTestMethod()"));
+            Verify(((TestFailedException)exception.InnerExceptions[1]).StackTraceInformation!.ErrorStackTrace.Contains("Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.DummyTestClass.DummyTestCleanupMethod()"));
+        }
     }
 
     public async Task TestMethodInfoInvokeShouldSetOutcomeAsInconclusiveIfTestCleanupIsInconclusive()

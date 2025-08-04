@@ -408,7 +408,7 @@ public class DeploymentUtilityTests : TestContainer
                 It.Is<string>(s => s.Contains(pdbFile)),
                 Path.Combine(testRunDirectories.OutDirectory, Path.GetFileName(pdbFile)),
                 out warning),
-            Times.Never);
+            Times.Once);
     }
 
     #endregion

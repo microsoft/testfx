@@ -32,6 +32,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="AwesomeAssertions" />
     <PackageReference Include="Moq" />
     <PackageReference Include="StrongNamer" />
     <!-- Fixes "Could not load file or assembly 'System.Runtime.CompilerServices.Unsafe, Version=4.0.4.1, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a' or one of its dependencies." -->
