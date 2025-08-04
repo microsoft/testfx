@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Immutable;
+using System.Linq;
 
 using Analyzer.Utilities.Extensions;
 
@@ -52,12 +53,29 @@ public sealed class PreferTestContextWriteAnalyzer : DiagnosticAnalyzer
             if (!context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemConsole, out INamedTypeSymbol? consoleSymbol)
                 || !context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemDiagnosticsTrace, out INamedTypeSymbol? traceSymbol)
                 || !context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemDiagnosticsDebug, out INamedTypeSymbol? debugSymbol)
-                || !context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestMethodAttribute, out INamedTypeSymbol? testMethodAttributeSymbol))
+                || !context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestMethodAttribute, out INamedTypeSymbol? testMethodAttributeSymbol)
+                || !context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestInitializeAttribute, out INamedTypeSymbol? testInitializeAttributeSymbol)
+                || !context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestCleanupAttribute, out INamedTypeSymbol? testCleanupAttributeSymbol)
+                || !context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingClassInitializeAttribute, out INamedTypeSymbol? classInitializeAttributeSymbol)
+                || !context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingClassCleanupAttribute, out INamedTypeSymbol? classCleanupAttributeSymbol)
+                || !context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingAssemblyInitializeAttribute, out INamedTypeSymbol? assemblyInitializeAttributeSymbol)
+                || !context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingAssemblyCleanupAttribute, out INamedTypeSymbol? assemblyCleanupAttributeSymbol))
             {
                 return;
             }
 
-            context.RegisterOperationAction(context => AnalyzeInvocation(context, consoleSymbol, traceSymbol, debugSymbol, testMethodAttributeSymbol), OperationKind.Invocation);
+            var testAttributes = new[] 
+            { 
+                testMethodAttributeSymbol, 
+                testInitializeAttributeSymbol, 
+                testCleanupAttributeSymbol, 
+                classInitializeAttributeSymbol, 
+                classCleanupAttributeSymbol, 
+                assemblyInitializeAttributeSymbol, 
+                assemblyCleanupAttributeSymbol 
+            };
+
+            context.RegisterOperationAction(context => AnalyzeInvocation(context, consoleSymbol, traceSymbol, debugSymbol, testAttributes), OperationKind.Invocation);
         });
     }
 
@@ -66,7 +84,7 @@ public sealed class PreferTestContextWriteAnalyzer : DiagnosticAnalyzer
         INamedTypeSymbol consoleSymbol,
         INamedTypeSymbol traceSymbol,
         INamedTypeSymbol debugSymbol,
-        INamedTypeSymbol testMethodAttributeSymbol)
+        INamedTypeSymbol[] testAttributeSymbols)
     {
         var invocation = (IInvocationOperation)context.Operation;
 
@@ -101,13 +119,13 @@ public sealed class PreferTestContextWriteAnalyzer : DiagnosticAnalyzer
         }
 
         // Check if we're in a test context (test method or test class)
-        if (IsInTestContext(context.ContainingSymbol, testMethodAttributeSymbol))
+        if (IsInTestContext(context.ContainingSymbol, testAttributeSymbols))
         {
             context.ReportDiagnostic(invocation.CreateDiagnostic(Rule, typeName, invocation.TargetMethod.Name));
         }
     }
 
-    private static bool IsInTestContext(ISymbol? containingSymbol, INamedTypeSymbol testMethodAttributeSymbol)
-        // Check if we're in a test method
-        => containingSymbol is IMethodSymbol method && method.HasAttribute(testMethodAttributeSymbol);
+    private static bool IsInTestContext(ISymbol? containingSymbol, INamedTypeSymbol[] testAttributeSymbols)
+        // Check if we're in a method with any test-related attribute
+        => containingSymbol is IMethodSymbol method && testAttributeSymbols.Any(method.HasAttribute);
 }
