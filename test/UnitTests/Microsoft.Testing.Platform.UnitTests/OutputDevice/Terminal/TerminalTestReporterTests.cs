@@ -666,7 +666,7 @@ public sealed class TerminalTestReporterTests
         Assert.Contains(normalizedDisplayName, output, $"{charName} should be replaced with {expectedChar}");
 
         // Verify that the literal control character is not present in the test display name
-        // Note: We skip this assertion for whitespace characters (\t, \n, \r) because these 
+        // Note: We skip this assertion for whitespace characters (\t, \n, \r) because these
         // characters naturally appear in console output formatting (e.g., line breaks between tests)
         // and asserting their complete absence would cause false positives
         string literalDisplayName = $"Test{controlChar}Name";
@@ -745,7 +745,7 @@ public sealed class TerminalTestReporterTests
         Assert.Contains(normalizedDisplayName, output, $"{charName} should be replaced with {expectedChar} in discovery");
 
         // Verify that the literal control character is not present in the test display name
-        // Note: We skip this assertion for whitespace characters (\t, \n, \r) because these 
+        // Note: We skip this assertion for whitespace characters (\t, \n, \r) because these
         // characters naturally appear in console output formatting (e.g., line breaks between tests)
         // and asserting their complete absence would cause false positives
         string literalDisplayName = $"Test{controlChar}Name";
