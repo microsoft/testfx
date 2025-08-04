@@ -44,10 +44,6 @@ This package extends Microsoft Testing Platform to provide an implementation of 
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Update="Resources\ExtensionResources.resx" GenerateSource="true" />
-  </ItemGroup>
-
-  <ItemGroup>
     <InternalsVisibleTo Include="Microsoft.Testing.Extensions.UnitTests" Key="$(VsPublicKey)" />
   </ItemGroup>
 

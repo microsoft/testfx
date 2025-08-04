@@ -548,64 +548,71 @@ internal sealed partial class TerminalTestReporter : IDisposable
     private void AppendAssemblyLinkTargetFrameworkAndArchitecture(ITerminal terminal)
     {
         terminal.AppendLink(_assembly, lineNumber: null);
-        if (_targetFramework != null || _architecture != null)
+        if (_targetFramework == null && _architecture == null)
         {
-            terminal.Append(" (");
-            if (_targetFramework != null)
-            {
-                terminal.Append(_targetFramework);
-                terminal.Append('|');
-            }
+            return;
+        }
 
+        terminal.Append(" (");
+        if (_targetFramework != null)
+        {
+            terminal.Append(_targetFramework);
             if (_architecture != null)
             {
-                terminal.Append(_architecture);
+                terminal.Append('|');
             }
-
-            terminal.Append(')');
         }
+
+        if (_architecture != null)
+        {
+            terminal.Append(_architecture);
+        }
+
+        terminal.Append(')');
     }
 
     internal /* for testing */ static void AppendStackFrame(ITerminal terminal, string stackTraceLine)
     {
         terminal.Append(DoubleIndentation);
         Match match = StackTraceHelper.GetFrameRegex().Match(stackTraceLine);
-        if (match.Success)
+        if (!match.Success)
         {
-            bool weHaveFilePathAndCodeLine = !RoslynString.IsNullOrWhiteSpace(match.Groups["code"].Value);
-            terminal.Append(PlatformResources.StackFrameAt);
-            terminal.Append(' ');
+            terminal.AppendLine(stackTraceLine);
+            return;
+        }
 
-            if (weHaveFilePathAndCodeLine)
-            {
-                terminal.Append(match.Groups["code"].Value);
-            }
-            else
-            {
-                terminal.Append(match.Groups["code1"].Value);
-            }
+        bool weHaveFilePathAndCodeLine = !RoslynString.IsNullOrWhiteSpace(match.Groups["code"].Value);
+        terminal.Append(PlatformResources.StackFrameAt);
+        terminal.Append(' ');
 
-            if (weHaveFilePathAndCodeLine)
-            {
-                terminal.Append(' ');
-                terminal.Append(PlatformResources.StackFrameIn);
-                terminal.Append(' ');
-                if (!RoslynString.IsNullOrWhiteSpace(match.Groups["file"].Value))
-                {
-                    int line = int.TryParse(match.Groups["line"].Value, out int value) ? value : 0;
-                    terminal.AppendLink(match.Groups["file"].Value, line);
-
-                    // AppendLink finishes by resetting color
-                    terminal.SetColor(TerminalColor.DarkGray);
-                }
-            }
-
-            terminal.AppendLine();
+        if (weHaveFilePathAndCodeLine)
+        {
+            terminal.Append(match.Groups["code"].Value);
         }
         else
         {
-            terminal.AppendLine(stackTraceLine);
+            terminal.Append(match.Groups["code1"].Value);
         }
+
+        if (!weHaveFilePathAndCodeLine)
+        {
+            terminal.AppendLine();
+            return;
+        }
+
+        terminal.Append(' ');
+        terminal.Append(PlatformResources.StackFrameIn);
+        terminal.Append(' ');
+        if (!RoslynString.IsNullOrWhiteSpace(match.Groups["file"].Value))
+        {
+            int line = int.TryParse(match.Groups["line"].Value, out int value) ? value : 0;
+            terminal.AppendLink(match.Groups["file"].Value, line);
+
+            // AppendLink finishes by resetting color
+            terminal.SetColor(TerminalColor.DarkGray);
+        }
+
+        terminal.AppendLine();
     }
 
     private static void AppendIndentedLine(ITerminal terminal, string? message, string indent)
@@ -745,52 +752,28 @@ internal sealed partial class TerminalTestReporter : IDisposable
     {
         TestProgressState asm = GetOrAddAssemblyRun();
         asm.AddError(text);
-
-        _terminalWithProgress.WriteToTerminal(terminal =>
-        {
-            terminal.SetColor(TerminalColor.DarkRed);
-            if (padding == null)
-            {
-                terminal.AppendLine(text);
-            }
-            else
-            {
-                AppendIndentedLine(terminal, text, new string(' ', padding.Value));
-            }
-
-            terminal.ResetColor();
-        });
+        WriteMessage(text, TerminalColor.DarkRed, padding);
     }
 
     internal void WriteWarningMessage(string text, int? padding)
     {
         TestProgressState asm = GetOrAddAssemblyRun();
         asm.AddWarning(text);
-        _terminalWithProgress.WriteToTerminal(terminal =>
-        {
-            terminal.SetColor(TerminalColor.DarkYellow);
-            if (padding == null)
-            {
-                terminal.AppendLine(text);
-            }
-            else
-            {
-                AppendIndentedLine(terminal, text, new string(' ', padding.Value));
-            }
-
-            terminal.ResetColor();
-        });
+        WriteMessage(text, TerminalColor.DarkYellow, padding);
     }
 
     internal void WriteErrorMessage(Exception exception)
         => WriteErrorMessage(exception.ToString(), padding: null);
 
     public void WriteMessage(string text, SystemConsoleColor? color = null, int? padding = null)
+        => WriteMessage(text, color is not null ? ToTerminalColor(color.ConsoleColor) : null, padding);
+
+    private void WriteMessage(string text, TerminalColor? color = null, int? padding = null)
         => _terminalWithProgress.WriteToTerminal(terminal =>
         {
-            if (color is not null)
+            if (color.HasValue)
             {
-                terminal.SetColor(ToTerminalColor(color.ConsoleColor));
+                terminal.SetColor(color.Value);
             }
 
             if (padding == null)
@@ -802,7 +785,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
                 AppendIndentedLine(terminal, text, new string(' ', padding.Value));
             }
 
-            if (color is not null)
+            if (color.HasValue)
             {
                 terminal.ResetColor();
             }
