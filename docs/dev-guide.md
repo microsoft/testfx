@@ -173,8 +173,9 @@ If working with Visual Studio, this repository uses the new, modern, XML-based s
 
 If you attempt to build using the `Build.cmd` script in the repository root or run `build.cmd -configuration release` in the terminal with a Visual Studio version other than Visual Studio 2022 17.13 or higher installed on your machine, you will encounter a build error as shown below.
 
-```
+```text
 error MSB4068: The element <Solution> is unrecognizable, or not supported in this context.
 Build FAILED.
 ```
+
 And opening the TestFx.slnx directly with a different version of Visual Studio installed other than Visual Studio 2022 17.13 or higher will just open the slnx file in a raw solution XML format.
