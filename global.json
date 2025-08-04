@@ -19,7 +19,7 @@
       ]
     },
     "vs": {
-      "version": "17.8.0"
+      "version": "17.14.10"
     }
   },
   "sdk": {
@@ -33,7 +33,7 @@
     "rollForward": "latestFeature"
   },
   "msbuild-sdks": {
-    "Microsoft.DotNet.Arcade.Sdk": "10.0.0-beta.25379.3",
+    "Microsoft.DotNet.Arcade.Sdk": "10.0.0-beta.25401.2",
     "MSBuild.Sdk.Extras": "3.0.44"
   }
 }

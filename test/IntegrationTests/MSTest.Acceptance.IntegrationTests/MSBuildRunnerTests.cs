@@ -20,7 +20,7 @@ public class MSBuildRunnerTests : AcceptanceTestBase<NopAssetFixture>
     }
 
     [TestMethod]
-    [DynamicData(nameof(GetBuildMatrix), DynamicDataSourceType.Method)]
+    [DynamicData(nameof(GetBuildMatrix))]
     public async Task MSBuildTestTarget_SingleAndMultiTfm_Should_Run_Solution_Tests(string singleTfmOrMultiTfm, BuildConfiguration buildConfiguration, bool isMultiTfm)
     {
         // Get the template project
