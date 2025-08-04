@@ -434,13 +434,13 @@ public sealed class CollectionAssert
     {
         Assert.CheckParameterNotNull(subset, "CollectionAssert.IsSubsetOf", "subset", string.Empty);
         Assert.CheckParameterNotNull(superset, "CollectionAssert.IsSubsetOf", "superset", string.Empty);
-        var isSubsetValue = IsSubsetOfHelper(subset, superset);
-        if (!isSubsetValue.isSubset)
+        Tuple<bool, ICollection<object?>> isSubsetValue = IsSubsetOfHelper(subset, superset);
+        if (!isSubsetValue.Item1)
         {
             string returnedSubsetValueMessage = string.Empty;
-            foreach (object? item in isSubsetValue.nonSubsetValues)
+            foreach (object? item in isSubsetValue.Item2)
             {
-                returnedSubsetValueMessage = returnedSubsetValueMessage + " " + Convert.ToString(item) + ",";
+                returnedSubsetValueMessage = returnedSubsetValueMessage + " " + Convert.ToString(item, CultureInfo.InvariantCulture) + ",";
             }
 
             // Remove the last trailing comma
@@ -449,7 +449,7 @@ public sealed class CollectionAssert
                 returnedSubsetValueMessage = returnedSubsetValueMessage.TrimEnd(',').Trim();
             }
 
-            returnedSubsetValueMessage = "values {" + returnedSubsetValueMessage.Trim() + "} is/are not a subset of the superset";
+            returnedSubsetValueMessage = "value(s) {" + returnedSubsetValueMessage.Trim() + "} is/are not a subset of the superset";
             Assert.ThrowAssertFailed("CollectionAssert.IsSubsetOf", returnedSubsetValueMessage);
         }
     }
@@ -523,8 +523,8 @@ public sealed class CollectionAssert
     {
         Assert.CheckParameterNotNull(subset, "CollectionAssert.IsNotSubsetOf", "subset", string.Empty);
         Assert.CheckParameterNotNull(superset, "CollectionAssert.IsNotSubsetOf", "superset", string.Empty);
-        var isSubsetValue = IsSubsetOfHelper(subset, superset);
-        if (isSubsetValue.isSubset)
+        Tuple<bool, ICollection<object?>> isSubsetValue = IsSubsetOfHelper(subset, superset);
+        if (isSubsetValue.Item1)
         {
             Assert.ThrowAssertFailed("CollectionAssert.IsNotSubsetOf", Assert.BuildUserMessage(message, parameters));
         }
@@ -1469,15 +1469,14 @@ public sealed class CollectionAssert
     /// True if <paramref name="subset"/> is a subset of
     /// <paramref name="superset"/>, false otherwise.
     /// </returns>
-    internal static (bool isSubset, ICollection<object> nonSubsetValues) IsSubsetOfHelper(ICollection subset, ICollection superset)
+    internal static Tuple<bool, ICollection<object?>> IsSubsetOfHelper(ICollection subset, ICollection superset)
     {
         // $ CONSIDER: The current algorithm counts the number of occurrences of each
         // $ CONSIDER: element in each collection and then compares the count, resulting
         // $ CONSIDER: in an algorithm of ~n*log(n) + m*log(m) + n*log(m). It should be
         // $ CONSIDER: faster to sort both collections and do an element-by-element
         // $ CONSIDER: comparison, which should result in ~n*log(n) + m*log(m) + n.
-
-        List<object> nonSubsetValues = new List<object>();
+        List<object?> nonSubsetValues = new List<object?>();
 
         // Count the occurrences of each object in both collections.
         Dictionary<object, int> subsetElements = GetElementCounts(subset.Cast<object>(), EqualityComparer<object>.Default, out int subsetNulls);
@@ -1515,7 +1514,7 @@ public sealed class CollectionAssert
             }
         }
 
-        return (isSubset, nonSubsetValues);
+        return new Tuple<bool, ICollection<object?>>(isSubset, nonSubsetValues);
     }
 
 #pragma warning disable CS8714
