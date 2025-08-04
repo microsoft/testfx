@@ -4,6 +4,7 @@
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Resources;
 using Microsoft.Testing.Platform.Services;
+using System.Collections.Generic;
 
 namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 
@@ -426,7 +427,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
         terminal.Append(outcomeText);
         terminal.ResetColor();
         terminal.Append(' ');
-        terminal.Append(NormalizeSpecialCharacters(displayName, true));
+        terminal.Append(MakeControlCharactersVisible(displayName, true));
         terminal.SetColor(TerminalColor.DarkGray);
         terminal.Append(' ');
         AppendLongDuration(terminal, duration);
@@ -536,11 +537,11 @@ internal sealed partial class TerminalTestReporter : IDisposable
         terminal.SetColor(TerminalColor.DarkGray);
         terminal.Append(SingleIndentation);
         terminal.AppendLine(PlatformResources.StandardOutput);
-        string? standardOutputWithoutSpecialChars = NormalizeSpecialCharacters(standardOutput, normalizeWhitespaceCharacters: false);
+        string? standardOutputWithoutSpecialChars = MakeControlCharactersVisible(standardOutput, normalizeWhitespaceCharacters: false);
         AppendIndentedLine(terminal, standardOutputWithoutSpecialChars, DoubleIndentation);
         terminal.Append(SingleIndentation);
         terminal.AppendLine(PlatformResources.StandardError);
-        string? standardErrorWithoutSpecialChars = NormalizeSpecialCharacters(standardError, normalizeWhitespaceCharacters: false);
+        string? standardErrorWithoutSpecialChars = MakeControlCharactersVisible(standardError, normalizeWhitespaceCharacters: false);
         AppendIndentedLine(terminal, standardErrorWithoutSpecialChars, DoubleIndentation);
         terminal.ResetColor();
     }
@@ -653,15 +654,47 @@ internal sealed partial class TerminalTestReporter : IDisposable
 
     // SearchValues for efficient detection of control characters
 #if NET8_0_OR_GREATER
-    private static readonly System.Buffers.SearchValues<char> AllControlChars = System.Buffers.SearchValues.Create("\x0000\x0001\x0002\x0003\x0004\x0005\x0006\x0007\x0008\x0009\x000A\x000B\x000C\x000D\x000E\x000F\x0010\x0011\x0012\x0013\x0014\x0015\x0016\x0017\x0018\x0019\x001A\x001B\x001C\x001D\x001E\x001F");
-    private static readonly System.Buffers.SearchValues<char> NonWhitespaceControlChars = System.Buffers.SearchValues.Create("\x0000\x0001\x0002\x0003\x0004\x0005\x0006\x0007\x0008\x000B\x000C\x000E\x000F\x0010\x0011\x0012\x0013\x0014\x0015\x0016\x0017\x0018\x0019\x001A\x001B\x001C\x001D\x001E\x001F");
+    private static readonly System.Buffers.SearchValues<char> AllControlChars = CreateControlCharSearchValues(includeWhitespace: true);
+    private static readonly System.Buffers.SearchValues<char> NonWhitespaceControlChars = CreateControlCharSearchValues(includeWhitespace: false);
+
+    private static System.Buffers.SearchValues<char> CreateControlCharSearchValues(bool includeWhitespace)
+    {
+        var controlChars = new List<char>();
+        for (char c = '\0'; c <= '\u00FF'; c++) // Check first 256 characters for performance
+        {
+            if (char.IsControl(c))
+            {
+                if (includeWhitespace || (c != '\t' && c != '\n' && c != '\r'))
+                {
+                    controlChars.Add(c);
+                }
+            }
+        }
+        return System.Buffers.SearchValues.Create(controlChars.ToArray());
+    }
 #else
-    private static readonly char[] AllControlChars = ['\x0000', '\x0001', '\x0002', '\x0003', '\x0004', '\x0005', '\x0006', '\x0007', '\x0008', '\x0009', '\x000A', '\x000B', '\x000C', '\x000D', '\x000E', '\x000F', '\x0010', '\x0011', '\x0012', '\x0013', '\x0014', '\x0015', '\x0016', '\x0017', '\x0018', '\x0019', '\x001A', '\x001B', '\x001C', '\x001D', '\x001E', '\x001F'];
-    private static readonly char[] NonWhitespaceControlChars = ['\x0000', '\x0001', '\x0002', '\x0003', '\x0004', '\x0005', '\x0006', '\x0007', '\x0008', '\x000B', '\x000C', '\x000E', '\x000F', '\x0010', '\x0011', '\x0012', '\x0013', '\x0014', '\x0015', '\x0016', '\x0017', '\x0018', '\x0019', '\x001A', '\x001B', '\x001C', '\x001D', '\x001E', '\x001F'];
+    private static readonly char[] AllControlChars = CreateControlCharArray(includeWhitespace: true);
+    private static readonly char[] NonWhitespaceControlChars = CreateControlCharArray(includeWhitespace: false);
+
+    private static char[] CreateControlCharArray(bool includeWhitespace)
+    {
+        var controlChars = new List<char>();
+        for (char c = '\0'; c <= '\u00FF'; c++) // Check first 256 characters for performance
+        {
+            if (char.IsControl(c))
+            {
+                if (includeWhitespace || (c != '\t' && c != '\n' && c != '\r'))
+                {
+                    controlChars.Add(c);
+                }
+            }
+        }
+        return controlChars.ToArray();
+    }
 #endif
 
     [return: NotNullIfNotNull(nameof(text))]
-    private static string? NormalizeSpecialCharacters(string? text, bool normalizeWhitespaceCharacters)
+    private static string? MakeControlCharactersVisible(string? text, bool normalizeWhitespaceCharacters)
     {
         if (text is null)
         {
@@ -689,7 +722,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
 
         foreach (char c in text)
         {
-            if (c <= '\x001F') // C0 control characters (U+0000-U+001F)
+            if (char.IsControl(c))
             {
                 // Skip normalization for whitespace characters when not requested
                 if (!normalizeWhitespaceCharacters && (c == '\t' || c == '\n' || c == '\r'))
@@ -699,6 +732,8 @@ internal sealed partial class TerminalTestReporter : IDisposable
                 else
                 {
                     // Convert to Unicode control picture using bit manipulation (0x2400 + char value)
+                    // For C0 control characters (0x00-0x1F), this produces proper Unicode control pictures (U+2400-U+241F)
+                    // For other control characters, this produces printable characters that won't break console formatting
                     sb.Append((char)(0x2400 + c));
                 }
             }
@@ -807,7 +842,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
             asm.TotalTests++;
         }
 
-        asm.DiscoveredTestDisplayNames.Add(NormalizeSpecialCharacters(displayName, true));
+        asm.DiscoveredTestDisplayNames.Add(MakeControlCharactersVisible(displayName, true));
 
         _terminalWithProgress.UpdateWorker(asm.SlotIndex);
     }
@@ -891,7 +926,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
         {
             asm.TestNodeResultsState ??= new(Interlocked.Increment(ref _counter));
             asm.TestNodeResultsState.AddRunningTestNode(
-                Interlocked.Increment(ref _counter), testNodeUid, NormalizeSpecialCharacters(displayName, true), CreateStopwatch());
+                Interlocked.Increment(ref _counter), testNodeUid, MakeControlCharactersVisible(displayName, true), CreateStopwatch());
         }
 
         _terminalWithProgress.UpdateWorker(asm.SlotIndex);
