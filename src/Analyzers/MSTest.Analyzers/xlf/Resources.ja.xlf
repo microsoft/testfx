@@ -419,7 +419,7 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_SourceTypeField">
         <source>'[DynamicData]' member '{0}.{1}' is a field so you should use 'DynamicDataSourceType.AutoDetect' or 'DynamicDataSourceType.Field' (auto detect is the default when not specified explicitly, and is recommended)</source>
-        <target state="new">'[DynamicData]' member '{0}.{1}' is a field so you should use 'DynamicDataSourceType.AutoDetect' or 'DynamicDataSourceType.Field' (auto detect is the default when not specified explicitly, and is recommended)</target>
+        <target state="translated">'[DynamicData]' のメンバー '{0}.{1}' はフィールドであるため、'DynamicDataSourceType.AutoDetect' または 'DynamicDataSourceType.Field' を使用する必要があります (明示的に指定しない場合は既定で自動検出され、これが推奨されます)</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_SourceTypeMethod">
@@ -429,7 +429,7 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_SourceTypeNotPropertyMethodOrField">
         <source>'[DynamicData]' member '{0}.{1}' is not a property, method, or field. Only properties, methods, and fields are supported.</source>
-        <target state="new">'[DynamicData]' member '{0}.{1}' is not a property, method, or field. Only properties, methods, and fields are supported.</target>
+        <target state="translated">'[DynamicData]' のメンバー '{0}.{1}' は、プロパティ、メソッド、フィールドではありません。サポートされているのは、プロパティ、メソッド、フィールドのみです。</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_SourceTypeNotPropertyOrMethod">
@@ -966,17 +966,17 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="AssertThrowsShouldContainSingleStatementDescription">
         <source>Assert.Throws methods should contain only a single statement or expression. Multiple statements can be misleading - if the first statement throws, subsequent statements are never executed; if it doesn't throw, it should be moved outside the Assert.Throws.</source>
-        <target state="new">Assert.Throws methods should contain only a single statement or expression. Multiple statements can be misleading - if the first statement throws, subsequent statements are never executed; if it doesn't throw, it should be moved outside the Assert.Throws.</target>
+        <target state="translated">Assert.Throws メソッドには 1 つのステートメントまたは式のみを含める必要があります。複数のステートメントは誤解を招く可能性があります。最初のステートメントがスローされた場合、後続のステートメントは実行されません。スローされない場合は、Assert.Throws の外部に移動する必要があります。</target>
         <note />
       </trans-unit>
       <trans-unit id="AssertThrowsShouldContainSingleStatementMessageFormat">
         <source>Assert.Throws should contain only a single statement/expression</source>
-        <target state="new">Assert.Throws should contain only a single statement/expression</target>
+        <target state="translated">Assert.Throws には 1 つのステートメントまたは式のみを含める必要があります</target>
         <note />
       </trans-unit>
       <trans-unit id="AssertThrowsShouldContainSingleStatementTitle">
         <source>Assert.Throws should contain only a single statement/expression</source>
-        <target state="new">Assert.Throws should contain only a single statement/expression</target>
+        <target state="translated">Assert.Throws には 1 つのステートメントまたは式のみを含める必要があります</target>
         <note />
       </trans-unit>
     </body>

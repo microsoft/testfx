@@ -419,7 +419,7 @@ Typ deklarujący te metody powinien również przestrzegać następujących regu
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_SourceTypeField">
         <source>'[DynamicData]' member '{0}.{1}' is a field so you should use 'DynamicDataSourceType.AutoDetect' or 'DynamicDataSourceType.Field' (auto detect is the default when not specified explicitly, and is recommended)</source>
-        <target state="new">'[DynamicData]' member '{0}.{1}' is a field so you should use 'DynamicDataSourceType.AutoDetect' or 'DynamicDataSourceType.Field' (auto detect is the default when not specified explicitly, and is recommended)</target>
+        <target state="translated">Składowa „[DynamicData]” „{0}.{1}” jest polem, dlatego należy użyć elementu „DynamicDataSourceType.AutoDetect” lub „DynamicDataSourceType.Field” (wykrywanie automatyczne jest ustawieniem domyślnym, gdy nie zostanie jawnie określone i jest zalecane)</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_SourceTypeMethod">
@@ -429,7 +429,7 @@ Typ deklarujący te metody powinien również przestrzegać następujących regu
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_SourceTypeNotPropertyMethodOrField">
         <source>'[DynamicData]' member '{0}.{1}' is not a property, method, or field. Only properties, methods, and fields are supported.</source>
-        <target state="new">'[DynamicData]' member '{0}.{1}' is not a property, method, or field. Only properties, methods, and fields are supported.</target>
+        <target state="translated">Składowa „[DynamicData]” „{0}.{1}” nie jest właściwością, metodą ani polem. Obsługiwane są tylko właściwości, metody i pola.</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_SourceTypeNotPropertyOrMethod">
@@ -966,17 +966,17 @@ Typ deklarujący te metody powinien również przestrzegać następujących regu
       </trans-unit>
       <trans-unit id="AssertThrowsShouldContainSingleStatementDescription">
         <source>Assert.Throws methods should contain only a single statement or expression. Multiple statements can be misleading - if the first statement throws, subsequent statements are never executed; if it doesn't throw, it should be moved outside the Assert.Throws.</source>
-        <target state="new">Assert.Throws methods should contain only a single statement or expression. Multiple statements can be misleading - if the first statement throws, subsequent statements are never executed; if it doesn't throw, it should be moved outside the Assert.Throws.</target>
+        <target state="translated">Metody Assert.Throws powinny zawierać tylko jedną instrukcję lub wyrażenie. Wiele instrukcji może być mylących – jeśli pierwsza instrukcja zgłosi wyjątek, kolejne instrukcje nigdy nie zostaną wykonane; jeśli nie zgłosi wyjątku, powinna zostać przeniesiona poza Assert.Throws.</target>
         <note />
       </trans-unit>
       <trans-unit id="AssertThrowsShouldContainSingleStatementMessageFormat">
         <source>Assert.Throws should contain only a single statement/expression</source>
-        <target state="new">Assert.Throws should contain only a single statement/expression</target>
+        <target state="translated">Element Assert.Throws powinien zawierać tylko jedną instrukcję/wyrażenie</target>
         <note />
       </trans-unit>
       <trans-unit id="AssertThrowsShouldContainSingleStatementTitle">
         <source>Assert.Throws should contain only a single statement/expression</source>
-        <target state="new">Assert.Throws should contain only a single statement/expression</target>
+        <target state="translated">Element Assert.Throws powinien zawierać tylko jedną instrukcję/wyrażenie</target>
         <note />
       </trans-unit>
     </body>

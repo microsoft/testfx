@@ -506,6 +506,104 @@ public sealed partial class Assert
     private static bool AreEqualFailing(long expected, long actual, long delta)
         => Math.Abs(expected - actual) > delta;
 
+    private static string FormatStringComparisonMessage(string? expected, string? actual, string userMessage)
+    {
+        // Handle null cases
+        if (expected is null && actual is null)
+        {
+            return string.Format(
+                CultureInfo.CurrentCulture,
+                FrameworkMessages.AreEqualFailMsg,
+                userMessage,
+                ReplaceNulls(expected),
+                ReplaceNulls(actual));
+        }
+
+        if (expected is null || actual is null)
+        {
+            return string.Format(
+                CultureInfo.CurrentCulture,
+                FrameworkMessages.AreEqualFailMsg,
+                userMessage,
+                ReplaceNulls(expected),
+                ReplaceNulls(actual));
+        }
+
+        // Find the first difference
+        int diffIndex = FindFirstStringDifference(expected, actual);
+
+        if (diffIndex == -1)
+        {
+            // Strings are equal - should not happen in practice, we call this method only when they are not equal.
+            ApplicationStateGuard.Unreachable();
+        }
+
+        // Format the enhanced string comparison message
+        return FormatStringDifferenceMessage(expected, actual, diffIndex, userMessage);
+    }
+
+    private static int FindFirstStringDifference(string expected, string actual)
+    {
+        int minLength = Math.Min(expected.Length, actual.Length);
+
+        for (int i = 0; i < minLength; i++)
+        {
+            if (expected[i] != actual[i])
+            {
+                return i;
+            }
+        }
+
+        // If we reach here, one string is a prefix of the other
+        return expected.Length != actual.Length ? minLength : -1;
+    }
+
+    private static string FormatStringDifferenceMessage(string expected, string actual, int diffIndex, string userMessage)
+    {
+        string lengthInfo = expected.Length == actual.Length
+            ? string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AreEqualStringDiffLengthBothMsg, expected.Length, diffIndex)
+            : string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AreEqualStringDiffLengthDifferentMsg, expected.Length, actual.Length);
+
+        // Create contextual preview around the difference
+        const int contextLength = 41; // Show up to 20 characters of context on each side
+        Tuple<string, string, int> tuple = StringPreviewHelper.CreateStringPreviews(expected, actual, diffIndex, contextLength);
+        string expectedPreview = tuple.Item1;
+        string actualPreview = tuple.Item2;
+        int caretPosition = tuple.Item3;
+
+        // Get localized prefixes
+        string expectedPrefix = FrameworkMessages.AreEqualStringDiffExpectedPrefix;
+        string actualPrefix = FrameworkMessages.AreEqualStringDiffActualPrefix;
+
+        // Calculate the maximum prefix length to align the caret properly
+        int maxPrefixLength = Math.Max(expectedPrefix.Length, actualPrefix.Length);
+
+        // Pad shorter prefix to match the longer one for proper alignment
+        string paddedExpectedPrefix = expectedPrefix.PadRight(maxPrefixLength);
+        string paddedActualPrefix = actualPrefix.PadRight(maxPrefixLength);
+
+        // Build the formatted lines with proper alignment
+        string expectedLine = paddedExpectedPrefix + $"\"{expectedPreview}\"";
+        string actualLine = paddedActualPrefix + $"\"{actualPreview}\"";
+
+        // The caret should align under the difference in the string content
+        // For localized prefixes with different lengths, we need to account for the longer prefix
+        // to ensure proper alignment. But the caret position is relative to the string content.
+        int adjustedCaretPosition = maxPrefixLength + 1 + caretPosition; // +1 for the opening quote
+
+        // Format user message properly - add leading space if not empty, otherwise no extra formatting
+        string formattedUserMessage = string.IsNullOrEmpty(userMessage) ? string.Empty : $" {userMessage}";
+
+        return string.Format(
+            CultureInfo.CurrentCulture,
+            FrameworkMessages.AreEqualStringDiffFailMsg,
+            lengthInfo,
+            formattedUserMessage,
+            expectedLine,
+            actualLine,
+            new string('-', adjustedCaretPosition) + "^");
+    }
+
     [DoesNotReturn]
     private static void ThrowAssertAreEqualFailed(object? expected, object? actual, string userMessage)
     {
@@ -518,12 +616,14 @@ public sealed partial class Assert
                 expected.GetType().FullName,
                 ReplaceNulls(actual),
                 actual.GetType().FullName)
-            : string.Format(
-                CultureInfo.CurrentCulture,
-                FrameworkMessages.AreEqualFailMsg,
-                userMessage,
-                ReplaceNulls(expected),
-                ReplaceNulls(actual));
+            : expected is string expectedString && actual is string actualString
+                ? FormatStringComparisonMessage(expectedString, actualString, userMessage)
+                : string.Format(
+                    CultureInfo.CurrentCulture,
+                    FrameworkMessages.AreEqualFailMsg,
+                    userMessage,
+                    ReplaceNulls(expected),
+                    ReplaceNulls(actual));
         ThrowAssertFailed("Assert.AreEqual", finalMessage);
     }
 
@@ -544,20 +644,23 @@ public sealed partial class Assert
     [DoesNotReturn]
     private static void ThrowAssertAreEqualFailed(string? expected, string? actual, bool ignoreCase, CultureInfo culture, string userMessage)
     {
+        string finalMessage;
+
         // If the user requested to match case, and the difference between expected/actual is casing only, then we use a different message.
-        string finalMessage = !ignoreCase && CompareInternal(expected, actual, ignoreCase: true, culture) == 0
-            ? string.Format(
+        if (!ignoreCase && CompareInternal(expected, actual, ignoreCase: true, culture) == 0)
+        {
+            finalMessage = string.Format(
                 CultureInfo.CurrentCulture,
                 FrameworkMessages.AreEqualCaseFailMsg,
                 userMessage,
                 ReplaceNulls(expected),
-                ReplaceNulls(actual))
-            : string.Format(
-                CultureInfo.CurrentCulture,
-                FrameworkMessages.AreEqualFailMsg,
-                userMessage,
-                ReplaceNulls(expected),
                 ReplaceNulls(actual));
+        }
+        else
+        {
+            // Use enhanced string comparison for string-specific failures
+            finalMessage = FormatStringComparisonMessage(expected, actual, userMessage);
+        }
 
         ThrowAssertFailed("Assert.AreEqual", finalMessage);
     }
@@ -1185,5 +1288,121 @@ public sealed partial class Assert
             ReplaceNulls(notExpected),
             ReplaceNulls(actual));
         ThrowAssertFailed("Assert.AreNotEqual", finalMessage);
+    }
+}
+
+internal static class StringPreviewHelper
+{
+    public static Tuple<string, string, int> CreateStringPreviews(string expected, string actual, int diffIndex, int fullPreviewLength)
+    {
+        int ellipsisLength = 3; // Length of the ellipsis "..."
+
+        if (fullPreviewLength % 2 == 0)
+        {
+            // Being odd makes it easier to calculate the context length, and center the marker, this is not user customizable.
+            throw new ArgumentException($"{nameof(fullPreviewLength)} must be odd, but it was even.");
+        }
+
+        // This is arbitrary number that is 2 times the size of the ellipsis,
+        // plus 3 chars to make it easier to check the tests are correct when part of string is masked.
+        // Preview length is not user customizable, just makes it harder to break the tests, and avoids few ifs we would need to write otherwise.
+        if (fullPreviewLength < 9)
+        {
+            throw new ArgumentException($"{nameof(fullPreviewLength)} cannot be shorter than 9.");
+        }
+
+        // In case we want to instead count runes or text elements we can change it just here.
+        int expectedLength = expected.Length;
+        int actualLength = actual.Length;
+
+        if (diffIndex < 0 || diffIndex > Math.Min(expectedLength, actualLength)) // Not -1 here because the difference can be right after the end of the shorter string.
+        {
+            throw new ArgumentOutOfRangeException(nameof(diffIndex), "diffIndex must be within the bounds of both strings.");
+        }
+
+        int contextLength = (fullPreviewLength - 1) / 2;
+
+        // Diff index must point into the string, the start of the strings will always be shortened the same amount,
+        // because otherwise the diff would happen at the beginning of the string.
+        // So we just care about how far we are from the end of the string, so we can show the maximum amount of info to the user
+        // when diff is really close to the end.
+        string shorterString = expectedLength < actualLength ? expected : actual;
+        string longerString = expectedLength < actualLength ? actual : expected;
+        bool expectedIsShorter = expectedLength < actualLength;
+
+        int shorterStringLength = shorterString.Length;
+        int longerStringLength = longerString.Length;
+
+        // End marker will point to the end of the shorter string, but the end of the longer string will be replaced by ...
+        // make sure we don't point at the dots. To do this we need to make sure the strings are cut at the beginning, rather than preferring the maximum context shown.
+        bool markerPointsAtEllipsis = longerStringLength - shorterStringLength > ellipsisLength && shorterStringLength - diffIndex < ellipsisLength;
+        int ellipsisSpaceOrZero = markerPointsAtEllipsis ? ellipsisLength + 2 : 0;
+
+        // Find the end of the string that we will show, either then end of the shorter string, or the end of the preview window.
+        // Then calculate the start of the preview from that. This makes sure that if diff is close end of the string we show as much as we can.
+        int start = Math.Min(diffIndex + contextLength, shorterStringLength) - fullPreviewLength + ellipsisSpaceOrZero;
+
+        // If the string is shorter than the preview, start cutting from 0, otherwise start cutting from the calculated start.
+        int cutStart = Math.Max(0, start);
+        // From here we need to handle longer and shorter string separately, because one of the can be shorter,
+        // and we want to show the maximum we can that fits in thew preview window.
+        int cutEndShort = Math.Min(cutStart + fullPreviewLength, shorterStringLength);
+        int cutEndLong = Math.Min(cutStart + fullPreviewLength, longerStringLength);
+
+        string shorterStringPreview = shorterString.Substring(cutStart, cutEndShort - cutStart);
+        string longerStringPreview = longerString.Substring(cutStart, cutEndLong - cutStart);
+
+        // We cut something from the start of the string, so we need to add ellipsis there.
+        // We know if one string is cut then both must be cut, otherwise the diff would be at the beginning of the string.
+        if (cutStart > 0)
+        {
+            shorterStringPreview = EllipsisStart(shorterStringPreview);
+            longerStringPreview = EllipsisStart(longerStringPreview);
+        }
+
+        // We cut something from the end of the string, so we need to add ellipsis there.
+        // We don't know if both strings are cut, so we need to check them separately.
+        if (cutEndShort < shorterStringLength)
+        {
+            shorterStringPreview = EllipsisEnd(shorterStringPreview);
+        }
+
+        // We cut something from the end of the string, so we need to add ellipsis there.
+        if (cutEndLong < longerStringLength)
+        {
+            longerStringPreview = EllipsisEnd(longerStringPreview);
+        }
+
+        string escapedShorterStringPreview = MakeControlCharactersVisible(shorterStringPreview);
+        string escapedLongerStringPreview = MakeControlCharactersVisible(longerStringPreview);
+
+        return new Tuple<string, string, int>(
+            expectedIsShorter ? escapedShorterStringPreview : escapedLongerStringPreview,
+            expectedIsShorter ? escapedLongerStringPreview : escapedShorterStringPreview,
+            diffIndex - cutStart);
+    }
+
+    private static string EllipsisEnd(string text)
+        => $"{text.Substring(0, text.Length - 3)}...";
+
+    private static string EllipsisStart(string text)
+        => $"...{text.Substring(3)}";
+
+    private static string MakeControlCharactersVisible(string text)
+    {
+        var stringBuilder = new StringBuilder(text.Length);
+        foreach (char ch in text)
+        {
+            if (char.IsControl(ch))
+            {
+                stringBuilder.Append((char)(0x2400 + ch));
+            }
+            else
+            {
+                stringBuilder.Append(ch);
+            }
+        }
+
+        return stringBuilder.ToString();
     }
 }

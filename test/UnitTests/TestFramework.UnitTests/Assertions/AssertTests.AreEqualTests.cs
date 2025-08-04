@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using AwesomeAssertions;
+
 using TestFramework.ForTestingMSTest;
 
 namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests;
@@ -1141,5 +1143,218 @@ public partial class AssertTests : TestContainer
 
         public override int GetHashCode()
             => Id.GetHashCode() + 1234;
+    }
+
+    public void AreEqualStringDifferenceAtBeginning()
+    {
+        Exception ex = VerifyThrows(() => Assert.AreEqual("baaa", "aaaa"));
+        ex.Message.Should().Be("""
+            Assert.AreEqual failed. String lengths are both 4 but differ at index 0.
+            Expected: "baaa"
+            But was:  "aaaa"
+            -----------^
+            """);
+    }
+
+    public void AreEqualStringDifferenceAtEnd()
+    {
+        Exception ex = VerifyThrows(() => Assert.AreEqual("aaaa", "aaab"));
+        ex.Message.Should().Be("""
+            Assert.AreEqual failed. String lengths are both 4 but differ at index 3.
+            Expected: "aaaa"
+            But was:  "aaab"
+            --------------^
+            """);
+    }
+
+    public void AreEqualStringWithSpecialCharactersShouldEscape()
+    {
+        Exception ex = VerifyThrows(() => Assert.AreEqual("aa\ta", "aa a"));
+        ex.Message.Should().Be("""
+            Assert.AreEqual failed. String lengths are both 4 but differ at index 2.
+            Expected: "aa␉a"
+            But was:  "aa a"
+            -------------^
+            """);
+    }
+
+    public void AreEqualLongStringsShouldTruncateAndShowContext()
+    {
+        string expected = new string('a', 100) + "b" + new string('c', 100);
+        string actual = new string('a', 100) + "d" + new string('c', 100);
+
+        Exception ex = VerifyThrows(() => Assert.AreEqual(expected, actual));
+        ex.Message.Should().Be("""
+            Assert.AreEqual failed. String lengths are both 201 but differ at index 100.
+            Expected: "...aaaaaaaaaaaaaaaaaabcccccccccccccccc..."
+            But was:  "...aaaaaaaaaaaaaaaaaadcccccccccccccccc..."
+            --------------------------------^
+            """);
+    }
+
+    public void AreEqualStringWithCultureShouldUseEnhancedMessage()
+    {
+        Exception ex = VerifyThrows(() => Assert.AreEqual("aaaa", "aaab", false, CultureInfo.InvariantCulture));
+        ex.Message.Should().Be("""
+            Assert.AreEqual failed. String lengths are both 4 but differ at index 3.
+            Expected: "aaaa"
+            But was:  "aaab"
+            --------------^
+            """);
+    }
+
+    public void AreEqualStringWithDifferentLength()
+    {
+        Exception ex = VerifyThrows(() => Assert.AreEqual("aaaa", "aaa"));
+        ex.Message.Should().Be("""
+            Assert.AreEqual failed. Expected string length 4 but was 3.
+            Expected: "aaaa"
+            But was:  "aaa"
+            --------------^
+            """);
+    }
+
+    public void AreEqualShorterExpectedString()
+    {
+        Exception ex = VerifyThrows(() => Assert.AreEqual("aaa", "aaab"));
+        ex.Message.Should().Be("""
+            Assert.AreEqual failed. Expected string length 3 but was 4.
+            Expected: "aaa"
+            But was:  "aaab"
+            --------------^
+            """);
+    }
+
+    public void AreEqualStringWithUserMessage()
+    {
+        Exception ex = VerifyThrows(() => Assert.AreEqual("aaaa", "aaab", "My custom message"));
+        ex.Message.Should().Be("""
+            Assert.AreEqual failed. String lengths are both 4 but differ at index 3. My custom message
+            Expected: "aaaa"
+            But was:  "aaab"
+            --------------^
+            """);
+    }
+
+    public void AreEqualStringWithEmojis()
+    {
+        Exception ex = VerifyThrows(() => Assert.AreEqual("🥰", "aaab"));
+        ex.Message.Should().Be("""
+            Assert.AreEqual failed. Expected string length 2 but was 4.
+            Expected: "🥰"
+            But was:  "aaab"
+            -----------^
+            """);
+    }
+
+    public void CreateStringPreviews_DiffPointsToCorrectPlaceInNonShortenedString()
+    {
+        int preview = 9;
+        int length = 1;
+        int diffIndex = 0;
+        string stringPreview = FormatStringPreview(StringPreviewHelper.CreateStringPreviews(DigitString(length, diffIndex), DigitString(length, diffIndex), diffIndex, preview));
+        stringPreview.Should().Be("""
+            "X"
+            "X"
+            _^
+            """);
+    }
+
+    public void CreateStringPreviews_DiffPointsToCorrectPlaceInShortenedStringWithEndCut()
+    {
+        int preview = 9;
+        int length = preview + 10;
+        int diffIndex = 0;
+        string stringPreview = FormatStringPreview(StringPreviewHelper.CreateStringPreviews(DigitString(length, diffIndex), DigitString(length, diffIndex), diffIndex, preview));
+        stringPreview.Should().Be("""
+            "X12345..."
+            "X12345..."
+            _^
+            """);
+    }
+
+    public void CreateStringPreviews_DiffPointsToCorrectPlaceInShortenedStringWithStartCut()
+    {
+        int preview = 9;
+        int length = 10;
+        int diffIndex = 9;
+        string stringPreview = FormatStringPreview(StringPreviewHelper.CreateStringPreviews(DigitString(length, diffIndex), DigitString(length, diffIndex), diffIndex: diffIndex, preview));
+        stringPreview.Should().Be("""
+            "...45678X"
+            "...45678X"
+            _________^
+            """);
+    }
+
+    public void CreateStringPreviews_ShowWholeStringWhenDifferenceIsAtTheEndAndJustOneStringDoesNotFit()
+    {
+        int preview = 21;
+        int length = 50;
+        int diffIndex = 16;
+        string stringPreview = FormatStringPreview(StringPreviewHelper.CreateStringPreviews(DigitString(preview, diffIndex), DigitString(length, diffIndex), diffIndex: diffIndex, preview));
+        stringPreview.Should().Be("""
+            "0123456789012345X7890"
+            "0123456789012345X7..."
+            _________________^
+            """);
+    }
+
+    public void CreateStringPreviews_MakeSureWeDontPointToEndEllipsis()
+    {
+        // We will mask last 3 chars of the string, so we need to make sure that the diff index is not pointing to the end ellipsis.
+        int preview = 25;
+        int length = 50;
+        int diffIndex = 24;
+
+        string stringPreview = FormatStringPreview(StringPreviewHelper.CreateStringPreviews(DigitString(preview, diffIndex), DigitString(length, diffIndex), diffIndex: diffIndex, preview));
+        stringPreview.Should().Be("""
+            "...8901234567890123X"
+            "...8901234567890123X56..."
+            ____________________^
+            """);
+    }
+
+    public void CreateStringPreviews_DiffPointsAfterLastCharacterWhenStringsAreAllTheSameCharactersUntilTheEndOfTheShorterOne()
+    {
+        int preview = 9;
+        int diffIndex = 3;
+        string stringPreview = FormatStringPreview(StringPreviewHelper.CreateStringPreviews("aaa", "aaaX", diffIndex, preview));
+        stringPreview.Should().Be("""
+            "aaa"
+            "aaaX"
+            ____^
+            """);
+    }
+
+    private string FormatStringPreview(Tuple<string, string, int> tuple)
+        => $"""
+            "{tuple.Item1}"
+            "{tuple.Item2}"
+            {new string('_', tuple.Item3 + 1)}{'^'}
+            """;
+
+    private static string DigitString(int length, int diffIndex)
+    {
+        const string digits = "0123456789";
+        if (length <= 0)
+        {
+            return string.Empty;
+        }
+
+        var result = new StringBuilder(length);
+        for (int i = 0; i < length; i++)
+        {
+            if (i == diffIndex)
+            {
+                // Use 'X' to indicate a difference should be at this index.
+                // To make it easier to see where the arrow should point, even though both strings are the same (we provide the diff index externally).
+                result.Append('X');
+                continue;
+            }
+
+            result.Append(digits[i % digits.Length]);
+        }
+
+        return result.ToString();
     }
 }

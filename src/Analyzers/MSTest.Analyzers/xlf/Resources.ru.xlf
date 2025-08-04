@@ -425,7 +425,7 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_SourceTypeField">
         <source>'[DynamicData]' member '{0}.{1}' is a field so you should use 'DynamicDataSourceType.AutoDetect' or 'DynamicDataSourceType.Field' (auto detect is the default when not specified explicitly, and is recommended)</source>
-        <target state="new">'[DynamicData]' member '{0}.{1}' is a field so you should use 'DynamicDataSourceType.AutoDetect' or 'DynamicDataSourceType.Field' (auto detect is the default when not specified explicitly, and is recommended)</target>
+        <target state="translated">Элемент "[DynamicData]" "{0}.{1}" является полем, поэтому следует использовать "DynamicDataSourceType.AutoDetect" или "DynamicDataSourceType.Field" (автообнаружение используется по умолчанию, если не указано явно, и является рекомендуемым)</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_SourceTypeMethod">
@@ -435,7 +435,7 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_SourceTypeNotPropertyMethodOrField">
         <source>'[DynamicData]' member '{0}.{1}' is not a property, method, or field. Only properties, methods, and fields are supported.</source>
-        <target state="new">'[DynamicData]' member '{0}.{1}' is not a property, method, or field. Only properties, methods, and fields are supported.</target>
+        <target state="translated">Элемент "[DynamicData]" "{0}.{1}" не является свойством, методом или полем. Поддерживаются только свойства, методы и поля.</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_SourceTypeNotPropertyOrMethod">
@@ -978,17 +978,17 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="AssertThrowsShouldContainSingleStatementDescription">
         <source>Assert.Throws methods should contain only a single statement or expression. Multiple statements can be misleading - if the first statement throws, subsequent statements are never executed; if it doesn't throw, it should be moved outside the Assert.Throws.</source>
-        <target state="new">Assert.Throws methods should contain only a single statement or expression. Multiple statements can be misleading - if the first statement throws, subsequent statements are never executed; if it doesn't throw, it should be moved outside the Assert.Throws.</target>
+        <target state="translated">Методы Assert.Throws должны содержать только одну инструкцию или выражение. Несколько инструкций могут вводить в заблуждение: если первое выражение вызывает исключение, последующие инструкции не выполняются; если исключение не возникает, его следует вынести за пределы Assert.Throws.</target>
         <note />
       </trans-unit>
       <trans-unit id="AssertThrowsShouldContainSingleStatementMessageFormat">
         <source>Assert.Throws should contain only a single statement/expression</source>
-        <target state="new">Assert.Throws should contain only a single statement/expression</target>
+        <target state="translated">Assert.Throws должен содержать только одну инструкцию/выражение</target>
         <note />
       </trans-unit>
       <trans-unit id="AssertThrowsShouldContainSingleStatementTitle">
         <source>Assert.Throws should contain only a single statement/expression</source>
-        <target state="new">Assert.Throws should contain only a single statement/expression</target>
+        <target state="translated">Assert.Throws должен содержать только одну инструкцию/выражение</target>
         <note />
       </trans-unit>
     </body>

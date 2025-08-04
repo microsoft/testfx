@@ -93,11 +93,6 @@ internal class AssemblyEnumerator : MarshalByRefObject
 
         foreach (Type type in types)
         {
-            if (type == null)
-            {
-                continue;
-            }
-
             List<UnitTestElement> testsInType = DiscoverTestsInType(assemblyFileName, type, warnings, discoverInternals,
                 dataSourcesUnfoldingStrategy, fixturesTests);
             tests.AddRange(testsInType);
