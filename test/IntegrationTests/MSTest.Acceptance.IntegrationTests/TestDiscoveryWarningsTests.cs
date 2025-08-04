@@ -36,7 +36,7 @@ public class TestDiscoveryWarningsTests : AcceptanceTestBase<TestDiscoveryWarnin
 
         TestHostResult testHostResult = await testHost.ExecuteAsync("--list-tests");
 
-        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+        testHostResult.AssertExitCodeIsNot(ExitCodes.Success);
         if (isNetFx)
         {
             testHostResult.AssertStandardErrorContains("Could not load file or assembly 'TestDiscoveryWarningsBaseClass, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null' or one of its dependencies. The system cannot find the file specified.");
