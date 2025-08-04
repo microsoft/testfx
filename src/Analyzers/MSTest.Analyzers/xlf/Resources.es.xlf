@@ -132,6 +132,16 @@ El tipo que declara estos métodos también debe respetar las reglas siguientes:
         <target state="translated">No use "Assert.AreSame" o "Assert.AreNotSame" con tipos de valor</target>
         <note />
       </trans-unit>
+      <trans-unit id="AvoidAssertFormatParametersMessageFormat">
+        <source>Replace '{0}' with format parameters with string.Format or string interpolation</source>
+        <target state="new">Replace '{0}' with format parameters with string.Format or string interpolation</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidAssertFormatParametersTitle">
+        <source>Avoid using Assert methods with format parameters</source>
+        <target state="new">Avoid using Assert methods with format parameters</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AvoidExpectedExceptionAttributeDescription">
         <source>Prefer 'Assert.ThrowsExactly' or 'Assert.ThrowsExactlyAsync' over '[ExpectedException]' as it ensures that only the expected call throws the expected exception. The assert APIs also provide more flexibility and allow you to assert extra properties of the exception.</source>
         <target state="translated">Preferir "Assert.ThrowsExactly" o "Assert.ThrowsExactlyAsync" en lugar de "[ExpectedException]", ya que garantiza que solo la llamada esperada inicie la excepción esperada. Las API de aserción también proporcionan más flexibilidad y permiten declarar propiedades adicionales de la ejecución.</target>

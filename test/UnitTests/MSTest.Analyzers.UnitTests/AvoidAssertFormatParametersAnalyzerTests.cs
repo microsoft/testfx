@@ -1,7 +1,9 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using VerifyCS = MSTest.Analyzers.UnitTests.Verifiers.CSharpCodeFixVerifier<
+using Microsoft.CodeAnalysis.Testing;
+
+using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
     MSTest.Analyzers.AvoidAssertFormatParametersAnalyzer,
     MSTest.Analyzers.CodeFixes.AvoidAssertFormatParametersFixer>;
 
@@ -50,7 +52,7 @@ public sealed class AvoidAssertFormatParametersAnalyzerTests
             }
             """;
 
-        var expected = VerifyCS.Diagnostic().WithLocation(0).WithArguments("IsTrue");
+        DiagnosticResult expected = VerifyCS.Diagnostic().WithLocation(0).WithArguments("IsTrue");
         await VerifyCS.VerifyAnalyzerAsync(code, expected);
     }
 
@@ -71,7 +73,7 @@ public sealed class AvoidAssertFormatParametersAnalyzerTests
             }
             """;
 
-        var expected = VerifyCS.Diagnostic().WithLocation(0).WithArguments("IsFalse");
+        DiagnosticResult expected = VerifyCS.Diagnostic().WithLocation(0).WithArguments("IsFalse");
         await VerifyCS.VerifyAnalyzerAsync(code, expected);
     }
 
@@ -92,7 +94,7 @@ public sealed class AvoidAssertFormatParametersAnalyzerTests
             }
             """;
 
-        var expected = VerifyCS.Diagnostic().WithLocation(0).WithArguments("AreEqual");
+        DiagnosticResult expected = VerifyCS.Diagnostic().WithLocation(0).WithArguments("AreEqual");
         await VerifyCS.VerifyAnalyzerAsync(code, expected);
     }
 
@@ -116,7 +118,7 @@ public sealed class AvoidAssertFormatParametersAnalyzerTests
             }
             """;
 
-        var expected = VerifyCS.Diagnostic().WithLocation(0).WithArguments("AreEqual");
+        DiagnosticResult expected = VerifyCS.Diagnostic().WithLocation(0).WithArguments("AreEqual");
         await VerifyCS.VerifyAnalyzerAsync(code, expected);
     }
 
@@ -137,7 +139,7 @@ public sealed class AvoidAssertFormatParametersAnalyzerTests
             }
             """;
 
-        var expected = VerifyCS.Diagnostic().WithLocation(0).WithArguments("Contains");
+        DiagnosticResult expected = VerifyCS.Diagnostic().WithLocation(0).WithArguments("Contains");
         await VerifyCS.VerifyAnalyzerAsync(code, expected);
     }
 
@@ -172,8 +174,16 @@ public sealed class AvoidAssertFormatParametersAnalyzerTests
             }
             """;
 
-        var expected = VerifyCS.Diagnostic().WithLocation(0).WithArguments("IsTrue");
-        await VerifyCS.VerifyCodeFixAsync(code, expected, fixedCode, 0); // Use first code fix (string.Format)
+        await new VerifyCS.Test
+        {
+            CodeActionIndex = 0, // Use first code fix (string.Format)
+            TestCode = code,
+            FixedCode = fixedCode,
+            ExpectedDiagnostics =
+            {
+                VerifyCS.Diagnostic().WithLocation(0).WithArguments("IsTrue"),
+            },
+        }.RunAsync();
     }
 
     [TestMethod]
@@ -207,8 +217,16 @@ public sealed class AvoidAssertFormatParametersAnalyzerTests
             }
             """;
 
-        var expected = VerifyCS.Diagnostic().WithLocation(0).WithArguments("IsTrue");
-        await VerifyCS.VerifyCodeFixAsync(code, expected, fixedCode, 1); // Use second code fix (interpolated string)
+        await new VerifyCS.Test
+        {
+            CodeActionIndex = 1, // Use second code fix (interpolated string)
+            TestCode = code,
+            FixedCode = fixedCode,
+            ExpectedDiagnostics =
+            {
+                VerifyCS.Diagnostic().WithLocation(0).WithArguments("IsTrue"),
+            },
+        }.RunAsync();
     }
 
     [TestMethod]
@@ -242,8 +260,16 @@ public sealed class AvoidAssertFormatParametersAnalyzerTests
             }
             """;
 
-        var expected = VerifyCS.Diagnostic().WithLocation(0).WithArguments("AreEqual");
-        await VerifyCS.VerifyCodeFixAsync(code, expected, fixedCode, 0); // Use first code fix (string.Format)
+        await new VerifyCS.Test
+        {
+            CodeActionIndex = 0, // Use first code fix (string.Format)
+            TestCode = code,
+            FixedCode = fixedCode,
+            ExpectedDiagnostics =
+            {
+                VerifyCS.Diagnostic().WithLocation(0).WithArguments("AreEqual"),
+            },
+        }.RunAsync();
     }
 
     [TestMethod]
@@ -277,8 +303,16 @@ public sealed class AvoidAssertFormatParametersAnalyzerTests
             }
             """;
 
-        var expected = VerifyCS.Diagnostic().WithLocation(0).WithArguments("AreEqual");
-        await VerifyCS.VerifyCodeFixAsync(code, expected, fixedCode, 1); // Use second code fix (interpolated string)
+        await new VerifyCS.Test
+        {
+            CodeActionIndex = 1, // Use second code fix (interpolated string)
+            TestCode = code,
+            FixedCode = fixedCode,
+            ExpectedDiagnostics =
+            {
+                VerifyCS.Diagnostic().WithLocation(0).WithArguments("AreEqual"),
+            },
+        }.RunAsync();
     }
 
     [TestMethod]
@@ -312,8 +346,16 @@ public sealed class AvoidAssertFormatParametersAnalyzerTests
             }
             """;
 
-        var expected = VerifyCS.Diagnostic().WithLocation(0).WithArguments("Contains");
-        await VerifyCS.VerifyCodeFixAsync(code, expected, fixedCode, 0); // Use first code fix (string.Format)
+        await new VerifyCS.Test
+        {
+            CodeActionIndex = 0, // Use first code fix (string.Format)
+            TestCode = code,
+            FixedCode = fixedCode,
+            ExpectedDiagnostics =
+            {
+                VerifyCS.Diagnostic().WithLocation(0).WithArguments("Contains"),
+            },
+        }.RunAsync();
     }
 
     [TestMethod]
@@ -349,7 +391,7 @@ public sealed class AvoidAssertFormatParametersAnalyzerTests
             }
             """;
 
-        var expected = VerifyCS.Diagnostic().WithLocation(0).WithArguments("IsTrue");
+        DiagnosticResult expected = VerifyCS.Diagnostic().WithLocation(0).WithArguments("IsTrue");
         await VerifyCS.VerifyCodeFixAsync(code, expected, fixedCode);
     }
 }

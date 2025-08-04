@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Immutable;
@@ -43,8 +43,8 @@ public sealed class AvoidAssertFormatParametersAnalyzer : DiagnosticAnalyzer
 
         context.RegisterCompilationStartAction(context =>
         {
-            if (context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingAssert, out INamedTypeSymbol? assertSymbol) ||
-                context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingCollectionAssert, out INamedTypeSymbol? collectionAssertSymbol) ||
+            if (context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingAssert, out INamedTypeSymbol? assertSymbol) &&
+                context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingCollectionAssert, out INamedTypeSymbol? collectionAssertSymbol) &&
                 context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingStringAssert, out INamedTypeSymbol? stringAssertSymbol))
             {
                 context.RegisterOperationAction(context => AnalyzeOperation(context, assertSymbol, collectionAssertSymbol, stringAssertSymbol), OperationKind.Invocation);
@@ -55,7 +55,7 @@ public sealed class AvoidAssertFormatParametersAnalyzer : DiagnosticAnalyzer
     private static void AnalyzeOperation(OperationAnalysisContext context, INamedTypeSymbol? assertSymbol, INamedTypeSymbol? collectionAssertSymbol, INamedTypeSymbol? stringAssertSymbol)
     {
         var invocationOperation = (IInvocationOperation)context.Operation;
-        
+
         // Check if this is a call to Assert, CollectionAssert, or StringAssert
         if (!IsTargetAssertType(invocationOperation.TargetMethod.ContainingType, assertSymbol, collectionAssertSymbol, stringAssertSymbol))
         {
@@ -70,16 +70,14 @@ public sealed class AvoidAssertFormatParametersAnalyzer : DiagnosticAnalyzer
     }
 
     private static bool IsTargetAssertType(INamedTypeSymbol? containingType, INamedTypeSymbol? assertSymbol, INamedTypeSymbol? collectionAssertSymbol, INamedTypeSymbol? stringAssertSymbol)
-    {
-        return SymbolEqualityComparer.Default.Equals(containingType, assertSymbol) ||
-               SymbolEqualityComparer.Default.Equals(containingType, collectionAssertSymbol) ||
-               SymbolEqualityComparer.Default.Equals(containingType, stringAssertSymbol);
-    }
+        => SymbolEqualityComparer.Default.Equals(containingType, assertSymbol) ||
+            SymbolEqualityComparer.Default.Equals(containingType, collectionAssertSymbol) ||
+            SymbolEqualityComparer.Default.Equals(containingType, stringAssertSymbol);
 
     private static bool HasFormatStringParamsPattern(IInvocationOperation invocationOperation)
     {
-        var parameters = invocationOperation.TargetMethod.Parameters;
-        
+        ImmutableArray<IParameterSymbol> parameters = invocationOperation.TargetMethod.Parameters;
+
         // Look for the pattern: ([other params...], string message, params object[] parameters)
         // The last two parameters should be string message and params object[]
         if (parameters.Length < 2)
@@ -87,8 +85,8 @@ public sealed class AvoidAssertFormatParametersAnalyzer : DiagnosticAnalyzer
             return false;
         }
 
-        var lastParam = parameters[parameters.Length - 1];
-        var secondLastParam = parameters[parameters.Length - 2];
+        IParameterSymbol lastParam = parameters[parameters.Length - 1];
+        IParameterSymbol secondLastParam = parameters[parameters.Length - 2];
 
         // Check if last parameter is params object[]
         bool hasParamsArray = lastParam.IsParams &&
@@ -104,7 +102,7 @@ public sealed class AvoidAssertFormatParametersAnalyzer : DiagnosticAnalyzer
 
     private static bool HasStringFormatSyntaxAttribute(IParameterSymbol parameter)
     {
-        foreach (var attribute in parameter.GetAttributes())
+        foreach (AttributeData attribute in parameter.GetAttributes())
         {
             if (attribute.AttributeClass?.Name == "StringSyntaxAttribute" &&
                 attribute.ConstructorArguments.Length > 0 &&
