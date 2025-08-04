@@ -1476,7 +1476,7 @@ public sealed class CollectionAssert
         // $ CONSIDER: in an algorithm of ~n*log(n) + m*log(m) + n*log(m). It should be
         // $ CONSIDER: faster to sort both collections and do an element-by-element
         // $ CONSIDER: comparison, which should result in ~n*log(n) + m*log(m) + n.
-        List<object?> nonSubsetValues = new List<object?>();
+        var nonSubsetValues = new List<object?>();
 
         // Count the occurrences of each object in both collections.
         Dictionary<object, int> subsetElements = GetElementCounts(subset.Cast<object>(), EqualityComparer<object>.Default, out int subsetNulls);
