@@ -678,4 +678,10 @@ The type declaring these methods should also respect the following rules:
   <data name="AvoidExplicitDynamicDataSourceTypeMessageFormat" xml:space="preserve">
     <value>Remove the 'DynamicDataSourceType' argument to use the default auto detect behavior</value>
   </data>
+  <data name="AvoidAssertFormatParametersTitle" xml:space="preserve">
+    <value>Avoid using Assert methods with format parameters</value>
+  </data>
+  <data name="AvoidAssertFormatParametersMessageFormat" xml:space="preserve">
+    <value>Replace '{0}' with format parameters with string.Format or string interpolation</value>
+  </data>
 </root>
