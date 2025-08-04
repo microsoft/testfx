@@ -245,12 +245,7 @@ namespace MSTestSdkTest
     }
 
     [TestMethod]
-<<<<<<< HEAD
-    [DynamicData(nameof(RunTests_With_MSTestRunner_Standalone_Default_Extensions_Data), DynamicDataSourceType.Method)]
-    [Ignore("Re-enable back after CC releases a version for MTP v2")]
-=======
     [DynamicData(nameof(RunTests_With_MSTestRunner_Standalone_Default_Extensions_Data))]
->>>>>>> main
     public async Task RunTests_With_MSTestRunner_Standalone_Enable_Default_Extensions(string multiTfm, BuildConfiguration buildConfiguration, bool enableDefaultExtensions)
     {
         using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
