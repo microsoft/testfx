@@ -172,21 +172,6 @@ O tipo que declara esses métodos também deve respeitar as seguintes regras:
         <target state="new">Avoid 'Console.Write*', 'Trace.Write*', and 'Debug.Write*' in tests</target>
         <note />
       </trans-unit>
-      <trans-unit id="PreferTestContextWriteDescription">
-        <source>Using 'Console.Write*', 'Trace.Write*', or 'Debug.Write*' methods in test methods can cause output to be lost or not properly captured by the test framework. Use 'TestContext.WriteLine' instead to ensure test output is properly captured and displayed.</source>
-        <target state="new">Using 'Console.Write*', 'Trace.Write*', or 'Debug.Write*' methods in test methods can cause output to be lost or not properly captured by the test framework. Use 'TestContext.WriteLine' instead to ensure test output is properly captured and displayed.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="PreferTestContextWriteMessageFormat">
-        <source>Use 'TestContext.WriteLine' instead of '{0}.{1}' in test methods</source>
-        <target state="new">Use 'TestContext.WriteLine' instead of '{0}.{1}' in test methods</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="PreferTestContextWriteTitle">
-        <source>Avoid 'Console.Write*', 'Trace.Write*', and 'Debug.Write*' in tests</source>
-        <target state="new">Avoid 'Console.Write*', 'Trace.Write*', and 'Debug.Write*' in tests</target>
-        <note />
-      </trans-unit>
       <trans-unit id="AvoidUsingAssertsInAsyncVoidContextDescription">
         <source>Do not assert inside 'async void' methods, local functions, or lambdas. Exceptions that are thrown in this context will be unhandled exceptions. When using VSTest under .NET Framework, they will be silently swallowed. When using Microsoft.Testing.Platform or VSTest under modern .NET, they may crash the process.</source>
         <target state="translated">Não asserção dentro de métodos 'async void', funções locais ou lambdas. Exceções lançadas neste contexto serão exceções sem tratamento. Ao usar VSTest sob .NET Framework, eles serão silenciosamente ignoradas. Ao usar Microsoft.Testing.Platform ou VSTest em .NET moderno, o processo pode falhar.</target>

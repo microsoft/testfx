@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
@@ -101,6 +101,7 @@ public sealed class PreferTestContextWriteAnalyzerTests
 
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
+
     [TestMethod]
     public async Task WhenConsoleWriteUsedInNonTestClass_NoDiagnostic()
     {

@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Immutable;
@@ -52,13 +52,12 @@ public sealed class PreferTestContextWriteAnalyzer : DiagnosticAnalyzer
             if (!context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemConsole, out INamedTypeSymbol? consoleSymbol)
                 || !context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemDiagnosticsTrace, out INamedTypeSymbol? traceSymbol)
                 || !context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemDiagnosticsDebug, out INamedTypeSymbol? debugSymbol)
-                || !context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestMethodAttribute, out INamedTypeSymbol? testMethodAttributeSymbol)
-                || !context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestClassAttribute, out INamedTypeSymbol? testClassAttributeSymbol))
+                || !context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestMethodAttribute, out INamedTypeSymbol? testMethodAttributeSymbol))
             {
                 return;
             }
 
-            context.RegisterOperationAction(context => AnalyzeInvocation(context, consoleSymbol, traceSymbol, debugSymbol, testMethodAttributeSymbol, testClassAttributeSymbol), OperationKind.Invocation);
+            context.RegisterOperationAction(context => AnalyzeInvocation(context, consoleSymbol, traceSymbol, debugSymbol, testMethodAttributeSymbol), OperationKind.Invocation);
         });
     }
 
@@ -67,8 +66,7 @@ public sealed class PreferTestContextWriteAnalyzer : DiagnosticAnalyzer
         INamedTypeSymbol consoleSymbol,
         INamedTypeSymbol traceSymbol,
         INamedTypeSymbol debugSymbol,
-        INamedTypeSymbol testMethodAttributeSymbol,
-        INamedTypeSymbol testClassAttributeSymbol)
+        INamedTypeSymbol testMethodAttributeSymbol)
     {
         var invocation = (IInvocationOperation)context.Operation;
 
@@ -103,23 +101,13 @@ public sealed class PreferTestContextWriteAnalyzer : DiagnosticAnalyzer
         }
 
         // Check if we're in a test context (test method or test class)
-        if (!IsInTestContext(context.ContainingSymbol, testMethodAttributeSymbol, testClassAttributeSymbol))
+        if (IsInTestContext(context.ContainingSymbol, testMethodAttributeSymbol))
         {
-            return;
+            context.ReportDiagnostic(invocation.CreateDiagnostic(Rule, typeName, invocation.TargetMethod.Name));
         }
-
-        // Report diagnostic
-        context.ReportDiagnostic(invocation.CreateDiagnostic(Rule, typeName, invocation.TargetMethod.Name));
     }
 
-    private static bool IsInTestContext(ISymbol? containingSymbol, INamedTypeSymbol testMethodAttributeSymbol, INamedTypeSymbol testClassAttributeSymbol)
-    {
+    private static bool IsInTestContext(ISymbol? containingSymbol, INamedTypeSymbol testMethodAttributeSymbol)
         // Check if we're in a test method
-        if (containingSymbol is IMethodSymbol method && method.HasAttribute(testMethodAttributeSymbol))
-        {
-            return true;
-        }
-
-        return false;
-    }
+        => containingSymbol is IMethodSymbol method && method.HasAttribute(testMethodAttributeSymbol);
 }
