@@ -236,7 +236,7 @@ internal sealed class TrxProcessLifetimeHandler :
         await DisposeHelper.DisposeAsync(_singleConnectionNamedPipeServer).ConfigureAwait(false);
 
         // Dispose the pipe descriptor after the server to ensure the pipe is closed.
-        _pipeNameDescription?.Dispose();
+        _pipeNameDescription.Dispose();
     }
 #else
     public void Dispose()
@@ -244,7 +244,7 @@ internal sealed class TrxProcessLifetimeHandler :
         _singleConnectionNamedPipeServer?.Dispose();
 
         // Dispose the pipe descriptor after the server to ensure the pipe is closed.
-        _pipeNameDescription?.Dispose();
+        _pipeNameDescription.Dispose();
     }
 #endif
 

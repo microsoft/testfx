@@ -46,8 +46,4 @@ This package extends Microsoft Testing Platform to provide a crash dump function
     <InternalsVisibleTo Include="Microsoft.Testing.Extensions.UnitTests" Key="$(VsPublicKey)" />
   </ItemGroup>
 
-  <ItemGroup>
-    <EmbeddedResource Update="Resources\CrashDumpResources.resx" GenerateSource="true" />
-  </ItemGroup>
-
 </Project>

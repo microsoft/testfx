@@ -11,7 +11,7 @@ internal sealed class PassiveNode : IDisposable
 {
     private readonly IMessageHandlerFactory _messageHandlerFactory;
     private readonly ITestApplicationCancellationTokenSource _testApplicationCancellationTokenSource;
-    private readonly IProcessHandler _processHandler;
+    private readonly IEnvironment _environment;
     private readonly ILogger<PassiveNode> _logger;
     private readonly IAsyncMonitor _messageMonitor;
     private IMessageHandler? _messageHandler;
@@ -19,13 +19,13 @@ internal sealed class PassiveNode : IDisposable
     public PassiveNode(
         IMessageHandlerFactory messageHandlerFactory,
         ITestApplicationCancellationTokenSource testApplicationCancellationTokenSource,
-        IProcessHandler processHandler,
+        IEnvironment environment,
         IAsyncMonitorFactory asyncMonitorFactory,
         ILogger<PassiveNode> logger)
     {
         _messageHandlerFactory = messageHandlerFactory;
         _testApplicationCancellationTokenSource = testApplicationCancellationTokenSource;
-        _processHandler = processHandler;
+        _environment = environment;
         _messageMonitor = asyncMonitorFactory.Create();
         _logger = logger;
     }
@@ -61,7 +61,7 @@ internal sealed class PassiveNode : IDisposable
 
         var requestMessage = (RequestMessage)message;
         var responseObject = new InitializeResponseArgs(
-                        ProcessId: _processHandler.GetCurrentProcess().Id,
+                        ProcessId: _environment.ProcessId,
                         ServerInfo: new ServerInfo("test-anywhere", Version: PlatformVersion.Version),
                         Capabilities: new ServerCapabilities(
                             new ServerTestingCapabilities(

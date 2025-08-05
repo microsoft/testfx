@@ -174,10 +174,6 @@ internal class TypeEnumerator
             {
                 testElement.CssProjectStructure = cssProjectStructure.CssProjectStructure;
             }
-            else if (attributes[i] is DescriptionAttribute descriptionAttribute)
-            {
-                testElement.Description = descriptionAttribute.Description;
-            }
         }
 
         IEnumerable<WorkItemAttribute> workItemAttributes = attributes.OfType<WorkItemAttribute>();

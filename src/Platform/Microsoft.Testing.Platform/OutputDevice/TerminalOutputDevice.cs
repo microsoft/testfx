@@ -31,6 +31,8 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
     private const string TESTINGPLATFORM_CONSOLEOUTPUTDEVICE_SKIP_BANNER = nameof(TESTINGPLATFORM_CONSOLEOUTPUTDEVICE_SKIP_BANNER);
 #pragma warning restore SA1310 // Field names should not contain underscore
 
+    private const char Dash = '-';
+
     private readonly IConsole _console;
     private readonly ITestHostControllerInfo _testHostControllerInfo;
     private readonly IAsyncMonitor _asyncMonitor;
@@ -42,6 +44,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
     private readonly ILoggerFactory _loggerFactory;
     private readonly IClock _clock;
     private readonly IStopPoliciesService _policiesService;
+    private readonly ITestApplicationCancellationTokenSource _testApplicationCancellationTokenSource;
     private readonly string? _longArchitecture;
     private readonly string? _shortArchitecture;
 
@@ -51,7 +54,6 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
     // The targeted framework, .NET 8 when application specifies <TargetFramework>net8.0</TargetFramework>
     private readonly string? _targetFramework;
     private readonly string _assemblyName;
-    private readonly char[] _dash = ['-'];
 
     private TerminalTestReporter? _terminalTestReporter;
     private bool _firstCallTo_OnSessionStartingAsync = true;
@@ -65,7 +67,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
         ITestApplicationModuleInfo testApplicationModuleInfo, ITestHostControllerInfo testHostControllerInfo, IAsyncMonitor asyncMonitor,
         IRuntimeFeature runtimeFeature, IEnvironment environment, IPlatformInformation platformInformation,
         ICommandLineOptions commandLineOptions, IFileLoggerInformation? fileLoggerInformation, ILoggerFactory loggerFactory, IClock clock,
-        IStopPoliciesService policiesService)
+        IStopPoliciesService policiesService, ITestApplicationCancellationTokenSource testApplicationCancellationTokenSource)
     {
         _console = console;
         _testHostControllerInfo = testHostControllerInfo;
@@ -78,6 +80,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
         _loggerFactory = loggerFactory;
         _clock = clock;
         _policiesService = policiesService;
+        _testApplicationCancellationTokenSource = testApplicationCancellationTokenSource;
 
         if (_runtimeFeature.IsDynamicCodeSupported)
         {
@@ -87,7 +90,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
 #else
             // RID has the operating system, we want to see that in the banner, but not next to every dll.
             _longArchitecture = RuntimeInformation.RuntimeIdentifier;
-            _shortArchitecture = GetShortArchitecture(RuntimeInformation.RuntimeIdentifier);
+            _shortArchitecture = TerminalOutputDevice.GetShortArchitecture(RuntimeInformation.RuntimeIdentifier);
 #endif
             _runtimeFramework = TargetFrameworkParser.GetShortTargetFramework(RuntimeInformation.FrameworkDescription);
             _targetFramework = TargetFrameworkParser.GetShortTargetFramework(Assembly.GetEntryAssembly()?.GetCustomAttribute<TargetFrameworkAttribute>()?.FrameworkDisplayName) ?? _runtimeFramework;
@@ -99,6 +102,8 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
         {
             _bannerDisplayed = true;
         }
+
+        _testApplicationCancellationTokenSource = testApplicationCancellationTokenSource;
     }
 
     public async Task InitializeAsync()
@@ -150,11 +155,8 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
                 : !_testHostControllerInfo.IsCurrentProcessTestHostController;
 
         // This is single exe run, don't show all the details of assemblies and their summaries.
-        _terminalTestReporter = new TerminalTestReporter(_console, new()
+        _terminalTestReporter = new TerminalTestReporter(_assemblyName, _targetFramework, _shortArchitecture, _console, _testApplicationCancellationTokenSource, new()
         {
-            BaseDirectory = null,
-            ShowAssembly = false,
-            ShowAssemblyStartAndComplete = false,
             ShowPassedTests = showPassed,
             MinimumExpectedTests = PlatformCommandLineProvider.GetMinimumExpectedTests(_commandLineOptions),
             UseAnsi = !noAnsi,
@@ -164,9 +166,9 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
         });
     }
 
-    private string GetShortArchitecture(string runtimeIdentifier)
-        => runtimeIdentifier.Contains('-')
-            ? runtimeIdentifier.Split(_dash, 2)[1]
+    private static string GetShortArchitecture(string runtimeIdentifier)
+        => runtimeIdentifier.Contains(Dash)
+            ? runtimeIdentifier.Split(Dash, 2)[1]
             : runtimeIdentifier;
 
     public Type[] DataTypesConsumed { get; } =
@@ -177,16 +179,16 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
     ];
 
     /// <inheritdoc />
-    public string Uid { get; } = nameof(TerminalOutputDevice);
+    public string Uid => nameof(TerminalOutputDevice);
 
     /// <inheritdoc />
-    public string Version { get; } = AppVersion.DefaultSemVer;
+    public string Version => AppVersion.DefaultSemVer;
 
     /// <inheritdoc />
-    public string DisplayName { get; } = "Test Platform Console Service";
+    public string DisplayName => "Test Platform Console Service";
 
     /// <inheritdoc />
-    public string Description { get; } = "Test Platform default console service";
+    public string Description => "Test Platform default console service";
 
     /// <inheritdoc />
     public Task<bool> IsEnabledAsync() => Task.FromResult(true);
@@ -250,13 +252,13 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
 
             if (_fileLoggerInformation is not null)
             {
-                if (_fileLoggerInformation.SyncronousWrite)
+                if (_fileLoggerInformation.SynchronousWrite)
                 {
-                    _terminalTestReporter.WriteWarningMessage(_assemblyName, _targetFramework, _shortArchitecture, string.Format(CultureInfo.CurrentCulture, PlatformResources.DiagnosticFileLevelWithFlush, _fileLoggerInformation.LogLevel, _fileLoggerInformation.LogFile.FullName), padding: null);
+                    _terminalTestReporter.WriteWarningMessage(string.Format(CultureInfo.CurrentCulture, PlatformResources.DiagnosticFileLevelWithFlush, _fileLoggerInformation.LogLevel, _fileLoggerInformation.LogFile.FullName), padding: null);
                 }
                 else
                 {
-                    _terminalTestReporter.WriteWarningMessage(_assemblyName, _targetFramework, _shortArchitecture, string.Format(CultureInfo.CurrentCulture, PlatformResources.DiagnosticFileLevelWithAsyncFlush, _fileLoggerInformation.LogLevel, _fileLoggerInformation.LogFile.FullName), padding: null);
+                    _terminalTestReporter.WriteWarningMessage(string.Format(CultureInfo.CurrentCulture, PlatformResources.DiagnosticFileLevelWithAsyncFlush, _fileLoggerInformation.LogLevel, _fileLoggerInformation.LogFile.FullName), padding: null);
                 }
             }
         }
@@ -277,7 +279,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
         // Start test execution here, rather than in ShowBanner, because then we know
         // if we are a testHost controller or not, and if we should show progress bar.
         _terminalTestReporter.TestExecutionStarted(_clock.UtcNow, workerCount: 1, isDiscovery: _isListTests);
-        _terminalTestReporter.AssemblyRunStarted(_assemblyName, _targetFramework, _shortArchitecture);
+        _terminalTestReporter.AssemblyRunStarted();
         if (_logger is not null && _logger.IsEnabled(LogLevel.Trace))
         {
             await _logger.LogTraceAsync("DisplayBeforeSessionStartAsync").ConfigureAwait(false);
@@ -312,7 +314,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
         {
             if (!_firstCallTo_OnSessionStartingAsync)
             {
-                _terminalTestReporter.AssemblyRunCompleted(_assemblyName, _targetFramework, _shortArchitecture, exitCode: null, outputData: null, errorData: null);
+                _terminalTestReporter.AssemblyRunCompleted();
                 _terminalTestReporter.TestExecutionCompleted(_clock.UtcNow);
             }
         }
@@ -363,17 +365,17 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
 
                 case WarningMessageOutputDeviceData warningData:
                     await LogDebugAsync(warningData.Message).ConfigureAwait(false);
-                    _terminalTestReporter.WriteWarningMessage(_assemblyName, _targetFramework, _shortArchitecture, warningData.Message, null);
+                    _terminalTestReporter.WriteWarningMessage(warningData.Message, null);
                     break;
 
                 case ErrorMessageOutputDeviceData errorData:
                     await LogDebugAsync(errorData.Message).ConfigureAwait(false);
-                    _terminalTestReporter.WriteErrorMessage(_assemblyName, _targetFramework, _shortArchitecture, errorData.Message, null);
+                    _terminalTestReporter.WriteErrorMessage(errorData.Message, null);
                     break;
 
                 case ExceptionOutputDeviceData exceptionOutputDeviceData:
                     await LogDebugAsync(exceptionOutputDeviceData.Exception.ToString()).ConfigureAwait(false);
-                    _terminalTestReporter.WriteErrorMessage(_assemblyName, _targetFramework, _shortArchitecture, exceptionOutputDeviceData.Exception);
+                    _terminalTestReporter.WriteErrorMessage(exceptionOutputDeviceData.Exception);
                     break;
             }
         }
@@ -401,9 +403,6 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
                     bool isOutOfProcessArtifact = _firstCallTo_OnSessionStartingAsync;
                     _terminalTestReporter.ArtifactAdded(
                         isOutOfProcessArtifact,
-                        _assemblyName,
-                        _targetFramework,
-                        _shortArchitecture,
                         testNodeStateChanged.TestNode.DisplayName,
                         artifact.FileInfo.FullName);
                 }
@@ -412,18 +411,12 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
                 {
                     case InProgressTestNodeStateProperty:
                         _terminalTestReporter.TestInProgress(
-                            _assemblyName,
-                            _targetFramework,
-                            _shortArchitecture,
                             testNodeStateChanged.TestNode.Uid.Value,
                             testNodeStateChanged.TestNode.DisplayName);
                         break;
 
                     case ErrorTestNodeStateProperty errorState:
                         _terminalTestReporter.TestCompleted(
-                            _assemblyName,
-                            _targetFramework,
-                            _shortArchitecture,
                             testNodeStateChanged.TestNode.Uid.Value,
                             testNodeStateChanged.TestNode.DisplayName,
                             TestOutcome.Error,
@@ -439,9 +432,6 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
 
                     case FailedTestNodeStateProperty failedState:
                         _terminalTestReporter.TestCompleted(
-                             _assemblyName,
-                             _targetFramework,
-                             _shortArchitecture,
                              testNodeStateChanged.TestNode.Uid.Value,
                              testNodeStateChanged.TestNode.DisplayName,
                              TestOutcome.Fail,
@@ -457,9 +447,6 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
 
                     case TimeoutTestNodeStateProperty timeoutState:
                         _terminalTestReporter.TestCompleted(
-                             _assemblyName,
-                             _targetFramework,
-                             _shortArchitecture,
                              testNodeStateChanged.TestNode.Uid.Value,
                              testNodeStateChanged.TestNode.DisplayName,
                              TestOutcome.Timeout,
@@ -475,9 +462,6 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
 
                     case CancelledTestNodeStateProperty cancelledState:
                         _terminalTestReporter.TestCompleted(
-                             _assemblyName,
-                             _targetFramework,
-                             _shortArchitecture,
                              testNodeStateChanged.TestNode.Uid.Value,
                              testNodeStateChanged.TestNode.DisplayName,
                              TestOutcome.Canceled,
@@ -493,9 +477,6 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
 
                     case PassedTestNodeStateProperty:
                         _terminalTestReporter.TestCompleted(
-                            _assemblyName,
-                            _targetFramework,
-                            _shortArchitecture,
                             testNodeStateChanged.TestNode.Uid.Value,
                             testNodeStateChanged.TestNode.DisplayName,
                             outcome: TestOutcome.Passed,
@@ -511,9 +492,6 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
 
                     case SkippedTestNodeStateProperty skippedState:
                         _terminalTestReporter.TestCompleted(
-                            _assemblyName,
-                            _targetFramework,
-                            _shortArchitecture,
                             testNodeStateChanged.TestNode.Uid.Value,
                             testNodeStateChanged.TestNode.DisplayName,
                             TestOutcome.Skipped,
@@ -528,12 +506,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
                         break;
 
                     case DiscoveredTestNodeStateProperty:
-                        _terminalTestReporter.TestDiscovered(
-                            _assemblyName,
-                            _targetFramework,
-                            _shortArchitecture,
-                            testNodeStateChanged.TestNode.DisplayName,
-                            testNodeStateChanged.TestNode.Uid);
+                        _terminalTestReporter.TestDiscovered(testNodeStateChanged.TestNode.DisplayName);
                         break;
                 }
 
@@ -544,9 +517,6 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
                     bool isOutOfProcessArtifact = _firstCallTo_OnSessionStartingAsync;
                     _terminalTestReporter.ArtifactAdded(
                         isOutOfProcessArtifact,
-                        _assemblyName,
-                        _targetFramework,
-                        _shortArchitecture,
                         testName: null,
                         artifact.FileInfo.FullName);
                 }
@@ -557,9 +527,6 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
                     bool isOutOfProcessArtifact = _firstCallTo_OnSessionStartingAsync;
                     _terminalTestReporter.ArtifactAdded(
                         isOutOfProcessArtifact,
-                        _assemblyName,
-                        _targetFramework,
-                        _shortArchitecture,
                         testName: null,
                         artifact.FileInfo.FullName);
                 }

@@ -8,7 +8,6 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
-using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -420,6 +419,30 @@ internal sealed class TypeCache : MarshalByRefObject
                         {
                             assemblyInfo.AssemblyCleanupMethod = methodInfo;
                             assemblyInfo.AssemblyCleanupMethodTimeoutMilliseconds = @this.TryGetTimeoutInfo(methodInfo, FixtureKind.AssemblyCleanup);
+                        }
+
+                        bool isGlobalTestInitialize = @this._reflectionHelper.IsAttributeDefined<GlobalTestInitializeAttribute>(methodInfo, inherit: true);
+                        bool isGlobalTestCleanup = @this._reflectionHelper.IsAttributeDefined<GlobalTestCleanupAttribute>(methodInfo, inherit: true);
+
+                        if (isGlobalTestInitialize || isGlobalTestCleanup)
+                        {
+                            // Only try to validate the method if it already has the needed attribute.
+                            // This avoids potential type load exceptions when the return type cannot be resolved.
+                            // NOTE: Users tend to load assemblies in AssemblyInitialize after finishing the discovery.
+                            // We want to avoid loading types early as much as we can.
+                            bool isValid = methodInfo is { IsSpecialName: false, IsPublic: true, IsStatic: true, IsGenericMethod: false, DeclaringType.IsGenericType: false, DeclaringType.IsPublic: true } &&
+                                methodInfo.GetParameters() is { } parameters && parameters.Length == 1 && parameters[0].ParameterType == typeof(TestContext) &&
+                                methodInfo.IsValidReturnType();
+
+                            if (isValid && isGlobalTestInitialize)
+                            {
+                                assemblyInfo.GlobalTestInitializations.Add((methodInfo, @this.TryGetTimeoutInfo(methodInfo, FixtureKind.TestInitialize)));
+                            }
+
+                            if (isValid && isGlobalTestCleanup)
+                            {
+                                assemblyInfo.GlobalTestCleanups.Add((methodInfo, @this.TryGetTimeoutInfo(methodInfo, FixtureKind.TestCleanup)));
+                            }
                         }
                     }
                 }

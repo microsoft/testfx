@@ -23,8 +23,8 @@ public sealed class PropertyBagTests
     [TestMethod]
     public void Ctors_With_WrongInit_ShouldFail()
     {
-        Assert.ThrowsException<InvalidOperationException>(() => _ = new PropertyBag([new DummyProperty(), PassedTestNodeStateProperty.CachedInstance, PassedTestNodeStateProperty.CachedInstance]));
-        Assert.ThrowsException<InvalidOperationException>(() => _ = new PropertyBag(new IProperty[] { new DummyProperty(), PassedTestNodeStateProperty.CachedInstance, PassedTestNodeStateProperty.CachedInstance }.AsEnumerable()));
+        Assert.ThrowsExactly<InvalidOperationException>(() => _ = new PropertyBag([new DummyProperty(), PassedTestNodeStateProperty.CachedInstance, PassedTestNodeStateProperty.CachedInstance]));
+        Assert.ThrowsExactly<InvalidOperationException>(() => _ = new PropertyBag(new IProperty[] { new DummyProperty(), PassedTestNodeStateProperty.CachedInstance, PassedTestNodeStateProperty.CachedInstance }.AsEnumerable()));
     }
 
     [TestMethod]
@@ -40,14 +40,14 @@ public sealed class PropertyBagTests
         PropertyBag property = new();
 
         Assert.IsFalse(property.Any<TestNodeStateProperty>());
-        Assert.AreEqual(0, property.OfType<TestNodeStateProperty>().Length);
+        Assert.IsEmpty(property.OfType<TestNodeStateProperty>());
 
         property.Add(PassedTestNodeStateProperty.CachedInstance);
 
         Assert.AreEqual(PassedTestNodeStateProperty.CachedInstance, property.Single<TestNodeStateProperty>());
         Assert.AreEqual(PassedTestNodeStateProperty.CachedInstance, property.SingleOrDefault<TestNodeStateProperty>());
         Assert.IsTrue(property.Any<TestNodeStateProperty>());
-        Assert.AreEqual(1, property.OfType<TestNodeStateProperty>().Length);
+        Assert.HasCount(1, property.OfType<TestNodeStateProperty>());
     }
 
     [TestMethod]
@@ -55,7 +55,7 @@ public sealed class PropertyBagTests
     {
         PropertyBag property = new();
         property.Add(PassedTestNodeStateProperty.CachedInstance);
-        Assert.ThrowsException<InvalidOperationException>(() => property.Add(PassedTestNodeStateProperty.CachedInstance));
+        Assert.ThrowsExactly<InvalidOperationException>(() => property.Add(PassedTestNodeStateProperty.CachedInstance));
     }
 
     [TestMethod]
@@ -64,7 +64,7 @@ public sealed class PropertyBagTests
         PropertyBag property = new();
         DummyProperty dummyProperty = new();
         property.Add(dummyProperty);
-        Assert.ThrowsException<InvalidOperationException>(() => property.Add(dummyProperty));
+        Assert.ThrowsExactly<InvalidOperationException>(() => property.Add(dummyProperty));
     }
 
     [TestMethod]
@@ -92,7 +92,7 @@ public sealed class PropertyBagTests
         Assert.IsNull(property.SingleOrDefault<DummyProperty2>());
 
         property.Add(new DummyProperty());
-        Assert.ThrowsException<InvalidOperationException>(property.SingleOrDefault<DummyProperty>);
+        Assert.ThrowsExactly<InvalidOperationException>(property.SingleOrDefault<DummyProperty>);
     }
 
     [TestMethod]
@@ -105,10 +105,10 @@ public sealed class PropertyBagTests
 
         Assert.AreEqual(PassedTestNodeStateProperty.CachedInstance, property.Single<TestNodeStateProperty>());
         Assert.AreEqual(prop, property.Single<DummyProperty>());
-        Assert.ThrowsException<InvalidOperationException>(property.Single<DummyProperty2>);
+        Assert.ThrowsExactly<InvalidOperationException>(property.Single<DummyProperty2>);
 
         property.Add(new DummyProperty());
-        Assert.ThrowsException<InvalidOperationException>(property.Single<DummyProperty>);
+        Assert.ThrowsExactly<InvalidOperationException>(property.Single<DummyProperty>);
     }
 
     [TestMethod]
@@ -120,7 +120,7 @@ public sealed class PropertyBagTests
         property.Add(PassedTestNodeStateProperty.CachedInstance);
 
         Assert.AreEqual(PassedTestNodeStateProperty.CachedInstance, property.OfType<TestNodeStateProperty>().Single());
-        Assert.AreEqual(2, property.OfType<DummyProperty>().Length);
+        Assert.HasCount(2, property.OfType<DummyProperty>());
     }
 
     [TestMethod]
@@ -141,7 +141,7 @@ public sealed class PropertyBagTests
             list.Remove(prop);
         }
 
-        Assert.AreEqual(0, list.Count);
+        Assert.IsEmpty(list);
 
         list = [.. property.AsEnumerable()];
         foreach (IProperty prop in property)
@@ -149,7 +149,7 @@ public sealed class PropertyBagTests
             list.Remove(prop);
         }
 
-        Assert.AreEqual(0, list.Count);
+        Assert.IsEmpty(list);
     }
 
     [TestMethod]
@@ -159,13 +159,13 @@ public sealed class PropertyBagTests
         Assert.AreEqual(0, property.Count);
         Assert.IsFalse(property.Any<TestNodeStateProperty>());
         Assert.IsNull(property.SingleOrDefault<TestNodeStateProperty>());
-        Assert.ThrowsException<InvalidOperationException>(property.Single<TestNodeStateProperty>);
-        Assert.AreEqual(0, property.OfType<TestNodeStateProperty>().Length);
+        Assert.ThrowsExactly<InvalidOperationException>(property.Single<TestNodeStateProperty>);
+        Assert.IsEmpty(property.OfType<TestNodeStateProperty>());
         Assert.AreEqual(0, property.AsEnumerable().Count());
 
         foreach (IProperty item in property)
         {
-            Assert.IsTrue(false, "no item expected");
+            Assert.Fail("no item expected");
         }
     }
 

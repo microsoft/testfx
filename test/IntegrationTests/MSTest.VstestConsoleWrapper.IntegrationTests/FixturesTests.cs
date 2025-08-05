@@ -5,6 +5,7 @@ using Microsoft.MSTestV2.CLIAutomation;
 
 namespace MSTest.VstestConsoleWrapper.IntegrationTests;
 
+[TestClass]
 public class FixturesTests : CLITestBase
 {
     private const string AssetName = "FixturesTestProject";
@@ -26,6 +27,7 @@ public class FixturesTests : CLITestBase
         PassingTest
     ];
 
+    [TestMethod]
     public void FixturesDisabled_DoesNotReport_FixtureTests()
     {
         string runSettings = GetRunSettings(false, true, true, true, true, true);
@@ -39,6 +41,7 @@ public class FixturesTests : CLITestBase
         ValidatePassedTests([TestMethod, PassingTest]);
     }
 
+    [TestMethod]
     public void FixturesEnabled_DoesReport_FixtureTests()
     {
         string runSettings = GetRunSettings(true, true, true, true, true, true);
@@ -54,6 +57,7 @@ public class FixturesTests : CLITestBase
         ValidatePassedTests(_tests);
     }
 
+    [TestMethod]
     public void AssemblyInitialize_Fails_TestMethod_Class_Skipped()
     {
         string runSettings = GetRunSettings(true, false, true, true, true, true);
@@ -65,6 +69,7 @@ public class FixturesTests : CLITestBase
         ValidateSkippedTests([ClassInitialize, ClassCleanup]);
     }
 
+    [TestMethod]
     public void AssemblyCleanup_OnlyFails_AssemblyCleanup()
     {
         string runSettings = GetRunSettings(true, true, false, true, true, true);
@@ -75,6 +80,7 @@ public class FixturesTests : CLITestBase
         ValidateFailedTests(false, [AssemblyCleanup, TestMethod]);
     }
 
+    [TestMethod]
     public void ClassInitialize_OnlyFails_ClassInitialize()
     {
         string runSettings = GetRunSettings(true, true, true, false, true, true);
@@ -84,6 +90,7 @@ public class FixturesTests : CLITestBase
         ValidatePassedTests([AssemblyInitialize, AssemblyCleanup, ClassCleanup]);
     }
 
+    [TestMethod]
     public void ClassCleanup_OnlyFails_ClassCleanup()
     {
         string runSettings = GetRunSettings(true, true, true, true, false, true);
@@ -94,6 +101,7 @@ public class FixturesTests : CLITestBase
         ValidateFailedTests(false, [ClassCleanup, TestMethod]);
     }
 
+    [TestMethod]
     public void RunOnlyFixtures_DoesNot_Run_Fixtures()
     {
         string runSettings = GetRunSettings(true, true, true, true, true, true);
@@ -110,6 +118,7 @@ public class FixturesTests : CLITestBase
         ValidateSkippedTests([AssemblyCleanup, ClassCleanup]);
     }
 
+    [TestMethod]
     public void RunSingleTest_Runs_Assembly_And_Class_Fixtures()
     {
         string runSettings = GetRunSettings(true, true, true, true, true, true);
@@ -118,6 +127,7 @@ public class FixturesTests : CLITestBase
         ValidatePassedTests([AssemblyInitialize, AssemblyCleanup, ClassInitialize, ClassCleanup, PassingTest]);
     }
 
+    [TestMethod]
     public void RunSingleTest_AssemblyInitialize_Failure_Skips_ClassFixtures()
     {
         string runSettings = GetRunSettings(true, false, true, true, true, true);
@@ -129,6 +139,7 @@ public class FixturesTests : CLITestBase
         ValidateSkippedTests([ClassInitialize, ClassCleanup]);
     }
 
+    [TestMethod]
     public void RunSingleTest_ClassInitialize_Failure_Runs_AssemblyFixtures()
     {
         string runSettings = GetRunSettings(true, true, true, false, true, true);

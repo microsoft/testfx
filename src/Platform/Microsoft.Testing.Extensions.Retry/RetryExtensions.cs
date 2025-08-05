@@ -23,7 +23,7 @@ public static class RetryExtensions
     {
         builder.CommandLine.AddProvider(() => new RetryCommandLineOptionsProvider());
 
-        builder.TestHost.AddTestApplicationLifecycleCallbacks(serviceProvider
+        builder.TestHost.AddTestHostApplicationLifetime(serviceProvider
             => new RetryLifecycleCallbacks(serviceProvider));
 
         CompositeExtensionFactory<RetryDataConsumer> compositeExtensionFactory

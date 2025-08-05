@@ -221,6 +221,7 @@ Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextIm
 Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.AddProperty(string! propertyName, string! propertyValue) -> void
 Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.ClearDiagnosticMessages() -> void
 Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.Context.get -> Microsoft.VisualStudio.TestTools.UnitTesting.TestContext!
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.Dispose() -> void
 Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.GetDiagnosticMessages() -> string?
 Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.GetResultFiles() -> System.Collections.Generic.IList<string!>?
 Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.SetDataConnection(object? dbConnection) -> void
@@ -288,3 +289,4 @@ static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestSettings.Run
 static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.RunConfigurationSettings.PopulateSettings(Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter.IDiscoveryContext? context) -> Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.RunConfigurationSettings!
 virtual Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestMethodInfo.Invoke(object?[]? arguments) -> Microsoft.VisualStudio.TestTools.UnitTesting.TestResult!
 virtual Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestMethodInfo.InvokeAsync(object?[]? arguments) -> System.Threading.Tasks.Task<Microsoft.VisualStudio.TestTools.UnitTesting.TestResult!>!
+virtual Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.Dispose(bool disposing) -> void

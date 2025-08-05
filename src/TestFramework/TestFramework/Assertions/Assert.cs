@@ -39,7 +39,7 @@ public sealed partial class Assert
 #else
     [Obsolete(FrameworkConstants.ThatPropertyObsoleteMessage)]
 #endif
-    public static Assert That { get; } = Instance;
+    public static Assert That => Instance;
 
     /// <summary>
     /// Replaces null characters ('\0') with "\\0".

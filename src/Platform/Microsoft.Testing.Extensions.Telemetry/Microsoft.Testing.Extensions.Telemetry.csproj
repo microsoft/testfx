@@ -49,10 +49,6 @@ This package provides telemetry for the platform.]]>
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Update="Resources\ExtensionResources.resx" GenerateSource="true" />
-  </ItemGroup>
-
-  <ItemGroup>
     <Using Include="Polyfills" />
   </ItemGroup>
 

@@ -21,7 +21,7 @@ internal sealed class CrashDumpEnvironmentVariableProvider : ITestHostEnvironmen
     private const string CreateDumpVerboseDiagnosticsVariable = "CreateDumpVerboseDiagnostics";
     private const string EnableMiniDumpValue = "1";
 
-    private readonly string[] _prefixes = ["DOTNET_", "COMPlus_"];
+    private static readonly string[] Prefixes = ["DOTNET_", "COMPlus_"];
     private readonly IConfiguration _configuration;
     private readonly ICommandLineOptions _commandLineOptions;
     private readonly ITestApplicationModuleInfo _testApplicationModuleInfo;
@@ -62,7 +62,7 @@ internal sealed class CrashDumpEnvironmentVariableProvider : ITestHostEnvironmen
 
     public Task UpdateAsync(IEnvironmentVariables environmentVariables)
     {
-        foreach (string prefix in _prefixes)
+        foreach (string prefix in Prefixes)
         {
             environmentVariables.SetVariable(new($"{prefix}{EnableMiniDumpVariable}", EnableMiniDumpValue, false, true));
             environmentVariables.SetVariable(new($"{prefix}{CreateDumpDiagnosticsVariable}", EnableMiniDumpValue, false, true));
@@ -107,7 +107,7 @@ internal sealed class CrashDumpEnvironmentVariableProvider : ITestHostEnvironmen
             }
         }
 
-        foreach (string prefix in _prefixes)
+        foreach (string prefix in Prefixes)
         {
             environmentVariables.SetVariable(new($"{prefix}{MiniDumpTypeVariable}", miniDumpTypeValue, false, true));
         }
@@ -116,7 +116,7 @@ internal sealed class CrashDumpEnvironmentVariableProvider : ITestHostEnvironmen
             ? Path.Combine(_configuration.GetTestResultDirectory(), dumpFileName[0])
             : Path.Combine(_configuration.GetTestResultDirectory(), $"{Path.GetFileNameWithoutExtension(_testApplicationModuleInfo.GetCurrentTestApplicationFullPath())}_%p_crash.dmp");
         _crashDumpGeneratorConfiguration.DumpFileNamePattern = _miniDumpNameValue;
-        foreach (string prefix in _prefixes)
+        foreach (string prefix in Prefixes)
         {
             environmentVariables.SetVariable(new($"{prefix}{MiniDumpNameVariable}", _miniDumpNameValue, false, true));
         }
@@ -132,12 +132,11 @@ internal sealed class CrashDumpEnvironmentVariableProvider : ITestHostEnvironmen
 
     public Task<ValidationResult> ValidateTestHostEnvironmentVariablesAsync(IReadOnlyEnvironmentVariables environmentVariables)
     {
-        StringBuilder errors = new();
-
 #if !NETCOREAPP
         return ValidationResult.InvalidTask(CrashDumpResources.CrashDumpNotSupportedInNonNetCoreErrorMessage);
 #else
-        foreach (string prefix in _prefixes)
+        StringBuilder errors = new();
+        foreach (string prefix in Prefixes)
         {
             if (!environmentVariables.TryGetVariable($"{prefix}{EnableMiniDumpVariable}", out OwnedEnvironmentVariable? enableMiniDump)
             || enableMiniDump.Value != EnableMiniDumpValue)
@@ -146,7 +145,7 @@ internal sealed class CrashDumpEnvironmentVariableProvider : ITestHostEnvironmen
             }
         }
 
-        foreach (string prefix in _prefixes)
+        foreach (string prefix in Prefixes)
         {
             if (!environmentVariables.TryGetVariable($"{prefix}{CreateDumpDiagnosticsVariable}", out OwnedEnvironmentVariable? enableMiniDump)
             || enableMiniDump.Value != EnableMiniDumpValue)
@@ -155,7 +154,7 @@ internal sealed class CrashDumpEnvironmentVariableProvider : ITestHostEnvironmen
             }
         }
 
-        foreach (string prefix in _prefixes)
+        foreach (string prefix in Prefixes)
         {
             if (!environmentVariables.TryGetVariable($"{prefix}{CreateDumpVerboseDiagnosticsVariable}", out OwnedEnvironmentVariable? enableMiniDump)
             || enableMiniDump.Value != EnableMiniDumpValue)
@@ -164,7 +163,7 @@ internal sealed class CrashDumpEnvironmentVariableProvider : ITestHostEnvironmen
             }
         }
 
-        foreach (string prefix in _prefixes)
+        foreach (string prefix in Prefixes)
         {
             if (!environmentVariables.TryGetVariable($"{prefix}{MiniDumpTypeVariable}", out OwnedEnvironmentVariable? miniDumpType))
             {
@@ -187,7 +186,7 @@ internal sealed class CrashDumpEnvironmentVariableProvider : ITestHostEnvironmen
             }
         }
 
-        foreach (string prefix in _prefixes)
+        foreach (string prefix in Prefixes)
         {
             if (!environmentVariables.TryGetVariable($"{prefix}{MiniDumpNameVariable}", out OwnedEnvironmentVariable? miniDumpName)
             || miniDumpName.Value != _miniDumpNameValue)

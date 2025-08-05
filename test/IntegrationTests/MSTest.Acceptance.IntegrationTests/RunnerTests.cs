@@ -15,7 +15,7 @@ public class RunnerTests : AcceptanceTestBase<NopAssetFixture>
     private const string AssetName = "MSTestProject";
 
     [TestMethod]
-    [DynamicData(nameof(GetBuildMatrixTfmBuildVerbConfiguration), typeof(AcceptanceTestBase<NopAssetFixture>), DynamicDataSourceType.Method)]
+    [DynamicData(nameof(GetBuildMatrixTfmBuildVerbConfiguration), typeof(AcceptanceTestBase<NopAssetFixture>))]
     public async SystemTask EnableMSTestRunner_True_Will_Run_Standalone(string tfm, BuildConfiguration buildConfiguration, Verb verb)
     {
         using TestAsset generator = await TestAsset.GenerateAssetAsync(
@@ -44,7 +44,7 @@ public class RunnerTests : AcceptanceTestBase<NopAssetFixture>
     }
 
     [TestMethod]
-    [DynamicData(nameof(GetBuildMatrixTfmBuildVerbConfiguration), typeof(AcceptanceTestBase<NopAssetFixture>), DynamicDataSourceType.Method)]
+    [DynamicData(nameof(GetBuildMatrixTfmBuildVerbConfiguration), typeof(AcceptanceTestBase<NopAssetFixture>))]
     public async SystemTask EnableMSTestRunner_True_WithCustomEntryPoint_Will_Run_Standalone(string tfm, BuildConfiguration buildConfiguration, Verb verb)
     {
         using TestAsset generator = await TestAsset.GenerateAssetAsync(
@@ -78,7 +78,7 @@ return await app.RunAsync();
     }
 
     [TestMethod]
-    [DynamicData(nameof(GetBuildMatrixTfmBuildVerbConfiguration), typeof(AcceptanceTestBase<NopAssetFixture>), DynamicDataSourceType.Method)]
+    [DynamicData(nameof(GetBuildMatrixTfmBuildVerbConfiguration), typeof(AcceptanceTestBase<NopAssetFixture>))]
     public async SystemTask EnableMSTestRunner_False_Will_Run_Empty_Program_EntryPoint_From_Tpv2_SDK(string tfm, BuildConfiguration buildConfiguration, Verb verb)
     {
         using TestAsset generator = await TestAsset.GenerateAssetAsync(
@@ -102,14 +102,14 @@ return await app.RunAsync();
         {
             if (TargetFrameworks.NetFramework.Any(x => x == tfm))
             {
-                Assert.IsTrue(ex.Message.Contains("Program does not contain a static 'Main' method suitable for an entry point"), ex.Message);
+                Assert.Contains("Program does not contain a static 'Main' method suitable for an entry point", ex.Message, ex.Message);
                 // .NET Framework does not insert the entry point for empty program.
             }
         }
     }
 
     [TestMethod]
-    [DynamicData(nameof(GetBuildMatrixTfmBuildVerbConfiguration), typeof(AcceptanceTestBase<NopAssetFixture>), DynamicDataSourceType.Method)]
+    [DynamicData(nameof(GetBuildMatrixTfmBuildVerbConfiguration), typeof(AcceptanceTestBase<NopAssetFixture>))]
     public async SystemTask EnableMSTestRunner_False_Wont_Flow_TestingPlatformServer_Capability(string tfm, BuildConfiguration buildConfiguration, Verb verb)
     {
         using TestAsset generator = await TestAsset.GenerateAssetAsync(

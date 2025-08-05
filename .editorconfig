@@ -465,9 +465,6 @@ dotnet_diagnostic.CA2245.severity = warning
 # CA2248: Provide correct enum argument to Enum.HasFlag
 dotnet_diagnostic.CA2248.severity = warning
 
-# RS0016: Only enable if API files are present
-dotnet_public_api_analyzer.require_api_files = true
-
 # RS0041: Do not use 'Obsolete' attribute
 dotnet_diagnostic.RS0041.severity = none
 

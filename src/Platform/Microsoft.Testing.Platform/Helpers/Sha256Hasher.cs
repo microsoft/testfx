@@ -9,23 +9,10 @@ namespace Microsoft.Testing.Platform.Helpers;
 [ExcludeFromCodeCoverage]
 internal static class Sha256Hasher
 {
-    private static string Hash(string text)
-    {
-        byte[] bytes = Encoding.UTF8.GetBytes(text);
-#if NETCOREAPP
-        byte[] hash = SHA256.HashData(bytes);
-#else
-        using var hasher = SHA256.Create();
-        byte[] hash = hasher.ComputeHash(bytes);
-#endif
-
-#if NETCOREAPP
-        return Convert.ToHexString(hash).ToLowerInvariant();
-#else
-        return BitConverter.ToString(hash).Replace("-", string.Empty).ToLowerInvariant();
-#endif
-    }
-
     public static string HashWithNormalizedCasing(string text)
-        => Hash(text.ToUpperInvariant());
+    {
+        byte[] bytes = Encoding.UTF8.GetBytes(text.ToUpperInvariant());
+        byte[] hash = SHA256.HashData(bytes);
+        return Convert.ToHexStringLower(hash);
+    }
 }

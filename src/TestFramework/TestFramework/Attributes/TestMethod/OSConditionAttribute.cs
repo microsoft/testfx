@@ -79,10 +79,8 @@ public sealed class OSConditionAttribute : ConditionBaseAttribute
     }
 #endif
 
-    /// <summary>
-    /// Gets the ignore message (in case <see cref="ShouldRun"/> returns <see langword="false"/>).
-    /// </summary>
-    public override string? IgnoreMessage { get; }
+    /// <inheritdoc />
+    public override string? IgnoreMessage { get; set; }
 
     /// <summary>
     /// Gets the group name for this attribute.

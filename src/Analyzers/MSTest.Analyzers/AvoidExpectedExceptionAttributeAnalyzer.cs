@@ -30,7 +30,7 @@ public sealed class AvoidExpectedExceptionAttributeAnalyzer : DiagnosticAnalyzer
         MessageFormat,
         Description,
         Category.Design,
-        DiagnosticSeverity.Info,
+        DiagnosticSeverity.Warning,
         isEnabledByDefault: true);
 
     /// <inheritdoc />

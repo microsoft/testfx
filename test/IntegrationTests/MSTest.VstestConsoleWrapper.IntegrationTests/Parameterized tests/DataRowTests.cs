@@ -5,10 +5,12 @@ using Microsoft.MSTestV2.CLIAutomation;
 
 namespace MSTest.VstestConsoleWrapper.IntegrationTests;
 
+[TestClass]
 public class DataRowTests : CLITestBase
 {
     private const string TestAssetName = "DataRowTestProject";
 
+    [TestMethod]
     public void ExecuteOnlyDerivedClassDataRowsWhenBothBaseAndDerivedClassHasDataRows_SimpleDataRows()
     {
         InvokeVsTestForExecution([TestAssetName], testCaseFilter: "TestCategory~DataRowSimple");
@@ -26,6 +28,7 @@ public class DataRowTests : CLITestBase
         ValidatePassedTestsCount(5);
     }
 
+    [TestMethod]
     public void GetDisplayName_AfterOverriding_GetsTheNewDisplayName()
     {
         InvokeVsTestForExecution([TestAssetName], testCaseFilter: "TestCategory~OverriddenGetDisplayName");
@@ -36,6 +39,7 @@ public class DataRowTests : CLITestBase
         ValidatePassedTestsCount(1);
     }
 
+    [TestMethod]
     public void ParameterizedTestsWithTestMethodSettingDisplayName_DataIsPrefixWithDisplayName()
     {
         InvokeVsTestForExecution([TestAssetName], testCaseFilter: "TestCategory~OverriddenTestMethodDisplayNameForParameterizedTest");
@@ -47,6 +51,7 @@ public class DataRowTests : CLITestBase
         ValidatePassedTestsCount(2);
     }
 
+    [TestMethod]
     public void ExecuteOnlyDerivedClassDataRowsWhenItOverridesBaseClassDataRows_SimpleDataRows()
     {
         InvokeVsTestForExecution([TestAssetName], testCaseFilter: "FullyQualifiedName~DerivedClass&TestCategory~DataRowSimple");
@@ -59,6 +64,7 @@ public class DataRowTests : CLITestBase
         ValidatePassedTestsCount(2);
     }
 
+    [TestMethod]
     public void DataRowsExecuteWithRequiredAndOptionalParameters()
     {
         InvokeVsTestForExecution([TestAssetName], testCaseFilter: "TestCategory~DataRowSomeOptional");
@@ -72,6 +78,7 @@ public class DataRowTests : CLITestBase
         ValidatePassedTestsCount(3);
     }
 
+    [TestMethod]
     public void DataRowsExecuteWithAllOptionalParameters()
     {
         InvokeVsTestForExecution([TestAssetName], testCaseFilter: "TestCategory~DataRowAllOptional");
@@ -86,6 +93,7 @@ public class DataRowTests : CLITestBase
         ValidatePassedTestsCount(4);
     }
 
+    [TestMethod]
     public void DataRowsExecuteWithParamsArrayParameter()
     {
         InvokeVsTestForExecution([TestAssetName], testCaseFilter: "TestCategory~DataRowParamsArgument");
@@ -100,6 +108,7 @@ public class DataRowTests : CLITestBase
         ValidatePassedTestsCount(4);
     }
 
+    [TestMethod]
     public void DataRowsFailWhenInvalidArgumentsProvided()
     {
         InvokeVsTestForExecution([TestAssetName], testCaseFilter: "FullyQualifiedName~DataRowTests_Regular&TestCategory~DataRowOptionalInvalidArguments");
@@ -114,6 +123,7 @@ public class DataRowTests : CLITestBase
         ValidateFailedTestsCount(3);
     }
 
+    [TestMethod]
     public void ExecuteDataRowTests_Enums()
     {
         // Arrange & Act
@@ -186,6 +196,7 @@ public class DataRowTests : CLITestBase
         ValidateFailedTestsCount(0);
     }
 
+    [TestMethod]
     public void ExecuteDataRowTests_NonSerializablePaths()
     {
         // Arrange & Act
@@ -202,6 +213,7 @@ public class DataRowTests : CLITestBase
         ValidateFailedTestsCount(0);
     }
 
+    [TestMethod]
     public void ExecuteRegular_DataRowTests()
     {
         // Arrange & Act

@@ -5,21 +5,17 @@ using System.Collections.Immutable;
 
 using DiscoveryAndExecutionTests.Utilities;
 
-using FluentAssertions;
-
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 
-using TestFramework.ForTestingMSTest;
-
 using TestResult = Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult;
 
 namespace Microsoft.MSTestV2.CLIAutomation;
 
-public partial class CLITestBase : TestContainer
+public abstract partial class CLITestBase
 {
     internal static ImmutableArray<TestCase> DiscoverTests(string assemblyPath, string? testCaseFilter = null)
     {
@@ -102,14 +98,14 @@ public partial class CLITestBase : TestContainer
 
         public void RecordResult(TestResult testResult)
         {
-            testResult.Should().NotBeNull();
+            Assert.IsNotNull(testResult, "Test result should not be null.");
             _activeResults.Add(testResult);
         }
 
         public ImmutableArray<TestResult> GetFlattenedTestResults()
         {
             var allTestResults = _testResults.SelectMany(i => i.Value).ToImmutableArray();
-            allTestResults.Should().NotContainNulls();
+            CollectionAssert.AllItemsAreNotNull(allTestResults, "All test results should be non-null.");
 
             return allTestResults;
         }

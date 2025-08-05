@@ -1,7 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using FluentAssertions;
+using AwesomeAssertions;
 
 using TestFramework.ForTestingMSTest;
 
@@ -591,6 +591,142 @@ public partial class AssertTests : TestContainer
         action.Should().Throw<AssertFailedException>().WithMessage("*brown*");
     }
 
+    /// <summary>
+    /// Tests the string DoesNotContain overload with message and parameters when substring is not present.
+    /// This test ensures the method overload works correctly and prevents regression of stackoverflow bug.
+    /// </summary>
+    public void DoesNotContain_StringWithMessageAndParameters_SubstringNotPresent_DoesNotThrow()
+    {
+        // Arrange
+        string value = "The quick brown fox";
+        string substring = "lazy";
+
+        // Act
+        Action action = () => Assert.DoesNotContain(substring, value, "Custom message: {0}", "test parameter");
+
+        // Assert
+        action.Should().NotThrow<AssertFailedException>();
+    }
+
+    /// <summary>
+    /// Tests the string DoesNotContain overload with message and parameters when substring is present.
+    /// This test ensures the method overload works correctly and prevents regression of stackoverflow bug.
+    /// Expects an exception.
+    /// </summary>
+    public void DoesNotContain_StringWithMessageAndParameters_SubstringPresent_ThrowsException()
+    {
+        // Arrange
+        string value = "The quick brown fox";
+        string substring = "brown";
+
+        // Act
+        Action action = () => Assert.DoesNotContain(substring, value, "Found unexpected substring: {0}", substring);
+
+        // Assert
+        action.Should().Throw<AssertFailedException>().WithMessage("*Found unexpected substring: brown*");
+    }
+
+    /// <summary>
+    /// Tests the string DoesNotContain overload with StringComparison and message when substring is not present.
+    /// This test ensures the method overload works correctly and prevents regression of stackoverflow bug.
+    /// </summary>
+    public void DoesNotContain_StringWithComparisonAndMessage_SubstringNotPresent_DoesNotThrow()
+    {
+        // Arrange
+        string value = "The quick brown fox";
+        string substring = "LAZY";
+
+        // Act
+        Action action = () => Assert.DoesNotContain(substring, value, StringComparison.OrdinalIgnoreCase, "Should not contain lazy");
+
+        // Assert
+        action.Should().NotThrow<AssertFailedException>();
+    }
+
+    /// <summary>
+    /// Tests the string DoesNotContain overload with StringComparison and message when substring is present.
+    /// This test ensures the method overload works correctly and prevents regression of stackoverflow bug.
+    /// Expects an exception.
+    /// </summary>
+    public void DoesNotContain_StringWithComparisonAndMessage_SubstringPresent_ThrowsException()
+    {
+        // Arrange
+        string value = "The quick brown fox";
+        string substring = "BROWN";
+
+        // Act
+        Action action = () => Assert.DoesNotContain(substring, value, StringComparison.OrdinalIgnoreCase, "Found unexpected substring");
+
+        // Assert
+        action.Should().Throw<AssertFailedException>().WithMessage("*Found unexpected substring*");
+    }
+
+    /// <summary>
+    /// Tests the simplest string DoesNotContain overload when substring is not present.
+    /// </summary>
+    public void DoesNotContain_StringSimpleOverload_SubstringNotPresent_DoesNotThrow()
+    {
+        // Arrange
+        string value = "The quick brown fox";
+        string substring = "lazy";
+
+        // Act
+        Action action = () => Assert.DoesNotContain(substring, value);
+
+        // Assert
+        action.Should().NotThrow<AssertFailedException>();
+    }
+
+    /// <summary>
+    /// Tests the simplest string DoesNotContain overload when substring is present.
+    /// Expects an exception.
+    /// </summary>
+    public void DoesNotContain_StringSimpleOverload_SubstringPresent_ThrowsException()
+    {
+        // Arrange
+        string value = "The quick brown fox";
+        string substring = "brown";
+
+        // Act
+        Action action = () => Assert.DoesNotContain(substring, value);
+
+        // Assert
+        action.Should().Throw<AssertFailedException>().WithMessage("*brown*");
+    }
+
+    /// <summary>
+    /// Tests the string DoesNotContain overload with message only when substring is not present.
+    /// </summary>
+    public void DoesNotContain_StringWithMessageOnly_SubstringNotPresent_DoesNotThrow()
+    {
+        // Arrange
+        string value = "The quick brown fox";
+        string substring = "lazy";
+
+        // Act
+        Action action = () => Assert.DoesNotContain(substring, value, "Should not contain lazy");
+
+        // Assert
+        action.Should().NotThrow<AssertFailedException>();
+    }
+
+    /// <summary>
+    /// Tests the string DoesNotContain overload with message only when substring is present.
+    /// Expects an exception.
+    /// </summary>
+    public void DoesNotContain_StringWithMessageOnly_SubstringPresent_ThrowsException()
+    {
+        // Arrange
+        string value = "The quick brown fox";
+        string substring = "brown";
+
+        // Act
+        Action action = () => Assert.DoesNotContain(substring, value, "Found unexpected substring");
+
+        // Assert
+        action.Should().Throw<AssertFailedException>().WithMessage("*Found unexpected substring*");
+    }
+
     private static bool IsEven(int x) => x % 2 == 0;
 
     #endregion
@@ -665,13 +801,13 @@ public partial class AssertTests : TestContainer
     /// Tests the ContainsSingle method with predicate and formatted message when no elements match.
     /// Expects an exception with the custom message.
     /// </summary>
-    public void ContainsSinglePredicate_WithMessageAndParams_NoItemMatches_ThrowsException()
+    public void ContainsSinglePredicate_WithMessage_NoItemMatches_ThrowsException()
     {
         // Arrange
         var collection = new List<int> { 1, 3, 5 };
 
         // Act
-        Action action = () => Assert.ContainsSingle(x => x % 2 == 0, collection, "No even numbers found in collection with {0} items", collection.Count);
+        Action action = () => Assert.ContainsSingle(x => x % 2 == 0, collection, $"No even numbers found in collection with {collection.Count} items");
 
         // Assert
         action.Should().Throw<AssertFailedException>().WithMessage("*No even numbers found in collection with 3 items*");
@@ -681,13 +817,13 @@ public partial class AssertTests : TestContainer
     /// Tests the ContainsSingle method with predicate and formatted message when multiple elements match.
     /// Expects an exception with the custom message.
     /// </summary>
-    public void ContainsSinglePredicate_WithMessageAndParams_MultipleItemsMatch_ThrowsException()
+    public void ContainsSinglePredicate_WithMessage_MultipleItemsMatch_ThrowsException()
     {
         // Arrange
         var collection = new List<int> { 2, 4, 6 };
 
         // Act
-        Action action = () => Assert.ContainsSingle(x => x % 2 == 0, collection, "Too many even numbers found: {0}", collection.Count);
+        Action action = () => Assert.ContainsSingle(x => x % 2 == 0, collection, $"Too many even numbers found: {collection.Count}");
 
         // Assert
         action.Should().Throw<AssertFailedException>().WithMessage("*Too many even numbers found: 3*");

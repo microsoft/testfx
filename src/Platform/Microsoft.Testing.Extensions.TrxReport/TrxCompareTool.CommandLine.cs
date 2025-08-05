@@ -31,7 +31,7 @@ internal sealed class TrxCompareToolCommandLine : IToolCommandLineOptionsProvide
     public string Description => _extension.Description;
 
     /// <inheritdoc />
-    public string ToolName { get; } = TrxCompareTool.ToolName;
+    public string ToolName => TrxCompareTool.ToolName;
 
     /// <inheritdoc />
     public Task<bool> IsEnabledAsync() => Task.FromResult(true);

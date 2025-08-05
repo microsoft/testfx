@@ -51,9 +51,7 @@ internal sealed class HotReloadTestHostTestFrameworkInvoker : TestHostTestFramew
                 await hotReloadOutputDevice.DisplayBeforeHotReloadSessionStartAsync().ConfigureAwait(false);
             }
 
-#pragma warning disable TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
             await testFrameworkAdapter.ExecuteRequestAsync(new(request, messageBus, new SemaphoreSlimRequestCompleteNotifier(requestSemaphore), cancellationToken)).ConfigureAwait(false);
-#pragma warning restore TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
 
             await requestSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
             await ServiceProvider.GetBaseMessageBus().DrainDataAsync().ConfigureAwait(false);

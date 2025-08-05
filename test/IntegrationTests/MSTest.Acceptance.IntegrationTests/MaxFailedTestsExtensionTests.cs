@@ -26,8 +26,8 @@ public sealed class MaxFailedTestsExtensionTests : AcceptanceTestBase<MaxFailedT
         // We can't know the number of tests that will be executed exactly due to the async
         // nature of publish/consume on the platform side. But we expect the cancellation to
         // happen "fast" enough that we don't execute all tests.
-        Assert.IsTrue(total < 12);
-        Assert.IsTrue(total >= 5);
+        Assert.IsLessThan(12, total);
+        Assert.IsGreaterThanOrEqualTo(5, total);
 
         testHostResult = await testHost.ExecuteAsync();
         testHostResult.AssertExitCodeIs(ExitCodes.AtLeastOneTestFailed);

@@ -9,7 +9,6 @@ using Microsoft.Testing.Platform.Requests;
 
 namespace Microsoft.Testing.Framework;
 
-#pragma warning disable TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
 internal sealed class BFSTestNodeVisitor
 {
     private readonly IEnumerable<TestNode> _rootTestNodes;

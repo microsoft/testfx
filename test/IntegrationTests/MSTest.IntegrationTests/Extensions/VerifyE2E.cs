@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using FluentAssertions;
-
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
@@ -58,16 +56,17 @@ public static class VerifyE2E
     {
         if (matchCount)
         {
-            discoveredTests.Should().HaveSameCount(expectedTests);
+            Assert.AreEqual(expectedTests.Count(), discoveredTests.Count());
         }
 
         foreach (string test in expectedTests)
         {
             // Test Discovery run was expecting to discover \"{test}\", but it has not discovered.
-            discoveredTests.Should().Contain(
+            Assert.Contains(
                 p => test.Equals(p.FullyQualifiedName, StringComparison.Ordinal)
                      || test.Equals(p.DisplayName, StringComparison.Ordinal)
-                     || test.Equals(p.DisplayName, StringComparison.Ordinal));
+                     || test.Equals(p.DisplayName, StringComparison.Ordinal),
+                discoveredTests);
         }
     }
 
@@ -82,10 +81,11 @@ public static class VerifyE2E
 
         foreach (string test in expectedTests)
         {
-            tests.Should().Contain(
+            Assert.Contains(
                 p => test.Equals(p.TestCase.FullyQualifiedName, StringComparison.Ordinal)
                      || test.Equals(p.DisplayName, StringComparison.Ordinal)
-                     || test.Equals(p.TestCase.DisplayName, StringComparison.Ordinal));
+                     || test.Equals(p.TestCase.DisplayName, StringComparison.Ordinal),
+                tests);
         }
     }
 
@@ -100,9 +100,10 @@ public static class VerifyE2E
 
         foreach (string test in expectedTests)
         {
-            tests.Should().Contain(p => p.DisplayName == test);
+            Assert.Contains(p => p.DisplayName == test, tests);
         }
     }
 
-    private static void AssertOutcomeCount(IEnumerable<TestResult> actual, TestOutcome expectedOutcome, int expectedCount) => actual.Where(i => i.Outcome == expectedOutcome).Should().HaveCount(expectedCount);
+    private static void AssertOutcomeCount(IEnumerable<TestResult> actual, TestOutcome expectedOutcome, int expectedCount)
+        => Assert.HasCount(expectedCount, actual.Where(i => i.Outcome == expectedOutcome));
 }

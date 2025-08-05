@@ -5,6 +5,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace TimeoutTestProject;
 
+#pragma warning disable CS0618 // Type or member is obsolete
 [TestClass]
 public class TimeoutTestClass
 {

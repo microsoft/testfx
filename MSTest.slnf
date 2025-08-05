@@ -40,6 +40,7 @@
       "test\\IntegrationTests\\TestAssets\\SampleFrameworkExtensions\\SampleFrameworkExtensions.csproj",
       "test\\IntegrationTests\\TestAssets\\SampleProjectForAssemblyResolution\\SampleProjectForAssemblyResolution.csproj",
       "test\\IntegrationTests\\TestAssets\\SuiteLifeCycleTestProject\\SuiteLifeCycleTestProject.csproj",
+      "test\\IntegrationTests\\TestAssets\\TestCategoriesFromTestDataRowProject\\TestCategoriesFromTestDataRowProject.csproj",
       "test\\IntegrationTests\\TestAssets\\TestIdProject.DefaultStrategy\\TestIdProject.DefaultStrategy.csproj",
       "test\\IntegrationTests\\TestAssets\\TestIdProject.DisplayNameStrategy\\TestIdProject.DisplayNameStrategy.csproj",
       "test\\IntegrationTests\\TestAssets\\TestIdProject.FullyQualifiedTestStrategy\\TestIdProject.FullyQualifiedStrategy.csproj",

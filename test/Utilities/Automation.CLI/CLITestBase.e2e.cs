@@ -1,21 +1,18 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using FluentAssertions;
-
 using Microsoft.TestPlatform.VsTestConsole.TranslationLayer;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Client;
-
-using TestFramework.ForTestingMSTest;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.MSTestV2.CLIAutomation;
 
-public partial class CLITestBase : TestContainer
+public abstract partial class CLITestBase
 {
     private static VsTestConsoleWrapper? s_vsTestConsoleWrapper;
     private DiscoveryEventsHandler? _discoveryEventsHandler;
 
-    public CLITestBase()
+    protected CLITestBase()
     {
         s_vsTestConsoleWrapper = new(
             GetConsoleRunnerPath(),
@@ -73,14 +70,14 @@ public partial class CLITestBase : TestContainer
         string nugetPackagesFolderPath = Environment.GetEnvironmentVariable("NUGET_PACKAGES");
         if (!string.IsNullOrEmpty(nugetPackagesFolderPath))
         {
-            Directory.Exists(nugetPackagesFolderPath).Should().BeTrue($"Found environment variable 'NUGET_PACKAGES' and NuGet package folder '{nugetPackagesFolderPath}' should exist");
+            Assert.IsTrue(Directory.Exists(nugetPackagesFolderPath), $"Found environment variable 'NUGET_PACKAGES' and NuGet package folder '{nugetPackagesFolderPath}' should exist");
 
             return nugetPackagesFolderPath;
         }
 
         string userProfile = Environment.GetEnvironmentVariable("USERPROFILE");
         nugetPackagesFolderPath = Path.Combine(userProfile, ".nuget", "packages");
-        Directory.Exists(nugetPackagesFolderPath).Should().BeTrue($"NuGet package folder '{nugetPackagesFolderPath}' should exist");
+        Assert.IsTrue(Directory.Exists(nugetPackagesFolderPath), $"NuGet package folder '{nugetPackagesFolderPath}' should exist");
 
         return nugetPackagesFolderPath;
     }
@@ -122,13 +119,11 @@ public partial class CLITestBase : TestContainer
     {
         foreach (string test in discoveredTestsList)
         {
-            bool flag = _discoveryEventsHandler!.Tests.Contains(test)
-                       || _discoveryEventsHandler.Tests.Contains(GetTestMethodName(test));
-            flag.Should().BeTrue("Test '{0}' does not appear in discovered tests list.", test);
+            Assert.IsTrue(_discoveryEventsHandler!.Tests.Contains(test) || _discoveryEventsHandler.Tests.Contains(GetTestMethodName(test)), $"Test '{test}' does not appear in discovered tests list.");
         }
 
         // Make sure only expected number of tests are discovered and not more.
-        discoveredTestsList.Should().HaveSameCount(_discoveryEventsHandler!.Tests);
+        Assert.AreEqual(_discoveryEventsHandler!.Tests.Length, discoveredTestsList.Length);
     }
 
     /// <summary>
@@ -144,7 +139,7 @@ public partial class CLITestBase : TestContainer
 
     public void ValidatePassedTestsCount(int expectedPassedTestsCount) =>
         // Make sure only expected number of tests passed and not more.
-        RunEventsHandler.PassedTests.Should().HaveCount(expectedPassedTestsCount);
+        Assert.HasCount(expectedPassedTestsCount, RunEventsHandler.PassedTests);
 
     /// <summary>
     /// Validates if the test results have the specified set of failed tests.
@@ -181,7 +176,7 @@ public partial class CLITestBase : TestContainer
     /// <param name="expectedFailedTestsCount">Expected failed tests count.</param>
     public void ValidateFailedTestsCount(int expectedFailedTestsCount) =>
         // Make sure only expected number of tests failed and not more.
-        RunEventsHandler.FailedTests.Should().HaveCount(expectedFailedTestsCount);
+        Assert.HasCount(expectedFailedTestsCount, RunEventsHandler.FailedTests);
 
     /// <summary>
     /// Validates if the test results have the specified set of skipped tests.
@@ -191,8 +186,7 @@ public partial class CLITestBase : TestContainer
     public void ValidateSkippedTests(params string[] skippedTests)
     {
         // Make sure only expected number of tests skipped and not more.
-        RunEventsHandler.SkippedTests.Should().HaveSameCount(skippedTests);
-
+        Assert.AreEqual(skippedTests.Length, RunEventsHandler.SkippedTests.Count);
         ValidateSkippedTestsContain(skippedTests);
     }
 
@@ -222,10 +216,11 @@ public partial class CLITestBase : TestContainer
 
             string failedOrSkippedMessage = isFailed ? " (Test failed)" : isSkipped ? " (Test skipped)" : string.Empty;
 
-            passedTestResults.Should().Contain(
+            Assert.Contains(
                 p => test.Equals(p.TestCase.FullyQualifiedName, StringComparison.Ordinal)
                      || test.Equals(p.DisplayName, StringComparison.Ordinal)
                      || test.Equals(p.TestCase.DisplayName, StringComparison.Ordinal),
+                passedTestResults,
                 $"Test '{test}' does not appear in passed tests list." + failedOrSkippedMessage);
         }
     }
@@ -246,7 +241,7 @@ public partial class CLITestBase : TestContainer
         {
             VisualStudio.TestPlatform.ObjectModel.TestResult testFound = RunEventsHandler.FailedTests.FirstOrDefault(f => test.Equals(f.TestCase?.FullyQualifiedName, StringComparison.Ordinal) ||
                        test.Equals(f.DisplayName, StringComparison.Ordinal));
-            testFound.Should().NotBeNull("Test '{0}' does not appear in failed tests list.", test);
+            Assert.IsNotNull(testFound, "Test '{0}' does not appear in failed tests list.", test);
 
 #if DEBUG
             if (!validateStackTraceInfo)
@@ -254,12 +249,15 @@ public partial class CLITestBase : TestContainer
                 continue;
             }
 
-            testFound.ErrorStackTrace.Should().NotBeNullOrWhiteSpace($"The test failure {testFound.DisplayName ?? testFound.TestCase.FullyQualifiedName} with message {testFound.ErrorMessage} lacks stack trace.");
+            Assert.IsFalse(
+                string.IsNullOrWhiteSpace(testFound.ErrorStackTrace),
+                $"The test failure {testFound.DisplayName ?? testFound.TestCase.FullyQualifiedName} with message {testFound.ErrorMessage} lacks stack trace.");
 
             // If test name is not empty, verify stack information as well.
             if (GetTestMethodName(test) is { Length: > 0 } testMethodName)
             {
-                testFound.ErrorStackTrace.Should().Contain(testMethodName, "No stack trace for failed test: {0}", test);
+                Assert.IsNotNull(testFound.ErrorStackTrace);
+                Assert.Contains(testMethodName, testFound.ErrorStackTrace, $"No stack trace for failed test: {test}");
             }
 #endif
         }
@@ -275,17 +273,17 @@ public partial class CLITestBase : TestContainer
     {
         foreach (string test in skippedTests)
         {
-            RunEventsHandler.SkippedTests.Should().Contain(
+            Assert.Contains(
                 s => test.Equals(s.TestCase.FullyQualifiedName, StringComparison.Ordinal) || test.Equals(s.DisplayName, StringComparison.Ordinal),
-                "Test '{0}' does not appear in skipped tests list.", test);
+                RunEventsHandler.SkippedTests,
+                $"Test '{test}' does not appear in skipped tests list.");
         }
     }
 
     public void ValidateTestRunTime(int thresholdTime)
-    {
-        bool time = RunEventsHandler.ElapsedTimeInRunningTests >= 0 && RunEventsHandler.ElapsedTimeInRunningTests < thresholdTime;
-        time.Should().BeTrue($"Test Run was expected to not exceed {thresholdTime} but it took {RunEventsHandler.ElapsedTimeInRunningTests}");
-    }
+        => Assert.IsTrue(
+            RunEventsHandler.ElapsedTimeInRunningTests >= 0 && RunEventsHandler.ElapsedTimeInRunningTests < thresholdTime,
+            $"Test Run was expected to not exceed {thresholdTime} but it took {RunEventsHandler.ElapsedTimeInRunningTests}");
 
     /// <summary>
     /// Gets the test method name from full name.

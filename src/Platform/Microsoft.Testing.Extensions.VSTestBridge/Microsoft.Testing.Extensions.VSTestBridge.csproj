@@ -37,10 +37,6 @@ This package provides a bridge integration for test adapters wanting to target b
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Update="Resources\ExtensionResources.resx" GenerateSource="true" />
-  </ItemGroup>
-
-  <ItemGroup>
     <Using Include="Polyfills" />
   </ItemGroup>
 

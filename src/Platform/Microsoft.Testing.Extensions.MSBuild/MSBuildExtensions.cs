@@ -20,7 +20,7 @@ public static class MSBuildExtensions
     public static void AddMSBuild(this ITestApplicationBuilder builder)
     {
         builder.CommandLine.AddProvider(() => new MSBuildCommandLineProvider());
-        builder.TestHost.AddTestApplicationLifecycleCallbacks(
+        builder.TestHost.AddTestHostApplicationLifetime(
             serviceProvider => new MSBuildTestApplicationLifecycleCallbacks(
                 serviceProvider.GetConfiguration(),
                 serviceProvider.GetCommandLineOptions(),

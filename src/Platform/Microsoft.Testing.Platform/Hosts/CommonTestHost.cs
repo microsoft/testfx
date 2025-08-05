@@ -14,7 +14,11 @@ using Microsoft.Testing.Platform.TestHost;
 
 namespace Microsoft.Testing.Platform.Hosts;
 
-internal abstract class CommonTestHost(ServiceProvider serviceProvider) : ITestHost
+/// <summary>
+/// This represents either a test host (console or server), or a test host controller.
+/// This doesn't represent an orchestrator host.
+/// </summary>
+internal abstract class CommonHost(ServiceProvider serviceProvider) : IHost
 {
     public ServiceProvider ServiceProvider => serviceProvider;
 
@@ -45,7 +49,6 @@ internal abstract class CommonTestHost(ServiceProvider serviceProvider) : ITestH
             {
                 RoslynDebug.Assert(PushOnlyProtocol is not null);
 
-                ITestApplicationModuleInfo testApplicationModuleInfo = serviceProvider.GetTestApplicationModuleInfo();
                 bool isValidProtocol = await PushOnlyProtocol.IsCompatibleProtocolAsync(GetHostType()).ConfigureAwait(false);
 
                 exitCode = isValidProtocol
@@ -86,7 +89,7 @@ internal abstract class CommonTestHost(ServiceProvider serviceProvider) : ITestH
 
     private string GetHostType()
     {
-        // For now, we don't  inherit TestHostOrchestratorHost from CommonTestHost one so we don't connect when we orchestrate
+        // For now, we don't  inherit TestHostOrchestratorHost from CommonHost one so we don't connect when we orchestrate
         string hostType = this switch
         {
             ConsoleTestHost => "TestHost",
@@ -101,21 +104,25 @@ internal abstract class CommonTestHost(ServiceProvider serviceProvider) : ITestH
         if (RunTestApplicationLifeCycleCallbacks)
         {
             // Get the test application lifecycle callbacks to be able to call the before run
+#pragma warning disable CS0618 // Type or member is obsolete
             foreach (ITestApplicationLifecycleCallbacks testApplicationLifecycleCallbacks in ServiceProvider.GetServicesInternal<ITestApplicationLifecycleCallbacks>())
             {
                 await testApplicationLifecycleCallbacks.BeforeRunAsync(testApplicationCancellationToken).ConfigureAwait(false);
             }
+#pragma warning restore CS0618 // Type or member is obsolete
         }
 
         int exitCode = await InternalRunAsync().ConfigureAwait(false);
 
         if (RunTestApplicationLifeCycleCallbacks)
         {
+#pragma warning disable CS0618 // Type or member is obsolete
             foreach (ITestApplicationLifecycleCallbacks testApplicationLifecycleCallbacks in ServiceProvider.GetServicesInternal<ITestApplicationLifecycleCallbacks>())
             {
                 await testApplicationLifecycleCallbacks.AfterRunAsync(exitCode, testApplicationCancellationToken).ConfigureAwait(false);
                 await DisposeHelper.DisposeAsync(testApplicationLifecycleCallbacks).ConfigureAwait(false);
             }
+#pragma warning restore CS0618 // Type or member is obsolete
         }
 
         return exitCode;
@@ -239,13 +246,16 @@ internal abstract class CommonTestHost(ServiceProvider serviceProvider) : ITestH
             }
 
             // We need to ensure that we won't dispose special services till the shutdown
+#pragma warning disable CS0618 // Type or member is obsolete
             if (!isProcessShutdown &&
                 service is ITelemetryCollector or
                  ITestApplicationLifecycleCallbacks or
+                 ITestHostApplicationLifetime or
                  IPushOnlyProtocol)
             {
                 continue;
             }
+#pragma warning restore CS0618 // Type or member is obsolete
 
             if (!alreadyDisposed.Contains(service))
             {

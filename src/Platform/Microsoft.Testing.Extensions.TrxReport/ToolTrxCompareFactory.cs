@@ -12,10 +12,10 @@ namespace Microsoft.Testing.Extensions.TrxReport.Abstractions;
 internal sealed class ToolTrxCompareFactory : IExtension
 {
     /// <inheritdoc />
-    public string Uid { get; } = nameof(TrxCompareTool);
+    public string Uid => nameof(TrxCompareTool);
 
     /// <inheritdoc />
-    public string Version { get; } = AppVersion.DefaultSemVer;
+    public string Version => AppVersion.DefaultSemVer;
 
     /// <inheritdoc />
     public string DisplayName { get; } = ExtensionResources.TrxComparerToolDisplayName;

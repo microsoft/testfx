@@ -7,21 +7,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <AdditionalFiles Include="PublicAPI.Shipped.txt" />
-    <AdditionalFiles Include="PublicAPI.Unshipped.txt" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="$(RepoRoot)src\Analyzers\MSTest.Analyzers\MSTest.Analyzers.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Update="CodeFixResources.Designer.cs" DesignTime="True" AutoGen="True" DependentUpon="CodeFixResources.resx" />
-    <EmbeddedResource Update="CodeFixResources.resx" Generator="ResXFileCodeGenerator" LastGenOutput="CodeFixResources.Designer.cs" />
   </ItemGroup>
 
 </Project>

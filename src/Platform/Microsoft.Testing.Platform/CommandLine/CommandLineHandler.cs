@@ -212,11 +212,8 @@ internal sealed class CommandLineHandler : ICommandLineHandler, ICommandLineOpti
     public bool IsOptionSet(string optionName)
         => ParseResult.IsOptionSet(optionName);
 
-    public bool TryGetOptionArgumentList(string optionName, [NotNullWhen(true)] out string[]? arguments)
-    {
-        arguments = null;
-        return ParseResult is not null && ParseResult.TryGetOptionArgumentList(optionName, out arguments);
-    }
+    public bool TryGetOptionArgumentList(string optionName, [NotNullWhen(true)] out string[]? arguments) =>
+        ParseResult.TryGetOptionArgumentList(optionName, out arguments);
 
     public Task<bool> IsEnabledAsync() => Task.FromResult(false);
 

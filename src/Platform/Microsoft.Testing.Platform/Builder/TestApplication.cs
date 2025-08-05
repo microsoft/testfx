@@ -21,8 +21,7 @@ public sealed class TestApplication : ITestApplication
 #pragma warning restore SA1001 // Commas should be spaced correctly
 #endif
 {
-    private readonly ITestHost _testHost;
-    private static int s_numberOfBuilders;
+    private readonly IHost _host;
     private static UnhandledExceptionHandler? s_unhandledExceptionHandler;
 
     static TestApplication() =>
@@ -30,11 +29,11 @@ public sealed class TestApplication : ITestApplication
         // This is important for the console display system to work properly.
         _ = new SystemConsole();
 
-    internal TestApplication(ITestHost testHost) => _testHost = testHost;
+    internal TestApplication(IHost host) => _host = host;
 
-    internal IServiceProvider ServiceProvider => ((CommonTestHost)_testHost).ServiceProvider;
-
-    internal static int MaxNumberOfBuilders { get; set; } = int.MaxValue;
+    // This cast looks like incorrect assumption.
+    // This property is currently accessed in unit tests only.
+    internal IServiceProvider ServiceProvider => ((CommonHost)_host).ServiceProvider;
 
     /// <summary>
     /// Creates a server mode builder asynchronously.
@@ -93,7 +92,7 @@ public sealed class TestApplication : ITestApplication
         {
             ILogger logger = loggingState.FileLoggerProvider.CreateLogger(typeof(TestApplication).ToString());
             s_unhandledExceptionHandler.SetLogger(logger);
-            await LogInformationAsync(logger, testApplicationModuleInfo, testHostControllerInfo, systemProcess, systemEnvironment, createBuilderEntryTime, loggingState.IsSynchronousWrite, loggingState.LogLevel, args).ConfigureAwait(false);
+            await LogInformationAsync(logger, testApplicationModuleInfo, testHostControllerInfo, systemEnvironment, createBuilderEntryTime, loggingState.IsSynchronousWrite, loggingState.LogLevel, args).ConfigureAwait(false);
         }
 
         // All checks are fine, create the TestApplication.
@@ -104,7 +103,6 @@ public sealed class TestApplication : ITestApplication
         ILogger logger,
         CurrentTestApplicationModuleInfo testApplicationModuleInfo,
         TestHostControllerInfo testHostControllerInfo,
-        SystemProcessHandler processHandler,
         SystemEnvironment environment,
         string createBuilderEntryTime,
         bool syncWrite,
@@ -125,8 +123,7 @@ public sealed class TestApplication : ITestApplication
         await logger.LogInformationAsync("Logging mode: " + (syncWrite ? "synchronous" : "asynchronous")).ConfigureAwait(false);
         await logger.LogInformationAsync($"Logging level: {loggerLevel}").ConfigureAwait(false);
         await logger.LogInformationAsync($"CreateBuilderAsync entry time: {createBuilderEntryTime}").ConfigureAwait(false);
-        using IProcess currentProcess = processHandler.GetCurrentProcess();
-        await logger.LogInformationAsync($"PID: {currentProcess.Id}").ConfigureAwait(false);
+        await logger.LogInformationAsync($"PID: {environment.ProcessId}").ConfigureAwait(false);
 
 #if NETCOREAPP
         string runtimeInformation = $"{RuntimeInformation.RuntimeIdentifier} - {RuntimeInformation.FrameworkDescription}";
@@ -208,24 +205,21 @@ public sealed class TestApplication : ITestApplication
         await logger.LogInformationAsync($"{EnvironmentVariableConstants.TESTINGPLATFORM_DEFAULT_HANG_TIMEOUT}: '{environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DEFAULT_HANG_TIMEOUT)}'").ConfigureAwait(false);
     }
 
-    internal static void ReleaseBuilder()
-        => Interlocked.Decrement(ref s_numberOfBuilders);
-
     /// <inheritdoc />
     public void Dispose()
-        => (_testHost as IDisposable)?.Dispose();
+        => (_host as IDisposable)?.Dispose();
 
 #if NETCOREAPP
     /// <inheritdoc />
     public ValueTask DisposeAsync()
-        => _testHost is IAsyncDisposable asyncDisposable
+        => _host is IAsyncDisposable asyncDisposable
             ? asyncDisposable.DisposeAsync()
             : ValueTask.CompletedTask;
 #endif
 
     /// <inheritdoc />
     public async Task<int> RunAsync()
-        => await _testHost.RunAsync().ConfigureAwait(false);
+        => await _host.RunAsync().ConfigureAwait(false);
 
     private static void AttachDebuggerIfNeeded(SystemEnvironment environment, SystemConsole console, SystemProcessHandler systemProcess)
     {
@@ -236,8 +230,8 @@ public sealed class TestApplication : ITestApplication
 
         if (environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER) == "1")
         {
-            IProcess currentProcess = systemProcess.GetCurrentProcess();
-            console.WriteLine($"Waiting for debugger to attach... Process Id: {currentProcess.Id}, Name: {currentProcess.Name}");
+            using IProcess currentProcess = systemProcess.GetCurrentProcess();
+            console.WriteLine($"Waiting for debugger to attach... Process Id: {environment.ProcessId}, Name: {currentProcess.Name}");
 
             while (!Debugger.IsAttached)
             {
@@ -286,7 +280,7 @@ public sealed class TestApplication : ITestApplication
 
         if (result.TryGetOptionArgumentList(PlatformCommandLineProvider.DiagnosticVerbosityOptionKey, out string[]? verbosity))
         {
-            logLevel = EnumPolyfill.Parse<LogLevel>(verbosity[0], true);
+            logLevel = Enum.Parse<LogLevel>(verbosity[0], true);
         }
 
         // Override the log level if the environment variable is set

@@ -23,7 +23,7 @@ public sealed class ConfigurationManagerTests
     public async ValueTask GetConfigurationValueFromJson(string jsonFileConfig, string key, string? result)
     {
         Mock<IFileSystem> fileSystem = new();
-        fileSystem.Setup(x => x.Exists(It.IsAny<string>())).Returns(true);
+        fileSystem.Setup(x => x.ExistFile(It.IsAny<string>())).Returns(true);
         fileSystem.Setup(x => x.NewFileStream(It.IsAny<string>(), FileMode.Open, FileAccess.Read))
             .Returns(new MemoryFileStream(Encoding.UTF8.GetBytes(jsonFileConfig)));
         CurrentTestApplicationModuleInfo testApplicationModuleInfo = new(new SystemEnvironment(), new SystemProcessHandler());
@@ -54,7 +54,7 @@ public sealed class ConfigurationManagerTests
     public async ValueTask InvalidJson_Fail()
     {
         Mock<IFileSystem> fileSystem = new();
-        fileSystem.Setup(x => x.Exists(It.IsAny<string>())).Returns(true);
+        fileSystem.Setup(x => x.ExistFile(It.IsAny<string>())).Returns(true);
         fileSystem.Setup(x => x.NewFileStream(It.IsAny<string>(), FileMode.Open, FileAccess.Read)).Returns(() => new MemoryFileStream(Encoding.UTF8.GetBytes(string.Empty)));
         CurrentTestApplicationModuleInfo testApplicationModuleInfo = new(new SystemEnvironment(), new SystemProcessHandler());
         ConfigurationManager configurationManager = new(fileSystem.Object, testApplicationModuleInfo);
@@ -76,7 +76,7 @@ public sealed class ConfigurationManagerTests
         byte[] bytes = Encoding.UTF8.GetBytes(jsonFileConfig);
 
         Mock<IFileSystem> fileSystem = new();
-        fileSystem.Setup(x => x.Exists(It.IsAny<string>())).Returns(true);
+        fileSystem.Setup(x => x.ExistFile(It.IsAny<string>())).Returns(true);
         fileSystem.Setup(x => x.NewFileStream(It.IsAny<string>(), FileMode.Open, FileAccess.Read))
             .Returns(() => new MemoryFileStream(bytes));
 

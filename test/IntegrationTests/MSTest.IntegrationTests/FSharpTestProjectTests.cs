@@ -5,10 +5,12 @@ using Microsoft.MSTestV2.CLIAutomation;
 
 namespace MSTest.IntegrationTests;
 
+[TestClass]
 public class FSharpTestProjectTests : CLITestBase
 {
     private const string TestAssetName = "FSharpTestProject";
 
+    [TestMethod]
     public async Task TestFSharpTestsWithSpaceAndDotInName()
     {
         // Arrange

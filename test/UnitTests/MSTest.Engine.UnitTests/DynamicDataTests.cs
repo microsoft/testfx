@@ -21,7 +21,7 @@ public class DynamicDataTests
     public void DynamicDataWithIntProperty(int expected, int actualPlus1)
         => Assert.AreEqual(expected, actualPlus1 - 1);
 
-    [DynamicData(nameof(IntDataProperty), DynamicDataSourceType.Property)]
+    [DynamicData(nameof(IntDataProperty))]
     [TestMethod]
     public void DynamicDataWithIntPropertyAndExplicitSourceType(int expected, int actualPlus1)
         => Assert.AreEqual(expected, actualPlus1 - 1);
@@ -31,7 +31,7 @@ public class DynamicDataTests
     public void DynamicDataWithIntMethod(int expected, int actualPlus1)
         => Assert.AreEqual(expected, actualPlus1 - 1);
 
-    [DynamicData(nameof(IntDataMethod), DynamicDataSourceType.Method)]
+    [DynamicData(nameof(IntDataMethod))]
     [TestMethod]
     public void DynamicDataWithIntMethodAndExplicitSourceType(int expected, int actualPlus1)
         => Assert.AreEqual(expected, actualPlus1 - 1);
@@ -48,7 +48,7 @@ public class DynamicDataTests
     public void DynamicDataWithIntPropertyOnSeparateClass(int expected, int actualPlus2)
         => Assert.AreEqual(expected, actualPlus2 - 2);
 
-    [DynamicData(nameof(IntDataMethod), typeof(DataClass), DynamicDataSourceType.Method)]
+    [DynamicData(nameof(IntDataMethod), typeof(DataClass))]
     [TestMethod]
     public void DynamicDataWithIntMethodOnSeparateClass(int expected, int actualPlus2)
         => Assert.AreEqual(expected, actualPlus2 - 2);
@@ -66,7 +66,7 @@ public class DynamicDataTests
             [new User("Marco"), new User("Pavel")]
         ];
 
-    [DynamicData(nameof(UserDataMethod), DynamicDataSourceType.Method)]
+    [DynamicData(nameof(UserDataMethod))]
     [TestMethod]
     public void DynamicDataWithUserMethod(User _, User _2)
     {

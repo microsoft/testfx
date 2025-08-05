@@ -154,7 +154,10 @@ internal static class ObjectModelConverters
 
         if (isTrxEnabled)
         {
-            testNode.Properties.Add(new TrxExceptionProperty(testResult.ErrorMessage, testResult.ErrorStackTrace));
+            if (!RoslynString.IsNullOrEmpty(testResult.ErrorMessage) || !RoslynString.IsNullOrEmpty(testResult.ErrorStackTrace))
+            {
+                testNode.Properties.Add(new TrxExceptionProperty(testResult.ErrorMessage, testResult.ErrorStackTrace));
+            }
 
             if (TryParseFullyQualifiedType(testResult.TestCase.FullyQualifiedName, out string? fullyQualifiedType))
             {

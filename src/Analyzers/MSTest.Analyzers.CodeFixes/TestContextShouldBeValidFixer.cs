@@ -62,9 +62,6 @@ public sealed class TestContextShouldBeValidFixer : CodeFixProvider
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        // Get the SemanticModel and Compilation
-        SemanticModel semanticModel = await document.GetRequiredSemanticModelAsync(cancellationToken).ConfigureAwait(false);
-
         DocumentEditor editor = await DocumentEditor.CreateAsync(document, cancellationToken).ConfigureAwait(false);
 
         // Remove the static and readonly modifiers if it exists

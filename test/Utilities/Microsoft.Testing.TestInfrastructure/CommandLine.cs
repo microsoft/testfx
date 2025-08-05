@@ -60,7 +60,7 @@ public sealed class CommandLine : IDisposable
         if (!commandLine.StartsWith('"'))
         {
             string[] tokens = commandLine.Split(' ');
-            return (tokens[0], string.Join(" ", tokens.Skip(1)));
+            return (tokens[0], string.Join(' ', tokens.Skip(1)));
         }
 
         int endQuote = commandLine.IndexOf('"', 1);
@@ -71,8 +71,7 @@ public sealed class CommandLine : IDisposable
         string commandLine,
         IDictionary<string, string?>? environmentVariables = null,
         string? workingDirectory = null,
-        bool cleanDefaultEnvironmentVariableIfCustomAreProvided = false,
-        int timeoutInSeconds = 60)
+        bool cleanDefaultEnvironmentVariableIfCustomAreProvided = false)
     {
         await s_maxOutstandingCommands_semaphore.WaitAsync();
         try
@@ -91,25 +90,7 @@ public sealed class CommandLine : IDisposable
             };
             _process = ProcessFactory.Start(startInfo, cleanDefaultEnvironmentVariableIfCustomAreProvided);
 
-            Task<int> exited = _process.WaitForExitAsync();
-            int seconds = timeoutInSeconds;
-            CancellationTokenSource stopTheTimer = new();
-            var timedOut = Task.Delay(TimeSpan.FromSeconds(seconds), stopTheTimer.Token);
-            if (await Task.WhenAny(exited, timedOut) == exited)
-            {
-                await stopTheTimer.CancelAsync();
-                return await exited;
-            }
-            else
-            {
-                _process.Kill();
-                throw new TimeoutException(
-                    $"""
-                Timeout after {seconds}s on command line: '{commandLine}'
-                STD: {StandardOutput}
-                ERR: {ErrorOutput}
-                """);
-            }
+            return await _process.WaitForExitAsync();
         }
         finally
         {

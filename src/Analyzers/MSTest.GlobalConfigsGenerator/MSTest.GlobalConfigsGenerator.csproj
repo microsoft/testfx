@@ -8,11 +8,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <AdditionalFiles Include="PublicAPI.Shipped.txt" />
-    <AdditionalFiles Include="PublicAPI.Unshipped.txt" />
-  </ItemGroup>
-
-  <ItemGroup>
     <Compile Include="$(RepoRoot)/src/Analyzers/MSTest.Analyzers/Helpers/WellKnownCustomTags.cs" />
   </ItemGroup>
 

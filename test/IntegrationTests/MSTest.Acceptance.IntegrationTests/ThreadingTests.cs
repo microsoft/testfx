@@ -342,12 +342,21 @@ public class UnitTest1
     public async Task TestMethod2()
     {
         AssertCorrectThreadApartmentState();
-        await Task.CompletedTask;
+        // Ensure that we continue on a thread pool thread after this await.
+        await Task.Yield();
+        Assert.IsTrue(Thread.CurrentThread.IsThreadPoolThread);
     }
 
     [TestMethod]
     public Task TestMethod3()
     {
+        if (Environment.GetEnvironmentVariable("MSTEST_THREAD_STATE_IS_STA") == "1")
+        {
+            // TestMethod2 finished on a thread pool thread.
+            // However, here in this method we should still start on STA thread.
+            Assert.IsFalse(Thread.CurrentThread.IsThreadPoolThread);
+        }
+
         AssertCorrectThreadApartmentState();
         return Task.CompletedTask;
     }

@@ -140,14 +140,12 @@ public class UnitTestElementTests : TestContainer
     {
         _unitTestElement.CssIteration = "12";
         _unitTestElement.CssProjectStructure = "ProjectStructure";
-        _unitTestElement.Description = "I am a dummy test";
         _unitTestElement.WorkItemIds = ["2312", "22332"];
 
         var testCase = _unitTestElement.ToTestCase();
 
         Verify((testCase.GetPropertyValue(EngineConstants.CssIterationProperty) as string) == "12");
         Verify((testCase.GetPropertyValue(EngineConstants.CssProjectStructureProperty) as string) == "ProjectStructure");
-        Verify((testCase.GetPropertyValue(EngineConstants.DescriptionProperty) as string) == "I am a dummy test");
         Verify(new string[] { "2312", "22332" }.SequenceEqual((string[])testCase.GetPropertyValue(EngineConstants.WorkItemIdsProperty)!));
     }
 
@@ -173,7 +171,7 @@ public class UnitTestElementTests : TestContainer
     public void ToTestCase_WhenStrategyIsLegacy_UsesDefaultTestCaseId()
     {
 #pragma warning disable CA2263 // Prefer generic overload when type is known
-        foreach (DynamicDataType dataType in EnumPolyfill.GetValues<DynamicDataType>())
+        foreach (DynamicDataType dataType in Enum.GetValues<DynamicDataType>())
         {
             var testCase = new UnitTestElement(new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", null, TestIdGenerationStrategy.Legacy) { DataType = dataType }).ToTestCase();
             var expectedTestCase = new TestCase(testCase.FullyQualifiedName, testCase.ExecutorUri, testCase.Source);
@@ -187,7 +185,7 @@ public class UnitTestElementTests : TestContainer
     public void ToTestCase_WhenStrategyIsDisplayName_DoesNotUseDefaultTestCaseId()
     {
 #pragma warning disable CA2263 // Prefer generic overload when type is known
-        foreach (DynamicDataType dataType in EnumPolyfill.GetValues<DynamicDataType>())
+        foreach (DynamicDataType dataType in Enum.GetValues<DynamicDataType>())
         {
             var testCase = new UnitTestElement(new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", null, TestIdGenerationStrategy.DisplayName) { DataType = dataType }).ToTestCase();
             var expectedTestCase = new TestCase(testCase.FullyQualifiedName, testCase.ExecutorUri, testCase.Source);
@@ -208,7 +206,7 @@ public class UnitTestElementTests : TestContainer
     public void ToTestCase_WhenStrategyIsData_DoesNotUseDefaultTestCaseId()
     {
 #pragma warning disable CA2263 // Prefer generic overload when type is known
-        foreach (DynamicDataType dataType in EnumPolyfill.GetValues<DynamicDataType>())
+        foreach (DynamicDataType dataType in Enum.GetValues<DynamicDataType>())
         {
             var testCase = new UnitTestElement(new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", null, TestIdGenerationStrategy.FullyQualified) { DataType = dataType }).ToTestCase();
             var expectedTestCase = new TestCase(testCase.FullyQualifiedName, testCase.ExecutorUri, testCase.Source);

@@ -4,6 +4,82 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
+## <a name="1.8.0" />[1.8.0] - 2025-07-29
+
+See full log [of v3.9.3...v3.10.0](https://github.com/microsoft/testfx/compare/v3.9.3...v3.10.0)
+
+### Added
+
+* Enable filtering with `TestMetadataProperty` in the treenode filter by @thomhurst in [#5679](https://github.com/microsoft/testfx/pull/5679)
+* Show colors in AzDo and GH actions by @nohwnd in [#5535](https://github.com/microsoft/testfx/pull/5535)
+* Handle metadata properties in TrxReport by @Youssef1313 in [#5891](https://github.com/microsoft/testfx/pull/5891)
+* Obsolete `ITestApplicationLifecycleCallbacks` and add `ITestHostApplicationLifetime` by @Youssef1313 in [#5889](https://github.com/microsoft/testfx/pull/5889)
+* Fix TrxReport not including test ignore reason by @Youssef1313 in [#5896](https://github.com/microsoft/testfx/pull/5896)
+* Support `--filter-uid` on console by @Youssef1313 in [#6002](https://github.com/microsoft/testfx/pull/6002)
+* Support unary not operator in TreeNodeFilter by @Youssef1313 in [#6127](https://github.com/microsoft/testfx/pull/6127)
+
+### Fixed
+
+* Fix MTP timeout parsing to use invariant culture instead of current culture by @Copilot in [#5705](https://github.com/microsoft/testfx/pull/5705)
+* Add lifecycle callbacks to test host orchestrator by @Youssef1313 in [#5717](https://github.com/microsoft/testfx/pull/5717)
+* Avoid potential clash with default TRX file name by @Youssef1313 in [#5939](https://github.com/microsoft/testfx/pull/5939)
+* Ensure TestRun id for retries is the same in TRX by @Youssef1313 in [#5945](https://github.com/microsoft/testfx/pull/5945)
+* Do not create TestResults dir for help and info options by @Evangelink in [#6020](https://github.com/microsoft/testfx/pull/6020)
+
+### Housekeeping
+
+* remove redundant Empty constructor and mark as warning by @SimonCropp in [#5378](https://github.com/microsoft/testfx/pull/5378)
+* use char based APIs in TryUnescape by @SimonCropp in [#5608](https://github.com/microsoft/testfx/pull/5608)
+* attribute param nullability in TryUnescape by @SimonCropp in [#5609](https://github.com/microsoft/testfx/pull/5609)
+* Cleanup TestApplicationResult by @Youssef1313 in [#5615](https://github.com/microsoft/testfx/pull/5615)
+* remove redundant fields by @SimonCropp in [#5610](https://github.com/microsoft/testfx/pull/5610)
+* Rename RegisterTestFramework adapterFactory parameter to frameworkFactory by @Copilot in [#5691](https://github.com/microsoft/testfx/pull/5691)
+* prefer specific scoped variables by @SimonCropp in [#5611](https://github.com/microsoft/testfx/pull/5611)
+* \[VSTestBridge] Avoid creating Uri instance for every test case. by @Youssef1313 in [#5743](https://github.com/microsoft/testfx/pull/5743)
+* avoid redundant string builder instance in ValidateTestHostEnvironmentVariablesAsync by @SimonCropp in [#5905](https://github.com/microsoft/testfx/pull/5905)
+* remove redundant assignment in TryGetOptionArgumentList by @SimonCropp in [#5908](https://github.com/microsoft/testfx/pull/5908)
+* remove redundant environment instance in TestHostBuilder by @SimonCropp in [#5914](https://github.com/microsoft/testfx/pull/5914)
+* Avoid keeping instance of process in DotnetMuxerLocator by @SimonCropp in [#5911](https://github.com/microsoft/testfx/pull/5911)
+* Add ProcessId to IEnvironment by @SimonCropp in [#5913](https://github.com/microsoft/testfx/pull/5913)
+* CrashDumpEnvironmentVariableProvider prefixes can be static by @SimonCropp in [#5909](https://github.com/microsoft/testfx/pull/5909)
+* remove unused SystemProcessHandler parameter by @SimonCropp in [#5918](https://github.com/microsoft/testfx/pull/5918)
+* missing using in AttachDebuggerIfNeeded by @SimonCropp in [#5919](https://github.com/microsoft/testfx/pull/5919)
+* redundant null checks in TrxProcessLifetimeHandler by @SimonCropp in [#5960](https://github.com/microsoft/testfx/pull/5960)
+* remove redundant BuildConsumerProducersAsync by @SimonCropp in [#5962](https://github.com/microsoft/testfx/pull/5962)
+* remove non generic ActionResult by @SimonCropp in [#5959](https://github.com/microsoft/testfx/pull/5959)
+* fix nullablity in FromFailedTest by @SimonCropp in [#5971](https://github.com/microsoft/testfx/pull/5971)
+* make dicts in NamedPipeBase strong typed by @SimonCropp in [#5973](https://github.com/microsoft/testfx/pull/5973)
+* simplify reading installLocation content by @SimonCropp in [#5968](https://github.com/microsoft/testfx/pull/5968)
+* update Polyfill and use Process.Kill by @SimonCropp in [#5943](https://github.com/microsoft/testfx/pull/5943)
+* Simplify IProcess.MainModule by @SimonCropp in [#5955](https://github.com/microsoft/testfx/pull/5955)
+* use ReadExactly from Polyfill by @SimonCropp in [#5972](https://github.com/microsoft/testfx/pull/5972)
+* suppress TPEXP warning for solution by @SimonCropp in [#5984](https://github.com/microsoft/testfx/pull/5984)
+* use ReadAllTextAsync from polyfill by @SimonCropp in [#5953](https://github.com/microsoft/testfx/pull/5953)
+* use TryAdd instead of TryGetValue and Add in Async MessageBus by @SimonCropp in [#5963](https://github.com/microsoft/testfx/pull/5963)
+* use XElement.LoadAsync in TrxCompareTool by @SimonCropp in [#5975](https://github.com/microsoft/testfx/pull/5975)
+* fix RunSettingsEnvironmentVariableProvider file name by @SimonCropp in [#6007](https://github.com/microsoft/testfx/pull/6007)
+* fix nullability of TestProgressState.DiscoveredTests by @SimonCropp in [#6011](https://github.com/microsoft/testfx/pull/6011)
+* remove Uid from DiscoveredTests by @SimonCropp in [#6019](https://github.com/microsoft/testfx/pull/6019)
+* remove predicate from RetryHelper by @SimonCropp in [#6027](https://github.com/microsoft/testfx/pull/6027)
+* update Polyfill and simplify SHA256 usage by @SimonCropp in [#6029](https://github.com/microsoft/testfx/pull/6029)
+* simplify TrxCompareTool using an inner type instead of tuples by @SimonCropp in [#6024](https://github.com/microsoft/testfx/pull/6024)
+* reduce some linq alloc in AppendTestDiscoverySummary by @SimonCropp in [#6025](https://github.com/microsoft/testfx/pull/6025)
+* fix Syncronous typo by @SimonCropp in [#6048](https://github.com/microsoft/testfx/pull/6048)
+
+### Artifacts
+
+* Microsoft.Testing.Platform: [1.8.0](https://www.nuget.org/packages/Microsoft.Testing.Platform/1.8.0)
+* Microsoft.Testing.Platform.MSBuild: [1.8.0](https://www.nuget.org/packages/Microsoft.Testing.Platform.MSBuild/1.8.0)
+* Microsoft.Testing.Extensions.CrashDump: [1.8.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.CrashDump/1.8.0)
+* Microsoft.Testing.Extensions.HangDump: [1.8.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HangDump/1.8.0)
+* Microsoft.Testing.Extensions.HotReload: [1.8.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HotReload/1.8.0)
+* Microsoft.Testing.Extensions.Retry: [1.8.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Retry/1.8.0)
+* Microsoft.Testing.Extensions.Telemetry: [1.8.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Telemetry/1.8.0)
+* Microsoft.Testing.Extensions.TrxReport: [1.8.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport/1.8.0)
+* Microsoft.Testing.Extensions.TrxReport.Abstractions: [1.8.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport.Abstractions/1.8.0)
+* Microsoft.Testing.Extensions.VSTestBridge: [1.8.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.VSTestBridge/1.8.0)
+* Microsoft.Testing.Extensions.AzureDevOpsReport [1.0.0-alpha.25379.8](https://www.nuget.org/packages/Microsoft.Testing.Extensions.AzureDevOpsReport/1.0.0-alpha.25379.8)
+
 ## <a name="1.7.3" />[1.7.3] - 2025-06-17
 
 See full log [of v3.9.2...v3.9.3](https://github.com/microsoft/testfx/compare/v3.9.2...v3.9.3)

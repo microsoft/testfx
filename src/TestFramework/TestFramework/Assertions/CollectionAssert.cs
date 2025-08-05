@@ -41,7 +41,7 @@ public sealed class CollectionAssert
 #else
     [Obsolete(FrameworkConstants.ThatPropertyObsoleteMessage)]
 #endif
-    public static CollectionAssert That { get; } = Instance;
+    public static CollectionAssert That => Instance;
 
     #endregion
 
@@ -343,8 +343,7 @@ public sealed class CollectionAssert
             }
             else
             {
-#pragma warning disable CA1864 // Prefer the 'IDictionary.TryAdd(TKey, TValue)' method
-                if (table.ContainsKey(current))
+                if (!table.TryAdd(current, true))
                 {
                     string userMessage = Assert.BuildUserMessage(message, parameters);
                     string finalMessage = string.Format(
@@ -355,11 +354,6 @@ public sealed class CollectionAssert
 
                     Assert.ThrowAssertFailed("CollectionAssert.AllItemsAreUnique", finalMessage);
                 }
-                else
-                {
-                    table.Add(current, true);
-                }
-#pragma warning restore CA1864 // Prefer the 'IDictionary.TryAdd(TKey, TValue)' method
             }
         }
     }

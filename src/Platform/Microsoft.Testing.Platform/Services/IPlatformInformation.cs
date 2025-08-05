@@ -64,7 +64,7 @@ internal sealed class PlatformInformation : IPlatformInformation
         }
     }
 
-    public string Name { get; } = "Microsoft.Testing.Platform";
+    public string Name => "Microsoft.Testing.Platform";
 
     public DateTimeOffset? BuildDate { get; }
 

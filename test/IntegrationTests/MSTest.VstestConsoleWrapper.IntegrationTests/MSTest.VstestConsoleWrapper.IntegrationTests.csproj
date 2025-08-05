@@ -2,14 +2,26 @@
 
   <PropertyGroup>
     <TargetFramework>$(NetFrameworkMinimum)</TargetFramework>
-    <UseInternalTestFramework>true</UseInternalTestFramework>
-    <!-- Don't generate MSTest using -->
-    <UseMSTest>false</UseMSTest>
+    <EnableMSTestRunner>true</EnableMSTestRunner>
+    <UseMSTestFromSource>true</UseMSTestFromSource>
     <OutputType>Exe</OutputType>
   </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="$(RepoRoot)test\Utilities\Automation.CLI\Automation.CLI.csproj" />
+    <ProjectReference Include="$(RepoRoot)src\Adapter\MSTest.TestAdapter\MSTest.TestAdapter.csproj" />
+    <ProjectReference Include="$(RepoRoot)src\Analyzers\MSTest.Internal.Analyzers\MSTest.Internal.Analyzers.csproj">
+      <OutputItemType>Analyzer</OutputItemType>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="$(RepoRoot)src\Analyzers\MSTest.Analyzers\MSTest.Analyzers.csproj">
+      <OutputItemType>Analyzer</OutputItemType>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="$(RepoRoot)src\Analyzers\MSTest.Analyzers.CodeFixes\MSTest.Analyzers.CodeFixes.csproj">
+      <OutputItemType>Analyzer</OutputItemType>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
   </ItemGroup>
 
 </Project>

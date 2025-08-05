@@ -125,15 +125,14 @@ internal sealed class TestMethodFilter
             MethodInfo? methodGetTestCaseFilter = context.GetType().GetRuntimeMethod("GetTestCaseFilter", [typeof(IEnumerable<string>), typeof(Func<string, TestProperty>)]);
             return (ITestCaseFilterExpression?)methodGetTestCaseFilter?.Invoke(context, [_supportedProperties.Keys, (Func<string, TestProperty>)PropertyProvider]);
         }
-        catch (Exception ex)
+        catch (TargetInvocationException ex)
         {
             // In case of UWP .Net Native Tool Chain compilation. Invoking methods via Reflection doesn't work, hence discovery always fails.
             // Hence throwing exception only if it is of type TargetInvocationException(i.e. Method got invoked but something went wrong in GetTestCaseFilter Method)
-            if (ex is TargetInvocationException)
-            {
-                throw ex.InnerException!;
-            }
-
+            throw ex.InnerException!;
+        }
+        catch (Exception ex)
+        {
             logger.SendMessage(TestMessageLevel.Warning, ex.Message);
         }
 

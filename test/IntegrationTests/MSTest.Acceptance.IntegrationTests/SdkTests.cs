@@ -54,7 +54,7 @@ namespace MSTestSdkTest
 """;
 
     [TestMethod]
-    [DynamicData(nameof(GetBuildMatrixMultiTfmFoldedBuildConfiguration), typeof(AcceptanceTestBase<NopAssetFixture>), DynamicDataSourceType.Method)]
+    [DynamicData(nameof(GetBuildMatrixMultiTfmFoldedBuildConfiguration), typeof(AcceptanceTestBase<NopAssetFixture>))]
     public async Task RunTests_With_VSTest(string multiTfm, BuildConfiguration buildConfiguration)
     {
         using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
@@ -65,7 +65,7 @@ namespace MSTestSdkTest
             .PatchCodeWithReplace("$ExtraProperties$", "<UseVSTest>true</UseVSTest>"));
 
         DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"test -c {buildConfiguration} {testAsset.TargetAssetPath}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, workingDirectory: testAsset.TargetAssetPath);
-        Assert.AreEqual(0, compilationResult.ExitCode);
+        compilationResult.AssertExitCodeIs(0);
 
         compilationResult.AssertOutputMatchesRegex(@"Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1, Duration: .* [m]?s - MSTestSdk.dll \(net9\.0\)");
 #if !SKIP_INTERMEDIATE_TARGET_FRAMEWORKS
@@ -81,7 +81,7 @@ namespace MSTestSdkTest
     }
 
     [TestMethod]
-    [DynamicData(nameof(GetBuildMatrixMultiTfmFoldedBuildConfiguration), typeof(AcceptanceTestBase<NopAssetFixture>), DynamicDataSourceType.Method)]
+    [DynamicData(nameof(GetBuildMatrixMultiTfmFoldedBuildConfiguration), typeof(AcceptanceTestBase<NopAssetFixture>))]
     public async Task RunTests_With_MSTestRunner_DotnetTest(string multiTfm, BuildConfiguration buildConfiguration)
     {
         using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
@@ -92,7 +92,7 @@ namespace MSTestSdkTest
                .PatchCodeWithReplace("$ExtraProperties$", string.Empty));
 
         DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"test -c {buildConfiguration} {testAsset.TargetAssetPath}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, workingDirectory: testAsset.TargetAssetPath);
-        Assert.AreEqual(0, compilationResult.ExitCode);
+        compilationResult.AssertExitCodeIs(0);
 
         compilationResult.AssertOutputMatchesRegex(@"Tests succeeded: .* \[net9\.0|x64\]");
 #if !SKIP_INTERMEDIATE_TARGET_FRAMEWORKS
@@ -108,7 +108,7 @@ namespace MSTestSdkTest
     }
 
     [TestMethod]
-    [DynamicData(nameof(GetBuildMatrixMultiTfmFoldedBuildConfiguration), typeof(AcceptanceTestBase<NopAssetFixture>), DynamicDataSourceType.Method)]
+    [DynamicData(nameof(GetBuildMatrixMultiTfmFoldedBuildConfiguration), typeof(AcceptanceTestBase<NopAssetFixture>))]
     public async Task RunTests_With_MSTestRunner_Standalone(string multiTfm, BuildConfiguration buildConfiguration)
     {
         using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
@@ -119,7 +119,7 @@ namespace MSTestSdkTest
                .PatchCodeWithReplace("$ExtraProperties$", string.Empty));
 
         DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"build -c {buildConfiguration} {testAsset.TargetAssetPath}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path);
-        Assert.AreEqual(0, compilationResult.ExitCode);
+        compilationResult.AssertExitCodeIs(0);
         foreach (string tfm in multiTfm.Split(";"))
         {
             var testHost = TestHost.LocateFrom(testAsset.TargetAssetPath, AssetName, tfm, buildConfiguration: buildConfiguration);
@@ -129,7 +129,7 @@ namespace MSTestSdkTest
     }
 
     [TestMethod]
-    [DynamicData(nameof(GetBuildMatrixMultiTfmFoldedBuildConfiguration), typeof(AcceptanceTestBase<NopAssetFixture>), DynamicDataSourceType.Method)]
+    [DynamicData(nameof(GetBuildMatrixMultiTfmFoldedBuildConfiguration), typeof(AcceptanceTestBase<NopAssetFixture>))]
     public async Task RunTests_With_CentralPackageManagement_Standalone(string multiTfm, BuildConfiguration buildConfiguration)
     {
         using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
@@ -140,7 +140,7 @@ namespace MSTestSdkTest
                .PatchCodeWithReplace("$ExtraProperties$", string.Empty));
 
         DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"build -c {buildConfiguration} {testAsset.TargetAssetPath}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path);
-        Assert.AreEqual(0, compilationResult.ExitCode);
+        compilationResult.AssertExitCodeIs(0);
         foreach (string tfm in multiTfm.Split(";"))
         {
             var testHost = TestHost.LocateFrom(testAsset.TargetAssetPath, AssetName, tfm, buildConfiguration: buildConfiguration);
@@ -177,11 +177,16 @@ namespace MSTestSdkTest
               "<EnableMicrosoftTestingExtensionsHangDump>true</EnableMicrosoftTestingExtensionsHangDump>",
               "--hangdump",
               "--crashdump");
+
+            yield return new(buildConfig.MultiTfm, buildConfig.BuildConfiguration,
+              "<EnableMicrosoftTestingExtensionsAzureDevOpsReport>true</EnableMicrosoftTestingExtensionsAzureDevOpsReport>",
+              "--report-azdo",
+              "--crashdump");
         }
     }
 
     [TestMethod]
-    [DynamicData(nameof(RunTests_With_MSTestRunner_Standalone_Plus_Extensions_Data), DynamicDataSourceType.Method)]
+    [DynamicData(nameof(RunTests_With_MSTestRunner_Standalone_Plus_Extensions_Data))]
     public async Task RunTests_With_MSTestRunner_Standalone_Selectively_Enabled_Extensions(string multiTfm, BuildConfiguration buildConfiguration,
         string msbuildExtensionEnableFragment,
         string enableCommandLineArg,
@@ -195,7 +200,7 @@ namespace MSTestSdkTest
                .PatchCodeWithReplace("$ExtraProperties$", msbuildExtensionEnableFragment));
 
         DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"build -c {buildConfiguration} {testAsset.TargetAssetPath}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path);
-        Assert.AreEqual(0, compilationResult.ExitCode);
+        compilationResult.AssertExitCodeIs(0);
         foreach (string tfm in multiTfm.Split(";"))
         {
             var testHost = TestHost.LocateFrom(testAsset.TargetAssetPath, AssetName, tfm, buildConfiguration: buildConfiguration);
@@ -208,7 +213,7 @@ namespace MSTestSdkTest
     }
 
     [TestMethod]
-    [DynamicData(nameof(GetBuildMatrixMultiTfmFoldedBuildConfiguration), typeof(AcceptanceTestBase<NopAssetFixture>), DynamicDataSourceType.Method)]
+    [DynamicData(nameof(GetBuildMatrixMultiTfmFoldedBuildConfiguration), typeof(AcceptanceTestBase<NopAssetFixture>))]
     public async Task RunTests_With_MSTestRunner_Standalone_EnableAll_Extensions(string multiTfm, BuildConfiguration buildConfiguration)
     {
         using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
@@ -219,11 +224,11 @@ namespace MSTestSdkTest
                .PatchCodeWithReplace("$ExtraProperties$", "<TestingExtensionsProfile>AllMicrosoft</TestingExtensionsProfile>"));
 
         DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"build -c {buildConfiguration} {testAsset.TargetAssetPath}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path);
-        Assert.AreEqual(0, compilationResult.ExitCode);
+        compilationResult.AssertExitCodeIs(0);
         foreach (string tfm in multiTfm.Split(";"))
         {
             var testHost = TestHost.LocateFrom(testAsset.TargetAssetPath, AssetName, tfm, buildConfiguration: buildConfiguration);
-            TestHostResult testHostResult = await testHost.ExecuteAsync(command: "--coverage --retry-failed-tests 3 --report-trx --crashdump --hangdump");
+            TestHostResult testHostResult = await testHost.ExecuteAsync(command: "--coverage --retry-failed-tests 3 --report-trx --crashdump --hangdump --report-azdo");
             testHostResult.AssertOutputContainsSummary(0, 1, 0);
         }
     }
@@ -238,7 +243,7 @@ namespace MSTestSdkTest
     }
 
     [TestMethod]
-    [DynamicData(nameof(RunTests_With_MSTestRunner_Standalone_Default_Extensions_Data), DynamicDataSourceType.Method)]
+    [DynamicData(nameof(RunTests_With_MSTestRunner_Standalone_Default_Extensions_Data))]
     public async Task RunTests_With_MSTestRunner_Standalone_Enable_Default_Extensions(string multiTfm, BuildConfiguration buildConfiguration, bool enableDefaultExtensions)
     {
         using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
@@ -249,7 +254,7 @@ namespace MSTestSdkTest
                .PatchCodeWithReplace("$ExtraProperties$", enableDefaultExtensions ? string.Empty : "<TestingExtensionsProfile>None</TestingExtensionsProfile>"));
 
         DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"build -c {buildConfiguration} {testAsset.TargetAssetPath}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path);
-        Assert.AreEqual(0, compilationResult.ExitCode);
+        compilationResult.AssertExitCodeIs(0);
         foreach (string tfm in multiTfm.Split(";"))
         {
             var testHost = TestHost.LocateFrom(testAsset.TargetAssetPath, AssetName, tfm, buildConfiguration: buildConfiguration);
@@ -266,7 +271,7 @@ namespace MSTestSdkTest
     }
 
     [TestMethod]
-    [DynamicData(nameof(GetBuildMatrixMultiTfmFoldedBuildConfiguration), typeof(AcceptanceTestBase<NopAssetFixture>), DynamicDataSourceType.Method)]
+    [DynamicData(nameof(GetBuildMatrixMultiTfmFoldedBuildConfiguration), typeof(AcceptanceTestBase<NopAssetFixture>))]
     public async Task Invalid_TestingProfile_Name_Should_Fail(string multiTfm, BuildConfiguration buildConfiguration)
     {
         using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
@@ -277,7 +282,7 @@ namespace MSTestSdkTest
                .PatchCodeWithReplace("$ExtraProperties$", "<TestingExtensionsProfile>WrongName</TestingExtensionsProfile>"));
 
         DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"build -c {buildConfiguration} {testAsset.TargetAssetPath}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, failIfReturnValueIsNotZero: false);
-        Assert.AreEqual(1, compilationResult.ExitCode);
+        compilationResult.AssertExitCodeIs(1);
         compilationResult.AssertOutputContains("Invalid value for property TestingExtensionsProfile. Valid values are 'Default', 'AllMicrosoft' and 'None'.");
     }
 
@@ -311,8 +316,7 @@ namespace MSTestSdkTest
                     $"publish -r {RID} -f net9.0 {testAsset.TargetAssetPath}",
                     AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
                     // We prefer to use the outer retry mechanism as we need some extra checks
-                    retryCount: 0,
-                    timeoutInSeconds: 180);
+                    retryCount: 0);
                 compilationResult.AssertOutputContains("Generating native code");
                 compilationResult.AssertOutputDoesNotContain("warning");
 
@@ -406,7 +410,7 @@ namespace MSTestSdkTest
             workingDirectory: AssetFixture.AspireProjectPath,
             warnAsError: false,
             suppressPreviewDotNetMessage: false);
-        Assert.AreEqual(0, dotnetTestResult.ExitCode);
+        dotnetTestResult.AssertExitCodeIs(0);
         // Ensure output contains the right platform banner
         dotnetTestResult.AssertOutputContains("VSTest version");
         dotnetTestResult.AssertOutputContains("Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1");
@@ -424,7 +428,7 @@ namespace MSTestSdkTest
 
         DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"test {testAsset.TargetAssetPath}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, workingDirectory: testAsset.TargetAssetPath);
 
-        Assert.AreEqual(0, compilationResult.ExitCode);
+        compilationResult.AssertExitCodeIs(0);
 
         SL.Build binLog = SL.Serialization.Read(compilationResult.BinlogPath!);
         SL.Task cscTask = binLog.FindChildrenRecursive<SL.Task>(task => task.Name == "Csc").Single();

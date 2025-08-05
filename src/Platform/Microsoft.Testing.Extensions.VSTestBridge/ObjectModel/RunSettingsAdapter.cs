@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#pragma warning disable TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
-
 using Microsoft.Testing.Extensions.VSTestBridge.CommandLine;
 using Microsoft.Testing.Extensions.VSTestBridge.Resources;
 using Microsoft.Testing.Platform;
@@ -45,7 +43,7 @@ internal sealed class RunSettingsAdapter : IRunSettings
         if (commandLineOptions.TryGetOptionArgumentList(RunSettingsCommandLineOptionsProvider.RunSettingsOptionName, out string[]? fileNames)
              && fileNames is not null
             && fileNames.Length == 1
-            && fileSystem.Exists(fileNames[0]))
+            && fileSystem.ExistFile(fileNames[0]))
         {
             runSettingsXml = fileSystem.ReadAllText(fileNames[0]);
         }

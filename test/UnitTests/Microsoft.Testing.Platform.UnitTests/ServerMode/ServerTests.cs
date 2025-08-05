@@ -38,7 +38,7 @@ public sealed class ServerTests
                     TestApplicationHooks testApplicationHooks = new();
                     string[] args = ["--no-banner", "--server", "--client-host", "localhost", "--client-port", $"{server.Port}", "--internal-testingplatform-skipbuildercheck"];
                     ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
-                    builder.TestHost.AddTestApplicationLifecycleCallbacks(_ => testApplicationHooks);
+                    builder.TestHost.AddTestHostApplicationLifetime(_ => testApplicationHooks);
                     builder.RegisterTestFramework(_ => new TestFrameworkCapabilities(), (_, __) => new MockTestAdapter());
                     var testApplication = (TestApplication)await builder.BuildAsync();
                     testApplication.ServiceProvider.GetRequiredService<SystemConsole>().SuppressOutput();
@@ -59,7 +59,7 @@ public sealed class ServerTests
         string[] args = ["--no-banner", "--server", "--client-port", $"{server.Port}", "--internal-testingplatform-skipbuildercheck"];
         TestApplicationHooks testApplicationHooks = new();
         ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
-        builder.TestHost.AddTestApplicationLifecycleCallbacks(_ => testApplicationHooks);
+        builder.TestHost.AddTestHostApplicationLifetime(_ => testApplicationHooks);
         builder.RegisterTestFramework(_ => new TestFrameworkCapabilities(), (_, __) => new MockTestAdapter());
         var testApplication = (TestApplication)await builder.BuildAsync();
         testApplication.ServiceProvider.GetRequiredService<SystemConsole>().SuppressOutput();
@@ -252,7 +252,7 @@ public sealed class ServerTests
         await writer.FlushAsync();
     }
 
-    private sealed class TestApplicationHooks : ITestApplicationLifecycleCallbacks, IDisposable
+    private sealed class TestApplicationHooks : ITestHostApplicationLifetime, IDisposable
     {
         private readonly SemaphoreSlim _waitForBeforeRunAsync = new(0, 1);
 

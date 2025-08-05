@@ -35,12 +35,12 @@ public class MSBuildTests_KnownExtensionRegistration : AcceptanceTestBase<NopAss
         SL.Task testingPlatformSelfRegisteredExtensions = generateSelfRegisteredExtensions.FindChildrenRecursive<SL.Task>().Single(t => t.Name == "TestingPlatformSelfRegisteredExtensions");
         SL.Message generatedSource = testingPlatformSelfRegisteredExtensions.FindChildrenRecursive<SL.Message>().Single(m => m.Text.Contains("SelfRegisteredExtensions source:"));
 
-        Assert.IsTrue(generatedSource.Text.Contains("Microsoft.Testing.Extensions.CrashDump.TestingPlatformBuilderHook.AddExtensions"), generatedSource.Text);
-        Assert.IsTrue(generatedSource.Text.Contains("Microsoft.Testing.Extensions.HangDump.TestingPlatformBuilderHook.AddExtensions"), generatedSource.Text);
-        Assert.IsTrue(generatedSource.Text.Contains("Microsoft.Testing.Extensions.HotReload.TestingPlatformBuilderHook.AddExtensions"), generatedSource.Text);
-        Assert.IsTrue(generatedSource.Text.Contains("Microsoft.Testing.Extensions.Retry.TestingPlatformBuilderHook.AddExtensions"), generatedSource.Text);
-        Assert.IsTrue(generatedSource.Text.Contains("Microsoft.Testing.Extensions.Telemetry.TestingPlatformBuilderHook.AddExtensions"), generatedSource.Text);
-        Assert.IsTrue(generatedSource.Text.Contains("Microsoft.Testing.Extensions.TrxReport.TestingPlatformBuilderHook.AddExtensions"), generatedSource.Text);
+        Assert.Contains("Microsoft.Testing.Extensions.CrashDump.TestingPlatformBuilderHook.AddExtensions", generatedSource.Text, generatedSource.Text);
+        Assert.Contains("Microsoft.Testing.Extensions.HangDump.TestingPlatformBuilderHook.AddExtensions", generatedSource.Text, generatedSource.Text);
+        Assert.Contains("Microsoft.Testing.Extensions.HotReload.TestingPlatformBuilderHook.AddExtensions", generatedSource.Text, generatedSource.Text);
+        Assert.Contains("Microsoft.Testing.Extensions.Retry.TestingPlatformBuilderHook.AddExtensions", generatedSource.Text, generatedSource.Text);
+        Assert.Contains("Microsoft.Testing.Extensions.Telemetry.TestingPlatformBuilderHook.AddExtensions", generatedSource.Text, generatedSource.Text);
+        Assert.Contains("Microsoft.Testing.Extensions.TrxReport.TestingPlatformBuilderHook.AddExtensions", generatedSource.Text, generatedSource.Text);
     }
 
     private const string SourceCode = """

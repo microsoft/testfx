@@ -98,7 +98,6 @@ public sealed class TestMethodShouldBeValidCodeFixProvider : CodeFixProvider
 
         // Ensure the method returns void or Task/ValueTask.
         SemanticModel semanticModel = await document.GetRequiredSemanticModelAsync(cancellationToken).ConfigureAwait(false);
-        Compilation compilation = semanticModel.Compilation;
         var wellKnownTypeProvider = WellKnownTypeProvider.GetOrCreate(semanticModel.Compilation);
         INamedTypeSymbol? taskSymbol = wellKnownTypeProvider.GetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemThreadingTasksTask);
         INamedTypeSymbol? valueTaskSymbol = wellKnownTypeProvider.GetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemThreadingTasksValueTask);

@@ -19,7 +19,7 @@ internal sealed class RetryFailedTestsPipeServer : IDisposable
 
     public RetryFailedTestsPipeServer(IServiceProvider serviceProvider, string[] failedTests, ILogger logger)
     {
-        _pipeNameDescription = NamedPipeServer.GetPipeName(Guid.NewGuid().ToString("N"));
+        _pipeNameDescription = NamedPipeServer.GetPipeName(Guid.NewGuid().ToString("N"), serviceProvider.GetEnvironment());
         logger.LogTrace($"Retry server pipe name: '{_pipeNameDescription.Name}'");
         _singleConnectionNamedPipeServer = new NamedPipeServer(_pipeNameDescription, CallbackAsync,
             serviceProvider.GetEnvironment(),

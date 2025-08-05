@@ -44,21 +44,6 @@ This package extends Microsoft Testing Platform to provide a retry policy system
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Update="Resources\ExtensionResources.Designer.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>ExtensionResources.resx</DependentUpon>
-    </Compile>
-  </ItemGroup>
-
-  <ItemGroup>
-    <EmbeddedResource Update="Resources\ExtensionResources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>ExtensionResources.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
-  </ItemGroup>
-
-  <ItemGroup>
     <InternalsVisibleTo Include="Microsoft.Testing.Extensions.UnitTests" Key="$(VsPublicKey)" />
   </ItemGroup>
 

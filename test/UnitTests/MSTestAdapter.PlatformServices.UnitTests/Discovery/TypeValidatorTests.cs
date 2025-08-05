@@ -3,7 +3,7 @@
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
-using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Resources;
 
 using Moq;
 
@@ -409,7 +409,7 @@ public class GenericClass<T>;
 
 public class ClassWithTestContextGetterOnly
 {
-    public TestContext TestContext { get; } = null!;
+    public TestContext TestContext => null!;
 }
 
 public class ClassWithTestContextPrivateSetter
@@ -435,7 +435,7 @@ public class ClassWithTestContext
 public class GenericClassWithProperty<T>
 {
 #pragma warning disable CA1000 // Do not declare static members on generic types
-    public static T ReturnAStableSomething { get; } = default!;
+    public static T ReturnAStableSomething => default!;
 #pragma warning restore CA1000 // Do not declare static members on generic types
 
     public T ReturnSomething { get; set; } = default!;
@@ -446,7 +446,7 @@ public class GenericClassWithProperty<T>
 public class GenericClassWithTestContext<T>
 {
 #pragma warning disable CA1000 // Do not declare static members on generic types
-    public static T ReturnAStableSomething { get; } = default!;
+    public static T ReturnAStableSomething => default!;
 #pragma warning restore CA1000 // Do not declare static members on generic types
 
     public T ReturnSomething { get; set; } = default!;
@@ -547,25 +547,25 @@ internal class InternalClass2
 /// </summary>
 internal class PrivateClassNames
 {
-    public string ProtectedInteralNestedClassInPublicClass { get; } = null!;
+    public string ProtectedInteralNestedClassInPublicClass => null!;
 
-    public string ProtectedNestedClassInPublicClass { get; } = null!;
+    public string ProtectedNestedClassInPublicClass => null!;
 
-    public string PrivateProtectedNestedClassInPublicClass { get; } = null!;
+    public string PrivateProtectedNestedClassInPublicClass => null!;
 
-    public string PrivateClassNestedInPublicClass { get; } = null!;
+    public string PrivateClassNestedInPublicClass => null!;
 
-    public string ProtectedInteralClassNestedInInternalClass { get; } = null!;
+    public string ProtectedInteralClassNestedInInternalClass => null!;
 
-    public string ProtectedClassNestedInInternalClass { get; } = null!;
+    public string ProtectedClassNestedInInternalClass => null!;
 
-    public string PrivateProtectedClassNestedInInternalClass { get; } = null!;
+    public string PrivateProtectedClassNestedInInternalClass => null!;
 
-    public string PrivateClassNestedInInternalClass { get; } = null!;
+    public string PrivateClassNestedInInternalClass => null!;
 
-    public string PublicClassNestedInPrivateClassNestedInPublicClass { get; } = null!;
+    public string PublicClassNestedInPrivateClassNestedInPublicClass => null!;
 
-    public string PublicClassNestedInPrivateClassNestedInInternalClass { get; } = null!;
+    public string PublicClassNestedInPrivateClassNestedInInternalClass => null!;
 }
 
 #endregion

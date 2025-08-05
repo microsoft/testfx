@@ -27,6 +27,11 @@
         <target state="translated">將方法協助工具變更為 'private'</target>
         <note />
       </trans-unit>
+      <trans-unit id="ChangeStructToClassAndAddTestClassFix">
+        <source>Change to 'class' and add '[TestClass]'</source>
+        <target state="translated">變更為 'class'，並新增 '[TestClass]'</target>
+        <note />
+      </trans-unit>
       <trans-unit id="FixAssertionArgsOrder">
         <source>Fix actual/expected arguments order</source>
         <target state="translated">修正實際/預期的引數順序</target>
@@ -40,6 +45,16 @@
       <trans-unit id="AssemblyInitializeShouldBeValidCodeFix">
         <source>Fix signature</source>
         <target state="translated">修正簽章</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PassCancellationTokenFix">
+        <source>Pass 'TestContext.CancellationTokenSource.Token' argument to method call</source>
+        <target state="translated">將 'TestContext.CancellationTokenSource.Token' 引數傳遞給方法呼叫</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="RemoveDynamicDataSourceTypeFix">
+        <source>Remove 'DynamicDataSourceType' parameter to use default 'AutoDetect'</source>
+        <target state="new">Remove 'DynamicDataSourceType' parameter to use default 'AutoDetect'</target>
         <note />
       </trans-unit>
       <trans-unit id="ReplaceDataTestMethodWithTestMethodTitle">
@@ -72,6 +87,11 @@
         <target state="translated">使用 TestInitialize 方法取代建構函式</target>
         <note />
       </trans-unit>
+      <trans-unit id="StringAssertToAssertTitle">
+        <source>Use 'Assert.{0}' instead of 'StringAssert'</source>
+        <target state="translated">使用 'Assert.{0}' 而不是 'StringAssert'</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TestClassShouldBeValidFix">
         <source>Fix test class signature</source>
         <target state="translated">修正測試類別簽章</target>
@@ -99,7 +119,7 @@
       </trans-unit>
       <trans-unit id="UseCooperativeCancellationForTimeoutFix">
         <source>Use 'CooperativeCancellation = true'</source>
-        <target state="new">Use 'CooperativeCancellation = true'</target>
+        <target state="translated">使用 'CooperativeCancellation = true'</target>
         <note />
       </trans-unit>
       <trans-unit id="UseNewerAssertThrows">

@@ -28,7 +28,7 @@ public class DebuggerUtility
             using var process = Process.GetProcessById(pid.Value);
             Trace($"Starting with pid '{pid}({process.ProcessName})', and vsPid '{vsPid}'", enabled: enableLog);
             Trace($"Using pid: {pid} to get parent VS.", enabled: enableLog);
-            Process? vs = GetVsFromPid(Process.GetProcessById(vsPid ?? process.Id));
+            using Process? vs = GetVsFromPid(Process.GetProcessById(vsPid ?? process.Id));
 
             if (vs != null)
             {
@@ -38,7 +38,7 @@ public class DebuggerUtility
             }
 
             Trace("Parent VS not found, finding the first VS that started.", enabled: enableLog);
-            Process? firstVsProcess = GetFirstVsProcess();
+            using Process? firstVsProcess = GetFirstVsProcess();
 
             if (firstVsProcess != null)
             {

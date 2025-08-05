@@ -62,7 +62,7 @@ public class UITestMethodAttribute : TestMethodAttribute
     {
         // TODO: Code seems to be assuming DeclaringType is never null, but it can be null.
         // Using 'bang' notation for now to ensure same behavior.
-        DispatcherQueue dispatcher = GetDispatcherQueue(testMethod.MethodInfo.DeclaringType!.Assembly) ?? throw new InvalidOperationException(FrameworkMessages.AsyncUITestMethodWithNoDispatcherQueue);
+        DispatcherQueue dispatcher = GetDispatcherQueue(testMethod.MethodInfo.DeclaringType!.Assembly) ?? throw new InvalidOperationException(FrameworkExtensionsMessages.AsyncUITestMethodWithNoDispatcherQueue);
         if (dispatcher.HasThreadAccess)
         {
             try
