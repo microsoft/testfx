@@ -8,7 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
 See full log [of v3.10.0...v3.10.1](https://github.com/microsoft/testfx/compare/v3.10.0...v3.10.1)
 
-* No change, released to keep version aligned with Microsoft.Testing.Platform.
+* No change, released to keep version aligned with MSTest.
 
 ### Artifacts
 
