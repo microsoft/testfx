@@ -747,6 +747,9 @@ internal sealed class TypeCache : MarshalByRefObject
         MethodBase? methodBase = null;
         try
         {
+            // testMethod.MethodInfo can be null if 'TestMethod' instance crossed app domain boundaries.
+            // This happens on .NET Framework when app domain is enabled, and the MethodInfo is calculated and set during discovery.
+            // Then, execution will cause TestMethod to cross to a different app domain, and MethodInfo will be null.
             methodBase = testMethod.MethodInfo ?? ManagedNameHelper.GetMethod(testClassInfo.Parent.Assembly, testMethod.ManagedTypeName!, testMethod.ManagedMethodName!);
         }
         catch (InvalidManagedNameException)
@@ -773,6 +776,11 @@ internal sealed class TypeCache : MarshalByRefObject
 
     private static MethodInfo? GetMethodInfoUsingRuntimeMethods(TestMethod testMethod, TestClassInfo testClassInfo, bool discoverInternals)
     {
+        // testMethod.MethodInfo can be null if 'TestMethod' instance crossed app domain boundaries.
+        // This happens on .NET Framework when app domain is enabled, and the MethodInfo is calculated and set during discovery.
+        // Then, execution will cause TestMethod to cross to a different app domain, and MethodInfo will be null.
+        // Note: This whole GetMethodInfoUsingRuntimeMethods is likely never reachable.
+        // It's called if HasManagedMethodAndTypeProperties is false, but it should always be true per the current implementation.
         if (testMethod.MethodInfo is { } methodInfo)
         {
             return methodInfo.HasCorrectTestMethodSignature(true, discoverInternals) ? methodInfo : null;
