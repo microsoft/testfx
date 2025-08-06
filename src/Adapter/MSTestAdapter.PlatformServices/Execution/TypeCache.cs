@@ -747,7 +747,7 @@ internal sealed class TypeCache : MarshalByRefObject
         MethodBase? methodBase = null;
         try
         {
-            methodBase = ManagedNameHelper.GetMethod(testClassInfo.Parent.Assembly, testMethod.ManagedTypeName!, testMethod.ManagedMethodName!);
+            methodBase = testMethod.MethodInfo ?? ManagedNameHelper.GetMethod(testClassInfo.Parent.Assembly, testMethod.ManagedTypeName!, testMethod.ManagedMethodName!);
         }
         catch (InvalidManagedNameException)
         {
@@ -773,6 +773,11 @@ internal sealed class TypeCache : MarshalByRefObject
 
     private static MethodInfo? GetMethodInfoUsingRuntimeMethods(TestMethod testMethod, TestClassInfo testClassInfo, bool discoverInternals)
     {
+        if (testMethod.MethodInfo is { } methodInfo)
+        {
+            return methodInfo.HasCorrectTestMethodSignature(true, discoverInternals) ? methodInfo : null;
+        }
+
         IEnumerable<MethodInfo> methods = PlatformServiceProvider.Instance.ReflectionOperations.GetRuntimeMethods(testClassInfo.ClassType)
             .Where(method => method.Name == testMethod.Name &&
                              method.HasCorrectTestMethodSignature(true, discoverInternals));

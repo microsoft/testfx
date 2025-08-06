@@ -153,6 +153,9 @@ public sealed class TestMethod : ITestMethod
     [field: NonSerialized]
     internal object?[]? ActualData { get; set; }
 
+    [field: NonSerialized]
+    internal MethodInfo? MethodInfo { get; set; }
+
     /// <summary>
     /// Gets or sets the test data source ignore message.
     /// </summary>
