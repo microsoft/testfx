@@ -192,6 +192,7 @@ internal class TypeEnumerator
 
         // get DisplayName from TestMethodAttribute (or any inherited attribute)
         testElement.DisplayName = testMethodAttribute?.DisplayName ?? method.Name;
+        testMethod.DisplayName = testElement.DisplayName;
 
         return testElement;
     }
