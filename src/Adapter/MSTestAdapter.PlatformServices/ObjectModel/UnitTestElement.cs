@@ -62,6 +62,7 @@ internal sealed class UnitTestElement
     /// <summary>
     /// Gets or sets the DisplayName.
     /// </summary>
+    // TODO: Remove this property and simply use TestMethod.DisplayName
     public string? DisplayName { get; set; }
 
     /// <summary>
