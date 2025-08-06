@@ -111,6 +111,7 @@ internal sealed class UnitTestElement
         TestCase testCase = new(testFullName, EngineConstants.ExecutorUri, TestMethod.AssemblyName)
         {
             DisplayName = GetDisplayName(),
+            LocalExtensionData = this,
         };
 
         if (TestMethod.HasManagedMethodAndTypeProperties)
