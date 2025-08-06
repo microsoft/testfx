@@ -2049,5 +2049,73 @@ public sealed class UseProperAssertMethodsAnalyzerTests
             fixedCode);
     }
 
+    [TestMethod]
+    public async Task WhenAssertAreEqualWithCollectionCountUsingCustomCollection()
+    {
+        string code = """
+            using System;
+            using System.Collections;
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            internal sealed class MyCustomCollection<T> : IEnumerable<T>
+            {
+                public IEnumerator<T> GetEnumerator()
+                {
+                    throw new NotImplementedException();
+                }
+
+                IEnumerator IEnumerable.GetEnumerator()
+                {
+                    throw new NotImplementedException();
+                }
+
+                public int Count => 5;
+            }
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    var x = new MyCustomCollection<string>();
+                    Assert.AreEqual(4, x.Count);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertAreEqualWithCollectionCountUsingNonGenericCollection()
+    {
+        string code = """
+            using System;
+            using System.Collections;
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    var x = new Hashtable();
+                    Assert.AreEqual(4, x.Count);
+                    // error CS0411: The type arguments for method 'Assert.HasCount<T>(int, IEnumerable<T>)' cannot be inferred from the usage. Try specifying the type arguments explicitly.
+                    // When we add a non-generic IEnumerable overload, this test will fail because CS0411 is no longer reported.
+                    // In that case, the analyzer should start reporting a diagnostic for the AreEqual call above.
+                    // The codefix should suggest to switch to HasCount.
+                    // Tracking issue https://github.com/microsoft/testfx/issues/6184.
+                    Assert.{|CS0411:HasCount|}(4, x);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
     #endregion
 }

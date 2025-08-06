@@ -221,11 +221,13 @@ public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
                 return;
             }
 
-            context.RegisterOperationAction(context => AnalyzeInvocationOperation(context, assertTypeSymbol), OperationKind.Invocation);
+            INamedTypeSymbol objectTypeSymbol = context.Compilation.GetSpecialType(SpecialType.System_Object);
+
+            context.RegisterOperationAction(context => AnalyzeInvocationOperation(context, assertTypeSymbol, objectTypeSymbol), OperationKind.Invocation);
         });
     }
 
-    private static void AnalyzeInvocationOperation(OperationAnalysisContext context, INamedTypeSymbol assertTypeSymbol)
+    private static void AnalyzeInvocationOperation(OperationAnalysisContext context, INamedTypeSymbol assertTypeSymbol, INamedTypeSymbol objectTypeSymbol)
     {
         var operation = (IInvocationOperation)context.Operation;
         IMethodSymbol targetMethod = operation.TargetMethod;
@@ -242,19 +244,19 @@ public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
         switch (targetMethod.Name)
         {
             case "IsTrue":
-                AnalyzeIsTrueOrIsFalseInvocation(context, firstArgument, isTrueInvocation: true);
+                AnalyzeIsTrueOrIsFalseInvocation(context, firstArgument, isTrueInvocation: true, objectTypeSymbol);
                 break;
 
             case "IsFalse":
-                AnalyzeIsTrueOrIsFalseInvocation(context, firstArgument, isTrueInvocation: false);
+                AnalyzeIsTrueOrIsFalseInvocation(context, firstArgument, isTrueInvocation: false, objectTypeSymbol);
                 break;
 
             case "AreEqual":
-                AnalyzeAreEqualOrAreNotEqualInvocation(context, firstArgument, isAreEqualInvocation: true);
+                AnalyzeAreEqualOrAreNotEqualInvocation(context, firstArgument, isAreEqualInvocation: true, objectTypeSymbol);
                 break;
 
             case "AreNotEqual":
-                AnalyzeAreEqualOrAreNotEqualInvocation(context, firstArgument, isAreEqualInvocation: false);
+                AnalyzeAreEqualOrAreNotEqualInvocation(context, firstArgument, isAreEqualInvocation: false, objectTypeSymbol);
                 break;
         }
     }
@@ -431,6 +433,7 @@ public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
 
     private static CollectionCheckStatus RecognizeCollectionMethodCheck(
         IOperation operation,
+        INamedTypeSymbol objectTypeSymbol,
         out SyntaxNode? collectionExpression,
         out SyntaxNode? itemExpression)
     {
@@ -441,10 +444,7 @@ public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
             // Check for Collection.Contains(item)
             if (methodName == "Contains" && invocation.Arguments.Length == 1)
             {
-                // Ensure it's a collection type (implements IEnumerable)
-                ITypeSymbol? receiverType = invocation.Instance?.Type;
-                if (receiverType is not null &&
-                    IsCollectionType(receiverType))
+                if (IsBCLCollectionType(invocation.TargetMethod.ContainingType, objectTypeSymbol))
                 {
                     collectionExpression = invocation.Instance?.Syntax;
                     itemExpression = invocation.Arguments[0].Value.Syntax;
@@ -458,11 +458,14 @@ public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
         return CollectionCheckStatus.Unknown;
     }
 
-    private static bool IsCollectionType(ITypeSymbol type)
-        // Check if the type implements IEnumerable (but is not string)
+    private static bool IsBCLCollectionType(ITypeSymbol type, INamedTypeSymbol objectTypeSymbol)
+        // Check if the type implements IEnumerable<T> (but is not string)
+        // Note: Assert.Contains/IsEmpty/HasCount for collections accept IEnumerable<T>, but not IEnumerable.
         => type.SpecialType != SpecialType.System_String && type.AllInterfaces.Any(i =>
-            i.SpecialType == SpecialType.System_Collections_IEnumerable ||
-            (i.OriginalDefinition?.SpecialType == SpecialType.System_Collections_Generic_IEnumerable_T));
+            i.OriginalDefinition.SpecialType == SpecialType.System_Collections_Generic_IEnumerable_T) &&
+            // object is coming from BCL and it's expected to always have a public key.
+            type.ContainingAssembly.Identity.HasPublicKey == objectTypeSymbol.ContainingAssembly.Identity.HasPublicKey &&
+            type.ContainingAssembly.Identity.PublicKey.SequenceEqual(objectTypeSymbol.ContainingAssembly.Identity.PublicKey);
 
     private static ComparisonCheckStatus RecognizeComparisonCheck(
         IOperation operation,
@@ -490,7 +493,7 @@ public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
         return ComparisonCheckStatus.Unknown;
     }
 
-    private static void AnalyzeIsTrueOrIsFalseInvocation(OperationAnalysisContext context, IOperation conditionArgument, bool isTrueInvocation)
+    private static void AnalyzeIsTrueOrIsFalseInvocation(OperationAnalysisContext context, IOperation conditionArgument, bool isTrueInvocation, INamedTypeSymbol objectTypeSymbol)
     {
         RoslynDebug.Assert(context.Operation is IInvocationOperation, "Expected IInvocationOperation.");
 
@@ -577,7 +580,7 @@ public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
         }
 
         // Check for collection method patterns: myCollection.Contains(...)
-        CollectionCheckStatus collectionMethodStatus = RecognizeCollectionMethodCheck(conditionArgument, out SyntaxNode? collectionExpr, out SyntaxNode? itemExpr);
+        CollectionCheckStatus collectionMethodStatus = RecognizeCollectionMethodCheck(conditionArgument, objectTypeSymbol, out SyntaxNode? collectionExpr, out SyntaxNode? itemExpr);
         if (collectionMethodStatus != CollectionCheckStatus.Unknown)
         {
             if (collectionMethodStatus == CollectionCheckStatus.Contains)
@@ -707,7 +710,7 @@ public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
         }
     }
 
-    private static void AnalyzeAreEqualOrAreNotEqualInvocation(OperationAnalysisContext context, IOperation expectedArgument, bool isAreEqualInvocation)
+    private static void AnalyzeAreEqualOrAreNotEqualInvocation(OperationAnalysisContext context, IOperation expectedArgument, bool isAreEqualInvocation, INamedTypeSymbol objectTypeSymbol)
     {
         // Check for collection count patterns: collection.Count/Length == 0 or collection.Count/Length == X
         if (isAreEqualInvocation)
@@ -718,6 +721,7 @@ public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
                 CountCheckStatus countStatus = RecognizeCountCheck(
                     expectedArgument,
                     actualArgumentValue,
+                    objectTypeSymbol,
                     out SyntaxNode? collectionExpr,
                     out _,
                     out _);
@@ -824,6 +828,7 @@ public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
     private static CountCheckStatus RecognizeCountCheck(
         IOperation expectedArgument,
         IOperation actualArgument,
+        INamedTypeSymbol objectTypeSymbol,
         out SyntaxNode? collectionExpression,
         out SyntaxNode? countExpression,
         out int countValue)
@@ -835,7 +840,7 @@ public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
             actualArgument is IPropertyReferenceOperation propertyRef &&
             propertyRef.Property.Name is "Count" or "Length" &&
             propertyRef.Instance?.Type is not null &&
-            IsCollectionType(propertyRef.Instance.Type))
+            IsBCLCollectionType(propertyRef.Property.ContainingType, objectTypeSymbol))
         {
             collectionExpression = propertyRef.Instance.Syntax;
             countExpression = propertyRef.Syntax;
@@ -850,7 +855,7 @@ public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
             expectedArgument is IPropertyReferenceOperation propertyRef2 &&
             propertyRef2.Property.Name is "Count" or "Length" &&
             propertyRef2.Instance?.Type is not null &&
-            IsCollectionType(propertyRef2.Instance.Type))
+            IsBCLCollectionType(propertyRef2.Property.ContainingType, objectTypeSymbol))
         {
             collectionExpression = propertyRef2.Instance.Syntax;
             countExpression = propertyRef2.Syntax;
