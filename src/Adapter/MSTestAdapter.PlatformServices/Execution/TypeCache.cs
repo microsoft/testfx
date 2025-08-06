@@ -314,7 +314,7 @@ internal sealed class TypeCache : MarshalByRefObject
         // which is used to decide whether TestInitialize/TestCleanup methods
         // present in the base type should be used or not. They are not used if
         // the method is overridden in the derived type.
-        var instanceMethods = new Dictionary<string, string?>();
+        HashSet<string>? instanceMethods = classType.BaseType == typeof(object) ? null : [];
 
         foreach (MethodInfo methodInfo in PlatformServiceProvider.Instance.ReflectionOperations.GetDeclaredMethods(classType))
         {
@@ -621,16 +621,16 @@ internal sealed class TypeCache : MarshalByRefObject
         TestClassInfo classInfo,
         MethodInfo methodInfo,
         bool isBase,
-        Dictionary<string, string?> instanceMethods)
+        HashSet<string>? instanceMethods)
     {
         bool hasTestInitialize = _reflectionHelper.IsAttributeDefined<TestInitializeAttribute>(methodInfo, inherit: false);
         bool hasTestCleanup = _reflectionHelper.IsAttributeDefined<TestCleanupAttribute>(methodInfo, inherit: false);
 
         if (!hasTestCleanup && !hasTestInitialize)
         {
-            if (methodInfo.HasCorrectTestInitializeOrCleanupSignature())
+            if (instanceMethods is not null && methodInfo.HasCorrectTestInitializeOrCleanupSignature())
             {
-                instanceMethods[methodInfo.Name] = null;
+                instanceMethods.Add(methodInfo.Name);
             }
 
             return;
@@ -655,7 +655,7 @@ internal sealed class TypeCache : MarshalByRefObject
             }
             else
             {
-                if (!instanceMethods.ContainsKey(methodInfo.Name))
+                if (instanceMethods is not null && !instanceMethods.Contains(methodInfo.Name))
                 {
                     classInfo.BaseTestInitializeMethodsQueue.Enqueue(methodInfo);
                 }
@@ -675,14 +675,14 @@ internal sealed class TypeCache : MarshalByRefObject
             }
             else
             {
-                if (!instanceMethods.ContainsKey(methodInfo.Name))
+                if (instanceMethods is not null && !instanceMethods.Contains(methodInfo.Name))
                 {
                     classInfo.BaseTestCleanupMethodsQueue.Enqueue(methodInfo);
                 }
             }
         }
 
-        instanceMethods[methodInfo.Name] = null;
+        instanceMethods?.Add(methodInfo.Name);
     }
 
     /// <summary>
