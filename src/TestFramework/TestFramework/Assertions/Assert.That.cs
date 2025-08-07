@@ -5,46 +5,55 @@ using System.Linq.Expressions;
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
-public sealed partial class Assert
+/// <summary>
+/// Provides That extension to Assert class.
+/// </summary>
+public static partial class AssertExtensions
 {
     /// <summary>
-    /// Evaluates a boolean condition and throws an <see cref="AssertFailedException"/> if the condition is <see
-    /// langword="false"/>.
+    /// Provides That extension to Assert class.
     /// </summary>
-    /// <param name="condition">An expression representing the condition to evaluate. Cannot be <see langword="null"/>.</param>
-    /// <param name="message">An optional message to include in the exception if the assertion fails.</param>
-    /// <param name="conditionExpression">The source code of the condition expression. This parameter is automatically populated by the compiler.</param>
-    /// <exception cref="ArgumentNullException">Thrown if <paramref name="condition"/> is <see langword="null"/>.</exception>
-    /// <exception cref="AssertFailedException">Thrown if the evaluated condition is <see langword="false"/>.</exception>
-    public static void That(Expression<Func<bool>> condition, string? message = null, [CallerArgumentExpression(nameof(condition))] string? conditionExpression = null)
+    extension(Assert _)
     {
-        if (condition == null)
+        /// <summary>
+        /// Evaluates a boolean condition and throws an <see cref="AssertFailedException"/> if the condition is <see
+        /// langword="false"/>.
+        /// </summary>
+        /// <param name="condition">An expression representing the condition to evaluate. Cannot be <see langword="null"/>.</param>
+        /// <param name="message">An optional message to include in the exception if the assertion fails.</param>
+        /// <param name="conditionExpression">The source code of the condition expression. This parameter is automatically populated by the compiler.</param>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="condition"/> is <see langword="null"/>.</exception>
+        /// <exception cref="AssertFailedException">Thrown if the evaluated condition is <see langword="false"/>.</exception>
+        public static void That(Expression<Func<bool>> condition, string? message = null, [CallerArgumentExpression(nameof(condition))] string? conditionExpression = null)
         {
-            throw new ArgumentNullException(nameof(condition));
-        }
+            if (condition == null)
+            {
+                throw new ArgumentNullException(nameof(condition));
+            }
 
-        if (condition.Compile()())
-        {
-            return;
-        }
+            if (condition.Compile()())
+            {
+                return;
+            }
 
-        var sb = new StringBuilder();
-        string expressionText = conditionExpression
-            ?? throw new ArgumentNullException(nameof(conditionExpression));
-        sb.AppendLine(string.Format(CultureInfo.InvariantCulture, FrameworkMessages.AssertThatFailedFormat, expressionText));
-        if (!string.IsNullOrWhiteSpace(message))
-        {
-            sb.AppendLine(string.Format(CultureInfo.InvariantCulture, FrameworkMessages.AssertThatMessageFormat, message));
-        }
+            var sb = new StringBuilder();
+            string expressionText = conditionExpression
+                ?? throw new ArgumentNullException(nameof(conditionExpression));
+            sb.AppendLine(string.Format(CultureInfo.InvariantCulture, FrameworkMessages.AssertThatFailedFormat, expressionText));
+            if (!string.IsNullOrWhiteSpace(message))
+            {
+                sb.AppendLine(string.Format(CultureInfo.InvariantCulture, FrameworkMessages.AssertThatMessageFormat, message));
+            }
 
-        string details = ExtractDetails(condition.Body);
-        if (!string.IsNullOrWhiteSpace(details))
-        {
-            sb.AppendLine(FrameworkMessages.AssertThatDetailsPrefix);
-            sb.AppendLine(details);
-        }
+            string details = ExtractDetails(condition.Body);
+            if (!string.IsNullOrWhiteSpace(details))
+            {
+                sb.AppendLine(FrameworkMessages.AssertThatDetailsPrefix);
+                sb.AppendLine(details);
+            }
 
-        throw new AssertFailedException(sb.ToString().TrimEnd());
+            throw new AssertFailedException(sb.ToString().TrimEnd());
+        }
     }
 
     private static string ExtractDetails(Expression expr)
