@@ -53,3 +53,6 @@ static Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert.ReferenceEquals
 *REMOVED*abstract Microsoft.VisualStudio.TestTools.UnitTesting.ConditionBaseAttribute.IgnoreMessage.get -> string?
 virtual Microsoft.VisualStudio.TestTools.UnitTesting.ConditionBaseAttribute.IgnoreMessage.get -> string?
 virtual Microsoft.VisualStudio.TestTools.UnitTesting.ConditionBaseAttribute.IgnoreMessage.set -> void
+*REMOVED*static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Instance.get -> Microsoft.VisualStudio.TestTools.UnitTesting.Assert!
+*REMOVED*static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.Instance.get -> Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert!
+*REMOVED*static Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert.Instance.get -> Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert!
