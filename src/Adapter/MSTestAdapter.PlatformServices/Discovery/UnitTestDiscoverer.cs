@@ -98,13 +98,7 @@ internal class UnitTestDiscoverer
         SendTestCases(testElements, discoverySink, discoveryContext, logger);
     }
 
-#pragma warning disable IDE0028 // Collection initialization can be simplified - cannot be done for all TFMs. So suppressing.
-    private static readonly ConditionalWeakTable<TestCase, object?[]> TestCaseToDataDictionary = new();
     private readonly ITestSourceHandler _testSource;
-#pragma warning restore IDE0028 // Collection initialization can be simplified
-
-    internal static bool TryGetActualData(TestCase testCase, [NotNullWhen(true)] out object?[]? actualData)
-        => TestCaseToDataDictionary.TryGetValue(testCase, out actualData);
 
     internal void SendTestCases(IEnumerable<UnitTestElement> testElements, ITestCaseDiscoverySink discoverySink, IDiscoveryContext? discoveryContext, IMessageLogger logger)
     {
@@ -133,11 +127,6 @@ internal class UnitTestDiscoverer
                 }
 
                 continue;
-            }
-
-            if (testElement.TestMethod.ActualData is { } actualData)
-            {
-                TestCaseToDataDictionary.Add(testCase, actualData);
             }
 
             if (!hasAnyRunnableTests)

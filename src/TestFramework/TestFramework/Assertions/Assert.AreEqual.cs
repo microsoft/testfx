@@ -535,7 +535,7 @@ public sealed partial class Assert
         if (diffIndex == -1)
         {
             // Strings are equal - should not happen in practice, we call this method only when they are not equal.
-            ApplicationStateGuard.Unreachable();
+            throw ApplicationStateGuard.Unreachable();
         }
 
         // Format the enhanced string comparison message

@@ -20,10 +20,10 @@ public sealed partial class Assert
     /// <remarks>
     /// Users can use this to plug-in custom assertions through C# extension methods.
     /// For instance, the signature of a custom assertion provider could be "public static void IsOfType&lt;T&gt;(this Assert assert, object obj)"
-    /// Users could then use a syntax similar to the default assertions which in this case is "Assert.Instance.IsOfType&lt;Dog&gt;(animal);"
+    /// Users could then use a syntax similar to the default assertions which in this case is "Assert.That.IsOfType&lt;Dog&gt;(animal);"
     /// More documentation is at "https://github.com/Microsoft/testfx/docs/README.md".
     /// </remarks>
-    public static Assert Instance { get; } = new Assert();
+    public static Assert That { get; } = new();
 
     /// <summary>
     /// Replaces null characters ('\0') with "\\0".
