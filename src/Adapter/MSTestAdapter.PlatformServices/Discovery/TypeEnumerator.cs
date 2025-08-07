@@ -130,7 +130,10 @@ internal class TypeEnumerator
 
         ManagedNameHelper.GetManagedName(method, out string managedType, out string managedMethod, out string?[]? hierarchyValues);
         hierarchyValues[HierarchyConstants.Levels.ContainerIndex] = null; // This one will be set by test windows to current test project name.
-        var testMethod = new TestMethod(managedType, managedMethod, hierarchyValues, method.Name, _type.FullName!, _assemblyFilePath, null, _testIdGenerationStrategy);
+        var testMethod = new TestMethod(managedType, managedMethod, hierarchyValues, method.Name, _type.FullName!, _assemblyFilePath, null, _testIdGenerationStrategy)
+        {
+            MethodInfo = method,
+        };
 
         if (!string.Equals(method.DeclaringType!.FullName, _type.FullName, StringComparison.Ordinal))
         {
@@ -189,6 +192,7 @@ internal class TypeEnumerator
 
         // get DisplayName from TestMethodAttribute (or any inherited attribute)
         testElement.DisplayName = testMethodAttribute?.DisplayName ?? method.Name;
+        testMethod.DisplayName = testElement.DisplayName;
 
         return testElement;
     }

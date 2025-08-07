@@ -62,6 +62,7 @@ internal sealed class UnitTestElement
     /// <summary>
     /// Gets or sets the DisplayName.
     /// </summary>
+    // TODO: Remove this property and simply use TestMethod.DisplayName
     public string? DisplayName { get; set; }
 
     /// <summary>
@@ -111,6 +112,7 @@ internal sealed class UnitTestElement
         TestCase testCase = new(testFullName, EngineConstants.ExecutorUri, TestMethod.AssemblyName)
         {
             DisplayName = GetDisplayName(),
+            LocalExtensionData = this,
         };
 
         if (TestMethod.HasManagedMethodAndTypeProperties)
