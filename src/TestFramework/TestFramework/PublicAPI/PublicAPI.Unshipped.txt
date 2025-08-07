@@ -1,4 +1,5 @@
 #nullable enable
+<<<<<<< HEAD
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertNonStrictThrowsInterpolatedStringHandler<TException>.AssertNonStrictThrowsInterpolatedStringHandler(int literalLength, int formattedCount, System.Func<object?>! action, out bool shouldAppend) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertThrowsExactlyInterpolatedStringHandler<TException>.AssertThrowsExactlyInterpolatedStringHandler(int literalLength, int formattedCount, System.Func<object?>! action, out bool shouldAppend) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.CIConditionAttribute
@@ -53,3 +54,9 @@ static Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert.ReferenceEquals
 *REMOVED*abstract Microsoft.VisualStudio.TestTools.UnitTesting.ConditionBaseAttribute.IgnoreMessage.get -> string?
 virtual Microsoft.VisualStudio.TestTools.UnitTesting.ConditionBaseAttribute.IgnoreMessage.get -> string?
 virtual Microsoft.VisualStudio.TestTools.UnitTesting.ConditionBaseAttribute.IgnoreMessage.set -> void
+=======
+Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataSourceType.Field = 3 -> Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataSourceType
+*REMOVED*static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Instance.get -> Microsoft.VisualStudio.TestTools.UnitTesting.Assert!
+*REMOVED*static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.Instance.get -> Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert!
+*REMOVED*static Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert.Instance.get -> Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert!
+>>>>>>> Revert Assert.That obsoletion
