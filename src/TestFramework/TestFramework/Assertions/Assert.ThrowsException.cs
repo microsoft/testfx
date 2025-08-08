@@ -5,6 +5,8 @@ using System.ComponentModel;
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
+#pragma warning disable RS0026 // Do not add multiple public overloads with optional parameters
+
 /// <summary>
 /// A collection of helper classes to test various conditions within
 /// unit tests. If the condition being tested is not met, an exception
@@ -76,13 +78,11 @@ public sealed partial class Assert
 
         public void AppendFormatted(string? value) => _builder!.Append(value);
 
-#pragma warning disable RS0026 // Do not add multiple public overloads with optional parameters
 #pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
         public void AppendFormatted(string? value, int alignment = 0, string? format = null) => _builder!.AppendFormat(null, $"{{0,{alignment}:{format}}}", value);
 
         public void AppendFormatted(object? value, int alignment = 0, string? format = null) => _builder!.AppendFormat(null, $"{{0,{alignment}:{format}}}", value);
 #pragma warning restore RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
-#pragma warning restore RS0026 // Do not add multiple public overloads with optional parameters
     }
 
     [InterpolatedStringHandler]
@@ -148,12 +148,10 @@ public sealed partial class Assert
 
         public void AppendFormatted(string? value) => _builder!.Append(value);
 
-#pragma warning disable RS0026 // Do not add multiple public overloads with optional parameters
 #pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
         public void AppendFormatted(string? value, int alignment = 0, string? format = null) => _builder!.AppendFormat(null, $"{{0,{alignment}:{format}}}", value);
 
         public void AppendFormatted(object? value, int alignment = 0, string? format = null) => _builder!.AppendFormat(null, $"{{0,{alignment}:{format}}}", value);
-#pragma warning restore RS0026 // Do not add multiple public overloads with optional parameters
 #pragma warning restore RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
     }
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
@@ -169,6 +167,10 @@ public sealed partial class Assert
     /// <param name="message">
     /// The message to include in the exception when <paramref name="action"/> does not throws exception of type <typeparamref name="TException"/>.
     /// </param>
+    /// <param name="actionExpression">
+    /// The syntactic expression of action as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
     /// <typeparam name="TException">
     /// The type of exception expected to be thrown.
     /// </typeparam>
@@ -178,18 +180,14 @@ public sealed partial class Assert
     /// <returns>
     /// The exception that was thrown.
     /// </returns>
-#pragma warning disable RS0026 // Do not add multiple public overloads with optional parameters
-    public static TException Throws<TException>(Action action, string message = "")
-#pragma warning restore RS0026 // Do not add multiple public overloads with optional parameters
+    public static TException Throws<TException>(Action action, string message = "", [CallerArgumentExpression(nameof(action))] string actionExpression = "")
         where TException : Exception
-        => ThrowsException<TException>(action, isStrictType: false, message);
+        => ThrowsException<TException>(action, isStrictType: false, message, actionExpression);
 
-    /// <inheritdoc cref="Throws{TException}(Action, string)"/>
-#pragma warning disable RS0026 // Do not add multiple public overloads with optional parameters
-    public static TException Throws<TException>(Func<object?> action, string message = "")
-#pragma warning restore RS0026 // Do not add multiple public overloads with optional parameters
+    /// <inheritdoc cref="Throws{TException}(Action, string, string)"/>
+    public static TException Throws<TException>(Func<object?> action, string message = "", [CallerArgumentExpression(nameof(action))] string actionExpression = "")
         where TException : Exception
-        => ThrowsException<TException>(() => _ = action(), isStrictType: false, message);
+        => ThrowsException<TException>(() => _ = action(), isStrictType: false, message, actionExpression);
 
     /// <summary>
     /// Asserts that the delegate <paramref name="action"/> throws an exception of type <typeparamref name="TException"/>
@@ -202,6 +200,10 @@ public sealed partial class Assert
     /// <param name="messageBuilder">
     /// A func that takes the thrown Exception (or null if the action didn't throw any exception) to construct the message to include in the exception when <paramref name="action"/> does not throws exception of type <typeparamref name="TException"/>.
     /// </param>
+    /// <param name="actionExpression">
+    /// The syntactic expression of action as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
     /// <typeparam name="TException">
     /// The type of exception expected to be thrown.
     /// </typeparam>
@@ -211,27 +213,29 @@ public sealed partial class Assert
     /// <returns>
     /// The exception that was thrown.
     /// </returns>
-    public static TException Throws<TException>(Action action, Func<Exception?, string> messageBuilder)
+    public static TException Throws<TException>(Action action, Func<Exception?, string> messageBuilder, [CallerArgumentExpression(nameof(action))] string actionExpression = "")
         where TException : Exception
-        => ThrowsException<TException>(action, isStrictType: false, messageBuilder);
+        => ThrowsException<TException>(action, isStrictType: false, messageBuilder, actionExpression);
 
-    /// <inheritdoc cref="Throws{TException}(Action, Func{Exception?, string})"/>
-    public static TException Throws<TException>(Func<object?> action, Func<Exception?, string> messageBuilder)
+    /// <inheritdoc cref="Throws{TException}(Action, Func{Exception?, string}, string)"/>
+    public static TException Throws<TException>(Func<object?> action, Func<Exception?, string> messageBuilder, [CallerArgumentExpression(nameof(action))] string actionExpression = "")
         where TException : Exception
-        => ThrowsException<TException>(() => _ = action(), isStrictType: false, messageBuilder);
+        => ThrowsException<TException>(() => _ = action(), isStrictType: false, messageBuilder, actionExpression);
 
-    /// <inheritdoc cref="Throws{TException}(Action, string)" />
+    /// <inheritdoc cref="Throws{TException}(Action, string, string)" />
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
-    public static TException Throws<TException>(Action action, [InterpolatedStringHandlerArgument(nameof(action))] ref AssertNonStrictThrowsInterpolatedStringHandler<TException> message)
+    public static TException Throws<TException>(Action action, [InterpolatedStringHandlerArgument(nameof(action))] ref AssertNonStrictThrowsInterpolatedStringHandler<TException> message, [CallerArgumentExpression(nameof(action))] string actionExpression = "")
 #pragma warning restore IDE0060 // Remove unused parameter
         where TException : Exception
+        // TODO: Use actionExpression to build the message
         => message.ComputeAssertion();
 
-    /// <inheritdoc cref="Throws{TException}(Action, string)" />
+    /// <inheritdoc cref="Throws{TException}(Action, string, string)" />
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
-    public static TException Throws<TException>(Func<object?> action, [InterpolatedStringHandlerArgument(nameof(action))] ref AssertNonStrictThrowsInterpolatedStringHandler<TException> message)
+    public static TException Throws<TException>(Func<object?> action, [InterpolatedStringHandlerArgument(nameof(action))] ref AssertNonStrictThrowsInterpolatedStringHandler<TException> message, [CallerArgumentExpression(nameof(action))] string actionExpression = "")
 #pragma warning restore IDE0060 // Remove unused parameter
         where TException : Exception
+        // TODO: Use actionExpression to build the message
         => message.ComputeAssertion();
 
     /// <summary>
@@ -245,6 +249,10 @@ public sealed partial class Assert
     /// <param name="message">
     /// The message to include in the exception when <paramref name="action"/> does not throws exception of type <typeparamref name="TException"/>.
     /// </param>
+    /// <param name="actionExpression">
+    /// The syntactic expression of action as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
     /// <typeparam name="TException">
     /// The type of exception expected to be thrown.
     /// </typeparam>
@@ -254,18 +262,14 @@ public sealed partial class Assert
     /// <returns>
     /// The exception that was thrown.
     /// </returns>
-#pragma warning disable RS0026 // Do not add multiple public overloads with optional parameters
-    public static TException ThrowsExactly<TException>(Action action, string message = "")
-#pragma warning restore RS0026 // Do not add multiple public overloads with optional parameters
+    public static TException ThrowsExactly<TException>(Action action, string message = "", [CallerArgumentExpression(nameof(action))] string actionExpression = "")
         where TException : Exception
-        => ThrowsException<TException>(action, isStrictType: true, message);
+        => ThrowsException<TException>(action, isStrictType: true, message, actionExpression);
 
-    /// <inheritdoc cref="ThrowsExactly{TException}(Action, string)" />
-#pragma warning disable RS0026 // Do not add multiple public overloads with optional parameters
-    public static TException ThrowsExactly<TException>(Func<object?> action, string message = "")
-#pragma warning restore RS0026 // Do not add multiple public overloads with optional parameters
+    /// <inheritdoc cref="ThrowsExactly{TException}(Action, string, string)" />
+    public static TException ThrowsExactly<TException>(Func<object?> action, string message = "", [CallerArgumentExpression(nameof(action))] string actionExpression = "")
         where TException : Exception
-        => ThrowsException<TException>(() => _ = action(), isStrictType: true, message);
+        => ThrowsException<TException>(() => _ = action(), isStrictType: true, message, actionExpression);
 
     /// <summary>
     /// Asserts that the delegate <paramref name="action"/> throws an exception of type <typeparamref name="TException"/>
@@ -278,6 +282,10 @@ public sealed partial class Assert
     /// <param name="messageBuilder">
     /// A func that takes the thrown Exception (or null if the action didn't throw any exception) to construct the message to include in the exception when <paramref name="action"/> does not throws exception of type <typeparamref name="TException"/>.
     /// </param>
+    /// <param name="actionExpression">
+    /// The syntactic expression of action as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
     /// <typeparam name="TException">
     /// The type of exception expected to be thrown.
     /// </typeparam>
@@ -287,32 +295,37 @@ public sealed partial class Assert
     /// <returns>
     /// The exception that was thrown.
     /// </returns>
-    public static TException ThrowsExactly<TException>(Action action, Func<Exception?, string> messageBuilder)
+    public static TException ThrowsExactly<TException>(Action action, Func<Exception?, string> messageBuilder, [CallerArgumentExpression(nameof(action))] string actionExpression = "")
         where TException : Exception
-        => ThrowsException<TException>(action, isStrictType: true, messageBuilder);
+        => ThrowsException<TException>(action, isStrictType: true, messageBuilder, actionExpression);
 
-    /// <inheritdoc cref="ThrowsExactly{TException}(Action, Func{Exception?, string})" />
-    public static TException ThrowsExactly<TException>(Func<object?> action, Func<Exception?, string> messageBuilder)
+    /// <inheritdoc cref="ThrowsExactly{TException}(Action, Func{Exception?, string}, string)" />
+    public static TException ThrowsExactly<TException>(Func<object?> action, Func<Exception?, string> messageBuilder, [CallerArgumentExpression(nameof(action))] string actionExpression = "")
     where TException : Exception
-        => ThrowsException<TException>(() => _ = action(), isStrictType: true, messageBuilder);
+        => ThrowsException<TException>(() => _ = action(), isStrictType: true, messageBuilder, actionExpression);
 
-    /// <inheritdoc cref="ThrowsExactly{TException}(Action, string)" />
+    /// <inheritdoc cref="ThrowsExactly{TException}(Action, string, string)" />
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
-    public static TException ThrowsExactly<TException>(Action action, [InterpolatedStringHandlerArgument(nameof(action))] ref AssertThrowsExactlyInterpolatedStringHandler<TException> message)
+    public static TException ThrowsExactly<TException>(Action action, [InterpolatedStringHandlerArgument(nameof(action))] ref AssertThrowsExactlyInterpolatedStringHandler<TException> message, [CallerArgumentExpression(nameof(action))] string actionExpression = "")
 #pragma warning restore IDE0060 // Remove unused parameter
         where TException : Exception
+        // TODO: Use actionExpression to build the message
         => message.ComputeAssertion();
 
-    /// <inheritdoc cref="ThrowsExactly{TException}(Action, string)" />
+    /// <inheritdoc cref="ThrowsExactly{TException}(Action, string, string)" />
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
-    public static TException ThrowsExactly<TException>(Func<object?> action, [InterpolatedStringHandlerArgument(nameof(action))] ref AssertThrowsExactlyInterpolatedStringHandler<TException> message)
+    public static TException ThrowsExactly<TException>(Func<object?> action, [InterpolatedStringHandlerArgument(nameof(action))] ref AssertThrowsExactlyInterpolatedStringHandler<TException> message, [CallerArgumentExpression(nameof(action))] string actionExpression = "")
 #pragma warning restore IDE0060 // Remove unused parameter
         where TException : Exception
+        // TODO: Use actionExpression to build the message
         => message.ComputeAssertion();
 
-    private static TException ThrowsException<TException>(Action action, bool isStrictType, string message, [CallerMemberName] string assertMethodName = "")
+    private static TException ThrowsException<TException>(Action action, bool isStrictType, string message, string actionExpression, [CallerMemberName] string assertMethodName = "")
         where TException : Exception
     {
+        // TODO: Use actionExpression to build the message
+        _ = actionExpression;
+
         Guard.NotNull(action);
         Guard.NotNull(message);
 
@@ -330,9 +343,12 @@ public sealed partial class Assert
         return null!;
     }
 
-    private static TException ThrowsException<TException>(Action action, bool isStrictType, Func<Exception?, string> messageBuilder, [CallerMemberName] string assertMethodName = "")
+    private static TException ThrowsException<TException>(Action action, bool isStrictType, Func<Exception?, string> messageBuilder, string actionExpression, [CallerMemberName] string assertMethodName = "")
         where TException : Exception
     {
+        // TODO: Use actionExpression to build the message
+        _ = actionExpression;
+
         Guard.NotNull(action);
         Guard.NotNull(messageBuilder);
 
@@ -361,6 +377,10 @@ public sealed partial class Assert
     /// <param name="message">
     /// The message to include in the exception when <paramref name="action"/> does not throws exception of type <typeparamref name="TException"/>.
     /// </param>
+    /// <param name="actionExpression">
+    /// The syntactic expression of action as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
     /// <typeparam name="TException">
     /// The type of exception expected to be thrown.
     /// </typeparam>
@@ -371,10 +391,10 @@ public sealed partial class Assert
     /// The exception that was thrown.
     /// </returns>
 #pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
-    public static Task<TException> ThrowsAsync<TException>(Func<Task> action, string message = "")
+    public static Task<TException> ThrowsAsync<TException>(Func<Task> action, string message = "", [CallerArgumentExpression(nameof(action))] string actionExpression = "")
 #pragma warning restore RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
         where TException : Exception
-        => ThrowsExceptionAsync<TException>(action, isStrictType: false, message);
+        => ThrowsExceptionAsync<TException>(action, isStrictType: false, message, actionExpression);
 
     /// <summary>
     /// Asserts that the delegate <paramref name="action"/> throws an exception of type <typeparamref name="TException"/>
@@ -387,6 +407,10 @@ public sealed partial class Assert
     /// <param name="message">
     /// The message to include in the exception when <paramref name="action"/> does not throws exception of type <typeparamref name="TException"/>.
     /// </param>
+    /// <param name="actionExpression">
+    /// The syntactic expression of action as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
     /// <typeparam name="TException">
     /// The type of exception expected to be thrown.
     /// </typeparam>
@@ -397,10 +421,10 @@ public sealed partial class Assert
     /// The exception that was thrown.
     /// </returns>
 #pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
-    public static Task<TException> ThrowsExactlyAsync<TException>(Func<Task> action, string message = "")
+    public static Task<TException> ThrowsExactlyAsync<TException>(Func<Task> action, string message = "", [CallerArgumentExpression(nameof(action))] string actionExpression = "")
 #pragma warning restore RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
         where TException : Exception
-        => ThrowsExceptionAsync<TException>(action, isStrictType: true, message);
+        => ThrowsExceptionAsync<TException>(action, isStrictType: true, message, actionExpression);
 
     /// <summary>
     /// Asserts that the delegate <paramref name="action"/> throws an exception of type <typeparamref name="TException"/>
@@ -413,6 +437,10 @@ public sealed partial class Assert
     /// <param name="messageBuilder">
     /// A func that takes the thrown Exception (or null if the action didn't throw any exception) to construct the message to include in the exception when <paramref name="action"/> does not throws exception of type <typeparamref name="TException"/>.
     /// </param>
+    /// <param name="actionExpression">
+    /// The syntactic expression of action as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
     /// <typeparam name="TException">
     /// The type of exception expected to be thrown.
     /// </typeparam>
@@ -422,9 +450,9 @@ public sealed partial class Assert
     /// <returns>
     /// The exception that was thrown.
     /// </returns>
-    public static Task<TException> ThrowsAsync<TException>(Func<Task> action, Func<Exception?, string> messageBuilder)
+    public static Task<TException> ThrowsAsync<TException>(Func<Task> action, Func<Exception?, string> messageBuilder, [CallerArgumentExpression(nameof(action))] string actionExpression = "")
         where TException : Exception
-        => ThrowsExceptionAsync<TException>(action, isStrictType: false, messageBuilder);
+        => ThrowsExceptionAsync<TException>(action, isStrictType: false, messageBuilder, actionExpression);
 
     /// <summary>
     /// Asserts that the delegate <paramref name="action"/> throws an exception of type <typeparamref name="TException"/>
@@ -437,6 +465,10 @@ public sealed partial class Assert
     /// <param name="messageBuilder">
     /// A func that takes the thrown Exception (or null if the action didn't throw any exception) to construct the message to include in the exception when <paramref name="action"/> does not throws exception of type <typeparamref name="TException"/>.
     /// </param>
+    /// <param name="actionExpression">
+    /// The syntactic expression of action as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
     /// <typeparam name="TException">
     /// The type of exception expected to be thrown.
     /// </typeparam>
@@ -446,13 +478,16 @@ public sealed partial class Assert
     /// <returns>
     /// The exception that was thrown.
     /// </returns>
-    public static Task<TException> ThrowsExactlyAsync<TException>(Func<Task> action, Func<Exception?, string> messageBuilder)
+    public static Task<TException> ThrowsExactlyAsync<TException>(Func<Task> action, Func<Exception?, string> messageBuilder, [CallerArgumentExpression(nameof(action))] string actionExpression = "")
         where TException : Exception
-        => ThrowsExceptionAsync<TException>(action, isStrictType: true, messageBuilder);
+        => ThrowsExceptionAsync<TException>(action, isStrictType: true, messageBuilder, actionExpression);
 
-    private static async Task<TException> ThrowsExceptionAsync<TException>(Func<Task> action, bool isStrictType, string message, [CallerMemberName] string assertMethodName = "")
+    private static async Task<TException> ThrowsExceptionAsync<TException>(Func<Task> action, bool isStrictType, string message, string actionExpression, [CallerMemberName] string assertMethodName = "")
         where TException : Exception
     {
+        // TODO: Use actionExpression to build the message
+        _ = actionExpression;
+
         Guard.NotNull(action);
         Guard.NotNull(message);
 
@@ -470,9 +505,12 @@ public sealed partial class Assert
         return null!;
     }
 
-    private static async Task<TException> ThrowsExceptionAsync<TException>(Func<Task> action, bool isStrictType, Func<Exception?, string> messageBuilder, [CallerMemberName] string assertMethodName = "")
+    private static async Task<TException> ThrowsExceptionAsync<TException>(Func<Task> action, bool isStrictType, Func<Exception?, string> messageBuilder, string actionExpression, [CallerMemberName] string assertMethodName = "")
         where TException : Exception
     {
+        // TODO: Use actionExpression to build the message
+        _ = actionExpression;
+
         Guard.NotNull(action);
         Guard.NotNull(messageBuilder);
 

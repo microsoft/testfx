@@ -24,12 +24,20 @@ public sealed partial class Assert
     /// does not begin with <paramref name="substring"/>. The message is
     /// shown in test results.
     /// </param>
+    /// <param name="substringExpression">
+    /// The syntactic expression of substring as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="valueExpression">
+    /// The syntactic expression of value as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
     /// <exception cref="AssertFailedException">
     /// <paramref name="value"/> is null, or <paramref name="substring"/> is null,
     /// or <paramref name="value"/> does not start with <paramref name="substring"/>.
     /// </exception>
-    public static void StartsWith([NotNull] string? substring, [NotNull] string? value, string message = "")
-        => StartsWith(substring, value, StringComparison.Ordinal, message);
+    public static void StartsWith([NotNull] string? substring, [NotNull] string? value, string message = "", [CallerArgumentExpression(nameof(substring))] string substringExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
+        => StartsWith(substring, value, StringComparison.Ordinal, message, substringExpression, valueExpression);
 
     /// <summary>
     /// Tests whether the specified string begins with the specified substring
@@ -50,12 +58,24 @@ public sealed partial class Assert
     /// does not begin with <paramref name="substring"/>. The message is
     /// shown in test results.
     /// </param>
+    /// <param name="substringExpression">
+    /// The syntactic expression of substring as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="valueExpression">
+    /// The syntactic expression of value as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
     /// <exception cref="AssertFailedException">
     /// <paramref name="value"/> is null, or <paramref name="substring"/> is null,
     /// or <paramref name="value"/> does not start with <paramref name="substring"/>.
     /// </exception>
-    public static void StartsWith([NotNull] string? substring, [NotNull] string? value, StringComparison comparisonType, string message = "")
+    public static void StartsWith([NotNull] string? substring, [NotNull] string? value, StringComparison comparisonType, string message = "", [CallerArgumentExpression(nameof(substring))] string substringExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
     {
+        // TODO: Use substringExpression and valueExpression to build the message
+        _ = substringExpression;
+        _ = valueExpression;
+
         CheckParameterNotNull(value, "Assert.StartsWith", "value", string.Empty);
         CheckParameterNotNull(substring, "Assert.StartsWith", "substring", string.Empty);
         if (!value.StartsWith(substring, comparisonType))
@@ -81,12 +101,20 @@ public sealed partial class Assert
     /// does not begin with <paramref name="substring"/>. The message is
     /// shown in test results.
     /// </param>
+    /// <param name="substringExpression">
+    /// The syntactic expression of substring as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="valueExpression">
+    /// The syntactic expression of value as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
     /// <exception cref="AssertFailedException">
     /// <paramref name="value"/> is null, or <paramref name="substring"/> is null,
     /// or <paramref name="value"/> does not start with <paramref name="substring"/>.
     /// </exception>
-    public static void DoesNotStartWith([NotNull] string? substring, [NotNull] string? value, string message = "")
-        => DoesNotStartWith(substring, value, StringComparison.Ordinal, message);
+    public static void DoesNotStartWith([NotNull] string? substring, [NotNull] string? value, string message = "", [CallerArgumentExpression(nameof(substring))] string substringExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
+        => DoesNotStartWith(substring, value, StringComparison.Ordinal, message, substringExpression, valueExpression);
 
     /// <summary>
     /// Tests whether the specified string does not begin with the specified substring
@@ -106,12 +134,24 @@ public sealed partial class Assert
     /// does not begin with <paramref name="substring"/>. The message is
     /// shown in test results.
     /// </param>
+    /// <param name="substringExpression">
+    /// The syntactic expression of substring as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="valueExpression">
+    /// The syntactic expression of value as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
     /// <exception cref="AssertFailedException">
     /// <paramref name="value"/> is null, or <paramref name="substring"/> is null,
     /// or <paramref name="value"/> does not start with <paramref name="substring"/>.
     /// </exception>
-    public static void DoesNotStartWith([NotNull] string? substring, [NotNull] string? value, StringComparison comparisonType, string message = "")
+    public static void DoesNotStartWith([NotNull] string? substring, [NotNull] string? value, StringComparison comparisonType, string message = "", [CallerArgumentExpression(nameof(substring))] string substringExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
     {
+        // TODO: Use substringExpression and valueExpression to build the message
+        _ = substringExpression;
+        _ = valueExpression;
+
         CheckParameterNotNull(value, "Assert.DoesNotStartWith", "value", string.Empty);
         CheckParameterNotNull(substring, "Assert.DoesNotStartWith", "substring", string.Empty);
         if (value.StartsWith(substring, comparisonType))
