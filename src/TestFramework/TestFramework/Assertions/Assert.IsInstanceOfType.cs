@@ -275,24 +275,31 @@ public sealed partial class Assert
     /// is not an instance of <paramref name="expectedType"/>. The message is
     /// shown in test results.
     /// </param>
+    /// <param name="valueExpression">
+    /// The syntactic expression of value as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="value"/> is null or
     /// <paramref name="expectedType"/> is not in the inheritance hierarchy
     /// of <paramref name="value"/>.
     /// </exception>
-    public static void IsInstanceOfType([NotNull] object? value, [NotNull] Type? expectedType, string message = "")
+    public static void IsInstanceOfType([NotNull] object? value, [NotNull] Type? expectedType, string message = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
     {
+        // TODO: Use valueExpression to build the message.
+        _ = valueExpression;
         if (IsInstanceOfTypeFailing(value, expectedType))
         {
             ThrowAssertIsInstanceOfTypeFailed(value, expectedType, BuildUserMessage(message));
         }
     }
 
-    /// <inheritdoc cref="IsInstanceOfType(object?, Type?, string?)" />
+    /// <inheritdoc cref="IsInstanceOfType(object?, Type?, string, string)" />
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
-    public static void IsInstanceOfType([NotNull] object? value, [NotNull] Type? expectedType, [InterpolatedStringHandlerArgument(nameof(value), nameof(expectedType))] ref AssertIsInstanceOfTypeInterpolatedStringHandler message)
+    public static void IsInstanceOfType([NotNull] object? value, [NotNull] Type? expectedType, [InterpolatedStringHandlerArgument(nameof(value), nameof(expectedType))] ref AssertIsInstanceOfTypeInterpolatedStringHandler message, [CallerArgumentExpression(nameof(value))] string valueExpression = "")
 #pragma warning restore IDE0060 // Remove unused parameter
 #pragma warning disable CS8777 // Parameter must have a non-null value when exiting. - Not sure how to express the semantics to the compiler, but the implementation guarantees that.
+        // TODO: Use valueExpression to build the message.
         => message.ComputeAssertion();
 #pragma warning restore CS8777 // Parameter must have a non-null value when exiting.
 
@@ -302,18 +309,19 @@ public sealed partial class Assert
     /// inheritance hierarchy of the object.
     /// </summary>
     /// <typeparam name="T">The expected type of <paramref name="value"/>.</typeparam>
-    public static T IsInstanceOfType<T>([NotNull] object? value, string message = "")
+    public static T IsInstanceOfType<T>([NotNull] object? value, string message = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
     {
-        IsInstanceOfType(value, typeof(T), message);
+        IsInstanceOfType(value, typeof(T), message, valueExpression);
         return (T)value!;
     }
 
-    /// <inheritdoc cref="IsInstanceOfType{T}(object?, string?)" />
+    /// <inheritdoc cref="IsInstanceOfType{T}(object?, string, string)" />
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
-    public static T IsInstanceOfType<T>([NotNull] object? value, [InterpolatedStringHandlerArgument(nameof(value))] ref AssertGenericIsInstanceOfTypeInterpolatedStringHandler<T> message)
+    public static T IsInstanceOfType<T>([NotNull] object? value, [InterpolatedStringHandlerArgument(nameof(value))] ref AssertGenericIsInstanceOfTypeInterpolatedStringHandler<T> message, [CallerArgumentExpression(nameof(value))] string valueExpression = "")
 #pragma warning restore IDE0060 // Remove unused parameter
 #pragma warning disable CS8777 // Parameter must have a non-null value when exiting. - Not sure how to express the semantics to the compiler, but the implementation guarantees that.
     {
+        // TODO: Use valueExpression to build the message.
         message.ComputeAssertion();
         return (T)value!;
     }
@@ -355,24 +363,32 @@ public sealed partial class Assert
     /// is an instance of <paramref name="wrongType"/>. The message is shown
     /// in test results.
     /// </param>
+    /// <param name="valueExpression">
+    /// The syntactic expression of value as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="value"/> is not null and
     /// <paramref name="wrongType"/> is in the inheritance hierarchy
     /// of <paramref name="value"/>.
     /// </exception>
-    public static void IsNotInstanceOfType(object? value, [NotNull] Type? wrongType, string message = "")
+    public static void IsNotInstanceOfType(object? value, [NotNull] Type? wrongType, string message = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
     {
+        // TODO: Use valueExpression to build the message.
+        _ = valueExpression;
+
         if (IsNotInstanceOfTypeFailing(value, wrongType))
         {
             ThrowAssertIsNotInstanceOfTypeFailed(value, wrongType, BuildUserMessage(message));
         }
     }
 
-    /// <inheritdoc cref="IsNotInstanceOfType(object?, Type?, string)" />
+    /// <inheritdoc cref="IsNotInstanceOfType(object?, Type?, string, string)" />
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
-    public static void IsNotInstanceOfType(object? value, [NotNull] Type? wrongType, [InterpolatedStringHandlerArgument(nameof(value), nameof(wrongType))] ref AssertIsNotInstanceOfTypeInterpolatedStringHandler message)
+    public static void IsNotInstanceOfType(object? value, [NotNull] Type? wrongType, [InterpolatedStringHandlerArgument(nameof(value), nameof(wrongType))] ref AssertIsNotInstanceOfTypeInterpolatedStringHandler message, [CallerArgumentExpression(nameof(value))] string valueExpression = "")
 #pragma warning restore IDE0060 // Remove unused parameter
 #pragma warning disable CS8777 // Parameter must have a non-null value when exiting. - Not sure how to express the semantics to the compiler, but the implementation guarantees that.
+        // TODO: Use valueExpression to build the message.
         => message.ComputeAssertion();
 #pragma warning restore CS8777 // Parameter must have a non-null value when exiting.
 
@@ -382,13 +398,14 @@ public sealed partial class Assert
     /// inheritance hierarchy of the object.
     /// </summary>
     /// <typeparam name="T">The type that <paramref name="value"/> should not be.</typeparam>
-    public static void IsNotInstanceOfType<T>(object? value, string message = "")
-        => IsNotInstanceOfType(value, typeof(T), message);
+    public static void IsNotInstanceOfType<T>(object? value, string message = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
+        => IsNotInstanceOfType(value, typeof(T), message, valueExpression);
 
-    /// <inheritdoc cref="IsNotInstanceOfType{T}(object?, string?)" />
+    /// <inheritdoc cref="IsNotInstanceOfType{T}(object?, string, string)" />
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
-    public static void IsNotInstanceOfType<T>(object? value, [InterpolatedStringHandlerArgument(nameof(value))] AssertGenericIsNotInstanceOfTypeInterpolatedStringHandler<T> message)
+    public static void IsNotInstanceOfType<T>(object? value, [InterpolatedStringHandlerArgument(nameof(value))] AssertGenericIsNotInstanceOfTypeInterpolatedStringHandler<T> message, [CallerArgumentExpression(nameof(value))] string valueExpression = "")
 #pragma warning restore IDE0060 // Remove unused parameter
+        // TODO: Use valueExpression to build the message.
         => message.ComputeAssertion();
 
     private static bool IsNotInstanceOfTypeFailing(object? value, [NotNullWhen(false)] Type? wrongType)
