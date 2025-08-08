@@ -86,19 +86,25 @@ public sealed partial class Assert
     }
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 
+#pragma warning disable RS0026 // Do not add multiple public overloads with optional parameters
+
     /// <summary>
     /// Tests whether the specified collection contains exactly one element.
     /// </summary>
     /// <typeparam name="T">The type of the collection items.</typeparam>
     /// <param name="collection">The collection.</param>
     /// <param name="message">The message to display when the assertion fails.</param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
     /// <returns>The item.</returns>
 #pragma warning disable IDE0060 // Remove unused parameter
-    public static T ContainsSingle<T>(IEnumerable<T> collection, [InterpolatedStringHandlerArgument(nameof(collection))] ref AssertSingleInterpolatedStringHandler<T> message)
+    public static T ContainsSingle<T>(IEnumerable<T> collection, [InterpolatedStringHandlerArgument(nameof(collection))] ref AssertSingleInterpolatedStringHandler<T> message, [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
 #pragma warning restore IDE0060 // Remove unused parameter
+        // TODO: Use the collectionExpression to build the message
         => message.ComputeAssertion();
 
-#pragma warning disable RS0026 // Do not add multiple public overloads with optional parameters
 #pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
 
     #region ContainsSingle
@@ -109,9 +115,16 @@ public sealed partial class Assert
     /// <typeparam name="T">The type of the collection items.</typeparam>
     /// <param name="collection">The collection.</param>
     /// <param name="message">The message to display when the assertion fails.</param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
     /// <returns>The item.</returns>
-    public static T ContainsSingle<T>(IEnumerable<T> collection, string message = "")
+    public static T ContainsSingle<T>(IEnumerable<T> collection, string message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
+        // TODO: Use the collectionExpression to build the message
+        _ = collectionExpression;
+
         int actualCount = collection.Count();
         if (actualCount == 1)
         {
@@ -132,9 +145,21 @@ public sealed partial class Assert
     /// <param name="predicate">A function to test each element for a condition.</param>
     /// <param name="collection">The collection.</param>
     /// <param name="message">The message to display when the assertion fails.</param>
+    /// <param name="predicateExpression">
+    /// The syntactic expression of predicate as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
     /// <returns>The item that matches the predicate.</returns>
-    public static T ContainsSingle<T>(Func<T, bool> predicate, IEnumerable<T> collection, string message = "")
+    public static T ContainsSingle<T>(Func<T, bool> predicate, IEnumerable<T> collection, string message = "", [CallerArgumentExpression(nameof(predicate))] string predicateExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
+        // TODO: Use the predicateExpression and collectionExpression to build the message
+        _ = predicateExpression;
+        _ = collectionExpression;
+
         var matchingElements = collection.Where(predicate).ToList();
         int actualCount = matchingElements.Count;
 
@@ -161,8 +186,16 @@ public sealed partial class Assert
     /// <param name="expected">The expected item.</param>
     /// <param name="collection">The collection.</param>
     /// <param name="message">The message to display when the assertion fails.</param>
-    public static void Contains<T>(T expected, IEnumerable<T> collection, string message = "")
-        => Contains(expected, collection, EqualityComparer<T>.Default, message);
+    /// <param name="expectedExpression">
+    /// The syntactic expression of expected as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void Contains<T>(T expected, IEnumerable<T> collection, string message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+        => Contains(expected, collection, EqualityComparer<T>.Default, message, expectedExpression, collectionExpression);
 
     /// <summary>
     /// Tests whether the specified collection contains the given element.
@@ -172,8 +205,20 @@ public sealed partial class Assert
     /// <param name="collection">The collection.</param>
     /// <param name="comparer">An equality comparer to compare values.</param>
     /// <param name="message">The message to display when the assertion fails.</param>
-    public static void Contains<T>(T expected, IEnumerable<T> collection, IEqualityComparer<T> comparer, string message = "")
+    /// <param name="expectedExpression">
+    /// The syntactic expression of expected as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void Contains<T>(T expected, IEnumerable<T> collection, IEqualityComparer<T> comparer, string message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
+        // TODO: Use the expectedExpression and collectionExpression to build the message
+        _ = expectedExpression;
+        _ = collectionExpression;
+
         if (!collection.Contains(expected, comparer))
         {
             string userMessage = BuildUserMessage(message);
@@ -188,8 +233,20 @@ public sealed partial class Assert
     /// <param name="predicate">A function to test each element for a condition.</param>
     /// <param name="collection">The collection.</param>
     /// <param name="message">The message to display when the assertion fails.</param>
-    public static void Contains<T>(Func<T, bool> predicate, IEnumerable<T> collection, string message = "")
+    /// <param name="predicateExpression">
+    /// The syntactic expression of predicate as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void Contains<T>(Func<T, bool> predicate, IEnumerable<T> collection, string message = "", [CallerArgumentExpression(nameof(predicate))] string predicateExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
+        // TODO: Use the predicateExpression and collectionExpression to build the message
+        _ = predicateExpression;
+        _ = collectionExpression;
+
         if (!collection.Any(predicate))
         {
             string userMessage = BuildUserMessage(message);
@@ -213,12 +270,20 @@ public sealed partial class Assert
     /// is not in <paramref name="value"/>. The message is shown in
     /// test results.
     /// </param>
+    /// <param name="substringExpression">
+    /// The syntactic expression of substring as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="valueExpression">
+    /// The syntactic expression of value as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
     /// <exception cref="AssertFailedException">
     /// <paramref name="value"/> is null, or <paramref name="substring"/> is null,
     /// or <paramref name="value"/> does not contain <paramref name="substring"/>.
     /// </exception>
-    public static void Contains(string substring, string value, string message = "")
-        => Contains(substring, value, StringComparison.Ordinal, message);
+    public static void Contains(string substring, string value, string message = "", [CallerArgumentExpression(nameof(substring))] string substringExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
+        => Contains(substring, value, StringComparison.Ordinal, message, substringExpression, valueExpression);
 
     /// <summary>
     /// Tests whether the specified string contains the specified substring
@@ -239,12 +304,24 @@ public sealed partial class Assert
     /// is not in <paramref name="value"/>. The message is shown in
     /// test results.
     /// </param>
+    /// <param name="substringExpression">
+    /// The syntactic expression of substring as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="valueExpression">
+    /// The syntactic expression of value as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
     /// <exception cref="AssertFailedException">
     /// <paramref name="value"/> is null, or <paramref name="substring"/> is null,
     /// or <paramref name="value"/> does not contain <paramref name="substring"/>.
     /// </exception>
-    public static void Contains(string substring, string value, StringComparison comparisonType, string message = "")
+    public static void Contains(string substring, string value, StringComparison comparisonType, string message = "", [CallerArgumentExpression(nameof(substring))] string substringExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
     {
+        // TODO: Use the substringExpression and valueExpression to build the message
+        _ = substringExpression;
+        _ = valueExpression;
+
 #if NETFRAMEWORK || NETSTANDARD
         if (value.IndexOf(substring, comparisonType) < 0)
 #else
@@ -268,8 +345,16 @@ public sealed partial class Assert
     /// <param name="expected">The expected item.</param>
     /// <param name="collection">The collection.</param>
     /// <param name="message">The message to display when the assertion fails.</param>
-    public static void DoesNotContain<T>(T expected, IEnumerable<T> collection, string message = "")
-        => DoesNotContain(expected, collection, EqualityComparer<T>.Default, message);
+    /// <param name="expectedExpression">
+    /// The syntactic expression of expected as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void DoesNotContain<T>(T expected, IEnumerable<T> collection, string message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+        => DoesNotContain(expected, collection, EqualityComparer<T>.Default, message, expectedExpression, collectionExpression);
 
     /// <summary>
     /// Tests whether the specified collection does not contain the specified item.
@@ -279,8 +364,20 @@ public sealed partial class Assert
     /// <param name="collection">The collection.</param>
     /// <param name="comparer">An equality comparer to compare values.</param>
     /// <param name="message">The message to display when the assertion fails.</param>
-    public static void DoesNotContain<T>(T expected, IEnumerable<T> collection, IEqualityComparer<T> comparer, string message = "")
+    /// <param name="expectedExpression">
+    /// The syntactic expression of expected as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void DoesNotContain<T>(T expected, IEnumerable<T> collection, IEqualityComparer<T> comparer, string message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
+        // TODO: Use the expectedExpression and collectionExpression to build the message
+        _ = expectedExpression;
+        _ = collectionExpression;
+
         if (collection.Contains(expected, comparer))
         {
             string userMessage = BuildUserMessage(message);
@@ -295,8 +392,19 @@ public sealed partial class Assert
     /// <param name="predicate">A function to test each element for a condition.</param>
     /// <param name="collection">The collection.</param>
     /// <param name="message">The message to display when the assertion fails.</param>
-    public static void DoesNotContain<T>(Func<T, bool> predicate, IEnumerable<T> collection, string message = "")
+    /// <param name="predicateExpression">
+    /// The syntactic expression of predicate as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void DoesNotContain<T>(Func<T, bool> predicate, IEnumerable<T> collection, string message = "", [CallerArgumentExpression(nameof(predicate))] string predicateExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
+        // TODO: Use the predicateExpression and collectionExpression to build the message
+        _ = predicateExpression;
+        _ = collectionExpression;
         if (collection.Any(predicate))
         {
             string userMessage = BuildUserMessage(message);
@@ -320,12 +428,20 @@ public sealed partial class Assert
     /// is in <paramref name="value"/>. The message is shown in
     /// test results.
     /// </param>
+    /// <param name="substringExpression">
+    /// The syntactic expression of substring as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="valueExpression">
+    /// The syntactic expression of value as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
     /// <exception cref="AssertFailedException">
     /// <paramref name="value"/> is null, or <paramref name="substring"/> is null,
     /// or <paramref name="value"/> contains <paramref name="substring"/>.
     /// </exception>
-    public static void DoesNotContain(string substring, string value, string message = "")
-        => DoesNotContain(substring, value, StringComparison.Ordinal, message);
+    public static void DoesNotContain(string substring, string value, string message = "", [CallerArgumentExpression(nameof(substring))] string substringExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
+        => DoesNotContain(substring, value, StringComparison.Ordinal, message, substringExpression, valueExpression);
 
     /// <summary>
     /// Tests whether the specified string does not contain the specified substring
@@ -346,12 +462,24 @@ public sealed partial class Assert
     /// is in <paramref name="value"/>. The message is shown in
     /// test results.
     /// </param>
+    /// <param name="substringExpression">
+    /// The syntactic expression of substring as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="valueExpression">
+    /// The syntactic expression of value as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
     /// <exception cref="AssertFailedException">
     /// <paramref name="value"/> is null, or <paramref name="substring"/> is null,
     /// or <paramref name="value"/> contains <paramref name="substring"/>.
     /// </exception>
-    public static void DoesNotContain(string substring, string value, StringComparison comparisonType, string message = "")
+    public static void DoesNotContain(string substring, string value, StringComparison comparisonType, string message = "", [CallerArgumentExpression(nameof(substring))] string substringExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
     {
+        // TODO: Use the substringExpression and valueExpression to build the message
+        _ = substringExpression;
+        _ = valueExpression;
+
 #if NETFRAMEWORK || NETSTANDARD
         if (value.IndexOf(substring, comparisonType) >= 0)
 #else
@@ -377,9 +505,26 @@ public sealed partial class Assert
     /// <param name="maxValue">The maximum value of the expected range (inclusive).</param>
     /// <param name="value">The value to test.</param>
     /// <param name="message">The message format to display when the assertion fails.</param>
-    public static void IsInRange<T>(T minValue, T maxValue, T value, string message = "")
+    /// <param name="minValueExpression">
+    /// The syntactic expression of minValue as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="maxValueExpression">
+    /// The syntactic expression of maxValue as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="valueExpression">
+    /// The syntactic expression of value as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void IsInRange<T>(T minValue, T maxValue, T value, string message = "", [CallerArgumentExpression(nameof(minValue))] string minValueExpression = "", [CallerArgumentExpression(nameof(maxValue))] string maxValueExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
         where T : struct, IComparable<T>
     {
+        // TODO: Use the minValueExpression, maxValueExpression, and valueExpression to build the message
+        _ = minValueExpression;
+        _ = maxValueExpression;
+        _ = valueExpression;
+
         if (maxValue.CompareTo(minValue) <= 0)
         {
             throw new ArgumentOutOfRangeException(nameof(maxValue), "The maximum value must be greater than the minimum value.");
