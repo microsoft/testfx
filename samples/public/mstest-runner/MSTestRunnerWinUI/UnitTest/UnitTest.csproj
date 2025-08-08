@@ -11,8 +11,8 @@
     <UseWinUI>true</UseWinUI>
     <EnableMsixTooling>true</EnableMsixTooling>
 
-    <!--<WindowsAppSDKSelfContained>True</WindowsAppSDKSelfContained>-->
-    <!--<WindowsPackageType>None</WindowsPackageType>-->
+    <WindowsAppSDKSelfContained>True</WindowsAppSDKSelfContained>
+    <WindowsPackageType>None</WindowsPackageType>
 
     <EnableMSTestRunner>true</EnableMSTestRunner>
     <GenerateTestingPlatformEntryPoint Condition=" '$(EnableMSTestRunner)' == 'true' ">false</GenerateTestingPlatformEntryPoint>
