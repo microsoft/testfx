@@ -17,25 +17,25 @@ internal class TestablePlatformServiceProvider : IPlatformServiceProvider
 {
     #region Mock Implementations
 
-    public Mock<ITestSource> MockTestSourceValidator { get; } = new();
+    public Mock<ITestSource> MockTestSourceValidator { get; } = new(MockBehavior.Loose);
 
-    public Mock<IFileOperations> MockFileOperations { get; } = new();
+    public Mock<IFileOperations> MockFileOperations { get; } = new(MockBehavior.Loose);
 
-    public Mock<IAdapterTraceLogger> MockTraceLogger { get; } = new();
+    public Mock<IAdapterTraceLogger> MockTraceLogger { get; } = new(MockBehavior.Loose);
 
-    public Mock<ITestSourceHost> MockTestSourceHost { get; } = new();
+    public Mock<ITestSourceHost> MockTestSourceHost { get; } = new(MockBehavior.Loose);
 
-    public Mock<ITestDeployment> MockTestDeployment { get; } = new();
+    public Mock<ITestDeployment> MockTestDeployment { get; } = new(MockBehavior.Loose);
 
-    public Mock<ISettingsProvider> MockSettingsProvider { get; } = new();
+    public Mock<ISettingsProvider> MockSettingsProvider { get; } = new(MockBehavior.Loose);
 
-    public Mock<ITestDataSource> MockTestDataSource { get; } = new();
+    public Mock<ITestDataSource> MockTestDataSource { get; } = new(MockBehavior.Loose);
 
-    public Mock<ITraceListener> MockTraceListener { get; } = new();
+    public Mock<ITraceListener> MockTraceListener { get; } = new(MockBehavior.Loose);
 
-    public Mock<ITraceListenerManager> MockTraceListenerManager { get; } = new();
+    public Mock<ITraceListenerManager> MockTraceListenerManager { get; } = new(MockBehavior.Loose);
 
-    public Mock<IThreadOperations> MockThreadOperations { get; } = new();
+    public Mock<IThreadOperations> MockThreadOperations { get; } = new(MockBehavior.Loose);
 
     public Mock<IReflectionOperations2> MockReflectionOperations { get; set; } = null!;
 
@@ -83,5 +83,5 @@ internal class TestablePlatformServiceProvider : IPlatformServiceProvider
     [SuppressMessage("Naming", "CA1725:Parameter names should match base declaration", Justification = "Part of the public API")]
     public ITraceListenerManager GetTraceListenerManager(TextWriter standardOutputWriter, TextWriter standardErrorWriter) => MockTraceListenerManager.Object;
 
-    public void SetupMockReflectionOperations() => MockReflectionOperations = new Mock<IReflectionOperations2>();
+    public void SetupMockReflectionOperations() => MockReflectionOperations = new Mock<IReflectionOperations2>(MockBehavior.Loose);
 }

@@ -30,8 +30,8 @@ public class DesktopTestDeploymentTests : TestContainer
 
     public DesktopTestDeploymentTests()
     {
-        _mockReflectionUtility = new Mock<ReflectionUtility>();
-        _mockFileUtility = new Mock<FileUtility>();
+        _mockReflectionUtility = new Mock<ReflectionUtility>(MockBehavior.Loose);
+        _mockFileUtility = new Mock<FileUtility>(MockBehavior.Loose);
         _warnings = [];
 
         // Reset adapter settings.
@@ -47,10 +47,10 @@ public class DesktopTestDeploymentTests : TestContainer
         // Setup mocks.
         TestDeployment testDeployment = CreateAndSetupDeploymentRelatedUtilities(out TestRunDirectories testRunDirectories);
 
-        var mockRunContext = new Mock<IRunContext>();
+        var mockRunContext = new Mock<IRunContext>(MockBehavior.Loose);
         mockRunContext.Setup(rc => rc.TestRunDirectory).Returns(testRunDirectories.RootDeploymentDirectory);
 
-        Verify(testDeployment.Deploy(new List<TestCase> { testCase }, mockRunContext.Object, new Mock<IFrameworkHandle>().Object));
+        Verify(testDeployment.Deploy(new List<TestCase> { testCase }, mockRunContext.Object, new Mock<IFrameworkHandle>(MockBehavior.Loose).Object));
 
         string? warning;
         string sourceFile = Assembly.GetExecutingAssembly().GetName().Name + ".exe";
@@ -72,10 +72,10 @@ public class DesktopTestDeploymentTests : TestContainer
         // Setup mocks.
         TestDeployment testDeployment = CreateAndSetupDeploymentRelatedUtilities(out TestRunDirectories testRunDirectories);
 
-        var mockRunContext = new Mock<IRunContext>();
+        var mockRunContext = new Mock<IRunContext>(MockBehavior.Loose);
         mockRunContext.Setup(rc => rc.TestRunDirectory).Returns(testRunDirectories.RootDeploymentDirectory);
 
-        Verify(testDeployment.Deploy(new List<TestCase> { testCase1, testCase2 }, mockRunContext.Object, new Mock<IFrameworkHandle>().Object));
+        Verify(testDeployment.Deploy(new List<TestCase> { testCase1, testCase2 }, mockRunContext.Object, new Mock<IFrameworkHandle>(MockBehavior.Loose).Object));
 
         string? warning;
         string sourceFile1 = Assembly.GetExecutingAssembly().GetName().Name + ".exe";
@@ -102,10 +102,10 @@ public class DesktopTestDeploymentTests : TestContainer
         // Setup mocks.
         TestDeployment testDeployment = CreateAndSetupDeploymentRelatedUtilities(out TestRunDirectories testRunDirectories);
 
-        var mockRunContext = new Mock<IRunContext>();
+        var mockRunContext = new Mock<IRunContext>(MockBehavior.Loose);
         mockRunContext.Setup(rc => rc.TestRunDirectory).Returns(testRunDirectories.RootDeploymentDirectory);
 
-        Verify(testDeployment.Deploy(new List<TestCase> { testCase }, mockRunContext.Object, new Mock<IFrameworkHandle>().Object));
+        Verify(testDeployment.Deploy(new List<TestCase> { testCase }, mockRunContext.Object, new Mock<IFrameworkHandle>(MockBehavior.Loose).Object));
 
         // matched twice because root deployment and out directory are same in net core
         _mockFileUtility.Verify(fu => fu.CreateDirectoryIfNotExists(testRunDirectories.RootDeploymentDirectory), Times.Once);
@@ -155,7 +155,7 @@ public class DesktopTestDeploymentTests : TestContainer
 
         _mockFileUtility.Setup(fu => fu.DoesDirectoryExist(It.Is<string>(s => !s.EndsWith(".dll") && !s.EndsWith(".exe")))).Returns(true);
         _mockFileUtility.Setup(fu => fu.DoesFileExist(It.IsAny<string>())).Returns(true);
-        var mockAssemblyUtility = new Mock<AssemblyUtility>();
+        var mockAssemblyUtility = new Mock<AssemblyUtility>(MockBehavior.Loose);
         mockAssemblyUtility.Setup(
             au => au.GetFullPathToDependentAssemblies(It.IsAny<string>(), It.IsAny<string>(), out _warnings))
             .Returns(Array.Empty<string>());

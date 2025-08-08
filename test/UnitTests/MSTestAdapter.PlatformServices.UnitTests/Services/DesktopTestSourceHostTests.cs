@@ -102,7 +102,7 @@ public class DesktopTestSourceHostTests : TestContainer
         _ = new DummyClass();
 
         string location = typeof(TestSourceHost).Assembly.Location;
-        Mock<TestSourceHost> sourceHost = new(location, null, null) { CallBase = true };
+        Mock<TestSourceHost> sourceHost = new(MockBehavior.Loose, location, null, null) { CallBase = true };
 
         try
         {
@@ -133,7 +133,7 @@ public class DesktopTestSourceHostTests : TestContainer
             """;
 
         string location = typeof(TestSourceHost).Assembly.Location;
-        var mockRunSettings = new Mock<IRunSettings>();
+        var mockRunSettings = new Mock<IRunSettings>(MockBehavior.Loose);
         mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
 
         TestSourceHost sourceHost = new(location, mockRunSettings.Object, null);
@@ -159,7 +159,7 @@ public class DesktopTestSourceHostTests : TestContainer
         DummyClass dummyClass = new();
 
         string location = typeof(TestSourceHost).Assembly.Location;
-        Mock<TestSourceHost> sourceHost = new(location, null, null) { CallBase = true };
+        Mock<TestSourceHost> sourceHost = new(MockBehavior.Loose, location, null, null) { CallBase = true };
 
         try
         {
@@ -178,8 +178,8 @@ public class DesktopTestSourceHostTests : TestContainer
     public void DisposeShouldSetTestHostShutdownOnIssueWithAppDomainUnload()
     {
         // Arrange
-        var frameworkHandle = new Mock<IFrameworkHandle>();
-        var testableAppDomain = new Mock<IAppDomain>();
+        var frameworkHandle = new Mock<IFrameworkHandle>(MockBehavior.Loose);
+        var testableAppDomain = new Mock<IAppDomain>(MockBehavior.Loose);
 
         testableAppDomain.Setup(ad => ad.CreateDomain(It.IsAny<string>(), It.IsAny<Evidence>(), It.IsAny<AppDomainSetup>())).Returns(AppDomain.CurrentDomain);
         testableAppDomain.Setup(ad => ad.Unload(It.IsAny<AppDomain>())).Throws(new CannotUnloadAppDomainException());
@@ -205,10 +205,10 @@ public class DesktopTestSourceHostTests : TestContainer
             </RunSettings>";
 
         string location = typeof(TestSourceHost).Assembly.Location;
-        var mockRunSettings = new Mock<IRunSettings>();
+        var mockRunSettings = new Mock<IRunSettings>(MockBehavior.Loose);
         mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
 
-        Mock<TestSourceHost> testSourceHost = new(location, mockRunSettings.Object, null) { CallBase = true };
+        Mock<TestSourceHost> testSourceHost = new(MockBehavior.Loose, location, mockRunSettings.Object, null) { CallBase = true };
 
         try
         {
@@ -236,10 +236,10 @@ public class DesktopTestSourceHostTests : TestContainer
             """;
 
         string location = typeof(TestSourceHost).Assembly.Location;
-        var mockRunSettings = new Mock<IRunSettings>();
+        var mockRunSettings = new Mock<IRunSettings>(MockBehavior.Loose);
         mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
 
-        Mock<TestSourceHost> testSourceHost = new(location, mockRunSettings.Object, null) { CallBase = true };
+        Mock<TestSourceHost> testSourceHost = new(MockBehavior.Loose, location, mockRunSettings.Object, null) { CallBase = true };
 
         try
         {

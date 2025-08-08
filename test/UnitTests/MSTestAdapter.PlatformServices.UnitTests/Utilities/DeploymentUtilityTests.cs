@@ -39,9 +39,9 @@ public class DeploymentUtilityTests : TestContainer
 
     public DeploymentUtilityTests()
     {
-        _mockReflectionUtility = new Mock<ReflectionUtility>();
-        _mockFileUtility = new Mock<FileUtility>();
-        _mockAssemblyUtility = new Mock<AssemblyUtility>();
+        _mockReflectionUtility = new Mock<ReflectionUtility>(MockBehavior.Loose);
+        _mockFileUtility = new Mock<FileUtility>(MockBehavior.Loose);
+        _mockAssemblyUtility = new Mock<AssemblyUtility>(MockBehavior.Loose);
         _warnings = [];
 
         _deploymentUtility = new DeploymentUtility(
@@ -49,8 +49,8 @@ public class DeploymentUtilityTests : TestContainer
             _mockAssemblyUtility.Object,
             _mockFileUtility.Object);
 
-        _mockRunContext = new Mock<IRunContext>();
-        _mockTestExecutionRecorder = new Mock<ITestExecutionRecorder>();
+        _mockRunContext = new Mock<IRunContext>(MockBehavior.Loose);
+        _mockTestExecutionRecorder = new Mock<ITestExecutionRecorder>(MockBehavior.Loose);
     }
 
     #region Deploy tests

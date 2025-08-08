@@ -10,7 +10,7 @@ namespace Microsoft.Testing.Platform.MSBuild.UnitTests;
 [TestClass]
 public sealed class MSBuildTests
 {
-    private readonly Mock<IBuildEngine> _buildEngine = new();
+    private readonly Mock<IBuildEngine> _buildEngine = new(MockBehavior.Loose);
     private readonly List<BuildErrorEventArgs> _errors = [];
 
     public MSBuildTests() =>

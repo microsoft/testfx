@@ -25,7 +25,7 @@ public class TestAssemblyInfoTests : TestContainer
         _testAssemblyInfo = new TestAssemblyInfo(typeof(TestAssemblyInfoTests).Assembly);
         _dummyMethodInfo = typeof(TestAssemblyInfoTests).GetMethods().First();
 
-        var testContext = new Mock<TestContext>();
+        var testContext = new Mock<TestContext>(MockBehavior.Loose);
         testContext.SetupGet(x => x.CancellationTokenSource).Returns(new CancellationTokenSource());
         _testContext = testContext.Object;
     }

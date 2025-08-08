@@ -20,13 +20,13 @@ namespace Microsoft.Testing.Extensions.UnitTests;
 [TestClass]
 public class TrxTests
 {
-    private readonly Mock<IEnvironment> _environmentMock = new();
-    private readonly Mock<ICommandLineOptions> _commandLineOptionsMock = new();
-    private readonly Mock<IConfiguration> _configurationMock = new();
-    private readonly Mock<IClock> _clockMock = new();
-    private readonly Mock<ITestFramework> _testFrameworkMock = new();
-    private readonly Mock<ITestApplicationModuleInfo> _testApplicationModuleInfoMock = new();
-    private readonly Mock<IFileSystem> _fileSystem = new();
+    private readonly Mock<IEnvironment> _environmentMock = new(MockBehavior.Loose);
+    private readonly Mock<ICommandLineOptions> _commandLineOptionsMock = new(MockBehavior.Loose);
+    private readonly Mock<IConfiguration> _configurationMock = new(MockBehavior.Loose);
+    private readonly Mock<IClock> _clockMock = new(MockBehavior.Loose);
+    private readonly Mock<ITestFramework> _testFrameworkMock = new(MockBehavior.Loose);
+    private readonly Mock<ITestApplicationModuleInfo> _testApplicationModuleInfoMock = new(MockBehavior.Loose);
+    private readonly Mock<IFileSystem> _fileSystem = new(MockBehavior.Loose);
     private readonly Dictionary<IExtension, List<SessionFileArtifact>> _artifactsByExtension = [];
 
     [TestMethod]

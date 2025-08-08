@@ -28,10 +28,10 @@ public class MSTestDiscovererTests : TestContainer
     {
         _testablePlatformServiceProvider = new TestablePlatformServiceProvider();
 
-        _mockMessageLogger = new Mock<IMessageLogger>();
-        _mockTestCaseDiscoverySink = new Mock<ITestCaseDiscoverySink>();
-        _mockDiscoveryContext = new Mock<IDiscoveryContext>();
-        _mockRunSettings = new Mock<IRunSettings>();
+        _mockMessageLogger = new Mock<IMessageLogger>(MockBehavior.Loose);
+        _mockTestCaseDiscoverySink = new Mock<ITestCaseDiscoverySink>(MockBehavior.Loose);
+        _mockDiscoveryContext = new Mock<IDiscoveryContext>(MockBehavior.Loose);
+        _mockRunSettings = new Mock<IRunSettings>(MockBehavior.Loose);
         _discoverer = new MSTestDiscoverer();
 
         _testablePlatformServiceProvider = new TestablePlatformServiceProvider();

@@ -26,11 +26,11 @@ public sealed class FileLoggerTests : IDisposable
         (state, exception) =>
             string.Format(CultureInfo.InvariantCulture, "{0}{1}", state, exception is not null ? $" -- {exception}" : string.Empty);
 
-    private readonly Mock<IClock> _mockClock = new();
-    private readonly Mock<IConsole> _mockConsole = new();
-    private readonly Mock<IFileSystem> _mockFileSystem = new();
-    private readonly Mock<IFileStream> _mockStream = new();
-    private readonly Mock<IFileStreamFactory> _mockFileStreamFactory = new();
+    private readonly Mock<IClock> _mockClock = new(MockBehavior.Loose);
+    private readonly Mock<IConsole> _mockConsole = new(MockBehavior.Loose);
+    private readonly Mock<IFileSystem> _mockFileSystem = new(MockBehavior.Loose);
+    private readonly Mock<IFileStream> _mockStream = new(MockBehavior.Loose);
+    private readonly Mock<IFileStreamFactory> _mockFileStreamFactory = new(MockBehavior.Loose);
     private readonly CustomMemoryStream _memoryStream;
 
     public FileLoggerTests()

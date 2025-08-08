@@ -32,7 +32,7 @@ public class DeploymentItemUtilityTests : TestContainer
 
     public DeploymentItemUtilityTests()
     {
-        _mockReflectionUtility = new Mock<ReflectionUtility>();
+        _mockReflectionUtility = new Mock<ReflectionUtility>(MockBehavior.Loose);
         _deploymentItemUtility = new DeploymentItemUtility(_mockReflectionUtility.Object);
         _warnings = [];
     }
