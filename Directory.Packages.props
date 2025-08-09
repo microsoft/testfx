@@ -65,7 +65,6 @@
     <PackageVersion Include="Microsoft.CodeAnalysis.VisualBasic.Analyzer.Testing" Version="$(MicrosoftCodeAnalysisAnalyzerTestingVersion)" />
     <PackageVersion Include="Microsoft.CodeAnalysis.VisualBasic.CodeFix.Testing" Version="$(MicrosoftCodeAnalysisAnalyzerTestingVersion)" />
     <PackageVersion Include="Microsoft.CodeAnalysis.VisualBasic.CodeRefactoring.Testing" Version="$(MicrosoftCodeAnalysisAnalyzerTestingVersion)" />
-
     <PackageVersion Include="Microsoft.Extensions.FileSystemGlobbing" Version="9.0.4" />
     <PackageVersion Include="Microsoft.TestPlatform" Version="$(MicrosoftNETTestSdkVersion)" />
     <!-- Pinned to 4.18.4 for security -->
