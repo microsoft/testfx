@@ -42,7 +42,7 @@ public partial class AssertTests : TestContainer
 
         // Assert
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("Assert.IsGreaterThan failed. Actual value <5> is not greater than expected value <10>. A Message");
+            .WithMessage("Assert.IsGreaterThan failed. Actual value <5> is not greater than expected value <10>. 'lowerBound' expression: '10', 'value' expression: '5'. A Message");
     }
 
     public void IsGreaterThanShouldWorkWithDoubles() =>
@@ -86,7 +86,7 @@ public partial class AssertTests : TestContainer
 
         // Assert
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("Assert.IsGreaterThanOrEqualTo failed. Actual value <5> is not greater than or equal to expected value <10>. A Message");
+            .WithMessage("Assert.IsGreaterThanOrEqualTo failed. Actual value <5> is not greater than or equal to expected value <10>. 'lowerBound' expression: '10', 'value' expression: '5'. A Message");
     }
 
     public void IsGreaterThanOrEqualToShouldWorkWithDoubles() =>
@@ -130,7 +130,7 @@ public partial class AssertTests : TestContainer
 
         // Assert
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("Assert.IsLessThan failed. Actual value <10> is not less than expected value <5>. A Message");
+            .WithMessage("Assert.IsLessThan failed. Actual value <10> is not less than expected value <5>. 'upperBound' expression: '5', 'value' expression: '10'. A Message");
     }
 
     public void IsLessThanShouldWorkWithDoubles() =>
@@ -174,7 +174,7 @@ public partial class AssertTests : TestContainer
 
         // Assert
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("Assert.IsLessThanOrEqualTo failed. Actual value <10> is not less than or equal to expected value <5>. A Message");
+            .WithMessage("Assert.IsLessThanOrEqualTo failed. Actual value <10> is not less than or equal to expected value <5>. 'upperBound' expression: '5', 'value' expression: '10'. A Message");
     }
 
     public void IsLessThanOrEqualToShouldWorkWithDoubles() =>
@@ -233,7 +233,7 @@ public partial class AssertTests : TestContainer
 
         // Assert
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("Assert.IsPositive failed. Expected value <-5> to be positive. A Message");
+            .WithMessage("Assert.IsPositive failed. Expected value <-5> to be positive. 'value' expression: '-5'. A Message");
     }
 
     public void IsPositiveShouldWorkWithDoubles() =>
@@ -298,7 +298,7 @@ public partial class AssertTests : TestContainer
 
         // Assert
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("Assert.IsNegative failed. Expected value <5> to be negative. A Message");
+            .WithMessage("Assert.IsNegative failed. Expected value <5> to be negative. 'value' expression: '5'. A Message");
     }
 
     public void IsNegativeShouldWorkWithDoubles() =>
