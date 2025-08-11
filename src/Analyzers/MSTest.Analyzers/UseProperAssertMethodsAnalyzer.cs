@@ -120,6 +120,12 @@ internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
         HasCount,
     }
 
+    private enum CollectionEmptinessCheckStatus
+    {
+        Unknown,
+        IsNotEmpty,
+    }
+
     internal const string ProperAssertMethodNameKey = nameof(ProperAssertMethodNameKey);
 
     /// <summary>
@@ -617,6 +623,27 @@ internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
             }
         }
 
+        // Check for collection emptiness patterns: myCollection.Count > 0 or myCollection.Count != 0
+        CollectionEmptinessCheckStatus emptinessStatus = RecognizeCollectionEmptinessCheck(conditionArgument, objectTypeSymbol, out SyntaxNode? collectionEmptinessExpr);
+        if (emptinessStatus != CollectionEmptinessCheckStatus.Unknown)
+        {
+            if (isTrueInvocation && emptinessStatus == CollectionEmptinessCheckStatus.IsNotEmpty)
+            {
+                string properAssertMethod = "IsNotEmpty";
+
+                ImmutableDictionary<string, string?>.Builder properties = ImmutableDictionary.CreateBuilder<string, string?>();
+                properties.Add(ProperAssertMethodNameKey, properAssertMethod);
+                properties.Add(CodeFixModeKey, CodeFixModeSimple);
+                context.ReportDiagnostic(context.Operation.CreateDiagnostic(
+                    Rule,
+                    additionalLocations: ImmutableArray.Create(conditionArgument.Syntax.GetLocation(), collectionEmptinessExpr!.GetLocation()),
+                    properties: properties.ToImmutable(),
+                    properAssertMethod,
+                    "IsTrue"));
+                return;
+            }
+        }
+
         // Check for comparison patterns: a > b, a >= b, a < b, a <= b
         ComparisonCheckStatus comparisonStatus = RecognizeComparisonCheck(conditionArgument, out SyntaxNode? leftExpr, out SyntaxNode? rightExpr);
         if (comparisonStatus != ComparisonCheckStatus.Unknown)
@@ -821,6 +848,36 @@ internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
                 properAssertMethod,
                 isAreEqualInvocation ? "AreEqual" : "AreNotEqual"));
         }
+    }
+
+    private static CollectionEmptinessCheckStatus RecognizeCollectionEmptinessCheck(
+        IOperation operation,
+        INamedTypeSymbol objectTypeSymbol,
+        out SyntaxNode? collectionExpression)
+    {
+        collectionExpression = null;
+
+        // Check for collection.Count > 0 or collection.Length > 0
+        if (operation is IBinaryOperation { OperatorKind: BinaryOperatorKind.GreaterThan, LeftOperand: IPropertyReferenceOperation propertyRef, RightOperand: ILiteralOperation { ConstantValue: { HasValue: true, Value: 0 } } } &&
+            propertyRef.Property.Name is "Count" or "Length" &&
+            propertyRef.Instance?.Type is not null &&
+            IsBCLCollectionType(propertyRef.Property.ContainingType, objectTypeSymbol))
+        {
+            collectionExpression = propertyRef.Instance.Syntax;
+            return CollectionEmptinessCheckStatus.IsNotEmpty;
+        }
+
+        // Check for collection.Count != 0 or collection.Length != 0
+        if (operation is IBinaryOperation { OperatorKind: BinaryOperatorKind.NotEquals, LeftOperand: IPropertyReferenceOperation propertyRef2, RightOperand: ILiteralOperation { ConstantValue: { HasValue: true, Value: 0 } } } &&
+            propertyRef2.Property.Name is "Count" or "Length" &&
+            propertyRef2.Instance?.Type is not null &&
+            IsBCLCollectionType(propertyRef2.Property.ContainingType, objectTypeSymbol))
+        {
+            collectionExpression = propertyRef2.Instance.Syntax;
+            return CollectionEmptinessCheckStatus.IsNotEmpty;
+        }
+
+        return CollectionEmptinessCheckStatus.Unknown;
     }
 
     private static CountCheckStatus RecognizeCountCheck(

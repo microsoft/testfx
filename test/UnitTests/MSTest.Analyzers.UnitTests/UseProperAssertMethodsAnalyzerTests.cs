@@ -1814,6 +1814,220 @@ public sealed class UseProperAssertMethodsAnalyzerTests
 
     #endregion
 
+    #region New test cases for collection emptiness checks
+
+    [TestMethod]
+    public async Task WhenAssertIsTrueWithCollectionCountGreaterThanZero()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Collections.Generic;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    var list = new List<int> { 1, 2, 3 };
+                    {|#0:Assert.IsTrue(list.Count > 0)|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Collections.Generic;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    var list = new List<int> { 1, 2, 3 };
+                    Assert.IsNotEmpty(list);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            // /0/Test0.cs(11,9): info MSTEST0037: Use 'Assert.IsNotEmpty' instead of 'Assert.IsTrue'
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("IsNotEmpty", "IsTrue"),
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertIsTrueWithCollectionCountNotEqualToZero()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Collections.Generic;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    var list = new List<int> { 1, 2, 3 };
+                    {|#0:Assert.IsTrue(list.Count != 0)|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Collections.Generic;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    var list = new List<int> { 1, 2, 3 };
+                    Assert.IsNotEmpty(list);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            // /0/Test0.cs(11,9): info MSTEST0037: Use 'Assert.IsNotEmpty' instead of 'Assert.IsTrue'
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("IsNotEmpty", "IsTrue"),
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertIsTrueWithArrayLengthGreaterThanZero()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    var array = new int[] { 1, 2, 3 };
+                    {|#0:Assert.IsTrue(array.Length > 0)|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    var array = new int[] { 1, 2, 3 };
+                    Assert.IsNotEmpty(array);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            // /0/Test0.cs(10,9): info MSTEST0037: Use 'Assert.IsNotEmpty' instead of 'Assert.IsTrue'
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("IsNotEmpty", "IsTrue"),
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertIsTrueWithArrayLengthNotEqualToZero()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    var array = new int[] { 1, 2, 3 };
+                    {|#0:Assert.IsTrue(array.Length != 0)|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    var array = new int[] { 1, 2, 3 };
+                    Assert.IsNotEmpty(array);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            // /0/Test0.cs(10,9): info MSTEST0037: Use 'Assert.IsNotEmpty' instead of 'Assert.IsTrue'
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("IsNotEmpty", "IsTrue"),
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertIsFalseWithCollectionCountGreaterThanZero_ShouldNotTrigger()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Collections.Generic;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    var list = new List<int> { 1, 2, 3 };
+                    // This should not trigger IsNotEmpty suggestion since it's IsFalse
+                    Assert.IsFalse(list.Count > 0);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertIsFalseWithCollectionCountNotEqualToZero_ShouldNotTrigger()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Collections.Generic;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    var list = new List<int> { 1, 2, 3 };
+                    // This should not trigger IsNotEmpty suggestion since it's IsFalse
+                    Assert.IsFalse(list.Count != 0);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    #endregion
+
     #region New test cases for collection count
 
     [TestMethod]
